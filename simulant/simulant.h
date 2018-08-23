@@ -69,4 +69,6 @@
 
 #include "renderers/renderer_config.h"
 
+#include "loaders/q2bsp_loader.h"
+
 #endif

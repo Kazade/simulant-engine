@@ -10,7 +10,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        pipeline_ = prepare_basic_scene(stage_, camera_);
+        pipeline_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
         pipeline_->deactivate();
@@ -19,10 +19,29 @@ public:
 
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/aggression.bsp").fetch();
         auto actor_id = stage_->new_geom_with_mesh(mesh->id());
-        /*
-        stage->camera(camera_id_)->move_to_absolute(
-            mesh->data->get<smlt::Vec3>("player_spawn")
-        );*/
+
+        auto entities = mesh->data->get<smlt::Q2EntityList>("entities");
+
+        std::for_each(entities.begin(), entities.end(), [&](Q2Entity& ent) {
+            if(ent["classname"] == "info_player_start") {
+                auto position = ent["origin"];
+                std::vector<unicode> coords = _u(position).split(" ");
+
+                //Needed because the Quake 2 coord system is weird
+                Mat4 rotation_x = Mat4::as_rotation_x(Degrees(-90));
+                Mat4 rotation_y = Mat4::as_rotation_y(Degrees(90.0f));
+                Mat4 rotation = rotation_y * rotation_x;
+
+                smlt::Vec3 pos(
+                    coords[0].to_float(),
+                    coords[1].to_float(),
+                    coords[2].to_float()
+                );
+
+                pos = pos.rotated_by(rotation);
+                camera_->move_to_absolute(pos);
+            }
+        });
 
         // Add a fly controller to the camera for user input
         camera_->new_behaviour<behaviours::Fly>(window);
