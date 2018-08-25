@@ -26,6 +26,9 @@ namespace loaders {
 
 class MD2Loader : public Loader {
 public:
+    /* This is the max number of expanded frames to keep in memory */
+    static uint16_t MAX_RESIDENT_FRAMES;
+
     MD2Loader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 

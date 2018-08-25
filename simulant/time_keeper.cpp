@@ -12,7 +12,7 @@ TimeKeeper::TimeKeeper(const float fixed_step):
 
 }
 
-uint64_t TimeKeeper::now_in_us() const {
+uint64_t TimeKeeper::now_in_us() {
 #ifdef _arch_dreamcast
     return timer_us_gettime64();
 #else

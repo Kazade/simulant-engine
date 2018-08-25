@@ -22,7 +22,7 @@
 #include "../meshes/mesh.h"
 #include "../resource_manager.h"
 #include "../resource_locator.h"
-
+#include "../time_keeper.h"
 #include "../utils/memory.h"
 
 namespace smlt {
@@ -75,7 +75,15 @@ static Vec3 ANORMS [] = {
     #include "md2_anorms.h"
 };
 
+
+uint16_t MD2Loader::MAX_RESIDENT_FRAMES = 32;
+
 class MD2MeshFrameData : public MeshFrameData {
+    /*
+     * This stores the compressed MD2 mesh data as stored in the file. At any one time we
+     * have up to MD2Loader::MAX_RESIDENT_FRAMES (default 32) uncompressed in memory. This allows balancing
+     * performance vs memory. Turn the value up to improve performance but use more ram.
+     */
 public:
     /* This is the frame data from an MD2 file, but without the vertices */
     struct FrameTransform {
@@ -97,13 +105,68 @@ public:
     /* This contains the scale/translate data for each frame */
     std::vector<FrameTransform> frames_;
 
-    void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData *out) {
-        const Mat4 ROT_X = Mat4::as_rotation_x(Degrees(-90.0f));
-        const Mat4 ROT_Y = Mat4::as_rotation_y(Degrees(90.0f));
-        const Mat4 VERTEX_ROTATION = ROT_Y * ROT_X;
+    struct UnpackedVertex {
+        Vec3 v;
+        Vec3 n;
+    };
 
-        FrameTransform& frame1 = frames_[current_frame];
-        FrameTransform& frame2 = frames_[next_frame];
+    typedef std::vector<UnpackedVertex> UnpackedFrame;
+
+    /* Cache of recently used frames, trying to balance memory usage with
+     * performance */
+    std::unordered_map<uint16_t, UnpackedFrame> frame_cache;
+    std::unordered_map<uint16_t, uint64_t> frame_usage_times;
+
+    void _expand_verts(uint16_t frame) {
+        /* Decompresses a single frame of MD2 data into the frame cache */
+
+        static const Mat4 ROT_X = Mat4::as_rotation_x(Degrees(-90.0f));
+        static const Mat4 ROT_Y = Mat4::as_rotation_y(Degrees(90.0f));
+        static const Mat4 VERTEX_ROTATION = ROT_Y * ROT_X;
+
+        if(frame_cache.count(frame)) {
+            frame_usage_times[frame] = TimeKeeper::now_in_us();
+        } else {
+            if(frame_cache.size() == MD2Loader::MAX_RESIDENT_FRAMES) {
+                /* We need to clear out the oldest frame */
+
+                uint64_t oldest_time = std::numeric_limits<uint64_t>::max();
+                uint16_t oldest_frame = std::numeric_limits<uint16_t>::max();
+
+                for(auto it = frame_usage_times.begin(); it != frame_usage_times.end(); ++it) {
+                    if(it->second < oldest_time) {
+                        oldest_time = it->second;
+                        oldest_frame = it->first;
+                    }
+                }
+
+                frame_cache.erase(oldest_frame);
+                frame_usage_times.erase(oldest_frame);
+            }
+
+            auto& verts = frame_cache[frame];
+            frame_usage_times[frame] = TimeKeeper::now_in_us();
+
+            FrameTransform& frame1 = frames_[frame];
+            FrameVertex* v1 = &vertices_[vertex_count * frame];
+
+            verts.resize(vertex_count);
+            for(uint16_t i = 0; i < vertex_count; ++i) {
+                float vx1 = float(v1->v[0]) * frame1.scale.x + frame1.translate.x;
+                float vy1 = float(v1->v[1]) * frame1.scale.y + frame1.translate.y;
+                float vz1 = float(v1->v[2]) * frame1.scale.z + frame1.translate.z;
+
+                verts[i].v = Vec3(vx1, vy1, vz1).rotated_by(VERTEX_ROTATION);
+                verts[i].n = ANORMS[v1->normal].rotated_by(VERTEX_ROTATION);
+
+                v1++;
+            }
+        }
+    }
+
+    void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData *out) {
+        _expand_verts(current_frame);
+        _expand_verts(next_frame);
 
         FrameVertex* v1 = &vertices_[vertex_count * current_frame];
         FrameVertex* v2 = &vertices_[vertex_count * next_frame];
@@ -112,30 +175,15 @@ public:
         out->move_to_start();
 
         for(uint16_t i = 0; i < vertex_count; ++i) {
-            float vx1 = float(v1->v[0]) * frame1.scale.x + frame1.translate.x;
-            float vy1 = float(v1->v[1]) * frame1.scale.y + frame1.translate.y;
-            float vz1 = float(v1->v[2]) * frame1.scale.z + frame1.translate.z;
+            const auto& v1v = frame_cache[current_frame][i].v;
+            const auto& v2v = frame_cache[next_frame][i].v;
+            const auto& n1 = frame_cache[current_frame][i].n;
+            const auto& n2 = frame_cache[next_frame][i].n;
 
-            float vx2 = float(v2->v[0]) * frame2.scale.x + frame2.translate.x;
-            float vy2 = float(v2->v[1]) * frame2.scale.y + frame2.translate.y;
-            float vz2 = float(v2->v[2]) * frame2.scale.z + frame2.translate.z;
-
-            auto v1v = Vec3(vx1, vy1, vz1);
-            auto v2v = Vec3(vx2, vy2, vz2);
-
-            auto n1 = ANORMS[v1->normal];
-            auto n2 = ANORMS[v2->normal];
-
-            auto ret = v1v + (v2v - v1v) * t;
-            ret = ret.rotated_by(VERTEX_ROTATION);
-
-            auto n = n1 + (n2 - n1) * t;
-            n = n.rotated_by(VERTEX_ROTATION);
-
-            out->position(ret);
+            out->position(v1v + (v2v - v1v) * t);
             out->tex_coord0(v1->st);
             out->diffuse(smlt::Colour::WHITE);
-            out->normal(n);
+            out->normal(n1 + (n2 - n1) * t);
             out->move_next();
 
             ++v1;

@@ -21,7 +21,7 @@ public:
 
     void update();
 
-    uint64_t now_in_us() const;
+    static uint64_t now_in_us();
 
     float delta_time() const { return delta_time_; }
     float fixed_step() const { return fixed_step_; }
