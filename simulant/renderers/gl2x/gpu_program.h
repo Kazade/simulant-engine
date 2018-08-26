@@ -31,7 +31,7 @@
 #include "../../generic/identifiable.h"
 #include "../../vertex_data.h"
 
-#include "glad/glad/glad.h"
+#include "../glad/glad/glad.h"
 
 #define BUFFER_OFFSET(bytes) ((GLubyte*) NULL + (bytes))
 

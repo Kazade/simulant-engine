@@ -21,15 +21,9 @@
 #include "utils/gl_error.h"
 
 #ifdef _arch_dreamcast
-#include <GL/gl.h>
+    #include "../deps/libgl/include/gl.h"
 #else
-
-#ifdef SIMULANT_GL_VERSION_2X
-    #include "renderers/gl2x/glad/glad/glad.h"
-#else
-    #include "renderers/gl1x/glad/glad/glad.h"
-#endif
-
+    #include "renderers/glad/glad/glad.h"
 #endif
 
 namespace smlt {

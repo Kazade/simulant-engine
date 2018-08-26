@@ -48,6 +48,7 @@
 
 #include "nodes/camera.h"
 
+#include "renderers/renderer_config.h"
 #include "sound.h"
 #include "render_sequence.h"
 #include "stage.h"
@@ -72,7 +73,7 @@ Window::Window(int width, int height, int bpp, bool fullscreen, bool enable_vsyn
     height_(-1),
     is_running_(true),
     idle_(*this),
-    resource_locator_(ResourceLocator::create()),
+    resource_locator_(ResourceLocator::create(this)),
     frame_counter_time_(0),
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
@@ -201,6 +202,8 @@ bool Window::_init() {
     // Initialize the sound driver (here rather than constructor as it relies on subclass type)
     sound_driver_ = create_sound_driver();
     sound_driver_->startup();
+
+    renderer_ = new_renderer(this, std::getenv("SIMULANT_RENDERER"));
 
     bool result = create_window();
 

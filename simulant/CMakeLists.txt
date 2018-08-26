@@ -2,7 +2,7 @@ FILE(GLOB_RECURSE SIMULANT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc)
 
 # Remove all the renderer files so we can add them specifically
 FILE(GLOB_RECURSE TO_REMOVE
-    "renderers/gl1x/*"
+    "renderers/glad/*"
     "renderers/gl2x/*"
     "deps/SOIL/original/*"
     "sdl2_window.*"
@@ -12,27 +12,17 @@ FILE(GLOB_RECURSE TO_REMOVE
 
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
-# Add GL1 files if we're targetting that
-IF(SIMULANT_GL_VERSION_1X)
-    MESSAGE("-- Using the OpenGL 1.1 renderer (Retro!)")
 
-    FILE(GLOB_RECURSE GL1_FILES renderers/gl1x/*.cpp)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL1_FILES})
-
-    IF(NOT DREAMCAST_BUILD)
-        # DC build doesn't need glad, GL1 is available directly
-        FILE(GLOB_RECURSE GLAD1_FILES renderers/gl1x/glad/*.c)
-        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
-    ENDIF()
-ENDIF()
-
-# Add GL2 files if we're using that instead
-IF(SIMULANT_GL_VERSION_2X)
-    MESSAGE("-- Using the OpenGL 2.1 renderer (Old Skool!)")
+IF(NOT DREAMCAST_BUILD)
+    MESSAGE("-- Including GLAD in build")
 
     FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
+    # DC build doesn't need glad, GL1 is available directly
+    FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
 ENDIF()
+
 
 IF(DREAMCAST_BUILD)
     MESSAGE("-- Including libGL in build, as this is the Dreamcast")

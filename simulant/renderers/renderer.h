@@ -61,6 +61,8 @@ public:
 
     virtual GPUProgramPtr gpu_program(GPUProgramID) const { return GPUProgramPtr(); }
 
+    virtual std::string name() const = 0;
+
 public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }

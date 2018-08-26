@@ -688,6 +688,7 @@ simulant/renderers/gl_renderer.h
 simulant/renderers/gl_renderer.h
 simulant/renderers/renderer.cpp
 simulant/renderers/renderer.h
+simulant/renderers/renderer_config.cpp
 simulant/renderers/renderer_config.h
 simulant/resource.cpp
 simulant/resource.h

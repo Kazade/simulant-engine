@@ -3,6 +3,7 @@
 #include "simulant/simulant.h"
 #include "../global.h"
 #include "../../simulant/hardware_buffer.h"
+#include "../../simulant/renderers/gl2x/buffer_manager.h"
 
 namespace {
 

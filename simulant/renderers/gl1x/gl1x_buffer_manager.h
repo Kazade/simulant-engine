@@ -3,7 +3,7 @@
 #ifdef _arch_dreamcast
 #include "../../../deps/libgl/include/gl.h"
 #else
-#include "./glad/glad/glad.h"
+#include "../glad/glad/glad.h"
 #endif
 
 #include "../../hardware_buffer.h"

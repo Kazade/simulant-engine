@@ -28,33 +28,18 @@
 
 namespace smlt {
 
-#ifdef SIMULANT_GL_VERSION_1X
-const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/opengl-1.x/texture_only.kglm";
-const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/opengl-1.x/diffuse_only.kglm";
-const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/opengl-1.x/alpha_texture.kglm";
-const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "simulant/materials/opengl-1.x/diffuse_with_lighting.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "simulant/materials/opengl-1.x/multitexture2_modulate.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/opengl-1.x/multitexture2_add.kglm";
-const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/materials/opengl-1.x/texture_with_lightmap.kglm";
-const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/opengl-1.x/texture_with_lightmap_and_lighting.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/opengl-1.x/multitexture2_modulate_with_lighting.kglm";
-const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-1.x/skybox.kglm";
-const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/opengl-1.x/textured_particle.kglm";
-const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/opengl-1.x/diffuse_particle.kglm";
-#else
-const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/opengl-2.x/texture_only.kglm";
-const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/opengl-2.x/diffuse_only.kglm";
-const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/opengl-2.x/alpha_texture.kglm";
-const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "simulant/materials/opengl-2.x/diffuse_with_lighting.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "simulant/materials/opengl-2.x/multitexture2_modulate.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/opengl-2.x/multitexture2_add.kglm";
-const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/materials/opengl-2.x/texture_with_lightmap.kglm";
-const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/opengl-2.x/texture_with_lightmap_and_lighting.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/opengl-2.x/multitexture2_modulate_with_lighting.kglm";
-const std::string Material::BuiltIns::SKYBOX = "simulant/materials/opengl-2.x/skybox.kglm";
-const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/opengl-2.x/textured_particle.kglm";
-const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/opengl-2.x/diffuse_particle.kglm";
-#endif
+const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/${RENDERER}/texture_only.kglm";
+const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/${RENDERER}/diffuse_only.kglm";
+const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/${RENDERER}/alpha_texture.kglm";
+const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "simulant/materials/${RENDERER}/diffuse_with_lighting.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "simulant/materials/${RENDERER}/multitexture2_modulate.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/${RENDERER}/multitexture2_add.kglm";
+const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/materials/${RENDERER}/texture_with_lightmap.kglm";
+const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/${RENDERER}/texture_with_lightmap_and_lighting.kglm";
+const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/${RENDERER}/multitexture2_modulate_with_lighting.kglm";
+const std::string Material::BuiltIns::SKYBOX = "simulant/materials/${RENDERER}/skybox.kglm";
+const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/${RENDERER}/textured_particle.kglm";
+const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/${RENDERER}/diffuse_particle.kglm";
 
 /* This list is used by the particle script loader to determine if a specified material
  * is a built-in or not. Please keep this up-to-date when changing the above materials!
