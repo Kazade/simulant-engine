@@ -686,6 +686,7 @@ simulant/renderers/gl_renderer.cpp
 simulant/renderers/gl_renderer.cpp
 simulant/renderers/gl_renderer.h
 simulant/renderers/gl_renderer.h
+simulant/renderers/glad/glad/glad.h
 simulant/renderers/renderer.cpp
 simulant/renderers/renderer.h
 simulant/renderers/renderer_config.cpp
@@ -783,6 +784,7 @@ samples/combined_sample_1.cpp
 samples/light_sample.cpp
 samples/new_pipeline_sample.cpp
 samples/flightsim.cpp
+tests/gl2/test_gl2.h
 tests/test_adjacency.h
 tests/test_camera.h
 tests/global.cpp

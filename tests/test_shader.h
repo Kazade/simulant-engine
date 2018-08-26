@@ -5,14 +5,14 @@
 
 #include "global.h"
 
-#ifndef SIMULANT_GL_VERSION_1X
+#ifndef _arch_dreamcast
 #include "simulant/renderers/gl2x/gpu_program.h"
 #endif
 
 class ShaderTest : public SimulantTestCase {
 public:
     void test_shader() {
-#ifndef SIMULANT_GL_VERSION_1X
+#ifndef _arch_dreamcast
         smlt::GPUProgram::ptr program = smlt::GPUProgram::create(
             smlt::GPUProgramID(1),
             "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }",

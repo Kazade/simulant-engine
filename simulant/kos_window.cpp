@@ -43,7 +43,7 @@ bool KOSWindow::create_window() {
         print_available_ram();
 #endif
 
-    renderer_ = std::make_shared<GL1XRenderer>(this);
+    renderer_ = new_renderer(this, "gl1x");
 
     set_has_context(true); //Mark that we have a valid GL context
 

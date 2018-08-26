@@ -28,7 +28,7 @@ Renderer::ptr new_renderer(Window* window, const char* name) {
     if(!name) {
         /* NULL? Then return the default for the platform */
 #ifdef _arch_dreamcast
-        return std::make_shared<GL1Renderer>(window);
+        return std::make_shared<GL1XRenderer>(window);
 #else
         return std::make_shared<GenericRenderer>(window);
 #endif
