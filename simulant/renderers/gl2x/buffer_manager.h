@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "./glad/glad/glad.h"
+#include "../glad/glad/glad.h"
 #include "../../hardware_buffer.h"
 
 namespace smlt {

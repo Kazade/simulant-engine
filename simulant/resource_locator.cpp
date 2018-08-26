@@ -22,6 +22,8 @@
 #include "deps/kfs/kfs.h"
 #include "deps/kazlog/kazlog.h"
 #include "resource_locator.h"
+#include "window.h"
+#include "renderers/renderer.h"
 
 #ifdef __ANDROID__
 #include <SDL_rwops.h>
@@ -29,7 +31,8 @@
 
 namespace smlt {
 
-ResourceLocator::ResourceLocator() {
+ResourceLocator::ResourceLocator(Window *window):
+    window_(window) {
 #ifndef __ANDROID__
     //Android can't find the executable directory in release mode, but can in debug!
     resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
@@ -54,9 +57,15 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
     */
+
+    std::string final_name = filename.replace(
+        "${RENDERER}",
+        window_->renderer->name()
+    ).encode();
+
 #ifdef __ANDROID__
     //On Android we use SDL_RWops which reads from the APK
-    SDL_RWops* ops = SDL_RWFromFile(filename.encode().c_str(), "rb");
+    SDL_RWops* ops = SDL_RWFromFile(final_name.c_str(), "rb");
     if(ops) {
         //If we could open the file, return the filename
         SDL_RWclose(ops);
@@ -64,18 +73,18 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
     }
 
 #else
-    if(kfs::path::exists(filename.encode())) { //Absolute path
-        return kfs::path::abs_path(filename.encode());
+    if(kfs::path::exists(final_name)) { //Absolute path
+        return kfs::path::abs_path(final_name);
     }
 
     for(unicode path: resource_path_) {
-        auto full_path = kfs::path::join(path.encode(), filename.encode());
+        auto full_path = kfs::path::join(path.encode(), final_name);
         if(kfs::path::exists(full_path)) {
             return kfs::path::abs_path(full_path);
         }
     }
 #endif
-    throw ResourceMissingError("Unable to find file: " + filename.encode());
+    throw ResourceMissingError("Unable to find file: " + final_name);
 }
 
 

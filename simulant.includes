@@ -190,3 +190,4 @@ deps/libgl/samples/nehe06
 deps/libgl/samples/zclip
 deps/libgl/samples/zclip_triangle
 deps/libgl/samples/zclip_trianglestrip
+simulant/renderers/glad/glad

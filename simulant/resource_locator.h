@@ -27,7 +27,7 @@
 #include "utils/unicode.h"
 
 namespace smlt {
-
+class Window;
 
 class ResourceMissingError : public std::runtime_error {
 public:
@@ -40,7 +40,7 @@ class ResourceLocator :
     public Managed<ResourceLocator> {
 
 public:
-    ResourceLocator();
+    ResourceLocator(Window* window);
 
     std::list<unicode>& resource_path() { return resource_path_; }
 
@@ -50,11 +50,14 @@ public:
     std::vector<std::string> read_file_lines(const unicode& filename);
 
     void add_search_path(const unicode& path);
+
 private:
     unicode find_executable_directory();
     unicode find_working_directory();
 
     std::list<unicode> resource_path_;
+
+    Window* window_;
 };
 
 }

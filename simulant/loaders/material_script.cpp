@@ -26,7 +26,7 @@
 #include "../utils/gl_thread_check.h"
 #include "../renderers/renderer.h"
 
-#ifndef SIMULANT_GL_VERSION_1X
+#ifndef _arch_dreamcast
 #include "../renderers/gl2x/gpu_program.h"
 #endif
 
@@ -248,7 +248,6 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             } else {
                 pass->set_shade_model(SHADE_MODEL_SMOOTH);
             }
-#ifdef SIMULANT_GL_VERSION_1X
         } else if(arg_1 == "TEXTURING") {
             if(arg_2 == "ON") {
                 pass->set_texturing_enabled(true);
@@ -261,7 +260,6 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             } else {
                 pass->set_lighting_enabled(false);
             }
-#endif
         } else {
             throw SyntaxError(_u("Invalid argument passed to SET(FLAG): {0}").format(arg_1));
         }

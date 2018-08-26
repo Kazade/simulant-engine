@@ -100,6 +100,10 @@ public:
 
     bool supports_gpu_programs() const override { return true; }
 
+    std::string name() const override {
+        return "gl2x";
+    }
+
 private:
     GPUProgramManager program_manager_;
 

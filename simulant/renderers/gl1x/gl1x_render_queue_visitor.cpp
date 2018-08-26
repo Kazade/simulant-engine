@@ -3,7 +3,7 @@
     #include "../../../deps/libgl/include/gl.h"
     #include "../../../deps/libgl/include/glext.h"
 #else
-    #include "./glad/glad/glad.h"
+    #include "../glad/glad/glad.h"
 #endif
 
 #include "gl1x_render_queue_visitor.h"
@@ -106,7 +106,7 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         auto current_tex = current_group_->texture_id[i];
         if(!last_group || last_group->texture_id[i] != current_tex) {
-            GLCheck(glActiveTextureARB, GL_TEXTURE0_ARB + i);
+            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
             if(current_tex) {
                 GLCheck(glEnable, GL_TEXTURE_2D);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
@@ -343,7 +343,7 @@ void GL1RenderQueueVisitor::disable_normal_arrays(bool force) {
 void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
     if(!force && textures_enabled_[which]) return;
 
-    GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + which);
+    GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
     GLCheck(glEnableClientState, GL_TEXTURE_COORD_ARRAY);
     textures_enabled_[which] = true;
 }
@@ -351,7 +351,7 @@ void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
 void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
     if(!force && !textures_enabled_[which]) return;
 
-    GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + which);
+    GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
     GLCheck(glDisableClientState, GL_TEXTURE_COORD_ARRAY);
     textures_enabled_[which] = false;
 }
@@ -463,7 +463,7 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         (enabled) ? enable_texcoord_array(i) : disable_texcoord_array(i);
 
         if(enabled) {
-            GLCheck(glClientActiveTextureARB, GL_TEXTURE0_ARB + i);
+            GLCheck(glClientActiveTexture, GL_TEXTURE0 + i);
             GLCheck(
                 glTexCoordPointer,
                 (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,

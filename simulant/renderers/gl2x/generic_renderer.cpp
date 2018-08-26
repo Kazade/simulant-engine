@@ -17,8 +17,6 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef SIMULANT_GL_VERSION_2X
-
 #include "generic_renderer.h"
 
 #include "../../nodes/actor.h"
@@ -29,7 +27,7 @@
 #include "../../types.h"
 #include "gpu_program.h"
 
-#include "./glad/glad/glad.h"
+#include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 
 namespace smlt {
@@ -671,5 +669,3 @@ void GenericRenderer::init_context() {
 
 
 }
-
-#endif //SIMULANT_GL_VERSION_2X

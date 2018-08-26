@@ -4,21 +4,16 @@
 #include "../utils/gl_error.h"
 #include "../utils/gl_thread_check.h"
 
-#if defined(SIMULANT_GL_VERSION_1X)
-    #ifdef _arch_dreamcast
-        #include "../../../deps/libgl/include/gl.h"
-        #include "../../../deps/libgl/include/glext.h"
-    #else
-        #include "gl1x/glad/glad/glad.h"
-    #endif
-#elif defined(SIMULANT_GL_VERSION_2X)
-    #ifdef __ANDROID__
-        #include <GLES2/gl2.h>
-        #include <GLES2/gl2ext.h>
-    #else
-        #include "gl2x/glad/glad/glad.h"
-    #endif
+
+/* This file should only contain things shared between GL1 + GL2 so include
+ * the gl1 headers here */
+#ifdef _arch_dreamcast
+    #include "../../../deps/libgl/include/gl.h"
+    #include "../../../deps/libgl/include/glext.h"
+#else
+    #include "./glad/glad/glad.h"
 #endif
+
 
 namespace smlt {
 
@@ -54,17 +49,6 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
         GLCheck(glDeleteTextures, 1, &gl_tex);
     }
 }
-
-#ifdef _arch_dreamcast
-
-/*
- * GL_RED technically isn't a GL1.x format, however, it works fine on modern implementations
- * (as it's a valid format in GL 2+) this define is here until I make GL_RED work on the
- * Dreamcast libGL
- */
-
-#define GL_RED 0x1903
-#endif
 
 uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
     switch(format) {
@@ -148,8 +132,6 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
 
         if(format > 0 && type > 0) {
             if(texture->is_compressed()) {
-
-#if defined(SIMULANT_GL_VERSION_2X)
                 GLCheck(glCompressedTexImage2D,
                     GL_TEXTURE_2D,
                     0,
@@ -158,16 +140,6 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                     texture->data().size(),
                     &texture->data()[0]
                 );
-#else
-                GLCheck(glCompressedTexImage2DARB,
-                    GL_TEXTURE_2D,
-                    0,
-                    format,
-                    texture->width(), texture->height(), 0,
-                    texture->data().size(),
-                    &texture->data()[0]
-                );
-#endif
             } else {
                 GLCheck(glTexImage2D,
                     GL_TEXTURE_2D,
@@ -188,11 +160,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             }
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
-#ifdef _arch_dreamcast
-                GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
-#else
                 GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
-#endif
                 texture->_set_has_mipmaps(true);
             }
 
@@ -233,11 +201,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
         auto convert_wrap_mode = [](TextureWrap wrap) -> GLenum {
             switch(wrap) {
                 case TEXTURE_WRAP_CLAMP_TO_EDGE:
-#ifdef SIMULANT_GL_VERSION_2X
                     return GL_CLAMP_TO_EDGE;
-#else
-                    return GL_CLAMP;
-#endif
                 break;
                 default:
                     // FIXME: Implement other modes

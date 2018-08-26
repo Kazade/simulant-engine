@@ -38,6 +38,9 @@ public:
 
     void init_context();
 
+    std::string name() const override {
+        return "gl1x";
+    }
 private:
     std::unique_ptr<HardwareBufferManager> buffer_manager_;
 

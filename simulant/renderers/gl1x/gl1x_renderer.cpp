@@ -17,13 +17,11 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef SIMULANT_GL_VERSION_1X
-
 #include "gl1x_renderer.h"
 #ifdef _arch_dreamcast
     #include "../../../deps/libgl/include/gl.h"
 #else
-    #include "./glad/glad/glad.h"
+    #include "../glad/glad/glad.h"
 #endif
 
 #include "../../utils/gl_error.h"
@@ -74,7 +72,5 @@ smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
 }
 
 }
-
-#endif // SIMULANT_GL_VERSION_1X
 
 

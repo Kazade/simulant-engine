@@ -21,20 +21,10 @@
 #include "../deps/kazlog/kazlog.h"
 
 #ifdef _arch_dreamcast
-#include "../../../deps/libgl/include/gl.h"
+    #include "../../../deps/libgl/include/gl.h"
+    #include "../../../deps/libgl/include/glext.h"
 #else
-
-#ifdef SIMULANT_GL_VERSION_2X
-    #ifndef __ANDROID__
-        #include "../renderers/gl2x/glad/glad/glad.h"
-    #else
-        #include <GLES2/gl2.h>
-        #include <GLES2/gl2ext.h>
-    #endif
-#else
-    #include "../renderers/gl1x/glad/glad/glad.h"
-#endif
-
+    #include "../renderers/glad/glad/glad.h"
 #endif
 
 namespace GLChecker {
@@ -63,11 +53,9 @@ void check_and_log_error(const std::string &function_name) {
         case GL_INVALID_OPERATION:
             error_string = "GL_INVALID_OPERATION";
             break;
-#ifndef _arch_dreamcast
         case GL_INVALID_FRAMEBUFFER_OPERATION:
             error_string = "GL_INVALID_FRAMEBUFFER_OPERATION";
             break;
-#endif
         case GL_OUT_OF_MEMORY:
             error_string = "GL_OUT_OF_MEMORY";
             break;
