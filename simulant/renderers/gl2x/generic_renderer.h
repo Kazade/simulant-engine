@@ -51,6 +51,7 @@ public:
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
     void change_material_pass(const MaterialPass* prev, const MaterialPass* next);
     void change_light(const Light* prev, const Light* next);
+    void apply_lights(const LightPtr* lights, const uint8_t count);
 
 private:
     GenericRenderer* renderer_;

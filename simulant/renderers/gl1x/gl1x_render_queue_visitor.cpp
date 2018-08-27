@@ -250,11 +250,57 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 }
 
+void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
+    if(!count) {
+        return;
+    }
+
+    Light* current = nullptr;
+
+    Mat4 identity = camera_->view_matrix();
+
+    GLCheck(glMatrixMode, GL_MODELVIEW);
+    GLCheck(glPushMatrix);
+    GLCheck(glLoadMatrixf, (const float*) &identity);
+
+    /* Disable all the other lights */
+    for(uint8_t i = count; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+        GLCheck(glDisable, GL_LIGHT0 + i);
+    }
+
+    for(uint8_t i = 0; i < count; ++i) {
+        current = lights[i];
+
+        GLCheck(glEnable, GL_LIGHT0 + i);
+        GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &current->ambient().r);
+        GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &current->diffuse().r);
+        GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &current->specular().r);
+        GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, current->constant_attenuation());
+        GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION, current->linear_attenuation());
+        GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, current->quadratic_attenuation());
+
+        Vec4 position(current->absolute_position(), 1.0);
+        if(current->type() == LIGHT_TYPE_DIRECTIONAL) {
+            position.w = 0.0f;
+        }
+
+        GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &position.x);
+    }
+
+    GLCheck(glPopMatrix);
+}
+
 void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
     if(!next) {
         return;
     }
 
+    /* Disable all but the first light */
+    for(uint8_t i = 1; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+        GLCheck(glDisable, GL_LIGHT0 + i);
+    }
+
+    GLCheck(glEnable, GL_LIGHT0);
     GLCheck(glLightfv, GL_LIGHT0, GL_AMBIENT, &next->ambient().r);
     GLCheck(glLightfv, GL_LIGHT0, GL_DIFFUSE, &next->diffuse().r);
     GLCheck(glLightfv, GL_LIGHT0, GL_SPECULAR, &next->specular().r);

@@ -19,7 +19,7 @@ public:
             1000.0
         );
 
-        stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
+        stage_->set_ambient_light(smlt::Colour(1.0, 1.0, 1.0, 1.0));
 
         actor_ = stage_->new_actor_with_mesh(stage_->assets->new_mesh_as_cube(2.0));
         actor_->move_to(0.0, 0.0, -5.0);
