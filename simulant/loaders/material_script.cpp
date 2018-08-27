@@ -178,6 +178,22 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             pass->uniforms->register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
         } else if(arg_1 == "LIGHT_QUADRATIC_ATTENUATION") {
             pass->uniforms->register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
+        } else if(arg_1 == "LIGHTS_POSITION") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHTS_POSITION, variable_name);
+        } else if(arg_1 == "LIGHTS_AMBIENT") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHTS_AMBIENT, variable_name);
+        } else if(arg_1 == "LIGHTS_DIFFUSE") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHTS_DIFFUSE, variable_name);
+        } else if(arg_1 == "LIGHTS_SPECULAR") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHTS_SPECULAR, variable_name);
+        } else if(arg_1 == "LIGHTS_CONSTANT_ATTENUATION") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHTS_CONSTANT_ATTENUATION, variable_name);
+        } else if(arg_1 == "LIGHTS_LINEAR_ATTENUATION") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHTS_LINEAR_ATTENUATION, variable_name);
+        } else if(arg_1 == "LIGHTS_QUADRATIC_ATTENUATION") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHTS_QUADRATIC_ATTENUATION, variable_name);
+        } else if(arg_1 == "LIGHT_COUNT") {
+            pass->uniforms->register_auto(SP_AUTO_LIGHT_COUNT, variable_name);
         } else if(arg_1 == "MATERIAL_SHININESS") {
             pass->uniforms->register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
         } else if(arg_1 == "MATERIAL_AMBIENT") {

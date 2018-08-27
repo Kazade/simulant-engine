@@ -154,6 +154,12 @@ public:
     virtual void change_render_group(const RenderGroup* prev, const RenderGroup* next) = 0;
 
     virtual void change_material_pass(const MaterialPass* prev, const MaterialPass* next) = 0;
+
+    /* This is used when not using once-per-light iterations. All lights are sent */
+    virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
+
+    /* This is used when iterating once-per-light. This is a multi-pass render and
+     * a different light each time */
     virtual void change_light(const Light* prev, const Light* next) = 0;
 
     virtual void visit(Renderable*, MaterialPass*, Iteration) = 0;

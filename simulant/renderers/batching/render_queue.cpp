@@ -302,13 +302,12 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
                 uint32_t iterations = 1;
 
-                std::vector<LightPtr> lights;
+                // Get any lights which are visible and affecting the renderable this frame
+                std::vector<LightPtr> lights = renderable->lights_affecting_this_frame();
 
                 if(pass_iteration_type == ITERATE_N) {
                     iterations = material_pass->max_iterations();
                 } else if(pass_iteration_type == ITERATE_ONCE_PER_LIGHT) {
-                    // Get any lights which are visible and affecting the renderable this frame
-                    lights = renderable->lights_affecting_this_frame();
                     iterations = lights.size();
                 }
 
@@ -323,8 +322,10 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                         next = nullptr;
                     }
 
-                    if(i == 0 || light != next) {
+                    if(pass_iteration_type == ITERATE_ONCE_PER_LIGHT && (i== 0 || light != next)) {
                         visitor->change_light(light, next);
+                    } else if(pass_iteration_type == ITERATE_N || pass_iteration_type == ITERATE_ONCE) {
+                        visitor->apply_lights(&lights[0], (uint8_t) lights.size());
                     }
 
                     light = next;

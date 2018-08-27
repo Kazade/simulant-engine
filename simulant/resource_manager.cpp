@@ -494,7 +494,7 @@ MaterialID ResourceManager::new_material_with_alias_from_file(const std::string 
 }
 
 MaterialID ResourceManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
-    MaterialID m = new_material_from_file(Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING, garbage_collect);
+    MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, garbage_collect);
     assert(m);
 
     material(m)->set_texture_unit_on_all_passes(0, texture_id);

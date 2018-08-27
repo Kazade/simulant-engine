@@ -378,6 +378,11 @@ void GL2RenderQueueVisitor::change_light(const Light *prev, const Light *next) {
     renderer_->set_light_uniforms(pass_, program_, next);
 }
 
+void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
+    /* FIXME: Set uniforms */
+
+}
+
 void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
 
