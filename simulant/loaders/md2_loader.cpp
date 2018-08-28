@@ -283,8 +283,10 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         tex_id = resource_manager->default_texture_id();
     }
 
-    auto material = resource_manager->new_material_from_texture(tex_id);
-    submesh->set_material_id(material);
+    auto material = resource_manager->clone_default_material().fetch();
+    material->first_pass()->set_texture_unit(0, tex_id);
+
+    submesh->set_material_id(material->id());
 
     // =========== TEXTURE COORDS =============
     std::vector<MD2TexCoord> texture_coordinates(header.num_st);

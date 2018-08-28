@@ -18,7 +18,9 @@ public:
             1000.0
         );
 
-        stage_->set_ambient_light(smlt::Colour::WHITE);
+        stage_->new_light_as_directional(smlt::Vec3(1, -1, 0));
+        stage_->new_light_as_directional(smlt::Vec3(-1, 0, 0), smlt::Colour::RED);
+        stage_->set_ambient_light(smlt::Colour(0.3, 0.3, 0.3, 1.0));
 
         // Load an animated MD2 mesh
         smlt::MeshID mesh_id = stage_->assets->new_mesh_from_file("sample_data/ogro.md2");
@@ -32,13 +34,8 @@ public:
         actor3->rotate_global_y_by(smlt::Degrees(180));
         actor3->animation_state->play_animation("idle_2");
 
-        auto scaling_matrix = smlt::Mat4::as_scaling(10.0);
-
-        auto tank = stage_->assets->new_mesh_from_file("sample_data/tank.obj").fetch();
-        tank->transform_vertices(scaling_matrix);
-
-        auto tank_actor = stage_->new_actor_with_mesh(tank->id());
-        tank_actor->move_to(40, 0, -110);
+        // Add a fly controller to the camera for user input
+        camera_->new_behaviour<behaviours::Fly>(window);
     }
 
 private:

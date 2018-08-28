@@ -259,7 +259,10 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
     GLCheck(glMatrixMode, GL_MODELVIEW);
     GLCheck(glPushMatrix);
-    GLCheck(glLoadIdentity);
+
+    const Mat4& view = camera_->view_matrix();
+
+    GLCheck(glLoadMatrixf, view.data());
 
     /* Disable all the other lights */
     for(uint8_t i = count; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
@@ -313,7 +316,11 @@ void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
 
     GLCheck(glMatrixMode, GL_MODELVIEW);
     GLCheck(glPushMatrix);
-    GLCheck(glLoadIdentity);
+
+    const Mat4& view = camera_->view_matrix();
+
+    GLCheck(glLoadMatrixf, view.data());
+
     GLCheck(glLightfv, GL_LIGHT0, GL_POSITION, &position.x);
     GLCheck(glPopMatrix);
 }
