@@ -248,6 +248,28 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glShadeModel, GL_FLAT);
         }
     }
+
+    if(!prev || prev->colour_material() != next->colour_material()) {
+        if(next->colour_material() == COLOUR_MATERIAL_NONE) {
+            GLCheck(glDisable, GL_COLOR_MATERIAL);
+        } else {
+            switch(next->colour_material()) {
+            case COLOUR_MATERIAL_AMBIENT:
+                GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
+            break;
+            case COLOUR_MATERIAL_DIFFUSE:
+                GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
+            break;
+            case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
+                GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+            break;
+            default:
+                break;
+            }
+
+            GLCheck(glEnable, GL_COLOR_MATERIAL);
+        }
+    }
 }
 
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {

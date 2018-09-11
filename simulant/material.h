@@ -222,6 +222,11 @@ public:
     void set_shade_model(ShadeModel model) { shade_model_ = model; }
     ShadeModel shade_model() const { return shade_model_; }
 
+    void set_colour_material(ColourMaterial material) {
+        colour_material_ = material;
+    }
+    ColourMaterial colour_material() const { return colour_material_; }
+
     void set_prevent_textures(bool value) { allow_textures_ = !value; }
 
     Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };    
@@ -272,6 +277,7 @@ private:
     PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
     CullMode cull_mode_ = CULL_MODE_BACK_FACE;
     ShadeModel shade_model_ = SHADE_MODEL_SMOOTH;
+    ColourMaterial colour_material_ = COLOUR_MATERIAL_NONE;
 
     friend class Material;
     MaterialPass::ptr new_clone(Material *owner) const;

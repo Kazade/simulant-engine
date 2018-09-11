@@ -264,6 +264,16 @@ void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<un
             } else {
                 pass->set_shade_model(SHADE_MODEL_SMOOTH);
             }
+        } else if(arg_1 == "COLOR_MATERIAL") {
+            if(arg_2 == "OFF") {
+                pass->set_colour_material(COLOUR_MATERIAL_NONE);
+            } else if(arg_2 == "AMBIENT") {
+                pass->set_colour_material(COLOUR_MATERIAL_AMBIENT);
+            } else if(arg_2 == "DIFFUSE") {
+                pass->set_colour_material(COLOUR_MATERIAL_DIFFUSE);
+            } else if(arg_2 == "AMBIENT_AND_DIFFUSE") {
+                pass->set_colour_material(COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE);
+            }
         } else if(arg_1 == "TEXTURING") {
             if(arg_2 == "ON") {
                 pass->set_texturing_enabled(true);
