@@ -466,6 +466,57 @@ public:
         assert_equal(v11->flags, VERTEX_CMD_EOL);
         assert_equal(v12->flags, VERTEX_CMD_EOL);
     }
+
+    void test_multiple_triangles() {
+        ClipVertex vertices[10]; //< Include header
+
+        *((uint32_t*)&vertices[0]) = 0xDEADBEEF; // Fake header
+
+        _init_vector(vertices[1], -0.5, 0.0, -2);
+        _init_vector(vertices[2], -0.5, 0.0, -1);
+        _init_vector(vertices[3], 0.5, 0.0,  -1);
+        _init_vector(vertices[4], 0.5, 0.0, 1);
+        _init_vector(vertices[5], -0.5, 0.0, 1);
+        _init_vector(vertices[6], 0.5, 0.0, 2);
+        _init_vector(vertices[7], -0.5, 0.0, -2);
+        _init_vector(vertices[8], -0.5, 0.0, -1);
+        _init_vector(vertices[9], 0.5, 0.0,  -1);
+
+        vertices[1].flags = vertices[2].flags = VERTEX_CMD;
+        vertices[3].flags = VERTEX_CMD_EOL;
+
+        vertices[4].flags = vertices[5].flags = VERTEX_CMD;
+        vertices[6].flags = VERTEX_CMD_EOL;
+
+        vertices[7].flags = vertices[8].flags = VERTEX_CMD;
+        vertices[9].flags = VERTEX_CMD_EOL;
+
+        aligned_vector_push_back(&input, vertices, 10);
+
+        clipTriangleStrip2(&input, 0, 0);
+
+        ClipVertex* v1 = (ClipVertex*) aligned_vector_at(&input, 1);
+        ClipVertex* v2 = (ClipVertex*) aligned_vector_at(&input, 2);
+        ClipVertex* v3 = (ClipVertex*) aligned_vector_at(&input, 3);
+        ClipVertex* v4 = (ClipVertex*) aligned_vector_at(&input, 4);
+        ClipVertex* v5 = (ClipVertex*) aligned_vector_at(&input, 5);
+        ClipVertex* v6 = (ClipVertex*) aligned_vector_at(&input, 6);
+        ClipVertex* v7 = (ClipVertex*) aligned_vector_at(&input, 7);
+        ClipVertex* v8 = (ClipVertex*) aligned_vector_at(&input, 8);
+        ClipVertex* v9 = (ClipVertex*) aligned_vector_at(&input, 9);
+
+        assert_equal(v1->flags, VERTEX_CMD);
+        assert_equal(v2->flags, VERTEX_CMD);
+        assert_equal(v3->flags, VERTEX_CMD_EOL);
+
+        assert_equal(v4->flags, VERTEX_CMD_EOL);
+        assert_equal(v5->flags, VERTEX_CMD_EOL);
+        assert_equal(v6->flags, VERTEX_CMD_EOL);
+
+        assert_equal(v7->flags, VERTEX_CMD);
+        assert_equal(v8->flags, VERTEX_CMD);
+        assert_equal(v9->flags, VERTEX_CMD_EOL);
+    }
 };
 
 }
