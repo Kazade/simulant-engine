@@ -16,6 +16,7 @@
 #include "button.h"
 #include "label.h"
 #include "progress_bar.h"
+#include "image.h"
 #include "../../stage.h"
 #include "../camera.h"
 
@@ -69,6 +70,15 @@ Label* UIManager::new_widget_as_label(const unicode &text, float width, float he
     stage_->add_child(label);
 
     return label;
+}
+
+Image* UIManager::new_widget_as_image(const TextureID texture_id) {
+    auto image = manager_->make_as<Image>(this, &config_).fetch_as<Image>();
+    image->set_texture_id(texture_id);
+
+    stage_->add_child(image);
+
+    return image;
 }
 
 ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
