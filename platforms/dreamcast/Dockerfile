@@ -5,7 +5,7 @@ FROM fedora:21
 MAINTAINER kazade <kazade@gmail.com>
 
 RUN yum clean all && yum -y install yum-plugin-ovl
-RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel python-pip && yum clean all && pip install -U pip
+RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone git://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
@@ -34,7 +34,6 @@ RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make install clean
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && mkdir makeip && cd makeip && curl http://www.boob.co.uk/files/makeip.tar.gz > makeip.tar.gz && tar -xf makeip.tar.gz && rm makeip.tar.gz && gcc makeip.c -o makeip
-RUN . /etc/bash.bashrc; yum -y install genisoimage unzip
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://github.com/Kazade/img4dc.git && cd img4dc && mkdir build && cd build && cmake .. && make BUMP=9
 
 # Add GLdc as a kos port
@@ -73,6 +72,5 @@ include ${KOS_PORTS}/scripts/kos-ports.mk\n\
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make install clean
 
 # Now install dcload-ip
-RUN . /etc/bash.bashrc; yum -y install binutils-devel
 RUN . /etc/bash.bashrc; git clone https://github.com/thentenaar/dc-load-ip.git /opt/toolchains/dc/dc-load-ip
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
