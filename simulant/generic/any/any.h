@@ -202,7 +202,7 @@ public:
 
   template <
     class ValueType,
-    class=enable_if_t<not ::std::is_same<any, decay_t<ValueType>>::value>
+    class=enable_if_t<! ::std::is_same<any, decay_t<ValueType>>::value>
   > any (ValueType&& value) :
     any { ::std::forward<ValueType>(value), impl::is_small<ValueType> { } }
   { }
@@ -221,7 +221,7 @@ public:
 
   template <
     class ValueType,
-    class=enable_if_t<not ::std::is_same<any, decay_t<ValueType>>::value>
+    class=enable_if_t<! ::std::is_same<any, decay_t<ValueType>>::value>
   > any& operator = (ValueType&& value) {
     any {
       ::std::forward<ValueType>(value),
@@ -253,14 +253,14 @@ public:
 
 template <class ValueType>
 ValueType const* any_cast (any const* operand) noexcept {
-  return operand and operand->type() == typeid(ValueType)
+  return operand && operand->type() == typeid(ValueType)
     ? operand->cast<ValueType>(impl::is_small<ValueType> { })
     : nullptr;
 }
 
 template <class ValueType>
 ValueType* any_cast (any* operand) noexcept {
-  return operand and operand->type() == typeid(ValueType)
+  return operand && operand->type() == typeid(ValueType)
     ? operand->cast<ValueType>(impl::is_small<ValueType> { })
     : nullptr;
 }
@@ -274,7 +274,7 @@ template <
 > ValueType any_cast (any const& operand) {
   using type = remove_reference_t<ValueType>;
   auto pointer = any_cast<add_const_t<type>>(::std::addressof(operand));
-  if (not pointer) { throw bad_any_cast { }; }
+  if (!pointer) { throw bad_any_cast { }; }
   return *pointer;
 }
 
@@ -287,7 +287,7 @@ template <
 > ValueType any_cast (any&& operand) {
   using type = remove_reference_t<ValueType>;
   auto pointer = any_cast<type>(::std::addressof(operand));
-  if (not pointer) { throw bad_any_cast { }; }
+  if (!pointer) { throw bad_any_cast { }; }
   return *pointer;
 }
 
@@ -300,7 +300,7 @@ template <
 > ValueType any_cast (any& operand) {
   using type = remove_reference_t<ValueType>;
   auto pointer = any_cast<type>(::std::addressof(operand));
-  if (not pointer) { throw bad_any_cast { }; }
+  if (!pointer) { throw bad_any_cast { }; }
   return *pointer;
 }
 
