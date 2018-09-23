@@ -27,6 +27,7 @@
 	#define APIENTRY
 #elif defined(_arch_dreamcast)
     #include <GL/gl.h>
+    #include <GL/glext.h>
 #elif defined(__ANDROID__)
     #include <GLES2/gl2.h>
     #include <GLES2/gl2ext.h>
@@ -2007,7 +2008,7 @@ int query_DXT_capability( void )
 				CFRelease( extensionName );
 				CFRelease( bundle );
             #elif defined(_arch_dreamcast)
-                ext_addr = &glCompressedTexImage2D;
+                ext_addr = &glCompressedTexImage2DARB;
             #elif defined(__ANDROID__)
                 ext_addr = &glCompressedTexImage2D;
 			#else
