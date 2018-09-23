@@ -68,6 +68,23 @@ This will build the DC port, and compile the samples to .cdi CD images. You can 
 lxdream -b dbuild/samples/light_sample.cdi
 ```
 
+# Cross-compiling for Dreamcast without Docker
+
+To compile for the Dreamcast you need to make the following changes to the C++ flags in your
+compiled KallistiOS SDK:
+
+ - Enable RTTI
+ - Enable Exceptions
+ - Enable Operator names
+ 
+e.g.
+
+```
+sed -i 's/-fno-rtti//' /opt/toolchains/dc/kos/environ_base.sh
+sed -i 's/-fno-exceptions//' /opt/toolchains/dc/kos/environ_base.sh
+sed -i 's/-fno-operator-names//' /opt/toolchains/dc/kos/environ_base.sh
+```
+
 # Cross-compiling for Windows (Not yet compiling)
 
 To cross compile for Windows, you'll find need to install some additional dependencies:
