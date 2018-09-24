@@ -5,6 +5,7 @@
 #include "../nodes/actor.h"
 #include "../nodes/camera.h"
 #include "../window.h"
+#include "../platform.h"
 #include "../nodes/ui/ui_manager.h"
 #include "../nodes/ui/label.h"
 
@@ -23,7 +24,16 @@ void Splash::load() {
 
     auto texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
     image_ = stage_->ui->new_widget_as_image(texture);
-    image_->move_to(window->coordinate_from_normalized(0.3, 0.5));
+    image_->move_to(window->coordinate_from_normalized(0.25, 0.5));
+
+    /* Scale for window resolution */
+    float scale = 0.5 * (window->height() / 720.0f);
+
+    image_->set_width(image_->width() * scale);
+    image_->set_height(image_->height() * scale);
+
+    text_->set_width(text_->width() * scale);
+    text_->set_height(text_->height() * scale);
 
     //Create an orthographic camera
     camera_ = stage_->new_camera();

@@ -56,6 +56,7 @@
 #include "nodes/camera.h"
 #include "hardware_buffer.h"
 #include "virtual_gamepad.h"
+#include "platform.h"
 
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"

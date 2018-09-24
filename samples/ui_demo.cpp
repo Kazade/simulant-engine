@@ -64,6 +64,9 @@ public:
 int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "UI Demo";
+    config.fullscreen = false;
+    config.width = 1280;
+    config.height = 720;
 
     App app(config);
     return app.run();

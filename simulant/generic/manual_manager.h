@@ -7,8 +7,8 @@
 #include <cmath>
 #include <cstring>
 
-#include "../../deps/kazsignal/kazsignal/kazsignal.h"
-#include "../../deps/kazlog/kazlog/kazlog.h"
+#include "../deps/kazsignal/kazsignal.h"
+#include "../deps/kazlog/kazlog.h"
 
 namespace smlt {
 namespace generic {
