@@ -20,11 +20,11 @@ void Splash::load() {
 
     auto text_texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-text.png");
     text_ = stage_->ui->new_widget_as_image(text_texture);
-    text_->move_to(window->coordinate_from_normalized(0.53, 0.5));
+    text_->move_to(window->coordinate_from_normalized(0.6, 0.5));
 
     auto texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
     image_ = stage_->ui->new_widget_as_image(texture);
-    image_->move_to(window->coordinate_from_normalized(0.25, 0.5));
+    image_->move_to(window->coordinate_from_normalized(0.3, 0.5));
 
     /* Scale for window resolution */
     float scale = 0.5 * (window->height() / 720.0f);
