@@ -33,3 +33,23 @@ There are a number of different methods of controlling widget sizes. These are:
 
 It's important to remember that padding doesn't affect the total widget size, and the border size extends outside the boundaries of the widget.
 
+# Widget Types
+
+## Image
+
+An Image widget allows you display an image (e.g. a HUD icon) on the screen. Under the hood these
+are implemented as widgets with a background image and an enforced `RESIZE_MODE_FIXED` resize mode.
+
+Sample usage:
+
+```
+    auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
+    auto icon = stage_->ui->new_widget_as_image(simulant_logo);
+```
+
+You can set the source area of the Image widget (the region of the texture that is displayed) using the `set_source_rect` method:
+
+ - `Image::set_source_rect(Vec2 bottom_left, Vec2 size)`
+
+
+
