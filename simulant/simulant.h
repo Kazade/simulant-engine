@@ -38,6 +38,7 @@
 #include "nodes/ui/button.h"
 #include "nodes/ui/label.h"
 #include "nodes/ui/progress_bar.h"
+#include "nodes/ui/image.h"
 
 #include "sound.h"
 #include "random.h"

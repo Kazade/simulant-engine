@@ -587,6 +587,8 @@ simulant/nodes/ui/button.cpp
 simulant/nodes/ui/button.cpp
 simulant/nodes/ui/button.h
 simulant/nodes/ui/button.h
+simulant/nodes/ui/image.cpp
+simulant/nodes/ui/image.h
 simulant/nodes/ui/label.cpp
 simulant/nodes/ui/label.cpp
 simulant/nodes/ui/label.h

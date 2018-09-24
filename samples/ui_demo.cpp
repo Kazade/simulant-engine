@@ -35,6 +35,10 @@ public:
         button->signal_clicked().connect([&]() {
             title->set_text("Clicked!");
         });
+
+        auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
+        auto icon = stage_->ui->new_widget_as_image(simulant_logo);
+        icon->move_to(window->coordinate_from_normalized(0.5, 0.58));
     }
 
 private:

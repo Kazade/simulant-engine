@@ -116,6 +116,38 @@ const AABB &Widget::aabb() const {
     return actor_->aabb();
 }
 
+void Widget::set_background_image(TextureID texture) {
+    background_image_ = texture;
+
+    // Triggers a rebuild
+    set_background_image_source_rect(
+        Vec2(),
+        texture.fetch()->dimensions()
+    );
+}
+
+void Widget::set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+    background_image_rect_.bottom_left = bottom_left;
+    background_image_rect_.size = size;
+    rebuild();
+}
+
+void Widget::set_foreground_image(TextureID texture) {
+    foreground_image_ = texture;
+
+    // Triggers a rebuild
+    set_foreground_image_source_rect(
+        Vec2(),
+        texture.fetch()->dimensions()
+    );
+}
+
+void Widget::set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+    foreground_image_rect_.bottom_left = bottom_left;
+    foreground_image_rect_.size = size;
+    rebuild();
+}
+
 void Widget::set_background_colour(const Colour& colour) {
     background_colour_ = colour;
     rebuild();
@@ -416,11 +448,73 @@ void Widget::resize_or_generate_border(MeshPtr mesh, float width, float height, 
 void Widget::resize_or_generate_background(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
     generate_or_resize_rectangle(mesh, material_->id(), "background", width, height, xoffset, yoffset, background_depth_bias_);
     mesh->submesh("background")->set_diffuse(background_colour_);
+
+    if(has_background_image()) {
+        auto submesh = mesh->submesh("background");
+        submesh->set_texture_on_material(0, background_image_);
+
+        auto& vertices = mesh->vertex_data;
+        auto& indices = submesh->index_data;
+        auto dim = background_image_.fetch()->dimensions();
+
+        Vec2 min = Vec2(
+            background_image_rect_.bottom_left.x / dim.x,
+            background_image_rect_.bottom_left.y / dim.y
+        );
+
+        Vec2 max = Vec2(
+            (background_image_rect_.bottom_left.x + background_image_rect_.size.x) / dim.x,
+            (background_image_rect_.bottom_left.y + background_image_rect_.size.y) / dim.y
+        );
+
+        auto first_idx = indices->at(0);
+
+        vertices->move_to(first_idx);
+        vertices->tex_coord0(min.x, min.y);
+        vertices->move_to(first_idx + 1);
+        vertices->tex_coord0(max.x, min.y);
+        vertices->move_to(first_idx + 2);
+        vertices->tex_coord0(max.x, max.y);
+        vertices->move_to(first_idx + 3);
+        vertices->tex_coord0(min.x, max.y);
+        vertices->done();
+    }
 }
 
 void Widget::resize_or_generate_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
     generate_or_resize_rectangle(mesh, material_->id(), "foreground", width, height, xoffset, yoffset, foreground_depth_bias_);
     mesh->submesh("foreground")->set_diffuse(foreground_colour_);
+
+    if(has_foreground_image()) {
+        auto submesh = mesh->submesh("foreground");
+        submesh->set_texture_on_material(0, foreground_image_);
+
+        auto& vertices = mesh->vertex_data;
+        auto& indices = submesh->index_data;
+        auto dim = foreground_image_.fetch()->dimensions();
+
+        Vec2 min = Vec2(
+            foreground_image_rect_.bottom_left.x / dim.x,
+            foreground_image_rect_.bottom_left.y / dim.y
+        );
+
+        Vec2 max = Vec2(
+            (foreground_image_rect_.bottom_left.x + foreground_image_rect_.size.x) / dim.x,
+            (foreground_image_rect_.bottom_left.y + foreground_image_rect_.size.y) / dim.y
+        );
+
+        auto first_idx = indices->at(0);
+
+        vertices->move_to(first_idx);
+        vertices->tex_coord0(min.x, min.y);
+        vertices->move_to(first_idx + 1);
+        vertices->tex_coord0(max.x, min.y);
+        vertices->move_to(first_idx + 2);
+        vertices->tex_coord0(max.x, max.y);
+        vertices->move_to(first_idx + 3);
+        vertices->tex_coord0(min.x, max.y);
+        vertices->done();
+    }
 }
 
 bool Widget::is_pressed_by_finger(uint32_t finger_id) {

@@ -51,4 +51,43 @@ private:
     StagePtr stage_;
 };
 
+
+class ImageTests : public SimulantTestCase {
+public:
+    void set_up() {
+        SimulantTestCase::set_up();
+        stage_ = window->new_stage();
+    }
+
+    void tear_down() {
+        window->delete_stage(stage_->id());
+        SimulantTestCase::tear_down();
+    }
+
+    void test_image_creation() {
+        auto texture = stage_->assets->new_texture_from_file("../assets/textures/simulant-icon.png").fetch();
+        auto image = stage_->ui->new_widget_as_image(texture->id());
+
+        assert_equal(image->width(), texture->width());
+        assert_equal(image->height(), texture->height());
+        assert_true(image->has_background_image());
+        assert_false(image->has_foreground_image());
+        assert_equal(image->resize_mode(), smlt::ui::RESIZE_MODE_FIXED);
+    }
+
+    void test_set_source_rect() {
+        auto texture = stage_->assets->new_texture_from_file("../assets/textures/simulant-icon.png").fetch();
+        auto image = stage_->ui->new_widget_as_image(texture->id());
+
+        image->set_source_rect(smlt::Vec2(0, 0), smlt::Vec2(128, 128));
+
+        assert_equal(image->width(), 128);
+        assert_equal(image->height(), 128);
+    }
+
+private:
+    StagePtr stage_;
+
+};
+
 }
