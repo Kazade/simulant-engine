@@ -13,6 +13,7 @@ namespace ui {
 class Button;
 class Label;
 class ProgressBar;
+class Image;
 
 typedef generic::TemplatedManager<Widget, WidgetID> WidgetManager;
 
@@ -42,6 +43,7 @@ public:
     Button* new_widget_as_button(const unicode& text, float width=.0f, float height=.0f);
     Label* new_widget_as_label(const unicode& text, float width=.0f, float height=.0f);
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
+    Image* new_widget_as_image(const TextureID& texture_id);
 
     void delete_widget(WidgetID widget);
 

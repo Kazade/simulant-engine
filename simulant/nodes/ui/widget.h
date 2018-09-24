@@ -141,13 +141,27 @@ public:
     void set_overflow(OverflowType type);
     void set_padding(float x);
     void set_padding(float left, float right, float bottom, float top);
-    void set_resize_mode(ResizeMode resize_mode);
+    virtual void set_resize_mode(ResizeMode resize_mode);
 
-    void set_background_image(TextureID texture); // FIXME: Switch to TextureFrame when that's a thing
+    ResizeMode resize_mode() const { return resize_mode_; }
+
+    bool has_background_image() const { return bool(background_image_); }
+    bool has_foreground_image() const { return bool(foreground_image_); }
+
+    /** Set the background image, pass TextureID() to clear */
+    void set_background_image(TextureID texture);
+
+    /** Set the background to a region of its image. Coordinates are in texels */
+    void set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size);
+
     void set_background_colour(const Colour& colour);
-
     void set_foreground_colour(const Colour& colour);
-    void set_foreground_image(TextureID texture);
+
+    /** Set the foreground image, pass TextureID() to clear */
+    void set_foreground_image(TextureID texture);   
+
+    /** Set the foreground to a region of its image. Coordinates are in texels */
+    void set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size);
 
     void set_text_colour(const Colour& colour);
 
@@ -215,6 +229,17 @@ private:
     unicode text_;
     OverflowType overflow_;
     ResizeMode resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+
+    struct ImageRect {
+        Vec2 bottom_left;
+        Vec2 size;
+    };
+
+    TextureID background_image_;
+    std::unique_ptr<ImageRect> background_image_rect_;
+
+    TextureID foreground_image_;
+    std::unique_ptr<ImageRect> foreground_image_rect_;
 
     Colour background_colour_ = Colour::WHITE;
     Colour foreground_colour_ = Colour::NONE; //Transparent

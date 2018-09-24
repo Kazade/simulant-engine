@@ -225,6 +225,7 @@ public:
 
     uint32_t width() const override { return width_; }
     uint32_t height() const override { return height_; }
+    Vec2 dimensions() const { return Vec2(width(), height()); }
 
     /*
      * Returns true if this Texture uses a compressed format

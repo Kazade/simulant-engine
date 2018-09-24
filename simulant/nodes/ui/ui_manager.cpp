@@ -72,7 +72,7 @@ Label* UIManager::new_widget_as_label(const unicode &text, float width, float he
     return label;
 }
 
-Image* UIManager::new_widget_as_image(const TextureID texture_id) {
+Image* UIManager::new_widget_as_image(const TextureID& texture_id) {
     auto image = manager_->make_as<Image>(this, &config_).fetch_as<Image>();
     image->set_texture_id(texture_id);
 

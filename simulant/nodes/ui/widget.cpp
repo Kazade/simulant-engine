@@ -116,6 +116,19 @@ const AABB &Widget::aabb() const {
     return actor_->aabb();
 }
 
+void Widget::set_background_image(TextureID texture) {
+    background_image_ = texture;
+    rebuild();
+}
+
+void Widget::set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+
+}
+
+void Widget::set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+
+}
+
 void Widget::set_background_colour(const Colour& colour) {
     background_colour_ = colour;
     rebuild();
@@ -416,11 +429,21 @@ void Widget::resize_or_generate_border(MeshPtr mesh, float width, float height, 
 void Widget::resize_or_generate_background(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
     generate_or_resize_rectangle(mesh, material_->id(), "background", width, height, xoffset, yoffset, background_depth_bias_);
     mesh->submesh("background")->set_diffuse(background_colour_);
+
+    if(has_background_image()) {
+        auto submesh = mesh->submesh("background");
+        submesh->set_texture_on_material(0, background_image_);
+    }
 }
 
 void Widget::resize_or_generate_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
     generate_or_resize_rectangle(mesh, material_->id(), "foreground", width, height, xoffset, yoffset, foreground_depth_bias_);
     mesh->submesh("foreground")->set_diffuse(foreground_colour_);
+
+    if(has_foreground_image()) {
+        auto submesh = mesh->submesh("foreground");
+        submesh->set_texture_on_material(0, foreground_image_);
+    }
 }
 
 bool Widget::is_pressed_by_finger(uint32_t finger_id) {
