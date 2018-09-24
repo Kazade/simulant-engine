@@ -24,7 +24,7 @@ void Splash::load() {
 
     auto texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
     image_ = stage_->ui->new_widget_as_image(texture);
-    image_->move_to(window->coordinate_from_normalized(0.3, 0.5));
+    image_->move_to(window->coordinate_from_normalized(0.35, 0.5));
 
     /* Scale for window resolution */
     float scale = 0.5 * (window->height() / 720.0f);
@@ -61,6 +61,8 @@ void Splash::unload() {
 }
 
 void Splash::activate() {
+    timer_ = 0.0f;
+
     pipeline_->activate();
 }
 
@@ -71,7 +73,7 @@ void Splash::deactivate() {
 
 void Splash::update(float dt) {
     timer_ += dt;
-    if(timer_ > time_) {
+    if(timer_ >= time_) {
         scenes->activate(target_);
     }
 }

@@ -16,7 +16,7 @@ class Splash:
     public Scene<Splash> {
 
 public:
-    Splash(Window* window, const std::string& target_scene, float time=5.0):
+    Splash(Window* window, const std::string& target_scene, float time=3.0):
         Scene<Splash>(window),
         target_(target_scene),
         time_(time) {
