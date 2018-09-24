@@ -236,10 +236,10 @@ private:
     };
 
     TextureID background_image_;
-    std::unique_ptr<ImageRect> background_image_rect_;
+    ImageRect background_image_rect_;
 
     TextureID foreground_image_;
-    std::unique_ptr<ImageRect> foreground_image_rect_;
+    ImageRect foreground_image_rect_;
 
     Colour background_colour_ = Colour::WHITE;
     Colour foreground_colour_ = Colour::NONE; //Transparent

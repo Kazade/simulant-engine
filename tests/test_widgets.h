@@ -75,6 +75,16 @@ public:
         assert_equal(image->resize_mode(), smlt::ui::RESIZE_MODE_FIXED);
     }
 
+    void test_set_source_rect() {
+        auto texture = stage_->assets->new_texture_from_file("../assets/textures/simulant-icon.png").fetch();
+        auto image = stage_->ui->new_widget_as_image(texture->id());
+
+        image->set_source_rect(smlt::Vec2(0, 0), smlt::Vec2(128, 128));
+
+        assert_equal(image->width(), 128);
+        assert_equal(image->height(), 128);
+    }
+
 private:
     StagePtr stage_;
 
