@@ -29,6 +29,12 @@ void Splash::load() {
     /* Scale for window resolution */
     float scale = 0.5 * (window->height() / 720.0f);
 
+    auto round = [](float x, float f) -> float {
+        return f * ceil(x / f);
+    };
+
+    round(scale, 0.25);
+
     image_->set_width(image_->width() * scale);
     image_->set_height(image_->height() * scale);
 

@@ -108,7 +108,6 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
         if(!last_group || last_group->texture_id[i] != current_tex) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
             if(current_tex) {
-                GLCheck(glEnable, GL_TEXTURE_2D);
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
                 GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
@@ -168,9 +167,15 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     if(!prev || prev->texturing_enabled() != next->texturing_enabled()) {
         if(next->texturing_enabled()) {
-            GLCheck(glEnable, GL_TEXTURE_2D);
+            for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+                GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+                GLCheck(glEnable, GL_TEXTURE_2D);
+            }
         } else {
-            GLCheck(glDisable, GL_TEXTURE_2D);
+            for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+                GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+                GLCheck(glDisable, GL_TEXTURE_2D);
+            }
         }
     }
 
