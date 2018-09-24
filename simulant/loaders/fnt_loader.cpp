@@ -211,6 +211,8 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
 
     font->line_gap_ = common.line_height;
     font->char_data_.resize(chars.size());
+    font->font_size_ = info.font_size;
+
     uint32_t i = 0;;
     for(auto& ch: chars) {
         auto& dst = font->char_data_[i];

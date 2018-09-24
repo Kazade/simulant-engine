@@ -32,7 +32,6 @@
 namespace smlt {
 
 #define HEADING_FONT "simulant/fonts/orbitron/orbitron-regular-48.fnt"
-#define SUBHEADING_FONT "simulant/fonts/orbitron/orbitron-regular-24.fnt"
 #define BODY_FONT "simulant/fonts/orbitron/orbitron-regular-18.fnt"
 
 ResourceManager::ResourceManager(Window* window, ResourceManager *parent):
@@ -84,7 +83,6 @@ bool ResourceManager::init() {
     material(default_material_id_)->pass(0)->set_texture_unit(0, default_texture_id_);
 
     default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
-    default_subheading_font_ = new_font_from_file(SUBHEADING_FONT).fetch();
     default_body_font_ = new_font_from_file(BODY_FONT).fetch();
     return true;
 }
@@ -699,8 +697,6 @@ FontID ResourceManager::default_font_id(DefaultFontStyle style) const {
         switch(style) {
         case DEFAULT_FONT_STYLE_HEADING:
             return default_heading_font_->id();
-        case DEFAULT_FONT_STYLE_SUBHEADING:
-            return default_subheading_font_->id();
         default:
             return default_body_font_->id();
         }

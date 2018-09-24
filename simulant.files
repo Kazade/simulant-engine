@@ -706,6 +706,8 @@ simulant/scenes/scene.cpp
 simulant/scenes/scene.h
 simulant/scenes/scene_manager.cpp
 simulant/scenes/scene_manager.h
+simulant/scenes/splash.cpp
+simulant/scenes/splash.h
 simulant/sdl2_keycodes.h
 simulant/sdl2_window.cpp
 simulant/sdl2_window.h

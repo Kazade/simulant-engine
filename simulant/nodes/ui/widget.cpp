@@ -58,7 +58,8 @@ void Widget::cleanup() {
 void Widget::set_font(FontID font_id) {
     font_ = stage->assets->font(font_id);
     line_height_ = ::round(float(font_->size()) * 1.1);
-    rebuild();
+
+    on_size_changed();
 }
 
 void Widget::resize(float width, float height) {
@@ -166,11 +167,15 @@ void Widget::set_text_colour(const Colour &colour) {
 void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float left_margin, float top_margin) {
     if(mesh->has_submesh(submesh_name)) {
         // Save these vertices as free
-        mesh->submesh(submesh_name)->index_data->each([&](uint32_t idx) {
+        auto sm = mesh->submesh(submesh_name);
+        sm->index_data->each([&](uint32_t idx) {
             available_indexes_.insert(idx);
         });
 
-        mesh->submesh(submesh_name)->index_data->clear();
+        sm->index_data->clear();
+
+        // Make sure we maintain the correct material
+        sm->set_material_id(font_->material_id());
     } else {
         // Create a new submesh for the text
         auto sm = mesh->new_submesh(submesh_name, MESH_ARRANGEMENT_TRIANGLES);
@@ -333,8 +338,6 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
         }
     }
 
-    submesh->vertex_data->done();
-
     // Everything was positioned with the starting X being at the
     // the center of the widget, so now we move the text to the left by whatever its width was
     // or half of "width" if that was specified
@@ -352,7 +355,7 @@ void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const un
         );
     }
 
-    submesh->vertex_data->done();
+    mesh->vertex_data->done();
     submesh->index_data->done();
 }
 

@@ -54,7 +54,9 @@ public:
     }
 
     bool init() {
-        scenes->register_scene<MainScene>("main");
+        scenes->register_scene<MainScene>("demo");
+        scenes->register_scene<smlt::scenes::Splash>("main", "demo");
+
         return true;
     }
 };

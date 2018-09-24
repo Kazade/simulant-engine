@@ -63,7 +63,6 @@ struct TextureFlags {
 
 enum DefaultFontStyle {
     DEFAULT_FONT_STYLE_HEADING,
-    DEFAULT_FONT_STYLE_SUBHEADING,
     DEFAULT_FONT_STYLE_BODY
 };
 
@@ -214,7 +213,6 @@ private:
     MaterialID default_material_id_;
     TextureID default_texture_id_;
     FontPtr default_body_font_;
-    FontPtr default_subheading_font_;
     FontPtr default_heading_font_;
 
     std::unique_ptr<FontManager> font_manager_;
