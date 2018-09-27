@@ -97,6 +97,10 @@ void Widget::set_height(float height) {
 }
 
 void Widget::set_text(const unicode &text) {
+    if(text_ == text) {
+        return;
+    }
+
     text_ = text;
     on_size_changed();
 }
@@ -118,6 +122,10 @@ const AABB &Widget::aabb() const {
 }
 
 void Widget::set_background_image(TextureID texture) {
+    if(background_image_ == texture) {
+        return;
+    }
+
     background_image_ = texture;
 
     // Triggers a rebuild
@@ -128,12 +136,21 @@ void Widget::set_background_image(TextureID texture) {
 }
 
 void Widget::set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+    if(background_image_rect_.bottom_left == bottom_left && background_image_rect_.size == size) {
+        // Nothing to do
+        return;
+    }
+
     background_image_rect_.bottom_left = bottom_left;
     background_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_foreground_image(TextureID texture) {
+    if(foreground_image_ == texture) {
+        return;
+    }
+
     foreground_image_ = texture;
 
     // Triggers a rebuild
@@ -144,22 +161,42 @@ void Widget::set_foreground_image(TextureID texture) {
 }
 
 void Widget::set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+    if(foreground_image_rect_.bottom_left == bottom_left && foreground_image_rect_.size == size) {
+        // Nothing to do
+        return;
+    }
+
     foreground_image_rect_.bottom_left = bottom_left;
     foreground_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_background_colour(const Colour& colour) {
+    if(background_colour_ == colour) {
+        // Nothing to do
+        return;
+    }
+
     background_colour_ = colour;
     rebuild();
 }
 
 void Widget::set_foreground_colour(const Colour& colour) {
+    if(foreground_colour_ == colour) {
+        // Nothing to do
+        return;
+    }
+
     foreground_colour_ = colour;
     rebuild();
 }
 
 void Widget::set_text_colour(const Colour &colour) {
+    if(text_colour_ == colour) {
+        // Nothing to do
+        return;
+    }
+
     text_colour_ = colour;
     rebuild();
 }
