@@ -160,7 +160,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             }
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
-                GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
+                GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
                 texture->_set_has_mipmaps(true);
             }
 

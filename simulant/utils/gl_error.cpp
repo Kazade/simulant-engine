@@ -53,7 +53,7 @@ void check_and_log_error(const std::string &function_name) {
         case GL_INVALID_OPERATION:
             error_string = "GL_INVALID_OPERATION";
             break;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
+        case GL_INVALID_FRAMEBUFFER_OPERATION_EXT:
             error_string = "GL_INVALID_FRAMEBUFFER_OPERATION";
             break;
         case GL_OUT_OF_MEMORY:
