@@ -56,6 +56,10 @@ void Widget::cleanup() {
 }
 
 void Widget::set_font(FontID font_id) {
+    if(font_ && font_->id() == font_id) {
+        return;
+    }
+
     font_ = stage->assets->font(font_id);
     line_height_ = ::round(float(font_->size()) * 1.1);
 
@@ -63,6 +67,10 @@ void Widget::set_font(FontID font_id) {
 }
 
 void Widget::resize(float width, float height) {
+    if(width_ == width && height_ == height) {
+        return;
+    }
+
     width_ = width;
     height_ = height;
     on_size_changed();
@@ -77,21 +85,37 @@ void Widget::rebuild() {
 }
 
 void Widget::set_border_width(float x) {
+    if(border_width_ == x) {
+        return;
+    }
+
     border_width_ = x;
     rebuild();
 }
 
 void Widget::set_border_colour(const Colour &colour) {
+    if(border_colour_ == colour) {
+        return;
+    }
+
     border_colour_ = colour;
     rebuild();
 }
 
 void Widget::set_width(float width) {
+    if(width_ == width) {
+        return;
+    }
+
     width_ = width;
     on_size_changed();
 }
 
 void Widget::set_height(float height) {
+    if(height_ == height) {
+        return;
+    }
+
     height_ = height;
     on_size_changed();
 }
