@@ -3,6 +3,16 @@
 #include "../../nodes/stage_node.h"
 #include "../../deps/bounce/bounce.h"
 
+
+/* Need for bounce */
+void b3BeginProfileScope(const char* name) {
+
+}
+
+void b3EndProfileScope() {
+
+}
+
 namespace smlt{
 namespace behaviours {
 
@@ -182,13 +192,13 @@ void RigidBodySimulation::fixed_update(float step) {
 }
 
 std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance, Vec3* normal) {
-    b3RayCastSingleOutput result;
+    b3RayCastSingleShapeOutput result;
     b3Vec3 s, d;
 
     to_b3vec3(start, s);
     to_b3vec3(start + direction, d);
 
-    bool hit = scene_->RayCastSingle(&result, s, d);
+    bool hit = scene_->RayCastSingleShape(&result, s, d);
 
     float closest = std::numeric_limits<float>::max();
     Vec3 impact_point, closest_normal;
