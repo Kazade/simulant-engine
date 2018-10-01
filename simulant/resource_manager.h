@@ -98,8 +98,9 @@ public:
     MeshID new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_cylinder(float diameter, float length, int segments = 20, int stacks = 20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshID new_mesh_as_icosphere(float diameter, int subdivisions=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 

@@ -100,6 +100,12 @@ public:
         IndexType=INDEX_TYPE_16_BIT
     );
 
+    SubMeshPtr new_submesh_as_icosphere(const std::string& name,
+        MaterialID material,
+        float diameter,
+        uint32_t subdivisions
+    );
+
     SubMeshPtr new_submesh_as_rectangle(
         const std::string& name,
         MaterialID material,

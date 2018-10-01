@@ -25,5 +25,6 @@
 #include "mesh/circle.h"
 #include "mesh/capsule.h"
 #include "mesh/cylinder.h"
+#include "mesh/icosphere.h"
 
 #endif // MESH_H_INCLUDED

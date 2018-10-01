@@ -269,7 +269,7 @@ public:
 
         clipTriangleStrip2(&input, 0, 0);
 
-        assert_equal(input.size, 7 + 6); /* Should introduce 6 new vertices */
+        assert_equal(input.size, 7u + 6u); /* Should introduce 6 new vertices */
 
         ClipVertex* clipped = (ClipVertex*) aligned_vector_at(&input, 0);
 

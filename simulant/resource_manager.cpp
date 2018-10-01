@@ -258,6 +258,13 @@ MeshID ResourceManager::new_mesh_as_capsule(float diameter, float length, int se
     return m;
 }
 
+MeshID ResourceManager::new_mesh_as_icosphere(float diameter, int subdivisions, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
+    m.fetch()->new_submesh_as_icosphere("icosphere", MaterialID(), diameter, subdivisions);
+    MeshManager::mark_as_uncollected(m);
+    return m;
+}
+
 MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(vertex_specification, garbage_collect);
 

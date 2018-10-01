@@ -30,6 +30,8 @@
 #include "../renderers/renderer.h"
 #include "private.h"
 
+#include "../procedural/mesh.h"
+
 namespace smlt {
 
 
@@ -185,14 +187,15 @@ SubMesh* Mesh::new_submesh(
     );
 }
 
-SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, float width, float height, float depth, const Vec3& offset) {
-    VertexSpecification spec;
-    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
-    spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
-    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID material, float diameter, uint32_t subdivisions) {
+    SubMesh* sm = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);
 
+    procedural::mesh::icosphere(sm, diameter, subdivisions);
+
+    return sm;
+}
+
+SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, float width, float height, float depth, const Vec3& offset) {
     SubMesh* sm = new_submesh_with_material(
         name,
         material,

@@ -51,17 +51,17 @@ public:
         data->position(2, 2, 2);
         data->move_next();
 
-        assert_equal(data->cursor_position(), 3);
+        assert_equal(data->cursor_position(), 3u);
         assert_equal(data->cursor_offset(), 3u * stride);
 
         data->move_to(1);
 
-        assert_equal(data->cursor_position(), 1);
+        assert_equal(data->cursor_position(), 1u);
         assert_equal(data->cursor_offset(), 1u * stride);
 
         data->move_by(1);
 
-        assert_equal(data->cursor_position(), 2);
+        assert_equal(data->cursor_position(), 2u);
         assert_equal(data->cursor_offset(), 2u * stride);
     }
 

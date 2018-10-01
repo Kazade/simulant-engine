@@ -644,6 +644,8 @@ simulant/procedural/mesh/cube.cpp
 simulant/procedural/mesh/cube.h
 simulant/procedural/mesh/cylinder.cpp
 simulant/procedural/mesh/cylinder.h
+simulant/procedural/mesh/icosphere.cpp
+simulant/procedural/mesh/icosphere.h
 simulant/procedural/mesh/rectangle.cpp
 simulant/procedural/mesh/rectangle.h
 simulant/procedural/mesh/sphere.cpp
