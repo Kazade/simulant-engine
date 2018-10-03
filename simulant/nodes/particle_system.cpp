@@ -36,7 +36,7 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* s
     vertex_data_(new VertexData(PS_VERTEX_SPEC)),
     index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
 
-    set_quota(quota_); // Force hardware buffer initialization
+    set_quota(INITIAL_QUOTA); // Force hardware buffer initialization
     set_material_id(stage->assets->clone_default_material());
 }
 
@@ -205,6 +205,7 @@ void ParticleSystem::set_quota(std::size_t quota) {
     // Shrink if necessary
     if(particles_.size() > quota) {
         particles_.resize(quota);
+        particles_.shrink_to_fit();
     } else {
         // Reserve space for all the particles
         particles_.reserve(quota);

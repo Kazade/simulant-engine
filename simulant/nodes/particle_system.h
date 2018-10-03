@@ -129,6 +129,8 @@ public:
     }
 
 private:
+    const static int32_t INITIAL_QUOTA = 10;
+
     AABB aabb_;
     void calc_aabb();
 
@@ -148,7 +150,7 @@ private:
     }
 
     std::string name_;
-    std::size_t quota_ = 10;
+    std::size_t quota_ = 0;
     float particle_width_ = 100.0f;
     float particle_height_ = 100.0f;
     bool cull_each_ = false;
