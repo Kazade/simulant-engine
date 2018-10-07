@@ -114,6 +114,17 @@ StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
     return ret.fetch();
 }
 
+StagePtr StageManager::new_stage_from_file(const unicode& filename, AvailablePartitioner partitioner) {
+    auto sid = StageManager::make(this->window_, partitioner);
+    signal_stage_added_(sid);
+
+    auto stage = sid.fetch();
+
+    window_->loader_for(filename)->into(stage);
+
+    return stage;
+}
+
 std::size_t StageManager::stage_count() const {
     return StageManager::count();
 }

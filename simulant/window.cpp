@@ -45,6 +45,7 @@
 #include "loaders/ttf_loader.h"
 #include "loaders/fnt_loader.h"
 #include "loaders/dds_texture_loader.h"
+#include "loaders/collada_loader.h"
 
 #include "nodes/camera.h"
 
@@ -234,6 +235,7 @@ bool Window::_init() {
         register_loader(std::make_shared<smlt::loaders::TTFLoaderType>());
         register_loader(std::make_shared<smlt::loaders::FNTLoaderType>());
         register_loader(std::make_shared<smlt::loaders::DDSTextureLoaderType>());
+        register_loader(std::make_shared<smlt::loaders::ColladaLoaderType>());
 
         L_INFO("Initializing the default resources");
 #ifdef _arch_dreamcast

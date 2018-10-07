@@ -65,6 +65,8 @@ public:
     StageManager(Window* window);
 
     StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
+    StagePtr new_stage_from_file(const unicode& filename, AvailablePartitioner partitioner=PARTITIONER_HASH);
+
     StagePtr stage(StageID s);
     StagePtr delete_stage(StageID s);
     std::size_t stage_count() const;

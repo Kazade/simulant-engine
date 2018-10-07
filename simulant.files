@@ -102,6 +102,7 @@ documentation/window.md
 samples/2d_sample.cpp
 samples/CMakeLists.txt
 samples/CMakeLists.txt
+samples/collada.cpp
 samples/nehe01.cpp
 samples/nehe02.cpp
 samples/nehe03.cpp
@@ -415,6 +416,8 @@ simulant/kos_window.h
 simulant/loadable.h
 simulant/loader.cpp
 simulant/loader.h
+simulant/loaders/collada_loader.cpp
+simulant/loaders/collada_loader.h
 simulant/loaders/dds_texture_loader.cpp
 simulant/loaders/dds_texture_loader.cpp
 simulant/loaders/dds_texture_loader.h
