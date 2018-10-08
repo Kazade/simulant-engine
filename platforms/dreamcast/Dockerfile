@@ -72,5 +72,7 @@ include ${KOS_PORTS}/scripts/kos-ports.mk\n\
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make install clean
 
 # Now install dcload-ip
-RUN . /etc/bash.bashrc; git clone https://github.com/thentenaar/dc-load-ip.git /opt/toolchains/dc/dc-load-ip
+RUN yum install -y elfutils-libelf-devel
+RUN . /etc/bash.bashrc; git clone https://git.code.sf.net/p/cadcdev/dcload-ip /opt/toolchains/dc/dc-load-ip
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
+RUN . /etc/bash.bashrc; mkdir -p /opt/toolchains/dc/bin && cp /opt/toolchains/dc/dc-load-ip/host-src/tool/dc-tool /opt/toolchains/dc/bin
