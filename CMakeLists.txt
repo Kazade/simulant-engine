@@ -13,6 +13,8 @@ ENDIF()
 # Set module options
 OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
+OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
+
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdelete-non-virtual-dtor")
@@ -101,6 +103,7 @@ IF(SIMULANT_BUILD_SAMPLES)
     ADD_SUBDIRECTORY(samples)
 
     IF(DREAMCAST_BUILD)
+    IF(SIMULANT_BUILD_SAMPLE_CDI)
         SET(DC_EXECUTABLES # Names without .elf extension
             tests/simulant_tests
             samples/nehe02
@@ -140,7 +143,7 @@ IF(SIMULANT_BUILD_SAMPLES)
             COMMENT "Converting ${EXE}.elf to ${EXE}.bin"
         )
         ENDFOREACH()
-
+    ENDIF()
     ENDIF()
 ENDIF()
 
