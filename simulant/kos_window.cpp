@@ -115,7 +115,8 @@ void KOSWindow::check_events() {
                     float v = float(joyy_state) / 127.0f;
                     if(v < -1.0f) v  = -1.0f;
 
-                    input_state->_handle_joystick_axis_motion(i, JOYSTICK_AXIS_Y, v);
+                    // We multiply by -1.0 as the Y-axis is reversed compared to what we expect
+                    input_state->_handle_joystick_axis_motion(i, JOYSTICK_AXIS_Y, v * -1.0f);
                     previous_joyy[i] = joyy_state;
                 }
 
