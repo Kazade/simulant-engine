@@ -120,28 +120,19 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     pass_ = next;
 
     if(!prev || prev->diffuse() != next->diffuse()) {
-        /* Only send material properties if lighting is enabled on the pass */
-        if(next->lighting_enabled()) {
-            GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &next->diffuse().r);
-        }
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &next->diffuse().r);
     }
 
     if(!prev || prev->ambient() != next->ambient()) {
-        if(next->lighting_enabled()) {
-            GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &next->ambient().r);
-        }
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &next->ambient().r);
     }
 
     if(!prev || prev->specular() != next->specular()) {
-        if(next->lighting_enabled()) {
-            GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &next->specular().r);
-        }
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &next->specular().r);
     }
 
     if(!prev || prev->shininess() != next->shininess()) {
-        if(next->lighting_enabled()) {
-            GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
-        }
+        GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
     }
 
     if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
