@@ -119,21 +119,27 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
 
-    if(next->lighting_enabled()) {
+    if(!prev || prev->diffuse() != next->diffuse()) {
         /* Only send material properties if lighting is enabled on the pass */
-        if(!prev || prev->diffuse() != next->diffuse()) {
+        if(next->lighting_enabled()) {
             GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &next->diffuse().r);
         }
+    }
 
-        if(!prev || prev->ambient() != next->ambient()) {
+    if(!prev || prev->ambient() != next->ambient()) {
+        if(next->lighting_enabled()) {
             GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &next->ambient().r);
         }
+    }
 
-        if(!prev || prev->specular() != next->specular()) {
+    if(!prev || prev->specular() != next->specular()) {
+        if(next->lighting_enabled()) {
             GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &next->specular().r);
         }
+    }
 
-        if(!prev || prev->shininess() != next->shininess()) {
+    if(!prev || prev->shininess() != next->shininess()) {
+        if(next->lighting_enabled()) {
             GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
         }
     }
