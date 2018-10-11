@@ -38,6 +38,10 @@ batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, Mate
     auto impl = std::make_shared<GL1RenderGroupImpl>(renderable->render_priority());
 
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+        if(!material_pass->texturing_enabled()) {
+            impl->texture_id[i] = 0;
+        }
+
         if(i < material_pass->texture_unit_count()) {
             auto tex_id = material_pass->texture_unit(i).texture_id();
             impl->texture_id[i] = this->texture_objects_.at(tex_id);

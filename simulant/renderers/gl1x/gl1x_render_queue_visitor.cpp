@@ -158,9 +158,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     if(!prev || prev->lighting_enabled() != next->lighting_enabled()) {
         if(next->lighting_enabled()) {
             GLCheck(glEnable, GL_LIGHTING);
-            GLCheck(glEnable, GL_LIGHT0);
         } else {
-            GLCheck(glDisable, GL_LIGHT0);
             GLCheck(glDisable, GL_LIGHTING);
         }
     }

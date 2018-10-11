@@ -26,7 +26,6 @@ void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
         });
     } else {
         GLCheck(glGenTextures, 1, &gl_tex);
-
     }
 
     std::lock_guard<std::mutex> lock(texture_object_mutex_);
