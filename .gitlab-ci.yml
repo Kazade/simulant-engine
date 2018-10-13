@@ -1,0 +1,11 @@
+stages:
+ - build
+
+android-debug:
+  stage: build
+  image: kazade/android-sdk
+  script:
+   - mkdir build
+   - cd build
+   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
+   - make
