@@ -6,16 +6,18 @@ android:
   image: kazade/android-sdk
   script:
    - mkdir ${CI_PROJECT_DIR}/build
-   - cd ${CI_PROJECT_DIR}/build
+
    # Download SDL and OpenAL-soft
-   - python ${CI_PROJECT_DIR}/platforms/android/prepare.py
+   - cd ${CI_PROJECT_DIR}/platforms/android
+   - python prepare.py
+   - cat sdl_cmake_fix.txt >> .android/sdl/CMakeLists.txt
    - mkdir -p .android/sdl/build
    - cd .android/sdl/build
    # Build SDL
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
    # Return to our build directory
-   - cd -
+   - cd ${CI_PROJECT_DIR}/build
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
 
