@@ -5,7 +5,16 @@ android-debug:
   stage: build
   image: kazade/android-sdk
   script:
-   - mkdir build
-   - cd build
+   - mkdir ${CI_PROJECT_DIR}/build
+   - cd ${CI_PROJECT_DIR}/build
+   # Download SDL and OpenAL-soft
+   - python ${CI_PROJECT_DIR}/platforms/android/prepare.py
+   - mkdir -p .android/sdl/build
+   - cd .android/sdl/build
+   # Build SDL
+   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
+   - make
+   # Return to our build directory
+   - cd -
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
