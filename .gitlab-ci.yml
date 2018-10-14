@@ -1,7 +1,7 @@
 stages:
  - build
 
-android-debug:
+android:
   stage: build
   image: kazade/android-sdk
   script:
@@ -18,3 +18,15 @@ android-debug:
    - cd -
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
+
+windows-mingw:
+  stage: build
+  image: fedora:28
+  before_script:
+   - dnf install -y mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python
+  script:
+   - mkdir build
+   - cd build
+   - mingw64-cmake ..
+   - make
+
