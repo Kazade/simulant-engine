@@ -1,6 +1,9 @@
 stages:
  - build
 
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
 android:
   stage: build
   image: kazade/android-sdk
