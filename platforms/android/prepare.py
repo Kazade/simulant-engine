@@ -16,7 +16,7 @@ OUTPUT_DIRECTORY = os.path.join(CWD, ".android")
 LIBRARIES = [
     {
         "name": "sdl",
-        "zip": "https://www.libsdl.org/release/SDL2-2.0.8.zip",
+        "zip": "https://www.libsdl.org/release/SDL2-2.0.4.zip",
         "include": "sdl/include"
     },
     {
