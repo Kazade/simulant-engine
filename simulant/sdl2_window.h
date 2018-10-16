@@ -46,7 +46,7 @@ class SDL2Window :
             return "darwin";
 #elif defined(__ANDROID__)
             return "android";
-#elif defined(_WIN32)
+#elif defined(__WIN32__)
             return "windows";
 #else
     #error Currently unsupported platform

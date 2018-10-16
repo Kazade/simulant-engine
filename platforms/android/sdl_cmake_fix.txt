@@ -1,0 +1,18 @@
+IF(ANDROID)
+# Must be added for SDL to compile with cmake and latest NDK
+
+# Force the Android config
+remove_definitions(-DUSING_GENERATED_CONFIG_H)
+configure_file("${SDL2_SOURCE_DIR}/include/SDL_config_android.h"
+	"${SDL2_BINARY_DIR}/include/SDL_config.h" COPYONLY)
+
+if (${ANDROID_ABI} STREQUAL "x86_64")
+    include_directories(${ANDROID_SYSROOT}/usr/include/x86_64-linux-android)
+elseif (${ANDROID_ABI} STREQUAL "x86")
+    include_directories(${ANDROID_SYSROOT}/usr/include/i686-linux-android)
+elseif (${ANDROID_ABI} STREQUAL "arm64-v8a")
+    include_directories(${ANDROID_SYSROOT}/usr/include/aarch64-linux-android)
+elseif (${ANDROID_ABI} STREQUAL "armeabi-v7a")
+    include_directories(${ANDROID_SYSROOT}/usr/include/arm-linux-androideabi)
+endif()
+ENDIF()
