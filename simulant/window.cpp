@@ -97,7 +97,7 @@ RenderSequence* Window::render_sequence() {
 
 LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
     unicode final_file = resource_locator->locate_file(filename);
-
+   
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 
     for(LoaderTypePtr loader_type: loaders_) {
@@ -131,7 +131,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 
 LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename) {
     unicode final_file = resource_locator->locate_file(filename);
-
+    
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             if(loader_type->supports(final_file)) {

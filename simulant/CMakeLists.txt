@@ -53,6 +53,13 @@ ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES})
 ENDIF()
 
+IF(MINGW)
+    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ ")
+    SET(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
+    SET(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
+    TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 SDL2main SDL2 OpenAL32 userenv)
+ENDIF()
+
 SET_TARGET_PROPERTIES(simulant
                       PROPERTIES
                       VERSION 0.0.1
