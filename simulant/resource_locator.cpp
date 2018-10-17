@@ -29,11 +29,13 @@
 #include <SDL_rwops.h>
 #endif
 
-#ifdef _WIN32
+#ifdef __WIN32__
 #include <string>       // std::string
 #include <iostream>     // std::cout
 #include <sstream>      // std::stringstream, std::stringbuf
 #endif
+
+std::vector<std::string> text_exts = {"kglp", "kglm", "obj", "fnt", "mtl"};
 
 namespace smlt {
 
@@ -58,7 +60,14 @@ void ResourceLocator::add_search_path(const unicode& path) {
     resource_path_.push_back(path);
 }
 
-static inline void ReplaceAll2(std::string &str, const std::string& from, const std::string& to)
+static bool is_text(std::string extension)
+{
+    return std::any_of(text_exts.begin(), text_exts.end(), [&extension](const std::string &str) {
+        return (str.compare(extension) == 0);
+    });
+}
+
+static void ReplaceAll2(std::string& str, const std::string& from, const std::string& to)
 {
     size_t start_pos = 0;
     while((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -74,9 +83,9 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
     */
 
     std::string final_name = filename.replace(
-        "${RENDERER}",
-        window_->renderer->name()
-    ).encode();
+            "${RENDERER}",
+            window_->renderer->name()
+        ).encode();
 
 #ifdef __ANDROID__
     //On Android we use SDL_RWops which reads from the APK
@@ -87,9 +96,11 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         return filename;
     }
 #else
-#ifdef _WIN32
-    ReplaceAll2(final_name,"/","\\");
-    if(kfs::path::exists(final_name)) { //Absolute path
+    #if __WIN32__
+        ReplaceAll2(final_name, "/", "\\");
+    #endif
+    if (kfs::path::exists(final_name))
+    { //Absolute path
         return kfs::path::abs_path(final_name);
     }
 
@@ -99,18 +110,6 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
             return kfs::path::abs_path(full_path);
         }
     }
-#else
-    if(kfs::path::exists(final_name)) { //Absolute path
-        return kfs::path::abs_path(final_name);
-    }
-
-    for(unicode path: resource_path_) {
-        auto full_path = kfs::path::join(path.encode(), final_name);
-        if(kfs::path::exists(full_path)) {
-            return kfs::path::abs_path(full_path);
-        }
-    }
-#endif
 #endif
     throw ResourceMissingError("Unable to find file: " + final_name);
 }
@@ -122,17 +121,9 @@ std::shared_ptr<std::istream> ResourceLocator::open_file(const unicode& filename
 #else
     unicode path = locate_file(filename);
 
-    std::shared_ptr<std::ifstream> file_in;// = std::make_shared<std::ifstream>(path.encode());
-
     std::string ext = filename.encode().substr(filename.encode().find_last_of(".") + 1);
-    if(ext.compare("kglp") == 0 ||  ext.compare("kglm") == 0 || ext.compare("obj") == 0 
-            ||ext.compare("fnt") == 0 ) {
-        //printf("LoadingTEXT: %s\n",filename.encode().c_str());
-        file_in->open(path.encode().c_str());
-    } else {
-        //printf("LoadingBINARY: %s\n",filename.encode().c_str());
-        file_in->open(path.encode().c_str(),std::ios::binary);
-    }
+    std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode(),
+                        (std::ios_base::openmode)(is_text(ext) ? std::ios::in: std::ios::binary));
 
     if(!(*file_in)) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
@@ -171,14 +162,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
     std::ifstream file_in;
 
     std::string ext = filename.encode().substr(filename.encode().find_last_of(".") + 1);
-    if(ext.compare("kglp") == 0 ||  ext.compare("kglm") == 0 || ext.compare("obj") == 0 
-            ||ext.compare("fnt") == 0 ) {
-        //printf("LoadingTEXT: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str());
-    } else {
-        //printf("LoadingBINARY: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str(),std::ios::binary);
-    }
+    file_in.open(path.encode().c_str(),(std::ios_base::openmode)(is_text(ext) ? std::ios::in: std::ios::binary));
 
     if(!file_in) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
@@ -192,19 +176,10 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 
 std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filename) {
     unicode path = locate_file(filename);
+    std::ifstream file_in(path.encode().c_str(),std::ios::in);
 
-    std::ifstream file_in;
-    std::string ext = filename.encode().substr(filename.encode().find_last_of(".") + 1);
-    if(ext.compare("kglp") == 0 ||  ext.compare("kglm") == 0 || ext.compare("obj") == 0 
-            ||ext.compare("fnt") == 0 ) {
-        //printf("LoadingTEXT: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str());
-    } else {
-        //printf("LoadingBINARY: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str(),std::ios::binary);
-    }
-    
-    if(!file_in) {
+    if (!file_in)
+    {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
     }
 

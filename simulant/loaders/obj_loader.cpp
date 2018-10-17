@@ -158,11 +158,18 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                     texture_name += " " + parts[i];
                 }
 
-    #ifndef WIN32
-                // Convert windows paths (this is probably broken)
-                texture_name = texture_name.replace("\\", "/");
+    #ifndef __WIN32__ 
+                std::string current_sep = "\\";
+                std::string new_sep = "/";
+                std::string str = texture_name.encode();
+                size_t start_pos = 0;
+                while((start_pos = str.find(current_sep), start_pos)) != std::string::npos) {
+                    str.replace(start_pos, 1, new_sep);
+                    start_pos += 1; // Handles case where 'to' is a substring of 'from'
+                }
+                texture_name = str;
     #endif
-
+                
                 auto mat = materials.at(current_material);
 
                 std::vector<std::string> possible_locations;
