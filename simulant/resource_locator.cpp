@@ -55,15 +55,6 @@ void ResourceLocator::add_search_path(const unicode& path) {
     resource_path_.push_back(path);
 }
 
-static inline void ReplaceAll2(std::string &str, const std::string& from, const std::string& to)
-{
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-    }
-}
-
 unicode ResourceLocator::locate_file(const unicode &filename) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
@@ -84,30 +75,21 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         return filename;
     }
 #else
-#ifdef _WIN32
-    ReplaceAll2(final_name,"/","\\");
-    if(kfs::path::exists(final_name)) { //Absolute path
-        return kfs::path::abs_path(final_name);
+    final_name = kfs::path::abs_path(final_name);
+
+    if(kfs::path::exists(final_name)) {
+        return final_name;
     }
 
     for(unicode path: resource_path_) {
-        auto full_path = kfs::path::join(path.encode(), final_name);
-        if(kfs::path::exists(full_path)) {
-            return kfs::path::abs_path(full_path);
-        }
-    }
-#else
-    if(kfs::path::exists(final_name)) { //Absolute path
-        return kfs::path::abs_path(final_name);
-    }
+        auto full_path = kfs::path::abs_path(
+            kfs::path::join(path.encode(), final_name)
+        );
 
-    for(unicode path: resource_path_) {
-        auto full_path = kfs::path::join(path.encode(), final_name);
         if(kfs::path::exists(full_path)) {
-            return kfs::path::abs_path(full_path);
+            return full_path;
         }
     }
-#endif
 #endif
     throw ResourceMissingError("Unable to find file: " + final_name);
 }
