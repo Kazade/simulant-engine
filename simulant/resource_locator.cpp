@@ -18,6 +18,9 @@
 //
 
 #include <fstream>
+#include <string>
+#include <iostream>
+#include <sstream>
 
 #include "deps/kfs/kfs.h"
 #include "deps/kazlog/kazlog.h"
@@ -27,12 +30,6 @@
 
 #ifdef __ANDROID__
 #include <SDL_rwops.h>
-#endif
-
-#ifdef _WIN32
-#include <string>       // std::string
-#include <iostream>     // std::cout
-#include <sstream>      // std::stringstream, std::stringbuf
 #endif
 
 namespace smlt {
