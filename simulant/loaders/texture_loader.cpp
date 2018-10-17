@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "../deps/kazlog/kazlog.h"
 #include "../deps/SOIL/SOIL.h"
 
 #include "texture_loader.h"
@@ -71,7 +72,12 @@ TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
 
         SOIL_free_image_data(data);
     } else {
-        throw std::runtime_error("Unable to load texture: " + filename_.encode()+"\n"+SOIL_last_result());
+        throw std::runtime_error(
+            _F("Unable to load texture {0}. Reason was {1}").format(
+                filename_.encode(),
+                SOIL_last_result()
+            )
+        );
     }
 
     return result;
