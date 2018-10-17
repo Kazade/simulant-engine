@@ -15,7 +15,7 @@
 
 #define SOIL_CHECK_FOR_GL_ERRORS 0
 
-#ifdef _WIN32
+#ifdef __WIN32__
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 	#include <wingdi.h>
