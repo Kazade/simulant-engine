@@ -101,21 +101,7 @@ std::shared_ptr<std::istream> ResourceLocator::open_file(const unicode& filename
 #else
     unicode path = locate_file(filename);
 
-    std::shared_ptr<std::ifstream> file_in;// = std::make_shared<std::ifstream>(path.encode());
-
-    std::string ext = filename.encode().substr(filename.encode().find_last_of(".") + 1);
-    if(ext.compare("kglp") == 0 ||  ext.compare("kglm") == 0 || ext.compare("obj") == 0 
-            ||ext.compare("fnt") == 0 ) {
-        //printf("LoadingTEXT: %s\n",filename.encode().c_str());
-        file_in->open(path.encode().c_str());
-    } else {
-        //printf("LoadingBINARY: %s\n",filename.encode().c_str());
-        file_in->open(path.encode().c_str(),std::ios::binary);
-    }
-
-    if(!(*file_in)) {
-        throw ResourceMissingError("Unable to load file: " + filename.encode());
-    }
+    std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode());
     return file_in;
 #endif
 }
@@ -147,23 +133,13 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 #else
     unicode path = locate_file(filename);
 
-    std::ifstream file_in;
-
-    std::string ext = filename.encode().substr(filename.encode().find_last_of(".") + 1);
-    if(ext.compare("kglp") == 0 ||  ext.compare("kglm") == 0 || ext.compare("obj") == 0 
-            ||ext.compare("fnt") == 0 ) {
-        //printf("LoadingTEXT: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str());
-    } else {
-        //printf("LoadingBINARY: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str(),std::ios::binary);
-    }
+    std::ifstream file_in(path.encode());
 
     if(!file_in) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
     }
 
-    std::shared_ptr<std::stringstream> result (new std::stringstream);
+    std::shared_ptr<std::stringstream> result(new std::stringstream);
     (*result) << file_in.rdbuf();
     return result;
 #endif
@@ -172,16 +148,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filename) {
     unicode path = locate_file(filename);
 
-    std::ifstream file_in;
-    std::string ext = filename.encode().substr(filename.encode().find_last_of(".") + 1);
-    if(ext.compare("kglp") == 0 ||  ext.compare("kglm") == 0 || ext.compare("obj") == 0 
-            ||ext.compare("fnt") == 0 ) {
-        //printf("LoadingTEXT: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str());
-    } else {
-        //printf("LoadingBINARY: %s\n",filename.encode().c_str());
-        file_in.open(path.encode().c_str(),std::ios::binary);
-    }
+    std::ifstream file_in(path.encode().c_str());
     
     if(!file_in) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
