@@ -9,7 +9,11 @@ set(CMAKE_C_COMPILER ${MINGW_PREFIX}-gcc)
 set(CMAKE_CXX_COMPILER ${MINGW_PREFIX}-g++)
 set(CMAKE_RC_COMPILER ${MINGW_PREFIX}-windres)
 
-set(CMAKE_SYSROOT /usr/${MINGW_PREFIX}/sys-root)
+if(EXISTS "/usr/${MINGW_PREFIX}/sys-root")
+    set(CMAKE_SYSROOT /usr/${MINGW_PREFIX}/sys-root)
+else()
+    set(CMAKE_SYSROOT /usr/${MINGW_PREFIX})
+endif()
 
 set(CMAKE_PREFIX_PATH /usr/${MINGW_PREFIX} /usr/${MINGW_PREFIX}/sys-root/mingw)
 
