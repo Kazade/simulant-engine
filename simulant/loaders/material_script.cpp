@@ -33,14 +33,7 @@
 namespace smlt {
 
 MaterialScript::MaterialScript(std::shared_ptr<std::istream> data):
-    text_(MaterialLanguageText(
-        std::string((std::istreambuf_iterator<char>(*data)), std::istreambuf_iterator<char>())
-    )) {
-
-}
-
-MaterialScript::MaterialScript(const MaterialLanguageText& text):
-    text_(text) {
+    data_(*data.get()) {
 
 }
 
@@ -350,7 +343,7 @@ void MaterialScript::handle_block(Material& mat,
         }
     }
 
-    for(uint16_t i = current_line; current_line != lines.size(); ++i) {
+    for(uint16_t i = current_line; current_line < lines.size(); ++i) {
         assert(current_line < lines.size());
 
         line = lines[current_line].strip();
@@ -363,8 +356,12 @@ void MaterialScript::handle_block(Material& mat,
             //FIXME: Read all lines up to the end into a single string and then pass that
             std::vector<unicode> data;
 
-            while(current_line < lines.size()) {
+            do {
                 current_line++;
+                if(current_line == lines.size()) {
+                    break;
+                }
+
                 unicode new_line = lines[current_line];
                 if(new_line.starts_with("END_DATA")) {
                     //FIXME: Check END_DATA type is the same as the start
@@ -372,7 +369,8 @@ void MaterialScript::handle_block(Material& mat,
                 } else {
                     data.push_back(new_line);
                 }
-            }
+            } while(current_line < lines.size());
+
 
             if(block_type == "PASS") {
                 handle_data_block(mat, data_type, data, current_pass);
@@ -439,12 +437,18 @@ void MaterialScript::handle_block(Material& mat,
 void MaterialScript::generate(Material& material) {
     std::vector<unicode> lines;
 
-    if(!text_.text().empty()) {
-        lines = _u(text_.text()).split("\n");
-        for(uint16_t i = 0; i < lines.size(); ++i) {
-            lines[i] = lines[i].strip();
+    std::string line;
+    while(portable_getline(data_, line)) {
+        unicode new_line(line);
+        new_line = new_line.strip();
+        if(new_line.empty()) {
+            continue;
         }
-    } else {
+
+        lines.push_back(new_line);
+    }
+
+    if(lines.empty()) {
         throw std::logic_error("Text must be specified");
     }
 

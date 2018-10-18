@@ -27,6 +27,7 @@
 #include "resource_locator.h"
 #include "window.h"
 #include "renderers/renderer.h"
+#include "loader.h"
 
 #ifdef __ANDROID__
 #include <SDL_rwops.h>
@@ -148,7 +149,8 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filename) {
     unicode path = locate_file(filename);
 
-    std::ifstream file_in(path.encode().c_str());
+    // Load as binary and let portable_getline do its thing
+    std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
     
     if(!file_in) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
@@ -156,7 +158,7 @@ std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filenam
 
     std::vector<std::string> results;
     std::string line;
-    while(std::getline(file_in, line)) {
+    while(portable_getline(file_in, line)) {
         results.push_back(line);
     }
     return results;

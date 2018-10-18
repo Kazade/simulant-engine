@@ -37,6 +37,9 @@
 
 namespace smlt {
 
+/* Like std::getline, but, it handles \n and \r\n line endings automatically */
+std::istream& portable_getline(std::istream& stream, std::string& str);
+
 class ResourceLocator;
 
 /*

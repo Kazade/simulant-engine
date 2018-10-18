@@ -36,29 +36,15 @@ public:
         std::logic_error(what.encode()) {}
 };
 
-/*
- *  Really just to differentiate the constructor from the filename version
- */
-class MaterialLanguageText {
-public:
-    explicit MaterialLanguageText(const std::string& text):
-        text_(text) {}
-
-    std::string text() const { return text_; }
-private:
-    std::string text_;
-};
-
 class MaterialScript :
     public Managed<MaterialScript> {
 public:
-    MaterialScript(const MaterialLanguageText& text);
     MaterialScript(std::shared_ptr<std::istream> data);
     void generate(Material& material);
 
 private:
     unicode filename_;
-    MaterialLanguageText text_;
+    std::istream& data_;
 
     void handle_block(Material& mat,
             const std::vector<unicode> &lines,
