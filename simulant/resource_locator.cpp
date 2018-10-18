@@ -76,14 +76,14 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         return filename;
     }
 #else
-    final_name = kfs::path::abs_path(final_name);
+    auto abs_final_name = kfs::path::abs_path(final_name);
 
-    if(kfs::path::exists(final_name)) {
-        return final_name;
+    if(kfs::path::exists(abs_final_name)) {
+        return abs_final_name;
     }
 
     for(unicode path: resource_path_) {
-        auto full_path = kfs::path::abs_path(
+        auto full_path = kfs::path::norm_path(
             kfs::path::join(path.encode(), final_name)
         );
 
