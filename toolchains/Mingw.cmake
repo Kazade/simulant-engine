@@ -1,13 +1,28 @@
-SET(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_SYSTEM_NAME Windows)
 
-SET(MINGW_PREFIX x86_64-w64-mingw32)
+set(MINGW 1)
+set(MINGW_PREFIX x86_64-w64-mingw32)
 
-SET(CMAKE_C_COMPILER ${MINGW_PREFIX}-gcc)
-SET(CMAKE_CXX_COMPILER ${MINGW_PREFIX}-g++)
-SET(CMAKE_RC_COMPILER ${MINGW_PREFIX}-windres)
+set(CMAKE_CROSSCOMPILING 1)
+
+set(CMAKE_C_COMPILER ${MINGW_PREFIX}-gcc)
+set(CMAKE_CXX_COMPILER ${MINGW_PREFIX}-g++)
+set(CMAKE_RC_COMPILER ${MINGW_PREFIX}-windres)
+
+set(CMAKE_SYSROOT /usr/${MINGW_PREFIX}/sys-root)
+
+set(CMAKE_PREFIX_PATH /usr/${MINGW_PREFIX} /usr/${MINGW_PREFIX}/sys-root/mingw)
 
 # here is the target environment located
-SET(CMAKE_FIND_ROOT_PATH /usr/${MINGW_PREFIX} /usr/${MINGW_PREFIX}/lib /usr/${MINGW_PREFIX}/include)
+set(
+    CMAKE_FIND_ROOT_PATH
+    /usr/${MINGW_PREFIX}
+    /usr/${MINGW_PREFIX}/include
+    /usr/${MINGW_PREFIX}/lib
+    /usr/${MINGW_PREFIX}/sys-root
+    /usr/${MINGW_PREFIX}/sys-root/mingw/include
+    /usr/${MINGW_PREFIX}/sys-root/mingw/lib
+)
 
 
 # adjust the default behaviour of the FIND_XXX() commands:
@@ -16,18 +31,9 @@ SET(CMAKE_FIND_ROOT_PATH /usr/${MINGW_PREFIX} /usr/${MINGW_PREFIX}/lib /usr/${MI
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-
-#list(APPEND CMAKE_PREFIX_PATH "/usr/${MINGW_PREFIX}/")
-#SET(SDL2_LIBRARY "/usr/x86_64-w64-mingw32/lib/libSDL2.dll.a")
-SET(SDL2_INCLUDE_DIR "/usr/${MINGW_PREFIX}/include/SDL2")
-SET(OPENAL_INCLUDE_DIR PATHS "/usr/${MINGW_PREFIX}/include/AL" "/usr/include/AL")
-#find_library(ZLIB_LIBRARY z HINTS "/usr/${MINGW_PREFIX}/lib")
-#SET(ZLIB_INCLUDE_DIR "/usr/${MINGW_PREFIX}/include")
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 add_definitions(-D__STDC_FORMAT_MACROS)
 add_definitions(-DWIN32 -D_WIN32 -D_WIN64 -D__WIN32__)
 
 add_definitions(-D__USE_MINGW_ANSI_STDIO=1)
-
-set(MINGW 1)
