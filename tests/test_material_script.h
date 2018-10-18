@@ -1,6 +1,8 @@
 #ifndef TEST_MATERIAL_SCRIPT_H
 #define TEST_MATERIAL_SCRIPT_H
 
+#include <sstream>
+
 #include "kaztest/kaztest.h"
 
 #include "simulant/simulant.h"
@@ -30,7 +32,11 @@ public:
         )";
 
         auto mat = window->shared_assets->material(window->shared_assets->new_material());
-        smlt::MaterialScript script((smlt::MaterialLanguageText(text))); //Most vexing parse \o/
+
+        auto stream = std::make_shared<std::stringstream>();
+        (*stream) << text;
+
+        smlt::MaterialScript script(stream);
         script.generate(*mat);
 
         this->assert_equal((uint32_t)1, mat->pass_count());

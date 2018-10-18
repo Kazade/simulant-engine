@@ -11,6 +11,7 @@ extern smlt::SDL2Window::ptr window;
 
 #include "kaztest/kaztest.h"
 #include "simulant/window.h"
+#include "simulant/stage.h"
 
 class SimulantTestCase : public TestCase {
 public:

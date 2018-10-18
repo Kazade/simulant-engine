@@ -125,7 +125,7 @@ install:
  - if [[ "$CROSS_BUILD" == "0" ]]; then make; fi
 
  # Use mingw64-cmake for cross-compiling to windows
- - if [[ "$CROSS_BUILD" == "windows" ]]; then cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/Windows.cmake $SIMULANT_OPTIONS ..; fi
+ - if [[ "$CROSS_BUILD" == "windows" ]]; then cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/Mingw.cmake $SIMULANT_OPTIONS ..; fi
  - if [[ "$CROSS_BUILD" == "windows" ]]; then make; fi
 
  # Otherwise, use docker for the dreamcast

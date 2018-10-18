@@ -18,12 +18,16 @@
 //
 
 #include <fstream>
+#include <string>
+#include <iostream>
+#include <sstream>
 
 #include "deps/kfs/kfs.h"
 #include "deps/kazlog/kazlog.h"
 #include "resource_locator.h"
 #include "window.h"
 #include "renderers/renderer.h"
+#include "loader.h"
 
 #ifdef __ANDROID__
 #include <SDL_rwops.h>
@@ -71,16 +75,20 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         SDL_RWclose(ops);
         return filename;
     }
-
 #else
-    if(kfs::path::exists(final_name)) { //Absolute path
-        return kfs::path::abs_path(final_name);
+    auto abs_final_name = kfs::path::abs_path(final_name);
+
+    if(kfs::path::exists(abs_final_name)) {
+        return abs_final_name;
     }
 
     for(unicode path: resource_path_) {
-        auto full_path = kfs::path::join(path.encode(), final_name);
+        auto full_path = kfs::path::norm_path(
+            kfs::path::join(path.encode(), final_name)
+        );
+
         if(kfs::path::exists(full_path)) {
-            return kfs::path::abs_path(full_path);
+            return full_path;
         }
     }
 #endif
@@ -95,9 +103,6 @@ std::shared_ptr<std::istream> ResourceLocator::open_file(const unicode& filename
     unicode path = locate_file(filename);
 
     std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode());
-    if(!(*file_in)) {
-        throw ResourceMissingError("Unable to load file: " + filename.encode());
-    }
     return file_in;
 #endif
 }
@@ -130,6 +135,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
     unicode path = locate_file(filename);
 
     std::ifstream file_in(path.encode());
+
     if(!file_in) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
     }
@@ -143,14 +149,16 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filename) {
     unicode path = locate_file(filename);
 
-    std::ifstream file_in(path.encode().c_str());
+    // Load as binary and let portable_getline do its thing
+    std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
+    
     if(!file_in) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());
     }
 
     std::vector<std::string> results;
     std::string line;
-    while(std::getline(file_in, line)) {
+    while(portable_getline(file_in, line)) {
         results.push_back(line);
     }
     return results;
