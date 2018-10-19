@@ -5,7 +5,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "renderers/glad/*"
     "renderers/gl2x/*"
     "deps/SOIL/original/*"
-    "deps/bounce_src/garment/triangle/*"
+    "deps/bounce_src/bounce/garment/triangle/tricall.c"
     "sdl2_window.*"
     "kos_window.*"
     "sound_drivers/*"
