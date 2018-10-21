@@ -15,10 +15,10 @@
 	url = https://github.com/Kazade/bounce.git
 [submodule "assets"]
 	path = assets
-	url = https://github.com/Kazade/simulant-assets.git
+	url = https://gitlab.com/simulant/simulant-assets.git
 [submodule "bin"]
 	path = bin
-	url = https://github.com/Kazade/simulant-tools.git
+	url = https://gitlab.com/simulant/simulant-tools.git
 [submodule "deps/libgl"]
 	path = deps/libgl
-	url = https://github.com/Kazade/libgl.git
+	url = https://gitlab.com/simulant/GLdc.git
