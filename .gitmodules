@@ -22,3 +22,6 @@
 [submodule "deps/libgl"]
 	path = deps/libgl
 	url = https://gitlab.com/simulant/GLdc.git
+[submodule "deps/libAL"]
+	path = deps/libAL
+	url = https://gitlab.com/simulant/ALdc.git
