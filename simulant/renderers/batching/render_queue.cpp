@@ -31,139 +31,11 @@
 namespace smlt {
 namespace batcher {
 
-void reinsert(ActorID actor_id, RenderQueue* queue) {
-    auto actor = actor_id.fetch();
-    actor->each([queue](uint32_t i, SubActor* subactor) {
-        queue->remove_renderable(subactor);
-        queue->insert_renderable(subactor);
-    });
-}
-
-void MaterialChangeWatcher::watch(MaterialID material_id, Renderable *renderable) {
-    auto ret = renderables_by_material_.emplace(material_id, std::set<Renderable*>());
-    auto material = material_id.fetch(); //FIXME: fetch is bad here, prevents a user constructing manually
-
-    if(ret.second) {
-        // First renderable with this material, set up a connection
-        material_update_conections_.emplace(material_id, material->signal_material_changed().connect(
-           std::bind(&MaterialChangeWatcher::on_material_changed, this, std::placeholders::_1)
-        ));
-    }
-
-    // Add the renderable to the list of renderables that use this material
-    auto& renderable_list = (*ret.first).second;
-    renderable_list.insert(renderable);
-}
-
-void MaterialChangeWatcher::on_material_changed(MaterialID material) {
-    // Intentionally copy, the act of removing and inserting will alter this map
-    auto renderables = renderables_by_material_.at(material);
-
-    for(auto& renderable: renderables) {
-        queue_->remove_renderable(renderable);
-        queue_->insert_renderable(renderable);
-    }
-}
-
-void MaterialChangeWatcher::unwatch(Renderable *renderable) {
-    MaterialID to_erase;
-    for(auto& pair: renderables_by_material_) {
-        if(pair.second.find(renderable) != pair.second.end()) {
-            pair.second.erase(renderable);
-            if(pair.second.empty()) {
-                // Was last renderable with this material, so erase the material
-                to_erase = pair.first;
-            }
-            break;
-        }
-    }
-
-    if(to_erase) {
-        // Disconnect signal
-        material_update_conections_.at(to_erase).disconnect();
-        material_update_conections_.erase(to_erase);
-
-        // Erase material entry
-        renderables_by_material_.erase(to_erase);
-    }
-}
 
 RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory):
     stage_(stage),
-    render_group_factory_(render_group_factory),
-    material_watcher_(this) {
+    render_group_factory_(render_group_factory) {
 
-    stage->signal_actor_created().connect([=](ActorID actor_id) {
-        auto actor = stage->actor(actor_id);
-        actor->each([=](uint32_t i, SubActor* subactor) {
-            insert_renderable(subactor);
-        });
-
-        // If the actor's render priority changes, we need to remove the renderables and re-add them
-        actor->signal_render_priority_changed().connect([this, actor_id](RenderPriority old, RenderPriority newp) {
-            reinsert(actor_id, this);
-        });
-
-
-        // If a material changes on an actor's subactor, reinsert
-        actor->signal_subactor_material_changed().connect([this](ActorID, SubActor* subactor, MaterialID, MaterialID) {
-            remove_renderable(subactor);
-            insert_renderable(subactor);
-        });
-
-        // If a new subactor is added to the actor, add it to the render queue
-        actor->signal_subactor_created().connect([this](ActorID actor_id, SubActor* subactor) {
-            insert_renderable(subactor);
-        });
-
-        // If a subactor is destroyed, remove it from the render queue
-        actor->signal_subactor_destroyed().connect([this](ActorID actor_id, SubActor* subactor) {
-            remove_renderable(subactor);
-        });
-    });
-
-    stage->signal_actor_destroyed().connect([=](ActorID actor_id) {
-        auto actor = stage->actor(actor_id);
-        actor->each([=](uint32_t i, SubActor* subactor) {
-            remove_renderable(subactor);
-        });
-    });
-
-    stage->signal_geom_created().connect([=](GeomID geom_id) {
-        auto geom = stage->geom(geom_id);
-        geom->culler->each_renderable([=](Renderable* renderable) {
-            insert_renderable(renderable);
-        });
-    });
-
-    stage->signal_geom_destroyed().connect([=](GeomID geom_id) {
-        auto geom = stage->geom(geom_id);
-        geom->culler->each_renderable([=](Renderable* renderable) {
-            remove_renderable(renderable);
-        });
-    });
-
-    stage->signal_particle_system_created().connect([=](ParticleSystemID ps_id) {
-        auto ps = stage->particle_system(ps_id);
-        insert_renderable(ps);
-
-        // When a particle system material changes, update the place in the queue
-        ps->signal_material_changed().connect([this](ParticleSystem* ps, MaterialID, MaterialID) {
-            remove_renderable(ps);
-            insert_renderable(ps);
-        });
-
-        ps->signal_render_priority_changed().connect([this, ps_id](RenderPriority old, RenderPriority newp) {
-            auto ps = ps_id.fetch();
-            remove_renderable(ps);
-            insert_renderable(ps);
-        });
-    });
-
-    stage->signal_particle_system_destroyed().connect([=](ParticleSystemID ps_id) {
-        auto ps = stage->particle_system(ps_id);
-        remove_renderable(ps);
-    });
 }
 
 void RenderQueue::insert_renderable(Renderable* renderable) {
@@ -197,8 +69,6 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
         batches_[i][group]->add_renderable(renderable);
     });
-
-    material_watcher_.watch(material_id, renderable);
 }
 
 void RenderQueue::clean_empty_batches() {    
@@ -226,31 +96,9 @@ void RenderQueue::clean_empty_batches() {
     }
 }
 
-void RenderQueue::remove_renderable(Renderable* renderable) {
-    /*
-     * The Renderable is a BatchMember that maintains a list of
-     * batches that it is a member of. This way removing the renderable
-     * is just a case of iterating its batches and removing it. If the
-     * renderable was the last in the batch we need to remove the batch.
-     */
-
-    material_watcher_.unwatch(renderable);
-
-    bool empty_batches_created = false;
-
-    // Copy, we're about to manipulate in a loop
-    auto batches = renderable->batches();
-
-    for(auto& batch: batches) {
-        batch->remove_renderable(renderable);
-        if(!batch->renderable_count()) {
-            empty_batches_created = true;
-        }
-    }
-
-    if(empty_batches_created) {
-        clean_empty_batches();
-    }
+void RenderQueue::clear() {
+    std::lock_guard<std::mutex> lock(queue_lock_);
+    batches_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {

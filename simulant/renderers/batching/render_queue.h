@@ -200,7 +200,7 @@ public:
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
 
     void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
-    void remove_renderable(Renderable* renderable);
+    void clear();
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
@@ -232,12 +232,7 @@ private:
     RenderGroupFactory* render_group_factory_ = nullptr;
     BatchPasses batches_;
 
-    sig::connection actor_created_;
-    sig::connection actor_destroyed_;
-
     void clean_empty_batches();
-
-    MaterialChangeWatcher material_watcher_;
 
     mutable std::mutex queue_lock_;
 };

@@ -60,10 +60,6 @@ namespace ui {
     class UIManager;
 }
 
-namespace batcher {
-class RenderQueue;
-}
-
 class Partitioner;
 
 class Debug;
@@ -159,7 +155,6 @@ public:
     void ask_owner_for_destruction() override;
 
     Property<Stage, Debug> debug = {this, &Stage::debug_};
-    Property<Stage, batcher::RenderQueue> render_queue = {this, &Stage::render_queue_};
     Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};
     Property<Stage, ResourceManager> assets = {this, &Stage::resource_manager_};
     Property<Stage, generic::DataCarrier> data = {this, &Stage::data_};
@@ -219,7 +214,6 @@ private:
 
     //FIXME: All managers should be composition rather than inheritence,
     // like this one!   
-    std::unique_ptr<batcher::RenderQueue> render_queue_;
     std::shared_ptr<ResourceManager> resource_manager_;
     smlt::Colour ambient_light_;
 
