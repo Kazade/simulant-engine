@@ -203,6 +203,16 @@ uint64_t generate_frame_id() {
 }
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
+    /*
+     * This is where rendering actually happens.
+     *
+     * FIXME: This needs some serious thought regarding thread-safety. There is no locking here
+     * and another thread could be adding/removing objects, updating the partitioner, or changing materials
+     * and/or textures on renderables. We need to make sure that we render a consistent snapshot of the world
+     * which means figuring out some kind of locking around the render queue building and traversal, or
+     * some deep-copying (of materials/textures/renderables) to make sure that nothing changes during traversal
+     */
+
     Profiler profiler(__func__);
 
     uint64_t frame_id = generate_frame_id();
