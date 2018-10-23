@@ -1,8 +1,6 @@
 # Simulant
 
-[![Join the chat at https://gitter.im/simulant-engine/development](https://badges.gitter.im/simulant-engine/developmet.svg)](https://gitter.im/simulant-engine/development?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/Kazade/simulant-engine.svg?branch=master)](https://travis-ci.org/Kazade/simulant-engine)
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/14262/badge.svg)](https://scan.coverity.com/projects/kazade-simulant-engine)
+**Development of Simulant has moved to [Gitlab](https://gitlab.com/simulant/simulant/)**
 
 ## What is it?
 

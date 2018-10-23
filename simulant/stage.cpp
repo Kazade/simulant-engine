@@ -36,7 +36,6 @@
 #include "partitioners/null_partitioner.h"
 #include "partitioners/spatial_hash.h"
 #include "partitioners/frustum_partitioner.h"
-#include "renderers/batching/render_queue.h"
 
 namespace smlt {
 
@@ -57,7 +56,6 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     sprite_manager_(new SpriteManager(parent, this)) {
 
     set_partitioner(partitioner);
-    render_queue_.reset(new batcher::RenderQueue(this, parent->renderer.get()));
 }
 
 Stage::~Stage() {

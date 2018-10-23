@@ -203,6 +203,16 @@ uint64_t generate_frame_id() {
 }
 
 void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
+    /*
+     * This is where rendering actually happens.
+     *
+     * FIXME: This needs some serious thought regarding thread-safety. There is no locking here
+     * and another thread could be adding/removing objects, updating the partitioner, or changing materials
+     * and/or textures on renderables. We need to make sure that we render a consistent snapshot of the world
+     * which means figuring out some kind of locking around the render queue building and traversal, or
+     * some deep-copying (of materials/textures/renderables) to make sure that nothing changes during traversal
+     */
+
     Profiler profiler(__func__);
 
     uint64_t frame_id = generate_frame_id();
@@ -273,6 +283,8 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
     profiler.checkpoint("gather");
 
+    batcher::RenderQueue render_queue(stage, this->window->renderer.get());
+
     uint32_t renderables_rendered = 0;
     // Mark the visible objects as visible
     for(auto& node: nodes_visible) {
@@ -320,6 +332,9 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
 
             renderable->update_last_visible_frame_id(frame_id);
             renderable->set_affected_by_lights(renderable_lights);
+
+            render_queue.insert_renderable(renderable.get());
+
             ++renderables_rendered;
         }
     }
@@ -333,7 +348,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
     auto visitor = renderer_->get_render_queue_visitor(camera);
 
     // Render the visible objects
-    stage->render_queue->traverse(visitor.get(), frame_id);
+    render_queue.traverse(visitor.get(), frame_id);
 
     profiler.checkpoint("traversal");
 
