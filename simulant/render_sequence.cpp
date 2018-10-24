@@ -42,7 +42,33 @@ Pipeline::Pipeline(PipelineID id,
     priority_(0),
     is_active_(false) {
 
+    /* Set sane defaults for detail ranges */
+    detail_level_end_distances_[DETAIL_LEVEL_NEAREST] = 25.0f;
+    detail_level_end_distances_[DETAIL_LEVEL_NEAR] = 50.0f;
+    detail_level_end_distances_[DETAIL_LEVEL_MID] = 100.0f;
+    detail_level_end_distances_[DETAIL_LEVEL_FAR] = 200.0f;
+    detail_level_end_distances_[DETAIL_LEVEL_FARTHEST] = 400.0f;
 }
+
+DetailLevel Pipeline::detail_level_at_distance(float dist) const {
+    /*
+     * Given a distance (e.g. from a camera), this will return the detail level
+     * that should be used at that distance
+     */
+
+    DetailLevel level = DETAIL_LEVEL_NEAREST;
+
+    for(auto& p: detail_level_end_distances_) {
+        if(dist < p.second) {
+            return level;
+        }
+
+        level = p.first;
+    }
+
+    return level;
+}
+
 
 void Pipeline::set_priority(int32_t priority) {
     if(priority_ != priority) {
@@ -324,7 +350,13 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             }
         );
 
-        for(auto& renderable: node->_get_renderables(camera->frustum())) {
+        /* FIXME: Store squared distances to avoid sqrt */
+        float distance_to_camera = (camera->absolute_position() - node->absolute_position()).length();
+
+        /* Find the ideal detail level at this distance from the camera */
+        auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
+
+        for(auto& renderable: node->_get_renderables(camera->frustum(), level)) {
             if(!renderable->index_element_count()) {
                 // Don't render things with no indices
                 continue;
@@ -333,7 +365,7 @@ void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rend
             renderable->update_last_visible_frame_id(frame_id);
             renderable->set_affected_by_lights(renderable_lights);
 
-            render_queue.insert_renderable(renderable.get());
+            render_queue.insert_renderable(renderable);
 
             ++renderables_rendered;
         }

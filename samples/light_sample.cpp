@@ -27,7 +27,7 @@ public:
         texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
         texture_.fetch()->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
-        actor_->mesh()->set_texture_on_material(0, texture_);
+        actor_->base_mesh()->set_texture_on_material(0, texture_);
 
         // Test Camera::look_at function
         camera_->look_at(actor_->absolute_position());

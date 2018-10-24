@@ -86,16 +86,6 @@ void Stage::ask_owner_for_destruction() {
     window->delete_stage(id());
 }
 
-void Stage::on_subactor_material_changed(
-    ActorID actor_id, SubActor* subactor, MaterialID old, MaterialID newM
-) {
-    ActorChangeEvent evt;
-    evt.type = ACTOR_CHANGE_TYPE_SUBACTOR_MATERIAL_CHANGED;
-    evt.subactor_material_changed = { old, newM };
-
-    signal_actor_changed_(actor_id, evt);
-}
-
 ActorPtr Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
@@ -104,9 +94,6 @@ ActorPtr Stage::new_actor(RenderableCullingMode mode) {
 
     a->set_renderable_culling_mode(mode);
     a->set_parent(this);
-    a->signal_subactor_material_changed().connect(
-        std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
-    );
 
     /* Whenever the actor moves, we need to tell the stage's partitioner */
     a->signal_bounds_updated().connect([this, result](const AABB& new_bounds) {
@@ -132,9 +119,6 @@ ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
 
     a->set_renderable_culling_mode(mode);
     a->set_parent(this);
-    a->signal_subactor_material_changed().connect(
-        std::bind(&Stage::on_subactor_material_changed, this, _1, _2, _3, _4)
-    );
 
     /* Whenever the actor moves, we need to tell the stage's partitioner */
     a->signal_bounds_updated().connect([this, result](const AABB& new_bounds) {

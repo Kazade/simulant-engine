@@ -18,6 +18,17 @@ typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
 
 typedef std::vector<std::shared_ptr<Renderable>> RenderableList;
 
+/* Used for multiple levels of detail when rendering stage nodes */
+
+enum DetailLevel {
+    DETAIL_LEVEL_NEAREST = 0,
+    DETAIL_LEVEL_NEAR,
+    DETAIL_LEVEL_MID,
+    DETAIL_LEVEL_FAR,
+    DETAIL_LEVEL_FARTHEST,
+    DETAIL_LEVEL_MAX
+};
+
 class StageNode:
     public TreeNode,
     public Nameable,
@@ -93,7 +104,10 @@ public:
     StageNode* find_child_with_name(const std::string& name);
 
     /* Return a list of renderables to pass into the render queue */
-    virtual RenderableList _get_renderables(const smlt::Frustum& frustum) const = 0;
+    virtual RenderableList _get_renderables(
+        const smlt::Frustum& frustum,
+        DetailLevel detail_level
+    ) const = 0;
 
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
@@ -132,7 +146,7 @@ public:
         StageNode(stage) {}
 
     /* Containers don't directly have renderables, but their children do */
-    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum) const {
+    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum, DetailLevel detail_level) const {
         return std::vector<std::shared_ptr<Renderable>>();
     }
 

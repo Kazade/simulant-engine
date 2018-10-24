@@ -68,6 +68,8 @@ public:
         clear_mask_ = viewport_clear_flags;
     }
 
+    DetailLevel detail_level_at_distance(float dist) const;
+
     Property<Pipeline, Viewport> viewport = { this, &Pipeline::viewport_ };
 private:
     RenderSequence* sequence_;
@@ -81,7 +83,9 @@ private:
 
     bool is_active_;
 
-    friend class RenderSequence;        
+    std::map<DetailLevel, float> detail_level_end_distances_;
+
+    friend class RenderSequence;
 };
 
 struct RenderOptions {
