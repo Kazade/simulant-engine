@@ -23,7 +23,7 @@
 #include "../deps/kazlog/kazlog.h"
 #include "gl_thread_check.h"
 
-void check_and_log_error(const std::string& function_name);
+void check_and_log_error(const char* function_name);
 
 namespace GLChecker {
 
@@ -39,7 +39,7 @@ void end_of_frame_check();
 
 template<typename Res, typename Func, typename... Args>
 struct Checker {
-    static Res run(const std::string& function_name, Func&& func, Args&&... args) {
+    static Res run(const char* function_name, Func&& func, Args&&... args) {
         Res result = func(std::forward<Args>(args)...);
         if(USE_GL_GET_ERROR) {
             check_and_log_error(function_name);
@@ -50,7 +50,7 @@ struct Checker {
 
 template<typename Func, typename... Args>
 struct Checker<void, Func, Args...> {
-    static void run(const std::string& function_name, Func&& func, Args&&... args) {
+    static void run(const char* function_name, Func&& func, Args&&... args) {
         func(std::forward<Args>(args)...);
         if(USE_GL_GET_ERROR) {
             check_and_log_error(function_name);
@@ -60,7 +60,7 @@ struct Checker<void, Func, Args...> {
 
 template<typename Func>
 struct Checker<void, Func> {
-    static void run(const std::string& function_name, Func&& func) {
+    static void run(const char* function_name, Func&& func) {
         func();
         if(USE_GL_GET_ERROR) {
             check_and_log_error(function_name);
@@ -71,7 +71,7 @@ struct Checker<void, Func> {
 }
 
 template<typename Res=void, typename Func, typename... Args>
-Res _GLCheck(const std::string& function_name, Func&& func, Args&&... args) {
+Res _GLCheck(const char* function_name, Func&& func, Args&&... args) {
     GLThreadCheck::check();
     return GLChecker::Checker<Res, Func, Args...>::run(function_name, std::forward<Func>(func), std::forward<Args>(args)...);
 }
