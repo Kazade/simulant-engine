@@ -30,7 +30,7 @@ android:
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
 
-windows-x64-mingw:build:
+build:windows-x64-mingw:
   stage: build
   image: fedora:28
   before_script:
@@ -50,9 +50,12 @@ windows-x64-mingw:build:
       - build-debug/simulant/
       - build-debug/tests/simulant_tests.exe
 
-windows-x64-mingw:test:
+test:windows-x64-mingw:
   stage: test
   image: fedora:28
+  allow_failure: true
+  dependencies:
+   - build:windows-x64-mingw
   before_script:
    - dnf install -y wine winetricks
   script:
@@ -60,7 +63,7 @@ windows-x64-mingw:test:
    - cp simulant/libsimulant.dll tests
    - wine tests/simulant_tests.exe
 
-linux-x64-gcc:build:
+build:linux-x64-gcc:
   stage: build
   image: fedora:28
   before_script:
@@ -80,18 +83,18 @@ linux-x64-gcc:build:
       - build-debug/simulant/
       - build-debug/tests/simulant_tests
 
-linux-x64-gcc:test:
+test:linux-x64-gcc:
   stage: test
   image: fedora:28
   dependencies:
-   - linux-x64-gcc:build
+   - build:linux-x64-gcc
   before_script:
-   - dnf install -y SDL2 openal-soft
+   - dnf install -y SDL2 openal-soft mesa-libGL
   script:
    - cd build-debug
    - ./tests/simulant_tests
 
-dreamcast-sh4-gcc:build:
+build:dreamcast-sh4-gcc:
   stage: build
   image: kazade/dreamcast-sdk
   script:
@@ -105,12 +108,14 @@ dreamcast-sh4-gcc:build:
       - build-release/simulant/
       - build-release/tests/simulant_tests.elf
 
-dreamcast-sh4-gcc:test:
+test:dreamcast-sh4-gcc:
   stage: test
   image: fedora:28
+  allow_failure: true
   dependencies:
-    - dreamcast-sh4-gcc:build
+    - build:dreamcast-sh4-gcc
   before_script:
+    - dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
     - dnf install -y lxdream
   script:
     - cd build-release
