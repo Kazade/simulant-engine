@@ -68,6 +68,13 @@ public:
         clear_mask_ = viewport_clear_flags;
     }
 
+    void set_detail_level_distances(
+        float nearest_cutoff,
+        float near_cutoff,
+        float mid_cutoff,
+        float far_cutoff
+    );
+
     DetailLevel detail_level_at_distance(float dist) const;
 
     Property<Pipeline, Viewport> viewport = { this, &Pipeline::viewport_ };

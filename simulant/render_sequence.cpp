@@ -50,23 +50,26 @@ Pipeline::Pipeline(PipelineID id,
     detail_level_end_distances_[DETAIL_LEVEL_FARTHEST] = 400.0f;
 }
 
+void Pipeline::set_detail_level_distances(float nearest_cutoff,
+    float near_cutoff, float mid_cutoff, float far_cutoff) {
+
+    detail_level_end_distances_[DETAIL_LEVEL_NEAREST] = nearest_cutoff;
+    detail_level_end_distances_[DETAIL_LEVEL_NEAR] = near_cutoff;
+    detail_level_end_distances_[DETAIL_LEVEL_MID] = mid_cutoff;
+    detail_level_end_distances_[DETAIL_LEVEL_FAR] = far_cutoff;
+}
+
 DetailLevel Pipeline::detail_level_at_distance(float dist) const {
     /*
      * Given a distance (e.g. from a camera), this will return the detail level
      * that should be used at that distance
      */
+    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_NEAREST)) return DETAIL_LEVEL_NEAREST;
+    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_NEAR)) return DETAIL_LEVEL_NEAR;
+    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_MID)) return DETAIL_LEVEL_MID;
+    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_FAR)) return DETAIL_LEVEL_FAR;
 
-    DetailLevel level = DETAIL_LEVEL_NEAREST;
-
-    for(auto& p: detail_level_end_distances_) {
-        if(dist < p.second) {
-            return level;
-        }
-
-        level = p.first;
-    }
-
-    return level;
+    return DETAIL_LEVEL_FARTHEST;
 }
 
 
@@ -88,7 +91,7 @@ void Pipeline::deactivate() {
 
     is_active_ = false;
 
-    if(stage_) {
+    if(stage_ && sequence_->window->has_stage(stage_)) {
         sequence_->window->stage(stage_)->decrement_render_count();
     }
 }
