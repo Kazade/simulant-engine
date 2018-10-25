@@ -49,7 +49,7 @@ linux-x64:
   stage: build
   image: fedora:28
   before_script:
-   - dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel
+   - dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - mkdir build-debug
    - cd build-debug
