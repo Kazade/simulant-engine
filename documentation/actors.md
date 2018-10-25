@@ -33,5 +33,14 @@ You can access the base mesh through the `base_mesh()` method, or alternatively 
 Simulant will determine the ideal `DetailLevel` using the ranges defined on the `Pipeline` being rendered. If there is no mesh attached to the Actor at the ideal level, then the next nearest
 available mesh will be rendered instead.
 
+To define the distance ranges that activate each detail level you must use the `Pipeline::set_detail_level_distances(nearest_cutoff, near_cutoff, mid_cutoff, far_cutoff)` method. For example:
+
+```
+auto pipeline = window.render(stage, camera).fetch();
+pipeline->set_detail_level_distances(10.0f, 20.0f, 40.0f, 80.0f);
+```
+
+Any distance above `far_cutoff` will use the `DETAIL_LEVEL_FARTHEST` level. Any below
+`nearest_cutoff` will use the `DETAIL_LEVEL_NEAREST` level.
 
 
