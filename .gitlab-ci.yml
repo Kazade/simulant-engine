@@ -37,12 +37,12 @@ windows-mingw:
   script:
    - mkdir build-debug
    - cd build-debug
-   - mingw64-cmake -DCMAKE_BUILD_TYPE=Debug ..
+   - mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
    - cd ..
    - mkdir build-release
    - cd build-release
-   - mingw64-cmake -DCMAKE_BUILD_TYPE=Release ..
+   - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
 
 linux-x64:
@@ -53,11 +53,21 @@ linux-x64:
   script:
    - mkdir build-debug
    - cd build-debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug ..
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
    - cd ..
    - mkdir build-release
    - cd build-release
-   - cmake -DCMAKE_BUILD_TYPE=Release ..
+   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
+   - make -j3
+
+dreamcast-sh4:
+  stage: build
+  image: kazade/dreamcast-sdk
+  script:
+   - mkdir build-release
+   - cd build-release
+   - source /etc/bash.bashrc
+   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
 
