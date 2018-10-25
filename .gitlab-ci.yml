@@ -1,5 +1,6 @@
 stages:
  - build
+ - test
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -29,7 +30,7 @@ android:
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
 
-windows-mingw:
+windows-x64-mingw:build:
   stage: build
   image: fedora:28
   before_script:
@@ -44,8 +45,22 @@ windows-mingw:
    - cd build-release
    - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
+  artifacts:
+    paths:
+      - build-debug/simulant/
+      - build-debug/tests/simulant_tests.exe
 
-linux-x64:
+windows-x64-mingw:test:
+  stage: test
+  image: fedora:28
+  before_script:
+   - dnf install -y wine winetricks
+  script:
+   - cd build-debug
+   - cp simulant/libsimulant.dll tests
+   - wine tests/simulant_tests.exe
+
+linux-x64-gcc:build:
   stage: build
   image: fedora:28
   before_script:
@@ -60,14 +75,42 @@ linux-x64:
    - cd build-release
    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
+  artifacts:
+    paths:
+      - build-debug/simulant/
+      - build-debug/tests/simulant_tests
 
-dreamcast-sh4:
+linux-x64-gcc:test:
+  stage: test
+  image: fedora:28
+  dependencies:
+   - linux-x64-gcc:build
+  script:
+   - cd build-debug
+   - ./tests/simulant_tests
+
+dreamcast-sh4-gcc:build:
   stage: build
   image: kazade/dreamcast-sdk
   script:
    - mkdir build-release
    - cd build-release
    - source /etc/bash.bashrc
-   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
+  artifacts:
+    paths:
+      - build-release/simulant/
+      - build-release/tests/simulant_tests.elf
+
+dreamcast-sh4-gcc:test:
+  stage: test
+  image: fedora:28
+  dependencies:
+    - dreamcast-sh4-gcc:build
+  before_script:
+    - dnf install -y lxdream
+  script:
+    - cd build-release
+    - lxdream -b -H -e tests/simulant_tests.elf
 
