@@ -85,6 +85,8 @@ linux-x64-gcc:test:
   image: fedora:28
   dependencies:
    - linux-x64-gcc:build
+  before_script:
+   - dnf install -y SDL2 openal-soft
   script:
    - cd build-debug
    - ./tests/simulant_tests
