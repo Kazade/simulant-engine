@@ -19,7 +19,7 @@ public:
     virtual ~SubMeshInterface() {}
 
     virtual const MaterialID material_id() const = 0;
-    virtual const MeshArrangement arrangement() const = 0;
+    virtual MeshArrangement arrangement() const = 0;
 
     Property<SubMeshInterface, VertexData, true> vertex_data = { this, &SubMeshInterface::get_vertex_data };
     Property<SubMeshInterface, IndexData, true> index_data = { this, &SubMeshInterface::get_index_data };
@@ -47,7 +47,7 @@ public:
     const MaterialID material_id() const;
     void set_material_id(MaterialID mat);
 
-    const MeshArrangement arrangement() const { return arrangement_; }
+    MeshArrangement arrangement() const { return arrangement_; }
 
     const AABB& aabb() const {
         return bounds_;

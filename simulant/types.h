@@ -253,7 +253,7 @@ public:
 
     bool has_texcoordX(uint8_t which) const;
 
-    const VertexAttribute texcoordX_attribute(uint8_t which) const;
+    VertexAttribute texcoordX_attribute(uint8_t which) const;
 
     bool has_texcoord0() const { return bool(texcoord0_attribute_); }
     bool has_texcoord1() const { return bool(texcoord1_attribute_); }

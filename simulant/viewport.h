@@ -50,10 +50,10 @@ public:
     Viewport(ViewportType type, const Colour& colour=smlt::Colour::BLACK);
     Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour& colour=smlt::Colour::BLACK);
 
-    const Ratio x() const { return x_; }
-    const Ratio y() const { return y_; }
-    const Ratio width() const { return width_; }
-    const Ratio height() const { return height_; }
+    Ratio x() const { return x_; }
+    Ratio y() const { return y_; }
+    Ratio width() const { return width_; }
+    Ratio height() const { return height_; }
 
     void clear(const RenderTarget& target, uint32_t clear_flags);
     void apply(const RenderTarget& target);

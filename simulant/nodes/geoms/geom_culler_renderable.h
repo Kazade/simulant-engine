@@ -11,7 +11,7 @@ class GeomCullerRenderable : public Renderable {
 public:
     GeomCullerRenderable(GeomCuller* owner, MaterialID mat_id, IndexType index_type);
 
-    const MeshArrangement arrangement() const {
+    MeshArrangement arrangement() const {
         return MESH_ARRANGEMENT_TRIANGLES;
     }
 
@@ -25,7 +25,7 @@ public:
     RenderPriority render_priority() const;
     Mat4 final_transformation() const { return Mat4(); }
     const MaterialID material_id() const { return material_id_; }
-    const bool is_visible() const;
+    bool is_visible() const;
     IndexData& _indices() { return indices_; }
     const AABB transformed_aabb() const;
     const AABB& aabb() const;

@@ -114,15 +114,15 @@ public:
     AABB(const Vec3* vertices, const std::size_t count);    
     AABB(const VertexData& vertex_data);
 
-    const float width() const {
+    float width() const {
         return fabs(max_.x - min_.x);
     }
 
-    const float height() const {
+    float height() const {
         return fabs(max_.y - min_.y);
     }
 
-    const float depth() const  {
+    float depth() const  {
         return fabs(max_.z - min_.z);
     }
 
@@ -130,11 +130,11 @@ public:
         return Vec3(width(), height(), depth());
     }
 
-    const float max_dimension() const {
+    float max_dimension() const {
         return std::max(width(), std::max(height(), depth()));
     }
 
-    const float min_dimension() const {
+    float min_dimension() const {
         return std::min(width(), std::min(height(), depth()));
     }
 
@@ -145,7 +145,7 @@ public:
         return Vec3(min_) + ((Vec3(max_) - Vec3(min_)) * 0.5f);
     }
 
-    const bool has_zero_area() const {
+    bool has_zero_area() const {
         /*
          * Returns True if the AABB has two or more zero dimensions
          */
