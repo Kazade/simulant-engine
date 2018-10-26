@@ -28,6 +28,7 @@ set(
     /usr/${MINGW_PREFIX}/sys-root/mingw/lib
 )
 
+set(CMAKE_EXE_LINKER_FLAGS "-static -static-libstdc++")
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search
