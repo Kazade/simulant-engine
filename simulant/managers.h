@@ -42,7 +42,7 @@ public:
     CameraPtr camera(CameraID c);
     void delete_camera(CameraID cid);
     uint32_t camera_count() const;
-    const bool has_camera(CameraID id) const;
+    bool has_camera(CameraID id) const;
     void delete_all_cameras();
 
 private:

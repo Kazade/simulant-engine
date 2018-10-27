@@ -55,7 +55,7 @@ bool VertexSpecification::has_texcoordX(uint8_t which) const {
            (which == 7) ? has_texcoord7() : false;
 }
 
-const VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
+VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
     assert(which < MAX_TEXTURE_UNITS);
 
     switch(which) {

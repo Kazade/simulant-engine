@@ -61,7 +61,7 @@ RenderPriority GeomCullerRenderable::render_priority() const {
     return culler_->geom_->render_priority();
 }
 
-const bool GeomCullerRenderable::is_visible() const {
+bool GeomCullerRenderable::is_visible() const {
     return culler_->geom_->is_visible();
 }
 

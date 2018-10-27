@@ -63,7 +63,7 @@ class Renderable:
 public:
     virtual ~Renderable() {}
 
-    virtual const MeshArrangement arrangement() const = 0;
+    virtual MeshArrangement arrangement() const = 0;
 
     virtual void prepare_buffers(Renderer* renderer) = 0;
 
@@ -78,7 +78,7 @@ public:
     virtual Mat4 final_transformation() const = 0;
 
     virtual const MaterialID material_id() const = 0;
-    virtual const bool is_visible() const = 0;
+    virtual bool is_visible() const = 0;
 
     void update_last_visible_frame_id(uint64_t frame_id) {
         last_visible_frame_id_ = frame_id;

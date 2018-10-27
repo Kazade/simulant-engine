@@ -13,27 +13,27 @@ class Boundable {
 public:
     virtual const AABB& aabb() const = 0;
 
-    virtual const float width() const {
+    virtual float width() const {
         AABB box = aabb();
         return box.width();
     }
 
-    virtual const float height() const {
+    virtual float height() const {
         AABB box = aabb();
         return box.height();
     }
 
-    virtual const float depth() const {
+    virtual float depth() const {
         AABB box = aabb();
         return box.depth();
     }
 
-    virtual const float half_width() const { return width() * 0.5f; }
-    virtual const float half_height() const { return height() * 0.5f; }
-    virtual const float half_depth() const { return depth() * 0.5f; }
+    virtual float half_width() const { return width() * 0.5f; }
+    virtual float half_height() const { return height() * 0.5f; }
+    virtual float half_depth() const { return depth() * 0.5f; }
 
-    virtual const float diameter() const { return std::max(width(), std::max(height(), depth())); }
-    virtual const float radius() const { return diameter() * 0.5f; }
+    virtual float diameter() const { return std::max(width(), std::max(height(), depth())); }
+    virtual float radius() const { return diameter() * 0.5f; }
 };
 
 /**
