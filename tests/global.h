@@ -23,13 +23,17 @@ public:
             window = smlt::SDL2Window::create(nullptr, 640, 480, 0, false, true);
 #endif
             window->_init();
-            window->set_logging_level(smlt::LOG_LEVEL_NONE);
+
+            if(std::getenv("SIMULANT_DEBUG")) {
+                kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
+                window->set_logging_level(smlt::LOG_LEVEL_DEBUG);
+            } else {
+                window->set_logging_level(smlt::LOG_LEVEL_NONE);
+            }
 
             auto root = kfs::path::dir_name(kfs::path::dir_name(__FILE__));
-            window->resource_locator->add_search_path(
-                kfs::path::join(root, "samples/data")
-            );
-
+            window->resource_locator->add_search_path(kfs::path::join(root, "samples/data"));
+            window->resource_locator->add_search_path("/pc");
         } else {
             window->reset();
         }

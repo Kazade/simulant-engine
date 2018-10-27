@@ -78,6 +78,7 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
 #else
     auto abs_final_name = kfs::path::abs_path(final_name);
 
+    L_DEBUG(_F("Trying path: {0}").format(abs_final_name));
     if(kfs::path::exists(abs_final_name)) {
         return abs_final_name;
     }
@@ -87,7 +88,10 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
             kfs::path::join(path.encode(), final_name)
         );
 
+        L_DEBUG(_F("Trying path: {0}").format(full_path));
+
         if(kfs::path::exists(full_path)) {
+            L_DEBUG(_F("Found: {0}").format(full_path));
             return full_path;
         }
     }
