@@ -100,7 +100,7 @@ test:linux-x64-gcc:
   dependencies:
    - build:linux-x64-gcc
   before_script:
-   - dnf install -y SDL2 openal-soft mesa-libGL
+   - dnf install -y SDL2 openal-soft mesa-libGL libstdc++
   script:
    - cd build-debug
    - ./tests/simulant_tests
