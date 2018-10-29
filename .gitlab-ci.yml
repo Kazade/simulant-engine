@@ -55,6 +55,7 @@ build:windows-x64-mingw:
   artifacts:
     paths:
       - build-debug/simulant/
+      - build-debug/sample_data/
       - build-debug/tests/simulant_tests.exe
       - build-debug/tests/*.dll
 
@@ -92,6 +93,7 @@ build:linux-x64-gcc:
   artifacts:
     paths:
       - build-debug/simulant/
+      - build-debug/sample_data/
       - build-debug/tests/simulant_tests
 
 test:linux-x64-gcc:
@@ -117,6 +119,7 @@ build:dreamcast-sh4-gcc:
   artifacts:
     paths:
       - build-release/simulant/
+      - build-release/sample_data/
       - build-release/tests/simulant_tests.elf
 
 test:dreamcast-sh4-gcc:
