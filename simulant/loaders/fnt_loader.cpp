@@ -231,7 +231,7 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
 
 void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     // FIXME: Support multiple pages
-    auto texture_path = kfs::path::dir_name(filename_.encode());
+    auto texture_path = kfs::path::dir_name(kfs::path::abs_path(filename_.encode()));
     texture_path = kfs::path::join(texture_path, texture_file);
 
     TextureFlags flags;

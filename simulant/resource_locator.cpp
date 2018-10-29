@@ -37,23 +37,29 @@ namespace smlt {
 
 ResourceLocator::ResourceLocator(Window *window):
     window_(window) {
+
+    resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
+
 #ifndef __ANDROID__
     //Android can't find the executable directory in release mode, but can in debug!
     resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
-    resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
 #endif
 
 #ifdef _arch_dreamcast
-    // On the Dreamcast, always add the CD as a search path
+    // On the Dreamcast, always add the CD and pc folder as a search path
     resource_path_.push_back("/cd");
+    resource_path_.push_back("/pc");
 #endif
 
+#ifdef __LINUX__
     resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
     resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
+#endif
 }
 
 void ResourceLocator::add_search_path(const unicode& path) {
-    resource_path_.push_back(path);
+    unicode new_path(kfs::path::abs_path(path.encode()));
+    resource_path_.push_back(new_path);
 }
 
 unicode ResourceLocator::locate_file(const unicode &filename) const {
@@ -66,6 +72,8 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         "${RENDERER}",
         window_->renderer->name()
     ).encode();
+
+    final_name = kfs::path::norm_path(final_name);
 
 #ifdef __ANDROID__
     //On Android we use SDL_RWops which reads from the APK
@@ -89,7 +97,6 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         );
 
         L_DEBUG(_F("Trying path: {0}").format(full_path));
-
         if(kfs::path::exists(full_path)) {
             L_DEBUG(_F("Found: {0}").format(full_path));
             return full_path;
@@ -138,7 +145,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 #else
     unicode path = locate_file(filename);
 
-    std::ifstream file_in(path.encode());
+    std::ifstream file_in(path.encode(), std::ios::in | std::ios::binary);
 
     if(!file_in) {
         throw ResourceMissingError("Unable to load file: " + filename.encode());

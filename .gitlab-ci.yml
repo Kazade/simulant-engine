@@ -130,5 +130,5 @@ test:dreamcast-sh4-gcc:
     - dnf install -y lxdream
   script:
     - cd build-release
-    - lxdream -b -H -e tests/simulant_tests.elf
+    - lxdream -H -e tests/simulant_tests.elf
 
