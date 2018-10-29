@@ -105,7 +105,7 @@ test:linux-x64-gcc:
    - dnf install -y SDL2 openal-soft mesa-libGL libstdc++
   script:
    - cd build-debug
-   - ./tests/simulant_tests
+   - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests
 
 build:dreamcast-sh4-gcc:
   stage: build
