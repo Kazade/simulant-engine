@@ -92,6 +92,13 @@ IF(ANDROID)
 LINK_LIBRARIES(log)
 ENDIF()
 
+# FIXME: Only do this if we're building samples or tests
+FILE(COPY ${CMAKE_SOURCE_DIR}/samples/data/ DESTINATION ${CMAKE_BINARY_DIR}/sample_data/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/particles/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/particles/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/materials/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/materials/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/textures/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/textures/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/fonts/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/fonts/)
+
 ADD_SUBDIRECTORY(simulant)
 ADD_SUBDIRECTORY(tests)
 
