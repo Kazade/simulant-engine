@@ -74,6 +74,9 @@ test:windows-x64-mingw:
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
+   # We have to unset SDL_AUDIODRIVER - otherwise it tries to use the pulseaudio
+   # backend on Windows (!)
+   - export SDL_AUDIODRIVER=""
   script:
    - cd build-debug
    - cp simulant/libsimulant.dll tests
