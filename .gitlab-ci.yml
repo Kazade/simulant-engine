@@ -79,7 +79,6 @@ test:windows-x64-mingw:
    # We have to ALSOFT_DRIVERS - otherwise it tries to use the pulseaudio
    # backend on Windows (!)
    - export ALSOFT_DRIVERS=dsound
-   - winetricks sound=pulse
   script:
    - cd build-debug
    - cp simulant/libsimulant.dll tests
