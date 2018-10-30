@@ -76,7 +76,7 @@ test:windows-x64-mingw:
    - export LIBGL_ALWAYS_SOFTWARE=1
    # We have to unset SDL_AUDIODRIVER - otherwise it tries to use the pulseaudio
    # backend on Windows (!)
-   - export SDL_AUDIODRIVER=""
+   - export ALSOFT_DRIVERS=dsound
   script:
    - cd build-debug
    - cp simulant/libsimulant.dll tests
