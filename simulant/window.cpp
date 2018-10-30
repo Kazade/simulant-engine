@@ -523,6 +523,7 @@ void Window::reset() {
     resource_manager_ = std::make_shared<ResourceManager>(this);
     resource_manager_->init();
 
+    L_DEBUG("Recreating defaults");
     create_defaults();
 }
 

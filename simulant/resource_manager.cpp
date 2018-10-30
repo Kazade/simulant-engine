@@ -96,11 +96,17 @@ bool ResourceManager::init() {
 
     assert(default_material_id_);
 
+    auto mat = material(default_material_id_);
+
+    assert(mat && "Material was missing?!");
+
     //Set the default material's first texture to the default (white) texture
-    material(default_material_id_)->pass(0)->set_texture_unit(0, default_texture_id_);
+    mat->first_pass()->set_texture_unit(0, default_texture_id_);
 
     default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
     default_body_font_ = new_font_from_file(BODY_FONT).fetch();
+
+    L_DEBUG("Finished initializing defaults");
 
     return true;
 }
