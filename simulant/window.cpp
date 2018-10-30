@@ -179,8 +179,7 @@ void Window::_cleanup() {
         sound_driver_.reset();
     }
 
-    delete resource_manager_;
-    resource_manager_ = nullptr;
+    resource_manager_.reset();
 
     destroy_window();
     GLThreadCheck::cleanup();
@@ -515,6 +514,11 @@ void Window::reset() {
 
     StageManager::destroy_all();
     background_manager_.reset(new BackgroundManager(this));
+
+    /* Destroy and recreate the base resource manager */
+
+    resource_manager_ = std::make_shared<ResourceManager>(this);
+    resource_manager_->init();
 
     create_defaults();
 }

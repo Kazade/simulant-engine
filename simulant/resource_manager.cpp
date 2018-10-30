@@ -41,25 +41,40 @@ ResourceManager::ResourceManager(Window* window, ResourceManager *parent):
     font_manager_.reset(new FontManager());
 
     if(parent_) {
+        L_DEBUG(_F("Registering new resource manager: {0}").format(this));
         base_manager()->register_child(this);
+    } else {
+        L_DEBUG(_F("Created base manager: {0}").format(this));
     }
 }
 
 ResourceManager::~ResourceManager() {
     if(parent_) {
+        L_DEBUG(_F("Unregistering resource manager: {0}").format(this));
         base_manager()->unregister_child(this);
+        parent_ = nullptr;
+    } else {
+        if(!children_.empty()) {
+            L_WARN("Destroyed base manager while children remain");
+        }
+
+        L_DEBUG(_F("Destroyed base manager: {0}").format(this));
     }
 }
 
 bool ResourceManager::init() {
     if(base_manager() != this) {
         // Only the base manager needs to load default materials and textures
+        L_DEBUG("Not the base manager, so not initializing");
         return true;
     }
+
+    L_DEBUG("Initalizing default materials, textures, and fonts");
 
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
     default_texture_id_ = new_texture(GARBAGE_COLLECT_NEVER);
+    assert(default_texture_id_);
 
     {
         // FIXME: Race condition between these two lines?
@@ -79,11 +94,14 @@ bool ResourceManager::init() {
     //Maintain ref-count
     default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
 
+    assert(default_material_id_);
+
     //Set the default material's first texture to the default (white) texture
     material(default_material_id_)->pass(0)->set_texture_unit(0, default_texture_id_);
 
     default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
     default_body_font_ = new_font_from_file(BODY_FONT).fetch();
+
     return true;
 }
 

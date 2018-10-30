@@ -201,8 +201,14 @@ public:
     FontID default_font_id(DefaultFontStyle style=DEFAULT_FONT_STYLE_BODY) const;
 
     ResourceManager* base_manager() const {
-        // Constness applies to the resource manager itself, not the returned base manager
         ResourceManager* ret = const_cast<ResourceManager*>(this);
+        assert(ret && "Unexpectedly failed to cast");
+
+        if(!parent_) {
+            return ret;
+        }
+
+        // Constness applies to the resource manager itself, not the returned base manager        
         while(ret->parent_) {
             ret = ret->parent_;
         }
