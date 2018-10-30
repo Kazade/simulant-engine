@@ -71,12 +71,15 @@ test:windows-x64-mingw:
    - pacmd load-module module-null-sink sink_name=MySink
    - pacmd update-sink-proplist MySink device.description=MySink
    - pacmd load-module module-loopback sink=MySink
+   - pacmd list-sinks
+   - pacmd set-default-sink MySink
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
-   # We have to unset SDL_AUDIODRIVER - otherwise it tries to use the pulseaudio
+   # We have to ALSOFT_DRIVERS - otherwise it tries to use the pulseaudio
    # backend on Windows (!)
    - export ALSOFT_DRIVERS=dsound
+   - winetricks sound=pulse
   script:
    - cd build-debug
    - cp simulant/libsimulant.dll tests
