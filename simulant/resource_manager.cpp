@@ -74,6 +74,9 @@ bool ResourceManager::init() {
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
     default_texture_id_ = new_texture(GARBAGE_COLLECT_NEVER);
+
+    L_DEBUG("- Created texture");
+
     assert(default_texture_id_);
 
     {
@@ -90,9 +93,13 @@ bool ResourceManager::init() {
             tex->data()[i] = 255;
         }
         tex->mark_data_changed();
+
+        L_DEBUG("- Generated texture data");
     }
+
     //Maintain ref-count
     default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
+    L_DEBUG("- Created material");
 
     assert(default_material_id_);
 
@@ -100,9 +107,12 @@ bool ResourceManager::init() {
 
     assert(mat && "Material was missing?!");
 
+    L_DEBUG("- Applying texture to material");
+
     //Set the default material's first texture to the default (white) texture
     mat->first_pass()->set_texture_unit(0, default_texture_id_);
 
+    L_DEBUG("- Loading fonts");
     default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
     default_body_font_ = new_font_from_file(BODY_FONT).fetch();
 
