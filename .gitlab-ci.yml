@@ -103,6 +103,7 @@ test:linux-x64-gcc:
    - build:linux-x64-gcc
   before_script:
    - dnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils
+   - pulseaudio --start
    - pacmd load-module module-null-sink sink_name=MySink
    - pacmd update-sink-proplist MySink device.description=MySink
    - pacmd load-module module-loopback sink=MySink
