@@ -508,6 +508,8 @@ void Window::disable_virtual_joypad() {
  * window to its original state.
  */
 void Window::reset() {
+    L_DEBUG("Resetting Window state");
+
     idle->execute(); //Execute any idle tasks before we go deleting things
 
     render_sequence_->delete_all_pipelines();
@@ -517,6 +519,7 @@ void Window::reset() {
 
     /* Destroy and recreate the base resource manager */
 
+    L_DEBUG("Reinitializing the base manager");
     resource_manager_ = std::make_shared<ResourceManager>(this);
     resource_manager_->init();
 
