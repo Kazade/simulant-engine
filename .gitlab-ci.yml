@@ -67,6 +67,10 @@ test:windows-x64-mingw:
    - build:windows-x64-mingw
   before_script:
    - dnf install -y wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg
+   - pulseaudio --start
+   - pacmd load-module module-null-sink sink_name=MySink
+   - pacmd update-sink-proplist MySink device.description=MySink
+   - pacmd load-module module-loopback sink=MySink
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -109,6 +113,7 @@ test:linux-x64-gcc:
    - pacmd load-module module-loopback sink=MySink
   script:
    - cd build-debug
+   - export SIMULANT_DEBUG=1
    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests
 
 build:dreamcast-sh4-gcc:

@@ -190,7 +190,10 @@ public:
     unicode default_material_filename() const;
 
     MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
-        return base_manager()->material(base_manager()->default_material_id())->new_clone(this, garbage_collect);
+        auto mat_id = base_manager()->default_material_id();
+        assert(mat_id && "No default material, called to early?");
+
+        return base_manager()->material(mat_id)->new_clone(this, garbage_collect);
     }
 
     MaterialID default_material_id() const;
