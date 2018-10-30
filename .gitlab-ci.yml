@@ -66,8 +66,7 @@ test:windows-x64-mingw:
   dependencies:
    - build:windows-x64-mingw
   before_script:
-   - modprobe snd-dummy
-   - dnf install -y wine winetricks xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg
+   - dnf install -y wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -103,8 +102,10 @@ test:linux-x64-gcc:
   dependencies:
    - build:linux-x64-gcc
   before_script:
-   - modprobe snd-dummy
-   - dnf install -y SDL2 openal-soft mesa-libGL libstdc++
+   - dnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils
+   - pacmd load-module module-null-sink sink_name=MySink
+   - pacmd update-sink-proplist MySink device.description=MySink
+   - pacmd load-module module-loopback sink=MySink
   script:
    - cd build-debug
    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests
