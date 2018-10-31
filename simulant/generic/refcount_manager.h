@@ -81,6 +81,8 @@ public:
             std::lock_guard<std::mutex> lock(manager_lock_);
             id = generate_new_id();
             assert(id);
+        } else {
+            L_DEBUG(_F("Already passed existing ID: {0}").format(id));
         }
 
         /* We intentionally create the object outside of the resource manager
@@ -90,6 +92,8 @@ public:
          */
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);
         assert(obj);
+
+        L_DEBUG("Object created");
 
         /*
          * FIXME: Should be more options than on or off
