@@ -90,7 +90,10 @@ public:
          * in a thread other than the main thread, and we need something to
          * run on idle.
          */
+        L_DEBUG("About to create object");
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);
+        L_DEBUG("Done");
+
         assert(obj);
 
         L_DEBUG("Object created");
