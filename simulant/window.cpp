@@ -522,7 +522,9 @@ void Window::reset() {
     resource_manager_.reset();
 
     L_DEBUG("Reinitializing the base manager");
-    resource_manager_ = std::make_shared<ResourceManager>(this);
+
+    resource_manager_.reset(new ResourceManager(this));
+    assert(resource_manager_);
     resource_manager_->init();
 
     L_DEBUG("Recreating defaults");

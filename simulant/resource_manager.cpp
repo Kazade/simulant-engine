@@ -39,6 +39,10 @@ ResourceManager::ResourceManager(Window* window, ResourceManager *parent):
     parent_(parent) {
 
     font_manager_.reset(new FontManager());
+    texture_manager_.reset(new TextureManager());
+    material_manager_.reset(new MaterialManager());
+    mesh_manager_.reset(new MeshManager());
+    sound_manager_.reset(new SoundManager());
 
     if(parent_) {
         L_DEBUG(_F("Registering new resource manager: {0}").format(this));
@@ -122,12 +126,12 @@ bool ResourceManager::init() {
 }
 
 void ResourceManager::update(float dt) {
-    MaterialManager::each([dt](Material* mat) {
+    material_manager_->each([dt](Material* mat) {
         mat->update_behaviours(dt);
         mat->update(dt);
     });
 
-    TextureManager::each([dt](Texture* tex) {
+    texture_manager_->each([dt](Texture* tex) {
         tex->update(dt);
     });
 }
@@ -138,11 +142,10 @@ void ResourceManager::run_garbage_collection() {
     }
 
     //Garbage collect all the things
-    MeshManager::garbage_collect();
-    MaterialManager::garbage_collect();
-    TextureManager::garbage_collect();
-    SoundManager::garbage_collect();
-
+    mesh_manager_->garbage_collect();
+    material_manager_->garbage_collect();
+    texture_manager_->garbage_collect();
+    sound_manager_->garbage_collect();
     font_manager_->garbage_collect();
 }
 
@@ -151,7 +154,7 @@ MeshPtr ResourceManager::mesh(MeshID m) {
         return parent_->mesh(m);
     }
 
-    return MeshManager::get(m).lock();
+    return mesh_manager_->get(m).lock();
 }
 
 const MeshPtr ResourceManager::mesh(MeshID m) const {
@@ -159,11 +162,11 @@ const MeshPtr ResourceManager::mesh(MeshID m) const {
         return parent_->mesh(m);
     }
 
-    return MeshManager::get(m).lock();
+    return mesh_manager_->get(m).lock();
 }
 
 MeshID ResourceManager::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
-    MeshID result = MeshManager::make(garbage_collect, this, vertex_specification);
+    MeshID result = mesh_manager_->make(garbage_collect, this, vertex_specification);
     return result;
 }
 
@@ -209,7 +212,7 @@ MeshID ResourceManager::new_mesh_from_file(const unicode& path, GarbageCollectMe
 
     loader->into(mesh(mesh_id));
 
-    MeshManager::mark_as_uncollected(mesh_id);
+    mesh_manager_->mark_as_uncollected(mesh_id);
     return mesh_id;
 }
 
@@ -221,7 +224,7 @@ MeshID ResourceManager::new_mesh_from_tmx_file(const unicode& tmx_file, const un
         {"layer", layer_name},
         {"render_size", tile_render_size}
     });
-    MeshManager::mark_as_uncollected(mesh_id);
+    mesh_manager_->mark_as_uncollected(mesh_id);
     return mesh_id;
 }
 
@@ -232,7 +235,7 @@ MeshID ResourceManager::new_mesh_from_heightmap(const unicode& image_file, const
     window->loader_for("heightmap_loader", image_file)->into(mesh, {
         { "spec", spec},
     });
-    MeshManager::mark_as_uncollected(mesh_id);
+    mesh_manager_->mark_as_uncollected(mesh_id);
     return mesh_id;
 }
 
@@ -242,7 +245,7 @@ MeshID ResourceManager::new_mesh_as_cube(float width, GarbageCollectMethod garba
         garbage_collect
     );
     smlt::procedural::mesh::cube(mesh(m), width);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
@@ -252,7 +255,7 @@ MeshID ResourceManager::new_mesh_as_cube_with_submesh_per_face(float width, Garb
         garbage_collect
     );
     smlt::procedural::mesh::box(mesh(m), width, width, width, smlt::procedural::MESH_STYLE_SUBMESH_PER_FACE);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 
 }
@@ -260,42 +263,42 @@ MeshID ResourceManager::new_mesh_as_cube_with_submesh_per_face(float width, Garb
 MeshID ResourceManager::new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     smlt::procedural::mesh::box(mesh(m), width, height, depth);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManager::new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     smlt::procedural::mesh::sphere(mesh(m), diameter);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManager::new_mesh_as_rectangle(float width, float height, const Vec2& offset, MaterialID material, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     smlt::procedural::mesh::rectangle(mesh(m), width, height, offset.x, offset.y, 0, false, material);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManager::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     smlt::procedural::mesh::cylinder(mesh(m), diameter, length, segments, stacks);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManager::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     smlt::procedural::mesh::capsule(mesh(m), diameter, length, segments, 1, stacks);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManager::new_mesh_as_icosphere(float diameter, int subdivisions, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(VertexSpecification::DEFAULT, garbage_collect);
     m.fetch()->new_submesh_as_icosphere("icosphere", MaterialID(), diameter, subdivisions);
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
@@ -314,7 +317,7 @@ MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specif
     new_mesh->vertex_data->done();
     submesh->index_data->done();
 
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
 
     return m;
 }
@@ -334,14 +337,14 @@ MeshID ResourceManager::new_mesh_from_vertices(VertexSpecification vertex_specif
 
     new_mesh->vertex_data->done();
     submesh->index_data->done();
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
     return m;
 }
 
 MeshID ResourceManager::new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh(vertex_specification, garbage_collect);
     try {
-        MeshManager::manager_store_alias(alias, m);
+        mesh_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -352,7 +355,7 @@ MeshID ResourceManager::new_mesh_with_alias(const std::string& alias, VertexSpec
 MeshID ResourceManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_from_file(path, garbage_collect);
     try {
-        MeshManager::manager_store_alias(alias, m);
+        mesh_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -363,7 +366,7 @@ MeshID ResourceManager::new_mesh_with_alias_from_file(const std::string &alias, 
 MeshID ResourceManager::new_mesh_with_alias_as_cube(const std::string& alias, float width, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_cube(width, garbage_collect);
     try {
-        MeshManager::manager_store_alias(alias, m);
+        mesh_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -374,7 +377,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_cube(const std::string& alias, fl
 MeshID ResourceManager::new_mesh_with_alias_as_sphere(const std::string &alias, float diameter, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_sphere(diameter, garbage_collect);
     try {
-        MeshManager::manager_store_alias(alias, m);
+        mesh_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -385,7 +388,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_sphere(const std::string &alias, 
 MeshID ResourceManager::new_mesh_with_alias_as_rectangle(const std::string& alias, float width, float height, const Vec2& offset, smlt::MaterialID material, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     try {
-        MeshManager::manager_store_alias(alias, m);
+        mesh_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -396,7 +399,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_rectangle(const std::string& alia
 MeshID ResourceManager::new_mesh_with_alias_as_cylinder(const std::string &alias, float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
     MeshID m = new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
     try {
-        MeshManager::manager_store_alias(alias, m);
+        mesh_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_mesh(m);
         throw;
@@ -406,7 +409,7 @@ MeshID ResourceManager::new_mesh_with_alias_as_cylinder(const std::string &alias
 }
 
 MeshID ResourceManager::get_mesh_with_alias(const std::string& alias) {
-    return MeshManager::get_by_alias(alias);
+    return mesh_manager_->get_by_alias(alias);
 }
 
 void ResourceManager::delete_mesh(MeshID m) {
@@ -414,19 +417,19 @@ void ResourceManager::delete_mesh(MeshID m) {
 }
 
 bool ResourceManager::has_mesh(MeshID m) const {
-    return MeshManager::contains(m);
+    return mesh_manager_->contains(m);
 }
 
 void ResourceManager::mark_mesh_as_uncollected(MeshID m) {
-    MeshManager::mark_as_uncollected(m);
+    mesh_manager_->mark_as_uncollected(m);
 }
 
 uint32_t ResourceManager::mesh_count() const {
-    return MeshManager::count();
+    return mesh_manager_->count();
 }
 
 MaterialID ResourceManager::new_material(GarbageCollectMethod garbage_collect) {
-    MaterialID result = MaterialManager::make(garbage_collect, this);
+    MaterialID result = material_manager_->make(garbage_collect, this);
     return result;
 }
 
@@ -511,7 +514,7 @@ MaterialID ResourceManager::new_material_with_alias(const std::string& alias, Ga
     assert(m);
 
     try {
-        MaterialManager::manager_store_alias(alias, m);
+        material_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_material(m);
         throw;
@@ -524,7 +527,7 @@ MaterialID ResourceManager::new_material_with_alias_from_file(const std::string 
     assert(m);
 
     try {
-        MaterialManager::manager_store_alias(alias, m);
+        material_manager_->manager_store_alias(alias, m);
     } catch(...) {
         delete_material(m);
         throw;
@@ -542,7 +545,7 @@ MaterialID ResourceManager::new_material_from_texture(TextureID texture_id, Garb
 }
 
 MaterialID ResourceManager::get_material_with_alias(const std::string& alias) {
-    return MaterialManager::get_by_alias(alias);
+    return material_manager_->get_by_alias(alias);
 }
 
 MaterialPtr ResourceManager::material(MaterialID mid) {
@@ -550,7 +553,7 @@ MaterialPtr ResourceManager::material(MaterialID mid) {
         return parent_->material(mid);
     }
 
-    return MaterialManager::get(mid).lock();
+    return material_manager_->get(mid).lock();
 }
 
 const MaterialPtr ResourceManager::material(MaterialID mid) const {
@@ -558,23 +561,23 @@ const MaterialPtr ResourceManager::material(MaterialID mid) const {
         return parent_->material(mid);
     }
 
-    return MaterialManager::get(mid).lock();
+    return material_manager_->get(mid).lock();
 }
 
 bool ResourceManager::has_material(MaterialID m) const {
-    return MaterialManager::contains(m);
+    return material_manager_->contains(m);
 }
 
 uint32_t ResourceManager::material_count() const {
-    return MaterialManager::count();
+    return material_manager_->count();
 }
 
 void ResourceManager::mark_material_as_uncollected(MaterialID t) {
-    MaterialManager::mark_as_uncollected(t);
+    material_manager_->mark_as_uncollected(t);
 }
 
 TextureID ResourceManager::new_texture(GarbageCollectMethod garbage_collect) {
-    return TextureManager::make(garbage_collect, this);
+    return texture_manager_->make(garbage_collect, this);
 }
 
 TextureID ResourceManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
@@ -607,7 +610,7 @@ void ResourceManager::delete_texture(TextureID t) {
 TextureID ResourceManager::new_texture_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
     TextureID t = new_texture(garbage_collect);
     try {
-        TextureManager::manager_store_alias(alias, t);
+        texture_manager_->manager_store_alias(alias, t);
     } catch(...) {
         delete_texture(t);
         throw;
@@ -618,7 +621,7 @@ TextureID ResourceManager::new_texture_with_alias(const std::string& alias, Garb
 TextureID ResourceManager::new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     TextureID t = new_texture_from_file(path, flags, garbage_collect);
     try {
-        TextureManager::manager_store_alias(alias, t);
+        texture_manager_->manager_store_alias(alias, t);
     } catch(...) {
         delete_texture(t);
         throw;
@@ -627,7 +630,7 @@ TextureID ResourceManager::new_texture_with_alias_from_file(const std::string &a
 }
 
 TextureID ResourceManager::get_texture_with_alias(const std::string& alias) {
-    return TextureManager::get_by_alias(alias);
+    return texture_manager_->get_by_alias(alias);
 }
 
 TexturePtr ResourceManager::texture(TextureID t) {
@@ -635,7 +638,7 @@ TexturePtr ResourceManager::texture(TextureID t) {
         return parent_->texture(t);
     }
 
-    return TexturePtr(TextureManager::get(t).lock());
+    return TexturePtr(texture_manager_->get(t).lock());
 }
 
 const TexturePtr ResourceManager::texture(TextureID t) const {
@@ -643,23 +646,23 @@ const TexturePtr ResourceManager::texture(TextureID t) const {
         return parent_->texture(t);
     }
 
-    return TexturePtr(TextureManager::get(t).lock());
+    return TexturePtr(texture_manager_->get(t).lock());
 }
 
 bool ResourceManager::has_texture(TextureID t) const {
-    return TextureManager::contains(t);
+    return texture_manager_->contains(t);
 }
 
 uint32_t ResourceManager::texture_count() const {
-    return TextureManager::count();
+    return texture_manager_->count();
 }
 
 void ResourceManager::mark_texture_as_uncollected(TextureID t) {
-    TextureManager::mark_as_uncollected(t);
+    texture_manager_->mark_as_uncollected(t);
 }
 
 SoundID ResourceManager::new_sound(GarbageCollectMethod garbage_collect) {
-    return SoundManager::make(garbage_collect, this, window->_sound_driver());
+    return sound_manager_->make(garbage_collect, this, window->_sound_driver());
 }
 
 SoundID ResourceManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
@@ -672,7 +675,7 @@ SoundID ResourceManager::new_sound_from_file(const unicode& path, GarbageCollect
 SoundID ResourceManager::new_sound_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect) {
     SoundID s = new_sound(garbage_collect);
     try {
-        SoundManager::manager_store_alias(alias, s);
+        sound_manager_->manager_store_alias(alias, s);
     } catch(...) {
         delete_sound(s);
         throw;
@@ -683,7 +686,7 @@ SoundID ResourceManager::new_sound_with_alias(const std::string &alias, GarbageC
 SoundID ResourceManager::new_sound_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
     SoundID s = new_sound_from_file(path, garbage_collect);
     try {
-        SoundManager::manager_store_alias(alias, s);
+        sound_manager_->manager_store_alias(alias, s);
     } catch(...) {
         delete_sound(s);
         throw;
@@ -692,7 +695,7 @@ SoundID ResourceManager::new_sound_with_alias_from_file(const std::string& alias
 }
 
 SoundID ResourceManager::get_sound_with_alias(const std::string &alias) {
-    return SoundManager::get_by_alias(alias);
+    return sound_manager_->get_by_alias(alias);
 }
 
 SoundPtr ResourceManager::sound(SoundID s) {
@@ -700,7 +703,7 @@ SoundPtr ResourceManager::sound(SoundID s) {
         return parent_->sound(s);
     }
 
-    return SoundManager::get(s).lock();
+    return sound_manager_->get(s).lock();
 }
 
 const SoundPtr ResourceManager::sound(SoundID s) const {
@@ -708,15 +711,15 @@ const SoundPtr ResourceManager::sound(SoundID s) const {
         return parent_->sound(s);
     }
 
-    return SoundManager::get(s).lock();
+    return sound_manager_->get(s).lock();
 }
 
 uint32_t ResourceManager::sound_count() const {
-    return SoundManager::count();
+    return sound_manager_->count();
 }
 
 bool ResourceManager::has_sound(SoundID s) const {
-    return SoundManager::contains(s);
+    return sound_manager_->contains(s);
 }
 
 void ResourceManager::delete_sound(SoundID t) {

@@ -69,10 +69,6 @@ enum DefaultFontStyle {
 
 class ResourceManager:
     public virtual WindowHolder,
-    public MeshManager,
-    public MaterialManager,
-    public TextureManager,
-    public SoundManager,
     public Managed<ResourceManager> {
 
 public:
@@ -225,7 +221,11 @@ private:
     FontPtr default_body_font_;
     FontPtr default_heading_font_;
 
+    std::unique_ptr<TextureManager> texture_manager_;
+    std::unique_ptr<MaterialManager> material_manager_;
     std::unique_ptr<FontManager> font_manager_;
+    std::unique_ptr<MeshManager> mesh_manager_;
+    std::unique_ptr<SoundManager> sound_manager_;
 
     std::mutex template_material_lock_;
     std::unordered_map<unicode, MaterialID> template_materials_;
