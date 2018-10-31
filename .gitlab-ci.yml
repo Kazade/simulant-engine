@@ -88,6 +88,7 @@ build:linux-x64-gcc:
   stage: build
   image: fedora:28
   before_script:
+   - dnf upgrade -y
    - dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - mkdir build-debug
@@ -111,6 +112,7 @@ test:linux-x64-gcc:
   dependencies:
    - build:linux-x64-gcc
   before_script:
+   - dnf upgrade -y
    - dnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils
    - pulseaudio --start
    - pacmd load-module module-null-sink sink_name=MySink
