@@ -1,3 +1,4 @@
+.gitlab-ci.yml
 deps/kfs/kfs/realpath.h
 tests/test_obj_loader.h
 tests/test_pipeline.h
