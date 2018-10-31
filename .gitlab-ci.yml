@@ -103,9 +103,6 @@ test:linux-x64-gcc:
   image: kazade/fedora-ci
   dependencies:
    - build:linux-x64-gcc
-  before_script:
-   - dnf upgrade -y
-   - dnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils
   script:
    - cd build-debug
    - export SIMULANT_DEBUG=1
