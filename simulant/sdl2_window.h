@@ -27,7 +27,6 @@
 #include "generic/managed.h"
 #include "window.h"
 #include "platform.h"
-#include "sound_drivers/openal_sound_driver.h"
 
 namespace smlt {
 
@@ -84,9 +83,7 @@ private:
 
     void denormalize(float x, float y, int& xout, int& yout);
 
-    std::shared_ptr<SoundDriver> create_sound_driver() override {
-        return std::make_shared<OpenALSoundDriver>(this);
-    }
+    std::shared_ptr<SoundDriver> create_sound_driver() override;
 
     void initialize_input_controller(InputState &controller);
 

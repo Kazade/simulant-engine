@@ -51,9 +51,11 @@ SourceInstance::SourceInstance(Source &parent, SoundID sound, bool loop_stream):
 SourceInstance::~SourceInstance() {
     SoundDriver* driver = parent_._sound_driver();
 
-    driver->stop_source(source_); // Make sure we have stopped playing!
-    driver->delete_sources({source_});
-    driver->delete_buffers(buffers_);
+    if(driver) {
+        driver->stop_source(source_); // Make sure we have stopped playing!
+        driver->delete_sources({source_});
+        driver->delete_buffers(buffers_);
+    }
 }
 
 void SourceInstance::start() {
