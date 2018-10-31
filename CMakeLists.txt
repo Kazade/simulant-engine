@@ -48,8 +48,6 @@ IF(NOT DREAMCAST_BUILD)
     find_package(Threads REQUIRED)
     link_libraries(Threads::Threads)
 
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-
     # Force the new C++ ABI on GCC
     MESSAGE("-- Enabling old C++11 ABI (until TravisCI is upgraded past Trusty)")
     ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)

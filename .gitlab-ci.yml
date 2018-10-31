@@ -100,7 +100,7 @@ build:linux-x64-gcc:
 
 test:linux-x64-gcc:
   stage: test
-  image: fedora:28
+  image: kazade/fedora-ci
   dependencies:
    - build:linux-x64-gcc
   before_script:
