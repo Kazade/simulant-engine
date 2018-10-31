@@ -44,6 +44,10 @@ IF(NOT DREAMCAST_BUILD)
 
     FIND_PACKAGE(ZLIB REQUIRED)
 
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    link_libraries(Threads::Threads)
+
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
     # Force the new C++ ABI on GCC
