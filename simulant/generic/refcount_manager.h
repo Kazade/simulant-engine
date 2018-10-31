@@ -63,17 +63,17 @@ public:
     }
 
     ObjectIDType make(GarbageCollectMethod garbage_collect) {
-        return make(generate_new_id(), garbage_collect);
+        return make(ObjectIDType(), garbage_collect);
     }
 
     template<typename ...Args>
     ObjectIDType make(GarbageCollectMethod garbage_collect, Args&&... args) {
-        return make(generate_new_id(), garbage_collect, std::forward<Args>(args)...);
+        return make(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
     }
 
     template<typename ...Args>
     ObjectIDType make(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
-        L_DEBUG("Creating new object");
+        L_DEBUG(_F("Creating new object in manager {0}").format(this));
 
         if(!id) {
             L_DEBUG("Generating new ID");
