@@ -73,8 +73,11 @@ public:
 
     template<typename ...Args>
     ObjectIDType make(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
+        L_DEBUG("Creating new object");
 
         if(!id) {
+            L_DEBUG("Generating new ID");
+
             std::lock_guard<std::mutex> lock(manager_lock_);
             id = generate_new_id();
             assert(id);
@@ -94,6 +97,8 @@ public:
         obj->enable_gc(garbage_collect == GARBAGE_COLLECT_PERIODIC);
 
         {
+            L_DEBUG("Updating containers");
+
             /* Update the containers within a lock */
             std::lock_guard<std::mutex> lock(manager_lock_);
             objects_.insert(std::make_pair(id, obj));
@@ -101,6 +106,7 @@ public:
             uncollected_.insert(id);
         }
 
+        L_DEBUG(_F("Signaling post-create on {0}").format(id));
         signal_post_create_(*obj, id);
 
         return id;
