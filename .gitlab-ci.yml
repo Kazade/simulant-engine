@@ -10,6 +10,8 @@ android:
   stage: build
   image: kazade/android-sdk
   allow_failure: true
+  before_script:
+   - echo ${PATH}
   script:
    - mkdir ${CI_PROJECT_DIR}/build
 
