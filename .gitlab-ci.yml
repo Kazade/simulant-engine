@@ -112,7 +112,6 @@ test:linux-x64-gcc:
    - export DISPLAY=:99
   script:
    - cd build-debug
-   - export SIMULANT_DEBUG=1
    - export SIMULANT_SOUND_DRIVER=null
    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests
 
