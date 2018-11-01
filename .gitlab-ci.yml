@@ -66,7 +66,7 @@ test:windows-x64-mingw:
   dependencies:
    - build:windows-x64-mingw
   before_script:
-   - dnf install -y wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg
+   - dnf install -y wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
