@@ -97,7 +97,7 @@ build:linux-x64-gcc:
    - cd ${TARGET}/debug
    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
-   - cd ..
+   - cd ../..
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
