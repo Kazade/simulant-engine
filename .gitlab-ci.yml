@@ -71,10 +71,11 @@ test:windows-x64-mingw:
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export SIMULANT_SOUND_DRIVER=null
+   - export DISPLAY=:99
   script:
    - cd build-debug
    - cp simulant/libsimulant.dll tests
-   - DISPLAY=:99 wine tests/simulant_tests.exe
+   - wine tests/simulant_tests.exe
 
 build:linux-x64-gcc:
   stage: build
@@ -108,6 +109,7 @@ test:linux-x64-gcc:
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
+   - export DISPLAY=:99
   script:
    - cd build-debug
    - export SIMULANT_DEBUG=1
@@ -140,5 +142,5 @@ test:dreamcast-sh4-gcc:
     - dnf install -y lxdream
   script:
     - cd build-release
-    - lxdream -H tests/simulant_tests.elf
+    - lxdream -H tests/simulant_tests.elf | tee log.out
 
