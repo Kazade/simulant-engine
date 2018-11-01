@@ -1,6 +1,7 @@
 stages:
  - build
  - test
+ - deploy
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -37,32 +38,36 @@ build:windows-x64-mingw:
    - dnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python
   variables:
     MINGW_BIN_DIR: /usr/x86_64-w64-mingw32/sys-root/mingw/bin/
+    TARGET: windows-x64-mingw
   script:
-   - mkdir build-debug
-   - cd build-debug
-   - mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ..
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll tests/
    - cp $MINGW_BIN_DIR/SDL2.dll tests/
    - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll tests/
    - cp $MINGW_BIN_DIR/libstdc++-6.dll tests/
    - cp $MINGW_BIN_DIR/libwinpthread-1.dll tests/
-   - cd ..
-   - mkdir build-release
-   - cd build-release
-   - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
+   - cd -
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
-      - build-debug/simulant/
-      - build-debug/sample_data/
-      - build-debug/tests/simulant_tests.exe
-      - build-debug/tests/*.dll
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/tests/simulant_tests.exe
+      - ${TARGET}/debug/tests/*.dll
+      - ${TARGET}/release/simulant/
 
 test:windows-x64-mingw:
   stage: test
   image: fedora:28
   allow_failure: true
+  variables:
+    TARGET: windows-x64-mingw
   dependencies:
    - build:windows-x64-mingw
   before_script:
@@ -73,37 +78,42 @@ test:windows-x64-mingw:
    - export SIMULANT_SOUND_DRIVER=null
    - export DISPLAY=:99
   script:
-   - cd build-debug
+   - cd ${TARGET}/debug
    - cp simulant/libsimulant.dll tests
    - wine tests/simulant_tests.exe
 
 build:linux-x64-gcc:
   stage: build
   image: fedora:28
+  variables:
+   TARGET: linux-x64-gcc
   before_script:
    - dnf upgrade -y
    - dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
-   - mkdir build-debug
-   - cd build-debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ..
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cd ..
-   - mkdir build-release
-   - cd build-release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ..
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
-      - build-debug/simulant/
-      - build-debug/sample_data/
-      - build-debug/tests/simulant_tests
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/tests/simulant_tests
+      - ${TARGET}/release/simulant/
 
 test:linux-x64-gcc:
   stage: test
   image: fedora:28
   dependencies:
    - build:linux-x64-gcc
+  variables:
+   TARGET: linux-x64-gcc
   before_script:
    - dnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
@@ -111,9 +121,31 @@ test:linux-x64-gcc:
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export DISPLAY=:99
   script:
-   - cd build-debug
+   - cd ${TARGET}/debug
    - export SIMULANT_SOUND_DRIVER=null
    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests
+
+deploy:linux-x64-gcc:
+  stage: deploy
+  image: fedora:28
+  dependencies:
+   - test:linux-x64-gcc
+  variables:
+   TARGET: linux-x64-gcc
+  before_script:
+   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip
+   - pip install gsutil
+  script:
+   - mkdir -p ./upload/${TARGET}/lib
+   - mkdir -p ./upload/${TARGET}/include/simulant
+   - cp ${TARGET}/release/libsimulant.so ./upload/${TARGET}/lib/libsimulant.so
+   - cp ${TARGET}/debug/libsimulant.so ./upload/${TARGET}/lib/libsimulantd.so
+   - rsync -avm --include='*.h' -f 'hide,! */' simulant ./upload/${TARGET}/include/simulant
+   - cd upload
+   - zip -r ${TARGET}.zip ${TARGET}/
+  artifacts:
+   paths:
+    - upload/${TARGET}.zip
 
 build:dreamcast-sh4-gcc:
   stage: build
