@@ -28,8 +28,8 @@ android:
    - cd ..
    - export APP_PLATFORM=android-18
    - NDK_PROJECT_PATH=. ndk-build
-   # Return to our build directory
-   - cd ${CI_PROJECT_DIR}/build
+
+   - cd ${CI_PROJECT_DIR}
 
    # Now OpenAL
    - mkdir -p .android/openal/build/jni
