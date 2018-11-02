@@ -41,6 +41,7 @@ android:
    - NDK_PROJECT_PATH=. ndk-build
 
    # Finally Simulant
+   - cd ${CI_PROJECT_DIR}/build
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
 
