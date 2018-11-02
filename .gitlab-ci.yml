@@ -16,8 +16,7 @@ android:
    - mkdir ${CI_PROJECT_DIR}/build
 
    # Download SDL and OpenAL-soft
-   - cd ${CI_PROJECT_DIR}/platforms/android
-   - python prepare.py
+   - python ./platforms/android/prepare.py
 
    # Build SDL
    - mkdir -p .android/sdl/build/jni
