@@ -27,6 +27,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-poin
 IF(NOT DREAMCAST_BUILD)
     IF(ANDROID)
         LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/sdl/build/libs/${ANDROID_ABI})
+        LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/openal/build/libs/${ANDROID_ABI})
 
         SET(SDL2_LIBRARY SDL2)
         SET(SDL2_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/.android/sdl/include)
