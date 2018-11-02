@@ -11,6 +11,7 @@ android:
   image: kazade/android-sdk
   allow_failure: true
   before_script:
+   - apt-get install -y file
    - echo ${PATH}
   script:
    - mkdir ${CI_PROJECT_DIR}/build

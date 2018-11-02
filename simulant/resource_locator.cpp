@@ -108,14 +108,10 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
 
 
 std::shared_ptr<std::istream> ResourceLocator::open_file(const unicode& filename) {
-#ifdef __ANDROID__
-#error "Implement this"
-#else
     unicode path = locate_file(filename);
 
     std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode());
     return file_in;
-#endif
 }
 
 std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& filename) {

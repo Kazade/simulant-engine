@@ -10,6 +10,10 @@ GeomCuller::GeomCuller(Geom *geom, const MeshPtr mesh):
 
 }
 
+GeomCuller::~GeomCuller() {
+
+}
+
 bool GeomCuller::is_compiled() const {
     return compiled_;
 }
