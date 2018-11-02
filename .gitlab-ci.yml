@@ -126,6 +126,10 @@ test:linux-x64-gcc:
    - cd ${TARGET}/debug
    - export SIMULANT_SOUND_DRIVER=null
    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests
+  artifacts:
+   paths:
+    - ${TARGET}/debug/simulant/
+    - ${TARGET}/release/simulant/
 
 deploy:linux-x64-gcc:
   stage: deploy
