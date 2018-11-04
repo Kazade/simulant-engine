@@ -58,23 +58,30 @@ build:windows-x64-mingw:
    - cd ${TARGET}/debug
    - mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
-   - cp $MINGW_BIN_DIR/zlib1.dll tests/
-   - cp $MINGW_BIN_DIR/SDL2.dll tests/
-   - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll tests/
-   - cp $MINGW_BIN_DIR/libstdc++-6.dll tests/
-   - cp $MINGW_BIN_DIR/libwinpthread-1.dll tests/
+   - cp $MINGW_BIN_DIR/zlib1.dll simulant/
+   - cp $MINGW_BIN_DIR/SDL2.dll simulant/
+   - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
+   - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
+   - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
+   - cp simulant/*.dll tests/
    - cd -
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
    - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
+   - cp $MINGW_BIN_DIR/zlib1.dll simulant/
+   - cp $MINGW_BIN_DIR/SDL2.dll simulant/
+   - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
+   - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
+   - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
+   - cp simulant/*.dll tests/
   artifacts:
     paths:
-      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/simulant/*.dll
       - ${TARGET}/debug/sample_data/
       - ${TARGET}/debug/tests/simulant_tests.exe
       - ${TARGET}/debug/tests/*.dll
-      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/simulant/*.dll
 
 test:windows-x64-mingw:
   stage: test
@@ -95,6 +102,10 @@ test:windows-x64-mingw:
    - cd ${TARGET}/debug
    - cp simulant/libsimulant.dll tests
    - wine tests/simulant_tests.exe
+  artifacts:
+   paths:
+    - ${TARGET}/debug/simulant/*.dll
+    - ${TARGET}/release/simulant/*.dll
 
 deploy:windows-x64-mingw:
   stage: deploy
@@ -224,6 +235,9 @@ test:dreamcast-sh4-gcc:
   script:
     - cd build-release
     - lxdream -H tests/simulant_tests.elf | tee log.out
+  artifacts:
+   paths:
+    - ${TARGET}/release/simulant/*.a
 
 deploy:dreamcast-sh4-gcc:
   stage: deploy
