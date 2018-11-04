@@ -96,6 +96,32 @@ test:windows-x64-mingw:
    - cp simulant/libsimulant.dll tests
    - wine tests/simulant_tests.exe
 
+deploy:windows-x64-mingw:
+  stage: deploy
+  image: fedora:28
+  dependencies:
+   - test:windows-x64-mingw
+  variables:
+   TARGET: windows-x64-mingw
+  before_script:
+   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - pip install gsutil
+  script:
+   - mkdir -p ./upload/${TARGET}/lib
+   - mkdir -p ./upload/${TARGET}/lib/debug
+   - mkdir -p ./upload/${TARGET}/include/simulant
+   - cp ${TARGET}/release/simulant/*.dll ./upload/${TARGET}/lib/
+   - cp ${TARGET}/debug/simulant/*.dll ./upload/${TARGET}/lib/debug/
+   - rsync -avm --include='*.h' -f 'hide,! */' simulant ./upload/${TARGET}/include/simulant
+   - cd upload
+   - zip -r ${TARGET}.zip ${TARGET}/
+   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+   - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+  artifacts:
+   paths:
+    - upload/${TARGET}.zip
+
 build:linux-x64-gcc:
   stage: build
   image: fedora:28
