@@ -151,7 +151,7 @@ deploy:linux-x64-gcc:
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip
+   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
    - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
