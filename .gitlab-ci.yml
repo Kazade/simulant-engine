@@ -117,7 +117,7 @@ deploy:windows-x64-mingw:
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
    - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
   artifacts:
    paths:
     - upload/${TARGET}.zip
@@ -190,7 +190,7 @@ deploy:linux-x64-gcc:
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
    - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
   artifacts:
    paths:
     - upload/${TARGET}.zip
@@ -198,17 +198,19 @@ deploy:linux-x64-gcc:
 build:dreamcast-sh4-gcc:
   stage: build
   image: kazade/dreamcast-sdk
+  variables:
+   TARGET: dreamcast-sh4-gcc
   script:
-   - mkdir build-release
-   - cd build-release
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
    - source /etc/bash.bashrc
    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ..
    - make -j3
   artifacts:
     paths:
-      - build-release/simulant/
-      - build-release/sample_data/
-      - build-release/tests/simulant_tests.elf
+     - ${TARGET}/release/tests/simulant_tests.elf
+     - ${TARGET}/release/simulant/
+     - ${TARGET}/release/sample_data/
 
 test:dreamcast-sh4-gcc:
   stage: test
@@ -235,7 +237,6 @@ deploy:dreamcast-sh4-gcc:
    - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
-   - mkdir -p ./upload/${TARGET}/lib/debug
    - mkdir -p ./upload/${TARGET}/include/simulant
    - cp ${TARGET}/release/simulant/*.a ./upload/${TARGET}/lib/
    - rsync -avm --include='*.h' -f 'hide,! */' simulant ./upload/${TARGET}/include/simulant
