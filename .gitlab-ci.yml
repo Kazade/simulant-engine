@@ -65,8 +65,8 @@ build:windows-x64-mingw:
    - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
    - cp simulant/*.dll tests/
    - cd -
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
    - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
@@ -74,7 +74,6 @@ build:windows-x64-mingw:
    - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
    - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
    - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
-   - cp simulant/*.dll tests/
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -126,7 +125,7 @@ deploy:windows-x64-mingw:
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
   artifacts:
    paths:
@@ -199,7 +198,7 @@ deploy:linux-x64-gcc:
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
   artifacts:
    paths:
@@ -258,7 +257,7 @@ deploy:dreamcast-sh4-gcc:
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
   artifacts:
    paths:
