@@ -204,7 +204,7 @@ build:dreamcast-sh4-gcc:
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
    - source /etc/bash.bashrc
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
