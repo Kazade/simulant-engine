@@ -77,7 +77,7 @@ build:windows-x64-mingw:
    - cp simulant/*.dll tests/
   artifacts:
     paths:
-      - ${TARGET}/debug/simulant/*.dll
+      - ${TARGET}/debug/simulant/
       - ${TARGET}/debug/sample_data/
       - ${TARGET}/debug/tests/simulant_tests.exe
       - ${TARGET}/debug/tests/*.dll
@@ -100,7 +100,6 @@ test:windows-x64-mingw:
    - export DISPLAY=:99
   script:
    - cd ${TARGET}/debug
-   - cp simulant/libsimulant.dll tests
    - wine tests/simulant_tests.exe
   artifacts:
    paths:
@@ -227,13 +226,15 @@ test:dreamcast-sh4-gcc:
   stage: test
   image: fedora:28
   allow_failure: true
+  variables:
+   TARGET: dreamcast-sh4-gcc
   dependencies:
     - build:dreamcast-sh4-gcc
   before_script:
     - dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
     - dnf install -y lxdream
   script:
-    - cd build-release
+    - cd ${TARGET}/release
     - lxdream -H tests/simulant_tests.elf | tee log.out
   artifacts:
    paths:
