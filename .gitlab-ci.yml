@@ -162,6 +162,9 @@ deploy:linux-x64-gcc:
    - rsync -avm --include='*.h' -f 'hide,! */' simulant ./upload/${TARGET}/include/simulant
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
+   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+   - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
   artifacts:
    paths:
     - upload/${TARGET}.zip
