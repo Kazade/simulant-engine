@@ -223,3 +223,27 @@ test:dreamcast-sh4-gcc:
     - cd build-release
     - lxdream -H tests/simulant_tests.elf | tee log.out
 
+deploy:dreamcast-sh4-gcc:
+  stage: deploy
+  image: fedora:28
+  dependencies:
+   - test:dreamcast-sh4-gcc
+  variables:
+   TARGET: dreamcast-sh4-gcc
+  before_script:
+   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - pip install gsutil
+  script:
+   - mkdir -p ./upload/${TARGET}/lib
+   - mkdir -p ./upload/${TARGET}/lib/debug
+   - mkdir -p ./upload/${TARGET}/include/simulant
+   - cp ${TARGET}/release/simulant/*.a ./upload/${TARGET}/lib/
+   - rsync -avm --include='*.h' -f 'hide,! */' simulant ./upload/${TARGET}/include/simulant
+   - cd upload
+   - zip -r ${TARGET}.zip ${TARGET}/
+   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+   - gsutil mv ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+  artifacts:
+   paths:
+    - upload/${TARGET}.zip
