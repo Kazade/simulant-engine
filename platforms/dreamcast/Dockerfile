@@ -19,9 +19,7 @@ RUN cp /opt/toolchains/dc/kos/doc/environ.sh.sample /opt/toolchains/dc/kos/envir
 RUN sed -i 's/-fno-rtti//' /opt/toolchains/dc/kos/environ_base.sh
 RUN sed -i 's/-fno-exceptions//' /opt/toolchains/dc/kos/environ_base.sh
 RUN sed -i 's/-fno-operator-names//' /opt/toolchains/dc/kos/environ_base.sh
-
-# Remove any custom frame-pointer overrides (just use default)
-RUN sed -i 's/-fomit-frame-pointer//' /opt/toolchains/dc/kos/environ.sh
+RUN set -i 's/-g / /' /opt/toolchains/dc/kos/environ_base.sh
 
 # Remove default optimisations, so it can be controlled by CMake or whatever
 RUN sed -i 's/-O2//' /opt/toolchains/dc/kos/environ.sh
