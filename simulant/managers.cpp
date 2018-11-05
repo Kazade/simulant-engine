@@ -90,7 +90,7 @@ uint32_t CameraManager::camera_count() const {
     return cameras_.count();
 }
 
-const bool CameraManager::has_camera(CameraID id) const {
+bool CameraManager::has_camera(CameraID id) const {
     return cameras_.contains(id);
 }
 

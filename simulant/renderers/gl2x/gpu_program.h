@@ -76,11 +76,11 @@ public:
     bool init() override;
     void cleanup() override;
 
-    const bool is_current() const;
+    bool is_current() const;
     void activate();
 
-    const bool is_complete() const;
-    const bool is_compiled(ShaderType type) const;
+    bool is_complete() const;
+    bool is_compiled(ShaderType type) const;
 
     void compile(ShaderType type);
     void build();

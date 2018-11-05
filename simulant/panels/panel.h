@@ -27,7 +27,7 @@ class Panel:
 public:
     virtual ~Panel() {}
 
-    const bool is_active() const { return is_active_; }
+    bool is_active() const { return is_active_; }
 
     void activate() {
         if(is_active_) return;

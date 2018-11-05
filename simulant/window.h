@@ -143,7 +143,7 @@ public:
     void set_logging_level(LoggingLevel level);
 
     void stop_running() { is_running_ = false; }
-    const bool is_shutting_down() const { return is_running_ == false; }
+    bool is_shutting_down() const { return is_running_ == false; }
 
     void enable_virtual_joypad(VirtualGamepadConfig config, bool flipped=false);
     void disable_virtual_joypad();

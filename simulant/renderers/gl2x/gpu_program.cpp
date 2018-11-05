@@ -185,7 +185,7 @@ void GPUProgram::set_attribute_location(const std::string& attribute, GLint loca
     needs_relink_ = true;
 }
 
-const bool GPUProgram::is_current() const {
+bool GPUProgram::is_current() const {
     GLint current = 0;
     GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &current);
     return program_object_ && GLuint(current) == program_object_;
@@ -321,7 +321,7 @@ void GPUProgram::build() {
     link(); //Now link the program
 }
 
-const bool GPUProgram::is_complete() const {
+bool GPUProgram::is_complete() const {
     //Vertex and Fragment shader are required
     if(!program_object_ || !shaders_.count(SHADER_TYPE_VERTEX) || !shaders_.count(SHADER_TYPE_FRAGMENT)) {
         return false;
@@ -338,7 +338,7 @@ const bool GPUProgram::is_complete() const {
     return false;
 }
 
-const bool GPUProgram::is_compiled(ShaderType type) const {
+bool GPUProgram::is_compiled(ShaderType type) const {
     return shaders_.at(type).is_compiled;
 }
 

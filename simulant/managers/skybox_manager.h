@@ -55,7 +55,7 @@ public:
     void cleanup() override;
 
     void set_size(float size) { width_ = size; }
-    const float size() const { return width_; }
+    float size() const { return width_; }
 
     void generate(
         const unicode& up,

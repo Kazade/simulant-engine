@@ -168,7 +168,7 @@ ActorPtr Stage::actor(ActorID e) {
     return ActorManager::get(e);
 }
 
-const ActorPtr Stage::actor(ActorID e) const {
+ActorPtr Stage::actor(ActorID e) const {
     return ActorManager::get(e);
 }
 

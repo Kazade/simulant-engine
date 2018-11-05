@@ -137,8 +137,8 @@ public:
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
     bool empty() const { return data_.empty(); }
 
-    const int32_t cursor_position() const { return cursor_position_; }
-    const int32_t cursor_offset() const { return cursor_position_ * stride_; }
+    int32_t cursor_position() const { return cursor_position_; }
+    int32_t cursor_offset() const { return cursor_position_ * stride_; }
 
     inline uint32_t stride() const {
         return stride_;

@@ -15,7 +15,7 @@ public:
 
     void set_name(const unicode& name) { name_ = name; }
     const unicode name() const { return name_; }
-    const bool has_name() const { return !name_.empty(); }
+    bool has_name() const { return !name_.empty(); }
 
     virtual unicode to_unicode() const { return name_; }
 

@@ -102,7 +102,7 @@ public:
     ActorPtr new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
     ActorPtr new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
     ActorPtr actor(ActorID e);
-    const ActorPtr actor(ActorID e) const;
+    ActorPtr actor(ActorID e) const;
     bool has_actor(ActorID e) const;
     ActorPtr delete_actor(ActorID e);
     std::size_t actor_count() const { return ActorManager::count(); }

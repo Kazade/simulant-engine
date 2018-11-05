@@ -64,7 +64,7 @@ public:
 
     //Renderable stuff
 
-    const MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
+    MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
     virtual Mat4 final_transformation() const override {
         return Mat4(); //Particles are absolutely positioned in the world
     }
@@ -106,7 +106,7 @@ public:
         return HasMutableRenderPriority::render_priority();
     }
 
-    const bool is_visible() const override {
+    bool is_visible() const override {
         return StageNode::is_visible();
     }
 
