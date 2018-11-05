@@ -140,11 +140,11 @@ public:
     void override_material_id(MaterialID material);
     void remove_material_id_override();
 
-    const MeshArrangement arrangement() const { return submesh()->arrangement(); }
+    MeshArrangement arrangement() const { return submesh()->arrangement(); }
 
     RenderPriority render_priority() const { return parent_.render_priority(); }
     Mat4 final_transformation() const { return parent_.absolute_transformation(); }
-    const bool is_visible() const { return parent_.is_visible(); }
+    bool is_visible() const { return parent_.is_visible(); }
 
     /* BoundableAndTransformable interface implementation */
 
