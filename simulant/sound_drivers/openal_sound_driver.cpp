@@ -14,6 +14,12 @@ bool OpenALSoundDriver::startup() {
     }
 
     ctx = alcCreateContext(dev, NULL);
+
+    if(!ctx) {
+        L_ERROR("Unable to create sound context");
+        return false;
+    }
+
     alcMakeContextCurrent(ctx);
 
     return true;
