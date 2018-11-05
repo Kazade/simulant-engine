@@ -481,8 +481,8 @@ typedef default_init_ptr<Widget> WidgetPtr;
 
 }
 
-class ResourceManager;
-typedef std::shared_ptr<ResourceManager> ResourceManagerPtr;
+class AssetManager;
+typedef std::shared_ptr<AssetManager> ResourceManagerPtr;
 
 class RenderSequence;
 typedef std::shared_ptr<RenderSequence> RenderSequencePtr;

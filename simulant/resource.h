@@ -29,19 +29,19 @@
 
 namespace smlt {
 
-class ResourceManager;
+class AssetManager;
 
 class Resource {
 public:
-    Resource(ResourceManager* manager):
+    Resource(AssetManager* manager):
         manager_(manager) {
         created_ = std::chrono::system_clock::now();
     }
 
     virtual ~Resource() {}
 
-    ResourceManager& resource_manager() { assert(manager_); return *manager_; }
-    const ResourceManager& resource_manager() const { assert(manager_); return *manager_; }
+    AssetManager& resource_manager() { assert(manager_); return *manager_; }
+    const AssetManager& resource_manager() const { assert(manager_); return *manager_; }
 
     int age() const {
         return std::chrono::duration_cast<std::chrono::seconds>(
@@ -51,7 +51,7 @@ public:
 
     Property<Resource, generic::DataCarrier> data = { this, &Resource::data_ };
 private:
-    ResourceManager* manager_;
+    AssetManager* manager_;
 
     std::chrono::time_point<std::chrono::system_clock> created_;
 

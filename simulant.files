@@ -1,5 +1,7 @@
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h
+simulant/asset_manager.cpp
+simulant/asset_manager.h
 simulant/sound_drivers/null_sound_driver.cpp
 simulant/sound_drivers/null_sound_driver.h
 tests/test_obj_loader.h
@@ -707,8 +709,6 @@ simulant/resource.cpp
 simulant/resource.h
 simulant/resource_locator.cpp
 simulant/resource_locator.h
-simulant/resource_manager.cpp
-simulant/resource_manager.h
 simulant/scenes/loading.cpp
 simulant/scenes/loading.h
 simulant/scenes/physics_scene.h

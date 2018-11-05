@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../../resource_manager.h"
+#include "../../asset_manager.h"
 #include "capsule.h"
 
 namespace smlt {

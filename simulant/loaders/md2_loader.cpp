@@ -20,7 +20,7 @@
 
 #include "md2_loader.h"
 #include "../meshes/mesh.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 #include "../resource_locator.h"
 #include "../time_keeper.h"
 #include "../utils/memory.h"
@@ -201,7 +201,7 @@ const int32_t MAGIC_NUMBER_ID = 844121161;
 
 void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
-    ResourceManager* resource_manager = &mesh->resource_manager();
+    AssetManager* resource_manager = &mesh->resource_manager();
 
     assert(mesh && "Tried to load an MD2 file into something that wasn't a mesh");
 

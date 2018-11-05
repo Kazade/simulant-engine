@@ -22,7 +22,7 @@
 
 #include "window.h"
 #include "material.h"
-#include "resource_manager.h"
+#include "asset_manager.h"
 #include "renderers/renderer.h"
 
 
@@ -86,7 +86,7 @@ TextureUnit::TextureUnit(MaterialPass &pass):
     current_texture_(0) {
 
     //Initialize the texture unit to the default texture
-    ResourceManager& rm = pass.material->resource_manager();
+    AssetManager& rm = pass.material->resource_manager();
     texture_unit_ = rm.texture(rm.default_texture_id());
 }
 
@@ -96,7 +96,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
     current_texture_(0) {
 
     //Initialize the texture unit
-    ResourceManager& rm = pass.material->resource_manager();
+    AssetManager& rm = pass.material->resource_manager();
     texture_unit_ = rm.texture(tex_id);
 }
 
@@ -107,7 +107,7 @@ TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, do
     current_texture_(0),
     texture_unit_(0) {
 
-    ResourceManager& rm = pass.material->resource_manager();
+    AssetManager& rm = pass.material->resource_manager();
 
     for(TextureID tid: textures) {
         animated_texture_units_.push_back(rm.texture(tid));
@@ -122,7 +122,7 @@ TextureID TextureUnit::texture_id() const {
     }
 }
 
-Material::Material(MaterialID mat_id, ResourceManager *resource_manager):
+Material::Material(MaterialID mat_id, AssetManager *resource_manager):
     Resource(resource_manager),
     generic::Identifiable<MaterialID>(mat_id) {
 
@@ -304,7 +304,7 @@ MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
     return ret;
 }
 
-MaterialID Material::new_clone(ResourceManager* target_resource_manager, GarbageCollectMethod garbage_collect) const {
+MaterialID Material::new_clone(AssetManager* target_resource_manager, GarbageCollectMethod garbage_collect) const {
 
     MaterialID ret = target_resource_manager->new_material(garbage_collect);
     assert(ret);

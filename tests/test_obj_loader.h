@@ -3,7 +3,7 @@
 
 #include "simulant/deps/kfs/kfs.h"
 #include "simulant/loaders/obj_loader.h"
-#include "simulant/resource_manager.h"
+#include "simulant/asset_manager.h"
 
 class OBJLoaderTest : public SimulantTestCase {
 public:

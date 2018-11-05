@@ -34,7 +34,7 @@
 #include "nodes/stage_node.h"
 #include "nodes/light.h"
 #include "types.h"
-#include "resource_manager.h"
+#include "asset_manager.h"
 #include "managers.h"
 #include "fog_settings.h"
 #include "window.h"
@@ -140,7 +140,7 @@ public:
 
     Property<Stage, Debug> debug = {this, &Stage::debug_};
     Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};
-    Property<Stage, ResourceManager> assets = {this, &Stage::resource_manager_};
+    Property<Stage, AssetManager> assets = {this, &Stage::resource_manager_};
     Property<Stage, generic::DataCarrier> data = {this, &Stage::data_};
     Property<Stage, ui::UIManager> ui = {this, &Stage::ui_};
     Property<Stage, SkyManager> skies = {this, &Stage::sky_manager_};
@@ -196,7 +196,7 @@ private:
 
     //FIXME: All managers should be composition rather than inheritence,
     // like this one!   
-    std::shared_ptr<ResourceManager> resource_manager_;
+    std::shared_ptr<AssetManager> resource_manager_;
     smlt::Colour ambient_light_;
 
     std::unique_ptr<FogSettings> fog_;

@@ -23,7 +23,7 @@
 #include "adjacency_info.h"
 
 #include "../window.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 #include "../loader.h"
 #include "../material.h"
 #include "../hardware_buffer.h"
@@ -36,7 +36,7 @@ namespace smlt {
 
 
 Mesh::Mesh(MeshID id,
-    ResourceManager *resource_manager,
+    AssetManager *resource_manager,
     VertexSpecification vertex_specification):
         Resource(resource_manager),
         generic::Identifiable<MeshID>(id) {
