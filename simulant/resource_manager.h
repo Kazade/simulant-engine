@@ -69,10 +69,6 @@ enum DefaultFontStyle {
 
 class ResourceManager:
     public virtual WindowHolder,
-    public MeshManager,
-    public MaterialManager,
-    public TextureManager,
-    public SoundManager,
     public Managed<ResourceManager> {
 
 public:
@@ -190,7 +186,10 @@ public:
     unicode default_material_filename() const;
 
     MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
-        return base_manager()->material(base_manager()->default_material_id())->new_clone(this, garbage_collect);
+        auto mat_id = base_manager()->default_material_id();
+        assert(mat_id && "No default material, called to early?");
+
+        return base_manager()->material(mat_id)->new_clone(this, garbage_collect);
     }
 
     MaterialID default_material_id() const;
@@ -198,8 +197,14 @@ public:
     FontID default_font_id(DefaultFontStyle style=DEFAULT_FONT_STYLE_BODY) const;
 
     ResourceManager* base_manager() const {
-        // Constness applies to the resource manager itself, not the returned base manager
         ResourceManager* ret = const_cast<ResourceManager*>(this);
+        assert(ret && "Unexpectedly failed to cast");
+
+        if(!parent_) {
+            return ret;
+        }
+
+        // Constness applies to the resource manager itself, not the returned base manager        
         while(ret->parent_) {
             ret = ret->parent_;
         }
@@ -216,7 +221,11 @@ private:
     FontPtr default_body_font_;
     FontPtr default_heading_font_;
 
-    std::unique_ptr<FontManager> font_manager_;
+    TextureManager texture_manager_;
+    MaterialManager material_manager_;
+    FontManager font_manager_;
+    MeshManager mesh_manager_;
+    SoundManager sound_manager_;
 
     std::mutex template_material_lock_;
     std::unordered_map<unicode, MaterialID> template_materials_;

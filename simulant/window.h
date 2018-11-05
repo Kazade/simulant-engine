@@ -262,7 +262,7 @@ private:
 
     bool can_attach_sound_by_id() const { return false; }
 
-    ResourceManager* resource_manager_;
+    std::shared_ptr<ResourceManager> resource_manager_;
     bool initialized_;
 
     uint32_t width_ = 0;

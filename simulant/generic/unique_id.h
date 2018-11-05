@@ -88,7 +88,7 @@ public:
     }
 
     friend std::ostream& operator<< (std::ostream& o, UniqueID<ResourceTypePtr> const& instance) {
-        return o << instance.value();
+        return o << typeid(resource_pointer_type).name() << ":" << instance.value();
     }
 
     uint32_t value() const { return id_; }
