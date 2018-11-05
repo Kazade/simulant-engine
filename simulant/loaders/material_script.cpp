@@ -22,7 +22,7 @@
 #include "../types.h"
 #include "../material.h"
 #include "../shortcuts.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 #include "../utils/gl_thread_check.h"
 #include "../renderers/renderer.h"
 

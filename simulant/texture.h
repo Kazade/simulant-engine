@@ -167,7 +167,7 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    Texture(TextureID id, ResourceManager* resource_manager);
+    Texture(TextureID id, AssetManager* resource_manager);
 
     /*
      * Lock the texture against uploads to the GPU.

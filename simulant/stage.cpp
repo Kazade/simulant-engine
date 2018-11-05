@@ -48,7 +48,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     generic::Identifiable<StageID>(id),
     CameraManager(this),
     ui_(new ui::UIManager(this)),
-    resource_manager_(ResourceManager::create(parent, parent->shared_assets.get())),
+    resource_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     ambient_light_(smlt::Colour::WHITE),
     fog_(new FogSettings()),
     geom_manager_(new GeomManager()),

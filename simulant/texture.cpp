@@ -29,7 +29,7 @@
 
 #include "window.h"
 #include "texture.h"
-#include "resource_manager.h"
+#include "asset_manager.h"
 #include "renderers/renderer.h"
 
 namespace smlt {
@@ -44,7 +44,7 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_ALPHA
 }};
 
-Texture::Texture(TextureID id, ResourceManager *resource_manager):
+Texture::Texture(TextureID id, AssetManager *resource_manager):
     Resource(resource_manager),
     generic::Identifiable<TextureID>(id),
     width_(0),

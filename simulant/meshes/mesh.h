@@ -43,7 +43,7 @@
 namespace smlt {
 
 class HardwareBuffer;
-class ResourceManager;
+class AssetManager;
 class AdjacencyInfo;
 class Renderer;
 
@@ -79,7 +79,7 @@ class Mesh :
 
 public:
     Mesh(MeshID id,
-         ResourceManager* resource_manager,
+         AssetManager* resource_manager,
          VertexSpecification vertex_specification
     );
 

@@ -43,7 +43,7 @@
 
 namespace smlt {
 
-class ResourceManager;
+class AssetManager;
 class InputManager;
 
 namespace ui {
@@ -262,7 +262,7 @@ private:
 
     bool can_attach_sound_by_id() const { return false; }
 
-    std::shared_ptr<ResourceManager> resource_manager_;
+    std::shared_ptr<AssetManager> resource_manager_;
     bool initialized_;
 
     uint32_t width_ = 0;
@@ -329,7 +329,7 @@ protected:
     std::shared_ptr<Platform> platform_;
 public:
     //Read only properties
-    Property<Window, ResourceManager> shared_assets = { this, &Window::resource_manager_ };
+    Property<Window, AssetManager> shared_assets = { this, &Window::resource_manager_ };
     Property<Window, Application> application = { this, &Window::application_ };
     Property<Window, VirtualGamepad> virtual_joypad = { this, &Window::virtual_gamepad_ };
     Property<Window, Renderer> renderer = { this, &Window::renderer_ };

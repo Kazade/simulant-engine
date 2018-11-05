@@ -20,7 +20,7 @@
 
 #include "sphere.h"
 #include "../../types.h"
-#include "../../resource_manager.h"
+#include "../../asset_manager.h"
 #include "../../meshes/mesh.h"
 
 namespace smlt {

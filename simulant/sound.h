@@ -46,7 +46,7 @@ class Sound :
     public Loadable {
 
 public:
-    Sound(SoundID id, ResourceManager* resource_manager, SoundDriver* sound_driver);
+    Sound(SoundID id, AssetManager* resource_manager, SoundDriver* sound_driver);
 
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }

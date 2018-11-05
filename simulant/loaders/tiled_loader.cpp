@@ -21,7 +21,7 @@
 #include "../meshes/mesh.h"
 #include "../types.h"
 #include "../extra/tiled/TmxParser/Tmx.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 
 namespace smlt {
 namespace loaders {

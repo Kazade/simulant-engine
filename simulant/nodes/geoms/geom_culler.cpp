@@ -1,6 +1,6 @@
 #include "geom_culler.h"
 #include "../../meshes/mesh.h"
-#include "../../resource_manager.h"
+#include "../../asset_manager.h"
 
 namespace smlt {
 

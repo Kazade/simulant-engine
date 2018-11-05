@@ -128,7 +128,7 @@ bool has_bitflag(uint32_t val, uint32_t flag) {
 }
 
 void Q2BSPLoader::generate_materials(
-    ResourceManager* assets,
+    AssetManager* assets,
     const std::vector<Q2::TextureInfo>& texture_infos,
     std::vector<MaterialID>& materials,
     std::vector<Q2::TexDimension>& dimensions,

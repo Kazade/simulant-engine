@@ -19,7 +19,7 @@
 
 #include "heightmap_loader.h"
 #include "../meshes/mesh.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 #include "texture_loader.h"
 
 namespace smlt {

@@ -16,8 +16,7 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RESOURCE_MANAGER_H
-#define RESOURCE_MANAGER_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -34,7 +33,7 @@
 
 namespace smlt {
 
-class ResourceManager;
+class AssetManager;
 
 typedef generic::RefCountedTemplatedManager<Mesh, MeshID> MeshManager;
 typedef generic::RefCountedTemplatedManager<Material, MaterialID> MaterialManager;
@@ -67,13 +66,13 @@ enum DefaultFontStyle {
 };
 
 
-class ResourceManager:
+class AssetManager:
     public virtual WindowHolder,
-    public Managed<ResourceManager> {
+    public Managed<AssetManager> {
 
 public:
-    ResourceManager(Window* window, ResourceManager* parent=nullptr);
-    ~ResourceManager();
+    AssetManager(Window* window, AssetManager* parent=nullptr);
+    ~AssetManager();
 
     bool init();
 
@@ -196,8 +195,8 @@ public:
     TextureID default_texture_id() const;
     FontID default_font_id(DefaultFontStyle style=DEFAULT_FONT_STYLE_BODY) const;
 
-    ResourceManager* base_manager() const {
-        ResourceManager* ret = const_cast<ResourceManager*>(this);
+    AssetManager* base_manager() const {
+        AssetManager* ret = const_cast<AssetManager*>(this);
         assert(ret && "Unexpectedly failed to cast");
 
         if(!parent_) {
@@ -214,7 +213,7 @@ public:
     void run_garbage_collection();
 
 private:
-    ResourceManager* parent_ = nullptr;
+    AssetManager* parent_ = nullptr;
 
     MaterialID default_material_id_;
     TextureID default_texture_id_;
@@ -233,12 +232,12 @@ private:
 
     MaterialID get_template_material(const unicode& path);
 
-    std::set<ResourceManager*> children_;
-    void register_child(ResourceManager* child) {
+    std::set<AssetManager*> children_;
+    void register_child(AssetManager* child) {
         children_.insert(child);
     }
 
-    void unregister_child(ResourceManager* child) {
+    void unregister_child(AssetManager* child) {
         children_.erase(child);
     }
 };
@@ -246,4 +245,3 @@ private:
 
 }
 
-#endif // RESOURCE_MANAGER_H

@@ -1,7 +1,7 @@
 
 #include "background_manager.h"
 #include "../window.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 
 namespace smlt {
 

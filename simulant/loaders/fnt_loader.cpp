@@ -2,7 +2,7 @@
 #include "../utils/string.h"
 #include "fnt_loader.h"
 #include "../font.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 
 namespace smlt {
 namespace loaders {

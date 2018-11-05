@@ -1,7 +1,7 @@
 #include "deps/stb_truetype/stb_truetype.h"
 #include "ttf_loader.h"
 #include "../font.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 
 namespace smlt {
 namespace loaders {

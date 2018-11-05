@@ -67,7 +67,7 @@ Window::Window(int width, int height, int bpp, bool fullscreen, bool enable_vsyn
     Source(this),
     StageManager(this),
     BackgroundManager(this),
-    resource_manager_(new ResourceManager(this)),
+    resource_manager_(new AssetManager(this)),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -523,7 +523,7 @@ void Window::reset() {
 
     L_DEBUG("Reinitializing the base manager");
 
-    resource_manager_.reset(new ResourceManager(this));
+    resource_manager_.reset(new AssetManager(this));
     assert(resource_manager_);
     resource_manager_->init();
 

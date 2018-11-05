@@ -22,7 +22,7 @@
 
 #include "../meshes/mesh.h"
 #include "../texture.h"
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 #include "../shortcuts.h"
 #include "opt_loader.h"
 

@@ -3,7 +3,7 @@
 #include "private.h"
 #include "adjacency_info.h"
 
-#include "../resource_manager.h"
+#include "../asset_manager.h"
 #include "../window.h"
 
 namespace smlt {

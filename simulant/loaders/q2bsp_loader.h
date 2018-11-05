@@ -140,7 +140,7 @@ public:
     void into(Loadable& resource, const LoaderOptions& options=LoaderOptions());
 
 private:
-    void generate_materials(ResourceManager *manager,
+    void generate_materials(AssetManager *manager,
         const std::vector<Q2::TextureInfo>& texture_infos,
         std::vector<MaterialID>& materials,
         std::vector<Q2::TexDimension>& dimensions
