@@ -5,12 +5,6 @@ LINK_LIBRARIES(
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
-FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/ DESTINATION ${CMAKE_BINARY_DIR}/sample_data/)
-FILE(COPY ${CMAKE_SOURCE_DIR}/assets/particles/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/particles/)
-FILE(COPY ${CMAKE_SOURCE_DIR}/assets/materials/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/materials/)
-FILE(COPY ${CMAKE_SOURCE_DIR}/assets/textures/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/textures/)
-FILE(COPY ${CMAKE_SOURCE_DIR}/assets/fonts/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/fonts/)
-
 ADD_EXECUTABLE(sample sample.cpp)
 ADD_EXECUTABLE(2d_sample 2d_sample.cpp)
 ADD_EXECUTABLE(viewport_sample viewport_sample.cpp)
