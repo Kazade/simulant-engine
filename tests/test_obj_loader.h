@@ -52,9 +52,6 @@ public:
     }
 
     void test_loading_without_texture_coords() {
-        kfs::Path path = kfs::path::join(kfs::path::dir_name(__FILE__), "test-data");
-        window->resource_locator->add_search_path(path);
-
         //Shouldn't throw
         smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj");
     }
