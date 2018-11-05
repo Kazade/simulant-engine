@@ -38,7 +38,7 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory)
 
 }
 
-void RenderQueue::insert_renderable(Renderable* renderable) {
+void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
     /*
      * Adds a renderable to the correct render groups. This goes through the
      * material passes on the renderable, calculates the render group for each one
@@ -53,7 +53,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
     material->each([&](uint32_t i, MaterialPass* material_pass) {
         RenderGroup group = render_group_factory_->new_render_group(
-            renderable, material_pass
+            renderable.get(), material_pass
         );
 
         assert(i < MAX_MATERIAL_PASSES);
@@ -189,7 +189,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
     visitor->end_traversal(*this, stage_);
 }
 
-void Batch::add_renderable(Renderable* renderable) {
+void Batch::add_renderable(RenderablePtr renderable) {
     assert(renderable);
 
     write_lock<shared_mutex> lock(batch_lock_);
@@ -198,7 +198,7 @@ void Batch::add_renderable(Renderable* renderable) {
     renderables_.push_back(renderable);
 }
 
-void Batch::remove_renderable(Renderable *renderable) {
+void Batch::remove_renderable(RenderablePtr renderable) {
     write_lock<shared_mutex> lock(batch_lock_);
 
     auto it = std::find(renderables_.begin(), renderables_.end(), renderable);
@@ -213,7 +213,7 @@ void Batch::each(std::function<void (uint32_t, Renderable *)> func) const {
 
     uint32_t i = 0;
     for(auto& renderable: renderables_) {
-        func(i++, renderable);
+        func(i++, renderable.get());
     }
 }
 

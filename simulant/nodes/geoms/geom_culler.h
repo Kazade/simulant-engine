@@ -28,6 +28,7 @@ class Renderer;
 class GeomCuller {
 public:
     GeomCuller(Geom* geom, const MeshPtr mesh);
+    virtual ~GeomCuller();
 
     bool is_compiled() const;
 

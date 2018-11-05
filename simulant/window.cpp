@@ -179,8 +179,7 @@ void Window::_cleanup() {
         sound_driver_.reset();
     }
 
-    delete resource_manager_;
-    resource_manager_ = nullptr;
+    resource_manager_.reset();
 
     destroy_window();
     GLThreadCheck::cleanup();
@@ -509,6 +508,8 @@ void Window::disable_virtual_joypad() {
  * window to its original state.
  */
 void Window::reset() {
+    L_DEBUG("Resetting Window state");
+
     idle->execute(); //Execute any idle tasks before we go deleting things
 
     render_sequence_->delete_all_pipelines();
@@ -516,6 +517,17 @@ void Window::reset() {
     StageManager::destroy_all();
     background_manager_.reset(new BackgroundManager(this));
 
+    L_DEBUG("Resetting the base manager");
+    /* Destroy and recreate the base resource manager */
+    resource_manager_.reset();
+
+    L_DEBUG("Reinitializing the base manager");
+
+    resource_manager_.reset(new ResourceManager(this));
+    assert(resource_manager_);
+    resource_manager_->init();
+
+    L_DEBUG("Recreating defaults");
     create_defaults();
 }
 

@@ -63,21 +63,26 @@ public:
     }
 
     ObjectIDType make(GarbageCollectMethod garbage_collect) {
-        return make(generate_new_id(), garbage_collect);
+        return make(ObjectIDType(), garbage_collect);
     }
 
     template<typename ...Args>
     ObjectIDType make(GarbageCollectMethod garbage_collect, Args&&... args) {
-        return make(generate_new_id(), garbage_collect, std::forward<Args>(args)...);
+        return make(ObjectIDType(), garbage_collect, std::forward<Args>(args)...);
     }
 
     template<typename ...Args>
     ObjectIDType make(ObjectIDType id, GarbageCollectMethod garbage_collect, Args&&... args) {
+        L_DEBUG(_F("Creating new object in manager {0}").format(this));
 
         if(!id) {
+            L_DEBUG("Generating new ID");
+
             std::lock_guard<std::mutex> lock(manager_lock_);
             id = generate_new_id();
             assert(id);
+        } else {
+            L_DEBUG(_F("Already passed existing ID: {0}").format(id));
         }
 
         /* We intentionally create the object outside of the resource manager
@@ -85,8 +90,13 @@ public:
          * in a thread other than the main thread, and we need something to
          * run on idle.
          */
+        L_DEBUG("About to create object");
         auto obj = ObjectType::create(id, std::forward<Args>(args)...);
+        L_DEBUG("Done");
+
         assert(obj);
+
+        L_DEBUG("Object created");
 
         /*
          * FIXME: Should be more options than on or off
@@ -94,6 +104,8 @@ public:
         obj->enable_gc(garbage_collect == GARBAGE_COLLECT_PERIODIC);
 
         {
+            L_DEBUG("Updating containers");
+
             /* Update the containers within a lock */
             std::lock_guard<std::mutex> lock(manager_lock_);
             objects_.insert(std::make_pair(id, obj));
@@ -101,6 +113,7 @@ public:
             uncollected_.insert(id);
         }
 
+        L_DEBUG(_F("Signaling post-create on {0}").format(id));
         signal_post_create_(*obj, id);
 
         return id;

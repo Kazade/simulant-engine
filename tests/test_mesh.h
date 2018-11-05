@@ -175,37 +175,26 @@ public:
 
         auto actor = stage_->new_actor();
 
-        assert_true(!actor->has_mesh());
+        assert_true(!actor->has_any_mesh());
 
         actor->set_mesh(mesh->id());
 
-        assert_true(actor->has_mesh());
+        assert_true(actor->has_any_mesh());
+        assert_true(actor->has_mesh(DETAIL_LEVEL_NEAREST));
+        assert_false(actor->has_mesh(DETAIL_LEVEL_NEAR));
+        assert_false(actor->has_mesh(DETAIL_LEVEL_MID));
+        assert_false(actor->has_mesh(DETAIL_LEVEL_FAR));
+        assert_false(actor->has_mesh(DETAIL_LEVEL_FARTHEST));
 
         //The actor's MeshID should match the mesh we set
-        assert_true(mesh->id() == actor->mesh()->id());
-
-        //The actor should report the same data as the mesh, the same subactor count
-        //as well as the same shared vertex data
-        assert_equal(mesh->submesh_count(), actor->subactor_count());
-
-        smlt::SubMesh* sm = actor->subactor(0).submesh();
-
-        //Likewise for subentities, they should just proxy to the submesh
-        assert_equal(sm->material_id(), actor->subactor(0).material_id());
-        assert_equal(sm->index_data.get(), actor->subactor(0).index_data.get());
-        assert_equal(sm->vertex_data.get(), actor->subactor(0).vertex_data.get());
-
-        //We should be able to override the material on a subactor though
-        actor->subactor(0).override_material_id(smlt::MaterialID(1));
-
-        assert_equal(smlt::MaterialID(1), actor->subactor(0).material_id());
+        assert_true(mesh->id() == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
     }
 
     void test_scene_methods() {
         smlt::MeshID mesh_id = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
         auto actor = stage_->new_actor_with_mesh(mesh_id);
 
-        assert_true(mesh_id == actor->mesh()->id());
+        assert_true(mesh_id == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
     }
 
     // Skipped, currently fails

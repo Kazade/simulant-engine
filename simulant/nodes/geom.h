@@ -51,9 +51,9 @@ class Geom :
 public:
     Geom(GeomID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
 
-    const AABB& aabb() const;
+    const AABB& aabb() const override;
 
-    void ask_owner_for_destruction();
+    void ask_owner_for_destruction() override;
 
     RenderPriority render_priority() const { return render_priority_; }
 
@@ -65,7 +65,7 @@ public:
 
     bool init() override;
 
-    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum) const;
+    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum, DetailLevel detail_level) const override;
 private:
     MeshID mesh_id_;
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
@@ -74,7 +74,7 @@ private:
 
     AABB aabb_;
 
-    void update(float dt) {
+    void update(float dt) override {
         update_source(dt);
     }
 };

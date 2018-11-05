@@ -37,6 +37,7 @@ namespace smlt {
 class KeyFrameAnimationState;
 class SubActor;
 
+
 class Actor :
     public StageNode,
     public virtual Boundable,
@@ -52,46 +53,20 @@ public:
 
     const AABB& aabb() const override;
 
-    MeshID mesh_id() const { return (mesh_) ? mesh_->id() : MeshID(0); }
+    MeshID mesh_id(DetailLevel detail_level) const;
+    MeshPtr mesh(DetailLevel detail_level) const;
+    MeshPtr best_mesh(DetailLevel detail_level) const;
+    MeshPtr base_mesh() const;
 
-    MeshPtr mesh() const;
+    bool has_mesh(DetailLevel detail_level) const;
+    bool has_any_mesh() const;
+    bool has_multiple_meshes() const;
 
-    bool has_mesh() const { return bool(mesh_); }
-    void set_mesh(MeshID mesh);
-
-    uint16_t subactor_count() const {
-        return subactors_.size();
-    }
-
-    void override_material_id(MaterialID mat);
-    void remove_material_id_override();
-
-    SubActor& subactor(uint16_t idx) {
-        return *subactors_[idx];
-    }
-
-    const std::vector<std::shared_ptr<SubActor> >& _subactors() { return subactors_; }
+    void set_mesh(MeshID mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
 
     void ask_owner_for_destruction() override;
 
-    void each(std::function<void (uint32_t, SubActor*)> callback);
-
-    typedef sig::signal<void (ActorID, SubActor*)> SubActorCreatedCallback;
-    typedef sig::signal<void (ActorID, SubActor*)> SubActorDestroyedCallback;
-    typedef sig::signal<void (ActorID, SubActor*, MaterialID, MaterialID)> SubActorMaterialChangedCallback;
     typedef sig::signal<void (ActorID)> MeshChangedCallback;
-
-    SubActorCreatedCallback& signal_subactor_created() {
-        return signal_subactor_created_;
-    }
-
-    SubActorDestroyedCallback& signal_subactor_destroyed() {
-        return signal_subactor_destroyed_;
-    }
-
-    SubActorMaterialChangedCallback& signal_subactor_material_changed() {
-        return signal_subactor_material_changed_;
-    }
 
     MeshChangedCallback& signal_mesh_changed() { return signal_mesh_changed_; }
 
@@ -103,34 +78,48 @@ public:
 
     Property<Actor, KeyFrameAnimationState> animation_state = { this, &Actor::animation_state_ };
 
-    bool has_animated_mesh() const {
-        return mesh_ && mesh_->is_animated();
+    bool has_animated_mesh(DetailLevel detail_level=DETAIL_LEVEL_NEAREST) const {
+        auto mesh = find_mesh(detail_level);
+        return mesh && mesh->is_animated();
     }
 
     void cleanup() override {
         StageNode::cleanup();
     }
 
-    RenderableList _get_renderables(const Frustum &frustum) const;
+    RenderableList _get_renderables(const Frustum &frustum, DetailLevel level) const;
 private:
+    MeshPtr find_mesh(DetailLevel level) const {
+        /* Find the most suitable mesh at the specified level. This will search downwards
+         * from the level to NEAREST and return the first non-null result */
+
+        auto mesh = meshes_[level];
+        while(!mesh) {
+            if(level == DETAIL_LEVEL_NEAREST) {
+                break;
+            }
+
+            level = (DetailLevel) (int(level) - 1);
+            mesh = meshes_[level];
+        }
+
+        return mesh;
+    }
+
+
     // Used for animated meshes
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
     std::shared_ptr<VertexData> interpolated_vertex_data_;
 
-    std::shared_ptr<Mesh> mesh_;
-    std::vector<std::shared_ptr<SubActor> > subactors_;
+    std::array<std::shared_ptr<Mesh>, DETAIL_LEVEL_MAX> meshes_;
+
     std::shared_ptr<KeyFrameAnimationState> animation_state_;
 
     RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
-
-    SubActorCreatedCallback signal_subactor_created_;
-    SubActorDestroyedCallback signal_subactor_destroyed_;
-    SubActorMaterialChangedCallback signal_subactor_material_changed_;
     MeshChangedCallback signal_mesh_changed_;
 
     void update(float dt) override;
-    void clear_subactors();
-    void rebuild_subactors();
+
     sig::connection submesh_created_connection_;
     sig::connection submesh_destroyed_connection_;
 
@@ -174,7 +163,7 @@ public:
         return submesh()->aabb();
     }
 
-    SubActor(Actor& parent, std::shared_ptr<SubMesh> submesh);
+    SubActor(const Actor& parent, std::shared_ptr<SubMesh> submesh);
     ~SubActor();
 
     SubMesh* submesh();
@@ -192,11 +181,11 @@ private:
     VertexData* get_vertex_data() const;
     IndexData* get_index_data() const;
 
-    Actor& parent_;
+    const Actor& parent_;
     std::shared_ptr<SubMesh> submesh_;
-    MaterialPtr material_;
 
-    sig::connection submesh_material_changed_connection_;
+    MaterialPtr material_;
+    MaterialPtr material_override_;
 
     std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
 

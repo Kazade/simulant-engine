@@ -56,15 +56,17 @@ private:
 
 class Batch {
 public:
-    void add_renderable(Renderable* renderable);
-    void remove_renderable(Renderable* renderable);
+    typedef std::shared_ptr<Renderable> RenderablePtr;
+
+    void add_renderable(RenderablePtr renderable);
+    void remove_renderable(RenderablePtr renderable);
 
     void each(std::function<void (uint32_t, Renderable*)> func) const;
 
     uint32_t renderable_count() const { return renderables_.size(); }
 
 private:
-    std::list<Renderable*> renderables_;
+    std::list<RenderablePtr> renderables_;
     mutable shared_mutex batch_lock_;
 };
 
@@ -199,7 +201,7 @@ public:
 
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
 
-    void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
+    void insert_renderable(std::shared_ptr<Renderable> renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;

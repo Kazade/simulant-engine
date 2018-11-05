@@ -39,7 +39,7 @@ void end_of_frame_check() {
 
 }
 
-void check_and_log_error(const std::string &function_name) {
+void check_and_log_error(const char *function_name) {
     GLuint error = glGetError();
     if(error != GL_NO_ERROR) {
         std::string error_string;

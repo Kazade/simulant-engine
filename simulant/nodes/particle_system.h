@@ -121,7 +121,7 @@ public:
         return m.get();
     }
 
-    RenderableList _get_renderables(const Frustum &frustum) const {
+    RenderableList _get_renderables(const Frustum &frustum, DetailLevel detail_level) const {
         auto ret = RenderableList();
         std::shared_ptr<Renderable> sptr = std::const_pointer_cast<ParticleSystem>(shared_from_this());
         ret.push_back(sptr);

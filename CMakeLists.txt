@@ -26,13 +26,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-poin
 
 IF(NOT DREAMCAST_BUILD)
     IF(ANDROID)
-        LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/libs/${ANDROID_ABI})
+        LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/sdl/build/libs/${ANDROID_ABI})
+        LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/openal/build/libs/${ANDROID_ABI})
 
         SET(SDL2_LIBRARY SDL2)
-        SET(SDL2_INCLUDE_DIR ${CMAKE_BINARY_DIR}/sdl/include)
+        SET(SDL2_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/.android/sdl/include)
 
         SET(OPENAL_LIBRARY openal)
-        SET(OPENAL_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/openal/OpenAL/include)
+        SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/.android/openal/OpenAL/include)
 
         FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
         FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
@@ -44,7 +45,9 @@ IF(NOT DREAMCAST_BUILD)
 
     FIND_PACKAGE(ZLIB REQUIRED)
 
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    link_libraries(Threads::Threads)
 
     # Force the new C++ ABI on GCC
     MESSAGE("-- Enabling old C++11 ABI (until TravisCI is upgraded past Trusty)")
@@ -91,6 +94,13 @@ ENDIF()
 IF(ANDROID)
 LINK_LIBRARIES(log)
 ENDIF()
+
+# FIXME: Only do this if we're building samples or tests
+FILE(COPY ${CMAKE_SOURCE_DIR}/samples/data/ DESTINATION ${CMAKE_BINARY_DIR}/sample_data/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/particles/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/particles/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/materials/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/materials/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/textures/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/textures/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/fonts/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/fonts/)
 
 ADD_SUBDIRECTORY(simulant)
 ADD_SUBDIRECTORY(tests)
