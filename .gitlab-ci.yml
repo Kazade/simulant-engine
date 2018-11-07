@@ -262,3 +262,18 @@ deploy:dreamcast-sh4-gcc:
   artifacts:
    paths:
     - upload/${TARGET}.zip
+
+deploy:assets:
+  stage: deploy
+  image: fedora:28
+  before_script:
+   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - pip install gsutil
+  script:
+   - zip -r assets.zip assets/
+   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+   - gsutil cp assets.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/assets.zip
+  artifacts:
+   paths:
+    - assets.zip
