@@ -192,8 +192,8 @@ deploy:linux-x64-gcc:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
    - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.so.* ./upload/${TARGET}/lib/
-   - cp ${TARGET}/debug/simulant/libsimulant.so.* ./upload/${TARGET}/lib/debug/
+   - cp ${TARGET}/release/simulant/libsimulant.so* ./upload/${TARGET}/lib/
+   - cp ${TARGET}/debug/simulant/libsimulant.so* ./upload/${TARGET}/lib/debug/
    - rsync -avm -L --include='*.h' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
