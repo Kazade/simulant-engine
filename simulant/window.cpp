@@ -339,6 +339,31 @@ void Window::await_frame_time() {
     last_frame_time_us_ = this_time;
 }
 
+Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t height, ScreenFormat format, uint16_t refresh_rate) {
+    if(screens_.count(name)) {
+        L_WARN("Tried to add duplicate Screen");
+        return screens_.at(name).get();
+    }
+
+    auto screen = Screen::create(this);
+    screen->width_ = width;
+    screen->height_ = height;
+    screen->format_ = format;
+    screen->refresh_rate_ = refresh_rate;
+
+    screens_.insert(std::make_pair(name, screen));
+
+    signal_screen_added_(name, screen.get());
+
+    return screen.get();
+}
+
+void Window::_destroy_screen(const std::string &name) {
+    auto screen = screens_.at(name);
+    screens_.erase(name);
+    signal_screen_removed_(name, screen.get());
+}
+
 bool Window::run_frame() {
     static bool first_frame = true;
 
@@ -593,13 +618,33 @@ void Window::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
     });
 }
 
+std::size_t Window::screen_count() const {
+    return screens_.size();
+}
+
+Screen *Window::screen(const std::string &name) const {
+    auto it = screens_.find(name);
+    if(it != screens_.end()) {
+        return it->second.get();
+    }
+
+    L_INFO(_F("Unable to find screen with name {0}").format(name));
+    return nullptr;
+}
+
+void Window::each_screen(std::function<void (std::string, Screen *)> callback) {
+    for(auto p: screens_) {
+        callback(p.first, p.second.get());
+    }
+}
+
 void Window::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_begin(
-            this,
-            touch_id,
-            normalized_x,
-            normalized_y,
+                    this,
+                    touch_id,
+                    normalized_x,
+                    normalized_y,
             pressure
         );
     });
