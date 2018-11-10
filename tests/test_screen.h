@@ -27,7 +27,7 @@ public:
 
         window->_destroy_screen("Test1");
 
-        assert_equal(window->screen_count(), 0);
+        assert_equal(window->screen_count(), 0u);
         assert_is_null(window->screen("Test1"));
     }
 };

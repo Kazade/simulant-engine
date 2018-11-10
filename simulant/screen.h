@@ -1,7 +1,7 @@
 #pragma once
 
 #include "generic/managed.h"
-
+#include "generic/data_carrier.h"
 
 namespace smlt {
 
@@ -13,7 +13,8 @@ enum ScreenFormat {
 };
 
 class Screen:
-    public Managed<Screen> {
+    public Managed<Screen>,
+    public generic::DataCarrier {
 
 public:
     Screen(Window* window);
@@ -48,12 +49,27 @@ public:
         return refresh_rate_;
     }
 
+    /*
+     * If this is greater than one, then
+     * all data sent via render is integer scaled
+     */
+    uint16_t integer_scale() const {
+        return integer_scale_;
+    }
+
+    /* Private API, should only be called by the window
+     * class that knows how to handle it */
+    void _set_integer_scale(uint8_t scale) {
+        integer_scale_ = scale;
+    }
+
 private:
     Window* window_;
     uint16_t width_ = 0;
     uint16_t height_ = 0;
     ScreenFormat format_ = SCREEN_FORMAT_G1;
-    uint16_t refresh_rate_ = 60;
+    uint16_t refresh_rate_ = 60;    
+    uint8_t integer_scale_ = 1;
 
     friend class Window;
 };

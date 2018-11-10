@@ -356,6 +356,10 @@ private:
     /* This is called by Screens to render themselves to devices. Default behaviour is a no-op */
     virtual void render_screen(Screen* screen, const uint8_t* data) {}
 
+    /* To be overridden by subclasses if external screens need some kind of initialization/cleanup */
+    virtual bool initialize_screen(Screen* screen) { return true; }
+    virtual void shutdown_screen(Screen* screen) {}
+
 protected:
     InputState* _input_state() const { return input_state_.get(); }
 

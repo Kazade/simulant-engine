@@ -351,6 +351,10 @@ Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t
     screen->format_ = format;
     screen->refresh_rate_ = refresh_rate;
 
+    if(!initialize_screen(screen.get())) {
+        return nullptr;
+    }
+
     screens_.insert(std::make_pair(name, screen));
 
     signal_screen_added_(name, screen.get());
@@ -362,6 +366,8 @@ void Window::_destroy_screen(const std::string &name) {
     auto screen = screens_.at(name);
     screens_.erase(name);
     signal_screen_removed_(name, screen.get());
+
+    shutdown_screen(screen.get());
 }
 
 bool Window::run_frame() {
