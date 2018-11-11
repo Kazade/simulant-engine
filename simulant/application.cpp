@@ -63,6 +63,15 @@ void Application::construct_window(const AppConfig& config) {
 
     L_DEBUG("Constructing the window");
 
+    /* Fallback. If fullscreen is disabled and there is no width
+     * or height, then default to 640x480 */
+    if(config_copy.width == 0 && config_copy.height == 0) {
+        if(!config_copy.fullscreen) {
+            config_copy.width = 640;
+            config_copy.height = 480;
+        }
+    }
+
     window_ = SysWindow::create(
         this,
         config_copy.width,

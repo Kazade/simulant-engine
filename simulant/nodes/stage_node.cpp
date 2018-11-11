@@ -40,18 +40,19 @@ Vec3 StageNode::absolute_scaling() const {
 }
 
 Mat4 StageNode::absolute_transformation() const {
-    Mat4 final(absolute_rotation_);
+    Mat4 scale;
+    Mat4 trans;
+    Mat4 rot(absolute_rotation_);
 
-    final[0] *= absolute_scale_.x;
-    final[5] *= absolute_scale_.y;
-    final[10] *= absolute_scale_.z;
-    final[15] = 1.0;
+    scale[0] = absolute_scale_.x;
+    scale[5] = absolute_scale_.y;
+    scale[10] = absolute_scale_.z;
 
-    final[12] = absolute_position_.x;
-    final[13] = absolute_position_.y;
-    final[14] = absolute_position_.z;
+    trans[12] = absolute_position_.x;
+    trans[13] = absolute_position_.y;
+    trans[14] = absolute_position_.z;
 
-    return final;
+    return trans * rot * scale;
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
