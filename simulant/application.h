@@ -77,9 +77,9 @@ struct AppConfig {
     struct Desktop {
         bool enable_virtual_screen = false;
         ScreenFormat virtual_screen_format = SCREEN_FORMAT_G1;
-        uint16_t virtual_screen_width = 48 * 4;
-        uint16_t virtual_screen_height = 32 * 4;
-        uint16_t virtual_screen_integer_scale = 4;
+        uint16_t virtual_screen_width = 48;
+        uint16_t virtual_screen_height = 32;
+        uint16_t virtual_screen_integer_scale = 1;
     } desktop;
 };
 

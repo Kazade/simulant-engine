@@ -442,7 +442,7 @@ bool SDL2Window::initialize_screen(Screen *screen) {
         SDL_WINDOWPOS_UNDEFINED,
         screen->width(),
         screen->height(),
-        0//SDL_WINDOW_BORDERLESS
+        0 //SDL_WINDOW_BORDERLESS
     );
 
     if(!window) {
@@ -465,6 +465,8 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
 
     auto surface = SDL_GetWindowSurface(window);
 
+    uint32_t* pixels = (uint32_t*) surface->pixels;
+
     if(screen->format() == SCREEN_FORMAT_G1) {
         auto x = 0;
         auto y = 0;
@@ -476,23 +478,30 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
         for(auto i = 0; i < bytes; ++i) {
 
             // Go through each bit
-            for(auto bit = 7; bit >= 0; --bit) {
+            for(auto bit = 0; bit < 8; ++bit) {
 
                 // Read the bit value
-                auto value = (data[i] >> 7) & 0x01;
+                auto value = (data[i] >> bit) & 0x01;
 
                 // Work out the pixel offset
-                auto offset = ((y * surface->w) + x) * SDL_BYTESPERPIXEL(surface->format->format);
+                auto offset = ((y * surface->w) + x);
 
                 // Write the pixel at the offset
-                for(auto j = 0u; j < SDL_BYTESPERPIXEL(surface->format->format); ++j) {
-                    ((uint8_t*) surface->pixels)[offset + j] = 255 * value;
+                pixels[offset] = (value) ? 0 : ~0;
+
+                ++x;
+                if(x == screen->width()) {
+                    x = 0;
+                    y++;
                 }
             }
         }
     } else {
         L_ERROR("Unsupported screen format");
+        return;
     }
+
+    SDL_UpdateWindowSurface(window);
 }
 
 }

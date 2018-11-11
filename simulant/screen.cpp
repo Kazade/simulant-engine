@@ -3,7 +3,12 @@
 
 namespace smlt {
 
-void Screen::render(const uint8_t *data) {
+void Screen::render(const uint8_t *data, ScreenFormat format) {
+    if(format != this->format()) {
+        L_WARN("Not uploading screen image due to format mismatch. Conversion not yet supported");
+        return;
+    }
+
     window_->render_screen(this, data);
 }
 

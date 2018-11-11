@@ -31,7 +31,7 @@ public:
      * You can use a Scene fixed_update, a Behaviour or window->idle->add_timeout
      * to update with a regular frequency.
      */
-    void render(const uint8_t* data);
+    void render(const uint8_t* data, ScreenFormat format);
 
     uint16_t height() const {
         return height_;
