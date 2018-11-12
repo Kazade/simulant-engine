@@ -1,5 +1,8 @@
 #pragma once
 
+#include <mutex>
+#include <vector>
+
 #include "generic/managed.h"
 #include "generic/data_carrier.h"
 
@@ -63,6 +66,8 @@ public:
         integer_scale_ = scale;
     }
 
+    uint32_t data_size() const;
+
 private:
     Window* window_;
     uint16_t width_ = 0;
@@ -70,6 +75,9 @@ private:
     ScreenFormat format_ = SCREEN_FORMAT_G1;
     uint16_t refresh_rate_ = 60;    
     uint8_t integer_scale_ = 1;
+
+    std::vector<uint8_t> buffer_;
+    std::mutex buffer_mutex_;
 
     friend class Window;
 };
