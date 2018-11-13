@@ -13,4 +13,17 @@ must be `SCREEN_FORMAT_G1` which is 1-bit greyscale.
 
 Calling render too quickly might result in some frames being dropped if the screen can't display them fast enough, you can judge how quickly to render by querying the `refresh_rate()` attribute.
 
+## The Virtual Screen
+
+Sometimes it's useful to test your Screen rendering while developing on a PC. Simulant provides
+applications the ability to enable a single virtual screen for testing.
+
+You can enable the screen by setting `desktop.enable_virtual_screen = true` in your `AppConfig`. There are other related settings too:
+
+ - `desktop.virtual_screen_width`
+ - `desktop.virtual_screen_height`
+ - `desktop.virtual_screen_format`
+ - `desktop.virtual_screen_integer_scale`
+ 
+`virtual_screen_integer_scale` increases the size of the test window, which is useful on Hi-dpi screens when you're testing 48x32 VMU images!
 
