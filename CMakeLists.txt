@@ -24,6 +24,9 @@ SET(CMAKE_ASM_FLAGS "")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
 
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -Wextra -Wno-unused-parameter")
+
+
 IF(NOT DREAMCAST_BUILD)
     IF(ANDROID)
         LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/sdl/build/libs/${ANDROID_ABI})
