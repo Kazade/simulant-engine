@@ -36,7 +36,7 @@ class StageNode:
     public Transformable,
     public Updateable,
     public Ownable,
-    public BoundableEntity,
+    public virtual BoundableEntity,
     public Organism,
     public HasAutoID<StageNode> {
 

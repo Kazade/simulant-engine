@@ -13,7 +13,7 @@ class HardwareBuffer;
 class Renderer;
 
 class SubMeshInterface:
-    public Boundable {
+    public virtual Boundable {
 
 public:
     virtual ~SubMeshInterface() {}
