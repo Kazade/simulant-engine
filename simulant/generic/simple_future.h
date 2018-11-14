@@ -216,3 +216,10 @@ future<result_of_t<decay_t<Function>(decay_t<Args>...)>> async(Function&& f, Arg
 }
 
 }
+
+#ifdef __DREAMCAST__
+/* Only use this implementation on the Dreamcast */
+namespace std {
+    using namespace stdX;
+}
+#endif
