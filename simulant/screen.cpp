@@ -7,8 +7,15 @@
 
 namespace smlt {
 
+
 void Screen::render(const uint8_t *data, ScreenFormat format) {
-    static std::future<void> future;
+#ifdef __DREAMCAST__
+    using namespace stdX;
+#else
+    using namespace std;
+#endif
+
+    static future<void> fut;
 
     if(format != this->format()) {
         L_WARN("Not uploading screen image due to format mismatch. Conversion not yet supported");
@@ -24,18 +31,18 @@ void Screen::render(const uint8_t *data, ScreenFormat format) {
     }
 
     /* Is there already a valid future? */
-    if(future.valid()) {
+    if(fut.valid()) {
         /* If so, is it ready? */
-        if(future.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
+        if(fut.wait_for(std::chrono::milliseconds(0)) == future_status::ready) {
             /* Then get it, and mark it as not valid */
-            future.get();
+            fut.get();
         }
     }
 
     /* We don't have a valid future, defer a new one */
-    if(!future.valid()) {
+    if(!fut.valid()) {
         /* We async this and return immediately */
-        future = std::async(std::launch::async, [this]() {
+        fut = async(launch::async, [this]() {
             std::vector<uint8_t> tmp;
             {
                 /* Copy the buffer while locking */
