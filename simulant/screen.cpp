@@ -1,5 +1,7 @@
 #include <chrono>
 
+#include "generic/simple_future.h"
+
 #include "window.h"
 #include "screen.h"
 
@@ -57,7 +59,14 @@ uint32_t Screen::data_size() const {
     }
 }
 
-Screen::Screen(Window *window):
-    window_(window) {}
+Screen::Screen(Window *window, const std::string &name):
+    window_(window),
+    name_(name) {
+
+}
+
+std::string Screen::name() const {
+    return name_;
+}
 
 }

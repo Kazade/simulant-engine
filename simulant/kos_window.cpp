@@ -59,7 +59,32 @@ void KOSWindow::destroy_window() {
 
 }
 
+void KOSWindow::probe_vmus() {
+    const static char LETTERS [] = {'A', 'B', 'C', 'D'};
+
+    const static int MAX_VMUS = 8;  // Four ports, two slots in each
+
+    std::lock_guard<std::mutex> g(vmu_mutex_);
+
+    vmu_lookup_.clear();
+
+    for(auto i = 0; i < MAX_VMUS; ++i) {
+        auto device = maple_enum_type(i, MAPLE_FUNC_LCD);
+        if(device && device->valid) {
+            std::string identifier = _F("{0}{1}").format(
+                LETTERS[device->port],
+                device->unit
+            );
+
+            vmu_lookup_[identifier] = std::make_pair(device->port, device->unit);
+        }
+    }
+}
+
+
 void KOSWindow::check_events() {
+    probe_vmus();
+
     const int8_t MAX_CONTROLLERS = 4;
     const static std::vector<uint16_t> CONTROLLER_BUTTONS = {
         CONT_A, CONT_B, CONT_C, CONT_D, CONT_X, CONT_Y, CONT_Z, CONT_START
@@ -245,7 +270,7 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
     return std::make_shared<KOSSoundDriver>(this);
 }
 
-void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) {
+void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
     std::vector<JoystickDeviceInfo> joypads;
 
     auto mouse_dev = maple_enum_type(0, MAPLE_FUNC_MOUSE);
@@ -283,4 +308,23 @@ void smlt::KOSWindow::initialize_input_controller(smlt::InputState &controller) 
     controller._update_joystick_devices(joypads);
 }
 
+void KOSWindow::render_screen(Screen* screen, const uint8_t* data) {
+    std::lock_guard<std::mutex> g(vmu_mutex_);
+
+    auto it = vmu_lookup_.find(screen->name());
+
+    if(it == vmu_lookup_.end()) {
+        L_WARN("Tried to render to VMU that has been removed");
+        return;
+    }
+
+    auto vmu = it->second;
+
+    auto device = maple_enum_dev(vmu.first, vmu.second);
+    if(device) {
+        vmu_draw_lcd(device, (void*) data);
+    }
 }
+
+}
+

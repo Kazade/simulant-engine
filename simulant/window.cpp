@@ -379,7 +379,7 @@ Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t
         return screens_.at(name).get();
     }
 
-    auto screen = Screen::create(this);
+    auto screen = Screen::create(this, name);
     screen->width_ = width;
     screen->height_ = height;
     screen->format_ = format;

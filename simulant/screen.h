@@ -20,7 +20,7 @@ class Screen:
     public generic::DataCarrier {
 
 public:
-    Screen(Window* window);
+    Screen(Window* window, const std::string& name);
 
     /* Render image data. data must be of size width x height x bits where bits
      * is defined by the ScreenFormat. Data should be arranged from top-left.
@@ -67,9 +67,12 @@ public:
     }
 
     uint32_t data_size() const;
+    std::string name() const;
 
 private:
     Window* window_;
+    std::string name_;
+
     uint16_t width_ = 0;
     uint16_t height_ = 0;
     ScreenFormat format_ = SCREEN_FORMAT_G1;

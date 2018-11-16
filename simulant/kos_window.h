@@ -3,6 +3,7 @@
 /* This is the window implementation for the Dreamcast using KallistiOS */
 
 #include <kos.h>
+#include <mutex>
 
 #include "window.h"
 #include "platform.h"
@@ -38,6 +39,16 @@ public:
     void initialize_input_controller(InputState &controller) override;
 
     std::shared_ptr<SoundDriver> create_sound_driver() override;
+
+private:
+    void probe_vmus();
+
+    void render_screen(Screen* screen, const uint8_t* data) override;
+
+    /* Name, to port/unit combo. This only includes VMUs we've seen during the last probe */
+
+    std::mutex vmu_mutex_;
+    std::unordered_map<std::string, std::pair<int, int>> vmu_lookup_;
 };
 
 }
