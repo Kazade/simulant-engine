@@ -18,6 +18,10 @@ set(CMAKE_SYSTEM_INCLUDE_PATH "$ENV{KOS_BASE}/include")
 SET(CMAKE_EXECUTABLE_SUFFIX ".elf")
 SET(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
 
+# Make sure we clear any flags set by the environment variables
+SET(ENV{KOS_CFLAGS} $ENV{KOS_INC_PATHS} "-fno-builtin -fno-strict-aliasing")
+SET(ENV{KOS_CPPFLAGS} $ENV{KOS_INC_PATHS})
+
 SET(
     CMAKE_C_FLAGS
     ${CMAKE_C_FLAGS}

@@ -9,7 +9,7 @@ namespace smlt {
 
 
 void Screen::render(const uint8_t *data, ScreenFormat format) {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     using namespace stdX;
 #else
     using namespace std;
