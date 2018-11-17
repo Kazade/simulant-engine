@@ -30,9 +30,19 @@ public:
         stdX::future<bool> my_future;
         assert_false(my_future.valid());
 
-        my_future = stdX::async([]() -> bool { return true; });
+        std::atomic<bool> running;
+        running = true;
+
+        my_future = stdX::async([&running]() -> bool {
+            while(running) {}
+            return true;
+        });
 
         assert_true(my_future.valid());
+        running = false;
+        my_future.get();
+
+        assert_false(my_future.valid());
     }
 };
 

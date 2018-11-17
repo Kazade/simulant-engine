@@ -37,9 +37,8 @@ public:
     T get() {
         wait();
 
-        is_valid_ = false;
-
         std::lock_guard<std::mutex> lock(state_->lock_);
+        state_->is_valid_ = false;
         if(state_->exception_) {
             stdX::rethrow_exception(state_->exception_);
         }
@@ -77,7 +76,12 @@ public:
     }
 
     bool valid() const {
-        return is_valid_;
+        if(!state_) {
+            return false;
+        }
+
+        std::lock_guard<std::mutex> lock(state_->lock_);
+        return state_->is_valid_;
     }
 
     struct future_state {
@@ -86,17 +90,17 @@ public:
         T result_;
         future_status status_ = future_status::timeout;
         stdX::exception_ptr exception_;
+        bool is_valid_ = false;
     };
 
     future(std::shared_ptr<future_state> state):
-        state_(state),
-        is_valid_(true) {
+        state_(state) {
 
+        state_->is_valid_ = true;
     }
 
 private:
     std::shared_ptr<future_state> state_;
-    bool is_valid_ = false;
 };
 
 
@@ -146,34 +150,34 @@ public:
     void get() {
         wait();
 
-        is_valid_ = false;
-
         std::lock_guard<std::mutex> lock(state_->lock_);
+        state_->is_valid_ = false;
         if(state_->exception_) {
             stdX::rethrow_exception(state_->exception_);
         }
     }
 
     bool valid() const {
-        return is_valid_;
+        std::lock_guard<std::mutex> lock(state_->lock_);
+        return state_->is_valid_;
     }
 
     struct future_state {
         std::mutex lock_;
         future_status status_ = future_status::timeout;
         stdX::exception_ptr exception_;
+        bool is_valid_ = false;
     };
 
     /* FIXME: Should be private */
     future(std::shared_ptr<future_state> state):
-        state_(state),
-        is_valid_(true) {
+        state_(state) {
 
+        state_->is_valid_ = true;
     }
 
 private:
     std::shared_ptr<future_state> state_;
-    bool is_valid_ = false;
 
 };
 
