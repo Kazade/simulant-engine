@@ -1,5 +1,6 @@
 SET(CMAKE_SYSTEM_NAME Generic)
 SET(DREAMCAST_BUILD TRUE)
+SET(DREAMCAST TRUE)
 SET(CMAKE_SYSTEM_VERSION 1)
 
 set(CMAKE_CROSSCOMPILING TRUE)
@@ -32,7 +33,9 @@ LINK_DIRECTORIES(
     $ENV{KOS_PORTS}/lib
 )
 
-LINK_LIBRARIES(-Wl,--start-group -lkallisti -lc -lgcc -Wl,--end-group)
+LINK_LIBRARIES(
+    -T$ENV{KOS_BASE}/utils/ldscripts/shlelf.xc
+)
 
 ADD_DEFINITIONS(
     -D__DREAMCAST__
@@ -42,16 +45,20 @@ ADD_DEFINITIONS(
     -D_arch_sub_pristine
 )
 
+LINK_LIBRARIES(
+    -lstdc++ -Wl,--start-group -lkallisti -lc -lgcc -Wl,--end-group -Wl,-Ttext=0x8c010000 -Wl,--gc-sections
+)
+
 SET(
     CMAKE_C_FLAGS
-    ${CMAKE_C_FLAGS}
-    "-fno-builtin -fno-strict-aliasing"
+    "${CMAKE_C_FLAGS} -nodefaultlibs -fno-builtin -fno-strict-aliasing -ffunction-sections -fdata-sections -ml -m4-single-only"
+    CACHE STRING "" FORCE
 )
 
 SET(
     CMAKE_CXX_FLAGS
-    ${CMAKE_CXX_FLAGS}
-    "-fno-builtin -fno-strict-aliasing"
+    "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}"
+    CACHE STRING "" FORCE
 )
 
 
