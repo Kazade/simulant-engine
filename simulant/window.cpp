@@ -61,6 +61,31 @@
 #include "panels/stats_panel.h"
 #include "panels/partitioner_panel.h"
 
+
+/* Icon to send to all screens on boot */
+
+#define simulant_icon_vmu_width 48
+#define simulant_icon_vmu_height 32
+
+static unsigned char simulant_icon_vmu_bits[] = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x80, 0x0b, 0x00,
+   0x00, 0x00, 0x00, 0x70, 0x05, 0x00, 0x00, 0x00, 0x00, 0xae, 0x06, 0x00,
+   0x00, 0x00, 0xc0, 0x55, 0x03, 0x00, 0x00, 0x00, 0xb8, 0xaa, 0x02, 0x00,
+   0x00, 0x00, 0x57, 0x55, 0x01, 0x00, 0x00, 0xc0, 0xaf, 0xaa, 0x01, 0x00,
+   0x00, 0x40, 0xfe, 0xd7, 0x00, 0x00, 0x00, 0x80, 0xf8, 0x7f, 0x00, 0x00,
+   0x00, 0x00, 0xc1, 0xff, 0x03, 0x00, 0x00, 0x00, 0x02, 0xfe, 0x07, 0x00,
+   0x00, 0x00, 0x04, 0xf0, 0x07, 0x00, 0x00, 0x00, 0x0e, 0x80, 0x0f, 0x00,
+   0x00, 0x00, 0x1f, 0x00, 0x0c, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x04, 0x00,
+   0x00, 0x80, 0x3f, 0x00, 0x03, 0x00, 0x00, 0x80, 0x7f, 0x80, 0x00, 0x00,
+   0x00, 0x00, 0xff, 0x40, 0x00, 0x00, 0x00, 0x00, 0xfa, 0x31, 0x00, 0x00,
+   0x00, 0x00, 0xd5, 0x0b, 0x00, 0x00, 0x00, 0x80, 0xaa, 0x07, 0x00, 0x00,
+   0x00, 0x40, 0x75, 0x00, 0x00, 0x00, 0x00, 0xa0, 0x0f, 0x00, 0x00, 0x00,
+   0x00, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+
 namespace smlt {
 
 Window::Window(int width, int height, int bpp, bool fullscreen, bool enable_vsync):
@@ -253,6 +278,15 @@ bool Window::_init() {
 #ifdef _arch_dreamcast
         print_available_ram();
 #endif
+
+    idle->add_once([this]() {
+        each_screen([](std::string name, Screen* screen) {
+            if(screen->width() / screen->integer_scale() == simulant_icon_vmu_width && screen->height() / screen->integer_scale() == simulant_icon_vmu_height) {
+                screen->render(simulant_icon_vmu_bits, SCREEN_FORMAT_G1);
+            }
+        });
+    });
+
     return result;
 }
 
@@ -337,6 +371,37 @@ void Window::await_frame_time() {
         this_time = time_keeper_->now_in_us();
     }
     last_frame_time_us_ = this_time;
+}
+
+Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t height, ScreenFormat format, uint16_t refresh_rate) {
+    if(screens_.count(name)) {
+        L_WARN("Tried to add duplicate Screen");
+        return screens_.at(name).get();
+    }
+
+    auto screen = Screen::create(this, name);
+    screen->width_ = width;
+    screen->height_ = height;
+    screen->format_ = format;
+    screen->refresh_rate_ = refresh_rate;
+
+    if(!initialize_screen(screen.get())) {
+        return nullptr;
+    }
+
+    screens_.insert(std::make_pair(name, screen));
+
+    signal_screen_added_(name, screen.get());
+
+    return screen.get();
+}
+
+void Window::_destroy_screen(const std::string &name) {
+    auto screen = screens_.at(name);
+    screens_.erase(name);
+    signal_screen_removed_(name, screen.get());
+
+    shutdown_screen(screen.get());
 }
 
 bool Window::run_frame() {
@@ -593,13 +658,33 @@ void Window::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
     });
 }
 
+std::size_t Window::screen_count() const {
+    return screens_.size();
+}
+
+Screen *Window::screen(const std::string &name) const {
+    auto it = screens_.find(name);
+    if(it != screens_.end()) {
+        return it->second.get();
+    }
+
+    L_INFO(_F("Unable to find screen with name {0}").format(name));
+    return nullptr;
+}
+
+void Window::each_screen(std::function<void (std::string, Screen *)> callback) {
+    for(auto p: screens_) {
+        callback(p.first, p.second.get());
+    }
+}
+
 void Window::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_begin(
-            this,
-            touch_id,
-            normalized_x,
-            normalized_y,
+                    this,
+                    touch_id,
+                    normalized_x,
+                    normalized_y,
             pressure
         );
     });

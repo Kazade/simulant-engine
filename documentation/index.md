@@ -26,7 +26,7 @@ This section covers the base subsystems and usages of Simulant.
  - User interfaces: [Widgets](widgets.md)
  - Cameras: [Cameras](cameras.md)
 
-### Scene Building
+### Using Simulant
 
  - Scene Management: [The Scene](scene.md) | [Managing Scenes](scene_management.md)
  - Behaviours: [Organisms and Behaviours](behaviours.md)
@@ -36,4 +36,5 @@ This section covers the base subsystems and usages of Simulant.
  - Supported File Formats: [Mesh Formats](mesh_formats.md) | [Image Formats](image_formats.md)
  - Assets: [Textures](textures.md) | [Meshes](meshes.md)
  - Debugging: [Debugging](debugging.md)
+ - Devices: [Screens](screens.md)
 

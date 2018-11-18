@@ -18,11 +18,16 @@ set(CMAKE_SYSTEM_INCLUDE_PATH "$ENV{KOS_BASE}/include")
 SET(CMAKE_EXECUTABLE_SUFFIX ".elf")
 SET(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
 
-SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-DDREAMCAST -D__arch_dreamcast -D_arch_sub_pristine")
+ADD_DEFINITIONS(
+    -D__DREAMCAST__
+    -DDREAMCAST
+    -D_arch_dreamcast
+    -D__arch_dreamcast
+    -D_arch_sub_pristine
+)
 
-# Optimise for size by default
-SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-Os -DDREAMCAST -D__arch_dreamcast -D_arch_sub_pristine")
 SET(CMAKE_ASM_FLAGS "")
 SET(CMAKE_ASM_FLAGS_RELEASE "")
 
 link_libraries(m)
+

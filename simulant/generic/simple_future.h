@@ -38,6 +38,7 @@ public:
         wait();
 
         std::lock_guard<std::mutex> lock(state_->lock_);
+        state_->is_valid_ = false;
         if(state_->exception_) {
             stdX::rethrow_exception(state_->exception_);
         }
@@ -75,7 +76,12 @@ public:
     }
 
     bool valid() const {
-        return bool(state_);
+        if(!state_) {
+            return false;
+        }
+
+        std::lock_guard<std::mutex> lock(state_->lock_);
+        return state_->is_valid_;
     }
 
     struct future_state {
@@ -84,11 +90,13 @@ public:
         T result_;
         future_status status_ = future_status::timeout;
         stdX::exception_ptr exception_;
+        bool is_valid_ = false;
     };
 
     future(std::shared_ptr<future_state> state):
         state_(state) {
 
+        state_->is_valid_ = true;
     }
 
 private:
@@ -143,23 +151,34 @@ public:
         wait();
 
         std::lock_guard<std::mutex> lock(state_->lock_);
+        state_->is_valid_ = false;
         if(state_->exception_) {
             stdX::rethrow_exception(state_->exception_);
         }
+    }
+
+    bool valid() const {
+        std::lock_guard<std::mutex> lock(state_->lock_);
+        return state_->is_valid_;
     }
 
     struct future_state {
         std::mutex lock_;
         future_status status_ = future_status::timeout;
         stdX::exception_ptr exception_;
+        bool is_valid_ = false;
     };
 
+    /* FIXME: Should be private */
     future(std::shared_ptr<future_state> state):
         state_(state) {
 
+        state_->is_valid_ = true;
     }
+
 private:
     std::shared_ptr<future_state> state_;
+
 };
 
 
@@ -192,8 +211,13 @@ void call_func(typename future<ResultType>::future_state& state, Function&& f, A
 
 }
 
+enum class launch : int {
+    async = 0,
+    deferred = 1
+};
 
-template<typename Function, typename ...Args>
+
+template<class Function, class ...Args, enable_if_t<!std::is_same<decay_t<Function>, launch>::value, int> = 0>
 future<result_of_t<decay_t<Function>(decay_t<Args>...)>> async(Function&& f, Args&&... args) {
     typedef result_of_t<decay_t<Function>(decay_t<Args>...)> ResultType;
 
@@ -215,4 +239,12 @@ future<result_of_t<decay_t<Function>(decay_t<Args>...)>> async(Function&& f, Arg
     return future<ResultType>(state);
 }
 
+template<typename Function, typename ...Args>
+future<result_of_t<decay_t<Function>(decay_t<Args>...)>> async(launch policy, Function&& f, Args&&... args) {
+    assert(policy == launch::async);
+
+    return async<Function, Args...>(std::forward<Function>(f), std::forward<Args>(args)...);
 }
+
+}
+

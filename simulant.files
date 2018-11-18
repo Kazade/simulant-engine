@@ -2,10 +2,14 @@
 deps/kfs/kfs/realpath.h
 simulant/asset_manager.cpp
 simulant/asset_manager.h
+simulant/screen.cpp
+simulant/screen.h
 simulant/sound_drivers/null_sound_driver.cpp
 simulant/sound_drivers/null_sound_driver.h
 tests/test_obj_loader.h
 tests/test_pipeline.h
+tests/test_scene.h
+tests/test_screen.h
 toolchains/Mingw.cmake
 bin/simulant
 build/CMakeFiles/CompilerIdC/a.out

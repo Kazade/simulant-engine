@@ -397,6 +397,12 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
     controller._update_joystick_devices(joypads);
 }
 
+void SDL2Window::initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale) {
+    /* Create the virtual screen */
+    Screen* screen = _create_screen("virtual", width, height, format, 60);
+    screen->_set_integer_scale(integer_scale);
+}
+
 void SDL2Window::destroy_window() {
     if(!screen_ && !context_) {
         return;
@@ -427,6 +433,75 @@ void SDL2Window::swap_buffers() {
 
 void SDL2Window::SDLPlatform::sleep_ms(uint32_t ms) const {
     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
+bool SDL2Window::initialize_screen(Screen *screen) {
+    auto window = SDL_CreateWindow(
+        "Virtual Screen",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        screen->width(),
+        screen->height(),
+        0 //SDL_WINDOW_BORDERLESS
+    );
+
+    if(!window) {
+        return false;
+    }
+
+    screen->stash(window, "window");
+    return true;
+}
+
+void SDL2Window::shutdown_screen(Screen* screen) {
+    SDL_Window* window = screen->get<SDL_Window*>("window");
+    if(window) {
+        SDL_DestroyWindow(window);
+    }
+}
+
+void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
+    auto window = screen->get<SDL_Window*>("window");
+
+    auto surface = SDL_GetWindowSurface(window);
+
+    uint32_t* pixels = (uint32_t*) surface->pixels;
+
+    if(screen->format() == SCREEN_FORMAT_G1) {
+        auto x = 0;
+        auto y = 0;
+
+        // Get the number of bytes in the data
+        auto bytes = (screen->width() * screen->height()) / 8;
+
+        // Go through the bytes
+        for(auto i = 0; i < bytes; ++i) {
+
+            // Go through each bit
+            for(auto bit = 0; bit < 8; ++bit) {
+
+                // Read the bit value
+                auto value = (data[i] >> bit) & 0x01;
+
+                // Work out the pixel offset
+                auto offset = ((y * surface->w) + x);
+
+                // Write the pixel at the offset
+                pixels[offset] = (value) ? 0 : ~0;
+
+                ++x;
+                if(x == screen->width()) {
+                    x = 0;
+                    y++;
+                }
+            }
+        }
+    } else {
+        L_ERROR("Unsupported screen format");
+        return;
+    }
+
+    SDL_UpdateWindowSurface(window);
 }
 
 }

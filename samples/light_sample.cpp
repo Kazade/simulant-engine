@@ -111,6 +111,8 @@ int main(int argc, char* argv[]) {
     config.width = 1280;
     config.height = 960;
 
+    config.desktop.enable_virtual_screen = true;
+
     LightingSample app(config);
     return app.run();
 }

@@ -21,8 +21,35 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdelet
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
 SET(CMAKE_ASM_FLAGS "")
 
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer")
+# We force disable debugging information in release builds - this is so we override settings in the
+# kallistios gnu-wrappers which sometimes pick up -g through the default env vars
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer -g0")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer -g0")
+
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -Wextra -Wno-unused-parameter")
+
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+    # For some reason, I need to explicitly specify the shared file
+    # on Fedora. This is brittle, but I don't know how best to fix it
+    FIND_LIBRARY(
+        ASAN_LIBRARY NAMES asan libasan.so.5 PATHS
+        /usr/lib
+        /usr/lib64
+        /usr/local/lib
+        /usr/local/lib64
+    )
+
+    message(${ASAN_LIBRARY})
+
+    IF(NOT ASAN_LIBRARY)
+        message("libasan NOT detected. Disabling address sanitizer")
+    ELSE()
+        message("libasan found. Enabling address sanitizer")
+        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+        link_libraries(${ASAN_LIBRARY})
+    ENDIF()
+ENDIF()
+
 
 IF(NOT DREAMCAST_BUILD)
     IF(ANDROID)

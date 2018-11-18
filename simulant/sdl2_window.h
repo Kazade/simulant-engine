@@ -87,8 +87,17 @@ private:
 
     void initialize_input_controller(InputState &controller);
 
+    /* This is for testing mainly. If you set config.desktop.enable_virtual_screen = true */
+    void initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale);
+
     std::vector<SDL_Joystick*> open_joysticks_;
     std::vector<SDL_GameController*> open_controllers_;
+
+    bool initialize_screen(Screen *screen) override;
+    void shutdown_screen(Screen* screen) override;
+    void render_screen(Screen* screen, const uint8_t* data) override;
+
+    friend class Application;
 };
 
 }

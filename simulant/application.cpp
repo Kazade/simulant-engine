@@ -114,6 +114,24 @@ void Application::construct_window(const AppConfig& config) {
     window_->signal_late_update().connect(std::bind(&Application::_call_late_update, this, std::placeholders::_1));
     window_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
     window_->signal_shutdown().connect(std::bind(&Application::_call_cleanup, this));
+
+    /* Is this a desktop window? */
+
+#if defined(__WIN32__) || defined(__APPLE__) || defined(__LINUX__)
+    SDL2Window* desktop = dynamic_cast<SDL2Window*>(window_.get());
+
+    if(desktop) {
+        if(config.desktop.enable_virtual_screen) {
+            desktop->initialize_virtual_screen(
+                config.desktop.virtual_screen_width,
+                config.desktop.virtual_screen_height,
+                config.desktop.virtual_screen_format,
+                config.desktop.virtual_screen_integer_scale
+            );
+        }
+    }
+#endif
+
 }
 
 StagePtr Application::stage(StageID stage) {

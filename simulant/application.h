@@ -33,6 +33,7 @@
 #include "generic/property.h"
 #include "generic/data_carrier.h"
 #include "scenes/scene_manager.h"
+#include "screen.h"
 
 namespace smlt {
 
@@ -68,6 +69,18 @@ struct AppConfig {
 
     /* If set to true, the mouse cursor will not be hidden by default */
     bool show_cursor = false;
+
+    struct General {
+
+    } general;
+
+    struct Desktop {
+        bool enable_virtual_screen = false;
+        ScreenFormat virtual_screen_format = SCREEN_FORMAT_G1;
+        uint16_t virtual_screen_width = 48;
+        uint16_t virtual_screen_height = 32;
+        uint16_t virtual_screen_integer_scale = 1;
+    } desktop;
 };
 
 class Application {

@@ -40,6 +40,8 @@
 #include "event_listener.h"
 #include "time_keeper.h"
 #include "stats_recorder.h"
+#include "screen.h"
+
 
 namespace smlt {
 
@@ -79,6 +81,9 @@ typedef sig::signal<void (float)> LateUpdateSignal;
 
 typedef sig::signal<void ()> ShutdownSignal;
 
+typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
+typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
+
 class Platform;
 
 class Window :
@@ -90,14 +95,18 @@ class Window :
     public RenderTarget,
     public EventListenerManager {
 
-    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
-    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
-    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
-    DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update);
-    DEFINE_SIGNAL(UpdateSignal, signal_update);
-    DEFINE_SIGNAL(LateUpdateSignal, signal_late_update);
-    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
+    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started)
+    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished)
+    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap)
+    DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update)
+    DEFINE_SIGNAL(UpdateSignal, signal_update)
+    DEFINE_SIGNAL(LateUpdateSignal, signal_late_update)
+    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown)
 
+    DEFINE_SIGNAL(ScreenAddedSignal, signal_screen_added)
+    DEFINE_SIGNAL(ScreenRemovedSignal, signal_screen_removed)
+
+    friend class Screen;  /* Screen needs to call render_screen */
 public:    
     typedef std::shared_ptr<Window> ptr;
     static const int STEPS_PER_SECOND = 60;
@@ -137,9 +146,6 @@ public:
     
     bool run_frame();
 
-    void _fixed_update_thunk(float dt) override;
-    void _update_thunk(float dt) override;
-
     void set_logging_level(LoggingLevel level);
 
     void stop_running() { is_running_ = false; }
@@ -170,8 +176,6 @@ public:
     virtual bool has_pipeline(PipelineID pid) const override;
     virtual bool is_pipeline_enabled(PipelineID pid) const override;
 
-    void _cleanup();
-
     void each_stage(std::function<void (uint32_t, Stage*)> func);
 
     Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
@@ -200,6 +204,28 @@ public:
     void on_key_down(KeyboardCode code, ModifierKeyState modifiers);
     void on_key_up(KeyboardCode code, ModifierKeyState modifiers);
 
+    /* Return the number of screens connected */
+    std::size_t screen_count() const;
+
+    /* Return a specific screen given its name */
+    Screen* screen(const std::string& name) const;
+
+    void each_screen(std::function<void (std::string, Screen*)> callback);
+
+    /* Private API for Window subclasses (public for testing)
+       don't call this directly
+    */
+    Screen* _create_screen(
+        const std::string& name,
+        uint16_t width,
+        uint16_t height,
+        ScreenFormat format,
+        uint16_t refresh_rate);
+
+    void _destroy_screen(const std::string& name);
+
+    void _fixed_update_thunk(float dt) override;
+    void _update_thunk(float dt) override;
 
     /* Must be called directly after Window construction, it creates the window itself. The reason this
      * isn't done in create() or the constructor is that _init also sets up the default resources etc. and doesn't
@@ -208,6 +234,7 @@ public:
      * FIXME: This is dirty and hacky and should be fixed.
      */
     bool _init();
+    void _cleanup();
 
 protected:    
     std::shared_ptr<Renderer> renderer_;
@@ -323,6 +350,16 @@ private:
     void await_frame_time();
     uint64_t last_frame_time_us_ = 0;
     float requested_frame_time_ms_ = 0;
+
+    std::unordered_map<std::string, Screen::ptr> screens_;
+
+    /* This is called by Screens to render themselves to devices. Default behaviour is a no-op */
+    virtual void render_screen(Screen* screen, const uint8_t* data) {}
+
+    /* To be overridden by subclasses if external screens need some kind of initialization/cleanup */
+    virtual bool initialize_screen(Screen* screen) { return true; }
+    virtual void shutdown_screen(Screen* screen) {}
+
 protected:
     InputState* _input_state() const { return input_state_.get(); }
 
