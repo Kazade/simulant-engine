@@ -34,7 +34,7 @@ You'll need to log out and log back in for this to take effect (easiest to reboo
 Next, you need to install the `simulant-tools` pip package:
 
 ```
-pip3 install -U --user git+https://github.com/Kazade/simulant-tools.git
+pip3 install -U --user git+https://gitlab.com/simulant/simulant-tools.git
 ```
 
 One installation is complete, you will have access to the `simulant` command.
