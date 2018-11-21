@@ -51,6 +51,7 @@ void Splash::load() {
     //Create an inactive pipeline
     pipeline_ = window->render(stage_, camera_);
     pipeline_->deactivate();
+    timer_ = 0.0f;
 }
 
 void Splash::unload() {
@@ -61,8 +62,6 @@ void Splash::unload() {
 }
 
 void Splash::activate() {
-    timer_ = 0.0f;
-
     pipeline_->activate();
 }
 
@@ -72,6 +71,10 @@ void Splash::deactivate() {
 }
 
 void Splash::update(float dt) {
+    if(!this->is_active()) {
+        return;
+    }
+
     timer_ += dt;
     if(timer_ >= time_) {
         scenes->activate(target_);
