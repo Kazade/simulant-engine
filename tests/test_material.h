@@ -1,9 +1,8 @@
 #ifndef TEST_MATERIAL_H
 #define TEST_MATERIAL_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 #include "global.h"
 
 class MaterialTest : public SimulantTestCase {

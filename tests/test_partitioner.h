@@ -1,12 +1,12 @@
 #pragma once
 
 #include <functional>
-#include "kaztest/kaztest.h"
+#include "simulant/test.h"
 #include "global.h"
-#include "../../simulant/partitioner.h"
-#include "../../simulant/stage.h"
-#include "../../simulant/nodes/actor.h"
-#include "../../simulant/nodes/particle_system.h"
+#include "simulant/partitioner.h"
+#include "simulant/stage.h"
+#include "simulant/nodes/actor.h"
+#include "simulant/nodes/particle_system.h"
 
 
 namespace {

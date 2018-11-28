@@ -1,11 +1,10 @@
 #ifndef TEST_VECTOR_H
 #define TEST_VECTOR_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 
-class Vec4Test : public TestCase {
+class Vec4Test : public smlt::test::TestCase {
 public:
     void test_component_constructor() {
         smlt::Vec4 v(1, 2, 3, 4);
@@ -45,7 +44,7 @@ public:
     }
 };
 
-class Vec3Test : public TestCase {
+class Vec3Test : public smlt::test::TestCase {
 public:
     void test_component_constructor() {
         smlt::Vec3 v(1, 2, 3);
@@ -93,7 +92,7 @@ public:
     }
 };
 
-class Vec2Test : public TestCase {
+class Vec2Test : public smlt::test::TestCase {
 public:
     void test_component_constructor() {
         smlt::Vec2 v(1, 2);

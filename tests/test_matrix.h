@@ -1,11 +1,10 @@
 #ifndef TEST_MAT3_H
 #define TEST_MAT3_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 
-class Mat4Test : public TestCase {
+class Mat4Test : public smlt::test::TestCase {
 public:
     void test_default_constructor() {
         smlt::Mat4 mat;
@@ -60,7 +59,7 @@ public:
 };
 
 
-class Mat3Test : public TestCase {
+class Mat3Test : public smlt::test::TestCase {
 public:
     void test_default_constructor() {
         smlt::Mat3 mat;

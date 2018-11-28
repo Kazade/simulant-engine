@@ -1,8 +1,7 @@
 #pragma once
 
 #include "simulant/simulant.h"
-#include "kaztest/kaztest.h"
-
+#include "simulant/test.h"
 #include "global.h"
 
 namespace {

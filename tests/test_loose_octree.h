@@ -11,7 +11,7 @@ struct TestNodeData {};
 
 typedef Octree<TestTreeData, TestNodeData> TestOctree;
 
-class LooseOctreeTests : public TestCase {
+class LooseOctreeTests : public smlt::test::TestCase {
 public:
     void test_calc_base() {
         assert_equal(TestOctree::calc_base(0), 0u);

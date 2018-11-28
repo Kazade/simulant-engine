@@ -1,12 +1,11 @@
 #ifndef TEST_KAZBASE_H
 #define TEST_KAZBASE_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 #include "global.h"
 
-class KazbaseTest : public TestCase {
+class KazbaseTest : public smlt::test::TestCase {
 public:
     void test_unicode_formatting() {
         unicode to_format("{0} {1:.2f}");

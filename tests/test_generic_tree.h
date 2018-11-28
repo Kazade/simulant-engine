@@ -1,11 +1,10 @@
 #ifndef TEST_GENERIC_TREE_H
 #define TEST_GENERIC_TREE_H
 
-#include "kaztest/kaztest.h"
-
+#include "simulant/test.h"
 #include "simulant/generic/generic_tree.h"
 
-class GenericTreeTest : public TestCase {
+class GenericTreeTest : public smlt::test::TestCase {
 public:
     void test_parent_set() {
 

@@ -1,12 +1,10 @@
 #ifndef TEST_MATH_H
 #define TEST_MATH_H
 
-
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 
-class MathTest : public TestCase {
+class MathTest : public smlt::test::TestCase {
 public:
 
     void test_lerp_angle() {

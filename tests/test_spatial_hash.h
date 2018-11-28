@@ -1,14 +1,13 @@
 #pragma once
 
-#include <kaztest/kaztest.h>
-
+#include "simulant/test.h"
 #include "../simulant/partitioners/impl/spatial_hash.h"
 
 namespace {
 
 using namespace smlt;
 
-class SpatialHashTests : public TestCase {
+class SpatialHashTests : public smlt::test::TestCase {
 public:
     void set_up() {
         hash_ = new smlt::SpatialHash();

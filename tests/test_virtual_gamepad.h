@@ -1,9 +1,8 @@
 #ifndef TEST_VIRTUAL_GAMEPAD_H
 #define TEST_VIRTUAL_GAMEPAD_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 #include "global.h"
 
 namespace {

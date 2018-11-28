@@ -9,11 +9,11 @@ extern smlt::KOSWindow::ptr window;
 extern smlt::SDL2Window::ptr window;
 #endif
 
-#include "kaztest/kaztest.h"
+#include "simulant/test.h"
 #include "simulant/window.h"
 #include "simulant/stage.h"
 
-class SimulantTestCase : public TestCase {
+class SimulantTestCase : public smlt::test::TestCase {
 public:
     void set_up();
 };

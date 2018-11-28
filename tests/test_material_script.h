@@ -3,9 +3,8 @@
 
 #include <sstream>
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 #include "global.h"
 #include "simulant/loaders/material_script.h"
 

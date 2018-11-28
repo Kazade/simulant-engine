@@ -19,7 +19,7 @@ struct SomeStructure {
     float z;
 };
 
-class LibGLNamedArrayTests : public TestCase {
+class LibGLNamedArrayTests : public smlt::test::TestCase {
 public:
 
     void test_alloc_and_release() {
@@ -79,7 +79,7 @@ public:
 
 };
 
-class LibGLAlignedVectorTests : public TestCase {
+class LibGLAlignedVectorTests : public smlt::test::TestCase {
 public:
 
     void test_aligned_vector() {
@@ -110,6 +110,7 @@ public:
 
         // Capacity should have remained unchanged
         assert_equal(vector.capacity, ALIGNED_VECTOR_INITIAL_CAPACITY);
+        aligned_vector_cleanup(&vector);
     }
 
     void test_resizing() {
@@ -138,6 +139,7 @@ public:
         assert_equal(data[2].commands[0], 3);
         assert_equal(data[3].commands[0], 4);
         assert_equal(data[4].commands[0], 5);
+        aligned_vector_cleanup(&vector);
     }
 
     void test_extending() {
@@ -164,6 +166,8 @@ public:
         assert_equal(data[1].commands[0], 2);
         assert_equal(data[2].commands[0], 3);
         assert_equal(data[3].commands[0], 4);
+
+        aligned_vector_cleanup(&vector);
     }
 
 
@@ -194,6 +198,7 @@ public:
 
         assert_equal(vector.size, 3u);
         assert_equal(vector.capacity, 5u);
+        aligned_vector_cleanup(&vector);
     }
 };
 
@@ -202,7 +207,7 @@ const uint32_t VERTEX_CMD = 0xe0000000;
 
 const float CLIP_DISTANCE = -0.2f;
 
-class LibGLTriangleStripClippingTests2 : public TestCase {
+class LibGLTriangleStripClippingTests2 : public smlt::test::TestCase {
 private:
     AlignedVector input;
 

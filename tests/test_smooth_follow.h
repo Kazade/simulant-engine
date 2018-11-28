@@ -1,8 +1,6 @@
 #ifndef TEST_SMOOTH_FOLLOW_H
 #define TEST_SMOOTH_FOLLOW_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
 #include "global.h"
 

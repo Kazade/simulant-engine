@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-import sys
-import re
 
 import argparse
+import re
+import sys
 
 parser = argparse.ArgumentParser(description="Generate C++ unit tests")
 parser.add_argument("--output", type=unicode, nargs=1, help="The output source file for the generated test main()", required=True)
 parser.add_argument("test_files", type=unicode, nargs="+", help="The list of C++ files containing your tests")
+parser.add_argument("--verbose", help="Verbose logging", action="store_true", default=False)
 
 
-CLASS_REGEX = r"\s*class\s+(\w+)\s*([\:|,]\s*(?:public|private|protected)\s+\w+\s*)*"
+CLASS_REGEX = r"\s*class\s+(\w+)\s*([\:|,]\s*(?:public|private|protected)\s+[\w|::]+\s*)*"
 TEST_FUNC_REGEX = r"void\s+(?P<func_name>test_\S[^\(]+)\(\s*(void)?\s*\)"
 
 
@@ -25,12 +26,13 @@ MAIN_TEMPLATE = """
 
 #include <functional>
 #include <memory>
-#include "kaztest/kaztest.h"
+
+#include "simulant/test.h"
 
 %(includes)s
 
 int main(int argc, char* argv[]) {
-    std::shared_ptr<TestRunner> runner(new TestRunner());
+    auto runner = std::make_shared<smlt::test::TestRunner>();
 
     std::string test_case;
     if(argc > 1) {
@@ -44,6 +46,13 @@ int main(int argc, char* argv[]) {
 
 
 """
+
+VERBOSE = False
+
+def log_verbose(message):
+    if VERBOSE:
+        print(message)
+
 
 def find_tests(files):
 
@@ -62,7 +71,7 @@ def find_tests(files):
                 class_name = match.group().split(":")[0].replace("class", "").strip()
 
                 try:
-                    parents = match.group().split(":")[1]
+                    parents = match.group().split(":", 1)[1]
                 except IndexError:
                     pass
                 else:
@@ -73,6 +82,7 @@ def find_tests(files):
                     ]
 
                     subclasses.append((path, class_name, parents, []))
+                    log_verbose("Found: %s" % str(subclasses[-1]))
 
                 start = match.end()
 
@@ -112,18 +122,28 @@ def find_tests(files):
     test_case_subclasses = []
     i = 0
     while i < len(subclasses):
-        if "TestCase" in subclasses[i][2] or any(x[1] in subclasses[i][2] for x in test_case_subclasses):
+        subclass_names = [x.rsplit("::")[-1] for x in subclasses[i][2]]
+
+        # If this subclasses TestCase, or it subclasses any of the already found testcase subclasses
+        # then add it to the list
+        if "TestCase" in subclass_names or any(x[1] in subclasses[i][2] for x in test_case_subclasses):
             if subclasses[i] not in test_case_subclasses:
                 test_case_subclasses.append(subclasses[i])
-                i = 0
+
+                i = 0 # Go back to the start, as we may have just found another parent class
                 continue
         i += 1
 
+    log_verbose("\n".join([str(x) for x in test_case_subclasses]))
     return test_case_subclasses
 
 
 def main():
+    global VERBOSE
+
     args = parser.parse_args()
+
+    VERBOSE = args.verbose
 
     testcases = find_tests(args.test_files)
 
