@@ -27,6 +27,9 @@
 #include <fstream>
 #include <memory>
 
+#include "application.h"
+#include "window.h"
+
 #define assert_equal(expected, actual) _assert_equal((expected), (actual), __FILE__, __LINE__)
 #define assert_not_equal(expected, actual) _assert_not_equal((expected), (actual), __FILE__, __LINE__)
 #define assert_false(actual) _assert_false((actual), __FILE__, __LINE__)
@@ -398,6 +401,55 @@ private:
     std::vector<std::shared_ptr<TestCase>> instances_;
     std::vector<std::function<void()> > tests_;
     std::vector<std::string> names_;
+};
+
+
+class TestApp: public smlt::Application {
+public:
+    TestApp(const AppConfig& config):
+        Application(config) {
+    }
+
+private:
+    bool init() {
+        return true;
+    }
+};
+
+class SimulantTestCase : public TestCase {
+private:
+    void set_app_and_window(std::shared_ptr<Application>* app, Window** window) {
+        static std::shared_ptr<Application> application;
+
+        if(!application) {
+            AppConfig config;
+            config.width = 640;
+            config.height = 480;
+            config.fullscreen = false;
+
+            application.reset(new TestApp(config));
+
+            // FIXME: This is a bit simulant-specific, you wouldn't necessarily want this
+            // path on user apps.
+            application->window->resource_locator->add_search_path("sample_data");
+        } else {
+            application->window->reset();
+        }
+
+        *app = application;
+        *window = (*app)->window;
+    }
+
+protected:
+    Window* window;
+    std::shared_ptr<Application> application;
+
+public:
+    void set_up() {
+        TestCase::set_up();
+
+        set_app_and_window(&application, &window);
+    }
 };
 
 } // test

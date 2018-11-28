@@ -5,7 +5,7 @@
  * I set up a test harness in the Dreamcast libGL fork
  */
 
-#include "global.h"
+
 
 #include "../deps/libgl/containers/named_array.h"
 #include "../deps/libgl/containers/aligned_vector.h"

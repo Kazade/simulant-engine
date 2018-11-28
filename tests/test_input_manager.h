@@ -1,6 +1,6 @@
 #pragma once
 
-#include "global.h"
+
 
 #include "../simulant/input/input_manager.h"
 #include "../simulant/input/input_axis.h"
@@ -9,7 +9,7 @@ namespace {
 
 using namespace smlt;
 
-class InputManagerTests : public SimulantTestCase {
+class InputManagerTests : public smlt::test::SimulantTestCase {
 
 public:
     void set_up() {

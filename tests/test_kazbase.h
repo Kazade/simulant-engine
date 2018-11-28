@@ -3,7 +3,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "global.h"
+
 
 class KazbaseTest : public smlt::test::TestCase {
 public:

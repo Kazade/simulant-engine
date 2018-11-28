@@ -3,13 +3,13 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "global.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class VirtualGamepadTest : public SimulantTestCase {
+class VirtualGamepadTest : public smlt::test::SimulantTestCase {
 private:
     bool b1_pressed = false;
     bool b2_pressed = false;
@@ -204,7 +204,7 @@ public:
     }
 };
 
-class VirtualGamepadInputTests : public SimulantTestCase {
+class VirtualGamepadInputTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

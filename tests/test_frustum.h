@@ -3,11 +3,11 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "global.h"
+
 
 using namespace smlt;
 
-class FrustumTest : public SimulantTestCase {
+class FrustumTest : public smlt::test::SimulantTestCase {
 public:
     void test_frustum_generation() {
         Frustum frustum;

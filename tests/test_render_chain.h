@@ -3,13 +3,13 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "global.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class RenderChainTests : public SimulantTestCase {
+class RenderChainTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_usage() {
         Viewport view;

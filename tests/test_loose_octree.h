@@ -1,6 +1,6 @@
 #pragma once
 
-#include "global.h"
+
 #include "../simulant/nodes/geoms/loose_octree.h"
 #include "../simulant/frustum.h"
 

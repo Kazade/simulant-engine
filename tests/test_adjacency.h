@@ -1,13 +1,13 @@
 #pragma once
 
-#include "global.h"
+
 #include "../simulant/meshes/adjacency_info.h"
 
 namespace {
 
 using namespace smlt;
 
-class AdjacencyTests : public SimulantTestCase {
+class AdjacencyTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_adjacency_build() {
         auto mesh = window->shared_assets->new_mesh_as_rectangle(1.0, 1.0f).fetch();

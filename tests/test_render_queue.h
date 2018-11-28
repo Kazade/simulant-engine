@@ -7,7 +7,7 @@ namespace {
 
 using namespace smlt;
 
-class RenderQueueTests : public SimulantTestCase {
+class RenderQueueTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

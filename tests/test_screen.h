@@ -1,12 +1,12 @@
 #pragma once
 
-#include "global.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class ScreenTests : public SimulantTestCase {
+class ScreenTests : public smlt::test::SimulantTestCase {
 
 public:
     void test_registering() {

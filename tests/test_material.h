@@ -3,9 +3,9 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "global.h"
 
-class MaterialTest : public SimulantTestCase {
+
+class MaterialTest : public smlt::test::SimulantTestCase {
 public:
     void test_material_initialization() {
         auto mat = window->shared_assets->material(window->shared_assets->new_material());

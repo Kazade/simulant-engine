@@ -807,8 +807,6 @@ samples/flightsim.cpp
 tests/gl2/test_gl2.h
 tests/test_adjacency.h
 tests/test_camera.h
-tests/global.cpp
-tests/global.h
 tests/test_controllers.h
 tests/test_frustum.h
 tests/test_geom.h

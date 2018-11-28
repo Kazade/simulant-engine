@@ -1,6 +1,6 @@
 #pragma once
 
-#include "global.h"
+
 
 #include "../simulant/nodes/geoms/octree_culler.h"
 #include "../simulant/nodes/geom.h"
@@ -9,7 +9,7 @@ namespace {
 
 using namespace smlt;
 
-class OctreeCullerTests : public SimulantTestCase {
+class OctreeCullerTests : public smlt::test::SimulantTestCase {
 public:
     void test_octree_bounds() {
         auto stage = window->new_stage();

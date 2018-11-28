@@ -2,7 +2,7 @@
 
 #include <functional>
 #include "simulant/test.h"
-#include "global.h"
+
 #include "simulant/partitioner.h"
 #include "simulant/stage.h"
 #include "simulant/nodes/actor.h"
@@ -32,7 +32,7 @@ private:
 };
 
 
-class PartitionerTests : public SimulantTestCase {
+class PartitionerTests : public smlt::test::SimulantTestCase {
 public:
     void test_add_actor_stages_write() {
         auto test = [=](const StagedWrite& write) {

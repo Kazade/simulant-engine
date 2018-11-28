@@ -2,13 +2,13 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "global.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class WidgetTest : public SimulantTestCase {
+class WidgetTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
@@ -52,7 +52,7 @@ private:
 };
 
 
-class ImageTests : public SimulantTestCase {
+class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

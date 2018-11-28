@@ -1,11 +1,11 @@
 #pragma once
 
 #include "simulant/simulant.h"
-#include "global.h"
+
 
 namespace {
 
-class AABBTests : public SimulantTestCase {
+class AABBTests : public smlt::test::SimulantTestCase {
 public:
     void test_aabb_intersects_aabb() {
 

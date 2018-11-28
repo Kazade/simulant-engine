@@ -3,9 +3,9 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "global.h"
 
-class IndexDataTest : public SimulantTestCase {
+
+class IndexDataTest : public smlt::test::SimulantTestCase {
 public:
     void test_clear() {
         smlt::IndexData data(smlt::INDEX_TYPE_16_BIT);
@@ -17,7 +17,7 @@ public:
     }
 };
 
-class VertexDataTest : public SimulantTestCase {
+class VertexDataTest : public smlt::test::SimulantTestCase {
 public:
     void test_offsets() {
         smlt::VertexSpecification spec = {

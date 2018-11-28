@@ -1,10 +1,10 @@
 #pragma once
 
-#include "global.h"
+
 
 namespace {
 
-class SpriteTests : public SimulantTestCase {
+class SpriteTests : public smlt::test::SimulantTestCase {
 public:
     void test_set_alpha() {
         auto stage = window->new_stage();

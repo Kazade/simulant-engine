@@ -1,6 +1,6 @@
 #pragma once
 
-#include "global.h"
+
 #include "../simulant/generic/manual_manager.h"
 #include "../simulant/generic/unique_id.h"
 
@@ -25,7 +25,7 @@ private:
 };
 
 
-class ManualManagerTest : public SimulantTestCase {
+class ManualManagerTest : public smlt::test::SimulantTestCase {
 public:
     void test_adding_more_than_64_elements() {
         generic::ManualManager<TestObject, TestObjectID> manager;
