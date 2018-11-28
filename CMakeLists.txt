@@ -15,8 +15,7 @@ OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 
-# Note: If this causes problems on some (nvidia) setups, then change to LEGACY
-SET(OpenGL_GL_PREFERENCE "GLVND")
+SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdelete-non-virtual-dtor")
