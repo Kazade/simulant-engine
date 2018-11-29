@@ -20,11 +20,9 @@ void Splash::load() {
 
     auto text_texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-text.png");
     text_ = stage_->ui->new_widget_as_image(text_texture);
-    text_->move_to(window->coordinate_from_normalized(0.56, 0.5));
 
     auto texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
     image_ = stage_->ui->new_widget_as_image(texture);
-    image_->move_to(window->coordinate_from_normalized(0.34, 0.5));
 
     /* Scale for window resolution */
     float scale = 0.5 * (window->height() / 720.0f);
@@ -40,6 +38,20 @@ void Splash::load() {
 
     text_->set_width(text_->width() * scale);
     text_->set_height(text_->height() * scale);
+
+
+    /* We have the final dimensions so let's work out what the widths should be */
+
+    float gap = image_->width() / 4.0f; // Leave a gap between the icon and the text
+
+    float total = text_->width() + image_->width() + gap;
+
+    float xpos = ((window->width() - total) / 2.0f) + (image_->width() / 2);
+
+    auto ypos = window->coordinate_from_normalized(0, 0.5).y;
+
+    image_->move_to(xpos, ypos);
+    text_->move_to(xpos + image_->width() + gap, ypos);
 
     //Create an orthographic camera
     camera_ = stage_->new_camera();
