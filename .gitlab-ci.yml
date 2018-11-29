@@ -288,7 +288,7 @@ deploy:tools:
    - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
    - pip install gsutil
   script:
-   - mkdir -p upload
+   - mkdir -p upload/simulant
    - cp tools/test_generator.py upload/simulant
    - cd upload
    - zip -r tools.zip simulant/
