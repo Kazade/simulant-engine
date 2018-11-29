@@ -75,6 +75,8 @@ public:
             auto ptr = pointers[i];
             assert_equal(ptr, named_array_get(&test, i + 1));
         }
+
+        named_array_cleanup(&test);
     }
 
 };
