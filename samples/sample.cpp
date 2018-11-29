@@ -51,7 +51,8 @@ public:
 
 private:
     bool init() {
-        scenes->register_scene<GameScene>("main");
+        scenes->register_scene<GameScene>("ingame");
+        scenes->register_scene<smlt::scenes::Splash>("main", "ingame");
         return true;
     }
 };
@@ -60,8 +61,8 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Basic Sample";
     config.fullscreen = false;
-    config.width = 1280;
-    config.height = 960;
+    config.width = 640;
+    config.height = 480;
 
     Sample app(config);
     return app.run();
