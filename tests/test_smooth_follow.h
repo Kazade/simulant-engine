@@ -1,16 +1,14 @@
 #ifndef TEST_SMOOTH_FOLLOW_H
 #define TEST_SMOOTH_FOLLOW_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class SmoothFollowTest : public SimulantTestCase {
+class SmoothFollowTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

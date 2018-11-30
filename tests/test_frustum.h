@@ -1,14 +1,13 @@
 #ifndef TEST_FRUSTUM_H
 #define TEST_FRUSTUM_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
+
 
 using namespace smlt;
 
-class FrustumTest : public SimulantTestCase {
+class FrustumTest : public smlt::test::SimulantTestCase {
 public:
     void test_frustum_generation() {
         Frustum frustum;

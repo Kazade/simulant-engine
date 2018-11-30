@@ -1,12 +1,12 @@
 #pragma once
 
 #include <functional>
-#include "kaztest/kaztest.h"
-#include "global.h"
-#include "../../simulant/partitioner.h"
-#include "../../simulant/stage.h"
-#include "../../simulant/nodes/actor.h"
-#include "../../simulant/nodes/particle_system.h"
+#include "simulant/test.h"
+
+#include "simulant/partitioner.h"
+#include "simulant/stage.h"
+#include "simulant/nodes/actor.h"
+#include "simulant/nodes/particle_system.h"
 
 
 namespace {
@@ -32,7 +32,7 @@ private:
 };
 
 
-class PartitionerTests : public SimulantTestCase {
+class PartitionerTests : public smlt::test::SimulantTestCase {
 public:
     void test_add_actor_stages_write() {
         auto test = [=](const StagedWrite& write) {

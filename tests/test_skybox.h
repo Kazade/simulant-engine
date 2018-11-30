@@ -1,12 +1,12 @@
 #pragma once
 
-#include "global.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class SkyboxTest : public SimulantTestCase {
+class SkyboxTest : public smlt::test::SimulantTestCase {
 public:
     void test_skybox_from_folder() {
         auto stage = window->new_stage();

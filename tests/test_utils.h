@@ -1,13 +1,13 @@
 #pragma once
 
-#include "kaztest/kaztest.h"
+#include "simulant/test.h"
 #include "../simulant/utils/string.h"
 
 namespace {
 
 using namespace smlt;
 
-class StringUtilsTest : public TestCase {
+class StringUtilsTest : public smlt::test::TestCase {
 public:
     void test_split() {
         std::string src = "this/is/a/test";

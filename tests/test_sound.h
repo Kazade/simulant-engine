@@ -3,11 +3,10 @@
 
 #include <cstdlib>
 #include "simulant/simulant.h"
-#include "kaztest/kaztest.h"
+#include "simulant/test.h"
 
-#include "global.h"
 
-class SoundTest : public SimulantTestCase {
+class SoundTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
 #ifdef __APPLE__

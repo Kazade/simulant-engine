@@ -1,6 +1,6 @@
 #pragma once
 
-#include "global.h"
+
 #include "simulant/generic/simple_future.h"
 
 namespace {
@@ -11,7 +11,7 @@ namespace {
  * which just uses std::thread and std::mutex to give similar behaviour. Not
  * all operations are supported, only the ones used in Simulant.
  */
-class SimpleFutureTests : public SimulantTestCase {
+class SimpleFutureTests : public smlt::test::SimulantTestCase {
 public:
     void test_wait() {
 

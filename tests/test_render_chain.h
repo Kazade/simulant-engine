@@ -1,16 +1,15 @@
 #ifndef TEST_RENDER_CHAIN_H
 #define TEST_RENDER_CHAIN_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class RenderChainTests : public SimulantTestCase {
+class RenderChainTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_usage() {
         Viewport view;

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../deps/kaztest/kaztest/kaztest.h"
-#include "../simulant/simulant.h"
+#include "simulant/simulant.h"
+#include "simulant/test.h"
 
 namespace {
 
 using namespace smlt;
 
-class PlaneTests : public TestCase {
+class PlaneTests : public smlt::test::TestCase {
 public:
     void test_distance_to_point() {
         smlt::Vec3 up(0, 1, 0);

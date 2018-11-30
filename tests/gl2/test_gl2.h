@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simulant/simulant.h"
-#include "../global.h"
+#include "simulant/test.h"
 #include "../../simulant/hardware_buffer.h"
 #include "../../simulant/renderers/gl2x/buffer_manager.h"
 
@@ -10,7 +10,7 @@ namespace {
 using namespace smlt;
 
 class GL2Tests:
-    public SimulantTestCase {
+    public smlt::test::SimulantTestCase {
 
 private:
     GL2BufferManager buffer_manager_;

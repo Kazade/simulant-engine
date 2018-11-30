@@ -5,7 +5,7 @@
 #include "simulant/loaders/obj_loader.h"
 #include "simulant/asset_manager.h"
 
-class OBJLoaderTest : public SimulantTestCase {
+class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_face_parsing() {
         std::string line = "1//2";

@@ -3,13 +3,12 @@
 
 #include <sstream>
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
+
 #include "simulant/loaders/material_script.h"
 
-class MaterialScriptTest : public SimulantTestCase {
+class MaterialScriptTest : public smlt::test::SimulantTestCase {
 public:
     void test_basic_material_script_parsing() {
         const std::string text = R"(

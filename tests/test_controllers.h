@@ -1,7 +1,7 @@
 #pragma once
 
-#include <simulant/simulant.h>
-#include "global.h"
+#include "simulant/simulant.h"
+#include "simulant/test.h"
 
 namespace {
 
@@ -22,7 +22,7 @@ public:
 };
 
 
-class BehaviourTests : public SimulantTestCase {
+class BehaviourTests : public smlt::test::SimulantTestCase {
 public:
     void test_behaviour_first_update() {
 

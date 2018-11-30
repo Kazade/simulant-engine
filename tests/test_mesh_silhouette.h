@@ -1,13 +1,13 @@
 #pragma once
 
-#include "global.h"
+
 #include "../simulant/shadows.h"
 
 namespace {
 
 using namespace smlt;
 
-class MeshSilhouetteTests : public SimulantTestCase {
+class MeshSilhouetteTests : public smlt::test::SimulantTestCase {
 public:
     void test_directional_silhouette_generation() {
         auto stage = window->new_stage();

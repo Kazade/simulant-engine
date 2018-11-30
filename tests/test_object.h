@@ -2,11 +2,10 @@
 #define TEST_OBJECT_H
 
 #include "simulant/simulant.h"
-#include "kaztest/kaztest.h"
+#include "simulant/test.h"
 
-#include "global.h"
 
-class ObjectTest : public SimulantTestCase {
+class ObjectTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

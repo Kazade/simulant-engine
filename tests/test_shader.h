@@ -1,15 +1,14 @@
 #pragma once
 
 #include "simulant/simulant.h"
-#include "kaztest/kaztest.h"
+#include "simulant/test.h"
 
-#include "global.h"
 
 #ifndef _arch_dreamcast
 #include "simulant/renderers/gl2x/gpu_program.h"
 #endif
 
-class ShaderTest : public SimulantTestCase {
+class ShaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_shader() {
 #ifndef _arch_dreamcast

@@ -1,14 +1,14 @@
 #pragma once
 
-#include <kaztest/kaztest.h>
-#include "../simulant/simulant.h"
-#include "global.h"
+#include "simulant/simulant.h"
+#include "simulant/test.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class WidgetTest : public SimulantTestCase {
+class WidgetTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
@@ -52,7 +52,7 @@ private:
 };
 
 
-class ImageTests : public SimulantTestCase {
+class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

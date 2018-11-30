@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simulant/simulant.h"
-#include "global.h"
+
 
 namespace {
 
@@ -37,7 +37,7 @@ public:
     bool* leave_called = nullptr;
 };
 
-class ColliderTests : public SimulantTestCase {
+class ColliderTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

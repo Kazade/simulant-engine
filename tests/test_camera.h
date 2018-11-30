@@ -1,16 +1,15 @@
 #ifndef TEST_CAMERA_H
 #define TEST_CAMERA_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class CameraTest : public SimulantTestCase {
+class CameraTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

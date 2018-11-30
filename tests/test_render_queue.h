@@ -1,14 +1,13 @@
 #pragma once
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 
 namespace {
 
 using namespace smlt;
 
-class RenderQueueTests : public SimulantTestCase {
+class RenderQueueTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

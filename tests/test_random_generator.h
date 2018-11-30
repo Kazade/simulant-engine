@@ -1,13 +1,13 @@
 #pragma once
 
-#include "global.h"
+
 #include "../simulant/random.h"
 
 namespace {
 
 using namespace smlt;
 
-class RandomGeneratorTest : public SimulantTestCase {
+class RandomGeneratorTest : public smlt::test::SimulantTestCase {
 public:
     void test_float_in_range() {
         RandomGenerator gen;

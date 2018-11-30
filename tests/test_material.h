@@ -1,12 +1,11 @@
 #ifndef TEST_MATERIAL_H
 #define TEST_MATERIAL_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
 
-class MaterialTest : public SimulantTestCase {
+
+class MaterialTest : public smlt::test::SimulantTestCase {
 public:
     void test_material_initialization() {
         auto mat = window->shared_assets->material(window->shared_assets->new_material());

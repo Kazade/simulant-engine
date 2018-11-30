@@ -1,11 +1,10 @@
 #pragma once
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
 
-class RigidBodyTest : public SimulantTestCase {
+
+class RigidBodyTest : public smlt::test::SimulantTestCase {
 public:
     void test_adding_to_stage_node_inherits_location() {
         smlt::StagePtr stage = window->new_stage();

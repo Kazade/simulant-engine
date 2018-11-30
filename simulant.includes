@@ -194,3 +194,4 @@ simulant/renderers/glad/glad
 simulant/renderers/glad
 toolchains
 deps/kfs/kfs
+tools

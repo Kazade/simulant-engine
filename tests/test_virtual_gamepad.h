@@ -1,16 +1,15 @@
 #ifndef TEST_VIRTUAL_GAMEPAD_H
 #define TEST_VIRTUAL_GAMEPAD_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class VirtualGamepadTest : public SimulantTestCase {
+class VirtualGamepadTest : public smlt::test::SimulantTestCase {
 private:
     bool b1_pressed = false;
     bool b2_pressed = false;
@@ -205,7 +204,7 @@ public:
     }
 };
 
-class VirtualGamepadInputTests : public SimulantTestCase {
+class VirtualGamepadInputTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();

@@ -1,17 +1,16 @@
 #ifndef TEST_sceneS_H
 #define TEST_sceneS_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
+
 
 namespace {
 
 using namespace smlt;
 
 
-class SceneTests : public SimulantTestCase {
+class SceneTests : public smlt::test::SimulantTestCase {
 public:
     void test_load() {
 
@@ -49,14 +48,14 @@ public:
 };
 
 
-class SceneManagerTests : public SimulantTestCase {
+class SceneManagerTests : public smlt::test::SimulantTestCase {
 private:
     SceneManager::ptr manager_;
 
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        manager_ = std::make_shared<SceneManager>(window.get());
+        manager_ = std::make_shared<SceneManager>(window);
     }
 
     void test_route() {
@@ -134,7 +133,7 @@ public:
     }
 
     void test_register_scene() {
-        SceneManager manager(window.get());
+        SceneManager manager(window);
         manager.register_scene<SceneWithArgs>("test", "arg");
     }
 };

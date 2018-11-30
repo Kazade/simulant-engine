@@ -1,13 +1,13 @@
 #pragma once
 
-#include "global.h"
+
 #include "../simulant/input/input_state.h"
 
 namespace {
 
 using namespace smlt;
 
-class InputStateTests : public SimulantTestCase {
+class InputStateTests : public smlt::test::SimulantTestCase {
 public:
     InputState* controller_;
 

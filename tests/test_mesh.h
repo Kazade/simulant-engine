@@ -1,16 +1,15 @@
 #ifndef TEST_MESH_H
 #define TEST_MESH_H
 
-#include "kaztest/kaztest.h"
-
 #include "simulant/simulant.h"
-#include "global.h"
+#include "simulant/test.h"
+
 
 namespace {
 
 using namespace smlt;
 
-class MeshTest : public SimulantTestCase {
+class MeshTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
