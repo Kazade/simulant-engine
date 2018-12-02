@@ -432,6 +432,7 @@ private:
             // FIXME: This is a bit simulant-specific, you wouldn't necessarily want this
             // path on user apps.
             application->window->resource_locator->add_search_path("sample_data");
+            application->window->resource_locator->add_search_path("assets");
         } else {
             application->window->reset();
         }
