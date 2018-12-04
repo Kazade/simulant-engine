@@ -91,27 +91,14 @@ AABB::AABB(const Vec3 *vertices, const std::size_t count) {
 }
 
 bool AABB::intersects_aabb(const AABB &other) const {
-    auto acx = (min_.x + max_.x) * 0.5;
-    auto acy = (min_.y + max_.y) * 0.5;
-    auto acz = (min_.z + max_.z) * 0.5;
+    if (max_.x < other.min_.x) return false;
+    if (min_.x > other.max_.x) return false;
+    if (max_.y < other.min_.y) return false;
+    if (min_.y > other.max_.y) return false;
+    if (max_.z < other.min_.z) return false;
+    if (min_.z > other.max_.z) return false;
 
-    auto bcx = (other.min_.x + other.max_.x) * 0.5;
-    auto bcy = (other.min_.y + other.max_.y) * 0.5;
-    auto bcz = (other.min_.z + other.max_.z) * 0.5;
-
-    auto arx = (max_.x - min_.x) * 0.5;
-    auto ary = (max_.y - min_.y) * 0.5;
-    auto arz = (max_.z - min_.z) * 0.5;
-
-    auto brx = (other.max_.x - other.min_.x) * 0.5;
-    auto bry = (other.max_.y - other.min_.y) * 0.5;
-    auto brz = (other.max_.z - other.min_.z) * 0.5;
-
-    bool x = fabs(acx - bcx) <= (arx + brx);
-    bool y = fabs(acy - bcy) <= (ary + bry);
-    bool z = fabs(acz - bcz) <= (arz + brz);
-
-    return x && y && z;
+    return true;
 }
 
 bool AABB::intersects_sphere(const smlt::Vec3& center, float diameter) const {
