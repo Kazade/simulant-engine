@@ -34,6 +34,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
+#define SIMULANT_DEBUG_KEY "SIMULANT_DEBUG"
 
 namespace smlt {
 
@@ -58,8 +59,13 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.show_cursor = true;
     }
 
+    // Force debug logging level
+    if(std::getenv(SIMULANT_DEBUG_KEY)) {
+        config_copy.log_level = LOG_LEVEL_DEBUG;
+    }
+
     kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
-    kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) config.log_level);
+    kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) config_copy.log_level);
 
     L_DEBUG("Constructing the window");
 
