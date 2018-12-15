@@ -446,7 +446,7 @@ protected:
     std::shared_ptr<Application> application;
 
 public:
-    void set_up() {
+    virtual void set_up() {
         TestCase::set_up();
 
         set_app_and_window(&application, &window);
