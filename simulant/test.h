@@ -427,12 +427,12 @@ private:
             config.height = 480;
             config.fullscreen = false;
 
-            application.reset(new TestApp(config));
-
             // FIXME: This is a bit simulant-specific, you wouldn't necessarily want this
             // path on user apps.
-            application->window->resource_locator->add_search_path("sample_data");
-            application->window->resource_locator->add_search_path("assets");
+            config.search_paths.push_back("assets");
+            config.search_paths.push_back("sample_data");
+
+            application.reset(new TestApp(config));
         } else {
             application->window->reset();
         }
