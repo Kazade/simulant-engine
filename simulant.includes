@@ -195,3 +195,7 @@ simulant/renderers/glad
 toolchains
 deps/kfs/kfs
 tools
+deps/libAL/include/AL
+deps/libAL/samples/basic
+deps/libAL/AL
+deps/libAL/samples/basic/romdisk

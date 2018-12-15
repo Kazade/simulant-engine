@@ -1,3 +1,12 @@
+deps/libAL/AL/aldc.h
+deps/libAL/AL/alut.c
+deps/libAL/AL/mojoal.c
+deps/libAL/include/AL/al.h
+deps/libAL/include/AL/alc.h
+deps/libAL/include/AL/alut.h
+deps/libAL/samples/basic/main.c
+deps/libAL/samples/basic/romdisk.img
+deps/libAL/samples/basic/romdisk/PLACEHOLDER
 tools/test_generator.py
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h
