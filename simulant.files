@@ -1,3 +1,4 @@
+deps/libAL/AL/aldc.c
 deps/libAL/AL/aldc.h
 deps/libAL/AL/alut.c
 deps/libAL/AL/mojoal.c
