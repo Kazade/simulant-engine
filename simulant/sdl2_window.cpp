@@ -274,9 +274,17 @@ std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver() {
 }
 
 bool SDL2Window::create_window() {
-    if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
+
+    if(SDL_Init(default_flags) != 0) {
         L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
         return false;
+    }
+
+    /* Some platforms don't ship SDL compiled with haptic support, so try it, but don't
+     * die if it's not there! */
+    if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
+        L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
     }
 
     int32_t flags = SDL_WINDOW_OPENGL;
