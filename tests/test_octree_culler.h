@@ -1,9 +1,10 @@
 #pragma once
 
 
-
-#include "../simulant/nodes/geoms/octree_culler.h"
-#include "../simulant/nodes/geom.h"
+#include "simulant/simulant.h"
+#include "simulant/test.h"
+#include "simulant/nodes/geoms/octree_culler.h"
+#include "simulant/nodes/geom.h"
 
 namespace {
 
