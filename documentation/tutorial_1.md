@@ -14,10 +14,9 @@ This tutorial assumes that you are running the Fedora 29 operating system (eithe
 
 If you are using another Linux distribution the instructions should be very similar.
 
->>> Why Fedora?
->>>
->>> Fedora is a user-friendly operating system which stays up-to-date with the latest advances
->>> in the Linux ecosystem. It has good support for Docker and cross-compilation which Simulant depends on.
+> Why Fedora?
+> Fedora is a user-friendly operating system which stays up-to-date with the latest advances
+> in the Linux ecosystem. It has good support for Docker and cross-compilation which Simulant depends on.
 
 ## Starting your project
 
