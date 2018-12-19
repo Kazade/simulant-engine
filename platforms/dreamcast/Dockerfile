@@ -5,7 +5,7 @@ FROM fedora:21
 MAINTAINER kazade <kazade@gmail.com>
 
 RUN yum clean all && yum -y install yum-plugin-ovl
-RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
+RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone git://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
