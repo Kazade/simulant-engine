@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import re
 import sys
 
 parser = argparse.ArgumentParser(description="Generate C++ unit tests")
-parser.add_argument("--output", type=unicode, nargs=1, help="The output source file for the generated test main()", required=True)
-parser.add_argument("test_files", type=unicode, nargs="+", help="The list of C++ files containing your tests")
+parser.add_argument("--output", type=str, nargs=1, help="The output source file for the generated test main()", required=True)
+parser.add_argument("test_files", type=str, nargs="+", help="The list of C++ files containing your tests")
 parser.add_argument("--verbose", help="Verbose logging", action="store_true", default=False)
 
 
@@ -96,7 +96,7 @@ def find_tests(files):
 
                     class_data = []
                     brace_counter = 1
-                    for i in xrange(start+2, len(source_file_data)):
+                    for i in range(start+2, len(source_file_data)):
                         class_data.append(source_file_data[i])
                         if class_data[-1] == '{': brace_counter += 1
                         if class_data[-1] == '}': brace_counter -= 1
