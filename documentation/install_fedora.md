@@ -1,4 +1,3 @@
-
 # Fedora (Linux) Installation
 
 The following installation process is probably very similar for other Linux distributions (such as Ubuntu, Debian etc.) the main difference should
@@ -15,7 +14,7 @@ sudo dnf install python-pip
 You'll probably need a bunch of other dependencies too for actually compiling programs:
 
 ```
-sudo cmake make gcc-c++ SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel docker
+sudo dnf install cmake make gcc-c++ SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel docker
 ```
 
 # Installation
