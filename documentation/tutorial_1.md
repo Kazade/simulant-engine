@@ -12,16 +12,24 @@ In this tutorial we'll set out to do the following:
 
 This tutorial assumes that you are running the Fedora 29 operating system (either natively, or in a Virtual Machine) and you have followed the "Prerequisites" and "Installation" sections in the [Fedora installation instructions](install_fedora.md).
 
+This tutorial also assumes the following fundamental knowledge:
+
+ - You have some knowledge of C++ or similar (e.g. C)
+ - You are comfortable using the terminal
+ - You can find your way around a Linux OS
+ 
+If you get stuck at any point, head over to the Simulant Discord server.
+
 If you are using another Linux distribution the instructions should be very similar.
 
-> *Why Fedora?*  
+> **Why Fedora?**
 > 
 > Fedora is a user-friendly operating system which stays up-to-date with the latest advances
 > in the Linux ecosystem. It has good support for Docker and cross-compilation which Simulant depends on. 
 
 ## Starting your project
 
-We're going to create a project called "monsters". Assuming you have Simulant correctly installed then this is very simple. Open a terminal (command prompt) and type the following commands and then hit enter after each:
+We're going to create a project called "monsters". Assuming you have Simulant correctly installed then this is very simple. Open a terminal and run the following commands:
 
 ```
 mkdir ~/Projects
@@ -39,7 +47,7 @@ The `start` command will download several things:
  
 It may take a little while. When the process finishes you'll find a new directory called "monsters" has been created.
 
-Now open the file manager ("Files") and navigate to the Projects folder.
+Now open the file manager and navigate to the Projects folder.
 
 ![figure 1](/documentation/images/tutorial_1_1.png?raw=true)
 
@@ -99,7 +107,7 @@ simulant run --rebuild
 ## Scenes
 
 A Simulant application is made up of a number of "Scenes". These are classes which subclass
-the `Scene` class template. A `Scene` represents a single portion of your game, for example you might have a `Scene` for the game's menu, you might have another for the game play, another for the game over screen etc.
+the `Scene` class template. A `Scene` represents a single portion of your game, for example you might have a `Scene` for the game's menu, you might have another for the gameplay, another for the game over screen etc.
 
 Scenes have a number of methods which you can override:
 
@@ -142,6 +150,7 @@ You control rendering in Simulant via `Pipelines`. A `Pipeline` combines the fol
  - The ID of a `Camera` inside the `Stage` that you want to use.
  - Optionally a `Viewport`.
  - Optionally a `Texture` to render to (rather than the window)
+ - A render priority
 
 Creating a pipeline is easy:
 
@@ -151,19 +160,55 @@ auto camera = stage->new_camera();  // Create a camera within the stage
 auto pipeline = window->render(stage, camera);  // Create your pipeline
 ```
 
-It is recommended you enable and disable your pipeline in your `activate()` and `deactivate()`
-methods.
+It is recommended you activate and deactivate your pipeline in the `activate()` and `deactivate()` methods of your `Scene`.
 
 ```
-pipeline->activate();
+void MyScene::load() {
+    // ...
+    
+    pipeline_ = window->render(stage, camera);
+    pipeline_->deactivate();
+}
 
-...
+void MyScene::activate() {
+    pipeline_->activate();
+}
 
-pipeline->deactivate();
+void MyScene::deactivate() {
+    pipeline_->deactivate();
+}
+
 ```
+
+You can create multiple pipelines and this gives you the control to do some cool things:
+
+ - Render the same stage to different viewports with different cameras (multiplayer)
+ - Render a stage to a texture, then use that texture on a mesh
+ - You can prolong the life of a pipeline across `Scenes` to create transitions
 
 ## Loading a 3D Model
 
-Coming soon...
+Let's now talk about the `Stage`. You created a `Stage` earlier, and a `Camera` within it so that you could build a `Pipeline`. 
+
+A `Stage` is the root of a heirarchical set of `StageNodes` which you can manipulate and render. `StageNodes` (e.g. `Actors`, `Cameras`, `Lights` etc.) can be moved around, rotated, and parented to other `StageNodes` to build up your scene.
+
+The most common object you will create is an `Actor`. An `Actor` is normally (but not always) associated with some kind of `Mesh` for rendering. In your `load()` method, it's very straightforward to load a 3D mesh, and attach it to an `Actor`:
+
+```
+auto mesh_id = stage->assets->new_mesh_from_file("models/mymesh.obj");
+auto actor = stage->new_actor_with_mesh(mesh_id);
+actor->move_to(0, 0, -10);
+```
+
+That's it!
+
+In Simulant the `Camera` looks down the negative Z axis by default. What we've done here is 
+loaded a 3D model asset, created an `Actor` that uses it, then moved that `Actor` so that it can be seen by the `Camera`.
+
+## Summary
+
+That's quite a lot for an introduction! You've learned that Simulant is structured around `Scenes` at a high-level, the rendering system is controlled by `Pipelines`, and you build up your visible scene by manipulating `Cameras` and `Actors` within a `Stage`.
+
+Now, go ahead an experiment!
 
 
