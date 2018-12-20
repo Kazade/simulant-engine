@@ -205,6 +205,12 @@ That's it!
 In Simulant the `Camera` looks down the negative Z axis by default. What we've done here is 
 loaded a 3D model asset, created an `Actor` that uses it, then moved that `Actor` so that it can be seen by the `Camera`.
 
+You'll notice that we accessed a property of the `Stage` called "assets". Every `Stage` has its own `AssetManager`, when the `Stage` is destroyed then those assets are destroyed too. Sometimes you want to share assets across `Stages` though, and you can do that with the `shared_assets` property of the `Window`.
+
+One last thing to be aware of is that assets are ref-counted. Once you access an asset, or attach it to an `Actor` it will be destroyed when all users of that asset are destroyed.
+
+You can turn this behaviour off by passing `smlt::GARBAGE_COLLECT_NEVER` as a second argument to `new_mesh_from_file`.
+
 ## Summary
 
 That's quite a lot for an introduction! You've learned that Simulant is structured around `Scenes` at a high-level, the rendering system is controlled by `Pipelines`, and you build up your visible scene by manipulating `Cameras` and `Actors` within a `Stage`.
