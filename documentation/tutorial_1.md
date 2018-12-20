@@ -1,4 +1,4 @@
-# Writing your first Simulant Application
+# Writing your First Simulant Application
 
 Welcome to the first Simulant tutorial!
 
@@ -14,9 +14,10 @@ This tutorial assumes that you are running the Fedora 29 operating system (eithe
 
 If you are using another Linux distribution the instructions should be very similar.
 
-> Why Fedora?
+> *Why Fedora?*  
+> 
 > Fedora is a user-friendly operating system which stays up-to-date with the latest advances
-> in the Linux ecosystem. It has good support for Docker and cross-compilation which Simulant depends on.
+> in the Linux ecosystem. It has good support for Docker and cross-compilation which Simulant depends on. 
 
 ## Starting your project
 
@@ -69,7 +70,7 @@ simulant build
 
 This will compile your project executable. It will actually generate two binaries:
 
- - Your project executable
+ - Your project executable which gets the same name as your project
  - A `tests` executable that runs your unit tests
  
 There'll be more on testing later.
@@ -95,16 +96,74 @@ And, if you want to rebuild and then run your project in a single command:
 simulant run --rebuild
 ```
 
+## Scenes
+
+A Simulant application is made up of a number of "Scenes". These are classes which subclass
+the `Scene` class template. A `Scene` represents a single portion of your game, for example you might have a `Scene` for the game's menu, you might have another for the game play, another for the game over screen etc.
+
+Scenes have a number of methods which you can override:
+
+ - `load()` - This is where you build the scene. This might involve loading assets or creating
+   actors, particle systems etc. More on that later.
+ - `unload()` - The opposite of load, this is where you tear down everything you built up.
+ - `activate()` - This is called when your `Scene` becomes the active scene.
+ - `deactivate()` - This is called when your `Scene` stops being the active one.
+ - `update(dt)` - This is called once per frame, and passes in a delta time value. This is where you'd move objects over time.
+ - `fixed_update(step)` - This is like update, but rather than being called once per frame, it's called 60 times per second. This might mean it's called more than once in a frame, or maybe not at all.
+ 
+You must at least override `load()`, the others are optional.
+
+The `Scene` has a number of properties that you have access to:
+
+ - `window` - This is the game window, you can access most of the Simulant API through this.
+ - `app` - This is the application
+ - `input` - The input manager
+ - `scenes` - The scene manager. You can use this to activate another `Scene`
+
+Once you've created your `Scene` class, you need to register it in your `Application::init` method (in your main.cpp file).
+
+```
+scenes->register_scene<MySceneClass>(name, ...);
+```
+
+The first argument is a name for your `Scene`, then any additional arguments are passed to your
+`Scene` constructor.
+
+When registering, the name "main" is special. If you call a `Scene` "main" it will be the first `Scene` called when your game starts. By default the "main" `Scene` is the simulant splash screen and the default generated `Scene` is called "ingame".
+
 ## Render Pipelines
 
-Coming soon...
+Now that you have your project created and running, let's talk about how Simulant renders
+to the screen.
+
+You control rendering in Simulant via `Pipelines`. A `Pipeline` combines the following:
+
+ - The ID of `Stage` you want to render.
+ - The ID of a `Camera` inside the `Stage` that you want to use.
+ - Optionally a `Viewport`.
+ - Optionally a `Texture` to render to (rather than the window)
+
+Creating a pipeline is easy:
+
+```
+auto stage = window->new_stage();  // Create a stage
+auto camera = stage->new_camera();  // Create a camera within the stage
+auto pipeline = window->render(stage, camera);  // Create your pipeline
+```
+
+It is recommended you enable and disable your pipeline in your `activate()` and `deactivate()`
+methods.
+
+```
+pipeline->activate();
+
+...
+
+pipeline->deactivate();
+```
 
 ## Loading a 3D Model
 
 Coming soon...
 
-
-
-
- 
 
