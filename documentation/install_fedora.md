@@ -87,7 +87,11 @@ Then, simply:
 $ simulant package dreamcast
 ```
 
-Will generate a .cdi image ready to burn. If you have 'lxdream' installed, you can run the CDI:
+Will generate a .cdi image ready to burn. 
+
+![Dreamcast package](images/dreamcast_package.gif)
+
+If you have 'lxdream' installed, you can run the CDI:
 
 ```
 $ simulant run dreamcast
