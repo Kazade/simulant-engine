@@ -77,6 +77,8 @@ Simulant is under heavy development (and unstable), it is recommended you regula
 $ simulant update
 ```
 
+![Simulant update](/documentation/images/simulant_update.gif)
+
 # Building for the Dreamcast
 
 To build for the Dreamcast you must have Docker and have downloaded the Docker kazade/dreamcast-sdk container.
