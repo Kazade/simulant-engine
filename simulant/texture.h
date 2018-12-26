@@ -1,4 +1,4 @@
-/* *   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+﻿/* *   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
  *
  *     This file is part of Simulant.
  *
@@ -62,6 +62,7 @@ enum TextureFormat {
     TEXTURE_FORMAT_RGBA8888,
 
     // Packed short formats
+    TEXTURE_FORMAT_RGB565,
     TEXTURE_FORMAT_RGBA4444,
     TEXTURE_FORMAT_RGBA5551,
 

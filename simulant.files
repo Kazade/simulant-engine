@@ -1,3 +1,7 @@
+samples/texture_formats.cpp
+simulant/loaders/tex_texture_loader.cpp
+simulant/loaders/tex_texture_loader.h
+simulant/loaders/tex_texture_loader.h
 tools/test_generator.py
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h

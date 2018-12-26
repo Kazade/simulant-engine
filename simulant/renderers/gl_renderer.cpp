@@ -1,3 +1,4 @@
+#include <cassert>
 #include "gl_renderer.h"
 
 #include "../window.h"
