@@ -66,6 +66,7 @@ public:
     void set_source_init_function(std::function<void (SourceInstance&)> func) { init_source_ = func; }
 
     SoundDriver* _driver() const { return driver_; }
+
 private:
     std::function<void (SourceInstance&)> init_source_;
 

@@ -718,4 +718,26 @@ void Window::on_finger_motion(
     });
 }
 
+void Window::set_audio_listener(StageNode* node) {
+    std::lock_guard g(audio_listener_mutex_);
+
+    if(audio_listener_connection_) {
+        audio_listener_connection_.disconnect();
+    }
+
+    audio_listener_ = node;
+    audio_listener_connection_ = audio_listener_->signal_destroyed().connect(
+        [this]() {
+            audio_listener_ = null;
+            audio_listener_connection_.disconnect();
+        }
+    );
+}
+
+StageNode* Window::audio_listener() const {
+    std::lock_guard g(audio_listener_mutex_);
+
+    return audio_listener_;
+}
+
 }

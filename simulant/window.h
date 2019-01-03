@@ -47,6 +47,7 @@ namespace smlt {
 
 class AssetManager;
 class InputManager;
+class StageNode;
 
 namespace ui {
     class Interface;
@@ -212,6 +213,11 @@ public:
 
     void each_screen(std::function<void (std::string, Screen*)> callback);
 
+    /* You must have an active audio listener to get sound. Once a listener is destroyed
+     * audio will stop until you provide another listener */
+    void set_audio_listener(StageNode* stage_node);
+    StageNode* audio_listener() const;
+
     /* Private API for Window subclasses (public for testing)
        don't call this directly
     */
@@ -359,6 +365,16 @@ private:
     /* To be overridden by subclasses if external screens need some kind of initialization/cleanup */
     virtual bool initialize_screen(Screen* screen) { return true; }
     virtual void shutdown_screen(Screen* screen) {}
+
+
+    /* Protect changes to the audio listener */
+    std::mutex audio_listener_mutex_;
+
+    /* The active listener */
+    StageNode* audio_listener_ = nullptr;
+
+    /* The connection that watches for listener destruction */
+    sig::connection audio_listener_connection_;
 
 protected:
     InputState* _input_state() const { return input_state_.get(); }

@@ -39,6 +39,28 @@ public:
         }
     }
 
+    void test_setting_audio_listener() {
+        assert_is_null(window->audio_listener()); // No listener by default
+
+        auto actor = stage_->new_actor();
+        window->set_audio_listener(actor);
+
+        assert_equal(window->audio_listener(), actor);
+
+        stage_->delete_actor(actor->id());
+        actor = nullptr;
+
+        assert_is_null(window->audio_listener()); // Should now be NULL
+
+        actor = stage_->new_actor();
+        window->set_audio_listener(actor);
+
+        assert_equal(window->audio_listener(), actor);
+        window->delete_stage(stage_->id());
+
+        assert_is_null(window->audio_listener());
+    }
+
     void test_3d_sound_output() {
         smlt::SoundID sound = stage_->assets->new_sound_from_file("test_sound.ogg");
 

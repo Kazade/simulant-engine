@@ -36,11 +36,46 @@ public:
 
         // Add a fly controller to the camera for user input
         camera_->new_behaviour<behaviours::Fly>(window);
+
+        // Make the camera the audio listener
+        window->set_audio_listener(camera_);
+
+        sounds_[0] = window->shared_assets->new_sound_from_file(
+            "sample_data/sounds/monster-1.wav"
+        );
+
+        sounds_[1] = window->shared_assets->new_sound_from_file(
+            "sample_data/sounds/monster-2.wav"
+        );
+
+        sounds_[2] = window->shared_assets->new_sound_from_file(
+            "sample_data/sounds/monster-3.wav"
+        );
+
+        // Play a sound every 2.5 seconds from actor
+        window->idle->add_timeout(2.5, [=]() -> bool {
+            static int sound = 0;
+            actor->play_sound(sounds_[sound]);
+
+            sound++;
+            if(sound == 3) sound = 0;
+        });
+
+        // Play a sound every 3.0 seconds from actor3
+        window->idle->add_timeout(3.0, [=]() -> bool {
+            static int sound = 0;
+            actor3->play_sound(sounds_[sound]);
+
+            sound++;
+            if(sound == 3) sound = 0;
+        });
     }
 
 private:
     CameraPtr camera_;
     StagePtr stage_;
+
+    SoundID sounds_[3];
 };
 
 class Sample: public smlt::Application {
