@@ -108,50 +108,67 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             if(line.empty() || parts.empty()) continue;
             if(parts[0][0] == '#') continue;
 
+            // Make sure we lower-case... .obj files aren't consistent
+            std::transform(parts[0].begin(), parts[0].end(), parts[0].begin(), ::tolower);
+
             if(parts[0] == "usemtl") {
                 current_material = parts[1];
             } else if(parts[0] == "newmtl") {
                 auto material_name = parts[1];
 
+                auto new_mat = mesh->resource_manager().clone_default_material().fetch();
+                assert(new_mat);
+
                 // Clone the default material
-                materials[material_name] = mesh->resource_manager().clone_default_material().fetch();
+                materials.insert(
+                    std::make_pair(
+                        material_name,
+                        new_mat
+                    )
+                );
+
                 current_material = material_name;
 
                 has_materials = true;
-            } else if(parts[0] == "Ns") {
+            } else if(parts[0] == "ns") {
                 auto mat = materials.at(current_material);
+                assert(mat);
+
                 mat->pass(0)->set_shininess(std::stof(parts[1]));
-            } else if(parts[0] == "Ka") {
+            } else if(parts[0] == "ka") {
                 auto mat = materials.at(current_material);
+                assert(mat);
 
                 float r = std::stof(parts[1]);
                 float g = std::stof(parts[2]);
                 float b = std::stof(parts[3]);
 
                 mat->pass(0)->set_ambient(smlt::Colour(r, g, b, 1.0));
-            } else if(parts[0] == "Kd") {
+            } else if(parts[0] == "kd") {
                 auto mat = materials.at(current_material);
+                assert(mat);
 
                 float r = std::stof(parts[1]);
                 float g = std::stof(parts[2]);
                 float b = std::stof(parts[3]);
 
                 mat->pass(0)->set_diffuse(smlt::Colour(r, g, b, 1.0));
-            } else if(parts[0] == "Ks") {
+            } else if(parts[0] == "ks") {
                 auto mat = materials.at(current_material);
+                assert(mat);
 
                 float r = std::stof(parts[1]);
                 float g = std::stof(parts[2]);
                 float b = std::stof(parts[3]);
 
                 mat->pass(0)->set_specular(smlt::Colour(r, g, b, 1.0));
-            } else if(parts[0] == "Ni") {
+            } else if(parts[0] == "ni") {
 
             } else if(parts[0] == "d") {
                 // Dissolved == Transparency... apparently
             } else if(parts[0] == "illum") {
 
-            } else if(parts[0] == "map_Kd") {
+            } else if(parts[0] == "map_kd") {
                 // The path may have spaces in, so we have to recombine everything
                 unicode texture_name = parts[1];
                 for(std::size_t i = 2; i < parts.size(); ++i) {
@@ -177,6 +194,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
                 // Check potentially absolute file path
                 possible_locations.push_back(texture_name.encode());
+
+                if(texture_name.contains("_64")) {
+                    std::cout << "Here" << std::endl;
+                }
 
                 bool found = false;
                 for(auto& texture_file: possible_locations) {
@@ -254,7 +275,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                     if(mesh->has_submesh(current_material)) {
                         smi = current_material;
                     } else {
-                        mesh->new_submesh_with_material(current_material, mat_id);
+                        mesh->new_submesh_with_material(
+                            current_material, mat_id, MESH_ARRANGEMENT_TRIANGLES, INDEX_TYPE_32_BIT
+                        );
                         smi = current_material;
                     }
                 } else {
