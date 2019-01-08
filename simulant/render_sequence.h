@@ -24,7 +24,6 @@
 #include <list>
 
 #include "generic/managed.h"
-#include "generic/manager.h"
 #include "generic/property.h"
 
 #include "renderers/renderer.h"
@@ -102,7 +101,7 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-typedef generic::TemplatedManager<Pipeline, PipelineID> PipelineManager;
+typedef ObjectManager<PipelineID, Pipeline, DONT_REFCOUNT> PipelineManager;
 
 class RenderSequence:
     public Managed<RenderSequence>,
@@ -143,13 +142,13 @@ public:
     Property<RenderSequence, Window> window = { this, &RenderSequence::window_ };
 private:    
     void sort_pipelines(bool acquire_lock=false);
-    void run_pipeline(Pipeline::ptr stage, int& actors_rendered);
+    void run_pipeline(PipelinePtr stage, int& actors_rendered);
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
 
     std::mutex pipeline_lock_;
-    std::list<Pipeline::ptr> ordered_pipelines_;
+    std::list<PipelinePtr> ordered_pipelines_;
 
     sig::signal<void (Pipeline&)> signal_pipeline_started_;
     sig::signal<void (Pipeline&)> signal_pipeline_finished_;

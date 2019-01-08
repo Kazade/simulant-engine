@@ -76,7 +76,7 @@ private:
     void rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program);
 };
 
-typedef generic::RefCountedTemplatedManager<GPUProgram, GPUProgramID> GPUProgramManager;
+typedef ObjectManager<GPUProgramID, GPUProgram, DO_REFCOUNT> GPUProgramManager;
 
 class GenericRenderer:
     public Renderer,

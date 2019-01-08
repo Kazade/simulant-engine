@@ -378,7 +378,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     for(auto& material: materials) {
         submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
         if(material) {
-            material.fetch()->enable_gc(); // Re-enable GC now the material has been applied
+            material.fetch()->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC); // Re-enable GC now the material has been applied
         }
     }
 
@@ -522,7 +522,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
     }
 
-    lightmap_texture.fetch()->enable_gc();
+    lightmap_texture.fetch()->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
 
     L_WARN("Finished loading Quake 2 BSP");
 

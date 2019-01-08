@@ -19,34 +19,95 @@
 #pragma once
 
 #include <cstdint>
+#include <cassert>
 #include <functional>
+#include <memory>
+#include <type_traits>
+#include <ostream>
 
 namespace smlt {
+
+namespace _unique_id_impl {
+    template<class T>
+    struct is_shared_ptr : std::false_type {};
+
+    template<class T>
+    struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
+
+    template<typename ResourceTypePtr, bool IsSharedPtr>
+    struct Members;
+
+    template<typename ResourceTypePtr>
+    struct Members<ResourceTypePtr, false> {
+        ResourceTypePtr ptr = nullptr;
+
+        Members() = default;
+        Members(ResourceTypePtr ptr):
+            ptr(ptr) {}
+
+
+        Members(std::shared_ptr<typename ResourceTypePtr::element_type> ptr):
+            ptr(ptr.get()) {
+        }
+
+        ResourceTypePtr as_pointer() const {
+            return ptr;
+        }
+    };
+
+    template<typename ResourceTypePtr>
+    struct Members<ResourceTypePtr, true> {
+        typedef std::weak_ptr<typename ResourceTypePtr::element_type> weak_ptr_type;
+        weak_ptr_type ptr;
+
+        Members() = default;
+
+        Members(weak_ptr_type ptr):
+            ptr(ptr) {}
+
+        Members(ResourceTypePtr ptr):
+            ptr(ptr) {}
+
+        ResourceTypePtr as_pointer() const {
+            return ptr.lock();
+        }
+    };
+}
+
 
 template<typename ResourceTypePtr>
 class UniqueID {
 public:
     typedef ResourceTypePtr resource_pointer_type;
-
-    typedef std::function<ResourceTypePtr (const UniqueID<ResourceTypePtr>*)> ResourceGetter;
+    typedef typename ResourceTypePtr::element_type element_type;
 
     operator bool() const {
         return id_ > 0;
     }
 
+    UniqueID():
+        id_(0) {}
+
+    /* Unbound. This should only happen during instantiation by a manager */
+    UniqueID(uint32_t id):
+        id_(id) {
+    }
+
     UniqueID(const UniqueID<ResourceTypePtr>& other):
         id_(other.id_),
-        getter_(other.getter_) {
+        members_(other.members_.ptr) {
 
     }
 
-    UniqueID(ResourceGetter getter=ResourceGetter()):
-        id_(0),
-        getter_(getter) {}
+    /* Private API */
+    void _bind(std::shared_ptr<element_type> ptr) {
+        members_ = MembersType(ptr);
+    }
 
     ResourceTypePtr fetch() const {
-        assert(is_bound() && "This ID is not bound to a resource manager");
-        return getter_(this);
+        auto ret = members_.as_pointer();
+        assert(ret);
+        return ret;
     }
 
     template<typename T>
@@ -56,12 +117,12 @@ public:
     }
 
     bool is_bound() const {
-        return bool(getter_);
+        return bool(members_.ptr);
     }
 
-    explicit UniqueID(uint32_t id, ResourceGetter getter=ResourceGetter()):
+    explicit UniqueID(uint32_t id, ResourceTypePtr ptr):
         id_(id),
-        getter_(getter) {
+        members_(ptr) {
 
     }
 
@@ -75,7 +136,7 @@ public:
         }
 
         this->id_ = other.id_;
-        this->getter_ = other.getter_;
+        this->members_.ptr = other.members_.ptr;
         return *this;
     }
 
@@ -88,14 +149,20 @@ public:
     }
 
     friend std::ostream& operator<< (std::ostream& o, UniqueID<ResourceTypePtr> const& instance) {
-        return o << typeid(resource_pointer_type).name() << ":" << instance.value();
+        return o << typeid(ResourceTypePtr).name() << ":" << instance.value();
     }
 
     uint32_t value() const { return id_; }
 
 private:
     uint32_t id_ = 0;
-    ResourceGetter getter_;
+
+    typedef _unique_id_impl::Members<
+        ResourceTypePtr,
+        _unique_id_impl::is_shared_ptr<ResourceTypePtr>::value
+    > MembersType;
+
+    MembersType members_;
 };
 
 }

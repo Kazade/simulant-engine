@@ -48,7 +48,7 @@ SpritePtr SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t 
 }
 
 SpritePtr SpriteManager::sprite(SpriteID s) {
-    return TemplatedSpriteManager::get(s).lock().get();
+    return TemplatedSpriteManager::get(s);
 }
 
 bool SpriteManager::has_sprite(SpriteID s) const {

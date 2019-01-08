@@ -21,9 +21,8 @@
 
 #include <functional>
 
-#include "generic/manual_manager.h"
+#include "generic/object_manager.h"
 #include "generic/managed.h"
-#include "generic/manager.h"
 #include "generic/generic_tree.h"
 #include "generic/data_carrier.h"
 
@@ -50,10 +49,10 @@ class Partitioner;
 class Debug;
 class Sprite;
 
-typedef generic::ManualManager<Actor, ActorID> ActorManager;
-typedef generic::ManualManager<Geom, GeomID> GeomManager;
-typedef generic::ManualManager<Light, LightID> LightManager;
-typedef generic::TemplatedManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
+typedef ObjectManager<ActorID, Actor, DONT_REFCOUNT> ActorManager;
+typedef ObjectManager<GeomID, Geom, DONT_REFCOUNT> GeomManager;
+typedef ObjectManager<LightID, Light, DONT_REFCOUNT> LightManager;
+typedef ObjectManager<ParticleSystemID, ParticleSystem, DONT_REFCOUNT> ParticleSystemManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;

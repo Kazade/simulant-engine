@@ -87,8 +87,6 @@ private:
     float width_;
 };
 
-typedef Skybox* SkyboxPtr;
-
 class SkyboxImageNotFoundError : public std::runtime_error {
 public:
     SkyboxImageNotFoundError(const std::string& what):
@@ -101,7 +99,7 @@ public:
         std::runtime_error(what) {}
 };
 
-typedef generic::TemplatedManager<Skybox, SkyID> TemplatedSkyboxManager;
+typedef ObjectManager<SkyID, Skybox, DONT_REFCOUNT> TemplatedSkyboxManager;
 
 class SkyManager :
     public TemplatedSkyboxManager,

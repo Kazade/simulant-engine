@@ -16,6 +16,8 @@ private:
     T* ptr_ = nullptr;
 
 public:
+    typedef T element_type;
+
     default_init_ptr() = default;
     default_init_ptr(const default_init_ptr<T>&) = default;
     default_init_ptr<T>& operator=(const default_init_ptr<T>&) = default;

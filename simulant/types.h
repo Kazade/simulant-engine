@@ -42,7 +42,7 @@
 #include "math/plane.h"
 #include "math/ray.h"
 
-#include "generic/manager.h"
+#include "generic/object_manager.h"
 #include "generic/unique_id.h"
 #include "generic/default_init_ptr.h"
 
@@ -498,7 +498,7 @@ class GPUProgram;
 typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 
 class Skybox;
-typedef Skybox* SkyboxPtr;
+typedef default_init_ptr<Skybox> SkyboxPtr;
 
 typedef uint32_t IdleConnectionID;
 
@@ -520,7 +520,7 @@ typedef UniqueID<SkyboxPtr> SkyID;
 typedef UniqueID<GPUProgramPtr> GPUProgramID;
 typedef UniqueID<ui::WidgetPtr> WidgetID;
 
-typedef generic::TemplatedManager<Stage, StageID> BaseStageManager;
+typedef ObjectManager<StageID, Stage, DONT_REFCOUNT> BaseStageManager;
 
 // Attributes should be aligned at 4 byte boundaries
 // according to this

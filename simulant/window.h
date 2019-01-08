@@ -24,7 +24,7 @@
 #include "deps/kazlog/kazlog.h"
 
 #include "generic/property.h"
-#include "generic/manager.h"
+#include "generic/object_manager.h"
 #include "generic/data_carrier.h"
 
 #include "resource_locator.h"

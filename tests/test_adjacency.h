@@ -2,6 +2,7 @@
 
 
 #include "../simulant/meshes/adjacency_info.h"
+#include "../simulant/asset_manager.h"
 
 namespace {
 

@@ -45,7 +45,8 @@ Debug::~Debug() {
     if(mesh_) {
         auto mesh = mesh_.fetch();
         if(mesh) {
-            mesh->enable_gc();
+            // Enable GC
+            mesh->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
         }
 
         mesh_ = MeshID();

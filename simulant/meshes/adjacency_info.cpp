@@ -1,3 +1,5 @@
+#include "../deps/kazlog/kazlog.h"
+
 #include "adjacency_info.h"
 
 #include "mesh.h"

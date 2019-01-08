@@ -9,7 +9,7 @@ namespace smlt {
 class Window;
 
 class BackgroundManager:
-    public generic::TemplatedManager<Background, BackgroundID> {
+    public ObjectManager<BackgroundID, Background, DONT_REFCOUNT> {
 
 public:
     BackgroundManager(Window* window);

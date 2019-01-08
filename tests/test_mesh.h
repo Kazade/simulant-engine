@@ -25,7 +25,7 @@ public:
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
-        smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
+        smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
         auto mesh = stage_->assets->mesh(mid);
 
         auto& data = mesh->vertex_data;
@@ -69,7 +69,7 @@ public:
         assert_true(box.min() == expected_min);
         assert_true(box.max() == expected_max);
 
-        stage_->assets->mark_mesh_as_uncollected(mesh->id());
+        mesh->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
 
         return mid;
     }
@@ -124,7 +124,7 @@ public:
     void test_user_data_works() {
         auto actor = stage_->new_actor();
 
-        this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
+        this->assert_true(actor->id()); //Make sure we set an id for the mesh
         this->assert_true(actor->auto_id() != 0); //Make sure we set a unique ID for the object
         this->assert_true(!actor->data->exists("data"));
         actor->data->stash((int)0xDEADBEEF, "data");

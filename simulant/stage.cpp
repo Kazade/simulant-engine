@@ -77,8 +77,8 @@ void Stage::cleanup() {
         stage_node->ask_owner_for_destruction();
     });
 
-    LightManager::clear();
-    ActorManager::clear();
+    LightManager::destroy_all();
+    ActorManager::destroy_all();
     CameraManager::delete_all_cameras();
 }
 
@@ -255,7 +255,7 @@ ParticleSystemPtr Stage::new_particle_system_with_parent_from_file(ActorID paren
 }
 
 ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {
-    return ParticleSystemManager::get(pid).lock().get();
+    return ParticleSystemManager::get(pid);
 }
 
 bool Stage::has_particle_system(ParticleSystemID pid) const {

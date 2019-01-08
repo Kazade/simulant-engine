@@ -34,7 +34,7 @@
 #include "generic/identifiable.h"
 #include "generic/cloneable.h"
 #include "generic/property.h"
-#include "generic/refcount_manager.h"
+#include "generic/object_manager.h"
 #include "behaviours/behaviour.h"
 #include "types.h"
 #include "interfaces.h"

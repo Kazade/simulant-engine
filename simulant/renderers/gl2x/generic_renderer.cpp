@@ -314,11 +314,13 @@ std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_v
 }
 
 smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
-    return program_manager_.make(GARBAGE_COLLECT_PERIODIC, vertex_shader_source, fragment_shader_source);
+    auto ret = program_manager_.make(vertex_shader_source, fragment_shader_source);
+    program_manager_.set_garbage_collection_method(ret, GARBAGE_COLLECT_PERIODIC);
+    return ret;
 }
 
 smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) {
-    return program_manager_.get(program_id).lock();
+    return program_manager_.get(program_id);
 }
 
 GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera):
