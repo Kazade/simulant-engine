@@ -213,9 +213,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             }
 
             offset += num_verts;
+            submeshptr->index_data->done();
         }
-
     }
+
+    mesh->vertex_data->done();
 
     L_DEBUG("Mesh loaded");
 }
