@@ -131,24 +131,29 @@ public:
         this->assert_true(actor->data->exists("data"));
         this->assert_equal((int)0xDEADBEEF, actor->data->get<int>("data"));
 
+        auto id = actor->id();
         stage_->delete_actor(actor->id());
 
-        this->assert_true(!stage_->has_actor(actor->id()));
+        this->assert_true(!stage_->has_actor(id));
     }
 
     void test_deleting_entities_deletes_children() {
-        auto mid = stage_->new_actor(); //Create the root mesh
-        auto cid1 = stage_->new_actor_with_parent(mid->id()); //Create a child
-        auto cid2 = stage_->new_actor_with_parent(cid1->id()); //Create a child of the child
+        auto m = stage_->new_actor(); //Create the root mesh
+        auto c1 = stage_->new_actor_with_parent(m->id()); //Create a child
+        auto c2 = stage_->new_actor_with_parent(c1->id()); //Create a child of the child
 
-        this->assert_equal((uint32_t)1, mid->count_children());
-        this->assert_equal((uint32_t)1, cid1->count_children());
-        this->assert_equal((uint32_t)0, cid2->count_children());
+        auto mid = m->id();
+        auto cid1 = c1->id();
+        auto cid2 = c2->id();
 
-        stage_->delete_actor(mid->id());
-        this->assert_true(!stage_->has_actor(mid->id()));
-        this->assert_true(!stage_->has_actor(cid1->id()));
-        this->assert_true(!stage_->has_actor(cid2->id()));
+        this->assert_equal((uint32_t)1, m->count_children());
+        this->assert_equal((uint32_t)1, c1->count_children());
+        this->assert_equal((uint32_t)0, c2->count_children());
+
+        stage_->delete_actor(mid);
+        this->assert_true(!stage_->has_actor(mid));
+        this->assert_true(!stage_->has_actor(cid1));
+        this->assert_true(!stage_->has_actor(cid2));
     }
 
     void test_basic_usage() {
