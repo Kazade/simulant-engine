@@ -49,7 +49,7 @@ HardwareBuffer* SubMesh::vertex_buffer() const {
 void SubMesh::prepare_buffers(Renderer* renderer) {
     parent_->prepare_buffers(renderer);
 
-    if(index_buffer_dirty_) {
+    if(index_buffer_dirty_ || !index_buffer_) {
         sync_buffer<IndexData, Renderer>(
             &index_buffer_, index_data_,
             renderer,

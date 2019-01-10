@@ -517,7 +517,7 @@ SubMesh* Mesh::submesh(const std::string& name) {
 }
 
 void Mesh::prepare_buffers(Renderer* renderer) {
-    if(shared_vertex_buffer_dirty_) {
+    if(shared_vertex_buffer_dirty_ || !shared_vertex_buffer_) {
         sync_buffer<VertexData, Renderer>(
             &shared_vertex_buffer_, vertex_data_.get(),
             renderer,
