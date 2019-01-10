@@ -1,4 +1,5 @@
 simulant/generic/object_manager.h
+simulant/loaders/deps/tiny_obj_loader.h
 tools/test_generator.py
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h

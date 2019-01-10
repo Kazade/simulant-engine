@@ -28,6 +28,7 @@
 
 namespace smlt {
 
+const std::string Material::BuiltIns::DEFAULT = "simulant/materials/${RENDERER}/default.kglm";
 const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/${RENDERER}/texture_only.kglm";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/${RENDERER}/diffuse_only.kglm";
 const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/${RENDERER}/alpha_texture.kglm";
@@ -243,7 +244,10 @@ void Material::update(float dt) {
     // The updating_disabled_ flag wasn't set so we
     // can safely update
     if(!updating_disabled_.test_and_set()) {
+        std::lock_guard<std::mutex> lock(pass_lock_);
         for(auto& p: passes_) {
+            assert(p);
+
             p->update(dt);
         }
 

@@ -45,6 +45,8 @@ bool Sprite::init() {
     actor_ = stage->new_actor_with_mesh(mesh_id_);
     actor_->set_parent(this);
 
+    actor_id_ = actor_->id();
+
     set_render_dimensions(1.0f, 1.0f);
 
     using namespace std::placeholders;
@@ -57,9 +59,10 @@ bool Sprite::init() {
 }
 
 void Sprite::cleanup() {
-    if(actor_ && stage->has_actor(actor_->id())) {
-        stage->delete_actor(actor_->id());
+    if(actor_ && stage->has_actor(actor_id_)) {
+        stage->delete_actor(actor_id_);
         actor_ = nullptr;
+        actor_id_ = ActorID();
     }
 }
 

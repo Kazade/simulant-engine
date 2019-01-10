@@ -96,6 +96,8 @@ private:
     float render_height_ = 1.0;
 
     ActorPtr actor_ = nullptr;
+    ActorID actor_id_;
+
     MeshID mesh_id_;
     MaterialID material_id_;
 

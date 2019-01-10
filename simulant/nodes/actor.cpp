@@ -49,6 +49,8 @@ Actor::~Actor() {
 void SubActor::prepare_buffers(Renderer *renderer) {
     if(submesh_) {
         submesh_->prepare_buffers(renderer);
+    } else {
+        L_WARN("No submesh attached to subactor!");
     }
 }
 
@@ -313,11 +315,21 @@ RenderableList Actor::_get_renderables(const Frustum &frustum, DetailLevel level
 
 
 VertexData* SubActor::get_vertex_data() const {
-    return submesh()->vertex_data.get();
+    auto sm = submesh();
+    assert(sm);
+
+    auto ret = sm->vertex_data.get();
+    assert(ret);
+    return ret;
 }
 
 IndexData* SubActor::get_index_data() const {
-    return submesh()->index_data.get();
+    auto sm = submesh();
+    assert(sm);
+
+    auto ret = sm->index_data.get();
+    assert(ret);
+    return ret;
 }
 
 }

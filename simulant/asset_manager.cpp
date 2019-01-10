@@ -745,7 +745,7 @@ MaterialID AssetManager::default_material_id() const {
 }
 
 unicode AssetManager::default_material_filename() const {
-    return window->resource_locator->locate_file(Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING);
+    return window->resource_locator->locate_file(Material::BuiltIns::DEFAULT);
 }
 
 // ========== FONTS ======================

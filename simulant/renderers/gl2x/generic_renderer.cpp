@@ -612,7 +612,10 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     renderable->prepare_buffers(renderer_);
 
     auto* vertex_buffer = renderable->vertex_attribute_buffer();
+    assert(vertex_buffer);
+
     auto* index_buffer = renderable->index_buffer();
+    assert(index_buffer);
 
     // Bind the buffers to the correct targets (purpose)
     vertex_buffer->bind(HARDWARE_BUFFER_VERTEX_ATTRIBUTES);

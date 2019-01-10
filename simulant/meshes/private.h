@@ -9,16 +9,18 @@ namespace smlt {
 
 template<typename Data, typename Allocator>
 void sync_buffer(HardwareBuffer::ptr* buffer, Data* data, Allocator* allocator, HardwareBufferPurpose purpose) {
-    if(!(*buffer) && data->count()) {
-        (*buffer) = allocator->hardware_buffers->allocate(
+    HardwareBuffer::ptr& target = *buffer;
+    if(!target && data->count()) {
+        target = allocator->hardware_buffers->allocate(
             data->data_size(),
             purpose,
             SHADOW_BUFFER_DISABLED
         );
+        assert(target);
     } else {
         // If we have a buffer, then resize it (possibly to zero)
-        if((*buffer)) {
-            (*buffer)->resize(data->data_size());
+        if(target) {
+            target->resize(data->data_size());
         }
 
         if(!data->count()) {
@@ -27,7 +29,8 @@ void sync_buffer(HardwareBuffer::ptr* buffer, Data* data, Allocator* allocator, 
         }
     }
 
-    (*buffer)->upload(*data);
+    assert(target);
+    target->upload(*data);
 }
 
 }

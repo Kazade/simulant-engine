@@ -297,6 +297,7 @@ class Material:
 
 public:
     struct BuiltIns {
+        static const std::string DEFAULT;
         static const std::string TEXTURE_ONLY;
         static const std::string DIFFUSE_ONLY;
         static const std::string ALPHA_TEXTURE;
