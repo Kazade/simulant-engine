@@ -65,7 +65,7 @@ public:
     void move_by(int32_t amount);
     void move_to(int32_t index);
     void move_to_end();
-    uint16_t move_next();
+    uint32_t move_next();
 
     void done();
 

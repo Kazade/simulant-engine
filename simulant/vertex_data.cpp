@@ -328,7 +328,7 @@ void VertexData::move_to(int32_t index) {
     cursor_position_ = index;
 }
 
-uint16_t VertexData::move_next() {
+uint32_t VertexData::move_next() {
     move_to(cursor_position_ + 1);
     return cursor_position_;
 }
