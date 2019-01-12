@@ -198,13 +198,16 @@ MeshID AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMetho
     return result;
 }
 
-MeshID AssetManager::new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+MeshID AssetManager::new_mesh_from_file(const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
     //Load the material
     smlt::MeshID mesh_id = new_mesh(VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
     auto loader = window->loader_for(path.encode());
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
-    loader->into(mesh(mesh_id));
+    LoaderOptions loader_options;
+    loader_options["mesh_options"] = options;
+
+    loader->into(mesh(mesh_id), loader_options);
 
     mesh_manager_.set_garbage_collection_method(mesh_id, garbage_collect, true);
     return mesh_id;
@@ -349,8 +352,8 @@ MeshID AssetManager::new_mesh_with_alias(const std::string& alias, VertexSpecifi
     return m;
 }
 
-MeshID AssetManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh_from_file(path, garbage_collect);
+MeshID AssetManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
+    MeshID m = new_mesh_from_file(path, options, garbage_collect);
     try {
         mesh_manager_.store_alias(alias, m);
     } catch(...) {

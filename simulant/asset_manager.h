@@ -24,7 +24,7 @@
 #include "generic/object_manager.h"
 #include "managers/window_holder.h"
 #include "loaders/heightmap_loader.h"
-
+#include "loader.h"
 #include "texture.h"
 #include "meshes/mesh.h"
 #include "material.h"
@@ -77,7 +77,11 @@ public:
     bool init();
 
     MeshID new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshID new_mesh_from_file(
+        const unicode& path,
+        const MeshLoadOptions& options=MeshLoadOptions(),
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
 
     /*
      * Given a submesh, this creates a new mesh with just that single submesh
@@ -100,7 +104,12 @@ public:
     MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MeshID new_mesh_with_alias(const std::string &alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_with_alias_from_file(const std::string& alias, const unicode &path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshID new_mesh_with_alias_from_file(
+        const std::string& alias,
+        const unicode &path,
+        const MeshLoadOptions& options=MeshLoadOptions(),
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
     MeshID new_mesh_with_alias_as_cube(const std::string &alias, float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_with_alias_as_sphere(const std::string& alias, float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_with_alias_as_rectangle(const std::string &name, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);

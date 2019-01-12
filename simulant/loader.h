@@ -152,6 +152,20 @@ private:
 };
 
 }
+
+
+struct MeshLoadOptions {
+    /* By default, no backface culling is applied to meshes, set this so that the materials
+     * generated inherit the cull mode you want */
+    CullMode cull_mode = CULL_MODE_NONE;
+
+    /* Some obj files have faces which have a diffuse texture, but no texture coordinates.
+     * The spec says that these should just have no texture applied, but in some files
+     * they need to be skipped entirely */
+    bool obj_include_faces_with_missing_texture_vertices = false;
+};
+
+
 }
 
 #endif

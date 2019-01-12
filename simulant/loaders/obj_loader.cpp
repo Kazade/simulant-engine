@@ -65,6 +65,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     L_DEBUG(_F("Loading mesh from {0}").format(filename_));
 
+    MeshLoadOptions mesh_opts;
+    if(options.count("mesh_options")) {
+        mesh_opts = smlt::any_cast<MeshLoadOptions>(options.at("mesh_options"));
+    }
+
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -116,6 +121,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         pass->set_ambient(smlt::Colour(material.ambient[0], material.ambient[1], material.ambient[2], alpha));
         pass->set_specular(smlt::Colour(material.specular[0], material.specular[1], material.specular[2], alpha));
         pass->set_shininess(material.shininess);
+        pass->set_cull_mode(mesh_opts.cull_mode);
 
         /* Apply the diffuse texture (if any) */
         if(!material.diffuse_texname.empty()) {
@@ -169,20 +175,24 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     float default_n [] = {0.0f, 0.0f, 1.0f};
 
     for(auto& shape: shapes) {
-        L_DEBUG(_F("Converting shape {0}").format(shape.name));
-
         uint32_t offset = 0;
         for(uint32_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f) {
             uint8_t num_verts = shape.mesh.num_face_vertices[f];
             assert(num_verts == 3 && "Only triangles supported");
 
-            auto submeshptr = material_submeshes.at(shape.mesh.material_ids[f]);
+            auto mat_id = shape.mesh.material_ids[f];
+
+            auto submeshptr = material_submeshes.at(mat_id);
 
             for(auto i = 0; i < num_verts; ++i) {
                 auto index = shape.mesh.indices[offset + i];
                 auto key = std::make_tuple(
                     index.vertex_index, index.normal_index, index.texcoord_index
                 );
+
+                if(!mesh_opts.obj_include_faces_with_missing_texture_vertices && index.texcoord_index == -1) {
+                    break;
+                }
 
                 auto it = shared_vertices.find(key);
                 if(it == shared_vertices.end()) {
@@ -215,6 +225,17 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             offset += num_verts;
             submeshptr->index_data->done();
         }
+    }
+
+    std::vector<std::string> empty;
+    mesh->each_submesh([&empty](std::string name, SubMeshPtr submesh) {
+        if(!submesh->index_data->count()) {
+            empty.push_back(name);
+        }
+    });
+
+    for(auto& name: empty) {
+        mesh->delete_submesh(name);
     }
 
     mesh->vertex_data->done();
