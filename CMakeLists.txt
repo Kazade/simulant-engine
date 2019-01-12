@@ -14,6 +14,7 @@ ENDIF()
 OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
+OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSantizer" ON)
 
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
@@ -29,6 +30,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-poin
 
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -Wextra -Wno-unused-parameter")
 
+IF(SIMULANT_ENABLE_ASAN)
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
     # For some reason, I need to explicitly specify the shared file
     # on Fedora. This is brittle, but I don't know how best to fix it
@@ -49,6 +51,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
         set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
         link_libraries(${ASAN_LIBRARY})
     ENDIF()
+ENDIF()
 ENDIF()
 
 
