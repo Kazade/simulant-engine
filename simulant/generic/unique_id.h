@@ -39,9 +39,11 @@ namespace _unique_id_impl {
 
     template<typename ResourceTypePtr>
     struct Members<ResourceTypePtr, false> {
-        ResourceTypePtr ptr = nullptr;
+        ResourceTypePtr ptr;
 
-        Members() = default;
+        Members():
+            ptr(nullptr) {}
+
         Members(ResourceTypePtr ptr):
             ptr(ptr) {}
 
