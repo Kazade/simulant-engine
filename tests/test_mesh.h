@@ -87,6 +87,7 @@ public:
 
     void test_mesh_garbage_collection() {
         auto initial = stage_->assets->mesh_count();
+        stage_->assets->set_garbage_collection_grace_period(1);
 
         auto mesh1 = generate_test_mesh(stage_);
         auto mesh2 = generate_test_mesh(stage_);
@@ -97,6 +98,8 @@ public:
         assert_equal(stage_->assets->mesh_count(), initial + 2);
 
         actor->set_mesh(mesh2);
+
+        stage_->assets->set_garbage_collection_grace_period(0);
         stage_->assets->run_garbage_collection();
 
         assert_equal(stage_->assets->mesh_count(), initial + 1);

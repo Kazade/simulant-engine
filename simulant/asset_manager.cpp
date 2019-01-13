@@ -143,6 +143,14 @@ void AssetManager::run_garbage_collection() {
     font_manager_.update();
 }
 
+void AssetManager::set_garbage_collection_grace_period(uint32_t period) {
+    material_manager_.set_garbage_collection_grace_period(period);
+    texture_manager_.set_garbage_collection_grace_period(period);
+    font_manager_.set_garbage_collection_grace_period(period);
+    sound_manager_.set_garbage_collection_grace_period(period);
+    mesh_manager_.set_garbage_collection_grace_period(period);
+}
+
 MeshPtr AssetManager::mesh(MeshID m) {
     if(parent_ && !has_mesh(m)) {
         return parent_->mesh(m);

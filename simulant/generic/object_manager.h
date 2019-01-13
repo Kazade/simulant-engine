@@ -14,7 +14,6 @@
 
 namespace smlt {
 
-const int GC_GRACE_PERIOD = 3;
 const bool DONT_REFCOUNT = false;
 const bool DO_REFCOUNT = true;
 
@@ -232,10 +231,10 @@ public:
                 std::chrono::system_clock::now() - meta.created
             );
 
-            int age_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(age).count();
+            uint32_t age_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(age).count();
 
             // 3 second grace period after creation
-            if(age_in_seconds < GC_GRACE_PERIOD) {
+            if(age_in_seconds < gc_grace_period_) {
                 collect = false;
             }
 
@@ -259,6 +258,10 @@ public:
         }
     }
 
+    void set_garbage_collection_grace_period(uint32_t period) {
+        gc_grace_period_ = period;
+    }
+
 private:
     typedef std::chrono::time_point<std::chrono::system_clock> date_time;
 
@@ -272,6 +275,7 @@ private:
 
     std::mutex metas_mutex_;
     std::unordered_map<IDType, ObjMeta> object_metas_;
+    std::atomic<uint32_t> gc_grace_period_ = ATOMIC_VAR_INIT(3);
 
     void on_make(IDType id) override {
         std::lock_guard<std::mutex> g(metas_mutex_);

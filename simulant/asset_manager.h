@@ -218,6 +218,8 @@ public:
 
     void run_garbage_collection();
 
+    void set_garbage_collection_grace_period(uint32_t period);
+
 private:
     AssetManager* parent_ = nullptr;
 
