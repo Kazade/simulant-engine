@@ -24,6 +24,9 @@ public:
     default_init_ptr(std::nullptr_t): ptr_(nullptr) {}
     default_init_ptr(const default_init_ptr<T>&) = default;
     default_init_ptr<T>& operator=(const default_init_ptr<T>&) = default;
+    default_init_ptr<T>& operator=(const std::nullptr_t) {
+        ptr_ = nullptr;
+    }
 
     default_init_ptr(T* p):
         ptr_(p) {}
