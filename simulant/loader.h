@@ -165,6 +165,7 @@ struct MeshLoadOptions {
     bool obj_include_faces_with_missing_texture_vertices = false;
 };
 
+#define MESH_LOAD_OPTIONS_KEY "mesh_options"
 
 }
 

@@ -2,6 +2,7 @@
 
 #include "simulant/test.h"
 #include "../simulant/partitioners/impl/spatial_hash.h"
+#include "../simulant/frustum.h"
 
 namespace {
 

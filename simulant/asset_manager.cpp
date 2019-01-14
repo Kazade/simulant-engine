@@ -213,7 +213,7 @@ MeshID AssetManager::new_mesh_from_file(const unicode& path, const MeshLoadOptio
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
     LoaderOptions loader_options;
-    loader_options["mesh_options"] = options;
+    loader_options[MESH_LOAD_OPTIONS_KEY] = options;
 
     loader->into(mesh(mesh_id), loader_options);
 

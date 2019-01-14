@@ -11,6 +11,20 @@ public:
         //Shouldn't throw
         smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj");
     }
+
+    void test_culling_method_applied() {
+        smlt::MeshLoadOptions opts;
+        opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
+
+        smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj", opts);
+        smlt::MeshPtr m = mid.fetch();
+
+        assert_equal(m->submesh_count(), 1);
+        assert_true(m->first_submesh()->material_id());
+
+        smlt::MaterialPtr mat = m->first_submesh()->material_id().fetch();
+        assert_equal(mat->first_pass()->cull_mode(), opts.cull_mode);
+    }
 };
 
 #endif // TEST_OBJ_LOADER_H

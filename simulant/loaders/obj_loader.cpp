@@ -66,8 +66,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     L_DEBUG(_F("Loading mesh from {0}").format(filename_));
 
     MeshLoadOptions mesh_opts;
-    if(options.count("mesh_options")) {
-        mesh_opts = smlt::any_cast<MeshLoadOptions>(options.at("mesh_options"));
+    if(options.count(MESH_LOAD_OPTIONS_KEY)) {
+        mesh_opts = smlt::any_cast<MeshLoadOptions>(
+            options.at(MESH_LOAD_OPTIONS_KEY)
+        );
     }
 
     tinyobj::attrib_t attrib;
@@ -190,7 +192,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                     index.vertex_index, index.normal_index, index.texcoord_index
                 );
 
-                if(!mesh_opts.obj_include_faces_with_missing_texture_vertices && index.texcoord_index == -1) {
+                /* If the material has a diffuse texture, and no texture, then ignore
+                 * if that's what's requested.
+                 * FIXME: Otherwise, just ignore the texture as per spec */
+                if(!mesh_opts.obj_include_faces_with_missing_texture_vertices &&
+                    index.texcoord_index == -1 &&
+                    !materials[mat_id].diffuse_texname.empty()) {
                     break;
                 }
 
