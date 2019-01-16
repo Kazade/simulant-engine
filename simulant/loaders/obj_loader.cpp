@@ -116,20 +116,24 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     uint32_t i = 0;
     for(auto& material: materials) {
         MaterialPtr new_mat = mesh->resource_manager().clone_default_material().fetch();
-        MaterialPass::ptr pass = new_mat->first_pass();
 
         auto alpha = (material.dissolve) ? 1.0f : 0.0f;
-        pass->set_diffuse(smlt::Colour(material.diffuse[0], material.diffuse[1], material.diffuse[2], alpha));
-        pass->set_ambient(smlt::Colour(material.ambient[0], material.ambient[1], material.ambient[2], alpha));
-        pass->set_specular(smlt::Colour(material.specular[0], material.specular[1], material.specular[2], alpha));
-        pass->set_shininess(material.shininess);
-        pass->set_cull_mode(mesh_opts.cull_mode);
+
+        new_mat->each([&](uint32_t i, MaterialPass* pass) {
+            pass->set_diffuse(smlt::Colour(material.diffuse[0], material.diffuse[1], material.diffuse[2], alpha));
+            pass->set_ambient(smlt::Colour(material.ambient[0], material.ambient[1], material.ambient[2], alpha));
+            pass->set_specular(smlt::Colour(material.specular[0], material.specular[1], material.specular[2], alpha));
+            pass->set_shininess(material.shininess);
+            pass->set_cull_mode(mesh_opts.cull_mode);
+        });
 
         /* Apply the diffuse texture (if any) */
         if(!material.diffuse_texname.empty()) {
             auto it = loaded_textures.find(material.diffuse_texname);
             if(it != loaded_textures.end()) {
-                pass->set_texture_unit(0, it->second->id());
+                new_mat->each([&](uint32_t i, MaterialPass* pass) {
+                    pass->set_texture_unit(0, it->second->id());
+                });
             } else {
                 std::vector<std::string> possible_locations;
 
@@ -148,7 +152,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 for(auto& texture_file: possible_locations) {
                     if(kfs::path::exists(texture_file)) {
                         auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
-                        pass->set_texture_unit(0, tex_id);
+                        new_mat->each([&](uint32_t i, MaterialPass* pass) {
+                            pass->set_texture_unit(0, tex_id);
+                        });
+
                         loaded_textures.insert(std::make_pair(material.diffuse_texname, tex_id.fetch()));
                         found = true;
                         break;

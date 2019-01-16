@@ -501,9 +501,15 @@ void Mesh::reverse_winding() {
     });
 }
 
-void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
+void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, int8_t pass) {
     each([=](const std::string& name, SubMesh* mesh) {
-        mesh->set_texture_on_material(unit, tex, pass);
+        if(pass == -1) {
+            for(auto i = 0; i < mesh->material_id().fetch()->pass_count(); ++i) {
+                mesh->set_texture_on_material(unit, tex, i);
+            }
+        } else {
+            mesh->set_texture_on_material(unit, tex, pass);
+        }
     });
 }
 

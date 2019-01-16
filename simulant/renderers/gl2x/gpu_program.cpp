@@ -60,7 +60,8 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
     GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_object_, name.c_str());
 
     if(location < 0 && !fail_silently) {
-        throw std::logic_error(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
+        L_ERROR(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
+        return -1;
     }
 
     uniform_cache_[uniform_name] = location;
@@ -69,36 +70,44 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
 
 void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t value, bool fail_silently) {
     GLint loc = locate_uniform(uniform_name, fail_silently);
-    if(loc >= 0) {
+    if(loc > -1) {
         GLCheck(glUniform1i, loc, value);
     }
 }
 
 void GPUProgram::set_uniform_float(const std::string& uniform_name, const float value, bool fail_silently) {
     int32_t loc = locate_uniform(uniform_name, fail_silently);
-    if(loc >= 0) {
+    if(loc > -1) {
         GLCheck(glUniform1f, loc, value);
     }
 }
 
 void GPUProgram::set_uniform_mat4x4(const std::string& uniform_name, const Mat4& matrix) {
     int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.data());
+    if(loc > -1) {
+        GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.data());
+    }
 }
 
 void GPUProgram::set_uniform_mat3x3(const std::string& uniform_name, const Mat3& matrix) {
     int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)matrix.data());
+    if(loc > -1) {
+        GLCheck(glUniformMatrix3fv, loc, 1, false, (GLfloat*)matrix.data());
+    }
 }
 
 void GPUProgram::set_uniform_vec3(const std::string& uniform_name, const Vec3& values) {
     int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniform3fv, loc, 1, (GLfloat*) &values);
+    if(loc > -1) {
+        GLCheck(glUniform3fv, loc, 1, (GLfloat*) &values);
+    }
 }
 
 void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& values) {
     int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
+    if(loc > -1) {
+        GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
+    }
 }
 
 void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {
