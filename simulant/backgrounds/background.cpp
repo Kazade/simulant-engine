@@ -99,7 +99,7 @@ void Background::set_spritesheet(TextureID texture_id, float frame_width, float 
     );
 
     auto mat = sprite_->material_id().fetch();
-    mat->first_pass()->set_depth_write_enabled(false);
+    mat->set_depth_write_enabled(false);
 }
 
 void Background::set_texture(TextureID texture_id) {
@@ -122,7 +122,7 @@ void Background::set_texture(TextureID texture_id) {
     );
 
     auto mat = sprite_->material_id().fetch();
-    mat->first_pass()->set_depth_write_enabled(false);
+    mat->set_depth_write_enabled(false);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {

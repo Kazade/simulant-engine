@@ -10,24 +10,36 @@
 
 class MaterialScriptTest : public smlt::test::SimulantTestCase {
 public:
-    void test_basic_material_script_parsing() {
+    void test_property_definitions_are_loaded_correctly() {
         const std::string text = R"(
-                BEGIN(pass)
-                    SET(TEXTURE_UNIT 0 "sample.tga")
+{
+    "custom_properties": [
+        {
+            "name": "texture_map",
+            "type": "texture",
+            "default": null
+        },
+        {
+            "name": "enable_texturing",
+            "type": "bool",
+            "default": true
+        },
+    ],
 
-                    BEGIN_DATA(vertex)
-                        #version 120
-                        void main() {
-                            gl_Position = vec4(1.0);
-                        }
-                    END_DATA(vertex)
-                    BEGIN_DATA(fragment)
-                        #version 120
-                        void main() {
-                            gl_FragColor = vec4(1.0);
-                        }
-                    END_DATA(fragment)
-                END(pass)
+    "property_values": {
+        "texture_map": "assets/textures/mytexture.png",
+        "s_diffuse": "1 0 0 0",
+        "s_ambient": "1 1 1 1"
+    }
+
+    "passes" [
+        {
+            "iteration": "once",
+            "vertex_shader": "assets/shader/default.vert",
+            "fragment_shader": "assets/shader/default.frag"
+        }
+    ]
+}
         )";
 
         auto mat = window->shared_assets->material(window->shared_assets->new_material());
@@ -38,8 +50,21 @@ public:
         smlt::MaterialScript script(stream);
         script.generate(*mat);
 
-        this->assert_equal((uint32_t)1, mat->pass_count());
-        this->assert_equal((uint32_t)1, mat->pass(0)->texture_unit_count());
+        assert_equal(mat->pass_count(), 1);
+        assert_true(mat->property("texture_map")->is_custom());
+        assert_equal(mat->property("texture_map")->type(), smlt::MATERIAL_PROPERTY_TYPE_TEXTURE);
+        assert_true(mat->property("texture_map")->is_set());
+        assert_equal(mat->property("texture_map")->value<TextureUnit>()->filename, "assets/textures/mytexture.png");
+
+        assert_equal(mat->pass(0)->iteration, smlt::MATERIAL_PASS_ITERATION_ONCE);
+        assert_equal(mat->pass(0)->vertex_shader->filename(), "assets/shader/default.vert");
+        assert_true(mat->pass(0)->vertex_shader->shader_id());
+
+        mat->each_pass([&](uint32_t i, MaterialPass* pass) {
+            assert_equal(pass->iteration, smlt::MATERIAL_PASS_ITERATION_ONCE);
+            assert_equal(pass->vertex_shader.filename(), "assets/shader/default.vert");
+            assert_true(pass->vertex_shader.shader_id());
+        });
 
         //TODO: Add tests to make sure that the shader has compiled correctly
     }

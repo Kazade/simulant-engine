@@ -46,6 +46,7 @@ const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/${R
  * is a built-in or not. Please keep this up-to-date when changing the above materials!
  */
 const std::map<std::string, std::string> Material::BUILT_IN_NAMES = {
+    {"DEFAULT", Material::BuiltIns::DEFAULT},
     {"TEXTURE_ONLY", Material::BuiltIns::TEXTURE_ONLY},
     {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
     {"ALPHA_TEXTURE", Material::BuiltIns::ALPHA_TEXTURE},
@@ -81,306 +82,38 @@ static const std::string DEFAULT_FRAG_SHADER = R"(
     }
 )";
 
-TextureUnit::TextureUnit(MaterialPass &pass):
-    pass_(&pass),
-    time_elapsed_(0),
-    current_texture_(0) {
+Material::Material(MaterialID id, AssetManager* asset_manager):
+    generic::Identifiable<MaterialID>(id) {
 
-    //Initialize the texture unit to the default texture
-    AssetManager& rm = pass.material->resource_manager();
-    texture_unit_ = rm.texture(rm.default_texture_id());
+    initialize_default_properties();
 }
 
-TextureUnit::TextureUnit(MaterialPass &pass, TextureID tex_id):
-    pass_(&pass),
-    time_elapsed_(0),
-    current_texture_(0) {
+void Material::initialize_default_properties() {
+    define_property(EMISSION_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_emission", Vec4(1, 1, 1, 1));
+    define_property(AMBIENT_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_ambient", Vec4(1, 1, 1, 1));
+    define_property(DIFFUSE_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_diffuse", Vec4(1, 1, 1, 1));
+    define_property(SPECULAR_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_specular", Vec4(1, 1, 1, 1));
+    define_property(SHININESS_PROPERTY, MATERIAL_PROPERTY_TYPE_FLOAT, "s_shininess", 0);
 
-    //Initialize the texture unit
-    AssetManager& rm = pass.material->resource_manager();
-    texture_unit_ = rm.texture(tex_id);
+    define_property(DIFFUSE_MAP_PROPERTY, MATERIAL_PROPERTY_TYPE_TEXTURE, "s_diffuse_map");
+    define_property(NORMAL_MAP_PROPERTY, MATERIAL_PROPERTY_TYPE_TEXTURE, "s_normal_map");
+    define_property(SPECULAR_MAP_PROPERTY, MATERIAL_PROPERTY_TYPE_TEXTURE, "s_specular_map");
+
+    define_property(BLENDING_ENABLE_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_blending_enabled", false);
+    define_property(BLEND_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_blend_mode", BLEND_NONE);
+
+    define_property(DEPTH_TEST_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_depth_test_enabled", true);
+    // define_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
+
+    define_property(DEPTH_WRITE_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_depth_write_enabled", true);
+
+    define_property(CULLING_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_culling_enaled", true);
+    define_property(CULL_MODE_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_cull_mode", CULL_MODE_BACK_FACE);
+
+    define_property(SHADE_MODEL_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_shade_model", SHADE_MODEL_SMOOTH);
+
+    define_property(LIGHTING_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_lighting_enabled", false);
 }
 
-TextureUnit::TextureUnit(MaterialPass &pass, std::vector<TextureID> textures, double duration):
-    pass_(&pass),
-    animated_texture_duration_(duration),
-    time_elapsed_(0),
-    current_texture_(0),
-    texture_unit_(0) {
-
-    AssetManager& rm = pass.material->resource_manager();
-
-    for(TextureID tid: textures) {
-        animated_texture_units_.push_back(rm.texture(tid));
-    }
-}
-
-TextureID TextureUnit::texture_id() const {
-    if(is_animated()) {
-        return animated_texture_units_[current_texture_]->id();
-    } else {
-        return texture_unit_->id();
-    }
-}
-
-Material::Material(MaterialID mat_id, AssetManager *resource_manager):
-    Resource(resource_manager),
-    generic::Identifiable<MaterialID>(mat_id) {
-
-}
-
-Material::~Material() {
-
-}
-
-uint32_t Material::new_pass() {
-    std::lock_guard<std::mutex> lock(pass_lock_);
-
-    passes_.push_back(MaterialPass::ptr(new MaterialPass(this)));
-    pass_count_ = passes_.size();
-
-    on_pass_created(passes_.back().get());
-    return passes_.size() - 1; //Return the index
-}
-
-void Material::delete_pass(uint32_t index) {
-    std::lock_guard<std::mutex> lock(pass_lock_);
-
-    auto pass = passes_.at(index);
-    passes_.erase(passes_.begin() + index);
-    pass_count_ = passes_.size();
-
-    on_pass_destroyed(pass.get());
-}
-
-MaterialPass::ptr Material::pass(uint32_t index) {
-    std::lock_guard<std::mutex> lock(pass_lock_);
-    return passes_.at(index);
-}
-
-MaterialPass::MaterialPass(Material *material):
-    material_(material),
-    iteration_(ITERATE_ONCE),    
-    max_iterations_(1),
-    blend_(BLEND_NONE),
-    depth_writes_enabled_(true),
-    depth_test_enabled_(true),
-    point_size_(1) {
-
-}
-
-void MaterialPass::set_texture_unit(uint32_t texture_unit_id, TextureID tex) {
-    if(!allow_textures_) {
-        throw std::logic_error("Attempted to set a texture on a pass which prevents them");
-    }
-
-    if(texture_unit_id >= MAX_TEXTURE_UNITS) {
-        L_ERROR(_F("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
-        throw std::logic_error(_F("Texture unit ID is too high. {0} >= {1}").format(texture_unit_id, MAX_TEXTURE_UNITS));
-    }
-
-    TextureID previous_texture;
-
-    if(texture_unit_id >= texture_units_.size()) {
-        texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
-    } else {
-        previous_texture = texture_units_[texture_unit_id].texture_id();
-    }
-    texture_units_.at(texture_unit_id) = TextureUnit(*this, tex);
-
-    material->on_pass_changed(this);
-}
-
-void MaterialPass::set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration) {
-    if(texture_unit_id >= MAX_TEXTURE_UNITS) {
-        throw std::logic_error("Texture unit ID is too high");
-    }
-
-    if(texture_units_.size() <= texture_unit_id) {
-        texture_units_.resize(texture_unit_id + 1, TextureUnit(*this));
-    }
-    texture_units_[texture_unit_id] = TextureUnit(*this, textures, duration);
-
-    material->on_pass_changed(this);
-}
-
-void MaterialPass::set_iteration(IterationType iter_type, uint32_t max) {
-    iteration_ = iter_type;
-    max_iterations_ = max;
-
-    material->on_pass_changed(this);
-}
-
-void MaterialPass::set_albedo(float reflectiveness) {
-    albedo_ = reflectiveness;
-    if(is_reflective()) {
-        material->reflective_passes_.insert(this);
-    } else {
-        material->reflective_passes_.erase(this);
-    }
-
-    material->on_pass_changed(this);
-}
-
-void MaterialPass::set_gpu_program_id(GPUProgramID program_id) {
-    gpu_program_ = program_id;
-
-    if(program_id) {
-        // We hold a shared_ptr to the program so it doesn't get destroyed while we're using it
-        gpu_program_ref_ = material->resource_manager().window->renderer->gpu_program(program_id);
-    } else {
-        gpu_program_ref_.reset();
-    }
-}
-
-
-void Material::set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex) {
-    for(auto& p: passes_) {
-        p->set_texture_unit(texture_unit_id, tex);
-    }
-}
-
-void Material::update(float dt) {
-    // The updating_disabled_ flag wasn't set so we
-    // can safely update
-    if(!updating_disabled_.test_and_set()) {
-        std::lock_guard<std::mutex> lock(pass_lock_);
-        for(auto& p: passes_) {
-            assert(p);
-
-            p->update(dt);
-        }
-
-        // Clear when we are done
-        updating_disabled_.clear();
-    }
-}
-
-TextureUnit TextureUnit::new_clone(MaterialPass& owner) const {
-    TextureUnit ret(owner);
-
-    ret.animated_texture_units_ = animated_texture_units_;
-    ret.animated_texture_duration_ = animated_texture_duration_;
-    ret.time_elapsed_ = time_elapsed_;
-    ret.current_texture_ = current_texture_;
-    ret.texture_unit_ = texture_unit_;
-    ret.texture_matrix_ = texture_matrix_;
-
-    return ret;
-}
-
-MaterialPass::ptr MaterialPass::new_clone(Material* owner) const {
-    MaterialPass::ptr ret = MaterialPass::create(owner);
-
-    for(auto& p: uniforms_.auto_uniforms()) {
-        ret->uniforms_.register_auto(p.first, p.second);
-    }
-
-    for(auto& p: attributes_.auto_attributes()) {
-        ret->attributes_.register_auto(p.first, p.second);
-    }
-
-    ret->gpu_program_ = gpu_program_;
-    ret->gpu_program_ref_ = gpu_program_ref_;
-
-    ret->diffuse_ = diffuse_;
-    ret->ambient_ = ambient_;
-    ret->specular_ = specular_;
-    ret->shininess_ = shininess_;
-
-    ret->allow_textures_ = allow_textures_;
-
-    for(auto& unit: texture_units_) {
-        ret->texture_units_.push_back(unit.new_clone(*ret));
-    }
-
-    ret->iteration_ = iteration_;
-    ret->max_iterations_ = max_iterations_;
-    ret->blend_ = blend_;
-    ret->depth_writes_enabled_ = depth_writes_enabled_;
-    ret->depth_test_enabled_ = depth_test_enabled_;
-    ret->lighting_enabled_ = lighting_enabled_;
-    ret->point_size_ = point_size_;
-    ret->albedo_ = albedo_;
-    ret->reflection_texture_unit_ = reflection_texture_unit_;
-    ret->polygon_mode_ = polygon_mode_;
-
-    return ret;
-}
-
-MaterialID Material::new_clone(AssetManager* target_resource_manager, GarbageCollectMethod garbage_collect) const {
-
-    MaterialID ret = target_resource_manager->new_material(garbage_collect);
-    assert(ret);
-
-    auto mat = target_resource_manager->material(ret);
-
-    for(auto pass: passes_) {
-        mat->passes_.push_back(pass->new_clone(mat.get()));
-    }
-
-    mat->pass_count_ = pass_count_;
-
-    for(auto& p: properties_) {
-        switch(p.second.type) {
-        case MATERIAL_PROPERTY_TYPE_INT: {
-            mat->create_int_property(p.first);
-            mat->set_int_property(p.first, p.second.int_value);
-        } break;
-        case MATERIAL_PROPERTY_TYPE_FLOAT: {
-            mat->create_float_property(p.first);
-            mat->set_float_property(p.first, p.second.float_value);
-        } break;
-        default:
-            assert(0 && "Not Implemented");
-        }
-    }
-
-    return ret;
-}
-
-void Material::set_int_property(const std::string &name, int value) {
-    auto& property = properties_.at(name);
-    property.type = MATERIAL_PROPERTY_TYPE_INT;
-    property.int_value = value;
-    property.is_set = true;
-}
-
-void Material::set_float_property(const std::string &name, float value) {
-    auto& property = properties_.at(name);
-    property.type = MATERIAL_PROPERTY_TYPE_FLOAT;
-    property.float_value = value;
-    property.is_set = true;
-}
-
-void Material::create_int_property(const std::string &name) {
-    if(!properties_.count(name)) {
-        MaterialProperty new_prop;
-        new_prop.type = MATERIAL_PROPERTY_TYPE_INT;
-        properties_[name] = new_prop;
-    }
-}
-
-void Material::create_float_property(const std::string &name) {
-    if(!properties_.count(name)) {
-        MaterialProperty new_prop;
-        new_prop.type = MATERIAL_PROPERTY_TYPE_FLOAT;
-        properties_[name] = new_prop;
-    }
-}
-
-void Material::on_pass_created(MaterialPass *pass) {
-    signal_material_pass_created_(id(), pass);
-    signal_material_changed_(id());
-}
-
-void Material::on_pass_changed(MaterialPass *pass) {
-    signal_material_changed_(id());
-}
-
-void Material::on_pass_destroyed(MaterialPass* pass) {
-    signal_material_pass_destroyed_(id(), pass);
-    signal_material_changed_(id());
-}
 
 }

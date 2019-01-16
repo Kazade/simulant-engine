@@ -108,7 +108,7 @@ bool AssetManager::init() {
     L_DEBUG("- Applying texture to material");
 
     //Set the default material's first texture to the default (white) texture
-    mat->first_pass()->set_texture_unit(0, default_texture_id_);
+    mat->set_diffuse_map(default_texture_id_);
 
     L_DEBUG("- Loading fonts");
     default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
@@ -540,7 +540,8 @@ MaterialID AssetManager::new_material_from_texture(TextureID texture_id, Garbage
     MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    material(m)->set_texture_unit_on_all_passes(0, texture_id);
+    material(m)->set_diffuse_map(texture_id);
+
     material_manager_.set_garbage_collection_method(m, garbage_collect, true);
     return m;
 }
