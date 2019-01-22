@@ -83,16 +83,6 @@ void SubMesh::set_material_id(MaterialID mat) {
             throw std::runtime_error("Tried to set invalid material on submesh");
         }
 
-        material_change_connection_ = material_->signal_material_changed().connect(
-            [=](MaterialID) {
-                /* FIXME: This is a hack! We want material_changed event to take some kind of event
-                 * structure so we can signal different types of event changes. Here we are signaling that
-                 * the material passes changed so the material itself changed - not that it we changed from
-                 * one material to another. Still, we need to make sure that we trigger the signal so that the
-                 * render queue updates. */
-                signal_material_changed_(this, material_->id(), material_->id());
-            }
-        );
     } else {
         // Reset the material
         material_.reset();
@@ -207,10 +197,6 @@ void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> c
             );
         }
     }
-}
-
-void SubMesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
-    material_->pass(pass)->set_texture_unit(unit, tex);
 }
 
 /**

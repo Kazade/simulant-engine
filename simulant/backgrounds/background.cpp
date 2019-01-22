@@ -67,11 +67,9 @@ void Background::update(float dt) {
     }
 
     auto mat = sprite_->material_id().fetch();
-    auto pass = mat->first_pass();
-    if(pass->texture_unit_count()) {
-        pass->texture_unit(0).scroll_x(x_rate_ * dt);
-        pass->texture_unit(0).scroll_y(y_rate_ * dt);
-    }
+
+    mat->diffuse_map()->scroll_x(x_rate_ * dt);
+    mat->diffuse_map()->scroll_y(y_rate_ * dt);
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {

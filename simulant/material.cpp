@@ -19,11 +19,13 @@
 
 #include <stdexcept>
 #include <cassert>
+#include <map>
 
 #include "window.h"
 #include "material.h"
 #include "asset_manager.h"
 #include "renderers/renderer.h"
+#include "renderers/gl2x/gpu_program.h"
 
 
 namespace smlt {
@@ -45,7 +47,7 @@ const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/${R
 /* This list is used by the particle script loader to determine if a specified material
  * is a built-in or not. Please keep this up-to-date when changing the above materials!
  */
-const std::map<std::string, std::string> Material::BUILT_IN_NAMES = {
+const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"DEFAULT", Material::BuiltIns::DEFAULT},
     {"TEXTURE_ONLY", Material::BuiltIns::TEXTURE_ONLY},
     {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
@@ -83,36 +85,75 @@ static const std::string DEFAULT_FRAG_SHADER = R"(
 )";
 
 Material::Material(MaterialID id, AssetManager* asset_manager):
-    generic::Identifiable<MaterialID>(id) {
+    Resource(asset_manager),
+    generic::Identifiable<MaterialID>(id),
+    passes_({MaterialPass(this), MaterialPass(this), MaterialPass(this), MaterialPass(this)}) {
 
     initialize_default_properties();
 }
 
+std::vector<std::string> Material::defined_properties_by_type(MaterialPropertyType type) const {
+    std::map<uint32_t, std::string> ordered_properties;
+    for(auto& p: defined_properties_) {
+        if(p.second.type == type) {
+            ordered_properties.insert(std::make_pair(p.second.order, p.first));
+        }
+    }
+
+    std::vector<std::string> ret;
+    for(auto& p: ordered_properties) {
+        ret.push_back(p.second);
+    }
+
+    return ret;
+}
+
 void Material::initialize_default_properties() {
-    define_property(EMISSION_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_emission", Vec4(1, 1, 1, 1));
-    define_property(AMBIENT_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_ambient", Vec4(1, 1, 1, 1));
-    define_property(DIFFUSE_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_diffuse", Vec4(1, 1, 1, 1));
-    define_property(SPECULAR_PROPERTY, MATERIAL_PROPERTY_TYPE_VEC4, "s_specular", Vec4(1, 1, 1, 1));
-    define_property(SHININESS_PROPERTY, MATERIAL_PROPERTY_TYPE_FLOAT, "s_shininess", 0);
+    define_property(MATERIAL_PROPERTY_TYPE_VEC4, EMISSION_PROPERTY, "s_material_emission", Vec4(1, 1, 1, 1));
+    define_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, "s_material_ambient", Vec4(1, 1, 1, 1));
+    define_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, "s_material_diffuse", Vec4(1, 1, 1, 1));
+    define_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, "s_material_specular", Vec4(1, 1, 1, 1));
+    define_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0);
 
-    define_property(DIFFUSE_MAP_PROPERTY, MATERIAL_PROPERTY_TYPE_TEXTURE, "s_diffuse_map");
-    define_property(NORMAL_MAP_PROPERTY, MATERIAL_PROPERTY_TYPE_TEXTURE, "s_normal_map");
-    define_property(SPECULAR_MAP_PROPERTY, MATERIAL_PROPERTY_TYPE_TEXTURE, "s_specular_map");
+    define_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, "s_diffuse_map");
+    define_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map");
+    define_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map");
 
-    define_property(BLENDING_ENABLE_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_blending_enabled", false);
-    define_property(BLEND_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_blend_mode", BLEND_NONE);
+    define_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
+    define_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", BLEND_NONE);
 
-    define_property(DEPTH_TEST_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_depth_test_enabled", true);
+    define_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
     // define_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
 
-    define_property(DEPTH_WRITE_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_depth_write_enabled", true);
+    define_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
 
-    define_property(CULLING_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_culling_enaled", true);
-    define_property(CULL_MODE_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_cull_mode", CULL_MODE_BACK_FACE);
+    define_property(MATERIAL_PROPERTY_TYPE_BOOL, CULLING_ENABLED_PROPERTY, "s_culling_enabled", true);
+    define_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", CULL_MODE_BACK_FACE);
 
-    define_property(SHADE_MODEL_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_shade_model", SHADE_MODEL_SMOOTH);
+    define_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", SHADE_MODEL_SMOOTH);
+    define_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", POLYGON_MODE_FILL);
 
-    define_property(LIGHTING_ENABLED_PROPERTY, MATERIAL_PROPERTY_TYPE_BOOL, "s_lighting_enabled", false);
+    define_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lights_enabled", false);
+    define_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_textures_enabled", true);
+    define_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0);
+
+    define_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_POSITION_PROPERTY, "s_light_position");
+}
+
+std::string PropertyValue::shader_variable() const {
+    return defined_property_->shader_variable;
+}
+
+std::string PropertyValue::name() const {
+    return defined_property_->name;
+}
+
+MaterialPropertyType PropertyValue::type() const {
+    return defined_property_->type;
+}
+
+GPUProgramID MaterialPass::gpu_program_id() const {
+    return program_->id();
 }
 
 

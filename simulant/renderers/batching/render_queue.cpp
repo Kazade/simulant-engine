@@ -111,7 +111,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
     for(auto& batches: batches_) {
         IterationType pass_iteration_type;
         MaterialID material_id;
-        MaterialPass::ptr material_pass;
+        MaterialPass* material_pass = nullptr;
 
         const RenderGroup* last_group = nullptr;
 
@@ -143,9 +143,9 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
                     material_id = this_mat_id;
                     material_pass = stage_->assets->material(material_id)->pass(pass);
-                    pass_iteration_type = material_pass->iteration();
+                    pass_iteration_type = material_pass->iteration_type();
 
-                    visitor->change_material_pass(last_pass.get(), material_pass.get());
+                    visitor->change_material_pass(last_pass, material_pass);
                 }
 
                 uint32_t iterations = 1;
@@ -153,9 +153,9 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 // Get any lights which are visible and affecting the renderable this frame
                 std::vector<LightPtr> lights = renderable->lights_affecting_this_frame();
 
-                if(pass_iteration_type == ITERATE_N) {
+                if(pass_iteration_type == ITERATION_TYPE_N) {
                     iterations = material_pass->max_iterations();
-                } else if(pass_iteration_type == ITERATE_ONCE_PER_LIGHT) {
+                } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
                     iterations = lights.size();
                 }
 
@@ -170,14 +170,14 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                         next = nullptr;
                     }
 
-                    if(pass_iteration_type == ITERATE_ONCE_PER_LIGHT && (i== 0 || light != next)) {
+                    if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT && (i== 0 || light != next)) {
                         visitor->change_light(light, next);
-                    } else if(pass_iteration_type == ITERATE_N || pass_iteration_type == ITERATE_ONCE) {
+                    } else if(pass_iteration_type == ITERATION_TYPE_N || pass_iteration_type == ITERATION_TYPE_ONCE) {
                         visitor->apply_lights(&lights[0], (uint8_t) lights.size());
                     }
 
                     light = next;
-                    visitor->visit(renderable, material_pass.get(), i);
+                    visitor->visit(renderable, material_pass, i);
                 }
 
                 last_group = current_group;

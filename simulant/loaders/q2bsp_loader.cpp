@@ -171,10 +171,10 @@ void Q2BSPLoader::generate_materials(
 
         auto mat = material_id.fetch();
 
-        mat->first_pass()->set_texture_unit(0, tex_id);
+        mat->set_diffuse_map(tex_id);
         if(uses_lightmap) {
             // Set the second texture unit to the lightmap texture if necessary
-            mat->first_pass()->set_texture_unit(1, lightmap_texture);
+            mat->set_light_map(lightmap_texture);
         }
 
         auto tex = tex_id.fetch();

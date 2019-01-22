@@ -37,16 +37,35 @@ namespace smlt {
 batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL1RenderGroupImpl>(renderable->render_priority());
 
-    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        if(!material_pass->texturing_enabled()) {
+    uint8_t used_count = 0;
+
+    if(!material_pass->is_texturing_enabled()) {
+        for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
             impl->texture_id[i] = 0;
         }
+    } else {
+        if(material_pass->diffuse_map()) {
+            impl->texture_id[used_count++] = texture_objects_.at(
+                material_pass->diffuse_map()->texture_id
+            );
+        }
 
-        if(i < material_pass->texture_unit_count()) {
-            auto tex_id = material_pass->texture_unit(i).texture_id();
-            impl->texture_id[i] = this->texture_objects_.at(tex_id);
-        } else {
-            impl->texture_id[i] = 0;
+        if(material_pass->light_map()) {
+            impl->texture_id[used_count++] = texture_objects_.at(
+                material_pass->light_map()->texture_id
+            );
+        }
+
+        if(material_pass->normal_map()) {
+            impl->texture_id[used_count++] = texture_objects_.at(
+                material_pass->normal_map()->texture_id
+            );
+        }
+
+        if(material_pass->specular_map()) {
+            impl->texture_id[used_count++] = texture_objects_.at(
+                material_pass->specular_map()->texture_id
+            );
         }
     }
 

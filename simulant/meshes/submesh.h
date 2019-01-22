@@ -53,9 +53,7 @@ public:
         return bounds_;
     }
 
-    void reverse_winding();
-    void set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass=0);
-
+    void reverse_winding();   
     void _recalc_bounds();
 
     void generate_texture_coordinates_cube(uint32_t texture=0);

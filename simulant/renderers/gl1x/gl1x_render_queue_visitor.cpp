@@ -120,31 +120,34 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     pass_ = next;
 
     if(!prev || prev->diffuse() != next->diffuse()) {
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &next->diffuse().r);
+        auto diffuse = next->diffuse();
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &diffuse.r);
     }
 
     if(!prev || prev->ambient() != next->ambient()) {
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &next->ambient().r);
+        auto ambient = next->ambient();
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
     }
 
     if(!prev || prev->specular() != next->specular()) {
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &next->specular().r);
+        auto specular = next->specular();
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
     }
 
     if(!prev || prev->shininess() != next->shininess()) {
         GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
     }
 
-    if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
-        if(next->depth_test_enabled()) {
+    if(!prev || prev->is_depth_test_enabled() != next->is_depth_test_enabled()) {
+        if(next->is_depth_test_enabled()) {
             GLCheck(glEnable, GL_DEPTH_TEST);
         } else {
             GLCheck(glDisable, GL_DEPTH_TEST);
         }
     }
 
-    if(!prev || prev->depth_write_enabled() != next->depth_write_enabled()) {
-        if(next->depth_write_enabled()) {
+    if(!prev || prev->is_depth_write_enabled() != next->is_depth_write_enabled()) {
+        if(next->is_depth_write_enabled()) {
             GLCheck(glDepthMask, GL_TRUE);
         } else {
             GLCheck(glDepthMask, GL_FALSE);
@@ -152,16 +155,16 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 
     /* Enable lighting on the pass appropriately */
-    if(!prev || prev->lighting_enabled() != next->lighting_enabled()) {
-        if(next->lighting_enabled()) {
+    if(!prev || prev->is_lighting_enabled() != next->is_lighting_enabled()) {
+        if(next->is_lighting_enabled()) {
             GLCheck(glEnable, GL_LIGHTING);
         } else {
             GLCheck(glDisable, GL_LIGHTING);
         }
     }
 
-    if(!prev || prev->texturing_enabled() != next->texturing_enabled()) {
-        if(next->texturing_enabled()) {
+    if(!prev || prev->is_texturing_enabled() != next->is_texturing_enabled()) {
+        if(next->is_texturing_enabled()) {
             for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
                 GLCheck(glActiveTexture, GL_TEXTURE0 + i);
                 GLCheck(glEnable, GL_TEXTURE_2D);
@@ -180,7 +183,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 
     if(!prev || prev->polygon_mode() != next->polygon_mode()) {
-        switch(next->polygon_mode()) {
+        switch((PolygonMode) next->polygon_mode()) {
             case POLYGON_MODE_POINT:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
             break;
@@ -237,8 +240,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     };
 
-    if(!prev || prev->blending() != next->blending()) {
-        set_blending_mode(next->blending());
+    if(!prev || prev->blend_func() != next->blend_func()) {
+        set_blending_mode(next->blend_func());
     }
 
     if(!prev || prev->shade_model() != next->shade_model()) {

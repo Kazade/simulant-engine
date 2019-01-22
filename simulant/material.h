@@ -26,16 +26,20 @@
 #include "generic/identifiable.h"
 #include "generic/optional.h"
 #include "generic/any/any.h"
+#include "generic/managed.h"
 #include "types.h"
+#include "loadable.h"
+#include "interfaces/updateable.h"
 
 namespace smlt {
 
-const std::string DIFFUSE_PROPERTY = "s_diffuse";
-const std::string AMBIENT_PROPERTY = "s_ambient";
-const std::string SPECULAR_PROPERTY = "s_specular";
-const std::string EMISSION_PROPERTY = "s_emission";
-const std::string SHININESS_PROPERTY = "s_shininess";
+const std::string DIFFUSE_PROPERTY = "s_material_diffuse";
+const std::string AMBIENT_PROPERTY = "s_material_ambient";
+const std::string SPECULAR_PROPERTY = "s_material_specular";
+const std::string EMISSION_PROPERTY = "s_material_emission";
+const std::string SHININESS_PROPERTY = "s_material_shininess";
 const std::string DIFFUSE_MAP_PROPERTY = "s_diffuse_map";
+const std::string LIGHT_MAP_PROPERTY = "s_light_map";
 const std::string NORMAL_MAP_PROPERTY = "s_normal_map";
 const std::string SPECULAR_MAP_PROPERTY = "s_specular_map";
 const std::string DEPTH_WRITE_ENABLED_PROPERTY = "s_depth_write";
@@ -47,7 +51,22 @@ const std::string CULLING_ENABLED_PROPERTY = "s_culling_enabled";
 const std::string CULL_MODE_PROPERTY = "s_cull_mode";
 const std::string SHADE_MODEL_PROPERTY = "s_shade_model";
 const std::string LIGHTING_ENABLED_PROPERTY = "s_lighting_enabled";
+const std::string TEXTURING_ENABLED_PROPERTY = "s_texturing_enabled";
+const std::string POINT_SIZE_PROPERTY = "s_point_size";
+const std::string POLYGON_MODE_PROPERTY = "s_polygon_mode";
+const std::string COLOUR_MATERIAL_PROPERTY = "s_colour_material";
+const std::string LIGHT_POSITION_PROPERTY = "s_light_position";
+const std::string LIGHT_AMBIENT_PROPERTY = "s_light_ambient";
+const std::string LIGHT_DIFFUSE_PROPERTY = "s_light_diffuse";
+const std::string LIGHT_SPECULAR_PROPERTY = "s_light_specular";
+const std::string LIGHT_CONSTANT_ATTENUATION_PROPERTY = "s_constant_attenuation";
+const std::string LIGHT_LINEAR_ATTENUATION_PROPERTY = "s_linear_attenuation";
+const std::string LIGHT_QUADRATIC_ATTENUATION_PROPERTY = "s_quadratic_attenuation";
 
+const std::string VIEW_MATRIX_PROPERTY = "s_view";
+const std::string MODELVIEW_PROJECTION_MATRIX_PROPERTY = "s_modelview_projection";
+const std::string PROJECTION_MATRIX_PROPERTY = "s_projection";
+const std::string MODELVIEW_MATRIX_PROPERTY = "s_modelview";
 
 enum MaterialPropertyType {
     MATERIAL_PROPERTY_TYPE_TEXTURE,
@@ -70,6 +89,9 @@ struct TextureUnit {
     std::string filename;
     TextureID texture_id;
     Mat4 texture_matrix;
+
+    void scroll_x(float amount);
+    void scroll_y(float amount);
 };
 
 namespace _material_impl {
@@ -86,6 +108,11 @@ public:
     template<typename T>
     T value() const;
 
+    std::string shader_variable() const;
+
+    std::string name() const;
+
+    MaterialPropertyType type() const;
 private:
     friend class Material;
 
@@ -98,6 +125,7 @@ private:
 
 namespace _material_impl {
     struct DefinedProperty {
+        uint32_t order;  // Keep track of the order properties were defined
         std::string name;
         std::string shader_variable;
         MaterialPropertyType type;
@@ -151,7 +179,26 @@ namespace _material_impl {
             set_property_value(DIFFUSE_MAP_PROPERTY, unit);
         }
 
+        void set_light_map(TextureID texture_id) {
+            TextureUnit unit;
+            unit.texture_id = texture_id;
+
+            set_property_value(LIGHT_MAP_PROPERTY, unit);
+        }
+
         TextureUnit* diffuse_map() const {
+            return nullptr;
+        }
+
+        TextureUnit* light_map() const {
+            return nullptr; // FIXME: How to return a pointer to an optional any...
+        }
+
+        TextureUnit* normal_map() const {
+            return nullptr; // FIXME: How to return a pointer to an optional any...
+        }
+
+        TextureUnit* specular_map() const {
             return nullptr; // FIXME: How to return a pointer to an optional any...
         }
 
@@ -179,7 +226,7 @@ namespace _material_impl {
             return property(SHININESS_PROPERTY)->value<float>();
         }
 
-        bool blending_enabled() const {
+        bool is_blending_enabled() const {
             return property(BLENDING_ENABLE_PROPERTY)->value<bool>();
         }
 
@@ -187,8 +234,72 @@ namespace _material_impl {
             set_property_value(BLENDING_ENABLE_PROPERTY, v);
         }
 
+        void set_blend_func(BlendType b) {
+            set_property_value(BLEND_FUNC_PROPERTY, (int) b);
+        }
+
+        BlendType blend_func() const {
+            return (BlendType) property(BLEND_FUNC_PROPERTY)->value<int>();
+        }
+
+        bool is_blended() const {
+            return blend_func() != BLEND_NONE;
+        }
+
         void set_depth_write_enabled(bool v) {
             set_property_value(DEPTH_WRITE_ENABLED_PROPERTY, v);
+        }
+
+        bool is_depth_write_enabled() const {
+            return property(DEPTH_WRITE_ENABLED_PROPERTY)->value<bool>();
+        }
+
+        void set_cull_mode(CullMode mode) {
+            set_property_value(CULL_MODE_PROPERTY, (int) mode);
+        }
+
+        CullMode cull_mode() const {
+            return (CullMode) property(CULL_MODE_PROPERTY)->value<int>();
+        }
+
+        void set_depth_test_enabled(bool v) {
+            set_property_value(DEPTH_TEST_ENABLED_PROPERTY, v);
+        }
+
+        bool is_depth_test_enabled() const {
+            return property(DEPTH_TEST_ENABLED_PROPERTY)->value<bool>();
+        }
+
+        void set_lighting_enabled(bool v) {
+            set_property_value(LIGHTING_ENABLED_PROPERTY, v);
+        }
+
+        bool is_lighting_enabled() const {
+            return property(LIGHTING_ENABLED_PROPERTY)->value<bool>();
+        }
+
+        void set_texturing_enabled(bool v) {
+            set_property_value(TEXTURING_ENABLED_PROPERTY, v);
+        }
+
+        bool is_texturing_enabled() const {
+            return property(TEXTURING_ENABLED_PROPERTY)->value<bool>();
+        }
+
+        float point_size() const {
+            return property(POINT_SIZE_PROPERTY)->value<float>();
+        }
+
+        PolygonMode polygon_mode() const {
+            return (PolygonMode) property(POLYGON_MODE_PROPERTY)->value<int>();
+        }
+
+        ShadeModel shade_model() const {
+            return (ShadeModel) property(SHADE_MODEL_PROPERTY)->value<int>();
+        }
+
+        ColourMaterial colour_material() const {
+            return (ColourMaterial) property(COLOUR_MATERIAL_PROPERTY)->value<int>();
         }
 
     protected:
@@ -206,14 +317,47 @@ public:
 class MaterialPass:
     public _material_impl::PropertyValueHolder  {
 public:
+    MaterialPass(Material* material):
+        material_(material) {
+
+    }
+
+    void set_iteration_type(IterationType iteration) {
+        iteration_type_ = iteration;
+    }
+
+    IterationType iteration_type() const {
+        return iteration_type_;
+    }
+
+    GPUProgramID gpu_program_id() const;
+
+    void set_gpu_program(GPUProgramID program) {
+        // If the renderer doesn't support GPU programs then this
+        // will be an empty ID
+        if(program) {
+            program_ = program.fetch();
+        }
+    }
+
+    uint8_t max_iterations() const {
+        return max_iterations_;
+    }
+
+    const Material* material() const {
+        return material_;
+    }
 
 private:
+    Material* material_;
     ShaderUnit shader_;
 
     IterationType iteration_type_ = ITERATION_TYPE_ONCE;
     uint8_t max_iterations_ = 1;
 
     std::unordered_map<std::string, PropertyValue> property_values_;
+
+    GPUProgramPtr program_;
 };
 
 
@@ -242,7 +386,7 @@ public:
         static const std::string DIFFUSE_PARTICLE;
     };
 
-    static const std::map<std::string, std::string> BUILT_IN_NAMES;
+    static const std::unordered_map<std::string, std::string> BUILT_IN_NAMES;
 
     Material(MaterialID id, AssetManager *asset_manager);
 
@@ -251,22 +395,60 @@ public:
         MaterialPropertyType type,
         std::string name,
         std::string shader_variable,
-        const smlt::optional<T>& default_value=smlt::optional<T>()
+        const T& default_value
     ) {
         _material_impl::DefinedProperty prop;
+        prop.order = defined_properties_.size();
         prop.name = name;
         prop.type = type;
-        //FIXME: set default
+        prop.default_value = smlt::any(default_value);
         prop.shader_variable = shader_variable;
 
         defined_properties_.insert(std::make_pair(name, prop));
     }
 
+    void define_property(
+        MaterialPropertyType type,
+        std::string name,
+        std::string shader_variable
+    ) {
+        _material_impl::DefinedProperty prop;
+        prop.order = defined_properties_.size();
+        prop.name = name;
+        prop.type = type;
+        prop.shader_variable = shader_variable;
+
+        defined_properties_.insert(std::make_pair(name, prop));
+    }
+
+    MaterialPropertyType defined_property_type(const std::string& name) const {
+        return defined_properties_.at(name).type;
+    }
+
+    std::vector<std::string> defined_properties_by_type(MaterialPropertyType type) const;
+    std::vector<std::string> defined_custom_properties() const;
+
+    bool property_is_defined(const std::string& name) const {
+        return defined_properties_.count(name) > 0;
+    }
 
 // ---------- Passes ------------------------
-    void set_pass_count(uint8_t pass_count);
+    void set_pass_count(uint8_t pass_count) {
+        if(pass_count < pass_count_) {
+            // We're removing a pass, we should reset any that are now unused
+            for(auto i = pass_count; i < pass_count_; ++i) {
+                passes_[i] = MaterialPass(this);
+            }
+        }
 
-    const MaterialPass* pass(uint8_t pass) const {
+        pass_count_ = pass_count;
+    }
+
+    uint8_t pass_count() const {
+        return pass_count_;
+    }
+
+    MaterialPass* pass(uint8_t pass) {
         if(pass < pass_count_) {
             return &passes_[pass];
         }
@@ -289,6 +471,25 @@ private:
 
     uint8_t pass_count_ = 0;
     std::array<MaterialPass, 4> passes_;
+
+
+    /* Assignment operator and copy constructor must be private
+     * to prevent accidental copying. However the object manager needs
+     * to be able to clone materials, hence the friendship.
+     */
+
+protected:
+    friend class _object_manager_impl::ObjectManagerBase<
+        MaterialID, Material, std::shared_ptr<smlt::Material>,
+        _object_manager_impl::ToSharedPtr<smlt::Material>
+    >;
+
+    Material(const Material& rhs);
+    Material& operator=(const Material& rhs);
+
+    MaterialPtr new_clone() {
+        return std::shared_ptr<Material>(new Material(*this));
+    }
 };
 
 

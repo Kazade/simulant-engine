@@ -121,7 +121,6 @@ bool AssetManager::init() {
 
 void AssetManager::update(float dt) {
     material_manager_.each([dt](uint32_t, MaterialPtr mat) {
-        mat->update_behaviours(dt);
         mat->update(dt);
     });
 
@@ -501,13 +500,14 @@ MaterialID AssetManager::new_material_from_file(const unicode& path, GarbageColl
 
     assert(template_id);
 
-    /* Take the template, clone it, and set garbage_collection appropriately */
-    auto new_mat = material(template_id)->new_clone(this, GARBAGE_COLLECT_NEVER).fetch();
+    /* Templates are always created in the base manager, we clone from the base manager into this
+     * manager (which might be the same manager) */
+    auto new_mat_id = base_manager()->material_manager_.clone(template_id, &this->material_manager_);
 
-    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat->id()));
+    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat_id));
 
-    material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect, true);
-    return new_mat->id();
+    material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect, true);
+    return new_mat_id;
 }
 
 MaterialID AssetManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
