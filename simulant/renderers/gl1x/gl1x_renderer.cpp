@@ -44,27 +44,27 @@ batcher::RenderGroup GL1XRenderer::new_render_group(Renderable *renderable, Mate
             impl->texture_id[i] = 0;
         }
     } else {
-        if(material_pass->diffuse_map()) {
+        if(material_pass->diffuse_map().texture_id) {
             impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->diffuse_map()->texture_id
+                material_pass->diffuse_map().texture_id
             );
         }
 
-        if(material_pass->light_map()) {
+        if(material_pass->light_map().texture_id) {
             impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->light_map()->texture_id
+                material_pass->light_map().texture_id
             );
         }
 
-        if(material_pass->normal_map()) {
+        if(material_pass->normal_map().texture_id) {
             impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->normal_map()->texture_id
+                material_pass->normal_map().texture_id
             );
         }
 
-        if(material_pass->specular_map()) {
+        if(material_pass->specular_map().texture_id) {
             impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->specular_map()->texture_id
+                material_pass->specular_map().texture_id
             );
         }
     }

@@ -63,33 +63,33 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"DIFFUSE_PARTICLE", Material::BuiltIns::DIFFUSE_PARTICLE}
 };
 
-static const std::string DEFAULT_VERT_SHADER = R"(
-    attribute vec3 vertex_position;
-    attribute vec4 vertex_diffuse;
-
-    uniform mat4 modelview_projection;
-
-    varying vec4 diffuse;
-
-    void main() {
-        diffuse = vertex_diffuse;
-        gl_Position = (modelview_projection * vec4(vertex_position, 1.0));
-    }
-)";
-
-static const std::string DEFAULT_FRAG_SHADER = R"(
-    varying vec4 diffuse;
-    void main() {
-        gl_FragColor = diffuse;
-    }
-)";
-
 Material::Material(MaterialID id, AssetManager* asset_manager):
     Resource(asset_manager),
     generic::Identifiable<MaterialID>(id),
+    _material_impl::PropertyValueHolder(this),
     passes_({MaterialPass(this), MaterialPass(this), MaterialPass(this), MaterialPass(this)}) {
 
     initialize_default_properties();
+}
+
+std::vector<std::string> Material::defined_custom_properties() const {
+    std::map<uint32_t, std::string> ordered_properties;
+    for(auto& p: defined_properties_) {
+        if(p.second.is_custom) {
+            ordered_properties.insert(std::make_pair(p.second.order, p.first));
+        }
+    }
+
+    std::vector<std::string> ret;
+    for(auto& p: ordered_properties) {
+        ret.push_back(p.second);
+    }
+
+    return ret;
+}
+
+void Material::update(float dt) {
+
 }
 
 std::vector<std::string> Material::defined_properties_by_type(MaterialPropertyType type) const {
@@ -109,35 +109,35 @@ std::vector<std::string> Material::defined_properties_by_type(MaterialPropertyTy
 }
 
 void Material::initialize_default_properties() {
-    define_property(MATERIAL_PROPERTY_TYPE_VEC4, EMISSION_PROPERTY, "s_material_emission", Vec4(1, 1, 1, 1));
-    define_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, "s_material_ambient", Vec4(1, 1, 1, 1));
-    define_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, "s_material_diffuse", Vec4(1, 1, 1, 1));
-    define_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, "s_material_specular", Vec4(1, 1, 1, 1));
-    define_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, EMISSION_PROPERTY, "s_material_emission", Vec4(1, 1, 1, 1));
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, "s_material_ambient", Vec4(1, 1, 1, 1));
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, "s_material_diffuse", Vec4(1, 1, 1, 1));
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, "s_material_specular", Vec4(1, 1, 1, 1));
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0);
 
-    define_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, "s_diffuse_map");
-    define_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map");
-    define_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, "s_diffuse_map");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map");
 
-    define_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
-    define_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", BLEND_NONE);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", BLEND_NONE);
 
-    define_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
-    // define_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
+    // define_builtin_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
 
-    define_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
 
-    define_property(MATERIAL_PROPERTY_TYPE_BOOL, CULLING_ENABLED_PROPERTY, "s_culling_enabled", true);
-    define_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", CULL_MODE_BACK_FACE);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, CULLING_ENABLED_PROPERTY, "s_culling_enabled", true);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", CULL_MODE_BACK_FACE);
 
-    define_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", SHADE_MODEL_SMOOTH);
-    define_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", POLYGON_MODE_FILL);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", SHADE_MODEL_SMOOTH);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", POLYGON_MODE_FILL);
 
-    define_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lights_enabled", false);
-    define_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_textures_enabled", true);
-    define_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lights_enabled", false);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_textures_enabled", true);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0);
 
-    define_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_POSITION_PROPERTY, "s_light_position");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_POSITION_PROPERTY, "s_light_position");
 }
 
 std::string PropertyValue::shader_variable() const {
@@ -148,6 +148,10 @@ std::string PropertyValue::name() const {
     return defined_property_->name;
 }
 
+bool PropertyValue::is_custom() const {
+    return defined_property_->is_custom;
+}
+
 MaterialPropertyType PropertyValue::type() const {
     return defined_property_->type;
 }
@@ -156,5 +160,44 @@ GPUProgramID MaterialPass::gpu_program_id() const {
     return program_->id();
 }
 
+void TextureUnit::scroll_x(float amount) {
+    Mat4 diff = Mat4::as_translation(Vec3(amount, 0, 0));
+    *texture_matrix_ = *texture_matrix_ * diff;
+}
+
+void TextureUnit::scroll_y(float amount) {
+    Mat4 diff = Mat4::as_translation(Vec3(0, amount, 0));
+    *texture_matrix_ = *texture_matrix_ * diff;
+}
+
+void _material_impl::PropertyValueHolder::set_property_value(const std::string &name, bool value) {
+    PropertyValue v(&top_level_->defined_properties_.at(name));
+    v.value_ = smlt::any(value);
+
+    auto ret = property_values_.emplace(std::make_pair(name, v));
+    if(!ret.second) {
+        property_values_.at(name) = v;
+    }
+}
+
+void _material_impl::PropertyValueHolder::set_property_value(const std::string &name, smlt::Vec4 value) {
+    PropertyValue v(&top_level_->defined_properties_.at(name));
+    v.value_ = smlt::any(value);
+
+    auto ret = property_values_.emplace(std::make_pair(name, v));
+    if(!ret.second) {
+        property_values_.at(name) = v;
+    }
+}
+
+void _material_impl::PropertyValueHolder::set_property_value(const std::string &name, smlt::TextureUnit value) {
+    PropertyValue v(&top_level_->defined_properties_.at(name));
+    v.value_ = smlt::any(value);
+
+    auto ret = property_values_.emplace(std::make_pair(name, v));
+    if(!ret.second) {
+        property_values_.at(name) = v;
+    }
+}
 
 }

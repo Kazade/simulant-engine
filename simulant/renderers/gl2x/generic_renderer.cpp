@@ -88,10 +88,17 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
         auto property_value = material_pass->property(defined_property);
 
         // Do we use this texture property? Then bind the texture appropriately
+        // FIXME: Is this right? The GL1 renderer uses the existence of a texture_id
+        // to decide whether or not to bind a texture to a unit. This checks the variable exists
+        // and also whether there's a texture ID. The question is, should the material have some other
+        // type of existence check for texture properties? Is checking the texture_id right for all situations?
+        // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
         auto loc = program->locate_uniform(property_value->shader_variable(), true);
         if(loc > -1 && (texture_unit + 1u) < MAX_TEXTURE_UNITS) {
-            TextureUnit* unit = property_value->value<TextureUnit>();
-            impl->texture_id[texture_unit++] = texture_objects_.at(unit->texture_id);
+            TextureUnit unit = property_value->value<TextureUnit>();
+            if(unit.texture_id) {
+                impl->texture_id[texture_unit++] = texture_objects_.at(unit.texture_id);
+            }
         }
     }
 
@@ -203,6 +210,8 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
         auto varname = ps_property->shader_variable();
         program->set_uniform_float(varname, pass->point_size());
     }
+
+    // FIXME: Send texture matrix properties
 
     /*
     auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
@@ -535,6 +544,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
     auto mvp_prop = pass->property(MODELVIEW_PROJECTION_MATRIX_PROPERTY);
     auto mv_prop = pass->property(MODELVIEW_MATRIX_PROPERTY);
     auto p_prop = pass->property(PROJECTION_MATRIX_PROPERTY);
+    auto itmv_prop = pass->property(INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY);
 
     auto v_loc = program->locate_uniform(v_prop->shader_variable());
     if(v_loc > -1) {
@@ -568,13 +578,15 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
         );
     }
 
-    if(pass->uniforms->uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
+    auto itmv_loc = program->locate_uniform(itmv_prop->shader_variable());
+    if(itmv_loc > -1) {
+        // PERF: Recalculating every frame will be costly!
         Mat3 inverse_transpose_modelview(modelview);
         inverse_transpose_modelview.inverse();
         inverse_transpose_modelview.transpose();
 
         program->set_uniform_mat3x3(
-            pass->uniforms->auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
+            itmv_prop->shader_variable(),
             inverse_transpose_modelview
         );
     }

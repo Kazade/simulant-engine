@@ -67,6 +67,12 @@ const std::string VIEW_MATRIX_PROPERTY = "s_view";
 const std::string MODELVIEW_PROJECTION_MATRIX_PROPERTY = "s_modelview_projection";
 const std::string PROJECTION_MATRIX_PROPERTY = "s_projection";
 const std::string MODELVIEW_MATRIX_PROPERTY = "s_modelview";
+const std::string INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY = "s_inverse_transpose_modelview";
+
+const std::string DIFFUSE_MAP_MATRIX_PROPERTY = "s_diffuse_map_matrix";
+const std::string LIGHT_MAP_MATRIX_PROPERTY = "s_light_map_matrix";
+const std::string NORMAL_MAP_MATRIX_PROPERTY = "s_normal_map_matrix";
+const std::string SPECULAR_MAP_MATRIX_PROPERTY = "s_specular_map_matrix";
 
 enum MaterialPropertyType {
     MATERIAL_PROPERTY_TYPE_TEXTURE,
@@ -88,18 +94,32 @@ enum IterationType {
 struct TextureUnit {
     std::string filename;
     TextureID texture_id;
-    Mat4 texture_matrix;
+
+    Mat4& texture_matrix() {
+        return *texture_matrix_;
+    }
+
+    const Mat4& texture_matrix() const {
+        return *texture_matrix_;
+    }
 
     void scroll_x(float amount);
     void scroll_y(float amount);
+
+private:
+    /* Shared pointer so that copying a TextureUnit also copies the matrix */
+    std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
 };
 
 namespace _material_impl {
     class DefinedProperty;
+    class PropertyValueHolder;
 }
 
 class PropertyValue {
 public:
+    friend class _material_impl::PropertyValueHolder;
+
     /* Has this property had the default overridden? */
     bool is_set() const {
         return value_.has_value();
@@ -109,13 +129,11 @@ public:
     T value() const;
 
     std::string shader_variable() const;
-
     std::string name() const;
+    bool is_custom() const;
 
     MaterialPropertyType type() const;
 private:
-    friend class Material;
-
     PropertyValue(_material_impl::DefinedProperty* defined_property):
         defined_property_(defined_property) {}
 
@@ -130,12 +148,20 @@ namespace _material_impl {
         std::string shader_variable;
         MaterialPropertyType type;
         smlt::optional<smlt::any> default_value;
+        bool is_custom = true;
     };
 
     class PropertyValueHolder {
+    private:
+        Material* top_level_;
     public:
+        PropertyValueHolder(Material* top_level):
+            top_level_(top_level) {}
+
         void set_property_value(const std::string& name, const std::string& value);
+
         void set_property_value(const std::string& name, bool value);
+
         void set_property_value(const std::string& name, Vec4 value);
         void set_property_value(const std::string& name, TextureUnit unit);
 
@@ -186,20 +212,20 @@ namespace _material_impl {
             set_property_value(LIGHT_MAP_PROPERTY, unit);
         }
 
-        TextureUnit* diffuse_map() const {
-            return nullptr;
+        TextureUnit diffuse_map() const {
+            return property(DIFFUSE_MAP_PROPERTY)->value<TextureUnit>();
         }
 
-        TextureUnit* light_map() const {
-            return nullptr; // FIXME: How to return a pointer to an optional any...
+        TextureUnit light_map() const {
+            return property(LIGHT_MAP_PROPERTY)->value<TextureUnit>();
         }
 
-        TextureUnit* normal_map() const {
-            return nullptr; // FIXME: How to return a pointer to an optional any...
+        TextureUnit normal_map() const {
+            return property(NORMAL_MAP_PROPERTY)->value<TextureUnit>();
         }
 
-        TextureUnit* specular_map() const {
-            return nullptr; // FIXME: How to return a pointer to an optional any...
+        TextureUnit specular_map() const {
+            return property(SPECULAR_MAP_PROPERTY)->value<TextureUnit>();
         }
 
         Colour emission() const {
@@ -318,6 +344,7 @@ class MaterialPass:
     public _material_impl::PropertyValueHolder  {
 public:
     MaterialPass(Material* material):
+        _material_impl::PropertyValueHolder(material),
         material_(material) {
 
     }
@@ -370,6 +397,8 @@ class Material:
     public _material_impl::PropertyValueHolder {
 
 public:
+    friend class _material_impl::PropertyValueHolder;
+
     struct BuiltIns {
         static const std::string DEFAULT;
         static const std::string TEXTURE_ONLY;
@@ -389,6 +418,7 @@ public:
     static const std::unordered_map<std::string, std::string> BUILT_IN_NAMES;
 
     Material(MaterialID id, AssetManager *asset_manager);
+    virtual ~Material() {}
 
     template<typename T>
     void define_property(
@@ -478,14 +508,46 @@ private:
      * to be able to clone materials, hence the friendship.
      */
 
+    template<typename T>
+    void define_builtin_property(
+        MaterialPropertyType type,
+        std::string name,
+        std::string shader_variable,
+        const T& default_value
+    ) {
+        _material_impl::DefinedProperty prop;
+        prop.order = defined_properties_.size();
+        prop.name = name;
+        prop.type = type;
+        prop.default_value = smlt::any(default_value);
+        prop.shader_variable = shader_variable;
+        prop.is_custom = false;
+
+        defined_properties_.insert(std::make_pair(name, prop));
+    }
+
+    void define_builtin_property(
+        MaterialPropertyType type,
+        std::string name,
+        std::string shader_variable
+    ) {
+        _material_impl::DefinedProperty prop;
+        prop.order = defined_properties_.size();
+        prop.name = name;
+        prop.type = type;
+        prop.shader_variable = shader_variable;
+        prop.is_custom = false;
+
+        defined_properties_.insert(std::make_pair(name, prop));
+    }
 protected:
     friend class _object_manager_impl::ObjectManagerBase<
         MaterialID, Material, std::shared_ptr<smlt::Material>,
         _object_manager_impl::ToSharedPtr<smlt::Material>
     >;
 
-    Material(const Material& rhs);
-    Material& operator=(const Material& rhs);
+    Material(const Material& rhs) = default;
+    Material& operator=(const Material& rhs) = default;
 
     MaterialPtr new_clone() {
         return std::shared_ptr<Material>(new Material(*this));

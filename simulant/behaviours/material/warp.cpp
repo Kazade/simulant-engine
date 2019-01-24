@@ -26,10 +26,10 @@ namespace material {
 
 void Warp::update(float dt) {
     auto pass = material->pass(0);
-    auto& tex_unit = pass->texture_unit(0);
+    auto tex_unit = pass->diffuse_map();
 
-    tex_unit.matrix()[0] = 1.0 + (sin(time_) * 0.25);
-    tex_unit.matrix()[5] = 1.0 + (sin(time_) * 0.25);
+    tex_unit.texture_matrix()[0] = 1.0 + (sin(time_) * 0.25);
+    tex_unit.texture_matrix()[5] = 1.0 + (sin(time_) * 0.25);
 
     time_ += dt * 0.25;
 }
