@@ -142,6 +142,44 @@ private:
 };
 
 namespace _material_impl {
+    template<typename T>
+    struct MaterialTypeForType {};
+
+    template<>
+    struct MaterialTypeForType<bool> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_BOOL;
+    };
+
+    template<>
+    struct MaterialTypeForType<float> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_FLOAT;
+    };
+
+    template<>
+    struct MaterialTypeForType<int> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_INT;
+    };
+
+    template<>
+    struct MaterialTypeForType<Vec2> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC2;
+    };
+
+    template<>
+    struct MaterialTypeForType<Vec3> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC3;
+    };
+
+    template<>
+    struct MaterialTypeForType<Vec4> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC4;
+    };
+
+    template<>
+    struct MaterialTypeForType<TextureUnit> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_TEXTURE;
+    };
+
     struct DefinedProperty {
         uint32_t order;  // Keep track of the order properties were defined
         std::string name;
@@ -158,21 +196,17 @@ namespace _material_impl {
         PropertyValueHolder(Material* top_level):
             top_level_(top_level) {}
 
-        void set_property_value(const std::string& name, const std::string& value);
+        template<typename T>
+        void set_property_value(const std::string& name, const T& value);
 
-        void set_property_value(const std::string& name, bool value);
-
-        void set_property_value(const std::string& name, Vec4 value);
-        void set_property_value(const std::string& name, TextureUnit unit);
-
-        const PropertyValue* property(const std::string& name) const {
-            auto it = property_values_.find(name);
-            if(it == property_values_.end()) {
-                return nullptr;
-            }
-
-            return &it->second;
+        /* Special case to make setting texture values more straightforward */
+        void set_property_value(const std::string& name, TextureID tex_id) {
+            TextureUnit unit;
+            unit.texture_id = tex_id;
+            set_property_value(name, unit);
         }
+
+        const PropertyValue* property(const std::string& name) const;
 
         void unset_property_value(const std::string& name);
 
@@ -435,6 +469,7 @@ public:
         prop.shader_variable = shader_variable;
 
         defined_properties_.insert(std::make_pair(name, prop));
+        set_property_value(name, default_value);
     }
 
     void define_property(
@@ -524,6 +559,7 @@ private:
         prop.is_custom = false;
 
         defined_properties_.insert(std::make_pair(name, prop));
+        set_property_value(name, default_value);
     }
 
     void define_builtin_property(
@@ -571,6 +607,25 @@ T PropertyValue::value() const {
     }
 
     return ret;
+}
+
+namespace _material_impl {
+
+template<typename T>
+void PropertyValueHolder::set_property_value(const std::string& name, const T& value) {
+    _material_impl::DefinedProperty* defined_property = &top_level_->defined_properties_.at(name);
+
+    assert(defined_property->type == _material_impl::MaterialTypeForType<T>::type);
+
+    PropertyValue v(defined_property);
+    v.value_ = smlt::any(value);
+
+    auto ret = property_values_.emplace(std::make_pair(name, v));
+    if(!ret.second) {
+        property_values_.at(name) = v;
+    }
+}
+
 }
 
 }

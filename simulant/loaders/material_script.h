@@ -39,7 +39,7 @@ public:
 class MaterialScript :
     public Managed<MaterialScript> {
 public:
-    MaterialScript(std::shared_ptr<std::istream> data);
+    MaterialScript(std::shared_ptr<std::istream> data, const unicode &filename);
     void generate(Material& material);
 
 private:
@@ -56,7 +56,7 @@ class MaterialScriptLoader:
 public:
     MaterialScriptLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {
-        parser_ = MaterialScript::create(data);
+        parser_ = MaterialScript::create(data, filename);
     }
 
     void into(Loadable& resource, const LoaderOptions& options) override;
@@ -69,7 +69,7 @@ class MaterialScriptLoaderType : public LoaderType {
 public:
     unicode name() { return "material"; }
     bool supports(const unicode& filename) const {
-        return filename.lower().contains(".kglm");
+        return filename.lower().contains(".smat");
     }
 
     Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {

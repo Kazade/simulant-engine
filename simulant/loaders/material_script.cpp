@@ -25,7 +25,7 @@
 #include "../asset_manager.h"
 #include "../utils/gl_thread_check.h"
 #include "../renderers/renderer.h"
-
+#include "../generic/raii.h"
 #include "../deps/jsonic/jsonic.h"
 
 
@@ -35,7 +35,8 @@
 
 namespace smlt {
 
-MaterialScript::MaterialScript(std::shared_ptr<std::istream> data):
+MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode& filename):
+    filename_(filename),
     data_(*data.get()) {
 
 }
@@ -45,17 +46,22 @@ static void define_property(Material& material, MaterialPropertyType prop_type, 
     std::string name = prop["name"]; // FIXME: Sanitize!
     auto shader_var = name; // FIXME: Should be definable, and should be checked for validity
 
-    smlt::optional<bool> def;
     if(!prop["default"].is_none()) {
-        def = (bool) prop["default"];
-    }
+        auto def = (T) prop["default"];
 
-    material.define_property(
-        prop_type,
-        name,
-        shader_var,
-        def
-    );
+        material.define_property(
+            prop_type,
+            name,
+            shader_var,
+            def
+        );
+    } else {
+        material.define_property(
+            prop_type,
+            name,
+            shader_var
+        );
+    }
 }
 
 void MaterialScript::generate(Material& material) {
@@ -159,7 +165,8 @@ void MaterialScript::generate(Material& material) {
 
     for(auto i = 0u; i < json["passes"].length(); ++i) {
         auto& pass = json["passes"][i];
-        std::string iteration = pass["iteration"];
+
+        std::string iteration = (pass.has_key("iteration")) ? (std::string) pass["iteration"] : "once";
 
         if(iteration == "once") {
             material.pass(i)->set_iteration_type(ITERATION_TYPE_ONCE);
@@ -173,6 +180,19 @@ void MaterialScript::generate(Material& material) {
         if(renderer->supports_gpu_programs()) {
             std::string vertex_shader_path = pass["vertex_shader"];
             std::string fragment_shader_path = pass["fragment_shader"];
+
+            auto parent_dir = unicode(kfs::path::dir_name(filename_.encode()));
+
+            bool added = false;
+
+            // Make sure we always remove the search path we add (if it didn't exist before)
+            raii::Finally then([&]() {
+                if(added) {
+                    window->resource_locator->remove_search_path(parent_dir);
+                }
+            });
+
+            added = window->resource_locator->add_search_path(parent_dir);
 
             auto vertex_shader = window->resource_locator->read_file(vertex_shader_path);
             auto fragment_shader = window->resource_locator->read_file(fragment_shader_path);

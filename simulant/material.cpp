@@ -30,8 +30,8 @@
 
 namespace smlt {
 
-const std::string Material::BuiltIns::DEFAULT = "simulant/materials/${RENDERER}/default.kglm";
-const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/${RENDERER}/texture_only.kglm";
+const std::string Material::BuiltIns::DEFAULT = "simulant/materials/${RENDERER}/default.smat";
+const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/${RENDERER}/texture_only.smat";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/${RENDERER}/diffuse_only.kglm";
 const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/${RENDERER}/alpha_texture.kglm";
 const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "simulant/materials/${RENDERER}/diffuse_with_lighting.kglm";
@@ -113,14 +113,15 @@ void Material::initialize_default_properties() {
     define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, "s_material_ambient", Vec4(1, 1, 1, 1));
     define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, "s_material_diffuse", Vec4(1, 1, 1, 1));
     define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, "s_material_specular", Vec4(1, 1, 1, 1));
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0.0f);
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, "s_diffuse_map");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, LIGHT_MAP_PROPERTY, "s_light_map");
     define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map");
     define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map");
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", BLEND_NONE);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", (int) BLEND_NONE);
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
     // define_builtin_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
@@ -128,16 +129,19 @@ void Material::initialize_default_properties() {
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, CULLING_ENABLED_PROPERTY, "s_culling_enabled", true);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", CULL_MODE_BACK_FACE);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", (int) CULL_MODE_BACK_FACE);
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", SHADE_MODEL_SMOOTH);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", POLYGON_MODE_FILL);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", (int) SHADE_MODEL_SMOOTH);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", (int) POLYGON_MODE_FILL);
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lights_enabled", false);
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_textures_enabled", true);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0f);
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_POSITION_PROPERTY, "s_light_position");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_AMBIENT_PROPERTY, "s_light_ambient");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_DIFFUSE_PROPERTY, "s_light_diffuse");
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_SPECULAR_PROPERTY, "s_light_specular");
 }
 
 std::string PropertyValue::shader_variable() const {
@@ -170,34 +174,18 @@ void TextureUnit::scroll_y(float amount) {
     *texture_matrix_ = *texture_matrix_ * diff;
 }
 
-void _material_impl::PropertyValueHolder::set_property_value(const std::string &name, bool value) {
-    PropertyValue v(&top_level_->defined_properties_.at(name));
-    v.value_ = smlt::any(value);
+const PropertyValue *_material_impl::PropertyValueHolder::property(const std::string &name) const {
+    auto it = property_values_.find(name);
+    if(it == property_values_.end()) {
+        /* If this isn't the top level (i.e a pass, not a material), fall back to there */
+        if(static_cast<const PropertyValueHolder*>(top_level_) != this) {
+            return top_level_->property(name);
+        }
 
-    auto ret = property_values_.emplace(std::make_pair(name, v));
-    if(!ret.second) {
-        property_values_.at(name) = v;
+        return nullptr;
     }
-}
 
-void _material_impl::PropertyValueHolder::set_property_value(const std::string &name, smlt::Vec4 value) {
-    PropertyValue v(&top_level_->defined_properties_.at(name));
-    v.value_ = smlt::any(value);
-
-    auto ret = property_values_.emplace(std::make_pair(name, v));
-    if(!ret.second) {
-        property_values_.at(name) = v;
-    }
-}
-
-void _material_impl::PropertyValueHolder::set_property_value(const std::string &name, smlt::TextureUnit value) {
-    PropertyValue v(&top_level_->defined_properties_.at(name));
-    v.value_ = smlt::any(value);
-
-    auto ret = property_values_.emplace(std::make_pair(name, v));
-    if(!ret.second) {
-        property_values_.at(name) = v;
-    }
+    return &it->second;
 }
 
 }

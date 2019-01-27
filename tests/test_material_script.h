@@ -47,7 +47,7 @@ public:
         auto stream = std::make_shared<std::stringstream>();
         (*stream) << text;
 
-        smlt::MaterialScript script(stream);
+        smlt::MaterialScript script(stream, "some/path");
         script.generate(*mat);
 
         assert_equal(mat->pass_count(), 1);

@@ -2,6 +2,7 @@
 
 
 #include "../simulant/shadows.h"
+#include "../simulant/stage.h"
 
 namespace {
 

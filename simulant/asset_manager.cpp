@@ -486,7 +486,13 @@ MaterialID AssetManager::get_template_material(const unicode& path) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
             L_INFO(_F("Loading material {0} into {1}").format(path, template_id));
             auto mat = material(template_id);
-            window->loader_for(path.encode())->into(mat);
+            auto loader = window->loader_for(path.encode());
+            if(!loader) {
+                L_ERROR(_F("Unable to find loader for {0}").format(path));
+                continue;
+            }
+
+            loader->into(mat);
             materials_loading_.erase(template_id);
         }
     }
