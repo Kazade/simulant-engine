@@ -51,6 +51,7 @@ class ShaderTest;
 
 namespace smlt {
 
+class Renderer;
 class GPUProgram;
 
 typedef sig::signal<void ()> ProgramLinkedSignal;
@@ -63,13 +64,14 @@ struct UniformInfo {
 };
 
 
-
 class GPUProgram:
     public Managed<GPUProgram>,
     public generic::Identifiable<GPUProgramID> {
 
 public:
-    GPUProgram(const GPUProgramID& id, const std::string& vertex_source, const std::string& fragment_source);
+    friend class Renderer;
+
+    GPUProgram(const GPUProgramID& id, Renderer* renderer, const std::string& vertex_source, const std::string& fragment_source);
     GPUProgram(const GPUProgram&) = delete;
     GPUProgram& operator=(const GPUProgram&) = delete;
 
@@ -99,7 +101,7 @@ public:
     const std::unordered_map<ShaderType, ShaderInfo> shader_infos() const { return shaders_; }
 
     GLint locate_uniform(const std::string& name, bool fail_silently=false);
-    GLint locate_attribute(const std::string& name);
+    GLint locate_attribute(const std::string& name, bool fail_silently=false);
     void set_uniform_location(const std::string& name, GLint location);
     void set_attribute_location(const std::string& name, GLint location);
 
@@ -130,6 +132,8 @@ public:
 
 private:
     friend class ::ShaderTest;
+
+    Renderer* renderer_;
 
     std::unordered_map<unicode, UniformInfo> uniform_info_;
 

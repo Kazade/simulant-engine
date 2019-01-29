@@ -82,7 +82,15 @@ public:
             terrain_mesh->vertex_data
         );
 
-        stage_->assets->material(terrain_material_id_)->first_pass()->set_texture_unit(4, terrain_splatmap);
+        auto terrain_mat = terrain_material_id_.fetch();
+        terrain_mat->define_property(
+            MATERIAL_PROPERTY_TYPE_TEXTURE,
+            "splatmap",
+            "splatmap",
+            TextureUnit()
+        );
+
+        stage_->assets->material(terrain_material_id_)->pass(0)->set_property_value("splatmap", terrain_splatmap);
 
         terrain_mesh->set_material_id(terrain_material_id_);
 

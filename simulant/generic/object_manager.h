@@ -127,6 +127,15 @@ public:
         }
     }
 
+    void each(std::function<void (uint32_t, const ObjectTypePtr)> callback) const {
+        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        uint32_t i = 0;
+        for(auto& p: objects_) {
+            auto ptr = p.second;
+            callback(i++, SmartPointerConverter::convert(ptr));
+        }
+    }
+
     void store_alias(const std::string& alias, IDType id) {
         std::lock_guard<std::recursive_mutex> g(aliases_mutex_);
         aliases_.insert(std::make_pair(alias, id));

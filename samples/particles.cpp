@@ -14,7 +14,7 @@ public:
 
         auto mat = stage_->assets->new_material_from_file(smlt::Material::BuiltIns::TEXTURED_PARTICLE).fetch();
         ps->set_material_id(mat->id());
-        mat->set_texture_unit_on_all_passes(0, stage_->assets->new_texture_from_file("sample_data/flare.tga"));
+        mat->set_diffuse_map(stage_->assets->new_texture_from_file("sample_data/flare.tga"));
 
         camera_->set_perspective_projection(
             smlt::Degrees(45.0),

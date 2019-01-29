@@ -27,6 +27,65 @@ public:
         this->assert_equal(mid, sm->material_id());
     }
 
+    void test_property_heirarchy() {
+        auto mat = window->shared_assets->new_material().fetch();
+
+        mat->set_diffuse(smlt::Colour::RED);
+        mat->set_pass_count(2);
+
+        auto pass1 = mat->pass(0);
+        auto pass2 = mat->pass(1);
+
+        assert_equal(pass1->diffuse(), smlt::Colour::RED);
+        assert_equal(pass2->diffuse(), smlt::Colour::RED);
+
+        pass1->set_diffuse(smlt::Colour::GREEN);
+
+        assert_equal(pass1->diffuse(), smlt::Colour::GREEN);
+        assert_equal(pass2->diffuse(), smlt::Colour::RED);
+    }
+
+    void test_texture_unit() {
+        auto mat = window->shared_assets->new_material().fetch();
+        auto tex = window->shared_assets->new_texture();
+
+        mat->set_diffuse_map(tex);
+        mat->set_pass_count(2);
+
+        auto pass1 = mat->pass(0);
+        auto pass2 = mat->pass(1);
+
+        assert_equal(pass1->diffuse_map().texture_id, tex);
+        assert_equal(pass2->diffuse_map().texture_id, tex);
+
+        auto tex2 = window->shared_assets->new_texture();
+
+        pass1->set_diffuse_map(tex2);
+
+        assert_equal(pass1->diffuse_map().texture_id, tex2);
+        assert_equal(pass2->diffuse_map().texture_id, tex);
+    }
+
+    void test_pass_material_set_on_clone() {
+        auto material = window->shared_assets->clone_default_material().fetch();
+
+        assert_equal(material->pass(0)->material()->id(), material->id());
+    }
+
+    void test_setting_texture_unit_increases_refcount() {
+        auto mat = window->shared_assets->new_material().fetch();
+        mat->set_pass_count(1);
+
+        auto texture = window->shared_assets->new_texture().fetch();
+        assert_equal(texture.use_count(), 2);
+
+        mat->set_diffuse_map(texture->id());
+
+        assert_equal(mat->diffuse_map().texture_id, texture->id());
+
+        assert_equal(texture.use_count(), 3);
+    }
+
     // FIXME: Restore this
     void test_reflectiveness() {
         /*

@@ -59,7 +59,8 @@ static void define_property(Material& material, MaterialPropertyType prop_type, 
         material.define_property(
             prop_type,
             name,
-            shader_var
+            shader_var,
+            _material_impl::TypeForMaterialType<MATERIAL_PROPERTY_TYPE_BOOL>::type()
         );
     }
 }

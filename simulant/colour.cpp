@@ -196,4 +196,9 @@ Colour Colour::from_hex_string(const std::string& hex_string) {
     );
 }
 
+std::ostream& operator<<(std::ostream& stream, const Colour& c) {
+    stream << "#" << c.to_hex_string();
+    return stream;
+}
+
 }

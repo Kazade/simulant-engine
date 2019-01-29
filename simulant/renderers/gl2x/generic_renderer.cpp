@@ -93,11 +93,13 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
         // and also whether there's a texture ID. The question is, should the material have some other
         // type of existence check for texture properties? Is checking the texture_id right for all situations?
         // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
+        assert(property_value);
         auto loc = program->locate_uniform(property_value->shader_variable(), true);
         if(loc > -1 && (texture_unit + 1u) < MAX_TEXTURE_UNITS) {
             TextureUnit unit = property_value->value<TextureUnit>();
             if(unit.texture_id) {
                 impl->texture_id[texture_unit++] = texture_objects_.at(unit.texture_id);
+                continue;
             }
         }
     }
@@ -301,7 +303,7 @@ void send_attribute(int32_t loc,
             stride,
             BUFFER_OFFSET(offset)
         );
-    } else {
+    } else if(loc > -1){
         disable_vertex_attribute(loc);
         //L_WARN_ONCE(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
     }
@@ -368,8 +370,23 @@ std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_v
 }
 
 smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
-    auto ret = program_manager_.make(vertex_shader_source, fragment_shader_source);
+    /* FIXME: This doesn't do what the function implies... it should either be called new_gpu_program, or it should try to return an existing progra
+     * if the source matches */
+
+    auto ret = program_manager_.make(this, vertex_shader_source, fragment_shader_source);
+    auto program = ret.fetch();
+
     program_manager_.set_garbage_collection_method(ret, GARBAGE_COLLECT_PERIODIC);
+
+    /* Build the GPU program on the main thread */
+    if(!GLThreadCheck::is_current()) {
+        window->idle->run_sync([&]() {
+            program->build();
+        });
+    } else {
+        program->build();
+    }
+
     return ret;
 }
 
@@ -711,6 +728,20 @@ static GLenum convert_arrangement(MeshArrangement arrangement) {
     }
 }
 
+GPUProgramID GenericRenderer::current_gpu_program_id() const {
+    GLint id;
+    GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &id);
+
+    GPUProgramID ret;
+
+    program_manager_.each([&](uint32_t i, GPUProgramPtr program) {
+        if(program->program_object() == (GLuint) id) {
+            ret = program->id();
+        }
+    });
+
+    return ret;
+}
 
 void GenericRenderer::send_geometry(Renderable *renderable) {
     auto element_count = renderable->index_element_count();

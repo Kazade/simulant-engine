@@ -81,7 +81,9 @@ enum MaterialPropertyType {
     MATERIAL_PROPERTY_TYPE_FLOAT,
     MATERIAL_PROPERTY_TYPE_VEC2,
     MATERIAL_PROPERTY_TYPE_VEC3,
-    MATERIAL_PROPERTY_TYPE_VEC4
+    MATERIAL_PROPERTY_TYPE_VEC4,
+    MATERIAL_PROPERTY_TYPE_MAT3,
+    MATERIAL_PROPERTY_TYPE_MAT4
 };
 
 enum IterationType {
@@ -90,8 +92,14 @@ enum IterationType {
     ITERATION_TYPE_ONCE_PER_LIGHT
 };
 
+namespace _material_impl {
+    class PropertyValueHolder;
+}
+
 /* Value type, if the type is texture */
 struct TextureUnit {
+    friend class _material_impl::PropertyValueHolder;
+
     std::string filename;
     TextureID texture_id;
 
@@ -109,6 +117,9 @@ struct TextureUnit {
 private:
     /* Shared pointer so that copying a TextureUnit also copies the matrix */
     std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
+
+    /* Set when assigned as a material property to maintain a refcount */
+    TexturePtr texture_;
 };
 
 namespace _material_impl {
@@ -142,6 +153,24 @@ private:
 };
 
 namespace _material_impl {
+    template<int>
+    struct TypeForMaterialType {};
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_BOOL> {
+        typedef bool type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_MAT3> {
+        typedef Mat3 type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_MAT4> {
+        typedef Mat4 type;
+    };
+
     template<typename T>
     struct MaterialTypeForType {};
 
@@ -180,6 +209,16 @@ namespace _material_impl {
         static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_TEXTURE;
     };
 
+    template<>
+    struct MaterialTypeForType<Mat3> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_MAT3;
+    };
+
+    template<>
+    struct MaterialTypeForType<Mat4> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_MAT4;
+    };
+
     struct DefinedProperty {
         uint32_t order;  // Keep track of the order properties were defined
         std::string name;
@@ -190,9 +229,9 @@ namespace _material_impl {
     };
 
     class PropertyValueHolder {
-    private:
-        Material* top_level_;
     public:
+        friend class ::smlt::Material;
+
         PropertyValueHolder(Material* top_level):
             top_level_(top_level) {}
 
@@ -203,6 +242,7 @@ namespace _material_impl {
         void set_property_value(const std::string& name, TextureID tex_id) {
             TextureUnit unit;
             unit.texture_id = tex_id;
+            unit.texture_ = tex_id.fetch();
             set_property_value(name, unit);
         }
 
@@ -233,17 +273,11 @@ namespace _material_impl {
         }
 
         void set_diffuse_map(TextureID texture_id) {
-            TextureUnit unit;
-            unit.texture_id = texture_id;
-
-            set_property_value(DIFFUSE_MAP_PROPERTY, unit);
+            set_property_value(DIFFUSE_MAP_PROPERTY, texture_id);
         }
 
         void set_light_map(TextureID texture_id) {
-            TextureUnit unit;
-            unit.texture_id = texture_id;
-
-            set_property_value(LIGHT_MAP_PROPERTY, unit);
+            set_property_value(LIGHT_MAP_PROPERTY, texture_id);
         }
 
         TextureUnit diffuse_map() const {
@@ -364,6 +398,14 @@ namespace _material_impl {
 
     protected:
         std::unordered_map<std::string, PropertyValue> property_values_;
+
+        /* We want to force users to use the TextureID version, hence the explicit protected override */
+        void set_property_value(const std::string& name, TextureUnit unit) {
+            set_property_value<TextureUnit>(name, unit);
+        }
+
+    private:
+        Material* top_level_;
     };
 }
 
@@ -377,6 +419,8 @@ public:
 class MaterialPass:
     public _material_impl::PropertyValueHolder  {
 public:
+    friend class Material;
+
     MaterialPass(Material* material):
         _material_impl::PropertyValueHolder(material),
         material_(material) {
@@ -472,20 +516,6 @@ public:
         set_property_value(name, default_value);
     }
 
-    void define_property(
-        MaterialPropertyType type,
-        std::string name,
-        std::string shader_variable
-    ) {
-        _material_impl::DefinedProperty prop;
-        prop.order = defined_properties_.size();
-        prop.name = name;
-        prop.type = type;
-        prop.shader_variable = shader_variable;
-
-        defined_properties_.insert(std::make_pair(name, prop));
-    }
-
     MaterialPropertyType defined_property_type(const std::string& name) const {
         return defined_properties_.at(name).type;
     }
@@ -562,28 +592,14 @@ private:
         set_property_value(name, default_value);
     }
 
-    void define_builtin_property(
-        MaterialPropertyType type,
-        std::string name,
-        std::string shader_variable
-    ) {
-        _material_impl::DefinedProperty prop;
-        prop.order = defined_properties_.size();
-        prop.name = name;
-        prop.type = type;
-        prop.shader_variable = shader_variable;
-        prop.is_custom = false;
-
-        defined_properties_.insert(std::make_pair(name, prop));
-    }
 protected:
     friend class _object_manager_impl::ObjectManagerBase<
         MaterialID, Material, std::shared_ptr<smlt::Material>,
         _object_manager_impl::ToSharedPtr<smlt::Material>
     >;
 
-    Material(const Material& rhs) = default;
-    Material& operator=(const Material& rhs) = default;
+    Material(const Material& rhs);
+    Material& operator=(const Material& rhs);
 
     MaterialPtr new_clone() {
         return std::shared_ptr<Material>(new Material(*this));

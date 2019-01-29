@@ -59,6 +59,7 @@ public:
         return GPUProgramID();
     }
 
+    virtual GPUProgramID current_gpu_program_id() const { return GPUProgramID(); }
     virtual GPUProgramPtr gpu_program(GPUProgramID) const { return GPUProgramPtr(); }
 
     virtual std::string name() const = 0;

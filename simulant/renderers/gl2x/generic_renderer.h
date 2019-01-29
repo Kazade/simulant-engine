@@ -98,7 +98,7 @@ public:
     GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source);
 
     GPUProgramPtr gpu_program(const GPUProgramID& program_id);
-
+    GPUProgramID current_gpu_program_id() const;
     bool supports_gpu_programs() const override { return true; }
 
     std::string name() const override {

@@ -209,6 +209,8 @@ struct Colour {
 
 };
 
+std::ostream& operator<<(std::ostream& stream, const Colour& c);
+
 }
 
 #endif // COLOUR_H
