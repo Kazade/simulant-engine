@@ -65,6 +65,84 @@ static void define_property(Material& material, MaterialPropertyType prop_type, 
     }
 }
 
+void read_property_values(_material_impl::PropertyValueHolder& holder, jsonic::Node& json) {
+    if(json.has_key("property_values")) {
+        for(auto& key: json["property_values"].keys()) {
+            auto& value = json["property_values"][key];
+
+            if(!holder.top_level()->property_is_defined(key)) {
+                L_ERROR(_F("Unrecognized property: {0}").format(key));
+                continue;
+            }
+
+            auto property_type = holder.top_level()->defined_property_type(key);
+
+            if(property_type == MATERIAL_PROPERTY_TYPE_BOOL) {
+                if(!value.is_bool()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
+                }
+
+                holder.set_property_value(key, (bool) value);
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
+                if(!value.is_string()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
+                }
+
+                if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
+                    holder.set_property_value(key, (float) value);
+                } else {
+                    /* Special cases for enums - need a better way to handle this */
+                    if(key == BLEND_FUNC_PROPERTY) {
+                        std::string v = value;
+                        if(v == "alpha") {
+                            holder.set_property_value(key, (int) BLEND_ALPHA);
+                        } else if(v == "add") {
+                            holder.set_property_value(key, (int) BLEND_ADD);
+                        } else if(v == "colour") {
+                            holder.set_property_value(key, (int) BLEND_COLOUR);
+                        } else if(v == "modulate") {
+                            holder.set_property_value(key, (int) BLEND_MODULATE);
+                        } else if(v == "one_one_minus_alpha") {
+                            holder.set_property_value(key, (int) BLEND_ONE_ONE_MINUS_ALPHA);
+                        } else {
+                            L_WARN(_F("Unrecognised blend value {0}").format(v));
+                            holder.set_property_value(key, (int) BLEND_NONE);
+                        }
+                    } else if(key == SHADE_MODEL_PROPERTY) {
+                        std::string v = value;
+                        if(v == "smooth") {
+                            holder.set_shade_model(SHADE_MODEL_SMOOTH);
+                        } else if(v == "front_face") {
+                            holder.set_shade_model(SHADE_MODEL_FLAT);
+                        } else {
+                            L_WARN(_F("Unrecognised shade model value {0}").format(v));
+                        }
+                    } else if(key == CULL_MODE_PROPERTY) {
+                        std::string v = value;
+                        if(v == "back_face") {
+                            holder.set_cull_mode(CULL_MODE_BACK_FACE);
+                        } else if(v == "front_face") {
+                            holder.set_cull_mode(CULL_MODE_FRONT_FACE);
+                        } else if(v == "front_and_back_face") {
+                            holder.set_cull_mode(CULL_MODE_FRONT_AND_BACK_FACE);
+                        } else if(v == "none") {
+                            holder.set_cull_mode(CULL_MODE_NONE);
+                        } else {
+                            L_WARN(_F("Unrecognised cull value {0}").format(v));
+                        }
+                    } else {
+                        holder.set_property_value(key, (int) value);
+                    }
+                }
+            } else {
+                L_ERROR("Unhandled property type");
+            }
+        }
+    }
+}
+
 void MaterialScript::generate(Material& material) {
     auto lookup_material_property_type = [](const std::string& kind) -> MaterialPropertyType {
         if(kind == "bool") {
@@ -123,40 +201,7 @@ void MaterialScript::generate(Material& material) {
         }
     }
 
-    if(json.has_key("property_values")) {
-        for(auto& key: json["property_values"].keys()) {
-            auto& value = json["property_values"][key];
-
-            if(!material.property_is_defined(key)) {
-                L_ERROR(_F("Unrecognized property: {0}").format(key));
-                continue;
-            }
-
-            auto property_type = material.defined_property_type(key);
-
-            if(property_type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                if(!value.is_bool()) {
-                    L_ERROR(_F("Invalid property value for: {0}").format(key));
-                    continue;
-                }
-
-                material.set_property_value(key, (bool) value);
-            } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
-                if(!value.is_string()) {
-                    L_ERROR(_F("Invalid property value for: {0}").format(key));
-                    continue;
-                }
-
-                if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                    material.set_property_value(key, (float) value);
-                } else {
-                    material.set_property_value(key, (int) value);
-                }
-            } else {
-                L_ERROR("Unhandled property type");
-            }
-        }
-    }
+    read_property_values(material, json);
 
     material.set_pass_count(json["passes"].length());
 
@@ -176,6 +221,8 @@ void MaterialScript::generate(Material& material) {
         } else {
             L_ERROR(_F("Unsupported iteration type: {0}").format(iteration));
         }
+
+        read_property_values(*material.pass(i), pass);
 
         /* If we support gpu programs, then we require shaders */
         if(renderer->supports_gpu_programs()) {

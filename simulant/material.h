@@ -235,6 +235,10 @@ namespace _material_impl {
         PropertyValueHolder(Material* top_level):
             top_level_(top_level) {}
 
+        const Material* top_level() const {
+            return top_level_;
+        }
+
         template<typename T>
         void set_property_value(const std::string& name, const T& value);
 
@@ -386,6 +390,10 @@ namespace _material_impl {
 
         PolygonMode polygon_mode() const {
             return (PolygonMode) property(POLYGON_MODE_PROPERTY)->value<int>();
+        }
+
+        void set_shade_model(ShadeModel model) {
+            set_property_value(SHADE_MODEL_PROPERTY, (int) model);
         }
 
         ShadeModel shade_model() const {
