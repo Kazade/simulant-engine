@@ -30,7 +30,7 @@ public:
         "texture_map": "assets/textures/mytexture.png",
         "s_diffuse": "1 0 0 0",
         "s_ambient": "1 1 1 1"
-    }
+    },
 
     "passes" [
         {

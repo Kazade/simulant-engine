@@ -245,7 +245,7 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
 
 void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
     auto varname = "s_global_ambient";
-    auto loc = program->locate_uniform(varname);
+    auto loc = program->locate_uniform(varname, true);
 
     if(loc > -1) {
         program->set_uniform_colour(varname, global_ambient);
@@ -319,7 +319,7 @@ void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Rendera
     const VertexSpecification& vertex_spec = buffer.vertex_attribute_specification();
 
     send_attribute(
-        program->locate_attribute("s_position"),
+        program->locate_attribute("s_position", true),
         VERTEX_ATTRIBUTE_TYPE_POSITION,
         vertex_spec,
         &VertexSpecification::has_positions,
@@ -327,18 +327,18 @@ void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Rendera
     );
 
     send_attribute(
-        program->locate_attribute("s_diffuse"),
+        program->locate_attribute("s_diffuse", true),
         VERTEX_ATTRIBUTE_TYPE_DIFFUSE,
         vertex_spec,
         &VertexSpecification::has_diffuse,
         &VertexSpecification::diffuse_offset
     );
 
-    send_attribute(program->locate_attribute("s_texcoord0"), VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
-    send_attribute(program->locate_attribute("s_texcoord1"), VERTEX_ATTRIBUTE_TYPE_TEXCOORD1, vertex_spec, &VertexSpecification::has_texcoord1, &VertexSpecification::texcoord1_offset);
-    send_attribute(program->locate_attribute("s_texcoord2"), VERTEX_ATTRIBUTE_TYPE_TEXCOORD2, vertex_spec, &VertexSpecification::has_texcoord2, &VertexSpecification::texcoord2_offset);
-    send_attribute(program->locate_attribute("s_texcoord3"), VERTEX_ATTRIBUTE_TYPE_TEXCOORD3, vertex_spec, &VertexSpecification::has_texcoord3, &VertexSpecification::texcoord3_offset);
-    send_attribute(program->locate_attribute("s_normal"), VERTEX_ATTRIBUTE_TYPE_NORMAL, vertex_spec, &VertexSpecification::has_normals, &VertexSpecification::normal_offset);
+    send_attribute(program->locate_attribute("s_texcoord0", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
+    send_attribute(program->locate_attribute("s_texcoord1", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD1, vertex_spec, &VertexSpecification::has_texcoord1, &VertexSpecification::texcoord1_offset);
+    send_attribute(program->locate_attribute("s_texcoord2", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD2, vertex_spec, &VertexSpecification::has_texcoord2, &VertexSpecification::texcoord2_offset);
+    send_attribute(program->locate_attribute("s_texcoord3", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD3, vertex_spec, &VertexSpecification::has_texcoord3, &VertexSpecification::texcoord3_offset);
+    send_attribute(program->locate_attribute("s_normal", true), VERTEX_ATTRIBUTE_TYPE_NORMAL, vertex_spec, &VertexSpecification::has_normals, &VertexSpecification::normal_offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
