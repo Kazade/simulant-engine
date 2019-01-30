@@ -183,64 +183,48 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
     auto shin_property = pass->property(SHININESS_PROPERTY);
     auto ps_property = pass->property(POINT_SIZE_PROPERTY);
 
-    auto amb_loc = program->locate_uniform(amb_property->shader_variable());
+    auto amb_loc = program->locate_uniform(amb_property->shader_variable(), true);
     if(amb_loc > -1) {
         auto varname = amb_property->shader_variable();
         program->set_uniform_colour(varname, pass->ambient());
     }
 
-    auto diff_loc = program->locate_uniform(diff_property->shader_variable());
+    auto diff_loc = program->locate_uniform(diff_property->shader_variable(), true);
     if(diff_loc > -1) {
         auto varname = diff_property->shader_variable();
         program->set_uniform_colour(varname, pass->diffuse());
     }
 
-    auto spec_loc = program->locate_uniform(spec_property->shader_variable());
+    auto spec_loc = program->locate_uniform(spec_property->shader_variable(), true);
     if(spec_loc > -1) {
         auto varname = spec_property->shader_variable();
         program->set_uniform_colour(varname, pass->specular());
     }
 
-    auto shin_loc = program->locate_uniform(shin_property->shader_variable());
+    auto shin_loc = program->locate_uniform(shin_property->shader_variable(), true);
     if(shin_loc > -1) {
         auto varname = shin_property->shader_variable();
         program->set_uniform_float(varname, pass->shininess());
     }
 
-    auto ps_loc = program->locate_uniform(ps_property->shader_variable());
+    auto ps_loc = program->locate_uniform(ps_property->shader_variable(), true);
     if(ps_loc > -1) {
         auto varname = ps_property->shader_variable();
         program->set_uniform_float(varname, pass->point_size());
     }
 
-    // FIXME: Send texture matrix properties
+    /* Each texture property has a counterpart matrix, this passes those down if they exist */
+    auto texture_props = pass->top_level()->defined_properties_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE);
+    for(auto& tex_prop: texture_props) {
+        auto prop = pass->property(tex_prop);
+        auto shader_name = prop->shader_variable();
+        shader_name += "_matrix";
 
-    /*
-    auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
-        switch(which) {
-        case 0: return SP_AUTO_MATERIAL_TEX_MATRIX0;
-        case 1: return SP_AUTO_MATERIAL_TEX_MATRIX1;
-        case 2: return SP_AUTO_MATERIAL_TEX_MATRIX2;
-        case 3: return SP_AUTO_MATERIAL_TEX_MATRIX3;
-        case 4: return SP_AUTO_MATERIAL_TEX_MATRIX4;
-        case 5: return SP_AUTO_MATERIAL_TEX_MATRIX5;
-        case 6: return SP_AUTO_MATERIAL_TEX_MATRIX6;
-        case 7: return SP_AUTO_MATERIAL_TEX_MATRIX7;
-        default:
-            throw std::logic_error("Invalid tex matrix index");
+        auto loc = program->locate_uniform(shader_name, true);
+        if(loc > -1) {
+            program->set_uniform_mat4x4(shader_name, prop->value<TextureUnit>().texture_matrix());
         }
-    };
-
-    for(uint8_t i = 0; i < pass->texture_unit_count(); ++i) {
-        if(pass->uniforms->uses_auto(texture_matrix_auto(i))) {
-            auto name = pass->uniforms->auto_variable_name(
-                ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + i)
-            );
-
-            auto& unit = pass->texture_unit(i);
-            program->set_uniform_mat4x4(name, unit.matrix());
-        }
-    }*/
+    }
 }
 
 void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
