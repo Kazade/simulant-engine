@@ -165,7 +165,7 @@ void Q2BSPLoader::generate_materials(
 
         // Load the correct material depending on surface flags
         auto material_id = assets->new_material_from_file(
-            (uses_lightmap) ? Material::BuiltIns::TEXTURE_WITH_LIGHTMAP : Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING,
+            Material::BuiltIns::DEFAULT,
             smlt::GARBAGE_COLLECT_NEVER // Disable GC for now
         );
 

@@ -58,7 +58,7 @@ public:
         copy->_overwrite_id(new_id);
 
         // Bind the copy to the ID
-        copy->_bind_id_pointer(copy);
+        copy->_bind_id_pointer(copy);       
 
         std::lock_guard<std::recursive_mutex> g(target_manager->objects_mutex_);
         target_manager->objects_.insert(std::make_pair(copy->id(), copy));

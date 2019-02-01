@@ -66,8 +66,8 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
 Material::Material(MaterialID id, AssetManager* asset_manager):
     Resource(asset_manager),
     generic::Identifiable<MaterialID>(id),
-    _material_impl::PropertyValueHolder(this),
-    passes_({MaterialPass(this), MaterialPass(this), MaterialPass(this), MaterialPass(this)}) {
+    _material_impl::PropertyValueHolder(this, 0),
+    passes_({MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)}) {
 
     initialize_default_properties();
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
@@ -78,9 +78,13 @@ Material::Material(const Material& rhs):
     generic::Identifiable<MaterialID>(rhs),
     Managed<Material>(rhs),
     _material_impl::PropertyValueHolder(rhs),
+    defined_property_count_(rhs.defined_property_count_),
     defined_properties_(rhs.defined_properties_),
+    defined_property_lookup_(rhs.defined_property_lookup_),
     pass_count_(rhs.pass_count_),
     passes_(rhs.passes_) {
+
+    top_level_ = this;
 
     for(auto& pass: passes_) {
         pass.material_ = this;
@@ -89,32 +93,62 @@ Material::Material(const Material& rhs):
 }
 
 Material& Material::operator=(const Material& rhs) {
-    defined_properties_ = rhs.defined_properties_;
-    pass_count_ = rhs.pass_count_;
-    passes_ = rhs.passes_;
+    Resource::operator=(rhs);
+    _material_impl::PropertyValueHolder::operator=(rhs);
 
-    for(auto& pass: passes_) {
-        pass.material_ = this;
-        pass.top_level_ = this;
+    top_level_ = this;
+    defined_property_count_ = rhs.defined_property_count_;
+    defined_properties_ = rhs.defined_properties_;
+    defined_property_lookup_ = rhs.defined_property_lookup_;
+    pass_count_ = rhs.pass_count_;
+
+    for(auto i = 0; i < pass_count_; ++i) {
+        passes_[i] = rhs.passes_[i];
+        passes_[i].material_ = this;
+        passes_[i].top_level_ = this;
     }
 
     return *this;
 }
 
 std::vector<std::string> Material::defined_custom_properties() const {
-    std::map<uint32_t, std::string> ordered_properties;
-    for(auto& p: defined_properties_) {
-        if(p.second.is_custom) {
-            ordered_properties.insert(std::make_pair(p.second.order, p.first));
-        }
-    }
-
     std::vector<std::string> ret;
-    for(auto& p: ordered_properties) {
-        ret.push_back(p.second);
+    for(auto i = 0u; i < defined_property_count_; ++i) {
+        auto& p = defined_properties_[i];
+        if(p.is_custom) {
+            ret.push_back(p.name);
+        }
+
     }
 
     return ret;
+}
+
+void Material::set_pass_count(uint8_t pass_count) {
+    if(pass_count == pass_count_) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(pass_mutex_);
+
+    /* We're adding more passes, so let's make sure they're clean */
+    if(pass_count > pass_count_) {
+        for(auto i = pass_count_; i < pass_count; ++i) {
+            passes_[i] = MaterialPass(this, i);
+        }
+    }
+
+    pass_count_ = pass_count;
+}
+
+MaterialPass *Material::pass(uint8_t pass) {
+    if(pass < pass_count_) {
+        return &passes_[pass];
+    }
+
+    /* Shouldn't happen in normal operation */
+    assert(pass < pass_count_);
+    return nullptr;
 }
 
 void Material::update(float dt) {
@@ -122,16 +156,13 @@ void Material::update(float dt) {
 }
 
 std::vector<std::string> Material::defined_properties_by_type(MaterialPropertyType type) const {
-    std::map<uint32_t, std::string> ordered_properties;
-    for(auto& p: defined_properties_) {
-        if(p.second.type == type) {
-            ordered_properties.insert(std::make_pair(p.second.order, p.first));
-        }
-    }
-
     std::vector<std::string> ret;
-    for(auto& p: ordered_properties) {
-        ret.push_back(p.second);
+    for(auto i = 0u; i < defined_property_count_; ++i) {
+        auto& p = defined_properties_[i];
+        if(p.type == type) {
+            assert(!p.name.empty());
+            ret.push_back(p.name);
+        }
     }
 
     return ret;
@@ -214,30 +245,170 @@ void TextureUnit::scroll_y(float amount) {
     *texture_matrix_ = *texture_matrix_ * diff;
 }
 
-const PropertyValue *_material_impl::PropertyValueHolder::property(const std::string &name) const {
+void _material_impl::PropertyValueHolder::set_property_value(const std::string &name, TextureID tex_id) {
+    set_property_value(top_level()->defined_property_index(name), tex_id);
+}
+
+PropertyValue _material_impl::PropertyValueHolder::property(const std::string &name) const {
     /*
-     * Returns a property value, or nullptr if the property is not defined
+     * Returns a property value
      */
 
-    if(!top_level_->property_is_defined(name)) {
-        return nullptr;
+    auto& prop = top_level_->defined_properties_[top_level_->defined_property_index(name)];
+    if(!prop.values[slot_].empty()) {
+        return PropertyValue(&prop, slot_);
+    } else {
+        assert(!prop.values[0].empty());
+        return PropertyValue(&prop, 0);
     }
+}
 
-    auto it = property_values_.find(name);
-    if(it == property_values_.end()) {
-        /* If this isn't the top level (i.e a pass, not a material), fall back to there */
-        if(static_cast<const PropertyValueHolder*>(top_level_) != this) {
-            return top_level_->property(name);
-        } else {
-            throw std::runtime_error(
-                _F("Unable to locate property value for property: {0}").format(
-                    name
-                )
-            );
-        }
-    }
+void _material_impl::PropertyValueHolder::set_emission(const Colour &colour) {
+    set_property_value(EMISSION_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
+}
 
-    return &it->second;
+void _material_impl::PropertyValueHolder::set_specular(const Colour &colour) {
+    set_property_value(SPECULAR_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
+}
+
+void _material_impl::PropertyValueHolder::set_ambient(const Colour &colour) {
+    set_property_value(AMBIENT_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
+}
+
+void _material_impl::PropertyValueHolder::set_diffuse(const Colour &colour) {
+    set_property_value(DIFFUSE_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
+}
+
+void _material_impl::PropertyValueHolder::set_shininess(float shininess) {
+    set_property_value(SHININESS_PROPERTY, shininess);
+}
+
+void _material_impl::PropertyValueHolder::set_diffuse_map(TextureID texture_id) {
+    set_property_value(DIFFUSE_MAP_PROPERTY, texture_id);
+}
+
+void _material_impl::PropertyValueHolder::set_light_map(TextureID texture_id) {
+    set_property_value(LIGHT_MAP_PROPERTY, texture_id);
+}
+
+TextureUnit _material_impl::PropertyValueHolder::diffuse_map() const {
+    return property(DIFFUSE_MAP_PROPERTY).value<TextureUnit>();
+}
+
+TextureUnit _material_impl::PropertyValueHolder::light_map() const {
+    return property(LIGHT_MAP_PROPERTY).value<TextureUnit>();
+}
+
+TextureUnit _material_impl::PropertyValueHolder::normal_map() const {
+    return property(NORMAL_MAP_PROPERTY).value<TextureUnit>();
+}
+
+TextureUnit _material_impl::PropertyValueHolder::specular_map() const {
+    return property(SPECULAR_MAP_PROPERTY).value<TextureUnit>();
+}
+
+Colour _material_impl::PropertyValueHolder::emission() const {
+    auto v = property(EMISSION_PROPERTY).value<Vec4>();
+    return Colour(v.x, v.y, v.z, v.w);
+}
+
+Colour _material_impl::PropertyValueHolder::specular() const {
+    auto v = property(SPECULAR_PROPERTY).value<Vec4>();
+    return Colour(v.x, v.y, v.z, v.w);
+}
+
+Colour _material_impl::PropertyValueHolder::ambient() const {
+    auto v = property(AMBIENT_PROPERTY).value<Vec4>();
+    return Colour(v.x, v.y, v.z, v.w);
+}
+
+Colour _material_impl::PropertyValueHolder::diffuse() const {
+    auto v = property(DIFFUSE_PROPERTY).value<Vec4>();
+    return Colour(v.x, v.y, v.z, v.w);
+}
+
+float _material_impl::PropertyValueHolder::shininess() const {
+    return property(SHININESS_PROPERTY).value<float>();
+}
+
+bool _material_impl::PropertyValueHolder::is_blending_enabled() const {
+    return property(BLENDING_ENABLE_PROPERTY).value<bool>();
+}
+
+void _material_impl::PropertyValueHolder::set_blending_enabled(bool v) {
+    set_property_value(BLENDING_ENABLE_PROPERTY, v);
+}
+
+void _material_impl::PropertyValueHolder::set_blend_func(BlendType b) {
+    set_property_value(BLEND_FUNC_PROPERTY, (int) b);
+}
+
+BlendType _material_impl::PropertyValueHolder::blend_func() const {
+    return (BlendType) property(BLEND_FUNC_PROPERTY).value<int>();
+}
+
+bool _material_impl::PropertyValueHolder::is_blended() const {
+    return blend_func() != BLEND_NONE;
+}
+
+void _material_impl::PropertyValueHolder::set_depth_write_enabled(bool v) {
+    set_property_value(DEPTH_WRITE_ENABLED_PROPERTY, v);
+}
+
+bool _material_impl::PropertyValueHolder::is_depth_write_enabled() const {
+    return property(DEPTH_WRITE_ENABLED_PROPERTY).value<bool>();
+}
+
+void _material_impl::PropertyValueHolder::set_cull_mode(CullMode mode) {
+    set_property_value(CULL_MODE_PROPERTY, (int) mode);
+}
+
+CullMode _material_impl::PropertyValueHolder::cull_mode() const {
+    return (CullMode) property(CULL_MODE_PROPERTY).value<int>();
+}
+
+void _material_impl::PropertyValueHolder::set_depth_test_enabled(bool v) {
+    set_property_value(DEPTH_TEST_ENABLED_PROPERTY, v);
+}
+
+bool _material_impl::PropertyValueHolder::is_depth_test_enabled() const {
+    return property(DEPTH_TEST_ENABLED_PROPERTY).value<bool>();
+}
+
+void _material_impl::PropertyValueHolder::set_lighting_enabled(bool v) {
+    set_property_value(LIGHTING_ENABLED_PROPERTY, v);
+}
+
+bool _material_impl::PropertyValueHolder::is_lighting_enabled() const {
+    return property(LIGHTING_ENABLED_PROPERTY).value<bool>();
+}
+
+void _material_impl::PropertyValueHolder::set_texturing_enabled(bool v) {
+    set_property_value(TEXTURING_ENABLED_PROPERTY, v);
+}
+
+bool _material_impl::PropertyValueHolder::is_texturing_enabled() const {
+    return property(TEXTURING_ENABLED_PROPERTY).value<bool>();
+}
+
+float _material_impl::PropertyValueHolder::point_size() const {
+    return property(POINT_SIZE_PROPERTY).value<float>();
+}
+
+PolygonMode _material_impl::PropertyValueHolder::polygon_mode() const {
+    return (PolygonMode) property(POLYGON_MODE_PROPERTY).value<int>();
+}
+
+void _material_impl::PropertyValueHolder::set_shade_model(ShadeModel model) {
+    set_property_value(SHADE_MODEL_PROPERTY, (int) model);
+}
+
+ShadeModel _material_impl::PropertyValueHolder::shade_model() const {
+    return (ShadeModel) property(SHADE_MODEL_PROPERTY).value<int>();
+}
+
+ColourMaterial _material_impl::PropertyValueHolder::colour_material() const {
+    return (ColourMaterial) property(COLOUR_MATERIAL_PROPERTY).value<int>();
 }
 
 }

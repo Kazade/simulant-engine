@@ -490,7 +490,7 @@ MaterialID AssetManager::get_template_material(const unicode& path) {
             if(!loader) {
                 L_ERROR(_F("Unable to find loader for {0}").format(path));
                 materials_loading_.erase(template_id);
-                continue;
+                throw std::runtime_error(_F("Unable to find loader for file: {0}").format(path));
             }
 
             loader->into(mat);
@@ -509,7 +509,10 @@ MaterialID AssetManager::new_material_from_file(const unicode& path, GarbageColl
 
     /* Templates are always created in the base manager, we clone from the base manager into this
      * manager (which might be the same manager) */
-    auto new_mat_id = base_manager()->material_manager_.clone(template_id, &this->material_manager_);
+    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_).fetch();
+    new_mat->manager_ = this;
+
+    auto new_mat_id = new_mat->id();
 
     L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat_id));
 

@@ -34,6 +34,8 @@ class AssetManager;
 
 class Resource {
 public:
+    friend class AssetManager;
+
     Resource(AssetManager* manager):
         manager_(manager) {
         created_ = std::chrono::system_clock::now();

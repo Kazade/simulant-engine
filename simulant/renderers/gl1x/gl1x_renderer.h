@@ -31,6 +31,8 @@ class GL1XRenderer:
     public GLRenderer {
 
 public:
+    friend class GL1RenderQueueVisitor;
+
     GL1XRenderer(Window* window);
 
     batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);

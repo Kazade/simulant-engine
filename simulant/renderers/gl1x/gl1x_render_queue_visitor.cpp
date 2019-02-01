@@ -25,6 +25,13 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 }
 
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+    /* We work out the default texture GL name at the start of traversal to avoid repeatingly looking it up later */
+
+    if(!default_texture_name_) {
+        auto default_tex = renderer_->window->shared_assets->default_texture_id();
+        default_texture_name_ = renderer_->texture_objects_.at(default_tex);
+    }
+
     enable_vertex_arrays(true);
     enable_colour_arrays(true);
 
@@ -110,7 +117,8 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
             if(current_tex) {
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
-                GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+                // Bind the default texture in this case
+                GLCheck(glBindTexture, GL_TEXTURE_2D, default_texture_name_);
             }
         }
     }

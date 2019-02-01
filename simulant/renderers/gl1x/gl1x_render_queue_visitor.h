@@ -66,6 +66,8 @@ private:
     bool colours_enabled_ = false;
     bool normals_enabled_ = false;
     bool textures_enabled_[MAX_TEXTURE_UNITS] = {0};
+
+    uint32_t default_texture_name_ = 0;
 };
 
 

@@ -196,7 +196,7 @@ private:
     //FIXME: All managers should be composition rather than inheritence,
     // like this one!   
     std::shared_ptr<AssetManager> resource_manager_;
-    smlt::Colour ambient_light_;
+    smlt::Colour ambient_light_ = smlt::Colour(0.3, 0.3, 0.3, 1.0);
 
     std::unique_ptr<FogSettings> fog_;
     std::unique_ptr<GeomManager> geom_manager_;

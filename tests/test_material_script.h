@@ -51,10 +51,9 @@ public:
         script.generate(*mat);
 
         assert_equal(mat->pass_count(), 1);
-        assert_true(mat->property("texture_map")->is_custom());
-        assert_equal(mat->property("texture_map")->type(), smlt::MATERIAL_PROPERTY_TYPE_TEXTURE);
-        assert_true(mat->property("texture_map")->is_set());
-        assert_equal(mat->property("texture_map")->value<TextureUnit>().filename, "assets/textures/mytexture.png");
+        assert_true(mat->property("texture_map").is_custom());
+        assert_equal(mat->property("texture_map").type(), smlt::MATERIAL_PROPERTY_TYPE_TEXTURE);
+        assert_equal(mat->property("texture_map").value<smlt::TextureUnit>().filename, "assets/textures/mytexture.png");
 /*
         assert_equal(mat->pass(0)->iteration, smlt::MATERIAL_PASS_ITERATION_ONCE);
         assert_equal(mat->pass(0)->vertex_shader->filename(), "assets/shader/default.vert");
