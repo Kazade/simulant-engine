@@ -53,7 +53,7 @@ public:
             10000.0
         );
 
-        stage_->set_ambient_light(smlt::Colour(0.8, 0.8, 0.8, 1.0));
+        stage_->new_light_as_directional();
     }
 
     void activate() {
