@@ -103,7 +103,6 @@ namespace _material_impl {
 struct TextureUnit {
     friend class _material_impl::PropertyValueHolder;
 
-    std::string filename;
     TextureID texture_id;
 
     Mat4& texture_matrix() {
@@ -161,6 +160,21 @@ namespace _material_impl {
     template<>
     struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_BOOL> {
         typedef bool type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_TEXTURE> {
+        typedef TextureUnit type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_INT> {
+        typedef int type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_FLOAT> {
+        typedef float type;
     };
 
     template<>
@@ -263,7 +277,11 @@ namespace _material_impl {
         void set_property_value(uint32_t index, TextureID tex_id) {
             TextureUnit unit;
             unit.texture_id = tex_id;
-            unit.texture_ = tex_id.fetch();
+
+            if(tex_id) {
+                unit.texture_ = tex_id.fetch();
+            }
+
             set_property_value(index, unit);
         }
 
@@ -337,11 +355,7 @@ class MaterialPass:
 public:
     friend class Material;
 
-    MaterialPass(Material* material, uint8_t index):
-        _material_impl::PropertyValueHolder(material, index + 1), // slot 0 is the Material
-        material_(material) {
-
-    }
+    MaterialPass(Material* material, uint8_t index);
 
     void set_iteration_type(IterationType iteration) {
         iteration_type_ = iteration;

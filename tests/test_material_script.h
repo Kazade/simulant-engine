@@ -28,15 +28,13 @@ public:
 
     "property_values": {
         "texture_map": "assets/textures/mytexture.png",
-        "s_diffuse": "1 0 0 0",
-        "s_ambient": "1 1 1 1"
+        "s_material_diffuse": "1 0 0 0",
+        "s_material_ambient": "1 1 1 1"
     },
 
-    "passes" [
+    "passes": [
         {
-            "iteration": "once",
-            "vertex_shader": "assets/shader/default.vert",
-            "fragment_shader": "assets/shader/default.frag"
+            "iteration": "once"
         }
     ]
 }
@@ -53,19 +51,9 @@ public:
         assert_equal(mat->pass_count(), 1);
         assert_true(mat->property("texture_map").is_custom());
         assert_equal(mat->property("texture_map").type(), smlt::MATERIAL_PROPERTY_TYPE_TEXTURE);
-        assert_equal(mat->property("texture_map").value<smlt::TextureUnit>().filename, "assets/textures/mytexture.png");
-/*
-        assert_equal(mat->pass(0)->iteration, smlt::MATERIAL_PASS_ITERATION_ONCE);
-        assert_equal(mat->pass(0)->vertex_shader->filename(), "assets/shader/default.vert");
-        assert_true(mat->pass(0)->vertex_shader->shader_id());
-
-        mat->each_pass([&](uint32_t i, MaterialPass* pass) {
-            assert_equal(pass->iteration, smlt::MATERIAL_PASS_ITERATION_ONCE);
-            assert_equal(pass->vertex_shader.filename(), "assets/shader/default.vert");
-            assert_true(pass->vertex_shader.shader_id());
-        }); */
-
-        //TODO: Add tests to make sure that the shader has compiled correctly
+        assert_equal(mat->pass(0)->iteration_type(), smlt::ITERATION_TYPE_ONCE);
+        assert_equal(mat->diffuse(), smlt::Colour(1, 0, 0, 0));
+        assert_equal(mat->ambient(), smlt::Colour(1, 1, 1, 1));
     }
 };
 

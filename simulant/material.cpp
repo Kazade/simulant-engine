@@ -231,6 +231,17 @@ MaterialPropertyType PropertyValue::type() const {
     return defined_property_->type;
 }
 
+MaterialPass::MaterialPass(Material *material, uint8_t index):
+    _material_impl::PropertyValueHolder(material, index + 1), // slot 0 is the Material
+    material_(material) {
+
+    /* If the renderer supports GPU programs, at least specify *something* */
+    auto& renderer = material_->resource_manager().window->renderer;
+    if(renderer->supports_gpu_programs()) {
+        set_gpu_program(renderer->default_gpu_program_id());
+    }
+}
+
 GPUProgramID MaterialPass::gpu_program_id() const {
     return program_->id();
 }

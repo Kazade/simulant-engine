@@ -100,6 +100,7 @@ public:
     GPUProgramPtr gpu_program(const GPUProgramID& program_id);
     GPUProgramID current_gpu_program_id() const;
     bool supports_gpu_programs() const override { return true; }
+    GPUProgramID default_gpu_program_id() const override;
 
     std::string name() const override {
         return "gl2x";
@@ -107,6 +108,7 @@ public:
 
 private:
     GPUProgramManager program_manager_;
+    GPUProgramID default_gpu_program_id_;
 
     std::unique_ptr<HardwareBufferManager> buffer_manager_;
 

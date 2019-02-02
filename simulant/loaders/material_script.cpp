@@ -41,26 +41,54 @@ MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode
 
 }
 
-template<typename T>
-static void define_property(Material& material, MaterialPropertyType prop_type, jsonic::Node& prop) {
+template<MaterialPropertyType MT>
+static void define_property(Material& material, jsonic::Node& prop) {
     std::string name = prop["name"]; // FIXME: Sanitize!
     auto shader_var = name; // FIXME: Should be definable, and should be checked for validity
+
+    typedef typename _material_impl::TypeForMaterialType<MT>::type T;
 
     if(!prop["default"].is_none()) {
         auto def = (T) prop["default"];
 
         material.define_property(
-            prop_type,
+            MT,
             name,
             shader_var,
             def
         );
     } else {
         material.define_property(
-            prop_type,
+            MT,
             name,
             shader_var,
-            _material_impl::TypeForMaterialType<MATERIAL_PROPERTY_TYPE_BOOL>::type()
+            T()
+        );
+    }
+}
+
+template<>
+void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic::Node& prop) {
+    std::string name = prop["name"]; // FIXME: Sanitize!
+    auto shader_var = name; // FIXME: Should be definable, and should be checked for validity
+
+    if(!prop["default"].is_none()) {
+        std::string def = prop["default"];
+
+        TextureID tex_id = material.resource_manager().new_texture_from_file(def);
+
+        material.define_property(
+            MATERIAL_PROPERTY_TYPE_TEXTURE,
+            name,
+            shader_var,
+            tex_id
+        );
+    } else {
+        material.define_property(
+            MATERIAL_PROPERTY_TYPE_TEXTURE,
+            name,
+            shader_var,
+            TextureID()
         );
     }
 }
@@ -83,7 +111,44 @@ void read_property_values(_material_impl::PropertyValueHolder& holder, jsonic::N
                     continue;
                 }
 
-                holder.set_property_value(key, (bool) value);
+                holder.set_property_value(key, (bool) value);                
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
+                if(!value.is_string()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
+                }
+
+                auto parts = unicode(std::string(value)).split(" ");
+
+                if(parts.size() != 3) {
+                    L_ERROR(_F("Invalid value for property: {0}").format(key));
+                    continue;
+                }
+
+                float x = parts[0].to_float();
+                float y = parts[1].to_float();
+                float z = parts[2].to_float();
+
+                holder.set_property_value(key, Vec3(x, y, z));
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC4) {
+                if(!value.is_string()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
+                }
+
+                auto parts = unicode(std::string(value)).split(" ");
+
+                if(parts.size() != 4) {
+                    L_ERROR(_F("Invalid value for property: {0}").format(key));
+                    continue;
+                }
+
+                float x = parts[0].to_float();
+                float y = parts[1].to_float();
+                float z = parts[2].to_float();
+                float w = parts[3].to_float();
+
+                holder.set_property_value(key, Vec4(x, y, z, w));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
                 if(!value.is_string()) {
                     L_ERROR(_F("Invalid property value for: {0}").format(key));
@@ -187,13 +252,16 @@ void MaterialScript::generate(Material& material) {
 
             switch(prop_type) {
                 case MATERIAL_PROPERTY_TYPE_BOOL: {
-                    define_property<bool>(material, prop_type, prop);
+                    define_property<MATERIAL_PROPERTY_TYPE_BOOL>(material, prop);
                 } break;
                 case MATERIAL_PROPERTY_TYPE_INT: {
-                    define_property<int>(material, prop_type, prop);
+                    define_property<MATERIAL_PROPERTY_TYPE_INT>(material, prop);
                 } break;
                 case MATERIAL_PROPERTY_TYPE_FLOAT: {
-                    define_property<float>(material, prop_type, prop);
+                    define_property<MATERIAL_PROPERTY_TYPE_FLOAT>(material, prop);
+                } break;
+                case MATERIAL_PROPERTY_TYPE_TEXTURE: {
+                    define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(material, prop);
                 } break;
             default:
                 L_ERROR(_F("Unhandled property type: {0}").format(kind));
@@ -224,8 +292,8 @@ void MaterialScript::generate(Material& material) {
 
         read_property_values(*material.pass(i), pass);
 
-        /* If we support gpu programs, then we require shaders */
-        if(renderer->supports_gpu_programs()) {
+        /* If we support gpu programs, then load any shaders */
+        if(renderer->supports_gpu_programs() && pass.has_key("vertex_shader") && pass.has_key("fragment_shader")) {
             std::string vertex_shader_path = pass["vertex_shader"];
             std::string fragment_shader_path = pass["fragment_shader"];
 

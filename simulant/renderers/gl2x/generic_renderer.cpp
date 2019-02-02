@@ -32,6 +32,26 @@
 
 namespace smlt {
 
+/* These are bare minimal shaders so that *something* is displayed, they're only used when the
+ * Material is incomplete (no shaders provided) */
+
+const std::string default_vertex_shader = R"(
+#version 120
+void main(void) {
+    gl_Position = ftransform();
+}
+)";
+
+const std::string default_fragment_shader = R"(
+#version 120
+
+void main(void) {
+    gl_FragColor = vec4(0.4,0.4,0.8,1.0);
+}
+
+)";
+
+
 class GL2RenderGroupImpl:
     public batcher::RenderGroupImpl,
     public std::enable_shared_from_this<GL2RenderGroupImpl> {
@@ -76,6 +96,10 @@ public:
         return false;
     }
 };
+
+GPUProgramID GenericRenderer::default_gpu_program_id() const {
+    return default_gpu_program_id_;
+}
 
 batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
     auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
@@ -747,6 +771,10 @@ void GenericRenderer::init_context() {
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
+
+    if(!default_gpu_program_id_) {
+        default_gpu_program_id_ = new_or_existing_gpu_program(default_vertex_shader, default_fragment_shader);
+    }
 }
 
 
