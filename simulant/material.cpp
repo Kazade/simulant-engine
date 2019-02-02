@@ -86,6 +86,15 @@ Material::Material(const Material& rhs):
 
     top_level_ = this;
 
+    material_ambient_index_ = rhs.material_ambient_index_;
+    material_diffuse_index_ = rhs.material_diffuse_index_;
+    material_shininess_index_ = rhs.material_shininess_index_;
+    material_specular_index_ = rhs.material_specular_index_;
+    diffuse_map_index_ = rhs.diffuse_map_index_;
+    specular_map_index_ = rhs.specular_map_index_;
+    normal_map_index_ = rhs.normal_map_index_;
+    light_map_index_ = rhs.light_map_index_;
+
     for(auto& pass: passes_) {
         pass.material_ = this;
         pass.top_level_ = this;
@@ -107,6 +116,15 @@ Material& Material::operator=(const Material& rhs) {
         passes_[i].material_ = this;
         passes_[i].top_level_ = this;
     }
+
+    material_ambient_index_ = rhs.material_ambient_index_;
+    material_diffuse_index_ = rhs.material_diffuse_index_;
+    material_shininess_index_ = rhs.material_shininess_index_;
+    material_specular_index_ = rhs.material_specular_index_;
+    diffuse_map_index_ = rhs.diffuse_map_index_;
+    specular_map_index_ = rhs.specular_map_index_;
+    normal_map_index_ = rhs.normal_map_index_;
+    light_map_index_ = rhs.light_map_index_;
 
     return *this;
 }
@@ -170,15 +188,15 @@ std::vector<std::string> Material::defined_properties_by_type(MaterialPropertyTy
 
 void Material::initialize_default_properties() {
     define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, EMISSION_PROPERTY, "s_material_emission", Vec4(1, 1, 1, 1));
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, "s_material_ambient", Vec4(1, 1, 1, 1));
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, "s_material_diffuse", Vec4(1, 1, 1, 1));
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, "s_material_specular", Vec4(1, 1, 1, 1));
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0.0f);
+    material_ambient_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, "s_material_ambient", Vec4(1, 1, 1, 1));
+    material_diffuse_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, "s_material_diffuse", Vec4(1, 1, 1, 1));
+    material_specular_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, "s_material_specular", Vec4(1, 1, 1, 1));
+    material_shininess_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0.0f);
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, "s_diffuse_map", TextureUnit());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, LIGHT_MAP_PROPERTY, "s_light_map", TextureUnit());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map", TextureUnit());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map", TextureUnit());
+    diffuse_map_index_ =define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, "s_diffuse_map", TextureUnit());
+    light_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, LIGHT_MAP_PROPERTY, "s_light_map", TextureUnit());
+    normal_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map", TextureUnit());
+    specular_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map", TextureUnit());
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
     define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", (int) BLEND_NONE);
@@ -260,18 +278,18 @@ void _material_impl::PropertyValueHolder::set_property_value(const std::string &
     set_property_value(top_level()->defined_property_index(name), tex_id);
 }
 
-PropertyValue _material_impl::PropertyValueHolder::property(const std::string &name) const {
-    /*
-     * Returns a property value
-     */
-
-    auto& prop = top_level_->defined_properties_[top_level_->defined_property_index(name)];
+PropertyValue _material_impl::PropertyValueHolder::property(uint32_t defined_property_index) const {
+    auto& prop = top_level_->defined_properties_[defined_property_index];
     if(!prop.values[slot_].empty()) {
         return PropertyValue(&prop, slot_);
     } else {
         assert(!prop.values[0].empty());
         return PropertyValue(&prop, 0);
     }
+}
+
+PropertyValue _material_impl::PropertyValueHolder::property(const std::string &name) const {
+    return property(top_level_->defined_property_index(name));
 }
 
 void _material_impl::PropertyValueHolder::set_emission(const Colour &colour) {
@@ -303,19 +321,19 @@ void _material_impl::PropertyValueHolder::set_light_map(TextureID texture_id) {
 }
 
 TextureUnit _material_impl::PropertyValueHolder::diffuse_map() const {
-    return property(DIFFUSE_MAP_PROPERTY).value<TextureUnit>();
+    return property(top_level_->diffuse_map_index_).value<TextureUnit>();
 }
 
 TextureUnit _material_impl::PropertyValueHolder::light_map() const {
-    return property(LIGHT_MAP_PROPERTY).value<TextureUnit>();
+    return property(top_level_->light_map_index_).value<TextureUnit>();
 }
 
 TextureUnit _material_impl::PropertyValueHolder::normal_map() const {
-    return property(NORMAL_MAP_PROPERTY).value<TextureUnit>();
+    return property(top_level_->normal_map_index_).value<TextureUnit>();
 }
 
 TextureUnit _material_impl::PropertyValueHolder::specular_map() const {
-    return property(SPECULAR_MAP_PROPERTY).value<TextureUnit>();
+    return property(top_level_->specular_map_index_).value<TextureUnit>();
 }
 
 Colour _material_impl::PropertyValueHolder::emission() const {
@@ -324,22 +342,22 @@ Colour _material_impl::PropertyValueHolder::emission() const {
 }
 
 Colour _material_impl::PropertyValueHolder::specular() const {
-    auto v = property(SPECULAR_PROPERTY).value<Vec4>();
+    auto v = property(top_level_->material_specular_index_).value<Vec4>();
     return Colour(v.x, v.y, v.z, v.w);
 }
 
 Colour _material_impl::PropertyValueHolder::ambient() const {
-    auto v = property(AMBIENT_PROPERTY).value<Vec4>();
+    auto v = property(top_level_->material_ambient_index_).value<Vec4>();
     return Colour(v.x, v.y, v.z, v.w);
 }
 
 Colour _material_impl::PropertyValueHolder::diffuse() const {
-    auto v = property(DIFFUSE_PROPERTY).value<Vec4>();
+    auto v = property(top_level_->material_diffuse_index_).value<Vec4>();
     return Colour(v.x, v.y, v.z, v.w);
 }
 
 float _material_impl::PropertyValueHolder::shininess() const {
-    return property(SHININESS_PROPERTY).value<float>();
+    return property(top_level_->material_shininess_index_).value<float>();
 }
 
 bool _material_impl::PropertyValueHolder::is_blending_enabled() const {

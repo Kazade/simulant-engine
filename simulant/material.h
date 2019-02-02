@@ -289,6 +289,7 @@ namespace _material_impl {
         void set_property_value(const std::string& name, TextureID tex_id);
 
         PropertyValue property(const std::string& name) const;
+        PropertyValue property(uint32_t defined_property_index) const;
 
         void unset_property_value(const std::string& name);
 
@@ -436,6 +437,7 @@ public:
         assert(defined_property_count_ < _material_impl::MAX_DEFINED_PROPERTIES - 1);
 
         _material_impl::DefinedProperty& prop = defined_properties_[defined_property_count_++];
+        assert(defined_property_count_ > 0);
         prop.index = defined_property_count_ - 1;
         prop.name = name;
         prop.type = type;
@@ -511,6 +513,15 @@ private:
         return index;
     }
 
+    /* These indexes exist for performance. It saves a map lookup up for each of these properties */
+    uint32_t material_ambient_index_;
+    uint32_t material_diffuse_index_;
+    uint32_t material_specular_index_;
+    uint32_t material_shininess_index_;
+    uint32_t diffuse_map_index_;
+    uint32_t specular_map_index_;
+    uint32_t light_map_index_;
+    uint32_t normal_map_index_;
 protected:
     friend class _object_manager_impl::ObjectManagerBase<
         MaterialID, Material, std::shared_ptr<smlt::Material>,
