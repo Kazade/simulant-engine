@@ -522,6 +522,12 @@ private:
     uint32_t specular_map_index_;
     uint32_t light_map_index_;
     uint32_t normal_map_index_;
+
+    uint32_t blending_enabled_index_;
+    uint32_t texturing_enabled_index_;
+    uint32_t lighting_enabled_index_;
+    uint32_t depth_test_enabled_index_;
+    uint32_t depth_write_enabled_index_;
 protected:
     friend class _object_manager_impl::ObjectManagerBase<
         MaterialID, Material, std::shared_ptr<smlt::Material>,

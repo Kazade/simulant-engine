@@ -94,6 +94,11 @@ Material::Material(const Material& rhs):
     specular_map_index_ = rhs.specular_map_index_;
     normal_map_index_ = rhs.normal_map_index_;
     light_map_index_ = rhs.light_map_index_;
+    blending_enabled_index_ = rhs.blending_enabled_index_;
+    lighting_enabled_index_ = rhs.lighting_enabled_index_;
+    texturing_enabled_index_ = rhs.texturing_enabled_index_;
+    depth_test_enabled_index_ = rhs.depth_test_enabled_index_;
+    depth_write_enabled_index_ = rhs.depth_write_enabled_index_;
 
     for(auto& pass: passes_) {
         pass.material_ = this;
@@ -125,6 +130,12 @@ Material& Material::operator=(const Material& rhs) {
     specular_map_index_ = rhs.specular_map_index_;
     normal_map_index_ = rhs.normal_map_index_;
     light_map_index_ = rhs.light_map_index_;
+    blending_enabled_index_ = rhs.blending_enabled_index_;
+    lighting_enabled_index_ = rhs.lighting_enabled_index_;
+    texturing_enabled_index_ = rhs.texturing_enabled_index_;
+
+    depth_test_enabled_index_ = rhs.depth_test_enabled_index_;
+    depth_write_enabled_index_ = rhs.depth_write_enabled_index_;
 
     return *this;
 }
@@ -198,13 +209,13 @@ void Material::initialize_default_properties() {
     normal_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map", TextureUnit());
     specular_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map", TextureUnit());
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
+    blending_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
     define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", (int) BLEND_NONE);
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
+    depth_test_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
     // define_builtin_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
+    depth_write_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, CULLING_ENABLED_PROPERTY, "s_culling_enabled", true);
     define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", (int) CULL_MODE_BACK_FACE);
@@ -212,8 +223,8 @@ void Material::initialize_default_properties() {
     define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", (int) SHADE_MODEL_SMOOTH);
     define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", (int) POLYGON_MODE_FILL);
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lighting_enabled", false);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_texturing_enabled", true);
+    lighting_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lighting_enabled", false);
+    texturing_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_texturing_enabled", true);
     define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0f);
     define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, COLOUR_MATERIAL_PROPERTY, "s_colour_material", (int) COLOUR_MATERIAL_NONE);
 
@@ -361,7 +372,7 @@ float _material_impl::PropertyValueHolder::shininess() const {
 }
 
 bool _material_impl::PropertyValueHolder::is_blending_enabled() const {
-    return property(BLENDING_ENABLE_PROPERTY).value<bool>();
+    return property(top_level_->blending_enabled_index_).value<bool>();
 }
 
 void _material_impl::PropertyValueHolder::set_blending_enabled(bool v) {
@@ -385,7 +396,7 @@ void _material_impl::PropertyValueHolder::set_depth_write_enabled(bool v) {
 }
 
 bool _material_impl::PropertyValueHolder::is_depth_write_enabled() const {
-    return property(DEPTH_WRITE_ENABLED_PROPERTY).value<bool>();
+    return property(top_level_->depth_write_enabled_index_).value<bool>();
 }
 
 void _material_impl::PropertyValueHolder::set_cull_mode(CullMode mode) {
@@ -401,7 +412,7 @@ void _material_impl::PropertyValueHolder::set_depth_test_enabled(bool v) {
 }
 
 bool _material_impl::PropertyValueHolder::is_depth_test_enabled() const {
-    return property(DEPTH_TEST_ENABLED_PROPERTY).value<bool>();
+    return property(top_level_->depth_test_enabled_index_).value<bool>();
 }
 
 void _material_impl::PropertyValueHolder::set_lighting_enabled(bool v) {
@@ -409,7 +420,7 @@ void _material_impl::PropertyValueHolder::set_lighting_enabled(bool v) {
 }
 
 bool _material_impl::PropertyValueHolder::is_lighting_enabled() const {
-    return property(LIGHTING_ENABLED_PROPERTY).value<bool>();
+    return property(top_level_->lighting_enabled_index_).value<bool>();
 }
 
 void _material_impl::PropertyValueHolder::set_texturing_enabled(bool v) {
@@ -417,7 +428,7 @@ void _material_impl::PropertyValueHolder::set_texturing_enabled(bool v) {
 }
 
 bool _material_impl::PropertyValueHolder::is_texturing_enabled() const {
-    return property(TEXTURING_ENABLED_PROPERTY).value<bool>();
+    return property(top_level_->texturing_enabled_index_).value<bool>();
 }
 
 float _material_impl::PropertyValueHolder::point_size() const {
