@@ -24,12 +24,13 @@
 
 #include "resource.h"
 #include "generic/identifiable.h"
-#include "generic/optional.h"
-#include "generic/any/any.h"
 #include "generic/managed.h"
 #include "types.h"
 #include "loadable.h"
 #include "interfaces/updateable.h"
+
+
+class MaterialTest;
 
 namespace smlt {
 
@@ -42,8 +43,8 @@ const std::string DIFFUSE_MAP_PROPERTY = "s_diffuse_map";
 const std::string LIGHT_MAP_PROPERTY = "s_light_map";
 const std::string NORMAL_MAP_PROPERTY = "s_normal_map";
 const std::string SPECULAR_MAP_PROPERTY = "s_specular_map";
-const std::string DEPTH_WRITE_ENABLED_PROPERTY = "s_depth_write";
-const std::string DEPTH_TEST_ENABLED_PROPERTY = "s_depth_test";
+const std::string DEPTH_WRITE_ENABLED_PROPERTY = "s_depth_write_enabled";
+const std::string DEPTH_TEST_ENABLED_PROPERTY = "s_depth_test_enabled";
 const std::string DEPTH_FUNC_PROPERTY = "s_depth_func";
 const std::string BLENDING_ENABLE_PROPERTY = "s_blending_enabled";
 const std::string BLEND_FUNC_PROPERTY = "s_blend_func";
@@ -101,6 +102,8 @@ namespace _material_impl {
 
 /* Value type, if the type is texture */
 struct TextureUnit {
+    friend class ::MaterialTest;
+
     friend class _material_impl::PropertyValueHolder;
 
     TextureID texture_id;
@@ -235,16 +238,93 @@ namespace _material_impl {
         static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_MAT4;
     };
 
+    template<typename T>
+    constexpr const T &T_max(const T &a, const T &b) {
+        return a > b ? a : b;
+    }
+
+    template<typename T, typename... Ts>
+    struct max_sizeof {
+        static const size_t value = T_max(sizeof(T), max_sizeof<Ts...>::value);
+    };
+
+    template<typename T>
+    struct max_sizeof<T> {
+        static const size_t value = sizeof(T);
+    };
+
+    /* Dirty hacky trash-all-the-things variant because std:variant and std::any are too slow */
+    template<typename... Args>
+    struct FastVariant {
+        typedef FastVariant<Args...> this_type;
+
+        /* Allocate data to hold the largest type */
+        uint8_t data[max_sizeof<Args...>::value];
+
+        std::function<void (this_type*)> destroy;
+        std::function<void (this_type*, const this_type*)> copy;
+
+        FastVariant() {
+            set<bool>(false);
+        }
+
+        FastVariant(const this_type& rhs) {
+            if(rhs.copy) {
+                rhs.copy(this, &rhs);
+            }
+        }
+
+        this_type& operator=(const this_type& rhs) {
+            if(rhs.copy) {
+                rhs.copy(this, &rhs);
+            }
+
+            return *this;
+        }
+
+        ~FastVariant() {
+            if(destroy) {
+                destroy(this);
+            }
+        }
+
+        template<typename T>
+        const T& get() const {
+            return *((T*) data);
+        }
+
+        template<typename T>
+        void set(const T& val) {
+            if(destroy) {
+                destroy(this);
+            }
+
+            new (data) T(val);
+
+            destroy = [](this_type* _this) {
+                T* thing = (T*) _this->data;
+                thing->~T();
+            };
+
+            copy = [](this_type* _this, const this_type* rhs) {
+                _this->set(rhs->get<T>());
+            };
+        }
+    };
+
+    typedef FastVariant<bool, int, float, Vec2, Vec3, Vec4, Mat3, Mat4, TextureUnit> MaterialVariant;
+
     struct DefinedProperty {
         uint32_t index;  // Keep track of the order properties were defined
         std::string name;
         std::string shader_variable;
         MaterialPropertyType type;
-        smlt::any default_value;
+        MaterialVariant default_value;
         bool is_custom = true;
 
         /* Material value + pass count */
-        smlt::any values[_material_impl::MAX_PASSES + 1];
+        bool slot_used[_material_impl::MAX_PASSES + 1] = {0, 0, 0, 0, 0};
+        MaterialVariant values[_material_impl::MAX_PASSES + 1];
     };
 
     class PropertyValueHolder {
@@ -394,6 +474,7 @@ private:
     GPUProgramPtr program_;
 };
 
+typedef uint8_t PropertyIndex;
 
 class Material:
     public Resource,
@@ -417,7 +498,6 @@ public:
         static const std::string TEXTURE_WITH_LIGHTMAP;
         static const std::string TEXTURE_WITH_LIGHTMAP_AND_LIGHTING;
         static const std::string MULTITEXTURE2_MODULATE_WITH_LIGHTING;
-        static const std::string SKYBOX;
         static const std::string TEXTURED_PARTICLE;
         static const std::string DIFFUSE_PARTICLE;
     };
@@ -428,7 +508,7 @@ public:
     virtual ~Material() {}
 
     template<typename T>
-    uint32_t define_property(
+    PropertyIndex define_property(
         MaterialPropertyType type,
         std::string name,
         std::string shader_variable,
@@ -441,7 +521,7 @@ public:
         prop.index = defined_property_count_ - 1;
         prop.name = name;
         prop.type = type;
-        prop.default_value = smlt::any(default_value);
+        prop.default_value.set(default_value);
         prop.shader_variable = shader_variable;
         set_property_value(prop.index, default_value);
         defined_property_lookup_.insert(std::make_pair(name, prop.index));
@@ -451,7 +531,7 @@ public:
         return prop.index;
     }
 
-    uint32_t defined_property_index(const std::string& name) const {
+    PropertyIndex defined_property_index(const std::string& name) const {
         return defined_property_lookup_.at(name);
     }
 
@@ -487,7 +567,7 @@ private:
     void initialize_default_properties();
 
     uint32_t defined_property_count_ = 0;
-    std::array<_material_impl::DefinedProperty, _material_impl::MAX_DEFINED_PROPERTIES> defined_properties_;
+    _material_impl::DefinedProperty defined_properties_[_material_impl::MAX_DEFINED_PROPERTIES];
     std::unordered_map<std::string, uint32_t> defined_property_lookup_;
 
 
@@ -502,7 +582,7 @@ private:
      */
 
     template<typename T>
-    uint32_t define_builtin_property(
+    PropertyIndex define_builtin_property(
         MaterialPropertyType type,
         std::string name,
         std::string shader_variable,
@@ -514,20 +594,27 @@ private:
     }
 
     /* These indexes exist for performance. It saves a map lookup up for each of these properties */
-    uint32_t material_ambient_index_;
-    uint32_t material_diffuse_index_;
-    uint32_t material_specular_index_;
-    uint32_t material_shininess_index_;
-    uint32_t diffuse_map_index_;
-    uint32_t specular_map_index_;
-    uint32_t light_map_index_;
-    uint32_t normal_map_index_;
+    PropertyIndex material_ambient_index_;
+    PropertyIndex material_diffuse_index_;
+    PropertyIndex material_specular_index_;
+    PropertyIndex material_shininess_index_;
+    PropertyIndex diffuse_map_index_;
+    PropertyIndex specular_map_index_;
+    PropertyIndex light_map_index_;
+    PropertyIndex normal_map_index_;
 
-    uint32_t blending_enabled_index_;
-    uint32_t texturing_enabled_index_;
-    uint32_t lighting_enabled_index_;
-    uint32_t depth_test_enabled_index_;
-    uint32_t depth_write_enabled_index_;
+    PropertyIndex blending_enabled_index_;
+    PropertyIndex texturing_enabled_index_;
+    PropertyIndex lighting_enabled_index_;
+    PropertyIndex depth_test_enabled_index_;
+    PropertyIndex depth_write_enabled_index_;
+
+    PropertyIndex shade_model_index_;
+    PropertyIndex cull_mode_index_;
+    PropertyIndex polygon_mode_index_;
+    PropertyIndex point_size_index_;
+    PropertyIndex colour_material_index_;
+    PropertyIndex blend_func_index_;
 protected:
     friend class _object_manager_impl::ObjectManagerBase<
         MaterialID, Material, std::shared_ptr<smlt::Material>,
@@ -545,9 +632,7 @@ protected:
 
 template<typename T>
 T PropertyValue::value() const {
-    return smlt::any_cast<T>(
-        defined_property_->values[slot_]
-    );
+    return defined_property_->values[slot_].get<T>();
 }
 
 namespace _material_impl {
@@ -558,7 +643,8 @@ void PropertyValueHolder::set_property_value(uint32_t index, const T& value) {
 
     assert(defined_property->type == _material_impl::MaterialTypeForType<T>::type);
 
-    defined_property->values[slot_] = value;
+    defined_property->values[slot_].set(value);
+    defined_property->slot_used[slot_] = true;
 }
 
 

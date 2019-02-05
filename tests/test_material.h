@@ -19,6 +19,36 @@ public:
         this->assert_equal(0.0, mat->pass(0)->shininess());
     }
 
+    void test_material_variant() {
+        /* Make sure that destructors are called correctly */
+
+        smlt::_material_impl::MaterialVariant* variant = nullptr;
+
+        smlt::TextureUnit unit;
+        unit.texture_id = window->shared_assets->new_texture();
+        unit.texture_ = unit.texture_id.fetch();
+
+        auto initial_count = unit.texture_.use_count();
+
+        // Assign 1
+        variant = new smlt::_material_impl::MaterialVariant();
+        variant->set(unit);
+
+        assert_equal(unit.texture_.use_count(), initial_count + 1);
+
+        auto variant2 = *variant;
+
+        assert_equal(unit.texture_.use_count(), initial_count + 2);
+
+        variant->set(1);
+
+        assert_equal(unit.texture_.use_count(), initial_count + 1);
+
+        delete variant;
+
+        assert_equal(unit.texture_.use_count(), initial_count + 1);
+    }
+
     void test_material_applies_to_mesh() {
         smlt::MaterialID mid = window->shared_assets->new_material();
         smlt::MeshID mesh_id = window->shared_assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);

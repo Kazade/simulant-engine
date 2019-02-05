@@ -63,11 +63,14 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
             batches_.push_back(BatchMap());
         }
 
-        if(!batches_[i].count(group)) {
-            batches_[i].insert(std::make_pair(group, std::make_shared<Batch>()));
+        auto& batch = batches_[i];
+
+        auto it = batch.find(group);
+        if(it == batch.end()) {
+            it = batch.insert(std::make_pair(group, std::make_shared<Batch>())).first;
         }
 
-        batches_[i][group]->add_renderable(renderable);
+        it->second->add_renderable(renderable);
     });
 }
 

@@ -143,7 +143,7 @@ void SubMesh::_recalc_bounds() {
     auto vertex_count = this->parent_->vertex_data_->count();
 
     // FIXME:! This will break with 32 bit indices
-    for(uint16_t idx: index_data_->all()) {
+    for(auto& idx: index_data_->all()) {
         if(idx >= vertex_count) continue; // Don't read outside the bounds
 
         Vec4 pos = vertex_data->position_nd_at(idx);

@@ -255,14 +255,19 @@ public:
 
     std::vector<uint32_t> all();
 
-    template<typename T>
+    uint32_t min_index() const { return min_index_; }
+    uint32_t max_index() const { return max_index_; }
+
+    template<typename T, int BS>
     void _index(uint32_t* indexes, std::size_t count) {
-        const auto bytes = (index_type_ == INDEX_TYPE_8_BIT) ? 1 : (index_type_ == INDEX_TYPE_16_BIT) ? 2 : 4;
         auto i = indices_.size();
-        indices_.resize(i + (count * bytes));
+        indices_.resize(i + (count * BS));
 
         uint32_t* idx = indexes;
         for(std::size_t j = 0; j < count; ++j) {
+            min_index_ = std::min(min_index_, *idx);
+            max_index_ = std::max(max_index_, *idx);
+
             auto ptr = (T*) &indices_[i];
             *ptr = (T) (*idx);
             ++idx;
@@ -273,13 +278,13 @@ public:
     void index(uint32_t* indexes, std::size_t count) {
         switch(index_type_) {
         case INDEX_TYPE_8_BIT:
-            _index<uint8_t>(indexes, count);
+            _index<uint8_t, 1>(indexes, count);
         break;
         case INDEX_TYPE_16_BIT:
-            _index<uint16_t>(indexes, count);
+            _index<uint16_t, 2>(indexes, count);
         break;
         case INDEX_TYPE_32_BIT:
-            _index<uint32_t>(indexes, count);
+            _index<uint32_t, 4>(indexes, count);
         break;
         default:
             break;
@@ -289,29 +294,7 @@ public:
     }
 
     void index(uint32_t idx) {
-        if(index_type_ == INDEX_TYPE_8_BIT) {
-            if(idx > 255) throw std::out_of_range("Index too large");
-
-            indices_.push_back(uint8_t(idx));
-        } else if(index_type_ == INDEX_TYPE_16_BIT) {
-            if(idx >= std::numeric_limits<uint16_t>::max()) throw std::out_of_range("Index too large");
-
-            auto i = indices_.size();
-            indices_.resize(i + 2);
-            auto ptr = (uint16_t*) &indices_[i];
-            *ptr = (uint16_t) idx;
-        } else {
-            auto i = indices_.size();
-            indices_.resize(i + 4);
-            auto ptr = (uint32_t*) &indices_[i];
-            *ptr = (uint32_t) idx;
-        }
-
-        count_ = indices_.size() / stride_;
-    }
-
-    void push(uint32_t idx) {
-        index(idx);
+        index(&idx, 1);
     }
 
     void done();
@@ -358,6 +341,10 @@ private:
     uint32_t count_ = 0;
 
     sig::signal<void ()> signal_update_complete_;
+
+    /* For glDrawRangeElements */
+    uint32_t min_index_ = ~0;
+    uint32_t max_index_ = 0;
 };
 
 

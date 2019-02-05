@@ -27,8 +27,8 @@ public:
     ],
 
     "property_values": {
-        "texture_map": "assets/textures/mytexture.png",
-        "s_material_diffuse": "1 0 0 0",
+        "texture_map": "simulant-icon.png",
+        "s_material_diffuse": "1 0 1 0",
         "s_material_ambient": "1 1 1 1"
     },
 
@@ -52,7 +52,7 @@ public:
         assert_true(mat->property("texture_map").is_custom());
         assert_equal(mat->property("texture_map").type(), smlt::MATERIAL_PROPERTY_TYPE_TEXTURE);
         assert_equal(mat->pass(0)->iteration_type(), smlt::ITERATION_TYPE_ONCE);
-        assert_equal(mat->diffuse(), smlt::Colour(1, 0, 0, 0));
+        assert_equal(mat->diffuse(), smlt::Colour(1, 0, 1, 0));
         assert_equal(mat->ambient(), smlt::Colour(1, 1, 1, 1));
     }
 };

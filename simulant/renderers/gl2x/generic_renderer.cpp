@@ -146,7 +146,7 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
     auto la_property = pass->property(LIGHT_LINEAR_ATTENUATION_PROPERTY);
     auto qa_property = pass->property(LIGHT_QUADRATIC_ATTENUATION_PROPERTY);
 
-    auto pos_loc = program->locate_uniform(pos_property.shader_variable());
+    auto pos_loc = program->locate_uniform(pos_property.shader_variable(), true);
     if(pos_loc > -1) {
         auto varname = pos_property.shader_variable();
         auto pos = (light) ? light->absolute_position() : Vec3();
@@ -154,7 +154,7 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
         program->set_uniform_vec4(varname, vec);
     }
 
-    auto amb_loc = program->locate_uniform(amb_property.shader_variable());
+    auto amb_loc = program->locate_uniform(amb_property.shader_variable(), true);
     if(amb_loc > -1) {
         auto varname = amb_property.shader_variable();
         program->set_uniform_colour(
@@ -163,35 +163,35 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
         );
     }
 
-    auto diff_loc = program->locate_uniform(diff_property.shader_variable());
+    auto diff_loc = program->locate_uniform(diff_property.shader_variable(), true);
     if(diff_loc > -1) {
         auto diffuse = (light) ? light->diffuse() : smlt::Colour::NONE;
         auto varname = diff_property.shader_variable();
         program->set_uniform_colour(varname, diffuse);
     }
 
-    auto spec_loc = program->locate_uniform(spec_property.shader_variable());
+    auto spec_loc = program->locate_uniform(spec_property.shader_variable(), true);
     if(spec_loc > -1) {
         auto specular = (light) ? light->specular() : smlt::Colour::NONE;
         auto varname = spec_property.shader_variable();
         program->set_uniform_colour(varname, specular);
     }
 
-    auto ca_loc = program->locate_uniform(ca_property.shader_variable());
+    auto ca_loc = program->locate_uniform(ca_property.shader_variable(), true);
     if(ca_loc > -1) {
         auto att = (light) ? light->constant_attenuation() : 0;
         auto varname = ca_property.shader_variable();
         program->set_uniform_float(varname, att);
     }
 
-    auto la_loc = program->locate_uniform(la_property.shader_variable());
+    auto la_loc = program->locate_uniform(la_property.shader_variable(), true);
     if(la_loc > -1) {
         auto att = (light) ? light->linear_attenuation() : 0;
         auto varname = la_property.shader_variable();
         program->set_uniform_float(varname, att);
     }
 
-    auto qa_loc = program->locate_uniform(la_property.shader_variable());
+    auto qa_loc = program->locate_uniform(la_property.shader_variable(), true);
     if(qa_loc > -1) {
         auto att = (light) ? light->quadratic_attenuation() : 0;
         auto varname = qa_property.shader_variable();
@@ -570,7 +570,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
     auto p_prop = pass->property(PROJECTION_MATRIX_PROPERTY);
     auto itmv_prop = pass->property(INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY);
 
-    auto v_loc = program->locate_uniform(v_prop.shader_variable());
+    auto v_loc = program->locate_uniform(v_prop.shader_variable(), true);
     if(v_loc > -1) {
         program->set_uniform_mat4x4(
             v_prop.shader_variable(),
@@ -578,7 +578,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
         );
     }
 
-    auto mvp_loc = program->locate_uniform(mvp_prop.shader_variable());
+    auto mvp_loc = program->locate_uniform(mvp_prop.shader_variable(), true);
     if(mvp_loc > -1) {
         program->set_uniform_mat4x4(
             mvp_prop.shader_variable(),
@@ -586,7 +586,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
         );
     }
 
-    auto mv_loc = program->locate_uniform(mv_prop.shader_variable());
+    auto mv_loc = program->locate_uniform(mv_prop.shader_variable(), true);
     if(mv_loc > -1) {
         program->set_uniform_mat4x4(
             mv_prop.shader_variable(),
@@ -594,7 +594,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
         );
     }
 
-    auto p_loc = program->locate_uniform(p_prop.shader_variable());
+    auto p_loc = program->locate_uniform(p_prop.shader_variable(), true);
     if(p_loc > -1) {
         program->set_uniform_mat4x4(
             p_prop.shader_variable(),
@@ -602,7 +602,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
         );
     }
 
-    auto itmv_loc = program->locate_uniform(itmv_prop.shader_variable());
+    auto itmv_loc = program->locate_uniform(itmv_prop.shader_variable(), true);
     if(itmv_loc > -1) {
         // PERF: Recalculating every frame will be costly!
         Mat3 inverse_transpose_modelview(modelview);

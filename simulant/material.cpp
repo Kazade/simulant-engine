@@ -40,7 +40,6 @@ const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/${
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/materials/${RENDERER}/texture_with_lightmap.kglm";
 const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/${RENDERER}/texture_with_lightmap_and_lighting.kglm";
 const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/${RENDERER}/multitexture2_modulate_with_lighting.kglm";
-const std::string Material::BuiltIns::SKYBOX = "simulant/materials/${RENDERER}/skybox.kglm";
 const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/${RENDERER}/textured_particle.kglm";
 const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/${RENDERER}/diffuse_particle.kglm";
 
@@ -58,7 +57,6 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"TEXTURE_WITH_LIGHTMAP", Material::BuiltIns::TEXTURE_WITH_LIGHTMAP},
     {"TEXTURE_WITH_LIGHTMAP_AND_LIGHTING", Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING},
     {"MULTITEXTURE2_MODULATE_WITH_LIGHTING", Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING},
-    {"SKYBOX", Material::BuiltIns::SKYBOX},
     {"TEXTURED_PARTICLE", Material::BuiltIns::TEXTURED_PARTICLE},
     {"DIFFUSE_PARTICLE", Material::BuiltIns::DIFFUSE_PARTICLE}
 };
@@ -100,6 +98,17 @@ Material::Material(const Material& rhs):
     depth_test_enabled_index_ = rhs.depth_test_enabled_index_;
     depth_write_enabled_index_ = rhs.depth_write_enabled_index_;
 
+    shade_model_index_ = rhs.shade_model_index_;
+    cull_mode_index_ = rhs.cull_mode_index_;
+    polygon_mode_index_ = rhs.polygon_mode_index_;
+    point_size_index_ = rhs.point_size_index_;
+    colour_material_index_ = rhs.colour_material_index_;
+    blend_func_index_ = rhs.blend_func_index_;
+
+    for(auto i = 0u; i < rhs.defined_property_count_; ++i) {
+        defined_properties_[i] = rhs.defined_properties_[i];
+    }
+
     for(auto& pass: passes_) {
         pass.material_ = this;
         pass.top_level_ = this;
@@ -112,9 +121,13 @@ Material& Material::operator=(const Material& rhs) {
 
     top_level_ = this;
     defined_property_count_ = rhs.defined_property_count_;
-    defined_properties_ = rhs.defined_properties_;
+
     defined_property_lookup_ = rhs.defined_property_lookup_;
     pass_count_ = rhs.pass_count_;
+
+    for(auto i = 0u; i < rhs.defined_property_count_; ++i) {
+        defined_properties_[i] = rhs.defined_properties_[i];
+    }
 
     for(auto i = 0; i < pass_count_; ++i) {
         passes_[i] = rhs.passes_[i];
@@ -136,6 +149,13 @@ Material& Material::operator=(const Material& rhs) {
 
     depth_test_enabled_index_ = rhs.depth_test_enabled_index_;
     depth_write_enabled_index_ = rhs.depth_write_enabled_index_;
+
+    shade_model_index_ = rhs.shade_model_index_;
+    cull_mode_index_ = rhs.cull_mode_index_;
+    polygon_mode_index_ = rhs.polygon_mode_index_;
+    point_size_index_ = rhs.point_size_index_;
+    colour_material_index_ = rhs.colour_material_index_;
+    blend_func_index_ = rhs.blend_func_index_;
 
     return *this;
 }
@@ -210,23 +230,24 @@ void Material::initialize_default_properties() {
     specular_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map", TextureUnit());
 
     blending_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", (int) BLEND_NONE);
+    blend_func_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", (int) BLEND_NONE);
 
     depth_test_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
     // define_builtin_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
 
     depth_write_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
 
+    // FIXME: Is this necessary? We use cull_mode_none for disabled.. but then why don't we do the same for blending?
     define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, CULLING_ENABLED_PROPERTY, "s_culling_enabled", true);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", (int) CULL_MODE_BACK_FACE);
+    cull_mode_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", (int) CULL_MODE_BACK_FACE);
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", (int) SHADE_MODEL_SMOOTH);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", (int) POLYGON_MODE_FILL);
+    shade_model_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", (int) SHADE_MODEL_SMOOTH);
+    polygon_mode_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", (int) POLYGON_MODE_FILL);
 
     lighting_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lighting_enabled", false);
     texturing_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_texturing_enabled", true);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0f);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, COLOUR_MATERIAL_PROPERTY, "s_colour_material", (int) COLOUR_MATERIAL_NONE);
+    point_size_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0f);
+    colour_material_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, COLOUR_MATERIAL_PROPERTY, "s_colour_material", (int) COLOUR_MATERIAL_NONE);
 
     define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_POSITION_PROPERTY, "s_light_position", Vec4());
     define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_AMBIENT_PROPERTY, "s_light_ambient", Vec4(1, 1, 1, 1));
@@ -291,10 +312,10 @@ void _material_impl::PropertyValueHolder::set_property_value(const std::string &
 
 PropertyValue _material_impl::PropertyValueHolder::property(uint32_t defined_property_index) const {
     auto& prop = top_level_->defined_properties_[defined_property_index];
-    if(!prop.values[slot_].empty()) {
+    if(prop.slot_used[slot_]) {
         return PropertyValue(&prop, slot_);
     } else {
-        assert(!prop.values[0].empty());
+        assert(prop.slot_used[0]);
         return PropertyValue(&prop, 0);
     }
 }
@@ -384,7 +405,7 @@ void _material_impl::PropertyValueHolder::set_blend_func(BlendType b) {
 }
 
 BlendType _material_impl::PropertyValueHolder::blend_func() const {
-    return (BlendType) property(BLEND_FUNC_PROPERTY).value<int>();
+    return (BlendType) property(top_level_->blend_func_index_).value<int>();
 }
 
 bool _material_impl::PropertyValueHolder::is_blended() const {
@@ -404,7 +425,7 @@ void _material_impl::PropertyValueHolder::set_cull_mode(CullMode mode) {
 }
 
 CullMode _material_impl::PropertyValueHolder::cull_mode() const {
-    return (CullMode) property(CULL_MODE_PROPERTY).value<int>();
+    return (CullMode) property(top_level_->cull_mode_index_).value<int>();
 }
 
 void _material_impl::PropertyValueHolder::set_depth_test_enabled(bool v) {
@@ -432,11 +453,11 @@ bool _material_impl::PropertyValueHolder::is_texturing_enabled() const {
 }
 
 float _material_impl::PropertyValueHolder::point_size() const {
-    return property(POINT_SIZE_PROPERTY).value<float>();
+    return property(top_level_->point_size_index_).value<float>();
 }
 
 PolygonMode _material_impl::PropertyValueHolder::polygon_mode() const {
-    return (PolygonMode) property(POLYGON_MODE_PROPERTY).value<int>();
+    return (PolygonMode) property(top_level_->polygon_mode_index_).value<int>();
 }
 
 void _material_impl::PropertyValueHolder::set_shade_model(ShadeModel model) {
@@ -444,11 +465,11 @@ void _material_impl::PropertyValueHolder::set_shade_model(ShadeModel model) {
 }
 
 ShadeModel _material_impl::PropertyValueHolder::shade_model() const {
-    return (ShadeModel) property(SHADE_MODEL_PROPERTY).value<int>();
+    return (ShadeModel) property(top_level_->shade_model_index_).value<int>();
 }
 
 ColourMaterial _material_impl::PropertyValueHolder::colour_material() const {
-    return (ColourMaterial) property(COLOUR_MATERIAL_PROPERTY).value<int>();
+    return (ColourMaterial) property(top_level_->colour_material_index_).value<int>();
 }
 
 }

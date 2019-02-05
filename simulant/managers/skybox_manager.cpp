@@ -75,8 +75,13 @@ void Skybox::generate(
 
         // Set the skybox material on all submeshes
         mesh->each([&stage](const std::string&, SubMesh* sm) {
-            auto mat = stage->assets->new_material_from_file(Material::BuiltIns::SKYBOX);
-            sm->set_material_id(mat);
+            auto mat = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
+
+            // Disable depth writes and depth testing, but otherwise use the default texture_only material
+            mat->set_depth_write_enabled(false);
+            mat->set_depth_test_enabled(false);
+
+            sm->set_material_id(mat->id());
         });
 
         auto up_path = manager_->window->resource_locator->locate_file(up);

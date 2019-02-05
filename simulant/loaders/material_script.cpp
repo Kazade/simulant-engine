@@ -93,7 +93,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic:
     }
 }
 
-void read_property_values(_material_impl::PropertyValueHolder& holder, jsonic::Node& json) {
+void read_property_values(Material& mat, _material_impl::PropertyValueHolder& holder, jsonic::Node& json) {
     if(json.has_key("property_values")) {
         for(auto& key: json["property_values"].keys()) {
             auto& value = json["property_values"][key];
@@ -201,6 +201,13 @@ void read_property_values(_material_impl::PropertyValueHolder& holder, jsonic::N
                         holder.set_property_value(key, (int) value);
                     }
                 }
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+                std::string path = value;
+                auto tex_id = mat.resource_manager().new_texture_from_file(
+                    path
+                );
+
+                holder.set_property_value(key, tex_id);
             } else {
                 L_ERROR("Unhandled property type");
             }
@@ -269,7 +276,7 @@ void MaterialScript::generate(Material& material) {
         }
     }
 
-    read_property_values(material, json);
+    read_property_values(material, material, json);
 
     material.set_pass_count(json["passes"].length());
 
@@ -290,7 +297,7 @@ void MaterialScript::generate(Material& material) {
             L_ERROR(_F("Unsupported iteration type: {0}").format(iteration));
         }
 
-        read_property_values(*material.pass(i), pass);
+        read_property_values(material, *material.pass(i), pass);
 
         /* If we support gpu programs, then load any shaders */
         if(renderer->supports_gpu_programs() && pass.has_key("vertex_shader") && pass.has_key("fragment_shader")) {
