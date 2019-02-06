@@ -89,8 +89,7 @@ void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Sta
             change_material_pass(pass_, state.pass);
         }
 
-        // FIXME: Pass the previous light from the last iteration, not nullptr
-        change_light(nullptr, state.light);
+        apply_lights(&state.light, 1);
 
         // Render the transparent / blended objects
         do_visit(
@@ -290,38 +289,62 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
     Light* current = nullptr;
 
-    GLCheck(glMatrixMode, GL_MODELVIEW);
-    GLCheck(glPushMatrix);
+    const LightState disabled_state;
 
-    const Mat4& view = camera_->view_matrix();
+    bool matrix_loaded = false;
 
-    GLCheck(glLoadMatrixf, view.data());
+    for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+        current = (i < count) ? lights[i] : nullptr;
 
-    /* Disable all the other lights */
-    for(uint8_t i = count; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-        GLCheck(glDisable, GL_LIGHT0 + i);
-    }
+        auto state = (current) ? LightState(
+            true,
+            Vec4(current->absolute_position(), (current->type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
+            current->ambient(),
+            current->diffuse(),
+            current->specular(),
+            current->constant_attenuation(),
+            current->linear_attenuation(),
+            current->quadratic_attenuation()
+        ) : disabled_state;
 
-    for(uint8_t i = 0; i < count; ++i) {
-        current = lights[i];
+        if(light_states_[i] != state) {
+            if(state.enabled) {
+                GLCheck(glEnable, GL_LIGHT0 + i);
 
-        GLCheck(glEnable, GL_LIGHT0 + i);
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &current->ambient().r);
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &current->diffuse().r);
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &current->specular().r);
-        GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, current->constant_attenuation());
-        GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION, current->linear_attenuation());
-        GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, current->quadratic_attenuation());
+                /* Only load the matrix on the first enabled light */
+                if(!matrix_loaded) {
+                    GLCheck(glMatrixMode, GL_MODELVIEW);
+                    GLCheck(glPushMatrix);
 
-        Vec4 position(current->absolute_position(), 1.0);
-        if(current->type() == LIGHT_TYPE_DIRECTIONAL) {
-            position.w = 0.0f;
+                    const Mat4& view = camera_->view_matrix();
+
+                    GLCheck(glLoadMatrixf, view.data());
+                    matrix_loaded = true;
+                }
+
+                GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
+                GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
+                GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
+                GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &state.specular.r);
+                GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, state.constant_att);
+                GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION, state.linear_att);
+                GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, state.quadratic_att);
+
+                /* Store the state in GL */
+                light_states_[i] = state;
+
+            } else {
+                GLCheck(glDisable, GL_LIGHT0 + i);
+
+                // Manipulate the stored state to match GL
+                light_states_[i].enabled = false;
+            }
         }
-
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &position.x);
     }
 
-    GLCheck(glPopMatrix);
+    if(matrix_loaded) {
+        GLCheck(glPopMatrix);
+    }
 }
 
 void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {

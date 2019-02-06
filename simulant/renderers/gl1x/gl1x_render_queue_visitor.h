@@ -11,7 +11,7 @@ class GL1XRenderer;
 struct GL1RenderState {
     Renderable* renderable;
     MaterialPass* pass;
-    const Light* light;
+    LightPtr light;
     batcher::Iteration iteration;
     GL1RenderGroupImpl* render_group_impl;
 };
@@ -36,7 +36,7 @@ private:
     Colour global_ambient_;
 
     const MaterialPass* pass_ = nullptr;
-    const Light* light_ = nullptr;
+    LightPtr light_;
 
     GL1RenderGroupImpl* current_group_ = nullptr;
 
@@ -68,6 +68,47 @@ private:
     bool textures_enabled_[MAX_TEXTURE_UNITS] = {0};
 
     uint32_t default_texture_name_ = 0;
+
+    struct LightState {
+        bool enabled = false;
+        Vec4 position;
+        Colour diffuse;
+        Colour ambient;
+        Colour specular;
+        float constant_att = 0;
+        float linear_att = 0;
+        float quadratic_att = 0;
+
+        LightState() = default;
+        LightState(bool enabled, Vec4 pos, Colour diffuse, Colour ambient, Colour specular, float constant_att, float linear_att, float quadratic_att):
+            enabled(enabled),
+            position(pos),
+            diffuse(diffuse),
+            ambient(ambient),
+            specular(specular),
+            constant_att(constant_att),
+            linear_att(linear_att),
+            quadratic_att(quadratic_att) {}
+
+        bool operator!=(const LightState& rhs) const {
+            return !(*this == rhs);
+        }
+
+        bool operator==(const LightState& rhs) const {
+            if(enabled != rhs.enabled) return false;
+            if(position != rhs.position) return false;
+            if(diffuse != rhs.diffuse) return false;
+            if(ambient != rhs.ambient) return false;
+            if(specular != rhs.specular) return false;
+            if(constant_att != rhs.constant_att) return false;
+            if(linear_att != rhs.linear_att) return false;
+            if(quadratic_att != rhs.quadratic_att) return false;
+
+            return true;
+        }
+    };
+
+    LightState light_states_[MAX_LIGHTS_PER_RENDERABLE];
 };
 
 

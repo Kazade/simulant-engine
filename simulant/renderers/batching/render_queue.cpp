@@ -107,7 +107,38 @@ void RenderQueue::clear() {
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     std::lock_guard<std::mutex> lock(queue_lock_);
 
+    struct BlendedObjectState {
+        Renderable* renderable;
+        MaterialPass* material_pass;
+        RenderGroup* group;
+
+        uint8_t light_count = 0;
+        std::array<LightPtr, MAX_LIGHTS_PER_RENDERABLE> lights;
+    };
+
     Pass pass = 0;
+    std::multimap<float, BlendedObjectState, std::greater<float> > blended_object_queue;
+
+    auto queue_if_blended = [](MaterialPass* material_pass, Renderable* renderable) {
+        if(material_pass->is_blended()) {
+            auto pos = renderable->transformed_aabb().centre();
+            auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
+
+            float key = plane.distance_to(pos);
+
+            GL1RenderState state;
+            state.renderable = renderable;
+            state.pass = material_pass;
+            state.light = light_;
+            state.iteration = iteration;
+            state.render_group_impl = current_group_;
+
+            blended_object_queue_.insert(
+                std::make_pair(key, state)
+            );
+        }
+    };
+
 
     visitor->start_traversal(*this, frame_id, stage_);
 
@@ -126,6 +157,10 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
             p.second->each([&](uint32_t i, Renderable* renderable) {
                 if(!renderable->is_visible_in_frame(frame_id)) {
+                    return;
+                }
+
+                if(!renderable->index_element_count()) {
                     return;
                 }
 
@@ -162,9 +197,8 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                     iterations = lights.size();
                 }
 
-                Light* light = nullptr;
                 for(Iteration i = 0; i < iterations; ++i) {
-                    Light* next = nullptr;
+                    LightPtr next = nullptr;
 
                     // Pass down the light if necessary, otherwise just pass nullptr
                     if(!lights.empty()) {
@@ -173,13 +207,11 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                         next = nullptr;
                     }
 
-                    if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT && (i== 0 || light != next)) {
-                        visitor->change_light(light, next);
+                    if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
+                        visitor->apply_lights(&next, 1);
                     } else if(pass_iteration_type == ITERATION_TYPE_N || pass_iteration_type == ITERATION_TYPE_ONCE) {
                         visitor->apply_lights(&lights[0], (uint8_t) lights.size());
                     }
-
-                    light = next;
                     visitor->visit(renderable, material_pass, i);
                 }
 
