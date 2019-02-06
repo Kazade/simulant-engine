@@ -80,8 +80,10 @@ class RenderGroupImpl {
 public:
     typedef std::shared_ptr<RenderGroupImpl> ptr;
 
-    RenderGroupImpl(RenderPriority priority):
-        priority_(priority) {
+    RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
+        priority_(priority),
+        is_blended_(is_blended),
+        distance_to_camera_(distance_to_camera) {
 
     }
 
@@ -99,6 +101,20 @@ public:
             return false;
         }
 
+        if(this->is_blended_ < rhs.is_blended_) {
+            return true;
+        } else if(this->is_blended_ > rhs.is_blended_) {
+            return false;
+        }
+
+        /* Objects are sorted from farthest first, to nearest which is why this
+           is reversed */
+        if(this->distance_to_camera_ > rhs.distance_to_camera_) {
+            return true;
+        } else if(this->distance_to_camera_ < rhs.distance_to_camera_) {
+            return false;
+        }
+
         return lt(rhs);
     }
 
@@ -106,6 +122,8 @@ private:
     virtual bool lt(const RenderGroupImpl& rhs) const = 0;
 
     RenderPriority priority_;
+    bool is_blended_;
+    float distance_to_camera_ = 0.0f;
 };
 
 class RenderGroup {
@@ -139,7 +157,13 @@ class RenderGroupFactory {
 public:
     virtual ~RenderGroupFactory() {}
 
-    virtual RenderGroup new_render_group(Renderable* renderable, MaterialPass* material_pass) = 0;  
+    virtual RenderGroup new_render_group(
+        Renderable* renderable,
+        MaterialPass* material_pass,
+        RenderPriority priority,
+        bool is_blended,
+        float distance_to_camera
+    ) = 0;
 };
 
 typedef uint32_t Pass;
@@ -199,7 +223,7 @@ class RenderQueue {
 public:
     typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Light*, Iteration)> TraverseCallback;
 
-    RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
+    RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
     void insert_renderable(std::shared_ptr<Renderable> renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
@@ -232,6 +256,8 @@ private:
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
+    CameraPtr camera_;
+
     BatchPasses batches_;
 
     void clean_empty_batches();

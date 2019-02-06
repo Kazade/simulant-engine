@@ -35,7 +35,13 @@ public:
 
     GL1XRenderer(Window* window);
 
-    batcher::RenderGroup new_render_group(Renderable *renderable, MaterialPass *material_pass);
+    batcher::RenderGroup new_render_group(
+        Renderable *renderable,
+        MaterialPass *material_pass,
+        RenderPriority priority,
+        bool is_blended,
+        float distance_to_camera
+    ) override;
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera);
 
     void init_context();

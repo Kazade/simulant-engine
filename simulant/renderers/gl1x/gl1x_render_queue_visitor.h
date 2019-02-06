@@ -40,15 +40,7 @@ private:
 
     GL1RenderGroupImpl* current_group_ = nullptr;
 
-    bool queue_blended_objects_ = true;
-
-    /*
-     * All entries are ordered by distance from the far frustum descending (back-to-front)
-     */
-    std::multimap<float, GL1RenderState, std::greater<float> > blended_object_queue_;
-
     void do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
-    bool queue_if_blended(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
 
     void enable_vertex_arrays(bool force=false);
     void disable_vertex_arrays(bool force=false);

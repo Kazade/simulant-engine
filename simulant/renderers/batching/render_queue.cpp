@@ -24,6 +24,7 @@
 #include "../../nodes/particle_system.h"
 #include "../../nodes/geom.h"
 #include "../../nodes/geoms/geom_culler.h"
+#include "../../nodes/camera.h"
 
 #include "render_queue.h"
 #include "../../partitioner.h"
@@ -32,9 +33,10 @@ namespace smlt {
 namespace batcher {
 
 
-RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory):
+RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera):
     stage_(stage),
-    render_group_factory_(render_group_factory) {
+    render_group_factory_(render_group_factory),
+    camera_(camera) {
 
 }
 
@@ -51,9 +53,21 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
     auto material = stage_->assets->material(material_id);
     assert(material);
 
+    auto pos = renderable->transformed_aabb().centre();
+    auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
+
     material->each([&](uint32_t i, MaterialPass* material_pass) {
+
+        bool is_blended = material_pass->is_blended();
+
+        // If we're not blending, we don't bother sorting based on distance
+        float distance_to_camera = (!is_blended) ? 0.0f : (
+            plane.distance_to(pos)
+        );
+
         RenderGroup group = render_group_factory_->new_render_group(
-            renderable.get(), material_pass
+            renderable.get(), material_pass,
+            renderable->render_priority(), is_blended, distance_to_camera
         );
 
         assert(i < MAX_MATERIAL_PASSES);
@@ -107,38 +121,7 @@ void RenderQueue::clear() {
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     std::lock_guard<std::mutex> lock(queue_lock_);
 
-    struct BlendedObjectState {
-        Renderable* renderable;
-        MaterialPass* material_pass;
-        RenderGroup* group;
-
-        uint8_t light_count = 0;
-        std::array<LightPtr, MAX_LIGHTS_PER_RENDERABLE> lights;
-    };
-
     Pass pass = 0;
-    std::multimap<float, BlendedObjectState, std::greater<float> > blended_object_queue;
-
-    auto queue_if_blended = [](MaterialPass* material_pass, Renderable* renderable) {
-        if(material_pass->is_blended()) {
-            auto pos = renderable->transformed_aabb().centre();
-            auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
-
-            float key = plane.distance_to(pos);
-
-            GL1RenderState state;
-            state.renderable = renderable;
-            state.pass = material_pass;
-            state.light = light_;
-            state.iteration = iteration;
-            state.render_group_impl = current_group_;
-
-            blended_object_queue_.insert(
-                std::make_pair(key, state)
-            );
-        }
-    };
-
 
     visitor->start_traversal(*this, frame_id, stage_);
 
