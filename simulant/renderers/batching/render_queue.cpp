@@ -56,6 +56,7 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
     auto pos = renderable->transformed_aabb().centre();
     auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
     auto renderable_dist_to_camera = plane.distance_to(pos);
+    auto priority = renderable->render_priority();
 
     material->each([&](uint32_t i, MaterialPass* material_pass) {
 
@@ -71,7 +72,7 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
 
         RenderGroup group = render_group_factory_->new_render_group(
             renderable.get(), material_pass,
-            renderable->render_priority(), is_blended, distance_to_camera
+            priority, is_blended, distance_to_camera
         );
 
         assert(i < MAX_MATERIAL_PASSES);
