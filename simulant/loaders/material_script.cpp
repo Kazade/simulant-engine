@@ -249,10 +249,10 @@ void MaterialScript::generate(Material& material) {
 
     /* Load any custom properties */
     if(json.has_key("custom_properties")) {
-        auto& custom_props = json["custom_properties"];
+        jsonic::Node& custom_props = json["custom_properties"];
 
         for(auto i = 0u; i < custom_props.length(); ++i) {
-            auto& prop = custom_props[i];
+            jsonic::Node& prop = custom_props[i];
 
             std::string kind = prop["type"];
             auto prop_type = lookup_material_property_type(kind);
@@ -285,7 +285,7 @@ void MaterialScript::generate(Material& material) {
     Renderer* renderer = window->renderer;
 
     for(auto i = 0u; i < json["passes"].length(); ++i) {
-        auto& pass = json["passes"][i];
+        jsonic::Node& pass = json["passes"][i];
 
         std::string iteration = (pass.has_key("iteration")) ? (std::string) pass["iteration"] : "once";
 
