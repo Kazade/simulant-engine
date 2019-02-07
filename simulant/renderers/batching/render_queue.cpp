@@ -55,14 +55,18 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
 
     auto pos = renderable->transformed_aabb().centre();
     auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
+    auto renderable_dist_to_camera = plane.distance_to(pos);
 
     material->each([&](uint32_t i, MaterialPass* material_pass) {
 
         bool is_blended = material_pass->is_blended();
 
         // If we're not blending, we don't bother sorting based on distance
+        // as grouping by texture is more important
+        // FIXME: Experiment with sorting non-blended in front-to-back order
+        // to see if it improves performance
         float distance_to_camera = (!is_blended) ? 0.0f : (
-            plane.distance_to(pos)
+            renderable_dist_to_camera
         );
 
         RenderGroup group = render_group_factory_->new_render_group(
