@@ -82,6 +82,9 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
         if(!last_group || last_group->texture_id[i] != current_tex) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
             if(current_tex) {
+                if(current_tex == 12) {
+                    std::cout << "";
+                }
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
                 // Bind the default texture in this case
@@ -267,47 +270,47 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         auto state = (current) ? LightState(
             true,
             Vec4(current->absolute_position(), (current->type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
-            current->ambient(),
             current->diffuse(),
+            current->ambient(),
             current->specular(),
             current->constant_attenuation(),
             current->linear_attenuation(),
             current->quadratic_attenuation()
         ) : disabled_state;
 
-        if(light_states_[i] != state) {
-            if(state.enabled) {
-                GLCheck(glEnable, GL_LIGHT0 + i);
-
-                /* Only load the matrix on the first enabled light */
-                if(!matrix_loaded) {
-                    GLCheck(glMatrixMode, GL_MODELVIEW);
-                    GLCheck(glPushMatrix);
-
-                    const Mat4& view = camera_->view_matrix();
-
-                    GLCheck(glLoadMatrixf, view.data());
-                    matrix_loaded = true;
-                }
-
-                GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
-                GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
-                GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
-                GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &state.specular.r);
-                GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, state.constant_att);
-                GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION, state.linear_att);
-                GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, state.quadratic_att);
-
-                /* Store the state in GL */
-                light_states_[i] = state;
-
-            } else {
-                GLCheck(glDisable, GL_LIGHT0 + i);
-
-                // Manipulate the stored state to match GL
-                light_states_[i].enabled = false;
-            }
+        /* No need to update this light */
+        if(light_states_[i].initialized && light_states_[i] == state) {
+            continue;
         }
+
+        if(state.enabled) {
+            GLCheck(glEnable, GL_LIGHT0 + i);
+
+            /* Only load the matrix on the first enabled light */
+            if(!matrix_loaded) {
+                GLCheck(glMatrixMode, GL_MODELVIEW);
+                GLCheck(glPushMatrix);
+
+                const Mat4& view = camera_->view_matrix();
+
+                GLCheck(glLoadMatrixf, view.data());
+                matrix_loaded = true;
+            }
+
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &state.specular.r);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, state.constant_att);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION, state.linear_att);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, state.quadratic_att);
+
+        } else {
+            GLCheck(glDisable, GL_LIGHT0 + i);
+        }
+
+        light_states_[i] = state;
+        light_states_[i].initialized = true;
     }
 
     if(matrix_loaded) {

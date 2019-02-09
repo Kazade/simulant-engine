@@ -62,6 +62,7 @@ private:
     uint32_t default_texture_name_ = 0;
 
     struct LightState {
+        bool initialized = false;
         bool enabled = false;
         Vec4 position;
         Colour diffuse;

@@ -56,8 +56,7 @@ private:
 };
 
 
-class Renderable:
-    public batcher::BatchMember,
+class Renderable:  
     public virtual BoundableEntity {
 
 public:

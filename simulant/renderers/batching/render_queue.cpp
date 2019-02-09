@@ -59,6 +59,9 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
     auto priority = renderable->render_priority();
 
     material->each([&](uint32_t i, MaterialPass* material_pass) {
+        if(pass_queues_.size() < i + 1) {
+            pass_queues_.resize(i + 1);
+        }
 
         bool is_blended = material_pass->is_blended();
 
@@ -78,49 +81,15 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
         assert(i < MAX_MATERIAL_PASSES);
         assert(i < material->pass_count());
 
-        if(batches_.size() <= i) {
-            batches_.push_back(BatchMap());
-        }
-
-        auto& batch = batches_[i];
-
-        auto it = batch.find(group);
-        if(it == batch.end()) {
-            it = batch.insert(std::make_pair(group, std::make_shared<Batch>())).first;
-        }
-
-        it->second->add_renderable(renderable);
+        auto& pass_queue = pass_queues_[i];
+        pass_queue.insert(std::make_pair(group, renderable));
     });
 }
 
-void RenderQueue::clean_empty_batches() {    
-    std::lock_guard<std::mutex> lock(queue_lock_);
-
-    for(auto& pass: batches_) {
-        auto group = pass.begin();
-        while(group != pass.end()) {
-            auto& batch = group->second;
-            if(!batch->renderable_count()) {
-                // Remove the group in a loop-safe way
-                group = pass.erase(group);
-            } else {
-                ++group;
-            }
-        }
-    }
-
-    for(auto it = batches_.begin(); it != batches_.end();) {
-        if(it->empty()) {
-            it = batches_.erase(it);
-        } else {
-            ++it;
-        }
-    }
-}
 
 void RenderQueue::clear() {
     std::lock_guard<std::mutex> lock(queue_lock_);
-    batches_.clear();
+    pass_queues_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
@@ -130,114 +99,81 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
     visitor->start_traversal(*this, frame_id, stage_);
 
-    for(auto& batches: batches_) {
+    for(auto& pass_queue: pass_queues_) {
         IterationType pass_iteration_type;
         MaterialID material_id;
         MaterialPass* material_pass = nullptr;
 
         const RenderGroup* last_group = nullptr;
 
-        for(auto& p: batches) {
+        for(auto& p: pass_queue) {
             const RenderGroup* current_group = &p.first;
+            Renderable* renderable = p.second.get();
 
-            // Track whether we've called change_render_group yet
-            bool render_group_changed_ = false;
+            if(!renderable->is_visible_in_frame(frame_id)) {
+                return;
+            }
 
-            p.second->each([&](uint32_t i, Renderable* renderable) {
-                if(!renderable->is_visible_in_frame(frame_id)) {
-                    return;
+            if(!renderable->index_element_count()) {
+                return;
+            }
+
+            /* We do this here so that we don't change render group unless something in the
+             * new group is visible */
+            if(!last_group || *current_group != *last_group) {
+                visitor->change_render_group(last_group, current_group);
+            }
+
+            /* As the pass number is constant for the entire batch, a material_pass
+             * will only change if and when a material changes
+             */
+            auto& this_mat_id = renderable->material_id();
+            if(this_mat_id != material_id) {
+                auto last_pass = material_pass;
+
+                material_id = this_mat_id;
+                material_pass = stage_->assets->material(material_id)->pass(pass);
+                pass_iteration_type = material_pass->iteration_type();
+
+                visitor->change_material_pass(last_pass, material_pass);
+            }
+
+            uint32_t iterations = 1;
+
+            // Get any lights which are visible and affecting the renderable this frame
+            std::vector<LightPtr> lights = renderable->lights_affecting_this_frame();
+
+            if(pass_iteration_type == ITERATION_TYPE_N) {
+                iterations = material_pass->max_iterations();
+            } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
+                iterations = lights.size();
+            }
+
+            for(Iteration i = 0; i < iterations; ++i) {
+                LightPtr next = nullptr;
+
+                // Pass down the light if necessary, otherwise just pass nullptr
+                if(!lights.empty()) {
+                    next = lights[i];
+                } else {
+                    next = nullptr;
                 }
 
-                if(!renderable->index_element_count()) {
-                    return;
+                if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
+                    visitor->apply_lights(&next, 1);
+                } else if(pass_iteration_type == ITERATION_TYPE_N || pass_iteration_type == ITERATION_TYPE_ONCE) {
+                    visitor->apply_lights(&lights[0], (uint8_t) lights.size());
                 }
+                visitor->visit(renderable, material_pass, i);
+            }
 
-                /* We do this here so that we don't change render group unless something in the
-                 * new group is visible */
-                if(!render_group_changed_) {
-                    visitor->change_render_group(last_group, current_group);
-                    render_group_changed_ = true;
-                }
+            last_group = current_group;
 
-
-                /* As the pass number is constant for the entire batch, a material_pass
-                 * will only change if and when a material changes
-                 */
-                auto& this_mat_id = renderable->material_id();
-                if(this_mat_id != material_id) {
-                    auto last_pass = material_pass;
-
-                    material_id = this_mat_id;
-                    material_pass = stage_->assets->material(material_id)->pass(pass);
-                    pass_iteration_type = material_pass->iteration_type();
-
-                    visitor->change_material_pass(last_pass, material_pass);
-                }
-
-                uint32_t iterations = 1;
-
-                // Get any lights which are visible and affecting the renderable this frame
-                std::vector<LightPtr> lights = renderable->lights_affecting_this_frame();
-
-                if(pass_iteration_type == ITERATION_TYPE_N) {
-                    iterations = material_pass->max_iterations();
-                } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
-                    iterations = lights.size();
-                }
-
-                for(Iteration i = 0; i < iterations; ++i) {
-                    LightPtr next = nullptr;
-
-                    // Pass down the light if necessary, otherwise just pass nullptr
-                    if(!lights.empty()) {
-                        next = lights[i];
-                    } else {
-                        next = nullptr;
-                    }
-
-                    if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
-                        visitor->apply_lights(&next, 1);
-                    } else if(pass_iteration_type == ITERATION_TYPE_N || pass_iteration_type == ITERATION_TYPE_ONCE) {
-                        visitor->apply_lights(&lights[0], (uint8_t) lights.size());
-                    }
-                    visitor->visit(renderable, material_pass, i);
-                }
-
-                last_group = current_group;
-            });
         }
         ++pass;
     }
 
     visitor->end_traversal(*this, stage_);
-}
-
-void Batch::add_renderable(RenderablePtr renderable) {
-    assert(renderable);
-
-    write_lock<shared_mutex> lock(batch_lock_);
-
-    renderable->join_batch(this);
-    renderables_.push_back(renderable);
-}
-
-void Batch::remove_renderable(RenderablePtr renderable) {
-    write_lock<shared_mutex> lock(batch_lock_);
-
-    auto it = std::find(renderables_.begin(), renderables_.end(), renderable);
-    if(it != renderables_.end()) {
-        renderables_.erase(it);
-    }
-    renderable->leave_batch(this);
-}
-
-void Batch::each(std::function<void (uint32_t, Renderable *)> func) const {
-    read_lock<shared_mutex> lock(batch_lock_);
-
-    uint32_t i = 0;
-    for(auto& renderable: renderables_) {
-        func(i++, renderable.get());
-    }
 }
 
 }
