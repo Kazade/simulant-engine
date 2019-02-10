@@ -177,13 +177,13 @@ GPUProgram::GPUProgram(const GPUProgramID &id, Renderer* renderer, const std::st
 }
 
 GLint GPUProgram::locate_attribute(const std::string &attribute, bool fail_silently) {
-    if(!is_complete()) {
-        throw std::logic_error("Attempted to access attribute on a GPU program that is not complete");
-    }
-
     auto it = attribute_cache_.find(attribute);
     if(it != attribute_cache_.end()) {
         return (*it).second;
+    }
+
+    if(!is_complete()) {
+        throw std::logic_error("Attempted to access attribute on a GPU program that is not complete");
     }
 
     GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, attribute.c_str());

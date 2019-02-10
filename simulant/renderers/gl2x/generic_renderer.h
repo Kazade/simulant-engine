@@ -50,7 +50,6 @@ public:
 
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
     void change_material_pass(const MaterialPass* prev, const MaterialPass* next);
-    void change_light(const Light* prev, const Light* next);
     void apply_lights(const LightPtr* lights, const uint8_t count);
 
 private:
@@ -64,12 +63,7 @@ private:
 
     GL2RenderGroupImpl* current_group_ = nullptr;
 
-    bool queue_blended_objects_ = true;
-
-    /*
-     * All entries are ordered by distance from the near frustum descending (back-to-front)
-     */
-    std::multimap<float, RenderState, std::greater<float> > blended_object_queue_;
+    uint32_t default_texture_name_ = 0;
 
     void do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
 
@@ -119,7 +113,7 @@ private:
         return buffer_manager_.get();
     }
 
-    void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const Light *light);
+    void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);

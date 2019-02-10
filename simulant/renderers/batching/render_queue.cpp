@@ -47,6 +47,14 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
      * and then adds the renderable to that pass's render queue
      */
 
+    if(!renderable->is_visible()) {
+        return;
+    }
+
+    if(!renderable->index_element_count()) {
+        return;
+    }
+
     auto material_id = renderable->material_id();
     assert(material_id);
 
@@ -58,10 +66,9 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
     auto renderable_dist_to_camera = plane.distance_to(pos);
     auto priority = renderable->render_priority();
 
-    material->each([&](uint32_t i, MaterialPass* material_pass) {
-        if(pass_queues_.size() < i + 1) {
-            pass_queues_.resize(i + 1);
-        }
+    auto pass_count = material->pass_count();
+    for(auto i = 0u; i < pass_count; ++i) {
+        MaterialPass* material_pass = material->pass(i);
 
         bool is_blended = material_pass->is_blended();
 
@@ -78,18 +85,17 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
             priority, is_blended, distance_to_camera
         );
 
-        assert(i < MAX_MATERIAL_PASSES);
-        assert(i < material->pass_count());
-
         auto& pass_queue = pass_queues_[i];
         pass_queue.insert(std::make_pair(group, renderable));
-    });
+    }
 }
 
 
 void RenderQueue::clear() {
     std::lock_guard<std::mutex> lock(queue_lock_);
-    pass_queues_.clear();
+    for(auto& pass_queue: pass_queues_) {
+        pass_queue.clear();
+    }
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {

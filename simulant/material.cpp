@@ -113,6 +113,8 @@ Material::Material(const Material& rhs):
         pass.material_ = this;
         pass.top_level_ = this;
     }
+
+    texture_properties_ = rhs.texture_properties_;
 }
 
 Material& Material::operator=(const Material& rhs) {
@@ -134,6 +136,8 @@ Material& Material::operator=(const Material& rhs) {
         passes_[i].material_ = this;
         passes_[i].top_level_ = this;
     }
+
+    texture_properties_ = rhs.texture_properties_;
 
     material_ambient_index_ = rhs.material_ambient_index_;
     material_diffuse_index_ = rhs.material_diffuse_index_;
@@ -204,17 +208,14 @@ void Material::update(float dt) {
 
 }
 
-std::vector<std::string> Material::defined_properties_by_type(MaterialPropertyType type) const {
-    std::vector<std::string> ret;
-    for(auto i = 0u; i < defined_property_count_; ++i) {
-        auto& p = defined_properties_[i];
-        if(p.type == type) {
-            assert(!p.name.empty());
-            ret.push_back(p.name);
-        }
+const std::vector<PropertyIndex>& Material::defined_properties_by_type(MaterialPropertyType type) const {
+    if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+        return texture_properties_;
+    } else {
+        assert(0 && "Not implemented");
+        L_ERROR("Not implemented");
+        return std::vector<PropertyIndex>();
     }
-
-    return ret;
 }
 
 void Material::initialize_default_properties() {

@@ -485,6 +485,7 @@ class Material:
     public _material_impl::PropertyValueHolder {
 
 public:
+    friend class GenericRenderer;
     friend class _material_impl::PropertyValueHolder;
 
     struct BuiltIns {
@@ -526,6 +527,10 @@ public:
         set_property_value(prop.index, default_value);
         defined_property_lookup_.insert(std::make_pair(name, prop.index));
 
+        if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+            texture_properties_.push_back(prop.index);
+        }
+
         assert(!name.empty());
 
         return prop.index;
@@ -539,7 +544,7 @@ public:
         return defined_properties_[defined_property_index(name)].type;
     }
 
-    std::vector<std::string> defined_properties_by_type(MaterialPropertyType type) const;
+    const std::vector<PropertyIndex> &defined_properties_by_type(MaterialPropertyType type) const;
     std::vector<std::string> defined_custom_properties() const;
 
     bool property_is_defined(const std::string& name) const {
@@ -570,6 +575,7 @@ private:
     _material_impl::DefinedProperty defined_properties_[_material_impl::MAX_DEFINED_PROPERTIES];
     std::unordered_map<std::string, uint32_t> defined_property_lookup_;
 
+    std::vector<PropertyIndex> texture_properties_;
 
     std::mutex pass_mutex_;
     uint8_t pass_count_ = 0;

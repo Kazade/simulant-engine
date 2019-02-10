@@ -82,9 +82,6 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
         if(!last_group || last_group->texture_id[i] != current_tex) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
             if(current_tex) {
-                if(current_tex == 12) {
-                    std::cout << "";
-                }
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
                 // Bind the default texture in this case
@@ -317,41 +314,6 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         GLCheck(glPopMatrix);
     }
 }
-
-void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
-    if(!next) {
-        return;
-    }
-
-    /* Disable all but the first light */
-    for(uint8_t i = 1; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-        GLCheck(glDisable, GL_LIGHT0 + i);
-    }
-
-    GLCheck(glEnable, GL_LIGHT0);
-    GLCheck(glLightfv, GL_LIGHT0, GL_AMBIENT, &next->ambient().r);
-    GLCheck(glLightfv, GL_LIGHT0, GL_DIFFUSE, &next->diffuse().r);
-    GLCheck(glLightfv, GL_LIGHT0, GL_SPECULAR, &next->specular().r);
-    GLCheck(glLightf, GL_LIGHT0, GL_CONSTANT_ATTENUATION, next->constant_attenuation());
-    GLCheck(glLightf, GL_LIGHT0, GL_LINEAR_ATTENUATION, next->linear_attenuation());
-    GLCheck(glLightf, GL_LIGHT0, GL_QUADRATIC_ATTENUATION, next->quadratic_attenuation());
-
-    Vec4 position(next->absolute_position(), 1.0);
-    if(next->type() == LIGHT_TYPE_DIRECTIONAL) {
-        position.w = 0.0f;
-    }
-
-    GLCheck(glMatrixMode, GL_MODELVIEW);
-    GLCheck(glPushMatrix);
-
-    const Mat4& view = camera_->view_matrix();
-
-    GLCheck(glLoadMatrixf, view.data());
-
-    GLCheck(glLightfv, GL_LIGHT0, GL_POSITION, &position.x);
-    GLCheck(glPopMatrix);
-}
-
 
 void GL1RenderQueueVisitor::enable_vertex_arrays(bool force) {
     if(!force && positions_enabled_) return;

@@ -123,7 +123,10 @@ batcher::RenderGroup GenericRenderer::new_render_group(
             TextureUnit unit = property_value.value<TextureUnit>();
             if(unit.texture_id) {
                 impl->texture_id[texture_unit++] = texture_objects_.at(unit.texture_id);
-                continue;
+            } else {
+                // Bind the default (white) texture if the unit is used, but doesn't have a
+                // texture bound.
+                impl->texture_id[texture_unit++] = 0;
             }
         }
     }
@@ -138,7 +141,7 @@ batcher::RenderGroup GenericRenderer::new_render_group(
     return batcher::RenderGroup(impl);
 }
 
-void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const Light *light) {
+void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light) {
     auto pos_property = pass->property(LIGHT_POSITION_PROPERTY);
     auto amb_property = pass->property(LIGHT_AMBIENT_PROPERTY);
     auto diff_property = pass->property(LIGHT_DIFFUSE_PROPERTY);
@@ -201,11 +204,12 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
 }
 
 void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram* program) {
-    auto amb_property = pass->property(AMBIENT_PROPERTY);
-    auto diff_property = pass->property(DIFFUSE_PROPERTY);
-    auto spec_property = pass->property(SPECULAR_PROPERTY);
-    auto shin_property = pass->property(SHININESS_PROPERTY);
-    auto ps_property = pass->property(POINT_SIZE_PROPERTY);
+    auto mat = pass->material();
+    auto amb_property = pass->property(mat->material_ambient_index_);
+    auto diff_property = pass->property(mat->material_diffuse_index_);
+    auto spec_property = pass->property(mat->material_specular_index_);
+    auto shin_property = pass->property(mat->material_shininess_index_);
+    auto ps_property = pass->property(mat->point_size_index_);
 
     auto amb_loc = program->locate_uniform(amb_property.shader_variable(), true);
     if(amb_loc > -1) {
@@ -409,58 +413,28 @@ GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPt
 }
 
 void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    queue_blended_objects_ = true;
     do_visit(renderable, material_pass, iteration);
 }
 
 void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+    if(!default_texture_name_) {
+        auto default_tex = renderer_->window->shared_assets->default_texture_id();
+        default_texture_name_ = renderer_->texture_objects_.at(default_tex);
+    }
+
     global_ambient_ = stage->ambient_light();
 }
 
 void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
-    // When running do_visit, don't queue blended objects just render them
-    queue_blended_objects_ = false;
 
-    // Should be ordered by distance to camera
-    for(auto p: blended_object_queue_) {
-        RenderState& state = p.second;
-
-        if(state.render_group_impl != current_group_) {
-            // Make sure we change render group (shaders, textures etc.)
-            batcher::RenderGroup prev(current_group_->shared_from_this());
-            batcher::RenderGroup next(state.render_group_impl->shared_from_this());
-
-            change_render_group(&prev, &next);
-            current_group_ = state.render_group_impl;            
-        }
-
-        if(pass_ != state.pass) {
-            change_material_pass(pass_, state.pass);
-        }
-
-        // FIXME: Pass the previous light from the last iteration, not nullptr
-        change_light(nullptr, state.light);
-
-        // Render the transparent / blended objects
-        do_visit(
-            state.renderable,
-            state.pass,
-            state.iteration
-        );
-    }
-
-    blended_object_queue_.clear();
-    queue_blended_objects_ = true;
-}
-
-void GL2RenderQueueVisitor::change_light(const Light *prev, const Light *next) {
-    light_ = next;
-
-    renderer_->set_light_uniforms(pass_, program_, next);
 }
 
 void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
-    /* FIXME: Set uniforms */
+    if(count == 1) {
+        renderer_->set_light_uniforms(pass_, program_, lights[0]);
+    } else {
+        // FIXME: This should fill out a light array in the shader. Needs a new property defined!
+    }
 
 }
 
@@ -654,37 +628,20 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        if(!last_group || last_group->texture_id[i] != current_group_->texture_id[i]) {
-
+        auto current_tex = current_group_->texture_id[i];
+        if(!last_group || last_group->texture_id[i] != current_tex) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, current_group_->texture_id[i]);
+            if(current_tex) {
+                GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
+            } else {
+                // Bind the default texture in this case
+                GLCheck(glBindTexture, GL_TEXTURE_2D, default_texture_name_);
+            }
         }
     }
 }
 
 void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    // Queue transparent objects for render later
-    if(material_pass->is_blended() && queue_blended_objects_) {
-        auto pos = renderable->transformed_aabb().centre();
-        auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
-
-        float key = plane.distance_to(pos);
-
-        RenderState state;
-        state.renderable = renderable;
-        state.pass = material_pass;
-        state.light = light_;
-        state.iteration = iteration;
-        state.render_group_impl = current_group_;
-
-        blended_object_queue_.insert(
-            std::make_pair(key, state)
-        );
-
-        // We are done for now, we'll render this in back-to-front order later
-        return;
-    }
-
     // Don't bother doing *anything* if there is nothing to render
     if(!renderable->index_element_count()) {
         return;
