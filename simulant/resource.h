@@ -26,6 +26,7 @@
 
 #include "generic/property.h"
 #include "generic/data_carrier.h"
+#include "generic/object_manager.h"
 
 namespace smlt {
 
@@ -45,9 +46,11 @@ public:
 
     int age() const {
         return std::chrono::duration_cast<std::chrono::seconds>(
-                    created_ - std::chrono::system_clock::now()
-               ).count();
+            created_ - std::chrono::system_clock::now()
+        ).count();
     }
+
+    void set_garbage_collection_method(GarbageCollectMethod method);
 
     Property<Resource, generic::DataCarrier> data = { this, &Resource::data_ };
 private:

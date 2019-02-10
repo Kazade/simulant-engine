@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 namespace smlt {
 
 template<typename T>
@@ -16,9 +18,16 @@ private:
     T* ptr_ = nullptr;
 
 public:
-    default_init_ptr() = default;
+    typedef T element_type;
+
+    default_init_ptr(): ptr_(nullptr) {}
+    default_init_ptr(std::nullptr_t): ptr_(nullptr) {}
     default_init_ptr(const default_init_ptr<T>&) = default;
     default_init_ptr<T>& operator=(const default_init_ptr<T>&) = default;
+    default_init_ptr<T>& operator=(std::nullptr_t) {
+        ptr_ = nullptr;
+        return *this;
+    }
 
     default_init_ptr(T* p):
         ptr_(p) {}

@@ -15,7 +15,7 @@ class Label;
 class ProgressBar;
 class Image;
 
-typedef generic::TemplatedManager<Widget, WidgetID> WidgetManager;
+typedef ObjectManager<WidgetID, Widget, DONT_REFCOUNT> WidgetManager;
 
 
 enum UIEventType {

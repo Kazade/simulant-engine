@@ -83,19 +83,12 @@ public:
         return instance;
     }
 
-
-    bool uses_gc() const { return uses_gc_; }
-    void enable_gc(bool value=true) { uses_gc_ = value; }
-
 protected:
     Managed() = default;
     virtual ~Managed() {}
 
     template<typename...Args>
     Managed(Args&&... args) {}
-
-private:
-    bool uses_gc_ = true;
 };
 
 }

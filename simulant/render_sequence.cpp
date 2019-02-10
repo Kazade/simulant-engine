@@ -129,7 +129,7 @@ void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines
 std::vector<PipelineID> RenderSequence::active_pipelines() const {
     std::vector<PipelineID> result;
 
-    for(Pipeline::ptr p: ordered_pipelines_) {
+    for(PipelinePtr p: ordered_pipelines_) {
         if(p->is_active()) {
             result.push_back(p->id());
         }
@@ -139,7 +139,7 @@ std::vector<PipelineID> RenderSequence::active_pipelines() const {
 }
 
 void RenderSequence::deactivate_all_pipelines() {
-    for(Pipeline::ptr p: ordered_pipelines_) {
+    for(PipelinePtr p: ordered_pipelines_) {
         if(p->is_active()) {
             p->deactivate();
         }
@@ -147,7 +147,7 @@ void RenderSequence::deactivate_all_pipelines() {
 }
 
 PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
-    return PipelineManager::get(pipeline).lock().get();
+    return PipelineManager::get(pipeline);
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
@@ -160,13 +160,11 @@ void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
         pip->deactivate();
     }
 
-    ordered_pipelines_.remove_if([=](Pipeline::ptr pipeline) -> bool { return pipeline->id() == pipeline_id;});
+    ordered_pipelines_.remove_if([=](PipelinePtr pipeline) -> bool { return pipeline->id() == pipeline_id;});
     PipelineManager::destroy(pipeline_id);
 }
 
 void RenderSequence::delete_all_pipelines() {
-    PipelineManager::destroy_all();
-
     for(auto pip: ordered_pipelines_) {
         if(pip->is_active()) {
             pip->deactivate();
@@ -174,12 +172,14 @@ void RenderSequence::delete_all_pipelines() {
     }
 
     ordered_pipelines_.clear();
+
+    PipelineManager::destroy_all();
 }
 
 void RenderSequence::sort_pipelines(bool acquire_lock) {
     auto do_sort = [&]() {
         ordered_pipelines_.sort(
-            [](Pipeline::ptr lhs, Pipeline::ptr rhs) { return lhs->priority() < rhs->priority(); }
+            [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
         );
     };
 
@@ -194,7 +194,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
     PipelineID new_p = PipelineManager::make(this);
 
-    auto pipeline = PipelineManager::get(new_p).lock();
+    auto pipeline = PipelineManager::get(new_p);
 
     pipeline->set_stage(stage);
     pipeline->set_camera(camera);
@@ -207,7 +207,7 @@ PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const V
     ordered_pipelines_.push_back(pipeline);
     sort_pipelines();
 
-    return pipeline.get();
+    return pipeline;
 }
 
 void RenderSequence::set_renderer(Renderer* renderer) {
@@ -218,7 +218,7 @@ void RenderSequence::run() {
     targets_rendered_this_frame_.clear();
 
     int actors_rendered = 0;
-    for(Pipeline::ptr pipeline: ordered_pipelines_) {
+    for(PipelinePtr pipeline: ordered_pipelines_) {
         run_pipeline(pipeline, actors_rendered);
     }
 
@@ -231,7 +231,7 @@ uint64_t generate_frame_id() {
     return ++frame_id;
 }
 
-void RenderSequence::run_pipeline(Pipeline::ptr pipeline_stage, int &actors_rendered) {
+void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) {
     /*
      * This is where rendering actually happens.
      *

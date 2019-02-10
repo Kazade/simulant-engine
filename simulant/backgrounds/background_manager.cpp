@@ -12,18 +12,14 @@ BackgroundManager::BackgroundManager(Window* window):
 }
 
 BackgroundManager::~BackgroundManager() {
-    auto objects = BackgroundManager::__objects();
-    for(auto background_pair: objects) {
-        delete_background(background_pair.first);
-    }
+    delete_all_backgrounds();
 }
 
 void BackgroundManager::update(float dt) {
     //Update the backgrounds
-    for(auto background_pair: BackgroundManager::__objects()) {
-        auto* bg = background_pair.second.get();
-        bg->update(dt);
-    }
+    each([dt](uint32_t, BackgroundPtr bg) {
+       bg->update(dt);
+    });
 }
 
 BackgroundPtr BackgroundManager::new_background(BackgroundType type) {
@@ -57,7 +53,7 @@ BackgroundPtr BackgroundManager::new_background_as_animated_from_file(const unic
 }
 
 BackgroundPtr BackgroundManager::background(BackgroundID bid) {
-    return BackgroundManager::get(bid).lock().get();
+    return BackgroundManager::get(bid);
 }
 
 bool BackgroundManager::has_background(BackgroundID bid) const {
@@ -74,7 +70,7 @@ uint32_t BackgroundManager::background_count() const {
 }
 
 void BackgroundManager::delete_all_backgrounds() {
-    generic::TemplatedManager<Background, BackgroundID>::destroy_all();
+    destroy_all();
 }
 
 //============== END BACKGROUNDS ============

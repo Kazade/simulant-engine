@@ -20,8 +20,7 @@
 #define MANAGERS_H
 
 #include "generic/generic_tree.h"
-#include "generic/manager.h"
-#include "generic/manual_manager.h"
+#include "generic/object_manager.h"
 #include "generic/property.h"
 #include "types.h"
 #include "interfaces.h"
@@ -48,7 +47,7 @@ public:
 private:
     Stage* stage_;
 
-    generic::ManualManager<Camera, CameraID> cameras_;
+    ObjectManager<CameraID, Camera, DONT_REFCOUNT> cameras_;
 };
 
 typedef sig::signal<void (StageID)> StageAddedSignal;

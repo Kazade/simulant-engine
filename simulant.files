@@ -1,3 +1,5 @@
+simulant/generic/object_manager.h
+simulant/loaders/deps/tiny_obj_loader.h
 tools/test_generator.py
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h
@@ -379,13 +381,9 @@ simulant/generic/lock_free/concurrent_queue.hpp
 simulant/generic/lock_free/concurrent_unordered_map.hpp
 simulant/generic/lock_free/shared_double_reference_guard.hpp
 simulant/generic/managed.h
-simulant/generic/manager.h
-simulant/generic/manager_base.h
-simulant/generic/manual_manager.h
 simulant/generic/manual_manager.h
 simulant/generic/optional.h
 simulant/generic/property.h
-simulant/generic/refcount_manager.h
 simulant/generic/relation.h
 simulant/generic/simple_apply.h
 simulant/generic/simple_future.h
@@ -814,7 +812,6 @@ tests/test_input_manager.h
 tests/test_input_state.h
 tests/test_libgl.h
 tests/test_loose_octree.h
-tests/test_manual_manager.h
 tests/test_material.h
 tests/test_material_script.h
 tests/test_mesh.h

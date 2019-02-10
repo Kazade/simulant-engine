@@ -25,7 +25,7 @@ public:
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
-        smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
+        smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
         auto mesh = stage_->assets->mesh(mid);
 
         auto& data = mesh->vertex_data;
@@ -69,7 +69,7 @@ public:
         assert_true(box.min() == expected_min);
         assert_true(box.max() == expected_max);
 
-        stage_->assets->mark_mesh_as_uncollected(mesh->id());
+        mesh->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
 
         return mid;
     }
@@ -87,6 +87,7 @@ public:
 
     void test_mesh_garbage_collection() {
         auto initial = stage_->assets->mesh_count();
+        stage_->assets->set_garbage_collection_grace_period(1);
 
         auto mesh1 = generate_test_mesh(stage_);
         auto mesh2 = generate_test_mesh(stage_);
@@ -97,6 +98,8 @@ public:
         assert_equal(stage_->assets->mesh_count(), initial + 2);
 
         actor->set_mesh(mesh2);
+
+        stage_->assets->set_garbage_collection_grace_period(0);
         stage_->assets->run_garbage_collection();
 
         assert_equal(stage_->assets->mesh_count(), initial + 1);
@@ -124,31 +127,36 @@ public:
     void test_user_data_works() {
         auto actor = stage_->new_actor();
 
-        this->assert_true(actor->id() != 0); //Make sure we set an id for the mesh
+        this->assert_true(actor->id()); //Make sure we set an id for the mesh
         this->assert_true(actor->auto_id() != 0); //Make sure we set a unique ID for the object
         this->assert_true(!actor->data->exists("data"));
         actor->data->stash((int)0xDEADBEEF, "data");
         this->assert_true(actor->data->exists("data"));
         this->assert_equal((int)0xDEADBEEF, actor->data->get<int>("data"));
 
+        auto id = actor->id();
         stage_->delete_actor(actor->id());
 
-        this->assert_true(!stage_->has_actor(actor->id()));
+        this->assert_true(!stage_->has_actor(id));
     }
 
     void test_deleting_entities_deletes_children() {
-        auto mid = stage_->new_actor(); //Create the root mesh
-        auto cid1 = stage_->new_actor_with_parent(mid->id()); //Create a child
-        auto cid2 = stage_->new_actor_with_parent(cid1->id()); //Create a child of the child
+        auto m = stage_->new_actor(); //Create the root mesh
+        auto c1 = stage_->new_actor_with_parent(m->id()); //Create a child
+        auto c2 = stage_->new_actor_with_parent(c1->id()); //Create a child of the child
 
-        this->assert_equal((uint32_t)1, mid->count_children());
-        this->assert_equal((uint32_t)1, cid1->count_children());
-        this->assert_equal((uint32_t)0, cid2->count_children());
+        auto mid = m->id();
+        auto cid1 = c1->id();
+        auto cid2 = c2->id();
 
-        stage_->delete_actor(mid->id());
-        this->assert_true(!stage_->has_actor(mid->id()));
-        this->assert_true(!stage_->has_actor(cid1->id()));
-        this->assert_true(!stage_->has_actor(cid2->id()));
+        this->assert_equal((uint32_t)1, m->count_children());
+        this->assert_equal((uint32_t)1, c1->count_children());
+        this->assert_equal((uint32_t)0, c2->count_children());
+
+        stage_->delete_actor(mid);
+        this->assert_true(!stage_->has_actor(mid));
+        this->assert_true(!stage_->has_actor(cid1));
+        this->assert_true(!stage_->has_actor(cid2));
     }
 
     void test_basic_usage() {

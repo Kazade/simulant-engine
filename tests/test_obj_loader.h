@@ -7,53 +7,23 @@
 
 class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
-    void test_face_parsing() {
-        std::string line = "1//2";
-
-        int32_t v, vn, vt;
-
-        smlt::loaders::parse_face(line, v, vt, vn);
-
-        assert_equal(0, v);
-        assert_equal(-1, vt);
-        assert_equal(1, vn);
-
-        line = "1";
-
-        smlt::loaders::parse_face(line, v, vt, vn);
-
-        assert_equal(0, v);
-        assert_equal(-1, vt);
-        assert_equal(-1, vn);
-
-        line = "1/2";
-
-        smlt::loaders::parse_face(line, v, vt, vn);
-
-        assert_equal(0, v);
-        assert_equal(1, vt);
-        assert_equal(-1, vn);
-
-        line = "1/2/3";
-
-        smlt::loaders::parse_face(line, v, vt, vn);
-
-        assert_equal(0, v);
-        assert_equal(1, vt);
-        assert_equal(2, vn);
-
-        line = "1//";
-
-        smlt::loaders::parse_face(line, v, vt, vn);
-
-        assert_equal(0, v);
-        assert_equal(-1, vt);
-        assert_equal(-1, vn);
-    }
-
     void test_loading_without_texture_coords() {
         //Shouldn't throw
         smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj");
+    }
+
+    void test_culling_method_applied() {
+        smlt::MeshLoadOptions opts;
+        opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
+
+        smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj", opts);
+        smlt::MeshPtr m = mid.fetch();
+
+        assert_equal(m->submesh_count(), 1);
+        assert_true(m->first_submesh()->material_id());
+
+        smlt::MaterialPtr mat = m->first_submesh()->material_id().fetch();
+        assert_equal(mat->first_pass()->cull_mode(), opts.cull_mode);
     }
 };
 

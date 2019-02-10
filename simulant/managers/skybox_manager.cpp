@@ -212,7 +212,7 @@ SkyboxPtr SkyManager::new_skybox_from_files(
 }
 
 SkyboxPtr SkyManager::skybox(SkyID skybox_id) {
-    return TemplatedSkyboxManager::get(skybox_id).lock().get();
+    return TemplatedSkyboxManager::get(skybox_id);
 }
 
 void SkyManager::delete_skybox(SkyID skybox_id) {

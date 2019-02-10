@@ -501,9 +501,15 @@ void Mesh::reverse_winding() {
     });
 }
 
-void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, uint8_t pass) {
+void Mesh::set_texture_on_material(uint8_t unit, TextureID tex, int8_t pass) {
     each([=](const std::string& name, SubMesh* mesh) {
-        mesh->set_texture_on_material(unit, tex, pass);
+        if(pass == -1) {
+            for(auto i = 0; i < mesh->material_id().fetch()->pass_count(); ++i) {
+                mesh->set_texture_on_material(unit, tex, i);
+            }
+        } else {
+            mesh->set_texture_on_material(unit, tex, pass);
+        }
     });
 }
 
@@ -517,7 +523,7 @@ SubMesh* Mesh::submesh(const std::string& name) {
 }
 
 void Mesh::prepare_buffers(Renderer* renderer) {
-    if(shared_vertex_buffer_dirty_) {
+    if(shared_vertex_buffer_dirty_ || !shared_vertex_buffer_) {
         sync_buffer<VertexData, Renderer>(
             &shared_vertex_buffer_, vertex_data_.get(),
             renderer,

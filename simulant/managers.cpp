@@ -95,7 +95,7 @@ bool CameraManager::has_camera(CameraID id) const {
 }
 
 void CameraManager::delete_all_cameras() {
-    cameras_.clear();
+    cameras_.destroy_all();
 }
 
 //============== END CAMERAS ================
@@ -128,7 +128,7 @@ std::size_t StageManager::stage_count() const {
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return StageManager::get(s).lock().get();
+    return StageManager::get(s);
 }
 
 StagePtr StageManager::delete_stage(StageID s) {
@@ -138,46 +138,46 @@ StagePtr StageManager::delete_stage(StageID s) {
 }
 
 void StageManager::fixed_update(float dt) {
-    for(auto stage_pair: StageManager::__objects()) {
-        TreeNode* root = stage_pair.second.get();
+    each([dt](uint32_t, StagePtr stage) {
+        TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
             StageNode* stage_node = static_cast<StageNode*>(node);
             stage_node->fixed_update(dt);
         });
-    }
+    });
 }
 
 void StageManager::late_update(float dt) {
-    for(auto stage_pair: StageManager::__objects()) {
-        TreeNode* root = stage_pair.second.get();
+    each([dt](uint32_t, StagePtr stage) {
+        TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
             StageNode* stage_node = static_cast<StageNode*>(node);
             stage_node->late_update(dt);
         });
-    }
+    });
 }
 
 
 void StageManager::update(float dt) {
     //Update the stages
-    for(auto& stage_pair: StageManager::__objects()) {
-        TreeNode* root = stage_pair.second.get();
+    each([dt](uint32_t, StagePtr stage) {
+        TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
             StageNode* stage_node = static_cast<StageNode*>(node);
             stage_node->update(dt);
         });
-    }
+    });
 }
 
 
 void StageManager::print_tree() {
-    for(auto stage: StageManager::__objects()) {
+    each([this](uint32_t, StagePtr stage) {
         uint32_t counter = 0;
-        print_tree(stage.second.get(), counter);
-    }
+        print_tree(stage, counter);
+    });
 }
 
 void StageManager::print_tree(StageNode *node, uint32_t& level) {

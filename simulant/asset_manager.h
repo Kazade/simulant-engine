@@ -21,10 +21,10 @@
 #include <string>
 #include <map>
 
-#include "generic/refcount_manager.h"
+#include "generic/object_manager.h"
 #include "managers/window_holder.h"
 #include "loaders/heightmap_loader.h"
-
+#include "loader.h"
 #include "texture.h"
 #include "meshes/mesh.h"
 #include "material.h"
@@ -35,11 +35,11 @@ namespace smlt {
 
 class AssetManager;
 
-typedef generic::RefCountedTemplatedManager<Mesh, MeshID> MeshManager;
-typedef generic::RefCountedTemplatedManager<Material, MaterialID> MaterialManager;
-typedef generic::RefCountedTemplatedManager<Texture, TextureID> TextureManager;
-typedef generic::RefCountedTemplatedManager<Sound, SoundID> SoundManager;
-typedef generic::RefCountedTemplatedManager<Font, FontID> FontManager;
+typedef ObjectManager<MeshID, Mesh, DO_REFCOUNT> MeshManager;
+typedef ObjectManager<MaterialID, Material, DO_REFCOUNT> MaterialManager;
+typedef ObjectManager<TextureID, Texture, DO_REFCOUNT> TextureManager;
+typedef ObjectManager<SoundID, Sound, DO_REFCOUNT> SoundManager;
+typedef ObjectManager<FontID, Font, DO_REFCOUNT> FontManager;
 
 struct TextureFlags {
     TextureFlags(
@@ -77,7 +77,11 @@ public:
     bool init();
 
     MeshID new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshID new_mesh_from_file(
+        const unicode& path,
+        const MeshLoadOptions& options=MeshLoadOptions(),
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
 
     /*
      * Given a submesh, this creates a new mesh with just that single submesh
@@ -100,14 +104,17 @@ public:
     MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MeshID new_mesh_with_alias(const std::string &alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_with_alias_from_file(const std::string& alias, const unicode &path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshID new_mesh_with_alias_from_file(
+        const std::string& alias,
+        const unicode &path,
+        const MeshLoadOptions& options=MeshLoadOptions(),
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
     MeshID new_mesh_with_alias_as_cube(const std::string &alias, float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_with_alias_as_sphere(const std::string& alias, float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_with_alias_as_rectangle(const std::string &name, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID new_mesh_with_alias_as_cylinder(const std::string& name, float diameter, float length, int segments = 20, int stacks = 20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshID get_mesh_with_alias(const std::string& alias);
-
-    void mark_mesh_as_uncollected(MeshID m);
 
     MeshPtr mesh(MeshID m);
     const MeshPtr mesh(MeshID m) const;
@@ -128,7 +135,6 @@ public:
     const TexturePtr texture(TextureID t) const;
     bool has_texture(TextureID t) const;
     uint32_t texture_count() const;
-    void mark_texture_as_uncollected(TextureID t);
     void delete_texture(TextureID t);
 
     MaterialID new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -142,7 +148,6 @@ public:
     const MaterialPtr material(MaterialID material) const;
     bool has_material(MaterialID m) const;
     uint32_t material_count() const;
-    void mark_material_as_uncollected(MaterialID t);
     void delete_material(MaterialID m);
 
     SoundID new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -178,7 +183,6 @@ public:
     const FontPtr font(FontID f) const;
     uint32_t font_count() const;
     bool has_font(FontID f) const;
-    void mark_font_as_uncollected(FontID f);
 
     void update(float dt);
 
@@ -188,7 +192,9 @@ public:
         auto mat_id = base_manager()->default_material_id();
         assert(mat_id && "No default material, called to early?");
 
-        return base_manager()->material(mat_id)->new_clone(this, garbage_collect);
+        auto new_mat_id = base_manager()->material(mat_id)->new_clone(this, garbage_collect);
+        assert(new_mat_id);
+        return new_mat_id;
     }
 
     MaterialID default_material_id() const;
@@ -211,6 +217,8 @@ public:
     }
 
     void run_garbage_collection();
+
+    void set_garbage_collection_grace_period(uint32_t period);
 
 private:
     AssetManager* parent_ = nullptr;
@@ -240,6 +248,27 @@ private:
     void unregister_child(AssetManager* child) {
         children_.erase(child);
     }
+
+    void set_garbage_collection_method(const Resource* resource, GarbageCollectMethod method) {
+        // FIXME: This is ugly, but I'm struggling to think of another way to get from the Resource
+        // to the right manager while keeping Resource as a non-template
+
+        if(auto p = dynamic_cast<const Mesh*>(resource)) {
+            mesh_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Material*>(resource)) {
+            material_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Font*>(resource)) {
+            font_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Sound*>(resource)) {
+            sound_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Texture*>(resource)) {
+            texture_manager_.set_garbage_collection_method(p->id(), method);
+        } else {
+            L_ERROR("Unhandled asset type. GC method not set");
+        }
+    }
+
+    friend class Resource;
 };
 
 

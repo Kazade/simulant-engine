@@ -34,7 +34,7 @@
 #include "generic/identifiable.h"
 #include "generic/cloneable.h"
 #include "generic/property.h"
-#include "generic/refcount_manager.h"
+#include "generic/object_manager.h"
 #include "behaviours/behaviour.h"
 #include "types.h"
 #include "interfaces.h"
@@ -297,6 +297,7 @@ class Material:
 
 public:
     struct BuiltIns {
+        static const std::string DEFAULT;
         static const std::string TEXTURE_ONLY;
         static const std::string DIFFUSE_ONLY;
         static const std::string ALPHA_TEXTURE;
