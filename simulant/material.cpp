@@ -33,15 +33,6 @@ namespace smlt {
 const std::string Material::BuiltIns::DEFAULT = "simulant/materials/${RENDERER}/default.smat";
 const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/${RENDERER}/texture_only.smat";
 const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/${RENDERER}/diffuse_only.smat";
-const std::string Material::BuiltIns::ALPHA_TEXTURE = "simulant/materials/${RENDERER}/alpha_texture.kglm";
-const std::string Material::BuiltIns::DIFFUSE_WITH_LIGHTING = "simulant/materials/${RENDERER}/diffuse_with_lighting.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE = "simulant/materials/${RENDERER}/multitexture2_modulate.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_ADD = "simulant/materials/${RENDERER}/multitexture2_add.kglm";
-const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP = "simulant/materials/${RENDERER}/texture_with_lightmap.kglm";
-const std::string Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING = "simulant/materials/${RENDERER}/texture_with_lightmap_and_lighting.kglm";
-const std::string Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING = "simulant/materials/${RENDERER}/multitexture2_modulate_with_lighting.kglm";
-const std::string Material::BuiltIns::TEXTURED_PARTICLE = "simulant/materials/${RENDERER}/textured_particle.kglm";
-const std::string Material::BuiltIns::DIFFUSE_PARTICLE = "simulant/materials/${RENDERER}/diffuse_particle.kglm";
 
 /* This list is used by the particle script loader to determine if a specified material
  * is a built-in or not. Please keep this up-to-date when changing the above materials!
@@ -50,15 +41,6 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"DEFAULT", Material::BuiltIns::DEFAULT},
     {"TEXTURE_ONLY", Material::BuiltIns::TEXTURE_ONLY},
     {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
-    {"ALPHA_TEXTURE", Material::BuiltIns::ALPHA_TEXTURE},
-    {"DIFFUSE_WITH_LIGHTING", Material::BuiltIns::DIFFUSE_WITH_LIGHTING},
-    {"MULTITEXTURE2_MODULATE", Material::BuiltIns::MULTITEXTURE2_MODULATE},
-    {"MULTITEXTURE2_ADD", Material::BuiltIns::MULTITEXTURE2_ADD},
-    {"TEXTURE_WITH_LIGHTMAP", Material::BuiltIns::TEXTURE_WITH_LIGHTMAP},
-    {"TEXTURE_WITH_LIGHTMAP_AND_LIGHTING", Material::BuiltIns::TEXTURE_WITH_LIGHTMAP_AND_LIGHTING},
-    {"MULTITEXTURE2_MODULATE_WITH_LIGHTING", Material::BuiltIns::MULTITEXTURE2_MODULATE_WITH_LIGHTING},
-    {"TEXTURED_PARTICLE", Material::BuiltIns::TEXTURED_PARTICLE},
-    {"DIFFUSE_PARTICLE", Material::BuiltIns::DIFFUSE_PARTICLE}
 };
 
 Material::Material(MaterialID id, AssetManager* asset_manager):
@@ -214,7 +196,9 @@ const std::vector<PropertyIndex>& Material::defined_properties_by_type(MaterialP
     } else {
         assert(0 && "Not implemented");
         L_ERROR("Not implemented");
-        return std::vector<PropertyIndex>();
+
+        static std::vector<PropertyIndex> disabled;
+        return disabled;
     }
 }
 

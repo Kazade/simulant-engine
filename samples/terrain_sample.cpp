@@ -49,7 +49,9 @@ public:
 
         // While we're loading, continually pulse the progress bar to show that stuff is happening
         window->idle->add([&loading, &done]() {
-            loading->progress_bar->pulse();
+            if(loading->is_loaded()) {
+                loading->progress_bar->pulse();
+            }
             return !done;
         });
 
@@ -66,7 +68,7 @@ public:
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
-        terrain_material_id_ = stage_->assets->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
+        terrain_material_id_ = stage_->assets->new_material_from_file("sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER);
         smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 

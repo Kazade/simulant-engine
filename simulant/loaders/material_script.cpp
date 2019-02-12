@@ -72,7 +72,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic:
     std::string name = prop["name"]; // FIXME: Sanitize!
     auto shader_var = name; // FIXME: Should be definable, and should be checked for validity
 
-    if(!prop["default"].is_none()) {
+    if(prop.has_key("default") && !prop["default"].is_none()) {
         std::string def = prop["default"];
 
         TextureID tex_id = material.resource_manager().new_texture_from_file(def);
@@ -251,7 +251,7 @@ void MaterialScript::generate(Material& material) {
     if(json.has_key("custom_properties")) {
         jsonic::Node& custom_props = json["custom_properties"];
 
-        for(auto i = 0u; i < custom_props.length(); ++i) {
+        for(uint32_t i = 0u; i < custom_props.length(); ++i) {
             jsonic::Node& prop = custom_props[i];
 
             std::string kind = prop["type"];
@@ -284,7 +284,7 @@ void MaterialScript::generate(Material& material) {
     Window* window = material.resource_manager().window;
     Renderer* renderer = window->renderer;
 
-    for(auto i = 0u; i < json["passes"].length(); ++i) {
+    for(uint32_t i = 0u; i < json["passes"].length(); ++i) {
         jsonic::Node& pass = json["passes"][i];
 
         std::string iteration = (pass.has_key("iteration")) ? (std::string) pass["iteration"] : "once";

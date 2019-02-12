@@ -50,10 +50,9 @@ void SceneBase::_call_unload() {
         return;
     }
 
+    is_loaded_ = false;
     unload();
     post_unload();
-
-    is_loaded_ = false;
 }
 
 void SceneBase::_call_activate() {

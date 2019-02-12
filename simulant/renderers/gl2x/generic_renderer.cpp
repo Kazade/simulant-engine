@@ -522,6 +522,9 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         case MATERIAL_PROPERTY_TYPE_FLOAT:
             program_->set_uniform_float(name, property_value.value<float>(), /* fail_silently= */true);
         break;
+        case MATERIAL_PROPERTY_TYPE_TEXTURE:
+            // HELP!
+        break;
         default:
             throw std::runtime_error("UNIMPLEMENTED property type");
         }
