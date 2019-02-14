@@ -70,7 +70,7 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
     for(auto i = 0u; i < pass_count; ++i) {
         MaterialPass* material_pass = material->pass(i);
 
-        bool is_blended = material_pass->is_blended();
+        bool is_blended = material_pass->is_blending_enabled();
 
         // If we're not blending, we don't bother sorting based on distance
         // as grouping by texture is more important

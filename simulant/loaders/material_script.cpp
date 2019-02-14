@@ -44,7 +44,6 @@ MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode
 template<MaterialPropertyType MT>
 static void define_property(Material& material, jsonic::Node& prop) {
     std::string name = prop["name"]; // FIXME: Sanitize!
-    auto shader_var = name; // FIXME: Should be definable, and should be checked for validity
 
     typedef typename _material_impl::TypeForMaterialType<MT>::type T;
 
@@ -54,14 +53,12 @@ static void define_property(Material& material, jsonic::Node& prop) {
         material.define_property(
             MT,
             name,
-            shader_var,
             def
         );
     } else {
         material.define_property(
             MT,
             name,
-            shader_var,
             T()
         );
     }
@@ -70,7 +67,6 @@ static void define_property(Material& material, jsonic::Node& prop) {
 template<>
 void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic::Node& prop) {
     std::string name = prop["name"]; // FIXME: Sanitize!
-    auto shader_var = name; // FIXME: Should be definable, and should be checked for validity
 
     if(prop.has_key("default") && !prop["default"].is_none()) {
         std::string def = prop["default"];
@@ -80,14 +76,12 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic:
         material.define_property(
             MATERIAL_PROPERTY_TYPE_TEXTURE,
             name,
-            shader_var,
             tex_id
         );
     } else {
         material.define_property(
             MATERIAL_PROPERTY_TYPE_TEXTURE,
             name,
-            shader_var,
             TextureID()
         );
     }

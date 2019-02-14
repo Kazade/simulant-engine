@@ -37,7 +37,6 @@ namespace smlt {
 const std::string DIFFUSE_PROPERTY = "s_material_diffuse";
 const std::string AMBIENT_PROPERTY = "s_material_ambient";
 const std::string SPECULAR_PROPERTY = "s_material_specular";
-const std::string EMISSION_PROPERTY = "s_material_emission";
 const std::string SHININESS_PROPERTY = "s_material_shininess";
 const std::string DIFFUSE_MAP_PROPERTY = "s_diffuse_map";
 const std::string LIGHT_MAP_PROPERTY = "s_light_map";
@@ -46,9 +45,7 @@ const std::string SPECULAR_MAP_PROPERTY = "s_specular_map";
 const std::string DEPTH_WRITE_ENABLED_PROPERTY = "s_depth_write_enabled";
 const std::string DEPTH_TEST_ENABLED_PROPERTY = "s_depth_test_enabled";
 const std::string DEPTH_FUNC_PROPERTY = "s_depth_func";
-const std::string BLENDING_ENABLE_PROPERTY = "s_blending_enabled";
 const std::string BLEND_FUNC_PROPERTY = "s_blend_func";
-const std::string CULLING_ENABLED_PROPERTY = "s_culling_enabled";
 const std::string CULL_MODE_PROPERTY = "s_cull_mode";
 const std::string SHADE_MODEL_PROPERTY = "s_shade_model";
 const std::string LIGHTING_ENABLED_PROPERTY = "s_lighting_enabled";
@@ -60,9 +57,9 @@ const std::string LIGHT_POSITION_PROPERTY = "s_light_position";
 const std::string LIGHT_AMBIENT_PROPERTY = "s_light_ambient";
 const std::string LIGHT_DIFFUSE_PROPERTY = "s_light_diffuse";
 const std::string LIGHT_SPECULAR_PROPERTY = "s_light_specular";
-const std::string LIGHT_CONSTANT_ATTENUATION_PROPERTY = "s_constant_attenuation";
-const std::string LIGHT_LINEAR_ATTENUATION_PROPERTY = "s_linear_attenuation";
-const std::string LIGHT_QUADRATIC_ATTENUATION_PROPERTY = "s_quadratic_attenuation";
+const std::string LIGHT_CONSTANT_ATTENUATION_PROPERTY = "s_light_constant_attenuation";
+const std::string LIGHT_LINEAR_ATTENUATION_PROPERTY = "s_light_linear_attenuation";
+const std::string LIGHT_QUADRATIC_ATTENUATION_PROPERTY = "s_light_quadratic_attenuation";
 
 const std::string VIEW_MATRIX_PROPERTY = "s_view";
 const std::string MODELVIEW_PROJECTION_MATRIX_PROPERTY = "s_modelview_projection";
@@ -317,7 +314,6 @@ namespace _material_impl {
     struct DefinedProperty {
         uint32_t index;  // Keep track of the order properties were defined
         std::string name;
-        std::string shader_variable;
         MaterialPropertyType type;
         MaterialVariant default_value;
         bool is_custom = true;
@@ -375,7 +371,6 @@ namespace _material_impl {
 
         // ---------- Helpers -----------------------
 
-        void set_emission(const Colour& colour);
         void set_specular(const Colour& colour);
         void set_ambient(const Colour& colour);
         void set_diffuse(const Colour& colour);
@@ -386,7 +381,6 @@ namespace _material_impl {
         TextureUnit light_map() const;
         TextureUnit normal_map() const;
         TextureUnit specular_map() const;
-        Colour emission() const;
         Colour specular() const;
         Colour ambient() const;
         Colour diffuse() const;
@@ -395,7 +389,6 @@ namespace _material_impl {
         void set_blending_enabled(bool v);
         void set_blend_func(BlendType b);
         BlendType blend_func() const;
-        bool is_blended() const;
         void set_depth_write_enabled(bool v);
         bool is_depth_write_enabled() const;
         void set_cull_mode(CullMode mode);
@@ -503,7 +496,6 @@ public:
     PropertyIndex define_property(
         MaterialPropertyType type,
         std::string name,
-        std::string shader_variable,
         const T& default_value
     ) {
         assert(defined_property_count_ < _material_impl::MAX_DEFINED_PROPERTIES - 1);
@@ -514,7 +506,6 @@ public:
         prop.name = name;
         prop.type = type;
         prop.default_value.set(default_value);
-        prop.shader_variable = shader_variable;
         set_property_value(prop.index, default_value);
         defined_property_lookup_.insert(std::make_pair(name, prop.index));
 
@@ -582,10 +573,9 @@ private:
     PropertyIndex define_builtin_property(
         MaterialPropertyType type,
         std::string name,
-        std::string shader_variable,
         const T& default_value
     ) {
-        auto index = define_property(type, name, shader_variable, default_value);
+        auto index = define_property(type, name, default_value);
         defined_properties_[index].is_custom = false;
         return index;
     }

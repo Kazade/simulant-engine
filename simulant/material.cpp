@@ -74,7 +74,7 @@ Material::Material(const Material& rhs):
     specular_map_index_ = rhs.specular_map_index_;
     normal_map_index_ = rhs.normal_map_index_;
     light_map_index_ = rhs.light_map_index_;
-    blending_enabled_index_ = rhs.blending_enabled_index_;
+
     lighting_enabled_index_ = rhs.lighting_enabled_index_;
     texturing_enabled_index_ = rhs.texturing_enabled_index_;
     depth_test_enabled_index_ = rhs.depth_test_enabled_index_;
@@ -129,7 +129,7 @@ Material& Material::operator=(const Material& rhs) {
     specular_map_index_ = rhs.specular_map_index_;
     normal_map_index_ = rhs.normal_map_index_;
     light_map_index_ = rhs.light_map_index_;
-    blending_enabled_index_ = rhs.blending_enabled_index_;
+
     lighting_enabled_index_ = rhs.lighting_enabled_index_;
     texturing_enabled_index_ = rhs.texturing_enabled_index_;
 
@@ -203,55 +203,51 @@ const std::vector<PropertyIndex>& Material::defined_properties_by_type(MaterialP
 }
 
 void Material::initialize_default_properties() {
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, EMISSION_PROPERTY, "s_material_emission", Vec4(1, 1, 1, 1));
-    material_ambient_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, "s_material_ambient", Vec4(1, 1, 1, 1));
-    material_diffuse_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, "s_material_diffuse", Vec4(1, 1, 1, 1));
-    material_specular_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, "s_material_specular", Vec4(1, 1, 1, 1));
-    material_shininess_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, "s_material_shininess", 0.0f);
+    material_ambient_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, Vec4(1, 1, 1, 1));
+    material_diffuse_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, Vec4(1, 1, 1, 1));
+    material_specular_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, Vec4(1, 1, 1, 1));
+    material_shininess_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, 0.0f);
 
-    diffuse_map_index_ =define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, "s_diffuse_map", TextureUnit());
-    light_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, LIGHT_MAP_PROPERTY, "s_light_map", TextureUnit());
-    normal_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, "s_normal_map", TextureUnit());
-    specular_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, "s_specular_map", TextureUnit());
+    diffuse_map_index_ =define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, TextureUnit());
+    light_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, LIGHT_MAP_PROPERTY, TextureUnit());
+    normal_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, TextureUnit());
+    specular_map_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, TextureUnit());
 
-    blending_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, BLENDING_ENABLE_PROPERTY, "s_blending_enabled", false);
-    blend_func_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, "s_blend_mode", (int) BLEND_NONE);
+    blend_func_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, BLEND_FUNC_PROPERTY, (int) BLEND_NONE);
+    cull_mode_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, (int) CULL_MODE_BACK_FACE);
+    colour_material_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, COLOUR_MATERIAL_PROPERTY, (int) COLOUR_MATERIAL_NONE);
 
-    depth_test_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, "s_depth_test_enabled", true);
-    // define_builtin_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, "s_depth_func", DEPTH_FUNC_LEQUAL);
+    depth_test_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_TEST_ENABLED_PROPERTY, true);
+    // define_builtin_property(DEPTH_FUNC_PROPERTY, MATERIAL_PROPERTY_TYPE_INT, DEPTH_FUNC_LEQUAL);
 
-    depth_write_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, "s_depth_write_enabled", true);
+    depth_write_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, DEPTH_WRITE_ENABLED_PROPERTY, true);
+    shade_model_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, (int) SHADE_MODEL_SMOOTH);
+    polygon_mode_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, (int) POLYGON_MODE_FILL);
 
-    // FIXME: Is this necessary? We use cull_mode_none for disabled.. but then why don't we do the same for blending?
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, CULLING_ENABLED_PROPERTY, "s_culling_enabled", true);
-    cull_mode_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, CULL_MODE_PROPERTY, "s_cull_mode", (int) CULL_MODE_BACK_FACE);
+    lighting_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, false);
+    texturing_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, true);
+    point_size_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, 1.0f);
 
-    shade_model_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, SHADE_MODEL_PROPERTY, "s_shade_model", (int) SHADE_MODEL_SMOOTH);
-    polygon_mode_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, POLYGON_MODE_PROPERTY, "s_polygon_mode", (int) POLYGON_MODE_FILL);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_POSITION_PROPERTY, Vec4());
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_AMBIENT_PROPERTY, Vec4(1, 1, 1, 1));
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_DIFFUSE_PROPERTY, Vec4(1, 1, 1, 1));
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_SPECULAR_PROPERTY, Vec4(1, 1, 1, 1));
 
-    lighting_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, LIGHTING_ENABLED_PROPERTY, "s_lighting_enabled", false);
-    texturing_enabled_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_BOOL, TEXTURING_ENABLED_PROPERTY, "s_texturing_enabled", true);
-    point_size_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, POINT_SIZE_PROPERTY, "s_point_size", 1.0f);
-    colour_material_index_ = define_builtin_property(MATERIAL_PROPERTY_TYPE_INT, COLOUR_MATERIAL_PROPERTY, "s_colour_material", (int) COLOUR_MATERIAL_NONE);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, LIGHT_CONSTANT_ATTENUATION_PROPERTY, 0.0f);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, LIGHT_LINEAR_ATTENUATION_PROPERTY, 0.0f);
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, LIGHT_QUADRATIC_ATTENUATION_PROPERTY, 0.0f);
 
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_POSITION_PROPERTY, "s_light_position", Vec4());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_AMBIENT_PROPERTY, "s_light_ambient", Vec4(1, 1, 1, 1));
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_DIFFUSE_PROPERTY, "s_light_diffuse", Vec4(1, 1, 1, 1));
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, LIGHT_SPECULAR_PROPERTY, "s_light_specular", Vec4(1, 1, 1, 1));
-
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, LIGHT_CONSTANT_ATTENUATION_PROPERTY, "s_light_constant_attenuation", 0.0f);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, LIGHT_LINEAR_ATTENUATION_PROPERTY, "s_light_linear_attenuation", 0.0f);
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, LIGHT_QUADRATIC_ATTENUATION_PROPERTY, "s_light_quadratic_attenuation", 0.0f);
-
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, MODELVIEW_MATRIX_PROPERTY, "s_modelview", Mat4());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, MODELVIEW_PROJECTION_MATRIX_PROPERTY, "s_modelview_projection", Mat4());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, PROJECTION_MATRIX_PROPERTY, "s_projection", Mat4());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, VIEW_MATRIX_PROPERTY, "s_view", Mat4());
-    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT3, INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY, "s_inverse_transpose_modelview", Mat3());
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, MODELVIEW_MATRIX_PROPERTY, Mat4());
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, MODELVIEW_PROJECTION_MATRIX_PROPERTY, Mat4());
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, PROJECTION_MATRIX_PROPERTY, Mat4());
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT4, VIEW_MATRIX_PROPERTY, Mat4());
+    define_builtin_property(MATERIAL_PROPERTY_TYPE_MAT3, INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY, Mat3());
 }
 
+/* This is the same as name for now, potentially we could generate this
+ * automatically (e.g. replace spaces with underscores etc. if we want prettier names) */
 std::string PropertyValue::shader_variable() const {
-    return defined_property_->shader_variable;
+    return defined_property_->name;
 }
 
 std::string PropertyValue::name() const {
@@ -309,10 +305,6 @@ PropertyValue _material_impl::PropertyValueHolder::property(const std::string &n
     return property(top_level_->defined_property_index(name));
 }
 
-void _material_impl::PropertyValueHolder::set_emission(const Colour &colour) {
-    set_property_value(EMISSION_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
-}
-
 void _material_impl::PropertyValueHolder::set_specular(const Colour &colour) {
     set_property_value(SPECULAR_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
 }
@@ -353,11 +345,6 @@ TextureUnit _material_impl::PropertyValueHolder::specular_map() const {
     return property(top_level_->specular_map_index_).value<TextureUnit>();
 }
 
-Colour _material_impl::PropertyValueHolder::emission() const {
-    auto v = property(EMISSION_PROPERTY).value<Vec4>();
-    return Colour(v.x, v.y, v.z, v.w);
-}
-
 Colour _material_impl::PropertyValueHolder::specular() const {
     auto v = property(top_level_->material_specular_index_).value<Vec4>();
     return Colour(v.x, v.y, v.z, v.w);
@@ -378,11 +365,7 @@ float _material_impl::PropertyValueHolder::shininess() const {
 }
 
 bool _material_impl::PropertyValueHolder::is_blending_enabled() const {
-    return property(top_level_->blending_enabled_index_).value<bool>();
-}
-
-void _material_impl::PropertyValueHolder::set_blending_enabled(bool v) {
-    set_property_value(BLENDING_ENABLE_PROPERTY, v);
+    return (BlendType) property(top_level_->blend_func_index_).value<int>() == BLEND_NONE;
 }
 
 void _material_impl::PropertyValueHolder::set_blend_func(BlendType b) {
@@ -391,10 +374,6 @@ void _material_impl::PropertyValueHolder::set_blend_func(BlendType b) {
 
 BlendType _material_impl::PropertyValueHolder::blend_func() const {
     return (BlendType) property(top_level_->blend_func_index_).value<int>();
-}
-
-bool _material_impl::PropertyValueHolder::is_blended() const {
-    return blend_func() != BLEND_NONE;
 }
 
 void _material_impl::PropertyValueHolder::set_depth_write_enabled(bool v) {
