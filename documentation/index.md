@@ -34,7 +34,7 @@ This section covers the base subsystems and usages of Simulant.
  - Scripting: [Particle System File Format](particle_system_format.md)
  - Scene Tree: [Stage Nodes](stage_nodes.md) | [Actors](actors.md)
  - Supported File Formats: [Mesh Formats](mesh_formats.md) | [Image Formats](image_formats.md)
- - Assets: [Textures](textures.md) | [Meshes](meshes.md)
+ - Assets: [Textures](textures.md) | [Meshes](meshes.md) | [Materials](materials.md)
  - Debugging: [Debugging](debugging.md)
  - Devices: [Screens](screens.md)
 
