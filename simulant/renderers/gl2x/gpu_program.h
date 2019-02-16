@@ -111,6 +111,12 @@ public:
         uniform_cache_.clear();
     }
 
+    void set_uniform_int(const int32_t loc, const int32_t value);
+    void set_uniform_mat4x4(const int32_t loc, const Mat4& values);
+    void set_uniform_colour(const int32_t loc, const Colour& values);
+    void set_uniform_vec4(const int32_t loc, const Vec4& values);
+    void set_uniform_float(const int32_t loc, const float value);
+
     void set_uniform_int(const std::string& uniform_name, const int32_t value, bool fail_silently=false);
     void set_uniform_float(const std::string& uniform_name, const float value, bool fail_silently=false);
     void set_uniform_mat4x4(const std::string& uniform_name, const Mat4& values);

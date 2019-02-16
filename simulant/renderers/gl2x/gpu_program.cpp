@@ -87,6 +87,11 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
     return location;
 }
 
+void GPUProgram::set_uniform_int(const int32_t loc, const int32_t value) {
+    assert(loc >= 0);
+    GLCheck(glUniform1i, loc, value);
+}
+
 void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t value, bool fail_silently) {
     GLint loc = locate_uniform(uniform_name, fail_silently);
     if(loc > -1) {
@@ -94,11 +99,21 @@ void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t 
     }
 }
 
+void GPUProgram::set_uniform_float(const int32_t loc, const float value) {
+    assert(loc >= 0);
+    GLCheck(glUniform1f, loc, value);
+}
+
 void GPUProgram::set_uniform_float(const std::string& uniform_name, const float value, bool fail_silently) {
     int32_t loc = locate_uniform(uniform_name, fail_silently);
     if(loc > -1) {
         GLCheck(glUniform1f, loc, value);
     }
+}
+
+void GPUProgram::set_uniform_mat4x4(const int32_t loc, const Mat4& matrix) {
+    assert(loc >= 0);
+    GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.data());
 }
 
 void GPUProgram::set_uniform_mat4x4(const std::string& uniform_name, const Mat4& matrix) {
@@ -122,11 +137,20 @@ void GPUProgram::set_uniform_vec3(const std::string& uniform_name, const Vec3& v
     }
 }
 
+void GPUProgram::set_uniform_vec4(const int32_t loc, const Vec4& values) {
+    assert(loc >= 0);
+    GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
+}
+
 void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& values) {
     int32_t loc = locate_uniform(uniform_name);
     if(loc > -1) {
         GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
     }
+}
+
+void GPUProgram::set_uniform_colour(const int32_t loc, const Colour& values) {
+    set_uniform_vec4(loc, Vec4(values.r, values.g, values.b, values.a));
 }
 
 void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {

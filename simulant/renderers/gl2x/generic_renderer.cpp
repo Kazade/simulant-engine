@@ -152,17 +152,15 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
 
     auto pos_loc = program->locate_uniform(pos_property.shader_variable(), true);
     if(pos_loc > -1) {
-        auto varname = pos_property.shader_variable();
         auto pos = (light) ? light->absolute_position() : Vec3();
         auto vec = (light) ? Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
-        program->set_uniform_vec4(varname, vec);
+        program->set_uniform_vec4(pos_loc, vec);
     }
 
     auto amb_loc = program->locate_uniform(amb_property.shader_variable(), true);
     if(amb_loc > -1) {
-        auto varname = amb_property.shader_variable();
         program->set_uniform_colour(
-            varname,
+            amb_loc,
             (light) ? light->ambient() : Colour::NONE
         );
     }
@@ -170,36 +168,31 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
     auto diff_loc = program->locate_uniform(diff_property.shader_variable(), true);
     if(diff_loc > -1) {
         auto diffuse = (light) ? light->diffuse() : smlt::Colour::NONE;
-        auto varname = diff_property.shader_variable();
-        program->set_uniform_colour(varname, diffuse);
+        program->set_uniform_colour(diff_loc, diffuse);
     }
 
     auto spec_loc = program->locate_uniform(spec_property.shader_variable(), true);
     if(spec_loc > -1) {
         auto specular = (light) ? light->specular() : smlt::Colour::NONE;
-        auto varname = spec_property.shader_variable();
-        program->set_uniform_colour(varname, specular);
+        program->set_uniform_colour(spec_loc, specular);
     }
 
     auto ca_loc = program->locate_uniform(ca_property.shader_variable(), true);
     if(ca_loc > -1) {
         auto att = (light) ? light->constant_attenuation() : 0;
-        auto varname = ca_property.shader_variable();
-        program->set_uniform_float(varname, att);
+        program->set_uniform_float(ca_loc, att);
     }
 
     auto la_loc = program->locate_uniform(la_property.shader_variable(), true);
     if(la_loc > -1) {
         auto att = (light) ? light->linear_attenuation() : 0;
-        auto varname = la_property.shader_variable();
-        program->set_uniform_float(varname, att);
+        program->set_uniform_float(la_loc, att);
     }
 
-    auto qa_loc = program->locate_uniform(la_property.shader_variable(), true);
+    auto qa_loc = program->locate_uniform(qa_property.shader_variable(), true);
     if(qa_loc > -1) {
         auto att = (light) ? light->quadratic_attenuation() : 0;
-        auto varname = qa_property.shader_variable();
-        program->set_uniform_float(varname, att);
+        program->set_uniform_float(qa_loc, att);
     }
 }
 
@@ -243,14 +236,22 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
 
     /* Each texture property has a counterpart matrix, this passes those down if they exist */
     auto texture_props = pass->top_level()->defined_properties_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE);
+    uint8_t texture_unit = 0;
     for(auto& tex_prop: texture_props) {
         auto prop = pass->property(tex_prop);
+
+        auto tloc = program->locate_uniform(prop.shader_variable(), true);
+        if(tloc > -1) {
+            // This texture is being used
+            program->set_uniform_int(tloc, texture_unit++);
+        }
+
         auto shader_name = prop.shader_variable();
         shader_name += "_matrix";
 
         auto loc = program->locate_uniform(shader_name, true);
         if(loc > -1) {
-            program->set_uniform_mat4x4(shader_name, prop.value<TextureUnit>().texture_matrix());
+            program->set_uniform_mat4x4(loc, prop.value<TextureUnit>().texture_matrix());
         }
     }
 }
@@ -260,7 +261,7 @@ void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *p
     auto loc = program->locate_uniform(varname, true);
 
     if(loc > -1) {
-        program->set_uniform_colour(varname, global_ambient);
+        program->set_uniform_colour(loc, global_ambient);
     }
 }
 
@@ -523,7 +524,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             program_->set_uniform_float(name, property_value.value<float>(), /* fail_silently= */true);
         break;
         case MATERIAL_PROPERTY_TYPE_TEXTURE:
-            // HELP!
+            // Ignore, we handle textures separately
         break;
         default:
             throw std::runtime_error("UNIMPLEMENTED property type");
