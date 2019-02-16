@@ -161,7 +161,7 @@ void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width, uint32_
     //Hold a reference to the new material
     material_id_ = stage->assets->new_material_from_texture(texture_id);
     stage->assets->mesh(mesh_id_)->set_material_id(material_id_);
-    material_id_.fetch()->first_pass()->set_blending(smlt::BLEND_ALPHA);
+    material_id_.fetch()->set_blend_func(smlt::BLEND_ALPHA);
 
     update_texture_coordinates();
 }

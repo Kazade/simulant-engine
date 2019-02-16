@@ -16,7 +16,9 @@ public:
 
         smlt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
         MeshID cube_mesh = window->shared_assets->new_mesh_as_cube(1.0);
-        window->shared_assets->mesh(cube_mesh)->set_texture_on_material(0, tid);
+        auto mat = cube_mesh.fetch()->first_submesh()->material_id().fetch();
+        mat->set_diffuse_map(tid);
+
         cube_ = cube_stage_->new_actor_with_mesh(cube_mesh);
         cube_->move_to_absolute(0, 0, -4);
 
@@ -25,7 +27,8 @@ public:
         rect_->move_to_absolute(0, 0, -4);
 
         TextureID rtt = window->shared_assets->new_texture(smlt::GARBAGE_COLLECT_NEVER);
-        window->shared_assets->mesh(rect_mesh)->set_texture_on_material(0, rtt);
+        mat = rect_mesh.fetch()->first_submesh()->material_id().fetch();
+        mat->set_diffuse_map(rtt);
 
         window->render(cube_stage_->id(), cube_cam->id()).to_texture(rtt);
         window->render(rect_stage_->id(), rect_cam->id()).to_framebuffer(

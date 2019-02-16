@@ -17,8 +17,8 @@ class GL1RenderGroupImpl:
     public std::enable_shared_from_this<GL1RenderGroupImpl> {
 
 public:
-    GL1RenderGroupImpl(RenderPriority priority):
-        batcher::RenderGroupImpl(priority) {}
+    GL1RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
+        batcher::RenderGroupImpl(priority, is_blended, distance_to_camera) {}
 
     GLuint texture_id[MAX_TEXTURE_UNITS] = {0};
 

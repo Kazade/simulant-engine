@@ -51,6 +51,11 @@ public:
         id_._bind(ptr);
     }
 
+    /* INTERNAL USE ONLY */
+    void _overwrite_id(IDType new_id) {
+        id_ = new_id;
+    }
+
 private:
     IDType id_;
 };

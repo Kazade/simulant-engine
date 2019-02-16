@@ -34,42 +34,6 @@ class Light;
 
 namespace batcher {
 
-class Batch;
-
-class BatchMember {
-public:
-    virtual ~BatchMember() {}
-
-    void join_batch(Batch* batch) {
-        batches_.insert(batch);
-    }
-
-    void leave_batch(Batch* batch) {
-        batches_.erase(batch);
-    }
-
-    std::set<Batch*> batches() const { return batches_; }
-
-private:
-    std::set<Batch*> batches_;
-};
-
-class Batch {
-public:
-    typedef std::shared_ptr<Renderable> RenderablePtr;
-
-    void add_renderable(RenderablePtr renderable);
-    void remove_renderable(RenderablePtr renderable);
-
-    void each(std::function<void (uint32_t, Renderable*)> func) const;
-
-    uint32_t renderable_count() const { return renderables_.size(); }
-
-private:
-    std::list<RenderablePtr> renderables_;
-    mutable shared_mutex batch_lock_;
-};
-
 /**
  * @brief The RenderGroupImpl class
  *
@@ -80,8 +44,10 @@ class RenderGroupImpl {
 public:
     typedef std::shared_ptr<RenderGroupImpl> ptr;
 
-    RenderGroupImpl(RenderPriority priority):
-        priority_(priority) {
+    RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
+        priority_(priority),
+        is_blended_(is_blended),
+        distance_to_camera_(distance_to_camera) {
 
     }
 
@@ -99,6 +65,20 @@ public:
             return false;
         }
 
+        if(this->is_blended_ < rhs.is_blended_) {
+            return true;
+        } else if(this->is_blended_ > rhs.is_blended_) {
+            return false;
+        }
+
+        /* Objects are sorted from farthest first, to nearest which is why this
+           is reversed */
+        if(this->distance_to_camera_ > rhs.distance_to_camera_) {
+            return true;
+        } else if(this->distance_to_camera_ < rhs.distance_to_camera_) {
+            return false;
+        }
+
         return lt(rhs);
     }
 
@@ -106,6 +86,8 @@ private:
     virtual bool lt(const RenderGroupImpl& rhs) const = 0;
 
     RenderPriority priority_;
+    bool is_blended_;
+    float distance_to_camera_ = 0.0f;
 };
 
 class RenderGroup {
@@ -126,6 +108,17 @@ public:
         return *impl_ < *rhs.impl_;
     }
 
+    bool operator!=(const RenderGroup& rhs) const {
+        // Equivilance test is fine
+        if(*this < rhs) {
+            return true;
+        } else if(rhs < *this) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     RenderGroupImpl* impl() const { return impl_.get(); }
 
 private:
@@ -139,7 +132,13 @@ class RenderGroupFactory {
 public:
     virtual ~RenderGroupFactory() {}
 
-    virtual RenderGroup new_render_group(Renderable* renderable, MaterialPass* material_pass) = 0;  
+    virtual RenderGroup new_render_group(
+        Renderable* renderable,
+        MaterialPass* material_pass,
+        RenderPriority priority,
+        bool is_blended,
+        float distance_to_camera
+    ) = 0;
 };
 
 typedef uint32_t Pass;
@@ -156,13 +155,7 @@ public:
     virtual void change_render_group(const RenderGroup* prev, const RenderGroup* next) = 0;
 
     virtual void change_material_pass(const MaterialPass* prev, const MaterialPass* next) = 0;
-
-    /* This is used when not using once-per-light iterations. All lights are sent */
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
-
-    /* This is used when iterating once-per-light. This is a multi-pass render and
-     * a different light each time */
-    virtual void change_light(const Light* prev, const Light* next) = 0;
 
     virtual void visit(Renderable*, MaterialPass*, Iteration) = 0;
     virtual void end_traversal(const RenderQueue& queue, Stage* stage) = 0;
@@ -199,40 +192,44 @@ class RenderQueue {
 public:
     typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Light*, Iteration)> TraverseCallback;
 
-    RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory);
+    RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
     void insert_renderable(std::shared_ptr<Renderable> renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
-    uint32_t pass_count() const { return batches_.size(); }
+    uint32_t pass_count() const { return pass_queues_.size(); }
     uint32_t group_count(Pass pass_number) const {
-        if(pass_number >= batches_.size()) {
-            throw std::out_of_range("Tried to access a pass that doesn't exist");
+        uint32_t i = 0;
+        auto& pass_queue = pass_queues_.at(pass_number);
+        for(auto it = pass_queue.begin(); it != pass_queue.end(); it = pass_queue.upper_bound(it->first)) {
+            ++i;
         }
 
-        return batches_[pass_number].size();
+        return i;
     }
 
+    /*
     void each_group(Pass pass, std::function<void (uint32_t, const RenderGroup&, const Batch&)> cb) {
         uint32_t i = 0;
         for(auto& batch: batches_[pass]){
             cb(i++, batch.first, *batch.second);
         }
-    }
+    } */
 
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
-    typedef std::map<RenderGroup, std::shared_ptr<Batch> > BatchMap;
-    typedef std::vector<BatchMap> BatchPasses;
+    typedef std::multimap<RenderGroup, std::shared_ptr<Renderable>> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
-    BatchPasses batches_;
+    CameraPtr camera_;
+
+    std::array<SortedRenderables, MAX_MATERIAL_PASSES> pass_queues_;
 
     void clean_empty_batches();
 

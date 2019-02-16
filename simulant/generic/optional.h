@@ -39,12 +39,12 @@ public:
         value_ = T();
     }
 
-    T value() const {
+    const T& value() const {
         assert(has_value());
         return value_;
     }
 
-    T value() {
+    T& value() {
         assert(has_value());
         return value_;
     }

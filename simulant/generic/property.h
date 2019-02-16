@@ -102,7 +102,7 @@ public:
      *  We can't allow copy construction, because 'this_' will never be initialized
      */
     Property(const this_type& rhs) = delete;
-    Property operator=(const this_type& rhs) {
+    Property& operator=(const this_type& rhs) {
         assert(this_); //Make sure that this_ was initialized
 
         // Intentionally don't transfer 'this_'
@@ -116,6 +116,8 @@ public:
         default:
             break;
         }
+
+        return *this;
     }
 
     inline operator T&() const { return *get(); }

@@ -32,6 +32,7 @@ public:
 template<typename IDType, typename ObjectType, typename ObjectTypePtrType, typename SmartPointerConverter>
 class ObjectManagerBase {
 public:
+    typedef ObjectManagerBase<IDType, ObjectType, ObjectTypePtrType, SmartPointerConverter> this_type;
     typedef ObjectTypePtrType ObjectTypePtr;
     typedef typename ObjectTypePtrType::element_type object_type;
 
@@ -40,6 +41,29 @@ public:
     uint32_t count() const {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
         return objects_.size();
+    }
+
+    /* Clones an object and returns an new ID to the clone */
+    IDType clone(IDType id, this_type* target_manager=nullptr) {
+        if(!target_manager) {
+            target_manager = this;
+        }
+
+        auto source = get(id);
+        auto copy = source->new_clone();
+
+        IDType new_id(target_manager->next_id()); // Unbound
+
+        // Force the new ID on the copy
+        copy->_overwrite_id(new_id);
+
+        // Bind the copy to the ID
+        copy->_bind_id_pointer(copy);       
+
+        std::lock_guard<std::recursive_mutex> g(target_manager->objects_mutex_);
+        target_manager->objects_.insert(std::make_pair(copy->id(), copy));
+        target_manager->on_make(copy->id());
+        return copy->id();
     }
 
     template<typename... Args>
@@ -95,6 +119,15 @@ public:
     }
 
     void each(std::function<void (uint32_t, ObjectTypePtr)> callback) {
+        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        uint32_t i = 0;
+        for(auto& p: objects_) {
+            auto ptr = p.second;
+            callback(i++, SmartPointerConverter::convert(ptr));
+        }
+    }
+
+    void each(std::function<void (uint32_t, const ObjectTypePtr)> callback) const {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
         uint32_t i = 0;
         for(auto& p: objects_) {

@@ -135,7 +135,6 @@ public:
     void set_diffuse(const smlt::Colour& colour); ///< Override vertex colour on all vertices
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
-    void set_texture_on_material(uint8_t unit, TextureID tex, int8_t pass=-1); ///< Replace the texture unit on all submesh materials
 
     const AABB& aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0

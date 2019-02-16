@@ -25,6 +25,9 @@
 #include "../asset_manager.h"
 #include "../utils/gl_thread_check.h"
 #include "../renderers/renderer.h"
+#include "../generic/raii.h"
+#include "../deps/jsonic/jsonic.h"
+
 
 #ifndef _arch_dreamcast
 #include "../renderers/gl2x/gpu_program.h"
@@ -32,436 +35,292 @@
 
 namespace smlt {
 
-MaterialScript::MaterialScript(std::shared_ptr<std::istream> data):
+MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode& filename):
+    filename_(filename),
     data_(*data.get()) {
 
 }
 
-void MaterialScript::handle_header_property_command(Material& mat, const std::vector<unicode> &args) {
-    if(args.size() < 2) {
-        throw SyntaxError("Wrong number of arguments for PROPERTY command");
-    }
+template<MaterialPropertyType MT>
+static void define_property(Material& material, jsonic::Node& prop) {
+    std::string name = prop["name"]; // FIXME: Sanitize!
 
-    unicode type = unicode(args[0]).upper();
-    bool has_value = args.size() == 3;
+    typedef typename _material_impl::TypeForMaterialType<MT>::type T;
 
-    // PROPERTY(INT varname [value])
-    // PROPERTY(FLOAT varname [value])
+    if(!prop["default"].is_none()) {
+        auto def = (T) prop["default"];
 
-    if(args.size() < 3) {
-        throw SyntaxError("Wrong number of arguments to PROPERTY()");
-    }
-
-    std::string variable_name = unicode(args[1]).strip("\"").encode();
-
-    if(type == "INT") {
-
-        // Create an integer property on the material
-        mat.create_int_property(variable_name);
-
-        if(has_value) {
-            /* If we have a value, then set it - otherwise just create an uninitialized property with this name */
-            int32_t value = 0;
-            try {
-                value = unicode(args[2]).to_int();
-                mat.set_int_property(variable_name, value);
-            } catch(std::exception& e) { //FIXME: Should be a specific exception
-                throw SyntaxError("Invalid INT value passed to PROPERTY");
-            }
-        }
+        material.define_property(
+            MT,
+            name,
+            def
+        );
     } else {
-        throw SyntaxError("Unhandled type passed to PROPERTY");
+        material.define_property(
+            MT,
+            name,
+            T()
+        );
     }
 }
 
-void MaterialScript::handle_pass_set_command(Material& mat, const std::vector<unicode>& args, MaterialPass::ptr pass) {
-    if(args.size() < 2) {
-        throw SyntaxError("Wrong number of arguments for SET command");
-    }
+template<>
+void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic::Node& prop) {
+    std::string name = prop["name"]; // FIXME: Sanitize!
 
-    Renderer* renderer = mat.resource_manager().window->renderer;
+    if(prop.has_key("default") && !prop["default"].is_none()) {
+        std::string def = prop["default"];
 
-    unicode type = unicode(args[0]).upper();
-    unicode arg_1 = unicode(args[1]);
+        TextureID tex_id = material.resource_manager().new_texture_from_file(def);
 
-    if(type == "TEXTURE_UNIT") {
-        unicode arg_2 = unicode(args[2]);
-
-        TextureID tex_id = mat.resource_manager().new_texture_from_file(arg_2.strip("\""));
-        pass->set_texture_unit(arg_1.to_int(), tex_id);
-
-    } else if(type == "ITERATION") {
-        if(arg_1 == "ONCE") {
-            pass->set_iteration(ITERATE_ONCE, pass->max_iterations());
-        } else if(arg_1 == "ONCE_PER_LIGHT") {
-            pass->set_iteration(ITERATE_ONCE_PER_LIGHT, pass->max_iterations());
-        } else {
-            throw SyntaxError(_u("Invalid argument to SET(ITERATION): ") + args[1]);
-        }
-    } else if (type == "MAX_ITERATIONS") {
-        int count = unicode(arg_1).to_int();
-        pass->set_iteration(pass->iteration(), count);
-
-    } else if(type == "ATTRIBUTE") {
-        if(args.size() < 3) {
-            throw SyntaxError("Wrong number of arguments for SET(ATTRIBUTE) command");
-        }
-
-        if(!renderer->supports_gpu_programs()) {
-            throw SyntaxError("ATTRIBUTE commands are not supported on this renderer");
-        }
-
-        std::string variable_name = unicode(args[2]).strip("\"").encode();
-        if(arg_1 == "POSITION") {
-            pass->attributes->register_auto(SP_ATTR_VERTEX_POSITION, variable_name);
-        } else if(arg_1 == "TEXCOORD0") {
-            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD0, variable_name);
-        } else if(arg_1 == "TEXCOORD1") {
-            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD1, variable_name);
-        } else if(arg_1 == "TEXCOORD2") {
-            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD2, variable_name);
-        } else if(arg_1 == "TEXCOORD3") {
-            pass->attributes->register_auto(SP_ATTR_VERTEX_TEXCOORD3, variable_name);
-        } else if(arg_1 == "NORMAL") {
-            pass->attributes->register_auto(SP_ATTR_VERTEX_NORMAL, variable_name);
-        } else if(arg_1 == "DIFFUSE") {
-            pass->attributes->register_auto(SP_ATTR_VERTEX_DIFFUSE, variable_name);
-        } else {
-            throw SyntaxError(_u("Unhandled attribute: {0}").format(arg_1));
-        }
-
-    }  else if(type == "UNIFORM") {
-        std::string variable_name = unicode(args[2]).strip("\"").encode();
-
-        if(!renderer->supports_gpu_programs()) {
-            throw SyntaxError("UNIFORM commands are not supported on this renderer");
-        }
-
-        if(arg_1 == "VIEW_MATRIX") {
-            pass->uniforms->register_auto(SP_AUTO_VIEW_MATRIX, variable_name);
-        } else if(arg_1 == "MODELVIEW_MATRIX") {
-            pass->uniforms->register_auto(SP_AUTO_MODELVIEW_MATRIX, variable_name);
-        } else if(arg_1 == "MODELVIEW_PROJECTION_MATRIX") {
-            pass->uniforms->register_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX, variable_name);
-        } else if(arg_1 == "INVERSE_TRANSPOSE_MODELVIEW_PROJECTION_MATRIX" || arg_1 == "NORMAL_MATRIX") {
-            pass->uniforms->register_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX, variable_name);
-        } else if(arg_1 == "TEXTURE_MATRIX0") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX0, variable_name);
-        } else if(arg_1 == "TEXTURE_MATRIX1") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX1, variable_name);
-        } else if(arg_1 == "TEXTURE_MATRIX2") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX2, variable_name);
-        } else if(arg_1 == "TEXTURE_MATRIX3") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_TEX_MATRIX3, variable_name);
-        } else if(arg_1 == "POINT_SIZE") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_POINT_SIZE, variable_name);
-        } else if(arg_1 == "LIGHT_GLOBAL_AMBIENT") {            
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT, variable_name);
-        } else if(arg_1 == "LIGHT_POSITION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_POSITION, variable_name);
-        } else if(arg_1 == "LIGHT_AMBIENT") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_AMBIENT, variable_name);
-        } else if(arg_1 == "LIGHT_DIFFUSE") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_DIFFUSE, variable_name);
-        } else if(arg_1 == "LIGHT_SPECULAR") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_SPECULAR, variable_name);
-        } else if(arg_1 == "LIGHT_CONSTANT_ATTENUATION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION, variable_name);
-        } else if(arg_1 == "LIGHT_LINEAR_ATTENUATION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION, variable_name);
-        } else if(arg_1 == "LIGHT_QUADRATIC_ATTENUATION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION, variable_name);
-        } else if(arg_1 == "LIGHTS_POSITION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHTS_POSITION, variable_name);
-        } else if(arg_1 == "LIGHTS_AMBIENT") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHTS_AMBIENT, variable_name);
-        } else if(arg_1 == "LIGHTS_DIFFUSE") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHTS_DIFFUSE, variable_name);
-        } else if(arg_1 == "LIGHTS_SPECULAR") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHTS_SPECULAR, variable_name);
-        } else if(arg_1 == "LIGHTS_CONSTANT_ATTENUATION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHTS_CONSTANT_ATTENUATION, variable_name);
-        } else if(arg_1 == "LIGHTS_LINEAR_ATTENUATION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHTS_LINEAR_ATTENUATION, variable_name);
-        } else if(arg_1 == "LIGHTS_QUADRATIC_ATTENUATION") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHTS_QUADRATIC_ATTENUATION, variable_name);
-        } else if(arg_1 == "LIGHT_COUNT") {
-            pass->uniforms->register_auto(SP_AUTO_LIGHT_COUNT, variable_name);
-        } else if(arg_1 == "MATERIAL_SHININESS") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_SHININESS, variable_name);
-        } else if(arg_1 == "MATERIAL_AMBIENT") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_AMBIENT, variable_name);
-        } else if(arg_1 == "MATERIAL_DIFFUSE") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_DIFFUSE, variable_name);
-        } else if(arg_1 == "MATERIAL_SPECULAR") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_SPECULAR, variable_name);
-        } else if(arg_1 == "ACTIVE_TEXTURE_UNITS") {
-            pass->uniforms->register_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS, variable_name);
-        } else {
-            throw SyntaxError(_u("Unhandled auto-uniform: {0}").format(arg_1));
-        }
-    } else if (type == "FLAG") {
-        std::string arg_2 = unicode(args[2]).upper().encode();
-
-        if(arg_1 == "DEPTH_WRITE") {
-            if(arg_2 == "ON") {
-                pass->set_depth_write_enabled(true);
-            } else {
-                pass->set_depth_write_enabled(false);
-            }
-        } else if(arg_1 == "DEPTH_CHECK") {
-            if(arg_2 == "ON") {
-                pass->set_depth_test_enabled(true);
-            } else {
-                pass->set_depth_test_enabled(false);
-            }
-        } else if(arg_1 == "BLEND") {
-            if(arg_2 == "NONE") {
-                pass->set_blending(BLEND_NONE);
-            } else if (arg_2 == "ADD") {
-                pass->set_blending(BLEND_ADD);
-            } else if (arg_2 == "MODULATE") {
-                pass->set_blending(BLEND_MODULATE);
-            } else if (arg_2 == "COLOUR") {
-                pass->set_blending(BLEND_COLOUR);
-            } else if (arg_2 == "ALPHA") {
-                pass->set_blending(BLEND_ALPHA);
-            } else if (arg_2 == "ONE_ONE_MINUS_ALPHA") {
-                pass->set_blending(BLEND_ONE_ONE_MINUS_ALPHA);
-            } else {
-                throw SyntaxError("Invalid argument passed to SET(FLAG BLEND): " + arg_2);
-            }
-        } else if(arg_1 == "CULL") {
-            if(arg_2 == "BACK") {
-                pass->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
-            } else if(arg_2 == "FRONT") {
-                pass->set_cull_mode(smlt::CULL_MODE_FRONT_FACE);
-            } else if(arg_2 == "FRONT_AND_BACK") {
-                pass->set_cull_mode(smlt::CULL_MODE_FRONT_AND_BACK_FACE);
-            } else if(arg_2 == "NONE") {
-                pass->set_cull_mode(smlt::CULL_MODE_NONE);
-            } else {
-                throw SyntaxError("Invalid argument passed to SET(FLAG CULL): " + arg_2);
-            }
-
-        } else if(arg_1 == "PREVENT_TEXTURES") {
-            // Safety, don't allow code to set a texture unit on this pass
-            if(arg_2 == "ON") {
-                pass->set_prevent_textures(true);
-            } else {
-                pass->set_prevent_textures(false);
-            }
-        } else if(arg_1 == "SHADE_MODEL") {
-            if(arg_2 == "FLAT") {
-                pass->set_shade_model(SHADE_MODEL_FLAT);
-            } else {
-                pass->set_shade_model(SHADE_MODEL_SMOOTH);
-            }
-        } else if(arg_1 == "COLOR_MATERIAL") {
-            if(arg_2 == "OFF") {
-                pass->set_colour_material(COLOUR_MATERIAL_NONE);
-            } else if(arg_2 == "AMBIENT") {
-                pass->set_colour_material(COLOUR_MATERIAL_AMBIENT);
-            } else if(arg_2 == "DIFFUSE") {
-                pass->set_colour_material(COLOUR_MATERIAL_DIFFUSE);
-            } else if(arg_2 == "AMBIENT_AND_DIFFUSE") {
-                pass->set_colour_material(COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE);
-            }
-        } else if(arg_1 == "TEXTURING") {
-            if(arg_2 == "ON") {
-                pass->set_texturing_enabled(true);
-            } else {
-                pass->set_texturing_enabled(false);
-            }
-        } else if(arg_1 == "LIGHTING") {
-            if(arg_2 == "ON") {
-                pass->set_lighting_enabled(true);
-            } else {
-                pass->set_lighting_enabled(false);
-            }
-        } else {
-            throw SyntaxError(_u("Invalid argument passed to SET(FLAG): {0}").format(arg_1));
-        }
+        material.define_property(
+            MATERIAL_PROPERTY_TYPE_TEXTURE,
+            name,
+            tex_id
+        );
     } else {
-        throw SyntaxError(_u("Invalid SET command for pass: {0}").format(type));
+        material.define_property(
+            MATERIAL_PROPERTY_TYPE_TEXTURE,
+            name,
+            TextureID()
+        );
     }
 }
 
-void MaterialScript::handle_data_block(Material& mat, const unicode& data_type, const std::vector<unicode> &lines, MaterialPass::ptr pass) {
-    if(data_type.upper() == "VERTEX") {
-        current_vert_shader_ = _u("\n").join(lines).encode();
-    } else if(data_type.upper() == "FRAGMENT") {
-        current_frag_shader_ = _u("\n").join(lines).encode();
-    } else {
-        throw SyntaxError(_u("Invalid BEGIN_DATA block: ") + data_type);
-    }
-}
+void read_property_values(Material& mat, _material_impl::PropertyValueHolder& holder, jsonic::Node& json) {
+    if(json.has_key("property_values")) {
+        for(auto& key: json["property_values"].keys()) {
+            auto& value = json["property_values"][key];
 
-void MaterialScript::handle_block(Material& mat,
-        const std::vector<unicode>& lines,
-        uint16_t& current_line,
-        const unicode &parent_block_type,
-        MaterialPass::ptr current_pass) {
+            if(!holder.top_level()->property_is_defined(key)) {
+                L_ERROR(_F("Unrecognized property: {0}").format(key));
+                continue;
+            }
 
-    Renderer* renderer = mat.resource_manager().window->renderer;
-    assert(renderer && "No renderer?");
+            auto property_type = holder.top_level()->defined_property_type(key);
 
-    unicode line = unicode(lines[current_line]).strip();
-    current_line++;
-
-    assert(unicode(line).starts_with("BEGIN"));
-
-    std::vector<unicode> block_args = line.split("(")[1].strip(")").split(" ");
-    unicode block_type = block_args[0].upper();
-
-    const std::vector<unicode> VALID_BLOCKS = {
-        "HEADER",
-        "PASS"
-    };
-
-    if(std::find(VALID_BLOCKS.begin(), VALID_BLOCKS.end(), block_type) == VALID_BLOCKS.end()) {
-        throw SyntaxError(_u("Line: {0}. Invalid block type: {1}").format(current_line, block_type));
-    }
-
-    L_DEBUG(_F("Reading material block: {0}").format(block_type));
-
-    if(block_type == "PASS" || block_type == "HEADER") {
-        if(!parent_block_type.empty()) {
-            throw SyntaxError(_u("Line: {0}. Unexpected {1} block").format(current_line, block_type));
-        }
-
-        if(block_args.size() > 1) {
-            throw SyntaxError(_u("Line: {0}. Wrong number of arguments.").format(current_line));
-        }
-
-        if(block_type == "PASS") {
-            //Create the pass with the default shader
-            uint32_t pass_number = mat.new_pass();
-            current_pass = mat.pass(pass_number);
-
-            L_DEBUG("Material pass created");
-        }
-    }
-
-    for(uint16_t i = current_line; current_line < lines.size(); ++i) {
-        assert(current_line < lines.size());
-
-        line = lines[current_line].strip();
-
-        //If we hit another BEGIN block, process it
-        if(line.starts_with("BEGIN_DATA")) {
-            //L_DEBUG("Found BEGIN_DATA block");
-            unicode data_type = line.split("(")[1].strip(")");
-
-            //FIXME: Read all lines up to the end into a single string and then pass that
-            std::vector<unicode> data;
-
-            do {
-                current_line++;
-                if(current_line == lines.size()) {
-                    break;
+            if(property_type == MATERIAL_PROPERTY_TYPE_BOOL) {
+                if(!value.is_bool()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
                 }
 
-                unicode new_line = lines[current_line];
-                if(new_line.starts_with("END_DATA")) {
-                    //FIXME: Check END_DATA type is the same as the start
-                    break;
+                holder.set_property_value(key, (bool) value);                
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
+                if(!value.is_string()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
+                }
+
+                auto parts = unicode(std::string(value)).split(" ");
+
+                if(parts.size() != 3) {
+                    L_ERROR(_F("Invalid value for property: {0}").format(key));
+                    continue;
+                }
+
+                float x = parts[0].to_float();
+                float y = parts[1].to_float();
+                float z = parts[2].to_float();
+
+                holder.set_property_value(key, Vec3(x, y, z));
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC4) {
+                if(!value.is_string()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
+                }
+
+                auto parts = unicode(std::string(value)).split(" ");
+
+                if(parts.size() != 4) {
+                    L_ERROR(_F("Invalid value for property: {0}").format(key));
+                    continue;
+                }
+
+                float x = parts[0].to_float();
+                float y = parts[1].to_float();
+                float z = parts[2].to_float();
+                float w = parts[3].to_float();
+
+                holder.set_property_value(key, Vec4(x, y, z, w));
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
+                if(!value.is_string()) {
+                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    continue;
+                }
+
+                if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
+                    holder.set_property_value(key, (float) value);
                 } else {
-                    data.push_back(new_line);
+                    /* Special cases for enums - need a better way to handle this */
+                    if(key == BLEND_FUNC_PROPERTY) {
+                        std::string v = value;
+                        if(v == "alpha") {
+                            holder.set_property_value(key, (int) BLEND_ALPHA);
+                        } else if(v == "add") {
+                            holder.set_property_value(key, (int) BLEND_ADD);
+                        } else if(v == "colour") {
+                            holder.set_property_value(key, (int) BLEND_COLOUR);
+                        } else if(v == "modulate") {
+                            holder.set_property_value(key, (int) BLEND_MODULATE);
+                        } else if(v == "one_one_minus_alpha") {
+                            holder.set_property_value(key, (int) BLEND_ONE_ONE_MINUS_ALPHA);
+                        } else {
+                            L_WARN(_F("Unrecognised blend value {0}").format(v));
+                            holder.set_property_value(key, (int) BLEND_NONE);
+                        }
+                    } else if(key == SHADE_MODEL_PROPERTY) {
+                        std::string v = value;
+                        if(v == "smooth") {
+                            holder.set_shade_model(SHADE_MODEL_SMOOTH);
+                        } else if(v == "front_face") {
+                            holder.set_shade_model(SHADE_MODEL_FLAT);
+                        } else {
+                            L_WARN(_F("Unrecognised shade model value {0}").format(v));
+                        }
+                    } else if(key == CULL_MODE_PROPERTY) {
+                        std::string v = value;
+                        if(v == "back_face") {
+                            holder.set_cull_mode(CULL_MODE_BACK_FACE);
+                        } else if(v == "front_face") {
+                            holder.set_cull_mode(CULL_MODE_FRONT_FACE);
+                        } else if(v == "front_and_back_face") {
+                            holder.set_cull_mode(CULL_MODE_FRONT_AND_BACK_FACE);
+                        } else if(v == "none") {
+                            holder.set_cull_mode(CULL_MODE_NONE);
+                        } else {
+                            L_WARN(_F("Unrecognised cull value {0}").format(v));
+                        }
+                    } else {
+                        holder.set_property_value(key, (int) value);
+                    }
                 }
-            } while(current_line < lines.size());
-
-
-            if(block_type == "PASS") {
-                handle_data_block(mat, data_type, data, current_pass);
-            } else {
-                throw SyntaxError(unicode("Line: {0}. Block does not accept BEGIN_DATA commands").format(current_line).encode());
-            }
-        } else if(line.starts_with("BEGIN")) {
-           // L_DEBUG("Found BEGIN block");
-            handle_block(mat, lines, current_line, block_type, current_pass);
-        } else if(line.starts_with("END")) {
-            L_DEBUG("Found END block");
-            //If we hit an END block, the type must match the BEGIN
-            auto parts = line.split("(");
-
-            if(parts.size() < 2) {
-                throw SyntaxError("Malformed END statement");
-            }
-
-            L_DEBUG("Parsing END type");
-            parts[1] = parts[1].strip(")");
-            unicode end_block_type = parts[1].upper();
-
-            if(end_block_type != block_type) {
-                throw SyntaxError(
-                    _u("Line: {0}. Expected END({1}) but found END({2})").format(current_line, block_type, end_block_type));
-            }
-
-            if(end_block_type == "PASS" && renderer->supports_gpu_programs()) {
-                L_DEBUG("Setting up GPU program on material");
-
-                current_pass->set_gpu_program_id(
-                    renderer->new_or_existing_gpu_program(current_vert_shader_, current_frag_shader_)
+            } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+                std::string path = value;
+                auto tex_id = mat.resource_manager().new_texture_from_file(
+                    path
                 );
-            }
 
-            L_DEBUG("Finished reading material block");
-            return; //Exit this function, we are done with this block
-        } else if(line.starts_with("SET")) {
-         //   L_DEBUG("Found SET command block");
-            unicode args_part = line.split("(")[1].strip(")");
-            std::vector<unicode> args = args_part.split(" ");
-
-            if (block_type == "PASS") {
-                handle_pass_set_command(mat, args, current_pass);
+                holder.set_property_value(key, tex_id);
             } else {
-                throw SyntaxError(unicode("Line: {0}. Block does not accept SET commands").format(current_line).encode());
+                L_ERROR("Unhandled property type");
             }
-
-        } else if(line.starts_with("PROPERTY")) {
-            unicode args_part = line.split("(")[1].strip(")");
-            std::vector<unicode> args = args_part.split(" ");
-
-            if(block_type == "HEADER") {
-                handle_header_property_command(mat, args);
-            }
-        } else if(!line.empty()) {
-            L_DEBUG(_F("Unhandled line: ").format(line));
         }
-        current_line++;
     }
-
 }
 
 void MaterialScript::generate(Material& material) {
-    std::vector<unicode> lines;
-
-    std::string line;
-    while(portable_getline(data_, line)) {
-        unicode new_line(line);
-        new_line = new_line.strip();
-        if(new_line.empty()) {
-            continue;
+    auto lookup_material_property_type = [](const std::string& kind) -> MaterialPropertyType {
+        if(kind == "bool") {
+            return MATERIAL_PROPERTY_TYPE_BOOL;
+        } else if(kind == "texture") {
+            return MATERIAL_PROPERTY_TYPE_TEXTURE;
+        } else if(kind == "float") {
+            return MATERIAL_PROPERTY_TYPE_FLOAT;
+        } else if(kind == "int") {
+            return MATERIAL_PROPERTY_TYPE_INT;
+        } else if(kind == "vec2") {
+            return MATERIAL_PROPERTY_TYPE_VEC2;
+        } else if(kind == "vec3") {
+            return MATERIAL_PROPERTY_TYPE_VEC3;
+        } else if(kind == "vec4") {
+            return MATERIAL_PROPERTY_TYPE_VEC4;
+        } else {
+            L_ERROR(_F("Unrecognised property type: {0}").format(kind));
+            return MATERIAL_PROPERTY_TYPE_FLOAT;
         }
+    };
 
-        lines.push_back(new_line);
+    jsonic::Node json;
+    jsonic::loads(
+        std::string{std::istreambuf_iterator<char>(data_), std::istreambuf_iterator<char>()},
+        json
+    );
+
+    if(!json.has_key("passes")) {
+        throw std::runtime_error("Material is missing the passes key");
     }
 
-    if(lines.empty()) {
-        throw std::logic_error("Text must be specified");
+    /* Load any custom properties */
+    if(json.has_key("custom_properties")) {
+        jsonic::Node& custom_props = json["custom_properties"];
+
+        for(uint32_t i = 0u; i < custom_props.length(); ++i) {
+            jsonic::Node& prop = custom_props[i];
+
+            std::string kind = prop["type"];
+            auto prop_type = lookup_material_property_type(kind);
+
+            switch(prop_type) {
+                case MATERIAL_PROPERTY_TYPE_BOOL: {
+                    define_property<MATERIAL_PROPERTY_TYPE_BOOL>(material, prop);
+                } break;
+                case MATERIAL_PROPERTY_TYPE_INT: {
+                    define_property<MATERIAL_PROPERTY_TYPE_INT>(material, prop);
+                } break;
+                case MATERIAL_PROPERTY_TYPE_FLOAT: {
+                    define_property<MATERIAL_PROPERTY_TYPE_FLOAT>(material, prop);
+                } break;
+                case MATERIAL_PROPERTY_TYPE_TEXTURE: {
+                    define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(material, prop);
+                } break;
+            default:
+                L_ERROR(_F("Unhandled property type: {0}").format(kind));
+            }
+        }
     }
 
-    //FIXME: Parse INCLUDE commands and insert associated files into the lines
+    read_property_values(material, material, json);
 
-    uint16_t current_line = 0;
-    //Go through the lines in the file
-    while(current_line < lines.size()) {
-        unicode line = lines[current_line];
-        if(line.starts_with("BEGIN")) {
-            handle_block(material, lines, current_line, "");
+    material.set_pass_count(json["passes"].length());
+
+    /* Feels dirty... */
+    Window* window = material.resource_manager().window;
+    Renderer* renderer = window->renderer;
+
+    for(uint32_t i = 0u; i < json["passes"].length(); ++i) {
+        jsonic::Node& pass = json["passes"][i];
+
+        std::string iteration = (pass.has_key("iteration")) ? (std::string) pass["iteration"] : "once";
+
+        if(iteration == "once") {
+            material.pass(i)->set_iteration_type(ITERATION_TYPE_ONCE);
+        } else if(iteration == "once_per_light") {
+            material.pass(i)->set_iteration_type(ITERATION_TYPE_ONCE_PER_LIGHT);
+        } else {
+            L_ERROR(_F("Unsupported iteration type: {0}").format(iteration));
         }
-        current_line++;
+
+        read_property_values(material, *material.pass(i), pass);
+
+        /* If we support gpu programs, then load any shaders */
+        if(renderer->supports_gpu_programs() && pass.has_key("vertex_shader") && pass.has_key("fragment_shader")) {
+            std::string vertex_shader_path = pass["vertex_shader"];
+            std::string fragment_shader_path = pass["fragment_shader"];
+
+            auto parent_dir = unicode(kfs::path::dir_name(filename_.encode()));
+
+            bool added = false;
+
+            // Make sure we always remove the search path we add (if it didn't exist before)
+            raii::Finally then([&]() {
+                if(added) {
+                    window->resource_locator->remove_search_path(parent_dir);
+                }
+            });
+
+            added = window->resource_locator->add_search_path(parent_dir);
+
+            auto vertex_shader = window->resource_locator->read_file(vertex_shader_path);
+            auto fragment_shader = window->resource_locator->read_file(fragment_shader_path);
+
+            auto program = renderer->new_or_existing_gpu_program(
+                std::string{std::istreambuf_iterator<char>(*vertex_shader), std::istreambuf_iterator<char>()},
+                std::string{std::istreambuf_iterator<char>(*fragment_shader), std::istreambuf_iterator<char>()}
+            );
+
+            material.pass(i)->set_gpu_program(program);
+        }
     }
 }
 

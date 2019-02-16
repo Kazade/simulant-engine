@@ -57,9 +57,19 @@ ResourceLocator::ResourceLocator(Window *window):
 #endif
 }
 
-void ResourceLocator::add_search_path(const unicode& path) {
+bool ResourceLocator::add_search_path(const unicode& path) {
     unicode new_path(kfs::path::abs_path(path.encode()));
+
+    if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
+        return false;
+    }
+
     resource_path_.push_back(new_path);
+    return true;
+}
+
+void ResourceLocator::remove_search_path(const unicode& path) {
+    resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
 unicode ResourceLocator::locate_file(const unicode &filename) const {
@@ -86,7 +96,6 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
 #else
     auto abs_final_name = kfs::path::abs_path(final_name);
 
-    L_DEBUG(_F("Trying path: {0}").format(abs_final_name));
     if(kfs::path::exists(abs_final_name)) {
         return abs_final_name;
     }

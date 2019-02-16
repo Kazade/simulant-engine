@@ -10,24 +10,34 @@
 
 class MaterialScriptTest : public smlt::test::SimulantTestCase {
 public:
-    void test_basic_material_script_parsing() {
+    void test_property_definitions_are_loaded_correctly() {
         const std::string text = R"(
-                BEGIN(pass)
-                    SET(TEXTURE_UNIT 0 "sample.tga")
+{
+    "custom_properties": [
+        {
+            "name": "texture_map",
+            "type": "texture",
+            "default": null
+        },
+        {
+            "name": "enable_texturing",
+            "type": "bool",
+            "default": true
+        },
+    ],
 
-                    BEGIN_DATA(vertex)
-                        #version 120
-                        void main() {
-                            gl_Position = vec4(1.0);
-                        }
-                    END_DATA(vertex)
-                    BEGIN_DATA(fragment)
-                        #version 120
-                        void main() {
-                            gl_FragColor = vec4(1.0);
-                        }
-                    END_DATA(fragment)
-                END(pass)
+    "property_values": {
+        "texture_map": "simulant-icon.png",
+        "s_material_diffuse": "1 0 1 0",
+        "s_material_ambient": "1 1 1 1"
+    },
+
+    "passes": [
+        {
+            "iteration": "once"
+        }
+    ]
+}
         )";
 
         auto mat = window->shared_assets->material(window->shared_assets->new_material());
@@ -35,13 +45,15 @@ public:
         auto stream = std::make_shared<std::stringstream>();
         (*stream) << text;
 
-        smlt::MaterialScript script(stream);
+        smlt::MaterialScript script(stream, "some/path");
         script.generate(*mat);
 
-        this->assert_equal((uint32_t)1, mat->pass_count());
-        this->assert_equal((uint32_t)1, mat->pass(0)->texture_unit_count());
-
-        //TODO: Add tests to make sure that the shader has compiled correctly
+        assert_equal(mat->pass_count(), 1);
+        assert_true(mat->property("texture_map").is_custom());
+        assert_equal(mat->property("texture_map").type(), smlt::MATERIAL_PROPERTY_TYPE_TEXTURE);
+        assert_equal(mat->pass(0)->iteration_type(), smlt::ITERATION_TYPE_ONCE);
+        assert_equal(mat->diffuse(), smlt::Colour(1, 0, 1, 0));
+        assert_equal(mat->ambient(), smlt::Colour(1, 1, 1, 1));
     }
 };
 

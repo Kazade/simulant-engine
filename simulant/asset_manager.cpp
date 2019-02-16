@@ -108,7 +108,7 @@ bool AssetManager::init() {
     L_DEBUG("- Applying texture to material");
 
     //Set the default material's first texture to the default (white) texture
-    mat->first_pass()->set_texture_unit(0, default_texture_id_);
+    mat->set_diffuse_map(default_texture_id_);
 
     L_DEBUG("- Loading fonts");
     default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
@@ -121,7 +121,6 @@ bool AssetManager::init() {
 
 void AssetManager::update(float dt) {
     material_manager_.each([dt](uint32_t, MaterialPtr mat) {
-        mat->update_behaviours(dt);
         mat->update(dt);
     });
 
@@ -487,7 +486,14 @@ MaterialID AssetManager::get_template_material(const unicode& path) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
             L_INFO(_F("Loading material {0} into {1}").format(path, template_id));
             auto mat = material(template_id);
-            window->loader_for(path.encode())->into(mat);
+            auto loader = window->loader_for(path.encode());
+            if(!loader) {
+                L_ERROR(_F("Unable to find loader for {0}").format(path));
+                materials_loading_.erase(template_id);
+                throw std::runtime_error(_F("Unable to find loader for file: {0}").format(path));
+            }
+
+            loader->into(mat);
             materials_loading_.erase(template_id);
         }
     }
@@ -501,13 +507,17 @@ MaterialID AssetManager::new_material_from_file(const unicode& path, GarbageColl
 
     assert(template_id);
 
-    /* Take the template, clone it, and set garbage_collection appropriately */
-    auto new_mat = material(template_id)->new_clone(this, GARBAGE_COLLECT_NEVER).fetch();
+    /* Templates are always created in the base manager, we clone from the base manager into this
+     * manager (which might be the same manager) */
+    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_).fetch();
+    new_mat->manager_ = this;
 
-    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat->id()));
+    auto new_mat_id = new_mat->id();
 
-    material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect, true);
-    return new_mat->id();
+    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat_id));
+
+    material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect, true);
+    return new_mat_id;
 }
 
 MaterialID AssetManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
@@ -540,7 +550,8 @@ MaterialID AssetManager::new_material_from_texture(TextureID texture_id, Garbage
     MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    material(m)->set_texture_unit_on_all_passes(0, texture_id);
+    material(m)->set_diffuse_map(texture_id);
+
     material_manager_.set_garbage_collection_method(m, garbage_collect, true);
     return m;
 }

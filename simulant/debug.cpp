@@ -163,15 +163,18 @@ bool Debug::init() {
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
     material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
-    material_.fetch()->first_pass()->set_cull_mode(CULL_MODE_NONE);
+
+    auto mat = material_.fetch();
+
+    mat->set_cull_mode(CULL_MODE_NONE);
 
     // Never write to the depth buffer with debug stuff
-    material_.fetch()->first_pass()->set_depth_write_enabled(false);
+    mat->set_depth_write_enabled(false);
 
     material_no_depth_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
-    material_no_depth_.fetch()->first_pass()->set_depth_write_enabled(false);
-    material_no_depth_.fetch()->first_pass()->set_depth_test_enabled(false);
-    material_no_depth_.fetch()->first_pass()->set_cull_mode(CULL_MODE_NONE);
+    material_no_depth_.fetch()->set_depth_write_enabled(false);
+    material_no_depth_.fetch()->set_depth_test_enabled(false);
+    material_no_depth_.fetch()->set_cull_mode(CULL_MODE_NONE);
 
     auto mesh = mesh_.fetch();
 

@@ -28,10 +28,10 @@ void Flowing::update(float dt) {
     float scroll = -(time_ - int(time_));
 
     auto pass = material->pass(0);
-    auto& tex_unit = pass->texture_unit(0);
+    auto tex_unit = pass->diffuse_map();
 
-    tex_unit.matrix()[12] = scroll;
-    tex_unit.matrix()[13] = sin(time_ * 5.0) * 0.125;
+    tex_unit.texture_matrix()[12] = scroll;
+    tex_unit.texture_matrix()[13] = sin(time_ * 5.0) * 0.125;
 
     time_ += (dt * 0.125);
 }

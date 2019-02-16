@@ -34,6 +34,8 @@ class AssetManager;
 
 class Resource {
 public:
+    friend class AssetManager;
+
     Resource(AssetManager* manager):
         manager_(manager) {
         created_ = std::chrono::system_clock::now();
@@ -52,7 +54,15 @@ public:
 
     void set_garbage_collection_method(GarbageCollectMethod method);
 
-    Property<Resource, generic::DataCarrier> data = { this, &Resource::data_ };
+    Property<Resource, generic::DataCarrier> data = {this, &Resource::data_};
+
+protected:
+    Resource(const Resource& rhs):
+        manager_(rhs.manager_),
+        created_(std::chrono::system_clock::now()),
+        data_(rhs.data_) {
+
+    }
 private:
     AssetManager* manager_;
 

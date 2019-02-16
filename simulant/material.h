@@ -19,271 +19,455 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include <cstdint>
-#include <map>
-#include <vector>
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <set>
 
-#include "deps/kazsignal/kazsignal.h"
-#include "generic/managed.h"
+#include <unordered_map>
+
 #include "resource.h"
-#include "loadable.h"
 #include "generic/identifiable.h"
-#include "generic/cloneable.h"
-#include "generic/property.h"
-#include "generic/object_manager.h"
-#include "behaviours/behaviour.h"
+#include "generic/managed.h"
 #include "types.h"
-#include "interfaces.h"
-#include "material_constants.h"
+#include "loadable.h"
 #include "interfaces/updateable.h"
 
-#include "materials/attribute_manager.h"
-#include "materials/uniform_manager.h"
+
+class MaterialTest;
 
 namespace smlt {
 
-class MaterialPass;
-class Material;
+const std::string DIFFUSE_PROPERTY = "s_material_diffuse";
+const std::string AMBIENT_PROPERTY = "s_material_ambient";
+const std::string SPECULAR_PROPERTY = "s_material_specular";
+const std::string SHININESS_PROPERTY = "s_material_shininess";
+const std::string DIFFUSE_MAP_PROPERTY = "s_diffuse_map";
+const std::string LIGHT_MAP_PROPERTY = "s_light_map";
+const std::string NORMAL_MAP_PROPERTY = "s_normal_map";
+const std::string SPECULAR_MAP_PROPERTY = "s_specular_map";
+const std::string DEPTH_WRITE_ENABLED_PROPERTY = "s_depth_write_enabled";
+const std::string DEPTH_TEST_ENABLED_PROPERTY = "s_depth_test_enabled";
+const std::string DEPTH_FUNC_PROPERTY = "s_depth_func";
+const std::string BLEND_FUNC_PROPERTY = "s_blend_func";
+const std::string CULL_MODE_PROPERTY = "s_cull_mode";
+const std::string SHADE_MODEL_PROPERTY = "s_shade_model";
+const std::string LIGHTING_ENABLED_PROPERTY = "s_lighting_enabled";
+const std::string TEXTURING_ENABLED_PROPERTY = "s_texturing_enabled";
+const std::string POINT_SIZE_PROPERTY = "s_point_size";
+const std::string POLYGON_MODE_PROPERTY = "s_polygon_mode";
+const std::string COLOUR_MATERIAL_PROPERTY = "s_colour_material";
+const std::string LIGHT_POSITION_PROPERTY = "s_light_position";
+const std::string LIGHT_AMBIENT_PROPERTY = "s_light_ambient";
+const std::string LIGHT_DIFFUSE_PROPERTY = "s_light_diffuse";
+const std::string LIGHT_SPECULAR_PROPERTY = "s_light_specular";
+const std::string LIGHT_CONSTANT_ATTENUATION_PROPERTY = "s_light_constant_attenuation";
+const std::string LIGHT_LINEAR_ATTENUATION_PROPERTY = "s_light_linear_attenuation";
+const std::string LIGHT_QUADRATIC_ATTENUATION_PROPERTY = "s_light_quadratic_attenuation";
 
+const std::string VIEW_MATRIX_PROPERTY = "s_view";
+const std::string MODELVIEW_PROJECTION_MATRIX_PROPERTY = "s_modelview_projection";
+const std::string PROJECTION_MATRIX_PROPERTY = "s_projection";
+const std::string MODELVIEW_MATRIX_PROPERTY = "s_modelview";
+const std::string INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY = "s_inverse_transpose_modelview";
 
-class TextureUnit:
-    public Updateable {
-public:
-    TextureUnit(MaterialPass& pass);
-    TextureUnit(MaterialPass& pass, TextureID tex_id);
-    TextureUnit(MaterialPass& pass, std::vector<TextureID> textures, double duration);
-
-    TextureUnit(const TextureUnit& rhs) = default;
-    TextureUnit& operator=(const TextureUnit& rhs) = default;
-
-    bool is_animated() const { return !animated_texture_units_.empty(); }
-
-    TextureID texture_id() const;
-
-    void update(float dt) {
-        if(!is_animated()) return;
-
-        time_elapsed_ += dt;
-        if(time_elapsed_ >= (animated_texture_duration_ / double(animated_texture_units_.size()))) {
-            current_texture_++;
-            time_elapsed_ = 0.0;
-
-            if(current_texture_ == animated_texture_units_.size()) {
-                current_texture_ = 0;
-            }
-        }
-    }
-
-    void scroll_x(float amount) {
-        Mat4 diff = Mat4::as_translation(Vec3(amount, 0, 0));
-        texture_matrix_ = texture_matrix_ * diff;
-    }
-
-    void scroll_y(float amount) {
-        Mat4 diff = Mat4::as_translation(Vec3(0, amount, 0));
-        texture_matrix_ = texture_matrix_ * diff;
-    }
-
-    const Mat4& matrix() const {
-        return texture_matrix_;
-    }
-
-    Mat4& matrix() {
-        return texture_matrix_;
-    }
-
-private:
-    MaterialPass* pass_;
-
-    std::vector<TexturePtr> animated_texture_units_;
-    double animated_texture_duration_;
-    double time_elapsed_;
-    uint32_t current_texture_;
-
-    TexturePtr texture_unit_;
-    Mat4 texture_matrix_;
-
-    friend class MaterialPass;
-    TextureUnit new_clone(MaterialPass& owner) const;
-};
-
-enum IterationType {
-    ITERATE_ONCE,
-    ITERATE_N,
-    ITERATE_ONCE_PER_LIGHT
-};
-
+const std::string DIFFUSE_MAP_MATRIX_PROPERTY = "s_diffuse_map_matrix";
+const std::string LIGHT_MAP_MATRIX_PROPERTY = "s_light_map_matrix";
+const std::string NORMAL_MAP_MATRIX_PROPERTY = "s_normal_map_matrix";
+const std::string SPECULAR_MAP_MATRIX_PROPERTY = "s_specular_map_matrix";
 
 enum MaterialPropertyType {
+    MATERIAL_PROPERTY_TYPE_TEXTURE,
+    MATERIAL_PROPERTY_TYPE_BOOL,
     MATERIAL_PROPERTY_TYPE_INT,
     MATERIAL_PROPERTY_TYPE_FLOAT,
     MATERIAL_PROPERTY_TYPE_VEC2,
     MATERIAL_PROPERTY_TYPE_VEC3,
-    MATERIAL_PROPERTY_TYPE_VEC4
+    MATERIAL_PROPERTY_TYPE_VEC4,
+    MATERIAL_PROPERTY_TYPE_MAT3,
+    MATERIAL_PROPERTY_TYPE_MAT4
 };
 
-struct MaterialProperty {
-    MaterialProperty():
-        int_value(0) {}
-
-    MaterialPropertyType type;
-    bool is_set = false; // Has this property been set (either by shader or the user)
-
-    // FIXME: Union? Works fine on newer compilers, fails on GCC 4.7.3 (Dreamcast)
-    int int_value;
-    float float_value;
-    Vec2 vec2_value;
-    Vec3 vec3_value;
-    Vec4 vec4_value;
+enum IterationType {
+    ITERATION_TYPE_ONCE,
+    ITERATION_TYPE_N,
+    ITERATION_TYPE_ONCE_PER_LIGHT
 };
 
-typedef std::unordered_map<std::string, MaterialProperty> MaterialProperties;
+namespace _material_impl {
+    class PropertyValueHolder;
+
+    const static int MAX_PASSES = 4;
+    const static int MAX_DEFINED_PROPERTIES = 64;
+}
+
+/* Value type, if the type is texture */
+struct TextureUnit {
+    friend class ::MaterialTest;
+
+    friend class _material_impl::PropertyValueHolder;
+
+    TextureID texture_id;
+
+    Mat4& texture_matrix() {
+        return *texture_matrix_;
+    }
+
+    const Mat4& texture_matrix() const {
+        return *texture_matrix_;
+    }
+
+    void scroll_x(float amount);
+    void scroll_y(float amount);
+
+private:
+    /* Shared pointer so that copying a TextureUnit also copies the matrix */
+    std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
+
+    /* Set when assigned as a material property to maintain a refcount */
+    TexturePtr texture_;
+};
+
+namespace _material_impl {
+    class DefinedProperty;
+    class PropertyValueHolder;
+}
+
+class PropertyValue {
+public:
+    friend class _material_impl::PropertyValueHolder;
+
+    template<typename T>
+    T value() const;
+
+    std::string shader_variable() const;
+    std::string name() const;
+    bool is_custom() const;
+
+    MaterialPropertyType type() const;
+private:
+    PropertyValue(_material_impl::DefinedProperty* defined_property, uint8_t slot):
+        defined_property_(defined_property),
+        slot_(slot) {
+
+        assert(defined_property);
+    }
+
+    _material_impl::DefinedProperty* defined_property_;
+    uint8_t slot_;
+};
+
+namespace _material_impl {
+    template<int>
+    struct TypeForMaterialType {};
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_BOOL> {
+        typedef bool type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_TEXTURE> {
+        typedef TextureUnit type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_INT> {
+        typedef int type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_FLOAT> {
+        typedef float type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_MAT3> {
+        typedef Mat3 type;
+    };
+
+    template<>
+    struct TypeForMaterialType<MATERIAL_PROPERTY_TYPE_MAT4> {
+        typedef Mat4 type;
+    };
+
+    template<typename T>
+    struct MaterialTypeForType {};
+
+    template<>
+    struct MaterialTypeForType<bool> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_BOOL;
+    };
+
+    template<>
+    struct MaterialTypeForType<float> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_FLOAT;
+    };
+
+    template<>
+    struct MaterialTypeForType<int> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_INT;
+    };
+
+    template<>
+    struct MaterialTypeForType<Vec2> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC2;
+    };
+
+    template<>
+    struct MaterialTypeForType<Vec3> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC3;
+    };
+
+    template<>
+    struct MaterialTypeForType<Vec4> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC4;
+    };
+
+    template<>
+    struct MaterialTypeForType<TextureUnit> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_TEXTURE;
+    };
+
+    template<>
+    struct MaterialTypeForType<Mat3> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_MAT3;
+    };
+
+    template<>
+    struct MaterialTypeForType<Mat4> {
+        static const MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_MAT4;
+    };
+
+    template<typename T>
+    constexpr const T &T_max(const T &a, const T &b) {
+        return a > b ? a : b;
+    }
+
+    template<typename T, typename... Ts>
+    struct max_sizeof {
+        static const size_t value = T_max(sizeof(T), max_sizeof<Ts...>::value);
+    };
+
+    template<typename T>
+    struct max_sizeof<T> {
+        static const size_t value = sizeof(T);
+    };
+
+    /* Dirty hacky trash-all-the-things variant because std:variant and std::any are too slow */
+    template<typename... Args>
+    struct FastVariant {
+        typedef FastVariant<Args...> this_type;
+
+        /* Allocate data to hold the largest type */
+        uint8_t data[max_sizeof<Args...>::value];
+
+        std::function<void (this_type*)> destroy;
+        std::function<void (this_type*, const this_type*)> copy;
+
+        FastVariant() {
+            set<bool>(false);
+        }
+
+        FastVariant(const this_type& rhs) {
+            if(rhs.copy) {
+                rhs.copy(this, &rhs);
+            }
+        }
+
+        this_type& operator=(const this_type& rhs) {
+            if(rhs.copy) {
+                rhs.copy(this, &rhs);
+            }
+
+            return *this;
+        }
+
+        ~FastVariant() {
+            if(destroy) {
+                destroy(this);
+            }
+        }
+
+        template<typename T>
+        const T& get() const {
+            return *((T*) data);
+        }
+
+        template<typename T>
+        void set(const T& val) {
+            if(destroy) {
+                destroy(this);
+            }
+
+            new (data) T(val);
+
+            destroy = [](this_type* _this) {
+                T* thing = (T*) _this->data;
+                thing->~T();
+            };
+
+            copy = [](this_type* _this, const this_type* rhs) {
+                _this->set(rhs->get<T>());
+            };
+        }
+    };
+
+    typedef FastVariant<bool, int, float, Vec2, Vec3, Vec4, Mat3, Mat4, TextureUnit> MaterialVariant;
+
+    struct DefinedProperty {
+        uint32_t index;  // Keep track of the order properties were defined
+        std::string name;
+        MaterialPropertyType type;
+        MaterialVariant default_value;
+        bool is_custom = true;
+
+        /* Material value + pass count */
+        bool slot_used[_material_impl::MAX_PASSES + 1] = {0, 0, 0, 0, 0};
+        MaterialVariant values[_material_impl::MAX_PASSES + 1];
+    };
+
+    class PropertyValueHolder {
+    public:
+        friend class ::smlt::Material;
+
+        PropertyValueHolder(Material* top_level, uint8_t slot):
+            top_level_(top_level),
+            slot_(slot) {
+
+            if(((PropertyValueHolder*) top_level) == this) {
+                assert(slot == 0);
+            }
+
+            assert(slot < _material_impl::MAX_PASSES + 1);
+        }
+
+        virtual ~PropertyValueHolder() {}
+
+        const Material* top_level() const {
+            return top_level_;
+        }
+
+        template<typename T>
+        void set_property_value(const std::string& name, const T& value);
+
+        template<typename T>
+        void set_property_value(uint32_t index, const T& value);
+
+        void set_property_value(uint32_t index, TextureID tex_id) {
+            TextureUnit unit;
+            unit.texture_id = tex_id;
+
+            if(tex_id) {
+                unit.texture_ = tex_id.fetch();
+            }
+
+            set_property_value(index, unit);
+        }
+
+        /* Special case to make setting texture values more straightforward */
+        void set_property_value(const std::string& name, TextureID tex_id);
+
+        PropertyValue property(const std::string& name) const;
+        PropertyValue property(uint32_t defined_property_index) const;
+
+        void unset_property_value(const std::string& name);
+
+        // ---------- Helpers -----------------------
+
+        void set_specular(const Colour& colour);
+        void set_ambient(const Colour& colour);
+        void set_diffuse(const Colour& colour);
+        void set_shininess(float shininess);
+        void set_diffuse_map(TextureID texture_id);
+        void set_light_map(TextureID texture_id);
+        TextureUnit diffuse_map() const;
+        TextureUnit light_map() const;
+        TextureUnit normal_map() const;
+        TextureUnit specular_map() const;
+        Colour specular() const;
+        Colour ambient() const;
+        Colour diffuse() const;
+        float shininess() const;
+        bool is_blending_enabled() const;
+        void set_blending_enabled(bool v);
+        void set_blend_func(BlendType b);
+        BlendType blend_func() const;
+        void set_depth_write_enabled(bool v);
+        bool is_depth_write_enabled() const;
+        void set_cull_mode(CullMode mode);
+        CullMode cull_mode() const;
+        void set_depth_test_enabled(bool v);
+        bool is_depth_test_enabled() const;
+        void set_lighting_enabled(bool v);
+        bool is_lighting_enabled() const;
+        void set_texturing_enabled(bool v);
+        bool is_texturing_enabled() const;
+        float point_size() const;
+        PolygonMode polygon_mode() const;
+        void set_shade_model(ShadeModel model);
+        ShadeModel shade_model() const;
+        ColourMaterial colour_material() const;
+
+    protected:
+        /* We want to force users to use the TextureID version, hence the explicit protected override */
+        void set_property_value(const std::string& name, TextureUnit unit) {
+            set_property_value<TextureUnit>(name, unit);
+        }
+
+    private:
+        Material* top_level_;
+        uint8_t slot_;
+    };
+}
+
+class ShaderUnit {
+public:
+    bool is_compiled() const;
+    GPUProgramID shader_id() const;
+    std::string filename() const;
+};
 
 class MaterialPass:
-    public Managed<MaterialPass>,
-    public Updateable {
+    public _material_impl::PropertyValueHolder  {
 public:
-    MaterialPass(Material* material);
+    friend class Material;
 
-    void set_shininess(float s) { shininess_ = s; }
-    void set_ambient(const smlt::Colour& colour) { ambient_ = colour; }
-    void set_diffuse(const smlt::Colour& colour) { diffuse_ = colour; }
-    void set_specular(const smlt::Colour& colour) { specular_ = colour; }
+    MaterialPass(Material* material, uint8_t index);
 
-    void set_texture_unit(uint32_t texture_unit_id, TextureID tex);
-    void set_animated_texture_unit(uint32_t texture_unit_id, const std::vector<TextureID> textures, double duration);
+    void set_iteration_type(IterationType iteration) {
+        iteration_type_ = iteration;
+    }
 
-    const Colour& diffuse() const { return diffuse_; }
-    const Colour& ambient() const { return ambient_; }
-    const Colour& specular() const { return specular_; }
-    float shininess() const { return shininess_; }
+    IterationType iteration_type() const {
+        return iteration_type_;
+    }
 
-    uint32_t texture_unit_count() const { return texture_units_.size(); }
-    TextureUnit& texture_unit(uint32_t index) { return texture_units_.at(index); }
-    const TextureUnit& texture_unit(uint32_t index) const { return texture_units_.at(index); }
+    GPUProgramID gpu_program_id() const;
 
-    void update(float dt) {
-        for(TextureUnit& t: texture_units_) {
-            t.update(dt);
+    void set_gpu_program(GPUProgramID program) {
+        // If the renderer doesn't support GPU programs then this
+        // will be an empty ID
+        if(program) {
+            program_ = program.fetch();
         }
     }
 
-    IterationType iteration() const { return iteration_; }
-    uint32_t max_iterations() const { return max_iterations_; }
-    void set_iteration(IterationType iter_type, uint32_t max=8);
-    void set_blending(BlendType blend) { blend_ = blend; }
-    BlendType blending() const { return blend_; }
-
-    bool is_blended() const { return blend_ != BLEND_NONE; }
-
-    void set_depth_write_enabled(bool value=true) {
-        depth_writes_enabled_ = value;
+    uint8_t max_iterations() const {
+        return max_iterations_;
     }
 
-    bool depth_write_enabled() const { return depth_writes_enabled_; }
-
-    void set_depth_test_enabled(bool value=true) {
-        depth_test_enabled_ = value;
+    const Material* material() const {
+        return material_;
     }
-    bool depth_test_enabled() const { return depth_test_enabled_; }
-
-    void set_lighting_enabled(bool value=true) {
-        lighting_enabled_ = value;
-    }
-
-    bool lighting_enabled() const { return lighting_enabled_; }
-
-    void set_texturing_enabled(bool value=true) {
-        texturing_enabled_ = value;
-    }
-
-    bool texturing_enabled() const { return texturing_enabled_; }
-
-    void set_point_size(float ps) { point_size_ = ps; }
-
-    float point_size() const { return point_size_; }
-
-    void set_albedo(float reflectiveness);
-    float albedo() const { return albedo_; }
-    bool is_reflective() const { return albedo_ > 0.0; }
-    void set_reflection_texture_unit(uint8_t i) { reflection_texture_unit_ = i; }
-    uint8_t reflection_texture_unit() const { return reflection_texture_unit_; }
-
-    void set_polygon_mode(PolygonMode mode) { polygon_mode_ = mode; }
-    PolygonMode polygon_mode() const { return polygon_mode_; }
-
-    void set_cull_mode(CullMode mode) { cull_mode_ = mode; }
-    CullMode cull_mode() const { return cull_mode_; }
-
-    void set_shade_model(ShadeModel model) { shade_model_ = model; }
-    ShadeModel shade_model() const { return shade_model_; }
-
-    void set_colour_material(ColourMaterial material) {
-        colour_material_ = material;
-    }
-    ColourMaterial colour_material() const { return colour_material_; }
-
-    void set_prevent_textures(bool value) { allow_textures_ = !value; }
-
-    Property<MaterialPass, Material> material = { this, &MaterialPass::material_ };    
-    Property<MaterialPass, UniformManager> uniforms = { this, &MaterialPass::uniforms_ };
-    Property<MaterialPass, AttributeManager> attributes = { this, &MaterialPass::attributes_ };
-
-    const GPUProgramID& gpu_program_id() const { return gpu_program_; }
-    void set_gpu_program_id(GPUProgramID program_id);
 
 private:
-    UniformManager uniforms_;
-    AttributeManager attributes_;
+    Material* material_;
+    ShaderUnit shader_;
 
-    static std::shared_ptr<GPUProgram> default_program;
+    IterationType iteration_type_ = ITERATION_TYPE_ONCE;
+    uint8_t max_iterations_ = 1;
 
-    Material* material_ = nullptr;
-
-    GPUProgramID gpu_program_;
-    GPUProgramPtr gpu_program_ref_;
-
-    std::map<std::string, float> float_uniforms_;
-    std::map<std::string, int> int_uniforms_;
-
-
-    Colour diffuse_ = Colour::WHITE;
-    Colour ambient_ = Colour::BLACK;
-    Colour specular_ = Colour::BLACK;
-    float shininess_ = 0.0;
-    bool allow_textures_ = true;
-
-    std::vector<TextureUnit> texture_units_;
-
-    IterationType iteration_ = ITERATE_ONCE;
-    uint32_t max_iterations_ = 0;
-
-    BlendType blend_;
-
-    bool depth_writes_enabled_ = true;
-    bool depth_test_enabled_ = true;
-    bool lighting_enabled_ = false; // Only has an effect on GL 1.x
-    bool texturing_enabled_ = true; // Only has an effect on GL 1.x
-
-    float point_size_;
-
-    float albedo_ = 0.0;
-    uint8_t reflection_texture_unit_ = 0;
-
-    PolygonMode polygon_mode_ = POLYGON_MODE_FILL;
-    CullMode cull_mode_ = CULL_MODE_BACK_FACE;
-    ShadeModel shade_model_ = SHADE_MODEL_SMOOTH;
-    ColourMaterial colour_material_ = COLOUR_MATERIAL_NONE;
-
-    friend class Material;
-    MaterialPass::ptr new_clone(Material *owner) const;
+    GPUProgramPtr program_;
 };
 
-typedef sig::signal<void (MaterialID)> MaterialChangedSignal;
+typedef uint8_t PropertyIndex;
 
 class Material:
     public Resource,
@@ -291,113 +475,172 @@ class Material:
     public generic::Identifiable<MaterialID>,
     public Managed<Material>,
     public Updateable,
-    public Organism {
-
-    DEFINE_SIGNAL(MaterialChangedSignal, signal_material_changed);
+    public _material_impl::PropertyValueHolder {
 
 public:
+    friend class GenericRenderer;
+    friend class _material_impl::PropertyValueHolder;
+
     struct BuiltIns {
         static const std::string DEFAULT;
         static const std::string TEXTURE_ONLY;
         static const std::string DIFFUSE_ONLY;
-        static const std::string ALPHA_TEXTURE;
-        static const std::string DIFFUSE_WITH_LIGHTING;
-        static const std::string MULTITEXTURE2_MODULATE;
-        static const std::string MULTITEXTURE2_ADD;
-        static const std::string TEXTURE_WITH_LIGHTMAP;
-        static const std::string TEXTURE_WITH_LIGHTMAP_AND_LIGHTING;
-        static const std::string MULTITEXTURE2_MODULATE_WITH_LIGHTING;
-        static const std::string SKYBOX;
-        static const std::string TEXTURED_PARTICLE;
-        static const std::string DIFFUSE_PARTICLE;
     };
 
-    static const std::map<std::string, std::string> BUILT_IN_NAMES;
+    static const std::unordered_map<std::string, std::string> BUILT_IN_NAMES;
 
-    Material(MaterialID mat_id, AssetManager* resource_manager);
-    ~Material();
+    Material(MaterialID id, AssetManager *asset_manager);
+    virtual ~Material() {}
 
-    void update(float dt) override;
-    bool has_reflective_pass() const { return !reflective_passes_.empty(); }
+    template<typename T>
+    PropertyIndex define_property(
+        MaterialPropertyType type,
+        std::string name,
+        const T& default_value
+    ) {
+        assert(defined_property_count_ < _material_impl::MAX_DEFINED_PROPERTIES - 1);
 
-    uint32_t new_pass();
-    MaterialPass::ptr pass(uint32_t index);
-    uint32_t pass_count() const { return pass_count_; }
-    MaterialPass::ptr first_pass() {
-        if(pass_count()) {
-            return pass(0);
+        _material_impl::DefinedProperty& prop = defined_properties_[defined_property_count_++];
+        assert(defined_property_count_ > 0);
+        prop.index = defined_property_count_ - 1;
+        prop.name = name;
+        prop.type = type;
+        prop.default_value.set(default_value);
+        set_property_value(prop.index, default_value);
+        defined_property_lookup_.insert(std::make_pair(name, prop.index));
+
+        if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+            texture_properties_.push_back(prop.index);
         }
-        return MaterialPass::ptr();
+
+        assert(!name.empty());
+
+        return prop.index;
     }
-    void delete_pass(uint32_t index);
 
-    void set_texture_unit_on_all_passes(uint32_t texture_unit_id, TextureID tex);
+    PropertyIndex defined_property_index(const std::string& name) const {
+        return defined_property_lookup_.at(name);
+    }
 
-    MaterialID new_clone(AssetManager* target_resource_manager, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) const;
+    MaterialPropertyType defined_property_type(const std::string& name) const {
+        return defined_properties_[defined_property_index(name)].type;
+    }
+
+    const std::vector<PropertyIndex> &defined_properties_by_type(MaterialPropertyType type) const;
+    std::vector<std::string> defined_custom_properties() const;
+
+    bool property_is_defined(const std::string& name) const {
+        return defined_property_lookup_.count(name) > 0;
+    }
+
+// ---------- Passes ------------------------
+    void set_pass_count(uint8_t pass_count);
+
+    uint8_t pass_count() const {
+        return pass_count_;
+    }
+
+    MaterialPass* pass(uint8_t pass);
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
-        // Wait until we can lock the atomic flag
-        std::vector<MaterialPass::ptr> passes;
-        {
-            std::lock_guard<std::mutex> lock(pass_lock_);
-            passes = passes_; // Copy, to prevent holding the lock for the entire loop
-        }
-
-        uint32_t i = 0;
-        for(auto pass: passes) {
-            callback(i++, pass.get());
+        for(auto i = 0; i != pass_count_; ++i) {
+            callback(i, &passes_[i]);
         }
     }
 
-public:
-    typedef sig::signal<void (MaterialID, MaterialPass*)> MaterialPassCreated;
-    typedef sig::signal<void (MaterialID, MaterialPass*)> MaterialPassDestroyed;
-
-    MaterialPassCreated& signal_material_pass_created() { return signal_material_pass_created_; }
-    MaterialPassDestroyed& signal_material_pass_destroyed() { return signal_material_pass_destroyed_; }
-
-    void set_int_property(const std::string& name, int value);
-    void set_float_property(const std::string& name, float value);
-
-    void create_int_property(const std::string& name);
-    void create_float_property(const std::string& name);
-
-    const MaterialProperties& properties() const { return properties_; }
+    void update(float dt);
 
 private:
-    MaterialPassCreated signal_material_pass_created_;
-    MaterialPassDestroyed signal_material_pass_destroyed_;
+    void initialize_default_properties();
 
-    void on_pass_created(MaterialPass *pass);
-    void on_pass_changed(MaterialPass *pass);
-    void on_pass_destroyed(MaterialPass *pass);
+    uint32_t defined_property_count_ = 0;
+    _material_impl::DefinedProperty defined_properties_[_material_impl::MAX_DEFINED_PROPERTIES];
+    std::unordered_map<std::string, uint32_t> defined_property_lookup_;
 
-private:
-    /*
-     * Although individual resources are not thread-safe
-     * we do call update() automatically, which means that without
-     * some kind of locking manipulating materials would be impossible.
-     *
-     * This flag keeps track of whether we should be updating, and we
-     * set it and clear it whenever we manipulate the material. If the flag
-     * is set then updating won't happen until it's cleared
+    std::vector<PropertyIndex> texture_properties_;
+
+    std::mutex pass_mutex_;
+    uint8_t pass_count_ = 0;
+    MaterialPass passes_[_material_impl::MAX_PASSES];
+
+
+    /* Assignment operator and copy constructor must be private
+     * to prevent accidental copying. However the object manager needs
+     * to be able to clone materials, hence the friendship.
      */
-    std::atomic_flag updating_disabled_ = ATOMIC_FLAG_INIT;
 
-    /*
-     * Are we iterating passes? If so we should block on adding/removing them
-     */
-    std::mutex pass_lock_;
+    template<typename T>
+    PropertyIndex define_builtin_property(
+        MaterialPropertyType type,
+        std::string name,
+        const T& default_value
+    ) {
+        auto index = define_property(type, name, default_value);
+        defined_properties_[index].is_custom = false;
+        return index;
+    }
 
-    std::vector<MaterialPass::ptr> passes_;
-    uint32_t pass_count_; // Used to prevent locking on passes_ when requesting the count
+    /* These indexes exist for performance. It saves a map lookup up for each of these properties */
+    PropertyIndex material_ambient_index_;
+    PropertyIndex material_diffuse_index_;
+    PropertyIndex material_specular_index_;
+    PropertyIndex material_shininess_index_;
+    PropertyIndex diffuse_map_index_;
+    PropertyIndex specular_map_index_;
+    PropertyIndex light_map_index_;
+    PropertyIndex normal_map_index_;
 
-    std::set<MaterialPass*> reflective_passes_;
+    PropertyIndex blending_enabled_index_;
+    PropertyIndex texturing_enabled_index_;
+    PropertyIndex lighting_enabled_index_;
+    PropertyIndex depth_test_enabled_index_;
+    PropertyIndex depth_write_enabled_index_;
 
-    MaterialProperties properties_;
+    PropertyIndex shade_model_index_;
+    PropertyIndex cull_mode_index_;
+    PropertyIndex polygon_mode_index_;
+    PropertyIndex point_size_index_;
+    PropertyIndex colour_material_index_;
+    PropertyIndex blend_func_index_;
+protected:
+    friend class _object_manager_impl::ObjectManagerBase<
+        MaterialID, Material, std::shared_ptr<smlt::Material>,
+        _object_manager_impl::ToSharedPtr<smlt::Material>
+    >;
 
-    friend class MaterialPass;
+    Material(const Material& rhs);
+    Material& operator=(const Material& rhs);
+
+    MaterialPtr new_clone() {
+        return std::shared_ptr<Material>(new Material(*this));
+    }
 };
+
+
+template<typename T>
+T PropertyValue::value() const {
+    return defined_property_->values[slot_].get<T>();
+}
+
+namespace _material_impl {
+
+template<typename T>
+void PropertyValueHolder::set_property_value(uint32_t index, const T& value) {
+    _material_impl::DefinedProperty* defined_property = &top_level_->defined_properties_[index];
+
+    assert(defined_property->type == _material_impl::MaterialTypeForType<T>::type);
+
+    defined_property->values[slot_].set(value);
+    defined_property->slot_used[slot_] = true;
+}
+
+
+template<typename T>
+void PropertyValueHolder::set_property_value(const std::string& name, const T& value) {
+    set_property_value(top_level()->defined_property_index(name), value);
+}
+
+}
 
 }
 

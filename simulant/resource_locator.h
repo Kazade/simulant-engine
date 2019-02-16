@@ -49,7 +49,8 @@ public:
     std::shared_ptr<std::stringstream> read_file(const unicode& filename);
     std::vector<std::string> read_file_lines(const unicode& filename);
 
-    void add_search_path(const unicode& path);
+    bool add_search_path(const unicode& path);
+    void remove_search_path(const unicode& path);
 
 private:
     unicode find_executable_directory();

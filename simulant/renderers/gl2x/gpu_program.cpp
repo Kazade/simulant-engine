@@ -21,6 +21,8 @@
 #include "../../utils/gl_error.h"
 #include "../../utils/hash/md5.h"
 #include "gpu_program.h"
+#include "../renderer.h"
+#include "../../generic/raii.h"
 
 namespace smlt {
 
@@ -39,14 +41,30 @@ UniformInfo GPUProgram::uniform_info(const std::string& uniform_name) {
 }
 
 GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_silently) {
+    /* Don't do anything costly if we already know where the uniform is */
     auto it = uniform_cache_.find(uniform_name);
     if(it != uniform_cache_.end()) {
         return (*it).second;
     }
 
-    if(!is_current()) {
-        L_ERROR("Attempted to modify a uniform without making the program active");
-        throw std::logic_error("Attempted to modify GPU program object without making it active");
+    /* Make sure we always rebind the currently bound gpu program when
+     * we leave this function */
+    auto current = renderer_->current_gpu_program_id();
+    raii::Finally then([&]() {
+        if(current && current != id()) {
+            auto program = renderer_->gpu_program(current);
+            if(program) {
+                program->activate();
+            } else {
+                L_WARN(_F("Program {0} vanished while locating uniforms for program {1}").format(
+                    current, id()
+                ));
+            }
+        }
+    });
+
+    if(current != id()) {
+        activate();
     }
 
     if(!is_complete()) {
@@ -59,13 +77,19 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
     //L_DEBUG(_u("Looking up uniform with name {0} in program {1}").format(name, program_.program_object_));
     GLint location = _GLCheck<GLint>(__func__, glGetUniformLocation, program_object_, name.c_str());
 
-    if(location < 0 && !fail_silently) {
-        L_ERROR(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
-        return -1;
+    if(location < 0) {
+        if(!fail_silently) {
+            L_ERROR(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
+        }
     }
 
     uniform_cache_[uniform_name] = location;
     return location;
+}
+
+void GPUProgram::set_uniform_int(const int32_t loc, const int32_t value) {
+    assert(loc >= 0);
+    GLCheck(glUniform1i, loc, value);
 }
 
 void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t value, bool fail_silently) {
@@ -75,11 +99,21 @@ void GPUProgram::set_uniform_int(const std::string& uniform_name, const int32_t 
     }
 }
 
+void GPUProgram::set_uniform_float(const int32_t loc, const float value) {
+    assert(loc >= 0);
+    GLCheck(glUniform1f, loc, value);
+}
+
 void GPUProgram::set_uniform_float(const std::string& uniform_name, const float value, bool fail_silently) {
     int32_t loc = locate_uniform(uniform_name, fail_silently);
     if(loc > -1) {
         GLCheck(glUniform1f, loc, value);
     }
+}
+
+void GPUProgram::set_uniform_mat4x4(const int32_t loc, const Mat4& matrix) {
+    assert(loc >= 0);
+    GLCheck(glUniformMatrix4fv, loc, 1, false, (GLfloat*)matrix.data());
 }
 
 void GPUProgram::set_uniform_mat4x4(const std::string& uniform_name, const Mat4& matrix) {
@@ -103,11 +137,20 @@ void GPUProgram::set_uniform_vec3(const std::string& uniform_name, const Vec3& v
     }
 }
 
+void GPUProgram::set_uniform_vec4(const int32_t loc, const Vec4& values) {
+    assert(loc >= 0);
+    GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
+}
+
 void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& values) {
     int32_t loc = locate_uniform(uniform_name);
     if(loc > -1) {
         GLCheck(glUniform4fv, loc, 1, (GLfloat*) &values);
     }
+}
+
+void GPUProgram::set_uniform_colour(const int32_t loc, const Colour& values) {
+    set_uniform_vec4(loc, Vec4(values.r, values.g, values.b, values.a));
 }
 
 void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {
@@ -148,28 +191,30 @@ void GPUProgram::rebuild_uniform_info() {
 }
 
 
-GPUProgram::GPUProgram(const GPUProgramID &id, const std::string &vertex_source, const std::string &fragment_source):
+GPUProgram::GPUProgram(const GPUProgramID &id, Renderer* renderer, const std::string &vertex_source, const std::string &fragment_source):
     generic::Identifiable<GPUProgramID>(id),
+    renderer_(renderer),
     program_object_(0) {
 
     set_shader_source(SHADER_TYPE_VERTEX, vertex_source);
     set_shader_source(SHADER_TYPE_FRAGMENT, fragment_source);
 }
 
-GLint GPUProgram::locate_attribute(const std::string &attribute) {
-    if(!is_complete()) {
-        throw std::logic_error("Attempted to access attribute on a GPU program that is not complete");
-    }
-
+GLint GPUProgram::locate_attribute(const std::string &attribute, bool fail_silently) {
     auto it = attribute_cache_.find(attribute);
     if(it != attribute_cache_.end()) {
         return (*it).second;
     }
 
+    if(!is_complete()) {
+        throw std::logic_error("Attempted to access attribute on a GPU program that is not complete");
+    }
+
     GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, attribute.c_str());
     if(location < 0) {
-        L_ERROR(_F("Unable to find attribute with name {0}").format(attribute));
-        throw std::logic_error(_F("Couldn't find attribute {0}").format(attribute));
+        if(!fail_silently) {
+            L_ERROR(_F("Unable to find attribute with name {0}").format(attribute));
+        }
     }
 
     attribute_cache_[attribute] = location;

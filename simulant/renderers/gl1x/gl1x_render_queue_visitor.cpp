@@ -25,6 +25,13 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 }
 
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+    /* We work out the default texture GL name at the start of traversal to avoid repeatingly looking it up later */
+
+    if(!default_texture_name_) {
+        auto default_tex = renderer_->window->shared_assets->default_texture_id();
+        default_texture_name_ = renderer_->texture_objects_.at(default_tex);
+    }
+
     enable_vertex_arrays(true);
     enable_colour_arrays(true);
 
@@ -57,44 +64,11 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
 }
 
 void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {
-    queue_blended_objects_ = true;
     do_visit(renderable, pass, iteration);
 }
 
 void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
-    // When running do_visit, don't queue blended objects just render them
-    queue_blended_objects_ = false;
 
-    // Should be ordered by distance to camera
-    for(auto p: blended_object_queue_) {
-        GL1RenderState& state = p.second;
-
-        if(state.render_group_impl != current_group_) {
-            // Make sure we change render group (shaders, textures etc.)
-            batcher::RenderGroup prev(current_group_->shared_from_this());
-            batcher::RenderGroup next(state.render_group_impl->shared_from_this());
-
-            change_render_group(&prev, &next);
-            current_group_ = state.render_group_impl;
-        }
-
-        if(pass_ != state.pass) {
-            change_material_pass(pass_, state.pass);
-        }
-
-        // FIXME: Pass the previous light from the last iteration, not nullptr
-        change_light(nullptr, state.light);
-
-        // Render the transparent / blended objects
-        do_visit(
-            state.renderable,
-            state.pass,
-            state.iteration
-        );
-    }
-
-    blended_object_queue_.clear();
-    queue_blended_objects_ = true;
 }
 
 void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
@@ -110,7 +84,8 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
             if(current_tex) {
                 GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
             } else {
-                GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+                // Bind the default texture in this case
+                GLCheck(glBindTexture, GL_TEXTURE_2D, default_texture_name_);
             }
         }
     }
@@ -120,31 +95,34 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     pass_ = next;
 
     if(!prev || prev->diffuse() != next->diffuse()) {
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &next->diffuse().r);
+        auto diffuse = next->diffuse();
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &diffuse.r);
     }
 
     if(!prev || prev->ambient() != next->ambient()) {
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &next->ambient().r);
+        auto ambient = next->ambient();
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
     }
 
     if(!prev || prev->specular() != next->specular()) {
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &next->specular().r);
+        auto specular = next->specular();
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
     }
 
     if(!prev || prev->shininess() != next->shininess()) {
         GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
     }
 
-    if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
-        if(next->depth_test_enabled()) {
+    if(!prev || prev->is_depth_test_enabled() != next->is_depth_test_enabled()) {
+        if(next->is_depth_test_enabled()) {
             GLCheck(glEnable, GL_DEPTH_TEST);
         } else {
             GLCheck(glDisable, GL_DEPTH_TEST);
         }
     }
 
-    if(!prev || prev->depth_write_enabled() != next->depth_write_enabled()) {
-        if(next->depth_write_enabled()) {
+    if(!prev || prev->is_depth_write_enabled() != next->is_depth_write_enabled()) {
+        if(next->is_depth_write_enabled()) {
             GLCheck(glDepthMask, GL_TRUE);
         } else {
             GLCheck(glDepthMask, GL_FALSE);
@@ -152,16 +130,16 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 
     /* Enable lighting on the pass appropriately */
-    if(!prev || prev->lighting_enabled() != next->lighting_enabled()) {
-        if(next->lighting_enabled()) {
+    if(!prev || prev->is_lighting_enabled() != next->is_lighting_enabled()) {
+        if(next->is_lighting_enabled()) {
             GLCheck(glEnable, GL_LIGHTING);
         } else {
             GLCheck(glDisable, GL_LIGHTING);
         }
     }
 
-    if(!prev || prev->texturing_enabled() != next->texturing_enabled()) {
-        if(next->texturing_enabled()) {
+    if(!prev || prev->is_texturing_enabled() != next->is_texturing_enabled()) {
+        if(next->is_texturing_enabled()) {
             for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
                 GLCheck(glActiveTexture, GL_TEXTURE0 + i);
                 GLCheck(glEnable, GL_TEXTURE_2D);
@@ -180,7 +158,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 
     if(!prev || prev->polygon_mode() != next->polygon_mode()) {
-        switch(next->polygon_mode()) {
+        switch((PolygonMode) next->polygon_mode()) {
             case POLYGON_MODE_POINT:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
             break;
@@ -237,8 +215,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     };
 
-    if(!prev || prev->blending() != next->blending()) {
-        set_blending_mode(next->blending());
+    if(!prev || prev->blend_func() != next->blend_func()) {
+        set_blending_mode(next->blend_func());
     }
 
     if(!prev || prev->shade_model() != next->shade_model()) {
@@ -279,96 +257,61 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
     Light* current = nullptr;
 
-    GLCheck(glMatrixMode, GL_MODELVIEW);
-    GLCheck(glPushMatrix);
+    const LightState disabled_state;
 
-    const Mat4& view = camera_->view_matrix();
+    bool matrix_loaded = false;
 
-    GLCheck(glLoadMatrixf, view.data());
+    for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+        current = (i < count) ? lights[i] : nullptr;
 
-    /* Disable all the other lights */
-    for(uint8_t i = count; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-        GLCheck(glDisable, GL_LIGHT0 + i);
-    }
+        auto state = (current) ? LightState(
+            true,
+            Vec4(current->absolute_position(), (current->type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
+            current->diffuse(),
+            current->ambient(),
+            current->specular(),
+            current->constant_attenuation(),
+            current->linear_attenuation(),
+            current->quadratic_attenuation()
+        ) : disabled_state;
 
-    for(uint8_t i = 0; i < count; ++i) {
-        current = lights[i];
-
-        GLCheck(glEnable, GL_LIGHT0 + i);
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &current->ambient().r);
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &current->diffuse().r);
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &current->specular().r);
-        GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, current->constant_attenuation());
-        GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION, current->linear_attenuation());
-        GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, current->quadratic_attenuation());
-
-        Vec4 position(current->absolute_position(), 1.0);
-        if(current->type() == LIGHT_TYPE_DIRECTIONAL) {
-            position.w = 0.0f;
+        /* No need to update this light */
+        if(light_states_[i].initialized && light_states_[i] == state) {
+            continue;
         }
 
-        GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &position.x);
+        if(state.enabled) {
+            GLCheck(glEnable, GL_LIGHT0 + i);
+
+            /* Only load the matrix on the first enabled light */
+            if(!matrix_loaded) {
+                GLCheck(glMatrixMode, GL_MODELVIEW);
+                GLCheck(glPushMatrix);
+
+                const Mat4& view = camera_->view_matrix();
+
+                GLCheck(glLoadMatrixf, view.data());
+                matrix_loaded = true;
+            }
+
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &state.specular.r);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, state.constant_att);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION, state.linear_att);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, state.quadratic_att);
+
+        } else {
+            GLCheck(glDisable, GL_LIGHT0 + i);
+        }
+
+        light_states_[i] = state;
+        light_states_[i].initialized = true;
     }
 
-    GLCheck(glPopMatrix);
-}
-
-void GL1RenderQueueVisitor::change_light(const Light* prev, const Light* next) {
-    if(!next) {
-        return;
-    }
-
-    /* Disable all but the first light */
-    for(uint8_t i = 1; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-        GLCheck(glDisable, GL_LIGHT0 + i);
-    }
-
-    GLCheck(glEnable, GL_LIGHT0);
-    GLCheck(glLightfv, GL_LIGHT0, GL_AMBIENT, &next->ambient().r);
-    GLCheck(glLightfv, GL_LIGHT0, GL_DIFFUSE, &next->diffuse().r);
-    GLCheck(glLightfv, GL_LIGHT0, GL_SPECULAR, &next->specular().r);
-    GLCheck(glLightf, GL_LIGHT0, GL_CONSTANT_ATTENUATION, next->constant_attenuation());
-    GLCheck(glLightf, GL_LIGHT0, GL_LINEAR_ATTENUATION, next->linear_attenuation());
-    GLCheck(glLightf, GL_LIGHT0, GL_QUADRATIC_ATTENUATION, next->quadratic_attenuation());
-
-    Vec4 position(next->absolute_position(), 1.0);
-    if(next->type() == LIGHT_TYPE_DIRECTIONAL) {
-        position.w = 0.0f;
-    }
-
-    GLCheck(glMatrixMode, GL_MODELVIEW);
-    GLCheck(glPushMatrix);
-
-    const Mat4& view = camera_->view_matrix();
-
-    GLCheck(glLoadMatrixf, view.data());
-
-    GLCheck(glLightfv, GL_LIGHT0, GL_POSITION, &position.x);
-    GLCheck(glPopMatrix);
-}
-
-bool GL1RenderQueueVisitor::queue_if_blended(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    if(material_pass->is_blended() && queue_blended_objects_) {
-        auto pos = renderable->transformed_aabb().centre();
-        auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
-
-        float key = plane.distance_to(pos);
-
-        GL1RenderState state;
-        state.renderable = renderable;
-        state.pass = material_pass;
-        state.light = light_;
-        state.iteration = iteration;
-        state.render_group_impl = current_group_;
-
-        blended_object_queue_.insert(
-            std::make_pair(key, state)
-        );
-
-        // We are done for now, we'll render this in back-to-front order later
-        return true;
-    } else {
-        return false;
+    if(matrix_loaded) {
+        GLCheck(glPopMatrix);
     }
 }
 
@@ -457,11 +400,6 @@ static GLenum convert_index_type(IndexType type) {
 }
 
 void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    if(queue_if_blended(renderable, material_pass, iteration)) {
-        // If this was a transparent object, and we were queuing then do nothing else for now
-        return;
-    }
-
     auto element_count = renderable->index_element_count();
     // Don't bother doing *anything* if there is nothing to render
     if(!element_count) {

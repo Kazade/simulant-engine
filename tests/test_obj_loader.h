@@ -19,11 +19,11 @@ public:
         smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj", opts);
         smlt::MeshPtr m = mid.fetch();
 
-        assert_equal(m->submesh_count(), 1);
+        assert_equal(m->submesh_count(), 1u);
         assert_true(m->first_submesh()->material_id());
 
         smlt::MaterialPtr mat = m->first_submesh()->material_id().fetch();
-        assert_equal(mat->first_pass()->cull_mode(), opts.cull_mode);
+        assert_equal(mat->pass(0)->cull_mode(), opts.cull_mode);
     }
 };
 

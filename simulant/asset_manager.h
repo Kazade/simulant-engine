@@ -192,7 +192,10 @@ public:
         auto mat_id = base_manager()->default_material_id();
         assert(mat_id && "No default material, called to early?");
 
-        auto new_mat_id = base_manager()->material(mat_id)->new_clone(this, garbage_collect);
+        auto& manager = base_manager()->material_manager_;
+        auto new_mat_id = manager.clone(mat_id);
+        manager.set_garbage_collection_method(new_mat_id, garbage_collect, true);
+
         assert(new_mat_id);
         return new_mat_id;
     }

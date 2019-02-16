@@ -1,3 +1,5 @@
+#include <map>
+
 #include "../../meshes/mesh.h"
 #include "triangulate.h"
 

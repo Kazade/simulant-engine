@@ -49,7 +49,9 @@ public:
 
         // While we're loading, continually pulse the progress bar to show that stuff is happening
         window->idle->add([&loading, &done]() {
-            loading->progress_bar->pulse();
+            if(loading->is_loaded() && loading->progress_bar) {
+                loading->progress_bar->pulse();
+            }
             return !done;
         });
 
@@ -66,7 +68,7 @@ public:
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
-        terrain_material_id_ = stage_->assets->new_material_from_file("sample_data/terrain_splat.kglm", GARBAGE_COLLECT_NEVER);
+        terrain_material_id_ = stage_->assets->new_material_from_file("sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER);
         smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
@@ -82,7 +84,10 @@ public:
             terrain_mesh->vertex_data
         );
 
-        stage_->assets->material(terrain_material_id_)->first_pass()->set_texture_unit(4, terrain_splatmap);
+        stage_->assets->material(terrain_material_id_)->pass(0)->set_property_value(
+            "textures[4]",
+            terrain_splatmap
+        );
 
         terrain_mesh->set_material_id(terrain_material_id_);
 
@@ -130,6 +135,7 @@ private:
 int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Terrain Demo";
+    config.fullscreen = false;
 
     TerrainDemo app(config);
     return app.run();

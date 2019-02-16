@@ -31,7 +31,7 @@ bool Widget::init() {
     actor_->set_parent(this);
 
     material_ = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
-    material_->first_pass()->set_blending(BLEND_ALPHA);
+    material_->set_blend_func(BLEND_ALPHA);
 
     // Assign the default font as default
     set_font(stage->assets->default_font_id());
@@ -515,7 +515,7 @@ void Widget::resize_or_generate_background(MeshPtr mesh, float width, float heig
 
     if(has_background_image()) {
         auto submesh = mesh->submesh("background");
-        submesh->set_texture_on_material(0, background_image_);
+        submesh->material_id().fetch()->set_diffuse_map(background_image_);
 
         auto& vertices = mesh->vertex_data;
         auto& indices = submesh->index_data;
@@ -551,7 +551,7 @@ void Widget::resize_or_generate_foreground(MeshPtr mesh, float width, float heig
 
     if(has_foreground_image()) {
         auto submesh = mesh->submesh("foreground");
-        submesh->set_texture_on_material(0, foreground_image_);
+        submesh->material_id().fetch()->set_diffuse_map(foreground_image_);
 
         auto& vertices = mesh->vertex_data;
         auto& indices = submesh->index_data;

@@ -1,0 +1,41 @@
+{
+    "custom_properties": [
+        {
+            "type": "texture",
+            "name": "textures[0]",
+            "default": "sample_data/beach_sand.png"
+        },
+        {
+            "type": "texture",
+            "name": "textures[1]",
+            "default": "sample_data/grass3.png"
+        },
+        {
+            "type": "texture",
+            "name": "textures[2]",
+            "default": "sample_data/rock.png"
+        },
+        {
+            "type": "texture",
+            "name": "textures[3]",
+            "default": "sample_data/snow10_d.png"
+        },
+        {
+            "type": "texture",
+            "name": "textures[4]"
+        }
+    ],
+    "passes": [
+        {
+            "iteration": "once",
+            "vertex_shader": "terrain_splat0.vert",
+            "fragment_shader": "terrain_splat0.frag"
+        },
+        {
+            "iteration": "once_per_light",
+            "max_iterations": 8,
+            "vertex_shader": "terrain_splat1.vert",
+            "fragment_shader": "terrain_splat1.frag"
+        }
+    ]
+}

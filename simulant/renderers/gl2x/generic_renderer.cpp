@@ -32,13 +32,33 @@
 
 namespace smlt {
 
+/* These are bare minimal shaders so that *something* is displayed, they're only used when the
+ * Material is incomplete (no shaders provided) */
+
+const std::string default_vertex_shader = R"(
+#version 120
+void main(void) {
+    gl_Position = ftransform();
+}
+)";
+
+const std::string default_fragment_shader = R"(
+#version 120
+
+void main(void) {
+    gl_FragColor = vec4(0.4,0.4,0.8,1.0);
+}
+
+)";
+
+
 class GL2RenderGroupImpl:
     public batcher::RenderGroupImpl,
     public std::enable_shared_from_this<GL2RenderGroupImpl> {
 
 public:
-    GL2RenderGroupImpl(RenderPriority priority):
-        batcher::RenderGroupImpl(priority) {}
+    GL2RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
+        batcher::RenderGroupImpl(priority, is_blended, distance_to_camera) {}
 
     GLuint texture_id[MAX_TEXTURE_UNITS];
     GPUProgramID shader_id;
@@ -77,134 +97,171 @@ public:
     }
 };
 
-batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass) {
-    auto impl = std::make_shared<GL2RenderGroupImpl>(renderable->render_priority());
-    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        if(i < material_pass->texture_unit_count()) {
-            auto tex_id = material_pass->texture_unit(i).texture_id();
-            impl->texture_id[i] = this->texture_objects_.at(tex_id);
-        } else {
-            impl->texture_id[i] = TextureID();
+GPUProgramID GenericRenderer::default_gpu_program_id() const {
+    return default_gpu_program_id_;
+}
+
+batcher::RenderGroup GenericRenderer::new_render_group(
+    Renderable* renderable, MaterialPass *material_pass, RenderPriority priority, bool is_blended, float distance_to_camera) {
+    auto impl = std::make_shared<GL2RenderGroupImpl>(priority, is_blended, distance_to_camera);
+
+    auto program = material_pass->gpu_program_id().fetch();
+
+    /* First we bind any used texture properties to their associated variables */
+    uint8_t texture_unit = 0;
+    for(auto& defined_property: material_pass->material()->defined_properties_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE)) {
+        auto property_value = material_pass->property(defined_property);
+
+        // Do we use this texture property? Then bind the texture appropriately
+        // FIXME: Is this right? The GL1 renderer uses the existence of a texture_id
+        // to decide whether or not to bind a texture to a unit. This checks the variable exists
+        // and also whether there's a texture ID. The question is, should the material have some other
+        // type of existence check for texture properties? Is checking the texture_id right for all situations?
+        // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
+        auto loc = program->locate_uniform(property_value.shader_variable(), true);
+        if(loc > -1 && (texture_unit + 1u) < MAX_TEXTURE_UNITS) {
+            TextureUnit unit = property_value.value<TextureUnit>();
+            if(unit.texture_id) {
+                impl->texture_id[texture_unit++] = texture_objects_.at(unit.texture_id);
+            } else {
+                // Bind the default (white) texture if the unit is used, but doesn't have a
+                // texture bound.
+                impl->texture_id[texture_unit++] = 0;
+            }
         }
     }
-    impl->shader_id = material_pass->gpu_program_id();
+
+    /* Next, we wipe out any unused texture units */
+    for(uint8_t i = texture_unit; i < MAX_TEXTURE_UNITS; ++i) {
+        impl->texture_id[i] = TextureID();
+    }
+
+    impl->shader_id = program->id();
+
     return batcher::RenderGroup(impl);
 }
 
-void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const Light *light) {
-    auto& uniforms = pass->uniforms;
+void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light) {
+    auto pos_property = pass->property(LIGHT_POSITION_PROPERTY);
+    auto amb_property = pass->property(LIGHT_AMBIENT_PROPERTY);
+    auto diff_property = pass->property(LIGHT_DIFFUSE_PROPERTY);
+    auto spec_property = pass->property(LIGHT_SPECULAR_PROPERTY);
+    auto ca_property = pass->property(LIGHT_CONSTANT_ATTENUATION_PROPERTY);
+    auto la_property = pass->property(LIGHT_LINEAR_ATTENUATION_PROPERTY);
+    auto qa_property = pass->property(LIGHT_QUADRATIC_ATTENUATION_PROPERTY);
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_POSITION)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_POSITION);
+    auto pos_loc = program->locate_uniform(pos_property.shader_variable(), true);
+    if(pos_loc > -1) {
         auto pos = (light) ? light->absolute_position() : Vec3();
         auto vec = (light) ? Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
-
-        program->set_uniform_vec4(varname, vec);
+        program->set_uniform_vec4(pos_loc, vec);
     }
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_AMBIENT)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_AMBIENT);
+    auto amb_loc = program->locate_uniform(amb_property.shader_variable(), true);
+    if(amb_loc > -1) {
         program->set_uniform_colour(
-            varname,
+            amb_loc,
             (light) ? light->ambient() : Colour::NONE
         );
     }
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_DIFFUSE)) {
+    auto diff_loc = program->locate_uniform(diff_property.shader_variable(), true);
+    if(diff_loc > -1) {
         auto diffuse = (light) ? light->diffuse() : smlt::Colour::NONE;
-        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_DIFFUSE);
-        program->set_uniform_colour(varname, diffuse);
+        program->set_uniform_colour(diff_loc, diffuse);
     }
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_SPECULAR)) {
+    auto spec_loc = program->locate_uniform(spec_property.shader_variable(), true);
+    if(spec_loc > -1) {
         auto specular = (light) ? light->specular() : smlt::Colour::NONE;
-        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_SPECULAR);
-        program->set_uniform_colour(varname, specular);
+        program->set_uniform_colour(spec_loc, specular);
     }
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_CONSTANT_ATTENUATION)) {
+    auto ca_loc = program->locate_uniform(ca_property.shader_variable(), true);
+    if(ca_loc > -1) {
         auto att = (light) ? light->constant_attenuation() : 0;
-        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_CONSTANT_ATTENUATION);
-        program->set_uniform_float(varname, att);
+        program->set_uniform_float(ca_loc, att);
     }
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_LINEAR_ATTENUATION)) {
+    auto la_loc = program->locate_uniform(la_property.shader_variable(), true);
+    if(la_loc > -1) {
         auto att = (light) ? light->linear_attenuation() : 0;
-        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_LINEAR_ATTENUATION);
-        program->set_uniform_float(varname, att);
+        program->set_uniform_float(la_loc, att);
     }
 
-    if(uniforms->uses_auto(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION)) {
+    auto qa_loc = program->locate_uniform(qa_property.shader_variable(), true);
+    if(qa_loc > -1) {
         auto att = (light) ? light->quadratic_attenuation() : 0;
-        auto varname = uniforms->auto_variable_name(SP_AUTO_LIGHT_QUADRATIC_ATTENUATION);
-        program->set_uniform_float(varname, att);
+        program->set_uniform_float(qa_loc, att);
     }
 }
 
 void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram* program) {
-    auto& uniforms = pass->uniforms;
+    auto mat = pass->material();
+    auto amb_property = pass->property(mat->material_ambient_index_);
+    auto diff_property = pass->property(mat->material_diffuse_index_);
+    auto spec_property = pass->property(mat->material_specular_index_);
+    auto shin_property = pass->property(mat->material_shininess_index_);
+    auto ps_property = pass->property(mat->point_size_index_);
 
-    if(uniforms->uses_auto(SP_AUTO_MATERIAL_AMBIENT)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_AMBIENT);
+    auto amb_loc = program->locate_uniform(amb_property.shader_variable(), true);
+    if(amb_loc > -1) {
+        auto varname = amb_property.shader_variable();
         program->set_uniform_colour(varname, pass->ambient());
     }
 
-    if(uniforms->uses_auto(SP_AUTO_MATERIAL_DIFFUSE)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_DIFFUSE);
+    auto diff_loc = program->locate_uniform(diff_property.shader_variable(), true);
+    if(diff_loc > -1) {
+        auto varname = diff_property.shader_variable();
         program->set_uniform_colour(varname, pass->diffuse());
     }
 
-    if(uniforms->uses_auto(SP_AUTO_MATERIAL_SPECULAR)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_SPECULAR);
+    auto spec_loc = program->locate_uniform(spec_property.shader_variable(), true);
+    if(spec_loc > -1) {
+        auto varname = spec_property.shader_variable();
         program->set_uniform_colour(varname, pass->specular());
     }
 
-    if(uniforms->uses_auto(SP_AUTO_MATERIAL_SHININESS)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_SHININESS);
+    auto shin_loc = program->locate_uniform(shin_property.shader_variable(), true);
+    if(shin_loc > -1) {
+        auto varname = shin_property.shader_variable();
         program->set_uniform_float(varname, pass->shininess());
     }
 
-    if(uniforms->uses_auto(SP_AUTO_MATERIAL_POINT_SIZE)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_POINT_SIZE);
+    auto ps_loc = program->locate_uniform(ps_property.shader_variable(), true);
+    if(ps_loc > -1) {
+        auto varname = ps_property.shader_variable();
         program->set_uniform_float(varname, pass->point_size());
     }
 
-    if(uniforms->uses_auto(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS)) {
-        auto varname = uniforms->auto_variable_name(SP_AUTO_MATERIAL_ACTIVE_TEXTURE_UNITS);
-        program->set_uniform_int(varname, pass->texture_unit_count());
-    }
+    /* Each texture property has a counterpart matrix, this passes those down if they exist */
+    auto texture_props = pass->top_level()->defined_properties_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE);
+    uint8_t texture_unit = 0;
+    for(auto& tex_prop: texture_props) {
+        auto prop = pass->property(tex_prop);
 
-    auto texture_matrix_auto = [](uint8_t which) -> ShaderAvailableAuto {
-        switch(which) {
-        case 0: return SP_AUTO_MATERIAL_TEX_MATRIX0;
-        case 1: return SP_AUTO_MATERIAL_TEX_MATRIX1;
-        case 2: return SP_AUTO_MATERIAL_TEX_MATRIX2;
-        case 3: return SP_AUTO_MATERIAL_TEX_MATRIX3;
-        case 4: return SP_AUTO_MATERIAL_TEX_MATRIX4;
-        case 5: return SP_AUTO_MATERIAL_TEX_MATRIX5;
-        case 6: return SP_AUTO_MATERIAL_TEX_MATRIX6;
-        case 7: return SP_AUTO_MATERIAL_TEX_MATRIX7;
-        default:
-            throw std::logic_error("Invalid tex matrix index");
+        auto tloc = program->locate_uniform(prop.shader_variable(), true);
+        if(tloc > -1) {
+            // This texture is being used
+            program->set_uniform_int(tloc, texture_unit++);
         }
-    };
 
-    for(uint8_t i = 0; i < pass->texture_unit_count(); ++i) {
-        if(pass->uniforms->uses_auto(texture_matrix_auto(i))) {
-            auto name = pass->uniforms->auto_variable_name(
-                ShaderAvailableAuto(SP_AUTO_MATERIAL_TEX_MATRIX0 + i)
-            );
+        auto shader_name = prop.shader_variable();
+        shader_name += "_matrix";
 
-            auto& unit = pass->texture_unit(i);
-            program->set_uniform_mat4x4(name, unit.matrix());
+        auto loc = program->locate_uniform(shader_name, true);
+        if(loc > -1) {
+            program->set_uniform_mat4x4(loc, prop.value<TextureUnit>().texture_matrix());
         }
     }
 }
 
 void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
-    if(pass->uniforms->uses_auto(SP_AUTO_LIGHT_GLOBAL_AMBIENT)) {
-        auto varname = pass->uniforms->auto_variable_name(SP_AUTO_LIGHT_GLOBAL_AMBIENT);
-        program->set_uniform_colour(varname, global_ambient);
+    auto varname = "s_global_ambient";
+    auto loc = program->locate_uniform(varname, true);
+
+    if(loc > -1) {
+        program->set_uniform_colour(loc, global_ambient);
     }
 }
 
@@ -236,20 +293,18 @@ void disable_vertex_attribute(uint8_t i) {
 }
 
 template<typename EnabledMethod, typename OffsetMethod>
-void send_attribute(ShaderAvailableAttributes attr,
+void send_attribute(int32_t loc,
+                    VertexAttributeType attr,
                     const VertexSpecification& vertex_spec,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func) {
 
-    int32_t loc = (int32_t) attr;
-
-    if((vertex_spec.*exists_on_data_predicate)()) {
+    if(loc > -1 && (vertex_spec.*exists_on_data_predicate)()) {
         auto offset = (vertex_spec.*offset_func)(false);
 
         enable_vertex_attribute(loc);
 
-        auto converted = convert(attr);
-        auto attr_for_type = attribute_for_type(converted, vertex_spec);
+        auto attr_for_type = attribute_for_type(attr, vertex_spec);
         auto attr_size = vertex_attribute_size(attr_for_type);
         auto stride = vertex_spec.stride();
 
@@ -261,13 +316,13 @@ void send_attribute(ShaderAvailableAttributes attr,
             stride,
             BUFFER_OFFSET(offset)
         );
-    } else {
+    } else if(loc > -1){
         disable_vertex_attribute(loc);
         //L_WARN_ONCE(_u("Couldn't locate attribute on the mesh: {0}").format(attr));
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
+void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Renderable &buffer) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
@@ -276,13 +331,27 @@ void GenericRenderer::set_auto_attributes_on_shader(Renderable &buffer) {
      */        
     const VertexSpecification& vertex_spec = buffer.vertex_attribute_specification();
 
-    send_attribute(SP_ATTR_VERTEX_POSITION, vertex_spec, &VertexSpecification::has_positions, &VertexSpecification::position_offset);
-    send_attribute(SP_ATTR_VERTEX_DIFFUSE, vertex_spec, &VertexSpecification::has_diffuse, &VertexSpecification::diffuse_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD1, vertex_spec, &VertexSpecification::has_texcoord1, &VertexSpecification::texcoord1_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD2, vertex_spec, &VertexSpecification::has_texcoord2, &VertexSpecification::texcoord2_offset);
-    send_attribute(SP_ATTR_VERTEX_TEXCOORD3, vertex_spec, &VertexSpecification::has_texcoord3, &VertexSpecification::texcoord3_offset);
-    send_attribute(SP_ATTR_VERTEX_NORMAL, vertex_spec, &VertexSpecification::has_normals, &VertexSpecification::normal_offset);
+    send_attribute(
+        program->locate_attribute("s_position", true),
+        VERTEX_ATTRIBUTE_TYPE_POSITION,
+        vertex_spec,
+        &VertexSpecification::has_positions,
+        &VertexSpecification::position_offset
+    );
+
+    send_attribute(
+        program->locate_attribute("s_diffuse", true),
+        VERTEX_ATTRIBUTE_TYPE_DIFFUSE,
+        vertex_spec,
+        &VertexSpecification::has_diffuse,
+        &VertexSpecification::diffuse_offset
+    );
+
+    send_attribute(program->locate_attribute("s_texcoord0", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
+    send_attribute(program->locate_attribute("s_texcoord1", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD1, vertex_spec, &VertexSpecification::has_texcoord1, &VertexSpecification::texcoord1_offset);
+    send_attribute(program->locate_attribute("s_texcoord2", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD2, vertex_spec, &VertexSpecification::has_texcoord2, &VertexSpecification::texcoord2_offset);
+    send_attribute(program->locate_attribute("s_texcoord3", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD3, vertex_spec, &VertexSpecification::has_texcoord3, &VertexSpecification::texcoord3_offset);
+    send_attribute(program->locate_attribute("s_normal", true), VERTEX_ATTRIBUTE_TYPE_NORMAL, vertex_spec, &VertexSpecification::has_normals, &VertexSpecification::normal_offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
@@ -314,8 +383,23 @@ std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_v
 }
 
 smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
-    auto ret = program_manager_.make(vertex_shader_source, fragment_shader_source);
+    /* FIXME: This doesn't do what the function implies... it should either be called new_gpu_program, or it should try to return an existing progra
+     * if the source matches */
+
+    auto ret = program_manager_.make(this, vertex_shader_source, fragment_shader_source);
+    auto program = ret.fetch();
+
     program_manager_.set_garbage_collection_method(ret, GARBAGE_COLLECT_PERIODIC);
+
+    /* Build the GPU program on the main thread */
+    if(!GLThreadCheck::is_current()) {
+        window->idle->run_sync([&]() {
+            program->build();
+        });
+    } else {
+        program->build();
+    }
+
     return ret;
 }
 
@@ -330,74 +414,44 @@ GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPt
 }
 
 void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    queue_blended_objects_ = true;
     do_visit(renderable, material_pass, iteration);
 }
 
 void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+    if(!default_texture_name_) {
+        auto default_tex = renderer_->window->shared_assets->default_texture_id();
+        default_texture_name_ = renderer_->texture_objects_.at(default_tex);
+    }
+
     global_ambient_ = stage->ambient_light();
 }
 
 void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
-    // When running do_visit, don't queue blended objects just render them
-    queue_blended_objects_ = false;
 
-    // Should be ordered by distance to camera
-    for(auto p: blended_object_queue_) {
-        RenderState& state = p.second;
-
-        if(state.render_group_impl != current_group_) {
-            // Make sure we change render group (shaders, textures etc.)
-            batcher::RenderGroup prev(current_group_->shared_from_this());
-            batcher::RenderGroup next(state.render_group_impl->shared_from_this());
-
-            change_render_group(&prev, &next);
-            current_group_ = state.render_group_impl;            
-        }
-
-        if(pass_ != state.pass) {
-            change_material_pass(pass_, state.pass);
-        }
-
-        // FIXME: Pass the previous light from the last iteration, not nullptr
-        change_light(nullptr, state.light);
-
-        // Render the transparent / blended objects
-        do_visit(
-            state.renderable,
-            state.pass,
-            state.iteration
-        );
-    }
-
-    blended_object_queue_.clear();
-    queue_blended_objects_ = true;
-}
-
-void GL2RenderQueueVisitor::change_light(const Light *prev, const Light *next) {
-    light_ = next;
-
-    renderer_->set_light_uniforms(pass_, program_, next);
 }
 
 void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
-    /* FIXME: Set uniforms */
+    if(count == 1) {
+        renderer_->set_light_uniforms(pass_, program_, lights[0]);
+    } else {
+        // FIXME: This should fill out a light array in the shader. Needs a new property defined!
+    }
 
 }
 
 void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
 
-    if(!prev || prev->depth_test_enabled() != next->depth_test_enabled()) {
-        if(next->depth_test_enabled()) {
+    if(!prev || prev->is_depth_test_enabled() != next->is_depth_test_enabled()) {
+        if(next->is_depth_test_enabled()) {
             GLCheck(glEnable, GL_DEPTH_TEST);
         } else {
             GLCheck(glDisable, GL_DEPTH_TEST);
         }
     }
 
-    if(!prev || prev->depth_write_enabled() != next->depth_write_enabled()) {
-        if(next->depth_write_enabled()) {
+    if(!prev || prev->is_depth_write_enabled() != next->is_depth_write_enabled()) {
+        if(next->is_depth_write_enabled()) {
             GLCheck(glDepthMask, GL_TRUE);
         } else {
             GLCheck(glDepthMask, GL_FALSE);
@@ -444,8 +498,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
-    if(!prev || prev->blending() != next->blending()) {
-        renderer_->set_blending_mode(next->blending());
+    if(!prev || prev->blend_func() != next->blend_func()) {
+        renderer_->set_blending_mode(next->blend_func());
     }
 
     if(!prev || prev->shade_model() != next->shade_model()) {
@@ -459,31 +513,25 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
 
-    /* Set any material properties on the gpu program */
-    for(auto& p: next->material->properties()) {
-        auto& name = p.first;
-        const MaterialProperty& property = p.second;
+    for(auto name: next->material()->defined_custom_properties()) {
+        auto property_value = next->property(name);
 
-        if(!property.is_set) {
-            L_WARN_ONCE(_F("Property {0} was not set").format(name));
-        }
-
-        /* As properties apply across passes, we must not throw an error if the uniform variable
-         * does not exist (as a single pass may not have a uniform) this is in contrast to automatic
-         * uniforms which *do* throw as they are pass-specific */
-        switch(property.type) {
+        switch(property_value.type()) {
         case MATERIAL_PROPERTY_TYPE_INT:
-            program_->set_uniform_int(name, property.int_value, /* fail_silently= */true);
-         break;
+            program_->set_uniform_int(name, property_value.value<int>(), /* fail_silently= */true);
+        break;
         case MATERIAL_PROPERTY_TYPE_FLOAT:
-            program_->set_uniform_float(name, property.float_value, /* fail_silently= */true);
+            program_->set_uniform_float(name, property_value.value<float>(), /* fail_silently= */true);
+        break;
+        case MATERIAL_PROPERTY_TYPE_TEXTURE:
+            // Ignore, we handle textures separately
         break;
         default:
             throw std::runtime_error("UNIMPLEMENTED property type");
         }
     }
 
-    rebind_attribute_locations_if_necessary(next, program_);
+   // rebind_attribute_locations_if_necessary(next, program_);
 }
 
 void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera) {
@@ -495,46 +543,59 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
     Mat4 modelview = view * model;
     Mat4 modelview_projection = projection * modelview;
 
-    if(pass->uniforms->uses_auto(SP_AUTO_VIEW_MATRIX)) {
+    auto v_prop = pass->property(VIEW_MATRIX_PROPERTY);
+    auto mvp_prop = pass->property(MODELVIEW_PROJECTION_MATRIX_PROPERTY);
+    auto mv_prop = pass->property(MODELVIEW_MATRIX_PROPERTY);
+    auto p_prop = pass->property(PROJECTION_MATRIX_PROPERTY);
+    auto itmv_prop = pass->property(INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY);
+
+    auto v_loc = program->locate_uniform(v_prop.shader_variable(), true);
+    if(v_loc > -1) {
         program->set_uniform_mat4x4(
-            pass->uniforms->auto_variable_name(SP_AUTO_VIEW_MATRIX),
+            v_prop.shader_variable(),
             view
         );
     }
 
-    if(pass->uniforms->uses_auto(SP_AUTO_MODELVIEW_PROJECTION_MATRIX)) {
+    auto mvp_loc = program->locate_uniform(mvp_prop.shader_variable(), true);
+    if(mvp_loc > -1) {
         program->set_uniform_mat4x4(
-            pass->uniforms->auto_variable_name(SP_AUTO_MODELVIEW_PROJECTION_MATRIX),
+            mvp_prop.shader_variable(),
             modelview_projection
         );
     }
 
-    if(pass->uniforms->uses_auto(SP_AUTO_MODELVIEW_MATRIX)) {
+    auto mv_loc = program->locate_uniform(mv_prop.shader_variable(), true);
+    if(mv_loc > -1) {
         program->set_uniform_mat4x4(
-            pass->uniforms->auto_variable_name(SP_AUTO_MODELVIEW_MATRIX),
+            mv_prop.shader_variable(),
             modelview
         );
     }
 
-    if(pass->uniforms->uses_auto(SP_AUTO_PROJECTION_MATRIX)) {
+    auto p_loc = program->locate_uniform(p_prop.shader_variable(), true);
+    if(p_loc > -1) {
         program->set_uniform_mat4x4(
-            pass->uniforms->auto_variable_name(SP_AUTO_PROJECTION_MATRIX),
+            p_prop.shader_variable(),
             projection
         );
     }
 
-    if(pass->uniforms->uses_auto(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX)) {
+    auto itmv_loc = program->locate_uniform(itmv_prop.shader_variable(), true);
+    if(itmv_loc > -1) {
+        // PERF: Recalculating every frame will be costly!
         Mat3 inverse_transpose_modelview(modelview);
         inverse_transpose_modelview.inverse();
         inverse_transpose_modelview.transpose();
 
         program->set_uniform_mat3x3(
-            pass->uniforms->auto_variable_name(SP_AUTO_INVERSE_TRANSPOSE_MODELVIEW_MATRIX),
+            itmv_prop.shader_variable(),
             inverse_transpose_modelview
         );
     }
 }
 
+/*
 void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program) {
     static const std::set<ShaderAvailableAttributes> SHADER_AVAILABLE_ATTRS = {
         SP_ATTR_VERTEX_POSITION,
@@ -554,7 +615,7 @@ void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const Materi
     }
 
     program->relink(); // Will only do somethig if set_attribute_location did something
-}
+}*/
 
 void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
 
@@ -571,37 +632,20 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        if(!last_group || last_group->texture_id[i] != current_group_->texture_id[i]) {
-
+        auto current_tex = current_group_->texture_id[i];
+        if(!last_group || last_group->texture_id[i] != current_tex) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, current_group_->texture_id[i]);
+            if(current_tex) {
+                GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
+            } else {
+                // Bind the default texture in this case
+                GLCheck(glBindTexture, GL_TEXTURE_2D, default_texture_name_);
+            }
         }
     }
 }
 
 void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    // Queue transparent objects for render later
-    if(material_pass->is_blended() && queue_blended_objects_) {
-        auto pos = renderable->transformed_aabb().centre();
-        auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
-
-        float key = plane.distance_to(pos);
-
-        RenderState state;
-        state.renderable = renderable;
-        state.pass = material_pass;
-        state.light = light_;
-        state.iteration = iteration;
-        state.render_group_impl = current_group_;
-
-        blended_object_queue_.insert(
-            std::make_pair(key, state)
-        );
-
-        // We are done for now, we'll render this in back-to-front order later
-        return;
-    }
-
     // Don't bother doing *anything* if there is nothing to render
     if(!renderable->index_element_count()) {
         return;
@@ -621,7 +665,7 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     vertex_buffer->bind(HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
     index_buffer->bind(HARDWARE_BUFFER_VERTEX_ARRAY_INDICES);
 
-    renderer_->set_auto_attributes_on_shader(*renderable);
+    renderer_->set_auto_attributes_on_shader(program_, *renderable);
     renderer_->send_geometry(renderable);
 }
 
@@ -653,6 +697,20 @@ static GLenum convert_arrangement(MeshArrangement arrangement) {
     }
 }
 
+GPUProgramID GenericRenderer::current_gpu_program_id() const {
+    GLint id;
+    GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &id);
+
+    GPUProgramID ret;
+
+    program_manager_.each([&](uint32_t i, GPUProgramPtr program) {
+        if(program->program_object() == (GLuint) id) {
+            ret = program->id();
+        }
+    });
+
+    return ret;
+}
 
 void GenericRenderer::send_geometry(Renderable *renderable) {
     auto element_count = renderable->index_element_count();
@@ -675,6 +733,10 @@ void GenericRenderer::init_context() {
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
+
+    if(!default_gpu_program_id_) {
+        default_gpu_program_id_ = new_or_existing_gpu_program(default_vertex_shader, default_fragment_shader);
+    }
 }
 
 

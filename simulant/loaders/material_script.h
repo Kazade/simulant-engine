@@ -39,25 +39,12 @@ public:
 class MaterialScript :
     public Managed<MaterialScript> {
 public:
-    MaterialScript(std::shared_ptr<std::istream> data);
+    MaterialScript(std::shared_ptr<std::istream> data, const unicode &filename);
     void generate(Material& material);
 
 private:
     unicode filename_;
     std::istream& data_;
-
-    void handle_block(Material& mat,
-            const std::vector<unicode> &lines,
-            uint16_t& current_line,
-            const unicode& parent_block_type,
-            MaterialPass::ptr current_pass=MaterialPass::ptr());
-
-    void handle_header_property_command(Material& mat, const std::vector<unicode> &args);
-    void handle_pass_set_command(Material& mat, const std::vector<unicode> &args, MaterialPass::ptr pass);
-    void handle_data_block(Material& mat, const unicode &data_type, const std::vector<unicode>& lines, MaterialPass::ptr pass);
-
-    std::string current_vert_shader_;
-    std::string current_frag_shader_;
 };
 
 namespace loaders {
@@ -69,7 +56,7 @@ class MaterialScriptLoader:
 public:
     MaterialScriptLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {
-        parser_ = MaterialScript::create(data);
+        parser_ = MaterialScript::create(data, filename);
     }
 
     void into(Loadable& resource, const LoaderOptions& options) override;
@@ -82,7 +69,7 @@ class MaterialScriptLoaderType : public LoaderType {
 public:
     unicode name() { return "material"; }
     bool supports(const unicode& filename) const {
-        return filename.lower().contains(".kglm");
+        return filename.lower().contains(".smat");
     }
 
     Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {

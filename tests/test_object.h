@@ -5,6 +5,10 @@
 #include "simulant/test.h"
 
 
+namespace {
+
+using namespace smlt;
+
 class ObjectTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
@@ -212,4 +216,5 @@ private:
     smlt::StagePtr stage_;
 };
 
+}
 #endif // TEST_OBJECT_H
