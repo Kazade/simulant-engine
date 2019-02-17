@@ -125,7 +125,7 @@ private:
 };
 
 namespace _material_impl {
-    class DefinedProperty;
+    struct DefinedProperty;
     class PropertyValueHolder;
 }
 
