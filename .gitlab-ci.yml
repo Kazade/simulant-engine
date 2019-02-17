@@ -131,6 +131,34 @@ deploy:windows-x64-mingw:
    paths:
     - upload/${TARGET}.zip
 
+## clang build is currently just for checking compilation
+build:linux-x64-clang:
+  stage: build
+  image: fedora:28
+  variables:
+   TARGET: linux-x64-clang
+  before_script:
+   - dnf upgrade -y
+   - dnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
+  script:
+   - export CC=/usr/bin/clang
+   - export CXX=/usr/bin/clang++
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+   - cd ../..
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/tests/simulant_tests
+      - ${TARGET}/release/simulant/
+
 build:linux-x64-gcc:
   stage: build
   image: fedora:28
