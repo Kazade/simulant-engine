@@ -417,13 +417,6 @@ namespace _material_impl {
     };
 }
 
-class ShaderUnit {
-public:
-    bool is_compiled() const;
-    GPUProgramID shader_id() const;
-    std::string filename() const;
-};
-
 class MaterialPass:
     public _material_impl::PropertyValueHolder  {
 public:
@@ -459,7 +452,6 @@ public:
 
 private:
     Material* material_;
-    ShaderUnit shader_;
 
     IterationType iteration_type_ = ITERATION_TYPE_ONCE;
     uint8_t max_iterations_ = 1;
@@ -554,14 +546,14 @@ private:
     void initialize_default_properties();
 
     uint32_t defined_property_count_ = 0;
-    _material_impl::DefinedProperty defined_properties_[_material_impl::MAX_DEFINED_PROPERTIES];
+    std::array<_material_impl::DefinedProperty, _material_impl::MAX_DEFINED_PROPERTIES> defined_properties_;
     std::unordered_map<std::string, uint32_t> defined_property_lookup_;
 
     std::vector<PropertyIndex> texture_properties_;
 
     std::mutex pass_mutex_;
     uint8_t pass_count_ = 0;
-    MaterialPass passes_[_material_impl::MAX_PASSES];
+    std::array<MaterialPass, _material_impl::MAX_PASSES> passes_;
 
 
     /* Assignment operator and copy constructor must be private
