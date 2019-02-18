@@ -25,7 +25,6 @@
 #include "utils/memory.h"
 
 #include "deps/kazlog/kazlog.h"
-#include "deps/SOIL/SOIL.h"
 
 #include "window.h"
 #include "texture.h"
@@ -275,7 +274,7 @@ const Texture::Data &Texture::data() const {
 }
 
 void Texture::save_to_file(const unicode& filename) {
-    SOIL_save_image(filename.encode().c_str(), SOIL_SAVE_TYPE_TGA, width(), height(), bytes_per_pixel(), &data_[0]);
+    assert(0 && "Not Implemented");
 }
 
 void Texture::set_texture_filter(TextureFilter filter) {
