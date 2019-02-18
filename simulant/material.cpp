@@ -47,7 +47,7 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     Resource(asset_manager),
     generic::Identifiable<MaterialID>(id),
     _material_impl::PropertyValueHolder(this, 0),
-    passes_({MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)}) {
+    passes_{{MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)}} {
 
     initialize_default_properties();
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
@@ -86,10 +86,6 @@ Material::Material(const Material& rhs):
     point_size_index_ = rhs.point_size_index_;
     colour_material_index_ = rhs.colour_material_index_;
     blend_func_index_ = rhs.blend_func_index_;
-
-    for(auto i = 0u; i < rhs.defined_property_count_; ++i) {
-        defined_properties_[i] = rhs.defined_properties_[i];
-    }
 
     for(auto& pass: passes_) {
         pass.material_ = this;

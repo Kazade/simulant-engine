@@ -87,6 +87,7 @@ class Application {
 
 public:
     Application(const AppConfig& config);
+    virtual ~Application() {}
 
     //Create the window, start do_initialization in a thread, show the loading scene
     //when thread completes, hide the loading scene and run the main loop

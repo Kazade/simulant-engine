@@ -199,6 +199,8 @@ public:
     );
 
     Property<HardwareBufferManager, const Renderer> renderer = { this, &HardwareBufferManager::renderer_ };
+
+    virtual ~HardwareBufferManager() {}
 private:
     const Renderer* renderer_;
 
