@@ -23,10 +23,12 @@
 #include <string>
 
 #include "../deps/kazlog/kazlog.h"
-#include "../deps/SOIL/SOIL.h"
 
 #include "texture_loader.h"
 #include "../texture.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 namespace smlt {
 namespace loaders {
@@ -35,13 +37,13 @@ TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
     TextureLoadResult result;
 
     int width, height, channels;
-    unsigned char* data = SOIL_load_image_from_memory(
+    unsigned char* data = stbi_load_from_memory(
         &buffer[0],
         buffer.size(),
         &width,
         &height,
         &channels,
-        SOIL_LOAD_AUTO
+        0
     );
 
     if((width & -width) != width || (height & -height) != height || width < 8 || height < 8) {
@@ -70,12 +72,12 @@ TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
             result.format = TEXTURE_FORMAT_RGBA8888;
         }
 
-        SOIL_free_image_data(data);
+        stbi_image_free(data);
     } else {
         throw std::runtime_error(
             _F("Unable to load texture {0}. Reason was {1}").format(
                 filename_.encode(),
-                SOIL_last_result()
+                stbi_failure_reason()
             )
         );
     }
