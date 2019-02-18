@@ -47,7 +47,12 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     Resource(asset_manager),
     generic::Identifiable<MaterialID>(id),
     _material_impl::PropertyValueHolder(this, 0),
+#ifdef __DREAMCAST__
+    // The GCC compiler in the DC SDK doesn't support initalization without brackets
+    passes_({MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)}) {
+#else
     passes_{MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)} {
+#endif
 
     initialize_default_properties();
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
