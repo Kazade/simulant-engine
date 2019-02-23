@@ -1,3 +1,6 @@
+deps/libgl/samples/Makefile
+deps/libgl/samples/paletted/Makefile
+deps/libgl/samples/paletted/main.c
 simulant/generic/object_manager.h
 simulant/generic/raii.h
 simulant/loaders/deps/tiny_obj_loader.h
