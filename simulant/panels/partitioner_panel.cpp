@@ -29,6 +29,15 @@ namespace smlt {
 PartitionerPanel::PartitionerPanel(Window* window):
     window_(window) {
 
+    window_->signal_stage_added().connect([=](StageID stage_id) {
+        auto stage = window_->stage(stage_id);
+
+        debug_actors_[stage->id()] = stage->new_actor_with_mesh(
+            stage->partitioner->debug_mesh_id(),
+            RENDERABLE_CULLING_MODE_NEVER //Important, we never want this to use the partitioner itself
+        );
+    });
+
     window_->signal_stage_removed().connect([=](StageID stage_id) {
         debug_actors_.erase(stage_id);
     });
@@ -53,6 +62,11 @@ void PartitionerPanel::initialize() {
 
     /* for stage in stages: stage->new_actor(stage->partitioner->debug_mesh_id()) */
     window_->each_stage([=](uint32_t i, Stage* stage) {
+        // Don't add another mesh if it already exists
+        if(debug_actors_.count(stage->id())) {
+            return;
+        }
+
         debug_actors_[stage->id()] = stage->new_actor_with_mesh(
             stage->partitioner->debug_mesh_id(),
             RENDERABLE_CULLING_MODE_NEVER //Important, we never want this to use the partitioner itself
