@@ -1,4 +1,7 @@
+deps/libgl/GL/config.h
 deps/libgl/samples/Makefile
+deps/libgl/samples/depth_funcs/Makefile
+deps/libgl/samples/depth_funcs/main.c
 deps/libgl/samples/paletted/Makefile
 deps/libgl/samples/paletted/main.c
 simulant/generic/object_manager.h

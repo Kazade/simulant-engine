@@ -30,7 +30,7 @@ public:
         unsigned int new_id;
         SomeStructure* s = (SomeStructure*) named_array_alloc(&test, &new_id);
 
-        assert_equal(new_id, 1u);
+        assert_equal(new_id, 0u);
         assert_is_not_null(named_array_get(&test, new_id));
         assert_is_null(named_array_get(&test, 2));
 
@@ -73,7 +73,7 @@ public:
 
         for(auto i = 0u; i < 5; ++i) {
             auto ptr = pointers[i];
-            assert_equal(ptr, named_array_get(&test, i + 1));
+            assert_equal(ptr, named_array_get(&test, i));
         }
 
         named_array_cleanup(&test);

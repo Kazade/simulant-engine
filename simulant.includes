@@ -198,3 +198,4 @@ tools
 simulant/loaders/deps
 deps/libgl/samples/paletted
 deps/libgl/samples
+deps/libgl/samples/depth_funcs
