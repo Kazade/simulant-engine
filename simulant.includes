@@ -199,3 +199,5 @@ simulant/loaders/deps
 deps/libgl/samples/paletted
 deps/libgl/samples
 deps/libgl/samples/depth_funcs
+deps/libgl/samples/paletted_pcx
+deps/libgl/samples/multitexture_arrays
