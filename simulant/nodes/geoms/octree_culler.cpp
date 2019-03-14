@@ -44,6 +44,8 @@ OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh):
             type = submesh->index_data->index_type();
         }
     });
+
+    index_type_ = type;
 }
 
 const VertexData *OctreeCuller::_vertex_data() const {
