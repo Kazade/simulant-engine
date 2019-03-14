@@ -195,6 +195,9 @@ public:
 
         //The actor's MeshID should match the mesh we set
         assert_true(mesh->id() == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
+
+        assert_equal(actor->aabb().min(), mesh->aabb().min());
+        assert_equal(actor->aabb().max(), mesh->aabb().max());
     }
 
     void test_scene_methods() {

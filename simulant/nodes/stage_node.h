@@ -118,9 +118,10 @@ protected:
 
     virtual void update_transformation_from_parent();
 
+    void recalc_bounds();
+
 private:
     AABB calculate_transformed_aabb() const;
-    void recalc_bounds();
 
     Stage* stage_ = nullptr;
 

@@ -159,6 +159,9 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
         refresh_animation_state(animation_state_->current_frame(), animation_state_->next_frame(), 0);
     }
 
+    /* Recalculate the AABB if necessary */
+    recalc_bounds();
+
     signal_mesh_changed_(id());
 }
 
