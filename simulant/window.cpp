@@ -420,6 +420,7 @@ bool Window::run_frame() {
         dt = time_keeper_->delta_time();
     }
 
+    input_state_->pre_update(dt);
     check_events(); // Check for any window events
 
     profiler.checkpoint("event_poll");

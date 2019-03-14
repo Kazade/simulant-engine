@@ -139,6 +139,16 @@ HatPosition InputState::joystick_hat_state(JoystickID joystick_id, JoystickHatID
     return HAT_POSITION_CENTERED;
 }
 
+void InputState::pre_update(float dt) {
+    /* Reset the mouse motion each frame, as motion events only come in
+     * when the mouse moves, not every frame */
+    for(uint8_t i = 0; i < mouse_count_; ++i) {
+        for(uint8_t j = 0; j < mice_[i].axis_count; ++j) {
+            mice_[i].axises[j] = 0.0f;
+        }
+    }
+}
+
 void InputState::update(float dt) {
 
     /*
