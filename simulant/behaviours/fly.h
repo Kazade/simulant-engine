@@ -36,7 +36,8 @@ public:
         Fly(window.get()) {}
 
     Fly(Window* window):
-        BehaviourWithInput(window->input.get()) {
+        BehaviourWithInput(window->input.get()),
+        window_(window) {
     }
 
     const std::string name() const override { return "Fly by Keyboard"; }
@@ -44,6 +45,8 @@ public:
 private:
     void on_behaviour_added(Organism* controllable) override {
         stage_node_ = dynamic_cast<StageNode*>(controllable);
+
+        window_->lock_cursor();
     }
 
     void on_behaviour_removed(Organism *controllable) override {
@@ -57,9 +60,12 @@ private:
 
         stage_node_->move_forward_by(input->axis_value("Vertical") * 600.0 * dt);
         stage_node_->rotate_global_y_by(Degrees(input->axis_value("Horizontal") * -50.0 * dt));
+        stage_node_->rotate_global_y_by(Degrees(input->axis_value("MouseX") * -50.0f * dt));
+        stage_node_->rotate_x_by(Degrees(input->axis_value("MouseY") * -50.0f * dt));
     }
 
     StageNode* stage_node_ = nullptr;
+    Window* window_ = nullptr;
 };
 
 }

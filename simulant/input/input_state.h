@@ -118,6 +118,7 @@ class InputState:
     public Managed<InputState> {
 
 public:
+    void pre_update(float dt);
     void update(float dt);
 
     /* These methods should be called by BaseWindow subclasses when the OS sends the corresponding
