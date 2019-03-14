@@ -3,6 +3,7 @@ deps/libgl/samples/Makefile
 deps/libgl/samples/depth_funcs/Makefile
 deps/libgl/samples/depth_funcs/main.c
 deps/libgl/samples/multitexture_arrays/main.c
+deps/libgl/samples/nehe02de/main.c
 deps/libgl/samples/paletted/Makefile
 deps/libgl/samples/paletted/main.c
 deps/libgl/samples/paletted_pcx/Makefile

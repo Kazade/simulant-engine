@@ -90,7 +90,7 @@ public:
         aligned_vector_init(&vector, sizeof(SomeStructure));
 
         // Make sure we have some initial capacity
-        assert_equal(vector.capacity, ALIGNED_VECTOR_INITIAL_CAPACITY);
+        assert_equal(vector.capacity, ALIGNED_VECTOR_CHUNK_SIZE);
         assert_equal(vector.size, 0u); // But nothing in there
 
         SomeStructure objects[3];
@@ -111,7 +111,7 @@ public:
         assert_equal(vector.size, 0u);
 
         // Capacity should have remained unchanged
-        assert_equal(vector.capacity, ALIGNED_VECTOR_INITIAL_CAPACITY);
+        assert_equal(vector.capacity, ALIGNED_VECTOR_CHUNK_SIZE);
         aligned_vector_cleanup(&vector);
     }
 
@@ -179,7 +179,7 @@ public:
         aligned_vector_init(&vector, sizeof(SomeStructure));
 
         // Make sure we have some initial capacity
-        assert_equal(vector.capacity, ALIGNED_VECTOR_INITIAL_CAPACITY);
+        assert_equal(vector.capacity, ALIGNED_VECTOR_CHUNK_SIZE);
 
         aligned_vector_shrink_to_fit(&vector);
 
@@ -189,17 +189,17 @@ public:
         aligned_vector_push_back(&vector, &s, 1);
 
         assert_equal(vector.size, 1u);
-        assert_equal(vector.capacity, 2u);
+        assert_equal(vector.capacity, ALIGNED_VECTOR_CHUNK_SIZE);
 
         aligned_vector_push_back(&vector, &s, 1);
 
         assert_equal(vector.size, 2u);
-        assert_equal(vector.capacity, 2u);
+        assert_equal(vector.capacity, ALIGNED_VECTOR_CHUNK_SIZE);
 
         aligned_vector_push_back(&vector, &s, 1);
 
         assert_equal(vector.size, 3u);
-        assert_equal(vector.capacity, 5u);
+        assert_equal(vector.capacity, ALIGNED_VECTOR_CHUNK_SIZE);
         aligned_vector_cleanup(&vector);
     }
 };
