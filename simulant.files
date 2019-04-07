@@ -1,4 +1,5 @@
 deps/libgl/GL/config.h
+deps/libgl/Makefile
 deps/libgl/samples/Makefile
 deps/libgl/samples/depth_funcs/Makefile
 deps/libgl/samples/depth_funcs/main.c
@@ -8,6 +9,7 @@ deps/libgl/samples/paletted/Makefile
 deps/libgl/samples/paletted/main.c
 deps/libgl/samples/paletted_pcx/Makefile
 deps/libgl/samples/paletted_pcx/main.c
+deps/libgl/samples/polymark/main.c
 simulant/generic/object_manager.h
 simulant/generic/raii.h
 simulant/loaders/deps/tiny_obj_loader.h
@@ -74,7 +76,6 @@ build_for_android.py
 cmake_modules/FindSDL2.cmake
 cmake_modules/FindSIMULANT.cmake
 deps/libgl/GL/clip.c
-deps/libgl/GL/clip.h
 deps/libgl/GL/draw.c
 deps/libgl/GL/error.c
 deps/libgl/GL/flush.c
