@@ -767,7 +767,7 @@ MaterialID AssetManager::default_material_id() const {
 }
 
 unicode AssetManager::default_material_filename() const {
-    return window->resource_locator->locate_file(Material::BuiltIns::DEFAULT);
+    return window->vfs->locate_file(Material::BuiltIns::DEFAULT);
 }
 
 // ========== FONTS ======================

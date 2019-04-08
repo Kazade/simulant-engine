@@ -15,6 +15,8 @@ simulant/asset.h
 simulant/generic/object_manager.h
 simulant/generic/raii.h
 simulant/loaders/deps/tiny_obj_loader.h
+simulant/vfs.cpp
+simulant/vfs.h
 tools/test_generator.py
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h
@@ -723,8 +725,6 @@ simulant/renderers/renderer.cpp
 simulant/renderers/renderer.h
 simulant/renderers/renderer_config.cpp
 simulant/renderers/renderer_config.h
-simulant/resource_locator.cpp
-simulant/resource_locator.h
 simulant/scenes/loading.cpp
 simulant/scenes/loading.h
 simulant/scenes/physics_scene.h

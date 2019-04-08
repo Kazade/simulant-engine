@@ -27,7 +27,7 @@
 #include "generic/object_manager.h"
 #include "generic/data_carrier.h"
 
-#include "resource_locator.h"
+#include "vfs.h"
 #include "idle_task_manager.h"
 #include "input/input_state.h"
 #include "types.h"
@@ -324,7 +324,7 @@ private:
 
     void destroy() {}
 
-    ResourceLocator::ptr resource_locator_;
+    VirtualFileSystem::ptr vfs_;
 
     float frame_counter_time_;
     int32_t frame_counter_frames_;
@@ -374,7 +374,7 @@ public:
 
     Property<Window, IdleTaskManager> idle = { this, &Window::idle_ };
     Property<Window, generic::DataCarrier> data = { this, &Window::data_carrier_ };
-    Property<Window, ResourceLocator> resource_locator = { this, &Window::resource_locator_ };
+    Property<Window, VirtualFileSystem> vfs = { this, &Window::vfs_ };
 
     Property<Window, InputManager> input = {this, &Window::input_manager_};
     Property<Window, InputState> input_state = {this, &Window::input_state_};

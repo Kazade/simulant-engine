@@ -26,7 +26,7 @@
 #include "../meshes/mesh.h"
 #include "../asset_manager.h"
 #include "../shortcuts.h"
-#include "../resource_locator.h"
+#include "../vfs.h"
 #include "../utils/string.h"
 
 namespace smlt {
@@ -34,7 +34,7 @@ namespace loaders {
 
 class SimulantMaterialReader : public tinyobj::MaterialReader {
 public:
-    SimulantMaterialReader(ResourceLocator* locator, const unicode& obj_filename):
+    SimulantMaterialReader(VirtualFileSystem* locator, const unicode& obj_filename):
         locator_(locator),
         obj_filename_(obj_filename) {}
 
@@ -48,7 +48,7 @@ public:
         try {
             auto stream = locator_->open_file(filename);
             tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
-        } catch(ResourceMissingError& e) {
+        } catch(AssetMissingError& e) {
             L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
         }
 
@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    ResourceLocator* locator_ = nullptr;
+    VirtualFileSystem* locator_ = nullptr;
     unicode obj_filename_;
 };
 
@@ -79,7 +79,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::string warn;
     std::string err;
 
-    SimulantMaterialReader reader(locator.get(), filename_);
+    SimulantMaterialReader reader(vfs.get(), filename_);
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, data_.get(), &reader);
 
     if(!ret) {

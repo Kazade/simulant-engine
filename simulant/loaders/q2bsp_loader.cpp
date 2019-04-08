@@ -99,7 +99,7 @@ void parse_actors(const std::string& actor_string, Q2EntityList& actors) {
 
 }
 
-unicode locate_texture(ResourceLocator& locator, const unicode& filename) {
+unicode locate_texture(VirtualFileSystem& locator, const unicode& filename) {
     std::vector<unicode> extensions = { ".wal", ".jpg", ".tga", ".jpeg", ".png" };
     for(auto& ext: extensions) {
         try {
@@ -156,7 +156,7 @@ void Q2BSPLoader::generate_materials(
         // Only load each texture once
         TextureID tex_id;
         if(!textures.count(texture_name)) {
-            unicode full_path = locate_texture(locator, texture_name);
+            unicode full_path = locate_texture(vfs, texture_name);
             tex_id = assets->new_texture_from_file(full_path);
             textures[texture_name] = tex_id;
         } else {

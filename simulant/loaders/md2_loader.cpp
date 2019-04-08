@@ -21,7 +21,7 @@
 #include "md2_loader.h"
 #include "../meshes/mesh.h"
 #include "../asset_manager.h"
-#include "../resource_locator.h"
+#include "../vfs.h"
 #include "../time_keeper.h"
 #include "../utils/memory.h"
 
@@ -272,9 +272,9 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     bool found = false;
     for(auto& texture_path: possible_paths) {
         try {
-            tex_id = asset_manager->new_texture_from_file(locator->locate_file(texture_path));
+            tex_id = asset_manager->new_texture_from_file(vfs->locate_file(texture_path));
             found = true;
-        } catch(ResourceMissingError&) {
+        } catch(AssetMissingError&) {
             L_DEBUG("MD2 skin not found at: " + texture_path);
             continue;
         }

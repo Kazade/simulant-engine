@@ -305,14 +305,14 @@ void MaterialScript::generate(Material& material) {
             // Make sure we always remove the search path we add (if it didn't exist before)
             raii::Finally then([&]() {
                 if(added) {
-                    window->resource_locator->remove_search_path(parent_dir);
+                    window->vfs->remove_search_path(parent_dir);
                 }
             });
 
-            added = window->resource_locator->add_search_path(parent_dir);
+            added = window->vfs->add_search_path(parent_dir);
 
-            auto vertex_shader = window->resource_locator->read_file(vertex_shader_path);
-            auto fragment_shader = window->resource_locator->read_file(fragment_shader_path);
+            auto vertex_shader = window->vfs->read_file(vertex_shader_path);
+            auto fragment_shader = window->vfs->read_file(fragment_shader_path);
 
             auto program = renderer->new_or_existing_gpu_program(
                 std::string{std::istreambuf_iterator<char>(*vertex_shader), std::istreambuf_iterator<char>()},
