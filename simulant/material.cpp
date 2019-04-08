@@ -44,7 +44,7 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
 };
 
 Material::Material(MaterialID id, AssetManager* asset_manager):
-    Resource(asset_manager),
+    Asset(asset_manager),
     generic::Identifiable<MaterialID>(id),
     _material_impl::PropertyValueHolder(this, 0),
     passes_{{MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)}} {
@@ -54,7 +54,7 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
 }
 
 Material::Material(const Material& rhs):
-    Resource(rhs),
+    Asset(rhs),
     generic::Identifiable<MaterialID>(rhs),
     Managed<Material>(rhs),
     _material_impl::PropertyValueHolder(rhs),
@@ -96,7 +96,7 @@ Material::Material(const Material& rhs):
 }
 
 Material& Material::operator=(const Material& rhs) {
-    Resource::operator=(rhs);
+    Asset::operator=(rhs);
     _material_impl::PropertyValueHolder::operator=(rhs);
 
     top_level_ = this;
@@ -263,7 +263,7 @@ MaterialPass::MaterialPass(Material *material, uint8_t index):
     material_(material) {
 
     /* If the renderer supports GPU programs, at least specify *something* */
-    auto& renderer = material_->resource_manager().window->renderer;
+    auto& renderer = material_->asset_manager().window->renderer;
     if(renderer->supports_gpu_programs()) {
         set_gpu_program(renderer->default_gpu_program_id());
     }

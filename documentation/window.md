@@ -1,6 +1,6 @@
 # The Window
 
-The Window is the root of all things. The Window class controls access to the Scene, RenderSequence, MessageBar, and resource loading.
+The Window is the root of all things. The Window class controls access to the Scene, RenderSequence, MessageBar, and asset loading.
 
 ## Signals
 

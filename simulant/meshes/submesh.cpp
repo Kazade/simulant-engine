@@ -21,7 +21,7 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
 
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)
-        material = parent_->resource_manager().clone_default_material();
+        material = parent_->asset_manager().clone_default_material();
     }
 
     set_material_id(material);
@@ -78,7 +78,7 @@ void SubMesh::set_material_id(MaterialID mat) {
 
     if(mat) {
         // Set the material, store the shared_ptr to increment the ref count
-        material_ = parent_->resource_manager().material(mat);
+        material_ = parent_->asset_manager().material(mat);
         if(!material_) {
             throw std::runtime_error("Tried to set invalid material on submesh");
         }

@@ -92,13 +92,13 @@ Window::Window(int width, int height, int bpp, bool fullscreen, bool enable_vsyn
     Source(this),
     StageManager(this),
     BackgroundManager(this),
-    resource_manager_(new AssetManager(this)),
+    asset_manager_(new AssetManager(this)),
     initialized_(false),
     width_(-1),
     height_(-1),
     is_running_(true),
     idle_(*this),
-    resource_locator_(ResourceLocator::create(this)),
+    vfs_(VirtualFileSystem::create(this)),
     frame_counter_time_(0),
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
@@ -121,14 +121,14 @@ RenderSequence* Window::render_sequence() {
 }
 
 LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
-    unicode final_file = resource_locator->locate_file(filename);
+    unicode final_file = vfs->locate_file(filename);
    
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
-            auto new_loader = loader_type->loader_for(final_file, resource_locator->read_file(final_file));
-            new_loader->set_resource_locator(this->resource_locator_.get());
+            auto new_loader = loader_type->loader_for(final_file, vfs->read_file(final_file));
+            new_loader->set_vfs(this->vfs_.get());
 
             possible_loaders.push_back(
                 std::make_pair(loader_type, new_loader)
@@ -155,12 +155,12 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 
 
 LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename) {
-    unicode final_file = resource_locator->locate_file(filename);
+    unicode final_file = vfs->locate_file(filename);
     
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             if(loader_type->supports(final_file)) {
-                return loader_type->loader_for(final_file, resource_locator->open_file(final_file));
+                return loader_type->loader_for(final_file, vfs->open_file(final_file));
             } else {
                 throw std::logic_error(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename).encode());
             }
@@ -204,7 +204,7 @@ void Window::_cleanup() {
         sound_driver_.reset();
     }
 
-    resource_manager_.reset();
+    asset_manager_.reset();
 
     destroy_window();
     GLThreadCheck::cleanup();
@@ -445,7 +445,7 @@ bool Window::run_frame() {
     profiler.checkpoint("idle");
 
     // Garbage collect resources after idle, but before rendering
-    resource_manager_->run_garbage_collection();
+    asset_manager_->run_garbage_collection();
 
     profiler.checkpoint("garbage_collection");
 
@@ -585,13 +585,13 @@ void Window::reset() {
 
     L_DEBUG("Resetting the base manager");
     /* Destroy and recreate the base resource manager */
-    resource_manager_.reset();
+    asset_manager_.reset();
 
     L_DEBUG("Reinitializing the base manager");
 
-    resource_manager_.reset(new AssetManager(this));
-    assert(resource_manager_);
-    resource_manager_->init();
+    asset_manager_.reset(new AssetManager(this));
+    assert(asset_manager_);
+    asset_manager_->init();
 
     L_DEBUG("Recreating defaults");
     create_defaults();

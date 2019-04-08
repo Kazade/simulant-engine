@@ -29,7 +29,7 @@
 
 #include "deps/kazsignal/kazsignal.h"
 
-#include "resource.h"
+#include "asset.h"
 #include "loadable.h"
 
 #include "types.h"
@@ -42,11 +42,11 @@ class SourceInstance;
 class Sound :
     public Managed<Sound>,
     public generic::Identifiable<SoundID>,
-    public Resource,
+    public Asset,
     public Loadable {
 
 public:
-    Sound(SoundID id, AssetManager* resource_manager, SoundDriver* sound_driver);
+    Sound(SoundID id, AssetManager* asset_manager, SoundDriver* sound_driver);
 
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }

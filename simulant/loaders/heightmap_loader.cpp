@@ -239,12 +239,12 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     );
 
     // Load the texture using the texture loader
-    TextureID tid = mesh->resource_manager().new_texture();
+    TextureID tid = mesh->asset_manager().new_texture();
     TextureLoader loader(this->filename_, this->data_);
-    loader.into(*mesh->resource_manager().texture(tid), {{"auto_upload", false}});
+    loader.into(*mesh->asset_manager().texture(tid), {{"auto_upload", false}});
 
     // Now generate the heightmap from it
-    auto tex = mesh->resource_manager().texture(tid);
+    auto tex = mesh->asset_manager().texture(tid);
     tex->flip_vertically();
 
     if(tex->is_compressed()) {
@@ -267,7 +267,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         INDEX_TYPE_32_BIT : INDEX_TYPE_16_BIT;
 
     // We divide the heightmap into patches for more efficient rendering
-    smlt::MaterialID mat = mesh->resource_manager().clone_default_material();
+    smlt::MaterialID mat = mesh->asset_manager().clone_default_material();
     std::vector<smlt::SubMesh*> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh_with_material(
@@ -388,7 +388,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
     mesh->vertex_data->done();
 
-    mesh->resource_manager().delete_texture(tid); //Finally delete the texture
+    mesh->asset_manager().delete_texture(tid); //Finally delete the texture
 
 
 }

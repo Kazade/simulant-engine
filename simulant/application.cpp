@@ -103,7 +103,7 @@ void Application::construct_window(const AppConfig& config) {
     }
 
     for(auto& search_path: config.search_paths) {
-        window_->resource_locator->add_search_path(search_path);
+        window_->vfs->add_search_path(search_path);
     }
 
     L_DEBUG("Search paths added successfully");

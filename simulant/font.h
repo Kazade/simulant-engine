@@ -5,7 +5,7 @@
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 #include "loadable.h"
-#include "resource.h"
+#include "asset.h"
 
 struct stbtt_fontinfo;
 
@@ -27,12 +27,12 @@ struct CharInfo{
 
 class Font:
     public Managed<Font>,
-    public Resource,
+    public Asset,
     public Loadable,
     public generic::Identifiable<FontID> {
 
 public:
-    Font(FontID id, AssetManager* resource_manager);
+    Font(FontID id, AssetManager* asset_manager);
 
     bool init() override;
 
