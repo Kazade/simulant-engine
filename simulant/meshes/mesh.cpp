@@ -38,7 +38,7 @@ namespace smlt {
 Mesh::Mesh(MeshID id,
     AssetManager *resource_manager,
     VertexSpecification vertex_specification):
-        Resource(resource_manager),
+        Asset(resource_manager),
         generic::Identifiable<MeshID>(id) {
 
     reset(vertex_specification);

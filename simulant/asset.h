@@ -32,16 +32,16 @@ namespace smlt {
 
 class AssetManager;
 
-class Resource {
+class Asset {
 public:
     friend class AssetManager;
 
-    Resource(AssetManager* manager):
+    Asset(AssetManager* manager):
         manager_(manager) {
         created_ = std::chrono::system_clock::now();
     }
 
-    virtual ~Resource() {}
+    virtual ~Asset() {}
 
     AssetManager& resource_manager() { assert(manager_); return *manager_; }
     const AssetManager& resource_manager() const { assert(manager_); return *manager_; }
@@ -54,10 +54,10 @@ public:
 
     void set_garbage_collection_method(GarbageCollectMethod method);
 
-    Property<Resource, generic::DataCarrier> data = {this, &Resource::data_};
+    Property<Asset, generic::DataCarrier> data = {this, &Asset::data_};
 
 protected:
-    Resource(const Resource& rhs):
+    Asset(const Asset& rhs):
         manager_(rhs.manager_),
         created_(std::chrono::system_clock::now()),
         data_(rhs.data_) {

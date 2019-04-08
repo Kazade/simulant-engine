@@ -17,12 +17,12 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "resource.h"
+#include "asset.h"
 #include "asset_manager.h"
 
 namespace smlt {
 
-void Resource::set_garbage_collection_method(GarbageCollectMethod method) {
+void Asset::set_garbage_collection_method(GarbageCollectMethod method) {
     manager_->set_garbage_collection_method(this, method);
 }
 

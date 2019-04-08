@@ -34,7 +34,7 @@
 #include "../generic/property.h"
 
 #include "../loadable.h"
-#include "../resource.h"
+#include "../asset.h"
 #include "../vertex_data.h"
 #include "../types.h"
 #include "../interfaces.h"
@@ -69,7 +69,7 @@ typedef std::shared_ptr<MeshFrameData> MeshFrameDataPtr;
 
 class Mesh :
     public virtual Boundable,
-    public Resource,
+    public Asset,
     public Loadable,
     public Managed<Mesh>,
     public generic::Identifiable<MeshID>,

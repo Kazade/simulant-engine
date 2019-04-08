@@ -252,7 +252,7 @@ private:
         children_.erase(child);
     }
 
-    void set_garbage_collection_method(const Resource* resource, GarbageCollectMethod method) {
+    void set_garbage_collection_method(const Asset* resource, GarbageCollectMethod method) {
         // FIXME: This is ugly, but I'm struggling to think of another way to get from the Resource
         // to the right manager while keeping Resource as a non-template
 
@@ -271,7 +271,7 @@ private:
         }
     }
 
-    friend class Resource;
+    friend class Asset;
 };
 
 

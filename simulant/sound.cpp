@@ -27,7 +27,7 @@ namespace smlt {
 
 Sound::Sound(SoundID id, AssetManager *resource_manager, SoundDriver *sound_driver):
     generic::Identifiable<SoundID>(id),
-    Resource(resource_manager),
+    Asset(resource_manager),
     driver_(sound_driver) {
 
 

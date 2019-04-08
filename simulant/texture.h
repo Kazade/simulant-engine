@@ -26,7 +26,7 @@
 #include "generic/managed.h"
 #include "loadable.h"
 #include "types.h"
-#include "resource.h"
+#include "asset.h"
 #include "interfaces.h"
 #include "interfaces/updateable.h"
 
@@ -149,7 +149,7 @@ enum TextureChannel {
 typedef std::array<TextureChannel, 4> TextureChannelSet;
 
 class Texture :
-    public Resource,
+    public Asset,
     public Loadable,
     public generic::Identifiable<TextureID>,
     public Managed<Texture>,

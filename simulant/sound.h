@@ -29,7 +29,7 @@
 
 #include "deps/kazsignal/kazsignal.h"
 
-#include "resource.h"
+#include "asset.h"
 #include "loadable.h"
 
 #include "types.h"
@@ -42,7 +42,7 @@ class SourceInstance;
 class Sound :
     public Managed<Sound>,
     public generic::Identifiable<SoundID>,
-    public Resource,
+    public Asset,
     public Loadable {
 
 public:

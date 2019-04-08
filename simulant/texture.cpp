@@ -44,7 +44,7 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
 }};
 
 Texture::Texture(TextureID id, AssetManager *resource_manager):
-    Resource(resource_manager),
+    Asset(resource_manager),
     generic::Identifiable<TextureID>(id),
     width_(0),
     height_(0) {

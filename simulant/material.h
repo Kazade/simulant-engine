@@ -22,7 +22,7 @@
 
 #include <unordered_map>
 
-#include "resource.h"
+#include "asset.h"
 #include "generic/identifiable.h"
 #include "generic/managed.h"
 #include "types.h"
@@ -462,7 +462,7 @@ private:
 typedef uint8_t PropertyIndex;
 
 class Material:
-    public Resource,
+    public Asset,
     public Loadable,
     public generic::Identifiable<MaterialID>,
     public Managed<Material>,
