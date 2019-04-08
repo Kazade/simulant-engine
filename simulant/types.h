@@ -297,15 +297,6 @@ enum IndexType {
     INDEX_TYPE_32_BIT
 };
 
-enum BlendType {
-    BLEND_NONE,
-    BLEND_ADD,
-    BLEND_MODULATE,
-    BLEND_COLOUR,
-    BLEND_ALPHA,
-    BLEND_ONE_ONE_MINUS_ALPHA
-};
-
 enum MeshArrangement {
     MESH_ARRANGEMENT_TRIANGLES,
     MESH_ARRANGEMENT_TRIANGLE_FAN,

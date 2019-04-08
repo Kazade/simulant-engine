@@ -155,20 +155,8 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                     /* Special cases for enums - need a better way to handle this */
                     if(key == BLEND_FUNC_PROPERTY) {
                         std::string v = value;
-                        if(v == "alpha") {
-                            holder.set_property_value(key, (int) BLEND_ALPHA);
-                        } else if(v == "add") {
-                            holder.set_property_value(key, (int) BLEND_ADD);
-                        } else if(v == "colour") {
-                            holder.set_property_value(key, (int) BLEND_COLOUR);
-                        } else if(v == "modulate") {
-                            holder.set_property_value(key, (int) BLEND_MODULATE);
-                        } else if(v == "one_one_minus_alpha") {
-                            holder.set_property_value(key, (int) BLEND_ONE_ONE_MINUS_ALPHA);
-                        } else {
-                            L_WARN(_F("Unrecognised blend value {0}").format(v));
-                            holder.set_property_value(key, (int) BLEND_NONE);
-                        }
+                        BlendType type = blend_type_from_name(v);
+                        holder.set_property_value(key, (int) type);
                     } else if(key == SHADE_MODEL_PROPERTY) {
                         std::string v = value;
                         if(v == "smooth") {
