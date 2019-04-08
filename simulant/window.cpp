@@ -92,7 +92,7 @@ Window::Window(int width, int height, int bpp, bool fullscreen, bool enable_vsyn
     Source(this),
     StageManager(this),
     BackgroundManager(this),
-    resource_manager_(new AssetManager(this)),
+    asset_manager_(new AssetManager(this)),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -204,7 +204,7 @@ void Window::_cleanup() {
         sound_driver_.reset();
     }
 
-    resource_manager_.reset();
+    asset_manager_.reset();
 
     destroy_window();
     GLThreadCheck::cleanup();
@@ -445,7 +445,7 @@ bool Window::run_frame() {
     profiler.checkpoint("idle");
 
     // Garbage collect resources after idle, but before rendering
-    resource_manager_->run_garbage_collection();
+    asset_manager_->run_garbage_collection();
 
     profiler.checkpoint("garbage_collection");
 
@@ -585,13 +585,13 @@ void Window::reset() {
 
     L_DEBUG("Resetting the base manager");
     /* Destroy and recreate the base resource manager */
-    resource_manager_.reset();
+    asset_manager_.reset();
 
     L_DEBUG("Reinitializing the base manager");
 
-    resource_manager_.reset(new AssetManager(this));
-    assert(resource_manager_);
-    resource_manager_->init();
+    asset_manager_.reset(new AssetManager(this));
+    assert(asset_manager_);
+    asset_manager_->init();
 
     L_DEBUG("Recreating defaults");
     create_defaults();

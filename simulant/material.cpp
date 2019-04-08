@@ -263,7 +263,7 @@ MaterialPass::MaterialPass(Material *material, uint8_t index):
     material_(material) {
 
     /* If the renderer supports GPU programs, at least specify *something* */
-    auto& renderer = material_->resource_manager().window->renderer;
+    auto& renderer = material_->asset_manager().window->renderer;
     if(renderer->supports_gpu_programs()) {
         set_gpu_program(renderer->default_gpu_program_id());
     }

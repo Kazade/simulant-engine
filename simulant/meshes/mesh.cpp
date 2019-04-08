@@ -36,9 +36,9 @@ namespace smlt {
 
 
 Mesh::Mesh(MeshID id,
-    AssetManager *resource_manager,
+    AssetManager *asset_manager,
     VertexSpecification vertex_specification):
-        Asset(resource_manager),
+        Asset(asset_manager),
         generic::Identifiable<MeshID>(id) {
 
     reset(vertex_specification);
@@ -181,7 +181,7 @@ SubMesh* Mesh::new_submesh(
 
     return new_submesh_with_material(
         name,
-        resource_manager().clone_default_material(),        
+        asset_manager().clone_default_material(),        
         arrangement,
         index_type
     );

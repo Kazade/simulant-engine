@@ -85,12 +85,12 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
         auto final_path = kfs::path::join(parent_dir, rel_path);
         L_DEBUG(_F("Loading tileset from: {0}").format(final_path));
 
-        TextureID tid = mesh->resource_manager().new_texture_from_file(
+        TextureID tid = mesh->asset_manager().new_texture_from_file(
             final_path,
             TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_POINT)
         );
 
-        tileset_materials[i] = mesh->resource_manager().new_material_from_texture(tid);
+        tileset_materials[i] = mesh->asset_manager().new_material_from_texture(tid);
 
         TilesetInfo& info = tileset_info[i];
         info.margin = tileset->GetMargin();

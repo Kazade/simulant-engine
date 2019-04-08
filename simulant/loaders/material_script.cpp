@@ -71,7 +71,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic:
     if(prop.has_key("default") && !prop["default"].is_none()) {
         std::string def = prop["default"];
 
-        TextureID tex_id = material.resource_manager().new_texture_from_file(def);
+        TextureID tex_id = material.asset_manager().new_texture_from_file(def);
 
         material.define_property(
             MATERIAL_PROPERTY_TYPE_TEXTURE,
@@ -197,7 +197,7 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value;
-                auto tex_id = mat.resource_manager().new_texture_from_file(
+                auto tex_id = mat.asset_manager().new_texture_from_file(
                     path
                 );
 
@@ -275,7 +275,7 @@ void MaterialScript::generate(Material& material) {
     material.set_pass_count(json["passes"].length());
 
     /* Feels dirty... */
-    Window* window = material.resource_manager().window;
+    Window* window = material.asset_manager().window;
     Renderer* renderer = window->renderer;
 
     for(uint32_t i = 0u; i < json["passes"].length(); ++i) {

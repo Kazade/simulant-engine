@@ -291,7 +291,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     // Make sure the passed mesh is empty and using the default vertex spec
     mesh->reset(smlt::VertexSpecification::DEFAULT);
 
-    auto assets = &mesh->resource_manager();
+    auto assets = &mesh->asset_manager();
 
     assert(mesh && "You passed a Resource that is not a mesh to the QBSP loader");
 

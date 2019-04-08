@@ -48,7 +48,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     generic::Identifiable<StageID>(id),
     CameraManager(this),
     ui_(new ui::UIManager(this)),
-    resource_manager_(AssetManager::create(parent, parent->shared_assets.get())),
+    asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
     geom_manager_(new GeomManager()),
     sky_manager_(new SkyManager(parent, this)),
@@ -351,7 +351,7 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
 }
 
 void Stage::update(float dt) {
-    resource_manager_->update(dt);
+    asset_manager_->update(dt);
 }
 
 void Stage::on_actor_created(ActorID actor_id) {

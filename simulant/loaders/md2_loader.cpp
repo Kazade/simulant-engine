@@ -201,7 +201,7 @@ const int32_t MAGIC_NUMBER_ID = 844121161;
 
 void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
-    AssetManager* resource_manager = &mesh->resource_manager();
+    AssetManager* asset_manager = &mesh->asset_manager();
 
     assert(mesh && "Tried to load an MD2 file into something that wasn't a mesh");
 
@@ -272,7 +272,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     bool found = false;
     for(auto& texture_path: possible_paths) {
         try {
-            tex_id = resource_manager->new_texture_from_file(locator->locate_file(texture_path));
+            tex_id = asset_manager->new_texture_from_file(locator->locate_file(texture_path));
             found = true;
         } catch(ResourceMissingError&) {
             L_DEBUG("MD2 skin not found at: " + texture_path);
@@ -282,10 +282,10 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(!found) {
         L_WARN("Unable to locate MD2 skin: " + skin_name);
-        tex_id = resource_manager->default_texture_id();
+        tex_id = asset_manager->default_texture_id();
     }
 
-    auto material = resource_manager->clone_default_material().fetch();
+    auto material = asset_manager->clone_default_material().fetch();
     material->set_diffuse_map(tex_id);
 
     submesh->set_material_id(material->id());

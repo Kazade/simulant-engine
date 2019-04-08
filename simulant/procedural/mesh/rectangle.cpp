@@ -32,7 +32,7 @@ SubMesh* new_rectangle_submesh(
     //Create a submesh
     SubMesh* submesh = mesh->new_submesh_with_material(
         "rectangle",
-        (material_id) ? material_id : mesh->resource_manager().clone_default_material(),
+        (material_id) ? material_id : mesh->asset_manager().clone_default_material(),
         MESH_ARRANGEMENT_TRIANGLES
     );
 
@@ -134,7 +134,7 @@ SubMesh *rectangle(
     mesh->vertex_data->done();
 
     if(!material) {
-        material = mesh->resource_manager().clone_default_material();
+        material = mesh->asset_manager().clone_default_material();
     }
 
     //Create a submesh that uses the shared data
@@ -192,7 +192,7 @@ SubMesh* rectangle_outline(
     mesh->vertex_data->done();
     
     if(!material) {
-        material = mesh->resource_manager().clone_default_material();
+        material = mesh->asset_manager().clone_default_material();
     }
     SubMesh* submesh = mesh->new_submesh_with_material(
         "rectangle_outline",

@@ -43,8 +43,8 @@ public:
 
     virtual ~Asset() {}
 
-    AssetManager& resource_manager() { assert(manager_); return *manager_; }
-    const AssetManager& resource_manager() const { assert(manager_); return *manager_; }
+    AssetManager& asset_manager() { assert(manager_); return *manager_; }
+    const AssetManager& asset_manager() const { assert(manager_); return *manager_; }
 
     int age() const {
         return std::chrono::duration_cast<std::chrono::seconds>(

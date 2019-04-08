@@ -139,7 +139,7 @@ public:
 
     Property<Stage, Debug> debug = {this, &Stage::debug_};
     Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};
-    Property<Stage, AssetManager> assets = {this, &Stage::resource_manager_};
+    Property<Stage, AssetManager> assets = {this, &Stage::asset_manager_};
     Property<Stage, generic::DataCarrier> data = {this, &Stage::data_};
     Property<Stage, ui::UIManager> ui = {this, &Stage::ui_};
     Property<Stage, SkyManager> skies = {this, &Stage::sky_manager_};
@@ -195,7 +195,7 @@ private:
 
     //FIXME: All managers should be composition rather than inheritence,
     // like this one!   
-    std::shared_ptr<AssetManager> resource_manager_;
+    std::shared_ptr<AssetManager> asset_manager_;
     smlt::Colour ambient_light_ = smlt::Colour(0.3, 0.3, 0.3, 1.0);
 
     std::unique_ptr<FogSettings> fog_;

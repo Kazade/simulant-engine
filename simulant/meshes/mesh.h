@@ -79,7 +79,7 @@ class Mesh :
 
 public:
     Mesh(MeshID id,
-         AssetManager* resource_manager,
+         AssetManager* asset_manager,
          VertexSpecification vertex_specification
     );
 

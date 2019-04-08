@@ -32,7 +32,7 @@ class Font:
     public generic::Identifiable<FontID> {
 
 public:
-    Font(FontID id, AssetManager* resource_manager);
+    Font(FontID id, AssetManager* asset_manager);
 
     bool init() override;
 
