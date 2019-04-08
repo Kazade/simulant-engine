@@ -90,6 +90,18 @@ enum IterationType {
     ITERATION_TYPE_ONCE_PER_LIGHT
 };
 
+enum BlendType {
+    BLEND_NONE,
+    BLEND_ADD,
+    BLEND_MODULATE,
+    BLEND_COLOUR,
+    BLEND_ALPHA,
+    BLEND_ONE_ONE_MINUS_ALPHA
+};
+
+
+BlendType blend_type_from_name(const std::string& v);
+
 namespace _material_impl {
     class PropertyValueHolder;
 

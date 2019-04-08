@@ -432,4 +432,21 @@ ColourMaterial _material_impl::PropertyValueHolder::colour_material() const {
     return (ColourMaterial) property(top_level_->colour_material_index_).value<int>();
 }
 
+BlendType blend_type_from_name(const std::string &v) {
+    if(v == "alpha") {
+        return BLEND_ALPHA;
+    } else if(v == "add") {
+        return BLEND_ADD;
+    } else if(v == "colour") {
+        return BLEND_COLOUR;
+    } else if(v == "modulate") {
+        return BLEND_MODULATE;
+    } else if(v == "one_one_minus_alpha") {
+        return BLEND_ONE_ONE_MINUS_ALPHA;
+    } else {
+        L_WARN(_F("Unrecognised blend value {0}").format(v));
+        return BLEND_NONE;
+    }
+}
+
 }
