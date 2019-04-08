@@ -2,7 +2,7 @@
 # Asset Manager
 
 Asset managers are the second kind of management class in Simulant (the other being [StageNode managers](manual_managers.md)). All assets
-in Simulant use a refcounted manager, these resources include:
+in Simulant use a refcounted manager, these assets include:
 
  - Textures
  - Materials
@@ -10,9 +10,9 @@ in Simulant use a refcounted manager, these resources include:
  - Shaders
  - Meshes
  
-In normal usage, these materials are linked just after creation to another resource (e.g. Texture -> Material) or
-to an object that has a manual manager (e.g. an Actor). A resource can obviously be linked to more than one object
-but when all linked objects/resources are destroyed, then the refcounted manager will delete the resource.
+In normal usage, these materials are linked just after creation to another asset (e.g. Texture -> Material) or
+to an object that has a manual manager (e.g. an Actor). A asset can obviously be linked to more than one object
+but when all linked objects/assets are destroyed, then the refcounted manager will delete the asset.
 
 # Garbage Collection Methods
 
@@ -23,7 +23,7 @@ There are (currently) two different kinds of `GarbageCollectMethod` that you can
 
 # The GC grace period
 
-When you create a resource, you have a 3 second grace period to grab a reference to it, after that time the resource
+When you create a asset, you have a 3 second grace period to grab a reference to it, after that time the asset
 will be destroyed and a warning will be logged.
 
 For example, say you load a mesh, like so:
@@ -39,7 +39,7 @@ or this:
 
     stage->new_actor_with_mesh(my_mesh); //Links the mesh to an actor, preventing its destruction    
     
-Failure to access a resource within the grace period will result in its destruction,
+Failure to access a asset within the grace period will result in its destruction,
 and any further attempts to access it will result in a NULL return value.
 
 You can control the grace period on a per-asset-manager basis by using `AssetManager::set_garbage_collection_grace_period` which takes an integer number
@@ -47,7 +47,7 @@ of seconds to allow before a new object is destroyed.
 
 # Disabling collection
 
-Sometimes you want to load a resource once, but there will be periods of time where it won't be attached to anything.
+Sometimes you want to load a asset once, but there will be periods of time where it won't be attached to anything.
 
 Imagine, for example, you have a Mesh for a torpedo. When the player fires a torpedo, you'd associate the Mesh to a new Actor, 
 and when the torpedo detonates, the Actor will be destroyed. If that was the only torpedo in play, this would mean the mesh was

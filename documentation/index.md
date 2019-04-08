@@ -14,7 +14,7 @@
 
 This section covers the base subsystems and usages of Simulant.
 
- - Overview: [Engine Structure](engine_structure.md) | [Resource Management](resource_management.md)
+ - Overview: [Engine Structure](engine_structure.md) | [Asset Management](resource_management.md)
  - Managing objects: [Stage Node Managers](manual_managers.md) | [Asset Managers](asset_managers.md)
  - Core systems: [The Window](window.md) | [Idle Manager](idle.md) | [Viewports](viewport.md) | [Threading](threading.md) | [Environment Variables](environment_variables.md)
  - Utilities: [Random](random.md) 
