@@ -60,9 +60,45 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
             material = Material::BUILT_IN_NAMES.at(material);
         }
 
-        ps->set_material_id(ps->stage->assets->new_material_from_file(material));
-    }
+        auto mat = ps->stage->assets->new_material_from_file(material).fetch();
+        ps->set_material_id(mat->id());
 
+        /* Apply any specified material properties */
+        const std::string MATERIAL_PROPERTY_PREFIX = "material.";
+        for(std::string& key: js.keys()) {
+            if(key.substr(0, MATERIAL_PROPERTY_PREFIX.length()) == MATERIAL_PROPERTY_PREFIX) {
+                auto property_name = key.substr(MATERIAL_PROPERTY_PREFIX.length());
+                if(mat->property_is_defined(property_name)) {
+                    auto type = mat->defined_property_type(property_name);
+                    if(type == MATERIAL_PROPERTY_TYPE_BOOL) {
+                        mat->set_property_value(property_name, (bool) js[key]);
+                    } else if(type == MATERIAL_PROPERTY_TYPE_FLOAT) {
+                        mat->set_property_value(property_name, (float) js[key]);
+                    } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
+                        if(property_name == BLEND_FUNC_PROPERTY) {
+                            mat->set_property_value(property_name, (int) blend_type_from_name(js[key]));
+                        } else {
+                            mat->set_property_value(property_name, (int) js[key]);
+                        }
+                    } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+                        auto dirname = kfs::path::dir_name(filename_.encode());
+                        /* Add the local directory for image lookups */
+                        auto remove = locator->add_search_path(dirname);
+                        auto tex_id = ps->stage->assets->new_texture_from_file((std::string) js[key]);
+                        mat->set_property_value(property_name, tex_id);
+                        if(remove) {
+                            // Remove the path if necessary
+                            locator->remove_search_path(dirname);
+                        }
+                    } else {
+                        L_ERROR(
+                            _F("Unhandled material property type {0}, please report.").format(type)
+                        );
+                    }
+                }
+            }
+        }
+    }
 
     if(js.has_key("emitters")) {
         L_DEBUG("Loading emitters");

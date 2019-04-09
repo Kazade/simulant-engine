@@ -15,7 +15,7 @@ public:
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
         pipeline_->deactivate();
 
-        window->resource_locator->add_search_path("sample_data/quake2/textures");
+        window->vfs->add_search_path("sample_data/quake2/textures");
 
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/aggression.bsp").fetch();
         stage_->new_geom_with_mesh(mesh->id());

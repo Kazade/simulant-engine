@@ -14,6 +14,7 @@ The JSON file should have a root dictionary which defines the particle system, i
  - emitters (array): A list of dictionaries, each defining the properties of a particle emitter 
  - manipulators (array): A list of dictionaries, each defining a rule that affects particles each frame
  - material (string): Either a path to a material file, or the name of a built-in material (e.g. `"TEXTURED_PARTICLE"`)
+ - material.XXXXX: These keys allow you to set individual material properties on the specified material, their type depends on the property type of the Material property.
 
 ## Emitter properties
 

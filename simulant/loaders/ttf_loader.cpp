@@ -36,7 +36,7 @@ namespace loaders {
         font->line_gap_ = float(line_gap) * font->scale_;
 
         // Generate a new texture for rendering the font to
-        auto texture = font->texture_ = font->resource_manager().new_texture().fetch();
+        auto texture = font->texture_ = font->asset_manager().new_texture().fetch();
         texture->set_format(TEXTURE_FORMAT_RGBA8888); // Need to use GL_RGBA for Dreamcast
 
         if(charset != CHARACTER_SET_LATIN) {
@@ -84,7 +84,7 @@ namespace loaders {
             texture->mark_data_changed();
         }
 
-        font->material_ = font->resource_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
+        font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
         font->material_->set_blend_func(smlt::BLEND_ALPHA);
         font->material_->set_diffuse_map(font->texture_id());
 

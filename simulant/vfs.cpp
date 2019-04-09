@@ -24,7 +24,7 @@
 
 #include "deps/kfs/kfs.h"
 #include "deps/kazlog/kazlog.h"
-#include "resource_locator.h"
+#include "vfs.h"
 #include "window.h"
 #include "renderers/renderer.h"
 #include "loader.h"
@@ -35,7 +35,7 @@
 
 namespace smlt {
 
-ResourceLocator::ResourceLocator(Window *window):
+VirtualFileSystem::VirtualFileSystem(Window *window):
     window_(window) {
 
     resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
@@ -57,7 +57,7 @@ ResourceLocator::ResourceLocator(Window *window):
 #endif
 }
 
-bool ResourceLocator::add_search_path(const unicode& path) {
+bool VirtualFileSystem::add_search_path(const unicode& path) {
     unicode new_path(kfs::path::abs_path(path.encode()));
 
     if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
@@ -68,11 +68,11 @@ bool ResourceLocator::add_search_path(const unicode& path) {
     return true;
 }
 
-void ResourceLocator::remove_search_path(const unicode& path) {
+void VirtualFileSystem::remove_search_path(const unicode& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-unicode ResourceLocator::locate_file(const unicode &filename) const {
+unicode VirtualFileSystem::locate_file(const unicode &filename) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -112,18 +112,18 @@ unicode ResourceLocator::locate_file(const unicode &filename) const {
         }
     }
 #endif
-    throw ResourceMissingError("Unable to find file: " + final_name);
+    throw AssetMissingError("Unable to find file: " + final_name);
 }
 
 
-std::shared_ptr<std::istream> ResourceLocator::open_file(const unicode& filename) {
+std::shared_ptr<std::istream> VirtualFileSystem::open_file(const unicode& filename) {
     unicode path = locate_file(filename);
 
     std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode());
     return file_in;
 }
 
-std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& filename) {
+std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& filename) {
 #ifdef __ANDROID__
     //If we're on Android, don't bother trying to locate the file, just try to load it from the APK
     std::shared_ptr<std::stringstream> result = std::make_shared<std::stringstream>();
@@ -144,7 +144,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
         return result;
     } else {
         L_ERROR("There was an error loading the specified file");
-        throw ResourceMissingError("Unable to load file: " + filename.encode());
+        throw AssetMissingError("Unable to load file: " + filename.encode());
     }
     SDL_FreeRW(ops);
 #else
@@ -153,7 +153,7 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
     std::ifstream file_in(path.encode(), std::ios::in | std::ios::binary);
 
     if(!file_in) {
-        throw ResourceMissingError("Unable to load file: " + filename.encode());
+        throw AssetMissingError("Unable to load file: " + filename.encode());
     }
 
     std::shared_ptr<std::stringstream> result(new std::stringstream);
@@ -162,14 +162,14 @@ std::shared_ptr<std::stringstream> ResourceLocator::read_file(const unicode& fil
 #endif
 }
 
-std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filename) {
+std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filename) {
     unicode path = locate_file(filename);
 
     // Load as binary and let portable_getline do its thing
     std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
     
     if(!file_in) {
-        throw ResourceMissingError("Unable to load file: " + filename.encode());
+        throw AssetMissingError("Unable to load file: " + filename.encode());
     }
 
     std::vector<std::string> results;
@@ -180,11 +180,11 @@ std::vector<std::string> ResourceLocator::read_file_lines(const unicode &filenam
     return results;
 }
 
-unicode ResourceLocator::find_executable_directory() {
+unicode VirtualFileSystem::find_executable_directory() {
     return kfs::exe_dirname();
 }
 
-unicode ResourceLocator::find_working_directory() {
+unicode VirtualFileSystem::find_working_directory() {
     return kfs::get_cwd();
 }
 

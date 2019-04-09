@@ -29,20 +29,20 @@
 namespace smlt {
 class Window;
 
-class ResourceMissingError : public std::runtime_error {
+class AssetMissingError : public std::runtime_error {
 public:
-    ResourceMissingError(const std::string& what):
+    AssetMissingError(const std::string& what):
         std::runtime_error(what) {}
 };
 
 
-class ResourceLocator :
-    public Managed<ResourceLocator> {
+class VirtualFileSystem :
+    public Managed<VirtualFileSystem> {
 
 public:
-    ResourceLocator(Window* window);
+    VirtualFileSystem(Window* window);
 
-    std::list<unicode>& resource_path() { return resource_path_; }
+    std::list<unicode>& search_path() { return resource_path_; }
 
     unicode locate_file(const unicode& filename) const;
     std::shared_ptr<std::istream> open_file(const unicode& filename);

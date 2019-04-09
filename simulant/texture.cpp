@@ -43,13 +43,13 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_ALPHA
 }};
 
-Texture::Texture(TextureID id, AssetManager *resource_manager):
-    Resource(resource_manager),
+Texture::Texture(TextureID id, AssetManager *asset_manager):
+    Asset(asset_manager),
     generic::Identifiable<TextureID>(id),
     width_(0),
     height_(0) {
 
-    renderer_ = resource_manager->window->renderer;
+    renderer_ = asset_manager->window->renderer;
 }
 
 void Texture::set_format(TextureFormat format, TextureTexelType texel_type) {

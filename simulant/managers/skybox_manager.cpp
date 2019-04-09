@@ -84,12 +84,12 @@ void Skybox::generate(
             sm->set_material_id(mat->id());
         });
 
-        auto up_path = manager_->window->resource_locator->locate_file(up);
-        auto down_path = manager_->window->resource_locator->locate_file(down);
-        auto left_path = manager_->window->resource_locator->locate_file(left);
-        auto right_path = manager_->window->resource_locator->locate_file(right);
-        auto back_path = manager_->window->resource_locator->locate_file(back);
-        auto front_path = manager_->window->resource_locator->locate_file(front);
+        auto up_path = manager_->window->vfs->locate_file(up);
+        auto down_path = manager_->window->vfs->locate_file(down);
+        auto left_path = manager_->window->vfs->locate_file(left);
+        auto right_path = manager_->window->vfs->locate_file(right);
+        auto back_path = manager_->window->vfs->locate_file(back);
+        auto front_path = manager_->window->vfs->locate_file(front);
 
         TextureFlags flags;
         flags.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;
@@ -131,7 +131,7 @@ SkyManager::SkyManager(Window* window, Stage* stage):
 SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
     std::map<SkyboxFace, std::string> files;
 
-    auto path = window->resource_locator->locate_file(folder);
+    auto path = window->vfs->locate_file(folder);
 
     for(auto& file: kfs::path::list_dir(path.encode())) {
         SkyboxFace face;

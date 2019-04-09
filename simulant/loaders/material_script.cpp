@@ -71,7 +71,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic:
     if(prop.has_key("default") && !prop["default"].is_none()) {
         std::string def = prop["default"];
 
-        TextureID tex_id = material.resource_manager().new_texture_from_file(def);
+        TextureID tex_id = material.asset_manager().new_texture_from_file(def);
 
         material.define_property(
             MATERIAL_PROPERTY_TYPE_TEXTURE,
@@ -155,20 +155,8 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                     /* Special cases for enums - need a better way to handle this */
                     if(key == BLEND_FUNC_PROPERTY) {
                         std::string v = value;
-                        if(v == "alpha") {
-                            holder.set_property_value(key, (int) BLEND_ALPHA);
-                        } else if(v == "add") {
-                            holder.set_property_value(key, (int) BLEND_ADD);
-                        } else if(v == "colour") {
-                            holder.set_property_value(key, (int) BLEND_COLOUR);
-                        } else if(v == "modulate") {
-                            holder.set_property_value(key, (int) BLEND_MODULATE);
-                        } else if(v == "one_one_minus_alpha") {
-                            holder.set_property_value(key, (int) BLEND_ONE_ONE_MINUS_ALPHA);
-                        } else {
-                            L_WARN(_F("Unrecognised blend value {0}").format(v));
-                            holder.set_property_value(key, (int) BLEND_NONE);
-                        }
+                        BlendType type = blend_type_from_name(v);
+                        holder.set_property_value(key, (int) type);
                     } else if(key == SHADE_MODEL_PROPERTY) {
                         std::string v = value;
                         if(v == "smooth") {
@@ -197,7 +185,7 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value;
-                auto tex_id = mat.resource_manager().new_texture_from_file(
+                auto tex_id = mat.asset_manager().new_texture_from_file(
                     path
                 );
 
@@ -275,7 +263,7 @@ void MaterialScript::generate(Material& material) {
     material.set_pass_count(json["passes"].length());
 
     /* Feels dirty... */
-    Window* window = material.resource_manager().window;
+    Window* window = material.asset_manager().window;
     Renderer* renderer = window->renderer;
 
     for(uint32_t i = 0u; i < json["passes"].length(); ++i) {
@@ -305,14 +293,14 @@ void MaterialScript::generate(Material& material) {
             // Make sure we always remove the search path we add (if it didn't exist before)
             raii::Finally then([&]() {
                 if(added) {
-                    window->resource_locator->remove_search_path(parent_dir);
+                    window->vfs->remove_search_path(parent_dir);
                 }
             });
 
-            added = window->resource_locator->add_search_path(parent_dir);
+            added = window->vfs->add_search_path(parent_dir);
 
-            auto vertex_shader = window->resource_locator->read_file(vertex_shader_path);
-            auto fragment_shader = window->resource_locator->read_file(fragment_shader_path);
+            auto vertex_shader = window->vfs->read_file(vertex_shader_path);
+            auto fragment_shader = window->vfs->read_file(fragment_shader_path);
 
             auto program = renderer->new_or_existing_gpu_program(
                 std::string{std::istreambuf_iterator<char>(*vertex_shader), std::istreambuf_iterator<char>()},

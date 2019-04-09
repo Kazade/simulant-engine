@@ -41,7 +41,7 @@ namespace smlt {
 /* Like std::getline, but, it handles \n and \r\n line endings automatically */
 std::istream& portable_getline(std::istream& stream, std::string& str);
 
-class ResourceLocator;
+class VirtualFileSystem;
 
 /*
  * You may have a situation where a single filetype can be used for different purposes.
@@ -82,9 +82,9 @@ public:
         into((Loadable&) window, options);
     }
 
-    void set_resource_locator(ResourceLocator* locator) { locator_ = locator; }
+    void set_vfs(VirtualFileSystem* locator) { locator_ = locator; }
 
-    Property<Loader, ResourceLocator> locator = { this, &Loader::locator_ };
+    Property<Loader, VirtualFileSystem> vfs = { this, &Loader::locator_ };
 protected:
     unicode filename_;
     std::shared_ptr<std::istream> data_;
@@ -101,7 +101,7 @@ protected:
     }
 
 private:
-    ResourceLocator* locator_ = nullptr;
+    VirtualFileSystem* locator_ = nullptr;
     virtual void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
 };
 

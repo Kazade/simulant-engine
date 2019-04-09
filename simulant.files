@@ -727,6 +727,10 @@ simulant/renderers/renderer.cpp
 simulant/renderers/renderer.h
 simulant/renderers/renderer_config.cpp
 simulant/renderers/renderer_config.h
+simulant/resource.cpp
+simulant/resource.h
+simulant/resource_locator.cpp
+simulant/resource_locator.h
 simulant/scenes/loading.cpp
 simulant/scenes/loading.h
 simulant/scenes/physics_scene.h

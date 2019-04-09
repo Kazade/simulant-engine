@@ -26,7 +26,7 @@
 #include "../meshes/mesh.h"
 #include "../asset_manager.h"
 #include "../shortcuts.h"
-#include "../resource_locator.h"
+#include "../vfs.h"
 #include "../utils/string.h"
 
 namespace smlt {
@@ -34,7 +34,7 @@ namespace loaders {
 
 class SimulantMaterialReader : public tinyobj::MaterialReader {
 public:
-    SimulantMaterialReader(ResourceLocator* locator, const unicode& obj_filename):
+    SimulantMaterialReader(VirtualFileSystem* locator, const unicode& obj_filename):
         locator_(locator),
         obj_filename_(obj_filename) {}
 
@@ -48,7 +48,7 @@ public:
         try {
             auto stream = locator_->open_file(filename);
             tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
-        } catch(ResourceMissingError& e) {
+        } catch(AssetMissingError& e) {
             L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
         }
 
@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    ResourceLocator* locator_ = nullptr;
+    VirtualFileSystem* locator_ = nullptr;
     unicode obj_filename_;
 };
 
@@ -79,7 +79,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::string warn;
     std::string err;
 
-    SimulantMaterialReader reader(locator.get(), filename_);
+    SimulantMaterialReader reader(vfs.get(), filename_);
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, data_.get(), &reader);
 
     if(!ret) {
@@ -115,7 +115,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     // First, load the materials, and create submeshes
     uint32_t i = 0;
     for(auto& material: materials) {
-        MaterialPtr new_mat = mesh->resource_manager().clone_default_material().fetch();
+        MaterialPtr new_mat = mesh->asset_manager().clone_default_material().fetch();
 
         auto alpha = (material.dissolve) ? 1.0f : 0.0f;
 
@@ -149,7 +149,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 bool found = false;
                 for(auto& texture_file: possible_locations) {
                     if(kfs::path::exists(texture_file)) {
-                        auto tex_id = mesh->resource_manager().new_texture_from_file(texture_file);
+                        auto tex_id = mesh->asset_manager().new_texture_from_file(texture_file);
 
                         new_mat->set_diffuse_map(tex_id);
 
