@@ -431,6 +431,8 @@ private:
             // path on user apps.
             config.search_paths.push_back("assets");
             config.search_paths.push_back("sample_data");
+            config.search_paths.push_back("/cd/assets");
+            config.search_paths.push_back("/cd/sample_data");
 
             application.reset(new TestApp(config));
         } else {
