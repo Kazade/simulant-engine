@@ -70,9 +70,9 @@ void Emitter::do_emit(float dt, uint32_t max, std::vector<Particle> &particles) 
 
         p.velocity *= rot;
 
-        p.ttl = rgen_.float_in_range(ttl_range().first, ttl_range().second);
+        p.lifetime = p.ttl = rgen_.float_in_range(ttl_range().first, ttl_range().second);
         p.colour = colour();
-        p.dimensions = smlt::Vec2(system().particle_width(), system().particle_height());
+        p.initial_dimensions = p.dimensions = smlt::Vec2(system().particle_width(), system().particle_height());
 
         //FIXME: Initialize other properties
         particles.push_back(p);

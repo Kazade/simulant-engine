@@ -38,6 +38,7 @@ Additional properties depend on the type of the affector
 ### Size
 
  - rate (float): A value between -1.0 and +1.0, the amount per second to reduce the size of the particle
+ - curve (string): This can be used instead of rate to use a curve function for the sizing. Options are linear(rate), or bell(peak, deviation).
 
 ### Colour Fader **(Not Implemented)**
 

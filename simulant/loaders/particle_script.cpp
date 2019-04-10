@@ -83,12 +83,12 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());
                         /* Add the local directory for image lookups */
-                        auto remove = locator->add_search_path(dirname);
+                        auto remove = vfs->add_search_path(dirname);
                         auto tex_id = ps->stage->assets->new_texture_from_file((std::string) js[key]);
                         mat->set_property_value(property_name, tex_id);
                         if(remove) {
                             // Remove the path if necessary
-                            locator->remove_search_path(dirname);
+                            vfs->remove_search_path(dirname);
                         }
                     } else {
                         L_ERROR(
@@ -186,7 +186,35 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
                     auto m = ps->new_manipulator<particles::SizeManipulator>();
 
                     if(manipulator.has_key("rate")) {
-                        m->set_property("rate", (float) manipulator["rate"]);
+                        /* Just a rate, then it's a linear curve */
+                        m->set_linear_curve((float) manipulator["rate"]);
+                    } else if(manipulator.has_key("curve")) {
+                        /* Parse the curve */
+                        std::string spec = manipulator["curve"];
+                        auto first_brace = spec.find('(');
+                        if(first_brace == std::string::npos || spec.at(spec.size() - 1) != ')') {
+                            L_WARN(_F("Invalid curve specification {0}. Ignoring.").format(spec));
+                        } else {
+                            auto kind = spec.substr(0, first_brace);
+                            auto args = spec.substr(first_brace + 1, spec.size() - 1);
+                            if(kind == "linear") {
+                                auto parts = unicode(args).split(",");
+                                if(parts.size() > 1) {
+                                    L_WARN("Too many arguments to linear curve");
+                                }
+
+                                m->set_linear_curve(parts[0].to_float());
+                            } else if(kind == "bell") {
+                                auto parts = unicode(args).split(",");
+                                if(parts.size() != 2) {
+                                    L_WARN("Wrong number of arguments to bell curve");
+                                } else {
+                                    m->set_bell_curve(parts[0].to_float(), parts[1].to_float());
+                                }
+                            } else {
+                                L_WARN(_F("Unknown curve type {0}. Ignoring.").format(kind));
+                            }
+                        }
                     }
                 }
             }
