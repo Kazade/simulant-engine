@@ -83,12 +83,12 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());
                         /* Add the local directory for image lookups */
-                        auto remove = locator->add_search_path(dirname);
+                        auto remove = vfs->add_search_path(dirname);
                         auto tex_id = ps->stage->assets->new_texture_from_file((std::string) js[key]);
                         mat->set_property_value(property_name, tex_id);
                         if(remove) {
                             // Remove the path if necessary
-                            locator->remove_search_path(dirname);
+                            vfs->remove_search_path(dirname);
                         }
                     } else {
                         L_ERROR(
