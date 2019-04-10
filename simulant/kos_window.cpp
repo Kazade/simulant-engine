@@ -37,7 +37,11 @@ bool KOSWindow::create_window() {
         print_available_ram();
 #endif
 
-    glKosInit();
+    static bool gl_initialized = false;
+    if(!gl_initialized++) {
+        glKosInit();
+    }
+
     L_DEBUG("OpenGL initialized");
 #ifdef _arch_dreamcast
         print_available_ram();
