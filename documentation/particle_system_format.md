@@ -40,9 +40,6 @@ Additional properties depend on the type of the affector
  - rate (float): A value between -1.0 and +1.0, the amount per second to reduce the size of the particle
  - curve (string): This can be used instead of rate to use a curve function for the sizing. Options are linear(rate), or bell(peak, deviation).
 
-### Colour Fader **(Not Implemented)**
+### Colour Fader
 
- - red (float): The amount per second added to the particle red (limited in the range 0.0 to 1.0)
- - green (float): The amount per second added to the particle green (limited in the range 0.0 to 1.0)
- - blue (float): The amount per second added to the particle blue (limited in the range 0.0 to 1.0)
- - alpha (float): The amount per second added to the particle alpha (limited in the range 0.0 to 1.0)
+ - colours(array): A list of strings in the format "R G B A" or "R G B" where each element is a floating point number between 0.0 and 1.0
