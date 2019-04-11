@@ -24,9 +24,84 @@
 #include "../stage.h"
 #include "../nodes/particle_system.h"
 #include "../nodes/particles/manipulators/size_manipulator.h"
+#include "../nodes/particles/manipulators/colour_fader.h"
 
 namespace smlt {
 namespace loaders {
+
+static smlt::particles::Manipulator* spawn_size_manipulator(ParticleSystem* ps, jsonic::Node& manipulator) {
+    auto m = ps->new_manipulator<particles::SizeManipulator>();
+
+    if(manipulator.has_key("rate")) {
+        /* Just a rate, then it's a linear curve */
+        m->set_linear_curve((float) manipulator["rate"]);
+    } else if(manipulator.has_key("curve")) {
+        /* Parse the curve */
+        std::string spec = manipulator["curve"];
+        auto first_brace = spec.find('(');
+        if(first_brace == std::string::npos || spec.at(spec.size() - 1) != ')') {
+            L_WARN(_F("Invalid curve specification {0}. Ignoring.").format(spec));
+        } else {
+            auto kind = spec.substr(0, first_brace);
+            auto args = spec.substr(first_brace + 1, spec.size() - 1);
+            if(kind == "linear") {
+                auto parts = unicode(args).split(",");
+                if(parts.size() > 1) {
+                    L_WARN("Too many arguments to linear curve");
+                }
+
+                m->set_linear_curve(parts[0].to_float());
+            } else if(kind == "bell") {
+                auto parts = unicode(args).split(",");
+                if(parts.size() != 2) {
+                    L_WARN("Wrong number of arguments to bell curve");
+                } else {
+                    m->set_bell_curve(parts[0].to_float(), parts[1].to_float());
+                }
+            } else {
+                L_WARN(_F("Unknown curve type {0}. Ignoring.").format(kind));
+            }
+        }
+    }
+
+    return m;
+}
+
+static smlt::particles::Manipulator* spawn_colour_fader_manipulator(ParticleSystem* ps, jsonic::Node& js) {
+    auto parse_colour = [](const std::string& colour) -> smlt::Colour {
+        auto parts = unicode(colour).split(" ");
+        if(parts.size() == 3) {
+            return smlt::Colour(
+                parts[0].to_float(),
+                parts[1].to_float(),
+                parts[2].to_float(),
+                1.0f
+            );
+        } else if(parts.size() == 4) {
+            return smlt::Colour(
+                parts[0].to_float(),
+                parts[1].to_float(),
+                parts[2].to_float(),
+                parts[3].to_float()
+            );
+        } else {
+            L_WARN("Invalid number of colour components to colour fader");
+            return smlt::Colour::WHITE;
+        }
+    };
+
+    std::vector<smlt::Colour> colours;
+
+    jsonic::Node& colour_array = js["colours"];
+    for(auto i = 0u; i < colour_array.length(); ++i) {
+        std::string colour = colour_array[i];
+        colours.push_back(parse_colour(colour));
+    }
+
+    auto m = ps->new_manipulator<particles::ColourFader>(colours);
+    return m;
+}
+
 
 void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
     ParticleSystem* ps = loadable_to<ParticleSystem>(resource);
@@ -183,39 +258,9 @@ void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
                 auto& manipulator = manipulators[i];
 
                 if(std::string(manipulator["type"]) == "size") {
-                    auto m = ps->new_manipulator<particles::SizeManipulator>();
-
-                    if(manipulator.has_key("rate")) {
-                        /* Just a rate, then it's a linear curve */
-                        m->set_linear_curve((float) manipulator["rate"]);
-                    } else if(manipulator.has_key("curve")) {
-                        /* Parse the curve */
-                        std::string spec = manipulator["curve"];
-                        auto first_brace = spec.find('(');
-                        if(first_brace == std::string::npos || spec.at(spec.size() - 1) != ')') {
-                            L_WARN(_F("Invalid curve specification {0}. Ignoring.").format(spec));
-                        } else {
-                            auto kind = spec.substr(0, first_brace);
-                            auto args = spec.substr(first_brace + 1, spec.size() - 1);
-                            if(kind == "linear") {
-                                auto parts = unicode(args).split(",");
-                                if(parts.size() > 1) {
-                                    L_WARN("Too many arguments to linear curve");
-                                }
-
-                                m->set_linear_curve(parts[0].to_float());
-                            } else if(kind == "bell") {
-                                auto parts = unicode(args).split(",");
-                                if(parts.size() != 2) {
-                                    L_WARN("Wrong number of arguments to bell curve");
-                                } else {
-                                    m->set_bell_curve(parts[0].to_float(), parts[1].to_float());
-                                }
-                            } else {
-                                L_WARN(_F("Unknown curve type {0}. Ignoring.").format(kind));
-                            }
-                        }
-                    }
+                    spawn_size_manipulator(ps, manipulator);
+                } else if(std::string(manipulator["type"]) == "colour_fader") {
+                    spawn_colour_fader_manipulator(ps, manipulator);
                 }
             }
         }
