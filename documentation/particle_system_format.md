@@ -43,3 +43,4 @@ Additional properties depend on the type of the affector
 ### Colour Fader
 
  - colours(array): A list of strings in the format "R G B A" or "R G B" where each element is a floating point number between 0.0 and 1.0
+ - interpolate(bool): Whether or not to blend between colours

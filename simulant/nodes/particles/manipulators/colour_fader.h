@@ -9,8 +9,10 @@ namespace particles {
 class ColourFader:
     public Manipulator {
 public:
-    ColourFader(const std::vector<Colour>& colours):
-        Manipulator("colour_fader") {}
+    ColourFader(const std::vector<Colour>& colours, bool interpolate):
+        Manipulator("colour_fader"),
+        colours_(colours),
+        interpolate_(interpolate) {}
 
 private:
     void do_manipulate(std::vector<Particle>& particles, float dt) {
@@ -18,12 +20,20 @@ private:
         for(auto& particle: particles) {
             float e = (particle.lifetime - particle.ttl);
             float n = e / particle.lifetime;
-            int colour = (size * n);
+            long unsigned int colour = (size * n);
+
             particle.colour = colours_[colour];
+
+            if(interpolate_) {
+                float f = (size * n) - int(size * n);
+                auto next_colour = colours_[std::min(colour + 1, size - 1)];
+                particle.colour = (particle.colour * (1.0f - f)) + (next_colour * f);
+            }
         }
     }
 
     std::vector<Colour> colours_;
+    bool interpolate_ = true;
 };
 
 }

@@ -98,12 +98,14 @@ static smlt::particles::Manipulator* spawn_colour_fader_manipulator(ParticleSyst
         colours.push_back(parse_colour(colour));
     }
 
-    auto m = ps->new_manipulator<particles::ColourFader>(colours);
+    bool interpolate = js["interpolate"].get<jsonic::Boolean>();
+
+    auto m = ps->new_manipulator<particles::ColourFader>(colours, interpolate);
     return m;
 }
 
 
-void KGLPLoader::into(Loadable &resource, const LoaderOptions &options) {
+void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options) {
     ParticleSystem* ps = loadable_to<ParticleSystem>(resource);
     jsonic::Node js;
 
