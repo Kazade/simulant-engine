@@ -106,7 +106,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
     visitor->start_traversal(*this, frame_id, stage_);
 
     for(auto& pass_queue: pass_queues_) {
-        IterationType pass_iteration_type;
+        IterationType pass_iteration_type = ITERATION_TYPE_ONCE;
         MaterialID material_id;
         MaterialPass* material_pass = nullptr;
 

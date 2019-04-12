@@ -37,6 +37,14 @@ struct Colour {
     Colour(float r, float g, float b, float a):
         r(r), g(g), b(b), a(a) {}
 
+    Colour operator*(const float rhs) const {
+        return Colour(r * rhs, g * rhs, b * rhs, a * rhs);
+    }
+
+    Colour operator+(const Colour& rhs) const {
+        return Colour(r + rhs.r, g + rhs.g, b + rhs.b, a + rhs.a);
+    }
+
     bool operator==(const Colour& rhs) const {
         return this->r == rhs.r && this->g == rhs.g && this->b == rhs.b && this->a == rhs.a;
     }

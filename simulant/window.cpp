@@ -245,7 +245,7 @@ bool Window::_init() {
         //Register the default resource loaders
         register_loader(std::make_shared<smlt::loaders::TextureLoaderType>());
         register_loader(std::make_shared<smlt::loaders::MaterialScriptLoaderType>());
-        register_loader(std::make_shared<smlt::loaders::KGLPLoaderType>());
+        register_loader(std::make_shared<smlt::loaders::ParticleScriptLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OPTLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OGGLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OBJLoaderType>());

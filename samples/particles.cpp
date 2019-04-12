@@ -1,15 +1,22 @@
 
 #include <simulant/simulant.h>
 
+std::string passed_filename;
+
 class MainScene : public smlt::Scene<MainScene> {
 public:
     MainScene(smlt::Window* window):
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_);
+        auto pipeline = prepare_basic_scene(stage_, camera_);
+        pipeline->viewport->set_colour(smlt::Colour::GREY);
+        pipeline->set_clear_flags(~0);
 
-        auto ps = stage_->new_particle_system_from_file("simulant/particles/fire.kglp");
+        auto ps = stage_->new_particle_system_from_file(
+            passed_filename.empty() ? "simulant/particles/fire.kglp" : passed_filename
+        );
+
         ps->move_to(0.0, 0, -4);
 
         camera_->set_perspective_projection(
@@ -47,6 +54,10 @@ int main(int argc, char* argv[]) {
     config.fullscreen = false;
     config.width = 1024;
     config.height = 768;
+
+    if(argc > 1) {
+        passed_filename = argv[1];
+    }
 
     App app(config);
     return app.run();

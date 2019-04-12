@@ -24,29 +24,29 @@
 namespace smlt {
 namespace loaders {
 
-class KGLPLoader : public Loader {
+class ParticleScriptLoader : public Loader {
 public:
-    KGLPLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    ParticleScriptLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
 
-class KGLPLoaderType : public LoaderType {
+class ParticleScriptLoaderType : public LoaderType {
 public:
-    KGLPLoaderType() {
+    ParticleScriptLoaderType() {
 
     }
 
-    ~KGLPLoaderType() {}
+    ~ParticleScriptLoaderType() {}
 
     unicode name() override { return "particle"; }
     bool supports(const unicode& filename) const override {
-        return filename.lower().contains(".kglp");
+        return filename.lower().ends_with(".spart") || filename.lower().ends_with(".kglp");
     }
 
     Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
-        return Loader::ptr(new KGLPLoader(filename, data));
+        return Loader::ptr(new ParticleScriptLoader(filename, data));
     }
 };
 
