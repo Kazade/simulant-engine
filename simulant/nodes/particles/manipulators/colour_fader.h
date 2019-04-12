@@ -26,7 +26,7 @@ private:
 
             if(interpolate_) {
                 float f = (size * n) - int(size * n);
-                auto next_colour = colours_[std::min(colour + 1, size - 1)];
+                auto next_colour = colours_[std::min((uint32_t) colour + 1, (uint32_t) size - 1)];
                 particle.colour = (particle.colour * (1.0f - f)) + (next_colour * f);
             }
         }

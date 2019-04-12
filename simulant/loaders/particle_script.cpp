@@ -94,7 +94,7 @@ static smlt::particles::Manipulator* spawn_colour_fader_manipulator(ParticleSyst
 
     jsonic::Node& colour_array = js["colours"];
     for(auto i = 0u; i < colour_array.length(); ++i) {
-        std::string colour = colour_array[i].get<jsonic::String>();
+        std::string colour = colour_array[(uint32_t) i].get<jsonic::String>();
         colours.push_back(parse_colour(colour));
     }
 
