@@ -43,12 +43,12 @@ MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode
 
 template<MaterialPropertyType MT>
 static void define_property(Material& material, jsonic::Node& prop) {
-    std::string name = prop["name"]; // FIXME: Sanitize!
+    std::string name = prop["name"].get<jsonic::String>(); // FIXME: Sanitize!
 
     typedef typename _material_impl::TypeForMaterialType<MT>::type T;
 
     if(!prop["default"].is_none()) {
-        auto def = (T) prop["default"];
+        auto def = (T) jsonic::auto_cast<T>(prop["default"]);
 
         material.define_property(
             MT,
@@ -66,10 +66,11 @@ static void define_property(Material& material, jsonic::Node& prop) {
 
 template<>
 void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic::Node& prop) {
-    std::string name = prop["name"]; // FIXME: Sanitize!
+    using namespace jsonic;
+    std::string name = prop["name"].get<String>(); // FIXME: Sanitize!
 
     if(prop.has_key("default") && !prop["default"].is_none()) {
-        std::string def = prop["default"];
+        std::string def = prop["default"].get<String>();
 
         TextureID tex_id = material.asset_manager().new_texture_from_file(def);
 
@@ -105,14 +106,14 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                     continue;
                 }
 
-                holder.set_property_value(key, (bool) value);                
+                holder.set_property_value(key, (bool) value.get<jsonic::Boolean>());
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
                 if(!value.is_string()) {
                     L_ERROR(_F("Invalid property value for: {0}").format(key));
                     continue;
                 }
 
-                auto parts = unicode(std::string(value)).split(" ");
+                auto parts = unicode(value.get<jsonic::String>()).split(" ");
 
                 if(parts.size() != 3) {
                     L_ERROR(_F("Invalid value for property: {0}").format(key));
@@ -130,7 +131,7 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                     continue;
                 }
 
-                auto parts = unicode(std::string(value)).split(" ");
+                auto parts = unicode(value.get<jsonic::String>()).split(" ");
 
                 if(parts.size() != 4) {
                     L_ERROR(_F("Invalid value for property: {0}").format(key));
@@ -150,15 +151,15 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                 }
 
                 if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                    holder.set_property_value(key, (float) value);
+                    holder.set_property_value(key, value.get<jsonic::Number>());
                 } else {
                     /* Special cases for enums - need a better way to handle this */
                     if(key == BLEND_FUNC_PROPERTY) {
-                        std::string v = value;
+                        std::string v = value.get<jsonic::String>();
                         BlendType type = blend_type_from_name(v);
                         holder.set_property_value(key, (int) type);
                     } else if(key == SHADE_MODEL_PROPERTY) {
-                        std::string v = value;
+                        std::string v = value.get<jsonic::String>();
                         if(v == "smooth") {
                             holder.set_shade_model(SHADE_MODEL_SMOOTH);
                         } else if(v == "front_face") {
@@ -167,7 +168,7 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                             L_WARN(_F("Unrecognised shade model value {0}").format(v));
                         }
                     } else if(key == CULL_MODE_PROPERTY) {
-                        std::string v = value;
+                        std::string v = value.get<jsonic::String>();
                         if(v == "back_face") {
                             holder.set_cull_mode(CULL_MODE_BACK_FACE);
                         } else if(v == "front_face") {
@@ -180,11 +181,11 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                             L_WARN(_F("Unrecognised cull value {0}").format(v));
                         }
                     } else {
-                        holder.set_property_value(key, (int) value);
+                        holder.set_property_value(key, (int) value.get<jsonic::Number>());
                     }
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
-                std::string path = value;
+                std::string path = value.get<jsonic::String>();
                 auto tex_id = mat.asset_manager().new_texture_from_file(
                     path
                 );
@@ -236,7 +237,7 @@ void MaterialScript::generate(Material& material) {
         for(uint32_t i = 0u; i < custom_props.length(); ++i) {
             jsonic::Node& prop = custom_props[i];
 
-            std::string kind = prop["type"];
+            std::string kind = prop["type"].get<jsonic::String>();
             auto prop_type = lookup_material_property_type(kind);
 
             switch(prop_type) {
@@ -269,7 +270,7 @@ void MaterialScript::generate(Material& material) {
     for(uint32_t i = 0u; i < json["passes"].length(); ++i) {
         jsonic::Node& pass = json["passes"][i];
 
-        std::string iteration = (pass.has_key("iteration")) ? (std::string) pass["iteration"] : "once";
+        std::string iteration = (pass.has_key("iteration")) ? pass["iteration"].get<jsonic::String>() : "once";
 
         if(iteration == "once") {
             material.pass(i)->set_iteration_type(ITERATION_TYPE_ONCE);
@@ -283,8 +284,8 @@ void MaterialScript::generate(Material& material) {
 
         /* If we support gpu programs, then load any shaders */
         if(renderer->supports_gpu_programs() && pass.has_key("vertex_shader") && pass.has_key("fragment_shader")) {
-            std::string vertex_shader_path = pass["vertex_shader"];
-            std::string fragment_shader_path = pass["fragment_shader"];
+            std::string vertex_shader_path = pass["vertex_shader"].get<jsonic::String>();
+            std::string fragment_shader_path = pass["fragment_shader"].get<jsonic::String>();
 
             auto parent_dir = unicode(kfs::path::dir_name(filename_.encode()));
 
