@@ -2,6 +2,7 @@
 #include <simulant/simulant.h>
 
 std::string passed_filename;
+bool stress_test = false;
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
@@ -13,11 +14,25 @@ public:
         pipeline->viewport->set_colour(smlt::Colour::GREY);
         pipeline->set_clear_flags(~0);
 
-        auto ps = stage_->new_particle_system_from_file(
-            passed_filename.empty() ? "simulant/particles/fire.kglp" : passed_filename
-        );
+        if(!stress_test) {
+            auto ps = stage_->new_particle_system_from_file(
+                passed_filename.empty() ? "simulant/particles/fire.kglp" : passed_filename
+            );
 
-        ps->move_to(0.0, 0, -4);
+            ps->move_to(0.0, 0, -4);
+        } else {
+            /* Generate 1024 particle system instances in a grid */
+            for(auto z = -16; z < 16; ++z) {
+                for(auto x = -16; x < 16; ++x) {
+                    auto ps = stage_->new_particle_system_from_file(
+                        passed_filename.empty() ? "simulant/particles/fire.kglp" : passed_filename
+                    );
+
+                    ps->move_to(x * 5, 0, z * 5);
+                }
+            }
+        }
+
 
         camera_->set_perspective_projection(
             smlt::Degrees(45.0),
@@ -57,6 +72,13 @@ int main(int argc, char* argv[]) {
 
     if(argc > 1) {
         passed_filename = argv[1];
+    }
+
+    for(auto i = 0; i < argc; ++i) {
+        if(std::string(argv[i]) == "--stress") {
+            stress_test = true;
+            break;
+        }
     }
 
     App app(config);

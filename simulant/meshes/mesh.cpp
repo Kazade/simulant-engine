@@ -510,17 +510,6 @@ SubMesh* Mesh::submesh(const std::string& name) {
     return nullptr;
 }
 
-void Mesh::prepare_buffers(Renderer* renderer) {
-    if(shared_vertex_buffer_dirty_ || !shared_vertex_buffer_) {
-        sync_buffer<VertexData, Renderer>(
-            &shared_vertex_buffer_, vertex_data_.get(),
-            renderer,
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
-        );
-        shared_vertex_buffer_dirty_ = false;
-    }
-}
-
 void Mesh::generate_adjacency_info() {
     adjacency_.reset(new AdjacencyInfo(this));
     adjacency_->rebuild();

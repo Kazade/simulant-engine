@@ -81,16 +81,15 @@ public:
     bool has_repeating_emitters() const;
     bool has_active_emitters() const;
 
-    void prepare_buffers(Renderer* renderer) override;
-    HardwareBuffer* vertex_attribute_buffer() const override {
-        return vertex_buffer_.get();
+    VertexData* vertex_data() const override {
+        return vertex_data_;
     }
 
-    HardwareBuffer* index_buffer() const override {
-        return index_buffer_.get();
+    IndexData* index_data() const override {
+        return index_data_;
     }
 
-    VertexSpecification vertex_attribute_specification() const override {
+    VertexSpecification vertex_specification() const override {
         return vertex_data_->specification();
     }
 
@@ -136,7 +135,7 @@ private:
 
     std::unique_ptr<HardwareBuffer> vertex_buffer_;
     std::unique_ptr<HardwareBuffer> index_buffer_;
-    bool resize_buffers_ = false;
+    bool resize_buffers_ = true;
 
     bool vertex_buffer_dirty_ = false;
     bool index_buffer_dirty_ = false;

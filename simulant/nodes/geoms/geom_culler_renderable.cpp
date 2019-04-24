@@ -10,43 +10,18 @@ GeomCullerRenderable::GeomCullerRenderable(GeomCuller *owner, MaterialID mat_id,
     culler_(owner),
     indices_(index_type),
     material_id_(mat_id) {
-
-    indices_.signal_update_complete().connect([&]() {
-        index_buffer_dirty_ = true;
-    });
 }
 
-void GeomCullerRenderable::prepare_buffers(Renderer *renderer) {
-    // Make sure the owner culler has a chance to do whatever it needs to
-    culler_->_prepare_buffers(renderer);
-
-    if(!index_buffer_) {
-        index_buffer_ = renderer->hardware_buffers->allocate(
-            indices_.data_size(),
-            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES,
-            SHADOW_BUFFER_DISABLED
-        );
-    }
-
-    if(index_buffer_dirty_) {
-        index_buffer_dirty_ = false;
-        if(indices_.data_size() > index_buffer_->size()) {
-            index_buffer_->resize(indices_.data_size());
-        }
-        index_buffer_->upload(indices_);
-    }
-}
-
-VertexSpecification GeomCullerRenderable::vertex_attribute_specification() const {
+VertexSpecification GeomCullerRenderable::vertex_specification() const {
     return culler_->_vertex_data()->specification();
 }
 
-HardwareBuffer *GeomCullerRenderable::vertex_attribute_buffer() const {
-    return culler_->_vertex_attribute_buffer();
+const VertexData *GeomCullerRenderable::vertex_data() const {
+    return culler_->_vertex_data();
 }
 
-HardwareBuffer *GeomCullerRenderable::index_buffer() const {
-    return index_buffer_.get();
+const IndexData *GeomCullerRenderable::index_data() const {
+    return &indices_;
 }
 
 std::size_t GeomCullerRenderable::index_element_count() const {

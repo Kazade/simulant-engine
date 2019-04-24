@@ -393,6 +393,11 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
 
 void VertexData::done() {
     signal_update_complete_();
+    last_updated_ = TimeKeeper::now_in_us();
+}
+
+uint64_t VertexData::last_updated() const {
+    return last_updated_;
 }
 
 bool VertexData::clone_into(VertexData& other) {
@@ -464,6 +469,11 @@ std::vector<uint32_t> IndexData::all() {
 
 void IndexData::done() {
     signal_update_complete_();
+    last_updated_ = TimeKeeper::now_in_us();
+}
+
+uint64_t IndexData::last_updated() const {
+    return last_updated_;
 }
 
 }

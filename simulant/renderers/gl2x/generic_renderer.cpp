@@ -329,7 +329,7 @@ void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Rendera
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */        
-    const VertexSpecification& vertex_spec = buffer.vertex_attribute_specification();
+    const VertexSpecification& vertex_spec = buffer.vertex_specification();
 
     send_attribute(
         program->locate_attribute("s_position", true),
@@ -652,19 +652,7 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     }
 
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
-
-    renderable->prepare_buffers(renderer_);
-
-    auto* vertex_buffer = renderable->vertex_attribute_buffer();
-    assert(vertex_buffer);
-
-    auto* index_buffer = renderable->index_buffer();
-    assert(index_buffer);
-
-    // Bind the buffers to the correct targets (purpose)
-    vertex_buffer->bind(HARDWARE_BUFFER_VERTEX_ATTRIBUTES);
-    index_buffer->bind(HARDWARE_BUFFER_VERTEX_ARRAY_INDICES);
-
+    renderer_->prepare_to_render(renderable);
     renderer_->set_auto_attributes_on_shader(program_, *renderable);
     renderer_->send_geometry(renderable);
 }
@@ -737,6 +725,33 @@ void GenericRenderer::init_context() {
     if(!default_gpu_program_id_) {
         default_gpu_program_id_ = new_or_existing_gpu_program(default_vertex_shader, default_fragment_shader);
     }
+}
+
+void GenericRenderer::prepare_to_render(Renderable *renderable) {
+    /* Here we allocate VBOs for the renderable if necessary, and then upload
+     * any new data */
+
+    GPUBuffer* gpu_buffer = buffer_manager_->find_buffer(renderable);
+    if(!gpu_buffer) {
+        gpu_buffer = buffer_manager_->allocate_buffer(renderable);
+    }
+
+    auto vertex_last_update = gpu_buffer->vertex_vbo->slot_last_updated(
+        gpu_buffer->vertex_vbo_slot
+    );
+
+    auto index_last_update = gpu_buffer->index_vbo->slot_last_updated(
+        gpu_buffer->index_vbo_slot
+    );
+
+    if(
+        (renderable->vertex_data()->last_updated() > vertex_last_update) ||
+        (renderable->index_data()->last_updated() > index_last_update)
+    ) {
+        gpu_buffer->sync_data_from_renderable(renderable);
+    }
+
+    gpu_buffer->bind_vbos();
 }
 
 

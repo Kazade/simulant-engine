@@ -149,8 +149,6 @@ public:
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
 
-    void prepare_buffers(Renderer *renderer);
-
     /* Generates adjacency information for this mesh. This is necessary for stencil shadowing
      * to work */
     void generate_adjacency_info();

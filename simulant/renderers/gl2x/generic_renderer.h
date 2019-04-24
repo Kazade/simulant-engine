@@ -24,7 +24,7 @@
 #include "../renderer.h"
 #include "../gl_renderer.h"
 #include "../../material.h"
-#include "./buffer_manager.h"
+#include "vbo_manager.h"
 #include "../batching/render_queue.h"
 
 namespace smlt {
@@ -80,7 +80,7 @@ public:
     GenericRenderer(Window* window):
         Renderer(window),
         GLRenderer(window),
-        buffer_manager_(new GL2BufferManager(this)) {
+        buffer_manager_(VBOManager::create()) {
 
     }
 
@@ -103,15 +103,12 @@ public:
         return "gl2x";
     }
 
+    void prepare_to_render(Renderable *renderable);
 private:
     GPUProgramManager program_manager_;
     GPUProgramID default_gpu_program_id_;
 
-    std::unique_ptr<HardwareBufferManager> buffer_manager_;
-
-    HardwareBufferManager* _get_buffer_manager() const {
-        return buffer_manager_.get();
-    }
+    std::shared_ptr<VBOManager> buffer_manager_;
 
     void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);

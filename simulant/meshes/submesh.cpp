@@ -15,9 +15,6 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
     arrangement_(arrangement) {
 
     index_data_ = new IndexData(index_type);
-    index_data_->signal_update_complete().connect([this]() {
-        this->index_buffer_dirty_ = true;
-    });
 
     if(!material) {
         //Set the material to the default one (store the pointer to increment the ref-count)
@@ -40,23 +37,6 @@ VertexData *SubMesh::get_vertex_data() const {
 
 IndexData* SubMesh::get_index_data() const {
     return index_data_;
-}
-
-HardwareBuffer* SubMesh::vertex_buffer() const {
-    return parent_->shared_vertex_buffer_.get();
-}
-
-void SubMesh::prepare_buffers(Renderer* renderer) {
-    parent_->prepare_buffers(renderer);
-
-    if(index_buffer_dirty_ || !index_buffer_) {
-        sync_buffer<IndexData, Renderer>(
-            &index_buffer_, index_data_,
-            renderer,
-            HARDWARE_BUFFER_VERTEX_ARRAY_INDICES
-        );
-        index_buffer_dirty_ = false;
-    }
 }
 
 void SubMesh::set_diffuse(const smlt::Colour& colour) {

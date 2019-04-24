@@ -52,10 +52,6 @@ const VertexData *OctreeCuller::_vertex_data() const {
     return &vertices_;
 }
 
-HardwareBuffer *OctreeCuller::_vertex_attribute_buffer() const {
-    return vertex_attribute_buffer_.get();
-}
-
 void OctreeCuller::_compile() {
     CullerTreeData data;
     data.vertices = &vertices_;
@@ -141,19 +137,6 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
     };
 
     pimpl_->octree->traverse_visible(frustum, visitor);
-}
-
-void OctreeCuller::_prepare_buffers(Renderer* renderer) {
-    if(!vertex_attribute_buffer_ && is_compiled()) {
-        vertex_attribute_buffer_ = renderer->hardware_buffers->allocate(
-            vertices_.data_size(),
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
-            SHADOW_BUFFER_DISABLED,
-            HARDWARE_BUFFER_MODIFY_ONCE_USED_FOR_RENDERING
-        );
-
-        vertex_attribute_buffer_->upload(vertices_);
-    }
 }
 
 AABB OctreeCuller::octree_bounds() const {

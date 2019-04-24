@@ -51,10 +51,6 @@ public:
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
 
-    Property<Renderer, HardwareBufferManager, true> hardware_buffers = { this, [](Renderer* self) {
-        return self->_get_buffer_manager();
-    }};
-
     virtual GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader, const std::string& fragment_shader) {
         return GPUProgramID();
     }
@@ -65,11 +61,12 @@ public:
 
     virtual std::string name() const = 0;
 
+    /* This function is called just before drawing the renderable, it can be
+     * used to upload any data to VRAM if necessary */
+    virtual void prepare_to_render(Renderable* renderable) = 0;
 public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }
-
-    virtual HardwareBufferManager* _get_buffer_manager() const = 0;
 
     void register_texture(TextureID tex_id, TexturePtr texture);
 

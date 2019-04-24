@@ -2,67 +2,87 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "../../simulant/hardware_buffer.h"
-#include "../../simulant/renderers/gl2x/buffer_manager.h"
+#include "../../simulant/renderers/gl2x/vbo_manager.h"
 
 namespace {
 
 using namespace smlt;
 
-class GL2Tests:
+class VBOManagerTests:
     public smlt::test::SimulantTestCase {
 
 private:
-    GL2BufferManager buffer_manager_;
+    VBOManager::ptr vbo_manager_;
+    StagePtr stage_;
+    MeshPtr mesh_;
+    CameraPtr camera_;
+public:
+    void set_up() {
+        smlt::test::SimulantTestCase::set_up();
+
+        vbo_manager_ = VBOManager::create();
+        stage_ = window->new_stage();
+        mesh_ = stage_->assets->new_mesh_as_cube(1.0f).fetch();
+        camera_ = stage_->new_camera();
+    }
+
+    void test_find_buffer() {
+        ActorPtr actor = stage_->new_actor_with_mesh(mesh_->id());
+
+        auto renderable = actor->_get_renderables(
+            camera_->frustum(),
+            DETAIL_LEVEL_NEAREST
+        )[0];
+
+        auto buffer = vbo_manager_->find_buffer(renderable.get());
+        assert_is_null(buffer);
+
+        auto allocated = vbo_manager_->allocate_buffer(renderable.get());
+        assert_equal(allocated, vbo_manager_->find_buffer(renderable.get()));
+    }
+
+    void test_allocate_buffer() {
+        ActorPtr actor = stage_->new_actor_with_mesh(mesh_->id());
+
+        auto renderable = actor->_get_renderables(
+            camera_->frustum(),
+            DETAIL_LEVEL_NEAREST
+        )[0];
+
+        GPUBuffer* allocated = vbo_manager_->allocate_buffer(renderable.get());
+
+        assert_true(allocated->vertex_vbo);
+        assert_equal(allocated->vertex_vbo_slot, 0u);
+
+        assert_true(allocated->index_vbo);
+        assert_equal(allocated->index_vbo_slot, 0u);
+
+        /* Should return the same buffer if we try to allocate again */
+        assert_equal(allocated, vbo_manager_->allocate_buffer(renderable.get()));
+    }
+};
+
+class VBOTests:
+    public smlt::test::SimulantTestCase {
+
+private:
+    VBO* vbo_ = nullptr;
 
 public:
-    GL2Tests():
-        buffer_manager_(nullptr) {
+    void test_allocate_slot() {
 
     }
 
-    void test_that_buffers_can_be_allocated() {
-        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        assert_equal(10u, buffer->size());
+    void test_release_slot() {
+
     }
 
-    void test_that_buffers_can_be_released() {
-        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        assert_equal(10u, buffer->size());
-        buffer->release();
-        assert_true(buffer->is_dead());
+    void test_upload() {
 
-        buffer->release(); // Second release should be no-op
-
-        const uint8_t random_data[8] = {0};
-
-        auto func = [&]() {
-            buffer->upload(random_data, 8);
-        };
-
-        // Trying to upload data to a dead buffer should raise a logic error
-        assert_raises(std::logic_error, func);
     }
 
-    void test_that_vertex_data_is_uploaded() {
-        smlt::VertexSpecification spec(smlt::VERTEX_ATTRIBUTE_3F);
-        smlt::VertexData data(spec);
+    void test_bind() {
 
-        data.position(smlt::Vec3());
-        data.move_next();
-
-        data.position(smlt::Vec3());
-        data.done();
-
-        auto small_buffer = buffer_manager_.allocate(spec.stride(), smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-
-        // Buffer is too small for the specified data, should raise an error
-        assert_raises(std::out_of_range, [&]() {
-            small_buffer->upload(data);
-        });
-
-        auto buffer = buffer_manager_.allocate(spec.stride() * 2, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        buffer->upload(data); //Should succeed
     }
 };
 

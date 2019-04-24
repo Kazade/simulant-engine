@@ -128,45 +128,6 @@ const AABB &ParticleSystem::aabb() const {
     return aabb_;
 }
 
-void ParticleSystem::prepare_buffers(Renderer *renderer) {
-
-    // Only resize the hardware buffers if someone called set_quota()
-    if(resize_buffers_) {
-        if(!vertex_buffer_) {
-            vertex_buffer_ = renderer->hardware_buffers->allocate(
-                vertex_data_->stride() * quota_ * 4,
-                HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
-                SHADOW_BUFFER_DISABLED
-            );
-        } else {
-            vertex_buffer_->resize(vertex_data_->stride() * quota_ * 4);
-        }
-
-        if(!index_buffer_) {
-            index_buffer_ = renderer->hardware_buffers->allocate(
-                sizeof(Index) * quota_ * 6,
-                HARDWARE_BUFFER_VERTEX_ARRAY_INDICES,
-                SHADOW_BUFFER_DISABLED
-            );
-        } else {
-            index_buffer_->resize(sizeof(Index) * quota_ * 6);
-        }
-
-        resize_buffers_ = false;
-    }
-
-    if(vertex_buffer_dirty_) {
-        vertex_buffer_->upload(*vertex_data_);
-        vertex_buffer_dirty_ = false;
-    }
-
-    if(index_buffer_dirty_) {
-        index_buffer_->upload(*index_data_);
-        index_buffer_dirty_ = false;
-    }
-}
-
-
 bool ParticleSystem::has_repeating_emitters() const {
     for(auto e: emitters_) {
         auto range = e->repeat_delay_range();
@@ -268,6 +229,9 @@ void ParticleSystem::update(float dt) {
     const static auto v4n = Vec3(-0.5,  0.5, 0.0);
 
     vertex_data_->move_to_start();
+
+    assert(particles_.size() <= quota_);
+
     vertex_data_->resize(particles_.size() * 4);
     for(auto& particle: particles_) {
         auto scale = Vec3(particle.dimensions.x, particle.dimensions.y, 0);

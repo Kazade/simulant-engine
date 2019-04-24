@@ -15,11 +15,9 @@ public:
         return MESH_ARRANGEMENT_TRIANGLES;
     }
 
-    virtual void prepare_buffers(Renderer* renderer);
-
-    virtual VertexSpecification vertex_attribute_specification() const;
-    virtual HardwareBuffer* vertex_attribute_buffer() const;
-    virtual HardwareBuffer* index_buffer() const;
+    virtual VertexSpecification vertex_specification() const;
+    virtual const VertexData* vertex_data() const;
+    virtual const IndexData* index_data() const;
     virtual std::size_t index_element_count() const;
     virtual IndexType index_type() const;
     RenderPriority render_priority() const;
@@ -31,10 +29,8 @@ public:
     const AABB& aabb() const;
 
 private:
-    std::shared_ptr<HardwareBuffer> index_buffer_;
     GeomCuller* culler_;
     IndexData indices_;
-    bool index_buffer_dirty_ = true;
     std::shared_ptr<Geom> geom_;
     MaterialID material_id_;
 };
