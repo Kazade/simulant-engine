@@ -23,8 +23,8 @@ GPUBuffer *VBOManager::find_buffer(Renderable *renderable) {
 
     GPUBuffer* buffers = &it->second;
 
-    if((renderable->vertex_data()->data_size() > (int) buffers->vertex_vbo->slot_size() * 1024) ||
-        (renderable->index_data()->data_size() > (int) buffers->index_vbo->slot_size() * 1024)) {
+    if((renderable->vertex_data()->data_size() > (int) buffers->vertex_vbo->slot_size()) ||
+        (renderable->index_data()->data_size() > (int) buffers->index_vbo->slot_size())) {
 
         L_DEBUG_VBO("Renderable exceeds slot size, reallocating");
 
@@ -210,7 +210,6 @@ void VBO::upload(VBOSlot slot, const VertexData *vertex_data) {
     uint32_t offset = (slot % SLOTS_PER_BUFFER) * slot_size_in_bytes_;
 
     bind(slot);
-    std::cout << "Offset: " << offset << " Size: " << vertex_data->data_size() << std::endl;
     GLCheck(glBufferSubData, type_, offset, vertex_data->data_size(), vertex_data->data());
 }
 
@@ -219,7 +218,6 @@ void VBO::upload(VBOSlot slot, const IndexData *index_data) {
     uint32_t offset = (slot % SLOTS_PER_BUFFER) * slot_size_in_bytes_;
 
     bind(slot);
-    std::cout << "Offset: " << offset << " Size: " << index_data->data_size() << std::endl;
     GLCheck(glBufferSubData, type_, offset, index_data->data_size(), index_data->data());
 }
 

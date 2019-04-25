@@ -422,8 +422,8 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
     renderer_->prepare_to_render(renderable);
 
-    auto vertex_data = renderable->vertex_data();
-    auto index_data = renderable->index_data();
+    auto vertex_data = renderable->vertex_data()->data();
+    auto index_data = renderable->index_data()->data();
 
     (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
     (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();

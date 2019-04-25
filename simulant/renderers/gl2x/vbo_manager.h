@@ -41,7 +41,6 @@ struct GPUBuffer {
     uint64_t last_updated;
 
     void sync_data_from_renderable(Renderable* renderable);
-
     void bind_vbos();
 };
 
@@ -94,6 +93,11 @@ public:
     void bind(VBOSlot slot);
 
     VBOSlotSize slot_size() const { return slot_size_; }
+
+    uint32_t byte_offset(VBOSlot slot) {
+        const int SLOTS_PER_BUFFER = (VBO_SIZE / slot_size_in_bytes_);
+        return (slot % SLOTS_PER_BUFFER) * slot_size_in_bytes_;
+    }
 
 private:
     void allocate_new_gl_buffer();

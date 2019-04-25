@@ -297,7 +297,7 @@ void send_attribute(int32_t loc,
                     VertexAttributeType attr,
                     const VertexSpecification& vertex_spec,
                     EnabledMethod exists_on_data_predicate,
-                    OffsetMethod offset_func) {
+                    OffsetMethod offset_func, uint32_t global_offset) {
 
     if(loc > -1 && (vertex_spec.*exists_on_data_predicate)()) {
         auto offset = (vertex_spec.*offset_func)(false);
@@ -314,7 +314,7 @@ void send_attribute(int32_t loc,
             GL_FLOAT,
             GL_FALSE,
             stride,
-            BUFFER_OFFSET(offset)
+            BUFFER_OFFSET(global_offset + offset)
         );
     } else if(loc > -1){
         disable_vertex_attribute(loc);
@@ -331,12 +331,16 @@ void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Rendera
      */        
     const VertexSpecification& vertex_spec = buffer.vertex_specification();
 
+    auto gpu_buffers = buffer_manager_->find_buffer(&buffer);
+    auto offset = gpu_buffers->vertex_vbo->byte_offset(gpu_buffers->vertex_vbo_slot);
+
     send_attribute(
         program->locate_attribute("s_position", true),
         VERTEX_ATTRIBUTE_TYPE_POSITION,
         vertex_spec,
         &VertexSpecification::has_positions,
-        &VertexSpecification::position_offset
+        &VertexSpecification::position_offset,
+        offset
     );
 
     send_attribute(
@@ -344,14 +348,29 @@ void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Rendera
         VERTEX_ATTRIBUTE_TYPE_DIFFUSE,
         vertex_spec,
         &VertexSpecification::has_diffuse,
-        &VertexSpecification::diffuse_offset
+        &VertexSpecification::diffuse_offset,
+        offset
     );
 
-    send_attribute(program->locate_attribute("s_texcoord0", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec, &VertexSpecification::has_texcoord0, &VertexSpecification::texcoord0_offset);
-    send_attribute(program->locate_attribute("s_texcoord1", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD1, vertex_spec, &VertexSpecification::has_texcoord1, &VertexSpecification::texcoord1_offset);
-    send_attribute(program->locate_attribute("s_texcoord2", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD2, vertex_spec, &VertexSpecification::has_texcoord2, &VertexSpecification::texcoord2_offset);
-    send_attribute(program->locate_attribute("s_texcoord3", true), VERTEX_ATTRIBUTE_TYPE_TEXCOORD3, vertex_spec, &VertexSpecification::has_texcoord3, &VertexSpecification::texcoord3_offset);
-    send_attribute(program->locate_attribute("s_normal", true), VERTEX_ATTRIBUTE_TYPE_NORMAL, vertex_spec, &VertexSpecification::has_normals, &VertexSpecification::normal_offset);
+    send_attribute( program->locate_attribute("s_texcoord0", true),
+                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec,
+                    &VertexSpecification::has_texcoord0,
+                    &VertexSpecification::texcoord0_offset, offset);
+    send_attribute(program->locate_attribute("s_texcoord1", true),
+                   VERTEX_ATTRIBUTE_TYPE_TEXCOORD1, vertex_spec,
+                   &VertexSpecification::has_texcoord1,
+                   &VertexSpecification::texcoord1_offset, offset);
+    send_attribute(program->locate_attribute("s_texcoord2", true),
+                   VERTEX_ATTRIBUTE_TYPE_TEXCOORD2, vertex_spec,
+                   &VertexSpecification::has_texcoord2,
+                   &VertexSpecification::texcoord2_offset, offset);
+    send_attribute(program->locate_attribute("s_texcoord3", true),
+                   VERTEX_ATTRIBUTE_TYPE_TEXCOORD3, vertex_spec,
+                   &VertexSpecification::has_texcoord3,
+                   &VertexSpecification::texcoord3_offset, offset);
+    send_attribute(program->locate_attribute("s_normal", true),
+                   VERTEX_ATTRIBUTE_TYPE_NORMAL, vertex_spec,
+                   &VertexSpecification::has_normals, &VertexSpecification::normal_offset, offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {
@@ -652,7 +671,7 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     }
 
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
-    renderer_->prepare_to_render(renderable);
+    renderer_->prepare_to_render(renderable);    
     renderer_->set_auto_attributes_on_shader(program_, *renderable);
     renderer_->send_geometry(renderable);
 }
@@ -709,7 +728,10 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
     auto index_type = convert_index_type(renderable->index_type());
     auto arrangement = renderable->arrangement();
 
-    GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(0));
+    auto gpu_buffers = buffer_manager_->find_buffer(renderable);
+    auto offset = gpu_buffers->index_vbo->byte_offset(gpu_buffers->index_vbo_slot);
+
+    GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(offset));
     window->stats->increment_polygons_rendered(arrangement, element_count);
 }
 
