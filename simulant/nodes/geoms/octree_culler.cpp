@@ -32,7 +32,7 @@ struct _OctreeCullerImpl {
 OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh):
     GeomCuller(geom, mesh),
     pimpl_(new _OctreeCullerImpl()),
-    vertices_(mesh->vertex_data->specification()) {
+    vertices_(mesh->vertex_data->vertex_specification()) {
 
     /* We have to clone the vertex data as the mesh will be destroyed */
     mesh->vertex_data->clone_into(vertices_);

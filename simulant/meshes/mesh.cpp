@@ -387,7 +387,7 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
 
     auto idx_offset = sm->vertex_data->count();
 
-    auto spec = sm->vertex_data->specification();
+    auto spec = sm->vertex_data->vertex_specification();
     sm->vertex_data->move_to_end();
 
     //Build some shared vertex data
@@ -460,13 +460,13 @@ void Mesh::transform_vertices(const smlt::Mat4& transform) {
     vertex_data->move_to_start();
 
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
-        if(vertex_data->specification().has_positions()) {
+        if(vertex_data->vertex_specification().has_positions()) {
             smlt::Vec3 v = vertex_data->position_at<Vec3>(i);
             v = v.transformed_by(transform);
             vertex_data->position(v);
         }
 
-        if(vertex_data->specification().has_normals()) {
+        if(vertex_data->vertex_specification().has_normals()) {
             smlt::Vec3 n;
             vertex_data->normal_at(i, n);
             n = n.rotated_by(transform);

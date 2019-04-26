@@ -2,97 +2,112 @@
 
 namespace smlt {
 
-void GPUBuffer::sync_data_from_renderable(smlt::Renderable *renderable) {
-    vertex_vbo->upload(vertex_vbo_slot, renderable->vertex_data());
-    index_vbo->upload(index_vbo_slot, renderable->index_data());
-
-    last_updated = TimeKeeper::now_in_us();
-}
-
 void GPUBuffer::bind_vbos() {
     vertex_vbo->bind(vertex_vbo_slot);
     index_vbo->bind(index_vbo_slot);
 }
 
-GPUBuffer *VBOManager::find_buffer(Renderable *renderable) {
-    auto id = renderable->uuid();
-    auto it = gpu_buffers_.find(id);
-    if(it == gpu_buffers_.end()) {
-        return nullptr;
-    }
-
-    GPUBuffer* buffers = &it->second;
-
-    if((renderable->vertex_data()->data_size() > (int) buffers->vertex_vbo->slot_size()) ||
-        (renderable->index_data()->data_size() > (int) buffers->index_vbo->slot_size())) {
-
-        L_DEBUG_VBO("Renderable exceeds slot size, reallocating");
-
-        buffers = reallocate_buffer(renderable);
-    }
-
-    return buffers;
-}
-
-GPUBuffer* VBOManager::reallocate_buffer(Renderable* renderable) {
-    GPUBuffer* buffers = &gpu_buffers_.at(renderable->uuid());
-
-    buffers->vertex_vbo->release_slot(buffers->vertex_vbo_slot);
-    buffers->index_vbo->release_slot(buffers->index_vbo_slot);
-
+GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
     const auto& vdata = renderable->vertex_data();
-    auto vpair = allocate_slot(
-        vdata->specification(),
-        vdata->data_size()
-    );
-
-    buffers->vertex_vbo = vpair.first;
-    buffers->vertex_vbo_slot = vpair.second;
-
     const auto& idata = renderable->index_data();
-    auto ipair = allocate_slot(
-        idata->index_type(),
-        idata->data_size()
-    );
 
-    buffers->index_vbo = ipair.first;
-    buffers->index_vbo_slot = ipair.second;
-    buffers->last_updated = 0;
+    uuid64 vid = vdata->uuid();
+    uuid64 iid = idata->uuid();
 
-    return buffers;
-}
+    auto vit = vertex_data_slots_.find(vid);
+    auto iit = index_data_slots_.find(iid);
 
-GPUBuffer *VBOManager::allocate_buffer(Renderable *renderable) {
-    auto existing = find_buffer(renderable);
-    if(existing) {
-        return existing;
+    VBO* vvbo = nullptr, *ivbo = nullptr;
+    VBOSlot vslot = 0, islot = 0;
+
+    bool upload_vdata = false, upload_idata = false;
+
+    if(vit == vertex_data_slots_.end()) {
+        /* OK, first time we've seen this vertex data, let's allocate! */
+        auto vpair = allocate_slot(vdata->vertex_specification(), vdata->data_size());
+        vertex_data_slots_.insert(std::make_pair(vid, vpair));
+
+        vvbo = vpair.first;
+        vslot = vpair.second;
+
+        upload_vdata = true;
+    } else {
+        /* We've seen this before... does it need updating? */
+        vvbo = vit->second.first;
+        vslot = vit->second.second;
+
+        if(vdata->data_size() > vvbo->slot_size()) {
+            /* Data size increased past the slot size, we need to free and reallocate */
+            /* Data size increased past the slot size, we need to free and reallocate */
+            vvbo->release_slot(vslot);
+            auto vpair = allocate_slot(vdata->vertex_specification(), vdata->data_size());
+            vertex_data_slots_[vid] = vpair;
+            vvbo = vpair.first;
+            vslot = vpair.second;
+            upload_vdata = true;
+        }
+
+        // FIXME: What if the vertex buffer reduces in size to below the next slot, do we
+        // bother reallocating?
+
+        if(vdata->last_updated() > vvbo->slot_last_updated(vslot)) {
+            upload_vdata = true;
+        }
     }
 
-    auto id = renderable->uuid();
+    assert(vvbo);
+
+    if(upload_vdata) {
+        /* Vertex data changed since previous upload, so upload again */
+        vvbo->bind(vslot);
+        vvbo->upload(vslot, vdata);
+    }
+
+    if(iit == index_data_slots_.end()) {
+        /* OK, first time we've seen this index data, let's allocate! */
+        auto ipair = allocate_slot(idata->index_type(), idata->data_size());
+        index_data_slots_.insert(std::make_pair(iid, ipair));
+        upload_idata = true;
+
+        ivbo = ipair.first;
+        islot = ipair.second;
+    } else {
+        /* We've seen this before... does it need updating? */
+        ivbo = iit->second.first;
+        islot = iit->second.second;
+
+        if(idata->data_size() > ivbo->slot_size()) {
+            /* Data size increased past the slot size, we need to free and reallocate */
+            ivbo->release_slot(islot);
+            auto ipair = allocate_slot(idata->index_type(), idata->data_size());
+            index_data_slots_[iid] = ipair;
+            ivbo = ipair.first;
+            islot = ipair.second;
+            upload_idata = true;
+        }
+
+        if(idata->last_updated() > ivbo->slot_last_updated(islot)) {
+            upload_idata = true;
+        }
+    }
+
+    if(upload_idata) {
+        /* Index data changed since previous upload, so upload again */
+        ivbo->bind(islot);
+        ivbo->upload(islot, idata);
+    }
 
     GPUBuffer buffer;
 
-    const auto& vdata = renderable->vertex_data();
-    auto vpair = allocate_slot(
-        vdata->specification(),
-        vdata->data_size()
-    );
+    assert(vvbo->target() == GL_ARRAY_BUFFER);
+    assert(ivbo->target() == GL_ELEMENT_ARRAY_BUFFER);
 
-    buffer.vertex_vbo = vpair.first;
-    buffer.vertex_vbo_slot = vpair.second;
+    buffer.index_vbo = ivbo;
+    buffer.vertex_vbo = vvbo;
+    buffer.index_vbo_slot = islot;
+    buffer.vertex_vbo_slot = vslot;
 
-    const auto& idata = renderable->index_data();
-    auto ipair = allocate_slot(
-        idata->index_type(),
-        idata->data_size()
-    );
-
-    buffer.index_vbo = ipair.first;
-    buffer.index_vbo_slot = ipair.second;
-    buffer.last_updated = 0;
-
-    gpu_buffers_.insert(std::make_pair(id, buffer));
-    return &gpu_buffers_[id];
+    return buffer;
 }
 
 VBOSlotSize VBOManager::calc_vbo_slot_size(uint32_t required_size_in_bytes) {
@@ -211,6 +226,8 @@ void VBO::upload(VBOSlot slot, const VertexData *vertex_data) {
 
     bind(slot);
     GLCheck(glBufferSubData, type_, offset, vertex_data->data_size(), vertex_data->data());
+
+    metas_[slot].last_updated = TimeKeeper::now_in_us();
 }
 
 void VBO::upload(VBOSlot slot, const IndexData *index_data) {
@@ -218,12 +235,16 @@ void VBO::upload(VBOSlot slot, const IndexData *index_data) {
     uint32_t offset = (slot % SLOTS_PER_BUFFER) * slot_size_in_bytes_;
 
     bind(slot);
+
     GLCheck(glBufferSubData, type_, offset, index_data->data_size(), index_data->data());
+
+    metas_[slot].last_updated = TimeKeeper::now_in_us();
 }
 
 void VBO::bind(VBOSlot slot) {
     const int SLOTS_PER_BUFFER = (VBO_SIZE / slot_size_in_bytes_);
     GLuint vbo_id = gl_ids_[slot / SLOTS_PER_BUFFER];
+
     GLCheck(glBindBuffer, type_, vbo_id);
 }
 

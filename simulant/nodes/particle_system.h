@@ -90,7 +90,7 @@ public:
     }
 
     VertexSpecification vertex_specification() const override {
-        return vertex_data_->specification();
+        return vertex_data_->vertex_specification();
     }
 
     std::size_t index_element_count() const override {

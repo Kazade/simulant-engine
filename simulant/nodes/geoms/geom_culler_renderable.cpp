@@ -13,7 +13,7 @@ GeomCullerRenderable::GeomCullerRenderable(GeomCuller *owner, MaterialID mat_id,
 }
 
 VertexSpecification GeomCullerRenderable::vertex_specification() const {
-    return culler_->_vertex_data()->specification();
+    return culler_->_vertex_data()->vertex_specification();
 }
 
 const VertexData *GeomCullerRenderable::vertex_data() const {

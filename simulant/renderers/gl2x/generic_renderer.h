@@ -115,9 +115,12 @@ private:
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);
 
-    void set_auto_attributes_on_shader(GPUProgram *program, Renderable &buffer);
+    void set_auto_attributes_on_shader(GPUProgram *program, Renderable* buffer, GPUBuffer* buffers);
     void set_blending_mode(BlendType type);
-    void send_geometry(Renderable* renderable);
+    void send_geometry(Renderable* renderable, GPUBuffer* buffers);
+
+    /* Stashed here in prepare_to_render and used later for that renderable */
+    GPUBuffer buffer_stash_;
 
     friend class GL2RenderQueueVisitor;
 

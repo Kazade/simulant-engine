@@ -23,6 +23,8 @@
 #include "deps/kazsignal/kazsignal.h"
 
 #include "generic/managed.h"
+#include "generic/uniquely_identifiable.h"
+
 #include "colour.h"
 #include "types.h"
 
@@ -49,7 +51,8 @@ enum VertexAttributeType {
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
 
 class VertexData :
-    public Managed<VertexData> {
+    public Managed<VertexData>,
+    public UniquelyIdentifiable<VertexData> {
 
 public:
     VertexData(VertexSpecification vertex_specification);
@@ -173,7 +176,7 @@ public:
         vertex_count_ = size;
     }
 
-    const VertexSpecification& specification() const { return vertex_specification_; }
+    const VertexSpecification& vertex_specification() const { return vertex_specification_; }
 
     /* Clones this VertexData into another. The other data must have the same
      * specification and will be wiped if it contains vertices already.
@@ -241,7 +244,10 @@ Vec4 VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 
 typedef uint32_t Index;
 
-class IndexData {
+class IndexData:
+    public Managed<IndexData>,
+    public UniquelyIdentifiable<IndexData> {
+
 public:
     IndexData(IndexType type);
 

@@ -322,17 +322,15 @@ void send_attribute(int32_t loc,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Renderable &buffer) {
+void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Renderable* renderable, GPUBuffer* buffers) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */        
-    const VertexSpecification& vertex_spec = buffer.vertex_specification();
-
-    auto gpu_buffers = buffer_manager_->find_buffer(&buffer);
-    auto offset = gpu_buffers->vertex_vbo->byte_offset(gpu_buffers->vertex_vbo_slot);
+    const VertexSpecification& vertex_spec = renderable->vertex_specification();
+    auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
 
     send_attribute(
         program->locate_attribute("s_position", true),
@@ -671,9 +669,9 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     }
 
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
-    renderer_->prepare_to_render(renderable);    
-    renderer_->set_auto_attributes_on_shader(program_, *renderable);
-    renderer_->send_geometry(renderable);
+    renderer_->prepare_to_render(renderable);
+    renderer_->set_auto_attributes_on_shader(program_, renderable, &renderer_->buffer_stash_);
+    renderer_->send_geometry(renderable, &renderer_->buffer_stash_);
 }
 
 static GLenum convert_index_type(IndexType type) {
@@ -719,7 +717,7 @@ GPUProgramID GenericRenderer::current_gpu_program_id() const {
     return ret;
 }
 
-void GenericRenderer::send_geometry(Renderable *renderable) {
+void GenericRenderer::send_geometry(Renderable *renderable, GPUBuffer *buffers) {
     auto element_count = renderable->index_element_count();
     if(!element_count) {
         return;
@@ -728,8 +726,7 @@ void GenericRenderer::send_geometry(Renderable *renderable) {
     auto index_type = convert_index_type(renderable->index_type());
     auto arrangement = renderable->arrangement();
 
-    auto gpu_buffers = buffer_manager_->find_buffer(renderable);
-    auto offset = gpu_buffers->index_vbo->byte_offset(gpu_buffers->index_vbo_slot);
+    auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
 
     GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(offset));
     window->stats->increment_polygons_rendered(arrangement, element_count);
@@ -752,28 +749,8 @@ void GenericRenderer::init_context() {
 void GenericRenderer::prepare_to_render(Renderable *renderable) {
     /* Here we allocate VBOs for the renderable if necessary, and then upload
      * any new data */
-
-    GPUBuffer* gpu_buffer = buffer_manager_->find_buffer(renderable);
-    if(!gpu_buffer) {
-        gpu_buffer = buffer_manager_->allocate_buffer(renderable);
-    }
-
-    auto vertex_last_update = gpu_buffer->vertex_vbo->slot_last_updated(
-        gpu_buffer->vertex_vbo_slot
-    );
-
-    auto index_last_update = gpu_buffer->index_vbo->slot_last_updated(
-        gpu_buffer->index_vbo_slot
-    );
-
-    if(
-        (renderable->vertex_data()->last_updated() > vertex_last_update) ||
-        (renderable->index_data()->last_updated() > index_last_update)
-    ) {
-        gpu_buffer->sync_data_from_renderable(renderable);
-    }
-
-    gpu_buffer->bind_vbos();
+    buffer_stash_ = buffer_manager_->update_and_fetch_buffers(renderable);
+    buffer_stash_.bind_vbos();
 }
 
 

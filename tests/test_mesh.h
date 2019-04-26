@@ -164,14 +164,14 @@ public:
 
         auto& data = mesh->vertex_data;
 
-        assert_true(data->specification().has_positions());
-        assert_true(!data->specification().has_normals());
-        assert_true(!data->specification().has_texcoord0());
-        assert_true(!data->specification().has_texcoord1());
-        assert_true(!data->specification().has_texcoord2());
-        assert_true(!data->specification().has_texcoord3());
-        assert_true(!data->specification().has_diffuse());
-        assert_true(!data->specification().has_specular());
+        assert_true(data->vertex_specification().has_positions());
+        assert_true(!data->vertex_specification().has_normals());
+        assert_true(!data->vertex_specification().has_texcoord0());
+        assert_true(!data->vertex_specification().has_texcoord1());
+        assert_true(!data->vertex_specification().has_texcoord2());
+        assert_true(!data->vertex_specification().has_texcoord3());
+        assert_true(!data->vertex_specification().has_diffuse());
+        assert_true(!data->vertex_specification().has_specular());
         assert_equal(4u, data->count());
 
         assert_equal(2u, mesh->submesh_count());

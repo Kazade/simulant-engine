@@ -25,41 +25,6 @@ public:
         mesh_ = stage_->assets->new_mesh_as_cube(1.0f).fetch();
         camera_ = stage_->new_camera();
     }
-
-    void test_find_buffer() {
-        ActorPtr actor = stage_->new_actor_with_mesh(mesh_->id());
-
-        auto renderable = actor->_get_renderables(
-            camera_->frustum(),
-            DETAIL_LEVEL_NEAREST
-        )[0];
-
-        auto buffer = vbo_manager_->find_buffer(renderable.get());
-        assert_is_null(buffer);
-
-        auto allocated = vbo_manager_->allocate_buffer(renderable.get());
-        assert_equal(allocated, vbo_manager_->find_buffer(renderable.get()));
-    }
-
-    void test_allocate_buffer() {
-        ActorPtr actor = stage_->new_actor_with_mesh(mesh_->id());
-
-        auto renderable = actor->_get_renderables(
-            camera_->frustum(),
-            DETAIL_LEVEL_NEAREST
-        )[0];
-
-        GPUBuffer* allocated = vbo_manager_->allocate_buffer(renderable.get());
-
-        assert_true(allocated->vertex_vbo);
-        assert_equal(allocated->vertex_vbo_slot, 0u);
-
-        assert_true(allocated->index_vbo);
-        assert_equal(allocated->index_vbo_slot, 0u);
-
-        /* Should return the same buffer if we try to allocate again */
-        assert_equal(allocated, vbo_manager_->allocate_buffer(renderable.get()));
-    }
 };
 
 class VBOTests:

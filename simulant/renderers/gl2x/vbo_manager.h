@@ -38,8 +38,6 @@ struct GPUBuffer {
     VBOSlot vertex_vbo_slot;
     VBOSlot index_vbo_slot;
 
-    uint64_t last_updated;
-
     void sync_data_from_renderable(Renderable* renderable);
     void bind_vbos();
 };
@@ -78,6 +76,8 @@ public:
     uint64_t slot_last_updated(VBOSlot slot) {
         return metas_[slot].last_updated;
     }
+
+    GLenum target() const { return type_; }
 
     VBOSlot allocate_slot();
 
@@ -121,9 +121,7 @@ private:
 
 class VBOManager : public Managed<VBOManager> {
 public:
-    GPUBuffer* find_buffer(Renderable* renderable);
-    GPUBuffer* allocate_buffer(Renderable* renderable);
-    GPUBuffer* reallocate_buffer(Renderable* renderable);
+    GPUBuffer update_and_fetch_buffers(Renderable* renderable);
 
 private:
     VBOSlotSize calc_vbo_slot_size(uint32_t required_size_in_bytes);
@@ -142,10 +140,9 @@ private:
         VBO_SLOT_SIZE_COUNT
     > shared_index_vbos_;
 
-    std::unordered_map<
-        uint64_t,
-        GPUBuffer
-    > gpu_buffers_;
+
+    std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> vertex_data_slots_;
+    std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> index_data_slots_;
 };
 
 }

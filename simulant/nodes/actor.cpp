@@ -49,7 +49,7 @@ Actor::~Actor() {
 VertexSpecification SubActor::vertex_specification() const {
     auto* vertex_data = get_vertex_data();
     if(vertex_data) {
-        return vertex_data->specification();
+        return vertex_data->vertex_specification();
     }
 
     return VertexSpecification();
@@ -139,7 +139,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     if(detail_level == DETAIL_LEVEL_NEAREST && has_animated_mesh(detail_level)) {
         using namespace std::placeholders;
 
-        interpolated_vertex_data_ = std::make_shared<VertexData>(meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->specification());
+        interpolated_vertex_data_ = std::make_shared<VertexData>(meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_specification());
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
             meshes_[detail_level],
             std::bind(&Actor::refresh_animation_state, this, _1, _2, _3)

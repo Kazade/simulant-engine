@@ -31,7 +31,7 @@ void AdjacencyInfo::rebuild() {
     std::unordered_map<edge_pair, uint32_t> edge_triangles;
 
     // FIXME: handle other types
-    if(mesh_->vertex_data->specification().position_attribute != VERTEX_ATTRIBUTE_3F) {
+    if(mesh_->vertex_data->vertex_specification().position_attribute != VERTEX_ATTRIBUTE_3F) {
         L_WARN("Adjacency info currently only supported on 3D vertices");
         return;
     }

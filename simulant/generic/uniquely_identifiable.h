@@ -4,6 +4,10 @@
  * across objects of this type. Copying / assigning the object will
  * generate a new uuid! */
 
+namespace smlt {
+
+typedef uint64_t uuid64;
+
 template<typename T>
 class UniquelyIdentifiable {
 public:
@@ -22,16 +26,18 @@ public:
         return *this;
     }
 
-    uint64_t uuid() const {
+    uuid64 uuid() const {
         return uuid_;
     }
 
 private:
     /* FIXME: Do something better */
-    static uint64_t generate_uuid() {
-        static uint64_t counter = ~0;
+    static uuid64 generate_uuid() {
+        static uuid64 counter = ~0;
         return --counter;
     }
 
-    uint64_t uuid_;
+    uuid64 uuid_;
 };
+
+}
