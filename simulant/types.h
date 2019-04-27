@@ -601,18 +601,18 @@ namespace std{
         size_t operator()(const smlt::VertexSpecification& spec) const {
             size_t seed = 0;
 
-            hash_combine(seed, spec.position_attribute_);
-            hash_combine(seed, spec.normal_attribute_);
-            hash_combine(seed, spec.texcoord0_attribute_);
-            hash_combine(seed, spec.texcoord1_attribute_);
-            hash_combine(seed, spec.texcoord2_attribute_);
-            hash_combine(seed, spec.texcoord3_attribute_);
-            hash_combine(seed, spec.texcoord4_attribute_);
-            hash_combine(seed, spec.texcoord5_attribute_);
-            hash_combine(seed, spec.texcoord6_attribute_);
-            hash_combine(seed, spec.texcoord7_attribute_);
-            hash_combine(seed, spec.diffuse_attribute_);
-            hash_combine(seed, spec.specular_attribute_);
+            hash_combine(seed, (unsigned int) spec.position_attribute_);
+            hash_combine(seed, (unsigned int) spec.normal_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord0_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord1_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord2_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord3_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord4_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord5_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord6_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord7_attribute_);
+            hash_combine(seed, (unsigned int) spec.diffuse_attribute_);
+            hash_combine(seed, (unsigned int) spec.specular_attribute_);
             return seed;
         }
     };
