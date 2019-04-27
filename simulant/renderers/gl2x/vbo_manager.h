@@ -57,17 +57,79 @@ enum VBOSlotSize {
 
 const int VBO_SLOT_SIZE_COUNT = 11;
 
-class VBO:
-    public Managed<VBO> {
+class VBO {
+public:
+    virtual ~VBO() {}
+
+    virtual GLenum target() const = 0;
+    virtual void upload(VBOSlot, const VertexData* vertex_data) = 0;
+    virtual void upload(VBOSlot, const IndexData* index_data) = 0;
+    virtual void bind(VBOSlot) = 0;
+    virtual uint64_t slot_last_updated(VBOSlot slot) = 0;
+    virtual uint32_t byte_offset(VBOSlot slot) = 0;
+    virtual uint32_t slot_size_in_bytes() const = 0;
+
+    virtual VBOSlot allocate_slot() = 0;
+    virtual void release_slot(VBOSlot slot) = 0;
+};
+
+class DedicatedVBO:
+    public Managed<DedicatedVBO>,
+    public VBO {
 
 public:
-    VBO(VBOSlotSize slot_size, VertexSpecification spec):
+    DedicatedVBO(uint32_t size, VertexSpecification spec):
+        size_in_bytes_(size),
+        spec_(spec),
+        type_(GL_ARRAY_BUFFER) {}
+
+    DedicatedVBO(uint32_t size, IndexType index_type):
+        size_in_bytes_(size),
+        index_type_(index_type),
+        type_(GL_ELEMENT_ARRAY_BUFFER) {}
+
+    uint64_t slot_last_updated(VBOSlot slot) { assert(slot == 0); return last_updated_; }
+    GLenum target() const { return type_; }
+
+    void upload(VBOSlot, const VertexData* vertex_data);
+    void upload(VBOSlot, const IndexData* index_data);
+    void bind(VBOSlot);
+
+    uint32_t byte_offset(VBOSlot slot) {
+        assert(slot == 0);
+        return 0;
+    }
+
+    uint32_t slot_size_in_bytes() const {
+        return size_in_bytes_;
+    }
+
+    VBOSlot allocate_slot();
+    void release_slot(VBOSlot slot);
+
+private:
+    uint32_t size_in_bytes_;
+    VertexSpecification spec_;
+    IndexType index_type_;
+    GLenum type_;
+
+    uint64_t last_updated_;
+    bool allocated_ = false;
+    GLuint gl_id_ = 0;
+};
+
+class SharedVBO:
+    public Managed<SharedVBO>,
+    public VBO {
+
+public:
+    SharedVBO(VBOSlotSize slot_size, VertexSpecification spec):
         slot_size_(slot_size),
         slot_size_in_bytes_(int(slot_size)),
         spec_(spec),
         type_(GL_ARRAY_BUFFER) {}
 
-    VBO(VBOSlotSize slot_size, IndexType type):
+    SharedVBO(VBOSlotSize slot_size, IndexType type):
         slot_size_(slot_size),
         slot_size_in_bytes_(int(slot_size)),
         index_type_(type),
@@ -87,12 +149,11 @@ public:
     }
 
     void upload(VBOSlot slot, const VertexData* vertex_data);
-
     void upload(VBOSlot slot, const IndexData* index_data);
-
     void bind(VBOSlot slot);
 
     VBOSlotSize slot_size() const { return slot_size_; }
+    uint32_t slot_size_in_bytes() const { return int(slot_size_); }
 
     uint32_t byte_offset(VBOSlot slot) {
         const int SLOTS_PER_BUFFER = (VBO_SIZE / slot_size_in_bytes_);
@@ -126,20 +187,22 @@ public:
 private:
     VBOSlotSize calc_vbo_slot_size(uint32_t required_size_in_bytes);
 
-    std::pair<VBO*, VBOSlot> allocate_slot(VertexSpecification spec, uint32_t required_size);
-    std::pair<VBO*, VBOSlot> allocate_slot(IndexType type, uint32_t required_size);
+    std::pair<VBO*, VBOSlot> allocate_slot(const VertexData* vertex_data);
+    std::pair<VBO*, VBOSlot> allocate_slot(const IndexData* index_data);
 
     /* Buffers for renderables which aren't dynamic and are less than 512k */
     std::array<
-        std::unordered_map<VertexSpecification, VBO::ptr>,
+        std::unordered_map<VertexSpecification, SharedVBO::ptr>,
         VBO_SLOT_SIZE_COUNT
     > shared_vertex_vbos_;
 
     std::array<
-        std::unordered_map<IndexType, VBO::ptr>,
+        std::unordered_map<IndexType, SharedVBO::ptr>,
         VBO_SLOT_SIZE_COUNT
     > shared_index_vbos_;
 
+    std::unordered_map<uuid64, DedicatedVBO::ptr> dedicated_vertex_vbos_;
+    std::unordered_map<uuid64, DedicatedVBO::ptr> dedicated_index_vbos_;
 
     std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> vertex_data_slots_;
     std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> index_data_slots_;

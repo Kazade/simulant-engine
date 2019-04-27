@@ -23,36 +23,43 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
     bool upload_vdata = false, upload_idata = false;
 
     if(vit == vertex_data_slots_.end()) {
-        /* OK, first time we've seen this vertex data, let's allocate! */
-        auto vpair = allocate_slot(vdata->vertex_specification(), vdata->data_size());
-        vertex_data_slots_.insert(std::make_pair(vid, vpair));
+        /* Could be dedicated? */
+        auto dvit = dedicated_vertex_vbos_.find(vdata->uuid());
+        if(dvit != dedicated_vertex_vbos_.end()) {
+            vvbo = dvit->second.get();
+            vslot = 0;
+        } else {
+            /* OK, first time we've seen this vertex data, let's allocate! */
+            auto vpair = allocate_slot(vdata);
+            vertex_data_slots_.insert(std::make_pair(vid, vpair));
 
-        vvbo = vpair.first;
-        vslot = vpair.second;
+            vvbo = vpair.first;
+            vslot = vpair.second;
 
-        upload_vdata = true;
+            upload_vdata = true;
+        }
     } else {
         /* We've seen this before... does it need updating? */
         vvbo = vit->second.first;
         vslot = vit->second.second;
+    }
 
-        if(vdata->data_size() > vvbo->slot_size()) {
-            /* Data size increased past the slot size, we need to free and reallocate */
-            /* Data size increased past the slot size, we need to free and reallocate */
-            vvbo->release_slot(vslot);
-            auto vpair = allocate_slot(vdata->vertex_specification(), vdata->data_size());
-            vertex_data_slots_[vid] = vpair;
-            vvbo = vpair.first;
-            vslot = vpair.second;
-            upload_vdata = true;
-        }
+    if(vdata->data_size() > vvbo->slot_size_in_bytes()) {
+        /* Data size increased past the slot size, we need to free and reallocate */
+        /* Data size increased past the slot size, we need to free and reallocate */
+        vvbo->release_slot(vslot);
+        auto vpair = allocate_slot(vdata);
+        vertex_data_slots_[vid] = vpair;
+        vvbo = vpair.first;
+        vslot = vpair.second;
+        upload_vdata = true;
+    }
 
-        // FIXME: What if the vertex buffer reduces in size to below the next slot, do we
-        // bother reallocating?
+    // FIXME: What if the vertex buffer reduces in size to below the next slot, do we
+    // bother reallocating?
 
-        if(vdata->last_updated() > vvbo->slot_last_updated(vslot)) {
-            upload_vdata = true;
-        }
+    if(vdata->last_updated() > vvbo->slot_last_updated(vslot)) {
+        upload_vdata = true;
     }
 
     assert(vvbo);
@@ -65,7 +72,7 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
 
     if(iit == index_data_slots_.end()) {
         /* OK, first time we've seen this index data, let's allocate! */
-        auto ipair = allocate_slot(idata->index_type(), idata->data_size());
+        auto ipair = allocate_slot(idata);
         index_data_slots_.insert(std::make_pair(iid, ipair));
         upload_idata = true;
 
@@ -76,10 +83,10 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
         ivbo = iit->second.first;
         islot = iit->second.second;
 
-        if(idata->data_size() > ivbo->slot_size()) {
+        if(idata->data_size() > ivbo->slot_size_in_bytes()) {
             /* Data size increased past the slot size, we need to free and reallocate */
             ivbo->release_slot(islot);
-            auto ipair = allocate_slot(idata->index_type(), idata->data_size());
+            auto ipair = allocate_slot(idata);
             index_data_slots_[iid] = ipair;
             ivbo = ipair.first;
             islot = ipair.second;
@@ -167,34 +174,48 @@ VBOSlotSize VBOManager::calc_vbo_slot_size(uint32_t required_size_in_bytes) {
     return size;
 }
 
-std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(VertexSpecification spec, uint32_t required_size) {
-    auto size = calc_vbo_slot_size(required_size);
+std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const VertexData *vertex_data) {
+    auto required_size = vertex_data->data_size();
+    auto spec = vertex_data->vertex_specification();
 
-    auto& entry = shared_vertex_vbos_[int(size) / 1024];
-    auto it = entry.find(spec);
-    if(it == entry.end()) {
-        // Create new VBO
-        auto new_vbo = VBO::create(size, spec);
-        entry.insert(std::make_pair(spec, new_vbo));
-        it = entry.find(spec);
+    if(required_size >= int(VBO_SLOT_SIZE_512K)) {
+        /* Use a dedicated VBO */
+        auto pair = std::make_pair(vertex_data->uuid(), DedicatedVBO::create(required_size, spec));
+        dedicated_vertex_vbos_.insert(pair);
+        return std::make_pair(pair.second.get(), 0);
+    } else {
+        /* Use one of the shared VBOs */
+        auto size = calc_vbo_slot_size(required_size);
+
+        auto& entry = shared_vertex_vbos_[int(size) / 1024];
+        auto it = entry.find(spec);
+        if(it == entry.end()) {
+            // Create new VBO
+            auto new_vbo = SharedVBO::create(size, spec);
+            entry.insert(std::make_pair(spec, new_vbo));
+            it = entry.find(spec);
+        }
+
+        VBO* vbo = it->second.get();
+        return std::make_pair(
+            vbo, vbo->allocate_slot()
+        );
     }
-
-    VBO* vbo = it->second.get();
-    return std::make_pair(
-        vbo, vbo->allocate_slot()
-    );
 }
 
-std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(IndexType type, uint32_t required_size) {
+std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data) {
+    auto required_size = index_data->data_size();
+    auto index_type = index_data->index_type();
+
     auto size = calc_vbo_slot_size(required_size);
 
     auto& entry = shared_index_vbos_[int(size) / 1024];
-    auto it = entry.find(type);
+    auto it = entry.find(index_type);
     if(it == entry.end()) {
         // Create new VBO
-        auto new_vbo = VBO::create(size, type);
-        entry.insert(std::make_pair(type, new_vbo));
-        it = entry.find(type);
+        auto new_vbo = SharedVBO::create(size, index_type);
+        entry.insert(std::make_pair(index_type, new_vbo));
+        it = entry.find(index_type);
     }
 
     VBO* vbo = it->second.get();
@@ -203,7 +224,7 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(IndexType type, uint32_t req
     );
 }
 
-VBOSlot VBO::allocate_slot() {
+VBOSlot SharedVBO::allocate_slot() {
     if(!free_slots_.empty()) {
         VBOSlot slot = free_slots_.front();
         free_slots_.pop();
@@ -220,7 +241,7 @@ VBOSlot VBO::allocate_slot() {
     }
 }
 
-void VBO::upload(VBOSlot slot, const VertexData *vertex_data) {
+void SharedVBO::upload(VBOSlot slot, const VertexData *vertex_data) {
     const int SLOTS_PER_BUFFER = (VBO_SIZE / slot_size_in_bytes_);
     uint32_t offset = (slot % SLOTS_PER_BUFFER) * slot_size_in_bytes_;
 
@@ -230,7 +251,7 @@ void VBO::upload(VBOSlot slot, const VertexData *vertex_data) {
     metas_[slot].last_updated = TimeKeeper::now_in_us();
 }
 
-void VBO::upload(VBOSlot slot, const IndexData *index_data) {
+void SharedVBO::upload(VBOSlot slot, const IndexData *index_data) {
     const int SLOTS_PER_BUFFER = (VBO_SIZE / slot_size_in_bytes_);
     uint32_t offset = (slot % SLOTS_PER_BUFFER) * slot_size_in_bytes_;
 
@@ -241,14 +262,48 @@ void VBO::upload(VBOSlot slot, const IndexData *index_data) {
     metas_[slot].last_updated = TimeKeeper::now_in_us();
 }
 
-void VBO::bind(VBOSlot slot) {
+void SharedVBO::bind(VBOSlot slot) {
     const int SLOTS_PER_BUFFER = (VBO_SIZE / slot_size_in_bytes_);
     GLuint vbo_id = gl_ids_[slot / SLOTS_PER_BUFFER];
 
     GLCheck(glBindBuffer, type_, vbo_id);
 }
 
-void VBO::allocate_new_gl_buffer() {
+void DedicatedVBO::upload(VBOSlot, const VertexData* vertex_data) {
+    bind(0);
+    GLCheck(glBufferData, type_, vertex_data->data_size(), vertex_data->data(), GL_STATIC_DRAW);
+    last_updated_ = TimeKeeper::now_in_us();
+}
+
+void DedicatedVBO::upload(VBOSlot, const IndexData* index_data) {
+    bind(0);
+    GLCheck(glBufferData, type_, index_data->data_size(), index_data->data(), GL_STATIC_DRAW);
+    last_updated_ = TimeKeeper::now_in_us();
+}
+
+void DedicatedVBO::bind(VBOSlot) {
+    if(!gl_id_) {
+        GLCheck(glGenBuffers, 1, &gl_id_);
+    }
+
+    GLCheck(glBindBuffer, type_, gl_id_);
+}
+
+VBOSlot DedicatedVBO::allocate_slot() {
+    assert(!allocated_);
+    allocated_ = true;
+    return 0;
+}
+
+void DedicatedVBO::release_slot(VBOSlot slot) {
+    assert(slot == 0);
+    assert(allocated_);
+    allocated_ = false;
+
+    // FIXME? Should we delete the GL buffer here?
+}
+
+void SharedVBO::allocate_new_gl_buffer() {
     /* Create a new GL VBO, then push back the
          * free slot IDS */
 
