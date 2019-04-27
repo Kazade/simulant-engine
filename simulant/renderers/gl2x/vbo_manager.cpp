@@ -71,31 +71,39 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
     }
 
     if(iit == index_data_slots_.end()) {
-        /* OK, first time we've seen this index data, let's allocate! */
-        auto ipair = allocate_slot(idata);
-        index_data_slots_.insert(std::make_pair(iid, ipair));
-        upload_idata = true;
+        /* Could be dedicated? */
+        auto diit = dedicated_index_vbos_.find(idata->uuid());
+        if(diit != dedicated_index_vbos_.end()) {
+            ivbo = diit->second.get();
+            islot = 0;
+        } else {
+            /* OK, first time we've seen this index data, let's allocate! */
+            auto ipair = allocate_slot(idata);
+            index_data_slots_.insert(std::make_pair(iid, ipair));
+            upload_idata = true;
 
-        ivbo = ipair.first;
-        islot = ipair.second;
+            ivbo = ipair.first;
+            islot = ipair.second;
+        }
+
     } else {
         /* We've seen this before... does it need updating? */
         ivbo = iit->second.first;
         islot = iit->second.second;
+    }
 
-        if(idata->data_size() > ivbo->slot_size_in_bytes()) {
-            /* Data size increased past the slot size, we need to free and reallocate */
-            ivbo->release_slot(islot);
-            auto ipair = allocate_slot(idata);
-            index_data_slots_[iid] = ipair;
-            ivbo = ipair.first;
-            islot = ipair.second;
-            upload_idata = true;
-        }
+    if(idata->data_size() > ivbo->slot_size_in_bytes()) {
+        /* Data size increased past the slot size, we need to free and reallocate */
+        ivbo->release_slot(islot);
+        auto ipair = allocate_slot(idata);
+        index_data_slots_[iid] = ipair;
+        ivbo = ipair.first;
+        islot = ipair.second;
+        upload_idata = true;
+    }
 
-        if(idata->last_updated() > ivbo->slot_last_updated(islot)) {
-            upload_idata = true;
-        }
+    if(idata->last_updated() > ivbo->slot_last_updated(islot)) {
+        upload_idata = true;
     }
 
     if(upload_idata) {
@@ -207,21 +215,29 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data)
     auto required_size = index_data->data_size();
     auto index_type = index_data->index_type();
 
-    auto size = calc_vbo_slot_size(required_size);
+    if(required_size >= int(VBO_SLOT_SIZE_512K)) {
+        /* Use a dedicated VBO */
+        auto pair = std::make_pair(index_data->uuid(), DedicatedVBO::create(required_size, index_type));
+        dedicated_index_vbos_.insert(pair);
+        return std::make_pair(pair.second.get(), 0);
+    } else {
+        /* Use one of the shared VBOs */
+        auto size = calc_vbo_slot_size(required_size);
 
-    auto& entry = shared_index_vbos_[int(size) / 1024];
-    auto it = entry.find(index_type);
-    if(it == entry.end()) {
-        // Create new VBO
-        auto new_vbo = SharedVBO::create(size, index_type);
-        entry.insert(std::make_pair(index_type, new_vbo));
-        it = entry.find(index_type);
+        auto& entry = shared_index_vbos_[int(size) / 1024];
+        auto it = entry.find(index_type);
+        if(it == entry.end()) {
+            // Create new VBO
+            auto new_vbo = SharedVBO::create(size, index_type);
+            entry.insert(std::make_pair(index_type, new_vbo));
+            it = entry.find(index_type);
+        }
+
+        VBO* vbo = it->second.get();
+        return std::make_pair(
+            vbo, vbo->allocate_slot()
+        );
     }
-
-    VBO* vbo = it->second.get();
-    return std::make_pair(
-        vbo, vbo->allocate_slot()
-    );
 }
 
 VBOSlot SharedVBO::allocate_slot() {
