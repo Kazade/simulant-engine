@@ -88,6 +88,14 @@ public:
         index_type_(index_type),
         type_(GL_ELEMENT_ARRAY_BUFFER) {}
 
+    ~DedicatedVBO() {
+        try {
+            if(gl_id_) glDeleteBuffers(1, &gl_id_);
+        } catch(...) {
+            L_WARN("Exception while deleting GL VBO");
+        }
+    }
+
     uint64_t slot_last_updated(VBOSlot slot) { assert(slot == 0); return last_updated_; }
     GLenum target() const { return type_; }
 
@@ -182,6 +190,7 @@ private:
 
 class VBOManager : public Managed<VBOManager> {
 public:
+    ~VBOManager();
     GPUBuffer update_and_fetch_buffers(Renderable* renderable);
 
 private:
@@ -206,6 +215,15 @@ private:
 
     std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> vertex_data_slots_;
     std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> index_data_slots_;
+
+    std::unordered_map<uuid64, sig::connection> vdata_destruction_connections_;
+    std::unordered_map<uuid64, sig::connection> idata_destruction_connections_;
+
+    void connect_destruction_signal(const VertexData *vertex_data);
+    void connect_destruction_signal(const IndexData *vertex_data);
+
+    void on_vertex_data_destroyed(VertexData* vertex_data);
+    void on_index_data_destroyed(IndexData* vertex_data);
 };
 
 }

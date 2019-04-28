@@ -24,6 +24,7 @@
 
 #include "generic/managed.h"
 #include "generic/uniquely_identifiable.h"
+#include "generic/notifies_destruction.h"
 
 #include "colour.h"
 #include "types.h"
@@ -52,7 +53,8 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
 
 class VertexData :
     public Managed<VertexData>,
-    public UniquelyIdentifiable<VertexData> {
+    public UniquelyIdentifiable<VertexData>,
+    public NotifiesDestruction<VertexData> {
 
 public:
     VertexData(VertexSpecification vertex_specification);
@@ -246,7 +248,8 @@ typedef uint32_t Index;
 
 class IndexData:
     public Managed<IndexData>,
-    public UniquelyIdentifiable<IndexData> {
+    public UniquelyIdentifiable<IndexData>,
+    public NotifiesDestruction<IndexData> {
 
 public:
     IndexData(IndexType type);

@@ -12,6 +12,7 @@ deps/libgl/samples/paletted_pcx/main.c
 deps/libgl/samples/polymark/main.c
 simulant/asset.cpp
 simulant/asset.h
+simulant/generic/notifies_destruction.h
 simulant/generic/object_manager.h
 simulant/generic/raii.h
 simulant/generic/uniquely_identifiable.h

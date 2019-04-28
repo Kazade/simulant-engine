@@ -49,13 +49,6 @@
 #include "utils/unicode.h"
 #include "material_constants.h"
 
-#define DEFINE_SIGNAL(prototype, name) \
-    public: \
-        prototype& name() { return name##_; } \
-    private: \
-        prototype name##_;
-
-
 namespace smlt {
 
 enum VertexAttribute {

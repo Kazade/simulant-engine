@@ -7,6 +7,37 @@ void GPUBuffer::bind_vbos() {
     index_vbo->bind(index_vbo_slot);
 }
 
+void VBOManager::on_index_data_destroyed(IndexData* index_data) {
+    auto dit = dedicated_index_vbos_.find(index_data->uuid());
+    if(dit != dedicated_index_vbos_.end()) {
+        dedicated_index_vbos_.erase(index_data->uuid());
+    }
+
+    auto vit = index_data_slots_.find(index_data->uuid());
+    if(vit != index_data_slots_.end()) {
+        vit->second.first->release_slot(
+            vit->second.second
+        );
+        index_data_slots_.erase(vit);
+    }
+}
+
+void VBOManager::on_vertex_data_destroyed(VertexData* vertex_data) {
+    std::cout << vertex_data->uuid() << std::endl;
+    auto vit = vertex_data_slots_.find(vertex_data->uuid());
+    if(vit != vertex_data_slots_.end()) {
+        vit->second.first->release_slot(
+            vit->second.second
+        );
+        vertex_data_slots_.erase(vit);
+    }
+
+    auto dit = dedicated_vertex_vbos_.find(vertex_data->uuid());
+    if(dit != dedicated_vertex_vbos_.end()) {
+        dedicated_vertex_vbos_.erase(vertex_data->uuid());
+    }
+}
+
 GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
     const auto& vdata = renderable->vertex_data();
     const auto& idata = renderable->index_data();
@@ -37,6 +68,10 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
             vslot = vpair.second;
 
             upload_vdata = true;
+
+            /* If the vertex data is destroyed, then make sure we release
+             * the slot */
+            connect_destruction_signal(vdata);
         }
     } else {
         /* We've seen this before... does it need updating? */
@@ -125,6 +160,16 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
     return buffer;
 }
 
+VBOManager::~VBOManager() {
+    for(auto& pair: vdata_destruction_connections_) {
+        pair.second.disconnect();
+    }
+
+    for(auto& pair: idata_destruction_connections_) {
+        pair.second.disconnect();
+    }
+}
+
 VBOSlotSize VBOManager::calc_vbo_slot_size(uint32_t required_size_in_bytes) {
     auto next_pow2 = [](uint32_t x) -> uint32_t {
         uint32_t power = 1;
@@ -190,7 +235,10 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const VertexData *vertex_dat
         /* Use a dedicated VBO */
         auto pair = std::make_pair(vertex_data->uuid(), DedicatedVBO::create(required_size, spec));
         dedicated_vertex_vbos_.insert(pair);
-        return std::make_pair(pair.second.get(), 0);
+
+        connect_destruction_signal(vertex_data);
+
+        return std::make_pair(pair.second.get(), pair.second->allocate_slot());
     } else {
         /* Use one of the shared VBOs */
         auto size = calc_vbo_slot_size(required_size);
@@ -219,6 +267,9 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data)
         /* Use a dedicated VBO */
         auto pair = std::make_pair(index_data->uuid(), DedicatedVBO::create(required_size, index_type));
         dedicated_index_vbos_.insert(pair);
+
+        connect_destruction_signal(index_data);
+
         return std::make_pair(pair.second.get(), 0);
     } else {
         /* Use one of the shared VBOs */
@@ -238,6 +289,36 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data)
             vbo, vbo->allocate_slot()
         );
     }
+}
+
+void VBOManager::connect_destruction_signal(const VertexData* vdata) {
+    auto uuid = vdata->uuid();
+    auto existing = vdata_destruction_connections_.find(uuid);
+    if(existing != vdata_destruction_connections_.end()) {
+        existing->second.disconnect();
+    }
+
+    vdata_destruction_connections_.insert(std::make_pair(
+        uuid,
+        vdata->signal_destruction().connect(
+            std::bind(&VBOManager::on_vertex_data_destroyed, this, std::placeholders::_1)
+        )
+    ));
+}
+
+void VBOManager::connect_destruction_signal(const IndexData* vdata) {
+    auto uuid = vdata->uuid();
+    auto existing = idata_destruction_connections_.find(uuid);
+    if(existing != idata_destruction_connections_.end()) {
+        existing->second.disconnect();
+    }
+
+    idata_destruction_connections_.insert(std::make_pair(
+        uuid,
+        vdata->signal_destruction().connect(
+            std::bind(&VBOManager::on_index_data_destroyed, this, std::placeholders::_1)
+        )
+    ));
 }
 
 VBOSlot SharedVBO::allocate_slot() {
