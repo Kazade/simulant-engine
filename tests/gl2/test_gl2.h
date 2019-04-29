@@ -25,28 +25,44 @@ public:
         mesh_ = stage_->assets->new_mesh_as_cube(1.0f).fetch();
         camera_ = stage_->new_camera();
     }
-};
 
-class VBOTests:
-    public smlt::test::SimulantTestCase {
+    void test_shared_vbo() {
+        auto ret1 = vbo_manager_->allocate_slot(mesh_->vertex_data);
+        VBO* vbo = ret1.first;
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-private:
-    VBO* vbo_ = nullptr;
+        auto mesh2 = stage_->assets->new_mesh_as_cube(1.0f).fetch();
 
-public:
-    void test_allocate_slot() {
+        auto ret3 = vbo_manager_->allocate_slot(mesh2->vertex_data);
+        assert_equal(ret1.first, ret3.first);
+        assert_not_equal(ret1.second, ret3.second); // New slot, same VBO
+
+        assert_equal(vbo->used_slot_count(), 2u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 2);
+    }
+
+    void test_dedicated_vbo() {
 
     }
 
-    void test_release_slot() {
+    void test_promotion_to_dedicated() {
 
     }
 
-    void test_upload() {
+    void test_multiple_specifications() {
 
     }
 
-    void test_bind() {
+    void test_demotion_to_shared() {
+
+    }
+
+    void test_vertex_data_destruction() {
+
+    }
+
+    void test_index_data_destruction() {
 
     }
 };

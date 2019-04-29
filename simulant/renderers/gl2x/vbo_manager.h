@@ -71,6 +71,9 @@ public:
 
     virtual VBOSlot allocate_slot() = 0;
     virtual void release_slot(VBOSlot slot) = 0;
+
+    virtual uint32_t used_slot_count() const = 0;
+    virtual uint32_t free_slot_count() const = 0;
 };
 
 class DedicatedVBO:
@@ -115,6 +118,13 @@ public:
     VBOSlot allocate_slot();
     void release_slot(VBOSlot slot);
 
+    uint32_t used_slot_count() const {
+        return (allocated_) ? 0 : 1;
+    }
+
+    uint32_t free_slot_count() const {
+        return (!allocated_) ? 0 : 1;
+    }
 private:
     uint32_t size_in_bytes_;
     VertexSpecification spec_;
@@ -166,6 +176,14 @@ public:
     uint32_t byte_offset(VBOSlot slot) {
         const int SLOTS_PER_BUFFER = (VBO_SIZE / slot_size_in_bytes_);
         return (slot % SLOTS_PER_BUFFER) * slot_size_in_bytes_;
+    }
+
+    uint32_t used_slot_count() const {
+        return metas_.size() - free_slots_.size();
+    }
+
+    uint32_t free_slot_count() const {
+        return free_slots_.size();
     }
 
 private:
