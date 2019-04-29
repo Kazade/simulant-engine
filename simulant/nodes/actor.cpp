@@ -22,8 +22,6 @@
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
-#include "../hardware_buffer.h"
-
 
 namespace smlt {
 

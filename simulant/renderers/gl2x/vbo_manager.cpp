@@ -23,7 +23,6 @@ void VBOManager::on_index_data_destroyed(IndexData* index_data) {
 }
 
 void VBOManager::on_vertex_data_destroyed(VertexData* vertex_data) {
-    std::cout << vertex_data->uuid() << std::endl;
     auto vit = vertex_data_slots_.find(vertex_data->uuid());
     if(vit != vertex_data_slots_.end()) {
         vit->second.first->release_slot(

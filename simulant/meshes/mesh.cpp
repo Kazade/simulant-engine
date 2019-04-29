@@ -26,7 +26,6 @@
 #include "../asset_manager.h"
 #include "../loader.h"
 #include "../material.h"
-#include "../hardware_buffer.h"
 #include "../renderers/renderer.h"
 #include "private.h"
 
@@ -59,11 +58,6 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     animation_frames_ = 0;
 
     vertex_data_ = std::make_shared<VertexData>(vertex_specification);
-
-    // When the vertex data updates, update the hardware buffer
-    vertex_data->signal_update_complete().connect([this]() {
-        shared_vertex_buffer_dirty_ = true;
-    });
 }
 
 Mesh::~Mesh() {

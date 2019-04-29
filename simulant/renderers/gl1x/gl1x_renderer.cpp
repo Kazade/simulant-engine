@@ -30,7 +30,6 @@
 #include "../../texture.h"
 #include "gl1x_render_queue_visitor.h"
 #include "gl1x_render_group_impl.h"
-#include "gl1x_buffer_manager.h"
 
 namespace smlt {
 

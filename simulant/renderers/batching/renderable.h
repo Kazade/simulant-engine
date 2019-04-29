@@ -30,7 +30,6 @@ namespace smlt {
 
 class VertexData;
 class IndexData;
-class HardwareBuffer;
 
 typedef sig::signal<void (RenderPriority, RenderPriority)> RenderPriorityChangedSignal;
 

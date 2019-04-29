@@ -33,7 +33,6 @@
 namespace smlt {
 
 class SubActor;
-class HardwareBufferManager;
 
 class Renderer:
     public batcher::RenderGroupFactory {

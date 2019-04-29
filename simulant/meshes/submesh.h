@@ -9,7 +9,6 @@ namespace smlt {
 class VertexData;
 class IndexData;
 class Mesh;
-class HardwareBuffer;
 class Renderer;
 
 class SubMeshInterface:

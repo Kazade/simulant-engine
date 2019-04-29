@@ -7,7 +7,6 @@
 #include "../../meshes/mesh.h"
 #include "../geom.h"
 #include "../../renderers/renderer.h"
-#include "../../hardware_buffer.h"
 #include "geom_culler_renderable.h"
 
 namespace smlt {

@@ -4,7 +4,6 @@
 
 #include "../stage.h"
 #include "../types.h"
-#include "../hardware_buffer.h"
 
 namespace smlt {
 
@@ -158,9 +157,6 @@ void ParticleSystem::set_quota(std::size_t quota) {
         return;
     }
 
-    // if the quota changed, then the hardware buffers will need resizing
-    resize_buffers_ = true;
-
     quota_ = quota;
 
     // Shrink if necessary
@@ -171,8 +167,6 @@ void ParticleSystem::set_quota(std::size_t quota) {
         // Reserve space for all the particles
         particles_.reserve(quota);
     }
-
-    vertex_buffer_dirty_ = index_buffer_dirty_ = true;
 }
 
 void ParticleSystem::update(float dt) {
@@ -274,10 +268,7 @@ void ParticleSystem::update(float dt) {
         index_data_->index(new_start + 3);
     }
 
-    vertex_buffer_dirty_ = true;
     vertex_data_->done();
-
-    index_buffer_dirty_ = true;
     index_data_->done();
 }
 

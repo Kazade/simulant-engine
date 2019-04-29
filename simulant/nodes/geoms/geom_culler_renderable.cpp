@@ -1,7 +1,6 @@
 #include "geom_culler_renderable.h"
 #include "../geom.h"
 #include "geom_culler.h"
-#include "../../hardware_buffer.h"
 #include "../../renderers/renderer.h"
 
 namespace smlt {

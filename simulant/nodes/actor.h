@@ -108,7 +108,6 @@ private:
 
 
     // Used for animated meshes
-    std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
     std::shared_ptr<VertexData> interpolated_vertex_data_;
 
     std::array<std::shared_ptr<Mesh>, DETAIL_LEVEL_MAX> meshes_;
@@ -184,9 +183,6 @@ private:
 
     MaterialPtr material_;
     MaterialPtr material_override_;
-
-    std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
-
 };
 
 }

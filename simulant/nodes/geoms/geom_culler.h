@@ -7,7 +7,6 @@
 
 namespace smlt {
 
-class HardwareBuffer;
 class Renderable;
 
 /*
