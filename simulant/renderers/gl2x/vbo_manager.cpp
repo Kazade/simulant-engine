@@ -183,7 +183,8 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const VertexData *vertex_dat
         /* Use one of the shared VBOs */
         auto size = calc_vbo_slot_size(required_size);
 
-        auto& entry = shared_vertex_vbos_[int(size) / 1024];
+        auto idx = log2(int(size)) - 10; // Convert enum value to index
+        auto& entry = shared_vertex_vbos_[idx];
         auto it = entry.find(spec);
         if(it == entry.end()) {
             // Create new VBO
@@ -253,7 +254,8 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data)
         /* Use one of the shared VBOs */
         auto size = calc_vbo_slot_size(required_size);
 
-        auto& entry = shared_index_vbos_[int(size) / 1024];
+        auto idx = log2(int(size)) - 10; // Convert enum value to index
+        auto& entry = shared_index_vbos_[idx];
         auto it = entry.find(index_type);
         if(it == entry.end()) {
             // Create new VBO
@@ -292,6 +294,7 @@ void VBOManager::connect_destruction_signal(const VertexData* vdata) {
     auto existing = vdata_destruction_connections_.find(uuid);
     if(existing != vdata_destruction_connections_.end()) {
         existing->second.disconnect();
+        vdata_destruction_connections_.erase(existing);
     }
 
     vdata_destruction_connections_.insert(std::make_pair(
@@ -307,6 +310,7 @@ void VBOManager::connect_destruction_signal(const IndexData* vdata) {
     auto existing = idata_destruction_connections_.find(uuid);
     if(existing != idata_destruction_connections_.end()) {
         existing->second.disconnect();
+        idata_destruction_connections_.erase(existing);
     }
 
     idata_destruction_connections_.insert(std::make_pair(
@@ -416,7 +420,7 @@ void SharedVBO::allocate_new_gl_buffer() {
     std::vector<uint8_t> init_data(VBO_SIZE, 0);
 
     /* FIXME: usage needs to change based on, well usage */
-    GLCheck(glBufferData, type_, VBO_SIZE, &init_data[0], GL_STATIC_DRAW);
+    GLCheck(glBufferData, type_, VBO_SIZE, &init_data[0], GL_DYNAMIC_DRAW);
 
     const auto slots_per_buffer = VBO_SIZE / slot_size_;
 
