@@ -119,11 +119,11 @@ public:
     void release_slot(VBOSlot slot);
 
     uint32_t used_slot_count() const {
-        return (allocated_) ? 0 : 1;
+        return (allocated_) ? 1 : 0;
     }
 
     uint32_t free_slot_count() const {
-        return (!allocated_) ? 0 : 1;
+        return (allocated_) ? 0 : 1;
     }
 private:
     uint32_t size_in_bytes_;
@@ -161,10 +161,7 @@ public:
 
     VBOSlot allocate_slot();
 
-    void release_slot(VBOSlot slot) {
-        L_DEBUG_VBO(_F("Releasing slot {0}").format(slot));
-        free_slots_.push(slot);
-    }
+    void release_slot(VBOSlot slot);
 
     void upload(VBOSlot slot, const VertexData* vertex_data);
     void upload(VBOSlot slot, const IndexData* index_data);
@@ -211,11 +208,16 @@ public:
     ~VBOManager();
     GPUBuffer update_and_fetch_buffers(Renderable* renderable);
 
+    uint32_t dedicated_buffer_count() const;
+
 private:
     VBOSlotSize calc_vbo_slot_size(uint32_t required_size_in_bytes);
 
     std::pair<VBO*, VBOSlot> allocate_slot(const VertexData* vertex_data);
     std::pair<VBO*, VBOSlot> allocate_slot(const IndexData* index_data);
+
+    void release_slot(const VertexData* vertex_data);
+    void release_slot(const IndexData* index_data);
 
     /* Buffers for renderables which aren't dynamic and are less than 512k */
     std::array<
@@ -228,20 +230,29 @@ private:
         VBO_SLOT_SIZE_COUNT
     > shared_index_vbos_;
 
-    std::unordered_map<uuid64, DedicatedVBO::ptr> dedicated_vertex_vbos_;
-    std::unordered_map<uuid64, DedicatedVBO::ptr> dedicated_index_vbos_;
+    typedef std::unordered_map<uuid64, DedicatedVBO::ptr> DedicatedMap;
+    typedef std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> SlotMap;
 
-    std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> vertex_data_slots_;
-    std::unordered_map<uuid64, std::pair<VBO*, VBOSlot>> index_data_slots_;
+    DedicatedMap dedicated_vertex_vbos_;
+    DedicatedMap dedicated_index_vbos_;
+
+    SlotMap vertex_data_slots_;
+    SlotMap index_data_slots_;
 
     std::unordered_map<uuid64, sig::connection> vdata_destruction_connections_;
     std::unordered_map<uuid64, sig::connection> idata_destruction_connections_;
 
     void connect_destruction_signal(const VertexData *vertex_data);
     void connect_destruction_signal(const IndexData *vertex_data);
+    void disconnect_destruction_signal(const VertexData *vertex_data);
+    void disconnect_destruction_signal(const IndexData *vertex_data);
 
     void on_vertex_data_destroyed(VertexData* vertex_data);
     void on_index_data_destroyed(IndexData* vertex_data);
+
+    template<typename Data>
+    std::pair<VBO*, VBOSlot> perform_fetch_or_upload(const Data*, VBOManager::DedicatedMap&, VBOManager::SlotMap&);
+
 };
 
 }

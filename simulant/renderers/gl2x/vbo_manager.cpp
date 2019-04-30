@@ -8,69 +8,37 @@ void GPUBuffer::bind_vbos() {
 }
 
 void VBOManager::on_index_data_destroyed(IndexData* index_data) {
-    auto dit = dedicated_index_vbos_.find(index_data->uuid());
-    if(dit != dedicated_index_vbos_.end()) {
-        dedicated_index_vbos_.erase(index_data->uuid());
-    }
-
-    auto vit = index_data_slots_.find(index_data->uuid());
-    if(vit != index_data_slots_.end()) {
-        vit->second.first->release_slot(
-            vit->second.second
-        );
-        index_data_slots_.erase(vit);
-    }
+    release_slot(index_data);
 }
 
 void VBOManager::on_vertex_data_destroyed(VertexData* vertex_data) {
-    auto vit = vertex_data_slots_.find(vertex_data->uuid());
-    if(vit != vertex_data_slots_.end()) {
-        vit->second.first->release_slot(
-            vit->second.second
-        );
-        vertex_data_slots_.erase(vit);
-    }
-
-    auto dit = dedicated_vertex_vbos_.find(vertex_data->uuid());
-    if(dit != dedicated_vertex_vbos_.end()) {
-        dedicated_vertex_vbos_.erase(vertex_data->uuid());
-    }
+    release_slot(vertex_data);
 }
 
-GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
-    const auto& vdata = renderable->vertex_data();
-    const auto& idata = renderable->index_data();
-
+template<typename Data>
+std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, VBOManager::DedicatedMap& dedicated_vbos, VBOManager::SlotMap& data_slots) {
     uuid64 vid = vdata->uuid();
-    uuid64 iid = idata->uuid();
 
-    auto vit = vertex_data_slots_.find(vid);
-    auto iit = index_data_slots_.find(iid);
+    auto vit = data_slots.find(vid);
 
-    VBO* vvbo = nullptr, *ivbo = nullptr;
-    VBOSlot vslot = 0, islot = 0;
+    VBO* vvbo = nullptr;
+    VBOSlot vslot = 0;
 
-    bool upload_vdata = false, upload_idata = false;
+    bool upload_vdata = false;
 
-    if(vit == vertex_data_slots_.end()) {
+    if(vit == data_slots.end()) {
         /* Could be dedicated? */
-        auto dvit = dedicated_vertex_vbos_.find(vdata->uuid());
-        if(dvit != dedicated_vertex_vbos_.end()) {
+        auto dvit = dedicated_vbos.find(vid);
+        if(dvit != dedicated_vbos.end()) {
             vvbo = dvit->second.get();
             vslot = 0;
         } else {
             /* OK, first time we've seen this vertex data, let's allocate! */
             auto vpair = allocate_slot(vdata);
-            vertex_data_slots_.insert(std::make_pair(vid, vpair));
-
             vvbo = vpair.first;
             vslot = vpair.second;
 
             upload_vdata = true;
-
-            /* If the vertex data is destroyed, then make sure we release
-             * the slot */
-            connect_destruction_signal(vdata);
         }
     } else {
         /* We've seen this before... does it need updating? */
@@ -81,9 +49,8 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
     if(vdata->data_size() > vvbo->slot_size_in_bytes()) {
         /* Data size increased past the slot size, we need to free and reallocate */
         /* Data size increased past the slot size, we need to free and reallocate */
-        vvbo->release_slot(vslot);
+        release_slot(vdata);
         auto vpair = allocate_slot(vdata);
-        vertex_data_slots_[vid] = vpair;
         vvbo = vpair.first;
         vslot = vpair.second;
         upload_vdata = true;
@@ -104,59 +71,31 @@ GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
         vvbo->upload(vslot, vdata);
     }
 
-    if(iit == index_data_slots_.end()) {
-        /* Could be dedicated? */
-        auto diit = dedicated_index_vbos_.find(idata->uuid());
-        if(diit != dedicated_index_vbos_.end()) {
-            ivbo = diit->second.get();
-            islot = 0;
-        } else {
-            /* OK, first time we've seen this index data, let's allocate! */
-            auto ipair = allocate_slot(idata);
-            index_data_slots_.insert(std::make_pair(iid, ipair));
-            upload_idata = true;
+    return std::make_pair(vvbo, vslot);
+}
 
-            ivbo = ipair.first;
-            islot = ipair.second;
-        }
+GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
+    const auto& vdata = renderable->vertex_data();
+    const auto& idata = renderable->index_data();
 
-    } else {
-        /* We've seen this before... does it need updating? */
-        ivbo = iit->second.first;
-        islot = iit->second.second;
-    }
-
-    if(idata->data_size() > ivbo->slot_size_in_bytes()) {
-        /* Data size increased past the slot size, we need to free and reallocate */
-        ivbo->release_slot(islot);
-        auto ipair = allocate_slot(idata);
-        index_data_slots_[iid] = ipair;
-        ivbo = ipair.first;
-        islot = ipair.second;
-        upload_idata = true;
-    }
-
-    if(idata->last_updated() > ivbo->slot_last_updated(islot)) {
-        upload_idata = true;
-    }
-
-    if(upload_idata) {
-        /* Index data changed since previous upload, so upload again */
-        ivbo->bind(islot);
-        ivbo->upload(islot, idata);
-    }
+    auto vpair = perform_fetch_or_upload(vdata, dedicated_vertex_vbos_, vertex_data_slots_);
+    auto ipair = perform_fetch_or_upload(idata, dedicated_index_vbos_, index_data_slots_);
 
     GPUBuffer buffer;
 
-    assert(vvbo->target() == GL_ARRAY_BUFFER);
-    assert(ivbo->target() == GL_ELEMENT_ARRAY_BUFFER);
+    assert(vpair.first->target() == GL_ARRAY_BUFFER);
+    assert(ipair.first->target() == GL_ELEMENT_ARRAY_BUFFER);
 
-    buffer.index_vbo = ivbo;
-    buffer.vertex_vbo = vvbo;
-    buffer.index_vbo_slot = islot;
-    buffer.vertex_vbo_slot = vslot;
+    buffer.index_vbo = ipair.first;
+    buffer.vertex_vbo = vpair.first;
+    buffer.index_vbo_slot = ipair.second;
+    buffer.vertex_vbo_slot = vpair.second;
 
     return buffer;
+}
+
+uint32_t VBOManager::dedicated_buffer_count() const {
+    return dedicated_index_vbos_.size() + dedicated_vertex_vbos_.size();
 }
 
 VBOManager::~VBOManager() {
@@ -237,7 +176,9 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const VertexData *vertex_dat
 
         connect_destruction_signal(vertex_data);
 
-        return std::make_pair(pair.second.get(), pair.second->allocate_slot());
+        auto vpair = std::make_pair(pair.second.get(), pair.second->allocate_slot());
+        vertex_data_slots_.insert(std::make_pair(vertex_data->uuid(), vpair));
+        return vpair;
     } else {
         /* Use one of the shared VBOs */
         auto size = calc_vbo_slot_size(required_size);
@@ -251,11 +192,47 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const VertexData *vertex_dat
             it = entry.find(spec);
         }
 
+        connect_destruction_signal(vertex_data);
+
         VBO* vbo = it->second.get();
-        return std::make_pair(
-            vbo, vbo->allocate_slot()
-        );
+        auto vpair = std::make_pair(vbo, vbo->allocate_slot());
+        vertex_data_slots_.insert(std::make_pair(vertex_data->uuid(), vpair));
+        return vpair;
     }
+}
+
+void VBOManager::release_slot(const VertexData *vertex_data) {
+    auto vid = vertex_data->uuid();
+    auto it = vertex_data_slots_.find(vid);
+    if(it != vertex_data_slots_.end()) {
+        it->second.first->release_slot(it->second.second);
+        vertex_data_slots_.erase(it);
+    }
+
+    /* If this was a dedicate VBO, then destroy it */
+    auto dit = dedicated_vertex_vbos_.find(vid);
+    if(dit != dedicated_vertex_vbos_.end()) {
+        dedicated_vertex_vbos_.erase(vid);
+    }
+
+    disconnect_destruction_signal(vertex_data);
+}
+
+void VBOManager::release_slot(const IndexData *index_data) {
+    auto vid = index_data->uuid();
+    auto it = index_data_slots_.find(vid);
+    if(it != index_data_slots_.end()) {
+        it->second.first->release_slot(it->second.second);
+        index_data_slots_.erase(it);
+    }
+
+    /* If this was a dedicate VBO, then destroy it */
+    auto dit = dedicated_index_vbos_.find(vid);
+    if(dit != dedicated_index_vbos_.end()) {
+        dedicated_index_vbos_.erase(vid);
+    }
+
+    disconnect_destruction_signal(index_data);
 }
 
 std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data) {
@@ -269,7 +246,9 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data)
 
         connect_destruction_signal(index_data);
 
-        return std::make_pair(pair.second.get(), 0);
+        auto ipair = std::make_pair(pair.second.get(), pair.second->allocate_slot());
+        index_data_slots_.insert(std::make_pair(index_data->uuid(), ipair));
+        return ipair;
     } else {
         /* Use one of the shared VBOs */
         auto size = calc_vbo_slot_size(required_size);
@@ -283,10 +262,28 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data)
             it = entry.find(index_type);
         }
 
+        connect_destruction_signal(index_data);
+
         VBO* vbo = it->second.get();
-        return std::make_pair(
-            vbo, vbo->allocate_slot()
-        );
+        auto ipair = std::make_pair(vbo, vbo->allocate_slot());
+        index_data_slots_.insert(std::make_pair(index_data->uuid(), ipair));
+        return ipair;
+    }
+}
+
+void VBOManager::disconnect_destruction_signal(const VertexData *vertex_data) {
+    auto it = vdata_destruction_connections_.find(vertex_data->uuid());
+    if(it != vdata_destruction_connections_.end()) {
+        it->second.disconnect();
+        vdata_destruction_connections_.erase(it);
+    }
+}
+
+void VBOManager::disconnect_destruction_signal(const IndexData *index_data) {
+    auto it = idata_destruction_connections_.find(index_data->uuid());
+    if(it != idata_destruction_connections_.end()) {
+        it->second.disconnect();
+        idata_destruction_connections_.erase(it);
     }
 }
 
@@ -335,6 +332,11 @@ VBOSlot SharedVBO::allocate_slot() {
         // Recurse
         return allocate_slot();
     }
+}
+
+void SharedVBO::release_slot(VBOSlot slot) {
+    L_DEBUG_VBO(_F("Releasing slot {0}").format(slot));
+    free_slots_.push(slot);
 }
 
 void SharedVBO::upload(VBOSlot slot, const VertexData *vertex_data) {
