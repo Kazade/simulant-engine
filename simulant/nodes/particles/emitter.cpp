@@ -37,6 +37,8 @@ void Emitter::do_emit(float dt, uint32_t max, std::vector<Particle> &particles) 
 
     float decrement = 1.0 / float(emission_rate()); //Work out how often to emit per second
 
+    auto scale = system().absolute_scaling();
+
     uint32_t to_emit = max;
     while(emission_accumulator_ > decrement) {
         //EMIT THE PARTICLE!
@@ -46,9 +48,9 @@ void Emitter::do_emit(float dt, uint32_t max, std::vector<Particle> &particles) 
         } else {
             p.position = system().absolute_position() + relative_position();
 
-            float hw = dimensions_.x * 0.5;
-            float hh = dimensions_.y * 0.5;
-            float hd = dimensions_.z * 0.5;
+            float hw = dimensions_.x * 0.5 * scale.x;
+            float hh = dimensions_.y * 0.5 * scale.y;
+            float hd = dimensions_.z * 0.5 * scale.z;
 
             p.position.x += rgen_.float_in_range(-hw, hw);
             p.position.y += rgen_.float_in_range(-hh, hh);
@@ -62,7 +64,7 @@ void Emitter::do_emit(float dt, uint32_t max, std::vector<Particle> &particles) 
             dir = dir.random_deviant(ang).normalized();
         }
 
-        p.velocity = dir * rgen_.float_in_range(velocity_range().first, velocity_range().second);
+        p.velocity = dir * rgen_.float_in_range(velocity_range().first, velocity_range().second) * scale;
 
         //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
         //when that entity rotates we want the velocity to stay pointing relative to the entity
@@ -72,7 +74,7 @@ void Emitter::do_emit(float dt, uint32_t max, std::vector<Particle> &particles) 
 
         p.lifetime = p.ttl = rgen_.float_in_range(ttl_range().first, ttl_range().second);
         p.colour = colour();
-        p.initial_dimensions = p.dimensions = smlt::Vec2(system().particle_width(), system().particle_height());
+        p.initial_dimensions = p.dimensions = smlt::Vec2(system().particle_width() * scale.x, system().particle_height() * scale.y);
 
         //FIXME: Initialize other properties
         particles.push_back(p);

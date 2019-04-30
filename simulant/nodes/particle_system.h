@@ -66,13 +66,8 @@ public:
 
     MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
     virtual Mat4 final_transformation() const override {
-        Mat4 ret;
-        Vec3 sc = scale();
-        ret[0] = sc.x;
-        ret[5] = sc.y;
-        ret[10] = sc.z;
-        ret[15] = 1.0f;
-        return ret;
+        /* Particles are absolutely positioned and rotated, transforming them messes them up! */
+        return Mat4();
     }
 
     void set_material_id(MaterialID mat_id);
