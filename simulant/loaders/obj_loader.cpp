@@ -106,7 +106,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->reset(spec);  // Make sure we're empty before we begin
 
     std::unordered_map<std::string, MaterialPtr> final_materials;
-    std::unordered_map<uint32_t, SubMeshPtr> material_submeshes;
+    std::unordered_map<int32_t, SubMeshPtr> material_submeshes;
     std::unordered_map<std::string, TexturePtr> loaded_textures;
 
     auto index_type = (attrib.vertices.size() / 3 >= std::numeric_limits<uint16_t>::max()) ?
@@ -167,9 +167,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         final_materials.insert(std::make_pair(material.name, new_mat));
 
-        auto submesh = mesh->new_submesh(material.name, MESH_ARRANGEMENT_TRIANGLES, index_type);
-        submesh->set_material_id(new_mat->id());
-
+        auto submesh = mesh->new_submesh_with_material(material.name, new_mat->id(), MESH_ARRANGEMENT_TRIANGLES, index_type);
         material_submeshes.insert(std::make_pair(i++, submesh));
     }
 
@@ -187,6 +185,15 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             assert(num_verts == 3 && "Only triangles supported");
 
             auto mat_id = shape.mesh.material_ids[f];
+            if(mat_id == -1 && !material_submeshes.count(mat_id)) {
+                // Special case, no material!
+                material_submeshes.insert(
+                    std::make_pair(
+                        mat_id,
+                        mesh->new_submesh("__default__", MESH_ARRANGEMENT_TRIANGLES, index_type)
+                    )
+                );
+            }
 
             auto submeshptr = material_submeshes.at(mat_id);
 
