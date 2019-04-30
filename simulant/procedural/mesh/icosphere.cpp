@@ -141,7 +141,7 @@ public:
         auto& vdata = submesh->vertex_data;
         auto start = submesh->vertex_data->count();
 
-        auto& spec = vdata->specification();
+        auto& spec = vdata->vertex_specification();
 
         vdata->move_to_end();
         for(auto& pos: positions_) {

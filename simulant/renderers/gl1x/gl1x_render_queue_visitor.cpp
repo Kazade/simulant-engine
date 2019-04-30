@@ -418,14 +418,12 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     GLCheck(glMatrixMode, GL_PROJECTION);
     GLCheck(glLoadMatrixf, projection.data());
 
-    auto spec = renderable->vertex_attribute_specification();
+    auto spec = renderable->vertex_specification();
 
-    renderable->prepare_buffers(renderer_);
+    renderer_->prepare_to_render(renderable);
 
-    /* We need to get access to the vertex data that's been uploaded, and map_target_for_read is the only way to do that
-     * but as on GL1 there are no VBOs this should be fast */
-    auto vertex_data = renderable->vertex_attribute_buffer()->map_target_for_read();
-    auto index_data = renderable->index_buffer()->map_target_for_read();
+    auto vertex_data = renderable->vertex_data()->data();
+    auto index_data = renderable->index_data()->data();
 
     (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
     (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();

@@ -173,7 +173,7 @@ MeshID AssetManager::new_mesh(VertexSpecification vertex_specification, GarbageC
 }
 
 MeshID AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
-    VertexSpecification spec = submesh->vertex_data->specification();
+    VertexSpecification spec = submesh->vertex_data->vertex_specification();
     MeshID result = new_mesh(spec, garbage_collect);
 
     SubMesh* target = mesh(result)->new_submesh_with_material(

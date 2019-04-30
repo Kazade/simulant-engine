@@ -81,17 +81,16 @@ public:
     bool has_repeating_emitters() const;
     bool has_active_emitters() const;
 
-    void prepare_buffers(Renderer* renderer) override;
-    HardwareBuffer* vertex_attribute_buffer() const override {
-        return vertex_buffer_.get();
+    VertexData* vertex_data() const override {
+        return vertex_data_;
     }
 
-    HardwareBuffer* index_buffer() const override {
-        return index_buffer_.get();
+    IndexData* index_data() const override {
+        return index_data_;
     }
 
-    VertexSpecification vertex_attribute_specification() const override {
-        return vertex_data_->specification();
+    VertexSpecification vertex_specification() const override {
+        return vertex_data_->vertex_specification();
     }
 
     std::size_t index_element_count() const override {
@@ -133,13 +132,6 @@ private:
 
     AABB aabb_;
     void calc_aabb();
-
-    std::unique_ptr<HardwareBuffer> vertex_buffer_;
-    std::unique_ptr<HardwareBuffer> index_buffer_;
-    bool resize_buffers_ = false;
-
-    bool vertex_buffer_dirty_ = false;
-    bool index_buffer_dirty_ = false;
 
     inline VertexData* get_vertex_data() const {
         return vertex_data_;

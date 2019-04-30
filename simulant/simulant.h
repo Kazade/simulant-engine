@@ -54,7 +54,6 @@
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
 #include "nodes/camera.h"
-#include "hardware_buffer.h"
 #include "virtual_gamepad.h"
 #include "platform.h"
 

@@ -108,7 +108,6 @@ private:
 
 
     // Used for animated meshes
-    std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
     std::shared_ptr<VertexData> interpolated_vertex_data_;
 
     std::array<std::shared_ptr<Mesh>, DETAIL_LEVEL_MAX> meshes_;
@@ -169,11 +168,9 @@ public:
     SubMesh* submesh();
     const SubMesh* submesh() const;
 
-    void prepare_buffers(Renderer* renderer);
-
-    VertexSpecification vertex_attribute_specification() const;
-    HardwareBuffer* vertex_attribute_buffer() const;
-    HardwareBuffer* index_buffer() const;
+    VertexSpecification vertex_specification() const;
+    VertexData* vertex_data() const;
+    IndexData* index_data() const;
     std::size_t index_element_count() const;
     IndexType index_type() const;
 
@@ -186,9 +183,6 @@ private:
 
     MaterialPtr material_;
     MaterialPtr material_override_;
-
-    std::unique_ptr<HardwareBuffer> interpolated_vertex_buffer_;
-
 };
 
 }

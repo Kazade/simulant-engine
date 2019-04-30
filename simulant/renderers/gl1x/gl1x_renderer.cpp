@@ -30,7 +30,6 @@
 #include "../../texture.h"
 #include "gl1x_render_queue_visitor.h"
 #include "gl1x_render_group_impl.h"
-#include "gl1x_buffer_manager.h"
 
 namespace smlt {
 
@@ -93,8 +92,7 @@ std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visi
 
 smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
     Renderer(window),
-    GLRenderer(window),
-    buffer_manager_(new GL1BufferManager(this)) {
+    GLRenderer(window) {
 }
 
 }

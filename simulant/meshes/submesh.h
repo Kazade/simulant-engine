@@ -9,7 +9,6 @@ namespace smlt {
 class VertexData;
 class IndexData;
 class Mesh;
-class HardwareBuffer;
 class Renderer;
 
 class SubMeshInterface:
@@ -63,11 +62,6 @@ public:
 
     const std::string& name() const { return name_; }
 
-    HardwareBuffer* vertex_buffer() const;
-    HardwareBuffer* index_buffer() const { return index_buffer_.get(); }
-
-    void prepare_buffers(Renderer *renderer); // Called by actors to make sure things are up-to-date before rendering
-
     /* Goes through the indexes in this submesh and changes the diffuse colour of the vertices
      * they point to */
     void set_diffuse(const Colour &colour);
@@ -109,10 +103,6 @@ private:
     MeshArrangement arrangement_;
 
     IndexData* index_data_ = nullptr;
-
-    std::unique_ptr<HardwareBuffer> index_buffer_;
-
-    bool index_buffer_dirty_ = false;
 
     AABB bounds_;
 

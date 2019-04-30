@@ -26,7 +26,6 @@
 #include "../asset_manager.h"
 #include "../loader.h"
 #include "../material.h"
-#include "../hardware_buffer.h"
 #include "../renderers/renderer.h"
 #include "private.h"
 
@@ -59,11 +58,6 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     animation_frames_ = 0;
 
     vertex_data_ = std::make_shared<VertexData>(vertex_specification);
-
-    // When the vertex data updates, update the hardware buffer
-    vertex_data->signal_update_complete().connect([this]() {
-        shared_vertex_buffer_dirty_ = true;
-    });
 }
 
 Mesh::~Mesh() {
@@ -387,7 +381,7 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
 
     auto idx_offset = sm->vertex_data->count();
 
-    auto spec = sm->vertex_data->specification();
+    auto spec = sm->vertex_data->vertex_specification();
     sm->vertex_data->move_to_end();
 
     //Build some shared vertex data
@@ -460,13 +454,13 @@ void Mesh::transform_vertices(const smlt::Mat4& transform) {
     vertex_data->move_to_start();
 
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
-        if(vertex_data->specification().has_positions()) {
+        if(vertex_data->vertex_specification().has_positions()) {
             smlt::Vec3 v = vertex_data->position_at<Vec3>(i);
             v = v.transformed_by(transform);
             vertex_data->position(v);
         }
 
-        if(vertex_data->specification().has_normals()) {
+        if(vertex_data->vertex_specification().has_normals()) {
             smlt::Vec3 n;
             vertex_data->normal_at(i, n);
             n = n.rotated_by(transform);
@@ -508,17 +502,6 @@ SubMesh* Mesh::submesh(const std::string& name) {
     }
 
     return nullptr;
-}
-
-void Mesh::prepare_buffers(Renderer* renderer) {
-    if(shared_vertex_buffer_dirty_ || !shared_vertex_buffer_) {
-        sync_buffer<VertexData, Renderer>(
-            &shared_vertex_buffer_, vertex_data_.get(),
-            renderer,
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES
-        );
-        shared_vertex_buffer_dirty_ = false;
-    }
 }
 
 void Mesh::generate_adjacency_info() {

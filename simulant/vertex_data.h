@@ -23,6 +23,9 @@
 #include "deps/kazsignal/kazsignal.h"
 
 #include "generic/managed.h"
+#include "generic/uniquely_identifiable.h"
+#include "generic/notifies_destruction.h"
+
 #include "colour.h"
 #include "types.h"
 
@@ -49,7 +52,9 @@ enum VertexAttributeType {
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
 
 class VertexData :
-    public Managed<VertexData> {
+    public Managed<VertexData>,
+    public UniquelyIdentifiable<VertexData>,
+    public NotifiesDestruction<VertexData> {
 
 public:
     VertexData(VertexSpecification vertex_specification);
@@ -68,6 +73,7 @@ public:
     uint32_t move_next();
 
     void done();
+    uint64_t last_updated() const;
 
     void position(float x, float y, float z, float w);
     void position(float x, float y, float z);
@@ -162,6 +168,7 @@ public:
 
     void interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
+    const uint8_t* data() const { if(empty()) { return nullptr; } return &data_[0]; }
     uint32_t data_size() const { return data_.size(); }
 
     VertexAttribute attribute_for_type(VertexAttributeType type) const;
@@ -171,7 +178,7 @@ public:
         vertex_count_ = size;
     }
 
-    const VertexSpecification& specification() const { return vertex_specification_; }
+    const VertexSpecification& vertex_specification() const { return vertex_specification_; }
 
     /* Clones this VertexData into another. The other data must have the same
      * specification and will be wiped if it contains vertices already.
@@ -188,8 +195,8 @@ private:
     std::vector<uint8_t> data_;
     uint32_t vertex_count_ = 0;
     uint32_t stride_ = 0;
-
     int32_t cursor_position_ = 0;
+    uint64_t last_updated_ = 0;
 
     void tex_coordX(uint8_t which, float u);
     void tex_coordX(uint8_t which, float u, float v);
@@ -239,7 +246,11 @@ Vec4 VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 
 typedef uint32_t Index;
 
-class IndexData {
+class IndexData:
+    public Managed<IndexData>,
+    public UniquelyIdentifiable<IndexData>,
+    public NotifiesDestruction<IndexData> {
+
 public:
     IndexData(IndexType type);
 
@@ -298,6 +309,7 @@ public:
     }
 
     void done();
+    uint64_t last_updated() const;
 
     uint32_t at(const uint32_t i) {
         auto ptr = &indices_[i * stride()];
@@ -339,6 +351,7 @@ private:
     std::vector<uint8_t> indices_;
     uint32_t stride_ = 0;
     uint32_t count_ = 0;
+    uint64_t last_updated_ = 0;
 
     sig::signal<void ()> signal_update_complete_;
 

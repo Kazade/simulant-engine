@@ -22,8 +22,6 @@
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
-#include "../hardware_buffer.h"
-
 
 namespace smlt {
 
@@ -46,33 +44,25 @@ Actor::~Actor() {
 
 }
 
-void SubActor::prepare_buffers(Renderer *renderer) {
-    if(submesh_) {
-        submesh_->prepare_buffers(renderer);
-    } else {
-        L_WARN("No submesh attached to subactor!");
-    }
-}
-
-VertexSpecification SubActor::vertex_attribute_specification() const {
+VertexSpecification SubActor::vertex_specification() const {
     auto* vertex_data = get_vertex_data();
     if(vertex_data) {
-        return vertex_data->specification();
+        return vertex_data->vertex_specification();
     }
 
     return VertexSpecification();
 }
 
-HardwareBuffer* SubActor::vertex_attribute_buffer() const {
+VertexData* SubActor::vertex_data() const {
     if(parent_.has_animated_mesh()) {
-        return parent_.interpolated_vertex_buffer_.get();
+        return parent_.interpolated_vertex_data_.get();
     }
 
-    return submesh_->vertex_buffer();
+    return submesh_->vertex_data.get();
 }
 
-HardwareBuffer* SubActor::index_buffer() const {
-    return submesh_->index_buffer();
+IndexData* SubActor::index_data() const {
+    return submesh_->index_data.get();
 }
 
 std::size_t SubActor::index_element_count() const {
@@ -147,7 +137,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     if(detail_level == DETAIL_LEVEL_NEAREST && has_animated_mesh(detail_level)) {
         using namespace std::placeholders;
 
-        interpolated_vertex_data_ = std::make_shared<VertexData>(meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->specification());
+        interpolated_vertex_data_ = std::make_shared<VertexData>(meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_specification());
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
             meshes_[detail_level],
             std::bind(&Actor::refresh_animation_state, this, _1, _2, _3)
@@ -180,17 +170,6 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
     meshes_[DETAIL_LEVEL_NEAREST]->animated_frame_data_->unpack_frame(
         current_frame, next_frame, interp, interpolated_vertex_data_.get()
     );
-
-    if(!interpolated_vertex_buffer_) {
-        // Create an interpolated vertex hardware buffer if this is an animated mesh
-        interpolated_vertex_buffer_ = stage->window->renderer->hardware_buffers->allocate(
-            interpolated_vertex_data_->data_size(),
-            HARDWARE_BUFFER_VERTEX_ATTRIBUTES,
-            SHADOW_BUFFER_DISABLED
-        );
-    }
-
-    interpolated_vertex_buffer_->upload(*interpolated_vertex_data_);
 }
 
 

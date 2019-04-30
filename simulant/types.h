@@ -49,13 +49,6 @@
 #include "utils/unicode.h"
 #include "material_constants.h"
 
-#define DEFINE_SIGNAL(prototype, name) \
-    public: \
-        prototype& name() { return name##_; } \
-    private: \
-        prototype name##_;
-
-
 namespace smlt {
 
 enum VertexAttribute {
@@ -91,6 +84,8 @@ private:
 
 
 class VertexSpecification {
+    friend struct std::hash<VertexSpecification>;
+
     VertexAttribute position_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute normal_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute texcoord0_attribute_ = VERTEX_ATTRIBUTE_NONE;
@@ -537,14 +532,6 @@ constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
 
 }
 
-/* Hash functions for smlt types */
-namespace std {
-    template <> struct hash<smlt::MeshArrangement> {
-        size_t operator() (smlt::MeshArrangement t) { return size_t(t); }
-    };
-}
-
-
 
 // Generic hash for tuples by Leo Goodstadt
 // http://stackoverflow.com/questions/7110301/generic-hash-for-tuples-in-unordered-map-unordered-set
@@ -597,7 +584,32 @@ namespace std{
         }
 
     };
-}
 
+    /* Hash functions for smlt types */
+    template <> struct hash<smlt::MeshArrangement> {
+        size_t operator() (smlt::MeshArrangement t) { return size_t(t); }
+    };
+
+    template<> struct hash<smlt::VertexSpecification> {
+        size_t operator()(const smlt::VertexSpecification& spec) const {
+            size_t seed = 0;
+
+            hash_combine(seed, (unsigned int) spec.position_attribute_);
+            hash_combine(seed, (unsigned int) spec.normal_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord0_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord1_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord2_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord3_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord4_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord5_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord6_attribute_);
+            hash_combine(seed, (unsigned int) spec.texcoord7_attribute_);
+            hash_combine(seed, (unsigned int) spec.diffuse_attribute_);
+            hash_combine(seed, (unsigned int) spec.specular_attribute_);
+            return seed;
+        }
+    };
+
+}
 
 #endif // TYPES_H_INCLUDED

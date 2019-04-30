@@ -21,8 +21,6 @@
 #include "../renderer.h"
 #include "../gl_renderer.h"
 
-#include "gl1x_buffer_manager.h"
-
 namespace smlt {
 
 
@@ -49,16 +47,9 @@ public:
     std::string name() const override {
         return "gl1x";
     }
+
+    void prepare_to_render(Renderable *renderable) override {}
 private:
-    std::unique_ptr<HardwareBufferManager> buffer_manager_;
-
-    HardwareBufferManager* _get_buffer_manager() const {
-        /*
-         * The GL1 renderer doesn't use hardware buffers for vertex/index data
-         */
-        return buffer_manager_.get();
-    }
-
     void on_texture_prepare(TexturePtr texture) override {
         GLRenderer::on_texture_prepare(texture);
     }

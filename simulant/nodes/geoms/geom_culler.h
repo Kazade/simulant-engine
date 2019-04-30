@@ -7,7 +7,6 @@
 
 namespace smlt {
 
-class HardwareBuffer;
 class Renderable;
 
 /*
@@ -43,13 +42,11 @@ protected:
 private:
     bool compiled_ = false;
 
-    virtual void _prepare_buffers(Renderer* renderer) = 0;
     virtual void _compile() = 0;
     virtual void _gather_renderables(const Frustum& frustum, RenderableList& out) = 0;
     virtual void _all_renderables(RenderableList& out) = 0;
 
     virtual const VertexData* _vertex_data() const = 0;
-    virtual HardwareBuffer* _vertex_attribute_buffer() const = 0;
 
     friend class GeomCullerRenderable;
 

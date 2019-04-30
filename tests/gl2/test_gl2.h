@@ -2,67 +2,137 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "../../simulant/hardware_buffer.h"
-#include "../../simulant/renderers/gl2x/buffer_manager.h"
+#include "../../simulant/renderers/gl2x/vbo_manager.h"
 
 namespace {
 
 using namespace smlt;
 
-class GL2Tests:
+class VBOManagerTests:
     public smlt::test::SimulantTestCase {
 
 private:
-    GL2BufferManager buffer_manager_;
-
+    VBOManager::ptr vbo_manager_;
+    StagePtr stage_;
+    MeshPtr mesh_;
+    CameraPtr camera_;
 public:
-    GL2Tests():
-        buffer_manager_(nullptr) {
+    void set_up() {
+        smlt::test::SimulantTestCase::set_up();
 
+        vbo_manager_ = VBOManager::create();
+        stage_ = window->new_stage();
+        mesh_ = stage_->assets->new_mesh_as_cube(1.0f).fetch();
+        camera_ = stage_->new_camera();
+
+        stage_->assets->set_garbage_collection_grace_period(0);
     }
 
-    void test_that_buffers_can_be_allocated() {
-        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        assert_equal(10u, buffer->size());
+    void test_shared_vertex_vbo() {
+        auto ret1 = vbo_manager_->allocate_slot(mesh_->vertex_data);
+        VBO* vbo = ret1.first;
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
+
+        auto mesh2 = stage_->assets->new_mesh_as_cube(1.0f).fetch();
+
+        auto ret3 = vbo_manager_->allocate_slot(mesh2->vertex_data);
+        assert_equal(ret1.first, ret3.first);
+        assert_not_equal(ret1.second, ret3.second); // New slot, same VBO
+
+        assert_equal(vbo->used_slot_count(), 2u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 2);
+
+        stage_->assets->delete_mesh(mesh2->id());
+        mesh2.reset(); // Remove refcount
+        stage_->assets->run_garbage_collection();
+
+        // Slot should've been freed
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
     }
 
-    void test_that_buffers_can_be_released() {
-        auto buffer = buffer_manager_.allocate(10, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        assert_equal(10u, buffer->size());
-        buffer->release();
-        assert_true(buffer->is_dead());
+    void test_shared_index_vbo() {
+        auto ret1 = vbo_manager_->allocate_slot(mesh_->first_submesh()->index_data);
+        VBO* vbo = ret1.first;
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        buffer->release(); // Second release should be no-op
+        auto mesh2 = stage_->assets->new_mesh_as_cube(1.0f).fetch();
 
-        const uint8_t random_data[8] = {0};
+        auto ret3 = vbo_manager_->allocate_slot(mesh2->first_submesh()->index_data);
+        assert_equal(ret1.first, ret3.first);
+        assert_not_equal(ret1.second, ret3.second); // New slot, same VBO
 
-        auto func = [&]() {
-            buffer->upload(random_data, 8);
-        };
+        assert_equal(vbo->used_slot_count(), 2u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 2);
 
-        // Trying to upload data to a dead buffer should raise a logic error
-        assert_raises(std::logic_error, func);
+        stage_->assets->delete_mesh(mesh2->id());
+        mesh2.reset(); // Remove refcount
+        stage_->assets->run_garbage_collection();
+
+        // Slot should've been freed
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
     }
 
-    void test_that_vertex_data_is_uploaded() {
-        smlt::VertexSpecification spec(smlt::VERTEX_ATTRIBUTE_3F);
-        smlt::VertexData data(spec);
+    void test_dedicated_vbo() {
+        auto ret1 = vbo_manager_->allocate_slot(mesh_->vertex_data);
+        VBO* vbo = ret1.first;
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        data.position(smlt::Vec3());
-        data.move_next();
+        auto mesh2 = stage_->assets->new_mesh(VertexSpecification::DEFAULT).fetch();
 
-        data.position(smlt::Vec3());
-        data.done();
+        /* 50000 verts should tip over 512k always */
+        for(auto i = 0; i < 50000; ++i) {
+            mesh2->vertex_data->position(Vec3());
+            mesh2->vertex_data->move_next();
+        }
+        mesh2->vertex_data->done();
 
-        auto small_buffer = buffer_manager_.allocate(spec.stride(), smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
+        auto ret2 = vbo_manager_->allocate_slot(mesh2->vertex_data);
+        assert_equal(vbo_manager_->dedicated_buffer_count(), 1u);
 
-        // Buffer is too small for the specified data, should raise an error
-        assert_raises(std::out_of_range, [&]() {
-            small_buffer->upload(data);
-        });
+        vbo = ret2.first;
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), 0u); // No free slots in a dedicated one
 
-        auto buffer = buffer_manager_.allocate(spec.stride() * 2, smlt::HARDWARE_BUFFER_VERTEX_ATTRIBUTES, SHADOW_BUFFER_DISABLED);
-        buffer->upload(data); //Should succeed
+        stage_->assets->delete_mesh(mesh2->id());
+        mesh2.reset(); // Remove refcount
+        stage_->assets->run_garbage_collection();
+
+        assert_equal(vbo_manager_->dedicated_buffer_count(), 0u);
+    }
+
+    void test_promotion_to_dedicated() {
+        auto ret1 = vbo_manager_->allocate_slot(mesh_->vertex_data);
+        VBO* vbo = ret1.first;
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
+
+        /* 50000 verts should tip over 512k always */
+        for(auto i = 0; i < 50000; ++i) {
+            mesh_->vertex_data->position(Vec3());
+            mesh_->vertex_data->move_next();
+        }
+        mesh_->vertex_data->done();
+
+        assert_equal(vbo->used_slot_count(), 1u);
+        assert_equal(vbo_manager_->dedicated_buffer_count(), 0u);
+
+        auto actor = stage_->new_actor_with_mesh(mesh_->id());
+
+        vbo_manager_->update_and_fetch_buffers(actor->_get_renderables(camera_->frustum(), DETAIL_LEVEL_NEAREST)[0].get());
+
+        assert_equal(vbo_manager_->dedicated_buffer_count(), 1u);
+
+        // VBO is not destroyed, maybe it should be?
+        assert_equal(vbo->used_slot_count(), 0u);
+    }
+
+    void test_demotion_to_shared() {
+        throw test::SkippedTestError("Demotion from dedicated to shared VBOs when data reduces in size is not yet implemented. See #192");
     }
 };
 

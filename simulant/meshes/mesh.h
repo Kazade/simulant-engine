@@ -42,7 +42,6 @@
 
 namespace smlt {
 
-class HardwareBuffer;
 class AssetManager;
 class AdjacencyInfo;
 class Renderer;
@@ -149,8 +148,6 @@ public:
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
 
-    void prepare_buffers(Renderer *renderer);
-
     /* Generates adjacency information for this mesh. This is necessary for stencil shadowing
      * to work */
     void generate_adjacency_info();
@@ -178,9 +175,6 @@ private:
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
     MeshFrameDataPtr animated_frame_data_;
-
-    std::unique_ptr<HardwareBuffer> shared_vertex_buffer_;
-    bool shared_vertex_buffer_dirty_ = false;
 
     std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
     std::list<SubMeshPtr> ordered_submeshes_; // Ordered by insertion order

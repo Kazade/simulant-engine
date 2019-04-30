@@ -24,12 +24,12 @@
 #include "../../interfaces.h"
 #include "../../interfaces/boundable.h"
 #include "render_queue.h"
+#include "../../generic/uniquely_identifiable.h"
 
 namespace smlt {
 
 class VertexData;
 class IndexData;
-class HardwareBuffer;
 
 typedef sig::signal<void (RenderPriority, RenderPriority)> RenderPriorityChangedSignal;
 
@@ -57,19 +57,18 @@ private:
 
 
 class Renderable:  
-    public virtual BoundableEntity {
+    public virtual BoundableEntity,
+    public UniquelyIdentifiable<Renderable> {
 
 public:
     virtual ~Renderable() {}
 
     virtual MeshArrangement arrangement() const = 0;
 
-    virtual void prepare_buffers(Renderer* renderer) = 0;
+    virtual VertexSpecification vertex_specification() const = 0;
+    virtual const VertexData* vertex_data() const = 0;
 
-    virtual VertexSpecification vertex_attribute_specification() const = 0;
-    virtual HardwareBuffer* vertex_attribute_buffer() const = 0;
-
-    virtual HardwareBuffer* index_buffer() const = 0;
+    virtual const IndexData* index_data() const = 0;
     virtual std::size_t index_element_count() const = 0; ///< The number of indexes that should be rendered
     virtual IndexType index_type() const = 0; ///< The size of the index (e.g. 8bit, 16 bit)
 
