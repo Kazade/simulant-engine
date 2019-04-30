@@ -66,7 +66,12 @@ public:
 
     MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
     virtual Mat4 final_transformation() const override {
-        return Mat4(); //Particles are absolutely positioned in the world
+        Mat4 ret;
+        Vec3 scale = absolute_scaling();
+        ret[0] = scale.x;
+        ret[5] = scale.y;
+        ret[10] = scale.z;
+        return ret;
     }
 
     void set_material_id(MaterialID mat_id);
