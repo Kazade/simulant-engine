@@ -99,6 +99,10 @@ void Transformable::scale_by(const Vec3& x) {
     scale_z_by(x.z);
 }
 
+void Transformable::scale_to(const float x, const float y, const float z) {
+    set_scaling(Vec3(x, y, z));
+}
+
 void Transformable::rotate_around(const smlt::Vec3& axis, const smlt::Degrees& degrees) {
     if(rotation_locked_) return;
 

@@ -67,10 +67,11 @@ public:
     MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
     virtual Mat4 final_transformation() const override {
         Mat4 ret;
-        Vec3 scale = absolute_scaling();
-        ret[0] = scale.x;
-        ret[5] = scale.y;
-        ret[10] = scale.z;
+        Vec3 sc = scale();
+        ret[0] = sc.x;
+        ret[5] = sc.y;
+        ret[10] = sc.z;
+        ret[15] = 1.0f;
         return ret;
     }
 

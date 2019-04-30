@@ -55,6 +55,7 @@ public:
     virtual void scale_z_by(const float scale);
     virtual void scale_by(float x);
     virtual void scale_by(const Vec3& x);
+    virtual void scale_to(const float x, const float y, const float z);
 
     virtual void rotate_around(const smlt::Vec3& axis, const smlt::Degrees& degrees);
 
