@@ -20,6 +20,7 @@ simulant/loaders/deps/tiny_obj_loader.h
 simulant/nodes/particles/manipulators/colour_fader.h
 simulant/nodes/particles/manipulators/curves.cpp
 simulant/nodes/particles/manipulators/curves.h
+simulant/nodes/particles/manipulators/size_manipulator.cpp
 simulant/renderers/gl2x/vbo_manager.cpp
 simulant/renderers/gl2x/vbo_manager.h
 simulant/vfs.cpp

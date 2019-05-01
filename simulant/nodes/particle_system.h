@@ -116,7 +116,7 @@ public:
 
     template<typename M, typename... Args>
     particles::Manipulator* new_manipulator(Args&& ...args) {
-        auto m = std::make_shared<M>(std::forward<Args>(args)...);
+        auto m = std::make_shared<M>(this, std::forward<Args>(args)...);
         manipulators_.push_back(m);
         return m.get();
     }

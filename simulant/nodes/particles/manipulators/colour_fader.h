@@ -9,8 +9,8 @@ namespace particles {
 class ColourFader:
     public Manipulator {
 public:
-    ColourFader(const std::vector<Colour>& colours, bool interpolate):
-        Manipulator("colour_fader"),
+    ColourFader(ParticleSystem* system, const std::vector<Colour>& colours, bool interpolate):
+        Manipulator(system, "colour_fader"),
         colours_(colours),
         interpolate_(interpolate) {}
 
