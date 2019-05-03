@@ -33,10 +33,9 @@ public:
 
     GL1XRenderer(Window* window);
 
-    batcher::RenderGroup new_render_group(
-        Renderable *renderable,
+    batcher::RenderGroup new_render_group(Renderable *renderable,
         MaterialPass *material_pass,
-        RenderPriority priority,
+        uint8_t pass_number,
         bool is_blended,
         float distance_to_camera
     ) override;

@@ -86,7 +86,7 @@ public:
 
     batcher::RenderGroup new_render_group(
         Renderable *renderable, MaterialPass *material_pass,
-        RenderPriority priority, bool is_blended, float distance_to_camera
+        uint8_t pass_number, bool is_blended, float distance_to_camera
     ) override;
     void init_context();
 

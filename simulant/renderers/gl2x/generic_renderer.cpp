@@ -57,8 +57,8 @@ class GL2RenderGroupImpl:
     public std::enable_shared_from_this<GL2RenderGroupImpl> {
 
 public:
-    GL2RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
-        batcher::RenderGroupImpl(priority, is_blended, distance_to_camera) {}
+    GL2RenderGroupImpl(uint8_t pass_number, bool is_blended, float distance_to_camera):
+        batcher::RenderGroupImpl(pass_number, is_blended, distance_to_camera) {}
 
     GLuint texture_id[MAX_TEXTURE_UNITS];
     GPUProgramID shader_id;
@@ -101,9 +101,8 @@ GPUProgramID GenericRenderer::default_gpu_program_id() const {
     return default_gpu_program_id_;
 }
 
-batcher::RenderGroup GenericRenderer::new_render_group(
-    Renderable* renderable, MaterialPass *material_pass, RenderPriority priority, bool is_blended, float distance_to_camera) {
-    auto impl = std::make_shared<GL2RenderGroupImpl>(priority, is_blended, distance_to_camera);
+batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass, uint8_t pass_number, bool is_blended, float distance_to_camera) {
+    auto impl = std::make_shared<GL2RenderGroupImpl>(pass_number, is_blended, distance_to_camera);
 
     auto program = material_pass->gpu_program_id().fetch();
 
