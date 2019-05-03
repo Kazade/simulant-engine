@@ -116,10 +116,6 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
             const RenderGroup* current_group = &p.first;
             Renderable* renderable = p.second.get();
 
-            if(!renderable->is_visible_in_frame(frame_id)) {
-                return;
-            }
-
             if(!renderable->index_element_count()) {
                 return;
             }

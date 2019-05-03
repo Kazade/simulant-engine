@@ -78,14 +78,6 @@ public:
     virtual const MaterialID material_id() const = 0;
     virtual bool is_visible() const = 0;
 
-    void update_last_visible_frame_id(uint64_t frame_id) {
-        last_visible_frame_id_ = frame_id;
-    }
-
-    bool is_visible_in_frame(uint64_t frame_id) const {
-        return frame_id == last_visible_frame_id_;
-    }
-
     void set_affected_by_lights(std::vector<LightPtr> lights) {
         lights_affecting_this_frame_ = lights;
     }
