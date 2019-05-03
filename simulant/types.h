@@ -585,10 +585,15 @@ namespace std{
 
     };
 
+
+#define DEFINE_ENUM_HASH(enum_name) \
+    template <> struct hash<enum_name> { \
+        size_t operator() (const enum_name& t) const { return std::hash<size_t>()((size_t) t); } \
+    }
+
     /* Hash functions for smlt types */
-    template <> struct hash<smlt::MeshArrangement> {
-        size_t operator() (smlt::MeshArrangement t) { return size_t(t); }
-    };
+    DEFINE_ENUM_HASH(smlt::MeshArrangement);
+    DEFINE_ENUM_HASH(smlt::IndexType);
 
     template<> struct hash<smlt::VertexSpecification> {
         size_t operator()(const smlt::VertexSpecification& spec) const {
