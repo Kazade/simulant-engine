@@ -74,6 +74,9 @@ void Viewport::clear(const RenderTarget &target, uint32_t clear_flags) {
 
     if((clear_flags & BUFFER_CLEAR_DEPTH_BUFFER) == BUFFER_CLEAR_DEPTH_BUFFER) {
         gl_clear_flags |= GL_DEPTH_BUFFER_BIT;
+
+        // Without this clearing the depth will do nothing.
+        GLCheck(glDepthMask, GL_TRUE);
     }
 
     if((clear_flags & BUFFER_CLEAR_STENCIL_BUFFER) == BUFFER_CLEAR_STENCIL_BUFFER) {
