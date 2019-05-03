@@ -82,19 +82,19 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
 
         RenderGroup group = render_group_factory_->new_render_group(
             renderable.get(), material_pass,
-            priority, is_blended, distance_to_camera
+            i, is_blended, distance_to_camera
         );
 
-        auto& pass_queue = pass_queues_[i];
-        pass_queue.insert(std::make_pair(group, renderable));
+        auto& priority_queue = priority_queues_[priority];
+        priority_queue.insert(std::make_pair(group, renderable));
     }
 }
 
 
 void RenderQueue::clear() {
     std::lock_guard<std::mutex> lock(queue_lock_);
-    for(auto& pass_queue: pass_queues_) {
-        pass_queue.clear();
+    for(auto& queue: priority_queues_) {
+        queue.clear();
     }
 }
 
@@ -105,20 +105,16 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
     visitor->start_traversal(*this, frame_id, stage_);
 
-    for(auto& pass_queue: pass_queues_) {
+    for(auto& queue: priority_queues_) {
         IterationType pass_iteration_type = ITERATION_TYPE_ONCE;
         MaterialID material_id;
         MaterialPass* material_pass = nullptr;
 
         const RenderGroup* last_group = nullptr;
 
-        for(auto& p: pass_queue) {
+        for(auto& p: queue) {
             const RenderGroup* current_group = &p.first;
             Renderable* renderable = p.second.get();
-
-            if(!renderable->is_visible_in_frame(frame_id)) {
-                return;
-            }
 
             if(!renderable->index_element_count()) {
                 return;
@@ -180,6 +176,16 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
     }
 
     visitor->end_traversal(*this, stage_);
+}
+
+uint32_t RenderQueue::group_count(Pass pass_number) const {
+    uint32_t i = 0;
+    auto& queue = priority_queues_.at(pass_number);
+    for(auto it = queue.begin(); it != queue.end(); it = queue.upper_bound(it->first)) {
+        ++i;
+    }
+
+    return i;
 }
 
 }

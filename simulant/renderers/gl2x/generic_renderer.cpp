@@ -26,6 +26,7 @@
 #include "../../partitioner.h"
 #include "../../types.h"
 #include "gpu_program.h"
+#include "vbo_manager.h"
 
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
@@ -57,8 +58,8 @@ class GL2RenderGroupImpl:
     public std::enable_shared_from_this<GL2RenderGroupImpl> {
 
 public:
-    GL2RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
-        batcher::RenderGroupImpl(priority, is_blended, distance_to_camera) {}
+    GL2RenderGroupImpl(uint8_t pass_number, bool is_blended, float distance_to_camera):
+        batcher::RenderGroupImpl(pass_number, is_blended, distance_to_camera) {}
 
     GLuint texture_id[MAX_TEXTURE_UNITS];
     GPUProgramID shader_id;
@@ -101,9 +102,15 @@ GPUProgramID GenericRenderer::default_gpu_program_id() const {
     return default_gpu_program_id_;
 }
 
-batcher::RenderGroup GenericRenderer::new_render_group(
-    Renderable* renderable, MaterialPass *material_pass, RenderPriority priority, bool is_blended, float distance_to_camera) {
-    auto impl = std::make_shared<GL2RenderGroupImpl>(priority, is_blended, distance_to_camera);
+GenericRenderer::GenericRenderer(Window *window):
+    Renderer(window),
+    GLRenderer(window),
+    buffer_manager_(VBOManager::create()) {
+
+}
+
+batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass, uint8_t pass_number, bool is_blended, float distance_to_camera) {
+    auto impl = std::make_shared<GL2RenderGroupImpl>(pass_number, is_blended, distance_to_camera);
 
     auto program = material_pass->gpu_program_id().fetch();
 
@@ -670,8 +677,8 @@ void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
 
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
     renderer_->prepare_to_render(renderable);
-    renderer_->set_auto_attributes_on_shader(program_, renderable, &renderer_->buffer_stash_);
-    renderer_->send_geometry(renderable, &renderer_->buffer_stash_);
+    renderer_->set_auto_attributes_on_shader(program_, renderable, renderer_->buffer_stash_.get());
+    renderer_->send_geometry(renderable, renderer_->buffer_stash_.get());
 }
 
 static GLenum convert_index_type(IndexType type) {
@@ -749,8 +756,8 @@ void GenericRenderer::init_context() {
 void GenericRenderer::prepare_to_render(Renderable *renderable) {
     /* Here we allocate VBOs for the renderable if necessary, and then upload
      * any new data */
-    buffer_stash_ = buffer_manager_->update_and_fetch_buffers(renderable);
-    buffer_stash_.bind_vbos();
+    buffer_stash_.reset(new GPUBuffer(buffer_manager_->update_and_fetch_buffers(renderable)));
+    buffer_stash_->bind_vbos();
 }
 
 

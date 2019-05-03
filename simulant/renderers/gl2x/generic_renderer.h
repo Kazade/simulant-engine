@@ -20,17 +20,19 @@
 #define GENERIC_RENDERER_H
 
 #include <vector>
+#include <memory>
 
 #include "../renderer.h"
 #include "../gl_renderer.h"
 #include "../../material.h"
-#include "vbo_manager.h"
 #include "../batching/render_queue.h"
 
 namespace smlt {
 
 class GL2RenderGroupImpl;
 class GenericRenderer;
+class VBOManager;
+class GPUBuffer;
 
 struct RenderState {
     Renderable* renderable;
@@ -77,16 +79,11 @@ class GenericRenderer:
     private GLRenderer {
 
 public:
-    GenericRenderer(Window* window):
-        Renderer(window),
-        GLRenderer(window),
-        buffer_manager_(VBOManager::create()) {
-
-    }
+    GenericRenderer(Window* window);
 
     batcher::RenderGroup new_render_group(
         Renderable *renderable, MaterialPass *material_pass,
-        RenderPriority priority, bool is_blended, float distance_to_camera
+        uint8_t pass_number, bool is_blended, float distance_to_camera
     ) override;
     void init_context();
 
@@ -120,7 +117,7 @@ private:
     void send_geometry(Renderable* renderable, GPUBuffer* buffers);
 
     /* Stashed here in prepare_to_render and used later for that renderable */
-    GPUBuffer buffer_stash_;
+    std::shared_ptr<GPUBuffer> buffer_stash_;
 
     friend class GL2RenderQueueVisitor;
 

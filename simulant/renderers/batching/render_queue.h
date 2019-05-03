@@ -44,8 +44,8 @@ class RenderGroupImpl {
 public:
     typedef std::shared_ptr<RenderGroupImpl> ptr;
 
-    RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
-        priority_(priority),
+    RenderGroupImpl(uint8_t pass_number, bool is_blended, float distance_to_camera):
+        pass_number_(pass_number),
         is_blended_(is_blended),
         distance_to_camera_(distance_to_camera) {
 
@@ -59,9 +59,9 @@ public:
     bool operator<(const RenderGroupImpl& rhs) const {
         // Always sort on priority first
 
-        if(this->priority_ < rhs.priority_) {
+        if(this->pass_number_ < rhs.pass_number_) {
             return true;
-        } else if(this->priority_ > rhs.priority_) {
+        } else if(this->pass_number_ > rhs.pass_number_) {
             return false;
         }
 
@@ -85,7 +85,7 @@ public:
 private:
     virtual bool lt(const RenderGroupImpl& rhs) const = 0;
 
-    RenderPriority priority_;
+    uint8_t pass_number_;
     bool is_blended_;
     float distance_to_camera_ = 0.0f;
 };
@@ -135,7 +135,7 @@ public:
     virtual RenderGroup new_render_group(
         Renderable* renderable,
         MaterialPass* material_pass,
-        RenderPriority priority,
+        uint8_t pass_number,
         bool is_blended,
         float distance_to_camera
     ) = 0;
@@ -199,16 +199,8 @@ public:
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
-    uint32_t pass_count() const { return pass_queues_.size(); }
-    uint32_t group_count(Pass pass_number) const {
-        uint32_t i = 0;
-        auto& pass_queue = pass_queues_.at(pass_number);
-        for(auto it = pass_queue.begin(); it != pass_queue.end(); it = pass_queue.upper_bound(it->first)) {
-            ++i;
-        }
-
-        return i;
-    }
+    uint32_t queue_count() const { return priority_queues_.size(); }
+    uint32_t group_count(Pass pass_number) const;
 
     /*
     void each_group(Pass pass, std::function<void (uint32_t, const RenderGroup&, const Batch&)> cb) {
@@ -229,7 +221,7 @@ private:
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
-    std::array<SortedRenderables, MAX_MATERIAL_PASSES> pass_queues_;
+    std::array<SortedRenderables, RENDER_PRIORITY_MAX> priority_queues_;
 
     void clean_empty_batches();
 

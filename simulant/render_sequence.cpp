@@ -365,7 +365,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
                 continue;
             }
 
-            renderable->update_last_visible_frame_id(frame_id);
             renderable->set_affected_by_lights(renderable_lights);
 
             render_queue.insert_renderable(renderable);

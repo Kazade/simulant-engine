@@ -35,9 +35,9 @@ namespace smlt {
 
 batcher::RenderGroup GL1XRenderer::new_render_group(
         Renderable *renderable, MaterialPass *material_pass,
-        RenderPriority priority, bool is_blended, float distance_to_camera) {
+        uint8_t pass_number, bool is_blended, float distance_to_camera) {
 
-    auto impl = std::make_shared<GL1RenderGroupImpl>(priority, is_blended, distance_to_camera);
+    auto impl = std::make_shared<GL1RenderGroupImpl>(pass_number, is_blended, distance_to_camera);
 
     uint8_t used_count = 0;
 
