@@ -20,6 +20,7 @@ public:
             );
 
             ps->move_to(0.0, 0, -4);
+            ps->set_render_priority(smlt::RENDER_PRIORITY_MAIN + 1);
         } else {
             /* Generate 1024 particle system instances in a grid */
             for(auto z = -16; z < 16; ++z) {

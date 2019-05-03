@@ -82,6 +82,7 @@ public:
         return lt(rhs);
     }
 
+    uint8_t pass_number() const { return pass_number_; }
 private:
     virtual bool lt(const RenderGroupImpl& rhs) const = 0;
 

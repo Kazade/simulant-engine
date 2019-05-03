@@ -101,14 +101,13 @@ void RenderQueue::clear() {
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     std::lock_guard<std::mutex> lock(queue_lock_);
 
-    Pass pass = 0;
-
     visitor->start_traversal(*this, frame_id, stage_);
 
     for(auto& queue: priority_queues_) {
         IterationType pass_iteration_type = ITERATION_TYPE_ONCE;
         MaterialID material_id;
         MaterialPass* material_pass = nullptr;
+        Pass last_pass_id = 0;
 
         const RenderGroup* last_group = nullptr;
 
@@ -126,15 +125,15 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 visitor->change_render_group(last_group, current_group);
             }
 
-            /* As the pass number is constant for the entire batch, a material_pass
-             * will only change if and when a material changes
-             */
+            auto this_pass_id = current_group->impl()->pass_number();
+
             auto& this_mat_id = renderable->material_id();
-            if(this_mat_id != material_id) {
+            if(this_mat_id != material_id || this_pass_id != last_pass_id) {
                 auto last_pass = material_pass;
 
                 material_id = this_mat_id;
-                material_pass = stage_->assets->material(material_id)->pass(pass);
+                last_pass_id = this_pass_id;
+                material_pass = stage_->assets->material(material_id)->pass(this_pass_id);
                 pass_iteration_type = material_pass->iteration_type();
 
                 visitor->change_material_pass(last_pass, material_pass);
@@ -172,7 +171,6 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
             last_group = current_group;
 
         }
-        ++pass;
     }
 
     visitor->end_traversal(*this, stage_);
