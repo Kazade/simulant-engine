@@ -120,11 +120,7 @@ private:
 
 class Organism {
 public:
-    virtual ~Organism() {
-        behaviours_.clear();
-        behaviour_names_.clear();
-        behaviour_types_.clear();
-    }
+    virtual ~Organism();
 
     template<typename T>
     bool has_behaviour() const {

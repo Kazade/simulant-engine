@@ -35,4 +35,14 @@ void Behaviour::_fixed_update_thunk(float step) {
     Updateable::_fixed_update_thunk(step);
 }
 
+Organism::~Organism() {
+    for(auto& b: behaviours_) {
+        b->set_organism(nullptr);
+    }
+
+    behaviours_.clear();
+    behaviour_names_.clear();
+    behaviour_types_.clear();
+}
+
 }
