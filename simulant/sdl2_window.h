@@ -64,10 +64,10 @@ public:
     SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync);
     virtual ~SDL2Window();
 
-    void set_title(const std::string& title);
-    void show_cursor(bool value=true);
-    void lock_cursor(bool cursor_locked=true);
-    void cursor_position(int32_t& mouse_x, int32_t& mouse_y);
+    void set_title(const std::string& title) override;
+    void show_cursor(bool value=true) override;
+    void lock_cursor(bool cursor_locked=true) override;
+    void cursor_position(int32_t& mouse_x, int32_t& mouse_y) override;
     
 private:
     SDL_Window* screen_;

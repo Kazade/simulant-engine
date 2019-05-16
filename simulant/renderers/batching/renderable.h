@@ -87,7 +87,6 @@ public:
     }
 
 private:
-    uint64_t last_visible_frame_id_ = 0;
     std::vector<LightPtr> lights_affecting_this_frame_;
 };
 
