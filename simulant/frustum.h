@@ -101,6 +101,8 @@ public:
     }
 
     Vec3 direction() const;
+    Vec3 up() const;
+    Vec3 right() const;
 
     float width_at_distance(float distance) const;
     float height_at_distance(float distance) const;
