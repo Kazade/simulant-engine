@@ -382,6 +382,8 @@ static GLenum convert_arrangement(MeshArrangement arrangement) {
         return GL_TRIANGLE_STRIP;
     case MESH_ARRANGEMENT_TRIANGLE_FAN:
         return GL_TRIANGLE_FAN;
+    case MESH_ARRANGEMENT_QUADS:
+        return GL_QUADS;
     default:
         assert(0 && "Invalid mesh arrangement");
         return GL_TRIANGLES;

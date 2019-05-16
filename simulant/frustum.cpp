@@ -85,6 +85,16 @@ Vec3 Frustum::direction() const {
     return (far - near).normalized();
 }
 
+Vec3 Frustum::up() const {
+    auto corners = near_corners();
+    return (corners[FRUSTUM_CORNER_TOP_RIGHT] - corners[FRUSTUM_CORNER_BOTTOM_RIGHT]).normalized();
+}
+
+Vec3 Frustum::right() const {
+    auto corners = near_corners();
+    return (corners[FRUSTUM_CORNER_TOP_RIGHT] - corners[FRUSTUM_CORNER_TOP_LEFT]).normalized();
+}
+
 float Frustum::aspect_ratio() const {
     return far_width() / far_height();
 }

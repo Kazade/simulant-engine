@@ -10,7 +10,7 @@ ENV ANDROID_NDK_HOME /opt/android-ndk-linux
 ENV PATH ${PATH}:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}:${ANDROID_HOME}/tools:${ANDROID_NDK_HOME}
 ENV SDKMANAGER_OPTS "--add-modules java.se.ee"
 RUN apt-get update && apt-get install -y --no-install-recommends \
-	unzip wget cmake build-essential
+	unzip wget cmake build-essential python3
 RUN cd /opt/android-sdk-linux && \
 	wget -q --output-document=sdk-tools.zip https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip && \
 	unzip sdk-tools.zip && \
