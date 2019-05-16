@@ -22,6 +22,9 @@ void StatsRecorder::increment_polygons_rendered(MeshArrangement arrangement, uin
     case MESH_ARRANGEMENT_LINE_STRIP:
         increment = element_count - 1;
     break;
+    case MESH_ARRANGEMENT_QUADS:
+        increment = element_count / 4;
+    break;
     }
 
     polygons_rendered_ += increment;
