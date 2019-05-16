@@ -189,35 +189,35 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     index_data_->resize(quota_ * 4);
     index_data_->clear();
 
-    auto half_up = up * 0.5f;
-    auto half_right = right * 0.5f;
-
     auto i = 0;
     for(auto& p: particles_) {
-        Vec3 scale(p.dimensions, 1.0f);
+        auto scaled_up = up * p.dimensions.y;
+        auto scaled_right = right * p.dimensions.x;
+        auto half_up = scaled_up * 0.5f;
+        auto half_right = scaled_right * 0.5f;
 
         auto pos = p.position;
-        pos += -half_up * scale;
-        pos += -half_right * scale;
+        pos += -half_up;
+        pos += -half_right;
 
         vertex_data_->position(pos);
         vertex_data_->diffuse(p.colour);
         vertex_data_->tex_coord0(0, 0);
         vertex_data_->move_next();
 
-        pos += right * scale;
+        pos += scaled_right;
         vertex_data_->position(pos);
         vertex_data_->diffuse(p.colour);
         vertex_data_->tex_coord0(1, 0);
         vertex_data_->move_next();
 
-        pos += up * scale;
+        pos += scaled_up;
         vertex_data_->position(pos);
         vertex_data_->diffuse(p.colour);
         vertex_data_->tex_coord0(1, 1);
         vertex_data_->move_next();
 
-        pos += -right * scale;
+        pos += -scaled_right;
         vertex_data_->position(pos);
         vertex_data_->diffuse(p.colour);
         vertex_data_->tex_coord0(0, 1);
