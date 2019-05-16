@@ -2,6 +2,7 @@
 
 #include "particles/emitter.h"
 
+#include "../frustum.h"
 #include "../stage.h"
 #include "../types.h"
 
@@ -148,6 +149,16 @@ bool ParticleSystem::has_active_emitters() const {
     return false;
 }
 
+RenderableList ParticleSystem::_get_renderables(const Frustum &frustum, DetailLevel detail_level) {
+    /* Rebuild the vertex data with the current frustum direction */
+    rebuild_vertex_data(frustum.up(), frustum.right());
+
+    auto ret = RenderableList();
+    std::shared_ptr<Renderable> sptr = std::const_pointer_cast<ParticleSystem>(shared_from_this());
+    ret.push_back(sptr);
+    return ret;
+}
+
 void ParticleSystem::ask_owner_for_destruction() {
     stage->delete_particle_system(id());
 }
@@ -167,6 +178,58 @@ void ParticleSystem::set_quota(std::size_t quota) {
         // Reserve space for all the particles
         particles_.reserve(quota);
     }
+}
+
+void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right) {
+    vertex_data_->resize(quota_ * 4);
+    vertex_data_->move_to_start();
+
+    /* FIXME: Remove this when #193 is complete */
+    index_data_->resize(quota_ * 4);
+    index_data_->clear();
+
+    auto half_up = up * 0.5f;
+    auto half_right = right * 0.5f;
+
+    auto i = 0;
+    for(auto& p: particles_) {
+        Vec3 scale(p.dimensions, 1.0f);
+
+        auto pos = p.position;
+        pos += -half_up * scale;
+        pos += -half_right * scale;
+
+        vertex_data_->position(pos);
+        vertex_data_->diffuse(p.colour);
+        vertex_data_->tex_coord0(0, 0);
+        vertex_data_->move_next();
+
+        pos += right * scale;
+        vertex_data_->position(pos);
+        vertex_data_->diffuse(p.colour);
+        vertex_data_->tex_coord0(1, 0);
+        vertex_data_->move_next();
+
+        pos += up * scale;
+        vertex_data_->position(pos);
+        vertex_data_->diffuse(p.colour);
+        vertex_data_->tex_coord0(1, 1);
+        vertex_data_->move_next();
+
+        pos += -right * scale;
+        vertex_data_->position(pos);
+        vertex_data_->diffuse(p.colour);
+        vertex_data_->tex_coord0(0, 1);
+        vertex_data_->move_next();
+
+        index_data_->index(i++);
+        index_data_->index(i++);
+        index_data_->index(i++);
+        index_data_->index(i++);
+    }
+
+    vertex_data_->done();
+    index_data_->done();
 }
 
 void ParticleSystem::update(float dt) {
@@ -216,60 +279,6 @@ void ParticleSystem::update(float dt) {
             return;
         }
     }
-
-    const static auto v1n = Vec3(-0.5, -0.5, 0.0);
-    const static auto v2n = Vec3( 0.5, -0.5, 0.0);
-    const static auto v3n = Vec3( 0.5,  0.5, 0.0);
-    const static auto v4n = Vec3(-0.5,  0.5, 0.0);
-
-    vertex_data_->move_to_start();
-
-    assert(particles_.size() <= quota_);
-
-    vertex_data_->resize(particles_.size() * 4);
-    for(auto& particle: particles_) {
-        auto scale = Vec3(particle.dimensions.x, particle.dimensions.y, 0);
-        auto v1 = particle.position + (v1n * scale);
-        auto v2 = particle.position + (v2n * scale);
-        auto v3 = particle.position + (v3n * scale);
-        auto v4 = particle.position + (v4n * scale);
-
-        vertex_data_->position(v1);
-        vertex_data_->diffuse(particle.colour);
-        vertex_data_->tex_coord0(0, 0);
-        vertex_data_->move_next();
-
-        vertex_data_->position(v2);
-        vertex_data_->diffuse(particle.colour);
-        vertex_data_->tex_coord0(1, 0);
-        vertex_data_->move_next();
-
-        vertex_data_->position(v3);
-        vertex_data_->diffuse(particle.colour);
-        vertex_data_->tex_coord0(1, 1);
-        vertex_data_->move_next();
-
-        vertex_data_->position(v4);
-        vertex_data_->diffuse(particle.colour);
-        vertex_data_->tex_coord0(0, 1);
-        vertex_data_->move_next();
-    }
-
-    index_data_->clear();
-
-    for(uint32_t i = 0; i < particles_.size(); ++i) {
-        auto new_start = (i * 4);
-        index_data_->index(new_start + 0);
-        index_data_->index(new_start + 1);
-        index_data_->index(new_start + 2);
-
-        index_data_->index(new_start + 0);
-        index_data_->index(new_start + 2);
-        index_data_->index(new_start + 3);
-    }
-
-    vertex_data_->done();
-    index_data_->done();
 }
 
 void ParticleSystem::set_particle_width(float width) {

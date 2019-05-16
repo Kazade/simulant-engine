@@ -273,7 +273,7 @@ const SubMesh *SubActor::submesh() const {
     return submesh_.get();
 }
 
-RenderableList Actor::_get_renderables(const Frustum &frustum, DetailLevel level) const {
+RenderableList Actor::_get_renderables(const Frustum &frustum, DetailLevel level) {
     auto ret = RenderableList();
 
     auto mesh = find_mesh(level);

@@ -107,7 +107,7 @@ public:
     virtual RenderableList _get_renderables(
         const smlt::Frustum& frustum,
         DetailLevel detail_level
-    ) const = 0;
+    ) = 0;
 
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
@@ -147,7 +147,7 @@ public:
         StageNode(stage) {}
 
     /* Containers don't directly have renderables, but their children do */
-    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum, DetailLevel detail_level) const {
+    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum, DetailLevel detail_level) override {
         return std::vector<std::shared_ptr<Renderable>>();
     }
 

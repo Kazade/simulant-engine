@@ -64,7 +64,7 @@ public:
 
     //Renderable stuff
 
-    MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_TRIANGLES; }
+    MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_QUADS; }
     virtual Mat4 final_transformation() const override {
         /* Particles are absolutely positioned and rotated, transforming them messes them up! */
         return Mat4();
@@ -121,12 +121,7 @@ public:
         return m.get();
     }
 
-    RenderableList _get_renderables(const Frustum &frustum, DetailLevel detail_level) const {
-        auto ret = RenderableList();
-        std::shared_ptr<Renderable> sptr = std::const_pointer_cast<ParticleSystem>(shared_from_this());
-        ret.push_back(sptr);
-        return ret;
-    }
+    RenderableList _get_renderables(const Frustum &frustum, DetailLevel detail_level) override;
 
 private:
     const static int32_t INITIAL_QUOTA = 10;
@@ -161,6 +156,8 @@ private:
     IndexData* index_data_ = nullptr;
 
     bool destroy_on_completion_ = false;
+
+    void rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right);
 };
 
 }
