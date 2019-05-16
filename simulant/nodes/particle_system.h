@@ -121,7 +121,7 @@ public:
         return m.get();
     }
 
-    RenderableList _get_renderables(const Frustum &frustum, DetailLevel detail_level) override;
+    RenderableList _get_renderables(CameraPtr camera, DetailLevel detail_level) override;
 
 private:
     const static int32_t INITIAL_QUOTA = 10;

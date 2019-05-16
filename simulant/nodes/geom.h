@@ -65,7 +65,7 @@ public:
 
     bool init() override;
 
-    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum, DetailLevel detail_level) override;
+    std::vector<std::shared_ptr<Renderable>> _get_renderables(CameraPtr camera, DetailLevel detail_level) override;
 private:
     MeshID mesh_id_;
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;

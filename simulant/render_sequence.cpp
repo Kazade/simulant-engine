@@ -359,7 +359,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
         /* Find the ideal detail level at this distance from the camera */
         auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
 
-        for(auto& renderable: node->_get_renderables(camera->frustum(), level)) {
+        for(auto& renderable: node->_get_renderables(camera, level)) {
             if(!renderable->index_element_count()) {
                 // Don't render things with no indices
                 continue;

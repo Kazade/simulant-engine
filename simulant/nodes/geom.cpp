@@ -20,6 +20,7 @@
 #include "geom.h"
 #include "../stage.h"
 #include "geoms/octree_culler.h"
+#include "camera.h"
 
 namespace smlt {
 
@@ -52,8 +53,8 @@ void Geom::ask_owner_for_destruction() {
     stage->delete_geom(id());
 }
 
-std::vector<std::shared_ptr<Renderable>> Geom::_get_renderables(const Frustum &frustum, DetailLevel detail_level) {
-    return culler_->renderables_visible(frustum);
+std::vector<std::shared_ptr<Renderable>> Geom::_get_renderables(CameraPtr camera, DetailLevel detail_level) {
+    return culler_->renderables_visible(camera->frustum());
 }
 
 

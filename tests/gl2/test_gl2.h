@@ -123,7 +123,7 @@ public:
 
         auto actor = stage_->new_actor_with_mesh(mesh_->id());
 
-        vbo_manager_->update_and_fetch_buffers(actor->_get_renderables(camera_->frustum(), DETAIL_LEVEL_NEAREST)[0].get());
+        vbo_manager_->update_and_fetch_buffers(actor->_get_renderables(camera_, DETAIL_LEVEL_NEAREST)[0].get());
 
         assert_equal(vbo_manager_->dedicated_buffer_count(), 1u);
 

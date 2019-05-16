@@ -5,6 +5,7 @@
 #include "../frustum.h"
 #include "../stage.h"
 #include "../types.h"
+#include "camera.h"
 
 namespace smlt {
 
@@ -149,9 +150,9 @@ bool ParticleSystem::has_active_emitters() const {
     return false;
 }
 
-RenderableList ParticleSystem::_get_renderables(const Frustum &frustum, DetailLevel detail_level) {
-    /* Rebuild the vertex data with the current frustum direction */
-    rebuild_vertex_data(frustum.up(), frustum.right());
+RenderableList ParticleSystem::_get_renderables(CameraPtr camera, DetailLevel detail_level) {
+    /* Rebuild the vertex data with the current camera direction */
+    rebuild_vertex_data(camera->up(), camera->right());
 
     auto ret = RenderableList();
     std::shared_ptr<Renderable> sptr = std::const_pointer_cast<ParticleSystem>(shared_from_this());

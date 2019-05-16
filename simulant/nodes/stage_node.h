@@ -105,7 +105,7 @@ public:
 
     /* Return a list of renderables to pass into the render queue */
     virtual RenderableList _get_renderables(
-        const smlt::Frustum& frustum,
+        CameraPtr camera,
         DetailLevel detail_level
     ) = 0;
 
@@ -147,7 +147,7 @@ public:
         StageNode(stage) {}
 
     /* Containers don't directly have renderables, but their children do */
-    std::vector<std::shared_ptr<Renderable>> _get_renderables(const Frustum& frustum, DetailLevel detail_level) override {
+    std::vector<std::shared_ptr<Renderable>> _get_renderables(CameraPtr camera, DetailLevel detail_level) override {
         return std::vector<std::shared_ptr<Renderable>>();
     }
 
