@@ -1,3 +1,4 @@
+#include <iomanip>
 #include "deps/kazlog/kazlog.h"
 #include "deps/kfs/kfs.h"
 
@@ -27,19 +28,16 @@ void ArgParser::define_arg(const std::string& name, ArgType type, const std::str
 }
 
 void ArgParser::print_help() const {
-    auto tmpl = _F("Usage: {0} [OPTION]...\n\n{1}");
+    auto exe = kfs::path::split(kfs::exe_path()).second;
+    std::cout << "Usage: " << exe << " [OPTION]..." << std::endl << std::endl;
 
-    std::string options;
     for(auto& arg: defined_args_) {
-        options += _F("\t{0}\t\t\t\t{1}\n").format(
-            arg.first, arg.second.help
-        );
+        std::cout << std::left << std::setw(30) << "\t" + arg.first;
+        std::cout << arg.second.help << std::endl;
+
     }
 
-    std::cout << tmpl.format(
-        kfs::path::split(kfs::exe_path()).second,
-        options
-    ) << std::endl;
+    std::cout << std::endl;
 }
 
 bool ArgParser::parse_args(int argc, char* argv[]) {
