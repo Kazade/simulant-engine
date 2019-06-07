@@ -19,7 +19,6 @@ public:
 
             ps_->move_to(0.0, 0, -4);
             ps_->set_render_priority(smlt::RENDER_PRIORITY_MAIN + 1);
-            ps_->material_id().fetch()->pass(0)->set_blend_func(smlt::BLEND_NONE);
         } else {
             /* Generate 1024 particle system instances in a grid */
             for(auto z = -16; z < 16; ++z) {
