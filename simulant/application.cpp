@@ -41,6 +41,8 @@ namespace smlt {
 Application::Application(const AppConfig &config):
     config_(config) {
 
+    args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
+
     construct_window(config);
 }
 
@@ -165,7 +167,6 @@ bool Application::_call_init() {
     return initialized_;
 }
 
-
 int32_t Application::run() {
     if(!_call_init()) {
         L_ERROR("Error while initializing, terminating application");
@@ -183,6 +184,19 @@ int32_t Application::run() {
     window_.reset();
 
     return 0;
+}
+
+int32_t Application::run(int argc, char* argv[]) {
+    if(!args->parse_args(argc, argv)) {
+        return 2;
+    }
+
+    if(args->arg_value<bool>("help", false).value()) {
+        args->print_help();
+        return 0;
+    }
+
+    return Application::run();
 }
 
 }

@@ -10,6 +10,8 @@ deps/libgl/samples/paletted/main.c
 deps/libgl/samples/paletted_pcx/Makefile
 deps/libgl/samples/paletted_pcx/main.c
 deps/libgl/samples/polymark/main.c
+simulant/arg_parser.cpp
+simulant/arg_parser.h
 simulant/asset.cpp
 simulant/asset.h
 simulant/generic/notifies_destruction.h
