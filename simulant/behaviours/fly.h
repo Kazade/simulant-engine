@@ -42,6 +42,7 @@ public:
 
     const std::string name() const override { return "Fly by Keyboard"; }
 
+    void set_speed(float v) { speed_ = v; }
 private:
     void on_behaviour_added(Organism* controllable) override {
         stage_node_ = dynamic_cast<StageNode*>(controllable);
@@ -58,7 +59,7 @@ private:
             return;
         }
 
-        stage_node_->move_forward_by(input->axis_value("Vertical") * 600.0 * dt);
+        stage_node_->move_forward_by(input->axis_value("Vertical") * speed_ * dt);
         stage_node_->rotate_global_y_by(Degrees(input->axis_value("Horizontal") * -50.0 * dt));
         stage_node_->rotate_global_y_by(Degrees(input->axis_value("MouseX") * -50.0f * dt));
         stage_node_->rotate_x_by(Degrees(input->axis_value("MouseY") * -50.0f * dt));
@@ -66,6 +67,7 @@ private:
 
     StageNode* stage_node_ = nullptr;
     Window* window_ = nullptr;
+    float speed_ = 600.0f;
 };
 
 }
