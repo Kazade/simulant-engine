@@ -5,6 +5,7 @@
 
 #include "generic/any/any.h"
 #include "generic/optional.h"
+#include "utils/string.h"
 
 namespace smlt {
 enum ArgType {
