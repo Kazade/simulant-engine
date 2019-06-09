@@ -25,6 +25,7 @@
 #include <thread>
 #include <future>
 
+#include "arg_parser.h"
 #include "keycodes.h"
 #include "utils/deprecated.h"
 #include "types.h"
@@ -92,10 +93,12 @@ public:
     //Create the window, start do_initialization in a thread, show the loading scene
     //when thread completes, hide the loading scene and run the main loop
     int32_t run();
+    int32_t run(int argc, char* argv[]);
 
     Property<Application, Window> window = {this, &Application::window_ };
     Property<Application, generic::DataCarrier> data = { this, &Application::data_carrier_ };
     Property<Application, SceneManager> scenes = {this, &Application::scene_manager_};
+    Property<Application, ArgParser> args = {this, &Application::args_};
 
     bool initialized() const { return initialized_; }
 
@@ -139,6 +142,8 @@ private:
 
     AppConfig config_;
     void construct_window(const AppConfig& config);
+
+    ArgParser args_;
 };
 
 }
