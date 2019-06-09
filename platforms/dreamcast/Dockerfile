@@ -9,9 +9,28 @@ RUN yum -y update && yum clean all && yum -y install automake make git hostname 
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone git://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
-#RUN sed -i 's/4.7.3/4.8.2/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
-#RUN sed -i 's/4.7.3/4.8.2/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
-#RUN sed -i 's/4.7.3/4.8.2/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
+
+## Uncomment the below to enable a 5.2 toolchain
+
+## Download update GCC and newlib diffs
+#RUN cd /opt/toolchains/dc/kos/utils/dc-chain/patches; curl -O https://raw.githubusercontent.com/DC-SWAT/#DreamShell/master/sdk/toolchain/patches/gcc-5.2.0-kos.diff; cd -
+#RUN cd /opt/toolchains/dc/kos/utils/dc-chain/patches; curl -O https://raw.githubusercontent.com/DC-SWAT/#DreamShell/master/sdk/toolchain/patches/newlib-2.2.0-kos.diff; cd -
+#
+## Custom SWAT/DreamShell patches which should probably be upstream??
+#RUN cd /opt/toolchains/dc/kos/utils/dc-chain/patches; curl -O https://raw.githubusercontent.com/DC-SWAT/#DreamShell/master/sdk/toolchain/patches/kos.diff; cd -
+#
+#RUN cd /opt/toolchains/dc/kos && patch -p1 < /opt/toolchains/dc/kos/utils/dc-chain/patches/kos.diff
+#
+## Update GCC
+#RUN sed -i 's/4.7.3/5.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
+#RUN sed -i 's/4.7.3/5.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
+#RUN sed -i 's/4.7.3/5.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
+#
+## Update newlib
+#RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
+#RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
+#RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
+
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain && sh ./download.sh && sh ./unpack.sh && make
 RUN cp /opt/toolchains/dc/kos/doc/environ.sh.sample /opt/toolchains/dc/kos/environ.sh
 
@@ -72,5 +91,6 @@ RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make
 # Now install dcload-ip
 RUN yum install -y elfutils-libelf-devel
 RUN . /etc/bash.bashrc; git clone https://git.code.sf.net/p/cadcdev/dcload-ip /opt/toolchains/dc/dc-load-ip
+RUN . /etc/bash.bashrc; cp /opt/toolchains/dc/dc-load-ip/example-src/dc4.x /opt/toolchains/dc/dc-load-ip/example-src/dc5.x
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
 RUN . /etc/bash.bashrc; mkdir -p /opt/toolchains/dc/bin && cp /opt/toolchains/dc/dc-load-ip/host-src/tool/dc-tool /opt/toolchains/dc/bin
