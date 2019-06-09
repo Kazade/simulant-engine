@@ -81,7 +81,7 @@ IF(NOT DREAMCAST_BUILD)
     link_libraries(Threads::Threads)
 
     # Force the new C++ ABI on GCC
-    MESSAGE("-- Enabling old C++11 ABI (until TravisCI is upgraded past Trusty)")
+    MESSAGE("-- Enabling old C++11 ABI")
     ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
 ELSE()
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
