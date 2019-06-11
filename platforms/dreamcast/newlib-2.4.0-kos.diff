@@ -1,6 +1,6 @@
-diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host" ./newlib/configure.host
---- "../newlib-2.4.0 (copy)/newlib/configure.host"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/configure.host	2019-06-11 11:06:29.956010819 +0100
+diff -ruN "newlib-2.4.0/newlib/configure.host" newlib-2.4.0-kos/newlib/configure.host
+--- "newlib-2.4.0/newlib/configure.host"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/configure.host	2019-06-11 11:06:29.956010819 +0100
 @@ -267,6 +267,7 @@
  	;;
    sh | sh64)
@@ -9,9 +9,9 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host" ./newlib/configure.host
  	;;
    sparc*)
  	machine_dir=sparc
-diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure.host.orig
---- "../newlib-2.4.0 (copy)/newlib/configure.host.orig"	1970-01-01 01:00:00.000000000 +0100
-+++ ./newlib/configure.host.orig	2016-03-29 22:33:42.000000000 +0100
+diff -ruN "newlib-2.4.0/newlib/configure.host.orig" newlib-2.4.0-kos/newlib/configure.host.orig
+--- "newlib-2.4.0/newlib/configure.host.orig"	1970-01-01 01:00:00.000000000 +0100
++++ newlib-2.4.0-kos/newlib/configure.host.orig	2016-03-29 22:33:42.000000000 +0100
 @@ -0,0 +1,892 @@
 +# configure.host
 +
@@ -175,11 +175,11 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +  i[34567]86)
 +	# Don't use for these since they provide their own setjmp.
 +	case ${host} in
-+	*-*-sco* | *-*-cygwin*) 
++	*-*-sco* | *-*-cygwin*)
 +		libm_machine_dir=i386
 +		machine_dir=i386
 +		;;
-+	*) 
++	*)
 +		libm_machine_dir=i386
 +		machine_dir=i386
 +		mach_add_setjmp=true
@@ -195,7 +195,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +	machine_dir=lm32
 +	;;
 +  m32c)
-+	machine_dir=m32c	
++	machine_dir=m32c
 +	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -DSMALL_MEMORY"
 +	;;
 +
@@ -208,7 +208,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +	newlib_cflags="-DPREFER_SIZE_OVER_SPEED -Os -mrelax"
 +	CFLAGS="-g -Os"
 +	;;
-+  
++
 +  m68*)
 +	machine_dir=m68k
 +	newlib_cflags="${newlib_cflags} -DCOMPACT_CTYPE"
@@ -477,7 +477,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +	unix_dir=unix
 +	posix_dir=posix
 +	crt1=crt1.o
-+	crt1_dir=libc/sys/${sys_dir}	
++	crt1_dir=libc/sys/${sys_dir}
 +	gcc_dir=`gcc -print-search-dirs | awk '/^install:/{print $2}'`
 +	default_newlib_io_c99_formats="yes"
 +	default_newlib_io_long_double="yes"
@@ -605,7 +605,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +	default_newlib_io_c99_formats="yes"
 +	newlib_cflags="${newlib_cflags} -D_COMPILING_NEWLIB"
 +	newlib_cflags="${newlib_cflags} -DMALLOC_PROVIDED -DEXIT_PROVIDED -DSIGNAL_PROVIDED -DREENTRANT_SYSCALLS_PROVIDED -DHAVE_NANOSLEEP -DHAVE_BLKSIZE -DHAVE_FCNTL -DHAVE_ASSERT_FUNC"
-+        # turn off unsupported items in posix directory 
++        # turn off unsupported items in posix directory
 +	newlib_cflags="${newlib_cflags} -D_NO_GETLOGIN -D_NO_GETPWENT -D_NO_GETUT -D_NO_GETPASS -D_NO_SIGSET -D_NO_WORDEXP -D_NO_POPEN -D_NO_POSIX_SPAWN"
 +        # turn off using cli/sti in i386 setjmp/longjmp
 +	newlib_cflags="${newlib_cflags} -D_I386MACH_ALLOW_HW_INTERRUPTS"
@@ -694,17 +694,17 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +        syscall_dir=syscalls
 +        ;;
 +  h8300*-*-*)
-+	syscall_dir=syscalls	
++	syscall_dir=syscalls
 +	default_newlib_io_long_long="yes"
 +	newlib_cflags="${newlib_cflags} -DSMALL_DTOA -DSMALL_MEMORY"
 +	# Simulator only extensions for H8300.
 +	# Uncomment the next line to enable them.
 +	# newlib_cflags="${newlib_cflags} -D__SIMULATOR__"
-+	;;	
++	;;
 +  h8500-*-*)
-+	syscall_dir=syscalls	
++	syscall_dir=syscalls
 +	newlib_cflags="${newlib_cflags} -DSMALL_DTOA -DSMALL_MEMORY"
-+	;;	
++	;;
 +  i[34567]86-*-sco*)
 +	newlib_cflags="${newlib_cflags} -DSIGNAL_PROVIDED -DHAVE_FCNTL"
 +	;;
@@ -835,7 +835,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +	syscall_dir=
 +	;;
 +  w65-*-*)
-+	syscall_dir=syscalls	
++	syscall_dir=syscalls
 +	newlib_cflags="${newlib_cflags} -DSMALL_DTOA -DSMALL_MEMORY"
 +	;;
 +  xc16x-*)
@@ -886,7 +886,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +# Disable atexit dynamic allocation if requested.
 +if [ "x${newlib_atexit_dynamic_alloc}" = "x" ]; then
 +	if [ ${default_newlib_atexit_dynamic_alloc} = "yes" ]; then
-+		newlib_atexit_dynamic_alloc="yes"; 
++		newlib_atexit_dynamic_alloc="yes";
 +	fi
 +fi
 +
@@ -905,9 +905,9 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/configure.host.orig" ./newlib/configure
 +if test -z "${have_crt0}" && test -n "${sys_dir}"; then
 +  have_crt0="yes"
 +fi
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/assert.h" ./newlib/libc/include/assert.h
---- "../newlib-2.4.0 (copy)/newlib/libc/include/assert.h"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/include/assert.h	2019-06-11 11:06:29.958010820 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/include/assert.h" newlib-2.4.0-kos/newlib/libc/include/assert.h
+--- "newlib-2.4.0/newlib/libc/include/assert.h"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/assert.h	2019-06-11 11:06:29.958010820 +0100
 @@ -13,8 +13,8 @@
  #ifdef NDEBUG           /* required by ANSI standard */
  # define assert(__e) ((void)0)
@@ -916,37 +916,37 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/assert.h" ./newlib/libc/in
 -						       __ASSERT_FUNC, #__e))
 +# define assert(__e) ((__e) ? (void)0 : __assert (__FILE__, __LINE__, \
 +						       #__e, (char *)0, __ASSERT_FUNC))
- 
+
  # ifndef __ASSERT_FUNC
    /* Use g++'s demangled names in C++.  */
 @@ -36,10 +36,8 @@
  # endif /* !__ASSERT_FUNC */
  #endif /* !NDEBUG */
- 
+
 -void _EXFUN(__assert, (const char *, int, const char *)
 -	    _ATTRIBUTE ((__noreturn__)));
 -void _EXFUN(__assert_func, (const char *, int, const char *, const char *)
 -	    _ATTRIBUTE ((__noreturn__)));
 +void _EXFUN(__assert, (const char *, int, const char *, const char *,
 +                       const char *) _ATTRIBUTE ((__noreturn__)));
- 
+
  #if __STDC_VERSION__ >= 201112L && !defined __cplusplus
  # define static_assert _Static_assert
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/machine/_default_types.h" ./newlib/libc/include/machine/_default_types.h
---- "../newlib-2.4.0 (copy)/newlib/libc/include/machine/_default_types.h"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/include/machine/_default_types.h	2019-06-11 11:06:29.960010822 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/include/machine/_default_types.h" newlib-2.4.0-kos/newlib/libc/include/machine/_default_types.h
+--- "newlib-2.4.0/newlib/libc/include/machine/_default_types.h"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/machine/_default_types.h	2019-06-11 11:06:29.960010822 +0100
 @@ -7,6 +7,8 @@
- 
+
  #include <sys/features.h>
- 
+
 +#include <sys/features.h>
 +
  /*
   * Guess on types by examining *_MIN / *_MAX defines.
   */
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/machine/_default_types.h.orig" ./newlib/libc/include/machine/_default_types.h.orig
---- "../newlib-2.4.0 (copy)/newlib/libc/include/machine/_default_types.h.orig"	1970-01-01 01:00:00.000000000 +0100
-+++ ./newlib/libc/include/machine/_default_types.h.orig	2016-03-29 22:33:42.000000000 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/include/machine/_default_types.h.orig" newlib-2.4.0-kos/newlib/libc/include/machine/_default_types.h.orig
+--- "newlib-2.4.0/newlib/libc/include/machine/_default_types.h.orig"	1970-01-01 01:00:00.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/machine/_default_types.h.orig	2016-03-29 22:33:42.000000000 +0100
 @@ -0,0 +1,220 @@
 +/*
 + *  $Id$
@@ -1168,53 +1168,53 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/machine/_default_types.h.o
 +#endif
 +
 +#endif /* _MACHINE__DEFAULT_TYPES_H */
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/select.h" ./newlib/libc/include/sys/select.h
---- "../newlib-2.4.0 (copy)/newlib/libc/include/sys/select.h"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/include/sys/select.h	2019-06-11 11:09:18.757385602 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/include/sys/select.h" newlib-2.4.0-kos/newlib/libc/include/sys/select.h
+--- "newlib-2.4.0/newlib/libc/include/sys/select.h"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/sys/select.h	2019-06-11 11:09:18.757385602 +0100
 @@ -19,7 +19,7 @@
     includes the W32api winsock[2].h header must know what it is doing;
     it must not call the Cygwin select function.
  */
 -# if !(defined (_WINSOCK_H) || defined (_WINSOCKAPI_) || defined (__USE_W32_SOCKETS))
 +# if !(defined (_WINSOCK_H) || defined (_WINSOCKAPI_) || defined (__USE_W32_SOCKETS) || defined(_arch_dreamcast))
- 
+
  #include <sys/cdefs.h>
  #include <sys/_sigset.h>
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h" ./newlib/libc/include/sys/types.h
---- "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/include/sys/types.h	2019-06-11 11:06:29.961010823 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/include/sys/types.h" newlib-2.4.0-kos/newlib/libc/include/sys/types.h
+--- "newlib-2.4.0/newlib/libc/include/sys/types.h"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h	2019-06-11 11:06:29.961010823 +0100
 @@ -256,7 +256,7 @@
- 
+
  #if defined(__XMK__)
  typedef unsigned int pthread_t;          /* identify a thread */
 -#else
 +#elif !defined(_arch_dreamcast)
  typedef __uint32_t pthread_t;            /* identify a thread */
  #endif
- 
+
 @@ -278,6 +278,7 @@
    #include <sys/cpuset.h>
  #endif
- 
+
 +#if !defined(_arch_dreamcast)
  #if defined(__XMK__)
  typedef struct pthread_attr_s {
    int contentionscope;
 @@ -315,6 +316,7 @@
  } pthread_attr_t;
- 
+
  #endif /* !defined(__XMK__) */
 +#endif /* !defined(_arch_dreamcast) */
- 
+
  #if defined(_POSIX_THREAD_PROCESS_SHARED)
  /* NOTE: P1003.1c/D10, p. 81 defines following values for process_shared.  */
 @@ -391,6 +393,7 @@
  } pthread_mutexattr_t;
- 
+
  #else /* !defined(__XMK__) */
 +#if !defined(_arch_dreamcast)
  typedef __uint32_t pthread_mutex_t;      /* identify a mutex */
- 
+
  typedef struct {
 @@ -407,10 +410,12 @@
  #endif
@@ -1222,24 +1222,24 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h" ./newlib/libc
  } pthread_mutexattr_t;
 +#endif /* !defined(_arch_dreamcast) */
  #endif /* !defined(__XMK__) */
- 
+
  /* Condition Variables */
- 
+
 +#if !defined(_arch_dreamcast)
  typedef __uint32_t pthread_cond_t;       /* identify a condition variable */
- 
+
  typedef struct {
 @@ -420,15 +425,18 @@
    int      process_shared;    /* allow this to be shared amongst processes */
  #endif
  } pthread_condattr_t;         /* a condition attribute object */
 +#endif /* !defined(_arch_dreamcast) */
- 
+
  /* Keys */
- 
+
 +#if !defined(_arch_dreamcast)
  typedef __uint32_t pthread_key_t;        /* thread-specific data keys */
- 
+
  typedef struct {
    int   is_initialized;  /* is this structure initialized? */
    int   init_executed;   /* has the initialization routine been run? */
@@ -1248,11 +1248,11 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h" ./newlib/libc
  #else
  #if defined (__CYGWIN__)
  #include <cygwin/types.h>
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h.orig" ./newlib/libc/include/sys/types.h.orig
---- "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h.orig"	1970-01-01 01:00:00.000000000 +0100
-+++ ./newlib/libc/include/sys/types.h.orig	2016-03-29 22:33:42.000000000 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/include/sys/types.h.orig" newlib-2.4.0-kos/newlib/libc/include/sys/types.h.orig
+--- "newlib-2.4.0/newlib/libc/include/sys/types.h.orig"	1970-01-01 01:00:00.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h.orig	2016-03-29 22:33:42.000000000 +0100
 @@ -0,0 +1,474 @@
-+/* unified sys/types.h: 
++/* unified sys/types.h:
 +   start with sef's sysvi386 version.
 +   merge go32 version -- a few ifdefs.
 +   h8300hms, h8300xray, and sysvnecv70 disagree on the following types:
@@ -1264,8 +1264,8 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h.orig" ./newlib
 +   typedef int mode_t;
 +   typedef int caddr_t;
 +
-+   however, these aren't "reasonable" values, the sysvi386 ones make far 
-+   more sense, and should work sufficiently well (in particular, h8300 
++   however, these aren't "reasonable" values, the sysvi386 ones make far
++   more sense, and should work sufficiently well (in particular, h8300
 +   doesn't have a stat, and the necv70 doesn't matter.) -- eichin
 + */
 +
@@ -1283,7 +1283,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h.orig" ./newlib
 +#endif
 +#if ___int16_t_defined
 +typedef __uint16_t	u_int16_t;
-+#endif 
++#endif
 +#if ___int32_t_defined
 +typedef __uint32_t	u_int32_t;
 +#endif
@@ -1494,7 +1494,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h.orig" ./newlib
 +
 +
 +/* Cygwin will probably never have full posix compliance due to little things
-+ * like an inability to set the stackaddress. Cygwin is also using void *  
++ * like an inability to set the stackaddress. Cygwin is also using void *
 + * pointers rather than structs to ensure maximum binary compatability with
 + * previous releases.
 + * This means that we don't use the types defined here, but rather in
@@ -1616,7 +1616,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h.orig" ./newlib
 + */
 +#define PTHREAD_MUTEX_RECURSIVE  1
 +
-+/* 
++/*
 + * This type of mutex provides error checking. A thread attempting
 + * to relock this mutex without first unlocking it shall return with an
 + * error. A thread attempting to unlock a mutex which another thread has
@@ -1726,13 +1726,13 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/include/sys/types.h.orig" ./newlib
 +#undef __need_inttypes
 +
 +#endif	/* _SYS_TYPES_H */
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/stdlib/assert.c" ./newlib/libc/stdlib/assert.c
---- "../newlib-2.4.0 (copy)/newlib/libc/stdlib/assert.c"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/stdlib/assert.c	2019-06-11 11:06:29.962010823 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/stdlib/assert.c" newlib-2.4.0-kos/newlib/libc/stdlib/assert.c
+--- "newlib-2.4.0/newlib/libc/stdlib/assert.c"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/stdlib/assert.c	2019-06-11 11:06:29.962010823 +0100
 @@ -47,6 +47,8 @@
  #include <stdlib.h>
  #include <stdio.h>
- 
+
 +#if 0
 +
  #ifndef HAVE_ASSERT_FUNC
@@ -1743,9 +1743,9 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/stdlib/assert.c" ./newlib/libc/std
    /* NOTREACHED */
  }
 +#endif
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/ftruncate.c" ./newlib/libc/sys/sh/ftruncate.c
---- "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/ftruncate.c"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/sys/sh/ftruncate.c	2019-06-11 11:06:29.963010824 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/sys/sh/ftruncate.c" newlib-2.4.0-kos/newlib/libc/sys/sh/ftruncate.c
+--- "newlib-2.4.0/newlib/libc/sys/sh/ftruncate.c"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/sys/sh/ftruncate.c	2019-06-11 11:06:29.963010824 +0100
 @@ -1,9 +1 @@
 -#include <_ansi.h>
 -#include <sys/types.h>
@@ -1757,9 +1757,9 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/ftruncate.c" ./newlib/libc/
 -  return __trap34 (SYS_ftruncate, file, length, 0);
 -}
 +/* Nothing here. */
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/sys/lock.h" ./newlib/libc/sys/sh/sys/lock.h
---- "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/sys/lock.h"	1970-01-01 01:00:00.000000000 +0100
-+++ ./newlib/libc/sys/sh/sys/lock.h	2019-06-11 11:06:29.964010825 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/sys/sh/sys/lock.h" newlib-2.4.0-kos/newlib/libc/sys/sh/sys/lock.h
+--- "newlib-2.4.0/newlib/libc/sys/sh/sys/lock.h"	1970-01-01 01:00:00.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/sys/sh/sys/lock.h	2019-06-11 11:06:29.964010825 +0100
 @@ -0,0 +1,51 @@
 +/* KallistiOS ##version##
 +
@@ -1812,9 +1812,9 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/sys/lock.h" ./newlib/libc/s
 +
 +
 +#endif // __NEWLIB_LOCK_COMMON_H
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/syscalls.c" ./newlib/libc/sys/sh/syscalls.c
---- "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/syscalls.c"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/sys/sh/syscalls.c	2019-06-11 11:06:29.964010825 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/sys/sh/syscalls.c" newlib-2.4.0-kos/newlib/libc/sys/sh/syscalls.c
+--- "newlib-2.4.0/newlib/libc/sys/sh/syscalls.c"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/sys/sh/syscalls.c	2019-06-11 11:06:29.964010825 +0100
 @@ -1,228 +1,2 @@
 -#include <_ansi.h>
 -#include <sys/types.h>
@@ -2046,9 +2046,9 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/syscalls.c" ./newlib/libc/s
 -}
 +// This is put in here to cause link errors if a proper newlib isn't present.
 +int __newlib_kos_patch = 1;
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/trap.S" ./newlib/libc/sys/sh/trap.S
---- "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/trap.S"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/sys/sh/trap.S	2019-06-11 11:06:29.965010825 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/sys/sh/trap.S" newlib-2.4.0-kos/newlib/libc/sys/sh/trap.S
+--- "newlib-2.4.0/newlib/libc/sys/sh/trap.S"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/sys/sh/trap.S	2019-06-11 11:06:29.965010825 +0100
 @@ -1,43 +0,0 @@
 -#if __SH5__
 -	.mode	SHmedia
@@ -2075,7 +2075,7 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/trap.S" ./newlib/libc/sys/s
 -	stx.l	r0, r63, r1
 -ret:
 -	blink	tr0, r63
--	
+-
 -#else
 -	.text
 -	.global	___trap34
@@ -2088,14 +2088,14 @@ diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/trap.S" ./newlib/libc/sys/s
 -ret:
 -	rts
 -	nop
--	
+-
 -	.align	2
 -perrno:
 -	.long	_errno
 -#endif /* ! __SH5__ */
-diff -ruN "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/truncate.c" ./newlib/libc/sys/sh/truncate.c
---- "../newlib-2.4.0 (copy)/newlib/libc/sys/sh/truncate.c"	2016-03-29 22:33:42.000000000 +0100
-+++ ./newlib/libc/sys/sh/truncate.c	2019-06-11 11:06:29.966010826 +0100
+diff -ruN "newlib-2.4.0/newlib/libc/sys/sh/truncate.c" newlib-2.4.0-kos/newlib/libc/sys/sh/truncate.c
+--- "newlib-2.4.0/newlib/libc/sys/sh/truncate.c"	2016-03-29 22:33:42.000000000 +0100
++++ newlib-2.4.0-kos/newlib/libc/sys/sh/truncate.c	2019-06-11 11:06:29.966010826 +0100
 @@ -1,9 +1 @@
 -#include <_ansi.h>
 -#include <sys/types.h>
