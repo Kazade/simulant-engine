@@ -1170,7 +1170,42 @@ diff -ruN newlib-2.4.0/newlib/libc/include/machine/_default_types.h.orig newlib-
 +#endif /* _MACHINE__DEFAULT_TYPES_H */
 diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h newlib-2.4.0-kos/newlib/libc/include/sys/types.h
 --- newlib-2.4.0/newlib/libc/include/sys/types.h	2016-03-29 22:33:42.000000000 +0100
-+++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h	2019-06-11 11:19:48.805253881 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h	2019-06-11 13:22:22.451030992 +0100
+@@ -1,4 +1,4 @@
+-/* unified sys/types.h: 
++/* unified sys/types.h:
+    start with sef's sysvi386 version.
+    merge go32 version -- a few ifdefs.
+    h8300hms, h8300xray, and sysvnecv70 disagree on the following types:
+@@ -10,8 +10,8 @@
+    typedef int mode_t;
+    typedef int caddr_t;
+ 
+-   however, these aren't "reasonable" values, the sysvi386 ones make far 
+-   more sense, and should work sufficiently well (in particular, h8300 
++   however, these aren't "reasonable" values, the sysvi386 ones make far
++   more sense, and should work sufficiently well (in particular, h8300
+    doesn't have a stat, and the necv70 doesn't matter.) -- eichin
+  */
+ 
+@@ -29,7 +29,7 @@
+ #endif
+ #if ___int16_t_defined
+ typedef __uint16_t	u_int16_t;
+-#endif 
++#endif
+ #if ___int32_t_defined
+ typedef __uint32_t	u_int32_t;
+ #endif
+@@ -240,7 +240,7 @@
+ 
+ 
+ /* Cygwin will probably never have full posix compliance due to little things
+- * like an inability to set the stackaddress. Cygwin is also using void *  
++ * like an inability to set the stackaddress. Cygwin is also using void *
+  * pointers rather than structs to ensure maximum binary compatability with
+  * previous releases.
+  * This means that we don't use the types defined here, but rather in
 @@ -256,7 +256,7 @@
  
  #if defined(__XMK__)
@@ -1196,6 +1231,15 @@ diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h newlib-2.4.0-kos/newlib/l
  
  #if defined(_POSIX_THREAD_PROCESS_SHARED)
  /* NOTE: P1003.1c/D10, p. 81 defines following values for process_shared.  */
+@@ -362,7 +364,7 @@
+  */
+ #define PTHREAD_MUTEX_RECURSIVE  1
+ 
+-/* 
++/*
+  * This type of mutex provides error checking. A thread attempting
+  * to relock this mutex without first unlocking it shall return with an
+  * error. A thread attempting to unlock a mutex which another thread has
 @@ -391,6 +393,7 @@
  } pthread_mutexattr_t;
  
@@ -1236,6 +1280,13 @@ diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h newlib-2.4.0-kos/newlib/l
  #else
  #if defined (__CYGWIN__)
  #include <cygwin/types.h>
+@@ -471,4 +479,6 @@
+ 
+ #undef __need_inttypes
+ 
++#include <sys/select.h>
++
+ #endif	/* _SYS_TYPES_H */
 diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h.orig newlib-2.4.0-kos/newlib/libc/include/sys/types.h.orig
 --- newlib-2.4.0/newlib/libc/include/sys/types.h.orig	1970-01-01 01:00:00.000000000 +0100
 +++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h.orig	2019-06-11 11:19:48.805253881 +0100
