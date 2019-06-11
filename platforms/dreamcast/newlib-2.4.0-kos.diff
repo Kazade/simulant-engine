@@ -1168,18 +1168,6 @@ diff -ruN newlib-2.4.0/newlib/libc/include/machine/_default_types.h.orig newlib-
 +#endif
 +
 +#endif /* _MACHINE__DEFAULT_TYPES_H */
-diff -ruN newlib-2.4.0/newlib/libc/include/sys/select.h newlib-2.4.0-kos/newlib/libc/include/sys/select.h
---- newlib-2.4.0/newlib/libc/include/sys/select.h	2016-03-29 22:33:42.000000000 +0100
-+++ newlib-2.4.0-kos/newlib/libc/include/sys/select.h	2019-06-11 11:19:48.805253881 +0100
-@@ -19,7 +19,7 @@
-    includes the W32api winsock[2].h header must know what it is doing;
-    it must not call the Cygwin select function.
- */
--# if !(defined (_WINSOCK_H) || defined (_WINSOCKAPI_) || defined (__USE_W32_SOCKETS))
-+# if !(defined (_WINSOCK_H) || defined (_WINSOCKAPI_) || defined (__USE_W32_SOCKETS) || defined(_arch_dreamcast))
- 
- #include <sys/cdefs.h>
- #include <sys/_sigset.h>
 diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h newlib-2.4.0-kos/newlib/libc/include/sys/types.h
 --- newlib-2.4.0/newlib/libc/include/sys/types.h	2016-03-29 22:33:42.000000000 +0100
 +++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h	2019-06-11 11:19:48.805253881 +0100
