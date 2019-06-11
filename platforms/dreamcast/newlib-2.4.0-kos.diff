@@ -1170,7 +1170,7 @@ diff -ruN newlib-2.4.0/newlib/libc/include/machine/_default_types.h.orig newlib-
 +#endif /* _MACHINE__DEFAULT_TYPES_H */
 diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h newlib-2.4.0-kos/newlib/libc/include/sys/types.h
 --- newlib-2.4.0/newlib/libc/include/sys/types.h	2016-03-29 22:33:42.000000000 +0100
-+++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h	2019-06-11 13:22:22.451030992 +0100
++++ newlib-2.4.0-kos/newlib/libc/include/sys/types.h	2019-06-11 15:13:53.789988412 +0100
 @@ -1,4 +1,4 @@
 -/* unified sys/types.h: 
 +/* unified sys/types.h:
@@ -1284,7 +1284,7 @@ diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h newlib-2.4.0-kos/newlib/l
  
  #undef __need_inttypes
  
-+#include <sys/select.h>
++#include "./select.h"
 +
  #endif	/* _SYS_TYPES_H */
 diff -ruN newlib-2.4.0/newlib/libc/include/sys/types.h.orig newlib-2.4.0-kos/newlib/libc/include/sys/types.h.orig
