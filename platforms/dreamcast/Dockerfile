@@ -30,6 +30,11 @@ RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolcha
 #RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
 #RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
 #RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
+# Speed up compilation
+RUN set -i 's/# makejobs=-jn/makejobs=-j5/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
+
+# Disable objc, and obj-c++
+RUN sed -i 's/c,c++,objc,obj-c++/c,c++/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
 
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain && sh ./download.sh && sh ./unpack.sh && make
 RUN cp /opt/toolchains/dc/kos/doc/environ.sh.sample /opt/toolchains/dc/kos/environ.sh
