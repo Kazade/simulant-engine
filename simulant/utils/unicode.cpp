@@ -29,7 +29,7 @@
 #include "unicode.h"
 
 #ifndef __clang__
-#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
+#ifndef _GLIBCXX_USE_C99_STDIO
 
 /* GCC 4.7 doesn't define std::to_string... for some reason, so we just hack around it here */
 
