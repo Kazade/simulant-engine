@@ -22,7 +22,7 @@ public:
 
         vbo_manager_ = VBOManager::create();
         stage_ = window->new_stage();
-        mesh_ = stage_->assets->new_mesh_as_cube(1.0f).fetch();
+        mesh_ = stage_->assets->new_mesh_as_cube(1.0f);
         camera_ = stage_->new_camera();
 
         stage_->assets->set_garbage_collection_grace_period(0);
@@ -34,7 +34,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = stage_->assets->new_mesh_as_cube(1.0f).fetch();
+        auto mesh2 = stage_->assets->new_mesh_as_cube(1.0f);
 
         auto ret3 = vbo_manager_->allocate_slot(mesh2->vertex_data);
         assert_equal(ret1.first, ret3.first);
@@ -58,7 +58,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = stage_->assets->new_mesh_as_cube(1.0f).fetch();
+        auto mesh2 = stage_->assets->new_mesh_as_cube(1.0f);
 
         auto ret3 = vbo_manager_->allocate_slot(mesh2->first_submesh()->index_data);
         assert_equal(ret1.first, ret3.first);
@@ -82,7 +82,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = stage_->assets->new_mesh(VertexSpecification::DEFAULT).fetch();
+        auto mesh2 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
 
         /* 50000 verts should tip over 512k always */
         for(auto i = 0; i < 50000; ++i) {

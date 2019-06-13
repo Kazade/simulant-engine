@@ -429,7 +429,7 @@ MeshPtr Widget::construct_widget(float requested_width, float requested_height) 
     float width = requested_width;
     float height = requested_height;
 
-    auto mesh = (mesh_) ? mesh_ : stage->assets->new_mesh(spec).fetch();
+    auto mesh = (mesh_) ? mesh_ : stage->assets->new_mesh(spec);
 
     /* New mesh, so make sure we clear the available vertices */
     available_indexes_.clear();

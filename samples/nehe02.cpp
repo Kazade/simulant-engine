@@ -10,7 +10,7 @@ public:
         auto pipeline = prepare_basic_scene(stage_, camera_);
         pipeline->viewport->set_colour(smlt::Colour::RED);
 
-        smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
+        smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0);
 
         auto actor = stage_->new_actor_with_mesh(square->id());
         actor->move_to(0, 0, -5);

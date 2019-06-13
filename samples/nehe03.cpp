@@ -9,7 +9,7 @@ public:
     void load() {
         prepare_basic_scene(stage_, camera_);
 
-        smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0).fetch();
+        smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0);
 
         square->vertex_data->move_to(0);
         square->vertex_data->diffuse(smlt::Colour::RED);
