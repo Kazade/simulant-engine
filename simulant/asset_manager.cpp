@@ -111,8 +111,8 @@ bool AssetManager::init() {
     mat->set_diffuse_map(default_texture_id_);
 
     L_DEBUG("- Loading fonts");
-    default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
-    default_body_font_ = new_font_from_file(BODY_FONT).fetch();
+    default_heading_font_ = new_font_from_file(HEADING_FONT);
+    default_body_font_ = new_font_from_file(BODY_FONT);
 
     L_DEBUG("Finished initializing defaults");
 
@@ -767,11 +767,10 @@ unicode AssetManager::default_material_filename() const {
 
 // ========== FONTS ======================
 
-FontID AssetManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
-    auto font_id = font_manager_.make(this);
+FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
+    auto font = font_manager_.make(this).fetch();
+    auto font_id = font->id();
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
-
-    auto font = font_id.fetch();
 
     try {
         LoaderOptions options;
@@ -783,10 +782,10 @@ FontID AssetManager::new_font_from_file(const unicode& filename, GarbageCollectM
         throw;
     }
 
-    return font_id;
+    return font;
 }
 
-FontID AssetManager::new_font_with_alias_from_file(const std::string& alias, const unicode& filename, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_with_alias_from_file(const std::string& alias, const unicode& filename, GarbageCollectMethod garbage_collect) {
     auto fid = new_font_from_file(filename, garbage_collect);
     try {
         font_manager_.store_alias(alias, fid);
@@ -797,11 +796,11 @@ FontID AssetManager::new_font_with_alias_from_file(const std::string& alias, con
     return fid;
 }
 
-FontID AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
-    auto font_id = font_manager_.make(this);
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
+FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+    auto font = font_manager_.make(this).fetch();
+    auto font_id = font->id();
 
-    auto font = font_id.fetch();
+    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
     try {
         LoaderOptions options;
@@ -816,10 +815,10 @@ FontID AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_si
         throw;
     }
 
-    return font_id;
+    return font;
 }
 
-FontID AssetManager::new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
     auto fid = new_font_from_ttf(filename, font_size, charset, garbage_collect);
     try {
         font_manager_.store_alias(alias, fid);
@@ -830,8 +829,8 @@ FontID AssetManager::new_font_with_alias_from_ttf(const std::string& alias, cons
     return fid;
 }
 
-FontID AssetManager::get_font_with_alias(const std::string& alias) {
-    return font_manager_.get_id_from_alias(alias);
+FontPtr AssetManager::get_font_with_alias(const std::string& alias) {
+    return font_manager_.get_id_from_alias(alias).fetch();
 }
 
 void AssetManager::delete_font(FontID f) {
