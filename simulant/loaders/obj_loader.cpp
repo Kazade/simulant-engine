@@ -115,7 +115,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     // First, load the materials, and create submeshes
     uint32_t i = 0;
     for(auto& material: materials) {
-        MaterialPtr new_mat = mesh->asset_manager().clone_default_material().fetch();
+        MaterialPtr new_mat = mesh->asset_manager().clone_default_material();
 
         auto alpha = (material.dissolve) ? 1.0f : 0.0f;
 

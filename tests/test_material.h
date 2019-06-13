@@ -97,7 +97,7 @@ public:
     }
 
     void test_pass_material_set_on_clone() {
-        auto material = window->shared_assets->clone_default_material().fetch();
+        auto material = window->shared_assets->clone_default_material();
 
         assert_equal(material->pass(0)->material()->id(), material->id());
     }

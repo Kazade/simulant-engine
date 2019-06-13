@@ -188,17 +188,7 @@ public:
 
     unicode default_material_filename() const;
 
-    MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
-        auto mat_id = base_manager()->default_material_id();
-        assert(mat_id && "No default material, called to early?");
-
-        auto& manager = base_manager()->material_manager_;
-        auto new_mat_id = manager.clone(mat_id);
-        manager.set_garbage_collection_method(new_mat_id, garbage_collect, true);
-
-        assert(new_mat_id);
-        return new_mat_id;
-    }
+    MaterialPtr clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;

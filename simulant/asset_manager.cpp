@@ -765,6 +765,18 @@ unicode AssetManager::default_material_filename() const {
     return window->vfs->locate_file(Material::BuiltIns::DEFAULT);
 }
 
+MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
+    auto mat_id = base_manager()->default_material_id();
+    assert(mat_id && "No default material, called to early?");
+
+    auto& manager = base_manager()->material_manager_;
+    auto new_mat_id = manager.clone(mat_id);
+    manager.set_garbage_collection_method(new_mat_id, garbage_collect, true);
+
+    assert(new_mat_id);
+    return material(new_mat_id);
+}
+
 // ========== FONTS ======================
 
 FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
