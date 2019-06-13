@@ -30,7 +30,7 @@ bool Widget::init() {
     actor_ = stage->new_actor();
     actor_->set_parent(this);
 
-    material_ = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
+    material_ = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
     material_->set_blend_func(BLEND_ALPHA);
 
     // Assign the default font as default

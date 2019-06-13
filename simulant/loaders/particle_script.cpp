@@ -137,7 +137,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             material = Material::BUILT_IN_NAMES.at(material);
         }
 
-        auto mat = ps->stage->assets->new_material_from_file(material).fetch();
+        auto mat = ps->stage->assets->new_material_from_file(material);
         ps->set_material_id(mat->id());
 
         /* Apply any specified material properties */

@@ -84,7 +84,7 @@ namespace loaders {
             texture->mark_data_changed();
         }
 
-        font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
+        font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_blend_func(smlt::BLEND_ALPHA);
         font->material_->set_diffuse_map(font->texture_id());
 

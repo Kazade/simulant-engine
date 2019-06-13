@@ -164,12 +164,10 @@ void Q2BSPLoader::generate_materials(
         }
 
         // Load the correct material depending on surface flags
-        auto material_id = assets->new_material_from_file(
+        auto mat = assets->new_material_from_file(
             Material::BuiltIns::DEFAULT,
             smlt::GARBAGE_COLLECT_NEVER // Disable GC for now
         );
-
-        auto mat = material_id.fetch();
 
         mat->set_diffuse_map(tex_id);
         if(uses_lightmap) {
@@ -178,7 +176,7 @@ void Q2BSPLoader::generate_materials(
         }
 
         auto tex = tex_id.fetch();
-        materials.push_back(material_id);
+        materials.push_back(mat->id());
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
 }

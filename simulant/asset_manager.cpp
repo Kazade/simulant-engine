@@ -426,17 +426,17 @@ uint32_t AssetManager::mesh_count() const {
     return mesh_manager_.count();
 }
 
-MaterialID AssetManager::new_material(GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::new_material(GarbageCollectMethod garbage_collect) {
     MaterialID result = material_manager_.make(this);
     material_manager_.set_garbage_collection_method(result, garbage_collect);
-    return result;
+    return result.fetch();
 }
 
 void AssetManager::delete_material(MaterialID m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
-MaterialID AssetManager::get_template_material(const unicode& path) {
+MaterialPtr AssetManager::get_template_material(const unicode& path) {
     /*
      * We keep a cache of the materials we've loaded from file, this massively improves performance
      * and allows sharing of the GPU program during rendering
@@ -493,10 +493,10 @@ MaterialID AssetManager::get_template_material(const unicode& path) {
         }
     }
 
-    return template_id;
+    return template_id.fetch();
 }
 
-MaterialID AssetManager::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
 
     MaterialID template_id = get_template_material(path);
 
@@ -512,47 +512,47 @@ MaterialID AssetManager::new_material_from_file(const unicode& path, GarbageColl
     L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat_id));
 
     material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect, true);
-    return new_mat_id;
+    return new_mat;
 }
 
-MaterialID AssetManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
-    MaterialID m = new_material(garbage_collect);
+MaterialPtr AssetManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
+    auto m = new_material(garbage_collect);
     assert(m);
 
     try {
-        material_manager_.store_alias(alias, m);
+        material_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_material(m);
+        delete_material(m->id());
         throw;
     }
     return m;
 }
 
-MaterialID AssetManager::new_material_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    MaterialID m = new_material_from_file(path, garbage_collect);
+MaterialPtr AssetManager::new_material_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+    auto m = new_material_from_file(path, garbage_collect);
     assert(m);
 
     try {
-        material_manager_.store_alias(alias, m);
+        material_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_material(m);
+        delete_material(m->id());
         throw;
     }
     return m;
 }
 
-MaterialID AssetManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
-    MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
+MaterialPtr AssetManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
+    auto m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    material(m)->set_diffuse_map(texture_id);
+    m->set_diffuse_map(texture_id);
 
-    material_manager_.set_garbage_collection_method(m, garbage_collect, true);
+    material_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
     return m;
 }
 
-MaterialID AssetManager::get_material_with_alias(const std::string& alias) {
-    return material_manager_.get_id_from_alias(alias);
+MaterialPtr AssetManager::get_material_with_alias(const std::string& alias) {
+    return material_manager_.get_id_from_alias(alias).fetch();
 }
 
 MaterialPtr AssetManager::material(MaterialID mid) {

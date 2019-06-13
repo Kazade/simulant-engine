@@ -137,12 +137,12 @@ public:
     uint32_t texture_count() const;
     void delete_texture(TextureID t);
 
-    MaterialID new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID get_material_with_alias(const std::string &alias);
+    MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr get_material_with_alias(const std::string &alias);
 
     MaterialPtr material(MaterialID material);
     const MaterialPtr material(MaterialID material) const;
@@ -241,7 +241,7 @@ private:
     std::unordered_map<unicode, MaterialID> template_materials_;
     std::set<MaterialID> materials_loading_;
 
-    MaterialID get_template_material(const unicode& path);
+    MaterialPtr get_template_material(const unicode& path);
 
     std::set<AssetManager*> children_;
     void register_child(AssetManager* child) {
