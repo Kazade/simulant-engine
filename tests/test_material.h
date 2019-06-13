@@ -58,7 +58,7 @@ public:
     }
 
     void test_property_heirarchy() {
-        auto mat = window->shared_assets->new_material().fetch();
+        auto mat = window->shared_assets->new_material();
 
         mat->set_diffuse(smlt::Colour::RED);
         mat->set_pass_count(2);
@@ -76,7 +76,7 @@ public:
     }
 
     void test_texture_unit() {
-        auto mat = window->shared_assets->new_material().fetch();
+        auto mat = window->shared_assets->new_material();
         auto tex = window->shared_assets->new_texture();
 
         mat->set_diffuse_map(tex);
@@ -97,16 +97,16 @@ public:
     }
 
     void test_pass_material_set_on_clone() {
-        auto material = window->shared_assets->clone_default_material().fetch();
+        auto material = window->shared_assets->clone_default_material();
 
         assert_equal(material->pass(0)->material()->id(), material->id());
     }
 
     void test_setting_texture_unit_increases_refcount() {
-        auto mat = window->shared_assets->new_material().fetch();
+        auto mat = window->shared_assets->new_material();
         mat->set_pass_count(1);
 
-        auto texture = window->shared_assets->new_texture().fetch();
+        auto texture = window->shared_assets->new_texture();
         assert_equal(texture.use_count(), 2);
 
         mat->set_diffuse_map(texture->id());

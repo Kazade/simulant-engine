@@ -136,7 +136,7 @@ void Q2BSPLoader::generate_materials(
 
     /* Given a list of texture infos, this generates counterpart materials */
 
-    std::unordered_map<std::string, TextureID> textures;
+    std::unordered_map<std::string, TexturePtr> textures;
 
     materials.clear();
     for(auto& info: texture_infos) {
@@ -154,31 +154,28 @@ void Q2BSPLoader::generate_materials(
         const std::string& texture_name = info.texture_name;
 
         // Only load each texture once
-        TextureID tex_id;
+        TexturePtr tex;
         if(!textures.count(texture_name)) {
             unicode full_path = locate_texture(vfs, texture_name);
-            tex_id = assets->new_texture_from_file(full_path);
-            textures[texture_name] = tex_id;
+            tex = assets->new_texture_from_file(full_path);
+            textures[texture_name] = tex;
         } else {
-            tex_id = textures.at(texture_name);
+            tex = textures.at(texture_name);
         }
 
         // Load the correct material depending on surface flags
-        auto material_id = assets->new_material_from_file(
+        auto mat = assets->new_material_from_file(
             Material::BuiltIns::DEFAULT,
             smlt::GARBAGE_COLLECT_NEVER // Disable GC for now
         );
 
-        auto mat = material_id.fetch();
-
-        mat->set_diffuse_map(tex_id);
+        mat->set_diffuse_map(tex->id());
         if(uses_lightmap) {
             // Set the second texture unit to the lightmap texture if necessary
             mat->set_light_map(lightmap_texture);
         }
 
-        auto tex = tex_id.fetch();
-        materials.push_back(material_id);
+        materials.push_back(mat->id());
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
 }

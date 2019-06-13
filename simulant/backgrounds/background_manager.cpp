@@ -23,7 +23,7 @@ void BackgroundManager::update(float dt) {
 }
 
 BackgroundPtr BackgroundManager::new_background(BackgroundType type) {
-    return make(this, type).fetch();
+    return make(this, type);
 }
 
 BackgroundPtr BackgroundManager::new_background_as_scrollable_from_file(const unicode& filename, float scroll_x, float scroll_y) {

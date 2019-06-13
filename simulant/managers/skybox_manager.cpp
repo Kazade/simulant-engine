@@ -75,7 +75,7 @@ void Skybox::generate(
 
         // Set the skybox material on all submeshes
         mesh->each([&stage](const std::string&, SubMesh* sm) {
-            auto mat = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY).fetch();
+            auto mat = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
 
             // Disable depth writes and depth testing, but otherwise use the default texture_only material
             mat->set_depth_write_enabled(false);
@@ -210,9 +210,7 @@ SkyboxPtr SkyManager::new_skybox_from_files(
 
     assert(stage_);
 
-    SkyID sid = TemplatedSkyboxManager::make(this);
-
-    auto sb = skybox(sid);
+    auto sb = TemplatedSkyboxManager::make(this);
     sb->generate(
         up, down, left, right, front, back
     );

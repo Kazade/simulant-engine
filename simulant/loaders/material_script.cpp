@@ -186,7 +186,7 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value.get<jsonic::String>();
-                auto tex_id = mat.asset_manager().new_texture_from_file(
+                smlt::TextureID tex_id = mat.asset_manager().new_texture_from_file(
                     path
                 );
 

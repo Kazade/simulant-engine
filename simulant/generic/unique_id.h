@@ -132,6 +132,22 @@ public:
         return this->id_ == other.id_;
     }
 
+    /* Implicit conversion from shared ptr type */
+    template<typename=std::enable_if<_unique_id_impl::is_shared_ptr<resource_pointer_type>::value>>
+    UniqueID(const resource_pointer_type& pointer) {
+        this->id_ = pointer->id().id_;
+        _bind(pointer);
+    }
+
+    template<typename=std::enable_if<_unique_id_impl::is_shared_ptr<resource_pointer_type>::value>>
+    UniqueID& operator=(const resource_pointer_type& pointer) {
+        this->id_ = pointer->id().id_;
+        _bind(pointer);
+
+        return *this;
+    }
+    /* Conversion ends */
+
     UniqueID& operator=(const UniqueID<ResourceTypePtr>& other) {
         if(&other == this) {
             return *this;

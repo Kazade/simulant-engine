@@ -76,8 +76,8 @@ public:
 
     bool init();
 
-    MeshID new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_from_file(
+    MeshPtr new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_from_file(
         const unicode& path,
         const MeshLoadOptions& options=MeshLoadOptions(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
@@ -86,35 +86,35 @@ public:
     /*
      * Given a submesh, this creates a new mesh with just that single submesh
      */
-    MeshID new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    MeshID new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
+    MeshPtr new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size=1.0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
-    MeshID new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_as_icosphere(float diameter, int subdivisions=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_rectangle(float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_cylinder(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_capsule(float diameter, float length, int segments=20, int stacks=20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_as_icosphere(float diameter, int subdivisions=0, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    MeshID new_mesh_with_alias(const std::string &alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_with_alias_from_file(
+    MeshPtr new_mesh_with_alias(const std::string &alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_with_alias_from_file(
         const std::string& alias,
         const unicode &path,
         const MeshLoadOptions& options=MeshLoadOptions(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
-    MeshID new_mesh_with_alias_as_cube(const std::string &alias, float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_with_alias_as_sphere(const std::string& alias, float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_with_alias_as_rectangle(const std::string &name, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID new_mesh_with_alias_as_cylinder(const std::string& name, float diameter, float length, int segments = 20, int stacks = 20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshID get_mesh_with_alias(const std::string& alias);
+    MeshPtr new_mesh_with_alias_as_cube(const std::string &alias, float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_with_alias_as_sphere(const std::string& alias, float diameter, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_with_alias_as_rectangle(const std::string &name, float width, float height, const Vec2& offset=Vec2(), MaterialID material=MaterialID(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_with_alias_as_cylinder(const std::string& name, float diameter, float length, int segments = 20, int stacks = 20, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr get_mesh_with_alias(const std::string& alias);
 
     MeshPtr mesh(MeshID m);
     const MeshPtr mesh(MeshID m) const;
@@ -124,12 +124,12 @@ public:
     void delete_mesh(MeshID m);
 
 
-    TextureID new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TextureID new_texture_from_file(const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture_from_file(const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    TextureID new_texture_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TextureID new_texture_with_alias_from_file(const std::string& alias, const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TextureID get_texture_with_alias(const std::string &alias);
+    TexturePtr new_texture_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture_with_alias_from_file(const std::string& alias, const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr get_texture_with_alias(const std::string &alias);
 
     TexturePtr texture(TextureID t);
     const TexturePtr texture(TextureID t) const;
@@ -137,12 +137,12 @@ public:
     uint32_t texture_count() const;
     void delete_texture(TextureID t);
 
-    MaterialID new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialID get_material_with_alias(const std::string &alias);
+    MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr get_material_with_alias(const std::string &alias);
 
     MaterialPtr material(MaterialID material);
     const MaterialPtr material(MaterialID material) const;
@@ -150,12 +150,12 @@ public:
     uint32_t material_count() const;
     void delete_material(MaterialID m);
 
-    SoundID new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    SoundID new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    SoundID new_sound_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    SoundID new_sound_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    SoundID get_sound_with_alias(const std::string& alias);
+    SoundPtr new_sound_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr get_sound_with_alias(const std::string& alias);
 
     void delete_sound(SoundID t);
 
@@ -164,19 +164,19 @@ public:
     bool has_sound(SoundID s) const;
     uint32_t sound_count() const;
 
-    FontID new_font_from_file(
+    FontPtr new_font_from_file(
         const unicode& filename,
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
 
-    FontID new_font_with_alias_from_file(
+    FontPtr new_font_with_alias_from_file(
         const std::string& alias, const unicode& filename,
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
 
-    FontID new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontID new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontID get_font_with_alias(const std::string& alias);
+    FontPtr new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr get_font_with_alias(const std::string& alias);
     void delete_font(FontID f);
 
     FontPtr font(FontID f);
@@ -188,17 +188,7 @@ public:
 
     unicode default_material_filename() const;
 
-    MaterialID clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC) {
-        auto mat_id = base_manager()->default_material_id();
-        assert(mat_id && "No default material, called to early?");
-
-        auto& manager = base_manager()->material_manager_;
-        auto new_mat_id = manager.clone(mat_id);
-        manager.set_garbage_collection_method(new_mat_id, garbage_collect, true);
-
-        assert(new_mat_id);
-        return new_mat_id;
-    }
+    MaterialPtr clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MaterialID default_material_id() const;
     TextureID default_texture_id() const;
@@ -221,8 +211,6 @@ public:
 
     void run_garbage_collection();
 
-    void set_garbage_collection_grace_period(uint32_t period);
-
 private:
     AssetManager* parent_ = nullptr;
 
@@ -241,7 +229,7 @@ private:
     std::unordered_map<unicode, MaterialID> template_materials_;
     std::set<MaterialID> materials_loading_;
 
-    MaterialID get_template_material(const unicode& path);
+    MaterialPtr get_template_material(const unicode& path);
 
     std::set<AssetManager*> children_;
     void register_child(AssetManager* child) {

@@ -111,8 +111,8 @@ bool AssetManager::init() {
     mat->set_diffuse_map(default_texture_id_);
 
     L_DEBUG("- Loading fonts");
-    default_heading_font_ = new_font_from_file(HEADING_FONT).fetch();
-    default_body_font_ = new_font_from_file(BODY_FONT).fetch();
+    default_heading_font_ = new_font_from_file(HEADING_FONT);
+    default_body_font_ = new_font_from_file(BODY_FONT);
 
     L_DEBUG("Finished initializing defaults");
 
@@ -142,14 +142,6 @@ void AssetManager::run_garbage_collection() {
     font_manager_.update();
 }
 
-void AssetManager::set_garbage_collection_grace_period(uint32_t period) {
-    material_manager_.set_garbage_collection_grace_period(period);
-    texture_manager_.set_garbage_collection_grace_period(period);
-    font_manager_.set_garbage_collection_grace_period(period);
-    sound_manager_.set_garbage_collection_grace_period(period);
-    mesh_manager_.set_garbage_collection_grace_period(period);
-}
-
 MeshPtr AssetManager::mesh(MeshID m) {
     if(parent_ && !has_mesh(m)) {
         return parent_->mesh(m);
@@ -166,17 +158,17 @@ const MeshPtr AssetManager::mesh(MeshID m) const {
     return mesh_manager_.get(m);
 }
 
-MeshID AssetManager::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
-    MeshID result = mesh_manager_.make(this, vertex_specification);
-    mesh_manager_.set_garbage_collection_method(result, garbage_collect);
+MeshPtr AssetManager::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+    auto result = mesh_manager_.make(this, vertex_specification);
+    mesh_manager_.set_garbage_collection_method(result->id(), garbage_collect);
     return result;
 }
 
-MeshID AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
     VertexSpecification spec = submesh->vertex_data->vertex_specification();
-    MeshID result = new_mesh(spec, garbage_collect);
+    auto result = new_mesh(spec, garbage_collect);
 
-    SubMesh* target = mesh(result)->new_submesh_with_material(
+    SubMesh* target = result->new_submesh_with_material(
         submesh->name(),
         submesh->material_id(),
         submesh->arrangement()
@@ -205,218 +197,213 @@ MeshID AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMetho
     return result;
 }
 
-MeshID AssetManager::new_mesh_from_file(const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::new_mesh_from_file(const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
     //Load the material
-    smlt::MeshID mesh_id = new_mesh(VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
+    auto mesh = new_mesh(VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
     auto loader = window->loader_for(path.encode());
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
     LoaderOptions loader_options;
     loader_options[MESH_LOAD_OPTIONS_KEY] = options;
 
-    loader->into(mesh(mesh_id), loader_options);
+    loader->into(mesh, loader_options);
 
-    mesh_manager_.set_garbage_collection_method(mesh_id, garbage_collect, true);
-    return mesh_id;
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
+    return mesh;
 }
 
-MeshID AssetManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
-    smlt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    auto mesh = mesh_id.fetch();
+MeshPtr AssetManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
+    auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     window->loader_for(tmx_file.encode())->into(mesh, {
         {"layer", layer_name},
         {"render_size", tile_render_size}
     });
 
-    mesh_manager_.set_garbage_collection_method(mesh_id, garbage_collect, true);
-    return mesh_id;
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
+    return mesh;
 }
 
-MeshID AssetManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
-    smlt::MeshID mesh_id = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    auto mesh = mesh_id.fetch();
+MeshPtr AssetManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+    auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     window->loader_for("heightmap_loader", image_file)->into(mesh, {
         { "spec", spec},
     });
-    mesh_manager_.set_garbage_collection_method(mesh_id, garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
-    return mesh_id;
+    return mesh;
 }
 
-MeshID AssetManager::new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(
+MeshPtr AssetManager::new_mesh_as_cube(float width, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(
         VertexSpecification::DEFAULT,
         GARBAGE_COLLECT_NEVER
     );
-    smlt::procedural::mesh::cube(mesh(m), width);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+    smlt::procedural::mesh::cube(m, width);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MeshID AssetManager::new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(
+MeshPtr AssetManager::new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(
         VertexSpecification::DEFAULT,
         GARBAGE_COLLECT_NEVER
     );
-    smlt::procedural::mesh::box(mesh(m), width, width, width, smlt::procedural::MESH_STYLE_SUBMESH_PER_FACE);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+    smlt::procedural::mesh::box(m, width, width, width, smlt::procedural::MESH_STYLE_SUBMESH_PER_FACE);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 
 }
 
-MeshID AssetManager::new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    smlt::procedural::mesh::box(mesh(m), width, height, depth);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+MeshPtr AssetManager::new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    smlt::procedural::mesh::box(m, width, height, depth);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MeshID AssetManager::new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    smlt::procedural::mesh::sphere(mesh(m), diameter);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+MeshPtr AssetManager::new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    smlt::procedural::mesh::sphere(m, diameter);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MeshID AssetManager::new_mesh_as_rectangle(float width, float height, const Vec2& offset, MaterialID material, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    smlt::procedural::mesh::rectangle(mesh(m), width, height, offset.x, offset.y, 0, false, material);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+MeshPtr AssetManager::new_mesh_as_rectangle(float width, float height, const Vec2& offset, MaterialID material, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    smlt::procedural::mesh::rectangle(m, width, height, offset.x, offset.y, 0, false, material);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MeshID AssetManager::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    smlt::procedural::mesh::cylinder(mesh(m), diameter, length, segments, stacks);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+MeshPtr AssetManager::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    smlt::procedural::mesh::cylinder(m, diameter, length, segments, stacks);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MeshID AssetManager::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    smlt::procedural::mesh::capsule(mesh(m), diameter, length, segments, 1, stacks);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+MeshPtr AssetManager::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    smlt::procedural::mesh::capsule(m, diameter, length, segments, 1, stacks);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MeshID AssetManager::new_mesh_as_icosphere(float diameter, int subdivisions, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-    m.fetch()->new_submesh_as_icosphere("icosphere", MaterialID(), diameter, subdivisions);
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+MeshPtr AssetManager::new_mesh_as_icosphere(float diameter, int subdivisions, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    m->new_submesh_as_icosphere("icosphere", MaterialID(), diameter, subdivisions);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MeshID AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(vertex_specification, GARBAGE_COLLECT_NEVER);
-
-    auto new_mesh = mesh(m);
-    auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
+MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
+    auto mesh = new_mesh(vertex_specification, GARBAGE_COLLECT_NEVER);
+    auto submesh = mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->vertex_data->position(v);
-        new_mesh->vertex_data->move_next();
+        mesh->vertex_data->position(v);
+        mesh->vertex_data->move_next();
         submesh->index_data->index(i++);
     }
 
-    new_mesh->vertex_data->done();
+    mesh->vertex_data->done();
     submesh->index_data->done();
 
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
-    return m;
+    return mesh;
 }
 
-MeshID AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
     //FIXME: THis is literally a copy/paste of the function above, we can templatize this
-    MeshID m = new_mesh(vertex_specification, GARBAGE_COLLECT_NEVER);
+    auto mesh = new_mesh(vertex_specification, GARBAGE_COLLECT_NEVER);
 
-    auto new_mesh = mesh(m);
-    auto submesh = new_mesh->new_submesh(submesh_name, arrangement);
+    auto submesh = mesh->new_submesh(submesh_name, arrangement);
     int i = 0;
     for(auto v: vertices) {
-        new_mesh->vertex_data->position(v);
-        new_mesh->vertex_data->move_next();
+        mesh->vertex_data->position(v);
+        mesh->vertex_data->move_next();
         submesh->index_data->index(i++);
     }
 
-    new_mesh->vertex_data->done();
+    mesh->vertex_data->done();
     submesh->index_data->done();
 
-    mesh_manager_.set_garbage_collection_method(m, garbage_collect, true);
-    return m;
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
+    return mesh;
 }
 
-MeshID AssetManager::new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh(vertex_specification, garbage_collect);
+MeshPtr AssetManager::new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(vertex_specification, garbage_collect);
     try {
-        mesh_manager_.store_alias(alias, m);
+        mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m);
+        delete_mesh(m->id());
         throw;
     }
     return m;
 }
 
-MeshID AssetManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh_from_file(path, options, garbage_collect);
+MeshPtr AssetManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh_from_file(path, options, garbage_collect);
     try {
-        mesh_manager_.store_alias(alias, m);
+        mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m);
+        delete_mesh(m->id());
         throw;
     }
     return m;
 }
 
-MeshID AssetManager::new_mesh_with_alias_as_cube(const std::string& alias, float width, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh_as_cube(width, garbage_collect);
+MeshPtr AssetManager::new_mesh_with_alias_as_cube(const std::string& alias, float width, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh_as_cube(width, garbage_collect);
     try {
-        mesh_manager_.store_alias(alias, m);
+        mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m);
+        delete_mesh(m->id());
         throw;
     }
     return m;
 }
 
-MeshID AssetManager::new_mesh_with_alias_as_sphere(const std::string &alias, float diameter, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh_as_sphere(diameter, garbage_collect);
+MeshPtr AssetManager::new_mesh_with_alias_as_sphere(const std::string &alias, float diameter, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh_as_sphere(diameter, garbage_collect);
     try {
-        mesh_manager_.store_alias(alias, m);
+        mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m);
+        delete_mesh(m->id());
         throw;
     }
     return m;
 }
 
-MeshID AssetManager::new_mesh_with_alias_as_rectangle(const std::string& alias, float width, float height, const Vec2& offset, smlt::MaterialID material, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
+MeshPtr AssetManager::new_mesh_with_alias_as_rectangle(const std::string& alias, float width, float height, const Vec2& offset, smlt::MaterialID material, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh_as_rectangle(width, height, offset, material, garbage_collect);
     try {
-        mesh_manager_.store_alias(alias, m);
+        mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m);
+        delete_mesh(m->id());
         throw;
     }
     return m;
 }
 
-MeshID AssetManager::new_mesh_with_alias_as_cylinder(const std::string &alias, float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
-    MeshID m = new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
+MeshPtr AssetManager::new_mesh_with_alias_as_cylinder(const std::string &alias, float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh_as_cylinder(diameter, length, segments, stacks, garbage_collect);
     try {
-        mesh_manager_.store_alias(alias, m);
+        mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m);
+        delete_mesh(m->id());
         throw;
     }
 
     return m;
 }
 
-MeshID AssetManager::get_mesh_with_alias(const std::string& alias) {
-    return mesh_manager_.get_id_from_alias(alias);
+MeshPtr AssetManager::get_mesh_with_alias(const std::string& alias) {
+    return mesh(mesh_manager_.get_id_from_alias(alias));
 }
 
 void AssetManager::delete_mesh(MeshID m) {
@@ -431,17 +418,17 @@ uint32_t AssetManager::mesh_count() const {
     return mesh_manager_.count();
 }
 
-MaterialID AssetManager::new_material(GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::new_material(GarbageCollectMethod garbage_collect) {
     MaterialID result = material_manager_.make(this);
     material_manager_.set_garbage_collection_method(result, garbage_collect);
-    return result;
+    return result.fetch();
 }
 
 void AssetManager::delete_material(MaterialID m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
-MaterialID AssetManager::get_template_material(const unicode& path) {
+MaterialPtr AssetManager::get_template_material(const unicode& path) {
     /*
      * We keep a cache of the materials we've loaded from file, this massively improves performance
      * and allows sharing of the GPU program during rendering
@@ -498,10 +485,10 @@ MaterialID AssetManager::get_template_material(const unicode& path) {
         }
     }
 
-    return template_id;
+    return template_id.fetch();
 }
 
-MaterialID AssetManager::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
 
     MaterialID template_id = get_template_material(path);
 
@@ -509,55 +496,55 @@ MaterialID AssetManager::new_material_from_file(const unicode& path, GarbageColl
 
     /* Templates are always created in the base manager, we clone from the base manager into this
      * manager (which might be the same manager) */
-    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_).fetch();
+    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_);
     new_mat->manager_ = this;
 
     auto new_mat_id = new_mat->id();
 
     L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat_id));
 
-    material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect, true);
-    return new_mat_id;
+    material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect);
+    return new_mat;
 }
 
-MaterialID AssetManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
-    MaterialID m = new_material(garbage_collect);
+MaterialPtr AssetManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
+    auto m = new_material(garbage_collect);
     assert(m);
 
     try {
-        material_manager_.store_alias(alias, m);
+        material_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_material(m);
+        delete_material(m->id());
         throw;
     }
     return m;
 }
 
-MaterialID AssetManager::new_material_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    MaterialID m = new_material_from_file(path, garbage_collect);
+MaterialPtr AssetManager::new_material_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+    auto m = new_material_from_file(path, garbage_collect);
     assert(m);
 
     try {
-        material_manager_.store_alias(alias, m);
+        material_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_material(m);
+        delete_material(m->id());
         throw;
     }
     return m;
 }
 
-MaterialID AssetManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
-    MaterialID m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
+MaterialPtr AssetManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
+    auto m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    material(m)->set_diffuse_map(texture_id);
+    m->set_diffuse_map(texture_id);
 
-    material_manager_.set_garbage_collection_method(m, garbage_collect, true);
+    material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
-MaterialID AssetManager::get_material_with_alias(const std::string& alias) {
-    return material_manager_.get_id_from_alias(alias);
+MaterialPtr AssetManager::get_material_with_alias(const std::string& alias) {
+    return material_manager_.get_id_from_alias(alias).fetch();
 }
 
 MaterialPtr AssetManager::material(MaterialID mid) {
@@ -584,13 +571,13 @@ uint32_t AssetManager::material_count() const {
     return material_manager_.count();
 }
 
-TextureID AssetManager::new_texture(GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::new_texture(GarbageCollectMethod garbage_collect) {
     auto ret = texture_manager_.make(this);
-    texture_manager_.set_garbage_collection_method(ret, garbage_collect);
+    texture_manager_.set_garbage_collection_method(ret->id(), garbage_collect);
     return ret;
 }
 
-TextureID AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(GARBAGE_COLLECT_NEVER));
 
@@ -609,38 +596,38 @@ TextureID AssetManager::new_texture_from_file(const unicode& path, TextureFlags 
         tex->mark_data_changed();
     }
 
-    texture_manager_.set_garbage_collection_method(tex->id(), garbage_collect, true);
-    return tex->id();
+    texture_manager_.set_garbage_collection_method(tex->id(), garbage_collect);
+    return tex;
 }
 
 void AssetManager::delete_texture(TextureID t) {
     texture_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
-TextureID AssetManager::new_texture_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
-    TextureID t = new_texture(garbage_collect);
+TexturePtr AssetManager::new_texture_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
+    auto t = new_texture(garbage_collect);
     try {
-        texture_manager_.store_alias(alias, t);
+        texture_manager_.store_alias(alias, t->id());
     } catch(...) {
-        delete_texture(t);
+        delete_texture(t->id());
         throw;
     }
     return t;
 }
 
-TextureID AssetManager::new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
-    TextureID t = new_texture_from_file(path, flags, garbage_collect);
+TexturePtr AssetManager::new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+    auto t = new_texture_from_file(path, flags, garbage_collect);
     try {
-        texture_manager_.store_alias(alias, t);
+        texture_manager_.store_alias(alias, t->id());
     } catch(...) {
-        delete_texture(t);
+        delete_texture(t->id());
         throw;
     }
     return t;
 }
 
-TextureID AssetManager::get_texture_with_alias(const std::string& alias) {
-    return texture_manager_.get_id_from_alias(alias);
+TexturePtr AssetManager::get_texture_with_alias(const std::string& alias) {
+    return texture_manager_.get_id_from_alias(alias).fetch();
 }
 
 TexturePtr AssetManager::texture(TextureID t) {
@@ -667,46 +654,46 @@ uint32_t AssetManager::texture_count() const {
     return texture_manager_.count();
 }
 
-SoundID AssetManager::new_sound(GarbageCollectMethod garbage_collect) {
+SoundPtr AssetManager::new_sound(GarbageCollectMethod garbage_collect) {
     auto ret = sound_manager_.make(this, window->_sound_driver());
-    sound_manager_.set_garbage_collection_method(ret, garbage_collect);
+    sound_manager_.set_garbage_collection_method(ret->id(), garbage_collect);
     return ret;
 }
 
-SoundID AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the sound
     auto snd = sound(new_sound(GARBAGE_COLLECT_NEVER));
     window->loader_for(path.encode())->into(snd);
 
-    sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect, true);
+    sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 
-    return snd->id();
+    return snd;
 }
 
-SoundID AssetManager::new_sound_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect) {
-    SoundID s = new_sound(garbage_collect);
+SoundPtr AssetManager::new_sound_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect) {
+    auto s = new_sound(garbage_collect);
     try {
-        sound_manager_.store_alias(alias, s);
+        sound_manager_.store_alias(alias, s->id());
     } catch(...) {
-        delete_sound(s);
+        delete_sound(s->id());
         throw;
     }
     return s;
 }
 
-SoundID AssetManager::new_sound_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    SoundID s = new_sound_from_file(path, garbage_collect);
+SoundPtr AssetManager::new_sound_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+    auto s = new_sound_from_file(path, garbage_collect);
     try {
-        sound_manager_.store_alias(alias, s);
+        sound_manager_.store_alias(alias, s->id());
     } catch(...) {
-        delete_sound(s);
+        delete_sound(s->id());
         throw;
     }
     return s;
 }
 
-SoundID AssetManager::get_sound_with_alias(const std::string &alias) {
-    return sound_manager_.get_id_from_alias(alias);
+SoundPtr AssetManager::get_sound_with_alias(const std::string &alias) {
+    return sound_manager_.get_id_from_alias(alias).fetch();
 }
 
 SoundPtr AssetManager::sound(SoundID s) {
@@ -770,28 +757,39 @@ unicode AssetManager::default_material_filename() const {
     return window->vfs->locate_file(Material::BuiltIns::DEFAULT);
 }
 
+MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
+    auto mat_id = base_manager()->default_material_id();
+    assert(mat_id && "No default material, called to early?");
+
+    auto& manager = base_manager()->material_manager_;
+    auto new_mat_id = manager.clone(mat_id);
+    manager.set_garbage_collection_method(new_mat_id, garbage_collect);
+
+    assert(new_mat_id);
+    return material(new_mat_id);
+}
+
 // ========== FONTS ======================
 
-FontID AssetManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
-    auto font_id = font_manager_.make(this);
+FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
+    auto font = font_manager_.make(this);
+    auto font_id = font->id();
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
-
-    auto font = font_id.fetch();
 
     try {
         LoaderOptions options;
         window->loader_for(filename)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect, true);
+        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
         delete_font(font_id);
         throw;
     }
 
-    return font_id;
+    return font;
 }
 
-FontID AssetManager::new_font_with_alias_from_file(const std::string& alias, const unicode& filename, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_with_alias_from_file(const std::string& alias, const unicode& filename, GarbageCollectMethod garbage_collect) {
     auto fid = new_font_from_file(filename, garbage_collect);
     try {
         font_manager_.store_alias(alias, fid);
@@ -802,11 +800,11 @@ FontID AssetManager::new_font_with_alias_from_file(const std::string& alias, con
     return fid;
 }
 
-FontID AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
-    auto font_id = font_manager_.make(this);
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
+FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+    auto font = font_manager_.make(this);
+    auto font_id = font->id();
 
-    auto font = font_id.fetch();
+    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
     try {
         LoaderOptions options;
@@ -814,17 +812,17 @@ FontID AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_si
         options["charset"] = charset;
         window->loader_for(filename)->into(font.get(), options);
 
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect, true);
+        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
         delete_font(font_id);
         throw;
     }
 
-    return font_id;
+    return font;
 }
 
-FontID AssetManager::new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
     auto fid = new_font_from_ttf(filename, font_size, charset, garbage_collect);
     try {
         font_manager_.store_alias(alias, fid);
@@ -835,8 +833,8 @@ FontID AssetManager::new_font_with_alias_from_ttf(const std::string& alias, cons
     return fid;
 }
 
-FontID AssetManager::get_font_with_alias(const std::string& alias) {
-    return font_manager_.get_id_from_alias(alias);
+FontPtr AssetManager::get_font_with_alias(const std::string& alias) {
+    return font_manager_.get_id_from_alias(alias).fetch();
 }
 
 void AssetManager::delete_font(FontID f) {

@@ -19,7 +19,7 @@ public:
         auto mat1 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
         auto mat2 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = stage->assets->new_mesh(VertexSpecification::DEFAULT).fetch();
+        auto mesh = stage->assets->new_mesh(VertexSpecification::DEFAULT);
         mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(-20, -20, -20.0));
         mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(20, 20, 20.0));
 
@@ -43,7 +43,7 @@ public:
         auto mat1 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
         auto mat2 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = stage->assets->new_mesh(VertexSpecification::DEFAULT).fetch();
+        auto mesh = stage->assets->new_mesh(VertexSpecification::DEFAULT);
         mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -20.0));
         mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 20.0));
 
