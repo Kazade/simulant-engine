@@ -579,13 +579,13 @@ uint32_t AssetManager::material_count() const {
     return material_manager_.count();
 }
 
-TextureID AssetManager::new_texture(GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::new_texture(GarbageCollectMethod garbage_collect) {
     auto ret = texture_manager_.make(this);
     texture_manager_.set_garbage_collection_method(ret, garbage_collect);
-    return ret;
+    return ret.fetch();
 }
 
-TextureID AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     auto tex = texture(new_texture(GARBAGE_COLLECT_NEVER));
 
@@ -605,37 +605,37 @@ TextureID AssetManager::new_texture_from_file(const unicode& path, TextureFlags 
     }
 
     texture_manager_.set_garbage_collection_method(tex->id(), garbage_collect, true);
-    return tex->id();
+    return tex;
 }
 
 void AssetManager::delete_texture(TextureID t) {
     texture_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
-TextureID AssetManager::new_texture_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
-    TextureID t = new_texture(garbage_collect);
+TexturePtr AssetManager::new_texture_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
+    auto t = new_texture(garbage_collect);
     try {
-        texture_manager_.store_alias(alias, t);
+        texture_manager_.store_alias(alias, t->id());
     } catch(...) {
-        delete_texture(t);
+        delete_texture(t->id());
         throw;
     }
     return t;
 }
 
-TextureID AssetManager::new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
-    TextureID t = new_texture_from_file(path, flags, garbage_collect);
+TexturePtr AssetManager::new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+    auto t = new_texture_from_file(path, flags, garbage_collect);
     try {
-        texture_manager_.store_alias(alias, t);
+        texture_manager_.store_alias(alias, t->id());
     } catch(...) {
-        delete_texture(t);
+        delete_texture(t->id());
         throw;
     }
     return t;
 }
 
-TextureID AssetManager::get_texture_with_alias(const std::string& alias) {
-    return texture_manager_.get_id_from_alias(alias);
+TexturePtr AssetManager::get_texture_with_alias(const std::string& alias) {
+    return texture_manager_.get_id_from_alias(alias).fetch();
 }
 
 TexturePtr AssetManager::texture(TextureID t) {

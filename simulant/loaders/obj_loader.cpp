@@ -149,11 +149,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 bool found = false;
                 for(auto& texture_file: possible_locations) {
                     if(kfs::path::exists(texture_file)) {
-                        auto tex_id = mesh->asset_manager().new_texture_from_file(texture_file);
-
-                        new_mat->set_diffuse_map(tex_id);
-
-                        loaded_textures.insert(std::make_pair(material.diffuse_texname, tex_id.fetch()));
+                        auto tex = mesh->asset_manager().new_texture_from_file(texture_file);
+                        new_mat->set_diffuse_map(tex->id());
+                        loaded_textures.insert(std::make_pair(material.diffuse_texname, tex));
                         found = true;
                         break;
                     }

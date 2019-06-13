@@ -65,7 +65,7 @@ public:
     }
 
     void test_image_creation() {
-        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png").fetch();
+        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
         auto image = stage_->ui->new_widget_as_image(texture->id());
 
         assert_equal(image->width(), texture->width());
@@ -76,7 +76,7 @@ public:
     }
 
     void test_set_source_rect() {
-        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png").fetch();
+        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
         auto image = stage_->ui->new_widget_as_image(texture->id());
 
         image->set_source_rect(smlt::Vec2(0, 0), smlt::Vec2(128, 128));

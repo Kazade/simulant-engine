@@ -106,7 +106,7 @@ public:
         auto mat = window->shared_assets->new_material().fetch();
         mat->set_pass_count(1);
 
-        auto texture = window->shared_assets->new_texture().fetch();
+        auto texture = window->shared_assets->new_texture();
         assert_equal(texture.use_count(), 2);
 
         mat->set_diffuse_map(texture->id());

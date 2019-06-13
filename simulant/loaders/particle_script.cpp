@@ -161,8 +161,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                         auto dirname = kfs::path::dir_name(filename_.encode());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
-                        auto tex_id = ps->stage->assets->new_texture_from_file(js[key].get<jsonic::String>());
-                        mat->set_property_value(property_name, tex_id);
+                        auto tex = ps->stage->assets->new_texture_from_file(js[key].get<jsonic::String>());
+                        mat->set_property_value(property_name, tex->id());
                         if(remove) {
                             // Remove the path if necessary
                             vfs->remove_search_path(dirname);
