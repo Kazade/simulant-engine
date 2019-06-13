@@ -260,16 +260,6 @@ public:
             }
 
             bool collect = meta.collection_method == GARBAGE_COLLECT_PERIODIC;
-            auto age = (
-                std::chrono::system_clock::now() - meta.created
-            );
-
-            uint32_t age_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(age).count();
-
-            // 3 second grace period after creation
-            if(age_in_seconds < gc_grace_period_) {
-                collect = false;
-            }
 
             if(it->second.unique() && collect) {
                 // The user accessed this, and GC is enabled, and now there is only the
@@ -282,17 +272,13 @@ public:
         }
     }
 
-    void set_garbage_collection_method(IDType id, GarbageCollectMethod method, bool restart_grace_period=false) {
+    void set_garbage_collection_method(IDType id, GarbageCollectMethod method) {
         std::lock_guard<std::mutex> g(metas_mutex_);
         auto& meta = object_metas_.at(id);
         meta.collection_method = method;
-        if(method != GARBAGE_COLLECT_NEVER && restart_grace_period) {
+        if(method != GARBAGE_COLLECT_NEVER) {
             meta.created = std::chrono::system_clock::now();
         }
-    }
-
-    void set_garbage_collection_grace_period(uint32_t period) {
-        gc_grace_period_ = period;
     }
 
 private:
@@ -308,7 +294,6 @@ private:
 
     std::mutex metas_mutex_;
     std::unordered_map<IDType, ObjMeta> object_metas_;
-    std::atomic<uint32_t> gc_grace_period_ = ATOMIC_VAR_INIT(3);
 
     void on_make(IDType id) override {
         std::lock_guard<std::mutex> g(metas_mutex_);

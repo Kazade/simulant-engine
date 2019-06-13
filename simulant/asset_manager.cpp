@@ -142,14 +142,6 @@ void AssetManager::run_garbage_collection() {
     font_manager_.update();
 }
 
-void AssetManager::set_garbage_collection_grace_period(uint32_t period) {
-    material_manager_.set_garbage_collection_grace_period(period);
-    texture_manager_.set_garbage_collection_grace_period(period);
-    font_manager_.set_garbage_collection_grace_period(period);
-    sound_manager_.set_garbage_collection_grace_period(period);
-    mesh_manager_.set_garbage_collection_grace_period(period);
-}
-
 MeshPtr AssetManager::mesh(MeshID m) {
     if(parent_ && !has_mesh(m)) {
         return parent_->mesh(m);
@@ -216,7 +208,7 @@ MeshPtr AssetManager::new_mesh_from_file(const unicode& path, const MeshLoadOpti
 
     loader->into(mesh, loader_options);
 
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
     return mesh;
 }
 
@@ -228,7 +220,7 @@ MeshPtr AssetManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unic
         {"render_size", tile_render_size}
     });
 
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
     return mesh;
 }
 
@@ -238,7 +230,7 @@ MeshPtr AssetManager::new_mesh_from_heightmap(const unicode& image_file, const H
     window->loader_for("heightmap_loader", image_file)->into(mesh, {
         { "spec", spec},
     });
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
     return mesh;
 }
@@ -249,7 +241,7 @@ MeshPtr AssetManager::new_mesh_as_cube(float width, GarbageCollectMethod garbage
         GARBAGE_COLLECT_NEVER
     );
     smlt::procedural::mesh::cube(m, width);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
@@ -259,7 +251,7 @@ MeshPtr AssetManager::new_mesh_as_cube_with_submesh_per_face(float width, Garbag
         GARBAGE_COLLECT_NEVER
     );
     smlt::procedural::mesh::box(m, width, width, width, smlt::procedural::MESH_STYLE_SUBMESH_PER_FACE);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 
 }
@@ -267,42 +259,42 @@ MeshPtr AssetManager::new_mesh_as_cube_with_submesh_per_face(float width, Garbag
 MeshPtr AssetManager::new_mesh_as_box(float width, float height, float depth, GarbageCollectMethod garbage_collect) {
     auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
     smlt::procedural::mesh::box(m, width, height, depth);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
 MeshPtr AssetManager::new_mesh_as_sphere(float diameter, GarbageCollectMethod garbage_collect) {
     auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
     smlt::procedural::mesh::sphere(m, diameter);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
 MeshPtr AssetManager::new_mesh_as_rectangle(float width, float height, const Vec2& offset, MaterialID material, GarbageCollectMethod garbage_collect) {
     auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
     smlt::procedural::mesh::rectangle(m, width, height, offset.x, offset.y, 0, false, material);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
 MeshPtr AssetManager::new_mesh_as_cylinder(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
     auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
     smlt::procedural::mesh::cylinder(m, diameter, length, segments, stacks);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
 MeshPtr AssetManager::new_mesh_as_capsule(float diameter, float length, int segments, int stacks, GarbageCollectMethod garbage_collect) {
     auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
     smlt::procedural::mesh::capsule(m, diameter, length, segments, 1, stacks);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
 MeshPtr AssetManager::new_mesh_as_icosphere(float diameter, int subdivisions, GarbageCollectMethod garbage_collect) {
     auto m = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
     m->new_submesh_as_icosphere("icosphere", MaterialID(), diameter, subdivisions);
-    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
@@ -319,7 +311,7 @@ MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specific
     mesh->vertex_data->done();
     submesh->index_data->done();
 
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
     return mesh;
 }
@@ -339,7 +331,7 @@ MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specific
     mesh->vertex_data->done();
     submesh->index_data->done();
 
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect, true);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
     return mesh;
 }
 
@@ -511,7 +503,7 @@ MaterialPtr AssetManager::new_material_from_file(const unicode& path, GarbageCol
 
     L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat_id));
 
-    material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect, true);
+    material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect);
     return new_mat;
 }
 
@@ -547,7 +539,7 @@ MaterialPtr AssetManager::new_material_from_texture(TextureID texture_id, Garbag
 
     m->set_diffuse_map(texture_id);
 
-    material_manager_.set_garbage_collection_method(m->id(), garbage_collect, true);
+    material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
 }
 
@@ -604,7 +596,7 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
         tex->mark_data_changed();
     }
 
-    texture_manager_.set_garbage_collection_method(tex->id(), garbage_collect, true);
+    texture_manager_.set_garbage_collection_method(tex->id(), garbage_collect);
     return tex;
 }
 
@@ -673,7 +665,7 @@ SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMe
     auto snd = sound(new_sound(GARBAGE_COLLECT_NEVER));
     window->loader_for(path.encode())->into(snd);
 
-    sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect, true);
+    sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 
     return snd;
 }
@@ -771,7 +763,7 @@ MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_co
 
     auto& manager = base_manager()->material_manager_;
     auto new_mat_id = manager.clone(mat_id);
-    manager.set_garbage_collection_method(new_mat_id, garbage_collect, true);
+    manager.set_garbage_collection_method(new_mat_id, garbage_collect);
 
     assert(new_mat_id);
     return material(new_mat_id);
@@ -787,7 +779,7 @@ FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollect
     try {
         LoaderOptions options;
         window->loader_for(filename)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect, true);
+        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
         delete_font(font_id);
@@ -820,7 +812,7 @@ FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_s
         options["charset"] = charset;
         window->loader_for(filename)->into(font.get(), options);
 
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect, true);
+        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
         delete_font(font_id);

@@ -239,12 +239,11 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     );
 
     // Load the texture using the texture loader
-    TextureID tid = mesh->asset_manager().new_texture();
-    TextureLoader loader(this->filename_, this->data_);
-    loader.into(*mesh->asset_manager().texture(tid), {{"auto_upload", false}});
+    TexturePtr tex = mesh->asset_manager().new_texture();
+    TextureLoader loader(this->filename_, this->data_);    
+    loader.into(*tex, {{"auto_upload", false}});
 
     // Now generate the heightmap from it
-    auto tex = mesh->asset_manager().texture(tid);
     tex->flip_vertically();
 
     if(tex->is_compressed()) {
@@ -388,9 +387,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
     mesh->vertex_data->done();
 
-    mesh->asset_manager().delete_texture(tid); //Finally delete the texture
-
-
+    mesh->asset_manager().delete_texture(tex->id()); //Finally delete the texture
 }
 
 }

@@ -24,8 +24,6 @@ public:
         stage_ = window->new_stage();
         mesh_ = stage_->assets->new_mesh_as_cube(1.0f);
         camera_ = stage_->new_camera();
-
-        stage_->assets->set_garbage_collection_grace_period(0);
     }
 
     void test_shared_vertex_vbo() {
