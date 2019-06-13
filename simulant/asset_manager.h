@@ -150,12 +150,12 @@ public:
     uint32_t material_count() const;
     void delete_material(MaterialID m);
 
-    SoundID new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    SoundID new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    SoundID new_sound_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    SoundID new_sound_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    SoundID get_sound_with_alias(const std::string& alias);
+    SoundPtr new_sound_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr get_sound_with_alias(const std::string& alias);
 
     void delete_sound(SoundID t);
 

@@ -662,46 +662,46 @@ uint32_t AssetManager::texture_count() const {
     return texture_manager_.count();
 }
 
-SoundID AssetManager::new_sound(GarbageCollectMethod garbage_collect) {
-    auto ret = sound_manager_.make(this, window->_sound_driver());
-    sound_manager_.set_garbage_collection_method(ret, garbage_collect);
+SoundPtr AssetManager::new_sound(GarbageCollectMethod garbage_collect) {
+    auto ret = sound_manager_.make(this, window->_sound_driver()).fetch();
+    sound_manager_.set_garbage_collection_method(ret->id(), garbage_collect);
     return ret;
 }
 
-SoundID AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the sound
     auto snd = sound(new_sound(GARBAGE_COLLECT_NEVER));
     window->loader_for(path.encode())->into(snd);
 
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect, true);
 
-    return snd->id();
+    return snd;
 }
 
-SoundID AssetManager::new_sound_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect) {
-    SoundID s = new_sound(garbage_collect);
+SoundPtr AssetManager::new_sound_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect) {
+    auto s = new_sound(garbage_collect);
     try {
-        sound_manager_.store_alias(alias, s);
+        sound_manager_.store_alias(alias, s->id());
     } catch(...) {
-        delete_sound(s);
+        delete_sound(s->id());
         throw;
     }
     return s;
 }
 
-SoundID AssetManager::new_sound_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    SoundID s = new_sound_from_file(path, garbage_collect);
+SoundPtr AssetManager::new_sound_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+    auto s = new_sound_from_file(path, garbage_collect);
     try {
-        sound_manager_.store_alias(alias, s);
+        sound_manager_.store_alias(alias, s->id());
     } catch(...) {
-        delete_sound(s);
+        delete_sound(s->id());
         throw;
     }
     return s;
 }
 
-SoundID AssetManager::get_sound_with_alias(const std::string &alias) {
-    return sound_manager_.get_id_from_alias(alias);
+SoundPtr AssetManager::get_sound_with_alias(const std::string &alias) {
+    return sound_manager_.get_id_from_alias(alias).fetch();
 }
 
 SoundPtr AssetManager::sound(SoundID s) {
