@@ -38,7 +38,7 @@ CameraManager::CameraManager(Stage *stage):
 }
 
 CameraPtr CameraManager::new_camera() {
-    auto new_camera = cameras_.make(this->stage_).fetch();
+    auto new_camera = cameras_.make(this->stage_);
     new_camera->set_parent(stage_);
 
     return new_camera;
@@ -110,8 +110,8 @@ StageManager::StageManager(Window* window):
 
 StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
     auto ret = StageManager::make(this->window_, partitioner);
-    signal_stage_added_(ret);
-    return ret.fetch();
+    signal_stage_added_(ret->id());
+    return ret;
 }
 
 std::size_t StageManager::stage_count() const {

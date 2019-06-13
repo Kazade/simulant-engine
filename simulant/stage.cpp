@@ -88,19 +88,19 @@ void Stage::ask_owner_for_destruction() {
 ActorPtr Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    ActorID result = ActorManager::make(this, window->_sound_driver());
-    auto a = result.fetch();
+    auto a = ActorManager::make(this, window->_sound_driver());
 
     a->set_renderable_culling_mode(mode);
     a->set_parent(this);
 
+    auto id = a->id();
     /* Whenever the actor moves, we need to tell the stage's partitioner */
-    a->signal_bounds_updated().connect([this, result](const AABB& new_bounds) {
-        this->partitioner->update_actor(result, new_bounds);
+    a->signal_bounds_updated().connect([this, id](const AABB& new_bounds) {
+        this->partitioner->update_actor(id, new_bounds);
     });
 
     //Tell everyone about the new actor
-    signal_actor_created_(result);
+    signal_actor_created_(a->id());
     return a;
 }
 
@@ -113,15 +113,14 @@ ActorPtr Stage::new_actor_with_name(const std::string& name, RenderableCullingMo
 ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    ActorID result = ActorManager::make(this, window->_sound_driver());
-    auto a = result.fetch();
-
+    auto a = ActorManager::make(this, window->_sound_driver());
     a->set_renderable_culling_mode(mode);
     a->set_parent(this);
 
+    auto id = a->id();
     /* Whenever the actor moves, we need to tell the stage's partitioner */
-    a->signal_bounds_updated().connect([this, result](const AABB& new_bounds) {
-        this->partitioner->update_actor(result, new_bounds);
+    a->signal_bounds_updated().connect([this, id](const AABB& new_bounds) {
+        this->partitioner->update_actor(id, new_bounds);
     });
 
     //If a mesh was specified, set it
@@ -130,7 +129,7 @@ ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     }
 
     //Tell everyone about the new actor
-    signal_actor_created_(result);
+    signal_actor_created_(id);
 
     return a;
 }
@@ -180,7 +179,7 @@ ActorPtr Stage::delete_actor(ActorID e) {
 //=============== GEOMS =====================
 
 GeomPtr Stage::new_geom_with_mesh(MeshID mid) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid).fetch();
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid);
     gid->set_parent(this);
 
     signal_geom_created_(gid->id());
@@ -193,7 +192,7 @@ GeomPtr Stage::geom(const GeomID gid) const {
 }
 
 GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation).fetch();
+    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation);
     gid->set_parent(this);
 
     signal_geom_created_(gid->id());
@@ -219,9 +218,8 @@ std::size_t Stage::geom_count() const {
 //=============== PARTICLES =================
 
 ParticleSystemPtr Stage::new_particle_system() {
-    ParticleSystemID new_id = ParticleSystemManager::make(this, window->_sound_driver());
-
-    auto p = new_id.fetch();
+    auto p = ParticleSystemManager::make(this, window->_sound_driver());
+    auto new_id = p->id();
 
     /* Whenever the particle system moves, we need to tell the stage's partitioner */
     p->signal_bounds_updated().connect([this, new_id](const AABB& new_bounds) {
@@ -268,7 +266,7 @@ ParticleSystemPtr Stage::delete_particle_system(ParticleSystemID pid) {
 }
 
 LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
-    auto light = LightManager::make(this).fetch();
+    auto light = LightManager::make(this);
     auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_DIRECTIONAL);
@@ -286,7 +284,7 @@ LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colo
 }
 
 LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
-    auto light = LightManager::make(this).fetch();
+    auto light = LightManager::make(this);
     auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_POINT);

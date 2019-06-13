@@ -44,7 +44,7 @@ public:
     }
 
     /* Clones an object and returns an new ID to the clone */
-    IDType clone(IDType id, this_type* target_manager=nullptr) {
+    ObjectTypePtrType clone(IDType id, this_type* target_manager=nullptr) {
         if(!target_manager) {
             target_manager = this;
         }
@@ -63,16 +63,16 @@ public:
         std::lock_guard<std::recursive_mutex> g(target_manager->objects_mutex_);
         target_manager->objects_.insert(std::make_pair(copy->id(), copy));
         target_manager->on_make(copy->id());
-        return copy->id();
+        return copy;
     }
 
     template<typename... Args>
-    IDType make(Args&&... args) {
+    ObjectTypePtrType make(Args&&... args) {
         return make_as<ObjectType>(std::forward<Args>(args)...);
     }
 
     template<typename T, typename... Args>
-    IDType make_as(Args&&... args) {
+    ObjectTypePtrType make_as(Args&&... args) {
         IDType new_id(next_id()); // Unbound
 
         auto obj = T::create(new_id, std::forward<Args>(args)...);
@@ -83,7 +83,7 @@ public:
 
         on_make(obj->id());
 
-        return obj->id(); // Bound
+        return SmartPointerConverter::convert(obj);
     }
 
     void destroy(IDType id) {

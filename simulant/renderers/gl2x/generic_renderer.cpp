@@ -410,10 +410,9 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
     /* FIXME: This doesn't do what the function implies... it should either be called new_gpu_program, or it should try to return an existing progra
      * if the source matches */
 
-    auto ret = program_manager_.make(this, vertex_shader_source, fragment_shader_source);
-    auto program = ret.fetch();
+    auto program = program_manager_.make(this, vertex_shader_source, fragment_shader_source);
 
-    program_manager_.set_garbage_collection_method(ret, GARBAGE_COLLECT_PERIODIC);
+    program_manager_.set_garbage_collection_method(program->id(), GARBAGE_COLLECT_PERIODIC);
 
     /* Build the GPU program on the main thread */
     if(!GLThreadCheck::is_current()) {
@@ -424,7 +423,7 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
         program->build();
     }
 
-    return ret;
+    return program->id();
 }
 
 smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) {

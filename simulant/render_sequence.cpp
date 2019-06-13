@@ -192,10 +192,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 }
 
 PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    PipelineID new_p = PipelineManager::make(this);
-
-    auto pipeline = PipelineManager::get(new_p);
-
+    auto pipeline = PipelineManager::make(this);
     pipeline->set_stage(stage);
     pipeline->set_camera(camera);
     pipeline->set_viewport(viewport);

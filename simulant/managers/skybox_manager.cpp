@@ -210,9 +210,7 @@ SkyboxPtr SkyManager::new_skybox_from_files(
 
     assert(stage_);
 
-    SkyID sid = TemplatedSkyboxManager::make(this);
-
-    auto sb = skybox(sid);
+    auto sb = TemplatedSkyboxManager::make(this);
     sb->generate(
         up, down, left, right, front, back
     );

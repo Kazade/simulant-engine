@@ -16,7 +16,7 @@ void SpriteManager::delete_all() {
 }
 
 SpritePtr SpriteManager::new_sprite() {
-    auto s = TemplatedSpriteManager::make(this, window->_sound_driver()).fetch();
+    auto s = TemplatedSpriteManager::make(this, window->_sound_driver());
     s->set_parent(stage_->id());
     signal_sprite_created_(s->id());
     return s;

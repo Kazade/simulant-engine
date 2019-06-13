@@ -167,7 +167,7 @@ const MeshPtr AssetManager::mesh(MeshID m) const {
 }
 
 MeshPtr AssetManager::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
-    auto result = mesh_manager_.make(this, vertex_specification).fetch();
+    auto result = mesh_manager_.make(this, vertex_specification);
     mesh_manager_.set_garbage_collection_method(result->id(), garbage_collect);
     return result;
 }
@@ -504,7 +504,7 @@ MaterialPtr AssetManager::new_material_from_file(const unicode& path, GarbageCol
 
     /* Templates are always created in the base manager, we clone from the base manager into this
      * manager (which might be the same manager) */
-    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_).fetch();
+    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_);
     new_mat->manager_ = this;
 
     auto new_mat_id = new_mat->id();
@@ -581,8 +581,8 @@ uint32_t AssetManager::material_count() const {
 
 TexturePtr AssetManager::new_texture(GarbageCollectMethod garbage_collect) {
     auto ret = texture_manager_.make(this);
-    texture_manager_.set_garbage_collection_method(ret, garbage_collect);
-    return ret.fetch();
+    texture_manager_.set_garbage_collection_method(ret->id(), garbage_collect);
+    return ret;
 }
 
 TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
@@ -663,7 +663,7 @@ uint32_t AssetManager::texture_count() const {
 }
 
 SoundPtr AssetManager::new_sound(GarbageCollectMethod garbage_collect) {
-    auto ret = sound_manager_.make(this, window->_sound_driver()).fetch();
+    auto ret = sound_manager_.make(this, window->_sound_driver());
     sound_manager_.set_garbage_collection_method(ret->id(), garbage_collect);
     return ret;
 }
@@ -780,7 +780,7 @@ MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_co
 // ========== FONTS ======================
 
 FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
-    auto font = font_manager_.make(this).fetch();
+    auto font = font_manager_.make(this);
     auto font_id = font->id();
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
@@ -809,7 +809,7 @@ FontPtr AssetManager::new_font_with_alias_from_file(const std::string& alias, co
 }
 
 FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
-    auto font = font_manager_.make(this).fetch();
+    auto font = font_manager_.make(this);
     auto font_id = font->id();
 
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
