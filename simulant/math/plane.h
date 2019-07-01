@@ -30,15 +30,14 @@ struct Plane {
 
     }
 
+    Plane(const Vec3& N, const Vec3& P):
+        n(N),
+        d(P.dot(N)) {
+    }
+
     Plane(float A, float B, float C, float D):
         n(A, B, C),
         d(D) {
-
-    }
-
-    Plane(const Vec3& P, const Vec3& N):
-        n(N),
-        d(-P.dot(N)) {
 
     }
 

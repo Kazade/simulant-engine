@@ -21,7 +21,7 @@ public:
         Vec3 p(0, 0, 0);
         Vec3 n(0, 1, 0);
 
-        Plane plane(p, n);
+        Plane plane(n, p);
 
         assert_close(plane.n.x, n.x, 0.00001f);
         assert_close(plane.n.y, n.y, 0.00001f);
