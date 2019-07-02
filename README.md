@@ -10,6 +10,13 @@ It is designed with portability in mind, using minimal dependencies and targetti
 
 The aim of Simulant is to create an easy-to-use game engine to allow building homebrew for older games consoles, as well as creating a great developer-experience on modern platforms.
 
+
+## Status
+
+Simulant is currently in the *Alpha* stage. This means that you can use it to build games, but you may come across bugs or shortcomings. 
+
+This is the perfect time to get involved in the development of Simulant! If you find bugs, please report them, and if you think of cool new features, then feel free to create an issue for those too!
+
 ## History
 
 Simulant was my accidental hobby engine. It started while I was reverse-engineering a model format and wanted to quickly and easily manipulate meshes. Over the next couple of years I chipped away at it here and there, using it for various little toy projects, but it grew out of control without any focus. Over time it became a dumping ground for useful graphics-related code, and depended on more and more third party libraries. 
