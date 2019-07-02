@@ -4,13 +4,20 @@
 
 ## What is it?
 
-Simulant is my accidental hobby engine. It started while I was reverse-engineering a model format and wanted to quickly and easily manipulate meshes. Over the next couple of years I chipped away at it here and there, using it for various little toy projects, but it grew out of control without any focus. Over time it became a dumping ground for useful graphics-related code, and depended on more and more third party libraries. 
+Simulant is a cross-platform general-purpose game engine written in C++.
+
+It is designed with portability in mind, using minimal dependencies and targetting C++11 (rather than more modern versions of the language).
+
+The aim of Simulant is to create an easy-to-use game engine to allow building homebrew for older games consoles, as well as creating a great developer-experience on modern platforms.
+
+## History
+
+Simulant was my accidental hobby engine. It started while I was reverse-engineering a model format and wanted to quickly and easily manipulate meshes. Over the next couple of years I chipped away at it here and there, using it for various little toy projects, but it grew out of control without any focus. Over time it became a dumping ground for useful graphics-related code, and depended on more and more third party libraries. 
 
 In 2014, I decided that it there were a lot of nice things in Simulant, but it was a mess, and so I developed my first game "Rocks & Spaceworms" (https://play.google.com/store/apps/details?id=uk.co.kazade.rocks) with it and ported the code to Android. This allowed me to start focusing on removing dependencies and structuring the codebase like a real game engine. 
 
-Since then the focus has been to remove dependencies, build an easy-to-use API, and performance. The engine now is already very different to the one that powered Rocks & Spaceworms. My future plan is to port the engine to "retro" consoles like the Dreamcast, and also Windows, OSX, iOS, and perhaps even PSP or NDS. Although you could use this engine for modern graphics (the material system is very powerful), it's generally aimed at providing mid-2000s style game graphics. 
+Since then the focus has been to remove dependencies, build an easy-to-use API, and performance. The engine now is already very different to the one that powered Rocks & Spaceworms. My plan is to port the engine to "retro" consoles like the Dreamcast, and also Windows, OSX, iOS, and perhaps even PSP or NDS. Although you could use this engine for modern graphics (the material system is very powerful), it's generally aimed at providing mid-2000s style game graphics. 
 
-There are some glaring holes in functionality (LOD, billboards, shadows, projected textures) but you can already build some impressive things, and those features will arrive eventually, hopefully sooner rather than later!
 
 ## Features
 
@@ -39,16 +46,12 @@ There are some glaring holes in functionality (LOD, billboards, shadows, project
 
 ## Roadmap / TODO
 
- * Finish the GL 1.x renderer
- * Switch the GL 2.x renderer with a GL 4.x one
  * Implement render-to-texture
  * Fix lightmaps in the Q2 bsp loader
- * Implement multiple LOD for meshes
  * Build in support for shadows
  * Improve Dreamcast support (depends on GL 1.x)
  * Restore Android support
- * Port to Windows, then iOS
- * Implement VBO management in the GL 2.x renderer for improved performance 
+ * Port to iOS and PSP
 
 ## Building
 
