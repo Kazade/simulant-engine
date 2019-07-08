@@ -44,17 +44,22 @@ const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
+    CameraManager(this),
     ContainerNode(this),
     generic::Identifiable<StageID>(id),
-    CameraManager(this),
     ui_(new ui::UIManager(this)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
     geom_manager_(new GeomManager()),
     sky_manager_(new SkyManager(parent, this)),
-    sprite_manager_(new SpriteManager(parent, this)) {
+    sprite_manager_(new SpriteManager(parent, this)),
+    actor_manager_(new ActorManager()),
+    particle_system_manager_(new ParticleSystemManager()),
+    light_manager_(new LightManager()) {
 
     set_partitioner(partitioner);
+
+    parent->signal_post_idle().connect(std::bind(&Stage::cleanup_dead_objects, this));
 }
 
 Stage::~Stage() {
@@ -76,8 +81,9 @@ void Stage::cleanup() {
         stage_node->ask_owner_for_destruction();
     });
 
-    LightManager::destroy_all();
-    ActorManager::destroy_all();
+    light_manager_->clear();
+    actor_manager_->clear();
+
     CameraManager::delete_all_cameras();
 }
 
@@ -88,7 +94,7 @@ void Stage::ask_owner_for_destruction() {
 ActorPtr Stage::new_actor(RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    auto a = ActorManager::make(this, window->_sound_driver());
+    auto a = actor_manager_->make(this, window->_sound_driver());
 
     a->set_renderable_culling_mode(mode);
     a->set_parent(this);
@@ -113,7 +119,7 @@ ActorPtr Stage::new_actor_with_name(const std::string& name, RenderableCullingMo
 ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     using namespace std::placeholders;
 
-    auto a = ActorManager::make(this, window->_sound_driver());
+    auto a = actor_manager_->make(this, window->_sound_driver());
     a->set_renderable_culling_mode(mode);
     a->set_parent(this);
 
@@ -159,21 +165,25 @@ ActorPtr Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, Rende
 }
 
 bool Stage::has_actor(ActorID m) const {
-    return ActorManager::contains(m);
+    return actor_manager_->contains(m);
 }
 
 ActorPtr Stage::actor(ActorID e) {
-    return ActorManager::get(e);
+    return actor_manager_->get(e);
 }
 
 ActorPtr Stage::actor(ActorID e) const {
-    return ActorManager::get(e);
+    return actor_manager_->get(e);
 }
 
 ActorPtr Stage::delete_actor(ActorID e) {
     signal_actor_destroyed_(e);
-    ActorManager::destroy(e);
+    actor_manager_->destroy(e);
     return nullptr;
+}
+
+std::size_t Stage::actor_count() const {
+    return actor_manager_->size();
 }
 
 //=============== GEOMS =====================
@@ -212,13 +222,13 @@ GeomPtr Stage::delete_geom(GeomID geom_id) {
 }
 
 std::size_t Stage::geom_count() const {
-    return geom_manager_->count();
+    return geom_manager_->size();
 }
 
 //=============== PARTICLES =================
 
 ParticleSystemPtr Stage::new_particle_system() {
-    auto p = ParticleSystemManager::make(this, window->_sound_driver());
+    auto p = particle_system_manager_->make(this, window->_sound_driver());
     auto new_id = p->id();
 
     /* Whenever the particle system moves, we need to tell the stage's partitioner */
@@ -252,21 +262,23 @@ ParticleSystemPtr Stage::new_particle_system_with_parent_from_file(ActorID paren
 }
 
 ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {
-    return ParticleSystemManager::get(pid);
+    return particle_system_manager_->get(pid);
 }
 
 bool Stage::has_particle_system(ParticleSystemID pid) const {
-    return ParticleSystemManager::contains(pid);
+    return particle_system_manager_->contains(pid);
 }
 
 ParticleSystemPtr Stage::delete_particle_system(ParticleSystemID pid) {
     signal_particle_system_destroyed_(pid);
-    ParticleSystemManager::destroy(pid);
+    particle_system_manager_->destroy(pid);
     return nullptr;
 }
 
+std::size_t Stage::particle_system_count() const { return particle_system_manager_->size(); }
+
 LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
-    auto light = LightManager::make(this);
+    auto light = light_manager_->make(this);
     auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_DIRECTIONAL);
@@ -284,7 +296,7 @@ LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colo
 }
 
 LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
-    auto light = LightManager::make(this);
+    auto light = light_manager_->make(this);
     auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_POINT);
@@ -303,14 +315,16 @@ LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& col
 }
 
 LightPtr Stage::light(LightID light_id) {
-    return LightManager::get(light_id);
+    return light_manager_->get(light_id);
 }
 
 LightPtr Stage::delete_light(LightID light_id) {
     signal_light_destroyed_(light_id);
-    LightManager::destroy(light_id);
+    light_manager_->destroy(light_id);
     return nullptr;
 }
+
+std::size_t Stage::light_count() const { return light_manager_->size(); }
 
 void Stage::set_partitioner(AvailablePartitioner partitioner) {
     /*
@@ -358,6 +372,12 @@ void Stage::on_actor_created(ActorID actor_id) {
 
 void Stage::on_actor_destroyed(ActorID actor_id) {
 
+}
+
+void Stage::cleanup_dead_objects() {
+    actor_manager_->clean_up();
+    light_manager_->clean_up();
+    geom_manager_->clean_up();
 }
 
 }

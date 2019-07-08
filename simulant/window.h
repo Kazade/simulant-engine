@@ -32,7 +32,7 @@
 #include "input/input_state.h"
 #include "types.h"
 #include "sound.h"
-#include "managers.h"
+#include "stage_manager.h"
 #include "backgrounds/background_manager.h"
 #include "pipeline_helper.h"
 #include "scenes/scene_manager.h"
@@ -41,7 +41,6 @@
 #include "time_keeper.h"
 #include "stats_recorder.h"
 #include "screen.h"
-
 
 namespace smlt {
 
@@ -74,6 +73,7 @@ typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 typedef sig::signal<void ()> FrameStartedSignal;
 typedef sig::signal<void ()> FrameFinishedSignal;
 typedef sig::signal<void ()> PreSwapSignal;
+typedef sig::signal<void ()> PostIdleSignal;
 
 typedef sig::signal<void (float)> FixedUpdateSignal;
 typedef sig::signal<void (float)> UpdateSignal;
@@ -98,6 +98,7 @@ class Window :
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started)
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished)
     DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap)
+    DEFINE_SIGNAL(PostIdleSignal, signal_post_idle)
     DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update)
     DEFINE_SIGNAL(UpdateSignal, signal_update)
     DEFINE_SIGNAL(LateUpdateSignal, signal_late_update)
@@ -175,8 +176,6 @@ public:
     virtual PipelinePtr delete_pipeline(PipelineID pid) override;
     virtual bool has_pipeline(PipelineID pid) const override;
     virtual bool is_pipeline_enabled(PipelineID pid) const override;
-
-    void each_stage(std::function<void (uint32_t, Stage*)> func);
 
     Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
         return Vec2(

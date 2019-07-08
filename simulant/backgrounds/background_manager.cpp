@@ -66,11 +66,11 @@ BackgroundPtr BackgroundManager::delete_background(BackgroundID bid) {
 }
 
 uint32_t BackgroundManager::background_count() const {
-    return BackgroundManager::count();
+    return BackgroundManager::size();
 }
 
 void BackgroundManager::delete_all_backgrounds() {
-    destroy_all();
+    clear();
 }
 
 //============== END BACKGROUNDS ============

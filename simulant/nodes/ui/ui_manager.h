@@ -6,6 +6,7 @@
 #include "../../types.h"
 #include "widget.h"
 #include "../../event_listener.h"
+#include "../../generic/manual_manager.h"
 
 namespace smlt {
 namespace ui {
@@ -15,7 +16,7 @@ class Label;
 class ProgressBar;
 class Image;
 
-typedef ObjectManager<WidgetID, Widget, DONT_REFCOUNT> WidgetManager;
+typedef ManualManager<Widget, WidgetID> WidgetManager;
 
 
 enum UIEventType {

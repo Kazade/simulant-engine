@@ -101,7 +101,7 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-typedef ObjectManager<PipelineID, Pipeline, DONT_REFCOUNT> PipelineManager;
+typedef ManualManager<Pipeline, PipelineID> PipelineManager;
 
 class RenderSequence:
     public Managed<RenderSequence>,

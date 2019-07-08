@@ -19,6 +19,7 @@
 #include "image.h"
 #include "../../stage.h"
 #include "../camera.h"
+#include "../../window.h"
 
 namespace smlt {
 namespace ui {

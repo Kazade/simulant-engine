@@ -18,7 +18,7 @@
 //
 
 
-#include "managers.h"
+#include "stage_manager.h"
 #include "window.h"
 #include "stage.h"
 #include "nodes/camera.h"
@@ -30,77 +30,6 @@
 namespace smlt {
 
 
-//=============== START CAMERAS ============
-
-CameraManager::CameraManager(Stage *stage):
-    stage_(stage) {
-
-}
-
-CameraPtr CameraManager::new_camera() {
-    auto new_camera = cameras_.make(this->stage_);
-    new_camera->set_parent(stage_);
-
-    return new_camera;
-}
-
-CameraPtr CameraManager::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
-    /*
-     *  Instantiates a camera with an orthographic projection. If both left and right are zero then they default to 0 and window.width()
-     *  respectively. If top and bottom are zero, then they default to window.height() and 0 respectively. So top left is 0,0
-     */
-    auto new_cam = new_camera();
-
-    if(!left && !right) {
-        right = stage_->window->width();
-    }
-
-    if(!bottom && !top) {
-        top = stage_->window->height();
-    }
-
-    new_cam->set_orthographic_projection(left, right, bottom, top, near, far);
-
-    return new_cam;
-}
-
-CameraPtr CameraManager::new_camera_for_viewport(const Viewport& vp) {
-    float x, y, width, height;
-    calculate_ratios_from_viewport(vp.type(), x, y, width, height);
-
-    auto camera = new_camera();
-    camera->set_perspective_projection(Degrees(45.0), width / height);
-
-    return camera;
-}
-
-CameraPtr CameraManager::new_camera_for_ui() {
-    return new_camera_with_orthographic_projection(0, stage_->window->width(), 0, stage_->window->height(), -1, 1);
-}
-
-CameraPtr CameraManager::camera(CameraID c) {
-    return cameras_.get(c);
-}
-
-void CameraManager::delete_camera(CameraID cid) {
-    cameras_.destroy(cid);
-}
-
-uint32_t CameraManager::camera_count() const {
-    return cameras_.count();
-}
-
-bool CameraManager::has_camera(CameraID id) const {
-    return cameras_.contains(id);
-}
-
-void CameraManager::delete_all_cameras() {
-    cameras_.destroy_all();
-}
-
-//============== END CAMERAS ================
-
-
 //=========== START STAGES ==================
 
 StageManager::StageManager(Window* window):
@@ -109,13 +38,13 @@ StageManager::StageManager(Window* window):
 }
 
 StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
-    auto ret = StageManager::make(this->window_, partitioner);
+    auto ret = stage_manager_.make(this->window_, partitioner);
     signal_stage_added_(ret->id());
     return ret;
 }
 
 std::size_t StageManager::stage_count() const {
-    return StageManager::count();
+    return stage_manager_.size();
 }
 
 /**
@@ -128,17 +57,17 @@ std::size_t StageManager::stage_count() const {
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return StageManager::get(s);
+    return stage_manager_.get(s);
 }
 
 StagePtr StageManager::delete_stage(StageID s) {
-    StageManager::destroy(s);
+    stage_manager_.destroy(s);
     signal_stage_removed_(s);
     return nullptr;
 }
 
 void StageManager::fixed_update(float dt) {
-    each([dt](uint32_t, StagePtr stage) {
+    stage_manager_.each([dt](uint32_t, StagePtr stage) {
         TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
@@ -149,7 +78,7 @@ void StageManager::fixed_update(float dt) {
 }
 
 void StageManager::late_update(float dt) {
-    each([dt](uint32_t, StagePtr stage) {
+    stage_manager_.each([dt](uint32_t, StagePtr stage) {
         TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
@@ -162,7 +91,7 @@ void StageManager::late_update(float dt) {
 
 void StageManager::update(float dt) {
     //Update the stages
-    each([dt](uint32_t, StagePtr stage) {
+    stage_manager_.each([dt](uint32_t, StagePtr stage) {
         TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
@@ -174,7 +103,7 @@ void StageManager::update(float dt) {
 
 
 void StageManager::print_tree() {
-    each([this](uint32_t, StagePtr stage) {
+    stage_manager_.each([this](uint32_t, StagePtr stage) {
         uint32_t counter = 0;
         print_tree(stage, counter);
     });
@@ -195,11 +124,15 @@ void StageManager::print_tree(StageNode *node, uint32_t& level) {
 }
 
 bool StageManager::has_stage(StageID stage_id) const {
-    return contains(stage_id);
+    return stage_manager_.contains(stage_id);
 }
 
 void StageManager::delete_all_stages() {
-    destroy_all();
+    stage_manager_.clear();
+}
+
+void StageManager::each_stage(std::function<void (uint32_t, Stage*)> func) {
+    stage_manager_.each(func);
 }
 
 // ============= END STAGES ===========

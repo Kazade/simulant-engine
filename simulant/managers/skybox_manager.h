@@ -24,10 +24,12 @@
 #include "../generic/identifiable.h"
 #include "../nodes/stage_node.h"
 #include "../types.h"
-
+#include "../generic/manual_manager.h"
 #include "./window_holder.h"
 
 namespace smlt {
+
+class Stage;
 
 enum SkyboxFace {
     SKYBOX_FACE_TOP,
@@ -99,7 +101,7 @@ public:
         std::runtime_error(what) {}
 };
 
-typedef ObjectManager<SkyID, Skybox, DONT_REFCOUNT> TemplatedSkyboxManager;
+typedef ManualManager<Skybox, SkyID> TemplatedSkyboxManager;
 
 class SkyManager :
     public TemplatedSkyboxManager,

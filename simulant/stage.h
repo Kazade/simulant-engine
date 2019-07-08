@@ -29,14 +29,16 @@
 #include "managers/window_holder.h"
 #include "managers/skybox_manager.h"
 #include "managers/sprite_manager.h"
+#include "managers/camera_manager.h"
 
+#include "nodes/actor.h"
+#include "nodes/geom.h"
+#include "nodes/particle_system.h"
 #include "nodes/stage_node.h"
 #include "nodes/light.h"
 #include "types.h"
 #include "asset_manager.h"
-#include "managers.h"
 #include "fog_settings.h"
-#include "window.h"
 
 namespace smlt {
 
@@ -49,10 +51,10 @@ class Partitioner;
 class Debug;
 class Sprite;
 
-typedef ObjectManager<ActorID, Actor, DONT_REFCOUNT> ActorManager;
-typedef ObjectManager<GeomID, Geom, DONT_REFCOUNT> GeomManager;
-typedef ObjectManager<LightID, Light, DONT_REFCOUNT> LightManager;
-typedef ObjectManager<ParticleSystemID, ParticleSystem, DONT_REFCOUNT> ParticleSystemManager;
+typedef ManualManager<Actor, ActorID> ActorManager;
+typedef ManualManager<Geom, GeomID> GeomManager;
+typedef ManualManager<Light, LightID> LightManager;
+typedef ManualManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
@@ -73,12 +75,9 @@ class Stage:
     public ContainerNode,
     public Managed<Stage>,
     public generic::Identifiable<StageID>,
-    public ActorManager,
-    public ParticleSystemManager,
-    public LightManager,
-    public CameraManager,
     public Loadable,    
     public RenderableStage,
+    public CameraManager,
     public virtual WindowHolder {
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
@@ -104,7 +103,7 @@ public:
     ActorPtr actor(ActorID e) const;
     bool has_actor(ActorID e) const;
     ActorPtr delete_actor(ActorID e);
-    std::size_t actor_count() const { return ActorManager::count(); }
+    std::size_t actor_count() const;
 
     GeomPtr new_geom_with_mesh(MeshID mid);
     GeomPtr new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
@@ -119,14 +118,14 @@ public:
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
     ParticleSystemPtr delete_particle_system(ParticleSystemID pid);
-    std::size_t particle_system_count() const { return ParticleSystemManager::count(); }
+    std::size_t particle_system_count() const;
 
     LightPtr new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
     LightPtr new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
     LightPtr light(LightID light);
     LightPtr delete_light(LightID light_id);
-    std::size_t light_count() const { return LightManager::count(); }
+    std::size_t light_count() const;
 
     smlt::Colour ambient_light() const { return ambient_light_; }
     void set_ambient_light(const smlt::Colour& c) { ambient_light_ = c; }
@@ -203,11 +202,17 @@ private:
     std::unique_ptr<SkyManager> sky_manager_;
     std::unique_ptr<SpriteManager> sprite_manager_;
 
+    std::unique_ptr<ActorManager> actor_manager_;
+    std::unique_ptr<ParticleSystemManager> particle_system_manager_;
+    std::unique_ptr<LightManager> light_manager_;
+
     generic::DataCarrier data_;
 
 private:
     void on_actor_created(ActorID actor_id);
     void on_actor_destroyed(ActorID actor_id);
+
+    void cleanup_dead_objects();
 };
 
 }

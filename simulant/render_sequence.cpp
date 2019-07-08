@@ -173,7 +173,7 @@ void RenderSequence::delete_all_pipelines() {
 
     ordered_pipelines_.clear();
 
-    PipelineManager::destroy_all();
+    PipelineManager::clear();
 }
 
 void RenderSequence::sort_pipelines(bool acquire_lock) {

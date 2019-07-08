@@ -210,10 +210,6 @@ void Window::_cleanup() {
     GLThreadCheck::cleanup();
 }
 
-void Window::each_stage(std::function<void (uint32_t, Stage*)> func) {
-    StageManager::each(func);
-}
-
 bool Window::_init() {
     GLThreadCheck::init();
 
@@ -447,6 +443,8 @@ bool Window::run_frame() {
     // Garbage collect resources after idle, but before rendering
     asset_manager_->run_garbage_collection();
 
+    signal_post_idle_();
+
     profiler.checkpoint("garbage_collection");
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
@@ -580,7 +578,7 @@ void Window::reset() {
 
     render_sequence_->delete_all_pipelines();
 
-    StageManager::destroy_all();
+    StageManager::delete_all_stages();
     background_manager_.reset(new BackgroundManager(this));
 
     L_DEBUG("Resetting the base manager");

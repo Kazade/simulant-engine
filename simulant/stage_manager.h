@@ -16,45 +16,23 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MANAGERS_H
-#define MANAGERS_H
+#pragma once
 
 #include "generic/generic_tree.h"
-#include "generic/object_manager.h"
+#include "generic/manual_manager.h"
 #include "generic/property.h"
-#include "types.h"
 #include "interfaces.h"
 #include "interfaces/updateable.h"
+#include "types.h"
 
 namespace smlt {
 
 class StageNode;
 
-class CameraManager {
-public:
-    CameraManager(Stage* stage);
-
-    CameraPtr new_camera();
-    CameraPtr new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
-    CameraPtr new_camera_for_ui();
-    CameraPtr new_camera_for_viewport(const Viewport& vp);
-    CameraPtr camera(CameraID c);
-    void delete_camera(CameraID cid);
-    uint32_t camera_count() const;
-    bool has_camera(CameraID id) const;
-    void delete_all_cameras();
-
-private:
-    Stage* stage_;
-
-    ObjectManager<CameraID, Camera, DONT_REFCOUNT> cameras_;
-};
-
 typedef sig::signal<void (StageID)> StageAddedSignal;
 typedef sig::signal<void (StageID)> StageRemovedSignal;
 
 class StageManager:
-    public BaseStageManager,
     public virtual Updateable {
 
     DEFINE_SIGNAL(StageAddedSignal, signal_stage_added);
@@ -75,11 +53,13 @@ public:
     void late_update(float dt) override;
 
     void delete_all_stages();
+
+    void each_stage(std::function<void (uint32_t, Stage*)> func);
 private:
     Window* window_ = nullptr;
     void print_tree(StageNode* node, uint32_t& level);
+
+    ManualManager<Stage, StageID> stage_manager_;
 };
 
 }
-
-#endif // MANAGERS_H

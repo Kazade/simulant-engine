@@ -12,7 +12,7 @@ SpriteManager::SpriteManager(Window* window, Stage* stage):
 }
 
 void SpriteManager::delete_all() {
-    objects_.clear();
+    clear();
 }
 
 SpritePtr SpriteManager::new_sprite() {
@@ -56,12 +56,12 @@ bool SpriteManager::has_sprite(SpriteID s) const {
 }
 
 SpritePtr SpriteManager::delete_sprite(SpriteID s) {
-    TemplatedSpriteManager::destroy(s);
+    destroy(s);
     return nullptr;
 }
 
 std::size_t SpriteManager::sprite_count() const {
-    return TemplatedSpriteManager::count();
+    return size();
 }
 
 }

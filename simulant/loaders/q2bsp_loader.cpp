@@ -23,7 +23,7 @@
 #include <sstream>
 
 #include "../deps/kazlog/kazlog.h"
-
+#include "../vfs.h"
 #include "../stage.h"
 #include "../meshes/mesh.h"
 #include "../types.h"

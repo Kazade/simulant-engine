@@ -3,13 +3,14 @@
 #include "../generic/property.h"
 #include "../utils/unicode.h"
 #include "background.h"
+#include "../generic/manual_manager.h"
 
 namespace smlt {
 
 class Window;
 
 class BackgroundManager:
-    public ObjectManager<BackgroundID, Background, DONT_REFCOUNT> {
+    public ManualManager<Background, BackgroundID> {
 
 public:
     BackgroundManager(Window* window);

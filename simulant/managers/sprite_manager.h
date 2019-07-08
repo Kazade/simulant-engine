@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../generic/object_manager.h"
 #include "../nodes/sprite.h"
 #include "./window_holder.h"
+#include "../generic/manual_manager.h"
 
 namespace smlt {
 
-typedef ObjectManager<SpriteID, Sprite, DONT_REFCOUNT> TemplatedSpriteManager;
+typedef ManualManager<Sprite, SpriteID> TemplatedSpriteManager;
 
 typedef sig::signal<void (SpriteID)> SpriteCreatedSignal;
 typedef sig::signal<void (SpriteID)> SpriteDestroyedSignal;
