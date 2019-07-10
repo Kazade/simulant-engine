@@ -64,7 +64,7 @@ public:
         // Only one renderable should come back
         assert_equal(1u, result.size());
 
-        auto ret1 = result[0];
+        auto ret1 = *result[0];
 
         camera->look_at(0, 0, 1); // Looking up +Z
 
@@ -73,12 +73,16 @@ public:
         result.clear();
 
         geom->culler->renderables_visible(camera->frustum(), factory);
+        factory->each_pushed([&](Renderable* r) {
+            result.push_back(r);
+        });
+
         assert_equal(1u, result.size());
 
-        auto ret2 = result[0];
+        auto ret2 = *result[0];
 
         // Should be different renderables that came back
-        assert_not_equal(ret1, ret2);
+        assert_not_equal(ret1.material_id, ret2.material_id);
     }
 };
 
