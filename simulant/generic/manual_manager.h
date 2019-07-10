@@ -164,7 +164,7 @@ namespace _manual_manager_impl {
 
         void pop_chunk() {
             auto chunk_id = chunks_.size() - 1;
-            auto chunk = chunks_.back();
+            auto chunk = chunks_.at(chunk_id);
             for(slot_id i = 0; i < ChunkSize; ++i) {
                 if(chunk->free_slots_.count(i)) continue;
 
