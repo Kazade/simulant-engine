@@ -31,7 +31,7 @@ typedef sig::signal<void (RaycastVehicle*)> VehicleAirbourneSignal;
 
 class RaycastVehicle:
     public RigidBody,
-    public Managed<RaycastVehicle> {
+    public RefCounted<RaycastVehicle> {
 
     DEFINE_SIGNAL(RollDetectedSignal, signal_roll_detected);
     DEFINE_SIGNAL(VehicleGroundedSignal, signal_vehicle_grounded);
@@ -44,8 +44,8 @@ public:
 
     bool init() override;
 
-    using Managed<RaycastVehicle>::create;
-    using Managed<RaycastVehicle>::ptr;
+    using RefCounted<RaycastVehicle>::create;
+    using RefCounted<RaycastVehicle>::ptr;
 
     void accelerate() {
         drive_force_ += acceleration_;

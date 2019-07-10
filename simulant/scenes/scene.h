@@ -122,7 +122,7 @@ private:
 };
 
 template<typename T>
-class Scene : public SceneBase, public Managed<T> {
+class Scene : public SceneBase, public RefCounted<T> {
 public:
     Scene(Window* window):
         SceneBase(window) {}

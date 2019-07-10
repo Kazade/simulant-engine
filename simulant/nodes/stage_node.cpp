@@ -110,6 +110,8 @@ void StageNode::update_transformation_from_parent() {
 
     each_child([](uint32_t, TreeNode* child) {
         StageNode* node = static_cast<StageNode*>(child);
+        assert(node);
+
         node->update_transformation_from_parent();
     });
 }

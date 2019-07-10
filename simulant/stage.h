@@ -73,7 +73,6 @@ extern const Colour DEFAULT_LIGHT_COLOUR;
 
 class Stage:
     public ContainerNode,
-    public Managed<Stage>,
     public generic::Identifiable<StageID>,
     public Loadable,    
     public RenderableStage,
@@ -213,6 +212,7 @@ private:
     void on_actor_destroyed(ActorID actor_id);
 
     void cleanup_dead_objects();
+    sig::connection cleanup_signal_;
 };
 
 }

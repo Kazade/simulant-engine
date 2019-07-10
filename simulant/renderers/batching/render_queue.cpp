@@ -32,7 +32,6 @@
 namespace smlt {
 namespace batcher {
 
-
 RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera):
     stage_(stage),
     render_group_factory_(render_group_factory),
@@ -40,31 +39,31 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory,
 
 }
 
-void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
+void RenderQueue::insert_renderable(Renderable* renderable) {
     /*
      * Adds a renderable to the correct render groups. This goes through the
      * material passes on the renderable, calculates the render group for each one
      * and then adds the renderable to that pass's render queue
      */
 
-    if(!renderable->is_visible()) {
+    if(!renderable->is_visible) {
         return;
     }
 
-    if(!renderable->index_element_count()) {
+    if(!renderable->index_element_count) {
         return;
     }
 
-    auto material_id = renderable->material_id();
+    auto material_id = renderable->material_id;
     assert(material_id);
 
     auto material = stage_->assets->material(material_id);
     assert(material);
 
-    auto pos = renderable->transformed_aabb().centre();
+    auto pos = renderable->centre;
     auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
     auto renderable_dist_to_camera = plane.distance_to(pos);
-    auto priority = renderable->render_priority();
+    auto priority = renderable->render_priority;
 
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
@@ -81,11 +80,12 @@ void RenderQueue::insert_renderable(std::shared_ptr<Renderable> renderable) {
         );
 
         RenderGroup group = render_group_factory_->new_render_group(
-            renderable.get(), material_pass,
+            renderable, material_pass,
             i, is_blended, distance_to_camera
         );
 
-        auto& priority_queue = priority_queues_[priority];
+        // Priorities run from -250 to +250, so we need to offset the index
+        auto& priority_queue = priority_queues_[priority + std::abs(RENDER_PRIORITY_MIN)];
         priority_queue.insert(std::make_pair(group, renderable));
     }
 }
@@ -113,9 +113,9 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
         for(auto& p: queue) {
             const RenderGroup* current_group = &p.first;
-            Renderable* renderable = p.second.get();
+            Renderable* renderable = p.second;
 
-            if(!renderable->index_element_count()) {
+            if(!renderable->index_element_count) {
                 return;
             }
 
@@ -127,7 +127,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
             auto this_pass_id = current_group->impl()->pass_number();
 
-            auto& this_mat_id = renderable->material_id();
+            auto& this_mat_id = renderable->material_id;
             if(this_mat_id != material_id || this_pass_id != last_pass_id) {
                 auto last_pass = material_pass;
 
@@ -142,12 +142,12 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
             uint32_t iterations = 1;
 
             // Get any lights which are visible and affecting the renderable this frame
-            std::vector<LightPtr> lights = renderable->lights_affecting_this_frame();
+            auto& lights = renderable->lights_affecting_this_frame;
 
             if(pass_iteration_type == ITERATION_TYPE_N) {
                 iterations = material_pass->max_iterations();
-            } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
-                iterations = lights.size();
+            } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {                
+                iterations = std::distance(lights.begin(), std::find(lights.begin(), lights.end(), nullptr));
             }
 
             for(Iteration i = 0; i < iterations; ++i) {

@@ -26,7 +26,7 @@ struct CharInfo{
 };
 
 class Font:
-    public Managed<Font>,
+    public RefCounted<Font>,
     public Asset,
     public Loadable,
     public generic::Identifiable<FontID> {

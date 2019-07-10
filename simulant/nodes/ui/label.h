@@ -6,8 +6,7 @@ namespace smlt {
 namespace ui {
 
 class Label:
-    public Widget,
-    public Managed<Label> {
+    public Widget {
 
 public:
     using Widget::init; // Pull in init to satisfy Managed<Button>

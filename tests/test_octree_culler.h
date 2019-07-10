@@ -5,6 +5,7 @@
 #include "simulant/test.h"
 #include "simulant/nodes/geoms/octree_culler.h"
 #include "simulant/nodes/geom.h"
+#include "simulant/renderers/batching/renderable_store.h"
 
 namespace {
 
@@ -49,8 +50,16 @@ public:
 
         camera->look_at(0, 0, -1); // Looking up -Z
 
+        RenderableStore store;
+        auto factory = store.new_factory();
+
         auto geom = stage->new_geom_with_mesh(mesh->id());
-        auto result = geom->culler->renderables_visible(camera->frustum());
+        geom->culler->renderables_visible(camera->frustum(), factory);
+
+        std::vector<Renderable*> result;
+        factory->each_pushed([&](Renderable* r) {
+            result.push_back(r);
+        });
 
         // Only one renderable should come back
         assert_equal(1u, result.size());
@@ -59,13 +68,17 @@ public:
 
         camera->look_at(0, 0, 1); // Looking up +Z
 
-        result = geom->culler->renderables_visible(camera->frustum());
+        store.clear();
+        factory = store.new_factory();
+        result.clear();
+
+        geom->culler->renderables_visible(camera->frustum(), factory);
         assert_equal(1u, result.size());
 
         auto ret2 = result[0];
 
         // Should be different renderables that came back
-        assert_not_equal(ret1.get(), ret2.get());
+        assert_not_equal(ret1, ret2);
     }
 };
 

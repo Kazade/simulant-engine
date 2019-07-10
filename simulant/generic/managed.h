@@ -44,23 +44,23 @@ void deleter(T* obj) {
     delete obj;
 }
 
-class ManagedBase {
+class TwoPhaseConstructed {
 public:
-    virtual ~ManagedBase() {}
+    virtual ~TwoPhaseConstructed() {}
 
     virtual bool init() { return true; }
     virtual void cleanup() {}
 };
 
 template<typename T>
-class Managed : public virtual ManagedBase, public std::enable_shared_from_this<T> {
+class RefCounted : public virtual TwoPhaseConstructed, public std::enable_shared_from_this<T> {
 public:
     typedef std::shared_ptr<T> ptr;
     typedef std::weak_ptr<T> wptr;
 
     template<typename... Args>
-    static typename Managed<T>::ptr create(Args&&... args) {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(
+    static typename RefCounted<T>::ptr create(Args&&... args) {
+        typename RefCounted<T>::ptr instance = typename RefCounted<T>::ptr(
             new T(std::forward<Args>(args)...),
             std::bind(&deleter<T>, std::placeholders::_1)
         );
@@ -71,8 +71,8 @@ public:
         return instance;
     }
 
-    static typename Managed<T>::ptr create() {
-        typename Managed<T>::ptr instance = typename Managed<T>::ptr(
+    static typename RefCounted<T>::ptr create() {
+        typename RefCounted<T>::ptr instance = typename RefCounted<T>::ptr(
             new T(),
             std::bind(&deleter<T>, std::placeholders::_1)
         );
@@ -84,11 +84,11 @@ public:
     }
 
 protected:
-    Managed() = default;
-    virtual ~Managed() {}
+    RefCounted() = default;
+    virtual ~RefCounted() {}
 
     template<typename...Args>
-    Managed(Args&&... args) {}
+    RefCounted(Args&&... args) {}
 };
 
 }

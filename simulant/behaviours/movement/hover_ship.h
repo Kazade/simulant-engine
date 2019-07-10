@@ -13,7 +13,7 @@ class RigidBodySimulation;
 
 class HoverShip:
     public BehaviourWithInput,
-    public Managed<HoverShip> {
+    public RefCounted<HoverShip> {
 
 public:
     HoverShip(Window* window);

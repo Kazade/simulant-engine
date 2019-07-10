@@ -41,6 +41,10 @@ public:
         return pipeline_;
     }
 
+    operator PipelineID() const;
+
+    PipelineID id() const;
+
 private:
     friend class PipelineHelperAPIInterface;
 

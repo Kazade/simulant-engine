@@ -10,7 +10,7 @@ namespace behaviours {
  * aside from acting as a collider */
 class StaticBody:
     public impl::Body,
-    public Managed<StaticBody> {
+    public RefCounted<StaticBody> {
 
 public:
     StaticBody(RigidBodySimulation *simulation);

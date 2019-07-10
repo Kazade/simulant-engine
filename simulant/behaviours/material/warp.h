@@ -29,7 +29,7 @@ namespace material {
 
 class Warp:
     public MaterialBehaviour,
-    public Managed<Warp> {
+    public RefCounted<Warp> {
 
 public:
     Warp(Organism* material):

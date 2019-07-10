@@ -40,7 +40,7 @@ class Source;
 class SourceInstance;
 
 class Sound :
-    public Managed<Sound>,
+    public RefCounted<Sound>,
     public generic::Identifiable<SoundID>,
     public Asset,
     public Loadable {
@@ -86,7 +86,7 @@ typedef std::function<int32_t (AudioBufferID)> StreamFunc;
 class Source;
 
 class SourceInstance:
-    public Managed<SourceInstance> {
+    public RefCounted<SourceInstance> {
 
 private:
     Source& parent_;

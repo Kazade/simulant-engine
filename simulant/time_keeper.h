@@ -11,7 +11,7 @@
 namespace smlt {
 
 class TimeKeeper:
-    public Managed<TimeKeeper> {
+    public RefCounted<TimeKeeper> {
 
 public:
     TimeKeeper(const float fixed_step);

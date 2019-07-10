@@ -44,7 +44,6 @@ enum SkyboxFace {
 class SkyManager;
 
 class Skybox :
-    public Managed<Skybox>,
     public generic::Identifiable<SkyID>,
     public ContainerNode {
 

@@ -72,6 +72,10 @@ void CameraManager::delete_all_cameras() {
     cameras_.clear();
 }
 
+void CameraManager::clean_up() {
+    cameras_.clean_up();
+}
+
 //============== END CAMERAS ================
 
 }

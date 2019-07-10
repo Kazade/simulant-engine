@@ -16,7 +16,7 @@ class Label;
 class ProgressBar;
 class Image;
 
-typedef ManualManager<Widget, WidgetID> WidgetManager;
+typedef ManualManager<Widget, WidgetID, Button, Label, ProgressBar, Image> WidgetManager;
 
 
 enum UIEventType {

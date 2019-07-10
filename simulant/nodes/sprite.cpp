@@ -38,7 +38,9 @@ Sprite::Sprite(SpriteID id, SpriteManager *manager, SoundDriver* sound_driver):
 }
 
 bool Sprite::init() {
-    mesh_id_ = stage->assets->new_mesh_as_rectangle(1.0, 1.0);
+    auto mesh = stage->assets->new_mesh_as_rectangle(1.0, 1.0);
+
+    mesh_id_ = mesh;
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns
@@ -51,7 +53,7 @@ bool Sprite::init() {
 
     using namespace std::placeholders;
     animation_state_ = std::make_shared<KeyFrameAnimationState>(
-        shared_from_this(),
+        this,
         std::bind(&Sprite::refresh_animation_state, this, _1, _2, _3)
     );
 
@@ -64,6 +66,8 @@ void Sprite::cleanup() {
         actor_ = nullptr;
         actor_id_ = ActorID();
     }
+
+    StageNode::cleanup();
 }
 
 void Sprite::ask_owner_for_destruction() {
@@ -88,6 +92,12 @@ void Sprite::flip_horizontally(bool value) {
 }
 
 const AABB& Sprite::aabb() const {
+    static const smlt::AABB IDENTITY;
+
+    if(!actor_) {
+        return IDENTITY;
+    }
+
     return actor_->aabb();
 }
 

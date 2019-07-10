@@ -9,9 +9,7 @@ namespace smlt {
 
 class Window;
 
-class BackgroundManager:
-    public ManualManager<Background, BackgroundID> {
-
+class BackgroundManager {
 public:
     BackgroundManager(Window* window);
     ~BackgroundManager();
@@ -30,8 +28,12 @@ public:
     void update(float dt);
 
     Property<BackgroundManager, Window> window = { this, &BackgroundManager::window_ };
+
+    void clean_up();
 private:
     Window* window_;
+
+    ManualManager<Background, BackgroundID> backgrounds_;
 };
 
 }

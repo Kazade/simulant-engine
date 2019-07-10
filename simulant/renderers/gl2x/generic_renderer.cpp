@@ -336,7 +336,7 @@ void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Rendera
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
      */        
-    const VertexSpecification& vertex_spec = renderable->vertex_specification();
+    const VertexSpecification& vertex_spec = renderable->vertex_data->vertex_specification();
     auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
 
     send_attribute(
@@ -559,7 +559,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
 void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera) {
     //Calculate the modelview-projection matrix    
-    const Mat4 model = renderable->final_transformation();
+    const Mat4 model = renderable->final_transformation;
     const Mat4& view = camera->view_matrix();
     const Mat4& projection = camera->projection_matrix();
 
@@ -670,7 +670,7 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 
 void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
     // Don't bother doing *anything* if there is nothing to render
-    if(!renderable->index_element_count()) {
+    if(!renderable->index_element_count) {
         return;
     }
 
@@ -726,13 +726,13 @@ GPUProgramID GenericRenderer::current_gpu_program_id() const {
 }
 
 void GenericRenderer::send_geometry(Renderable *renderable, GPUBuffer *buffers) {
-    auto element_count = renderable->index_element_count();
+    auto element_count = renderable->index_element_count;
     if(!element_count) {
         return;
     }
 
-    auto index_type = convert_index_type(renderable->index_type());
-    auto arrangement = renderable->arrangement();
+    auto index_type = convert_index_type(renderable->index_data->index_type());
+    auto arrangement = renderable->arrangement;
 
     auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
 

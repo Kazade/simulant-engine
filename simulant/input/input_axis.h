@@ -18,7 +18,7 @@ enum AxisType {
 };
 
 class InputAxis:
-    public Managed<InputAxis> {
+    public RefCounted<InputAxis> {
 public:
     InputAxis(const std::string& name);
 

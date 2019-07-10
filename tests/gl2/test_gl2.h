@@ -3,6 +3,7 @@
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 #include "../../simulant/renderers/gl2x/vbo_manager.h"
+#include "../../simulant/renderers/batching/renderable_store.h"
 
 namespace {
 
@@ -121,7 +122,16 @@ public:
 
         auto actor = stage_->new_actor_with_mesh(mesh_->id());
 
-        vbo_manager_->update_and_fetch_buffers(actor->_get_renderables(camera_, DETAIL_LEVEL_NEAREST)[0].get());
+        RenderableStore store;
+        auto factory = store.new_factory();
+        actor->_get_renderables(factory, camera_, DETAIL_LEVEL_NEAREST);
+
+        std::vector<Renderable*> result;
+        factory->each_pushed([&](Renderable* r) {
+            result.push_back(r);
+        });
+
+        vbo_manager_->update_and_fetch_buffers(result[0]);
 
         assert_equal(vbo_manager_->dedicated_buffer_count(), 1u);
 

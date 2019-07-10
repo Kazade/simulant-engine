@@ -47,7 +47,7 @@ class RigidBody;
  */
 class RigidBody:
     public impl::Body,
-    public Managed<RigidBody> {
+    public RefCounted<RigidBody> {
 
 public:
     RigidBody(RigidBodySimulation *simulation);

@@ -37,7 +37,7 @@ public:
 };
 
 class MaterialScript :
-    public Managed<MaterialScript> {
+    public RefCounted<MaterialScript> {
 public:
     MaterialScript(std::shared_ptr<std::istream> data, const unicode &filename);
     void generate(Material& material);

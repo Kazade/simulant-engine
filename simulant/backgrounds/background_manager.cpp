@@ -17,13 +17,17 @@ BackgroundManager::~BackgroundManager() {
 
 void BackgroundManager::update(float dt) {
     //Update the backgrounds
-    each([dt](uint32_t, BackgroundPtr bg) {
+    backgrounds_.each([dt](uint32_t, BackgroundPtr bg) {
        bg->update(dt);
     });
 }
 
+void BackgroundManager::clean_up() {
+    backgrounds_.clean_up();
+}
+
 BackgroundPtr BackgroundManager::new_background(BackgroundType type) {
-    return make(this, type);
+    return backgrounds_.make(this, type);
 }
 
 BackgroundPtr BackgroundManager::new_background_as_scrollable_from_file(const unicode& filename, float scroll_x, float scroll_y) {
@@ -53,24 +57,24 @@ BackgroundPtr BackgroundManager::new_background_as_animated_from_file(const unic
 }
 
 BackgroundPtr BackgroundManager::background(BackgroundID bid) {
-    return BackgroundManager::get(bid);
+    return backgrounds_.get(bid);
 }
 
 bool BackgroundManager::has_background(BackgroundID bid) const {
-    return BackgroundManager::contains(bid);
+    return backgrounds_.contains(bid);
 }
 
 BackgroundPtr BackgroundManager::delete_background(BackgroundID bid) {
-    BackgroundManager::destroy(bid);
+    backgrounds_.destroy(bid);
     return nullptr;
 }
 
 uint32_t BackgroundManager::background_count() const {
-    return BackgroundManager::size();
+    return backgrounds_.size();
 }
 
 void BackgroundManager::delete_all_backgrounds() {
-    clear();
+    backgrounds_.clear();
 }
 
 //============== END BACKGROUNDS ============

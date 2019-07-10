@@ -30,7 +30,7 @@ private:
 
 class SubMesh :
     public SubMeshInterface,
-    public Managed<SubMesh> {
+    public RefCounted<SubMesh> {
 
 public:
     SubMesh(

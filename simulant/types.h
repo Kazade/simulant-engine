@@ -335,6 +335,7 @@ enum BufferClearFlag {
 };
 
 typedef int32_t RenderPriority;
+const RenderPriority RENDER_PRIORITY_MIN = -250;
 const RenderPriority RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -250;
 const RenderPriority RENDER_PRIORITY_BACKGROUND = -100;
 const RenderPriority RENDER_PRIORITY_DISTANT = -50;

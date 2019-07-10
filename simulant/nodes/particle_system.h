@@ -25,12 +25,10 @@ typedef sig::signal<void (ParticleSystem*, MaterialID, MaterialID)> ParticleSyst
 
 class ParticleSystem :
     public StageNode,
-    public Managed<ParticleSystem>,
     public generic::Identifiable<ParticleSystemID>,
     public Source,
     public Loadable,
-    public HasMutableRenderPriority,
-    public Renderable {
+    public HasMutableRenderPriority {
 
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed)
 
@@ -62,16 +60,8 @@ public:
 
     void ask_owner_for_destruction() override;
 
-    //Renderable stuff
-
-    MeshArrangement arrangement() const override { return MESH_ARRANGEMENT_QUADS; }
-    virtual Mat4 final_transformation() const override {
-        /* Particles are absolutely positioned and rotated, transforming them messes them up! */
-        return Mat4();
-    }
-
     void set_material_id(MaterialID mat_id);
-    virtual const MaterialID material_id() const override { return material_id_; }
+    const MaterialID material_id() const { return material_id_; }
 
     void deactivate_emitters() { for(auto emitter: emitters_) { emitter->deactivate(); }; }
     void activate_emitters() { for(auto emitter: emitters_) { emitter->activate(); }; }
@@ -82,32 +72,12 @@ public:
     bool has_repeating_emitters() const;
     bool has_active_emitters() const;
 
-    VertexData* vertex_data() const override {
+    VertexData* vertex_data() const {
         return vertex_data_;
     }
 
-    IndexData* index_data() const override {
+    IndexData* index_data() const {
         return index_data_;
-    }
-
-    VertexSpecification vertex_specification() const override {
-        return vertex_data_->vertex_specification();
-    }
-
-    std::size_t index_element_count() const override {
-        return index_data_->count();
-    }
-
-    IndexType index_type() const override {
-        return index_data_->index_type();
-    }
-
-    RenderPriority render_priority() const override {
-        return HasMutableRenderPriority::render_priority();
-    }
-
-    bool is_visible() const override {
-        return StageNode::is_visible();
     }
 
     void cleanup() override {
@@ -121,21 +91,13 @@ public:
         return m.get();
     }
 
-    RenderableList _get_renderables(CameraPtr camera, DetailLevel detail_level) override;
+    void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) override;
 
 private:
     const static int32_t INITIAL_QUOTA = 10;
 
     AABB aabb_;
     void calc_aabb();
-
-    inline VertexData* get_vertex_data() const {
-        return vertex_data_;
-    }
-
-    inline IndexData* get_index_data() const {
-        return index_data_;
-    }
 
     std::string name_;
     std::size_t quota_ = 0;

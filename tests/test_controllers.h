@@ -8,7 +8,7 @@ namespace {
 using namespace smlt;
 
 
-class TestBehaviour : public Behaviour, public Managed<TestBehaviour> {
+class TestBehaviour : public Behaviour, public RefCounted<TestBehaviour> {
 public:
     TestBehaviour() {}
 

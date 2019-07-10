@@ -48,7 +48,7 @@ enum SceneChangeBehaviour {
 };
 
 class SceneManager :
-    public Managed<SceneManager> {
+    public RefCounted<SceneManager> {
 
 public:
     SceneManager(Window* window);

@@ -477,7 +477,7 @@ class Material:
     public Asset,
     public Loadable,
     public generic::Identifiable<MaterialID>,
-    public Managed<Material>,
+    public RefCounted<Material>,
     public Updateable,
     public _material_impl::PropertyValueHolder {
 

@@ -23,6 +23,7 @@ typedef std::vector<RenderablePtr> RenderableList;
 typedef std::function<void (Renderable*)> EachRenderableCallback;
 
 class Renderer;
+class RenderableFactory;
 
 class GeomCuller {
 public:
@@ -32,7 +33,7 @@ public:
     bool is_compiled() const;
 
     void compile();
-    RenderableList renderables_visible(const Frustum& frustum);
+    void renderables_visible(const Frustum& frustum, RenderableFactory* factory);
 
     void each_renderable(EachRenderableCallback cb);
 protected:
@@ -43,8 +44,8 @@ private:
     bool compiled_ = false;
 
     virtual void _compile() = 0;
-    virtual void _gather_renderables(const Frustum& frustum, RenderableList& out) = 0;
-    virtual void _all_renderables(RenderableList& out) = 0;
+    virtual void _gather_renderables(const Frustum& frustum, RenderableFactory* factory) = 0;
+    virtual void _all_renderables(RenderableFactory* factory) = 0;
 
     virtual const VertexData* _vertex_data() const = 0;
 

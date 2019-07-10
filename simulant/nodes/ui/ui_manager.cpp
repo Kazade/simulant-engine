@@ -55,7 +55,7 @@ UIManager::~UIManager() {
 }
 
 Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {
-    auto button = (Button*) &(*manager_->make_as<Button>(this, &config_));
+    auto button = manager_->make_as<Button>(this, &config_);
     button->set_text(text);
     button->resize(width, height);
     stage_->add_child(button);

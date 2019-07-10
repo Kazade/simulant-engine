@@ -34,10 +34,11 @@
 namespace smlt {
 
 class RenderSequence;
+class RenderableStore;
 
 class Pipeline:
-    public Managed<Pipeline>,
-    public generic::Identifiable<PipelineID>{
+    public RefCounted<Pipeline>,
+    public generic::Identifiable<PipelineID> {
 
 public:
     Pipeline(
@@ -104,7 +105,7 @@ struct RenderOptions {
 typedef ManualManager<Pipeline, PipelineID> PipelineManager;
 
 class RenderSequence:
-    public Managed<RenderSequence>,
+    public RefCounted<RenderSequence>,
     public PipelineManager {
 
 public:
@@ -146,6 +147,7 @@ private:
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
+    std::shared_ptr<RenderableStore> renderable_store_;
 
     std::mutex pipeline_lock_;
     std::list<PipelinePtr> ordered_pipelines_;

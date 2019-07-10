@@ -25,7 +25,7 @@
 namespace smlt {
 
 class Simplex :
-    public Managed<Simplex> {
+    public RefCounted<Simplex> {
 
 public:
     Simplex(int seed=time(NULL));

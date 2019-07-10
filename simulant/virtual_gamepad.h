@@ -29,7 +29,7 @@
 
 namespace smlt {
 
-class VirtualGamepad : public Managed<VirtualGamepad> {
+class VirtualGamepad : public RefCounted<VirtualGamepad> {
 public:
     VirtualGamepad(Window& window, VirtualGamepadConfig config);
 

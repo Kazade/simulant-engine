@@ -59,6 +59,7 @@ private:
     Window* window_ = nullptr;
     void print_tree(StageNode* node, uint32_t& level);
 
+protected:
     ManualManager<Stage, StageID> stage_manager_;
 };
 

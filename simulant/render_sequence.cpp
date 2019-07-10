@@ -33,6 +33,8 @@
 #include "partitioner.h"
 #include "loader.h"
 
+#include "renderers/batching/renderable_store.h"
+
 namespace smlt {
 
 Pipeline::Pipeline(PipelineID id,
@@ -108,7 +110,8 @@ void Pipeline::activate() {
 
 RenderSequence::RenderSequence(Window *window):
     window_(window),
-    renderer_(window->renderer.get()) {
+    renderer_(window->renderer.get()),
+    renderable_store_(new RenderableStore()){
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
@@ -356,21 +359,47 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
         /* Find the ideal detail level at this distance from the camera */
         auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
 
-        for(auto& renderable: node->_get_renderables(camera, level)) {
-            if(!renderable->index_element_count()) {
+        /* create a new factory */
+        auto renderable_factory = renderable_store_->new_factory();
+
+        /* Push any renderables for this node */
+        node->_get_renderables(renderable_factory, camera, level);
+
+        /* Go through and insert them into the render_queue */
+        renderable_factory->each_pushed([&](Renderable* renderable) {
+            assert(
+                renderable->arrangement == MESH_ARRANGEMENT_LINES ||
+                renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
+                renderable->arrangement == MESH_ARRANGEMENT_QUADS ||
+                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES ||
+                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN ||
+                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP
+            );
+
+            assert(renderable->material_id);
+            assert(renderable->index_data);
+            assert(renderable->vertex_data);
+
+            if(!renderable->index_element_count) {
                 // Don't render things with no indices
-                continue;
+                return;
             }
 
-            renderable->set_affected_by_lights(renderable_lights);
-
-            render_queue.insert_renderable(renderable);
-
+            for(auto i = 0u; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+                renderable->lights_affecting_this_frame[i] = (i < renderable_lights.size()) ? renderable_lights[i] : nullptr;
+            }
             ++renderables_rendered;
-        }
+        });
     }
 
     profiler.checkpoint("lights");
+
+    // Insert all the renderables we just created into the queue
+    // this has to happen after the renderable_store has finished any
+    // reallocs or the pointers will be invalidated
+    renderable_store_->each_renderable([&](Renderable* renderable) {
+        render_queue.insert_renderable(renderable);
+    });
 
     window->stats->set_geometry_visible(renderables_rendered);
 
@@ -388,6 +417,9 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
 
     signal_pipeline_finished_(*pipeline_stage);
     profiler.checkpoint("post_render");
+
+    /* Make sure we clear the renderable store each frame */
+    renderable_store_->clear();
 }
 
 }

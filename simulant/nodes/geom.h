@@ -44,7 +44,6 @@ class GeomCuller;
 class Geom :
     public StageNode,
     public virtual Boundable,
-    public Managed<Geom>,
     public generic::Identifiable<GeomID>,
     public Source {
 
@@ -65,7 +64,7 @@ public:
 
     bool init() override;
 
-    std::vector<std::shared_ptr<Renderable>> _get_renderables(CameraPtr camera, DetailLevel detail_level) override;
+    void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) override;
 private:
     MeshID mesh_id_;
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;

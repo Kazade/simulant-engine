@@ -15,7 +15,7 @@ namespace smlt {
 
 namespace _manual_manager_impl {
 
-    template<typename T, typename IDType, int ChunkSize>
+    template<typename T, typename IDType, int ChunkSize, typename ...Subtypes>
     class VectorPool {
     public:
         typedef T element_type;
@@ -28,7 +28,11 @@ namespace _manual_manager_impl {
             push_chunk();
         }
 
-        template<typename... Args>
+        ~VectorPool() {
+            clear();
+        }
+
+        template<typename U, typename... Args>
         std::pair<id_type, T*> alloc(Args&&... args) {
             uint32_t i = 0;
             for(auto& chunk: chunks_) {
@@ -47,7 +51,14 @@ namespace _manual_manager_impl {
                     id_type id = id_for_chunk_slot(chunk_id, slot);
 
                     uint8_t* new_thing = find_address(id);
-                    T* ret = new (new_thing) T(id, args...);
+                    T* ret = new (new_thing) U(id, args...);
+
+                    if(!ret->init()) {
+                        ret->cleanup();
+                        ret->~T(); // Call the destructor
+                        chunk->free_slots_.insert(slot); // Release the slot
+                        throw InstanceInitializationError(typeid(T).name());
+                    }
 
                     ++size_;
 
@@ -61,12 +72,14 @@ namespace _manual_manager_impl {
             // No free chunks
             push_chunk();
 
-            return alloc(std::forward<Args>(args)...);
+            return alloc<U, Args...>(std::forward<Args>(args)...);
         }
 
         bool used(id_type id) const {
             auto p = find_chunk_and_slot(id);
-            assert(p.first);
+            if(!p.first) {
+                return false;
+            }
 
             return p.first->free_slots_.count(p.second) == 0;
         }
@@ -82,6 +95,11 @@ namespace _manual_manager_impl {
             auto p = find_chunk_and_slot(id);
             T* element = get(id);
 
+            if(!element) {
+                return;
+            }
+
+            element->cleanup();
             // Call the destructor
             element->~T();
 
@@ -102,8 +120,24 @@ namespace _manual_manager_impl {
             return size_;
         }
 
+        void clear() {
+            while(chunks_.size()) {
+                pop_chunk();
+            }
+        }
+
     private:
         std::mutex chunk_lock_;
+
+        template<typename... Others> struct MaxSize {
+          static constexpr size_t value = 0;
+        };
+
+        template<typename A, typename... Others> struct MaxSize<A, Others...> {
+            static constexpr size_t a_size = sizeof(A);
+            static constexpr size_t b_size = MaxSize<Others...>::value;
+            static constexpr size_t value = (a_size > b_size) ? a_size : b_size;
+        };
 
         struct Chunk {
             Chunk() {
@@ -113,7 +147,7 @@ namespace _manual_manager_impl {
             }
 
             static constexpr uint32_t size() {
-                return ChunkSize * sizeof(T);
+                return ChunkSize * MaxSize<T, Subtypes...>::value;
             }
 
             std::mutex lock_;
@@ -128,6 +162,20 @@ namespace _manual_manager_impl {
             chunks_.push_back(std::make_shared<Chunk>());
         }
 
+        void pop_chunk() {
+            auto chunk_id = chunks_.size() - 1;
+            auto chunk = chunks_.back();
+            for(slot_id i = 0; i < ChunkSize; ++i) {
+                if(chunk->free_slots_.count(i)) continue;
+
+                id_type id = id_for_chunk_slot(chunk_id, i);
+                release(id);
+            }
+
+            std::lock_guard<std::mutex> g(chunk_lock_);
+            chunks_.pop_back();
+        }
+
         std::pair<Chunk*, slot_id> find_chunk_and_slot(id_type id) const {
             assert(id.value() > 0);
 
@@ -136,8 +184,9 @@ namespace _manual_manager_impl {
             auto idx = v / ChunkSize;
             slot_id slot = (v % ChunkSize);
 
-            assert(idx < chunks_.size());
-            assert(slot < ChunkSize);
+            if(idx >= chunks_.size() || slot >= ChunkSize) {
+                return std::make_pair(nullptr, 0);
+            }
 
             return std::make_pair(chunks_[idx].get(), slot);
         }
@@ -153,15 +202,32 @@ namespace _manual_manager_impl {
 
         uint32_t size_ = 0;
     };
+
+    template < typename Tp, typename... List >
+    struct contains : std::true_type {};
+
+    template < typename Tp, typename Head, typename... Rest >
+    struct contains<Tp, Head, Rest...>
+    : std::conditional< std::is_same<Tp, Head>::value,
+        std::true_type,
+        contains<Tp, Rest...>
+    >::type {};
+
+    template < typename Tp >
+    struct contains<Tp> : std::false_type {};
 }
 
-template<typename T, typename IDType>
+template<typename T, typename IDType, typename ...Subtypes>
 class ManualManager {
 public:
     typedef T element_type;
     typedef IDType id_type;
     typedef ManualManager<T, IDType> this_type;
     const static std::size_t chunk_size = 128;
+
+    virtual ~ManualManager() {
+        clear();
+    }
 
     // Returns the number of items
     std::size_t size() const {
@@ -190,19 +256,18 @@ public:
     // Makes a new object, resizing the pool if necessary
     template<typename... Args>
     T* make(Args&&... args) {
-        T* ret = pool_.alloc(std::forward<Args>(args)...).second;
-
-        if(!ret->init()) {
-            throw InstanceInitializationError(typeid(T).name());
-        }
-
-        return ret;
+        return make_as<T, Args...>(std::forward<Args>(args)...);
     }
 
     // Makes a new object as a subclass
-    template<typename U, typename... Args>
-    U* make_as(Args&&... args) {
-        return dynamic_cast<U*>(make(std::forward<Args>(args)...));
+    template<typename Derived, typename... Args>
+    Derived* make_as(Args&&... args) {
+        static_assert(_manual_manager_impl::contains<Derived, T, Subtypes...>::value, "Requested unlisted type");
+
+        auto p = pool_.template alloc<Derived, Args...>(std::forward<Args>(args)...);
+        Derived* ret = dynamic_cast<Derived*>(p.second);
+        ret->_bind_id_pointer(ret);
+        return ret;
     }
 
     // Mark the element for destruction at cleanup
@@ -214,12 +279,6 @@ public:
     void clean_up() {
         while(to_release_.size()) {
             auto id = *to_release_.begin();
-
-            auto elem = get(id);
-            if(elem) {
-                elem->cleanup();
-            }
-
             pool_.release(id);
             to_release_.erase(id);
 
@@ -228,7 +287,8 @@ public:
 
     // Immediately clear the manager
     void clear() {
-
+        pool_.clear();
+        to_release_.clear();
     }
 
     // Returns true if the ID is allocated
@@ -259,7 +319,7 @@ public:
     }
 
 private:
-    _manual_manager_impl::VectorPool<T, id_type, chunk_size> pool_;
+    _manual_manager_impl::VectorPool<T, id_type, chunk_size, Subtypes...> pool_;
     std::unordered_set<id_type> to_release_;
 };
 

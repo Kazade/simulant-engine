@@ -21,6 +21,7 @@ class SpriteManager :
 
 public:
     SpriteManager(Window* window, Stage* stage);
+    virtual ~SpriteManager();
 
     SpritePtr new_sprite();
     SpritePtr new_sprite_from_file(
@@ -43,6 +44,7 @@ public:
     Property<SpriteManager, Stage> stage = { this, &SpriteManager::stage_ };
 private:
     Stage* stage_ = nullptr;
+    sig::connection cleanup_conn_;
 };
 
 }

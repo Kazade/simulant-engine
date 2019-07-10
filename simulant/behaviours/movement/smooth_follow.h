@@ -12,7 +12,7 @@ namespace behaviours {
 
 class SmoothFollow:
     public StageNodeBehaviour,
-    public Managed<SmoothFollow> {
+    public RefCounted<SmoothFollow> {
 
 public:
     SmoothFollow();

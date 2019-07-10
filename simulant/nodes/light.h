@@ -29,8 +29,7 @@ namespace smlt {
 
 class Light :
     public ContainerNode,
-    public generic::Identifiable<LightID>,
-    public Managed<Light> {
+    public generic::Identifiable<LightID> {
 
 public:
     typedef std::shared_ptr<Light> ptr;

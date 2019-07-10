@@ -334,7 +334,6 @@ private:
     generic::DataCarrier data_carrier_;
 
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
-    std::unique_ptr<BackgroundManager> background_manager_;
     std::shared_ptr<TimeKeeper> time_keeper_;
 
     StatsRecorder stats_;

@@ -40,6 +40,14 @@ PipelineHelper PipelineHelper::with_clear(uint32_t viewport_clear_flags, const s
     return *this;
 }
 
+PipelineID PipelineHelper::id() const {
+    return pipeline_->id();
+}
+
+smlt::PipelineHelper::operator PipelineID() const {
+    return pipeline_->id();
+}
+
 PipelineHelper PipelineHelper::with_priority(smlt::RenderPriority priority) {
     pipeline_->set_priority((int) priority);
     return *this;

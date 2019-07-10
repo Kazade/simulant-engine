@@ -41,7 +41,7 @@ enum ViewportType {
 
 void calculate_ratios_from_viewport(ViewportType type, float& x, float& y, float& width, float& height);
 
-class Viewport : public Managed<Viewport> {
+class Viewport : public RefCounted<Viewport> {
 public:
     Viewport();
     Viewport(const Viewport& rhs) = default;

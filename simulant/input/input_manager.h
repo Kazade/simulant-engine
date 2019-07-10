@@ -14,7 +14,7 @@ typedef std::function<void (InputAxis*)> EachAxisCallback;
 typedef std::vector<InputAxis*> AxisList;
 
 class InputManager:
-    public Managed<InputManager> {
+    public RefCounted<InputManager> {
 
 public:
     InputManager(InputState* controller);

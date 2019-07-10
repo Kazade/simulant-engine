@@ -402,13 +402,13 @@ static GLenum convert_index_type(IndexType type) {
 }
 
 void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    auto element_count = renderable->index_element_count();
+    auto element_count = renderable->index_element_count;
     // Don't bother doing *anything* if there is nothing to render
     if(!element_count) {
         return;
     }
 
-    const Mat4 model = renderable->final_transformation();
+    const Mat4 model = renderable->final_transformation;
     const Mat4& view = camera_->view_matrix();
     const Mat4& projection = camera_->projection_matrix();
 
@@ -420,12 +420,12 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     GLCheck(glMatrixMode, GL_PROJECTION);
     GLCheck(glLoadMatrixf, projection.data());
 
-    auto spec = renderable->vertex_specification();
+    auto spec = renderable->vertex_data->vertex_specification();
 
     renderer_->prepare_to_render(renderable);
 
-    auto vertex_data = renderable->vertex_data()->data();
-    auto index_data = renderable->index_data()->data();
+    auto vertex_data = renderable->vertex_data->data();
+    auto index_data = renderable->index_data->data();
 
     (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
     (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();
@@ -483,16 +483,16 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         }
     }
 
-    auto arrangement = convert_arrangement(renderable->arrangement());
+    auto arrangement = convert_arrangement(renderable->arrangement);
     GLCheck(
         glDrawElements,
         arrangement,
         element_count,
-        convert_index_type(renderable->index_type()),
+        convert_index_type(renderable->index_data->index_type()),
         (const void*) index_data
     );
 
-    renderer_->window->stats->increment_polygons_rendered(renderable->arrangement(), element_count);
+    renderer_->window->stats->increment_polygons_rendered(renderable->arrangement, element_count);
 }
 
 }

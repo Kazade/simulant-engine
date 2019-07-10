@@ -21,6 +21,7 @@
 #include "../stage.h"
 #include "geoms/octree_culler.h"
 #include "camera.h"
+#include "../renderers/batching/renderable_store.h"
 
 namespace smlt {
 
@@ -36,6 +37,12 @@ Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, cons
 
 bool Geom::init() {
     auto mesh_ptr = stage->assets->mesh(mesh_id_);
+    assert(mesh_ptr);
+
+    if(!mesh_ptr) {
+        return false;
+    }
+
     culler_.reset(new OctreeCuller(this, mesh_ptr));
 
     /* FIXME: Transform and recalc */
@@ -53,8 +60,8 @@ void Geom::ask_owner_for_destruction() {
     stage->delete_geom(id());
 }
 
-std::vector<std::shared_ptr<Renderable>> Geom::_get_renderables(CameraPtr camera, DetailLevel detail_level) {
-    return culler_->renderables_visible(camera->frustum());
+void Geom::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) {
+    culler_->renderables_visible(camera->frustum(), factory);
 }
 
 

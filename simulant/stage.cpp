@@ -59,11 +59,15 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
 
     set_partitioner(partitioner);
 
-    parent->signal_post_idle().connect(std::bind(&Stage::cleanup_dead_objects, this));
+    cleanup_signal_ = parent->signal_post_idle().connect(
+        std::bind(&Stage::cleanup_dead_objects, this)
+    );
 }
 
 Stage::~Stage() {
-
+    sprite_manager_.reset();
+    sky_manager_.reset();
+    cleanup_signal_.disconnect();
 }
 
 bool Stage::init() {    
@@ -378,6 +382,8 @@ void Stage::cleanup_dead_objects() {
     actor_manager_->clean_up();
     light_manager_->clean_up();
     geom_manager_->clean_up();
+    particle_system_manager_->clean_up();
+    CameraManager::clean_up();
 }
 
 }

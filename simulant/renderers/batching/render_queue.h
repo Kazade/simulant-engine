@@ -195,7 +195,7 @@ public:
 
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
-    void insert_renderable(std::shared_ptr<Renderable> renderable); // IMPORTANT, must update RenderGroups if they exist already
+    void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
@@ -216,13 +216,13 @@ private:
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
-    typedef std::multimap<RenderGroup, std::shared_ptr<Renderable>> SortedRenderables;
+    typedef std::multimap<RenderGroup, Renderable*> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
-    std::array<SortedRenderables, RENDER_PRIORITY_MAX> priority_queues_;
+    std::array<SortedRenderables, RENDER_PRIORITY_MAX - RENDER_PRIORITY_MIN> priority_queues_;
 
     void clean_empty_batches();
 

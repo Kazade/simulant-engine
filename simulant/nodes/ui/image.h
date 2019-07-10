@@ -12,8 +12,7 @@ namespace ui {
  * allow text.
  */
 class Image:
-    public Widget,
-    public Managed<Image> {
+    public Widget {
 
     void clear_layers();
 

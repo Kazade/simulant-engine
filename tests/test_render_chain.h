@@ -48,6 +48,8 @@ public:
 
         auto pid2 = pipeline2->id();
         window->delete_pipeline(pid2);
+        window->run_frame();
+
         assert_false(window->has_pipeline(pid2));
 
         pipeline1->activate();

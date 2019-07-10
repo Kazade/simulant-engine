@@ -197,7 +197,11 @@ void Window::_cleanup() {
     loading_.reset();
     render_sequence_.reset();
 
+    BackgroundManager::delete_all_backgrounds();
+    BackgroundManager::clean_up();
+
     delete_all_stages();
+    stage_manager_.clean_up();
 
     if(sound_driver_) {
         sound_driver_->shutdown();
@@ -444,6 +448,7 @@ bool Window::run_frame() {
     asset_manager_->run_garbage_collection();
 
     signal_post_idle_();
+    stage_manager_.clean_up();
 
     profiler.checkpoint("garbage_collection");
 
@@ -578,8 +583,11 @@ void Window::reset() {
 
     render_sequence_->delete_all_pipelines();
 
+    BackgroundManager::delete_all_backgrounds();
+    BackgroundManager::clean_up();
+
     StageManager::delete_all_stages();
-    background_manager_.reset(new BackgroundManager(this));
+    stage_manager_.clean_up();
 
     L_DEBUG("Resetting the base manager");
     /* Destroy and recreate the base resource manager */

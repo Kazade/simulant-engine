@@ -80,7 +80,7 @@ typedef std::function<void (int32_t, int32_t, float)> AnimationUpdatedCallback;
 class KeyFrameAnimationState {
 public:
     KeyFrameAnimationState(
-        std::weak_ptr<KeyFrameAnimated> animatable,
+        KeyFrameAnimated* animatable,
         AnimationUpdatedCallback refresh_animation_state
     );
 
@@ -100,7 +100,7 @@ public:
     uint32_t next_frame() const { return next_frame_; }
     float interp() const { return interp_; }
 private:
-    std::weak_ptr<KeyFrameAnimated> animatable_;
+    KeyFrameAnimated* animatable_;
 
     KeyFrameAnimated::Animation* current_animation_ = nullptr;
     KeyFrameAnimated::Animation* next_animation_ = nullptr;

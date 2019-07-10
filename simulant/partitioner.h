@@ -61,7 +61,7 @@ struct StagedWrite {
 
 
 class Partitioner:
-    public Managed<Partitioner> {
+    public RefCounted<Partitioner> {
 
 public:
     Partitioner(Stage* ss):

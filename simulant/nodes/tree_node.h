@@ -16,7 +16,7 @@ public:
     using TraversalCallback = void(uint32_t, TreeNode*);
 
     TreeNode();
-    virtual ~TreeNode() {}
+    virtual ~TreeNode();
 
     void set_parent(TreeNode* node);
     void add_child(TreeNode* node);

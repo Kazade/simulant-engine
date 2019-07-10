@@ -19,6 +19,9 @@ public:
     bool has_camera(CameraID id) const;
     void delete_all_cameras();
 
+protected:
+    void clean_up();
+
 private:
     Stage* stage_;
 

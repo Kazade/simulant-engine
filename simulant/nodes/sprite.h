@@ -42,7 +42,6 @@ struct SpritesheetAttrs {
 
 class Sprite :
     public ContainerNode,
-    public Managed<Sprite>,
     public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
     public Source {
