@@ -581,6 +581,8 @@ void Window::reset() {
 
     idle->execute(); //Execute any idle tasks before we go deleting things
 
+    disable_virtual_joypad();
+
     render_sequence_->delete_all_pipelines();
 
     BackgroundManager::delete_all_backgrounds();
@@ -641,7 +643,7 @@ PipelinePtr Window::delete_pipeline(PipelineID pid) {
 }
 
 bool Window::has_pipeline(PipelineID pid) const {
-    return render_sequence_->contains(pid);
+    return render_sequence_->has_pipeline(pid);
 }
 
 bool Window::is_pipeline_enabled(PipelineID pid) const {
