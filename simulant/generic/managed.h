@@ -49,7 +49,16 @@ public:
     virtual ~TwoPhaseConstructed() {}
 
     virtual bool init() { return true; }
-    virtual void cleanup() {}
+    virtual void cleanup() {
+#if DEBUG
+        assert(!cleaned_up);
+        cleaned_up = true;
+#endif
+    }
+
+#ifdef DEBUG
+    bool cleaned_up = false;
+#endif
 };
 
 template<typename T>
