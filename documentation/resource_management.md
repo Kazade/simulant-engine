@@ -10,60 +10,56 @@ Pipelines.
 
 All of these types of objects have a counterpart ID type, an instance of which
 identifies a single object. These IDs can be exchanged with an object manager for
-temporary access to an object. It's important to understand that the manager
+access to an object. It's important to understand that the manager
 that created the object, retains ownership of it.
 
-For example, the Stage is a manager of Actors. You can create an Actor with the
-new_actor() method:
+For example, you can create a Mesh (which is an Asset) like this:
 
-    ActorID actor_id = stage.new_actor();
+    MeshID mid = stage->assets->new_mesh();
     
-new_actor() creates a new actor instance, but it doesn't return it. Instead you
-are given an ActorID which is your token to get access to the Actor.
+and later, you can exchange the ID for a MeshPtr like this:
 
-When you want to manipulate the Actor, you can use your ActorID to get it:
+    MeshPtr mesh = stage->mesh(mid);
+    
+## Assets vs Stage Nodes
 
-    auto actor = stage.actor(actor_id);
-    actor->move_to(10, 10, 10);
-        
+Assets and StageNodes both use this ID system, but they behave in different ways:
+
+ - Assets: are reference-counted, you should try not to store pointers to assets, instead store IDs
+ - StageNodes: are *not* reference-counted, you can store the pointers to them
+ 
+If you store a pointer to an Asset, the reference count will never hit zero and the asset will never
+be freed which is why storing an ID is prefered.
+
+Storing pointers to StageNodes doesn't suffer the same problem, but if you store IDs instead you can
+check to see whether or not the StageNode still exists before accessing the pointer:
+
+```
+    smlt::ActorID id = stage->new_actor();
+    if(stage->has_actor()) {
+        // OK, the actor is still there
+        smlt::ActorPtr ptr = stage->actor(id);
+        ptr->move_to(x, y, z);
+        // etc...
+    }
+```
+         
 ## Release references ASAP
         
-It is important that you don't hold on to object references for longer than you need to.
-The reason is that accessor functions like actor() return ProtectedPtr<T> instances.
-ProtectedPtr is a wrapper around both a std::shared_ptr<T> and a std::lock_guard. If
-you hold on to the reference for too long, you will deadlock other threads that
-need access to the actor. 
+It is important that you don't hold on to asset pointers for longer than you need to.
 
 The recommended approach is to wrap accesses to assets in curly braces or to get a reference and use it in a single line, for example:
 
+```
     // ... code ...
 
     { //Start a scope block
-        auto actor = stage.actor(actor_id);
-        actor->move_to(10, 10, 10);
-    } //End of scope, releases the lock on the actor
-
-    // ... or ...
-    stage.actor(actor_id)->move_to(10, 10, 10);
+        auto mesh = stage->assets->mesh(mesh_id);
+        mesh->new_submesh_as_rectangle(...);
+    } //End of scope, releases the lock on the mesh
+```
 
 This minimizes the amount of time the lock is held and so reduces the chance of a deadlock.
-
-### What is a deadlock?
-
-A deadlock happens when you have more than one thread in your program, and more than
-one thread is waiting for access to the same asset. The main symptom of a deadlock
-is that the application will freeze and become unresponsive. Most debuggers come
-with a way to pause execution when this happens. This will allow you to examine
-the call stack of both threads to determine if a deadlock has occurred, and where
-in the code it happened. 
-
-### Avoiding deadlocks in Simulant
-
- - Always release asset handles as soon as possible
- - Be aware that calling texture.upload() or vertex_data().done() will wait until the 
-   idle tasks have run on the main thread. Be sure not to call either of the above functions while holding 
-   a asset handle to a material, as materials are updated each frame and doing
-   so will cause a deadlock.
 
 ## Deleting objects
     
@@ -72,7 +68,10 @@ and Sounds) are reference counted. This means that you don't need to delete obje
 manually, other managers do not free objects automatically and you are required
 to delete the objects with a delete call:
 
-    stage.delete_actor(actor_id);
+    stage->delete_actor(actor_id);
+    
+StageNodes like Actors will not be released immediately. They will be destroyed after the idle
+tasks have run, but before the render queue is constructed.
     
 For more information see [Refcounted Managers](refcount_managers.md) and 
 [Manual Managers](manual_managers.md)
