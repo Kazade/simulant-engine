@@ -33,18 +33,19 @@ namespace smlt {
 //=========== START STAGES ==================
 
 StageManager::StageManager(Window* window):
-    window_(window) {
+    window_(window),
+    stage_manager_(new ManualManager<Stage, StageID>()) {
 
 }
 
 StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
-    auto ret = stage_manager_.make(this->window_, partitioner);
+    auto ret = stage_manager_->make(this->window_, partitioner);
     signal_stage_added_(ret->id());
     return ret;
 }
 
 std::size_t StageManager::stage_count() const {
-    return stage_manager_.size();
+    return stage_manager_->size();
 }
 
 /**
@@ -57,17 +58,17 @@ std::size_t StageManager::stage_count() const {
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return stage_manager_.get(s);
+    return stage_manager_->get(s);
 }
 
 StagePtr StageManager::delete_stage(StageID s) {
-    stage_manager_.destroy(s);
+    stage_manager_->destroy(s);
     signal_stage_removed_(s);
     return nullptr;
 }
 
 void StageManager::fixed_update(float dt) {
-    stage_manager_.each([dt](uint32_t, StagePtr stage) {
+    stage_manager_->each([dt](uint32_t, StagePtr stage) {
         TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
@@ -78,7 +79,7 @@ void StageManager::fixed_update(float dt) {
 }
 
 void StageManager::late_update(float dt) {
-    stage_manager_.each([dt](uint32_t, StagePtr stage) {
+    stage_manager_->each([dt](uint32_t, StagePtr stage) {
         TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
@@ -91,7 +92,7 @@ void StageManager::late_update(float dt) {
 
 void StageManager::update(float dt) {
     //Update the stages
-    stage_manager_.each([dt](uint32_t, StagePtr stage) {
+    stage_manager_->each([dt](uint32_t, StagePtr stage) {
         TreeNode* root = stage;
 
         root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
@@ -103,7 +104,7 @@ void StageManager::update(float dt) {
 
 
 void StageManager::print_tree() {
-    stage_manager_.each([this](uint32_t, StagePtr stage) {
+    stage_manager_->each([this](uint32_t, StagePtr stage) {
         uint32_t counter = 0;
         print_tree(stage, counter);
     });
@@ -124,15 +125,15 @@ void StageManager::print_tree(StageNode *node, uint32_t& level) {
 }
 
 bool StageManager::has_stage(StageID stage_id) const {
-    return stage_manager_.contains(stage_id);
+    return stage_manager_->contains(stage_id);
 }
 
 void StageManager::delete_all_stages() {
-    stage_manager_.clear();
+    stage_manager_->clear();
 }
 
 void StageManager::each_stage(std::function<void (uint32_t, Stage*)> func) {
-    stage_manager_.each(func);
+    stage_manager_->each(func);
 }
 
 // ============= END STAGES ===========

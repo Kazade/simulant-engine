@@ -19,7 +19,6 @@
 #pragma once
 
 #include "generic/generic_tree.h"
-#include "generic/manual_manager.h"
 #include "generic/property.h"
 #include "interfaces.h"
 #include "interfaces/updateable.h"
@@ -31,6 +30,9 @@ class StageNode;
 
 typedef sig::signal<void (StageID)> StageAddedSignal;
 typedef sig::signal<void (StageID)> StageRemovedSignal;
+
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
 
 class StageManager:
     public virtual Updateable {
@@ -60,7 +62,7 @@ private:
     void print_tree(StageNode* node, uint32_t& level);
 
 protected:
-    ManualManager<Stage, StageID> stage_manager_;
+    ManualManager<Stage, StageID>* stage_manager_ = nullptr;
 };
 
 }
