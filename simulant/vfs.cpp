@@ -28,6 +28,7 @@
 #include "window.h"
 #include "renderers/renderer.h"
 #include "loader.h"
+#include "platform.h"
 
 #ifdef __ANDROID__
 #include <SDL_rwops.h>
@@ -81,6 +82,9 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
     std::string final_name = filename.replace(
         "${RENDERER}",
         window_->renderer->name()
+    ).replace(
+        "${PLATFORM}",
+        window_->platform->name()
     ).encode();
 
     final_name = kfs::path::norm_path(final_name);
