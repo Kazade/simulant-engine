@@ -105,14 +105,11 @@ struct RenderOptions {
 typedef ManualManager<Pipeline, PipelineID> PipelineManager;
 
 class RenderSequence:
-    public RefCounted<RenderSequence>,
-    public PipelineManager {
+    public RefCounted<RenderSequence> {
 
 public:
     RenderSequence(Window* window);
-    ~RenderSequence() {
-        delete_all_pipelines();
-    }
+    ~RenderSequence();
 
     PipelinePtr new_pipeline(
         StageID stage,
@@ -125,6 +122,7 @@ public:
     PipelinePtr pipeline(PipelineID pipeline);
     void delete_pipeline(PipelineID pipeline);
     void delete_all_pipelines();
+    bool has_pipeline(PipelineID pipeline);
 
     void activate_pipelines(const std::vector<PipelineID>& pipelines);
     std::vector<PipelineID> active_pipelines() const;
@@ -158,6 +156,10 @@ private:
     friend class Pipeline;
 
     std::set<RenderTarget*> targets_rendered_this_frame_;
+
+    sig::connection cleanup_connection_;
+
+    std::unique_ptr<PipelineManager> pipeline_manager_;
 };
 
 }

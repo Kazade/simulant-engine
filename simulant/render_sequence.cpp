@@ -111,13 +111,25 @@ void Pipeline::activate() {
 RenderSequence::RenderSequence(Window *window):
     window_(window),
     renderer_(window->renderer.get()),
-    renderable_store_(new RenderableStore()){
+    renderable_store_(new RenderableStore()),
+    pipeline_manager_(new PipelineManager()) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
     render_options.texture_enabled = true;
     render_options.backface_culling_enabled = true;
     render_options.point_size = 1;
+
+    cleanup_connection_ = window->signal_post_idle().connect([&]() {
+        pipeline_manager_->clean_up();
+    });
+}
+
+RenderSequence::~RenderSequence() {
+    cleanup_connection_.disconnect();
+    delete_all_pipelines();
+    pipeline_manager_->clean_up();
+    pipeline_manager_.reset();
 }
 
 void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines) {
@@ -150,11 +162,11 @@ void RenderSequence::deactivate_all_pipelines() {
 }
 
 PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
-    return PipelineManager::get(pipeline);
+    return pipeline_manager_->get(pipeline);
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
-    if(!PipelineManager::contains(pipeline_id)) {
+    if(!pipeline_manager_->contains(pipeline_id)) {
         return;
     }
 
@@ -164,7 +176,7 @@ void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
     }
 
     ordered_pipelines_.remove_if([=](PipelinePtr pipeline) -> bool { return pipeline->id() == pipeline_id;});
-    PipelineManager::destroy(pipeline_id);
+    pipeline_manager_->destroy(pipeline_id);
 }
 
 void RenderSequence::delete_all_pipelines() {
@@ -176,7 +188,11 @@ void RenderSequence::delete_all_pipelines() {
 
     ordered_pipelines_.clear();
 
-    PipelineManager::clear();
+    pipeline_manager_->clear();
+}
+
+bool RenderSequence::has_pipeline(PipelineID pipeline) {
+    return pipeline_manager_->contains(pipeline);
 }
 
 void RenderSequence::sort_pipelines(bool acquire_lock) {
@@ -195,7 +211,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 }
 
 PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    auto pipeline = PipelineManager::make(this);
+    auto pipeline = pipeline_manager_->make(this);
     pipeline->set_stage(stage);
     pipeline->set_camera(camera);
     pipeline->set_viewport(viewport);
