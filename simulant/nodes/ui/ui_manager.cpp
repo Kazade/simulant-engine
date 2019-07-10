@@ -82,6 +82,10 @@ Image* UIManager::new_widget_as_image(const TextureID& texture_id) {
     return image;
 }
 
+Widget* UIManager::widget(WidgetID widget_id) {
+    return manager_->get(widget_id);
+}
+
 ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
     auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_));
     pg->set_property("min", min);
@@ -93,12 +97,21 @@ ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float v
     return pg;
 }
 
-void UIManager::delete_widget(WidgetID widget) {
-    if(!widget) {
+void UIManager::delete_widget(WidgetID widget_id) {
+    if(!widget_id) {
         return;
     }
 
-    manager_->destroy(widget);
+    auto w = widget(widget_id);
+    if(!w) {
+        return;
+    }
+
+    // Release any presses on the widget
+    w->force_release();
+
+    // Queue for destruction
+    manager_->destroy(widget_id);
 }
 
 void UIManager::on_touch_begin(const TouchEvent &evt) {

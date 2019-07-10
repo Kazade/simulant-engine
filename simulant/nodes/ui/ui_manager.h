@@ -46,6 +46,8 @@ public:
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TextureID& texture_id);
 
+    Widget* widget(WidgetID widget_id);
+
     void delete_widget(WidgetID widget);
 
     Stage* stage() const { return stage_; }
