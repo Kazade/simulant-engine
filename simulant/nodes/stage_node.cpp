@@ -21,6 +21,8 @@ void StageNode::cleanup() {
     });
 
     detach(); // Make sure we're not connected to anything
+
+    TwoPhaseConstructed::cleanup();
 }
 
 void StageNode::set_parent(CameraID id) {
