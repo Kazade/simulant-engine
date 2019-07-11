@@ -6,9 +6,12 @@
 #include "../../types.h"
 #include "widget.h"
 #include "../../event_listener.h"
-#include "../../generic/manual_manager.h"
 
 namespace smlt {
+
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
 namespace ui {
 
 class Button;
@@ -56,7 +59,7 @@ private:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
 
-    std::unique_ptr<WidgetManager> manager_;
+    std::shared_ptr<WidgetManager> manager_;
     UIConfig config_;
 
     void on_touch_begin(const TouchEvent &evt) override;

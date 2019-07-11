@@ -26,6 +26,7 @@
 #include "loader.h"
 
 #include "renderers/batching/render_queue.h"
+#include "generic/manual_manager.h"
 
 namespace smlt {
 
@@ -124,12 +125,16 @@ void StageManager::print_tree(StageNode *node, uint32_t& level) {
     level -= 1;
 }
 
+void StageManager::clean_up() {
+    stage_manager_->clean_up();
+}
+
 bool StageManager::has_stage(StageID stage_id) const {
     return stage_manager_->contains(stage_id);
 }
 
 void StageManager::delete_all_stages() {
-    stage_manager_->clear();
+    stage_manager_->destroy_all();
 }
 
 void StageManager::each_stage(std::function<void (uint32_t, Stage*)> func) {

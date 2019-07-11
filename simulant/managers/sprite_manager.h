@@ -2,9 +2,11 @@
 
 #include "../nodes/sprite.h"
 #include "./window_holder.h"
-#include "../generic/manual_manager.h"
 
 namespace smlt {
+
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
 
 typedef ManualManager<Sprite, SpriteID> TemplatedSpriteManager;
 
@@ -13,7 +15,6 @@ typedef sig::signal<void (SpriteID)> SpriteDestroyedSignal;
 
 
 class SpriteManager :
-    public TemplatedSpriteManager,
     public virtual WindowHolder {
 
     DEFINE_SIGNAL(SpriteCreatedSignal, signal_sprite_created);
@@ -45,6 +46,8 @@ public:
 private:
     Stage* stage_ = nullptr;
     sig::connection cleanup_conn_;
+
+    std::shared_ptr<TemplatedSpriteManager> sprite_manager_;
 };
 
 }

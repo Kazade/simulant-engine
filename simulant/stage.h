@@ -51,6 +51,9 @@ class Partitioner;
 class Debug;
 class Sprite;
 
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
 typedef ManualManager<Actor, ActorID> ActorManager;
 typedef ManualManager<Geom, GeomID> GeomManager;
 typedef ManualManager<Light, LightID> LightManager;

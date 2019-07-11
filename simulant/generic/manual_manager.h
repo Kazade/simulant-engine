@@ -285,6 +285,12 @@ public:
         }
     }
 
+    void destroy_all() {
+        each([this](uint32_t, T* thing) {
+            destroy(thing->id());
+        });
+    }
+
     // Immediately clear the manager
     void clear() {
         pool_.clear();

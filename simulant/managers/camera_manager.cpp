@@ -1,18 +1,20 @@
 #include "camera_manager.h"
 #include "../stage.h"
 #include "../window.h"
+#include "../generic/manual_manager.h"
 
 namespace smlt {
 
 //=============== START CAMERAS ============
 
 CameraManager::CameraManager(Stage *stage):
-    stage_(stage) {
+    stage_(stage),
+    cameras_(new Manager()) {
 
 }
 
 CameraPtr CameraManager::new_camera() {
-    auto new_camera = cameras_.make(this->stage_);
+    auto new_camera = cameras_->make(this->stage_);
     new_camera->set_parent(stage_);
 
     return new_camera;
@@ -53,27 +55,27 @@ CameraPtr CameraManager::new_camera_for_ui() {
 }
 
 CameraPtr CameraManager::camera(CameraID c) {
-    return cameras_.get(c);
+    return cameras_->get(c);
 }
 
 void CameraManager::delete_camera(CameraID cid) {
-    cameras_.destroy(cid);
+    cameras_->destroy(cid);
 }
 
 uint32_t CameraManager::camera_count() const {
-    return cameras_.size();
+    return cameras_->size();
 }
 
 bool CameraManager::has_camera(CameraID id) const {
-    return cameras_.contains(id);
+    return cameras_->contains(id);
 }
 
 void CameraManager::delete_all_cameras() {
-    cameras_.clear();
+    cameras_->destroy_all();
 }
 
 void CameraManager::clean_up() {
-    cameras_.clean_up();
+    cameras_->clean_up();
 }
 
 //============== END CAMERAS ================

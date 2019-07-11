@@ -62,6 +62,7 @@ private:
     void print_tree(StageNode* node, uint32_t& level);
 
 protected:
+    void clean_up();
     std::shared_ptr<ManualManager<Stage, StageID>> stage_manager_;
 };
 

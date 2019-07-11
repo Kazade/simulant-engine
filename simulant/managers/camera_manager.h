@@ -1,9 +1,11 @@
 #pragma once
 
 #include "../nodes/camera.h"
-#include "../generic/manual_manager.h"
 
 namespace smlt {
+
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
 
 class CameraManager {
 public:
@@ -25,7 +27,8 @@ protected:
 private:
     Stage* stage_;
 
-    ManualManager<Camera, CameraID> cameras_;
+    typedef ManualManager<Camera, CameraID> Manager;
+    std::shared_ptr<Manager> cameras_;
 };
 
 }

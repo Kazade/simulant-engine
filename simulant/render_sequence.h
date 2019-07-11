@@ -102,6 +102,9 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
 typedef ManualManager<Pipeline, PipelineID> PipelineManager;
 
 class RenderSequence:

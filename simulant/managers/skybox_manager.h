@@ -24,7 +24,6 @@
 #include "../generic/identifiable.h"
 #include "../nodes/stage_node.h"
 #include "../types.h"
-#include "../generic/manual_manager.h"
 #include "./window_holder.h"
 
 namespace smlt {
@@ -100,10 +99,12 @@ public:
         std::runtime_error(what) {}
 };
 
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
 typedef ManualManager<Skybox, SkyID> TemplatedSkyboxManager;
 
 class SkyManager :
-    public TemplatedSkyboxManager,
     public virtual WindowHolder {
 
 public:
@@ -128,6 +129,8 @@ public:
     Property<SkyManager, Stage> stage = { this, &SkyManager::stage_ };
 private:
     Stage* stage_ = nullptr;
+
+    std::shared_ptr<TemplatedSkyboxManager> sky_manager_;
 
 };
 

@@ -20,6 +20,7 @@
 #include "../../stage.h"
 #include "../camera.h"
 #include "../../window.h"
+#include "../../generic/manual_manager.h"
 
 namespace smlt {
 namespace ui {

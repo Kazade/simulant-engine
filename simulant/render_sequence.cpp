@@ -33,6 +33,7 @@
 #include "partitioner.h"
 #include "loader.h"
 
+#include "generic/manual_manager.h"
 #include "renderers/batching/renderable_store.h"
 
 namespace smlt {
@@ -188,7 +189,7 @@ void RenderSequence::delete_all_pipelines() {
 
     ordered_pipelines_.clear();
 
-    pipeline_manager_->clear();
+    pipeline_manager_->destroy_all();
 }
 
 bool RenderSequence::has_pipeline(PipelineID pipeline) {

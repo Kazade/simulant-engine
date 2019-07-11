@@ -3,9 +3,11 @@
 #include "../generic/property.h"
 #include "../utils/unicode.h"
 #include "background.h"
-#include "../generic/manual_manager.h"
 
 namespace smlt {
+
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
 
 class Window;
 
@@ -33,7 +35,8 @@ public:
 private:
     Window* window_;
 
-    ManualManager<Background, BackgroundID> backgrounds_;
+    typedef ManualManager<Background, BackgroundID> Manager;
+    std::shared_ptr<Manager> backgrounds_;
 };
 
 }
