@@ -178,6 +178,9 @@ public:
 
         actor2->ask_owner_for_destruction();
 
+        // Run cleanup
+        window->run_frame();
+
         assert_true(leave_called);
 
         body->unregister_collision_listener(&listener);

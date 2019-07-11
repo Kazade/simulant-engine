@@ -22,6 +22,7 @@
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
+#include "../renderers/batching/renderable_store.h"
 
 namespace smlt {
 
@@ -139,7 +140,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
 
         interpolated_vertex_data_ = std::make_shared<VertexData>(meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_specification());
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
-            meshes_[detail_level],
+            meshes_[detail_level].get(),
             std::bind(&Actor::refresh_animation_state, this, _1, _2, _3)
         );
 
@@ -273,12 +274,10 @@ const SubMesh *SubActor::submesh() const {
     return submesh_.get();
 }
 
-RenderableList Actor::_get_renderables(CameraPtr camera, DetailLevel level) {
-    auto ret = RenderableList();
-
+void Actor::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel level) {
     auto mesh = find_mesh(level);
     if(!mesh) {
-        return ret;
+        return;
     }
 
     mesh->each([&](const std::string& name, SubMesh* submesh) {
@@ -287,12 +286,20 @@ RenderableList Actor::_get_renderables(CameraPtr camera, DetailLevel level) {
          * submesh. Otherwise if a thread destroys a submesh while rendering is happening
          * we get random crashes. We called shared_from_this to keep the submesh around
          */
-        ret.push_back(
-            SubActor::create(*this, submesh->shared_from_this())
-        );
-    });
+        Renderable new_renderable;
+        new_renderable.final_transformation = absolute_transformation();
+        new_renderable.render_priority = render_priority();
+        new_renderable.is_visible = is_visible();
 
-    return ret;
+        new_renderable.arrangement = submesh->arrangement();
+        new_renderable.vertex_data = submesh->vertex_data.get();
+        new_renderable.index_data = submesh->index_data.get();
+        new_renderable.index_element_count = new_renderable.index_data->count();
+        new_renderable.material_id = submesh->material_id(); // FIXME: Override?
+        new_renderable.centre = transformed_aabb().centre();
+
+        factory->push_renderable(new_renderable);
+    });
 }
 
 

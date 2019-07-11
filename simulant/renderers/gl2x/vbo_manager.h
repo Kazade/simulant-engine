@@ -77,7 +77,7 @@ public:
 };
 
 class DedicatedVBO:
-    public Managed<DedicatedVBO>,
+    public RefCounted<DedicatedVBO>,
     public VBO {
 
 public:
@@ -137,7 +137,7 @@ private:
 };
 
 class SharedVBO:
-    public Managed<SharedVBO>,
+    public RefCounted<SharedVBO>,
     public VBO {
 
 public:
@@ -203,7 +203,7 @@ private:
     std::vector<SlotMeta> metas_;
 };
 
-class VBOManager : public Managed<VBOManager> {
+class VBOManager : public RefCounted<VBOManager> {
 public:
     ~VBOManager();
     GPUBuffer update_and_fetch_buffers(Renderable* renderable);

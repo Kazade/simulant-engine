@@ -2,21 +2,30 @@
 #include "../texture.h"
 #include "../window.h"
 #include "../stage.h"
+#include "../generic/manual_manager.h"
 
 namespace smlt {
 
 SpriteManager::SpriteManager(Window* window, Stage* stage):
     WindowHolder(window),
-    stage_(stage)   {
+    stage_(stage),
+    sprite_manager_(new TemplatedSpriteManager()) {
 
+    cleanup_conn_ = window->signal_post_idle().connect([&]() {
+       sprite_manager_->clean_up();
+    });
+}
+
+SpriteManager::~SpriteManager() {
+    cleanup_conn_.disconnect();
 }
 
 void SpriteManager::delete_all() {
-    objects_.clear();
+    sprite_manager_->clear();
 }
 
 SpritePtr SpriteManager::new_sprite() {
-    auto s = TemplatedSpriteManager::make(this, window->_sound_driver());
+    auto s = sprite_manager_->make(this, window->_sound_driver());
     s->set_parent(stage_->id());
     signal_sprite_created_(s->id());
     return s;
@@ -48,20 +57,20 @@ SpritePtr SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t 
 }
 
 SpritePtr SpriteManager::sprite(SpriteID s) {
-    return TemplatedSpriteManager::get(s);
+    return sprite_manager_->get(s);
 }
 
 bool SpriteManager::has_sprite(SpriteID s) const {
-    return TemplatedSpriteManager::contains(s);
+    return sprite_manager_->contains(s);
 }
 
 SpritePtr SpriteManager::delete_sprite(SpriteID s) {
-    TemplatedSpriteManager::destroy(s);
+    sprite_manager_->destroy(s);
     return nullptr;
 }
 
 std::size_t SpriteManager::sprite_count() const {
-    return TemplatedSpriteManager::count();
+    return sprite_manager_->size();
 }
 
 }

@@ -33,6 +33,9 @@
 #include "partitioner.h"
 #include "loader.h"
 
+#include "generic/manual_manager.h"
+#include "renderers/batching/renderable_store.h"
+
 namespace smlt {
 
 Pipeline::Pipeline(PipelineID id,
@@ -108,13 +111,26 @@ void Pipeline::activate() {
 
 RenderSequence::RenderSequence(Window *window):
     window_(window),
-    renderer_(window->renderer.get()) {
+    renderer_(window->renderer.get()),
+    renderable_store_(new RenderableStore()),
+    pipeline_manager_(new PipelineManager()) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
     render_options.texture_enabled = true;
     render_options.backface_culling_enabled = true;
     render_options.point_size = 1;
+
+    cleanup_connection_ = window->signal_post_idle().connect([&]() {
+        pipeline_manager_->clean_up();
+    });
+}
+
+RenderSequence::~RenderSequence() {
+    cleanup_connection_.disconnect();
+    delete_all_pipelines();
+    pipeline_manager_->clean_up();
+    pipeline_manager_.reset();
 }
 
 void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines) {
@@ -147,11 +163,11 @@ void RenderSequence::deactivate_all_pipelines() {
 }
 
 PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
-    return PipelineManager::get(pipeline);
+    return pipeline_manager_->get(pipeline);
 }
 
 void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
-    if(!PipelineManager::contains(pipeline_id)) {
+    if(!pipeline_manager_->contains(pipeline_id)) {
         return;
     }
 
@@ -161,7 +177,7 @@ void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
     }
 
     ordered_pipelines_.remove_if([=](PipelinePtr pipeline) -> bool { return pipeline->id() == pipeline_id;});
-    PipelineManager::destroy(pipeline_id);
+    pipeline_manager_->destroy(pipeline_id);
 }
 
 void RenderSequence::delete_all_pipelines() {
@@ -173,7 +189,11 @@ void RenderSequence::delete_all_pipelines() {
 
     ordered_pipelines_.clear();
 
-    PipelineManager::destroy_all();
+    pipeline_manager_->destroy_all();
+}
+
+bool RenderSequence::has_pipeline(PipelineID pipeline) {
+    return pipeline_manager_->contains(pipeline);
 }
 
 void RenderSequence::sort_pipelines(bool acquire_lock) {
@@ -192,7 +212,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 }
 
 PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    auto pipeline = PipelineManager::make(this);
+    auto pipeline = pipeline_manager_->make(this);
     pipeline->set_stage(stage);
     pipeline->set_camera(camera);
     pipeline->set_viewport(viewport);
@@ -356,21 +376,47 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
         /* Find the ideal detail level at this distance from the camera */
         auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
 
-        for(auto& renderable: node->_get_renderables(camera, level)) {
-            if(!renderable->index_element_count()) {
+        /* create a new factory */
+        auto renderable_factory = renderable_store_->new_factory();
+
+        /* Push any renderables for this node */
+        node->_get_renderables(renderable_factory, camera, level);
+
+        /* Go through and insert them into the render_queue */
+        renderable_factory->each_pushed([&](Renderable* renderable) {
+            assert(
+                renderable->arrangement == MESH_ARRANGEMENT_LINES ||
+                renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
+                renderable->arrangement == MESH_ARRANGEMENT_QUADS ||
+                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES ||
+                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN ||
+                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP
+            );
+
+            assert(renderable->material_id);
+            assert(renderable->index_data);
+            assert(renderable->vertex_data);
+
+            if(!renderable->index_element_count) {
                 // Don't render things with no indices
-                continue;
+                return;
             }
 
-            renderable->set_affected_by_lights(renderable_lights);
-
-            render_queue.insert_renderable(renderable);
-
+            for(auto i = 0u; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+                renderable->lights_affecting_this_frame[i] = (i < renderable_lights.size()) ? renderable_lights[i] : nullptr;
+            }
             ++renderables_rendered;
-        }
+        });
     }
 
     profiler.checkpoint("lights");
+
+    // Insert all the renderables we just created into the queue
+    // this has to happen after the renderable_store has finished any
+    // reallocs or the pointers will be invalidated
+    renderable_store_->each_renderable([&](Renderable* renderable) {
+        render_queue.insert_renderable(renderable);
+    });
 
     window->stats->set_geometry_visible(renderables_rendered);
 
@@ -388,6 +434,9 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
 
     signal_pipeline_finished_(*pipeline_stage);
     profiler.checkpoint("post_render");
+
+    /* Make sure we clear the renderable store each frame */
+    renderable_store_->clear();
 }
 
 }

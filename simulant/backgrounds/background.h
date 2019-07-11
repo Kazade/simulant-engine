@@ -44,7 +44,7 @@ enum BackgroundResizeStyle {
 };
 
 class Background:
-    public Managed<Background>,
+    public TwoPhaseConstructed,
     public generic::Identifiable<BackgroundID>,
     public Updateable,
     public Nameable,

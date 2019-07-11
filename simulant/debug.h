@@ -25,7 +25,7 @@
 
 namespace smlt {
 
-class Debug : public Managed<Debug> {
+class Debug : public RefCounted<Debug> {
 public:
     Debug(Stage& stage);
     ~Debug();

@@ -46,11 +46,7 @@ void Widget::cleanup() {
     // Make sure we fire any outstanding events when the widget
     // is destroyed. If any buttons are held, then they should fire
     // released signals.
-
-    auto fingers_down = fingers_down_; // Copy, fingerup will delete from fingers_down_
-    for(auto& finger_id: fingers_down) {
-        fingerup(finger_id);
-    }
+    force_release();
 
     StageNode::cleanup();
 }
@@ -583,6 +579,13 @@ void Widget::resize_or_generate_foreground(MeshPtr mesh, float width, float heig
 
 bool Widget::is_pressed_by_finger(uint32_t finger_id) {
     return fingers_down_.find(finger_id) != fingers_down_.end();
+}
+
+void Widget::force_release() {
+    auto fingers_down = fingers_down_; // Copy, fingerup will delete from fingers_down_
+    for(auto& finger_id: fingers_down) {
+        fingerup(finger_id);
+    }
 }
 
 void Widget::fingerdown(uint32_t finger_id) {

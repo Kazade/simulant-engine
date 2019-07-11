@@ -99,6 +99,9 @@ public:
         assert_equal(stage_->assets->mesh_count(), initial + 1);
 
         stage_->delete_actor(actor->id());
+
+        window->run_frame();
+
         stage_->assets->run_garbage_collection();
 
         assert_equal(stage_->assets->mesh_count(), initial + 0);
@@ -130,6 +133,7 @@ public:
 
         auto id = actor->id();
         stage_->delete_actor(actor->id());
+        window->run_frame();
 
         this->assert_true(!stage_->has_actor(id));
     }
@@ -148,6 +152,8 @@ public:
         this->assert_equal((uint32_t)0, c2->count_children());
 
         stage_->delete_actor(mid);
+        window->run_frame();
+
         this->assert_true(!stage_->has_actor(mid));
         this->assert_true(!stage_->has_actor(cid1));
         this->assert_true(!stage_->has_actor(cid2));

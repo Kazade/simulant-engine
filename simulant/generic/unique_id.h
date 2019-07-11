@@ -47,11 +47,6 @@ namespace _unique_id_impl {
         Members(ResourceTypePtr ptr):
             ptr(ptr) {}
 
-
-        Members(std::shared_ptr<typename ResourceTypePtr::element_type> ptr):
-            ptr(ptr.get()) {
-        }
-
         ResourceTypePtr as_pointer() const {
             return ptr;
         }
@@ -102,13 +97,12 @@ public:
     }
 
     /* Private API */
-    void _bind(std::shared_ptr<element_type> ptr) {
+    void _bind(resource_pointer_type ptr) {
         members_ = MembersType(ptr);
     }
 
     ResourceTypePtr fetch() const {
         auto ret = members_.as_pointer();
-        assert(ret);
         return ret;
     }
 

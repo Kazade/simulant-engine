@@ -6,11 +6,12 @@
 
 namespace smlt {
 
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
 class Window;
 
-class BackgroundManager:
-    public ObjectManager<BackgroundID, Background, DONT_REFCOUNT> {
-
+class BackgroundManager {
 public:
     BackgroundManager(Window* window);
     ~BackgroundManager();
@@ -29,8 +30,13 @@ public:
     void update(float dt);
 
     Property<BackgroundManager, Window> window = { this, &BackgroundManager::window_ };
+
+    void clean_up();
 private:
     Window* window_;
+
+    typedef ManualManager<Background, BackgroundID> Manager;
+    std::shared_ptr<Manager> backgrounds_;
 };
 
 }

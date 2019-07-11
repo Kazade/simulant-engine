@@ -70,7 +70,7 @@ class Mesh :
     public virtual Boundable,
     public Asset,
     public Loadable,
-    public Managed<Mesh>,
+    public RefCounted<Mesh>,
     public generic::Identifiable<MeshID>,
     public KeyFrameAnimated {
 

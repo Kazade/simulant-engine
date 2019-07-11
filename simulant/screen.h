@@ -16,7 +16,7 @@ enum ScreenFormat {
 };
 
 class Screen:
-    public Managed<Screen>,
+    public RefCounted<Screen>,
     public generic::DataCarrier {
 
 public:

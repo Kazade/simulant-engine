@@ -1,0 +1,188 @@
+#pragma once
+
+#include "simulant/generic/manual_manager.h"
+#include "simulant/generic/unique_id.h"
+#include "simulant/stage.h"
+#include "simulant/test.h"
+
+class MyObject;
+
+typedef smlt::default_init_ptr<MyObject> MyObjectPtr;
+typedef smlt::UniqueID<MyObjectPtr> MyObjectID;
+
+typedef smlt::ManualManager<MyObject, MyObjectID> MyObjectManager;
+
+class MyObject {
+public:
+    MyObjectID id_;
+
+    MyObject(MyObjectID id): id_(id) {}
+
+    bool init() { return true; }
+    void cleanup() {}
+    void _bind_id_pointer(MyObject*) {}
+};
+
+class ManualManagerTests : public smlt::test::SimulantTestCase {
+public:
+
+    void test_basic_usage() {
+        MyObjectManager manager;
+        MyObject* obj = manager.make();
+        auto id = obj->id_;
+
+        assert_is_not_null(obj);
+        assert_true(obj->id_);
+        assert_true(manager.contains(obj->id_));
+        assert_equal(manager.size(), 1u);
+        assert_equal(manager.capacity(), MyObjectManager::chunk_size);
+        assert_is_not_null(manager.get(obj->id_));
+
+        manager.destroy(obj->id_);
+
+        assert_is_not_null(manager.get(obj->id_));
+        assert_true(manager.is_marked_for_destruction(obj->id_));
+        assert_equal(manager.size(), 1u); // Still there
+        assert_true(manager.contains(obj->id_));
+
+        manager.clean_up();
+
+        assert_is_null(manager.get(id));
+        assert_false(manager.is_marked_for_destruction(id));
+        assert_equal(manager.size(), 0u); // Gone
+        assert_false(manager.contains(id));
+    }
+
+    void test_clear_immediately_destroys() {
+
+    }
+
+    void test_actors_are_freed() {
+        auto stage = window->new_stage();
+
+        auto actor = stage->new_actor()->id();
+        stage->delete_actor(actor);
+
+        // Should be different, the original actor is still lingering
+        assert_not_equal(stage->new_actor()->id(), actor);
+
+        window->run_frame();
+
+        // Same ID should be given back as it's been released
+        assert_equal(stage->new_actor()->id(), actor);
+    }
+
+    void test_lights_are_freed() {
+        auto stage = window->new_stage();
+
+        auto light = stage->new_light_as_directional()->id();
+        stage->delete_light(light);
+
+        // Should be different, the original light is still lingering
+        assert_not_equal(stage->new_light_as_directional()->id(), light);
+
+        window->run_frame();
+
+        // Same ID should be given back as it's been released
+        assert_equal(stage->new_light_as_directional()->id(), light);
+    }
+
+    void test_particle_systems_are_freed() {
+        auto stage = window->new_stage();
+
+        auto particle_system = stage->new_particle_system()->id();
+        stage->delete_particle_system(particle_system);
+
+        // Should be different, the original light is still lingering
+        assert_not_equal(stage->new_particle_system()->id(), particle_system);
+
+        window->run_frame();
+
+        // Same ID should be given back as it's been released
+        assert_equal(stage->new_particle_system()->id(), particle_system);
+    }
+
+    void test_geoms_are_freed() {
+        auto stage = window->new_stage();
+
+        auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+
+        auto geom = stage->new_geom_with_mesh(mesh)->id();
+        stage->delete_geom(geom);
+
+        // Should be different, the original light is still lingering
+        assert_not_equal(stage->new_geom_with_mesh(mesh)->id(), geom);
+
+        window->run_frame();
+
+        // Same ID should be given back as it's been released
+        assert_equal(stage->new_geom_with_mesh(mesh)->id(), geom);
+    }
+
+    void test_cameras_are_freed() {
+        auto stage = window->new_stage();
+
+        auto camera = stage->new_camera()->id();
+        stage->delete_camera(camera);
+
+        // Should be different, the original light is still lingering
+        assert_not_equal(stage->new_camera()->id(), camera);
+
+        window->run_frame();
+
+        // Same ID should be given back as it's been released
+        assert_equal(stage->new_camera()->id(), camera);
+    }
+
+    void test_pipelines_are_freed() {
+        auto stage = window->new_stage();
+        auto pipeline = window->render(stage, stage->new_camera()).id();
+
+        window->delete_pipeline(pipeline);
+        assert_true(window->has_pipeline(pipeline));
+
+        window->run_frame();
+        assert_false(window->has_pipeline(pipeline));
+    }
+
+    void test_stages_are_freed() {
+        auto stage = window->new_stage()->id();
+
+        window->delete_stage(stage);
+
+        // Should be different, the original light is still lingering
+        assert_not_equal(window->new_stage()->id(), stage);
+
+        window->run_frame();
+
+        // Same ID should be given back as it's been released
+        assert_equal(window->new_stage()->id(), stage);
+    }
+
+    void test_backgrounds_are_freed() {
+
+    }
+
+    void test_skyboxes_are_freed() {
+
+    }
+
+    void test_widgets_are_freed() {
+
+    }
+
+    void test_sprites_are_freed() {
+        auto stage = window->new_stage();
+
+        auto sprite = stage->sprites->new_sprite();
+        stage->sprites->delete_sprite(sprite);
+
+        // Should be different, the original light is still lingering
+        assert_not_equal(stage->sprites->new_sprite()->id(), sprite);
+
+        window->run_frame();
+
+        // Same ID should be given back as it's been released
+        assert_equal(stage->sprites->new_sprite()->id(), sprite);
+    }
+};

@@ -7,7 +7,7 @@ namespace smlt {
 
 class GeomCuller;
 
-class GeomCullerRenderable : public Renderable {
+class GeomCullerRenderable {
 public:
     GeomCullerRenderable(GeomCuller* owner, MaterialID mat_id, IndexType index_type);
 

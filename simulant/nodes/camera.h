@@ -12,8 +12,7 @@ class RenderTarget;
 
 class Camera:
     public ContainerNode,
-    public generic::Identifiable<CameraID>,
-    public Managed<Camera>{
+    public generic::Identifiable<CameraID> {
 
 public:
     using ContainerNode::_get_renderables;

@@ -8,6 +8,7 @@
 #include "../geom.h"
 #include "../../renderers/renderer.h"
 #include "geom_culler_renderable.h"
+#include "../../renderers/batching/renderable_store.h"
 
 namespace smlt {
 
@@ -101,14 +102,28 @@ void OctreeCuller::_compile() {
     });
 }
 
-void OctreeCuller::_all_renderables(RenderableList& out) {
+void OctreeCuller::_all_renderables(RenderableFactory* factory) {
     auto& renderable_map = pimpl_->renderable_map;
     for(auto& p: renderable_map) {
-        out.push_back(p.second);
+        auto& gr = p.second;
+
+        Renderable new_renderable;
+
+        new_renderable.arrangement = gr->arrangement();
+        new_renderable.final_transformation = gr->final_transformation();
+        new_renderable.index_data = gr->index_data();
+        new_renderable.vertex_data = &vertices_;
+        new_renderable.render_priority = gr->render_priority();
+        new_renderable.index_element_count = new_renderable.index_data->count();
+        new_renderable.is_visible = gr->is_visible();
+        new_renderable.material_id = gr->material_id();
+        new_renderable.centre = gr->transformed_aabb().centre();
+
+        factory->push_renderable(new_renderable);
     }
 }
 
-void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::shared_ptr<Renderable> > &out) {    
+void OctreeCuller::_gather_renderables(const Frustum &frustum, RenderableFactory* factory) {
     auto& renderable_map = pimpl_->renderable_map;
 
     /* Reset all the index data before we start gathering */
@@ -126,7 +141,6 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
 
             if(!seen.count(renderable)) {
                 seen.insert(renderable);
-                out.push_back(it->second);
             }
 
             /* Transfer the indices to the renderable */
@@ -136,6 +150,21 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, std::vector<std::
     };
 
     pimpl_->octree->traverse_visible(frustum, visitor);
+
+    for(auto& gr: seen) {
+        Renderable new_renderable;
+
+        new_renderable.arrangement = gr->arrangement();
+        new_renderable.final_transformation = gr->final_transformation();
+        new_renderable.index_data = gr->index_data();
+        new_renderable.vertex_data = &vertices_;
+        new_renderable.render_priority = gr->render_priority();
+        new_renderable.index_element_count = new_renderable.index_data->count();
+        new_renderable.is_visible = gr->is_visible();
+        new_renderable.material_id = gr->material_id();
+
+        factory->push_renderable(new_renderable);
+    }
 }
 
 AABB OctreeCuller::octree_bounds() const {

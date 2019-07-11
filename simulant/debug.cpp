@@ -22,6 +22,7 @@
 #include "debug.h"
 #include "nodes/actor.h"
 #include "random.h"
+#include "window.h"
 
 namespace smlt {
 

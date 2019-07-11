@@ -205,6 +205,9 @@ public:
     void fingerleave(uint32_t finger_id);
     bool is_pressed_by_finger(uint32_t finger_id);
 
+    /* Releases all presses forcibly, firing signals */
+    void force_release();
+
 private:
     bool initialized_ = false;
     UIManager* owner_ = nullptr;

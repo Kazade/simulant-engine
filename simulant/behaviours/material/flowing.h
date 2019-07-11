@@ -29,7 +29,7 @@ namespace material {
 
 class Flowing :
     public MaterialBehaviour,
-    public Managed<Flowing> {
+    public RefCounted<Flowing> {
 public:
     Flowing(Organism* material):
         MaterialBehaviour(dynamic_cast<Material*>(material)) {

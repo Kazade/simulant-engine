@@ -115,7 +115,7 @@ enum HatPosition {
 };
 
 class InputState:
-    public Managed<InputState> {
+    public RefCounted<InputState> {
 
 public:
     void pre_update(float dt);

@@ -60,6 +60,7 @@
 
 #include "panels/stats_panel.h"
 #include "panels/partitioner_panel.h"
+#include "stage_manager.h"
 
 
 /* Icon to send to all screens on boot */
@@ -197,7 +198,11 @@ void Window::_cleanup() {
     loading_.reset();
     render_sequence_.reset();
 
+    BackgroundManager::delete_all_backgrounds();
+    BackgroundManager::clean_up();
+
     delete_all_stages();
+    StageManager::clean_up();
 
     if(sound_driver_) {
         sound_driver_->shutdown();
@@ -208,10 +213,6 @@ void Window::_cleanup() {
 
     destroy_window();
     GLThreadCheck::cleanup();
-}
-
-void Window::each_stage(std::function<void (uint32_t, Stage*)> func) {
-    StageManager::each(func);
 }
 
 bool Window::_init() {
@@ -447,6 +448,9 @@ bool Window::run_frame() {
     // Garbage collect resources after idle, but before rendering
     asset_manager_->run_garbage_collection();
 
+    signal_post_idle_();
+    StageManager::clean_up();
+
     profiler.checkpoint("garbage_collection");
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
@@ -578,10 +582,15 @@ void Window::reset() {
 
     idle->execute(); //Execute any idle tasks before we go deleting things
 
+    disable_virtual_joypad();
+
     render_sequence_->delete_all_pipelines();
 
-    StageManager::destroy_all();
-    background_manager_.reset(new BackgroundManager(this));
+    BackgroundManager::delete_all_backgrounds();
+    BackgroundManager::clean_up();
+
+    StageManager::delete_all_stages();
+    StageManager::clean_up();
 
     L_DEBUG("Resetting the base manager");
     /* Destroy and recreate the base resource manager */
@@ -635,7 +644,7 @@ PipelinePtr Window::delete_pipeline(PipelineID pid) {
 }
 
 bool Window::has_pipeline(PipelineID pid) const {
-    return render_sequence_->contains(pid);
+    return render_sequence_->has_pipeline(pid);
 }
 
 bool Window::is_pipeline_enabled(PipelineID pid) const {

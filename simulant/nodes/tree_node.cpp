@@ -11,6 +11,10 @@ TreeNode::TreeNode():
 
 }
 
+TreeNode::~TreeNode() {
+    detach();
+}
+
 uint32_t TreeNode::count_children() const {
     uint32_t ret = 0;
     auto child = first_child_;

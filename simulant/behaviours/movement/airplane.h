@@ -8,7 +8,7 @@ namespace behaviours {
 
 class Airplane:
     public BehaviourWithInput,
-    public Managed<Airplane> {
+    public RefCounted<Airplane> {
 
 public:
     Airplane(Window* window);

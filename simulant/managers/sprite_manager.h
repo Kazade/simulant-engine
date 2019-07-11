@@ -1,19 +1,20 @@
 #pragma once
 
-#include "../generic/object_manager.h"
 #include "../nodes/sprite.h"
 #include "./window_holder.h"
 
 namespace smlt {
 
-typedef ObjectManager<SpriteID, Sprite, DONT_REFCOUNT> TemplatedSpriteManager;
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
+typedef ManualManager<Sprite, SpriteID> TemplatedSpriteManager;
 
 typedef sig::signal<void (SpriteID)> SpriteCreatedSignal;
 typedef sig::signal<void (SpriteID)> SpriteDestroyedSignal;
 
 
 class SpriteManager :
-    public TemplatedSpriteManager,
     public virtual WindowHolder {
 
     DEFINE_SIGNAL(SpriteCreatedSignal, signal_sprite_created);
@@ -21,6 +22,7 @@ class SpriteManager :
 
 public:
     SpriteManager(Window* window, Stage* stage);
+    virtual ~SpriteManager();
 
     SpritePtr new_sprite();
     SpritePtr new_sprite_from_file(
@@ -43,6 +45,9 @@ public:
     Property<SpriteManager, Stage> stage = { this, &SpriteManager::stage_ };
 private:
     Stage* stage_ = nullptr;
+    sig::connection cleanup_conn_;
+
+    std::shared_ptr<TemplatedSpriteManager> sprite_manager_;
 };
 
 }

@@ -152,7 +152,7 @@ class Texture :
     public Asset,
     public Loadable,
     public generic::Identifiable<TextureID>,
-    public Managed<Texture>,
+    public RefCounted<Texture>,
     public Updateable,
     public RenderTarget {
 

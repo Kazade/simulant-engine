@@ -23,6 +23,7 @@
 #include "../nodes/actor.h"
 #include "../meshes/mesh.h"
 #include "../procedural/constants.h"
+#include "../generic/manual_manager.h"
 
 #include "skybox_manager.h"
 
@@ -115,7 +116,8 @@ void Skybox::generate(
 
 SkyManager::SkyManager(Window* window, Stage* stage):
     WindowHolder(window),
-    stage_(stage) {
+    stage_(stage),
+    sky_manager_(new TemplatedSkyboxManager()) {
 
 }
 
@@ -210,7 +212,7 @@ SkyboxPtr SkyManager::new_skybox_from_files(
 
     assert(stage_);
 
-    auto sb = TemplatedSkyboxManager::make(this);
+    auto sb = sky_manager_->make(this);
     sb->generate(
         up, down, left, right, front, back
     );
@@ -219,11 +221,11 @@ SkyboxPtr SkyManager::new_skybox_from_files(
 }
 
 SkyboxPtr SkyManager::skybox(SkyID skybox_id) {
-    return TemplatedSkyboxManager::get(skybox_id);
+    return sky_manager_->get(skybox_id);
 }
 
 void SkyManager::delete_skybox(SkyID skybox_id) {
-    TemplatedSkyboxManager::destroy(skybox_id);
+    sky_manager_->destroy(skybox_id);
 }
 
 }

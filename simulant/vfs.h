@@ -37,7 +37,7 @@ public:
 
 
 class VirtualFileSystem :
-    public Managed<VirtualFileSystem> {
+    public RefCounted<VirtualFileSystem> {
 
 public:
     VirtualFileSystem(Window* window);

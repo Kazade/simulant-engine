@@ -24,10 +24,11 @@
 #include "../generic/identifiable.h"
 #include "../nodes/stage_node.h"
 #include "../types.h"
-
 #include "./window_holder.h"
 
 namespace smlt {
+
+class Stage;
 
 enum SkyboxFace {
     SKYBOX_FACE_TOP,
@@ -42,7 +43,6 @@ enum SkyboxFace {
 class SkyManager;
 
 class Skybox :
-    public Managed<Skybox>,
     public generic::Identifiable<SkyID>,
     public ContainerNode {
 
@@ -99,10 +99,12 @@ public:
         std::runtime_error(what) {}
 };
 
-typedef ObjectManager<SkyID, Skybox, DONT_REFCOUNT> TemplatedSkyboxManager;
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
+typedef ManualManager<Skybox, SkyID> TemplatedSkyboxManager;
 
 class SkyManager :
-    public TemplatedSkyboxManager,
     public virtual WindowHolder {
 
 public:
@@ -127,6 +129,8 @@ public:
     Property<SkyManager, Stage> stage = { this, &SkyManager::stage_ };
 private:
     Stage* stage_ = nullptr;
+
+    std::shared_ptr<TemplatedSkyboxManager> sky_manager_;
 
 };
 

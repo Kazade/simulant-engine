@@ -27,7 +27,7 @@ namespace impl {
 typedef sig::signal<void ()> SimulationPreStepSignal;
 
 class RigidBodySimulation:
-    public Managed<RigidBodySimulation> {
+    public RefCounted<RigidBodySimulation> {
 
     DEFINE_SIGNAL(SimulationPreStepSignal, signal_simulation_pre_step);
 

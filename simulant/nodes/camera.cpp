@@ -1,7 +1,8 @@
 #include "camera.h"
+#include "actor.h"
 
 #include "../stage.h"
-#include "actor.h"
+#include "../window.h"
 
 namespace smlt {
 

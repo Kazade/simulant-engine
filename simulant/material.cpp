@@ -56,7 +56,7 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
 Material::Material(const Material& rhs):
     Asset(rhs),
     generic::Identifiable<MaterialID>(rhs),
-    Managed<Material>(rhs),
+    RefCounted<Material>(rhs),
     _material_impl::PropertyValueHolder(rhs),
     defined_property_count_(rhs.defined_property_count_),
     defined_properties_(rhs.defined_properties_),

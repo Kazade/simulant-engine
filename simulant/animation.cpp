@@ -47,11 +47,11 @@ void KeyFrameAnimated::add_animation(const std::string& name,
     signal_animation_added_(this, name);
 }
 
-KeyFrameAnimationState::KeyFrameAnimationState(std::weak_ptr<KeyFrameAnimated> animatable, AnimationUpdatedCallback refresh_animation_state):
+KeyFrameAnimationState::KeyFrameAnimationState(KeyFrameAnimated* animatable, AnimationUpdatedCallback refresh_animation_state):
     animatable_(animatable),
     refresh_animation_state_(refresh_animation_state) {
 
-    auto anim = animatable_.lock();
+    auto anim = animatable_;
     on_animation_added_ = anim->signal_animation_added().connect(
         [this](KeyFrameAnimated* animatable, const std::string& name) {
             if(animatable->animation_count() == 1) {
@@ -62,11 +62,11 @@ KeyFrameAnimationState::KeyFrameAnimationState(std::weak_ptr<KeyFrameAnimated> a
 }
 
 void KeyFrameAnimationState::play_first_animation() {
-    play_animation(animatable_.lock()->first_animation_);
+    play_animation(animatable_->first_animation_);
 }
 
 void KeyFrameAnimationState::play_animation(const std::string& name) {
-    auto animatable = animatable_.lock();
+    auto animatable = animatable_;
     if(!animatable) {
         L_WARN("Animatable has been destroyed, not animating");
         current_animation_ = next_animation_ = nullptr;
@@ -98,7 +98,7 @@ void KeyFrameAnimationState::play_animation(const std::string& name) {
 }
 
 void KeyFrameAnimationState::queue_next_animation(const std::string& name) {
-    auto animatable = animatable_.lock();
+    auto animatable = animatable_;
     if(!animatable) {
         L_WARN("Animatable has been destroyed, not animating");
         current_animation_ = next_animation_ = nullptr;

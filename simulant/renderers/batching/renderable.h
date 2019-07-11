@@ -55,39 +55,18 @@ private:
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
 };
 
+struct Renderable final {
+    MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
+    const VertexData* vertex_data = nullptr;
+    const IndexData* index_data = nullptr;
+    std::size_t index_element_count = 0;
+    RenderPriority render_priority = RENDER_PRIORITY_MAIN;
+    Mat4 final_transformation;
+    MaterialID material_id;
+    bool is_visible = true;
+    std::array<LightPtr, MAX_LIGHTS_PER_RENDERABLE> lights_affecting_this_frame;
 
-class Renderable:  
-    public virtual BoundableEntity,
-    public UniquelyIdentifiable<Renderable> {
-
-public:
-    virtual ~Renderable() {}
-
-    virtual MeshArrangement arrangement() const = 0;
-
-    virtual VertexSpecification vertex_specification() const = 0;
-    virtual const VertexData* vertex_data() const = 0;
-
-    virtual const IndexData* index_data() const = 0;
-    virtual std::size_t index_element_count() const = 0; ///< The number of indexes that should be rendered
-    virtual IndexType index_type() const = 0; ///< The size of the index (e.g. 8bit, 16 bit)
-
-    virtual RenderPriority render_priority() const = 0;
-    virtual Mat4 final_transformation() const = 0;
-
-    virtual const MaterialID material_id() const = 0;
-    virtual bool is_visible() const = 0;
-
-    void set_affected_by_lights(std::vector<LightPtr> lights) {
-        lights_affecting_this_frame_ = lights;
-    }
-
-    std::vector<LightPtr> lights_affecting_this_frame() const {
-        return lights_affecting_this_frame_;
-    }
-
-private:
-    std::vector<LightPtr> lights_affecting_this_frame_;
+    smlt::Vec3 centre;
 };
 
 typedef std::shared_ptr<Renderable> RenderablePtr;

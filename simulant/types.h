@@ -335,6 +335,7 @@ enum BufferClearFlag {
 };
 
 typedef int32_t RenderPriority;
+const RenderPriority RENDER_PRIORITY_MIN = -250;
 const RenderPriority RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -250;
 const RenderPriority RENDER_PRIORITY_BACKGROUND = -100;
 const RenderPriority RENDER_PRIORITY_DISTANT = -50;
@@ -453,8 +454,9 @@ class Viewport;
 class Background;
 typedef default_init_ptr<Background> BackgroundPtr;
 
-class Stage;
 class Window;
+
+class Stage;
 typedef default_init_ptr<Stage> StagePtr;
 
 namespace ui {
@@ -506,8 +508,6 @@ typedef UniqueID<ParticleSystemPtr> ParticleSystemID;
 typedef UniqueID<SkyboxPtr> SkyID;
 typedef UniqueID<GPUProgramPtr> GPUProgramID;
 typedef UniqueID<ui::WidgetPtr> WidgetID;
-
-typedef ObjectManager<StageID, Stage, DONT_REFCOUNT> BaseStageManager;
 
 // Attributes should be aligned at 4 byte boundaries
 // according to this

@@ -52,7 +52,7 @@ enum VertexAttributeType {
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
 
 class VertexData :
-    public Managed<VertexData>,
+    public RefCounted<VertexData>,
     public UniquelyIdentifiable<VertexData>,
     public NotifiesDestruction<VertexData> {
 
@@ -247,7 +247,7 @@ Vec4 VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 typedef uint32_t Index;
 
 class IndexData:
-    public Managed<IndexData>,
+    public RefCounted<IndexData>,
     public UniquelyIdentifiable<IndexData>,
     public NotifiesDestruction<IndexData> {
 

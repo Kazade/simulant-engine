@@ -34,10 +34,11 @@
 namespace smlt {
 
 class RenderSequence;
+class RenderableStore;
 
 class Pipeline:
-    public Managed<Pipeline>,
-    public generic::Identifiable<PipelineID>{
+    public RefCounted<Pipeline>,
+    public generic::Identifiable<PipelineID> {
 
 public:
     Pipeline(
@@ -101,17 +102,17 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-typedef ObjectManager<PipelineID, Pipeline, DONT_REFCOUNT> PipelineManager;
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
+typedef ManualManager<Pipeline, PipelineID> PipelineManager;
 
 class RenderSequence:
-    public Managed<RenderSequence>,
-    public PipelineManager {
+    public RefCounted<RenderSequence> {
 
 public:
     RenderSequence(Window* window);
-    ~RenderSequence() {
-        delete_all_pipelines();
-    }
+    ~RenderSequence();
 
     PipelinePtr new_pipeline(
         StageID stage,
@@ -124,6 +125,7 @@ public:
     PipelinePtr pipeline(PipelineID pipeline);
     void delete_pipeline(PipelineID pipeline);
     void delete_all_pipelines();
+    bool has_pipeline(PipelineID pipeline);
 
     void activate_pipelines(const std::vector<PipelineID>& pipelines);
     std::vector<PipelineID> active_pipelines() const;
@@ -146,6 +148,7 @@ private:
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
+    std::shared_ptr<RenderableStore> renderable_store_;
 
     std::mutex pipeline_lock_;
     std::list<PipelinePtr> ordered_pipelines_;
@@ -156,6 +159,10 @@ private:
     friend class Pipeline;
 
     std::set<RenderTarget*> targets_rendered_this_frame_;
+
+    sig::connection cleanup_connection_;
+
+    std::unique_ptr<PipelineManager> pipeline_manager_;
 };
 
 }

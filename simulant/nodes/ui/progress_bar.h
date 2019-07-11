@@ -11,8 +11,7 @@ enum ProgressBarMode {
 };
 
 class ProgressBar:
-    public Widget,
-    public Managed<ProgressBar> {
+    public Widget {
 
 public:
     using Widget::init; // Pull in init to satisfy Managed<Button>

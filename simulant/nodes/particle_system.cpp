@@ -2,6 +2,7 @@
 
 #include "particles/emitter.h"
 
+#include "../renderers/batching/renderable_store.h"
 #include "../frustum.h"
 #include "../stage.h"
 #include "../types.h"
@@ -150,14 +151,22 @@ bool ParticleSystem::has_active_emitters() const {
     return false;
 }
 
-RenderableList ParticleSystem::_get_renderables(CameraPtr camera, DetailLevel detail_level) {
+void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) {
     /* Rebuild the vertex data with the current camera direction */
     rebuild_vertex_data(camera->up(), camera->right());
 
-    auto ret = RenderableList();
-    std::shared_ptr<Renderable> sptr = std::const_pointer_cast<ParticleSystem>(shared_from_this());
-    ret.push_back(sptr);
-    return ret;
+    Renderable new_renderable;
+    new_renderable.arrangement = MESH_ARRANGEMENT_QUADS;
+    new_renderable.render_priority = render_priority();
+    new_renderable.final_transformation = Mat4();
+    new_renderable.index_data = index_data_;
+    new_renderable.vertex_data = vertex_data_;
+    new_renderable.index_element_count = index_data_->count();
+    new_renderable.is_visible = is_visible();
+    new_renderable.material_id = material_id_;
+    new_renderable.centre = transformed_aabb().centre();
+
+    factory->push_renderable(new_renderable);
 }
 
 void ParticleSystem::ask_owner_for_destruction() {

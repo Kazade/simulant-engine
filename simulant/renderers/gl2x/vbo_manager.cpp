@@ -75,8 +75,8 @@ std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, 
 }
 
 GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
-    const auto& vdata = renderable->vertex_data();
-    const auto& idata = renderable->index_data();
+    const auto& vdata = renderable->vertex_data;
+    const auto& idata = renderable->index_data;
 
     auto vpair = perform_fetch_or_upload(vdata, dedicated_vertex_vbos_, vertex_data_slots_);
     auto ipair = perform_fetch_or_upload(idata, dedicated_index_vbos_, index_data_slots_);

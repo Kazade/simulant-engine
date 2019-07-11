@@ -41,7 +41,6 @@ class SubActor;
 class Actor :
     public StageNode,
     public virtual Boundable,
-    public Managed<Actor>,
     public generic::Identifiable<ActorID>,
     public Source,
     public HasMutableRenderPriority {
@@ -87,7 +86,7 @@ public:
         StageNode::cleanup();
     }
 
-    RenderableList _get_renderables(CameraPtr camera, DetailLevel level) override;
+    void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel level) override;
 private:
     MeshPtr find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
@@ -130,8 +129,7 @@ private:
 class SubActor :
     public SubMeshInterface,
     public virtual BoundableEntity,
-    public Managed<SubActor>,
-    public Renderable {
+    public RefCounted<SubActor> {
 
 public:
     const MaterialID material_id() const;

@@ -14,9 +14,9 @@
 
 namespace smlt {
 
-typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
+class RenderableFactory;
 
-typedef std::vector<std::shared_ptr<Renderable>> RenderableList;
+typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
 
 /* Used for multiple levels of detail when rendering stage nodes */
 
@@ -38,7 +38,8 @@ class StageNode:
     public Ownable,
     public virtual BoundableEntity,
     public Organism,
-    public HasAutoID<StageNode> {
+    public HasAutoID<StageNode>,
+    public TwoPhaseConstructed {
 
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
@@ -104,7 +105,8 @@ public:
     StageNode* find_child_with_name(const std::string& name);
 
     /* Return a list of renderables to pass into the render queue */
-    virtual RenderableList _get_renderables(
+    virtual void _get_renderables(
+        RenderableFactory* factory,
         CameraPtr camera,
         DetailLevel detail_level
     ) = 0;
@@ -147,8 +149,8 @@ public:
         StageNode(stage) {}
 
     /* Containers don't directly have renderables, but their children do */
-    std::vector<std::shared_ptr<Renderable>> _get_renderables(CameraPtr camera, DetailLevel detail_level) override {
-        return std::vector<std::shared_ptr<Renderable>>();
+    void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) override {
+
     }
 
     virtual ~ContainerNode() {}

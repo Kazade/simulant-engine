@@ -4,7 +4,10 @@ namespace utils {
 
 namespace static_if_detail {
     template<bool Condition>
-    struct statement {
+    struct statement;
+
+    template<>
+    struct statement<true> {
         template<typename Function>
         void then(const Function& f) {
             f();

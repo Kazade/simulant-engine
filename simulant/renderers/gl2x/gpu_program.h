@@ -65,7 +65,7 @@ struct UniformInfo {
 
 
 class GPUProgram:
-    public Managed<GPUProgram>,
+    public RefCounted<GPUProgram>,
     public generic::Identifiable<GPUProgramID> {
 
 public:

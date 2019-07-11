@@ -29,7 +29,7 @@ namespace behaviours {
 
 class Fly:
     public BehaviourWithInput,
-    public Managed<Fly> {
+    public RefCounted<Fly> {
 
 public:
     Fly(const Property<smlt::SceneBase, smlt::Window>& window):

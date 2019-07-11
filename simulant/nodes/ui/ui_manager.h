@@ -8,6 +8,10 @@
 #include "../../event_listener.h"
 
 namespace smlt {
+
+template<typename T, typename IDType, typename ...Subtypes>
+class ManualManager;
+
 namespace ui {
 
 class Button;
@@ -15,7 +19,7 @@ class Label;
 class ProgressBar;
 class Image;
 
-typedef ObjectManager<WidgetID, Widget, DONT_REFCOUNT> WidgetManager;
+typedef ManualManager<Widget, WidgetID, Button, Label, ProgressBar, Image> WidgetManager;
 
 
 enum UIEventType {
@@ -45,6 +49,8 @@ public:
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TextureID& texture_id);
 
+    Widget* widget(WidgetID widget_id);
+
     void delete_widget(WidgetID widget);
 
     Stage* stage() const { return stage_; }
@@ -53,7 +59,7 @@ private:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
 
-    std::unique_ptr<WidgetManager> manager_;
+    std::shared_ptr<WidgetManager> manager_;
     UIConfig config_;
 
     void on_touch_begin(const TouchEvent &evt) override;

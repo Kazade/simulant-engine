@@ -68,7 +68,7 @@ enum DefaultFontStyle {
 
 class AssetManager:
     public virtual WindowHolder,
-    public Managed<AssetManager> {
+    public RefCounted<AssetManager> {
 
 public:
     AssetManager(Window* window, AssetManager* parent=nullptr);
