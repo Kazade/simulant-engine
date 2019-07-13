@@ -32,6 +32,10 @@ public:
         pg->resize(400, 10);
         pg->pulse();
 
+        auto pg2 = stage_->ui->new_widget_as_progress_bar(0, 100, 50);
+        pg2->move_to(window->coordinate_from_normalized(0.5, 0.7));
+        pg2->resize(400, 10);
+
         button->signal_clicked().connect([&]() {
             title->set_text("Clicked!");
         });

@@ -23,7 +23,14 @@ public:
     void pulse();
     void set_pulse_step(float value);
     void set_pulse_fraction(float value);
+
     void set_fraction(float fraction);
+    void set_value(float value);
+    void set_range(float min, float max);
+
+    float value() const;
+    float min() const;
+    float max() const;
 
     ProgressBarMode current_mode() const { return mode_; }
 
