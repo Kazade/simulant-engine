@@ -52,6 +52,39 @@ private:
 };
 
 
+class ProgressBarTests : public smlt::test::SimulantTestCase {
+public:
+    void set_up() {
+        SimulantTestCase::set_up();
+
+        stage_ = window->new_stage();
+    }
+
+    void tear_down() {
+        window->delete_stage(stage_->id());
+        SimulantTestCase::tear_down();
+    }
+
+    void test_set_value() {
+        auto progress_bar = stage_->ui->new_widget_as_progress_bar(0, 100, 50);
+
+        assert_equal(progress_bar->value(), 50);
+        assert_equal(progress_bar->min(), 0);
+        assert_equal(progress_bar->max(), 100);
+
+        progress_bar->set_value(75);
+
+        assert_equal(progress_bar->value(), 75);
+
+        progress_bar->set_fraction(0.25);
+
+        assert_equal(progress_bar->value(), 25);
+    }
+
+private:
+    StagePtr stage_;
+};
+
 class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {

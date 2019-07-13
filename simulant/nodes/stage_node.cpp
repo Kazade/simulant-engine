@@ -4,6 +4,7 @@
 namespace smlt {
 
 StageNode::StageNode(Stage *stage):
+    TreeNode(),
     stage_(stage) {
 
 }

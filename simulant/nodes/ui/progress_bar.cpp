@@ -55,7 +55,9 @@ void ProgressBar::refresh_pulse() {
 }
 
 void ProgressBar::refresh_fraction() {
-
+    float fraction = value() / (max() - min());
+    float w = content_width() * fraction;
+    resize_or_generate_foreground(mesh(), w, content_height(), -(w / 2), 0);
 }
 
 void ProgressBar::refresh_bar() {
@@ -81,8 +83,38 @@ void ProgressBar::set_pulse_step(float value) {
     pulse_step_ = std::fabs(value);
 }
 
+void ProgressBar::set_range(float min, float max) {
+    assert(min < max);
+
+    set_property("min", min);
+    set_property("max", max);
+}
+
+void ProgressBar::set_value(float value) {
+    set_property("value", value);
+}
+
 void ProgressBar::set_fraction(float fraction) {
-    resize_or_generate_foreground(mesh(), content_width() * fraction, content_height(), 0, 0);
+    auto value = min() + (max() * fraction);
+    set_property("value", value);
+}
+
+float ProgressBar::value() const {
+    auto valuep = property<float>("value");
+    float value = valuep.has_value() ? valuep.value() : 0;
+    return value;
+}
+
+float ProgressBar::min() const {
+    auto minp = property<float>("min");
+    float min = minp.has_value() ? minp.value() : 0;
+    return min;
+}
+
+float ProgressBar::max() const {
+    auto maxp = property<float>("max");
+    float max = maxp.has_value() ? maxp.value() : 0;
+    return max;
 }
 
 }

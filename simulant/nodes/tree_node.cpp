@@ -47,13 +47,19 @@ void TreeNode::add_child(TreeNode *node) {
         return;
     }
 
+    auto old = node->parent_;
+
     if(node->parent_) {
         node->remove_from_parent();
     }
 
-    auto old = node->parent_;
     node->parent_ = this;
     node->root_ = this->root_;
+
+    // If we've changed parent, then we no longer
+    // have any siblings to the right of us
+    // (we insert children to the end of the list)
+    node->right_ = nullptr;
 
     if(!first_child_) {
         first_child_ = node;
@@ -64,7 +70,7 @@ void TreeNode::add_child(TreeNode *node) {
         node->parent_ = this;
     }
 
-    on_parent_set(old, node->parent_);
+    node->on_parent_set(old, node->parent_);
 }
 
 void TreeNode::remove_from_parent() {

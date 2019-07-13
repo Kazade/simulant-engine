@@ -184,7 +184,7 @@ public:
     bool has_property(const std::string& name) const { return bool(properties_.count(name)); }
 
     template<typename T>
-    smlt::optional<T> property(const std::string& name) {
+    smlt::optional<T> property(const std::string& name) const {
         if(!properties_.count(name)) {
             return smlt::optional<T>();
         }
