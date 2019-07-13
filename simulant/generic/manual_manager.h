@@ -51,6 +51,15 @@ namespace _manual_manager_impl {
                     id_type id = id_for_chunk_slot(chunk_id, slot);
 
                     uint8_t* new_thing = find_address(id);
+
+#ifndef NDEBUG
+                    // Debugging, set the marker byte
+                    uint8_t* marker = new_thing + max_element_size();
+                    assert(*marker == 0);
+
+                    *marker = 0xAB;
+#endif
+
                     T* ret = new (new_thing) U(id, args...);
 
                     if(!ret->init()) {
@@ -61,7 +70,9 @@ namespace _manual_manager_impl {
                     }
 
                     ++size_;
-
+#ifndef NDEBUG
+                    assert(*marker == 0xAB);
+#endif
                     return std::make_pair(
                         id,
                         ret
@@ -86,7 +97,14 @@ namespace _manual_manager_impl {
 
         T* get(id_type id) const {
             assert(used(id));
-            return reinterpret_cast<T*>(find_address(id));
+#ifndef NDEBUG
+            uint8_t* addr = find_address(id);
+            uint8_t* marker = addr + max_element_size();
+            assert(*marker == 0xAB);
+            return reinterpret_cast<T*>(addr);
+#else
+           return reinterpret_cast<T*>(find_address(id));
+#endif
         }
 
         void release(id_type id) {
@@ -94,6 +112,12 @@ namespace _manual_manager_impl {
 
             auto p = find_chunk_and_slot(id);
             T* element = get(id);
+
+#ifndef NDEBUG
+            uint8_t* marker = ((uint8_t*) element) + max_element_size();
+            assert(*marker == 0xAB);
+            *marker = 0; // Reset the marker
+#endif
 
             if(!element) {
                 return;
@@ -126,6 +150,10 @@ namespace _manual_manager_impl {
             }
         }
 
+        constexpr static uint32_t max_element_size() {
+            return MaxSize<T, Subtypes...>::value;
+        }
+
     private:
         std::mutex chunk_lock_;
 
@@ -147,12 +175,20 @@ namespace _manual_manager_impl {
             }
 
             static constexpr uint32_t size() {
+#ifndef NDEBUG
+                // If we're debugging, we add marker bytes between each element
+                // and initalize them to 0xAB we can then assert that these
+                // haven't been overwritten to detect overflows
+                return (ChunkSize * MaxSize<T, Subtypes...>::value) + ChunkSize;
+
+#else
                 return ChunkSize * MaxSize<T, Subtypes...>::value;
+#endif
             }
 
             std::mutex lock_;
             std::unordered_set<slot_id> free_slots_;
-            std::array<uint8_t, size()> elements_;
+            std::array<uint8_t, size()> elements_ = {}; // Zero-initialize
         };
 
         std::vector<std::shared_ptr<Chunk>> chunks_;
@@ -197,7 +233,11 @@ namespace _manual_manager_impl {
 
         uint8_t* find_address(id_type id) const {
             auto chunk = find_chunk_and_slot(id);
-            return &chunk.first->elements_.at(chunk.second * sizeof(T));
+#ifndef NDEBUG
+            return &chunk.first->elements_.at(chunk.second * (max_element_size() + 1));
+#else
+            return &chunk.first->elements_.at(chunk.second * max_element_size());
+#endif
         }
 
         uint32_t size_ = 0;
@@ -263,6 +303,7 @@ public:
     template<typename Derived, typename... Args>
     Derived* make_as(Args&&... args) {
         static_assert(_manual_manager_impl::contains<Derived, T, Subtypes...>::value, "Requested unlisted type");
+        static_assert(sizeof(Derived) <= PoolType::max_element_size(), "Something went wrong with size calculation");
 
         auto p = pool_.template alloc<Derived, Args...>(std::forward<Args>(args)...);
         Derived* ret = dynamic_cast<Derived*>(p.second);
@@ -325,7 +366,8 @@ public:
     }
 
 private:
-    _manual_manager_impl::VectorPool<T, id_type, chunk_size, Subtypes...> pool_;
+    typedef _manual_manager_impl::VectorPool<T, id_type, chunk_size, Subtypes...> PoolType;
+    PoolType pool_;
     std::unordered_set<id_type> to_release_;
 };
 
