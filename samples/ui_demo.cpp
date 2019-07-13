@@ -32,9 +32,11 @@ public:
         pg->resize(400, 10);
         pg->pulse();
 
-        auto pg2 = stage_->ui->new_widget_as_progress_bar(0, 100, 50);
-        pg2->move_to(window->coordinate_from_normalized(0.5, 0.7));
-        pg2->resize(400, 10);
+        pg2_ = stage_->ui->new_widget_as_progress_bar(0, 100, 0);
+        pg2_->move_to(window->coordinate_from_normalized(0.5, 0.7));
+        pg2_->resize(400, 20);
+        pg2_->set_border_colour(smlt::Colour::RED);
+        pg2_->set_border_width(1);
 
         button->signal_clicked().connect([&]() {
             title->set_text("Clicked!");
@@ -45,9 +47,28 @@ public:
         icon->move_to(window->coordinate_from_normalized(0.5, 0.58));
     }
 
+    void update(float dt) {
+        percent += (increasing) ? 100.0f * dt : -100.0f * dt;
+        if(percent >= 100.0f) {
+            increasing = false;
+            percent = 100.0f;
+        }
+
+        if(percent <= 0.0f) {
+            increasing = true;
+            percent = 0.0f;
+        }
+
+        pg2_->set_value(percent);
+    }
+
 private:
     smlt::StagePtr stage_;
     smlt::CameraPtr camera_;
+    smlt::ui::ProgressBar* pg2_;
+
+    bool increasing = true;
+    float percent = 0;
 };
 
 class App : public smlt::Application {

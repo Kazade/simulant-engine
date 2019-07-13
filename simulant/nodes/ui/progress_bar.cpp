@@ -57,7 +57,8 @@ void ProgressBar::refresh_pulse() {
 void ProgressBar::refresh_fraction() {
     float fraction = value() / (max() - min());
     float w = content_width() * fraction;
-    resize_or_generate_foreground(mesh(), w, content_height(), -(w / 2), 0);
+
+    resize_or_generate_foreground(mesh(), w, content_height(), -(content_width() - w) / 2, 0);
 }
 
 void ProgressBar::refresh_bar() {
@@ -91,12 +92,13 @@ void ProgressBar::set_range(float min, float max) {
 }
 
 void ProgressBar::set_value(float value) {
+    needs_refresh_ = true;
     set_property("value", value);
 }
 
 void ProgressBar::set_fraction(float fraction) {
     auto value = min() + (max() * fraction);
-    set_property("value", value);
+    set_value(value);
 }
 
 float ProgressBar::value() const {
