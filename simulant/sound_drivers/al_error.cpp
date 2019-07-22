@@ -25,6 +25,8 @@
 #include <AL/alc.h>
 #endif
 
+#include <stdexcept>
+
 #include "../deps/kazlog/kazlog.h"
 
 namespace ALChecker {

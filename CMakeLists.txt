@@ -87,7 +87,7 @@ ELSE()
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
     SET(CMAKE_BUILD_TYPE Release)
 
-    SET(OPENAL_INCLUDE_DIRS "") # Don't use OpenAL on DC
+    SET(OPENAL_INCLUDE_DIRS "")
     SET(OPENAL_LIBRARY "")
 
     SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on DC

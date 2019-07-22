@@ -26,20 +26,28 @@ ENDIF()
 
 
 IF(DREAMCAST_BUILD)
-    MESSAGE("-- Including libGL in build, as this is the Dreamcast")
+    MESSAGE("-- Including GLdc and ALdc in build, as this is the Dreamcast")
 
-    # We build in libGL directly for the Dreamcast build because we use a custom fork and this is the easiest
-    # way to prevent mishaps in linking with the upstream version
+    # We build in GLdc and ALdc directly (as it's all under the Simulant umbrella)
     FILE(GLOB_RECURSE LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/*.c)
     FILE(GLOB_RECURSE LIBGL_ASM ${CMAKE_SOURCE_DIR}/deps/libgl/*.S)
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include)
+
+    SET(
+        LIBAL
+        ${CMAKE_SOURCE_DIR}/deps/libAL/AL/mojoal.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/AL/aldc.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/AL/alut.c
+    )
+
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include ${CMAKE_SOURCE_DIR}/deps/libAL/include)
 
     SET(SIMULANT_FILES ${SIMULANT_FILES}
         ${LIBGL}
         ${LIBGL_ASM}
+        ${LIBAL}
     )
 
-    SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp sound_drivers/kos_sound_driver.cpp sound_drivers/null_sound_driver.cpp)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp sound_drivers/null_sound_driver.cpp)
 ELSE()
     SET(SIMULANT_FILES ${SIMULANT_FILES} sdl2_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp sound_drivers/null_sound_driver.cpp)
 ENDIF()

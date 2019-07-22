@@ -5,7 +5,10 @@
 
 #include "input/input_state.h"
 #include "kos_window.h"
-#include "sound_drivers/kos_sound_driver.h"
+
+#include "sound_drivers/openal_sound_driver.h"
+#include "sound_drivers/null_sound_driver.h"
+
 #include "renderers/renderer_config.h"
 #include "utils/memory.h"
 
@@ -271,7 +274,19 @@ void KOSWindow::check_events() {
 }
 
 std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
-    return std::make_shared<KOSSoundDriver>(this);
+    const char* from_env = std::getenv("SIMULANT_SOUND_DRIVER");
+    std::string selected = (from_env) ? from_env : "openal";
+
+    if(selected == "null") {
+        L_DEBUG("Null sound driver activated");
+        return std::make_shared<NullSoundDriver>(this);
+    } else {
+        if(selected != "openal") {
+            L_WARN(_F("Unknown sound driver ({0}) falling back to OpenAL").format(selected));
+        }
+        L_DEBUG("OpenAL sound driver activated");
+        return std::make_shared<OpenALSoundDriver>(this);
+    }
 }
 
 void KOSWindow::initialize_input_controller(smlt::InputState &controller) {

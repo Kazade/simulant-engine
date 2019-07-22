@@ -1,6 +1,10 @@
+#include <stdexcept>
+
 #include "openal_sound_driver.h"
 #include "../deps/kazlog/kazlog.h"
 #include "al_error.h"
+
+static_assert(sizeof(ALuint) == sizeof(uint32_t), "Unexpected mismatch with AL types");
 
 namespace smlt {
 
@@ -39,22 +43,22 @@ void OpenALSoundDriver::shutdown() {
 
 std::vector<AudioSourceID> OpenALSoundDriver::generate_sources(uint32_t count) {
     std::vector<AudioSourceID> sources(count, 0);
-    ALCheck(alGenSources, count, &sources[0]);
+    ALCheck(alGenSources, (ALuint) count, (ALuint*) &sources[0]);
     return sources;
 }
 
 std::vector<AudioBufferID> OpenALSoundDriver::generate_buffers(uint32_t count) {
     std::vector<AudioBufferID> buffers(count, 0);
-    ALCheck(alGenBuffers, count, &buffers[0]);
+    ALCheck(alGenBuffers, (ALuint) count, (ALuint*) &buffers[0]);
     return buffers;
 }
 
 void OpenALSoundDriver::delete_buffers(const std::vector<AudioBufferID> &buffers) {
-    ALCheck(alDeleteBuffers, buffers.size(), &buffers[0]);
+    ALCheck(alDeleteBuffers, (ALuint) buffers.size(), (ALuint*) &buffers[0]);
 }
 
 void OpenALSoundDriver::delete_sources(const std::vector<AudioSourceID> &sources) {
-    ALCheck(alDeleteSources, sources.size(), &sources[0]);
+    ALCheck(alDeleteSources, (ALuint) sources.size(), (ALuint*) &sources[0]);
 }
 
 void OpenALSoundDriver::play_source(AudioSourceID source_id) {
@@ -62,11 +66,11 @@ void OpenALSoundDriver::play_source(AudioSourceID source_id) {
 }
 
 void OpenALSoundDriver::stop_source(AudioSourceID source_id) {
-    ALCheck(alSourceStopv, 1, &source_id);
+    ALCheck(alSourceStop, (ALuint) source_id);
 }
 
 void OpenALSoundDriver::queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID> &buffers) {
-    ALCheck(alSourceQueueBuffers, source, count, &buffers[0]);
+    ALCheck(alSourceQueueBuffers, (ALuint) source, (ALuint) count, (ALuint*) &buffers[0]);
 }
 
 std::vector<AudioBufferID> OpenALSoundDriver::unqueue_buffers_from_source(AudioSourceID source, uint32_t count) {
@@ -105,7 +109,7 @@ AudioSourceState OpenALSoundDriver::source_state(AudioSourceID source) {
 
 int32_t OpenALSoundDriver::source_buffers_processed_count(AudioSourceID source) const {
     int32_t processed = 0;
-    ALCheck(alGetSourcei, source, AL_BUFFERS_PROCESSED, &processed);
+    ALCheck(alGetSourcei, (ALuint) source, AL_BUFFERS_PROCESSED, (ALint*) &processed);
     return processed;
 }
 

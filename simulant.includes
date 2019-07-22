@@ -203,3 +203,12 @@ deps/libgl/samples/paletted_pcx
 deps/libgl/samples/multitexture_arrays
 deps/libgl/samples/nehe02de
 deps/libgl/samples/polymark
+deps/libAL/AL
+deps/libAL/include/AL
+deps/libAL/AL/private
+deps/libgl/samples/polygon_offset
+deps/libAL/samples/basic
+deps/libAL
+deps/libAL/samples/helicopter
+deps/libAL/samples
+deps/libAL/samples/streaming
