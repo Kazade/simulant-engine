@@ -205,7 +205,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                  * if that's what's requested.
                  * FIXME: Otherwise, just ignore the texture as per spec */
                 if(!mesh_opts.obj_include_faces_with_missing_texture_vertices &&
-                    index.texcoord_index == -1 &&
+                    index.texcoord_index == -1 && mat_id != -1 &&
                     !materials[mat_id].diffuse_texname.empty()) {
                     break;
                 }
