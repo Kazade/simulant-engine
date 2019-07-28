@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 
 #include "texture_loader.h"
 #include "../texture.h"

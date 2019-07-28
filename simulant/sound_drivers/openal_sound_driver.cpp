@@ -1,7 +1,7 @@
 #include <stdexcept>
 
 #include "openal_sound_driver.h"
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 #include "al_error.h"
 
 static_assert(sizeof(ALuint) == sizeof(uint32_t), "Unexpected mismatch with AL types");

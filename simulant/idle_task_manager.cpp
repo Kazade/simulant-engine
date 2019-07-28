@@ -19,7 +19,7 @@
 
 #include <utility>
 #include <functional>
-#include "deps/kazlog/kazlog.h"
+#include "logging.h"
 #include "idle_task_manager.h"
 #include "window.h"
 #include "utils/gl_thread_check.h"

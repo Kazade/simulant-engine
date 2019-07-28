@@ -25,7 +25,7 @@
 #include <string>
 #include <memory>
 
-#include "deps/kazlog/kazlog.h"
+#include "logging.h"
 #include "deps/kfs/kfs.h"
 
 #include "loadable.h"

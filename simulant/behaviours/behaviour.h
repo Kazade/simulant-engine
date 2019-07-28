@@ -27,7 +27,7 @@
 #include <type_traits>
 #include <thread>
 
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 
 #include "../generic/property.h"
 #include "../generic/managed.h"
