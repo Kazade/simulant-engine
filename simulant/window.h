@@ -21,7 +21,7 @@
 
 #include <memory>
 
-#include "deps/kazlog/kazlog.h"
+#include "logging.h"
 
 #include "generic/property.h"
 #include "generic/object_manager.h"
@@ -147,7 +147,7 @@ public:
     
     bool run_frame();
 
-    void set_logging_level(LoggingLevel level);
+    void set_logging_level(LogLevel level);
 
     void stop_running() { is_running_ = false; }
     bool is_shutting_down() const { return is_running_ == false; }

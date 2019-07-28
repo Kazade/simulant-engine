@@ -355,14 +355,6 @@ const std::vector<RenderPriority> RENDER_PRIORITIES = {
     RENDER_PRIORITY_ABSOLUTE_FOREGROUND
 };
 
-enum LoggingLevel {
-    LOG_LEVEL_NONE = 0,
-    LOG_LEVEL_ERROR = 1,
-    LOG_LEVEL_WARN = 2,
-    LOG_LEVEL_INFO = 3,
-    LOG_LEVEL_DEBUG = 4
-};
-
 enum PolygonMode {
     POLYGON_MODE_FILL,
     POLYGON_MODE_LINE,

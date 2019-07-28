@@ -1,9 +1,6 @@
 [submodule "deps/kazsignal"]
 	path = deps/kazsignal
 	url = https://github.com/Kazade/kazsignal.git
-[submodule "deps/kazlog"]
-	path = deps/kazlog
-	url = https://github.com/Kazade/kazlog.git
 [submodule "deps/jsonic"]
 	path = deps/jsonic
 	url = https://Kazade@gitlab.com/Kazade/jsonic.git

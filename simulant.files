@@ -37,6 +37,9 @@ simulant/arg_parser.cpp
 simulant/arg_parser.h
 simulant/asset.cpp
 simulant/asset.h
+simulant/compat.cpp
+simulant/compat.h
+simulant/compat/exception_ptr_lite.hpp
 simulant/generic/manual_manager.h
 simulant/generic/notifies_destruction.h
 simulant/generic/object_manager.h
@@ -445,10 +448,7 @@ simulant/generic/optional.h
 simulant/generic/property.h
 simulant/generic/relation.h
 simulant/generic/simple_apply.h
-simulant/generic/simple_future.h
 simulant/generic/simple_this_thread.h
-simulant/generic/simple_tostring.cpp
-simulant/generic/simple_tostring.h
 simulant/generic/static_if.h
 simulant/generic/threading/shared_mutex.h
 simulant/generic/unique_id.h

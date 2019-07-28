@@ -23,7 +23,7 @@
 #include <thread>
 #include <memory>
 
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 
 class WrongThreadError:
     public std::runtime_error {

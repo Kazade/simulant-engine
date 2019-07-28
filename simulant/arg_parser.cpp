@@ -1,5 +1,5 @@
 #include <iomanip>
-#include "deps/kazlog/kazlog.h"
+#include "logging.h"
 #include "deps/kfs/kfs.h"
 
 #include "arg_parser.h"

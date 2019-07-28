@@ -9,7 +9,7 @@
 #include "default_init_ptr.h"
 #include "unique_id.h"
 
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 #include "../deps/kazsignal/kazsignal.h"
 
 namespace smlt {

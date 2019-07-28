@@ -18,7 +18,7 @@
 //
 
 #include <stdexcept>
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 
 #ifdef _arch_dreamcast
     #include "../../../deps/libgl/include/gl.h"

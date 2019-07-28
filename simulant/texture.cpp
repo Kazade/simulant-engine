@@ -24,7 +24,7 @@
 #include "utils/gl_error.h"
 #include "utils/memory.h"
 
-#include "deps/kazlog/kazlog.h"
+#include "logging.h"
 
 #include "window.h"
 #include "texture.h"

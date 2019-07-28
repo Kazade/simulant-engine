@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "deps/kazlog/kazlog.h"
+#include "logging.h"
 #include "utils/unicode.h"
 #include "input/input_state.h"
 #include "sdl2_window.h"
