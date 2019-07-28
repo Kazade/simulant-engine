@@ -56,7 +56,7 @@ std::vector<AudioBufferID> NullSoundDriver::unqueue_buffers_from_source(AudioSou
     return {};
 }
 
-void NullSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, int16_t* data, uint32_t size, uint32_t frequency) {
+void NullSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) {
 
 }
 

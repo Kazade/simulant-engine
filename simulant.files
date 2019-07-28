@@ -43,6 +43,8 @@ simulant/generic/object_manager.h
 simulant/generic/raii.h
 simulant/generic/uniquely_identifiable.h
 simulant/loaders/deps/tiny_obj_loader.h
+simulant/loaders/wav_loader.cpp
+simulant/loaders/wav_loader.h
 simulant/managers/camera_manager.cpp
 simulant/managers/camera_manager.h
 simulant/nodes/particles/manipulators/colour_fader.h

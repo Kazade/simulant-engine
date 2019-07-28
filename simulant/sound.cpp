@@ -33,7 +33,13 @@ Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver)
 
 }
 
-SourceInstance::SourceInstance(Source &parent, SoundID sound, bool loop_stream):
+void Sound::init_source(SourceInstance& source) {
+    if(!init_source_) return; // Nothing to do
+
+    init_source_(source);
+}
+
+SourceInstance::SourceInstance(Source &parent, SoundID sound, AudioRepeat loop_stream):
     parent_(parent),
     source_(0),
     buffers_{0, 0},
@@ -59,6 +65,11 @@ SourceInstance::~SourceInstance() {
 }
 
 void SourceInstance::start() {
+    if(!stream_func_) {
+        L_WARN("Not playing sound as no stream func was set");
+        return;
+    }
+
     //Fill up two buffers to begin with
     auto bs1 = stream_func_(buffers_[0]);
     auto bs2 = stream_func_(buffers_[1]);
@@ -87,16 +98,23 @@ void SourceInstance::update(float dt) {
         uint32_t bytes = stream_func_(buffer);
 
         if(!bytes) {
-            parent_.signal_stream_finished_();
-            if(loop_stream_) {
-                //Restart the sound
-                auto sound = parent_.stage_->assets->sound(sound_);
-                sound->init_source_(*this);
-                start();
-            } else {
-                //Mark as dead
-                is_dead_ = true;
+            // Just because we have nothing left to queue, doesn't mean that all buffers
+            // are finished, so wait for the last buffer to be unqueued
+            bool finished = driver->source_state(source_) == AUDIO_SOURCE_STATE_STOPPED;
+            if(finished) {
+                parent_.signal_stream_finished_();
+                if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
+                    //Restart the sound
+                    auto sound = parent_.stage_->assets->sound(sound_);
+                    assert(sound);
+                    sound->init_source(*this);
+                    start();
+                } else {
+                    //Mark as dead
+                    is_dead_ = true;
+                }
             }
+
         } else {
             driver->queue_buffers_to_source(source_, 1, {buffer});
         }
@@ -121,21 +139,21 @@ Source::~Source() {
 
 }
 
-void Source::play_sound(SoundID sound, bool loop) {
+void Source::play_sound(SoundID sound, AudioRepeat repeat) {
     if(!sound) {
         L_WARN("Tried to play an invalid sound");
         return;
     }
 
-    SourceInstance::ptr new_source = SourceInstance::create(*this, sound, loop);
+    SourceInstance::ptr new_source = SourceInstance::create(*this, sound, repeat);
 
-    /* This is surely wrong... */
+    /* There's surely a better way of determining which asset manager to use here */
     if(stage_) {
         auto s = stage_->assets->sound(sound);
-        s->init_source_(*new_source);
+        s->init_source(*new_source);
     } else {
         auto s = window_->shared_assets->sound(sound);
-        s->init_source_(*new_source);
+        s->init_source(*new_source);
     }
 
     new_source->start();

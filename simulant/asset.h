@@ -16,8 +16,7 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RESOURCE_H
-#define RESOURCE_H
+#pragma once
 
 #include <cassert>
 #include <mutex>
@@ -36,33 +35,22 @@ class Asset {
 public:
     friend class AssetManager;
 
-    Asset(AssetManager* manager):
-        manager_(manager) {
-        created_ = std::chrono::system_clock::now();
-    }
+    Asset(AssetManager* manager);
 
     virtual ~Asset() {}
 
     AssetManager& asset_manager() { assert(manager_); return *manager_; }
     const AssetManager& asset_manager() const { assert(manager_); return *manager_; }
 
-    int age() const {
-        return std::chrono::duration_cast<std::chrono::seconds>(
-            created_ - std::chrono::system_clock::now()
-        ).count();
-    }
+    int age() const;
 
     void set_garbage_collection_method(GarbageCollectMethod method);
 
     Property<Asset, generic::DataCarrier> data = {this, &Asset::data_};
 
 protected:
-    Asset(const Asset& rhs):
-        manager_(rhs.manager_),
-        created_(std::chrono::system_clock::now()),
-        data_(rhs.data_) {
-
-    }
+    Asset(const Asset& rhs);
+    Asset& operator=(const Asset& rhs);
 private:
     AssetManager* manager_;
 
@@ -72,4 +60,4 @@ private:
 };
 
 }
-#endif // RESOURCE_H
+

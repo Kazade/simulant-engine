@@ -663,7 +663,13 @@ SoundPtr AssetManager::new_sound(GarbageCollectMethod garbage_collect) {
 SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the sound
     auto snd = sound(new_sound(GARBAGE_COLLECT_NEVER));
-    window->loader_for(path.encode())->into(snd);
+    auto loader = window->loader_for(path.encode());
+
+    if(loader) {
+        loader->into(snd);
+    } else {
+        L_ERROR(_F("Unsupported file type: ").format(path));
+    }
 
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 

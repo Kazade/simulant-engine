@@ -27,7 +27,7 @@ public:
 
     void queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID>& buffers) override;
     std::vector<AudioBufferID> unqueue_buffers_from_source(AudioSourceID source, uint32_t count) override;
-    void upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, int16_t* data, uint32_t size, uint32_t frequency) override;
+    void upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) override;
 
     AudioSourceState source_state(AudioSourceID source) override;
     int32_t source_buffers_processed_count(AudioSourceID source) const override;
