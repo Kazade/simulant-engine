@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "generic/simple_tostring.h"
+#include "compat.h"
 #include "stage.h"
 #include "debug.h"
 #include "nodes/actor.h"
