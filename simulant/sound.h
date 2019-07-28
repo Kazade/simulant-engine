@@ -67,6 +67,8 @@ public:
 
     SoundDriver* _driver() const { return driver_; }
 private:
+    void init_source(SourceInstance& source);
+
     std::function<void (SourceInstance&)> init_source_;
 
     SoundDriver* driver_ = nullptr;
@@ -85,6 +87,11 @@ typedef std::function<int32_t (AudioBufferID)> StreamFunc;
 
 class Source;
 
+enum AudioRepeat {
+    AUDIO_REPEAT_NONE,
+    AUDIO_REPEAT_FOREVER
+};
+
 class SourceInstance:
     public RefCounted<SourceInstance> {
 
@@ -96,11 +103,11 @@ private:
     SoundID sound_;
     StreamFunc stream_func_;
 
-    bool loop_stream_;
+    AudioRepeat loop_stream_;
     bool is_dead_;
 
 public:
-    SourceInstance(Source& parent, SoundID sound, bool loop_stream);
+    SourceInstance(Source& parent, SoundID sound, AudioRepeat loop_stream);
     ~SourceInstance();
 
     void start();
@@ -118,7 +125,7 @@ public:
     Source(Stage* stage, SoundDriver *driver);
     virtual ~Source();
 
-    void play_sound(SoundID sound, bool loop=false);
+    void play_sound(SoundID sound, AudioRepeat repeat=AUDIO_REPEAT_NONE);
     int32_t playing_sound_count() const;
 
     void update_source(float dt);

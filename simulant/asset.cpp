@@ -22,8 +22,35 @@
 
 namespace smlt {
 
+Asset::Asset(AssetManager* manager):
+    manager_(manager),
+    created_(std::chrono::system_clock::now()) {
+}
+
+int Asset::age() const {
+    return std::chrono::duration_cast<std::chrono::seconds>(
+                created_ - std::chrono::system_clock::now()
+    ).count();
+}
+
 void Asset::set_garbage_collection_method(GarbageCollectMethod method) {
     manager_->set_garbage_collection_method(this, method);
+}
+
+Asset::Asset(const Asset& rhs):
+    manager_(rhs.manager_),
+    created_(std::chrono::system_clock::now()),
+    data_(rhs.data_) {
+}
+
+Asset& Asset::operator=(const Asset& rhs) {
+    if(&rhs == this) return *this;
+
+    // We intentionally don't copy the created timestamp
+    manager_ = rhs.manager_;
+    data_ = rhs.data_;
+
+    return *this;
 }
 
 

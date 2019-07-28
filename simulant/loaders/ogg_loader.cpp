@@ -57,9 +57,18 @@ int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, Audi
     int result = 0;
 
     while(size < self->buffer_size()) {
-        result = stb_vorbis_get_samples_short_interleaved(stream->get(), self->channels(), &pcm[0] + size, self->buffer_size() - size);
+        // 'result' is the total number of samples per channel
+        result = stb_vorbis_get_samples_short_interleaved(
+            stream->get(),
+            self->channels(),
+            &pcm[0] + (size / 2),  // Size is in bytes, we need shorts
+            self->buffer_size() - size
+        );
+
         if(result > 0)  {
-            size += result * self->channels();
+            // samples-per-channel * channels * size of each sample
+            // so this is the total bytes we just read
+            size += result * self->channels() * sizeof(int16_t);
         } else {
             break;
         }
@@ -69,11 +78,11 @@ int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, Audi
         return 0;
     }
 
-    self->_driver()->upload_buffer_data(buffer, self->format(), &pcm[0], size * sizeof(int16_t), self->sample_rate());
+    self->_driver()->upload_buffer_data(buffer, self->format(), (uint8_t*) &pcm[0], size * sizeof(int16_t), self->sample_rate());
     return size;
 }
 
-void init_source(Sound* self, SourceInstance& source) {
+static void init_source(Sound* self, SourceInstance& source) {
     /*
      *  This is either smart or crazy and I haven't worked out which yet...
      *

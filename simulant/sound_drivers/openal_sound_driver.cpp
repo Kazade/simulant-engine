@@ -79,7 +79,7 @@ std::vector<AudioBufferID> OpenALSoundDriver::unqueue_buffers_from_source(AudioS
     return buffers;
 }
 
-void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, int16_t *data, uint32_t size, uint32_t frequency) {
+void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) {
     ALenum al_format;
 
     switch(format) {
@@ -91,7 +91,7 @@ void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat
         throw std::runtime_error("Invalid format");
     }
 
-    ALCheck(alBufferData, buffer, al_format, &data[0], size * sizeof(int16_t), frequency);
+    ALCheck(alBufferData, buffer, al_format, &data[0], bytes, frequency);
 }
 
 AudioSourceState OpenALSoundDriver::source_state(AudioSourceID source) {

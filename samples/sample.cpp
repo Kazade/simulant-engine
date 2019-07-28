@@ -36,11 +36,17 @@ public:
 
         // Add a fly controller to the camera for user input
         camera_->new_behaviour<behaviours::Fly>(window);
+
+        // Load a zombie sound and play it
+        sound_ = stage_->assets->new_sound_from_file("sample_data/zombie.wav");
+        actor->play_sound(sound_, AUDIO_REPEAT_FOREVER);
     }
 
 private:
     CameraPtr camera_;
     StagePtr stage_;
+
+    SoundID sound_;
 };
 
 class Sample: public smlt::Application {

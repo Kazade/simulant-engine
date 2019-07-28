@@ -39,8 +39,21 @@ enum AudioDataFormat {
     AUDIO_DATA_FORMAT_MONO8,
     AUDIO_DATA_FORMAT_MONO16,
     AUDIO_DATA_FORMAT_STEREO8,
-    AUDIO_DATA_FORMAT_STEREO16
+    AUDIO_DATA_FORMAT_STEREO16,
+
+    // These formats aren't supported, but are set
+    // when loading files before down conversion
+    AUDIO_DATA_FORMAT_MONO24,
+    AUDIO_DATA_FORMAT_STEREO24
 };
+
+constexpr uint32_t audio_data_format_byte_size(AudioDataFormat format) {
+    return (format == AUDIO_DATA_FORMAT_MONO8) ? 1 :
+           (format == AUDIO_DATA_FORMAT_MONO16) ? 2 :
+           (format == AUDIO_DATA_FORMAT_STEREO8) ? 2 :
+           (format == AUDIO_DATA_FORMAT_STEREO16) ? 4 :
+           (format == AUDIO_DATA_FORMAT_MONO24) ? 3 : 6;
+}
 
 
 class Window;
@@ -73,7 +86,7 @@ public:
 
     virtual void queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID>& buffers) = 0;
     virtual std::vector<AudioBufferID> unqueue_buffers_from_source(AudioSourceID source, uint32_t count) = 0;
-    virtual void upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, int16_t* data, uint32_t size, uint32_t frequency) = 0;
+    virtual void upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) = 0;
 
     virtual AudioSourceState source_state(AudioSourceID source) = 0;
     virtual int32_t source_buffers_processed_count(AudioSourceID source) const = 0;
