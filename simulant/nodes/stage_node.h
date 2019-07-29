@@ -17,6 +17,7 @@ namespace smlt {
 class RenderableFactory;
 
 typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
+typedef sig::signal<void ()> DestroyedSignal;
 
 /* Used for multiple levels of detail when rendering stage nodes */
 
@@ -43,6 +44,7 @@ class StageNode:
 
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
+    DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
 
 public:
     unicode to_unicode() const override {

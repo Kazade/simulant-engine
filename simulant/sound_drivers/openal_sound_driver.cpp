@@ -1,5 +1,6 @@
 #include <stdexcept>
 
+#include "../math/quaternion.h"
 #include "openal_sound_driver.h"
 #include "../logging.h"
 #include "al_error.h"
@@ -111,6 +112,29 @@ int32_t OpenALSoundDriver::source_buffers_processed_count(AudioSourceID source) 
     int32_t processed = 0;
     ALCheck(alGetSourcei, (ALuint) source, AL_BUFFERS_PROCESSED, (ALint*) &processed);
     return processed;
+}
+
+void OpenALSoundDriver::set_source_as_ambient(AudioSourceID id) {
+    ALCheck(alSourcei, id, AL_SOURCE_RELATIVE, AL_TRUE);
+    ALCheck(alSource3f, id, AL_POSITION, 0, 0, 0);
+}
+
+void OpenALSoundDriver::set_listener_properties(const Vec3& position, const Quaternion& orientation, const Vec3& velocity) {
+    auto forward = orientation.forward();
+    auto up = orientation.up();
+    ALfloat ori[] = { forward.x, forward.y, forward.z, up.x, up.y, up.z };
+    ALCheck(alListener3f, AL_POSITION, position.x, position.y, position.z);
+    ALCheck(alListener3f, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+    ALCheck(alListenerfv, AL_ORIENTATION, ori);
+}
+
+void OpenALSoundDriver::set_source_properties(AudioSourceID id, const Vec3& position, const Quaternion& orientation, const Vec3& velocity) {
+    auto forward = orientation.forward();
+    auto up = orientation.up();
+    ALfloat ori[] = { forward.x, forward.y, forward.z, up.x, up.y, up.z };
+    ALCheck(alSource3f, id, AL_POSITION, position.x, position.y, position.z);
+    ALCheck(alSource3f, id, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+    ALCheck(alSourcefv, id, AL_ORIENTATION, ori);
 }
 
 }

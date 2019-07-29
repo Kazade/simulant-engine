@@ -23,6 +23,9 @@ void SpatialHashPartitioner::stage_add_actor(ActorID obj) {
     write_lock<shared_mutex> lock(lock_);
 
     auto actor = stage->actor(obj);
+    if(!actor) {
+        return;
+    }
 
     auto partitioner_entry = std::make_shared<PartitionerEntry>(obj);
     hash_->insert_object_for_box(actor->transformed_aabb(), partitioner_entry.get());
@@ -60,6 +63,10 @@ void SpatialHashPartitioner::stage_add_geom(GeomID geom_id) {
 
     auto geom = stage->geom(geom_id);
 
+    if(!geom) {
+        return;
+    }
+
     auto partitioner_entry = std::make_shared<PartitionerEntry>(geom_id);
     hash_->insert_object_for_box(geom->transformed_aabb(), partitioner_entry.get());
     geom_entries_.insert(std::make_pair(geom_id, partitioner_entry));
@@ -79,6 +86,10 @@ void SpatialHashPartitioner::stage_add_light(LightID obj) {
     write_lock<shared_mutex> lock(lock_);
 
     auto light = stage->light(obj);
+
+    if(!light) {
+        return;
+    }
 
     if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
         // Directional lights are always visible, no need to add them to the hash

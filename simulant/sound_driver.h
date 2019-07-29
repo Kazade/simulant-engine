@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "generic/property.h"
+#include "math/vec3.h"
 
 namespace smlt {
 
@@ -93,6 +94,12 @@ public:
 
     Property<SoundDriver, Window> window = {this, &SoundDriver::window_};
 
+    /* When called this should set the source to not be affected by distance
+     * this is used when playing background music etc. (i.e. the Window is the source) */
+    virtual void set_source_as_ambient(AudioSourceID id) = 0;
+
+    virtual void set_listener_properties(const Vec3& position, const Quaternion& rotation, const Vec3& velocity) = 0;
+    virtual void set_source_properties(AudioSourceID id, const Vec3& position, const Quaternion& rotation, const Vec3& velocity) = 0;
 private:
     Window* window_ = nullptr;
 };
