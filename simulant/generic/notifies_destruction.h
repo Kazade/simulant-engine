@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../deps/kazsignal/kazsignal.h"
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 
 namespace smlt {
 

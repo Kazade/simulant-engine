@@ -20,7 +20,7 @@
 #define SIMULANT_GL_ERROR_H
 
 #include <string>
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 #include "gl_thread_check.h"
 
 void check_and_log_error(const char* function_name);

@@ -20,7 +20,7 @@
 #include "ogg_loader.h"
 #include "stb_vorbis.h"
 
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 #include "../sound.h"
 
 namespace smlt {

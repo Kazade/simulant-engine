@@ -1,5 +1,5 @@
 #include "memory.h"
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 
 #ifdef _arch_dreamcast
 #include <malloc.h>

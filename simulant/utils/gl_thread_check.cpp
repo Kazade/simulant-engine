@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 #include "gl_thread_check.h"
 
 std::shared_ptr<GLThreadCheck> GL_thread;

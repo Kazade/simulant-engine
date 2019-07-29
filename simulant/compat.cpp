@@ -1,15 +1,13 @@
-#include <string>
-
-/*
- * GCC 4.7.3 didn't ship implementations of to_string, but did include it in some headers.
- * This file supplies some basic implementations using sstream functions
- */
-#ifndef __clang__
-#if (__GNUC__ == 4 && __GNUC_MINOR__ <= 7)
-
-/* GCC 4.7 doesn't define std::to_string... for some reason, so we just hack around it here */
 
 #include <cstdio>
+#include "compat.h"
+
+
+#ifndef __clang__
+// FIXME: these version checks may not be correct, I'm not sure
+// which version improved the define checking
+#if (__GNUC__ == 4 || __GNUC__ == 5 || __GNUC__ == 6 || __GNUC__ == 7)
+#ifndef _GLIBCXX_USE_C99_STDIO
 
 namespace std {
 
@@ -46,5 +44,7 @@ std::string to_string(double value) {
 
 }
 
+
+#endif
 #endif
 #endif

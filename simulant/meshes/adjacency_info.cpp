@@ -1,4 +1,4 @@
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 
 #include "adjacency_info.h"
 

@@ -12,14 +12,14 @@
 #include "../../utils/gl_error.h"
 #include "../batching/renderable.h"
 
-#include "../../deps/kazlog/kazlog.h"
+#include "../../logging.h"
 
 #define __LOGGER__ "/smlt/vbo"
 
-#define L_DEBUG_VBO(txt) kazlog::get_logger(__LOGGER__)->debug(txt, __FILE__, __LINE__)
-#define L_INFO_VBO(txt) kazlog::get_logger(__LOGGER__)->info(txt, __FILE__, __LINE__)
-#define L_WARN_VBO(txt) kazlog::get_logger(__LOGGER__)->warn(txt, __FILE__, __LINE__)
-#define L_ERROR_VBO(txt) kazlog::get_logger(__LOGGER__)->error(txt, __FILE__, __LINE__)
+#define L_DEBUG_VBO(txt) smlt::get_logger(__LOGGER__)->debug(txt, __FILE__, __LINE__)
+#define L_INFO_VBO(txt) smlt::get_logger(__LOGGER__)->info(txt, __FILE__, __LINE__)
+#define L_WARN_VBO(txt) smlt::get_logger(__LOGGER__)->warn(txt, __FILE__, __LINE__)
+#define L_ERROR_VBO(txt) smlt::get_logger(__LOGGER__)->error(txt, __FILE__, __LINE__)
 
 namespace smlt {
 

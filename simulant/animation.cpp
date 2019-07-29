@@ -19,7 +19,7 @@
 
 #include <cassert>
 #include "animation.h"
-#include "deps/kazlog/kazlog.h"
+#include "logging.h"
 
 namespace smlt {
 

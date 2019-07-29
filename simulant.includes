@@ -212,3 +212,4 @@ deps/libAL
 deps/libAL/samples/helicopter
 deps/libAL/samples
 deps/libAL/samples/streaming
+simulant/compat

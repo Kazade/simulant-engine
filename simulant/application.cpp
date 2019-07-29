@@ -66,8 +66,8 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.log_level = LOG_LEVEL_DEBUG;
     }
 
-    kazlog::get_logger("/")->add_handler(kazlog::Handler::ptr(new kazlog::StdIOHandler));
-    kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) config_copy.log_level);
+    smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
+    smlt::get_logger("/")->set_level(config_copy.log_level);
 
     L_DEBUG("Constructing the window");
 

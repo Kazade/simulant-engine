@@ -18,7 +18,7 @@
 //
 
 #include "material_script.h"
-#include "../deps/kazlog/kazlog.h"
+#include "../logging.h"
 #include "../types.h"
 #include "../material.h"
 #include "../shortcuts.h"

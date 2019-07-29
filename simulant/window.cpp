@@ -308,8 +308,8 @@ void Window::unregister_panel(uint8_t function_key) {
     panels_.erase(function_key);
 }
 
-void Window::set_logging_level(LoggingLevel level) {
-    kazlog::get_logger("/")->set_level((kazlog::LOG_LEVEL) level);
+void Window::set_logging_level(LogLevel level) {
+    smlt::get_logger("/")->set_level(level);
 }
 
 void Window::_update_thunk(float dt) {
