@@ -291,8 +291,10 @@ void Actor::_get_renderables(RenderableFactory* factory, CameraPtr camera, Detai
         new_renderable.render_priority = render_priority();
         new_renderable.is_visible = is_visible();
 
+        auto vdata = (has_animated_mesh()) ? interpolated_vertex_data_.get() : mesh->vertex_data.get();
+
         new_renderable.arrangement = submesh->arrangement();
-        new_renderable.vertex_data = submesh->vertex_data.get();
+        new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();
         new_renderable.index_element_count = new_renderable.index_data->count();
         new_renderable.material_id = submesh->material_id(); // FIXME: Override?
