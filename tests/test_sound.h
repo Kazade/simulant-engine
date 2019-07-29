@@ -25,6 +25,29 @@ public:
         window->delete_stage(stage_->id());
     }
 
+    void test_audio_listener() {
+        assert_false(window->has_explicit_audio_listener());
+        assert_is_null(window->audio_listener());
+
+        window->render(stage_, camera_);
+
+        // Make the first camera of the first pipeline the audio listener
+        assert_equal(window->audio_listener(), camera_);
+        assert_false(window->has_explicit_audio_listener());
+
+        auto actor = stage_->new_actor();
+        window->set_audio_listener(actor);
+
+        assert_equal(window->audio_listener(), actor);
+        assert_true(window->has_explicit_audio_listener());
+
+        stage_->delete_actor(actor);
+        window->run_frame(); // actually destroy
+
+        assert_equal(window->audio_listener(), camera_);
+        assert_false(window->has_explicit_audio_listener());
+    }
+
     void test_2d_sound_output() {
         smlt::SoundID sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
 

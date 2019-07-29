@@ -36,6 +36,7 @@
 
 namespace smlt {
 
+class StageNode;
 class Source;
 class SourceInstance;
 
@@ -92,6 +93,11 @@ enum AudioRepeat {
     AUDIO_REPEAT_FOREVER
 };
 
+enum DistanceModel {
+    DISTANCE_MODEL_POSITIONAL,
+    DISTANCE_MODEL_AMBIENT
+};
+
 class SourceInstance:
     public RefCounted<SourceInstance> {
 
@@ -106,8 +112,11 @@ private:
     AudioRepeat loop_stream_;
     bool is_dead_;
 
+    /* This is used to calculate the velocity */
+    smlt::Vec3 previous_position_;
+    bool first_update_ = true;
 public:
-    SourceInstance(Source& parent, SoundID sound, AudioRepeat loop_stream);
+    SourceInstance(Source& parent, SoundID sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     ~SourceInstance();
 
     void start();
@@ -138,6 +147,7 @@ private:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
     SoundDriver* driver_ = nullptr;
+    StageNode* node_ = nullptr;
 
     std::list<SourceInstance::ptr> instances_;
     sig::signal<void ()> signal_stream_finished_;

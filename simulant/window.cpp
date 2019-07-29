@@ -216,6 +216,32 @@ void Window::_cleanup() {
     GLThreadCheck::cleanup();
 }
 
+StageNode* Window::audio_listener()  {
+    if(audio_listener_) {
+        return audio_listener_;
+    } else {
+        // Return the first camera we're going to render with
+        auto active = render_sequence_->active_pipelines();
+        if(!active.empty()) {
+            auto p = pipeline(active[0]);
+            return stage(p->stage_id())->camera(p->camera_id());
+        }
+
+        return nullptr;
+    }
+}
+
+void Window::set_audio_listener(StageNode* node) {
+    audio_listener_ = node;
+    audio_listener_->signal_destroyed().connect([this]() {
+        audio_listener_ = nullptr;
+    });
+}
+
+bool Window::has_explicit_audio_listener() const {
+    return audio_listener_ != nullptr;
+}
+
 bool Window::_init() {
     GLThreadCheck::init();
 
@@ -427,6 +453,15 @@ bool Window::run_frame() {
     check_events(); // Check for any window events
 
     profiler.checkpoint("event_poll");
+
+    auto listener = audio_listener();
+    if(listener) {
+        sound_driver_->set_listener_properties(
+            listener->absolute_position(),
+            listener->absolute_rotation(),
+            smlt::Vec3() // FIXME: Where do we get velocity?
+        );
+    }
 
     Source::update_source(dt); //Update any playing sounds
     input_state_->update(dt); // Update input devices

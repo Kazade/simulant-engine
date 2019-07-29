@@ -10,6 +10,8 @@ StageNode::StageNode(Stage *stage):
 }
 
 void StageNode::cleanup() {
+    signal_destroyed_(); // Tell everyone we're going
+
     remove_from_parent(); // Make sure we're detached from the scene
 
     // Go through the subnodes and ask each for destruction in-turn

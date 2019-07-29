@@ -32,6 +32,9 @@ public:
     AudioSourceState source_state(AudioSourceID source) override;
     int32_t source_buffers_processed_count(AudioSourceID source) const override;
 
+    void set_source_as_ambient(AudioSourceID id) override {}
+    void set_listener_properties(const Vec3& position, const Quaternion& orientation, const Vec3& velocity) override {}
+    void set_source_properties(AudioSourceID id, const Vec3& position, const Quaternion& rotation, const Vec3& velocity) override {}
 private:
     AudioSourceID source_counter_ = 0;
     AudioBufferID buffer_counter_ = 0;

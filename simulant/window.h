@@ -235,6 +235,26 @@ public:
     bool _init();
     void _cleanup();
 
+    /* Audio listener stuff */
+
+    /* Returns the current audio listener, or NULL if there
+     * is no explicit audio listener set, and there are no current
+     * render pipelines.
+     *
+     * Behaviour is:
+     *
+     *  - Explictly set listener
+     *  - Or, First camera of first render pipeline
+     *  - Or, NULL
+     */
+    StageNode* audio_listener();
+
+    /* Sets a stage node explicitly as the audio listener */
+    void set_audio_listener(StageNode* node);
+
+    /* Returns true if an explicit audio listener is being used */
+    bool has_explicit_audio_listener() const;
+
 protected:    
     std::shared_ptr<Renderer> renderer_;
 
@@ -358,6 +378,7 @@ private:
     virtual bool initialize_screen(Screen* screen) { return true; }
     virtual void shutdown_screen(Screen* screen) {}
 
+    StageNode* audio_listener_ = nullptr;
 protected:
     InputState* _input_state() const { return input_state_.get(); }
 

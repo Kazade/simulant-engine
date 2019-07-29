@@ -22,6 +22,7 @@
 #include "stage.h"
 #include "sound.h"
 #include "sound_driver.h"
+#include "nodes/stage_node.h"
 
 namespace smlt {
 
@@ -29,7 +30,6 @@ Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver)
     generic::Identifiable<SoundID>(id),
     Asset(asset_manager),
     driver_(sound_driver) {
-
 
 }
 
@@ -39,7 +39,7 @@ void Sound::init_source(SourceInstance& source) {
     init_source_(source);
 }
 
-SourceInstance::SourceInstance(Source &parent, SoundID sound, AudioRepeat loop_stream):
+SourceInstance::SourceInstance(Source &parent, SoundID sound, AudioRepeat loop_stream, DistanceModel model):
     parent_(parent),
     source_(0),
     buffers_{0, 0},
@@ -52,6 +52,10 @@ SourceInstance::SourceInstance(Source &parent, SoundID sound, AudioRepeat loop_s
 
     source_ = driver->generate_sources(1).back();
     buffers_ = driver->generate_buffers(2);
+
+    if(model == DISTANCE_MODEL_AMBIENT) {
+        driver->set_source_as_ambient(source_);
+    }
 }
 
 SourceInstance::~SourceInstance() {
@@ -90,6 +94,27 @@ bool SourceInstance::is_playing() const {
 void SourceInstance::update(float dt) {
     SoundDriver* driver = parent_._sound_driver();
 
+    // Update the position of the source if this is attached to a stagenode
+    if(parent_.node_) {
+        auto pos = parent_.node_->absolute_position();
+        driver->set_source_properties(
+            source_,
+            pos,
+            parent_.node_->absolute_rotation(),
+            // Use the last position to calculate the velocity, this is a bit of
+            // a hack... FIXME maybe..
+            // FIXME: This is value is "scaled" to assume the velocity over a second
+            // this isn't accurate as update isn't called with a fixed timestep
+            (first_update_) ? smlt::Vec3() : (pos - previous_position_) * (1.0 / dt)
+        );
+
+        previous_position_ = pos;
+
+        // We don't apply velocity on the first update otherwise things might go
+        // funny
+        first_update_ = false;
+    }
+
     int32_t processed = driver->source_buffers_processed_count(source_);
 
     while(processed--) {
@@ -124,7 +149,6 @@ void SourceInstance::update(float dt) {
 Source::Source(Window *window):
     stage_(nullptr),
     window_(window) {
-
 }
 
 Source::Source(Stage *stage, SoundDriver* driver):
@@ -132,7 +156,9 @@ Source::Source(Stage *stage, SoundDriver* driver):
     window_(nullptr),
     driver_(driver) {
 
-
+    // Store whether or not this source is a stagenode
+    // if it is, we'll update the position etc.
+    node_ = dynamic_cast<StageNode*>(this);
 }
 
 Source::~Source() {
@@ -145,7 +171,13 @@ void Source::play_sound(SoundID sound, AudioRepeat repeat) {
         return;
     }
 
-    SourceInstance::ptr new_source = SourceInstance::create(*this, sound, repeat);
+    // If this is the window, we create an ambient source
+    SourceInstance::ptr new_source = SourceInstance::create(
+        *this,
+        sound,
+        repeat,
+        (stage_) ? DISTANCE_MODEL_POSITIONAL : DISTANCE_MODEL_AMBIENT
+    );
 
     /* There's surely a better way of determining which asset manager to use here */
     if(stage_) {
