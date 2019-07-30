@@ -70,7 +70,7 @@ void Sprite::clean_up() {
     StageNode::clean_up();
 }
 
-void Sprite::ask_owner_for_destruction() {
+void Sprite::destroy() {
     manager_->destroy_sprite(id());
 }
 

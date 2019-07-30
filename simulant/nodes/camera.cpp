@@ -20,7 +20,7 @@ Camera::~Camera() {
 
 }
 
-void Camera::ask_owner_for_destruction() {
+void Camera::destroy() {
     stage->destroy_camera(id());
 }
 

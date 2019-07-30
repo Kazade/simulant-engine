@@ -99,7 +99,7 @@ public:
         return bounds_;
     }
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
     void update(float step) override {}

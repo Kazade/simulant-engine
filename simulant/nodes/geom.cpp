@@ -56,7 +56,7 @@ const AABB &Geom::aabb() const {
     return aabb_;
 }
 
-void Geom::ask_owner_for_destruction() {
+void Geom::destroy() {
     stage->destroy_geom(id());
 }
 

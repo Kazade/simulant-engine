@@ -136,7 +136,7 @@ public:
         throw std::logic_error("You cannot move the stage");
     }
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     Property<Stage, Debug> debug = {this, &Stage::debug_};
     Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};

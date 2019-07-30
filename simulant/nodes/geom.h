@@ -52,7 +52,7 @@ public:
 
     const AABB& aabb() const override;
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     RenderPriority render_priority() const { return render_priority_; }
 

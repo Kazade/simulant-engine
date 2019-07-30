@@ -194,7 +194,7 @@ MeshID Actor::mesh_id(DetailLevel detail_level) const {
     return (mesh) ? mesh->id() : MeshID(0);
 }
 
-void Actor::ask_owner_for_destruction() {
+void Actor::destroy() {
     stage->destroy_actor(id());
 }
 

@@ -45,9 +45,9 @@ const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
-    CameraManager(this),
     ContainerNode(this),
     generic::Identifiable<StageID>(id),
+    CameraManager(this),
     ui_(new ui::UIManager(this)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
@@ -83,7 +83,7 @@ void Stage::clean_up() {
     //Recurse through the tree, destroying all children
     this->each_descendent_lf([](uint32_t, TreeNode* node) {
         StageNode* stage_node = static_cast<StageNode*>(node);
-        stage_node->ask_owner_for_destruction();
+        stage_node->destroy();
     });
 
     light_manager_->clear();
@@ -92,7 +92,7 @@ void Stage::clean_up() {
     CameraManager::destroy_all_cameras();
 }
 
-void Stage::ask_owner_for_destruction() {
+void Stage::destroy() {
     window->destroy_stage(id());
 }
 

@@ -192,7 +192,7 @@ public:
         return smlt::optional<T>(smlt::any_cast<T>(properties_.at(name)));
     }
 
-    void ask_owner_for_destruction();
+    void destroy();
     const AABB& aabb() const;
 
     const unicode& text() const { return text_; }

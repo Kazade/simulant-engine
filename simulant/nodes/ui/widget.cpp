@@ -133,7 +133,7 @@ void Widget::set_property(const std::string &name, float value) {
     properties_[name] = value;
 }
 
-void Widget::ask_owner_for_destruction() {
+void Widget::destroy() {
     owner_->destroy_widget(id());
 }
 

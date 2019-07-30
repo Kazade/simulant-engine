@@ -66,7 +66,7 @@ public:
         const unicode& back
     );
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     const AABB& aabb() const override;
 

@@ -20,7 +20,7 @@ void StageNode::clean_up() {
         assert(stage_node);
 
         stage_node->detach();
-        stage_node->ask_owner_for_destruction();        
+        stage_node->destroy();        
     });
 
     detach(); // Make sure we're not connected to anything

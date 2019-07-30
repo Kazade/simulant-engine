@@ -64,7 +64,7 @@ public:
     void set_resize_style(BackgroundResizeStyle style);
 
     //Ownable interface
-    void ask_owner_for_destruction();
+    void destroy();
 
     Property<Background, Sprite> sprite = {this, &Background::sprite_};
     Property<Background, Stage> stage = {this, &Background::stage_};

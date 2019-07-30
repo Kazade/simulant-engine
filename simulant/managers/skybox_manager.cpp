@@ -43,7 +43,7 @@ bool Skybox::init() {
 void Skybox::clean_up() {
 }
 
-void Skybox::ask_owner_for_destruction() {
+void Skybox::destroy() {
     manager_->destroy_skybox(id());
 }
 

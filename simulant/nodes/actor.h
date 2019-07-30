@@ -63,7 +63,7 @@ public:
 
     void set_mesh(MeshID mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     typedef sig::signal<void (ActorID)> MeshChangedCallback;
 

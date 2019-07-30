@@ -127,7 +127,7 @@ void Background::set_resize_style(BackgroundResizeStyle style) {
     style_ = style;
 }
 
-void Background::ask_owner_for_destruction() {
+void Background::destroy() {
     manager_->destroy_background(id());
 }
 

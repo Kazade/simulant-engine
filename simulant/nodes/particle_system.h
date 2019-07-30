@@ -58,7 +58,7 @@ public:
     particles::EmitterPtr push_emitter();
     void pop_emitter();
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     void set_material_id(MaterialID mat_id);
     const MaterialID material_id() const { return material_id_; }
