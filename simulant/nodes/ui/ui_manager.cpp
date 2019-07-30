@@ -98,7 +98,7 @@ ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float v
     return pg;
 }
 
-void UIManager::delete_widget(WidgetID widget_id) {
+void UIManager::destroy_widget(WidgetID widget_id) {
     if(!widget_id) {
         return;
     }

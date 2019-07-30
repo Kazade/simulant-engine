@@ -22,7 +22,7 @@ public:
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->delete_stage(stage_->id());
+        window->destroy_stage(stage_->id());
     }
 
     void test_audio_listener() {
@@ -41,7 +41,7 @@ public:
         assert_equal(window->audio_listener(), actor);
         assert_true(window->has_explicit_audio_listener());
 
-        stage_->delete_actor(actor);
+        stage_->destroy_actor(actor);
         window->run_frame(); // actually destroy
 
         assert_equal(window->audio_listener(), camera_);

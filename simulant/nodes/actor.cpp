@@ -194,8 +194,8 @@ MeshID Actor::mesh_id(DetailLevel detail_level) const {
     return (mesh) ? mesh->id() : MeshID(0);
 }
 
-void Actor::ask_owner_for_destruction() {
-    stage->delete_actor(id());
+void Actor::destroy() {
+    stage->destroy_actor(id());
 }
 
 SubActor::SubActor(const Actor &parent, std::shared_ptr<SubMesh> submesh):

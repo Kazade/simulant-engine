@@ -17,7 +17,7 @@ public:
     TimeKeeper(const float fixed_step);
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
 
     void update();
 

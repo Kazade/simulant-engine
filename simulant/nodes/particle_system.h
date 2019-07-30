@@ -58,7 +58,7 @@ public:
     particles::EmitterPtr push_emitter();
     void pop_emitter();
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     void set_material_id(MaterialID mat_id);
     const MaterialID material_id() const { return material_id_; }
@@ -80,8 +80,8 @@ public:
         return index_data_;
     }
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 
     template<typename M, typename... Args>

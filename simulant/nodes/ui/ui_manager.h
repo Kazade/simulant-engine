@@ -51,7 +51,7 @@ public:
 
     Widget* widget(WidgetID widget_id);
 
-    void delete_widget(WidgetID widget);
+    void destroy_widget(WidgetID widget);
 
     Stage* stage() const { return stage_; }
 

@@ -76,7 +76,7 @@ public:
     Vec3 angular_velocity() const;
 
     using impl::Body::init;
-    using impl::Body::cleanup;
+    using impl::Body::clean_up;
 
     Vec3 position() const;
     Quaternion rotation() const;

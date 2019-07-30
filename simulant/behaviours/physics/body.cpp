@@ -37,7 +37,7 @@ bool Body::init() {
     return true;
 }
 
-void Body::cleanup() {
+void Body::clean_up() {
     for(auto listener: listeners_) {
         unregister_collision_listener(listener);
     }

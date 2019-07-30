@@ -59,7 +59,7 @@ void Loading::load() {
 void Loading::unload() {
     //Clean up
     pipeline_->deactivate();
-    window->delete_stage(stage_->id());
+    window->destroy_stage(stage_->id());
 }
 
 void Loading::activate() {

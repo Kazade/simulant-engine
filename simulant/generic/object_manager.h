@@ -180,7 +180,7 @@ protected:
     > aliases_;
 
     sig::signal<void (ObjectType&, IDType)> signal_post_create_;
-    sig::signal<void (ObjectType&, IDType)> signal_pre_delete_;
+    sig::signal<void (ObjectType&, IDType)> signal_pre_destroy_;
 
     virtual void on_make(IDType id) {}
     virtual void on_get(IDType id) {}

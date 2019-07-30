@@ -62,7 +62,7 @@ StagePtr StageManager::stage(StageID s) {
     return stage_manager_->get(s);
 }
 
-StagePtr StageManager::delete_stage(StageID s) {
+StagePtr StageManager::destroy_stage(StageID s) {
     stage_manager_->destroy(s);
     signal_stage_removed_(s);
     return nullptr;
@@ -133,7 +133,7 @@ bool StageManager::has_stage(StageID stage_id) const {
     return stage_manager_->contains(stage_id);
 }
 
-void StageManager::delete_all_stages() {
+void StageManager::destroy_all_stages() {
     stage_manager_->destroy_all();
 }
 

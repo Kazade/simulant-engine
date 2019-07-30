@@ -34,7 +34,7 @@ class RigidBodySimulation:
 public:
     RigidBodySimulation(TimeKeeper* time_keeper);
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
 
     void fixed_update(float step);
 

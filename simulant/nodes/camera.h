@@ -20,7 +20,7 @@ public:
     Camera(CameraID camera_id, Stage* stage);
     ~Camera();
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
     const AABB& aabb() const override {
@@ -31,8 +31,8 @@ public:
         return AABB(position(), position());
     }
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 
     // Converts an OpenGL unit to window space

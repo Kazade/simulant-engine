@@ -69,8 +69,8 @@ void Splash::load() {
 void Splash::unload() {
     //Clean up
     pipeline_->deactivate();
-    window->delete_pipeline(pipeline_->id());
-    window->delete_stage(stage_->id());
+    window->destroy_pipeline(pipeline_->id());
+    window->destroy_stage(stage_->id());
 }
 
 void Splash::activate() {

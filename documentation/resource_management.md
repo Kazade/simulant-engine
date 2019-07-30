@@ -68,7 +68,7 @@ and Sounds) are reference counted. This means that you don't need to delete obje
 manually, other managers do not free objects automatically and you are required
 to delete the objects with a delete call:
 
-    stage->delete_actor(actor_id);
+    stage->destroy_actor(actor_id);
     
 StageNodes like Actors will not be released immediately. They will be destroyed after the idle
 tasks have run, but before the render queue is constructed.

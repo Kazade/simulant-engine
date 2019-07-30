@@ -19,7 +19,7 @@ public:
     MyObject(MyObjectID id): id_(id) {}
 
     bool init() { return true; }
-    void cleanup() {}
+    void clean_up() {}
     void _bind_id_pointer(MyObject*) {}
 };
 
@@ -61,7 +61,7 @@ public:
         auto stage = window->new_stage();
 
         auto actor = stage->new_actor()->id();
-        stage->delete_actor(actor);
+        stage->destroy_actor(actor);
 
         // Should be different, the original actor is still lingering
         assert_not_equal(stage->new_actor()->id(), actor);
@@ -76,7 +76,7 @@ public:
         auto stage = window->new_stage();
 
         auto light = stage->new_light_as_directional()->id();
-        stage->delete_light(light);
+        stage->destroy_light(light);
 
         // Should be different, the original light is still lingering
         assert_not_equal(stage->new_light_as_directional()->id(), light);
@@ -91,7 +91,7 @@ public:
         auto stage = window->new_stage();
 
         auto particle_system = stage->new_particle_system()->id();
-        stage->delete_particle_system(particle_system);
+        stage->destroy_particle_system(particle_system);
 
         // Should be different, the original light is still lingering
         assert_not_equal(stage->new_particle_system()->id(), particle_system);
@@ -108,7 +108,7 @@ public:
         auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
         auto geom = stage->new_geom_with_mesh(mesh)->id();
-        stage->delete_geom(geom);
+        stage->destroy_geom(geom);
 
         // Should be different, the original light is still lingering
         assert_not_equal(stage->new_geom_with_mesh(mesh)->id(), geom);
@@ -123,7 +123,7 @@ public:
         auto stage = window->new_stage();
 
         auto camera = stage->new_camera()->id();
-        stage->delete_camera(camera);
+        stage->destroy_camera(camera);
 
         // Should be different, the original light is still lingering
         assert_not_equal(stage->new_camera()->id(), camera);
@@ -138,7 +138,7 @@ public:
         auto stage = window->new_stage();
         auto pipeline = window->render(stage, stage->new_camera()).id();
 
-        window->delete_pipeline(pipeline);
+        window->destroy_pipeline(pipeline);
         assert_true(window->has_pipeline(pipeline));
 
         window->run_frame();
@@ -148,7 +148,7 @@ public:
     void test_stages_are_freed() {
         auto stage = window->new_stage()->id();
 
-        window->delete_stage(stage);
+        window->destroy_stage(stage);
 
         // Should be different, the original light is still lingering
         assert_not_equal(window->new_stage()->id(), stage);
@@ -175,7 +175,7 @@ public:
         auto stage = window->new_stage();
 
         auto sprite = stage->sprites->new_sprite();
-        stage->sprites->delete_sprite(sprite);
+        stage->sprites->destroy_sprite(sprite);
 
         // Should be different, the original light is still lingering
         assert_not_equal(stage->sprites->new_sprite()->id(), sprite);

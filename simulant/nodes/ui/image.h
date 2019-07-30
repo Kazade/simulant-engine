@@ -18,7 +18,7 @@ class Image:
 
 public:
     using Widget::init; // Pull in init to satisfy Managed<Image>
-    using Widget::cleanup;
+    using Widget::clean_up;
 
     Image(WidgetID id, UIManager* owner, UIConfig* config);
     virtual ~Image() {}

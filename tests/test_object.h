@@ -20,7 +20,7 @@ public:
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->delete_stage(stage_->id());
+        window->destroy_stage(stage_->id());
     }
 
     void test_move_forward_by() {

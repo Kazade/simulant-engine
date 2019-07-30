@@ -9,7 +9,7 @@ StageNode::StageNode(Stage *stage):
 
 }
 
-void StageNode::cleanup() {
+void StageNode::clean_up() {
     signal_destroyed_(); // Tell everyone we're going
 
     remove_from_parent(); // Make sure we're detached from the scene
@@ -20,12 +20,12 @@ void StageNode::cleanup() {
         assert(stage_node);
 
         stage_node->detach();
-        stage_node->ask_owner_for_destruction();        
+        stage_node->destroy();        
     });
 
     detach(); // Make sure we're not connected to anything
 
-    TwoPhaseConstructed::cleanup();
+    TwoPhaseConstructed::clean_up();
 }
 
 void StageNode::set_parent(CameraID id) {

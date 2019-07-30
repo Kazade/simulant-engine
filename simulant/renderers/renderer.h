@@ -96,7 +96,7 @@ private:
     virtual void on_texture_register(TextureID tex_id, TexturePtr texture) {}
 
     /*
-     * Called when a texture is destroyed, should perform any cleanup from
+     * Called when a texture is destroyed, should perform any clean_up from
      * register_texture.
      *
      * This will be called when all render groups sharing the texture are destroyed

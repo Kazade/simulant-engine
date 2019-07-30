@@ -527,7 +527,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     mesh->each_submesh([&](const std::string& name, SubMesh* submesh) {
         //Delete empty submeshes
         if(!submesh->index_data->count()) {
-            mesh->delete_submesh(name);
+            mesh->destroy_submesh(name);
             return;
         }
         submesh->index_data->done();

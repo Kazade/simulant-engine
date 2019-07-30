@@ -47,7 +47,7 @@ public:
         assert_false(window->is_pipeline_enabled(pipeline1->id()));
 
         auto pid2 = pipeline2->id();
-        window->delete_pipeline(pid2);
+        window->destroy_pipeline(pid2);
         window->run_frame();
 
         assert_false(window->has_pipeline(pid2));
@@ -74,7 +74,7 @@ public:
 
         assert_true(stage->is_being_rendered());
 
-        window->delete_pipeline(pipeline2->id());
+        window->destroy_pipeline(pipeline2->id());
 
         assert_false(stage->is_being_rendered());
 
@@ -82,7 +82,7 @@ public:
 
         assert_true(stage->is_being_rendered());
 
-        window->delete_pipeline(pipeline->id());
+        window->destroy_pipeline(pipeline->id());
 
         assert_false(stage->is_being_rendered());
     }

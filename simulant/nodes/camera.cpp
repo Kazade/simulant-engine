@@ -20,8 +20,8 @@ Camera::~Camera() {
 
 }
 
-void Camera::ask_owner_for_destruction() {
-    stage->delete_camera(id());
+void Camera::destroy() {
+    stage->destroy_camera(id());
 }
 
 void Camera::update_transformation_from_parent() {

@@ -42,7 +42,7 @@ public:
         assert_equal(vbo->used_slot_count(), 2u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 2);
 
-        stage_->assets->delete_mesh(mesh2->id());
+        stage_->assets->destroy_mesh(mesh2->id());
         mesh2.reset(); // Remove refcount
         stage_->assets->run_garbage_collection();
 
@@ -66,7 +66,7 @@ public:
         assert_equal(vbo->used_slot_count(), 2u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 2);
 
-        stage_->assets->delete_mesh(mesh2->id());
+        stage_->assets->destroy_mesh(mesh2->id());
         mesh2.reset(); // Remove refcount
         stage_->assets->run_garbage_collection();
 
@@ -97,7 +97,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), 0u); // No free slots in a dedicated one
 
-        stage_->assets->delete_mesh(mesh2->id());
+        stage_->assets->destroy_mesh(mesh2->id());
         mesh2.reset(); // Remove refcount
         stage_->assets->run_garbage_collection();
 

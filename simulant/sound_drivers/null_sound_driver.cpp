@@ -30,11 +30,11 @@ std::vector<AudioBufferID> NullSoundDriver::generate_buffers(uint32_t count) {
     return ret;
 }
 
-void NullSoundDriver::delete_buffers(const std::vector<AudioBufferID>& buffers) {
+void NullSoundDriver::destroy_buffers(const std::vector<AudioBufferID>& buffers) {
 
 }
 
-void NullSoundDriver::delete_sources(const std::vector<AudioSourceID>& sources) {
+void NullSoundDriver::destroy_sources(const std::vector<AudioSourceID>& sources) {
     for(auto& src: sources) {
         source_playing_.erase(src);
     }

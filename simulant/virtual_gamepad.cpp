@@ -96,24 +96,24 @@ void VirtualGamepad::_prepare_deletion() {
     pipeline_->deactivate();
 }
 
-void VirtualGamepad::cleanup() {
+void VirtualGamepad::clean_up() {
     L_DEBUG("Destroying virtual gamepad");
 
     // make sure we delete the buttons before we delete the gamepad
     // This will fire any release signals
     for(auto& button: buttons_) {
-        stage_->ui->delete_widget(button->id());
+        stage_->ui->destroy_widget(button->id());
     }
 
     // Remove any signal connections
     connections_.clear();
 
     if(window_.has_pipeline(pipeline_id_)) {
-        pipeline_ = window_.delete_pipeline(pipeline_id_);
+        pipeline_ = window_.destroy_pipeline(pipeline_id_);
     }
 
     if(window_.has_stage(stage_id_)) {
-        stage_ = window_.delete_stage(stage_id_);
+        stage_ = window_.destroy_stage(stage_id_);
     }
 }
 

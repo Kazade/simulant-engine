@@ -11,7 +11,7 @@ class Button:
 
 public:
     using Widget::init; // Pull in init to satisfy Managed<Button>
-    using Widget::cleanup;
+    using Widget::clean_up;
 
     Button(WidgetID id, UIManager* owner, UIConfig* config);
 };

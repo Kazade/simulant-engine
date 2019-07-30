@@ -127,7 +127,7 @@ public:
     SubMeshPtr submesh(const std::string& name);
     SubMeshPtr first_submesh() const;
 
-    void delete_submesh(const std::string& name);
+    void destroy_submesh(const std::string& name);
     void clear();
 
     void set_material_id(MaterialID material); ///< Apply material to all submeshes

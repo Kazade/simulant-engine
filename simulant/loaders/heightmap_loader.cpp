@@ -387,7 +387,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
     mesh->vertex_data->done();
 
-    mesh->asset_manager().delete_texture(tex->id()); //Finally delete the texture
+    mesh->asset_manager().destroy_texture(tex->id()); //Finally delete the texture
 }
 
 }

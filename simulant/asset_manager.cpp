@@ -340,7 +340,7 @@ MeshPtr AssetManager::new_mesh_with_alias(const std::string& alias, VertexSpecif
     try {
         mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m->id());
+        destroy_mesh(m->id());
         throw;
     }
     return m;
@@ -351,7 +351,7 @@ MeshPtr AssetManager::new_mesh_with_alias_from_file(const std::string &alias, co
     try {
         mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m->id());
+        destroy_mesh(m->id());
         throw;
     }
     return m;
@@ -362,7 +362,7 @@ MeshPtr AssetManager::new_mesh_with_alias_as_cube(const std::string& alias, floa
     try {
         mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m->id());
+        destroy_mesh(m->id());
         throw;
     }
     return m;
@@ -373,7 +373,7 @@ MeshPtr AssetManager::new_mesh_with_alias_as_sphere(const std::string &alias, fl
     try {
         mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m->id());
+        destroy_mesh(m->id());
         throw;
     }
     return m;
@@ -384,7 +384,7 @@ MeshPtr AssetManager::new_mesh_with_alias_as_rectangle(const std::string& alias,
     try {
         mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m->id());
+        destroy_mesh(m->id());
         throw;
     }
     return m;
@@ -395,7 +395,7 @@ MeshPtr AssetManager::new_mesh_with_alias_as_cylinder(const std::string &alias, 
     try {
         mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_mesh(m->id());
+        destroy_mesh(m->id());
         throw;
     }
 
@@ -406,7 +406,7 @@ MeshPtr AssetManager::get_mesh_with_alias(const std::string& alias) {
     return mesh(mesh_manager_.get_id_from_alias(alias));
 }
 
-void AssetManager::delete_mesh(MeshID m) {
+void AssetManager::destroy_mesh(MeshID m) {
     mesh_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
@@ -424,7 +424,7 @@ MaterialPtr AssetManager::new_material(GarbageCollectMethod garbage_collect) {
     return result.fetch();
 }
 
-void AssetManager::delete_material(MaterialID m) {
+void AssetManager::destroy_material(MaterialID m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
@@ -514,7 +514,7 @@ MaterialPtr AssetManager::new_material_with_alias(const std::string& alias, Garb
     try {
         material_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_material(m->id());
+        destroy_material(m->id());
         throw;
     }
     return m;
@@ -527,7 +527,7 @@ MaterialPtr AssetManager::new_material_with_alias_from_file(const std::string &a
     try {
         material_manager_.store_alias(alias, m->id());
     } catch(...) {
-        delete_material(m->id());
+        destroy_material(m->id());
         throw;
     }
     return m;
@@ -600,7 +600,7 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
     return tex;
 }
 
-void AssetManager::delete_texture(TextureID t) {
+void AssetManager::destroy_texture(TextureID t) {
     texture_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
@@ -609,7 +609,7 @@ TexturePtr AssetManager::new_texture_with_alias(const std::string& alias, Garbag
     try {
         texture_manager_.store_alias(alias, t->id());
     } catch(...) {
-        delete_texture(t->id());
+        destroy_texture(t->id());
         throw;
     }
     return t;
@@ -620,7 +620,7 @@ TexturePtr AssetManager::new_texture_with_alias_from_file(const std::string &ali
     try {
         texture_manager_.store_alias(alias, t->id());
     } catch(...) {
-        delete_texture(t->id());
+        destroy_texture(t->id());
         throw;
     }
     return t;
@@ -681,7 +681,7 @@ SoundPtr AssetManager::new_sound_with_alias(const std::string &alias, GarbageCol
     try {
         sound_manager_.store_alias(alias, s->id());
     } catch(...) {
-        delete_sound(s->id());
+        destroy_sound(s->id());
         throw;
     }
     return s;
@@ -692,7 +692,7 @@ SoundPtr AssetManager::new_sound_with_alias_from_file(const std::string& alias, 
     try {
         sound_manager_.store_alias(alias, s->id());
     } catch(...) {
-        delete_sound(s->id());
+        destroy_sound(s->id());
         throw;
     }
     return s;
@@ -726,7 +726,7 @@ bool AssetManager::has_sound(SoundID s) const {
     return sound_manager_.contains(s);
 }
 
-void AssetManager::delete_sound(SoundID t) {
+void AssetManager::destroy_sound(SoundID t) {
     sound_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
@@ -788,7 +788,7 @@ FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollect
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
-        delete_font(font_id);
+        destroy_font(font_id);
         throw;
     }
 
@@ -800,7 +800,7 @@ FontPtr AssetManager::new_font_with_alias_from_file(const std::string& alias, co
     try {
         font_manager_.store_alias(alias, fid);
     } catch(...) {
-        delete_font(fid);
+        destroy_font(fid);
         throw;
     }
     return fid;
@@ -821,7 +821,7 @@ FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_s
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
-        delete_font(font_id);
+        destroy_font(font_id);
         throw;
     }
 
@@ -833,7 +833,7 @@ FontPtr AssetManager::new_font_with_alias_from_ttf(const std::string& alias, con
     try {
         font_manager_.store_alias(alias, fid);
     } catch(...) {
-        delete_font(fid);
+        destroy_font(fid);
         throw;
     }
     return fid;
@@ -843,7 +843,7 @@ FontPtr AssetManager::get_font_with_alias(const std::string& alias) {
     return font_manager_.get_id_from_alias(alias).fetch();
 }
 
-void AssetManager::delete_font(FontID f) {
+void AssetManager::destroy_font(FontID f) {
     font_manager_.set_garbage_collection_method(f, GARBAGE_COLLECT_PERIODIC);
 }
 

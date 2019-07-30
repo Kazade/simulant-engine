@@ -265,7 +265,7 @@ bool GPUProgram::init() {
     return true;
 }
 
-void GPUProgram::cleanup()  {
+void GPUProgram::clean_up()  {
     if(GLThreadCheck::is_current() && program_object_) {        
         L_DEBUG(_F("Destroying GPU program: {0}").format(program_object_));
 

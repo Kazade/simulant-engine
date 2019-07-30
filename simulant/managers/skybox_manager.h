@@ -52,7 +52,7 @@ public:
     Skybox(SkyID id, SkyManager* manager);
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
 
     void set_size(float size) { width_ = size; }
     float size() const { return width_; }
@@ -66,7 +66,7 @@ public:
         const unicode& back
     );
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     const AABB& aabb() const override;
 
@@ -124,7 +124,7 @@ public:
     );
 
     SkyboxPtr skybox(SkyID skybox_id);
-    void delete_skybox(SkyID skybox_id);
+    void destroy_skybox(SkyID skybox_id);
 
     Property<SkyManager, Stage> stage = { this, &SkyManager::stage_ };
 private:

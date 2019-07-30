@@ -23,8 +23,8 @@ public:
     std::vector<AudioSourceID> generate_sources(uint32_t count) override;
     std::vector<AudioBufferID> generate_buffers(uint32_t count) override;
 
-    void delete_buffers(const std::vector<AudioBufferID>& buffers) override;
-    void delete_sources(const std::vector<AudioSourceID>& sources) override;
+    void destroy_buffers(const std::vector<AudioBufferID>& buffers) override;
+    void destroy_sources(const std::vector<AudioSourceID>& sources) override;
 
     void play_source(AudioSourceID source_id) override;
     void stop_source(AudioSourceID source_id) override;

@@ -111,7 +111,7 @@ public:
     virtual ~Widget();
 
     virtual bool init();
-    virtual void cleanup();
+    virtual void clean_up();
 
     void resize(float width, float height);
     void set_width(float width);
@@ -192,7 +192,7 @@ public:
         return smlt::optional<T>(smlt::any_cast<T>(properties_.at(name)));
     }
 
-    void ask_owner_for_destruction();
+    void destroy();
     const AABB& aabb() const;
 
     const unicode& text() const { return text_; }

@@ -123,8 +123,8 @@ public:
     );
 
     PipelinePtr pipeline(PipelineID pipeline);
-    void delete_pipeline(PipelineID pipeline);
-    void delete_all_pipelines();
+    void destroy_pipeline(PipelineID pipeline);
+    void destroy_all_pipelines();
     bool has_pipeline(PipelineID pipeline);
 
     void activate_pipelines(const std::vector<PipelineID>& pipelines);
@@ -160,7 +160,7 @@ private:
 
     std::set<RenderTarget*> targets_rendered_this_frame_;
 
-    sig::connection cleanup_connection_;
+    sig::connection clean_up_connection_;
 
     std::unique_ptr<PipelineManager> pipeline_manager_;
 };
