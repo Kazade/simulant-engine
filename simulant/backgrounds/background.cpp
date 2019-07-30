@@ -54,7 +54,7 @@ bool Background::init() {
     return true;
 }
 
-void Background::cleanup() {
+void Background::clean_up() {
     //Remove the pipeline and delete the stage, everything else is cleaned
     //up automatically
     manager_->window->destroy_pipeline(pipeline_->id());

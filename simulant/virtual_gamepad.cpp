@@ -96,7 +96,7 @@ void VirtualGamepad::_prepare_deletion() {
     pipeline_->deactivate();
 }
 
-void VirtualGamepad::cleanup() {
+void VirtualGamepad::clean_up() {
     L_DEBUG("Destroying virtual gamepad");
 
     // make sure we delete the buttons before we delete the gamepad

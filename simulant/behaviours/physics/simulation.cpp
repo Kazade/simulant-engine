@@ -179,7 +179,7 @@ bool RigidBodySimulation::init() {
     return true;
 }
 
-void RigidBodySimulation::cleanup() {
+void RigidBodySimulation::clean_up() {
     // Disconnect the contact listener
     scene_->SetContactListener(nullptr);
 }

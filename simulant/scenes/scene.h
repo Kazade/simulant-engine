@@ -127,7 +127,7 @@ public:
     Scene(Window* window):
         SceneBase(window) {}
 
-    void cleanup() override {
+    void clean_up() override {
         _call_unload();
     }
 };

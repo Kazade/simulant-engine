@@ -45,7 +45,7 @@ public:
     Property<SpriteManager, Stage> stage = { this, &SpriteManager::stage_ };
 private:
     Stage* stage_ = nullptr;
-    sig::connection cleanup_conn_;
+    sig::connection clean_up_conn_;
 
     std::shared_ptr<TemplatedSpriteManager> sprite_manager_;
 };

@@ -31,8 +31,8 @@ public:
         return AABB(position(), position());
     }
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 
     // Converts an OpenGL unit to window space

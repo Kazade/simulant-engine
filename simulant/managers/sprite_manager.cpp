@@ -11,13 +11,13 @@ SpriteManager::SpriteManager(Window* window, Stage* stage):
     stage_(stage),
     sprite_manager_(new TemplatedSpriteManager()) {
 
-    cleanup_conn_ = window->signal_post_idle().connect([&]() {
+    clean_up_conn_ = window->signal_post_idle().connect([&]() {
        sprite_manager_->clean_up();
     });
 }
 
 SpriteManager::~SpriteManager() {
-    cleanup_conn_.disconnect();
+    clean_up_conn_.disconnect();
 }
 
 void SpriteManager::destroy_all() {

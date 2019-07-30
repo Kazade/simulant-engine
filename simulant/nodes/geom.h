@@ -56,8 +56,8 @@ public:
 
     RenderPriority render_priority() const { return render_priority_; }
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 
     Property<Geom, GeomCuller> culler = {this, &Geom::culler_};

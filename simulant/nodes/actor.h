@@ -82,8 +82,8 @@ public:
         return mesh && mesh->is_animated();
     }
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 
     void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel level) override;

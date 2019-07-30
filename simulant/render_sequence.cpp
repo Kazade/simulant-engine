@@ -121,13 +121,13 @@ RenderSequence::RenderSequence(Window *window):
     render_options.backface_culling_enabled = true;
     render_options.point_size = 1;
 
-    cleanup_connection_ = window->signal_post_idle().connect([&]() {
+    clean_up_connection_ = window->signal_post_idle().connect([&]() {
         pipeline_manager_->clean_up();
     });
 }
 
 RenderSequence::~RenderSequence() {
-    cleanup_connection_.disconnect();
+    clean_up_connection_.disconnect();
     destroy_all_pipelines();
     pipeline_manager_->clean_up();
     pipeline_manager_.reset();

@@ -340,7 +340,7 @@ public:
 
     /* These are overridden to notify the renderer of texture changes */
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
     void update(float dt) override;
 
     void _set_has_mipmaps(bool v) {

@@ -43,7 +43,7 @@ public:
         GL_thread.reset(new GLThreadCheck(std::this_thread::get_id()));
     }
 
-    static void cleanup() {
+    static void clean_up() {
         GL_thread.reset();
     }
 

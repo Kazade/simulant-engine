@@ -42,13 +42,13 @@ bool Widget::init() {
     return true;
 }
 
-void Widget::cleanup() {
+void Widget::clean_up() {
     // Make sure we fire any outstanding events when the widget
     // is destroyed. If any buttons are held, then they should fire
     // released signals.
     force_release();
 
-    StageNode::cleanup();
+    StageNode::clean_up();
 }
 
 void Widget::set_font(FontID font_id) {

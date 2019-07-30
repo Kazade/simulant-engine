@@ -233,7 +233,7 @@ public:
      * FIXME: This is dirty and hacky and should be fixed.
      */
     bool _init();
-    void _cleanup();
+    void _clean_up();
 
     /* Audio listener stuff */
 
@@ -374,7 +374,7 @@ private:
     /* This is called by Screens to render themselves to devices. Default behaviour is a no-op */
     virtual void render_screen(Screen* screen, const uint8_t* data) {}
 
-    /* To be overridden by subclasses if external screens need some kind of initialization/cleanup */
+    /* To be overridden by subclasses if external screens need some kind of initialization/clean_up */
     virtual bool initialize_screen(Screen* screen) { return true; }
     virtual void shutdown_screen(Screen* screen) {}
 

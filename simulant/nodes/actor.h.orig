@@ -92,8 +92,8 @@ public:
         return mesh && mesh->is_animated();
     }
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 
     RenderableList _get_renderables(const Frustum &frustum, DetailLevel level) const;

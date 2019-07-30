@@ -148,7 +148,7 @@ public:
     Property<Stage, FogSettings> fog = {this, &Stage::fog_};
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
 
     // Updateable interface
 
@@ -214,8 +214,8 @@ private:
     void on_actor_created(ActorID actor_id);
     void on_actor_destroyed(ActorID actor_id);
 
-    void cleanup_dead_objects();
-    sig::connection cleanup_signal_;
+    void clean_up_dead_objects();
+    sig::connection clean_up_signal_;
 };
 
 }

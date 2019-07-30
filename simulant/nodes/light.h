@@ -104,8 +104,8 @@ public:
 
     void update(float step) override {}
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 private:
     LightType type_;

@@ -73,7 +73,7 @@ public:
     void rotate_to(const Quaternion& rotation);
 
     bool init();
-    void cleanup();
+    void clean_up();
 
     void add_box_collider(
         const Vec3& size,

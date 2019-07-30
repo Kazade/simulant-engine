@@ -19,7 +19,7 @@ public:
     MyObject(MyObjectID id): id_(id) {}
 
     bool init() { return true; }
-    void cleanup() {}
+    void clean_up() {}
     void _bind_id_pointer(MyObject*) {}
 };
 

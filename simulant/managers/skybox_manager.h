@@ -52,7 +52,7 @@ public:
     Skybox(SkyID id, SkyManager* manager);
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
 
     void set_size(float size) { width_ = size; }
     float size() const { return width_; }

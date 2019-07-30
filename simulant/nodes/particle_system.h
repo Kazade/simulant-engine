@@ -80,8 +80,8 @@ public:
         return index_data_;
     }
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 
     template<typename M, typename... Args>

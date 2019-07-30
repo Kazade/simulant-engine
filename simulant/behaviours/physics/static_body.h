@@ -17,7 +17,7 @@ public:
     ~StaticBody();
 
     using impl::Body::init;
-    using impl::Body::cleanup;
+    using impl::Body::clean_up;
 
     const std::string name() const { return "Static Body"; }
 

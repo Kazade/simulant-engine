@@ -122,8 +122,8 @@ private:
         fixed_update(dt);
     }
 
-    void _call_cleanup() {
-        cleanup();
+    void _call_clean_up() {
+        clean_up();
     }
 
     void _call_update(float dt) {
@@ -138,7 +138,7 @@ private:
     virtual void fixed_update(float dt) {}
     virtual void update(float dt) {}
     virtual void late_update(float dt) {}
-    virtual void cleanup() {}
+    virtual void clean_up() {}
 
     generic::DataCarrier data_carrier_;
 

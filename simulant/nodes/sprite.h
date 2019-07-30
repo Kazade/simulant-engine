@@ -53,7 +53,7 @@ public:
     void ask_owner_for_destruction() override;
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
     void update(float dt) override;
 
     Sprite(SpriteID id, SpriteManager *manager, SoundDriver *sound_driver);

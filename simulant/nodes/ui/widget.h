@@ -111,7 +111,7 @@ public:
     virtual ~Widget();
 
     virtual bool init();
-    virtual void cleanup();
+    virtual void clean_up();
 
     void resize(float width, float height);
     void set_width(float width);

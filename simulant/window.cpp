@@ -192,7 +192,7 @@ void Window::create_defaults() {
     initialize_input_controller(*input_state_);
 }
 
-void Window::_cleanup() {
+void Window::_clean_up() {
     destroy_all_backgrounds();
 
     virtual_gamepad_.reset();
@@ -213,7 +213,7 @@ void Window::_cleanup() {
     asset_manager_.reset();
 
     destroy_window();
-    GLThreadCheck::cleanup();
+    GLThreadCheck::clean_up();
 }
 
 StageNode* Window::audio_listener()  {

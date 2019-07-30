@@ -35,7 +35,7 @@ public:
     VirtualGamepad(Window& window, VirtualGamepadConfig config);
 
     bool init();
-    void cleanup();
+    void clean_up();
 
     void flip();
 

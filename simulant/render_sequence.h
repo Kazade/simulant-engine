@@ -160,7 +160,7 @@ private:
 
     std::set<RenderTarget*> targets_rendered_this_frame_;
 
-    sig::connection cleanup_connection_;
+    sig::connection clean_up_connection_;
 
     std::unique_ptr<PipelineManager> pipeline_manager_;
 };
