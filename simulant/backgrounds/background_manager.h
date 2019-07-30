@@ -22,10 +22,10 @@ public:
 
     BackgroundPtr background(BackgroundID bid);
     bool has_background(BackgroundID bid) const;
-    BackgroundPtr delete_background(BackgroundID bid);
+    BackgroundPtr destroy_background(BackgroundID bid);
     uint32_t background_count() const;
 
-    void delete_all_backgrounds();
+    void destroy_all_backgrounds();
 
     void update(float dt);
 

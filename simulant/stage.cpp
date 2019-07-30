@@ -89,11 +89,11 @@ void Stage::cleanup() {
     light_manager_->clear();
     actor_manager_->clear();
 
-    CameraManager::delete_all_cameras();
+    CameraManager::destroy_all_cameras();
 }
 
 void Stage::ask_owner_for_destruction() {
-    window->delete_stage(id());
+    window->destroy_stage(id());
 }
 
 ActorPtr Stage::new_actor(RenderableCullingMode mode) {
@@ -181,7 +181,7 @@ ActorPtr Stage::actor(ActorID e) const {
     return actor_manager_->get(e);
 }
 
-ActorPtr Stage::delete_actor(ActorID e) {
+ActorPtr Stage::destroy_actor(ActorID e) {
     signal_actor_destroyed_(e);
     actor_manager_->destroy(e);
     return nullptr;
@@ -219,7 +219,7 @@ bool Stage::has_geom(GeomID geom_id) const {
     return geom_manager_->contains(geom_id);
 }
 
-GeomPtr Stage::delete_geom(GeomID geom_id) {
+GeomPtr Stage::destroy_geom(GeomID geom_id) {
     signal_geom_destroyed_(geom_id);
 
     geom_manager_->destroy(geom_id);
@@ -274,7 +274,7 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
     return particle_system_manager_->contains(pid);
 }
 
-ParticleSystemPtr Stage::delete_particle_system(ParticleSystemID pid) {
+ParticleSystemPtr Stage::destroy_particle_system(ParticleSystemID pid) {
     signal_particle_system_destroyed_(pid);
     particle_system_manager_->destroy(pid);
     return nullptr;
@@ -323,7 +323,7 @@ LightPtr Stage::light(LightID light_id) {
     return light_manager_->get(light_id);
 }
 
-LightPtr Stage::delete_light(LightID light_id) {
+LightPtr Stage::destroy_light(LightID light_id) {
     signal_light_destroyed_(light_id);
     light_manager_->destroy(light_id);
     return nullptr;

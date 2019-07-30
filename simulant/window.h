@@ -171,9 +171,9 @@ public:
     virtual bool disable_pipeline(PipelineID pid) override;
 
     /* Delete a pipeline and return a nullptr so you can use the pattern
-     * pipeline_ = delete_pipeline(pipeline->id()) for safety
+     * pipeline_ = destroy_pipeline(pipeline->id()) for safety
      */
-    virtual PipelinePtr delete_pipeline(PipelineID pid) override;
+    virtual PipelinePtr destroy_pipeline(PipelineID pid) override;
     virtual bool has_pipeline(PipelineID pid) const override;
     virtual bool is_pipeline_enabled(PipelineID pid) const override;
 

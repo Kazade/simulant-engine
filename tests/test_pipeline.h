@@ -20,8 +20,8 @@ public:
     }
 
     void tear_down() {
-        window->delete_stage(stage->id());
-        window->delete_pipeline(pipeline->id());
+        window->destroy_stage(stage->id());
+        window->destroy_pipeline(pipeline->id());
     }
 
     void test_detail_range_settings() {

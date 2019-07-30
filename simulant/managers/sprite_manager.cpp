@@ -20,7 +20,7 @@ SpriteManager::~SpriteManager() {
     cleanup_conn_.disconnect();
 }
 
-void SpriteManager::delete_all() {
+void SpriteManager::destroy_all() {
     sprite_manager_->clear();
 }
 
@@ -49,7 +49,7 @@ SpritePtr SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t 
         // Set the render dimensions to match the image size by default
         s->set_render_dimensions(frame_width, frame_height);
     } catch(...) {
-        delete_sprite(s->id());
+        destroy_sprite(s->id());
         throw;
     }
 
@@ -64,7 +64,7 @@ bool SpriteManager::has_sprite(SpriteID s) const {
     return sprite_manager_->contains(s);
 }
 
-SpritePtr SpriteManager::delete_sprite(SpriteID s) {
+SpritePtr SpriteManager::destroy_sprite(SpriteID s) {
     sprite_manager_->destroy(s);
     return nullptr;
 }

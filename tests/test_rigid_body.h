@@ -20,6 +20,6 @@ public:
         assert_equal(controller->position().y, 0.0f);
         assert_equal(controller->position().z, 0.0f);
 
-        window->delete_stage(stage->id());
+        window->destroy_stage(stage->id());
     }
 };

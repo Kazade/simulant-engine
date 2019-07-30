@@ -62,7 +62,7 @@ bool Sprite::init() {
 
 void Sprite::cleanup() {
     if(actor_ && stage->has_actor(actor_id_)) {
-        stage->delete_actor(actor_id_);
+        stage->destroy_actor(actor_id_);
         actor_ = nullptr;
         actor_id_ = ActorID();
     }
@@ -71,7 +71,7 @@ void Sprite::cleanup() {
 }
 
 void Sprite::ask_owner_for_destruction() {
-    manager_->delete_sprite(id());
+    manager_->destroy_sprite(id());
 }
 
 void Sprite::update(float dt) {

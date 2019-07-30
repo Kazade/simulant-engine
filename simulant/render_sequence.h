@@ -123,8 +123,8 @@ public:
     );
 
     PipelinePtr pipeline(PipelineID pipeline);
-    void delete_pipeline(PipelineID pipeline);
-    void delete_all_pipelines();
+    void destroy_pipeline(PipelineID pipeline);
+    void destroy_all_pipelines();
     bool has_pipeline(PipelineID pipeline);
 
     void activate_pipelines(const std::vector<PipelineID>& pipelines);

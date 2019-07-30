@@ -58,7 +58,7 @@ CameraPtr CameraManager::camera(CameraID c) {
     return cameras_->get(c);
 }
 
-void CameraManager::delete_camera(CameraID cid) {
+void CameraManager::destroy_camera(CameraID cid) {
     cameras_->destroy(cid);
 }
 
@@ -70,7 +70,7 @@ bool CameraManager::has_camera(CameraID id) const {
     return cameras_->contains(id);
 }
 
-void CameraManager::delete_all_cameras() {
+void CameraManager::destroy_all_cameras() {
     cameras_->destroy_all();
 }
 

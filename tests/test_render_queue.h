@@ -15,7 +15,7 @@ public:
     }
 
     void tear_down() {
-        window->delete_stage(stage_->id());
+        window->destroy_stage(stage_->id());
     }
 
 #ifdef SIMULANT_GL_VERSION_2X

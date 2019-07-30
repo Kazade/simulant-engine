@@ -121,7 +121,7 @@ public:
 
     bool has_mesh(MeshID m) const;
     uint32_t mesh_count() const;
-    void delete_mesh(MeshID m);
+    void destroy_mesh(MeshID m);
 
 
     TexturePtr new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -135,7 +135,7 @@ public:
     const TexturePtr texture(TextureID t) const;
     bool has_texture(TextureID t) const;
     uint32_t texture_count() const;
-    void delete_texture(TextureID t);
+    void destroy_texture(TextureID t);
 
     MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MaterialPtr new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -148,7 +148,7 @@ public:
     const MaterialPtr material(MaterialID material) const;
     bool has_material(MaterialID m) const;
     uint32_t material_count() const;
-    void delete_material(MaterialID m);
+    void destroy_material(MaterialID m);
 
     SoundPtr new_sound(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     SoundPtr new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -157,7 +157,7 @@ public:
     SoundPtr new_sound_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     SoundPtr get_sound_with_alias(const std::string& alias);
 
-    void delete_sound(SoundID t);
+    void destroy_sound(SoundID t);
 
     SoundPtr sound(SoundID sound);
     const SoundPtr sound(SoundID sound) const;
@@ -177,7 +177,7 @@ public:
     FontPtr new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     FontPtr new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     FontPtr get_font_with_alias(const std::string& alias);
-    void delete_font(FontID f);
+    void destroy_font(FontID f);
 
     FontPtr font(FontID f);
     const FontPtr font(FontID f) const;

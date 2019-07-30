@@ -134,7 +134,7 @@ void Widget::set_property(const std::string &name, float value) {
 }
 
 void Widget::ask_owner_for_destruction() {
-    owner_->delete_widget(id());
+    owner_->destroy_widget(id());
 }
 
 const AABB &Widget::aabb() const {

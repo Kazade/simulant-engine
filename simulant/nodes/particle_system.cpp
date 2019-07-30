@@ -170,7 +170,7 @@ void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr came
 }
 
 void ParticleSystem::ask_owner_for_destruction() {
-    stage->delete_particle_system(id());
+    stage->destroy_particle_system(id());
 }
 
 void ParticleSystem::set_quota(std::size_t quota) {

@@ -57,8 +57,8 @@ bool Background::init() {
 void Background::cleanup() {
     //Remove the pipeline and delete the stage, everything else is cleaned
     //up automatically
-    manager_->window->delete_pipeline(pipeline_->id());
-    manager_->window->delete_stage(stage_->id());
+    manager_->window->destroy_pipeline(pipeline_->id());
+    manager_->window->destroy_stage(stage_->id());
 }
 
 void Background::update(float dt) {
@@ -128,7 +128,7 @@ void Background::set_resize_style(BackgroundResizeStyle style) {
 }
 
 void Background::ask_owner_for_destruction() {
-    manager_->delete_background(id());
+    manager_->destroy_background(id());
 }
 
 

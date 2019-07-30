@@ -20,8 +20,8 @@ public:
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        stage_->delete_camera(camera_->id());
-        window->delete_stage(stage_->id());
+        stage_->destroy_camera(camera_->id());
+        window->destroy_stage(stage_->id());
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
@@ -98,7 +98,7 @@ public:
 
         assert_equal(stage_->assets->mesh_count(), initial + 1);
 
-        stage_->delete_actor(actor->id());
+        stage_->destroy_actor(actor->id());
 
         window->run_frame();
 
@@ -132,7 +132,7 @@ public:
         this->assert_equal((int)0xDEADBEEF, actor->data->get<int>("data"));
 
         auto id = actor->id();
-        stage_->delete_actor(actor->id());
+        stage_->destroy_actor(actor->id());
         window->run_frame();
 
         this->assert_true(!stage_->has_actor(id));
@@ -151,7 +151,7 @@ public:
         this->assert_equal((uint32_t)1, c1->count_children());
         this->assert_equal((uint32_t)0, c2->count_children());
 
-        stage_->delete_actor(mid);
+        stage_->destroy_actor(mid);
         window->run_frame();
 
         this->assert_true(!stage_->has_actor(mid));

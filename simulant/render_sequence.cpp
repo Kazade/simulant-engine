@@ -128,7 +128,7 @@ RenderSequence::RenderSequence(Window *window):
 
 RenderSequence::~RenderSequence() {
     cleanup_connection_.disconnect();
-    delete_all_pipelines();
+    destroy_all_pipelines();
     pipeline_manager_->clean_up();
     pipeline_manager_.reset();
 }
@@ -166,7 +166,7 @@ PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
     return pipeline_manager_->get(pipeline);
 }
 
-void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
+void RenderSequence::destroy_pipeline(PipelineID pipeline_id) {
     if(!pipeline_manager_->contains(pipeline_id)) {
         return;
     }
@@ -180,7 +180,7 @@ void RenderSequence::delete_pipeline(PipelineID pipeline_id) {
     pipeline_manager_->destroy(pipeline_id);
 }
 
-void RenderSequence::delete_all_pipelines() {
+void RenderSequence::destroy_all_pipelines() {
     for(auto pip: ordered_pipelines_) {
         if(pip->is_active()) {
             pip->deactivate();

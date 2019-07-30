@@ -48,7 +48,7 @@ public:
     }
 
     void tear_down() {
-        window->delete_all_stages();
+        window->destroy_all_stages();
         physics.reset();
         SimulantTestCase::tear_down();
     }

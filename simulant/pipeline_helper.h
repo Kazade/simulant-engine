@@ -66,7 +66,7 @@ public:
     virtual PipelinePtr pipeline(PipelineID pid) = 0;
     virtual bool enable_pipeline(PipelineID pid) = 0;
     virtual bool disable_pipeline(PipelineID pid) = 0;
-    virtual PipelinePtr delete_pipeline(PipelineID pid) = 0;
+    virtual PipelinePtr destroy_pipeline(PipelineID pid) = 0;
     virtual bool has_pipeline(PipelineID pid) const = 0;
     virtual bool is_pipeline_enabled(PipelineID pid) const = 0;
 

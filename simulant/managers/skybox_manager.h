@@ -124,7 +124,7 @@ public:
     );
 
     SkyboxPtr skybox(SkyID skybox_id);
-    void delete_skybox(SkyID skybox_id);
+    void destroy_skybox(SkyID skybox_id);
 
     Property<SkyManager, Stage> stage = { this, &SkyManager::stage_ };
 private:

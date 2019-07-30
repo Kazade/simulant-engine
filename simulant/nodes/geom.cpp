@@ -57,7 +57,7 @@ const AABB &Geom::aabb() const {
 }
 
 void Geom::ask_owner_for_destruction() {
-    stage->delete_geom(id());
+    stage->destroy_geom(id());
 }
 
 void Geom::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) {

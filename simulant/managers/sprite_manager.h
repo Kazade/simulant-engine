@@ -38,9 +38,9 @@ public:
 
     SpritePtr sprite(SpriteID s);
     bool has_sprite(SpriteID s) const;
-    SpritePtr delete_sprite(SpriteID s);
+    SpritePtr destroy_sprite(SpriteID s);
     std::size_t sprite_count() const;
-    void delete_all();
+    void destroy_all();
 
     Property<SpriteManager, Stage> stage = { this, &SpriteManager::stage_ };
 private:
