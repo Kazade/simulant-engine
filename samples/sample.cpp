@@ -40,6 +40,8 @@ public:
         // Load a zombie sound and play it
         sound_ = stage_->assets->new_sound_from_file("sample_data/zombie.wav");
         actor->play_sound(sound_, AUDIO_REPEAT_FOREVER);
+        actor->set_gain(1);
+        actor->set_reference_distance(50);
     }
 
 private:

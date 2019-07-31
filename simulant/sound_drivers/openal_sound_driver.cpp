@@ -137,4 +137,16 @@ void OpenALSoundDriver::set_source_properties(AudioSourceID id, const Vec3& posi
     ALCheck(alSourcefv, id, AL_ORIENTATION, ori);
 }
 
+void OpenALSoundDriver::set_source_reference_distance(AudioSourceID id, float dist) {
+    ALCheck(alSourcef, id, AL_REFERENCE_DISTANCE, dist);
+}
+
+void OpenALSoundDriver::set_source_gain(AudioSourceID id, RangeValue<0, 1> value) {
+    ALCheck(alSourcef, id, AL_GAIN, (float) value);
+}
+
+void OpenALSoundDriver::set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) {
+    ALCheck(alSourcef, id, AL_PITCH, (float) value);
+}
+
 }

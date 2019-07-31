@@ -23,6 +23,7 @@
 
 #include "generic/property.h"
 #include "math/vec3.h"
+#include "generic/range_value.h"
 
 namespace smlt {
 
@@ -100,6 +101,10 @@ public:
 
     virtual void set_listener_properties(const Vec3& position, const Quaternion& rotation, const Vec3& velocity) = 0;
     virtual void set_source_properties(AudioSourceID id, const Vec3& position, const Quaternion& rotation, const Vec3& velocity) = 0;
+
+    virtual void set_source_reference_distance(AudioSourceID id, float dist) = 0;
+    virtual void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) = 0;
+    virtual void set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) = 0;
 private:
     Window* window_ = nullptr;
 };

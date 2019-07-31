@@ -44,6 +44,7 @@ simulant/generic/manual_manager.h
 simulant/generic/notifies_destruction.h
 simulant/generic/object_manager.h
 simulant/generic/raii.h
+simulant/generic/range_value.h
 simulant/generic/uniquely_identifiable.h
 simulant/loaders/deps/tiny_obj_loader.h
 simulant/loaders/wav_loader.cpp
