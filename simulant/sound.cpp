@@ -209,6 +209,24 @@ void Source::update_source(float dt) {
     );
 }
 
+void Source::set_pitch(RangeValue<0, 1> pitch) {
+    for(auto& instance: instances_) {
+        _sound_driver()->set_source_pitch(instance->source_, pitch);
+    }
+}
+
+void Source::set_reference_distance(float dist) {
+    for(auto& instance: instances_) {
+        _sound_driver()->set_source_reference_distance(instance->source_, dist);
+    }
+}
+
+void Source::set_gain(RangeValue<0, 1> gain) {
+    for(auto& instance: instances_) {
+        _sound_driver()->set_source_gain(instance->source_, gain);
+    }
+}
+
 SoundDriver *Source::_sound_driver() const {
     return (window_) ? window_->_sound_driver() : driver_;
 }

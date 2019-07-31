@@ -101,6 +101,7 @@ enum DistanceModel {
 class SourceInstance:
     public RefCounted<SourceInstance> {
 
+    friend class Source;
 private:
     Source& parent_;
 
@@ -140,6 +141,10 @@ public:
     void update_source(float dt);
 
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
+
+    void set_gain(RangeValue<0, 1> gain);
+    void set_pitch(RangeValue<0, 1> pitch);
+    void set_reference_distance(float dist);
 
 private:
     SoundDriver* _sound_driver() const;
