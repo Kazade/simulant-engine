@@ -74,7 +74,7 @@ public:
     }
 
 private:
-    BackgroundManager* manager_;
+    BackgroundManager* manager_ = nullptr;
 
     BackgroundType type_;
     StagePtr stage_;

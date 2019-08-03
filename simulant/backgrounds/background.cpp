@@ -66,10 +66,14 @@ void Background::update(float dt) {
         return;
     }
 
-    auto mat = sprite_->material_id().fetch();
+    assert(sprite_);
 
-    mat->diffuse_map().scroll_x(x_rate_ * dt);
-    mat->diffuse_map().scroll_y(y_rate_ * dt);
+    auto mat = sprite_->material_id().fetch();
+    assert(mat);
+
+    auto diffuse_map = mat->diffuse_map();
+    diffuse_map.scroll_x(x_rate_ * dt);
+    diffuse_map.scroll_y(y_rate_ * dt);
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {

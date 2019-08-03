@@ -14,7 +14,7 @@ class Window;
 class BackgroundManager {
 public:
     BackgroundManager(Window* window);
-    ~BackgroundManager();
+    virtual ~BackgroundManager();
 
     BackgroundPtr new_background(BackgroundType type);
     BackgroundPtr new_background_as_scrollable_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
@@ -33,7 +33,7 @@ public:
 
     void clean_up();
 private:
-    Window* window_;
+    Window* window_ = nullptr;
 
     typedef ManualManager<Background, BackgroundID> Manager;
     std::shared_ptr<Manager> backgrounds_;

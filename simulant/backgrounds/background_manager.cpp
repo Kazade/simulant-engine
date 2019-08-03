@@ -20,7 +20,8 @@ BackgroundManager::~BackgroundManager() {
 void BackgroundManager::update(float dt) {
     //Update the backgrounds
     backgrounds_->each([dt](uint32_t, BackgroundPtr bg) {
-       bg->update(dt);
+        assert(bg);
+        bg->update(dt);
     });
 }
 
