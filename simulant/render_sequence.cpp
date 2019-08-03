@@ -258,7 +258,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
      * which means figuring out some kind of locking around the render queue building and traversal, or
      * some deep-copying (of materials/textures/renderables) to make sure that nothing changes during traversal
      */
-
     Profiler profiler(__func__);
 
     uint64_t frame_id = generate_frame_id();

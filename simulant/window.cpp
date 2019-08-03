@@ -193,17 +193,16 @@ void Window::create_defaults() {
 }
 
 void Window::_clean_up() {
-    destroy_all_backgrounds();
-
     virtual_gamepad_.reset();
     loading_.reset();
-    render_sequence_.reset();
 
-    BackgroundManager::destroy_all_backgrounds();
+    destroy_all_backgrounds();
     BackgroundManager::clean_up();
 
     destroy_all_stages();
     StageManager::clean_up();
+
+    render_sequence_.reset();
 
     if(sound_driver_) {
         sound_driver_->shutdown();
