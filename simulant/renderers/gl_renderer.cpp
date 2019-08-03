@@ -159,8 +159,16 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             }
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
+#ifdef _arch_dreamcast
+                if(texture->width() == texture->height()) {
+#endif
                 GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
                 texture->_set_has_mipmaps(true);
+#ifdef _arch_dreamcast
+                } else {
+                    L_WARN("Not generating mipmaps as texture is non-square (PVR limitation)");
+                }
+#endif
             }
 
         } else {
