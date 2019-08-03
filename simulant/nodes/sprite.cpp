@@ -60,18 +60,18 @@ bool Sprite::init() {
     return true;
 }
 
-void Sprite::cleanup() {
+void Sprite::clean_up() {
     if(actor_ && stage->has_actor(actor_id_)) {
-        stage->delete_actor(actor_id_);
+        stage->destroy_actor(actor_id_);
         actor_ = nullptr;
         actor_id_ = ActorID();
     }
 
-    StageNode::cleanup();
+    StageNode::clean_up();
 }
 
-void Sprite::ask_owner_for_destruction() {
-    manager_->delete_sprite(id());
+void Sprite::destroy() {
+    manager_->destroy_sprite(id());
 }
 
 void Sprite::update(float dt) {

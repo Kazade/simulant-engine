@@ -63,7 +63,7 @@ namespace _manual_manager_impl {
                     T* ret = new (new_thing) U(id, args...);
 
                     if(!ret->init()) {
-                        ret->cleanup();
+                        ret->clean_up();
                         ret->~T(); // Call the destructor
                         chunk->free_slots_.insert(slot); // Release the slot
                         throw InstanceInitializationError(typeid(T).name());
@@ -123,7 +123,7 @@ namespace _manual_manager_impl {
                 return;
             }
 
-            element->cleanup();
+            element->clean_up();
             // Call the destructor
             element->~T();
 
@@ -311,7 +311,7 @@ public:
         return ret;
     }
 
-    // Mark the element for destruction at cleanup
+    // Mark the element for destruction at clean_up
     void destroy(id_type id) {
         to_release_.insert(id);
     }

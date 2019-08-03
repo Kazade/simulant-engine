@@ -54,7 +54,7 @@ public:
     Background(BackgroundID background_id, BackgroundManager *manager, BackgroundType type);
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
     void update(float dt) override;
 
     void set_horizontal_scroll_rate(float x_rate);
@@ -64,7 +64,7 @@ public:
     void set_resize_style(BackgroundResizeStyle style);
 
     //Ownable interface
-    void ask_owner_for_destruction();
+    void destroy();
 
     Property<Background, Sprite> sprite = {this, &Background::sprite_};
     Property<Background, Stage> stage = {this, &Background::stage_};

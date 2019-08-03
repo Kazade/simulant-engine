@@ -40,11 +40,11 @@ bool Skybox::init() {
     return true;
 }
 
-void Skybox::cleanup() {
+void Skybox::clean_up() {
 }
 
-void Skybox::ask_owner_for_destruction() {
-    manager_->delete_skybox(id());
+void Skybox::destroy() {
+    manager_->destroy_skybox(id());
 }
 
 const AABB &Skybox::aabb() const {
@@ -224,7 +224,7 @@ SkyboxPtr SkyManager::skybox(SkyID skybox_id) {
     return sky_manager_->get(skybox_id);
 }
 
-void SkyManager::delete_skybox(SkyID skybox_id) {
+void SkyManager::destroy_skybox(SkyID skybox_id) {
     sky_manager_->destroy(skybox_id);
 }
 

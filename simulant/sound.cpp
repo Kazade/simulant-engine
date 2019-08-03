@@ -63,8 +63,8 @@ SourceInstance::~SourceInstance() {
 
     if(driver) {
         driver->stop_source(source_); // Make sure we have stopped playing!
-        driver->delete_sources({source_});
-        driver->delete_buffers(buffers_);
+        driver->destroy_sources({source_});
+        driver->destroy_buffers(buffers_);
     }
 }
 

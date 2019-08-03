@@ -45,9 +45,9 @@ const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     WindowHolder(parent),
-    CameraManager(this),
     ContainerNode(this),
     generic::Identifiable<StageID>(id),
+    CameraManager(this),
     ui_(new ui::UIManager(this)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
@@ -60,15 +60,15 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
 
     set_partitioner(partitioner);
 
-    cleanup_signal_ = parent->signal_post_idle().connect(
-        std::bind(&Stage::cleanup_dead_objects, this)
+    clean_up_signal_ = parent->signal_post_idle().connect(
+        std::bind(&Stage::clean_up_dead_objects, this)
     );
 }
 
 Stage::~Stage() {
     sprite_manager_.reset();
     sky_manager_.reset();
-    cleanup_signal_.disconnect();
+    clean_up_signal_.disconnect();
 }
 
 bool Stage::init() {    
@@ -76,24 +76,24 @@ bool Stage::init() {
     return true;
 }
 
-void Stage::cleanup() {    
+void Stage::clean_up() {    
     ui_.reset();
     debug_.reset();
 
     //Recurse through the tree, destroying all children
     this->each_descendent_lf([](uint32_t, TreeNode* node) {
         StageNode* stage_node = static_cast<StageNode*>(node);
-        stage_node->ask_owner_for_destruction();
+        stage_node->destroy();
     });
 
     light_manager_->clear();
     actor_manager_->clear();
 
-    CameraManager::delete_all_cameras();
+    CameraManager::destroy_all_cameras();
 }
 
-void Stage::ask_owner_for_destruction() {
-    window->delete_stage(id());
+void Stage::destroy() {
+    window->destroy_stage(id());
 }
 
 ActorPtr Stage::new_actor(RenderableCullingMode mode) {
@@ -181,7 +181,7 @@ ActorPtr Stage::actor(ActorID e) const {
     return actor_manager_->get(e);
 }
 
-ActorPtr Stage::delete_actor(ActorID e) {
+ActorPtr Stage::destroy_actor(ActorID e) {
     signal_actor_destroyed_(e);
     actor_manager_->destroy(e);
     return nullptr;
@@ -219,7 +219,7 @@ bool Stage::has_geom(GeomID geom_id) const {
     return geom_manager_->contains(geom_id);
 }
 
-GeomPtr Stage::delete_geom(GeomID geom_id) {
+GeomPtr Stage::destroy_geom(GeomID geom_id) {
     signal_geom_destroyed_(geom_id);
 
     geom_manager_->destroy(geom_id);
@@ -274,7 +274,7 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
     return particle_system_manager_->contains(pid);
 }
 
-ParticleSystemPtr Stage::delete_particle_system(ParticleSystemID pid) {
+ParticleSystemPtr Stage::destroy_particle_system(ParticleSystemID pid) {
     signal_particle_system_destroyed_(pid);
     particle_system_manager_->destroy(pid);
     return nullptr;
@@ -323,7 +323,7 @@ LightPtr Stage::light(LightID light_id) {
     return light_manager_->get(light_id);
 }
 
-LightPtr Stage::delete_light(LightID light_id) {
+LightPtr Stage::destroy_light(LightID light_id) {
     signal_light_destroyed_(light_id);
     light_manager_->destroy(light_id);
     return nullptr;
@@ -379,7 +379,7 @@ void Stage::on_actor_destroyed(ActorID actor_id) {
 
 }
 
-void Stage::cleanup_dead_objects() {
+void Stage::clean_up_dead_objects() {
     actor_manager_->clean_up();
     light_manager_->clean_up();
     geom_manager_->clean_up();

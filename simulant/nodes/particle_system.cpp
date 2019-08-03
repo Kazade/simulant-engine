@@ -169,8 +169,8 @@ void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr came
     factory->push_renderable(new_renderable);
 }
 
-void ParticleSystem::ask_owner_for_destruction() {
-    stage->delete_particle_system(id());
+void ParticleSystem::destroy() {
+    stage->destroy_particle_system(id());
 }
 
 void ParticleSystem::set_quota(std::size_t quota) {
@@ -284,7 +284,7 @@ void ParticleSystem::update(float dt) {
         // If the particles are gone, and we don't have repeating emitters and all the emitters are inactive
         // Then destroy the particle system if that's what we've been told to do
         if(destroy_on_completion()) {
-            ask_owner_for_destruction();
+            destroy();
             // No point doing anything else!
             return;
         }

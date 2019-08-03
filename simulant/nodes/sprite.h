@@ -50,10 +50,10 @@ public:
     using ContainerNode::_get_renderables;
 
     //Ownable interface (inherited through ParentSetterMixin)
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
     void update(float dt) override;
 
     Sprite(SpriteID id, SpriteManager *manager, SoundDriver *sound_driver);

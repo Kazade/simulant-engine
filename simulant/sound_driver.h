@@ -80,8 +80,8 @@ public:
     virtual std::vector<AudioSourceID> generate_sources(uint32_t count) = 0;
     virtual std::vector<AudioBufferID> generate_buffers(uint32_t count) = 0;
 
-    virtual void delete_buffers(const std::vector<AudioBufferID>& buffers) = 0;
-    virtual void delete_sources(const std::vector<AudioSourceID>& sources) = 0;
+    virtual void destroy_buffers(const std::vector<AudioBufferID>& buffers) = 0;
+    virtual void destroy_sources(const std::vector<AudioSourceID>& sources) = 0;
 
     virtual void play_source(AudioSourceID source_id) = 0;
     virtual void stop_source(AudioSourceID source_id) = 0;

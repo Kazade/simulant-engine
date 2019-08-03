@@ -14,7 +14,7 @@ BackgroundManager::BackgroundManager(Window* window):
 }
 
 BackgroundManager::~BackgroundManager() {
-    delete_all_backgrounds();
+    destroy_all_backgrounds();
 }
 
 void BackgroundManager::update(float dt) {
@@ -39,7 +39,7 @@ BackgroundPtr BackgroundManager::new_background_as_scrollable_from_file(const un
         bg->set_horizontal_scroll_rate(scroll_x);
         bg->set_vertical_scroll_rate(scroll_y);
     } catch(...) {
-        delete_background(bg->id());
+        destroy_background(bg->id());
         throw;
     }
 
@@ -51,7 +51,7 @@ BackgroundPtr BackgroundManager::new_background_as_animated_from_file(const unic
     try {
         bg->set_texture(window_->shared_assets->new_texture_from_file(filename));
     } catch(...) {
-        delete_background(bg->id());
+        destroy_background(bg->id());
         throw;
     }
 
@@ -66,7 +66,7 @@ bool BackgroundManager::has_background(BackgroundID bid) const {
     return backgrounds_->contains(bid);
 }
 
-BackgroundPtr BackgroundManager::delete_background(BackgroundID bid) {
+BackgroundPtr BackgroundManager::destroy_background(BackgroundID bid) {
     backgrounds_->destroy(bid);
     return nullptr;
 }
@@ -75,7 +75,7 @@ uint32_t BackgroundManager::background_count() const {
     return backgrounds_->size();
 }
 
-void BackgroundManager::delete_all_backgrounds() {
+void BackgroundManager::destroy_all_backgrounds() {
     backgrounds_->destroy_all();
 }
 

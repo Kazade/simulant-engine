@@ -121,7 +121,7 @@ void Application::construct_window(const AppConfig& config) {
     window_->signal_update().connect(std::bind(&Application::_call_update, this, std::placeholders::_1));
     window_->signal_late_update().connect(std::bind(&Application::_call_late_update, this, std::placeholders::_1));
     window_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
-    window_->signal_shutdown().connect(std::bind(&Application::_call_cleanup, this));
+    window_->signal_shutdown().connect(std::bind(&Application::_call_clean_up, this));
 
     /* Is this a desktop window? */
 
@@ -180,7 +180,7 @@ int32_t Application::run() {
     scene_manager_.reset();
 
     // Shutdown and clean up the window
-    window_->_cleanup();
+    window_->_clean_up();
     window_.reset();
 
     return 0;

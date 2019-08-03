@@ -10,7 +10,7 @@ namespace smlt {
 class Ownable {
 public:
     virtual ~Ownable() {}
-    virtual void ask_owner_for_destruction() = 0;
+    virtual void destroy() = 0;
 };
 
 }

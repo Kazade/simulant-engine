@@ -99,13 +99,13 @@ public:
         return bounds_;
     }
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
     void update(float step) override {}
 
-    void cleanup() override {
-        StageNode::cleanup();
+    void clean_up() override {
+        StageNode::clean_up();
     }
 private:
     LightType type_;

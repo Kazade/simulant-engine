@@ -45,7 +45,7 @@ public:
 
     StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
     StagePtr stage(StageID s);
-    StagePtr delete_stage(StageID s);
+    StagePtr destroy_stage(StageID s);
     std::size_t stage_count() const;
     bool has_stage(StageID stage_id) const;
 
@@ -54,7 +54,7 @@ public:
     void update(float dt) override;
     void late_update(float dt) override;
 
-    void delete_all_stages();
+    void destroy_all_stages();
 
     void each_stage(std::function<void (uint32_t, Stage*)> func);
 private:

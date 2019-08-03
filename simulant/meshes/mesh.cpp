@@ -426,7 +426,7 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
     return sm;
 }
 
-void Mesh::delete_submesh(const std::string& name) {
+void Mesh::destroy_submesh(const std::string& name) {
     auto it = submeshes_.find(name);
     if(it != submeshes_.end()) {
         auto submesh = (*it).second;

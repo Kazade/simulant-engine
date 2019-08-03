@@ -37,7 +37,7 @@ SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fulls
 
 SDL2Window::~SDL2Window() {
     try {
-        _cleanup();
+        _clean_up();
     } catch(...) {
         L_ERROR("There was a problem shutting down the Window. Ignoring.");
     }

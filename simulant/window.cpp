@@ -192,17 +192,17 @@ void Window::create_defaults() {
     initialize_input_controller(*input_state_);
 }
 
-void Window::_cleanup() {
-    delete_all_backgrounds();
+void Window::_clean_up() {
+    destroy_all_backgrounds();
 
     virtual_gamepad_.reset();
     loading_.reset();
     render_sequence_.reset();
 
-    BackgroundManager::delete_all_backgrounds();
+    BackgroundManager::destroy_all_backgrounds();
     BackgroundManager::clean_up();
 
-    delete_all_stages();
+    destroy_all_stages();
     StageManager::clean_up();
 
     if(sound_driver_) {
@@ -213,7 +213,7 @@ void Window::_cleanup() {
     asset_manager_.reset();
 
     destroy_window();
-    GLThreadCheck::cleanup();
+    GLThreadCheck::clean_up();
 }
 
 StageNode* Window::audio_listener()  {
@@ -621,12 +621,12 @@ void Window::reset() {
 
     disable_virtual_joypad();
 
-    render_sequence_->delete_all_pipelines();
+    render_sequence_->destroy_all_pipelines();
 
-    BackgroundManager::delete_all_backgrounds();
+    BackgroundManager::destroy_all_backgrounds();
     BackgroundManager::clean_up();
 
-    StageManager::delete_all_stages();
+    StageManager::destroy_all_stages();
     StageManager::clean_up();
 
     L_DEBUG("Resetting the base manager");
@@ -675,8 +675,8 @@ bool Window::disable_pipeline(PipelineID pid) {
     return state != pipeline->is_active();
 }
 
-PipelinePtr Window::delete_pipeline(PipelineID pid) {
-    render_sequence_->delete_pipeline(pid);
+PipelinePtr Window::destroy_pipeline(PipelineID pid) {
+    render_sequence_->destroy_pipeline(pid);
     return nullptr;
 }
 

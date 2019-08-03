@@ -251,7 +251,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     });
 
     for(auto& name: empty) {
-        mesh->delete_submesh(name);
+        mesh->destroy_submesh(name);
     }
 
     mesh->vertex_data->done();

@@ -54,11 +54,11 @@ std::vector<AudioBufferID> OpenALSoundDriver::generate_buffers(uint32_t count) {
     return buffers;
 }
 
-void OpenALSoundDriver::delete_buffers(const std::vector<AudioBufferID> &buffers) {
+void OpenALSoundDriver::destroy_buffers(const std::vector<AudioBufferID> &buffers) {
     ALCheck(alDeleteBuffers, (ALuint) buffers.size(), (ALuint*) &buffers[0]);
 }
 
-void OpenALSoundDriver::delete_sources(const std::vector<AudioSourceID> &sources) {
+void OpenALSoundDriver::destroy_sources(const std::vector<AudioSourceID> &sources) {
     ALCheck(alDeleteSources, (ALuint) sources.size(), (ALuint*) &sources[0]);
 }
 

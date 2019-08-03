@@ -76,7 +76,7 @@ void InputManager::each_axis(EachAxisCallback callback) {
     }
 }
 
-void InputManager::delete_axises(const std::string& name) {
+void InputManager::destroy_axises(const std::string& name) {
     axises_.erase(
         std::remove_if(axises_.begin(), axises_.end(),
             [&name](InputAxis::ptr axis) -> bool {
@@ -86,7 +86,7 @@ void InputManager::delete_axises(const std::string& name) {
     );
 }
 
-void InputManager::delete_axis(InputAxis* axis) {
+void InputManager::destroy_axis(InputAxis* axis) {
     axises_.erase(
         std::remove_if(axises_.begin(), axises_.end(),
             [axis](InputAxis::ptr ax) -> bool {

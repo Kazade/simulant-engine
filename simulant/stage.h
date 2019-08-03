@@ -104,14 +104,14 @@ public:
     ActorPtr actor(ActorID e);
     ActorPtr actor(ActorID e) const;
     bool has_actor(ActorID e) const;
-    ActorPtr delete_actor(ActorID e);
+    ActorPtr destroy_actor(ActorID e);
     std::size_t actor_count() const;
 
     GeomPtr new_geom_with_mesh(MeshID mid);
     GeomPtr new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation=Quaternion());
     GeomPtr geom(const GeomID gid) const;
     bool has_geom(GeomID geom_id) const;
-    GeomPtr delete_geom(GeomID geom_id);
+    GeomPtr destroy_geom(GeomID geom_id);
     std::size_t geom_count() const;
 
     ParticleSystemPtr new_particle_system();
@@ -119,14 +119,14 @@ public:
     ParticleSystemPtr new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion=false);
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
-    ParticleSystemPtr delete_particle_system(ParticleSystemID pid);
+    ParticleSystemPtr destroy_particle_system(ParticleSystemID pid);
     std::size_t particle_system_count() const;
 
     LightPtr new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
     LightPtr new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
     LightPtr light(LightID light);
-    LightPtr delete_light(LightID light_id);
+    LightPtr destroy_light(LightID light_id);
     std::size_t light_count() const;
 
     smlt::Colour ambient_light() const { return ambient_light_; }
@@ -136,7 +136,7 @@ public:
         throw std::logic_error("You cannot move the stage");
     }
 
-    void ask_owner_for_destruction() override;
+    void destroy() override;
 
     Property<Stage, Debug> debug = {this, &Stage::debug_};
     Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};
@@ -148,7 +148,7 @@ public:
     Property<Stage, FogSettings> fog = {this, &Stage::fog_};
 
     bool init() override;
-    void cleanup() override;
+    void clean_up() override;
 
     // Updateable interface
 
@@ -214,8 +214,8 @@ private:
     void on_actor_created(ActorID actor_id);
     void on_actor_destroyed(ActorID actor_id);
 
-    void cleanup_dead_objects();
-    sig::connection cleanup_signal_;
+    void clean_up_dead_objects();
+    sig::connection clean_up_signal_;
 };
 
 }

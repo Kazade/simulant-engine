@@ -54,7 +54,7 @@ Debug::~Debug() {
     }
 
     if(actor_) {
-        actor_->ask_owner_for_destruction();
+        actor_->destroy();
     }
 }
 

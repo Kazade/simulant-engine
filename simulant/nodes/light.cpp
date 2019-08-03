@@ -66,8 +66,8 @@ void Light::set_attenuation_from_range(float range) {
     quadratic_attenuation_ = 75.0 / (range * range);
 }
 
-void Light::ask_owner_for_destruction() {
-    stage->delete_light(id());
+void Light::destroy() {
+    stage->destroy_light(id());
 }
 
 }

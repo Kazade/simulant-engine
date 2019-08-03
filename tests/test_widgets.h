@@ -16,7 +16,7 @@ public:
     }
 
     void tear_down() {
-        window->delete_stage(stage_->id());
+        window->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 
@@ -61,7 +61,7 @@ public:
     }
 
     void tear_down() {
-        window->delete_stage(stage_->id());
+        window->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 
@@ -93,7 +93,7 @@ public:
     }
 
     void tear_down() {
-        window->delete_stage(stage_->id());
+        window->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 

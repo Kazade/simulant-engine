@@ -48,7 +48,7 @@ public:
     }
 
     void tear_down() {
-        window->delete_all_stages();
+        window->destroy_all_stages();
         physics.reset();
         SimulantTestCase::tear_down();
     }
@@ -176,7 +176,7 @@ public:
         assert_true(enter_called);
         assert_false(leave_called);
 
-        actor2->ask_owner_for_destruction();
+        actor2->destroy();
 
         // Run cleanup
         window->run_frame();
@@ -214,7 +214,7 @@ public:
 
         assert_equal(stay_count, 2u);
 
-        actor2->ask_owner_for_destruction();
+        actor2->destroy();
 
         physics->fixed_update(1.0 / 60.0f);
         window->run_frame();

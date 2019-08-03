@@ -30,7 +30,7 @@ bool TimeKeeper::init() {
     return true;
 }
 
-void TimeKeeper::cleanup() {
+void TimeKeeper::clean_up() {
 
 }
 

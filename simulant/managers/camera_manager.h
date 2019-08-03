@@ -16,10 +16,10 @@ public:
     CameraPtr new_camera_for_ui();
     CameraPtr new_camera_for_viewport(const Viewport& vp);
     CameraPtr camera(CameraID c);
-    void delete_camera(CameraID cid);
+    void destroy_camera(CameraID cid);
     uint32_t camera_count() const;
     bool has_camera(CameraID id) const;
-    void delete_all_cameras();
+    void destroy_all_cameras();
 
 protected:
     void clean_up();

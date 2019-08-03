@@ -51,7 +51,7 @@ public:
         partitioner.add_actor(actor->id());
         partitioner._apply_writes();
 
-        window->delete_stage(stage->id());
+        window->destroy_stage(stage->id());
     }
 
     void test_remove_actor_stages_write() {
@@ -71,7 +71,7 @@ public:
         partitioner.remove_actor(actor->id());
         partitioner._apply_writes();
 
-        window->delete_stage(stage->id());
+        window->destroy_stage(stage->id());
     }
 
     void test_add_light_stages_write() {
@@ -91,7 +91,7 @@ public:
         partitioner.add_light(light->id());
         partitioner._apply_writes();
 
-        window->delete_stage(stage->id());
+        window->destroy_stage(stage->id());
     }
 
     void test_remove_light_stages_write() {
@@ -111,7 +111,7 @@ public:
         partitioner.remove_light(light->id());
         partitioner._apply_writes();
 
-        window->delete_stage(stage->id());
+        window->destroy_stage(stage->id());
     }
 
     void test_add_particle_system_stages_write() {
@@ -131,7 +131,7 @@ public:
         partitioner.add_particle_system(ps->id());
         partitioner._apply_writes();
 
-        window->delete_stage(stage->id());
+        window->destroy_stage(stage->id());
     }
 
     void test_remove_particle_system_stages_write() {
@@ -150,7 +150,7 @@ public:
         MockPartitioner partitioner(stage, test);
         partitioner.remove_particle_system(ps->id());
         partitioner._apply_writes();
-        window->delete_stage(stage->id());
+        window->destroy_stage(stage->id());
     }
 };
 

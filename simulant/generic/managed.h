@@ -40,7 +40,7 @@ public:
 
 template<typename T>
 void deleter(T* obj) {
-    obj->cleanup();
+    obj->clean_up();
     delete obj;
 }
 
@@ -49,7 +49,7 @@ public:
     virtual ~TwoPhaseConstructed() {}
 
     virtual bool init() { return true; }
-    virtual void cleanup() {
+    virtual void clean_up() {
 #if DEBUG
         assert(!cleaned_up);
         cleaned_up = true;

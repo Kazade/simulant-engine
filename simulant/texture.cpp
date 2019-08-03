@@ -321,7 +321,7 @@ bool Texture::init() {
     return true;
 }
 
-void Texture::cleanup() {
+void Texture::clean_up() {
     // Tell the renderer to forget the texture
     renderer_->unregister_texture(id());
 }
