@@ -87,6 +87,7 @@ void Mesh::each_submesh(std::function<void (const std::string&, SubMesh*)> func)
 void Mesh::clear() {
     //Delete the submeshes and clear the shared data
     submeshes_.clear();
+    ordered_submeshes_.clear();
     vertex_data->clear();
     rebuild_aabb();
 }
