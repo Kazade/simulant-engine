@@ -579,10 +579,10 @@ TexturePtr AssetManager::new_texture(GarbageCollectMethod garbage_collect) {
 
 TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
-    auto tex = texture(new_texture(GARBAGE_COLLECT_NEVER));
+    smlt::TexturePtr tex = texture(new_texture(garbage_collect));
 
-    auto texlock = tex->lock();
     {
+        auto texlock = tex->lock();
         window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
         if(flags.flip_vertically) {
@@ -596,7 +596,6 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
         tex->mark_data_changed();
     }
 
-    texture_manager_.set_garbage_collection_method(tex->id(), garbage_collect);
     return tex;
 }
 
