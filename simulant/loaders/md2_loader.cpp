@@ -174,11 +174,14 @@ public:
         out->resize(vertex_count);
         out->move_to_start();
 
+        const auto& current_cache = frame_cache[current_frame];
+        const auto& next_cache = frame_cache[next_frame];
+
         for(uint16_t i = 0; i < vertex_count; ++i) {
-            const auto& v1v = frame_cache[current_frame][i].v;
-            const auto& v2v = frame_cache[next_frame][i].v;
-            const auto& n1 = frame_cache[current_frame][i].n;
-            const auto& n2 = frame_cache[next_frame][i].n;
+            const auto& v1v = current_cache[i].v;
+            const auto& v2v = next_cache[i].v;
+            const auto& n1 = current_cache[i].n;
+            const auto& n2 = next_cache[i].n;
 
             out->position(v1v + (v2v - v1v) * t);
             out->tex_coord0(v1->st);

@@ -432,6 +432,10 @@ ColourMaterial _material_impl::PropertyValueHolder::colour_material() const {
     return (ColourMaterial) property(top_level_->colour_material_index_).value<int>();
 }
 
+void _material_impl::PropertyValueHolder::set_colour_material(ColourMaterial cm) {
+    set_property_value(COLOUR_MATERIAL_PROPERTY, (int) cm);
+}
+
 BlendType blend_type_from_name(const std::string &v) {
     if(v == "alpha") {
         return BLEND_ALPHA;

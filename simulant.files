@@ -61,6 +61,7 @@ simulant/renderers/gl2x/vbo_manager.cpp
 simulant/renderers/gl2x/vbo_manager.h
 simulant/stage_manager.cpp
 simulant/stage_manager.h
+simulant/utils/throttle.h
 simulant/vfs.cpp
 simulant/vfs.h
 tests/test_manual_manager.h

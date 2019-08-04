@@ -147,7 +147,10 @@ void KeyFrameAnimationState::update(float dt) {
         }
     }
 
-    refresh_animation_state_(current_frame_, next_frame_, interp_);
+    if(throttle_.update_and_test(dt)) {
+        // Frame limit to 60fps max, let's not go crazy
+        refresh_animation_state_(current_frame_, next_frame_, interp_);
+    }
 }
 
 

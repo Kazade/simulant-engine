@@ -50,6 +50,13 @@ private:
     ui::WidgetPtr ram_usage_;
     ui::WidgetPtr actors_rendered_;
     ui::WidgetPtr polygons_rendered_;
+
+    MaterialPtr graph_material_;
+    MeshPtr ram_graph_mesh_;
+    ActorPtr ram_graph_;
+    std::deque<float> free_ram_history_;
+
+    void rebuild_ram_graph();
 };
 
 }

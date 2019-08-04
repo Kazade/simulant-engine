@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include "deps/kazsignal/kazsignal.h"
+#include "utils/throttle.h"
 
 namespace smlt {
 
@@ -112,6 +113,8 @@ private:
 
     AnimationUpdatedCallback refresh_animation_state_;
     sig::connection on_animation_added_;
+
+    Throttle throttle_ = Throttle(60);
 };
 
 
