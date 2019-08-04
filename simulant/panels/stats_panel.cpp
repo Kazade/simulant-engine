@@ -71,12 +71,14 @@ void StatsPanel::initialize() {
     polygons_rendered_->move_to(hw, vheight);
     vheight -= diff;
 
-    window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
-
-    initialized_ = true;
-
+    graph_material_ = stage_->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    graph_material_->set_blend_func(BLEND_ALPHA);
+    graph_material_->set_depth_test_enabled(false);
     ram_graph_mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
     ram_graph_ = stage_->new_actor_with_mesh(ram_graph_mesh_, RENDERABLE_CULLING_MODE_NEVER);
+
+    window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
+    initialized_ = true;
 }
 
 #ifdef _arch_dreamcast
@@ -139,6 +141,8 @@ static unsigned int round(unsigned int value, unsigned int multiple){
 }
 
 void StatsPanel::rebuild_ram_graph() {
+    const smlt::Colour colour = smlt::Colour::SKY_BLUE;
+
     float width = window_->width();
     float height = window_->height() * 0.4f;
 
@@ -149,41 +153,46 @@ void StatsPanel::rebuild_ram_graph() {
         return;
     }
 
-    auto submesh = ram_graph_mesh_->new_submesh("ram-usage", MESH_ARRANGEMENT_QUADS);
-    auto material = submesh->material_id().fetch();
-    material->set_diffuse(smlt::Colour::from_bytes(89, 133, 253, 225));
-
-    auto& vdata = ram_graph_mesh_->vertex_data;
-    auto& idata = submesh->index_data;
-
+#ifdef _arch_dreamcast
+    float graph_max = 16.0f;
+#else
     float max_y = *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
     float graph_max = round(max_y, 8);
+#endif
+
+    auto submesh = ram_graph_mesh_->new_submesh_with_material("ram-usage", graph_material_, MESH_ARRANGEMENT_QUADS);
+    auto& vdata = ram_graph_mesh_->vertex_data;
+    auto& idata = submesh->index_data;
 
     float x = 0;
     float xstep = width / (RAM_SAMPLES - 1);
 
-    auto idx = 0;
+    auto idx = vdata->count();
     for(auto i = 1u; i < free_ram_history_.size(); ++i) {
         auto sample = free_ram_history_[i];
         auto last_sample = free_ram_history_[i - 1];
 
         float y = (height / graph_max) * last_sample;
-        vdata->position(x, y, 0);
+        vdata->position(x, y, -1);
+        vdata->diffuse(colour);
         vdata->move_next();
         idata->index(idx++);
 
-        vdata->position(x, 0, 0);
+        vdata->position(x, 0, -1);
+        vdata->diffuse(colour);
         vdata->move_next();
         idata->index(idx++);
 
         x += xstep;
 
         y = (height / graph_max) * sample;
-        vdata->position(x, 0, 0);
+        vdata->position(x, 0, -1);
+        vdata->diffuse(colour);
         vdata->move_next();
         idata->index(idx++);
 
-        vdata->position(x, y, 0);
+        vdata->position(x, y, -1);
+        vdata->diffuse(colour);
         vdata->move_next();
         idata->index(idx++);
     }
