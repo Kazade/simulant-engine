@@ -416,7 +416,7 @@ namespace _material_impl {
         void set_shade_model(ShadeModel model);
         ShadeModel shade_model() const;
         ColourMaterial colour_material() const;
-
+        void set_colour_material(ColourMaterial cm);
     protected:
         /* We want to force users to use the TextureID version, hence the explicit protected override */
         void set_property_value(const std::string& name, TextureUnit unit) {
