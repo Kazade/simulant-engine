@@ -23,6 +23,12 @@ public:
         window->destroy_stage(stage_->id());
     }
 
+    void test_move_to_origin() {
+        // A bug was reported that this caused a crash
+        auto actor = stage_->new_actor();
+        actor->move_to(0, 0, 0);
+    }
+
     void test_move_forward_by() {
         auto actor = stage_->new_actor();
 
