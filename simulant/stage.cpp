@@ -134,13 +134,15 @@ ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
         this->partitioner->update_actor(id, new_bounds);
     });
 
+    // Tell everyone about the new actor
+    // It's important this happens *before* we set the mesh that will
+    // trigger a bounds update.
+    signal_actor_created_(id);
+
     //If a mesh was specified, set it
     if(mid) {
         a->set_mesh(mid);
     }
-
-    //Tell everyone about the new actor
-    signal_actor_created_(id);
 
     return a;
 }

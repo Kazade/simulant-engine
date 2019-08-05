@@ -24,9 +24,13 @@ public:
     }
 
     void test_move_to_origin() {
-        // A bug was reported that this caused a crash
-        auto actor = stage_->new_actor();
+        auto pipeline = window->render(stage_, camera_);
+
+        // A bug was reported that this caused a crash (see #219)
+        auto mesh = stage_->assets->new_mesh_as_cube(50.0f);
+        auto actor = stage_->new_actor_with_mesh(mesh);
         actor->move_to(0, 0, 0);
+        window->run_frame();
     }
 
     void test_move_forward_by() {
