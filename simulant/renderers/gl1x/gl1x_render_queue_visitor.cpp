@@ -427,6 +427,9 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     auto vertex_data = renderable->vertex_data->data();
     auto index_data = renderable->index_data->data();
 
+    assert(vertex_data);
+    assert(index_data);
+
     (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
     (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();
     (spec.has_normals()) ? enable_normal_arrays() : disable_normal_arrays();
@@ -483,12 +486,16 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
         }
     }
 
+    assert(element_count);
+
+    auto index_type = convert_index_type(renderable->index_data->index_type());
     auto arrangement = convert_arrangement(renderable->arrangement);
+
     GLCheck(
         glDrawElements,
         arrangement,
         element_count,
-        convert_index_type(renderable->index_data->index_type()),
+        index_type,
         (const void*) index_data
     );
 
