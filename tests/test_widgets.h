@@ -35,7 +35,7 @@ public:
         assert_equal(button->aabb().min().x, 0); // No change
         assert_equal(button->aabb().min().y, 0);
         button->move_to(0, 0);
-        assert_equal(button->aabb().min().x, -100); // Should've changed now
+        assert_equal(button->aabb().min().x, -button->aabb().width()); // Should've changed now
         assert_equal(button->aabb().min().y, 0);
     }
 

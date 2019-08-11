@@ -330,6 +330,7 @@ void Widget::rebuild() {
         vdata->move_to(i);
         vdata->position(p);
     }
+    vdata->done();
 
     anchor_point_dirty_ = false;
 }
