@@ -27,7 +27,13 @@ Widget::~Widget() {
 }
 
 bool Widget::init() {
-    actor_ = stage->new_actor();
+    VertexSpecification spec;
+    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
+    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+
+    mesh_ = stage->assets->new_mesh(spec);
+    actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
 
     material_ = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
@@ -35,8 +41,7 @@ bool Widget::init() {
 
     // Assign the default font as default
     set_font(stage->assets->default_font_id());
-
-    mesh_ = construct_widget(0, 0);
+    rebuild();
 
     initialized_ = true;
     return true;
@@ -63,21 +68,285 @@ void Widget::set_font(FontID font_id) {
 }
 
 void Widget::resize(float width, float height) {
-    if(width_ == width && height_ == height) {
+    if(requested_width_ == width && requested_height_ == height) {
         return;
     }
 
-    width_ = width;
-    height_ = height;
+    requested_width_ = width;
+    requested_height_ = height;
     on_size_changed();
+}
+
+void Widget::render_text() {
+    struct Vertex {
+        smlt::Vec3 xyz;
+        smlt::Vec2 uv;
+    };
+
+    if(text().empty()) {
+        content_height_ = content_width_ = 0;
+        return;
+    }
+
+    // start and length, not start and end
+    std::vector<std::pair<uint32_t, uint32_t>> line_ranges;
+    std::vector<float> line_lengths;
+    std::vector<Vertex> vertices;
+
+    float left_bound = 0;
+    auto right_bound = requested_width_;
+    float left = left_bound;
+    uint32_t line_start = 0;
+    float line_length = 0;
+
+
+    /* Generate lines of text */
+    for(uint32_t i = 0; i < text().length(); ++i) {
+        unicode::value_type ch = text()[i];
+        float ch_width = font_->character_width(ch);
+        float ch_height = font_->character_height(ch);
+        float ch_advance = (i == text().length() - 1) ? 0 : font_->character_advance(ch, text()[i + 1]);
+
+        auto right = left + ch_width;
+        auto next_left = left + ch_advance;
+        auto finalize_line = [&]() {
+            line_ranges.push_back(std::make_pair(line_start, (i - line_start) + 1));
+            line_lengths.push_back(line_length);
+            line_start = vertices.size();
+            left = left_bound;
+            line_length = 0;
+        };
+
+        bool break_line = ch == '\n';
+
+        if(resize_mode() == RESIZE_MODE_FIXED || resize_mode() == RESIZE_MODE_FIXED_WIDTH) {
+            // FIXME: if(line_wrap)
+            if(right >= right_bound) {
+                break_line = true;
+            }
+        }
+
+        if(break_line) {
+            /* We reached the end of the line, so we finalize without
+             * actually processing this character, then rewind one step */
+            finalize_line();
+            i--;
+            continue;
+        }
+
+        Vertex corners[4];
+
+        // Characters are created with their top-line at 0, we then
+        // properly manipulate the position when we process the lines later
+        auto off = font_->character_offset(ch);
+        corners[0].xyz = smlt::Vec3(left + off.first, off.second - ch_height, 0);
+        corners[1].xyz = smlt::Vec3(right + off.first, off.second - ch_height, 0);
+        corners[2].xyz = smlt::Vec3(right + off.first, off.second, 0);
+        corners[3].xyz = smlt::Vec3(left + off.first, off.second, 0);
+
+        auto min_max = font_->texture_coordinates_for_character(ch);
+        corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
+        corners[1].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
+        corners[2].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
+        corners[3].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+
+        vertices.push_back(corners[0]);
+        vertices.push_back(corners[1]);
+        vertices.push_back(corners[2]);
+        vertices.push_back(corners[3]);
+
+        line_length += ch_advance;
+
+        if(i == text().length() - 1) {
+            finalize_line();
+        }
+
+        left = next_left;
+    }
+
+    /* Now apply line heights */
+    float top = 0;
+    uint32_t j = 0;
+    for(auto range: line_ranges) {
+        Vertex* ch = &vertices.at(range.first);
+        float hw = line_lengths[j++] * 0.5f;
+        for(auto i = 0u; i < range.second; ++i) {
+            Vertex* bl = ch;
+            Vertex* br = ch + 1;
+            Vertex* tr = ch + 2;
+            Vertex* tl = ch + 3;
+
+            // Shift the vertex downwards
+            bl->xyz.y -= top;
+            br->xyz.y -= top;
+            tr->xyz.y -= top;
+            tl->xyz.y -= top;
+
+            // Center each line
+            bl->xyz.x -= hw;
+            br->xyz.x -= hw;
+            tr->xyz.x -= hw;
+            tl->xyz.x -= hw;
+
+            ch += 4;
+        }
+
+        // Increase for the next line
+        top += line_height_;
+    }
+
+    // Now we have to shift the entire thing up to vertically center!
+    for(Vertex& v: vertices) {
+        v.xyz.y += top / 2.0f;
+    }
+
+    auto sm = mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
+
+    float min_x = std::numeric_limits<float>::max();
+    float min_y = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+    float max_y = std::numeric_limits<float>::lowest();
+
+    auto vdata = mesh_->vertex_data.get();
+    auto idata = sm->index_data.get();
+    vdata->move_to_start();
+    auto idx = 0;
+    for(auto& v: vertices) {
+        min_x = std::min(min_x, v.xyz.x);
+        max_x = std::max(max_x, v.xyz.x);
+        min_y = std::min(min_y, v.xyz.y);
+        max_y = std::max(max_y, v.xyz.y);
+
+        vdata->position(v.xyz);
+        vdata->tex_coord0(v.uv);
+        vdata->diffuse(text_colour_);
+        vdata->move_next();
+
+        idata->index(idx++);
+    }
+
+    vdata->done();
+    idata->done();
+
+    content_width_ = max_x - min_x;
+    content_height_ = max_y - min_y;
+}
+
+void Widget::new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour) {
+    auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, 0);
+
+    auto sm = mesh_->new_submesh_as_rectangle(name, mat_id, bounds.width(), bounds.height(), offset);
+    sm->set_diffuse(colour);
+}
+
+void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect) {
+    auto dim = image->dimensions();
+
+    Vec2 min = Vec2(
+        rect.bottom_left.x / dim.x,
+        rect.bottom_left.y / dim.y
+    );
+
+    Vec2 max = Vec2(
+        (rect.bottom_left.x + rect.size.x) / dim.x,
+        (rect.bottom_left.y + rect.size.y) / dim.y
+    );
+
+    auto vertices = submesh->vertex_data.get();
+    auto indices = submesh->index_data.get();
+
+    auto first_idx = indices->at(0);
+    vertices->move_to(first_idx);
+    vertices->tex_coord0(min.x, min.y);
+    vertices->move_to(first_idx + 1);
+    vertices->tex_coord0(max.x, min.y);
+    vertices->move_to(first_idx + 2);
+    vertices->tex_coord0(max.x, max.y);
+    vertices->move_to(first_idx + 3);
+    vertices->tex_coord0(min.x, max.y);
+    vertices->done();
 }
 
 void Widget::rebuild() {
     // If we aren't initialized, don't do anything yet
     if(!is_initialized()) return;
 
-    mesh_ = construct_widget(width_, height_);
-    actor_->set_mesh(mesh_->id());
+    mesh_->clear();
+
+    render_text();
+
+    // FIXME: Clipping + other modes
+    if(resize_mode() == RESIZE_MODE_FIXED) {
+        content_width_ = requested_width_;
+        content_height_ = requested_height_;
+    } else if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
+        content_height_ = std::max(requested_height_, content_height_);
+        content_width_ = requested_width_;
+    } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
+        content_width_ = std::max(requested_width_, content_width_);
+        content_height_ = requested_height_;
+    }
+
+    auto background_bounds = calculate_background_size(content_width_, content_height_);
+    auto foreground_bounds = calculate_foreground_size(content_width_, content_height_);
+
+    auto border_bounds = background_bounds;
+    border_bounds.min -= smlt::Vec2(border_width_, border_width_);
+    border_bounds.max += smlt::Vec2(border_width_, border_width_);
+
+    auto colour = border_colour_;
+    colour.a *= opacity_;
+    new_rectangle("border", material_->id(), border_bounds, colour);
+
+    colour = background_colour_;
+    colour.a *= opacity_;
+    new_rectangle("background", material_->id(), background_bounds, colour);
+    if(has_background_image()) {
+        auto sm = mesh_->submesh("background");
+        sm->material_id().fetch()->set_diffuse_map(background_image_);
+        apply_image_rect(sm, background_image_.fetch(), background_image_rect_);
+    }
+
+    colour = foreground_colour_;
+    colour.a *= opacity_;
+    new_rectangle("foreground", material_->id(), foreground_bounds, colour);
+    if(has_foreground_image()) {
+        auto sm = mesh_->submesh("foreground");
+        sm->material_id().fetch()->set_diffuse_map(foreground_image_);
+        apply_image_rect(sm, foreground_image_.fetch(), foreground_image_rect_);
+    }
+
+    /* Apply anchoring */
+    auto width = mesh_->aabb().width();
+    auto height = mesh_->aabb().height();
+
+    float xoff = -((anchor_point_.x * width) - (width / 2.0));
+    float yoff = -((anchor_point_.y * height) - (height / 2.0));
+    auto& vdata = mesh_->vertex_data;
+    for(auto i = 0u; i < vdata->count(); ++i) {
+        auto p = vdata->position_at<smlt::Vec3>(i);
+        p.x += xoff;
+        p.y += yoff;
+        vdata->move_to(i);
+        vdata->position(p);
+    }
+
+    anchor_point_dirty_ = false;
+}
+
+Widget::WidgetBounds Widget::calculate_background_size(float content_width, float content_height) const {
+    /* By default, we just return the content_width + padding */
+    auto hw = content_width / 2.0;
+    auto hh = content_height / 2.0;
+
+    WidgetBounds bounds;
+    bounds.min = smlt::Vec2(-(hw + padding_.left), -(hh + padding_.bottom));
+    bounds.max = smlt::Vec2(hw + padding_.right, hh + padding_.top);
+    return bounds;
+}
+
+Widget::WidgetBounds Widget::calculate_foreground_size(float content_width, float content_height) const {
+    return calculate_background_size(content_width, content_height);
 }
 
 void Widget::set_border_width(float x) {
@@ -99,20 +368,20 @@ void Widget::set_border_colour(const Colour &colour) {
 }
 
 void Widget::set_width(float width) {
-    if(width_ == width) {
+    if(requested_width_ == width) {
         return;
     }
 
-    width_ = width;
+    requested_width_ = width;
     on_size_changed();
 }
 
 void Widget::set_height(float height) {
-    if(height_ == height) {
+    if(requested_height_ == height) {
         return;
     }
 
-    height_ = height;
+    requested_height_ = height;
     on_size_changed();
 }
 
@@ -221,250 +490,6 @@ void Widget::set_text_colour(const Colour &colour) {
     rebuild();
 }
 
-void Widget::render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float left_margin, float top_margin) {
-    if(mesh->has_submesh(submesh_name)) {
-        // Save these vertices as free
-        auto sm = mesh->submesh(submesh_name);
-        sm->index_data->each([&](uint32_t idx) {
-            available_indexes_.insert(idx);
-        });
-
-        sm->index_data->clear();
-
-        // Make sure we maintain the correct material
-        sm->set_material_id(font_->material_id());
-    } else {
-        // Create a new submesh for the text
-        auto sm = mesh->new_submesh(submesh_name, MESH_ARRANGEMENT_TRIANGLES);
-        sm->set_material_id(font_->material_id());
-    }
-
-    auto submesh = mesh->submesh(submesh_name);
-
-    // We return here so there's always a text mesh even if it's got nothing in it
-    // FIXME: although totally not thread or exception safe :/
-    if(text.empty()) {
-        return;
-    }
-
-    struct WordVertex {
-        Vec3 position;
-        Vec2 texcoord;
-    };
-
-    std::vector<WordVertex> word_vertices;
-    float word_length = .0f;
-    float longest_line = .0f;
-    float line_length = .0f;
-
-    // We use the font-size as the default height, but then add line-height for each subsequent
-    // line. That's because the line height might be less than the font size (causing overlapping)
-    // but we want the total visible height... I think this makes sense!
-    float min_height = std::numeric_limits<float>::max();
-    float max_height = std::numeric_limits<float>::lowest();
-
-    float xoffset = 0;
-    float yoffset = line_height_ / 2.0f;
-
-
-    for(std::size_t i = 0; i < text.length(); ++i) {
-        bool word_ended = text[i] == U' ' || i == text.length() - 1;
-        bool word_wrap = false;
-
-        if(text[i] == '\n') {
-            xoffset = 0;
-            yoffset -= line_height_;
-
-            if(line_length > longest_line) {
-                longest_line = line_length;
-            }
-            line_length = .0f;
-        } else {
-            auto ch = text[i];
-            auto ch_width = font_->character_width(ch);
-            auto ch_height = font_->character_height(ch);
-            auto coords = font_->texture_coordinates_for_character(ch);
-            auto min = coords.first;
-            auto max = coords.second;
-
-            auto off = font_->character_offset(ch);
-
-            WordVertex v1, v2, v3, v4;
-
-            v1.position.x = off.first + xoffset;
-            v1.position.y = off.second + yoffset;
-            v1.texcoord.x = min.x;
-            v1.texcoord.y = min.y;
-            word_vertices.push_back(v1);
-
-            v2.position.x = off.first + xoffset;
-            v2.position.y = off.second + yoffset - ch_height;
-            v2.texcoord.x = min.x;
-            v2.texcoord.y = max.y;
-            word_vertices.push_back(v2);
-
-            v3.position.x = off.first + xoffset + ch_width;
-            v3.position.y = off.second + yoffset - ch_height;
-            v3.texcoord.x = max.x;
-            v3.texcoord.y = max.y;
-            word_vertices.push_back(v3);
-
-            v4.position.x = off.first + xoffset + ch_width;
-            v4.position.y = off.second + yoffset;
-            v4.texcoord.x = max.x;
-            v4.texcoord.y = min.y;
-            word_vertices.push_back(v4);
-
-            if(i != text.length() - 1) {
-                float advance = font_->character_advance(ch, text[i + 1]);
-                xoffset += advance;
-                line_length += advance + ch_width;
-            } else {
-                line_length += ch_width;
-            }
-
-            // If the xoffset is greater than the width then we should word wrap
-            if(xoffset > width) {
-                word_wrap = true;
-            }
-        }
-
-        if(word_ended) {
-            float xshift = 0;
-            float yshift = 0;
-
-            // If we need to wrap the word, then do so but only if the word
-            // would actually fit. We don't even try otherwise (but it would be nice to
-            // hyphenate)
-            if(word_wrap && word_length < width) {
-                xshift = -xoffset;
-                yshift = line_height_;
-
-                xoffset = word_length;
-                yoffset -= line_height_;
-            }
-
-            std::vector<uint32_t> used_indexes;
-
-            // We're at the end of the word, time to commit to the mesh
-            for(auto& v: word_vertices) {
-                auto pos = v.position + Vec3(xshift, yshift, text_depth_bias_);
-                if(pos.y < min_height) min_height = pos.y;
-                if(pos.y > max_height) max_height = pos.y;
-
-                if(!available_indexes_.empty()) {
-                    auto it = available_indexes_.begin();
-                    auto idx = *it;
-                    available_indexes_.erase(it);
-
-                    // Use an existing slot
-                    submesh->vertex_data->move_to(idx);
-                    used_indexes.push_back(idx);
-                } else {
-                    // Move to the end to create a new vertex
-                    used_indexes.push_back(submesh->vertex_data->count());
-                    submesh->vertex_data->move_to_end();
-                }
-
-                submesh->vertex_data->position(pos);
-                submesh->vertex_data->tex_coord0(v.texcoord);
-                submesh->vertex_data->diffuse(text_colour_);
-            }
-
-            assert(used_indexes.size() == word_vertices.size());
-
-            for(std::size_t k = 0; k < word_vertices.size(); k += 4) {
-                submesh->index_data->index(used_indexes[k]);
-                submesh->index_data->index(used_indexes[k + 1]);
-                submesh->index_data->index(used_indexes[k + 2]);
-
-                submesh->index_data->index(used_indexes[k]);
-                submesh->index_data->index(used_indexes[k + 2]);
-                submesh->index_data->index(used_indexes[k + 3]);
-            }
-
-            word_vertices.clear();
-            used_indexes.clear();
-            word_length = .0f;
-            word_wrap = false;
-            if(line_length > longest_line) {
-                longest_line = line_length;
-            }
-            line_length = .0f;
-
-        }
-    }
-
-    // Everything was positioned with the starting X being at the
-    // the center of the widget, so now we move the text to the left by whatever its width was
-    // or half of "width" if that was specified
-    float shiftX = ::round(std::max(submesh->aabb().width(), width) / 2.0);
-    float descent = font_->descent();
-
-    // FIXME: I can't for the life of me figure out why this works - it's almost definitely wrong
-    float shiftY = ::round(-descent);
-
-    for(uint32_t i = 0; i < submesh->vertex_data->count(); ++i) {
-        submesh->vertex_data->move_to(i);
-        auto pos = submesh->vertex_data->position_at<Vec3>(i);
-        submesh->vertex_data->position(
-            pos + Vec3(-shiftX, -shiftY, 0)
-        );
-    }
-
-    mesh->vertex_data->done();
-    submesh->index_data->done();
-}
-
-MeshPtr Widget::construct_widget(float requested_width, float requested_height) {
-    VertexSpecification spec;
-    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
-    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
-
-    float width = requested_width;
-    float height = requested_height;
-
-    auto mesh = (mesh_) ? mesh_ : stage->assets->new_mesh(spec);
-
-    /* New mesh, so make sure we clear the available vertices */
-    available_indexes_.clear();
-
-    // Render the text to the specified width
-    render_text(mesh, "text", text_, width - padding_.left - padding_.right, padding_.left, padding_.top);
-
-    if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        height = std::max(
-            mesh->submesh("text")->aabb().height() + padding_.top + padding_.bottom,
-            height
-        );
-    } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
-        width = std::max(
-            mesh->submesh("text")->aabb().width() + padding_.left + padding_.right,
-            width
-        );
-
-        // Default to the font size + padding if there is no requested height
-        height = (height == 0.0f) ? font_->size() + padding_.top + padding_.bottom : height;
-
-    } else if(resize_mode_ == RESIZE_MODE_FIT_CONTENT) {
-        auto aabb = mesh->submesh("text")->aabb();
-        width = aabb.width() + padding_.left + padding_.right;
-        height = aabb.height() + padding_.top + padding_.bottom;
-    } else {
-        // Clip the content?
-    }
-
-    resize_or_generate_border(mesh, width + (border_width_ * 2), height + (border_width_ * 2), 0, 0);
-    resize_or_generate_background(mesh, width, height, 0, 0);
-    resize_or_generate_foreground(mesh, width, height, 0, 0);
-
-    content_width_ = width;
-    content_height_ = height;
-
-    return mesh;
-}
-
 void Widget::set_resize_mode(ResizeMode resize_mode) {
     resize_mode_ = resize_mode;
     on_size_changed();
@@ -475,106 +500,7 @@ void Widget::set_padding(float left, float right, float bottom, float top) {
     padding_.right = right;
     padding_.bottom = bottom;
     padding_.top = top;
-}
-
-void generate_or_resize_rectangle(MeshPtr mesh, MaterialID material_id, const std::string& submesh_name, float width, float height, float xoffset, float yoffset, float zoffset) {
-    if(!mesh->has_submesh(submesh_name)) {
-        mesh->new_submesh_as_rectangle(
-            submesh_name, material_id, width, height,
-            Vec3(xoffset, yoffset, zoffset)
-        );
-    } else {
-        auto submesh = mesh->submesh(submesh_name);
-        mesh->vertex_data->move_to(submesh->index_data->at(0));
-        mesh->vertex_data->position(xoffset + (-width / 2.0), yoffset + (-height / 2.0), zoffset);
-
-        mesh->vertex_data->move_to(submesh->index_data->at(1));
-        mesh->vertex_data->position(xoffset + (width / 2.0), yoffset + (-height / 2.0), zoffset);
-
-        mesh->vertex_data->move_to(submesh->index_data->at(2));
-        mesh->vertex_data->position(xoffset + (width / 2.0),  yoffset + (height / 2.0), zoffset);
-
-        mesh->vertex_data->move_to(submesh->index_data->at(5));
-        mesh->vertex_data->position(xoffset + (-width / 2.0),  yoffset + (height / 2.0), zoffset);
-        mesh->vertex_data->done();
-    }
-}
-
-void Widget::resize_or_generate_border(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
-    generate_or_resize_rectangle(mesh, material_->id(), "border", width, height, xoffset, yoffset, 0);
-    mesh->submesh("border")->set_diffuse(border_colour_);
-}
-
-void Widget::resize_or_generate_background(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
-    generate_or_resize_rectangle(mesh, material_->id(), "background", width, height, xoffset, yoffset, background_depth_bias_);
-    mesh->submesh("background")->set_diffuse(background_colour_);
-
-    if(has_background_image()) {
-        auto submesh = mesh->submesh("background");
-        submesh->material_id().fetch()->set_diffuse_map(background_image_);
-
-        auto& vertices = mesh->vertex_data;
-        auto& indices = submesh->index_data;
-        auto dim = background_image_.fetch()->dimensions();
-
-        Vec2 min = Vec2(
-            background_image_rect_.bottom_left.x / dim.x,
-            background_image_rect_.bottom_left.y / dim.y
-        );
-
-        Vec2 max = Vec2(
-            (background_image_rect_.bottom_left.x + background_image_rect_.size.x) / dim.x,
-            (background_image_rect_.bottom_left.y + background_image_rect_.size.y) / dim.y
-        );
-
-        auto first_idx = indices->at(0);
-
-        vertices->move_to(first_idx);
-        vertices->tex_coord0(min.x, min.y);
-        vertices->move_to(first_idx + 1);
-        vertices->tex_coord0(max.x, min.y);
-        vertices->move_to(first_idx + 2);
-        vertices->tex_coord0(max.x, max.y);
-        vertices->move_to(first_idx + 3);
-        vertices->tex_coord0(min.x, max.y);
-        vertices->done();
-    }
-}
-
-void Widget::resize_or_generate_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset) {
-    generate_or_resize_rectangle(mesh, material_->id(), "foreground", width, height, xoffset, yoffset, foreground_depth_bias_);
-    mesh->submesh("foreground")->set_diffuse(foreground_colour_);
-
-    if(has_foreground_image()) {
-        auto submesh = mesh->submesh("foreground");
-        submesh->material_id().fetch()->set_diffuse_map(foreground_image_);
-
-        auto& vertices = mesh->vertex_data;
-        auto& indices = submesh->index_data;
-        auto dim = foreground_image_.fetch()->dimensions();
-
-        Vec2 min = Vec2(
-            foreground_image_rect_.bottom_left.x / dim.x,
-            foreground_image_rect_.bottom_left.y / dim.y
-        );
-
-        Vec2 max = Vec2(
-            (foreground_image_rect_.bottom_left.x + foreground_image_rect_.size.x) / dim.x,
-            (foreground_image_rect_.bottom_left.y + foreground_image_rect_.size.y) / dim.y
-        );
-
-        auto first_idx = indices->at(0);
-
-        vertices->move_to(first_idx);
-        vertices->tex_coord0(min.x, min.y);
-        vertices->move_to(first_idx + 1);
-        vertices->tex_coord0(max.x, min.y);
-        vertices->move_to(first_idx + 2);
-        vertices->tex_coord0(max.x, max.y);
-        vertices->move_to(first_idx + 3);
-        vertices->tex_coord0(min.x, max.y);
-        vertices->done();
-    }
+    rebuild();
 }
 
 bool Widget::is_pressed_by_finger(uint32_t finger_id) {
@@ -585,6 +511,24 @@ void Widget::force_release() {
     auto fingers_down = fingers_down_; // Copy, fingerup will delete from fingers_down_
     for(auto& finger_id: fingers_down) {
         fingerup(finger_id);
+    }
+}
+
+Vec2 Widget::anchor_point() const {
+    return anchor_point_;
+}
+
+void Widget::set_opacity(RangeValue<0, 1> alpha) {
+    if(opacity_ != alpha) {
+        opacity_ = alpha;
+        rebuild();
+    }
+}
+
+void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
+    if(anchor_point_.x != (float) x || anchor_point_.y != (float) y) {
+        anchor_point_ = smlt::Vec2(x, y);
+        anchor_point_dirty_ = true;
     }
 }
 
@@ -682,6 +626,17 @@ WidgetPtr Widget::focused_in_chain_or_this() {
     }
 
     return this;
+}
+
+void Widget::on_transformation_change_attempted() {
+    // We do this is when a transformation change is attempted
+    // (rather than if it happens)
+    // because the anchor point may change and someone might
+    // call move_to with the same position
+    if(anchor_point_dirty_) {
+        // Reconstruct which will clear the dirty flag
+        rebuild();
+    }
 }
 
 void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {

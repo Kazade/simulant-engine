@@ -35,6 +35,7 @@ public:
 class unicode {
 public:
     typedef ustring::size_type size_type;
+    typedef ustring::value_type value_type;
 
     unicode():
         string_(u"") {}

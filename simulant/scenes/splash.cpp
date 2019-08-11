@@ -33,25 +33,17 @@ void Splash::load() {
 
     round(scale, 0.25);
 
-    image_->set_width(image_->width() * scale);
-    image_->set_height(image_->height() * scale);
+    image_->set_width(image_->width() * scale * 0.75);
+    image_->set_height(image_->height() * scale * 0.75);
+    image_->set_anchor_point(0.5, 0.0);
+    image_->set_opacity(0.0f);
 
     text_->set_width(text_->width() * scale);
     text_->set_height(text_->height() * scale);
+    text_->set_anchor_point(0.5, 1.0);
 
-
-    /* We have the final dimensions so let's work out what the widths should be */
-
-    float gap = image_->width() / 4.0f; // Leave a gap between the icon and the text
-
-    float total = text_->width() + image_->width() + gap;
-
-    float xpos = ((window->width() - total) / 2.0f) + (image_->width() / 2);
-
-    auto ypos = window->coordinate_from_normalized(0, 0.5).y;
-
-    image_->move_to(xpos, ypos);
-    text_->move_to(xpos + image_->width() + gap, ypos);
+    image_->move_to(window->coordinate_from_normalized(0.5, 0.5));
+    text_->move_to(window->coordinate_from_normalized(0.5, 0.5));
 
     //Create an orthographic camera
     camera_ = stage_->new_camera();
@@ -75,6 +67,15 @@ void Splash::unload() {
 
 void Splash::activate() {
     pipeline_->activate();
+
+    /* Add gradual fade in */
+    std::shared_ptr<float> opacity = std::make_shared<float>(0.0f);
+    window->idle->add_timeout(1.0 / 60, [opacity, this]() -> bool {
+        const float SPEED = 5.0f;
+        *opacity += window->time_keeper->delta_time() * SPEED;
+        image_->set_opacity(std::min(*opacity, 1.0f));
+        return *opacity < 1.0f;
+    });
 }
 
 void Splash::deactivate() {

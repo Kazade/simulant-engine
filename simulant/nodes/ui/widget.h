@@ -4,6 +4,7 @@
 #include "../../generic/optional.h"
 #include "../../generic/identifiable.h"
 #include "../../generic/managed.h"
+#include "../../generic/range_value.h"
 
 namespace smlt {
 namespace ui {
@@ -21,12 +22,11 @@ enum OverflowType {
     OVERFLOW_TYPE_AUTO
 };
 
-/*
 enum TextAlignment {
     TEXT_ALIGNMENT_LEFT,
     TEXT_ALIGNMENT_CENTER,
     TEXT_ALIGNMENT_RIGHT
-};*/
+};
 
 enum ResizeMode {
     RESIZE_MODE_FIXED, // Clips / scrolls text
@@ -82,6 +82,7 @@ struct UIConfig {
     Colour progress_bar_background_colour_ = Colour::WHITE;
     Colour progress_bar_border_colour_ = Colour::DODGER_BLUE;
     float progress_bar_border_width_ = 1;
+    float progress_bar_height_ = 16.0f;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;
@@ -165,8 +166,8 @@ public:
 
     void set_text_colour(const Colour& colour);
 
-    float requested_width() const { return width_; }
-    float requested_height() const { return height_; }
+    float requested_width() const { return requested_width_; }
+    float requested_height() const { return requested_height_; }
 
     float content_width() const { return content_width_; } // Content area
     float content_height() const { return content_height_; }
@@ -208,6 +209,11 @@ public:
     /* Releases all presses forcibly, firing signals */
     void force_release();
 
+    void set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y);
+    smlt::Vec2 anchor_point() const;
+
+    void set_opacity(RangeValue<0, 1> alpha);
+
 private:
     bool initialized_ = false;
     UIManager* owner_ = nullptr;
@@ -216,10 +222,8 @@ private:
     FontPtr font_ = nullptr;
     MaterialPtr material_ = nullptr;
 
-    virtual MeshPtr construct_widget(float requested_width, float requested_height);
-
-    float width_ = .0f;
-    float height_ = .0f;
+    float requested_width_ = .0f;
+    float requested_height_ = .0f;
 
     float content_width_ = .0f;
     float content_height_ = .0f;
@@ -252,13 +256,28 @@ private:
     std::unordered_map<std::string, smlt::any> properties_;
 
     virtual void on_size_changed();
-    void rebuild();
 
     bool is_focused_ = false;
     WidgetPtr focus_next_ = nullptr;
     WidgetPtr focus_previous_ = nullptr;
 
+    float opacity_ = 1.0f;
+
 protected:
+    struct WidgetBounds {
+        smlt::Vec2 min;
+        smlt::Vec2 max;
+
+        float width() const { return max.x - min.x; }
+        float height() const { return max.y - min.y; }
+    };
+
+    virtual WidgetBounds calculate_background_size(float content_width, float content_height) const;
+    virtual WidgetBounds calculate_foreground_size(float content_width, float content_height) const;
+    void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
+
+    void new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour);
+
     bool is_initialized() const { return initialized_; }
 
     MeshPtr mesh() { return mesh_; }
@@ -267,11 +286,7 @@ protected:
     float foreground_depth_bias_ = 0.0002f;
     float text_depth_bias_ = 0.0004f;
 
-    void resize_or_generate_foreground(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
-    void resize_or_generate_background(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
-    void resize_or_generate_border(MeshPtr mesh, float width, float height, float xoffset, float yoffset);
-
-    void render_text(MeshPtr mesh, const std::string& submesh_name, const unicode& text, float width, float xoffset=0, float yoffset=0);
+    void render_text();
 
     std::set<uint32_t> fingers_down_;
 
@@ -283,6 +298,15 @@ protected:
      * them here, then used these indexes as necessary when rebuilding
      */
     std::set<uint16_t> available_indexes_;
+
+    /* A normalized vector representing the relative
+     * anchor position for movement (0, 0 == bottom left) */
+    smlt::Vec2 anchor_point_;
+    bool anchor_point_dirty_;
+
+    void on_transformation_change_attempted();
+
+    void rebuild();
 };
 
 }

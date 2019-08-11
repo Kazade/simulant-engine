@@ -20,6 +20,25 @@ public:
         SimulantTestCase::tear_down();
     }
 
+    void test_anchor_point() {
+        /*
+         * The anchor point should allow choosing where the
+         * position of widgets is set from, it should start
+         * at the bottom left initially
+         */
+
+        auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
+        assert_equal(button->aabb().min().x, 0); // By default, the bounds should start at zero
+        assert_equal(button->aabb().min().y, 0);
+        button->set_anchor_point(1.0, 0.0); // Bottom-right
+
+        assert_equal(button->aabb().min().x, 0); // No change
+        assert_equal(button->aabb().min().y, 0);
+        button->move_to(0, 0);
+        assert_equal(button->aabb().min().x, -100); // Should've changed now
+        assert_equal(button->aabb().min().y, 0);
+    }
+
     void test_button_creation() {
         auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
 

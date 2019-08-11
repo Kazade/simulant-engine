@@ -42,6 +42,7 @@ private:
     float pulse_fraction_ = 0.33f;
     bool pulse_right_ = true;
     float pulse_width_ = 1.0f;
+    float fraction_ = 0.0f;
 
     bool needs_refresh_ = true;
 
@@ -50,6 +51,8 @@ private:
     void refresh_bar();
 
     IdleConnectionID idle_connection_;
+
+    WidgetBounds calculate_foreground_size(float content_width, float content_height) const override;
 };
 
 }

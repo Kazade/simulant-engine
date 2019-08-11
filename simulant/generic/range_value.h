@@ -20,24 +20,43 @@ namespace smlt {
 template<int min, int max, typename T=float>
 class RangeValue {
 public:
+    RangeValue() = delete;
     RangeValue(T x):
         value_(clamp(x)) {}
+
+    RangeValue(const RangeValue& rhs):
+        value_(rhs.value_) {}
+
+    RangeValue& operator=(const RangeValue& rhs) {
+        if(&rhs == this) return *this;
+
+        value_ = rhs.value_;
+        return *this;
+    }
 
     operator T() const {
         return value_;
     }
 
+    bool operator==(const RangeValue& rhs) const {
+        return value_ == rhs.value_;
+    }
+
+    bool operator!=(const RangeValue& rhs) const {
+        return !(*this == rhs);
+    }
+
 private:
-    float clamp(T x) const {
+    T clamp(T x) const {
         // Debug assertions
         assert(x >= (T) min);
         assert(x <= (T) max);
 
-        return (value_ < min) ? (T) min:
-               (value_ > max) ? (T) max : value_;
+        return (x < min) ? (T) min:
+               (x > max) ? (T) max : x;
     }
 
-    T value_;
+    T value_ = (T) min;
 };
 
 }
