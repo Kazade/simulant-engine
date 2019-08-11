@@ -204,6 +204,8 @@ void Transformable::set_position(const Vec3 &p) {
         on_transformation_changed();
         signal_transformation_changed_();
     }
+
+    on_transformation_change_attempted();
 }
 
 void Transformable::set_rotation(const Quaternion& q) {

@@ -87,6 +87,10 @@ private:
 
     virtual void on_transformation_changed() {}
 
+    /* Called when a transformation is attempted, even if it doesn't
+     * result in any change */
+    virtual void on_transformation_change_attempted() {}
+
     Vec3 position_;
     Quaternion rotation_;
     Vec3 scaling_ = Vec3(1, 1, 1);

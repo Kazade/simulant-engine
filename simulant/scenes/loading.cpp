@@ -37,10 +37,12 @@ void Loading::load() {
 
     progress_bar_ = stage_->ui->new_widget_as_progress_bar();
     progress_bar_->resize(window->width() * 0.5f, 8);
+    progress_bar_->set_anchor_point(0.5f, 0.5f);
     progress_bar_->move_to(window->coordinate_from_normalized(0.5, 0.5));
     progress_bar_->set_pulse_step(progress_bar_->requested_width());
 
     auto label = stage_->ui->new_widget_as_label("LOADING");
+    label->set_anchor_point(0.5f, 0.5f);
     label->move_to(window->coordinate_from_normalized(0.5, 0.55));
     label->set_background_colour(smlt::Colour::NONE);
 
