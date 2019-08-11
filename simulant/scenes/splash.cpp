@@ -70,7 +70,7 @@ void Splash::activate() {
 
     /* Add gradual fade in */
     std::shared_ptr<float> opacity = std::make_shared<float>(0.0f);
-    window->idle->add_timeout(1.0 / 60, [opacity, this]() -> bool {
+    connection_ = window->idle->add_timeout(1.0 / 60, [opacity, this]() -> bool {
         const float SPEED = 5.0f;
         *opacity += window->time_keeper->delta_time() * SPEED;
         image_->set_opacity(std::min(*opacity, 1.0f));
@@ -81,6 +81,7 @@ void Splash::activate() {
 void Splash::deactivate() {
     //Deactivate the Splash pipeline
     pipeline_->deactivate();
+    window->idle->remove(connection_);
 }
 
 void Splash::update(float dt) {

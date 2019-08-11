@@ -42,6 +42,8 @@ private:
 
     ui::Image* text_ = nullptr;
     ui::Image* image_ = nullptr;
+
+    IdleConnectionID connection_;
 };
 
 }
