@@ -136,6 +136,7 @@ FILE(COPY ${CMAKE_SOURCE_DIR}/assets/particles/ DESTINATION ${CMAKE_BINARY_DIR}/
 FILE(COPY ${CMAKE_SOURCE_DIR}/assets/materials/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/materials/)
 FILE(COPY ${CMAKE_SOURCE_DIR}/assets/textures/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/textures/)
 FILE(COPY ${CMAKE_SOURCE_DIR}/assets/fonts/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/fonts/)
+FILE(COPY ${CMAKE_SOURCE_DIR}/assets/sounds/ DESTINATION ${CMAKE_BINARY_DIR}/simulant/sounds/)
 
 ADD_SUBDIRECTORY(simulant)
 ADD_SUBDIRECTORY(tests)

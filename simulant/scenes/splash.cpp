@@ -24,6 +24,8 @@ void Splash::load() {
     auto texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
     image_ = stage_->ui->new_widget_as_image(texture);
 
+    sound_ = window->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav");
+
     /* Scale for window resolution */
     float scale = 0.5 * (window->height() / 720.0f);
 
@@ -71,10 +73,22 @@ void Splash::unload() {
     pipeline_->deactivate();
     window->destroy_pipeline(pipeline_->id());
     window->destroy_stage(stage_->id());
+    window->shared_assets->destroy_sound(sound_);
 }
 
 void Splash::activate() {
     pipeline_->activate();
+
+    /* Add gradual fade in */
+    std::shared_ptr<float> opacity = std::make_shared<float>(0.0f);
+    connection_ = window->idle->add_timeout(1.0 / 60, [opacity, this]() -> bool {
+        const float SPEED = 2.0f;
+        *opacity += window->time_keeper->delta_time() * SPEED;
+        image_->set_opacity(std::min(*opacity, 1.0f));
+        return *opacity < 1.0f;
+    });
+
+    window->play_sound(sound_);
 }
 
 void Splash::deactivate() {

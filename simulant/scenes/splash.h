@@ -16,7 +16,7 @@ class Splash:
     public Scene<Splash> {
 
 public:
-    Splash(Window* window, const std::string& target_scene, float time=4.0):
+    Splash(Window* window, const std::string& target_scene, float time=5.5):
         Scene<Splash>(window),
         target_(target_scene),
         time_(time) {
@@ -42,6 +42,10 @@ private:
 
     ui::Image* text_ = nullptr;
     ui::Image* image_ = nullptr;
+
+    smlt::SoundID sound_;
+
+    IdleConnectionID connection_;
 };
 
 }
