@@ -42,32 +42,33 @@ void StatsPanel::initialize() {
 
     auto overlay = stage_;
 
-    auto hw = window_->width() / 2;
+    auto hw = 32;
+    float label_width = window_->width() * 0.5f;
 
     const float diff = 32;
     float vheight = window_->height() - diff;
 
-    auto heading1 = overlay->ui->new_widget_as_label("Performance");
+    auto heading1 = overlay->ui->new_widget_as_label("Performance", label_width);
     heading1->move_to(hw, vheight);
     vheight -= diff;
 
-    fps_ = overlay->ui->new_widget_as_label("FPS: 0");
+    fps_ = overlay->ui->new_widget_as_label("FPS: 0", label_width);
     fps_->move_to(hw, vheight);
     vheight -= diff;
 
-    frame_time_ = overlay->ui->new_widget_as_label("Frame Time: 0ms");
+    frame_time_ = overlay->ui->new_widget_as_label("Frame Time: 0ms", label_width);
     frame_time_->move_to(hw, vheight);
     vheight -= diff;
 
-    ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0");
+    ram_usage_ = overlay->ui->new_widget_as_label("RAM: 0", label_width);
     ram_usage_->move_to(hw, vheight);
     vheight -= diff;
 
-    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0");
+    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0", label_width);
     actors_rendered_->move_to(hw, vheight);
     vheight -= diff;
 
-    polygons_rendered_ = overlay->ui->new_widget_as_label("Polygons Rendered: 0");
+    polygons_rendered_ = overlay->ui->new_widget_as_label("Polygons Rendered: 0", label_width);
     polygons_rendered_->move_to(hw, vheight);
     vheight -= diff;
 

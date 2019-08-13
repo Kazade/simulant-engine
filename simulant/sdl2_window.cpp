@@ -289,7 +289,7 @@ bool SDL2Window::create_window() {
 
     int32_t flags = SDL_WINDOW_OPENGL;
     if(is_fullscreen()) {
-        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+        flags |= SDL_WINDOW_FULLSCREEN;
     }
 
     if(renderer_->name() == "gl1x") {
@@ -337,6 +337,38 @@ bool SDL2Window::create_window() {
         throw std::runtime_error("FATAL: Unable to create SDL window");
     }
 
+    if(is_fullscreen()) {
+        SDL_DisplayMode requested, found;
+        requested.w = width();
+        requested.h = height();
+        requested.format = 0;
+        requested.refresh_rate = 0;
+        requested.driverdata = 0;
+
+        L_DEBUG(_F("Requesting: {0}, {1}").format(width(), height()));
+
+        SDL_GetClosestDisplayMode(0, &requested, &found);
+        if(SDL_SetWindowDisplayMode(screen_, &found) != 0) {
+            // If this fails, we log it, but continue on
+            // the dev can tell whether this succeeded by
+            // checking the window width/height is what they
+            // asked for
+            L_ERROR(std::string(SDL_GetError()));
+            L_ERROR("Failed to set display resolution!");
+
+            //Reset the width and height to whatever was actually created
+            int32_t width = 0, height = 0;
+            SDL_GetWindowSize(screen_, &width, &height);
+
+            set_width(width);
+            set_height(height);
+        } else {
+            L_DEBUG(_F("Successfully changed window resolution to: {0}, {1}").format(found.w, found.h));
+            set_width(found.w);
+            set_height(found.h);
+        }
+    }
+
     context_ = SDL_GL_CreateContext(screen_);
 
     if(!context_) {
@@ -347,13 +379,6 @@ bool SDL2Window::create_window() {
     set_has_context(true); //Mark that we have a valid GL context
 
     renderer_->init_context();
-
-    //Reset the width and height to whatever was actually created
-    int32_t width = 0, height = 0;
-    SDL_GetWindowSize(screen_, &width, &height);
-
-    set_width(width);
-    set_height(height);
 
     SDL_GL_SetSwapInterval((vsync_enabled()) ? 1 : 0);
 

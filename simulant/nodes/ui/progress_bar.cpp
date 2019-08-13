@@ -14,6 +14,7 @@ ProgressBar::ProgressBar(WidgetID id, UIManager* owner, UIConfig* config):
     set_foreground_colour(config->progress_bar_foreground_colour_);
     set_border_colour(config->progress_bar_border_colour_);
     set_border_width(config->progress_bar_border_width_);
+    set_height(config->progress_bar_height_);
 
     idle_connection_ = this->stage->window->idle->add([this]() -> bool {
         refresh_bar();
@@ -51,14 +52,12 @@ void ProgressBar::refresh_pulse() {
         pulse_right_ = false;
     }
 
-    resize_or_generate_foreground(mesh(), pulse_width_, content_height(), pulse_position_, 0);
+    rebuild();
 }
 
 void ProgressBar::refresh_fraction() {
-    float fraction = value() / (max() - min());
-    float w = content_width() * fraction;
-
-    resize_or_generate_foreground(mesh(), w, content_height(), -(content_width() - w) / 2, 0);
+    fraction_ = value() / (max() - min());
+    rebuild();
 }
 
 void ProgressBar::refresh_bar() {
@@ -73,6 +72,17 @@ void ProgressBar::refresh_bar() {
     } else {
         refresh_fraction();
     }
+}
+
+Widget::WidgetBounds ProgressBar::calculate_foreground_size(float content_width, float content_height) const {
+    WidgetBounds result = Widget::calculate_foreground_size(content_width, content_height);
+    if(mode_ == PROGRESS_BAR_MODE_PULSE) {
+        result.min.x = pulse_position_ - (pulse_width_ / 2);
+        result.max.x = pulse_position_ + (pulse_width_ / 2);
+    } else {
+        result.max.x = result.min.x + ((result.max.x - result.min.x) * fraction_);
+    }
+    return result;
 }
 
 void ProgressBar::pulse() {

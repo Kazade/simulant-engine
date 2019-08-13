@@ -68,7 +68,7 @@ private:
 int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Basic Sample";
-    config.fullscreen = false;
+    config.fullscreen = true;
     config.width = 640;
     config.height = 480;
 
