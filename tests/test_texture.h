@@ -12,7 +12,7 @@ class TextureTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_locking() {
-        auto tex = window->shared_assets->new_texture();
+        auto tex = window->shared_assets->new_texture(8, 8);
         {
             auto lock = tex->lock();
             assert_false(tex->try_lock());
@@ -22,10 +22,7 @@ public:
     }
 
     void test_conversion_from_r8_to_rgba4444() {
-        auto tex = window->shared_assets->new_texture();
-
-        tex->set_format(TEXTURE_FORMAT_R8);
-        tex->resize(2, 2);
+        auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
 
         auto& data = tex->data();
         data[0] = 255;

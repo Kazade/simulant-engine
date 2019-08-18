@@ -60,8 +60,8 @@ class RenderTarget {
 public:
     virtual ~RenderTarget() {}
 
-    virtual uint32_t width() const = 0;
-    virtual uint32_t height() const = 0;
+    virtual uint16_t width() const = 0;
+    virtual uint16_t height() const = 0;
 
     virtual void set_clear_every_frame(uint32_t clear_flags=BUFFER_CLEAR_ALL, const smlt::Colour& colour=smlt::Colour::BLACK) {
         clear_flags_ = clear_flags;

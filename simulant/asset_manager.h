@@ -124,10 +124,10 @@ public:
     void destroy_mesh(MeshID m);
 
 
-    TexturePtr new_texture(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     TexturePtr new_texture_from_file(const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    TexturePtr new_texture_with_alias(const std::string &alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture_with_alias(const std::string &alias, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     TexturePtr new_texture_with_alias_from_file(const std::string& alias, const unicode& path, TextureFlags flags=TextureFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     TexturePtr get_texture_with_alias(const std::string &alias);
 

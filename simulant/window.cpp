@@ -90,7 +90,7 @@ static unsigned char simulant_icon_vmu_bits[] = {
 
 namespace smlt {
 
-Window::Window(int width, int height, int bpp, bool fullscreen, bool enable_vsync):
+Window::Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync):
     Source(this),
     StageManager(this),
     BackgroundManager(this),

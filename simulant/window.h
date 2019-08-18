@@ -138,8 +138,8 @@ public:
 
     bool is_paused() const { return is_paused_; }
 
-    uint32_t width() const override { return width_; }
-    uint32_t height() const override { return height_; }
+    uint16_t width() const override { return width_; }
+    uint16_t height() const override { return height_; }
     bool is_fullscreen() const { return fullscreen_; }
     bool vsync_enabled() const { return vsync_enabled_; }
 
@@ -179,8 +179,8 @@ public:
 
     Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
         return Vec2(
-            uint32_t(float(width()) * rx),
-            uint32_t(float(height()) * ry)
+            uint16_t(float(width()) * rx),
+            uint16_t(float(height()) * ry)
         );
     }
 
@@ -264,15 +264,15 @@ protected:
         vsync_enabled_ = vsync;
     }
 
-    void set_width(uint32_t width) { 
+    void set_width(uint16_t width) {
         width_ = width; 
     }
     
-    void set_height(uint32_t height) {
+    void set_height(uint16_t height) {
         height_ = height; 
     }
 
-    void set_bpp(uint32_t bpp) {
+    void set_bpp(uint16_t bpp) {
         bpp_ = bpp;
     }
 
@@ -283,7 +283,7 @@ protected:
     virtual bool create_window() = 0;
     virtual void destroy_window() = 0;
 
-    Window(int width, int height, int bpp, bool fullscreen, bool enable_vsync);
+    Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync);
 
     void set_paused(bool value=true);
     void set_has_context(bool value=true);
@@ -311,9 +311,9 @@ private:
     std::shared_ptr<AssetManager> asset_manager_;
     bool initialized_;
 
-    uint32_t width_ = 0;
-    uint32_t height_ = 0;
-    uint32_t bpp_ = 0;
+    uint16_t width_ = 0;
+    uint16_t height_ = 0;
+    uint16_t bpp_ = 0;
     bool fullscreen_ = false;
     bool vsync_enabled_ = false;
 

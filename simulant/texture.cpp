@@ -43,11 +43,15 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_ALPHA
 }};
 
-Texture::Texture(TextureID id, AssetManager *asset_manager):
+Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
     Asset(asset_manager),
     generic::Identifiable<TextureID>(id),
     width_(0),
-    height_(0) {
+    height_(0),
+    format_(format) {
+
+    resize(width, height);
+    set_format(format);
 
     renderer_ = asset_manager->window->renderer;
 }
@@ -71,7 +75,7 @@ void Texture::set_format(TextureFormat format, TextureTexelType texel_type) {
     data_dirty_ = true;
 }
 
-void Texture::resize(uint32_t width, uint32_t height, uint32_t data_size) {
+void Texture::resize(uint16_t width, uint16_t height, uint32_t data_size) {
     if(width_ == width && height_ == height && data_.size() == data_size) {
         return;
     }
@@ -83,7 +87,7 @@ void Texture::resize(uint32_t width, uint32_t height, uint32_t data_size) {
     data_dirty_ = true;
 }
 
-void Texture::resize(uint32_t width, uint32_t height) {
+void Texture::resize(uint16_t width, uint16_t height) {
     if(width_ == width && height_ == height) {
         return;
     }
