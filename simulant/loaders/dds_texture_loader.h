@@ -26,7 +26,7 @@ public:
         add_hint(LOADER_HINT_TEXTURE);
     }
 
-    ~DDSTextureLoaderType() {}
+    virtual ~DDSTextureLoaderType() {}
 
     unicode name() override { return "dds_texture"; }
     bool supports(const unicode& filename) const override {

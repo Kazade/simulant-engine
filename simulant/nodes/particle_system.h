@@ -34,7 +34,7 @@ class ParticleSystem :
 
 public:
     ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver);
-    ~ParticleSystem();
+    virtual ~ParticleSystem();
 
     const AABB& aabb() const override;
     const AABB transformed_aabb() const override {

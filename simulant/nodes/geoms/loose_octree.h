@@ -57,7 +57,7 @@ public:
         grow(max_level_count);
     }
 
-    ~Octree() {
+    virtual ~Octree() {
         /* Make sure we delete the node data */
         for(auto& node: nodes_) {
             delete node.data;

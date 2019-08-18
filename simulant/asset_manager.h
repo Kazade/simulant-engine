@@ -72,7 +72,7 @@ class AssetManager:
 
 public:
     AssetManager(Window* window, AssetManager* parent=nullptr);
-    ~AssetManager();
+    virtual ~AssetManager();
 
     bool init();
 

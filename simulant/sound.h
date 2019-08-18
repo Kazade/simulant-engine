@@ -118,7 +118,7 @@ private:
     bool first_update_ = true;
 public:
     SourceInstance(Source& parent, SoundID sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
-    ~SourceInstance();
+    virtual ~SourceInstance();
 
     void start();
     void update(float dt);

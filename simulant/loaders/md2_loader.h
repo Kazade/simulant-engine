@@ -41,7 +41,7 @@ public:
 
     }
 
-    ~MD2LoaderType() {}
+    virtual ~MD2LoaderType() {}
 
     unicode name() override {
         return "md2";

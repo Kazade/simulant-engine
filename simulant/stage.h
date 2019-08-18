@@ -90,7 +90,7 @@ class Stage:
 
 public:
     Stage(StageID id, Window *parent, AvailablePartitioner partitioner);
-    ~Stage();
+    virtual ~Stage();
 
     ActorPtr new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
     ActorPtr new_actor_with_name(const std::string& name, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);

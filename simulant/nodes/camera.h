@@ -18,7 +18,7 @@ public:
     using ContainerNode::_get_renderables;
 
     Camera(CameraID camera_id, Stage* stage);
-    ~Camera();
+    virtual ~Camera();
 
     void destroy() override;
 

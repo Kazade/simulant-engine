@@ -103,6 +103,8 @@ ELSE()
     # We build libGL source files into Simulant directly (see simulant/CMakeLists.txt)
     SET(OPENGL_INCLUDE_DIRS "")
     SET(OPENGL_LIBRARIES "")
+
+    SET(THREADS_PREFER_PTHREAD_FLAG OFF)
 ENDIF()
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)

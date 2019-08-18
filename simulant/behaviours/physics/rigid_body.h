@@ -51,7 +51,7 @@ class RigidBody:
 
 public:
     RigidBody(RigidBodySimulation *simulation);
-    ~RigidBody();
+    virtual ~RigidBody();
 
     void add_force(const Vec3& force);
     void add_force_at_position(const Vec3& force, const Vec3& position);

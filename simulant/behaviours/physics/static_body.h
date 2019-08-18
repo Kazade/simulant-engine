@@ -14,7 +14,7 @@ class StaticBody:
 
 public:
     StaticBody(RigidBodySimulation *simulation);
-    ~StaticBody();
+    virtual ~StaticBody();
 
     using impl::Body::init;
     using impl::Body::clean_up;

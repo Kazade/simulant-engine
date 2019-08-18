@@ -40,7 +40,7 @@ public:
         add_hint(LOADER_HINT_TEXTURE);
     }
 
-    ~PCXLoaderType() {}
+    virtual ~PCXLoaderType() {}
 
     unicode name() override { return "pcx_texture"; }
     bool supports(const unicode& filename) const override {

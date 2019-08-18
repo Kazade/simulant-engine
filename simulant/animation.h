@@ -85,7 +85,7 @@ public:
         AnimationUpdatedCallback refresh_animation_state
     );
 
-    ~KeyFrameAnimationState() {
+    virtual ~KeyFrameAnimationState() {
         on_animation_added_.disconnect();
     }
 

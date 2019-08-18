@@ -32,7 +32,7 @@ struct PartitionerEntry : public SpatialHashEntry {
         type(PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM),
         particle_system_id(ps_id) {}
 
-    ~PartitionerEntry() {}
+    virtual ~PartitionerEntry() {}
 
     PartitionerEntryType type;
     union {
@@ -46,7 +46,7 @@ struct PartitionerEntry : public SpatialHashEntry {
 class SpatialHashPartitioner : public Partitioner {
 public:
     SpatialHashPartitioner(Stage* ss);
-    ~SpatialHashPartitioner();
+    virtual ~SpatialHashPartitioner();
 
     void lights_and_geometry_visible_from(
         CameraID camera_id,

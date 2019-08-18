@@ -74,7 +74,7 @@ public:
         add_hint(LOADER_HINT_MESH);
     }
 
-    ~HeightmapLoaderType() {}
+    virtual ~HeightmapLoaderType() {}
 
     unicode name() override { return "heightmap_loader"; }
     bool supports(const unicode& filename) const override {

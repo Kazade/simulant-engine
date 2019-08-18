@@ -205,7 +205,7 @@ private:
 
 class VBOManager : public RefCounted<VBOManager> {
 public:
-    ~VBOManager();
+    virtual ~VBOManager();
     GPUBuffer update_and_fetch_buffers(Renderable* renderable);
 
     uint32_t dedicated_buffer_count() const;

@@ -18,7 +18,7 @@ public:
     using Widget::clean_up;
 
     ProgressBar(WidgetID id, UIManager* owner, UIConfig* config);
-    ~ProgressBar();
+    virtual ~ProgressBar();
 
     void pulse();
     void set_pulse_step(float value);

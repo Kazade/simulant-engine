@@ -42,7 +42,7 @@ class UIManager:
 
 public:
     UIManager(Stage* stage);
-    ~UIManager();
+    virtual ~UIManager();
 
     Button* new_widget_as_button(const unicode& text, float width=.0f, float height=.0f);
     Label* new_widget_as_label(const unicode& text, float width=.0f, float height=.0f);

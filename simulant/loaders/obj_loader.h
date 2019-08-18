@@ -40,7 +40,7 @@ public:
 
     }
 
-    ~OBJLoaderType() {}
+    virtual ~OBJLoaderType() {}
 
     unicode name() override { return "obj"; }
     bool supports(const unicode& filename) const override {

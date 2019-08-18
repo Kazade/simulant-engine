@@ -816,8 +816,6 @@ simulant/utils/hash/md5_public_domain.cpp
 simulant/utils/hash/md5_public_domain.h
 simulant/utils/memory.cpp
 simulant/utils/memory.h
-simulant/utils/mesh/triangulate.cpp
-simulant/utils/mesh/triangulate.h
 simulant/utils/noise.cpp
 simulant/utils/noise.h
 simulant/utils/rect_pack.cpp

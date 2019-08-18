@@ -11,11 +11,13 @@ std::vector<uint32_t> triangles_to_triangles(SubMesh* submesh) {
 }
 
 std::vector<uint32_t> triangle_strip_to_triangles(SubMesh* submesh) {
-
+    assert(0 && "Not implemented");
+    return std::vector<uint32_t>();
 }
 
 std::vector<uint32_t> triangle_fan_to_triangles(SubMesh* submeshes) {
-
+    assert(0 && "Not implemented");
+    return std::vector<uint32_t>();
 }
 
 typedef std::function<std::vector<uint32_t> (SubMesh*)> ProcessorFunc;

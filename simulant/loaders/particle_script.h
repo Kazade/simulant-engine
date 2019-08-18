@@ -38,7 +38,7 @@ public:
 
     }
 
-    ~ParticleScriptLoaderType() {}
+    virtual ~ParticleScriptLoaderType() {}
 
     unicode name() override { return "particle"; }
     bool supports(const unicode& filename) const override {

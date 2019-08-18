@@ -45,7 +45,7 @@ public:
         add_hint(LOADER_HINT_TEXTURE);
     }
 
-    ~WALLoaderType() {}
+    virtual ~WALLoaderType() {}
 
     unicode name() override { return "wal_texture"; }
     bool supports(const unicode& filename) const override {

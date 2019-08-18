@@ -46,7 +46,7 @@ public:
         RenderSequence* render_sequence
     );
 
-    ~Pipeline();
+    virtual ~Pipeline();
 
     CameraID camera_id() { return camera_; }
     StageID stage_id() { return stage_; }
@@ -112,7 +112,7 @@ class RenderSequence:
 
 public:
     RenderSequence(Window* window);
-    ~RenderSequence();
+    virtual ~RenderSequence();
 
     PipelinePtr new_pipeline(
         StageID stage,

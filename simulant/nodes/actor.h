@@ -161,7 +161,7 @@ public:
     }
 
     SubActor(const Actor& parent, std::shared_ptr<SubMesh> submesh);
-    ~SubActor();
+    virtual ~SubActor();
 
     SubMesh* submesh();
     const SubMesh* submesh() const;

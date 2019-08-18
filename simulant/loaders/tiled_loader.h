@@ -38,7 +38,7 @@ public:
 
     }
 
-    ~TiledLoaderType() {}
+    virtual ~TiledLoaderType() {}
 
     unicode name() override { return "tiled"; }
     bool supports(const unicode& filename) const override {        

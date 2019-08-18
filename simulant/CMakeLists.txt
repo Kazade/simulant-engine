@@ -30,7 +30,7 @@ IF(DREAMCAST_BUILD)
 
     # We build in GLdc and ALdc directly (as it's all under the Simulant umbrella)
     FILE(GLOB_RECURSE LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/*.c)
-    FILE(GLOB_RECURSE LIBGL_ASM ${CMAKE_SOURCE_DIR}/deps/libgl/*.S)
+    LIST(REMOVE_ITEM LIBGL "${CMAKE_SOURCE_DIR}deps/libgl/samples/*")
 
     SET(
         LIBAL

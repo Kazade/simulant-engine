@@ -28,7 +28,7 @@ namespace smlt {
 class Debug : public RefCounted<Debug> {
 public:
     Debug(Stage& stage);
-    ~Debug();
+    virtual ~Debug();
 
     void draw_ray(
         const Vec3& start,

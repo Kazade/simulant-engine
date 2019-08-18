@@ -40,7 +40,7 @@ public:
         add_hint(LOADER_HINT_TEXTURE);
     }
 
-    ~TextureLoaderType() {}
+    virtual ~TextureLoaderType() {}
 
     unicode name() override { return "texture"; }
     bool supports(const unicode& filename) const override {
