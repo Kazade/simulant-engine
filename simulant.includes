@@ -203,3 +203,6 @@ deps/libgl/samples/paletted_pcx
 deps/libgl/samples/multitexture_arrays
 deps/libgl/samples/nehe02de
 deps/libgl/samples/polymark
+deps/libAL/samples/basic
+deps/libAL/AL
+deps/libAL/AL/private

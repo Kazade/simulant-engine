@@ -1,3 +1,6 @@
+deps/libAL/AL/mojoal.c
+deps/libAL/AL/private/device.c
+deps/libAL/samples/basic/main.c
 deps/libgl/GL/config.h
 deps/libgl/Makefile
 deps/libgl/samples/Makefile

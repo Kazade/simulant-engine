@@ -1,14 +1,22 @@
 # Dockerfile for generating a Fedora image with the full KallistiOS SDK installed so you can compile
 # Dreamcast applications
 
-FROM fedora:21
+FROM registry.fedoraproject.org/fedora-minimal:30
 MAINTAINER kazade <kazade@gmail.com>
 
-RUN yum clean all && yum -y install yum-plugin-ovl
-RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
+RUN rpm --import https://copr-be.cloud.fedoraproject.org/results/davidva/gcc49/pubkey.gpg
+RUN microdnf install -y wget && microdnf clean all
+
+RUN wget -P /etc/yum.repos.d/ https://raw.githubusercontent.com/kuboosoft/spec-testing/master/REPOSITORY/_copr_davidva-gcc49.repo
+RUN sed -i -r -e 's/-23-/-30-/;' /etc/yum.repos.d/_copr_davidva-gcc49.repo
+
+RUN microdnf -y update && microdnf clean all && microdnf -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc49 texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && microdnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone git://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
+
+# Switch to a gcc4.9 toolchain (compiling with later causes issues for some reason)
+RUN source /usr/bin/gcc49
 
 ## Uncomment the below to enable a 5.2 toolchain
 
@@ -94,7 +102,7 @@ include ${KOS_PORTS}/scripts/kos-ports.mk\n\
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make install clean
 
 # Now install dcload-ip
-RUN yum install -y elfutils-libelf-devel
+RUN microdnf install -y elfutils-libelf-devel
 RUN . /etc/bash.bashrc; git clone https://git.code.sf.net/p/cadcdev/dcload-ip /opt/toolchains/dc/dc-load-ip
 RUN . /etc/bash.bashrc; cp /opt/toolchains/dc/dc-load-ip/example-src/dc4.x /opt/toolchains/dc/dc-load-ip/example-src/dc5.x
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
