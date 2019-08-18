@@ -15,7 +15,7 @@ public:
         Viewport view;
         auto stage = window->new_stage();
         auto cam = stage->new_camera();
-        TextureID tex = window->shared_assets->new_texture();
+        TextureID tex = window->shared_assets->new_texture(256, 256);
 
         PipelinePtr pipeline1 = window->render(stage, cam);
         PipelinePtr pipeline2 = window->render(stage, cam).to_texture(tex);

@@ -71,7 +71,9 @@ bool AssetManager::init() {
 
     //FIXME: Should lock the default texture and material during construction!
     //Create the default blank texture
-    default_texture_id_ = new_texture(GARBAGE_COLLECT_NEVER);
+    /* 8x8 is the smallest size we can do without the Dreamcast pvr library
+     * complaining that it's not a valid size :/ */
+    default_texture_id_ = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, GARBAGE_COLLECT_NEVER);
 
     L_DEBUG("- Created texture");
 
@@ -82,11 +84,6 @@ bool AssetManager::init() {
         auto tex = texture(default_texture_id_);
         auto texlock = tex->lock();
 
-        /* 8x8 is the smallest size we can do without the Dreamcast pvr library
-         * complaining that it's not a valid size :/
-         */
-        tex->resize(8, 8);
-        tex->set_format(TEXTURE_FORMAT_RGBA8888);
         for(uint32_t i = 0; i < 64 * 4; ++i) {
             tex->data()[i] = 255;
         }
@@ -571,15 +568,15 @@ uint32_t AssetManager::material_count() const {
     return material_manager_.count();
 }
 
-TexturePtr AssetManager::new_texture(GarbageCollectMethod garbage_collect) {
-    auto ret = texture_manager_.make(this);
+TexturePtr AssetManager::new_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
+    auto ret = texture_manager_.make(this, width, height, format);
     texture_manager_.set_garbage_collection_method(ret->id(), garbage_collect);
     return ret;
 }
 
 TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
-    smlt::TexturePtr tex = texture(new_texture(garbage_collect));
+    smlt::TexturePtr tex = texture(new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect));
 
     {
         auto texlock = tex->lock();
@@ -603,8 +600,8 @@ void AssetManager::destroy_texture(TextureID t) {
     texture_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
-TexturePtr AssetManager::new_texture_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
-    auto t = new_texture(garbage_collect);
+TexturePtr AssetManager::new_texture_with_alias(const std::string& alias, uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
+    auto t = new_texture(width, height, format, garbage_collect);
     try {
         texture_manager_.store_alias(alias, t->id());
     } catch(...) {

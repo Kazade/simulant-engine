@@ -349,7 +349,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<MaterialID> materials;    
     std::vector<Q2::TexDimension> dimensions;
 
-    TextureID lightmap_texture = assets->new_texture(smlt::GARBAGE_COLLECT_NEVER);
+    TextureID lightmap_texture = assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
 
     generate_materials(assets, textures, materials, dimensions, lightmap_texture);
 

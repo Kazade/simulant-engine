@@ -26,7 +26,7 @@ public:
         rect_ = rect_stage_->new_actor_with_mesh(rect_mesh);
         rect_->move_to_absolute(0, 0, -4);
 
-        TextureID rtt = window->shared_assets->new_texture(smlt::GARBAGE_COLLECT_NEVER);
+        TextureID rtt = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
         mat = rect_mesh.fetch()->first_submesh()->material_id().fetch();
         mat->set_diffuse_map(rtt);
 
