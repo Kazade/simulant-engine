@@ -239,7 +239,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     );
 
     // Load the texture using the texture loader
-    TexturePtr tex = mesh->asset_manager().new_texture();
+    TexturePtr tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R8);
     TextureLoader loader(this->filename_, this->data_);    
     loader.into(*tex, {{"auto_upload", false}});
 

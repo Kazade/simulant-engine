@@ -167,7 +167,7 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    Texture(TextureID id, AssetManager* asset_manager);
+    Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888);
 
     /*
      * Lock the texture against uploads to the GPU.
@@ -206,13 +206,13 @@ public:
      * Change the width and height, but manually set the data buffer size,
      * mainly used for compressed textures
      */
-    void resize(uint32_t width, uint32_t height, uint32_t data_size);
+    void resize(uint16_t width, uint16_t height, uint32_t data_size);
 
     /*
      * Change the width and height, automatically resizing the data buffer
      * depending on the bytes_per_pixel of the texel_type
      */
-    void resize(uint32_t width, uint32_t height);
+    void resize(uint16_t width, uint16_t height);
 
     /*
      * Flip the data buffer vertically. This will have no effect if the
@@ -223,8 +223,8 @@ public:
     /* Clear the data buffer */
     void free();
 
-    uint32_t width() const override { return width_; }
-    uint32_t height() const override { return height_; }
+    uint16_t width() const override { return width_; }
+    uint16_t height() const override { return height_; }
     Vec2 dimensions() const { return Vec2(width(), height()); }
 
     /*
@@ -364,8 +364,8 @@ public:
 private:
     Renderer* renderer_ = nullptr;
 
-    uint32_t width_;
-    uint32_t height_;
+    uint16_t width_;
+    uint16_t height_;
 
     TextureTexelType texel_type_ = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
     TextureFormat format_ = TEXTURE_FORMAT_RGBA8888;

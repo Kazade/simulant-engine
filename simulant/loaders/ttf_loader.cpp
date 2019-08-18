@@ -36,8 +36,7 @@ namespace loaders {
         font->line_gap_ = float(line_gap) * font->scale_;
 
         // Generate a new texture for rendering the font to
-        auto texture = font->texture_ = font->asset_manager().new_texture();
-        texture->set_format(TEXTURE_FORMAT_RGBA8888); // Need to use GL_RGBA for Dreamcast
+        auto texture = font->texture_ = font->asset_manager().new_texture(TEXTURE_WIDTH, TEXTURE_HEIGHT, TEXTURE_FORMAT_RGBA8888);
 
         if(charset != CHARACTER_SET_LATIN) {
             throw std::runtime_error("Unsupported character set - please submit a patch!");
@@ -66,8 +65,6 @@ namespace loaders {
         {
             // Lock against updates
             auto lock = font->texture_->lock();
-
-            texture->resize(TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
             // Manipulate the data buffer
             auto data = &texture->data()[0];

@@ -25,7 +25,7 @@ public:
         smlt::_material_impl::MaterialVariant* variant = nullptr;
 
         smlt::TextureUnit unit;
-        unit.texture_id = window->shared_assets->new_texture();
+        unit.texture_id = window->shared_assets->new_texture(8, 8);
         unit.texture_ = unit.texture_id.fetch();
 
         auto initial_count = unit.texture_.use_count();
@@ -77,7 +77,7 @@ public:
 
     void test_texture_unit() {
         auto mat = window->shared_assets->new_material();
-        auto tex = window->shared_assets->new_texture();
+        auto tex = window->shared_assets->new_texture(8, 8);
 
         mat->set_diffuse_map(tex);
         mat->set_pass_count(2);
@@ -88,7 +88,7 @@ public:
         assert_equal(pass1->diffuse_map().texture_id, tex);
         assert_equal(pass2->diffuse_map().texture_id, tex);
 
-        auto tex2 = window->shared_assets->new_texture();
+        auto tex2 = window->shared_assets->new_texture(8, 8);
 
         pass1->set_diffuse_map(tex2);
 
@@ -106,7 +106,7 @@ public:
         auto mat = window->shared_assets->new_material();
         mat->set_pass_count(1);
 
-        auto texture = window->shared_assets->new_texture();
+        auto texture = window->shared_assets->new_texture(8, 8);
         assert_equal(texture.use_count(), 2);
 
         mat->set_diffuse_map(texture->id());
