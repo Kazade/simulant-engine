@@ -59,7 +59,8 @@ private:
         b3Mesh* get_mesh() const { return mesh_.get(); }
     };
 
-    static std::unordered_map<MeshID, std::shared_ptr<b3MeshGenerator>> mesh_cache;
+    typedef std::unordered_map<MeshID, std::shared_ptr<b3MeshGenerator>> MeshCache;
+    static MeshCache& get_mesh_cache();
 };
 
 }

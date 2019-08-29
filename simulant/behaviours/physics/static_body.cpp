@@ -7,8 +7,6 @@
 namespace smlt {
 namespace behaviours {
 
-std::unordered_map<MeshID, std::shared_ptr<StaticBody::b3MeshGenerator>> StaticBody::mesh_cache;
-
 StaticBody::StaticBody(RigidBodySimulation* simulation):
     Body(simulation) {
 
@@ -50,6 +48,8 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
         return;
     }
 
+    auto& mesh_cache = get_mesh_cache();
+
     // If we haven't already seen this mesh, then create a new b3Mesh for it
     if(mesh_cache.count(mesh_id) == 0) {
         auto bmesh = std::make_shared<b3MeshGenerator>();
@@ -80,6 +80,11 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
     sdef.restitution = properties.bounciness;
 
     store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+}
+
+StaticBody::MeshCache& StaticBody::get_mesh_cache() {
+    static MeshCache mesh_cache;
+    return mesh_cache;
 }
 
 
