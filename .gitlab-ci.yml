@@ -48,9 +48,9 @@ android:
 
 build:windows-x64-mingw:
   stage: build
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   before_script:
-   - dnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python
+   - microdnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python
   variables:
     MINGW_BIN_DIR: /usr/x86_64-w64-mingw32/sys-root/mingw/bin/
     TARGET: windows-x64-mingw
@@ -85,14 +85,14 @@ build:windows-x64-mingw:
 
 test:windows-x64-mingw:
   stage: test
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   allow_failure: true
   variables:
     TARGET: windows-x64-mingw
   dependencies:
    - build:windows-x64-mingw
   before_script:
-   - dnf install -y wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
+   - microdnf install -y wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -108,13 +108,13 @@ test:windows-x64-mingw:
 
 deploy:windows-x64-mingw:
   stage: deploy
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
    - test:windows-x64-mingw
   variables:
    TARGET: windows-x64-mingw
   before_script:
-   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
    - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
@@ -135,12 +135,12 @@ deploy:windows-x64-mingw:
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
   stage: build
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   variables:
    TARGET: linux-x64-clang
   before_script:
-   - dnf upgrade -y
-   - dnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
+   - microdnf upgrade -y && microdnf clean all
+   - microdnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - export CC=/usr/bin/clang
    - export CXX=/usr/bin/clang++
@@ -162,12 +162,12 @@ build:linux-x64-clang:
 
 build:linux-x64-gcc:
   stage: build
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - dnf upgrade -y
-   - dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
+   - microdnf upgrade -y && microdnf clean all
+   - microdnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
@@ -187,13 +187,13 @@ build:linux-x64-gcc:
 
 test:linux-x64-gcc:
   stage: test
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
    - build:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - dnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
+   - microdnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -209,13 +209,13 @@ test:linux-x64-gcc:
 
 deploy:linux-x64-gcc:
   stage: deploy
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
    - test:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
    - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
@@ -252,15 +252,15 @@ build:dreamcast-sh4-gcc:
 
 test:dreamcast-sh4-gcc:
   stage: test
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   allow_failure: true
   variables:
    TARGET: dreamcast-sh4-gcc
   dependencies:
     - build:dreamcast-sh4-gcc
   before_script:
-    - dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-    - dnf install -y lxdream
+    - microdnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+    - microdnf install -y lxdream
   script:
     - cd ${TARGET}/release
     - lxdream --audio=null -H tests/simulant_tests.elf | tee log.out
@@ -270,13 +270,13 @@ test:dreamcast-sh4-gcc:
 
 deploy:dreamcast-sh4-gcc:
   stage: deploy
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
    - test:dreamcast-sh4-gcc
   variables:
    TARGET: dreamcast-sh4-gcc
   before_script:
-   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
    - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
@@ -294,9 +294,9 @@ deploy:dreamcast-sh4-gcc:
 
 deploy:assets:
   stage: deploy
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   before_script:
-   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
    - pip install gsutil
   script:
    - mkdir -p upload
@@ -312,9 +312,9 @@ deploy:assets:
 
 deploy:tools:
   stage: deploy
-  image: fedora:28
+  image: registry.fedoraproject.org/fedora-minimal:30
   before_script:
-   - dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
+   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
    - pip install gsutil
   script:
    - mkdir -p upload/simulant
