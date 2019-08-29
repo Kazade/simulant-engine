@@ -71,13 +71,13 @@ static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
     return true;
 }
 
-const static std::map<std::string, std::function<bool (std::istream* stream, Sound* sound, std::size_t len)>> CHUNK_MAP = {
-    {"RIFF", read_riff},
-    {"junk", read_junk},
-    {"data", read_data}
-};
-
 void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
+    const static std::map<std::string, std::function<bool (std::istream* stream, Sound* sound, std::size_t len)>> CHUNK_MAP = {
+        {"RIFF", read_riff},
+        {"junk", read_junk},
+        {"data", read_data}
+    };
+
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");
@@ -154,11 +154,9 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
             if(sound) {
                 auto& data = sound->data();
                 const uint32_t buffer_size = sound->buffer_size();
-                const std::size_t sample_size = audio_data_format_byte_size(sound->format());
-
                 const uint32_t remaining_in_bytes = data.size() - state->offset;
 
-                assert(buffer_size % sample_size == 0);
+                assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
 
                 std::vector<uint8_t> buffer;
                 if(remaining_in_bytes == 0) {
