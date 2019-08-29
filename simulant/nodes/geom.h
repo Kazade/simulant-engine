@@ -48,7 +48,15 @@ class Geom :
     public Source {
 
 public:
-    Geom(GeomID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh, const Vec3& position=Vec3(), const Quaternion rotation=Quaternion());
+    Geom(
+        GeomID id,
+        Stage* stage,
+        SoundDriver *sound_driver,
+        MeshID mesh,
+        const Vec3& position=Vec3(),
+        const Quaternion rotation=Quaternion(),
+        uint8_t octree_max_depth=5
+    );
 
     const AABB& aabb() const override;
 
@@ -68,6 +76,7 @@ public:
 private:
     MeshID mesh_id_;
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
+    uint8_t octree_max_depth_;
 
     std::shared_ptr<GeomCuller> culler_;
 
