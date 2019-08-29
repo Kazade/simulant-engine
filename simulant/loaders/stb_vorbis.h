@@ -196,7 +196,7 @@ extern stb_vorbis * stb_vorbis_open_file(FILE *f, int close_handle_on_close,
 // create an ogg vorbis decoder from an open FILE *, looking for a stream at
 // the _current_ seek point (ftell). on failure, returns NULL and sets *error.
 // note that stb_vorbis must "own" this stream; if you seek it in between
-// calls to stb_vorbis, it will become confused. Morever, if you attempt to
+// calls to stb_vorbis, it will become confused. Moreover, if you attempt to
 // perform stb_vorbis_seek_*() operations on this file, it will assume it
 // owns the _entire_ rest of the file after the start point. Use the next
 // function, stb_vorbis_open_file_section(), to limit it.
@@ -317,7 +317,8 @@ enum STBVorbisError
    VORBIS_invalid_first_page,
    VORBIS_bad_packet_type,
    VORBIS_cant_find_last_page,
-   VORBIS_seek_failed
+   VORBIS_seek_failed,
+   VORBIS_ogg_skeleton_not_supported
 };
 
 
