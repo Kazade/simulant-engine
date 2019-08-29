@@ -137,6 +137,10 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
 
 #define RAM_SAMPLES 25
 
+static unsigned int round(unsigned int value, unsigned int multiple){
+    return ((value-1u) & ~(multiple-1u)) + multiple;
+}
+
 void StatsPanel::rebuild_ram_graph() {
     const smlt::Colour colour = smlt::Colour::SKY_BLUE;
 
@@ -154,7 +158,7 @@ void StatsPanel::rebuild_ram_graph() {
     float graph_max = 16.0f;
 #else
     float max_y = *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
-    float graph_max = round(max_y, 8);
+    float graph_max = round(max_y, 8.0f);
 #endif
 
     auto submesh = ram_graph_mesh_->new_submesh_with_material("ram-usage", graph_material_, MESH_ARRANGEMENT_QUADS);
