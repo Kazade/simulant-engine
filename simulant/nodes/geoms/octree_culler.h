@@ -12,7 +12,7 @@ struct _OctreeCullerImpl;
 
 class OctreeCuller : public GeomCuller {
 public:
-    OctreeCuller(Geom* geom, const MeshPtr mesh);
+    OctreeCuller(Geom* geom, const MeshPtr mesh, uint8_t max_depth);
 
     AABB octree_bounds() const;
 private:
@@ -26,6 +26,7 @@ private:
 
     VertexData vertices_;
     IndexType index_type_ = INDEX_TYPE_16_BIT;
+    uint8_t max_depth_;
 };
 
 }

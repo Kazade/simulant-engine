@@ -25,12 +25,13 @@
 
 namespace smlt {
 
-Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation):
+Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, uint8_t octree_max_depth):
     StageNode(stage),
     generic::Identifiable<GeomID>(id),
     Source(stage, sound_driver),
     mesh_id_(mesh),
-    render_priority_(RENDER_PRIORITY_MAIN) {
+    render_priority_(RENDER_PRIORITY_MAIN),
+    octree_max_depth_(octree_max_depth) {
 
     set_parent(stage);
 }
@@ -43,7 +44,7 @@ bool Geom::init() {
         return false;
     }
 
-    culler_.reset(new OctreeCuller(this, mesh_ptr));
+    culler_.reset(new OctreeCuller(this, mesh_ptr, octree_max_depth_));
 
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();

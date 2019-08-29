@@ -24,7 +24,7 @@ public:
         mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(-20, -20, -20.0));
         mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(20, 20, 20.0));
 
-        OctreeCuller culler(nullptr, mesh);
+        OctreeCuller culler(nullptr, mesh, 4);
         culler.compile();
 
         auto bounds = culler.octree_bounds();

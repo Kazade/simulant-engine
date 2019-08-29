@@ -29,10 +29,11 @@ struct _OctreeCullerImpl {
     std::shared_ptr<CullerOctree> octree;
 };
 
-OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh):
+OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth):
     GeomCuller(geom, mesh),
     pimpl_(new _OctreeCullerImpl()),
-    vertices_(mesh->vertex_data->vertex_specification()) {
+    vertices_(mesh->vertex_data->vertex_specification()),
+    max_depth_(max_depth) {
 
     /* We have to clone the vertex data as the mesh will be destroyed */
     mesh->vertex_data->clone_into(vertices_);
@@ -57,7 +58,7 @@ void OctreeCuller::_compile() {
     data.vertices = &vertices_;
 
     AABB bounds(*data.vertices);
-    pimpl_->octree.reset(new CullerOctree(bounds, 4, &data));
+    pimpl_->octree.reset(new CullerOctree(bounds, max_depth_, &data));
 
     Vec3 stash[3];
 

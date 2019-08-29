@@ -16,3 +16,14 @@ a `Stage` is constructed (via `new_stage()`).
 One thing to note is that if a `Geom` is visible, the renderable returned will be the result of an additional Octree culling step. This allows for entire chunks of static
 geometry to be culled out by the partitioner, and then if they are visible, to only return the polygons visible rather than the whole chunk.
 
+## Geom Octree Culling
+
+When you load a mesh, there are two ways of rendering it. You can either attach it to an `Actor`; allowing
+you to move and rotate it. Or, you can generate a `Geom` from it. `Geoms` are static once they have been
+created and they internally use an Octree to provide an additional culling step once the partitioner has
+deemed it visible.
+
+When creating a Geom, as well as specifying its rotation and position, you can also specify the depth
+of the octree. This is really a per-mesh setting that you'll need to test and profile. If the max depth
+is too high, then the processing time will outweigh any savings on overdraw, if it's too low you'll still
+be drawing too many polygons outside the view frustum.
