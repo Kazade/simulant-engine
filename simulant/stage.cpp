@@ -195,21 +195,20 @@ std::size_t Stage::actor_count() const {
 
 //=============== GEOMS =====================
 
-GeomPtr Stage::new_geom_with_mesh(MeshID mid) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid);
-    gid->set_parent(this);
-
-    signal_geom_created_(gid->id());
-
-    return gid;
+GeomPtr Stage::new_geom_with_mesh(MeshID mid, smlt::RangeValue<1, 64, uint8_t> octree_depth) {
+    return new_geom_with_mesh_at_position(mid, smlt::Vec3(), smlt::Quaternion(), octree_depth);
 }
 
 GeomPtr Stage::geom(const GeomID gid) const {
     return geom_manager_->get(gid);
 }
 
-GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation) {
-    auto gid = geom_manager_->make(this, window->_sound_driver(), mid, position, rotation);
+GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation, smlt::RangeValue<1, 64, uint8_t> octree_depth) {
+    auto gid = geom_manager_->make(
+        this, window->_sound_driver(),
+        mid, position, rotation,
+        octree_depth
+    );
     gid->set_parent(this);
 
     signal_geom_created_(gid->id());
