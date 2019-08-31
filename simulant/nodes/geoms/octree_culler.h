@@ -24,7 +24,6 @@ private:
 
     std::shared_ptr<_OctreeCullerImpl> pimpl_;
 
-    VertexData vertices_;
     IndexType index_type_ = INDEX_TYPE_16_BIT;
     uint8_t max_depth_;
 };

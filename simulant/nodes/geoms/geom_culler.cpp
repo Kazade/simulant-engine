@@ -32,9 +32,6 @@ void GeomCuller::compile() {
     mesh_->each_submesh([this](const std::string, SubMesh* submesh) {
         material_refs_.push_back(mesh_->asset_manager().material(submesh->material_id()));
     });
-
-    // No longer hold onto the mesh, we don't need it anymore
-    mesh_.reset();
 }
 
 void GeomCuller::renderables_visible(const Frustum& frustum, RenderableFactory* factory) {

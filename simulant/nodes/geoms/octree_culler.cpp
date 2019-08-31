@@ -13,7 +13,7 @@
 namespace smlt {
 
 struct CullerTreeData {
-    VertexData* vertices;
+    const VertexData* vertices;
 };
 
 struct CullerNodeData {
@@ -32,11 +32,7 @@ struct _OctreeCullerImpl {
 OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth):
     GeomCuller(geom, mesh),
     pimpl_(new _OctreeCullerImpl()),
-    vertices_(mesh->vertex_data->vertex_specification()),
     max_depth_(max_depth) {
-
-    /* We have to clone the vertex data as the mesh will be destroyed */
-    mesh->vertex_data->clone_into(vertices_);
 
     /* Find the size of index we need to store all indices */
     IndexType type = INDEX_TYPE_8_BIT;
@@ -50,12 +46,13 @@ OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth):
 }
 
 const VertexData *OctreeCuller::_vertex_data() const {
-    return &vertices_;
+    assert(mesh_);
+    return mesh_->vertex_data.get();
 }
 
 void OctreeCuller::_compile() {
     CullerTreeData data;
-    data.vertices = &vertices_;
+    data.vertices = _vertex_data();
 
     AABB bounds(*data.vertices);
     pimpl_->octree.reset(new CullerOctree(bounds, max_depth_, &data));
@@ -113,7 +110,7 @@ void OctreeCuller::_all_renderables(RenderableFactory* factory) {
         new_renderable.arrangement = gr->arrangement();
         new_renderable.final_transformation = gr->final_transformation();
         new_renderable.index_data = gr->index_data();
-        new_renderable.vertex_data = &vertices_;
+        new_renderable.vertex_data = _vertex_data();
         new_renderable.render_priority = gr->render_priority();
         new_renderable.index_element_count = new_renderable.index_data->count();
         new_renderable.is_visible = gr->is_visible();
@@ -158,7 +155,7 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, RenderableFactory
         new_renderable.arrangement = gr->arrangement();
         new_renderable.final_transformation = gr->final_transformation();
         new_renderable.index_data = gr->index_data();
-        new_renderable.vertex_data = &vertices_;
+        new_renderable.vertex_data = _vertex_data();
         new_renderable.render_priority = gr->render_priority();
         new_renderable.index_element_count = new_renderable.index_data->count();
         new_renderable.is_visible = gr->is_visible();
