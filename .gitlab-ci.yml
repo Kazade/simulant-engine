@@ -86,7 +86,6 @@ build:windows-x64-mingw:
 test:windows-x64-mingw:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:30
-  allow_failure: true
   variables:
     TARGET: windows-x64-mingw
   dependencies:
@@ -136,6 +135,7 @@ deploy:windows-x64-mingw:
 build:linux-x64-clang:
   stage: build
   image: registry.fedoraproject.org/fedora-minimal:30
+  allow_failure: true
   variables:
    TARGET: linux-x64-clang
   before_script:
