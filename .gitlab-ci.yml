@@ -139,7 +139,8 @@ build:linux-x64-clang:
   variables:
    TARGET: linux-x64-clang
   before_script:
-   - microdnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
+   - microdnf install -y dnf && microdnf clean all
+   - dnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - export CC=/usr/bin/clang
    - export CXX=/usr/bin/clang++
