@@ -86,6 +86,7 @@ build:windows-x64-mingw:
 test:windows-x64-mingw:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:30
+  needs: ["build:windows-x64-mingw"]
   variables:
     TARGET: windows-x64-mingw
   dependencies:
@@ -187,6 +188,7 @@ build:linux-x64-gcc:
 test:linux-x64-gcc:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:30
+  needs: ["build:linux-x64-gcc"]
   dependencies:
    - build:linux-x64-gcc
   variables:
@@ -252,6 +254,7 @@ build:dreamcast-sh4-gcc:
 test:dreamcast-sh4-gcc:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:30
+  needs: ["build:dreamcast-sh4-gcc"]
   allow_failure: true
   variables:
    TARGET: dreamcast-sh4-gcc
