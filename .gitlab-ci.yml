@@ -86,7 +86,7 @@ build:windows-x64-mingw:
 test:windows-x64-mingw:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:30
-  allow_failure: true
+  needs: ["build:windows-x64-mingw"]
   variables:
     TARGET: windows-x64-mingw
   dependencies:
@@ -139,8 +139,8 @@ build:linux-x64-clang:
   variables:
    TARGET: linux-x64-clang
   before_script:
-   - microdnf upgrade -y && microdnf clean all
-   - microdnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
+   - microdnf install -y dnf && microdnf clean all
+   - dnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - export CC=/usr/bin/clang
    - export CXX=/usr/bin/clang++
@@ -188,6 +188,7 @@ build:linux-x64-gcc:
 test:linux-x64-gcc:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:30
+  needs: ["build:linux-x64-gcc"]
   dependencies:
    - build:linux-x64-gcc
   variables:
@@ -253,6 +254,7 @@ build:dreamcast-sh4-gcc:
 test:dreamcast-sh4-gcc:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:30
+  needs: ["build:dreamcast-sh4-gcc"]
   allow_failure: true
   variables:
    TARGET: dreamcast-sh4-gcc

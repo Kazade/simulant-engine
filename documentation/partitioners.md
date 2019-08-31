@@ -27,3 +27,7 @@ When creating a Geom, as well as specifying its rotation and position, you can a
 of the octree. This is really a per-mesh setting that you'll need to test and profile. If the max depth
 is too high, then the processing time will outweigh any savings on overdraw, if it's too low you'll still
 be drawing too many polygons outside the view frustum.
+
+**NOTE: Once you have created a `Geom` from a `MeshPtr`, DO NOT manipulate the `Mesh's` `vertex_data`. Doing so will
+cause visual corruption or a crash! You might be able to get away with manipulating diffuse colours, texture coordinates
+or normals, but changing the positions or number of vertices will cause errors.**
