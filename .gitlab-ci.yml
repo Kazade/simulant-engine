@@ -135,7 +135,6 @@ deploy:windows-x64-mingw:
 build:linux-x64-clang:
   stage: build
   image: registry.fedoraproject.org/fedora-minimal:30
-  allow_failure: true
   variables:
    TARGET: linux-x64-clang
   before_script:
