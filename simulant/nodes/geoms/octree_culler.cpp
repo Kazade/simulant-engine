@@ -7,7 +7,6 @@
 #include "../../meshes/mesh.h"
 #include "../geom.h"
 #include "../../renderers/renderer.h"
-#include "geom_culler_renderable.h"
 #include "../../renderers/batching/renderable_store.h"
 
 namespace smlt {
@@ -17,7 +16,7 @@ struct CullerTreeData {
 };
 
 struct CullerNodeData {
-    std::unordered_map<MaterialID, std::vector<uint32_t> > triangles;
+    std::unordered_map<MaterialID, IndexData::ptr> triangles;
 };
 
 
@@ -25,7 +24,6 @@ typedef Octree<CullerTreeData, CullerNodeData> CullerOctree;
 
 
 struct _OctreeCullerImpl {
-    std::unordered_map<MaterialID, std::shared_ptr<GeomCullerRenderable>> renderable_map;
     std::shared_ptr<CullerOctree> octree;
 };
 
@@ -59,31 +57,8 @@ void OctreeCuller::_compile() {
 
     Vec3 stash[3];
 
-    auto& renderable_map = pimpl_->renderable_map;
-
     mesh_->each([&](const std::string&, SubMesh* submesh) {
         auto material_id = submesh->material_id();
-
-        /* Generate a renderable for each material. These are added
-         * to the RenderQueue and updated before each render queu
-         * iteration by _gather_renderables
-         *
-         * This must be done here, because when the geom_created() signal is
-         * fired by the stage, then the render queue is updated which will call
-         * _all_renderables.
-        */
-
-        auto it = renderable_map.find(material_id);
-        if(it == renderable_map.end()) {
-            // Not in the map yet? Create a new renderable
-            auto r = std::make_shared<GeomCullerRenderable>(
-                this,
-                material_id,
-                index_type_
-            );
-
-            renderable_map.insert(std::make_pair(material_id, r));
-        }
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
             stash[0] = data.vertices->position_at<Vec3>(a);
@@ -92,77 +67,45 @@ void OctreeCuller::_compile() {
 
             auto node = pimpl_->octree->find_destination_for_triangle(stash);
 
-            auto& indexes = node->data->triangles[material_id];
-            indexes.push_back(a);
-            indexes.push_back(b);
-            indexes.push_back(c);
+            auto it = node->data->triangles.find(material_id);
+            if(it == node->data->triangles.end()) {
+                it = node->data->triangles.emplace(
+                    material_id, std::make_shared<IndexData>(index_type_)
+                ).first;
+            }
+
+            auto& indexes = *it->second;
+            indexes.index(a);
+            indexes.index(b);
+            indexes.index(c);
         });
     });
 }
 
-void OctreeCuller::_all_renderables(RenderableFactory* factory) {
-    auto& renderable_map = pimpl_->renderable_map;
-    for(auto& p: renderable_map) {
-        auto& gr = p.second;
-
+static void node_visitor(OctreeCuller* _this, RenderableFactory* factory, CullerOctree::Node* node) {
+    for(auto& p: node->data->triangles) {
+        auto mat_id = p.first;
         Renderable new_renderable;
 
-        new_renderable.arrangement = gr->arrangement();
-        new_renderable.final_transformation = gr->final_transformation();
-        new_renderable.index_data = gr->index_data();
-        new_renderable.vertex_data = _vertex_data();
-        new_renderable.render_priority = gr->render_priority();
+        new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
+        new_renderable.final_transformation = Mat4();
+        new_renderable.index_data = p.second.get();
+        new_renderable.vertex_data = _this->_vertex_data();
+        new_renderable.render_priority = _this->geom()->render_priority();
         new_renderable.index_element_count = new_renderable.index_data->count();
-        new_renderable.is_visible = gr->is_visible();
-        new_renderable.material_id = gr->material_id();
-        new_renderable.centre = gr->transformed_aabb().centre();
+        new_renderable.is_visible = _this->geom()->is_visible();
+        new_renderable.material_id = mat_id;
 
         factory->push_renderable(new_renderable);
     }
 }
 
 void OctreeCuller::_gather_renderables(const Frustum &frustum, RenderableFactory* factory) {
-    auto& renderable_map = pimpl_->renderable_map;
+    pimpl_->octree->traverse_visible(frustum, std::bind(&node_visitor, this, factory, std::placeholders::_1));
+}
 
-    /* Reset all the index data before we start gathering */
-    for(auto& p: renderable_map) {
-        p.second->_indices().reset();
-    }
-
-    std::unordered_set<GeomCullerRenderable*> seen;
-
-    auto visitor = [&](CullerOctree::Node* node) {
-        for(auto& p: node->data->triangles) {
-            auto mat_id = p.first;
-            auto it = renderable_map.find(mat_id);
-            GeomCullerRenderable* renderable = it->second.get();
-
-            if(!seen.count(renderable)) {
-                seen.insert(renderable);
-            }
-
-            /* Transfer the indices to the renderable */
-            renderable->_indices().index(&p.second[0], p.second.size());
-            renderable->_indices().done();
-        }
-    };
-
-    pimpl_->octree->traverse_visible(frustum, visitor);
-
-    for(auto& gr: seen) {
-        Renderable new_renderable;
-
-        new_renderable.arrangement = gr->arrangement();
-        new_renderable.final_transformation = gr->final_transformation();
-        new_renderable.index_data = gr->index_data();
-        new_renderable.vertex_data = _vertex_data();
-        new_renderable.render_priority = gr->render_priority();
-        new_renderable.index_element_count = new_renderable.index_data->count();
-        new_renderable.is_visible = gr->is_visible();
-        new_renderable.material_id = gr->material_id();
-
-        factory->push_renderable(new_renderable);
-    }
+void OctreeCuller::_all_renderables(RenderableFactory* factory) {
+    pimpl_->octree->traverse(std::bind(&node_visitor, this, factory, std::placeholders::_1));
 }
 
 AABB OctreeCuller::octree_bounds() const {

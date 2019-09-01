@@ -36,6 +36,8 @@ public:
     void renderables_visible(const Frustum& frustum, RenderableFactory* factory);
 
     void each_renderable(EachRenderableCallback cb);
+
+    Geom* geom() const { return geom_; }
 protected:
     Geom* geom_ = nullptr;
     MeshPtr mesh_;
