@@ -79,7 +79,7 @@ public:
             result.push_back(r);
         });
 
-        assert_equal(1u, result.size());
+        assert_equal(3u, result.size());
 
         auto ret2 = *result[0];
 
