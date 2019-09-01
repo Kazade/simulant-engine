@@ -15,9 +15,9 @@ public:
     OctreeCuller(Geom* geom, const MeshPtr mesh, uint8_t max_depth);
 
     AABB octree_bounds() const;
-private:
-    const VertexData* _vertex_data() const override;
 
+    const VertexData* _vertex_data() const override;
+private:
     void _compile() override;
     void _gather_renderables(const Frustum &frustum, RenderableFactory* factory) override;
     void _all_renderables(RenderableFactory* factory) override;
