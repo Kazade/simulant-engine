@@ -20,6 +20,7 @@
 #include "geom.h"
 #include "../stage.h"
 #include "geoms/octree_culler.h"
+#include "geoms/quadtree_culler.h"
 #include "camera.h"
 #include "../renderers/batching/renderable_store.h"
 
@@ -45,8 +46,9 @@ bool Geom::init() {
     }
 
     if(culler_options_.type == GEOM_CULLER_TYPE_QUADTREE) {
-        assert(0 && "Not yet implemented");
+        culler_.reset(new QuadtreeCuller(this, mesh_ptr, culler_options_.quadtree_max_depth));
     } else {
+        assert(culler_options_.type == GEOM_CULLER_TYPE_OCTREE);
         culler_.reset(new OctreeCuller(this, mesh_ptr, culler_options_.octree_max_depth));
     }
 
