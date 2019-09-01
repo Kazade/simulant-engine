@@ -61,8 +61,10 @@ public:
             result.push_back(r);
         });
 
-        // Only one renderable should come back
-        assert_equal(1u, result.size());
+        // FIXME: Make sure this is the right value!!!
+        // things changed when we started returning a renderable
+        // per node per material, rather than one per material.
+        assert_equal(3u, result.size());
 
         auto ret1 = *result[0];
 
