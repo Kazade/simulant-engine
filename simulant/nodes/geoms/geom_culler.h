@@ -25,6 +25,7 @@ typedef std::function<void (Renderable*)> EachRenderableCallback;
 class Renderer;
 class RenderableFactory;
 
+
 class GeomCuller {
 public:
     GeomCuller(Geom* geom, const MeshPtr mesh);
