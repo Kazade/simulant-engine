@@ -107,11 +107,11 @@ public:
     ActorPtr destroy_actor(ActorID e);
     std::size_t actor_count() const;
 
-    GeomPtr new_geom_with_mesh(MeshID mid, smlt::RangeValue<1, 64, uint8_t> octree_depth=5);
+    GeomPtr new_geom_with_mesh(MeshID mid, const GeomCullerOptions& culler_options=GeomCullerOptions());
     GeomPtr new_geom_with_mesh_at_position(
         MeshID mid, const Vec3& position,
         const Quaternion& rotation=Quaternion(),
-        smlt::RangeValue<1, 64, uint8_t> octree_depth=5
+        const GeomCullerOptions& culler_options=GeomCullerOptions()
     );
     GeomPtr geom(const GeomID gid) const;
     bool has_geom(GeomID geom_id) const;

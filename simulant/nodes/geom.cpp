@@ -25,13 +25,13 @@
 
 namespace smlt {
 
-Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, uint8_t octree_max_depth):
+Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, GeomCullerOptions culler_options):
     StageNode(stage),
     generic::Identifiable<GeomID>(id),
     Source(stage, sound_driver),
     mesh_id_(mesh),
     render_priority_(RENDER_PRIORITY_MAIN),
-    octree_max_depth_(octree_max_depth) {
+    culler_options_(culler_options) {
 
     set_parent(stage);
 }
@@ -44,7 +44,11 @@ bool Geom::init() {
         return false;
     }
 
-    culler_.reset(new OctreeCuller(this, mesh_ptr, octree_max_depth_));
+    if(culler_options_.type == GEOM_CULLER_TYPE_QUADTREE) {
+        assert(0 && "Not yet implemented");
+    } else {
+        culler_.reset(new OctreeCuller(this, mesh_ptr, culler_options_.octree_max_depth));
+    }
 
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();

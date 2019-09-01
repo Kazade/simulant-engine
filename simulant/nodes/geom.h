@@ -30,6 +30,18 @@ namespace smlt {
 
 class GeomCuller;
 
+
+enum GeomCullerType {
+    GEOM_CULLER_TYPE_OCTREE,
+    GEOM_CULLER_TYPE_QUADTREE
+};
+
+struct GeomCullerOptions {
+    GeomCullerType type = GEOM_CULLER_TYPE_OCTREE;
+    uint8_t octree_max_depth = 5;
+    uint8_t quadtree_max_depth = 5;
+};
+
 /**
  * @brief The Geom class
  *
@@ -55,7 +67,7 @@ public:
         MeshID mesh,
         const Vec3& position=Vec3(),
         const Quaternion rotation=Quaternion(),
-        uint8_t octree_max_depth=5
+        GeomCullerOptions culler_options=GeomCullerOptions()
     );
 
     const AABB& aabb() const override;
@@ -76,7 +88,7 @@ public:
 private:
     MeshID mesh_id_;
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
-    uint8_t octree_max_depth_;
+    GeomCullerOptions culler_options_;
 
     std::shared_ptr<GeomCuller> culler_;
 
