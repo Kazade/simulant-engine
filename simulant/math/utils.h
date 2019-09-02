@@ -12,6 +12,8 @@ const float PI_UNDER_180 = 180.0f / PI;
 
 float clamp(float x, float l, float h);
 float lerp(float x, float y, float t);
+float smoothstep(float e0, float e1, float x);
+float smootherstep(float e0, float e1, float x);
 
 template<typename T>
 bool almost_equal(const T& lhs, const T& rhs) {
