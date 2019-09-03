@@ -209,6 +209,8 @@ test:linux-x64-gcc:
     - ${TARGET}/release/simulant/
 
 deploy:linux-x64-gcc:
+  except:
+   - merge_requests
   stage: deploy
   image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
@@ -273,6 +275,8 @@ test:dreamcast-sh4-gcc:
     - ${TARGET}/release/simulant/*.a
 
 deploy:dreamcast-sh4-gcc:
+  except:
+   - merge_requests
   stage: deploy
   image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
@@ -297,6 +301,8 @@ deploy:dreamcast-sh4-gcc:
     - upload/${TARGET}.zip
 
 deploy:assets:
+  except:
+   - merge_requests
   stage: deploy
   image: registry.fedoraproject.org/fedora-minimal:30
   before_script:
@@ -315,6 +321,8 @@ deploy:assets:
     - upload/assets.zip
 
 deploy:tools:
+  except:
+   - merge_requests
   stage: deploy
   image: registry.fedoraproject.org/fedora-minimal:30
   before_script:
