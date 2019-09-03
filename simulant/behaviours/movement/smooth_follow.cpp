@@ -31,7 +31,14 @@ void SmoothFollow::late_update(float dt) {
         stage_node->absolute_position().lerp(wanted_position, damping_to_apply)
     );
 
-    auto wanted_rotation = Quaternion::as_look_at((target_position - stage_node->absolute_position()).normalized(), target->absolute_rotation().up());
+    auto dir = target_position - stage_node->absolute_position();
+    if(!dir.length_squared()) {
+        // The two things are the same, we can't really do much about rotation so just
+        // return
+        return;
+    }
+
+    auto wanted_rotation = Quaternion::as_look_at(dir.normalized(), target->absolute_rotation().up());
     wanted_rotation.inverse(); // << FIXME: This seems like a bug in as_look_at...
 
     // Keep within 0.0 - 1.0f;

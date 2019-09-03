@@ -23,6 +23,18 @@ public:
         window->destroy_stage(stage->id());
     }
 
+    void test_origin_bug() {
+        // See #241
+
+        auto sphere = stage->new_actor_with_mesh(stage->assets->new_mesh_as_sphere(10));
+        auto camera = stage->new_camera();
+        auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
+        follow->set_target(sphere);
+        follow->set_follow_distance(15.f);
+        follow->set_follow_height(10.f);
+
+        window->run_frame();
+    }
 
     void test_half_turn() {
         auto follower = stage->new_actor();
