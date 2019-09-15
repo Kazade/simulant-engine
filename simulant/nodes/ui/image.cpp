@@ -11,6 +11,7 @@ Image::Image(WidgetID id, UIManager* owner, UIConfig* config):
     /* By default, images don't have a border */
     set_border_width(0);
     set_border_colour(smlt::Colour::NONE);
+    set_foreground_colour(smlt::Colour::WHITE);
 
     Widget::set_resize_mode(RESIZE_MODE_FIXED);
 }

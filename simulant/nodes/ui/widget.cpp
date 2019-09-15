@@ -198,6 +198,7 @@ void Widget::render_text() {
     // Now we have to shift the entire thing up to vertically center!
     for(Vertex& v: vertices) {
         v.xyz.y += top / 2.0f;
+        v.xyz.z += -0.001;
     }
 
     auto sm = mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
@@ -233,8 +234,10 @@ void Widget::render_text() {
 }
 
 void Widget::new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour) {
-    auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, 0);
-
+    // Position so that the first rectangle is furthest from the
+    // camera. Space for 10 layers (we only have 3 but whatevs.)
+    float zindex = -0.001 * (10 - mesh_->submesh_count());
+    auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, zindex);
     auto sm = mesh_->new_submesh_as_rectangle(name, mat_id, bounds.width(), bounds.height(), offset);
     sm->set_diffuse(colour);
 }
@@ -303,7 +306,7 @@ void Widget::rebuild() {
     new_rectangle("background", material_->id(), background_bounds, colour);
     if(has_background_image()) {
         auto sm = mesh_->submesh("background");
-        sm->material_id().fetch()->set_diffuse_map(background_image_);
+        sm->material_id().fetch()->pass(0)->set_diffuse_map(background_image_);
         apply_image_rect(sm, background_image_.fetch(), background_image_rect_);
     }
 
@@ -312,7 +315,7 @@ void Widget::rebuild() {
     new_rectangle("foreground", material_->id(), foreground_bounds, colour);
     if(has_foreground_image()) {
         auto sm = mesh_->submesh("foreground");
-        sm->material_id().fetch()->set_diffuse_map(foreground_image_);
+        sm->material_id().fetch()->pass(0)->set_diffuse_map(foreground_image_);
         apply_image_rect(sm, foreground_image_.fetch(), foreground_image_rect_);
     }
 
