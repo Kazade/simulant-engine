@@ -78,8 +78,7 @@ public:
         identity.build(&projection);
 
         auto cb = [=](TestQuadtree::Node* node) {
-            // Should only traverse nodes in the negative-Z
-            assert_equal(+node->grid[2], 0);
+            assert_equal(+node->grid[1], 0);
         };
 
         Quadtree.traverse_visible(identity, cb);
