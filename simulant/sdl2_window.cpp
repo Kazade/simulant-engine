@@ -294,18 +294,16 @@ bool SDL2Window::create_window() {
 
     if(renderer_->name() == "gl1x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
-        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 5);
+        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     } else {
 #ifdef __ANDROID__
         /* FIXME: Add a GLES2 renderer */
@@ -388,7 +386,6 @@ bool SDL2Window::create_window() {
 #else
     SDL_ShowCursor(0);
 #endif
-
 
     L_DEBUG(unicode("{0} joysicks found").format(SDL_NumJoysticks()).encode());
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
