@@ -27,10 +27,17 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
     /* We work out the default texture GL name at the start of traversal to avoid repeatingly looking it up later */
 
+#ifndef _arch_dreamcast
+    /* FIXME: This should also happen on the Dreamcast
+     * but there's an issue with multitexturing there so this
+     * is disabled until we have a proper MT solution in
+     * GLdc using accumulation buffers */
+
     if(!default_texture_name_) {
         auto default_tex = renderer_->window->shared_assets->default_texture_id();
         default_texture_name_ = renderer_->texture_objects_.at(default_tex);
     }
+#endif
 
     enable_vertex_arrays(true);
     enable_colour_arrays(true);
