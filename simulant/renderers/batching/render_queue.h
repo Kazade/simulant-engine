@@ -71,12 +71,26 @@ public:
             return false;
         }
 
-        /* Objects are sorted from farthest first, to nearest which is why this
-           is reversed */
-        if(this->distance_to_camera_ > rhs.distance_to_camera_) {
-            return true;
-        } else if(this->distance_to_camera_ < rhs.distance_to_camera_) {
-            return false;
+        /* If we're blended, then we sort from far-to-near, if we're not blended
+         * then we sort from near-to-far (to benefit from early-out depth testing) */
+        if(this->is_blended_) {
+            assert(rhs.is_blended_);
+
+            /* Objects are sorted from farthest first, to nearest which is why this
+               is reversed */
+            if(this->distance_to_camera_ > rhs.distance_to_camera_) {
+                return true;
+            } else if(this->distance_to_camera_ < rhs.distance_to_camera_) {
+                return false;
+            }
+        } else {
+            assert(!rhs.is_blended_);
+
+            if(this->distance_to_camera_ < rhs.distance_to_camera_) {
+                return true;
+            } else if(this->distance_to_camera_ > rhs.distance_to_camera_) {
+                return false;
+            }
         }
 
         return lt(rhs);

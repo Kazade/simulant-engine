@@ -71,17 +71,9 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
         bool is_blended = material_pass->is_blending_enabled();
 
-        // If we're not blending, we don't bother sorting based on distance
-        // as grouping by texture is more important
-        // FIXME: Experiment with sorting non-blended in front-to-back order
-        // to see if it improves performance
-        float distance_to_camera = (!is_blended) ? 0.0f : (
-            renderable_dist_to_camera
-        );
-
         RenderGroup group = render_group_factory_->new_render_group(
             renderable, material_pass,
-            i, is_blended, distance_to_camera
+            i, is_blended, renderable_dist_to_camera
         );
 
         // Priorities run from -250 to +250, so we need to offset the index
