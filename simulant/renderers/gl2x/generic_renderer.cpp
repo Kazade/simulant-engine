@@ -745,6 +745,15 @@ void GenericRenderer::init_context() {
         throw std::runtime_error("Unable to intialize OpenGL 2.1");
     }
 
+    const GLubyte* GL_vendor = glGetString(GL_VENDOR);
+    const GLubyte* GL_renderer = glGetString(GL_RENDERER);
+    const GLubyte* GL_version = glGetString(GL_VERSION);
+
+    L_INFO("\n\nOpenGL Information:\n\n");
+    L_INFO(_F("\tVendor: {0}\n").format(GL_vendor));
+    L_INFO(_F("\tRenderer: {0}\n").format(GL_renderer));
+    L_INFO(_F("\tVersion: {0}\n").format(GL_version));
+
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
