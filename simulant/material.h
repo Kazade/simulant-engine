@@ -398,7 +398,6 @@ namespace _material_impl {
         Colour diffuse() const;
         float shininess() const;
         bool is_blending_enabled() const;
-        void set_blending_enabled(bool v);
         void set_blend_func(BlendType b);
         BlendType blend_func() const;
         void set_depth_write_enabled(bool v);
