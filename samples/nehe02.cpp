@@ -40,7 +40,8 @@ public:
 
 int main(int argc, char* argv[]) {
     smlt::AppConfig config;
-    config.title = "NeHe 01";
+    config.title = "NeHe 02";
+    config.fullscreen = false;
     App app(config);
     return app.run();
 }
