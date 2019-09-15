@@ -22,6 +22,7 @@ deps/libAL/samples/streaming/main.c
 deps/libgl/GL/config.h
 deps/libgl/Makefile
 deps/libgl/samples/Makefile
+deps/libgl/samples/blend_test/main.c
 deps/libgl/samples/depth_funcs/Makefile
 deps/libgl/samples/depth_funcs/main.c
 deps/libgl/samples/multitexture_arrays/main.c

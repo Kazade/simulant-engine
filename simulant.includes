@@ -213,3 +213,4 @@ deps/libAL/samples/helicopter
 deps/libAL/samples
 deps/libAL/samples/streaming
 simulant/compat
+deps/libgl/samples/blend_test
