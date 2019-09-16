@@ -60,8 +60,9 @@ public:
 
     float point_size() const;
 
-private:
     void update(float dt);
+
+private:
     void frame_finished();
 
     bool initialized_ = false;
@@ -100,7 +101,6 @@ private:
     MaterialID material_no_depth_;
     float current_point_size_ = 0.001f;
 
-    sig::Connection update_connection_;
     sig::Connection frame_finished_connection_;
 };
 
