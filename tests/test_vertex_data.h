@@ -84,11 +84,11 @@ public:
 
         // Check the data is valid
         assert_equal(dest.count(), source.count());
-        assert_equal(smlt::Vec2(0, 0), dest.position_at<smlt::Vec2>(0));
-        assert_equal(smlt::Vec2(1, 0), dest.position_at<smlt::Vec2>(1));
-        assert_equal(smlt::Vec2(2, 0), dest.position_at<smlt::Vec2>(2));
-        assert_equal(smlt::Vec2(3, 0), dest.position_at<smlt::Vec2>(3));
-        assert_equal(smlt::Vec2(4, 0), dest.position_at<smlt::Vec2>(4));
+        assert_equal(smlt::Vec2(0, 0), *dest.position_at<smlt::Vec2>(0));
+        assert_equal(smlt::Vec2(1, 0), *dest.position_at<smlt::Vec2>(1));
+        assert_equal(smlt::Vec2(2, 0), *dest.position_at<smlt::Vec2>(2));
+        assert_equal(smlt::Vec2(3, 0), *dest.position_at<smlt::Vec2>(3));
+        assert_equal(smlt::Vec2(4, 0), *dest.position_at<smlt::Vec2>(4));
         assert_equal(source.stride(), dest.stride());
 
         assert_equal(dest.cursor_position(), 0);

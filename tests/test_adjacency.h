@@ -41,7 +41,7 @@ public:
         // Add another vertex, using the same position as the first
         auto i = mesh->vertex_data->count();
         mesh->vertex_data->move_to_end();
-        mesh->vertex_data->position(mesh->vertex_data->position_at<smlt::Vec3>(1));
+        mesh->vertex_data->position(*mesh->vertex_data->position_at<smlt::Vec3>(1));
         mesh->vertex_data->move_next();
 
         // Add another vertex

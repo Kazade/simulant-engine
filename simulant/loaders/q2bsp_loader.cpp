@@ -501,7 +501,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     for(uint32_t i = 0; i < locations.size(); ++i) {
         for(auto idx: face_indexes[i]) {
             mesh->vertex_data->move_to(idx);
-            auto t = mesh->vertex_data->texcoord1_at<Vec2>(idx);
+            auto t = *mesh->vertex_data->texcoord1_at<Vec2>(idx);
 
             t.x -= uv_limits[i].min.x;
             t.y -= uv_limits[i].min.y;

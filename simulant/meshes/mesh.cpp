@@ -456,16 +456,13 @@ void Mesh::transform_vertices(const smlt::Mat4& transform) {
 
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
         if(vertex_data->vertex_specification().has_positions()) {
-            smlt::Vec3 v = vertex_data->position_at<Vec3>(i);
-            v = v.transformed_by(transform);
-            vertex_data->position(v);
+            auto v = vertex_data->position_at<Vec3>(i);
+            vertex_data->position(v->transformed_by(transform));
         }
 
         if(vertex_data->vertex_specification().has_normals()) {
-            smlt::Vec3 n;
-            vertex_data->normal_at(i, n);
-            n = n.rotated_by(transform);
-            vertex_data->normal(n.normalized());
+            auto n = vertex_data->normal_at<Vec3>(i);
+            vertex_data->normal(n->rotated_by(transform).normalized());
         }
         vertex_data->move_next();
     }

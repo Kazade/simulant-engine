@@ -94,9 +94,9 @@ void MeshSilhouette::calculate_directional_silhouette() {
         // If one normal is facing the light and one isn't then
         // store the edge as a silhouette
         if(d1 >= 0 && d2 < 0) {
-            edge_list_.push_back(SilhouetteEdge(v1, v2));
+            edge_list_.push_back(SilhouetteEdge(*v1, *v2));
         } else if(d1 < 0 && d1 >= 0) {
-            edge_list_.push_back(SilhouetteEdge(v2, v1));
+            edge_list_.push_back(SilhouetteEdge(*v2, *v1));
         }
     });
 }
@@ -122,7 +122,7 @@ void MeshSilhouette::calculate_point_silhouette() {
         auto v2 = vertices->position_at<smlt::Vec3>(edge.indexes[1]);
 
         // Just use one of the edge vertices to determine the light direction
-        auto light_direction = light_position - v1;
+        auto light_direction = light_position - *v1;
 
         auto d1 = edge.normals[0].dot(light_direction);
 
@@ -135,9 +135,9 @@ void MeshSilhouette::calculate_point_silhouette() {
         // If one normal is facing the light and one isn't then
         // store the edge as a silhouette
         if(d1 > eps && d2 <= 0) {
-            edge_list_.push_back(SilhouetteEdge(v1, v2));
+            edge_list_.push_back(SilhouetteEdge(*v1, *v2));
         } else if(d1 <= 0 && d2 > eps) {
-            edge_list_.push_back(SilhouetteEdge(v2, v1));
+            edge_list_.push_back(SilhouetteEdge(*v2, *v1));
         }
     });
 }

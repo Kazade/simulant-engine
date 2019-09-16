@@ -14,16 +14,15 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
     texture->resize(width, length);
 
     for(uint32_t i = 0; i < vertices.count(); ++i) {
-        Vec3 n;
-        vertices.normal_at(i, n);
+        auto n = vertices.normal_at<Vec3>(i);
 
-        Degrees steepness = Radians(acos(n.dot(Vec3(0, 1, 0))));
-        float height = (vertices.position_at<Vec3>(i).y + 64.0f) / 128.0f;
+        Degrees steepness = Radians(acos(n->dot(Vec3(0, 1, 0))));
+        float height = (vertices.position_at<Vec3>(i)->y + 64.0f) / 128.0f;
 
         float rock = clamp(steepness.value / 45.0f);
         float sand = clamp(1.0 - (height * 4.0f));
         float grass = (sand > 0.5) ? 0.0 : 0.5f;
-        float snow = height * clamp(n.z);
+        float snow = height * clamp(n->z);
 
         float z = rock + sand + grass + snow;
 

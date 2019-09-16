@@ -83,7 +83,16 @@ public:
     void position(const Vec4& pos);
 
     template<typename T>
-    T position_at(uint32_t idx) const;
+    const T* position_at(uint32_t idx) const;
+
+    template<typename T>
+    const T* normal_at(uint32_t idx) const;
+
+    template<typename T>
+    const T* texcoord0_at(uint32_t idx) const;
+
+    template<typename T>
+    const T* texcoord1_at(uint32_t idx) const;
 
     /*
      * Position Non-Dimensional
@@ -96,26 +105,10 @@ public:
     void normal(float x, float y, float z);
     void normal(const Vec3& n);
 
-    void normal_at(int32_t idx, Vec3& out) {
-        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
-        out = *((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
-    }
-
-    void normal_at(int32_t idx, Vec4& out) {
-        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_4F);
-        out = *((Vec4*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
-    }
-
     void tex_coord0(float u, float v);
     void tex_coord0(float u, float v, float w);
     void tex_coord0(float x, float y, float z, float w);
     void tex_coord0(const Vec2& vec) { tex_coord0(vec.x, vec.y); }
-
-    template<typename T>
-    T texcoord0_at(uint32_t idx);
-
-    template<typename T>
-    T texcoord1_at(uint32_t idx) const;
 
     void tex_coord1(float u, float v);
     void tex_coord1(float u, float v, float w);
@@ -217,31 +210,37 @@ private:
 };
 
 template<>
-Vec2 VertexData::position_at<Vec2>(uint32_t idx) const;
+const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const;
 
 template<>
-Vec3 VertexData::position_at<Vec3>(uint32_t idx) const;
+const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const;
 
 template<>
-Vec4 VertexData::position_at<Vec4>(uint32_t idx) const;
+const Vec4* VertexData::position_at<Vec4>(uint32_t idx) const;
 
 template<>
-Vec2 VertexData::texcoord0_at<Vec2>(uint32_t idx);
+const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const;
 
 template<>
-Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx);
+const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const;
 
 template<>
-Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx);
+const Vec2* VertexData::texcoord0_at<Vec2>(uint32_t idx) const;
 
 template<>
-Vec2 VertexData::texcoord1_at<Vec2>(uint32_t idx) const;
+const Vec3* VertexData::texcoord0_at<Vec3>(uint32_t idx) const;
 
 template<>
-Vec3 VertexData::texcoord1_at<Vec3>(uint32_t idx) const;
+const Vec4* VertexData::texcoord0_at<Vec4>(uint32_t idx) const;
 
 template<>
-Vec4 VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
+const Vec2* VertexData::texcoord1_at<Vec2>(uint32_t idx) const;
+
+template<>
+const Vec3* VertexData::texcoord1_at<Vec3>(uint32_t idx) const;
+
+template<>
+const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 
 
 typedef uint32_t Index;

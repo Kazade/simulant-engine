@@ -215,40 +215,40 @@ public:
         auto& vd = *stage_->assets->mesh(mesh_id)->first_submesh()->vertex_data.get();
 
         // Neg Z
-        assert_equal(smlt::Vec2((1.0 / 3.0), 0), vd.texcoord0_at<smlt::Vec2>(0));
-        assert_equal(smlt::Vec2((2.0 / 3.0), 0), vd.texcoord0_at<smlt::Vec2>(1));
-        assert_equal(smlt::Vec2((2.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(2));
-        assert_equal(smlt::Vec2((1.0 / 3.0), (1.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(3));
+        assert_equal(smlt::Vec2((1.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(0));
+        assert_equal(smlt::Vec2((2.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(1));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (1.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(2));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (1.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(3));
 
         // Pos Z
-        assert_equal(smlt::Vec2((1.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(4));
-        assert_equal(smlt::Vec2((2.0 / 3.0), (2.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(5));
-        assert_equal(smlt::Vec2((2.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(6));
-        assert_equal(smlt::Vec2((1.0 / 3.0), (3.0 / 4.0)), vd.texcoord0_at<smlt::Vec2>(7));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (2.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(4));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (2.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(5));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (3.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(6));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (3.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(7));
 
         // Neg X
-        assert_equal(smlt::Vec2(0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(8));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(9));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(10));
-        assert_equal(smlt::Vec2(0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(11));
+        assert_equal(smlt::Vec2(0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(8));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(9));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(10));
+        assert_equal(smlt::Vec2(0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(11));
 
         // Pos X
-        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(12));
-        assert_equal(smlt::Vec2(3.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(13));
-        assert_equal(smlt::Vec2(3.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(14));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(15));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(12));
+        assert_equal(smlt::Vec2(3.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(13));
+        assert_equal(smlt::Vec2(3.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(14));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(15));
 
         // Neg Y
-        assert_equal(smlt::Vec2(1.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(16));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 1.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(17));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(18));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(19));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 1.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(16));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 1.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(17));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(18));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(19));
 
         // Pos Y
-        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(20));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(21));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(22));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 4.0 / 4.0), vd.texcoord0_at<smlt::Vec2>(23));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(20));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(21));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 4.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(22));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 4.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(23));
     }
 
 private:

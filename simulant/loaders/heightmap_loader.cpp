@@ -39,7 +39,7 @@ Vec3 get_vertex_at(MeshPtr terrain, int x, int z) {
     /* Returns the vertex at the specified point */
     TerrainData data = terrain->data->get<TerrainData>("terrain_data");
     int idx = (z * data.x_size) + x;
-    return terrain->vertex_data->position_at<Vec3>(idx);
+    return *terrain->vertex_data->position_at<Vec3>(idx);
 }
 
 static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uint32_t i) {
@@ -89,7 +89,7 @@ static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uin
 
     for(auto& idx: surrounding_indexes) {
         if(idx == -1) continue;
-        surrounding_vertices.push_back(vertex_data.position_at<Vec3>(idx));
+        surrounding_vertices.push_back(*vertex_data.position_at<Vec3>(idx));
     }
 
     return surrounding_vertices;
@@ -116,7 +116,7 @@ static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
         auto this_pos = vertex_data.position_at<Vec3>(i);
         auto vertices = _get_surrounding_vertices_from_index(mesh, i);
 
-        float total_height = this_pos.y;
+        float total_height = this_pos->y;
         for(auto& vert: vertices) {
             total_height += vert.y;
         }
@@ -124,7 +124,7 @@ static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
         // http://nic-gamedev.blogspot.co.uk/2013/02/simple-terrain-smoothing.html
 
         float new_height = total_height / float(vertices.size() + 1);
-        vertex_data.position(this_pos.x, new_height, this_pos.z);
+        vertex_data.position(this_pos->x, new_height, this_pos->z);
         vertex_data.move_next();
     }
 }
@@ -215,7 +215,7 @@ std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int hei
 
     std::vector<Vec3> results;
     for(auto& idx: surrounding_indexes) {
-        results.push_back(data->position_at<Vec3>(idx));
+        results.push_back(*data->position_at<Vec3>(idx));
     }
 
     return results;
@@ -361,12 +361,11 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
                 Index idx2 = sm->index_data->at(i+1);
                 Index idx3 = sm->index_data->at(i+2);
 
-                smlt::Vec3 v1, v2, v3;
-                v1 = sm->vertex_data->position_at<Vec3>(idx1);
-                v2 = sm->vertex_data->position_at<Vec3>(idx2);
-                v3 = sm->vertex_data->position_at<Vec3>(idx3);
+                auto v1 = sm->vertex_data->position_at<Vec3>(idx1);
+                auto v2 = sm->vertex_data->position_at<Vec3>(idx2);
+                auto v3 = sm->vertex_data->position_at<Vec3>(idx3);
 
-                smlt::Vec3 normal = (v2 - v1).normalized().cross((v3 - v1).normalized()).normalized();
+                smlt::Vec3 normal = (*v2 - *v1).normalized().cross((*v3 - *v1).normalized()).normalized();
 
                 index_to_normal[idx1] += normal;
                 index_to_normal[idx2] += normal;

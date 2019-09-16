@@ -142,36 +142,45 @@ void VertexData::position(const Vec4 &pos) {
 }
 
 template<>
-Vec2 VertexData::position_at<Vec2>(uint32_t idx) const {
+const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
-    Vec2 out = *((Vec2*) &data_[idx * stride()]);
-    return out;
+    return ((Vec2*) &data_[idx * stride()]);
 }
 
 template<>
-Vec3 VertexData::position_at<Vec3>(uint32_t idx) const {
+const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3 out = *((Vec3*) &data_[idx * stride()]);
-    return out;
+    return ((Vec3*) &data_[idx * stride()]);
 }
 
 template<>
-Vec4 VertexData::position_at<Vec4>(uint32_t idx) const {
+const Vec4* VertexData::position_at<Vec4>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4 out = *((Vec4*) &data_[idx * stride()]);
-    return out;
+    return ((Vec4*) &data_[idx * stride()]);
+}
+
+template<>
+const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const {
+    assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_2F);
+    return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
+}
+
+template<>
+const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
+    assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
+    return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
 }
 
 Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
     const auto& attr = vertex_specification_.position_attribute;
     if(attr == VERTEX_ATTRIBUTE_2F) {
-        auto v = position_at<Vec2>(idx);
+        auto v = *position_at<Vec2>(idx);
         return Vec4(v.x, v.y, def, def);
     } else if(attr == VERTEX_ATTRIBUTE_3F) {
-        auto v = position_at<Vec3>(idx);
+        auto v = *position_at<Vec3>(idx);
         return Vec4(v.x, v.y, v.z, def);
     } else {
-        return position_at<Vec4>(idx);
+        return *position_at<Vec4>(idx);
     }
 }
 
@@ -221,45 +230,39 @@ void VertexData::tex_coord0(float u, float v, float w, float x) {
 }
 
 template<>
-Vec2 VertexData::texcoord0_at<Vec2>(uint32_t idx) {
+const Vec2* VertexData::texcoord0_at<Vec2>(uint32_t idx) const {
     assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_2F);
-    Vec2 out = *((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
-    return out;
+    return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
 }
 
 template<>
-Vec3 VertexData::texcoord0_at<Vec3>(uint32_t idx) {
+const Vec3* VertexData::texcoord0_at<Vec3>(uint32_t idx) const {
     assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3 out = *((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
-    return out;
+    return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
 }
 
 template<>
-Vec4 VertexData::texcoord0_at<Vec4>(uint32_t idx) {
+const Vec4* VertexData::texcoord0_at<Vec4>(uint32_t idx) const {
     assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4 out = *((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
-    return out;
+    return ((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
 }
 
 template<>
-Vec2 VertexData::texcoord1_at<Vec2>(uint32_t idx) const {
+const Vec2* VertexData::texcoord1_at<Vec2>(uint32_t idx) const {
     assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_2F);
-    Vec2 out = *((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
-    return out;
+    return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
 }
 
 template<>
-Vec3 VertexData::texcoord1_at<Vec3>(uint32_t idx) const {
+const Vec3* VertexData::texcoord1_at<Vec3>(uint32_t idx) const {
     assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3 out = *((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
-    return out;
+    return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
 }
 
 template<>
-Vec4 VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
+const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
     assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4 out = *((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
-    return out;
+    return ((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
 }
 
 void VertexData::tex_coord1(float u, float v) {
@@ -364,23 +367,23 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
 
     switch(vertex_specification_.position_attribute) {
         case VERTEX_ATTRIBUTE_2F: {
-            Vec2 source = this->position_at<Vec2>(source_idx);
-            Vec2 dest = dest_state.position_at<Vec2>(dest_idx);
-            Vec2 final = source + ((dest - source) * interp);
+            auto source = this->position_at<Vec2>(source_idx);
+            auto dest = dest_state.position_at<Vec2>(dest_idx);
+            Vec2 final = *source + ((*dest - *source) * interp);
             out.position(final);
         }
         break;
         case VERTEX_ATTRIBUTE_3F: {
-            Vec3 source = this->position_at<Vec3>(source_idx);
-            Vec3 dest = dest_state.position_at<Vec3>(dest_idx);
-            Vec3 final = source + ((dest - source) * interp);
+            auto source = this->position_at<Vec3>(source_idx);
+            auto dest = dest_state.position_at<Vec3>(dest_idx);
+            Vec3 final = *source + ((*dest - *source) * interp);
             out.position(final);
         }
         break;
         case VERTEX_ATTRIBUTE_4F: {
-            Vec4 source = this->position_at<Vec4>(source_idx);
-            Vec4 dest = dest_state.position_at<Vec4>(dest_idx);
-            Vec4 final = source + ((dest - source) * interp);
+            auto source = this->position_at<Vec4>(source_idx);
+            auto dest = dest_state.position_at<Vec4>(dest_idx);
+            Vec4 final = *source + ((*dest - *source) * interp);
             out.position(final);
         }
         break;
