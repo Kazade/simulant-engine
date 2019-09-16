@@ -133,19 +133,19 @@ void SubMesh::_recalc_bounds() {
         bounds_.set_max_z(0);
         bounds_.set_min_z(0);
 
-        for(auto& idx: index_data_->all()) {
-            if(idx >= vertex_count) continue; // Don't read outside the bounds
-            auto pos = vertex_data->position_at<Vec2>(idx);
+        index_data_->each([&](uint32_t idx) {
+            if(idx >= vertex_count) return; // Don't read outside the bounds
+            auto pos = vdata->position_at<Vec2>(idx);
             if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
             if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
             if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
             if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
-        }
+        });
     } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
-        for(auto& idx: index_data_->all()) {
-            if(idx >= vertex_count) continue; // Don't read outside the bounds
+        index_data_->each([&](uint32_t idx) {
+            if(idx >= vertex_count) return; // Don't read outside the bounds
 
-            auto pos = vertex_data->position_at<Vec3>(idx);
+            auto pos = vdata->position_at<Vec3>(idx);
             if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
             if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
             if(pos->z < bounds_.min().z) bounds_.set_min_z(pos->z);
@@ -153,14 +153,14 @@ void SubMesh::_recalc_bounds() {
             if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
             if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
             if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
-        }
+        });
     } else {
-        for(auto& idx: index_data_->all()) {
+        index_data_->each([&](uint32_t idx) {
             assert(pos_attr == VERTEX_ATTRIBUTE_4F);
 
-            if(idx >= vertex_count) continue; // Don't read outside the bounds
+            if(idx >= vertex_count) return; // Don't read outside the bounds
 
-            auto pos = vertex_data->position_at<Vec4>(idx);
+            auto pos = vdata->position_at<Vec4>(idx);
             if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
             if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
             if(pos->z < bounds_.min().z) bounds_.set_min_z(pos->z);
@@ -168,7 +168,7 @@ void SubMesh::_recalc_bounds() {
             if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
             if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
             if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
-        }
+        });
     }
 }
 
