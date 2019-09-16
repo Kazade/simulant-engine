@@ -41,8 +41,8 @@ void AdjacencyInfo::rebuild() {
         auto va = vertices->position_at<smlt::Vec3>(a);
         auto vb = vertices->position_at<smlt::Vec3>(b);
         auto vc = vertices->position_at<smlt::Vec3>(c);
-        auto v1 = vb - va;
-        auto v2 = vc - va;
+        auto v1 = *vb - *va;
+        auto v2 = *vc - *va;
         return v1.cross(v2).normalized();
     };
 
@@ -60,9 +60,9 @@ void AdjacencyInfo::rebuild() {
             assert(b < size);
             assert(c < size);
 
-            auto v1 = to_tuple(vertices->position_at<smlt::Vec3>(a));
-            auto v2 = to_tuple(vertices->position_at<smlt::Vec3>(b));
-            auto v3 = to_tuple(vertices->position_at<smlt::Vec3>(c));
+            auto v1 = to_tuple(*vertices->position_at<smlt::Vec3>(a));
+            auto v2 = to_tuple(*vertices->position_at<smlt::Vec3>(b));
+            auto v3 = to_tuple(*vertices->position_at<smlt::Vec3>(c));
 
             // If this vertex already exist, use the first known index (or insert this as the first known index)
             a = (position_map.count(v1)) ? position_map[v1] : position_map.insert(std::make_pair(v1, a)).first->second;

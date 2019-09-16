@@ -29,10 +29,6 @@ namespace smlt {
 Debug::Debug(Stage &stage):
     stage_(stage) {
 
-    update_connection_ = stage_.window->signal_late_update().connect(
-        std::bind(&Debug::update, this, std::placeholders::_1)
-    );
-
     frame_finished_connection_ = stage_.window->signal_frame_finished().connect(
         std::bind(&Debug::frame_finished, this)
     );
@@ -40,7 +36,6 @@ Debug::Debug(Stage &stage):
 
 Debug::~Debug() {
     // Make sure we disconnect otherwise crashes happen
-    update_connection_.disconnect();
     frame_finished_connection_.disconnect();
 
     if(mesh_) {

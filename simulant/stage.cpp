@@ -370,6 +370,10 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
 
 void Stage::update(float dt) {
     asset_manager_->update(dt);
+
+    if(debug_) {
+        debug_->update(dt);
+    }
 }
 
 void Stage::on_actor_created(ActorID actor_id) {

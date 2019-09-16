@@ -327,7 +327,7 @@ void Widget::rebuild() {
     float yoff = -((anchor_point_.y * height) - (height / 2.0));
     auto& vdata = mesh_->vertex_data;
     for(auto i = 0u; i < vdata->count(); ++i) {
-        auto p = vdata->position_at<smlt::Vec3>(i);
+        auto p = *vdata->position_at<smlt::Vec3>(i);
         p.x += xoff;
         p.y += yoff;
         vdata->move_to(i);

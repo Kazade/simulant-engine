@@ -99,11 +99,14 @@ void ProgressBar::set_range(float min, float max) {
 
     set_property("min", min);
     set_property("max", max);
+    needs_refresh_ = true;
 }
 
 void ProgressBar::set_value(float value) {
-    needs_refresh_ = true;
-    set_property("value", value);
+    if(value != this->value()) {
+        needs_refresh_ = true;
+        set_property("value", value);
+    }
 }
 
 void ProgressBar::set_fraction(float fraction) {

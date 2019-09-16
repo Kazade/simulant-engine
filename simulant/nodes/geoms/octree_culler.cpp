@@ -61,9 +61,9 @@ void OctreeCuller::_compile() {
         auto material_id = submesh->material_id();
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
-            stash[0] = data.vertices->position_at<Vec3>(a);
-            stash[1] = data.vertices->position_at<Vec3>(b);
-            stash[2] = data.vertices->position_at<Vec3>(c);
+            stash[0] = *data.vertices->position_at<Vec3>(a);
+            stash[1] = *data.vertices->position_at<Vec3>(b);
+            stash[2] = *data.vertices->position_at<Vec3>(c);
 
             auto node = pimpl_->octree->find_destination_for_triangle(stash);
 

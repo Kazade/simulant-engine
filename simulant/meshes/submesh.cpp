@@ -122,18 +122,53 @@ void SubMesh::_recalc_bounds() {
 
     auto vertex_count = this->parent_->vertex_data_->count();
 
-    // FIXME:! This will break with 32 bit indices
-    for(auto& idx: index_data_->all()) {
-        if(idx >= vertex_count) continue; // Don't read outside the bounds
+    // Store a raw-pointer for performance
+    VertexData* vdata = vertex_data.get();
+    auto& pos_attr = vdata->vertex_specification().position_attribute;
 
-        Vec4 pos = vertex_data->position_nd_at(idx);
-        if(pos.x < bounds_.min().x) bounds_.set_min_x(pos.x);
-        if(pos.y < bounds_.min().y) bounds_.set_min_y(pos.y);
-        if(pos.z < bounds_.min().z) bounds_.set_min_z(pos.z);
+    /* Awful switching is for performance
+       FIXME: Is there a better way to do this? I guess templated lambda or method
+    */
+    if(pos_attr == VERTEX_ATTRIBUTE_2F) {
+        bounds_.set_max_z(0);
+        bounds_.set_min_z(0);
 
-        if(pos.x > bounds_.max().x) bounds_.set_max_x(pos.x);
-        if(pos.y > bounds_.max().y) bounds_.set_max_y(pos.y);
-        if(pos.z > bounds_.max().z) bounds_.set_max_z(pos.z);
+        index_data_->each([&](uint32_t idx) {
+            if(idx >= vertex_count) return; // Don't read outside the bounds
+            auto pos = vdata->position_at<Vec2>(idx);
+            if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
+            if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
+            if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
+            if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
+        });
+    } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
+        index_data_->each([&](uint32_t idx) {
+            if(idx >= vertex_count) return; // Don't read outside the bounds
+
+            auto pos = vdata->position_at<Vec3>(idx);
+            if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
+            if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
+            if(pos->z < bounds_.min().z) bounds_.set_min_z(pos->z);
+
+            if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
+            if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
+            if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
+        });
+    } else {
+        index_data_->each([&](uint32_t idx) {
+            assert(pos_attr == VERTEX_ATTRIBUTE_4F);
+
+            if(idx >= vertex_count) return; // Don't read outside the bounds
+
+            auto pos = vdata->position_at<Vec4>(idx);
+            if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
+            if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
+            if(pos->z < bounds_.min().z) bounds_.set_min_z(pos->z);
+
+            if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
+            if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
+            if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
+        });
     }
 }
 
@@ -194,13 +229,12 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
     vd->move_to_start();
     for(uint16_t i = 0; i < vd->count(); ++i) {
-        Vec3 v;
-        vd->normal_at(i, v); // Get the vertex normal
+        auto v = vd->normal_at<Vec3>(i); // Get the vertex normal
 
         // Work out the component with the largest value
-        float absx = fabs(v.x);
-        float absy = fabs(v.y);
-        float absz = fabs(v.z);
+        float absx = fabs(v->x);
+        float absy = fabs(v->y);
+        float absz = fabs(v->z);
 
         bool x = (absx > absy && absx > absz);
         bool y = (absy > absx && absy > absz);
@@ -210,17 +244,17 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         smlt::Vec3 dir(0, 0, 0);
 
         if(x) {
-            dir.x = (v.x < 0) ? -1 : 1;
+            dir.x = (v->x < 0) ? -1 : 1;
         } else if(y) {
-            dir.y = (v.y < 0) ? -1 : 1;
+            dir.y = (v->y < 0) ? -1 : 1;
         } else {
-            dir.z = (v.z < 0) ? -1 : 1;
+            dir.z = (v->z < 0) ? -1 : 1;
         }
 
         // Create a plane at the origin with the opposite direction
         Plane plane(-dir.x, -dir.y, -dir.z, 0.0f);
 
-        smlt::Vec3 v1 = vd->position_at<Vec3>(i) - bounds_.min();
+        smlt::Vec3 v1 = *vd->position_at<Vec3>(i) - bounds_.min();
 
         // Project the vertex position onto the plane
         smlt::Vec3 final = plane.project(v1);
