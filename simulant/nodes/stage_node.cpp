@@ -297,6 +297,8 @@ StageNodeIterator::StageNodeIterator(StageNode* root, StageNodeIterator::Iterati
         if(current_ == start_ && !include_root) {
             current_ = (StageNode*) current_->right_;
         }
+    } else if(itype == ITERATION_TYPE_ANCESTORS && !include_root) {
+        current_ = (StageNode*) current_->parent();
     } else if(itype == ITERATION_TYPE_CHILDREN) {
         // Children is similar, we start at the first child
         // and just go right
