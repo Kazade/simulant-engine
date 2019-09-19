@@ -376,6 +376,16 @@ void Stage::update(float dt) {
     }
 }
 
+Debug* Stage::enable_debug(bool v) {
+    if(debug_ && !v) {
+        debug_.reset();
+    } else if(!debug_ && v) {
+        debug_ = Debug::create(*this);
+    }
+
+    return debug_.get();
+}
+
 void Stage::on_actor_created(ActorID actor_id) {
 
 }
