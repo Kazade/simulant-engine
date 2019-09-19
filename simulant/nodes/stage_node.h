@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stack>
+
 #include "./tree_node.h"
 #include "../interfaces/nameable.h"
 #include "../interfaces/printable.h"
@@ -30,6 +32,67 @@ enum DetailLevel {
     DETAIL_LEVEL_MAX
 };
 
+class StageNode;
+
+class StageNodeIterator:
+    public std::iterator<std::forward_iterator_tag, StageNode*, uint32_t, const StageNode**, StageNode*> {
+
+public:
+    enum IterationType {
+        ITERATION_TYPE_SIBLINGS,
+        ITERATION_TYPE_ANCESTORS,
+        ITERATION_TYPE_CHILDREN,
+        ITERATION_TYPE_DESCENDENTS
+    };
+
+    StageNodeIterator():
+        start_(nullptr),
+        current_(nullptr) {}
+
+    explicit StageNodeIterator(
+        StageNode* root,
+        IterationType itype, bool include_root, bool leaf_first
+    );
+
+    StageNodeIterator& operator++();
+
+    StageNodeIterator operator++(int) {
+        auto retval = *this;
+        ++(*this);
+        return retval;
+    }
+
+    bool operator==(StageNodeIterator& other) const {
+        if(!current_ && !other.current_) {
+            // Both "end" iterators
+            return true;
+        }
+
+        // FIXME: compare everything?
+        return start_ == other.start_ && current_ == other.current_ && itype_ == other.itype_;
+    }
+
+    bool operator!=(StageNodeIterator other) const {
+        return !(*this == other);
+    }
+
+    reference operator*() const {
+        return current_;
+    }
+
+private:
+    StageNode* start_ = nullptr;
+    StageNode* current_ = nullptr;
+    IterationType itype_ = ITERATION_TYPE_SIBLINGS;
+    bool include_root_ = false;
+    bool leaf_first_ = false;
+
+    /* For leaf-first iteration we need to store the parents
+     * we haven't visited */
+    std::stack<StageNode*> history_;
+};
+
+
 class StageNode:
     public TreeNode,
     public Nameable,
@@ -46,9 +109,70 @@ class StageNode:
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
 
+    friend class StageNodeIterator;
+
 public:
-    unicode to_unicode() const override {
-        return Nameable::to_unicode();
+    class StageNodeIteratorPair {
+    private:
+        friend class StageNode;
+
+        StageNodeIteratorPair(StageNode* root, StageNodeIterator::IterationType itype, bool include_root, bool leaf_first):
+            root_(root),
+            itype_(itype),
+            include_root_(include_root),
+            leaf_first_(leaf_first) {
+
+        }
+
+        StageNode* root_;
+        StageNodeIterator::IterationType itype_;
+        bool include_root_;
+        bool leaf_first_;
+
+    public:
+        StageNodeIterator begin() {
+            return StageNodeIterator(root_, itype_, include_root_, leaf_first_);
+        }
+
+        StageNodeIterator end() {
+            return StageNodeIterator();
+        }
+    };
+
+    StageNodeIteratorPair each_ancestor() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_ANCESTORS, false, false);
+    }
+
+    StageNodeIteratorPair each_descendent() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, false, false);
+    }
+
+    StageNodeIteratorPair each_descendent_lf() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, false, true);
+    }
+
+    StageNodeIteratorPair each_descendent_and_self() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, true, false);
+    }
+
+    StageNodeIteratorPair each_sibling() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_SIBLINGS, false, false);
+    }
+
+    StageNodeIteratorPair each_sibling_and_self() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_SIBLINGS, true, false);
+    }
+
+    StageNodeIteratorPair each_descendent_and_self_lf() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, true, true);
+    }
+
+    StageNodeIteratorPair each_child() {
+        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_CHILDREN, false, false);
+    }
+
+    std::string repr() const override {
+        return name();
     }
 
     StageNode(Stage* stage);

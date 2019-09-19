@@ -15,7 +15,7 @@ TreeNode::~TreeNode() {
     detach();
 }
 
-uint32_t TreeNode::count_children() const {
+uint32_t TreeNode::child_count() const {
     uint32_t ret = 0;
     auto child = first_child_;
     while(child) {
