@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/unicode.h"
+#include <string>
 
 namespace smlt {
 
@@ -8,7 +8,7 @@ class Printable {
 public:
     virtual ~Printable() {}
 
-    virtual unicode to_unicode() const = 0;
+    virtual std::string repr() const = 0;
 
     friend std::ostream& operator<< (std::ostream& o, Printable const& instance);
 };

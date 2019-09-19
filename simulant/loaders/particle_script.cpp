@@ -114,7 +114,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
         js
     );
 
-    ps->set_name((js.has_key("name")) ? _u(js["name"].get<jsonic::String>()): "");
+    ps->set_name((js.has_key("name")) ? js["name"].get<jsonic::String>(): "");
 
     L_DEBUG(_F("Loading particle system: {0}").format(ps->name()));
 
