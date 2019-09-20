@@ -55,7 +55,6 @@ public:
     void late_update(float dt) override;
 
     void destroy_all_stages();
-
     void each_stage(std::function<void (uint32_t, Stage*)> func);
 private:
     Window* window_ = nullptr;

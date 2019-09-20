@@ -162,11 +162,11 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
                 if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_MOVE || evt.touch.type == TOUCH_EVENT_TYPE_FINGER_UP) {
                     // Go through all the widgets, if one is being pressed and it's different
                     // than the one above, then trigger a fingerleave event
-                    manager_->each([&](uint32_t, WidgetPtr iter) {
+                    for(auto iter: manager_->_each()) {
                         if(iter->is_pressed_by_finger(evt.touch.touch_id) && iter != widget) {
                             iter->fingerleave(evt.touch.touch_id);
                         }
-                    });
+                    }
                 }
 
             } break;
@@ -183,7 +183,7 @@ void UIManager::clear_event_queue() {
 WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
     WidgetPtr result = nullptr;
 
-    manager_->each([&](uint32_t, WidgetPtr widget) {
+    for(auto widget: manager_->_each()) {
         auto aabb = widget->transformed_aabb();
         std::vector<Vec3> ss_points;
 
@@ -197,7 +197,7 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
         if(ss_aabb.contains_point(Vec3(window_coord, 0.5))) {
             result = widget;
         }
-    });
+    };
 
     return result;
 }
