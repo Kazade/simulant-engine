@@ -127,13 +127,6 @@ void StageManager::destroy_all_stages() {
     stage_manager_->destroy_all();
 }
 
-void StageManager::each_stage(std::function<void (uint32_t, Stage*)> func) {
-    uint32_t i = 0;
-    for(auto stage: stage_manager_->_each()) {
-        func(i++, stage);
-    }
-}
-
 // ============= END STAGES ===========
 
 }

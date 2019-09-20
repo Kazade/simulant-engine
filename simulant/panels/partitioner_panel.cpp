@@ -61,7 +61,7 @@ void PartitionerPanel::initialize() {
     if(initialized_) return;
 
     /* for stage in stages: stage->new_actor(stage->partitioner->debug_mesh_id()) */
-    window_->each_stage([=](uint32_t i, Stage* stage) {
+    for(auto stage: window_->each_stage()) {
         // Don't add another mesh if it already exists
         if(debug_actors_.count(stage->id())) {
             return;
@@ -71,7 +71,7 @@ void PartitionerPanel::initialize() {
             stage->partitioner->debug_mesh_id(),
             RENDERABLE_CULLING_MODE_NEVER //Important, we never want this to use the partitioner itself
         );
-    });
+    }
 
     initialized_ = true;
 }
