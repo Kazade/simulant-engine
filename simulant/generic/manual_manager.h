@@ -299,7 +299,7 @@ public:
             while(1) {
                 current_++;
 
-                if(current_ == container_->capacity()) {
+                if(current_ >= container_->capacity()) {
                     break;
                 }
 
@@ -383,8 +383,6 @@ public:
     // Fetch an element by ID, returns nullptr
     // if it doesn't exist
     T* get(id_type id) const {
-        assert(contains(id));
-
         if(!contains(id)) {
             return nullptr;
         }
