@@ -25,6 +25,8 @@ deps/libgl/samples/Makefile
 deps/libgl/samples/blend_test/main.c
 deps/libgl/samples/depth_funcs/Makefile
 deps/libgl/samples/depth_funcs/main.c
+deps/libgl/samples/mipmap/Makefile
+deps/libgl/samples/mipmap/main.c
 deps/libgl/samples/multitexture_arrays/main.c
 deps/libgl/samples/nehe02de/main.c
 deps/libgl/samples/paletted/Makefile
