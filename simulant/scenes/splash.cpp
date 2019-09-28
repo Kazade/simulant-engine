@@ -24,7 +24,7 @@ void Splash::load() {
     auto texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
     image_ = stage_->ui->new_widget_as_image(texture);
 
-    sound_ = window->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav");
+    sound_ = window->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav", smlt::GARBAGE_COLLECT_NEVER);
 
     /* Scale for window resolution */
     float scale = 0.5 * (window->height() / 720.0f);
