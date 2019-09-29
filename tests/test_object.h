@@ -221,6 +221,20 @@ public:
         assert_equal(actor1, stage_->find_child_with_name("actor1"));
     }
 
+    void test_visibility() {
+        auto a1 = stage_->new_actor();
+        auto a2 = stage_->new_actor_with_parent(a1);
+        auto a3 = stage_->new_actor_with_parent(a2);
+
+        a2->set_visible(false);
+
+        assert_true(a1->is_visible());
+        assert_false(a2->is_visible());
+        assert_false(a3->is_visible());
+        assert_false(a2->is_intended_visible());
+        assert_true(a3->is_intended_visible());
+    }
+
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;

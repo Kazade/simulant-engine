@@ -68,7 +68,9 @@ public:
     Vec3 absolute_scaling() const;
     Mat4 absolute_transformation() const;
 
-    bool is_visible() const { return is_visible_; }
+    bool is_visible() const;
+
+    bool is_intended_visible() const { return is_visible_; }
     void set_visible(bool visible) { is_visible_ = visible; }
 
     Property<StageNode, generic::DataCarrier> data = { this, &StageNode::data_ };

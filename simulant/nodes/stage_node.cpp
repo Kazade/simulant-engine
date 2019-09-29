@@ -60,6 +60,16 @@ Mat4 StageNode::absolute_transformation() const {
     return trans * rot * scale;
 }
 
+bool StageNode::is_visible() const {
+    // Debug check to make sure the parent is always a stage node. If we have a parent
+    // the dynamic cast should return something truthy, if there's no parent just return true
+    assert(parent() ? (bool) dynamic_cast<StageNode*>(parent()) : true);
+
+    // If this isn't visible, then fast-out, else return whether the parent is visible until
+    // there are no more parents
+    return is_visible_ && ((parent()) ? ((StageNode*) parent())->is_visible() : true);
+}
+
 void StageNode::move_to_absolute(const Vec3& position) {
     if(!parent_is_stage()) {
         // The stage itself is immovable so, we only bother with this if this isn't he stage
