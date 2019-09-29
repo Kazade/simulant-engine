@@ -69,46 +69,36 @@ StagePtr StageManager::destroy_stage(StageID s) {
 }
 
 void StageManager::fixed_update(float dt) {
-    stage_manager_->each([dt](uint32_t, StagePtr stage) {
-        TreeNode* root = stage;
-
-        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
+    for(auto stage: stage_manager_->_each()) {
+        for(auto stage_node: stage->each_descendent_and_self()) {
             stage_node->fixed_update(dt);
-        });
-    });
+        }
+    }
 }
 
 void StageManager::late_update(float dt) {
-    stage_manager_->each([dt](uint32_t, StagePtr stage) {
-        TreeNode* root = stage;
-
-        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
+    for(auto stage: stage_manager_->_each()) {
+        for(auto stage_node: stage->each_descendent_and_self()) {
             stage_node->late_update(dt);
-        });
-    });
+        }
+    }
 }
 
 
 void StageManager::update(float dt) {
     //Update the stages
-    stage_manager_->each([dt](uint32_t, StagePtr stage) {
-        TreeNode* root = stage;
-
-        root->each_descendent_and_self([=](uint32_t, TreeNode* node) {
-            StageNode* stage_node = static_cast<StageNode*>(node);
+    for(auto stage: stage_manager_->_each()) {
+        for(auto stage_node: stage->each_descendent_and_self()) {
             stage_node->update(dt);
-        });
-    });
+        }
+    }
 }
 
-
 void StageManager::print_tree() {
-    stage_manager_->each([this](uint32_t, StagePtr stage) {
+    for(auto stage: stage_manager_->_each()) {
         uint32_t counter = 0;
         print_tree(stage, counter);
-    });
+    }
 }
 
 void StageManager::print_tree(StageNode *node, uint32_t& level) {
@@ -119,9 +109,9 @@ void StageManager::print_tree(StageNode *node, uint32_t& level) {
     std::cout << *dynamic_cast<Printable*>(node) << std::endl;
 
     level += 1;
-    node->each_child([&](uint32_t, TreeNode* child) {
-        print_tree(static_cast<StageNode*>(child), level);
-    });
+    for(auto child: node->each_child()) {
+        print_tree(child, level);
+    }
     level -= 1;
 }
 
@@ -135,10 +125,6 @@ bool StageManager::has_stage(StageID stage_id) const {
 
 void StageManager::destroy_all_stages() {
     stage_manager_->destroy_all();
-}
-
-void StageManager::each_stage(std::function<void (uint32_t, Stage*)> func) {
-    stage_manager_->each(func);
 }
 
 // ============= END STAGES ===========

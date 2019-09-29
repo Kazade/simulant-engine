@@ -257,6 +257,7 @@ namespace _manual_manager_impl {
     struct contains<Tp> : std::false_type {};
 }
 
+
 template<typename T, typename IDType, typename ...Subtypes>
 class ManualManager {
 public:
@@ -265,8 +266,104 @@ public:
     typedef ManualManager<T, IDType> this_type;
     const static std::size_t chunk_size = 128;
 
+    class iterator {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = element_type;
+        using difference_type = uint32_t;
+        using pointer = element_type**;
+        using reference = element_type*;
+
+        enum Position {
+            POSITION_BEGIN,
+            POSITION_END
+        };
+
+        iterator(ManualManager* container, Position pos):
+            container_(container) {
+
+            assert(container_);
+
+            // If we've asked for the end, or the container is empty
+            // we return 1 past the final
+            if(pos == POSITION_END || !container_->size()) {
+                current_ = container_->capacity();
+            } else {
+                while(!container_->contains(id_type(current_ + 1))) {
+                    current_++;
+                }
+            }
+        }
+
+        iterator& operator++() {
+            while(1) {
+                current_++;
+
+                if(current_ >= container_->capacity()) {
+                    break;
+                }
+
+                if(container_->contains(id_type(current_ + 1))) {
+                    break;
+                }
+            }
+
+            return *this;
+        }
+
+        iterator operator++(int) {
+            auto retval = *this;
+            ++(*this);
+            return retval;
+        }
+
+        bool operator==(const iterator& other) const {
+            return container_ == other.container_ && current_ == other.current_;
+        }
+
+        bool operator!=(const iterator& other) const {
+            return !(*this == other);
+        }
+
+        reference operator*() const {
+            id_type id(current_ + 1);
+            auto ret = container_->get(id);
+            assert(ret);
+            return ret;
+        }
+
+    private:
+        ManualManager* container_ = nullptr;
+        uint32_t current_ = 0;
+    };
+
+    class iterator_pair {
+    private:
+        friend class ManualManager;
+
+        ManualManager* container_ = nullptr;
+
+        iterator_pair(ManualManager* container):
+            container_(container) {}
+    public:
+        iterator begin() {
+            return iterator(container_, iterator::POSITION_BEGIN);
+        }
+
+        iterator end() {
+            return iterator(container_, iterator::POSITION_END);
+        }
+    };
+
     virtual ~ManualManager() {
         clear();
+    }
+
+    /* Internal: Do not use this explicitly instead
+     * use the exposed each_X methods implemented
+     * by subclasses + owners */
+    iterator_pair _each() {
+        return iterator_pair(this);
     }
 
     // Returns the number of items
@@ -327,9 +424,10 @@ public:
     }
 
     void destroy_all() {
-        each([this](uint32_t, T* thing) {
+        for(auto thing: _each()) {
+            assert(thing);
             destroy(thing->id());
-        });
+        }
     }
 
     // Immediately clear the manager
@@ -348,17 +446,6 @@ public:
         auto source = get(id);
         auto copy = target_manager->make(*source); // Copy construction
         return copy;
-    }
-
-    template<typename Func>
-    void each(Func func) {
-        /* FIXME: This seems expensive! */
-        for(uint32_t i = 0; i < capacity(); ++i) {
-            id_type id(i + 1);
-            if(contains(id)) {
-                func(i, get(id));
-            }
-        }
     }
 
     bool is_marked_for_destruction(id_type id) const {

@@ -147,9 +147,9 @@ public:
         auto cid1 = c1->id();
         auto cid2 = c2->id();
 
-        this->assert_equal((uint32_t)1, m->count_children());
-        this->assert_equal((uint32_t)1, c1->count_children());
-        this->assert_equal((uint32_t)0, c2->count_children());
+        this->assert_equal((uint32_t)1, m->child_count());
+        this->assert_equal((uint32_t)1, c1->child_count());
+        this->assert_equal((uint32_t)0, c2->child_count());
 
         stage_->destroy_actor(mid);
         window->run_frame();

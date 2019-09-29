@@ -174,6 +174,9 @@ public:
     const AABB& aabb() const override { return aabb_; }
     const AABB transformed_aabb() const override { return aabb_; }
 
+    /* Enables the debug actor to allow drawing of debug lines and points */
+    Debug* enable_debug(bool v=true);
+
 private:
     AABB aabb_;
 

@@ -72,7 +72,7 @@ Stage::~Stage() {
 }
 
 bool Stage::init() {    
-    debug_ = Debug::create(*this);
+
     return true;
 }
 
@@ -81,10 +81,9 @@ void Stage::clean_up() {
     debug_.reset();
 
     //Recurse through the tree, destroying all children
-    this->each_descendent_lf([](uint32_t, TreeNode* node) {
-        StageNode* stage_node = static_cast<StageNode*>(node);
+    for(auto stage_node: each_descendent_lf()) {
         stage_node->destroy();
-    });
+    }
 
     light_manager_->clear();
     actor_manager_->clear();
@@ -374,6 +373,16 @@ void Stage::update(float dt) {
     if(debug_) {
         debug_->update(dt);
     }
+}
+
+Debug* Stage::enable_debug(bool v) {
+    if(debug_ && !v) {
+        debug_.reset();
+    } else if(!debug_ && v) {
+        debug_ = Debug::create(*this);
+    }
+
+    return debug_.get();
 }
 
 void Stage::on_actor_created(ActorID actor_id) {

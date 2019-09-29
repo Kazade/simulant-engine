@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/unicode.h"
+#include <string>
 
 namespace smlt {
 
@@ -13,14 +13,11 @@ class Nameable {
 public:
     virtual ~Nameable() {}
 
-    void set_name(const unicode& name) { name_ = name; }
-    const unicode name() const { return name_; }
+    void set_name(const std::string& name) { name_ = name; }
+    const std::string& name() const { return name_; }
     bool has_name() const { return !name_.empty(); }
-
-    virtual unicode to_unicode() const { return name_; }
-
 private:
-    unicode name_;
+    std::string name_;
 };
 
 }

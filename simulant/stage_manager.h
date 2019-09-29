@@ -20,6 +20,7 @@
 
 #include "generic/generic_tree.h"
 #include "generic/property.h"
+#include "generic/manual_manager.h"
 #include "interfaces.h"
 #include "interfaces/updateable.h"
 #include "types.h"
@@ -31,8 +32,6 @@ class StageNode;
 typedef sig::signal<void (StageID)> StageAddedSignal;
 typedef sig::signal<void (StageID)> StageRemovedSignal;
 
-template<typename T, typename IDType, typename ...Subtypes>
-class ManualManager;
 
 class StageManager:
     public virtual Updateable {
@@ -41,6 +40,8 @@ class StageManager:
     DEFINE_SIGNAL(StageRemovedSignal, signal_stage_removed);
 
 public:
+    typedef ManualManager<Stage, StageID>::iterator_pair stage_iterator_pair;
+
     StageManager(Window* window);
 
     StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_HASH);
@@ -56,7 +57,9 @@ public:
 
     void destroy_all_stages();
 
-    void each_stage(std::function<void (uint32_t, Stage*)> func);
+    stage_iterator_pair each_stage() {
+        return stage_manager_->_each();
+    }
 private:
     Window* window_ = nullptr;
     void print_tree(StageNode* node, uint32_t& level);
