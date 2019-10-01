@@ -314,7 +314,9 @@ void _material_impl::PropertyValueHolder::set_diffuse(const Colour &colour) {
 }
 
 void _material_impl::PropertyValueHolder::set_shininess(float shininess) {
-    set_property_value(SHININESS_PROPERTY, shininess);
+    // OpenGL expects shininess to range between 0 and 128 otherwise it throws
+    // an invalid_value error
+    set_property_value(SHININESS_PROPERTY, clamp(shininess, 0, 128));
 }
 
 void _material_impl::PropertyValueHolder::set_diffuse_map(TextureID texture_id) {

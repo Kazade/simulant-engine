@@ -96,6 +96,18 @@ public:
         assert_equal(pass2->diffuse_map().texture_id, tex);
     }
 
+    void test_shininess_is_clamped() {
+        /* OpenGL requires that the specular exponent is between
+         * 0 and 128, this checks that we clamp the value outside that
+         * range */
+
+        auto mat = window->shared_assets->new_material();
+        mat->set_shininess(1000);
+        assert_equal(mat->shininess(), 128);
+        mat->set_shininess(-100);
+        assert_equal(mat->shininess(), 0);
+    }
+
     void test_pass_material_set_on_clone() {
         auto material = window->shared_assets->clone_default_material();
 
