@@ -29,7 +29,6 @@
 #include "loadable.h"
 #include "interfaces/updateable.h"
 
-
 class MaterialTest;
 
 namespace smlt {

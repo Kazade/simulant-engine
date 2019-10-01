@@ -123,7 +123,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             pass->set_diffuse(smlt::Colour(material.diffuse[0], material.diffuse[1], material.diffuse[2], alpha));
             pass->set_ambient(smlt::Colour(material.ambient[0], material.ambient[1], material.ambient[2], alpha));
             pass->set_specular(smlt::Colour(material.specular[0], material.specular[1], material.specular[2], alpha));
-            pass->set_shininess(material.shininess);
+
+            // Shininess values "normally" are between 0 and 1000, but OpenGL expects them to
+            // be up to 128 so we scale that here
+            pass->set_shininess((material.shininess / 1000.0f) * 128);
             pass->set_cull_mode(mesh_opts.cull_mode);
         });
 
