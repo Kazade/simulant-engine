@@ -23,6 +23,7 @@
 namespace smlt {
 
 Light::Light(LightID lid, Stage* stage):
+    TypedDestroyableObject<Light, Stage>(stage),
     ContainerNode(stage),
     generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT) {
@@ -66,8 +67,5 @@ void Light::set_attenuation_from_range(float range) {
     quadratic_attenuation_ = 75.0 / (range * range);
 }
 
-void Light::destroy() {
-    stage->destroy_light(id());
-}
 
 }

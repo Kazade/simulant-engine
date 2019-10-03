@@ -20,22 +20,26 @@
 
 #include "panel.h"
 #include "../types.h"
+#include "../generic/managed.h"
 
 namespace smlt {
 
 class Window;
 
-class StatsPanel : public Panel {
+class StatsPanel:
+    public Panel,
+    public RefCounted<StatsPanel> {
+
 public:
     StatsPanel(Window* window);
 
+    bool init() override;
+    void clean_up() override;
 private:
     Window* window_ = nullptr;
 
     void do_activate() override;
     void do_deactivate() override;
-    void initialize();
-    bool initialized_ = false;
 
     StagePtr stage_;
     CameraPtr ui_camera_;
@@ -57,6 +61,13 @@ private:
     std::deque<float> free_ram_history_;
 
     void rebuild_ram_graph();
+
+    ui::WidgetPtr low_mem_;
+    ui::WidgetPtr high_mem_;
+
+    sig::connection frame_started_;
+    bool first_update_ = true;
+    float last_update_ = 0.0f;
 };
 
 }

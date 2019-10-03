@@ -10,6 +10,7 @@ namespace smlt {
 namespace ui {
 
 Widget::Widget(WidgetID id, UIManager *owner, UIConfig *defaults):
+    TypedDestroyableObject<Widget, UIManager>(owner),
     ContainerNode(owner->stage()),
     generic::Identifiable<WidgetID>(id),
     owner_(owner) {
@@ -404,10 +405,6 @@ void Widget::on_size_changed() {
 
 void Widget::set_property(const std::string &name, float value) {
     properties_[name] = value;
-}
-
-void Widget::destroy() {
-    owner_->destroy_widget(id());
 }
 
 const AABB &Widget::aabb() const {

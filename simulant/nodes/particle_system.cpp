@@ -32,6 +32,7 @@ const static VertexSpecification PS_VERTEX_SPEC(
 );
 
 ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* sound_driver):
+    TypedDestroyableObject<ParticleSystem, Stage>(stage),
     StageNode(stage),
     generic::Identifiable<ParticleSystemID>(id),
     Source(stage, sound_driver),
@@ -167,10 +168,6 @@ void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr came
     new_renderable.centre = transformed_aabb().centre();
 
     factory->push_renderable(new_renderable);
-}
-
-void ParticleSystem::destroy() {
-    stage->destroy_particle_system(id());
 }
 
 void ParticleSystem::set_quota(std::size_t quota) {

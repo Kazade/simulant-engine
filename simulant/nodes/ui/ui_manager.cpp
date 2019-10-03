@@ -115,6 +115,19 @@ void UIManager::destroy_widget(WidgetID widget_id) {
     manager_->destroy(widget_id);
 }
 
+void UIManager::destroy_object(Widget* object) {
+    // Release any presses on the widget
+    object->force_release();
+
+    // Queue for destruction
+    manager_->destroy(object->id());
+}
+
+void UIManager::destroy_object_immediately(Widget* object) {
+    object->force_release();
+    manager_->destroy_immediately(object->id());
+}
+
 void UIManager::on_touch_begin(const TouchEvent &evt) {
     queue_event(evt);
 }

@@ -44,10 +44,10 @@ namespace smlt {
 const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
-    WindowHolder(parent),
+    TypedDestroyableObject<Stage, Window>(parent),
     ContainerNode(this),
     generic::Identifiable<StageID>(id),
-    CameraManager(this),
+    WindowHolder(parent),
     ui_(new ui::UIManager(this)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
@@ -56,7 +56,8 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     sprite_manager_(new SpriteManager(parent, this)),
     actor_manager_(new ActorManager()),
     particle_system_manager_(new ParticleSystemManager()),
-    light_manager_(new LightManager()) {
+    light_manager_(new LightManager()),
+    camera_manager_(new CameraManager()) {
 
     set_partitioner(partitioner);
 
@@ -87,12 +88,8 @@ void Stage::clean_up() {
 
     light_manager_->clear();
     actor_manager_->clear();
-
-    CameraManager::destroy_all_cameras();
-}
-
-void Stage::destroy() {
-    window->destroy_stage(id());
+    camera_manager_->clear();
+    geom_manager_->clear();
 }
 
 ActorPtr Stage::new_actor(RenderableCullingMode mode) {
@@ -182,14 +179,78 @@ ActorPtr Stage::actor(ActorID e) const {
     return actor_manager_->get(e);
 }
 
-ActorPtr Stage::destroy_actor(ActorID e) {
-    signal_actor_destroyed_(e);
-    actor_manager_->destroy(e);
-    return nullptr;
+void Stage::destroy_actor(ActorID e) {
+    auto a = actor(e);
+    if(a) {
+        a->destroy();
+    }
 }
 
 std::size_t Stage::actor_count() const {
     return actor_manager_->size();
+}
+
+CameraPtr Stage::new_camera() {
+    auto new_camera = camera_manager_->make(this);
+    new_camera->set_parent(this);
+    return new_camera;
+}
+
+CameraPtr Stage::new_camera_with_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+    /*
+     *  Instantiates a camera with an orthographic projection. If both left and right are zero then they default to 0 and window.width()
+     *  respectively. If top and bottom are zero, then they default to window.height() and 0 respectively. So top left is 0,0
+     */
+    auto new_cam = new_camera();
+
+    if(!left && !right) {
+        right = window->width();
+    }
+
+    if(!bottom && !top) {
+        top = window->height();
+    }
+
+    new_cam->set_orthographic_projection(left, right, bottom, top, near, far);
+
+    return new_cam;
+}
+
+CameraPtr Stage::new_camera_for_viewport(const Viewport& vp) {
+    float x, y, width, height;
+    calculate_ratios_from_viewport(vp.type(), x, y, width, height);
+
+    auto camera = new_camera();
+    camera->set_perspective_projection(Degrees(45.0), width / height);
+
+    return camera;
+}
+
+CameraPtr Stage::new_camera_for_ui() {
+    return new_camera_with_orthographic_projection(0, window->width(), 0, window->height(), -1, 1);
+}
+
+CameraPtr Stage::camera(CameraID c) {
+    return camera_manager_->get(c);
+}
+
+void Stage::destroy_camera(CameraID cid) {
+    auto c = camera(cid);
+    if(c) {
+        c->destroy();
+    }
+}
+
+uint32_t Stage::camera_count() const {
+    return camera_manager_->size();
+}
+
+bool Stage::has_camera(CameraID id) const {
+    return camera_manager_->contains(id);
+}
+
+void Stage::destroy_all_cameras() {
+    camera_manager_->destroy_all();
 }
 
 //=============== GEOMS =====================
@@ -219,11 +280,11 @@ bool Stage::has_geom(GeomID geom_id) const {
     return geom_manager_->contains(geom_id);
 }
 
-GeomPtr Stage::destroy_geom(GeomID geom_id) {
-    signal_geom_destroyed_(geom_id);
-
-    geom_manager_->destroy(geom_id);
-    return nullptr;
+void Stage::destroy_geom(GeomID geom_id) {
+    auto g = geom(geom_id);
+    if(g) {
+        g->destroy();
+    }
 }
 
 std::size_t Stage::geom_count() const {
@@ -274,10 +335,11 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
     return particle_system_manager_->contains(pid);
 }
 
-ParticleSystemPtr Stage::destroy_particle_system(ParticleSystemID pid) {
-    signal_particle_system_destroyed_(pid);
-    particle_system_manager_->destroy(pid);
-    return nullptr;
+void Stage::destroy_particle_system(ParticleSystemID pid) {
+    auto p = particle_system(pid);
+    if(p) {
+        p->destroy();
+    }
 }
 
 std::size_t Stage::particle_system_count() const { return particle_system_manager_->size(); }
@@ -323,10 +385,11 @@ LightPtr Stage::light(LightID light_id) {
     return light_manager_->get(light_id);
 }
 
-LightPtr Stage::destroy_light(LightID light_id) {
-    signal_light_destroyed_(light_id);
-    light_manager_->destroy(light_id);
-    return nullptr;
+void Stage::destroy_light(LightID light_id) {
+    auto l = light(light_id);
+    if(l) {
+        l->destroy();
+    }
 }
 
 std::size_t Stage::light_count() const { return light_manager_->size(); }
@@ -385,6 +448,82 @@ Debug* Stage::enable_debug(bool v) {
     return debug_.get();
 }
 
+void Stage::destroy_object(Actor* object) {
+    if(!actor_manager_->is_marked_for_destruction(object->id())) {
+        signal_actor_destroyed_(object->id());
+        actor_manager_->destroy(object->id());
+    }
+}
+
+void Stage::destroy_object(Light* object) {
+    if(!light_manager_->is_marked_for_destruction(object->id())) {
+        signal_light_destroyed_(object->id());
+        light_manager_->destroy(object->id());
+    }
+}
+
+void Stage::destroy_object(Camera* object) {
+    if(!camera_manager_->is_marked_for_destruction(object->id())) {
+        signal_camera_destroyed_(object->id());
+        camera_manager_->destroy(object->id());
+    }
+}
+
+void Stage::destroy_object(Geom* object) {
+    if(!geom_manager_->is_marked_for_destruction(object->id())) {
+        signal_geom_destroyed_(object->id());
+        geom_manager_->destroy(object->id());
+    }
+}
+
+void Stage::destroy_object(ParticleSystem* object) {
+    if(!particle_system_manager_->is_marked_for_destruction(object->id())) {
+        signal_particle_system_destroyed_(object->id());
+        particle_system_manager_->destroy(object->id());
+    }
+}
+
+void Stage::destroy_object_immediately(Actor* object) {
+    // Only send the signal if we didn't already
+    if(!actor_manager_->is_marked_for_destruction(object->id())) {
+        signal_actor_destroyed_(object->id());
+    }
+
+    actor_manager_->destroy_immediately(object->id());
+}
+
+void Stage::destroy_object_immediately(Light* object) {
+    if(!light_manager_->is_marked_for_destruction(object->id())) {
+        signal_light_destroyed_(object->id());
+    }
+
+    light_manager_->destroy_immediately(object->id());
+}
+
+void Stage::destroy_object_immediately(Camera* object) {
+    if(!camera_manager_->is_marked_for_destruction(object->id())) {
+        signal_camera_destroyed_(object->id());
+    }
+
+    camera_manager_->destroy_immediately(object->id());
+}
+
+void Stage::destroy_object_immediately(Geom* object) {
+    if(!geom_manager_->is_marked_for_destruction(object->id())) {
+        signal_geom_destroyed_(object->id());
+    }
+
+    geom_manager_->destroy_immediately(object->id());
+}
+
+void Stage::destroy_object_immediately(ParticleSystem* object) {
+    if(!particle_system_manager_->is_marked_for_destruction(object->id())) {
+        signal_particle_system_destroyed_(object->id());
+    }
+
+    particle_system_manager_->destroy_immediately(object->id());
+}
+
 void Stage::on_actor_created(ActorID actor_id) {
 
 }
@@ -398,7 +537,7 @@ void Stage::clean_up_dead_objects() {
     light_manager_->clean_up();
     geom_manager_->clean_up();
     particle_system_manager_->clean_up();
-    CameraManager::clean_up();
+    camera_manager_->clean_up();
 }
 
 }

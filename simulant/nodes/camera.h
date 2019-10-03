@@ -3,6 +3,7 @@
 #include "stage_node.h"
 #include "../generic/identifiable.h"
 #include "../generic/optional.h"
+#include "../generic/manual_object.h"
 #include "../math/aabb.h"
 #include "../frustum.h"
 
@@ -11,6 +12,7 @@ namespace smlt {
 class RenderTarget;
 
 class Camera:
+    public TypedDestroyableObject<Camera, Stage>,
     public ContainerNode,
     public generic::Identifiable<CameraID> {
 
@@ -19,8 +21,6 @@ public:
 
     Camera(CameraID camera_id, Stage* stage);
     virtual ~Camera();
-
-    void destroy() override;
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
     const AABB& aabb() const override {

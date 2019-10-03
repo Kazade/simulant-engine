@@ -4,8 +4,8 @@
 #include <map>
 #include <queue>
 #include "../../types.h"
-#include "widget.h"
 #include "../../event_listener.h"
+#include "ui_config.h"
 
 namespace smlt {
 
@@ -14,6 +14,7 @@ class ManualManager;
 
 namespace ui {
 
+class Widget;
 class Button;
 class Label;
 class ProgressBar;
@@ -54,6 +55,10 @@ public:
     void destroy_widget(WidgetID widget);
 
     Stage* stage() const { return stage_; }
+
+    /* Implementation for TypedDestroyableObject (INTERNAL) */
+    void destroy_object(Widget* object);
+    void destroy_object_immediately(Widget* object);
 
 private:    
     Stage* stage_ = nullptr;

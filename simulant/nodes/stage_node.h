@@ -7,12 +7,12 @@
 #include "../interfaces/printable.h"
 #include "../interfaces/transformable.h"
 #include "../interfaces/updateable.h"
-#include "../interfaces/ownable.h"
 #include "../interfaces/boundable.h"
 #include "../behaviours/behaviour.h"
 #include "../interfaces/has_auto_id.h"
 #include "../generic/data_carrier.h"
 #include "../shadows.h"
+#include "../generic/manual_object.h"
 
 namespace smlt {
 
@@ -94,17 +94,16 @@ private:
 
 
 class StageNode:
+    public virtual DestroyableObject,
     public TreeNode,
     public Nameable,
     public Printable,
     public Transformable,
     public Updateable,
-    public Ownable,
     public virtual BoundableEntity,
     public Organism,
     public HasAutoID<StageNode>,
     public TwoPhaseConstructed {
-
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
@@ -176,7 +175,8 @@ public:
     }
 
     StageNode(Stage* stage);
-    virtual ~StageNode() {}
+
+    virtual ~StageNode();
 
 
     /* Without a parent, these are the same as move_to/rotate_to. With a parent

@@ -45,6 +45,8 @@ simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
 simulant/generic/manual_manager.h
+simulant/generic/manual_object.cpp
+simulant/generic/manual_object.h
 simulant/generic/notifies_destruction.h
 simulant/generic/object_manager.h
 simulant/generic/raii.h
@@ -53,8 +55,6 @@ simulant/generic/uniquely_identifiable.h
 simulant/loaders/deps/tiny_obj_loader.h
 simulant/loaders/wav_loader.cpp
 simulant/loaders/wav_loader.h
-simulant/managers/camera_manager.cpp
-simulant/managers/camera_manager.h
 simulant/nodes/geoms/loose_quadtree.h
 simulant/nodes/geoms/quadtree_culler.cpp
 simulant/nodes/geoms/quadtree_culler.h
@@ -62,6 +62,7 @@ simulant/nodes/particles/manipulators/colour_fader.h
 simulant/nodes/particles/manipulators/curves.cpp
 simulant/nodes/particles/manipulators/curves.h
 simulant/nodes/particles/manipulators/size_manipulator.cpp
+simulant/nodes/ui/ui_config.h
 simulant/renderers/batching/renderable_store.cpp
 simulant/renderers/batching/renderable_store.h
 simulant/renderers/gl2x/vbo_manager.cpp
@@ -483,7 +484,6 @@ simulant/interfaces/has_auto_id.cpp
 simulant/interfaces/has_auto_id.h
 simulant/interfaces/locateable.h
 simulant/interfaces/nameable.h
-simulant/interfaces/ownable.h
 simulant/interfaces/printable.cpp
 simulant/interfaces/transformable.cpp
 simulant/interfaces/transformable.h

@@ -20,6 +20,8 @@ class SpriteManager :
     DEFINE_SIGNAL(SpriteCreatedSignal, signal_sprite_created);
     DEFINE_SIGNAL(SpriteDestroyedSignal, signal_sprite_destroyed);
 
+    friend class Sprite;
+
 public:
     SpriteManager(Window* window, Stage* stage);
     virtual ~SpriteManager();

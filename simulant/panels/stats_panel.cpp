@@ -31,9 +31,7 @@ StatsPanel::StatsPanel(Window *window):
 
 }
 
-void StatsPanel::initialize() {
-    if(initialized_) return;
-
+bool StatsPanel::init() {
     stage_ = window_->new_stage();
 
     ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
@@ -78,8 +76,31 @@ void StatsPanel::initialize() {
     ram_graph_mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
     ram_graph_ = stage_->new_actor_with_mesh(ram_graph_mesh_, RENDERABLE_CULLING_MODE_NEVER);
 
-    window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
-    initialized_ = true;
+    low_mem_ = overlay->ui->new_widget_as_label("0M");
+    high_mem_ = overlay->ui->new_widget_as_label("0M");
+
+    frame_started_ = window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
+
+    return true;
+}
+
+void StatsPanel::clean_up() {
+    frame_started_.disconnect();
+
+    if(pipeline_) {
+        window_->destroy_pipeline(pipeline_);
+    }
+
+    if(stage_) {
+        stage_->destroy();
+        stage_ = nullptr;
+    }
+
+    fps_ = nullptr;
+    frame_time_ = nullptr;
+    ram_usage_ = nullptr;
+    actors_rendered_ = nullptr;
+    polygons_rendered_ = nullptr;
 }
 
 #ifdef _arch_dreamcast
@@ -142,7 +163,8 @@ static unsigned int round(unsigned int value, unsigned int multiple){
 }
 
 void StatsPanel::rebuild_ram_graph() {
-    const smlt::Colour colour = smlt::Colour::SKY_BLUE;
+    smlt::Colour colour = smlt::Colour::SKY_BLUE;
+    colour.a = 0.35;
 
     float width = window_->width();
     float height = window_->height() * 0.4f;
@@ -168,6 +190,14 @@ void StatsPanel::rebuild_ram_graph() {
     float x = 0;
     float xstep = width / (RAM_SAMPLES - 1);
 
+    float lowest_mem = std::numeric_limits<float>::max();
+    float lowest_x = 0;
+    float lowest_y = 0;
+
+    float highest_mem = std::numeric_limits<float>::lowest();
+    float highest_x = 0;
+    float highest_y = 0;
+
     auto idx = vdata->count();
     for(auto i = 1u; i < free_ram_history_.size(); ++i) {
         auto sample = free_ram_history_[i];
@@ -184,6 +214,18 @@ void StatsPanel::rebuild_ram_graph() {
         vdata->move_next();
         idata->index(idx++);
 
+        if(last_sample < lowest_mem) {
+            lowest_x = x;
+            lowest_y = y;
+            lowest_mem = last_sample;
+        }
+
+        if(last_sample > highest_mem) {
+            highest_x = x;
+            highest_y = y;
+            highest_mem = last_sample;
+        }
+
         x += xstep;
 
         y = (height / graph_max) * sample;
@@ -196,19 +238,34 @@ void StatsPanel::rebuild_ram_graph() {
         vdata->diffuse(colour);
         vdata->move_next();
         idata->index(idx++);
+
+        if(sample < lowest_mem) {
+            lowest_x = x;
+            lowest_y = y;
+            lowest_mem = sample;
+        }
+
+        if(sample > highest_mem) {
+            highest_x = x;
+            highest_y = y;
+            highest_mem = sample;
+        }
     }
+
+    low_mem_->set_text(_u("{0}M").format(lowest_mem));
+    low_mem_->move_to(lowest_x, lowest_y + 10);
+
+    high_mem_->set_text(_u("{0}M").format(highest_mem));
+    high_mem_->move_to(highest_x, highest_y + 10);
 
     vdata->done();
     idata->done();
 }
 
 void StatsPanel::update() {
-    static float last_update = 0.0f;
-    static bool first_update = true;
+    last_update_ += window_->time_keeper->delta_time();
 
-    last_update += window_->time_keeper->delta_time();
-
-    if(first_update || last_update >= 1.0) {
+    if(first_update_ || last_update_ >= 1.0) {
         auto mem_usage = get_memory_usage_in_megabytes();
         auto actors_rendered = window_->stats->geometry_visible();
 
@@ -225,8 +282,8 @@ void StatsPanel::update() {
         actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
         polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
 
-        last_update = 0.0f;
-        first_update = false;
+        last_update_ = 0.0f;
+        first_update_ = false;
 
         /* FIXME: Restore this...
          *
@@ -250,8 +307,6 @@ void StatsPanel::update() {
 }
 
 void StatsPanel::do_activate() {
-    initialize();
-
     pipeline_->activate();
     L_DEBUG("Activating stats panel");
 }

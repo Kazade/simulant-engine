@@ -196,6 +196,12 @@ void Window::_clean_up() {
     virtual_gamepad_.reset();
     loading_.reset();
 
+    auto panels = panels_;
+    for(auto p: panels) {
+        unregister_panel(p.first);
+    }
+    panels.clear();
+
     destroy_all_backgrounds();
     BackgroundManager::clean_up();
 
@@ -296,8 +302,8 @@ bool Window::_init() {
 
         create_defaults();
 
-        register_panel(1, std::make_shared<StatsPanel>(this));
-        register_panel(2, std::make_shared<PartitionerPanel>(this));
+        register_panel(1, StatsPanel::create(this));
+        register_panel(2, PartitionerPanel::create(this));
 
         initialized_ = true;
     }
@@ -620,6 +626,12 @@ void Window::reset() {
 
     disable_virtual_joypad();
 
+    auto panels = panels_;
+    for(auto p: panels) {
+        unregister_panel(p.first);
+    }
+    panels.clear();
+
     render_sequence_->destroy_all_pipelines();
 
     BackgroundManager::destroy_all_backgrounds();
@@ -640,6 +652,10 @@ void Window::reset() {
 
     L_DEBUG("Recreating defaults");
     create_defaults();
+
+    L_DEBUG("Recreating panels");
+    register_panel(1, StatsPanel::create(this));
+    register_panel(2, PartitionerPanel::create(this));
 }
 
 PipelineHelper Window::render(StagePtr stage, CameraPtr camera) {
@@ -675,7 +691,10 @@ bool Window::disable_pipeline(PipelineID pid) {
 }
 
 PipelinePtr Window::destroy_pipeline(PipelineID pid) {
-    render_sequence_->destroy_pipeline(pid);
+    if(render_sequence_) {
+        render_sequence_->destroy_pipeline(pid);
+    }
+
     return nullptr;
 }
 

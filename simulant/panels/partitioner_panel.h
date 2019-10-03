@@ -21,24 +21,32 @@
 #include <unordered_map>
 #include "panel.h"
 #include "../types.h"
+#include "../generic/managed.h"
 
 namespace smlt {
 
 class Window;
 
-class PartitionerPanel : public Panel {
+class PartitionerPanel:
+    public Panel,
+    public RefCounted<PartitionerPanel> {
+
 public:
     PartitionerPanel(Window* window);
+
+    bool init() override;
+    void clean_up() override;
 
 private:
     Window* window_ = nullptr;
 
     void do_activate() override;
     void do_deactivate() override;
-    void initialize();
-    bool initialized_ = false;
 
     std::unordered_map<StageID, ActorPtr> debug_actors_;
+
+    sig::connection stage_added_;
+    sig::connection stage_removed_;
 };
 
 }

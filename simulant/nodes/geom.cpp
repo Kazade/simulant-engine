@@ -27,6 +27,7 @@
 namespace smlt {
 
 Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, GeomCullerOptions culler_options):
+    TypedDestroyableObject<Geom, Stage>(stage),
     StageNode(stage),
     generic::Identifiable<GeomID>(id),
     Source(stage, sound_driver),
@@ -61,10 +62,6 @@ bool Geom::init() {
 
 const AABB &Geom::aabb() const {
     return aabb_;
-}
-
-void Geom::destroy() {
-    stage->destroy_geom(id());
 }
 
 void Geom::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) {

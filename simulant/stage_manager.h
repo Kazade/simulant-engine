@@ -60,6 +60,10 @@ public:
     stage_iterator_pair each_stage() {
         return stage_manager_->_each();
     }
+
+    /* Implementation for TypedDestroyableObject (INTERNAL) */
+    void destroy_object(Stage* object);
+    void destroy_object_immediately(Stage* object);
 private:
     Window* window_ = nullptr;
     void print_tree(StageNode* node, uint32_t& level);

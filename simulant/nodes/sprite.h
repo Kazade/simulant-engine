@@ -49,12 +49,12 @@ class Sprite :
 public:
     using ContainerNode::_get_renderables;
 
-    //Ownable interface (inherited through ParentSetterMixin)
-    void destroy() override;
-
     bool init() override;
     void clean_up() override;
     void update(float dt) override;
+
+    void destroy();
+    void destroy_immediately();
 
     Sprite(SpriteID id, SpriteManager *manager, SoundDriver *sound_driver);
 

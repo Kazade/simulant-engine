@@ -37,6 +37,14 @@ Sprite::Sprite(SpriteID id, SpriteManager *manager, SoundDriver* sound_driver):
     sprite_sheet_padding_ = std::make_pair(0, 0);  
 }
 
+void Sprite::destroy() {
+    manager_->destroy_sprite(id());
+}
+
+void Sprite::destroy_immediately() {
+    manager_->sprite_manager_->destroy_immediately(id());
+}
+
 bool Sprite::init() {
     auto mesh = stage->assets->new_mesh_as_rectangle(1.0, 1.0);
 
@@ -68,10 +76,6 @@ void Sprite::clean_up() {
     }
 
     StageNode::clean_up();
-}
-
-void Sprite::destroy() {
-    manager_->destroy_sprite(id());
 }
 
 void Sprite::update(float dt) {

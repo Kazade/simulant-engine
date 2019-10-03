@@ -9,20 +9,26 @@ StageNode::StageNode(Stage *stage):
 
 }
 
+StageNode::~StageNode() {
+
+}
+
 void StageNode::clean_up() {
     signal_destroyed_(); // Tell everyone we're going
 
-    remove_from_parent(); // Make sure we're detached from the scene
+    remove_from_parent(); // Make sure we're not connected to anything
 
     // Go through the subnodes and ask each for destruction in-turn
-    for(auto stage_node: each_descendent_lf()) {
+    std::vector<StageNode*> to_destroy;
+    for(auto stage_node: each_child()) {
         assert(stage_node);
-
-        stage_node->detach();
-        stage_node->destroy();
+        to_destroy.push_back(stage_node);
     };
 
-    detach(); // Make sure we're not connected to anything
+    for(auto stage_node: to_destroy) {
+        // Don't wait for the next frame, just destroy now
+        stage_node->destroy_immediately();
+    }
 
     TwoPhaseConstructed::clean_up();
 }
