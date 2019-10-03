@@ -7,6 +7,7 @@
 
 #include "../generic/identifiable.h"
 #include "../generic/managed.h"
+#include "../generic/manual_object.h"
 #include "../renderers/renderer.h"
 #include "../sound.h"
 #include "../interfaces.h"
@@ -24,6 +25,7 @@ class ParticleSystem;
 typedef sig::signal<void (ParticleSystem*, MaterialID, MaterialID)> ParticleSystemMaterialChangedSignal;
 
 class ParticleSystem :
+    public TypedDestroyableObject<ParticleSystem, Stage>,
     public StageNode,
     public generic::Identifiable<ParticleSystemID>,
     public Source,
@@ -57,8 +59,6 @@ public:
     particles::EmitterPtr emitter(int32_t i) { return emitters_.at(i); }
     particles::EmitterPtr push_emitter();
     void pop_emitter();
-
-    void destroy() override;
 
     void set_material_id(MaterialID mat_id);
     const MaterialID material_id() const { return material_id_; }

@@ -21,6 +21,7 @@
 
 #include "../generic/managed.h"
 #include "../generic/identifiable.h"
+#include "../generic/manual_object.h"
 #include "../types.h"
 
 #include "stage_node.h"
@@ -28,6 +29,7 @@
 namespace smlt {
 
 class Light :
+    public TypedDestroyableObject<Light, Stage>,
     public ContainerNode,
     public generic::Identifiable<LightID> {
 
@@ -99,7 +101,6 @@ public:
         return bounds_;
     }
 
-    void destroy() override;
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
     void update(float step) override {}

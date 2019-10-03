@@ -47,6 +47,10 @@ void Skybox::destroy() {
     manager_->destroy_skybox(id());
 }
 
+void Skybox::destroy_immediately() {
+    manager_->sky_manager_->destroy_immediately(id());
+}
+
 const AABB &Skybox::aabb() const {
     return actor_->aabb();
 }

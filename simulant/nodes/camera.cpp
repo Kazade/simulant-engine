@@ -8,6 +8,7 @@ namespace smlt {
 
 
 Camera::Camera(CameraID camera_id, Stage *stage):
+    TypedDestroyableObject<Camera, Stage>(stage),
     ContainerNode(stage),
     generic::Identifiable<CameraID>(camera_id) {
 
@@ -18,10 +19,6 @@ Camera::Camera(CameraID camera_id, Stage *stage):
 
 Camera::~Camera() {
 
-}
-
-void Camera::destroy() {
-    stage->destroy_camera(id());
 }
 
 void Camera::update_transformation_from_parent() {

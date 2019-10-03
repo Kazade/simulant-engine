@@ -6,6 +6,26 @@
 class StageTests : public smlt::test::SimulantTestCase {
 public:
 
+    void test_destruction() {
+        auto stage = window->new_stage();
+        auto destroyed_count = 0;
+
+        stage->signal_actor_destroyed().connect([&](smlt::ActorID) {
+            destroyed_count++;
+        });
+
+        auto a1 = stage->new_actor();
+        auto a2 = stage->new_actor_with_parent(a1);
+        stage->new_actor_with_parent(a2);
+
+        a2->destroy();
+
+        window->run_frame();
+
+        assert_false(a1->child_count()); // No children now
+        assert_equal(destroyed_count, 2); // Should've destroyed 2
+    }
+
     void test_iteration_types() {
         auto stage = window->new_stage();
 
@@ -35,8 +55,8 @@ public:
         c3->set_parent(c2);
         c4->set_parent(a2);
 
-        std::set<smlt::StageNode*> found;
-        std::set<smlt::StageNode*> expected;
+        std::multiset<smlt::StageNode*> found;
+        std::multiset<smlt::StageNode*> expected;
 
         /* Should iterate a1, and a2 */
         for(auto node: a1->each_sibling()) {
@@ -74,7 +94,15 @@ public:
 
         // FIXME: this doesn't test the order
         assert_items_equal(found, expected);
+        found.clear();
+        expected.clear();
 
+        for(auto node: c1->each_descendent_lf()) {
+            found.insert(node);
+        }
+        expected.insert(c2);
+        expected.insert(c3);
+        assert_items_equal(found, expected);
         found.clear();
         expected.clear();
 

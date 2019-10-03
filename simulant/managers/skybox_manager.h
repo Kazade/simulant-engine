@@ -67,6 +67,7 @@ public:
     );
 
     void destroy() override;
+    void destroy_immediately() override;
 
     const AABB& aabb() const override;
 
@@ -106,6 +107,8 @@ typedef ManualManager<Skybox, SkyID> TemplatedSkyboxManager;
 
 class SkyManager :
     public virtual WindowHolder {
+
+    friend class Skybox;
 
 public:
     SkyManager(Window* window, Stage* stage);

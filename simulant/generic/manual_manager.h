@@ -103,7 +103,7 @@ namespace _manual_manager_impl {
             assert(*marker == 0xAB);
             return reinterpret_cast<T*>(addr);
 #else
-           return reinterpret_cast<T*>(find_address(id));
+            return reinterpret_cast<T*>(find_address(id));
 #endif
         }
 
@@ -113,19 +113,16 @@ namespace _manual_manager_impl {
             auto p = find_chunk_and_slot(id);
             T* element = get(id);
 
+            assert(element);
+            element->clean_up();
+            // Call the destructor
+            element->~T();
+
 #ifndef NDEBUG
             uint8_t* marker = ((uint8_t*) element) + max_element_size();
             assert(*marker == 0xAB);
             *marker = 0; // Reset the marker
 #endif
-
-            if(!element) {
-                return;
-            }
-
-            element->clean_up();
-            // Call the destructor
-            element->~T();
 
             {
                 std::lock_guard<std::mutex> g(p.first->lock_);
@@ -256,7 +253,6 @@ namespace _manual_manager_impl {
     template < typename Tp >
     struct contains<Tp> : std::false_type {};
 }
-
 
 template<typename T, typename IDType, typename ...Subtypes>
 class ManualManager {
@@ -413,13 +409,19 @@ public:
         to_release_.insert(id);
     }
 
+    // This deletes the object immediately, without any
+    // grace period
+    void destroy_immediately(id_type id) {
+        pool_.release(id);
+        to_release_.erase(id);
+    }
+
     // Clean up deleted objects
     void clean_up() {
         while(to_release_.size()) {
             auto id = *to_release_.begin();
             pool_.release(id);
             to_release_.erase(id);
-
         }
     }
 

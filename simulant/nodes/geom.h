@@ -19,6 +19,7 @@
 #pragma once
 
 #include "../generic/managed.h"
+#include "../generic/manual_object.h"
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
@@ -54,6 +55,7 @@ struct GeomCullerOptions {
  * Also unlike an actor, a mesh is a requirement.
  */
 class Geom :
+    public TypedDestroyableObject<Geom, Stage>,
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<GeomID>,
@@ -71,8 +73,6 @@ public:
     );
 
     const AABB& aabb() const override;
-
-    void destroy() override;
 
     RenderPriority render_priority() const { return render_priority_; }
 

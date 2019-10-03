@@ -29,7 +29,6 @@
 #include "managers/window_holder.h"
 #include "managers/skybox_manager.h"
 #include "managers/sprite_manager.h"
-#include "managers/camera_manager.h"
 
 #include "nodes/actor.h"
 #include "nodes/geom.h"
@@ -58,6 +57,7 @@ typedef ManualManager<Actor, ActorID> ActorManager;
 typedef ManualManager<Geom, GeomID> GeomManager;
 typedef ManualManager<Light, LightID> LightManager;
 typedef ManualManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
+typedef ManualManager<Camera, CameraID> CameraManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
@@ -75,11 +75,11 @@ typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
 class Stage:
+    public TypedDestroyableObject<Stage, Window>,
     public ContainerNode,
     public generic::Identifiable<StageID>,
     public Loadable,    
     public RenderableStage,
-    public CameraManager,
     public virtual WindowHolder {
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
@@ -106,6 +106,16 @@ public:
     bool has_actor(ActorID e) const;
     ActorPtr destroy_actor(ActorID e);
     std::size_t actor_count() const;
+
+    CameraPtr new_camera();
+    CameraPtr new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
+    CameraPtr new_camera_for_ui();
+    CameraPtr new_camera_for_viewport(const Viewport& vp);
+    CameraPtr camera(CameraID c);
+    void destroy_camera(CameraID cid);
+    uint32_t camera_count() const;
+    bool has_camera(CameraID id) const;
+    void destroy_all_cameras();
 
     GeomPtr new_geom_with_mesh(MeshID mid, const GeomCullerOptions& culler_options=GeomCullerOptions());
     GeomPtr new_geom_with_mesh_at_position(
@@ -139,8 +149,6 @@ public:
     void move(float x, float y, float z) {
         throw std::logic_error("You cannot move the stage");
     }
-
-    void destroy() override;
 
     Property<Stage, Debug> debug = {this, &Stage::debug_};
     Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};
@@ -177,6 +185,18 @@ public:
     /* Enables the debug actor to allow drawing of debug lines and points */
     Debug* enable_debug(bool v=true);
 
+    /* Implementation for TypedDestroyableObject (INTERNAL) */
+    void destroy_object(Actor* object);
+    void destroy_object(Light* object);
+    void destroy_object(Camera* object);
+    void destroy_object(Geom* object);
+    void destroy_object(ParticleSystem* object);
+
+    void destroy_object_immediately(Actor* object);
+    void destroy_object_immediately(Light* object);
+    void destroy_object_immediately(Camera* object);
+    void destroy_object_immediately(Geom* object);
+    void destroy_object_immediately(ParticleSystem* object);
 private:
     AABB aabb_;
 
@@ -214,6 +234,7 @@ private:
     std::unique_ptr<ActorManager> actor_manager_;
     std::unique_ptr<ParticleSystemManager> particle_system_manager_;
     std::unique_ptr<LightManager> light_manager_;
+    std::unique_ptr<CameraManager> camera_manager_;
 
     generic::DataCarrier data_;
 

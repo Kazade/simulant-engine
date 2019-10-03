@@ -28,6 +28,7 @@
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
+#include "../generic/manual_object.h"
 
 #include "../renderers/batching/render_queue.h"
 #include "../renderers/batching/renderable.h"
@@ -39,6 +40,7 @@ class SubActor;
 
 
 class Actor :
+    public TypedDestroyableObject<Actor, Stage>,
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<ActorID>,
@@ -62,8 +64,6 @@ public:
     bool has_multiple_meshes() const;
 
     void set_mesh(MeshID mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
-
-    void destroy() override;
 
     typedef sig::signal<void (ActorID)> MeshChangedCallback;
 

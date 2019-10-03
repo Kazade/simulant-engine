@@ -27,6 +27,7 @@
 namespace smlt {
 
 Actor::Actor(ActorID id, Stage* stage, SoundDriver* sound_driver):
+    TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage),
     generic::Identifiable<ActorID>(id),
     Source(stage, sound_driver) {
@@ -34,6 +35,7 @@ Actor::Actor(ActorID id, Stage* stage, SoundDriver* sound_driver):
 }
 
 Actor::Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh):
+    TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage),
     generic::Identifiable<ActorID>(id),
     Source(stage, sound_driver) {
@@ -192,10 +194,6 @@ const AABB &Actor::aabb() const {
 MeshID Actor::mesh_id(DetailLevel detail_level) const {
     auto& mesh = meshes_[detail_level];
     return (mesh) ? mesh->id() : MeshID(0);
-}
-
-void Actor::destroy() {
-    stage->destroy_actor(id());
 }
 
 SubActor::SubActor(const Actor &parent, std::shared_ptr<SubMesh> submesh):

@@ -127,6 +127,14 @@ void StageManager::destroy_all_stages() {
     stage_manager_->destroy_all();
 }
 
+void StageManager::destroy_object(Stage* object) {
+    stage_manager_->destroy(object->id());
+}
+
+void StageManager::destroy_object_immediately(Stage* object) {
+    stage_manager_->destroy_immediately(object->id());
+}
+
 // ============= END STAGES ===========
 
 }
