@@ -68,6 +68,9 @@ typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
 typedef sig::signal<void (ParticleSystemID)> ParticleSystemCreatedSignal;
 typedef sig::signal<void (ParticleSystemID)> ParticleSystemDestroyedSignal;
 
+typedef sig::signal<void (CameraID)> CameraCreatedSignal;
+typedef sig::signal<void (CameraID)> CameraDestroyedSignal;
+
 typedef sig::signal<void (CameraID, Viewport)> StagePreRenderSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
 
@@ -104,7 +107,7 @@ public:
     ActorPtr actor(ActorID e);
     ActorPtr actor(ActorID e) const;
     bool has_actor(ActorID e) const;
-    ActorPtr destroy_actor(ActorID e);
+    void destroy_actor(ActorID e);
     std::size_t actor_count() const;
 
     CameraPtr new_camera();
@@ -125,7 +128,7 @@ public:
     );
     GeomPtr geom(const GeomID gid) const;
     bool has_geom(GeomID geom_id) const;
-    GeomPtr destroy_geom(GeomID geom_id);
+    void destroy_geom(GeomID geom_id);
     std::size_t geom_count() const;
 
     ParticleSystemPtr new_particle_system();
@@ -133,14 +136,14 @@ public:
     ParticleSystemPtr new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion=false);
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
-    ParticleSystemPtr destroy_particle_system(ParticleSystemID pid);
+    void destroy_particle_system(ParticleSystemID pid);
     std::size_t particle_system_count() const;
 
     LightPtr new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
     LightPtr new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
     LightPtr light(LightID light);
-    LightPtr destroy_light(LightID light_id);
+    void destroy_light(LightID light_id);
     std::size_t light_count() const;
 
     smlt::Colour ambient_light() const { return ambient_light_; }
@@ -176,6 +179,9 @@ public:
     GeomCreatedSignal& signal_geom_created() { return signal_geom_created_; }
     GeomDestroyedSignal& signal_geom_destroyed() { return signal_geom_destroyed_; }
 
+    CameraCreatedSignal& signal_camera_created() { return signal_camera_created_; }
+    CameraDestroyedSignal& signal_camera_destroyed() { return signal_camera_destroyed_; }
+
     sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
     sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
 
@@ -205,6 +211,9 @@ private:
 
     GeomCreatedSignal signal_geom_created_;
     GeomDestroyedSignal signal_geom_destroyed_;
+
+    CameraCreatedSignal signal_camera_created_;
+    CameraDestroyedSignal signal_camera_destroyed_;
 
     sig::signal<void (LightID)> signal_light_created_;
     sig::signal<void (LightID)> signal_light_destroyed_;

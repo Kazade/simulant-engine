@@ -179,10 +179,11 @@ ActorPtr Stage::actor(ActorID e) const {
     return actor_manager_->get(e);
 }
 
-ActorPtr Stage::destroy_actor(ActorID e) {
-    signal_actor_destroyed_(e);
-    actor_manager_->destroy(e);
-    return nullptr;
+void Stage::destroy_actor(ActorID e) {
+    auto a = actor(e);
+    if(a) {
+        a->destroy();
+    }
 }
 
 std::size_t Stage::actor_count() const {
@@ -234,7 +235,10 @@ CameraPtr Stage::camera(CameraID c) {
 }
 
 void Stage::destroy_camera(CameraID cid) {
-    camera_manager_->destroy(cid);
+    auto c = camera(cid);
+    if(c) {
+        c->destroy();
+    }
 }
 
 uint32_t Stage::camera_count() const {
@@ -276,11 +280,11 @@ bool Stage::has_geom(GeomID geom_id) const {
     return geom_manager_->contains(geom_id);
 }
 
-GeomPtr Stage::destroy_geom(GeomID geom_id) {
-    signal_geom_destroyed_(geom_id);
-
-    geom_manager_->destroy(geom_id);
-    return nullptr;
+void Stage::destroy_geom(GeomID geom_id) {
+    auto g = geom(geom_id);
+    if(g) {
+        g->destroy();
+    }
 }
 
 std::size_t Stage::geom_count() const {
@@ -331,10 +335,11 @@ bool Stage::has_particle_system(ParticleSystemID pid) const {
     return particle_system_manager_->contains(pid);
 }
 
-ParticleSystemPtr Stage::destroy_particle_system(ParticleSystemID pid) {
-    signal_particle_system_destroyed_(pid);
-    particle_system_manager_->destroy(pid);
-    return nullptr;
+void Stage::destroy_particle_system(ParticleSystemID pid) {
+    auto p = particle_system(pid);
+    if(p) {
+        p->destroy();
+    }
 }
 
 std::size_t Stage::particle_system_count() const { return particle_system_manager_->size(); }
@@ -380,10 +385,11 @@ LightPtr Stage::light(LightID light_id) {
     return light_manager_->get(light_id);
 }
 
-LightPtr Stage::destroy_light(LightID light_id) {
-    signal_light_destroyed_(light_id);
-    light_manager_->destroy(light_id);
-    return nullptr;
+void Stage::destroy_light(LightID light_id) {
+    auto l = light(light_id);
+    if(l) {
+        l->destroy();
+    }
 }
 
 std::size_t Stage::light_count() const { return light_manager_->size(); }
@@ -450,19 +456,31 @@ void Stage::destroy_object(Actor* object) {
 }
 
 void Stage::destroy_object(Light* object) {
-    light_manager_->destroy(object->id());
+    if(!light_manager_->is_marked_for_destruction(object->id())) {
+        signal_light_destroyed_(object->id());
+        light_manager_->destroy(object->id());
+    }
 }
 
 void Stage::destroy_object(Camera* object) {
-    camera_manager_->destroy(object->id());
+    if(!camera_manager_->is_marked_for_destruction(object->id())) {
+        signal_camera_destroyed_(object->id());
+        camera_manager_->destroy(object->id());
+    }
 }
 
 void Stage::destroy_object(Geom* object) {
-    geom_manager_->destroy(object->id());
+    if(!geom_manager_->is_marked_for_destruction(object->id())) {
+        signal_geom_destroyed_(object->id());
+        geom_manager_->destroy(object->id());
+    }
 }
 
 void Stage::destroy_object(ParticleSystem* object) {
-    particle_system_manager_->destroy(object->id());
+    if(!particle_system_manager_->is_marked_for_destruction(object->id())) {
+        signal_particle_system_destroyed_(object->id());
+        particle_system_manager_->destroy(object->id());
+    }
 }
 
 void Stage::destroy_object_immediately(Actor* object) {
@@ -475,18 +493,34 @@ void Stage::destroy_object_immediately(Actor* object) {
 }
 
 void Stage::destroy_object_immediately(Light* object) {
+    if(!light_manager_->is_marked_for_destruction(object->id())) {
+        signal_light_destroyed_(object->id());
+    }
+
     light_manager_->destroy_immediately(object->id());
 }
 
 void Stage::destroy_object_immediately(Camera* object) {
+    if(!camera_manager_->is_marked_for_destruction(object->id())) {
+        signal_camera_destroyed_(object->id());
+    }
+
     camera_manager_->destroy_immediately(object->id());
 }
 
 void Stage::destroy_object_immediately(Geom* object) {
+    if(!geom_manager_->is_marked_for_destruction(object->id())) {
+        signal_geom_destroyed_(object->id());
+    }
+
     geom_manager_->destroy_immediately(object->id());
 }
 
 void Stage::destroy_object_immediately(ParticleSystem* object) {
+    if(!particle_system_manager_->is_marked_for_destruction(object->id())) {
+        signal_particle_system_destroyed_(object->id());
+    }
+
     particle_system_manager_->destroy_immediately(object->id());
 }
 
