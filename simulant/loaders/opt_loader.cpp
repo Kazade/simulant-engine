@@ -514,7 +514,9 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         );
 
         auto new_tex = mesh->asset_manager().texture(texture_name_to_id[tex.name]);
-        new_tex->data().assign(tex.data.begin(), tex.data.end());
+        auto txn = new_tex->begin_transaction();
+        txn->set_data(tex.data);
+        txn->commit();
 
         //Create a submesh for each texture.
         texture_submesh[tex.name] = mesh->new_submesh_with_material(

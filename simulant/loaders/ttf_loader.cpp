@@ -64,10 +64,12 @@ namespace loaders {
         // Convert from 8bpp to 32bpp
         {
             // Lock against updates
-            auto lock = font->texture_->lock();
+            auto txn = font->texture_->begin_transaction();
+
+            auto source_data = texture->data();
 
             // Manipulate the data buffer
-            auto data = &texture->data()[0];
+            auto data = &source_data[0];
             uint32_t i = 0;
             for(auto& b: tmp_buffer) {
                 uint32_t idx = i * 4;
@@ -78,7 +80,8 @@ namespace loaders {
             L_DEBUG("F: Finished conversion");
 
             // Mark the data as changed
-            texture->mark_data_changed();
+            txn->set_data(source_data);
+            txn->commit();
         }
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);

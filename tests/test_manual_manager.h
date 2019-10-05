@@ -4,6 +4,7 @@
 #include "simulant/generic/unique_id.h"
 #include "simulant/stage.h"
 #include "simulant/test.h"
+#include "simulant/nodes/camera.h"
 
 class MyObject;
 

@@ -40,7 +40,8 @@ void draw_circle(smlt::TexturePtr texture_ptr, float x, float y, float size, flo
 
     int32_t bytes_per_pixel = texture.bytes_per_pixel();
 
-    auto texlock = texture.lock();
+    auto txn = texture.begin_transaction();
+    auto data = texture.data();
 
     for(uint32_t j = start_y; j < end_y; ++j) {
         for(uint32_t i = start_x; i < end_x; ++i) {
@@ -50,24 +51,27 @@ void draw_circle(smlt::TexturePtr texture_ptr, float x, float y, float size, flo
             if((dx*dx + dy*dy) <= (radius * radius)) {
                 int32_t idx = (j * texture.width()) + i;
 
-                texture.data()[idx * bytes_per_pixel] = brightness * colour.r;
-                texture.data()[(idx * bytes_per_pixel) + 1] = brightness * colour.g;
-                texture.data()[(idx * bytes_per_pixel) + 2] = brightness * colour.b;
+                data[idx * bytes_per_pixel] = brightness * colour.r;
+                data[(idx * bytes_per_pixel) + 1] = brightness * colour.g;
+                data[(idx * bytes_per_pixel) + 2] = brightness * colour.b;
                 if(bytes_per_pixel == 4) {
-                    texture.data()[(idx * bytes_per_pixel) + 3] = brightness * colour.a;
+                    data[(idx * bytes_per_pixel) + 3] = brightness * colour.a;
                 }
             }
         }
     }
 
-    texture.mark_data_changed();
+    txn->set_data(data);
+    txn->commit();
 }
 
 void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     smlt::Texture& texture = *texture_ptr;
 
-    texture.resize(width, height);
-    texture.set_format(TEXTURE_FORMAT_RGBA8888);
+    auto txn = texture.begin_transaction();
+    txn->resize(width, height);
+    txn->set_format(TEXTURE_FORMAT_RGBA8888);
+    txn->commit();
 
     const float GLOBAL_DENSITY = 0.01f;
     const float MAX_SIZE = 2.0;

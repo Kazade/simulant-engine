@@ -10,30 +10,27 @@ using namespace smlt;
 
 class TextureTests : public smlt::test::SimulantTestCase {
 public:
-
-    void test_locking() {
-        auto tex = window->shared_assets->new_texture(8, 8);
-        {
-            auto lock = tex->lock();
-            assert_false(tex->try_lock());
-        }
-
-        assert_true(tex->try_lock());
+    void test_transaction_api() {
+        auto tex = window->shared_assets->new_texture(0, 0);
+        auto txn = tex->begin_transaction();
+        txn->resize(64, 64);
+        txn->commit();
     }
 
     void test_conversion_from_r8_to_rgba4444() {
         auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
 
-        auto& data = tex->data();
+        auto txn = tex->begin_transaction();
+        auto& data = txn->data();
         data[0] = 255;
         data[1] = 128;
         data[2] = 0;
-        data[3] = 255;
+        data[3] = 255;        
 
         assert_equal(4u, data.size());
 
         // Should convert each pixel to: {1, 0, 0, v}
-        tex->convert(
+        txn->convert(
             TEXTURE_FORMAT_RGBA4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ZERO, TEXTURE_CHANNEL_GREEN, TEXTURE_CHANNEL_RED}}
         );

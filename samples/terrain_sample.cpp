@@ -9,9 +9,8 @@ inline T clamp(T x, T a = 0, T b = 1) {
 }
 
 void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& vertices) {
-    auto lock = texture->lock();
-
-    texture->resize(width, length);
+    auto txn = texture->begin_transaction();
+    txn->resize(width, length);
 
     for(uint32_t i = 0; i < vertices.count(); ++i) {
         auto n = vertices.normal_at<Vec3>(i);
@@ -26,13 +25,13 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
 
         float z = rock + sand + grass + snow;
 
-        texture->data()[i * 4] = 255.0f * (sand / z);
-        texture->data()[(i * 4) + 1] = 255.0f * (grass / z);
-        texture->data()[(i * 4) + 2] = 255.0f * (rock / z);
-        texture->data()[(i * 4) + 3] = 255.0f * (snow / z);
+        txn->data()[i * 4] = 255.0f * (sand / z);
+        txn->data()[(i * 4) + 1] = 255.0f * (grass / z);
+        txn->data()[(i * 4) + 2] = 255.0f * (rock / z);
+        txn->data()[(i * 4) + 3] = 255.0f * (snow / z);
     }
-    texture->mark_data_changed();
 
+    txn->commit();
 }
 
 class Gamescene : public smlt::Scene<Gamescene> {
