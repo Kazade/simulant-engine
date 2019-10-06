@@ -35,6 +35,8 @@ public:
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ZERO, TEXTURE_CHANNEL_GREEN, TEXTURE_CHANNEL_RED}}
         );
 
+        txn->commit();
+
         assert_equal(8u, data.size());
 
         auto expected1 = 0b1111000000001111;

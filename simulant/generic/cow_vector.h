@@ -26,7 +26,7 @@ public:
     }
 
     cow_vector(const std::vector<T>& rhs):
-        vector_(std::make_shared<std::vector<T>>(rhs)),
+        vector_(std::make_shared<std::vector<T>>(rhs.begin(), rhs.end())),
         unique_(true) {
 
     }
@@ -35,11 +35,14 @@ public:
         vector_(rhs.vector_),
         unique_(false) {
 
+        rhs.unique_ = false;
     }
 
     cow_vector& operator=(const cow_vector& rhs) {
         vector_ = rhs.vector_;
         unique_ = false;
+        rhs.unique_ = false;
+
         return *this;
     }
 
@@ -116,7 +119,7 @@ private:
     }
 
     std::shared_ptr<std::vector<T>> vector_;
-    bool unique_ = true;
+    mutable bool unique_ = true;
 };
 
 }

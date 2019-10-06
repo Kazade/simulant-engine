@@ -67,8 +67,8 @@ public:
         if(is_dirty_) {
             on_commit();
             std::swap(source_->pimpl_, target_);
-            committed_ = true;
         }
+        committed_ = true;
     }
 
     void rollback() {

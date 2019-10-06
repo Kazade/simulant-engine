@@ -5,7 +5,7 @@
 
 namespace {
 
-class CoWVectorTests : public smlt::test::SimulantTestCase {
+class CoWVectorTests : public smlt::test::TestCase {
 public:
 
     void test_basic_usage() {
