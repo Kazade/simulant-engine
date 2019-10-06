@@ -292,6 +292,7 @@ public:
 
 private:
     bool data_dirty_ = false;
+    bool params_dirty_ = false;
 
     void on_commit() override;
 };

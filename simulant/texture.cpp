@@ -344,6 +344,7 @@ void TextureTransaction::set_source(const unicode& source) {
 void TextureTransaction::free() {
     target_->data_.clear();
     target_->data_.shrink_to_fit();
+    data_dirty_ = true;
     mark_dirty();
 }
 
@@ -402,6 +403,7 @@ MipmapGenerate Texture::mipmap_generation() const {
 void TextureTransaction::set_texture_filter(TextureFilter filter) {
     if(filter != target_->filter_) {
         target_->filter_ = filter;
+        params_dirty_ = true;
     }
 
     mark_dirty();
@@ -409,6 +411,7 @@ void TextureTransaction::set_texture_filter(TextureFilter filter) {
 
 void TextureTransaction::set_free_data_mode(TextureFreeData mode) {
     target_->free_data_mode_ = mode;
+    params_dirty_ = true;
     mark_dirty();
 }
 
@@ -425,6 +428,7 @@ void TextureTransaction::set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v
 void TextureTransaction::set_texture_wrap_u(TextureWrap wrap_u) {
     if(wrap_u != target_->wrap_u_) {
         target_->wrap_u_ = wrap_u;
+        params_dirty_ = true;
         mark_dirty();
     }
 }
@@ -432,6 +436,7 @@ void TextureTransaction::set_texture_wrap_u(TextureWrap wrap_u) {
 void TextureTransaction::set_texture_wrap_v(TextureWrap wrap_v) {
     if(wrap_v != target_->wrap_v_) {
         target_->wrap_v_ = wrap_v;
+        params_dirty_ = true;
         mark_dirty();
     }
 }
@@ -439,16 +444,19 @@ void TextureTransaction::set_texture_wrap_v(TextureWrap wrap_v) {
 void TextureTransaction::set_texture_wrap_w(TextureWrap wrap_w) {
     if(wrap_w != target_->wrap_w_) {
         target_->wrap_w_ = wrap_w;
+        params_dirty_ = true;
         mark_dirty();
     }
 }
 
 void TextureTransaction::set_auto_upload(bool v) {
     target_->auto_upload_ = v;
+    params_dirty_ = true;
 }
 
 void TextureTransaction::set_mipmap_generation(MipmapGenerate type) {
     target_->mipmap_generation_ = type;
+    params_dirty_ = true;
 }
 
 void TextureTransaction::set_data(const Texture::Data& data) {
@@ -468,8 +476,13 @@ void TextureTransaction::on_commit() {
     }
 
     // Set some flags on the texture itself
-    source_->params_dirty_ = true;
-    source_->data_dirty_ = data_dirty_;
+    if(!source_->params_dirty_) {
+        source_->params_dirty_ = params_dirty_;
+    }
+
+    if(!source_->data_dirty_) {
+        source_->data_dirty_ = data_dirty_;
+    }
 }
 
 bool Texture::init() {

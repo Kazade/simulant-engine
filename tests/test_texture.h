@@ -11,10 +11,18 @@ using namespace smlt;
 class TextureTests : public smlt::test::SimulantTestCase {
 public:
     void test_transaction_api() {
-        auto tex = window->shared_assets->new_texture(0, 0);
+        TexturePtr tex = window->shared_assets->new_texture(0, 0);
+
+        window->run_frame();
+        assert_false(tex->_data_dirty());
+        assert_false(tex->_params_dirty());
+
         auto txn = tex->begin_transaction();
         txn->resize(64, 64);
         txn->commit();
+
+        assert_true(tex->_data_dirty());
+        assert_false(tex->_params_dirty());
     }
 
     void test_conversion_from_r8_to_rgba4444() {
@@ -37,18 +45,18 @@ public:
 
         txn->commit();
 
-        assert_equal(8u, data.size());
+        assert_equal(8u, tex->data().size());
 
         auto expected1 = 0b1111000000001111;
-        uint16_t* first_pixel = (uint16_t*) &data[0];
+        uint16_t* first_pixel = (uint16_t*) &tex->data()[0];
         assert_equal(*first_pixel, expected1);
 
         auto expected2 = 0b1111000000000111;
-        uint16_t* second_pixel = (uint16_t*) &data[2];
+        uint16_t* second_pixel = (uint16_t*) &tex->data()[2];
         assert_equal(*second_pixel, expected2);
 
         auto expected3 = 0b1111000000000000;
-        uint16_t* third_pixel = (uint16_t*) &data[4];
+        uint16_t* third_pixel = (uint16_t*) &tex->data()[4];
         assert_equal(*third_pixel, expected3);
     }
 };

@@ -146,7 +146,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
             /* Free the data if that's what is wanted */
             if(texture->free_data_mode() == TEXTURE_FREE_DATA_AFTER_UPLOAD) {
                 auto txn = texture->begin_transaction();
-                txn->set_data(Texture::Data());
+                txn->free();
                 txn->commit();
             }
 
