@@ -62,7 +62,7 @@ public:
 };
 
 template<typename T>
-class RefCounted : public virtual TwoPhaseConstructed, public std::enable_shared_from_this<T> {
+class RefCounted : public virtual TwoPhaseConstructed, public virtual std::enable_shared_from_this<T> {
 public:
     typedef std::shared_ptr<T> ptr;
     typedef std::weak_ptr<T> wptr;

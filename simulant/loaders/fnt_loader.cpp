@@ -252,20 +252,23 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
 
     font->material_->set_blend_func(BLEND_ALPHA);
 
+    auto txn = font->texture_->begin_transaction();
+
     if(font->texture_->channels() == 1) {
         /*
          * Convert 1 channel textures to 4 channel, 16 bits-per-pixel textures
          * which are the most compressed format we can send the Dreamcast without
          * getting bogged down with VQ compression or paletted textures
          */
-        font->texture_->convert(
+        txn->convert(
             TEXTURE_FORMAT_RGBA4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
     }
 
     // OK, it's fine to upload now
-    font->texture_->set_auto_upload(true);
+    txn->set_auto_upload(true);
+    txn->commit();
 }
 
 void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {

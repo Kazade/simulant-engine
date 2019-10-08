@@ -70,6 +70,10 @@ StagePtr StageManager::destroy_stage(StageID s) {
 
 void StageManager::fixed_update(float dt) {
     for(auto stage: stage_manager_->_each()) {
+        if(!stage->is_part_of_active_pipeline()) {
+            continue;
+        }
+
         for(auto stage_node: stage->each_descendent_and_self()) {
             stage_node->fixed_update(dt);
         }
@@ -78,6 +82,10 @@ void StageManager::fixed_update(float dt) {
 
 void StageManager::late_update(float dt) {
     for(auto stage: stage_manager_->_each()) {
+        if(!stage->is_part_of_active_pipeline()) {
+            continue;
+        }
+
         for(auto stage_node: stage->each_descendent_and_self()) {
             stage_node->late_update(dt);
         }
@@ -88,6 +96,10 @@ void StageManager::late_update(float dt) {
 void StageManager::update(float dt) {
     //Update the stages
     for(auto stage: stage_manager_->_each()) {
+        if(!stage->is_part_of_active_pipeline()) {
+            continue;
+        }
+
         for(auto stage_node: stage->each_descendent_and_self()) {
             stage_node->update(dt);
         }

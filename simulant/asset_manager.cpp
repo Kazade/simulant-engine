@@ -80,14 +80,20 @@ bool AssetManager::init() {
     assert(default_texture_id_);
 
     {
-        // FIXME: Race condition between these two lines?
         auto tex = texture(default_texture_id_);
-        auto texlock = tex->lock();
+
+        // FIXME: This is slow! Need to allow
+        // maniulating the data on the txn to avoid
+        // two copies.
+        auto data = tex->data();
 
         for(uint32_t i = 0; i < 64 * 4; ++i) {
-            tex->data()[i] = 255;
+            data[i] = 255;
         }
-        tex->mark_data_changed();
+
+        auto txn = tex->begin_transaction();
+        txn->set_data(data);
+        txn->commit();
 
         L_DEBUG("- Generated texture data");
     }
@@ -579,18 +585,19 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
     smlt::TexturePtr tex = texture(new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect));
 
     {
-        auto texlock = tex->lock();
         window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
+        auto txn = tex->begin_transaction();
+
         if(flags.flip_vertically) {
-            tex->flip_vertically();
+            txn->flip_vertically();
         }
 
-        tex->set_mipmap_generation(flags.mipmap);
-        tex->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
-        tex->set_texture_filter(flags.filter);
-        tex->set_auto_upload(flags.auto_upload);
-        tex->mark_data_changed();
+        txn->set_mipmap_generation(flags.mipmap);
+        txn->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
+        txn->set_texture_filter(flags.filter);
+        txn->set_auto_upload(flags.auto_upload);
+        txn->commit();
     }
 
     return tex;

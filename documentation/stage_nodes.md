@@ -30,3 +30,9 @@ for(auto node: actor->each_sibling()) {} // Iterate the siblings of the actor
 
 for(auto node: stage->each_child()) {} // Iterate direct-children only
 ```
+
+# Updating of StageNode and their Behaviours
+
+`StageNodes` are only updated if the owning `Stage` is attached to an active `Pipeline`. You can check this by checking `Stage::is_part_of_active_pipeline()`. 
+
+It is highly recommended that if you are manipulating a `Stage` in a background thread (e.g. in the `load()` method of a `Scene`) that you do not attach the `Stage` to a pipeline until you are finished manipulating. This should prevent threading problems.

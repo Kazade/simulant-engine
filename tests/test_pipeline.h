@@ -37,6 +37,35 @@ public:
         assert_equal(pipeline->detail_level_at_distance(50.0), DETAIL_LEVEL_FARTHEST);
     }
 
+    void test_stage_active_counting() {
+        /* When a stage is attached to an pipeline a counter should
+         * increment and drive is_part_of_active_pipeline */
+        pipeline->destroy();
+
+        assert_false(stage->is_part_of_active_pipeline());
+
+        smlt::PipelinePtr pipeline = window->render(stage, camera);
+
+        assert_true(stage->is_part_of_active_pipeline());
+
+        window->destroy_pipeline(pipeline);
+
+        assert_false(stage->is_part_of_active_pipeline());
+
+        pipeline = window->render(stage, camera);
+        smlt::PipelinePtr pipeline2 = window->render(stage, camera);
+
+        assert_true(stage->is_part_of_active_pipeline());
+
+        pipeline->destroy();
+
+        assert_true(stage->is_part_of_active_pipeline());
+
+        pipeline2->destroy();
+
+        assert_false(stage->is_part_of_active_pipeline());
+    }
+
 private:
     StagePtr stage;
     CameraPtr camera;

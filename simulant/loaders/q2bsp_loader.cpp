@@ -238,13 +238,15 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     // Make sure we lock the texture so that the renderer doesn't
     // upload it while we're working on it!
-    auto texlock = output_texture->lock();
+    auto txn = output_texture->begin_transaction();
 
     // Finally generate the texture!
-    output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
-    output_texture->set_format(TEXTURE_FORMAT_RGBA8888);
+    txn->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
+    txn->set_format(TEXTURE_FORMAT_RGBA8888);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
+
+    auto data = output_texture->data();
 
     bool logged = false;
     for(uint32_t i = 0; i < lightmaps.size(); ++i) {
@@ -264,10 +266,10 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
             for(uint32_t x = rect.x; x < rect.x + rect.w; ++x) {
                 uint32_t idx = (y * LIGHTMAP_DIMENSION * 4) + (x * 4);
 
-                output_texture->data()[idx] = lightmaps[i].data[src_idx];
-                output_texture->data()[idx + 1] = lightmaps[i].data[src_idx + 1];
-                output_texture->data()[idx + 2] = lightmaps[i].data[src_idx + 2];
-                output_texture->data()[idx + 3] = 255;
+                data[idx] = lightmaps[i].data[src_idx];
+                data[idx + 1] = lightmaps[i].data[src_idx + 1];
+                data[idx + 2] = lightmaps[i].data[src_idx + 2];
+                data[idx + 3] = 255;
 
                 src_idx += 3;
             }
@@ -277,7 +279,8 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
     }
 
     // output_texture->save_to_file("/tmp/lightmap.tga");
-    output_texture->mark_data_changed();
+    txn->set_data(data);
+    txn->commit();
     return locations;
 }
 

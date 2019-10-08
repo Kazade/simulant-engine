@@ -99,12 +99,6 @@ GLint texture_format_to_internal_format(TextureFormat format) {
 }
 
 void GLRenderer::on_texture_prepare(TexturePtr texture) {
-    auto lock = texture->try_lock();
-    if(!lock) {
-        // Don't update anything unless we can get a lock
-        return;
-    }
-
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;
@@ -151,11 +145,9 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
 
             /* Free the data if that's what is wanted */
             if(texture->free_data_mode() == TEXTURE_FREE_DATA_AFTER_UPLOAD) {
-                texture->data().clear();
-
-                // Necessary to actually free the data, which on the Dreamcast
-                // is important!
-                texture->data().shrink_to_fit();
+                auto txn = texture->begin_transaction();
+                txn->free();
+                txn->commit();
             }
 
             if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
@@ -163,7 +155,10 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                 if(texture->width() == texture->height()) {
 #endif
                 GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
-                texture->_set_has_mipmaps(true);
+
+                auto txn = texture->begin_transaction();
+                txn->_set_has_mipmaps(true);
+                txn->commit();
 #ifdef _arch_dreamcast
                 } else {
                     L_WARN("Not generating mipmaps as texture is non-square (PVR limitation)");

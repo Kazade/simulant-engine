@@ -25,7 +25,9 @@ public:
         actor_->move_to(0.0, 0.0, -5.0);
 
         texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
-        texture_.fetch()->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+        auto txn = texture_.fetch()->begin_transaction();
+        txn->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+        txn->commit();
 
         auto mat = actor_->base_mesh()->first_submesh()->material_id().fetch();
         mat->set_diffuse_map(texture_);
@@ -62,7 +64,10 @@ public:
                 current_filter_ = 0;
             }
 
-            texture_.fetch()->set_texture_filter(filters_[current_filter_]);
+            auto txn = texture_.fetch()->begin_transaction();
+            txn->set_texture_filter(filters_[current_filter_]);
+            txn->commit();
+
             f_down = true;
         } else if(input->axis_value_hard("F") == 0) {
             f_down = false;

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <mutex>
+#include "../atomic.h"
 
 /*
  * Shoddy implementation of a multi-reader/single-writer lock until
@@ -40,6 +40,8 @@
  * }
  */
 
+namespace smlt {
+
 class shared_mutex {
 public:
     shared_mutex() = default;
@@ -47,40 +49,40 @@ public:
     shared_mutex& operator=(const shared_mutex& rhs) = delete;
 
     void lock() {
-        global_lock.lock(); // Writer lock
+        global_lock_.lock(); // Writer lock
     }
 
     void unlock() {
-        global_lock.unlock(); // Writer unlock
+        global_lock_.unlock(); // Writer unlock
     }
 
     void lock_shared() {
-        read_lock.lock();
-        if(++counter == 1) {
-            global_lock.lock();
+        std::lock_guard<std::mutex> g(read_lock_);
+        if(++counter_ == 1) {
+            global_lock_.lock();
         }
-        read_lock.unlock();
     }
 
     void unlock_shared() {
-        read_lock.lock();
-        if(--counter == 0) {
-            global_lock.unlock();
+        std::lock_guard<std::mutex> g(read_lock_);
+        if(--counter_ == 0) {
+            global_lock_.unlock();
         }
-        read_lock.unlock();
     }
 
 private:
-    int32_t counter = 0;
-    std::mutex read_lock;
-    std::mutex global_lock;
+    atomic<int32_t> counter_ = {0};
+    std::mutex read_lock_;
+    std::mutex global_lock_;
 };
 
-
 template<typename Mutex>
-class write_lock {
+class write_lock;
+
+template<>
+class write_lock<shared_mutex> {
 public:
-    write_lock(Mutex& mutex):
+    write_lock(shared_mutex& mutex):
         mutex_(mutex) {
         mutex_.lock();
     }
@@ -90,13 +92,16 @@ public:
     }
 
 private:
-    Mutex& mutex_;
+    shared_mutex& mutex_;
 };
 
 template<typename Mutex>
-class read_lock {
+class read_lock;
+
+template<>
+class read_lock<shared_mutex> {
 public:
-    read_lock(Mutex& mutex):
+    read_lock(shared_mutex& mutex):
         mutex_(mutex) {
 
         mutex_.lock_shared();
@@ -107,5 +112,7 @@ public:
     }
 
 private:
-    Mutex& mutex_;
+    shared_mutex& mutex_;
 };
+
+}

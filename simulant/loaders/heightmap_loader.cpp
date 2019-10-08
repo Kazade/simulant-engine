@@ -243,8 +243,11 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     TextureLoader loader(this->filename_, this->data_);    
     loader.into(*tex, {{"auto_upload", false}});
 
+    auto txn = tex->begin_transaction();
+    txn->flip_vertically();
+    txn->commit();
+
     // Now generate the heightmap from it
-    tex->flip_vertically();
 
     if(tex->is_compressed()) {
         throw std::logic_error("Creating a heightmap from a compressed texture is currently unimplemented");

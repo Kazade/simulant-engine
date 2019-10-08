@@ -84,15 +84,16 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         L_ERROR(_F("Unable to load texture with name: {0}").format(filename_));
         throw std::runtime_error("Couldn't load the file: " + filename_.encode());
     } else {
-        tex->set_source(filename_);
-        tex->set_format(result.format, result.texel_type);
-        tex->resize(result.width, result.height);
-        tex->data().assign(result.data.begin(), result.data.end());
-        tex->set_auto_upload(auto_upload);
-
+        auto txn = tex->begin_transaction();
+        txn->set_source(filename_);
+        txn->set_format(result.format, result.texel_type);
+        txn->resize(result.width, result.height);
+        txn->set_data(result.data);
+        txn->set_auto_upload(auto_upload);
         if(format_stored_upside_down()) {
-            tex->flip_vertically();
+            txn->flip_vertically();
         }
+        txn->commit();
     }
 }
 

@@ -275,6 +275,8 @@ void Widget::rebuild() {
     // If we aren't initialized, don't do anything yet
     if(!is_initialized()) return;
 
+    assert(mesh_);
+
     mesh_->clear();
 
     render_text();

@@ -44,6 +44,8 @@ simulant/asset.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
+simulant/generic/atomic.h
+simulant/generic/cow_vector.h
 simulant/generic/manual_manager.h
 simulant/generic/manual_object.cpp
 simulant/generic/manual_object.h
@@ -63,6 +65,8 @@ simulant/nodes/particles/manipulators/curves.cpp
 simulant/nodes/particles/manipulators/curves.h
 simulant/nodes/particles/manipulators/size_manipulator.cpp
 simulant/nodes/ui/ui_config.h
+simulant/pipeline.cpp
+simulant/pipeline.h
 simulant/renderers/batching/renderable_store.cpp
 simulant/renderers/batching/renderable_store.h
 simulant/renderers/gl2x/vbo_manager.cpp
@@ -72,6 +76,7 @@ simulant/stage_manager.h
 simulant/utils/throttle.h
 simulant/vfs.cpp
 simulant/vfs.h
+tests/test_cow_vector.h
 tests/test_loose_quadtree.h
 tests/test_manual_manager.h
 tests/test_stage.h
