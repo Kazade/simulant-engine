@@ -5,6 +5,8 @@
 
 namespace {
 
+using namespace smlt;
+
 class CoWVectorTests : public smlt::test::TestCase {
 public:
 
