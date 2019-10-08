@@ -18,8 +18,7 @@
 
 #pragma once
 
-#include <mutex>
-#include <atomic>
+#include "../atomic.h"
 
 /*
  * Shoddy implementation of a multi-reader/single-writer lock until
@@ -40,6 +39,8 @@
  *      ... do ready things...
  * }
  */
+
+namespace smlt {
 
 class shared_mutex {
 public:
@@ -70,7 +71,7 @@ public:
     }
 
 private:
-    std::atomic<int32_t> counter_ = {0};
+    atomic<int32_t> counter_ = {0};
     std::mutex read_lock_;
     std::mutex global_lock_;
 };
@@ -113,3 +114,5 @@ public:
 private:
     shared_mutex& mutex_;
 };
+
+}

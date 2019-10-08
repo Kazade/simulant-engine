@@ -25,6 +25,7 @@
 #include "generic/managed.h"
 #include "generic/generic_tree.h"
 #include "generic/data_carrier.h"
+#include "generic/atomic.h"
 
 #include "managers/window_holder.h"
 #include "managers/skybox_manager.h"
@@ -252,9 +253,8 @@ private:
 
     generic::DataCarrier data_;
 
-
     friend class Pipeline;
-    std::atomic<uint8_t> active_pipeline_count_ = {0};
+    atomic<uint8_t> active_pipeline_count_ = {0};
 
 private:
     void on_actor_created(ActorID actor_id);

@@ -44,6 +44,7 @@ simulant/asset.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
+simulant/generic/atomic.h
 simulant/generic/cow_vector.h
 simulant/generic/manual_manager.h
 simulant/generic/manual_object.cpp
