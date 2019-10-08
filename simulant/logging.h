@@ -221,6 +221,23 @@ void warn(const std::string& text, const std::string& file="None", int32_t line=
 void warn_once(const std::string& text, const std::string& file="None", int32_t line=-1);
 void error(const std::string& text, const std::string& file="None", int32_t line=-1);
 
+
+class DebugScopedLog {
+public:
+    DebugScopedLog(const std::string& text, const std::string& file, uint32_t line):
+        text_(text) {
+
+        debug(smlt::Formatter("Enter: {0} ({1}, {2})").format(text, file, line));
+    }
+
+    ~DebugScopedLog() {
+        debug(smlt::Formatter("Exit: {0}").format(text_));
+    }
+
+private:
+    std::string text_;
+};
+
 }
 
 typedef smlt::Formatter _F;

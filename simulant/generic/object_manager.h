@@ -40,6 +40,7 @@ public:
 
     uint32_t count() const {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
         return objects_.size();
     }
 
@@ -61,6 +62,7 @@ public:
         copy->_bind_id_pointer(copy);       
 
         std::lock_guard<std::recursive_mutex> g(target_manager->objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
         target_manager->objects_.insert(std::make_pair(copy->id(), copy));
         target_manager->on_make(copy->id());
         return copy;
@@ -79,6 +81,7 @@ public:
         obj->_bind_id_pointer(obj);
 
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
         objects_.insert(std::make_pair(obj->id(), obj));
 
         on_make(obj->id());
@@ -88,12 +91,14 @@ public:
 
     void destroy(IDType id) {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
         on_destroy(id);
         objects_.erase(id);
     }
 
     void destroy_all() {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
 
         for(auto& p: objects_) {
             on_destroy(p.first);
@@ -104,6 +109,7 @@ public:
 
     ObjectTypePtr get(IDType id) const {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
         auto it = objects_.find(id);
         if(it == objects_.end()) {
             return ObjectTypePtr();
@@ -114,12 +120,15 @@ public:
 
     bool contains(IDType id) const {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
         auto it = objects_.find(id);
         return (it != objects_.end());
     }
 
     void each(std::function<void (uint32_t, ObjectTypePtr)> callback) {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
+
         uint32_t i = 0;
         for(auto& p: objects_) {
             auto ptr = p.second;
@@ -129,6 +138,8 @@ public:
 
     void each(std::function<void (uint32_t, const ObjectTypePtr)> callback) const {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
+
         uint32_t i = 0;
         for(auto& p: objects_) {
             auto ptr = p.second;
@@ -251,6 +262,7 @@ public:
         // FIXME: Throttle collections per update
 
         std::lock_guard<std::recursive_mutex> g(this->objects_mutex_);
+        // DebugScopedLog("Locked", __FILE__, __LINE__);
         for(auto it = this->objects_.begin(); it != this->objects_.end();) {
             ObjMeta meta;
 

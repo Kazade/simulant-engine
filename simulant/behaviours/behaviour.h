@@ -124,11 +124,16 @@ public:
 
     template<typename T>
     bool has_behaviour() const {
+        std::lock_guard<std::mutex> lock(container_lock_);
         return behaviour_types_.count(typeid(T).hash_code()) > 0;
     }
 
     template<typename T>
     T* behaviour() const {
+        // FIXME: What if the behaviour is removed from another thread?
+        // should this return a shared_ptr?
+
+        std::lock_guard<std::mutex> lock(container_lock_);
         auto hash_code = typeid(T).hash_code();
         if(!behaviour_types_.count(hash_code)) {
             return nullptr;
@@ -156,12 +161,16 @@ public:
     }
 
     void fixed_update_behaviours(float step) {
+        std::lock_guard<std::mutex> lock(container_lock_);
+
         for(auto& behaviour: behaviours_) {
             behaviour->_fixed_update_thunk(step);
         }
     }
 
     void update_behaviours(float dt) {
+        std::lock_guard<std::mutex> lock(container_lock_);
+
         for(auto& behaviour: behaviours_) {
 
             // Call any overridden functions looking for first update
@@ -175,6 +184,8 @@ public:
     }
 
     void late_update_behaviours(float dt) {
+        std::lock_guard<std::mutex> lock(container_lock_);
+
         for(auto& behaviour: behaviours_) {
             behaviour->_late_update_thunk(dt);
         }
@@ -208,7 +219,7 @@ private:
         behaviour->set_organism(this);
     }
 
-    std::mutex container_lock_;
+    mutable std::mutex container_lock_;
 
     std::vector<BehaviourPtr> behaviours_;
     std::unordered_set<std::string> behaviour_names_;
