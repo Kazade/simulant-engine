@@ -203,6 +203,11 @@ public:
     void destroy_object_immediately(Camera* object);
     void destroy_object_immediately(Geom* object);
     void destroy_object_immediately(ParticleSystem* object);
+
+    bool is_part_of_active_pipeline() const {
+        return active_pipeline_count_ > 0;
+    }
+
 private:
     AABB aabb_;
 
@@ -246,6 +251,10 @@ private:
     std::unique_ptr<CameraManager> camera_manager_;
 
     generic::DataCarrier data_;
+
+
+    friend class Pipeline;
+    std::atomic<uint8_t> active_pipeline_count_ = {0};
 
 private:
     void on_actor_created(ActorID actor_id);
