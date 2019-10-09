@@ -65,7 +65,6 @@ void Pipeline::deactivate() {
     if(stage_) {
         auto s = sequence_->window->stage(stage_);
         if(s) {
-            s->decrement_render_count();
             s->active_pipeline_count_--;
         }
     }
@@ -79,7 +78,6 @@ void Pipeline::activate() {
     if(stage_) {
         auto s = sequence_->window->stage(stage_);
         if(s) {
-            s->increment_render_count();
             s->active_pipeline_count_++;
         }
     }

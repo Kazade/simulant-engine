@@ -24,38 +24,6 @@
 
 namespace smlt {
 
-class RenderableStage {
-    /*
-     *  Keeps track of the number of pipelines a stage of some kind is
-     *  active on
-     */
-public:
-    void increment_render_count() {
-        render_count_++;
-        if(render_count_ == 1) {
-            on_render_started();
-        }
-    }
-
-    void decrement_render_count() {
-        render_count_--;
-        assert(render_count_ >= 0);
-
-        if(render_count_ == 0) {
-            on_render_stopped();
-        }
-    }
-
-    bool is_being_rendered() const { return bool(render_count_); }
-
-private:
-    int render_count_ = 0;
-
-    virtual void on_render_started() = 0;
-    virtual void on_render_stopped() = 0;
-};
-
-
 class RenderTarget {
 public:
     virtual ~RenderTarget() {}

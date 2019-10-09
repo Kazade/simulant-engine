@@ -83,7 +83,6 @@ class Stage:
     public ContainerNode,
     public generic::Identifiable<StageID>,
     public Loadable,    
-    public RenderableStage,
     public virtual WindowHolder {
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
@@ -169,10 +168,6 @@ public:
     // Updateable interface
 
     void update(float dt) override;
-
-    // RenderableStage
-    void on_render_started() override {}
-    void on_render_stopped() override {}
 
     ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
     ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
