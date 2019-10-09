@@ -20,6 +20,7 @@
 #include "scene.h"
 #include "../stage.h"
 #include "../window.h"
+#include "../pipeline.h"
 
 namespace smlt {
 
@@ -58,18 +59,21 @@ void SceneBase::_call_unload() {
 void SceneBase::_call_activate() {
     activate();
     is_active_ = true;
+
+    for(auto pid: linked_pipelines_) {
+        window->pipeline(pid)->activate();
+    }
 }
 
 void SceneBase::_call_deactivate() {
+    for(auto pid: linked_pipelines_) {
+        window->pipeline(pid)->deactivate();
+    }
+
     deactivate();
     is_active_ = false;
 }
 
-PipelinePtr SceneBase::prepare_basic_scene(StagePtr& new_stage, CameraPtr& new_camera, AvailablePartitioner partitioner) {
-    new_stage = window->new_stage(partitioner);
-    new_camera = new_stage->new_camera();
-    return window->render(new_stage, new_camera);
-}
 
 }
 

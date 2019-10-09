@@ -7,7 +7,11 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        auto pipeline = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
+        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        camera_ = stage_->new_camera();
+        auto pipeline = window->render(stage_, camera_).as_pipeline();
+        link_pipeline(pipeline);
+
         pipeline->viewport->set_colour(smlt::Colour::GREY);
         pipeline->set_clear_flags(~0);
 
@@ -43,8 +47,6 @@ public:
 
         auto fly = camera_->new_behaviour<smlt::behaviours::Fly>(window);
         fly->set_speed(10.0f);
-
-        pipeline->activate();
         L_DEBUG("Scene loaded");
     }
 

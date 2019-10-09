@@ -53,8 +53,10 @@ public:
             return !done;
         });
 
-        pipeline_ = prepare_basic_scene(stage_, camera_);
-        pipeline_->deactivate();
+        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        camera_ = stage_->new_camera();
+        pipeline_ = window->render(stage_, camera_).as_pipeline();
+        link_pipeline(pipeline_);
 
         camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
@@ -94,10 +96,6 @@ public:
         terrain_actor_ = stage_->new_actor_with_mesh(terrain_mesh_id_);
 
         done = true;
-    }
-
-    void activate() {
-        pipeline_->activate();
     }
 
     void fixed_update(float dt) override {

@@ -8,7 +8,11 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        auto pipeline = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
+        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        camera_ = stage_->new_camera();
+        auto pipeline = window->render(stage_, camera_).as_pipeline();
+        link_pipeline(pipeline);
+
         pipeline->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         camera_->set_perspective_projection(
@@ -42,8 +46,6 @@ public:
         actor->play_sound(sound_, AUDIO_REPEAT_FOREVER);
         actor->set_gain(1);
         actor->set_reference_distance(50);
-
-        pipeline->activate();
     }
 
 private:

@@ -7,7 +7,11 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        auto pipeline = prepare_basic_scene(stage_, camera_);
+        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        camera_ = stage_->new_camera();
+        auto pipeline = window->render(stage_, camera_).as_pipeline();
+        link_pipeline(pipeline);
+
         pipeline->viewport->set_colour(smlt::Colour::RED);
 
         smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0);
@@ -15,8 +19,6 @@ public:
         auto actor = stage_->new_actor_with_mesh(square->id());
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
-
-        pipeline->activate();
         L_DEBUG("Scene loaded");
     }
 

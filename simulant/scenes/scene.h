@@ -37,6 +37,8 @@
  *
  */
 
+#include <set>
+
 #include "../utils/unicode.h"
 #include "../types.h"
 #include "../generic/managed.h"
@@ -98,12 +100,19 @@ protected:
     virtual void activate() {}
     virtual void deactivate() {}
 
-    PipelinePtr prepare_basic_scene(StagePtr &new_stage,
-        CameraPtr &new_camera,
-        AvailablePartitioner partitioner=PARTITIONER_HASH
-    );
+
+    /* Linked pipelines activate and deactivate with the scene */
+    void link_pipeline(smlt::PipelineID pipeline) {
+        linked_pipelines_.insert(pipeline);
+    }
+
+    void unlink_pipeline(smlt::PipelineID pipeline) {
+        linked_pipelines_.insert(pipeline);
+    }
 
 private:
+    std::set<PipelineID> linked_pipelines_;
+
     virtual void pre_load() {}
     virtual void post_unload() {}
 

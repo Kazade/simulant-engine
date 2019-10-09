@@ -7,7 +7,10 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_)->activate();
+        stage_ = window->new_stage();
+        camera_ = stage_->new_camera();
+        auto pipeline = window->render(stage_, camera_);
+        link_pipeline(pipeline);
 
         smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0);
 
