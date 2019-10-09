@@ -141,14 +141,15 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
 }
 
 PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    auto pipeline = pipeline_manager_->make(this);
-    pipeline->set_stage(stage);
-    pipeline->set_camera(camera);
+    auto pipeline = pipeline_manager_->make(this, stage, camera);
+
+    /* New pipelines should always start deactivated to avoid the attached stage
+     * as being updated automatically in the main thread when the pipeline
+     * is constructed */
+    pipeline->deactivate();
     pipeline->set_viewport(viewport);
     pipeline->set_target(target);
     pipeline->set_priority(priority);
-    pipeline->activate();
-
     std::lock_guard<std::mutex> lock(pipeline_lock_);
     ordered_pipelines_.push_back(pipeline);
     sort_pipelines();
@@ -222,16 +223,13 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
 
     signal_pipeline_started_(*pipeline_stage);
 
-    CameraID camera_id = pipeline_stage->camera_id();
-    StageID stage_id = pipeline_stage->stage_id();
-
-    auto stage = window->stage(stage_id);
-    auto camera = stage->camera(camera_id);
+    auto stage = pipeline_stage->stage();
+    auto camera = pipeline_stage->camera();
 
     profiler.checkpoint("prepare");
 
     // Trigger a signal to indicate the stage is about to be rendered
-    stage->signal_stage_pre_render()(camera_id, viewport);
+    stage->signal_stage_pre_render()(camera->id(), viewport);
 
     profiler.checkpoint("pre_render");
 
@@ -248,7 +246,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     nodes_visible.resize(0);
 
     // Gather the lights and geometry visible to the camera
-    stage->partitioner->lights_and_geometry_visible_from(camera_id, light_ids, nodes_visible);
+    stage->partitioner->lights_and_geometry_visible_from(camera->id(), light_ids, nodes_visible);
 
     // Get the actual lights from the IDs
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
@@ -358,7 +356,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     profiler.checkpoint("traversal");
 
     // Trigger a signal to indicate the stage has been rendered
-    stage->signal_stage_post_render()(camera_id, viewport);
+    stage->signal_stage_post_render()(camera->id(), viewport);
 
     signal_pipeline_finished_(*pipeline_stage);
     profiler.checkpoint("post_render");

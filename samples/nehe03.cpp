@@ -7,7 +7,7 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_);
+        prepare_basic_scene(stage_, camera_)->activate();
 
         smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0);
 

@@ -10,7 +10,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_);
+        prepare_basic_scene(stage_, camera_)->activate();
 
         auto cam = camera_;
 

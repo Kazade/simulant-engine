@@ -54,6 +54,7 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
 }
 
 Material::Material(const Material& rhs):
+    std::enable_shared_from_this<Material>(rhs),
     Asset(rhs),
     generic::Identifiable<MaterialID>(rhs),
     RefCounted<Material>(rhs),

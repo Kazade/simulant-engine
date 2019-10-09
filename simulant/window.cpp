@@ -229,7 +229,7 @@ StageNode* Window::audio_listener()  {
         auto active = render_sequence_->active_pipelines();
         if(!active.empty()) {
             auto p = pipeline(active[0]);
-            return stage(p->stage_id())->camera(p->camera_id());
+            return p->camera();
         }
 
         return nullptr;

@@ -16,6 +16,7 @@ public:
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
 
+        pipeline->activate();
         L_DEBUG("Scene loaded");
     }
 

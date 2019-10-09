@@ -20,27 +20,24 @@ class Pipeline:
     public generic::Identifiable<PipelineID> {
 
 public:
-    Pipeline(
-        PipelineID id,
-        RenderSequence* render_sequence
-    );
+    Pipeline(PipelineID id,
+        RenderSequence* render_sequence,
+        StageID stage_id, CameraID camera_id);
 
     virtual ~Pipeline();
 
-    CameraID camera_id() { return camera_; }
-    StageID stage_id() { return stage_; }
-    TextureID target_id() { return target_; }
-    uint32_t clear_flags() const { return clear_mask_; }
+    CameraPtr camera() const;
+    StagePtr stage() const;
+    TexturePtr target() const;
+    uint32_t clear_flags() const;
 
-    int32_t priority() const { return priority_; }
+    int32_t priority() const;
     void set_priority(int32_t priority);
 
     void deactivate();
     void activate();
     bool is_active() const { return is_active_; }
 
-    void set_stage(StageID s);
-    void set_camera(CameraID c) { camera_ = c; }
     void set_viewport(const Viewport& v) { viewport_ = v; }
     void set_target(TextureID t) { target_ = t; }
     void set_clear_flags(uint32_t viewport_clear_flags) {
@@ -59,16 +56,18 @@ public:
     Property<Pipeline, Viewport> viewport = { this, &Pipeline::viewport_ };
 
 private:
-    RenderSequence* sequence_;
-    int32_t priority_;
+    void set_stage(StageID s);
+    void set_camera(CameraID c) { camera_ = c; }
+
+    RenderSequence* sequence_ = nullptr;
+    int32_t priority_ = 0;
     StageID stage_;
     TextureID target_;
     CameraID camera_;
     Viewport viewport_;
 
     uint32_t clear_mask_ = 0;
-
-    bool is_active_;
+    bool is_active_ = false;
 
     std::map<DetailLevel, float> detail_level_end_distances_;
 

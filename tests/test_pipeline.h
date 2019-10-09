@@ -45,6 +45,7 @@ public:
         assert_false(stage->is_part_of_active_pipeline());
 
         smlt::PipelinePtr pipeline = window->render(stage, camera);
+        pipeline->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
 
@@ -53,7 +54,10 @@ public:
         assert_false(stage->is_part_of_active_pipeline());
 
         pipeline = window->render(stage, camera);
+        pipeline->activate();
+
         smlt::PipelinePtr pipeline2 = window->render(stage, camera);
+        pipeline2->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
 
@@ -64,6 +68,11 @@ public:
         pipeline2->destroy();
 
         assert_false(stage->is_part_of_active_pipeline());
+    }
+
+    void test_pipeline_starts_deactivated() {
+        auto p = window->render(stage, camera).as_pipeline();
+        assert_false(p->is_active());
     }
 
 private:
