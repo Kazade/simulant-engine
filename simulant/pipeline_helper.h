@@ -45,6 +45,11 @@ public:
 
     PipelineID id() const;
 
+    /* Explicit conversion */
+    PipelinePtr as_pipeline() const {
+        return pipeline_;
+    }
+
 private:
     friend class PipelineHelperAPIInterface;
 

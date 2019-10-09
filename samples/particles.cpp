@@ -44,6 +44,7 @@ public:
         auto fly = camera_->new_behaviour<smlt::behaviours::Fly>(window);
         fly->set_speed(10.0f);
 
+        pipeline->activate();
         L_DEBUG("Scene loaded");
     }
 

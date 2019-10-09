@@ -6,12 +6,15 @@
 namespace smlt {
 
 Pipeline::Pipeline(PipelineID id,
-        RenderSequence* render_sequence):
+        RenderSequence* render_sequence, StageID stage_id, CameraID camera_id):
     TypedDestroyableObject<Pipeline, RenderSequence>(render_sequence),
     generic::Identifiable<PipelineID>(id),
     sequence_(render_sequence),
     priority_(0),
     is_active_(false) {
+
+    set_stage(stage_id);
+    set_camera(camera_id);
 
     /* Set sane defaults for detail ranges */
     detail_level_end_distances_[DETAIL_LEVEL_NEAREST] = 25.0f;
@@ -57,6 +60,26 @@ Pipeline::~Pipeline() {
     deactivate();
 }
 
+CameraPtr Pipeline::camera() const {
+    return stage()->camera(camera_);
+}
+
+StagePtr Pipeline::stage() const {
+    return sequence_->window->stage(stage_);
+}
+
+TexturePtr Pipeline::target() const {
+    return stage()->assets->texture(target_);
+}
+
+uint32_t Pipeline::clear_flags() const {
+    return clear_mask_;
+}
+
+int32_t Pipeline::priority() const {
+    return priority_;
+}
+
 void Pipeline::deactivate() {
     if(!is_active_) return;
 
@@ -65,7 +88,6 @@ void Pipeline::deactivate() {
     if(stage_) {
         auto s = sequence_->window->stage(stage_);
         if(s) {
-            s->decrement_render_count();
             s->active_pipeline_count_--;
         }
     }
@@ -79,7 +101,6 @@ void Pipeline::activate() {
     if(stage_) {
         auto s = sequence_->window->stage(stage_);
         if(s) {
-            s->increment_render_count();
             s->active_pipeline_count_++;
         }
     }

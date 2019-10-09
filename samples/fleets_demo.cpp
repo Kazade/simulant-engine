@@ -17,6 +17,7 @@ public:
 
         stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
         stage_->new_light_as_directional();
+        pipeline->activate();
     }
 
     void activate() {

@@ -87,6 +87,7 @@ bool VirtualGamepad::init() {
 
     //Finally add to the render sequence, give a ridiculously high priority
     pipeline_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_->activate();
     pipeline_id_ = pipeline_->id();
 
     return true;

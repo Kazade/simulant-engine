@@ -42,6 +42,8 @@ public:
         actor->play_sound(sound_, AUDIO_REPEAT_FOREVER);
         actor->set_gain(1);
         actor->set_reference_distance(50);
+
+        pipeline->activate();
     }
 
 private:

@@ -161,13 +161,13 @@ auto pipeline = window->render(stage, camera);  // Create your pipeline
 ```
 
 It is recommended you activate and deactivate your pipeline in the `activate()` and `deactivate()` methods of your `Scene`.
+Pipelines are created deactivated.
 
 ```
 void MyScene::load() {
     // ...
     
     pipeline_ = window->render(stage, camera);
-    pipeline_->deactivate();
 }
 
 void MyScene::activate() {
