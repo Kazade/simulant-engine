@@ -108,6 +108,9 @@ test:windows-x64-mingw:
 
 deploy:windows-x64-mingw:
   stage: deploy
+  only:
+    - master
+    - tags
   image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
    - test:windows-x64-mingw
@@ -209,9 +212,10 @@ test:linux-x64-gcc:
     - ${TARGET}/release/simulant/
 
 deploy:linux-x64-gcc:
-  except:
-   - merge_requests
   stage: deploy
+  only:
+   - master
+   - tags
   image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
    - test:linux-x64-gcc
@@ -275,9 +279,10 @@ test:dreamcast-sh4-gcc:
     - ${TARGET}/release/simulant/*.a
 
 deploy:dreamcast-sh4-gcc:
-  except:
-   - merge_requests
   stage: deploy
+  only:
+   - master
+   - tags
   image: registry.fedoraproject.org/fedora-minimal:30
   dependencies:
    - test:dreamcast-sh4-gcc
@@ -301,9 +306,10 @@ deploy:dreamcast-sh4-gcc:
     - upload/${TARGET}.zip
 
 deploy:assets:
-  except:
-   - merge_requests
   stage: deploy
+  only:
+   - master
+   - tags
   image: registry.fedoraproject.org/fedora-minimal:30
   before_script:
    - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
@@ -321,9 +327,10 @@ deploy:assets:
     - upload/assets.zip
 
 deploy:tools:
-  except:
-   - merge_requests
   stage: deploy
+  only:
+   - master
+   - tags
   image: registry.fedoraproject.org/fedora-minimal:30
   before_script:
    - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
