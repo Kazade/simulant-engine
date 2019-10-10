@@ -10,10 +10,13 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        pipeline_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_FRUSTUM);
+        stage_ = window->new_stage(smlt::PARTITIONER_FRUSTUM);
+        camera_ = stage_->new_camera();
+        pipeline_ = window->render(stage_, camera_).as_pipeline();
+
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
-        pipeline_->deactivate();
+        link_pipeline(pipeline_);
 
         window->vfs->add_search_path("sample_data/quake2/textures");
 
@@ -54,10 +57,6 @@ public:
         );
 
         stage_->new_light_as_directional();
-    }
-
-    void activate() {
-        pipeline_->activate();
     }
 
 private:

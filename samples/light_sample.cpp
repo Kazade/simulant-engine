@@ -10,7 +10,10 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        prepare_basic_scene(stage_, camera_)->activate();
+        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        camera_ = stage_->new_camera();
+        auto pipeline = window->render(stage_, camera_).as_pipeline();
+        link_pipeline(pipeline);
 
         camera_->set_perspective_projection(
             Degrees(45.0),

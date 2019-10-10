@@ -21,7 +21,7 @@ This section covers the base subsystems and usages of Simulant.
 
 ### The Rendering System
 
- - The rendering process: [The Render Sequence](render_sequence.md) | [Pipelines](pipeline.md)
+ - The rendering process: [The Render Sequence](render_sequence.md) | [Pipelines](pipelines.md)
  - Partitioning: [Overview](partitioners.md) | [Spatial Hash Partitioner](spatial_hashing.md) | [The Null Partitioner](null_partitioner.md)
  - User interfaces: [Widgets](widgets.md)
  - Cameras: [Cameras](cameras.md)

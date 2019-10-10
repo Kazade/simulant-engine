@@ -11,8 +11,11 @@ public:
         smlt::PhysicsScene<GameScene>(window) {}
 
     void load() {
-        pipeline_ = prepare_basic_scene(stage_, camera_, smlt::PARTITIONER_NULL);
-        pipeline_->deactivate();
+        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        camera_ = stage_->new_camera();
+        pipeline_ = window->render(stage_, camera_).as_pipeline();
+        link_pipeline(pipeline_);
+
         pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         camera_->set_perspective_projection(
@@ -58,10 +61,6 @@ public:
             ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
             20, 0)
         );
-    }
-
-    void activate() {
-        pipeline_->activate();
     }
 
     void update(float dt) {

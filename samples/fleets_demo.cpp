@@ -8,7 +8,11 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        auto pipeline = prepare_basic_scene(stage_, camera_);
+        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        camera_ = stage_->new_camera();
+        auto pipeline = window->render(stage_, camera_).as_pipeline();
+        link_pipeline(pipeline);
+
         pipeline->viewport->set_colour(smlt::Colour::BLACK);
 
         camera_->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
@@ -17,11 +21,6 @@ public:
 
         stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
         stage_->new_light_as_directional();
-        pipeline->activate();
-    }
-
-    void activate() {
-
     }
 
     void fixed_update(float dt) override {
