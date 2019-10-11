@@ -15,28 +15,21 @@ ProgressBar::ProgressBar(WidgetID id, UIManager* owner, UIConfig* config):
     set_border_colour(config->progress_bar_border_colour_);
     set_border_width(config->progress_bar_border_width_);
     set_height(config->progress_bar_height_);
-
-    idle_connection_ = this->stage->window->idle->add([this]() -> bool {
-        refresh_bar();
-        return true;
-    });
 }
 
 ProgressBar::~ProgressBar() {
-    this->stage->window->idle->remove(idle_connection_);
+
 }
 
 void ProgressBar::set_pulse_fraction(float value) {
     pulse_fraction_ = value;
 }
 
-void ProgressBar::refresh_pulse() {
+void ProgressBar::refresh_pulse(float dt) {
     pulse_width_ = this->content_width() * pulse_fraction_;
     float pulse_range = (this->content_width() - pulse_width_);
     float pulse_max = pulse_range / 2.0f;
     float pulse_min = -pulse_range / 2.0f;
-
-    float dt = stage->window->time_keeper->delta_time();
 
     if(pulse_right_) {
         pulse_position_ += pulse_step_ * dt;
@@ -60,7 +53,7 @@ void ProgressBar::refresh_fraction() {
     rebuild();
 }
 
-void ProgressBar::refresh_bar() {
+void ProgressBar::refresh_bar(float dt) {
     if(!needs_refresh_) {
         return;
     }
@@ -68,7 +61,7 @@ void ProgressBar::refresh_bar() {
     needs_refresh_ = false;
 
     if(current_mode() == PROGRESS_BAR_MODE_PULSE) {
-        refresh_pulse();
+        refresh_pulse(dt);
     } else {
         refresh_fraction();
     }
@@ -130,6 +123,10 @@ float ProgressBar::max() const {
     auto maxp = property<float>("max");
     float max = maxp.has_value() ? maxp.value() : 0;
     return max;
+}
+
+void ProgressBar::update(float dt) {
+    refresh_bar(dt);
 }
 
 }
