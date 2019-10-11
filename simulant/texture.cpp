@@ -339,6 +339,7 @@ void TextureTransaction::flip_vertically() {
 
 void TextureTransaction::set_source(const unicode& source) {
     target_->source_ = source;
+    mark_dirty();
 }
 
 void TextureTransaction::free() {
@@ -452,17 +453,20 @@ void TextureTransaction::set_texture_wrap_w(TextureWrap wrap_w) {
 void TextureTransaction::set_auto_upload(bool v) {
     target_->auto_upload_ = v;
     params_dirty_ = true;
+    mark_dirty();
 }
 
 void TextureTransaction::set_mipmap_generation(MipmapGenerate type) {
     target_->mipmap_generation_ = type;
     params_dirty_ = true;
+    mark_dirty();
 }
 
 void TextureTransaction::set_data(const Texture::Data& data) {
     target_->data_ = data;
     target_->data_.shrink_to_fit();
     data_dirty_ = true;
+    mark_dirty();
 }
 
 void TextureTransaction::_set_has_mipmaps(bool v) {
