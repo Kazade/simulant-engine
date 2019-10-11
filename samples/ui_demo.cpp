@@ -12,7 +12,8 @@ public:
         stage_ = window->new_stage();
         camera_ = stage_->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
 
-        window->render(stage_, camera_).with_clear(smlt::BUFFER_CLEAR_ALL, smlt::Colour::BLACK);
+        auto pipeline = window->render(stage_, camera_).with_clear(smlt::BUFFER_CLEAR_ALL, smlt::Colour::BLACK);
+        link_pipeline(pipeline);
 
         //stage_->ui->transform_input_with_camera(camera_);
 
@@ -27,10 +28,10 @@ public:
         big_label->set_font(ttf_font);
         big_label->move_to(window->coordinate_from_normalized(0.5, 0.6));
 
-        auto pg = stage_->ui->new_widget_as_progress_bar();
-        pg->move_to(window->coordinate_from_normalized(0.5, 0.5));
-        pg->resize(400, 10);
-        pg->pulse();
+        pg1_ = stage_->ui->new_widget_as_progress_bar();
+        pg1_->move_to(window->coordinate_from_normalized(0.5, 0.5));
+        pg1_->resize(400, 10);
+        pg1_->pulse();
 
         pg2_ = stage_->ui->new_widget_as_progress_bar(0, 100, 0);
         pg2_->move_to(window->coordinate_from_normalized(0.5, 0.7));
@@ -60,11 +61,13 @@ public:
         }
 
         pg2_->set_value(percent);
+        pg1_->pulse();
     }
 
 private:
     smlt::StagePtr stage_;
     smlt::CameraPtr camera_;
+    smlt::ui::ProgressBar* pg1_;
     smlt::ui::ProgressBar* pg2_;
 
     bool increasing = true;

@@ -56,21 +56,18 @@ void Splash::load() {
 
     //Create an inactive pipeline
     pipeline_ = window->render(stage_, camera_);
-    pipeline_->deactivate();
+    link_pipeline(pipeline_);
     timer_ = 0.0f;
 }
 
 void Splash::unload() {
     //Clean up
-    pipeline_->deactivate();
     window->destroy_pipeline(pipeline_->id());
     window->destroy_stage(stage_->id());
     window->shared_assets->destroy_sound(sound_);
 }
 
 void Splash::activate() {
-    pipeline_->activate();
-
     /* Add gradual fade in */
     std::shared_ptr<float> opacity = std::make_shared<float>(0.0f);
     connection_ = window->idle->add_timeout(1.0 / 60, [opacity, this]() -> bool {
@@ -85,7 +82,6 @@ void Splash::activate() {
 
 void Splash::deactivate() {
     //Deactivate the Splash pipeline
-    pipeline_->deactivate();
     window->idle->remove(connection_);
 }
 
