@@ -65,6 +65,7 @@ ENDIF()
 
 IF(MINGW)
     FIND_LIBRARY(SDL2MAIN NAMES SDL2main)
+    
     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ ")
 
     IF(NOT SDL2MAIN_FOUND)
