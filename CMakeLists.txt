@@ -74,6 +74,20 @@ IF(NOT DREAMCAST_BUILD)
             FIND_PACKAGE(PkgConfig REQUIRED)
             PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
         ENDIF()
+
+        IF(WIN32)
+            IF(NOT SDL2_FOUND)
+                SET(SDL2_INCLUDE_DIR $ENV{SDL2DIR}/include)
+                SET(SDL2_LIBRARY $ENV{SDL2DIR}/lib/x64/SDL2.lib)
+                FIND_PACKAGE(SDL2 REQUIRED)
+            ENDIF()
+
+            SET(OPENAL_INCLUDE_DIR $ENV{OPENALDIR}/include)
+            SET(OPENAL_INCLUDE_DIRS $ENV{OPENALDIR}/include)
+
+            SET(ZLIB_INCLUDE_DIR $ENV{ZLIBDIR}/include)
+        ENDIF()
+
         FIND_PACKAGE(OpenAL REQUIRED)
         FIND_PACKAGE(OpenGL REQUIRED)
     ENDIF()

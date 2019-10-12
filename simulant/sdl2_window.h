@@ -22,7 +22,9 @@
 #include <string>
 
 #include <SDL.h>
-
+#if defined(__WIN32__)
+    #undef main
+#endif
 #include "sdl2_keycodes.h"
 #include "generic/managed.h"
 #include "window.h"
