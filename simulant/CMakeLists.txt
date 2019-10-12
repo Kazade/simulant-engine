@@ -64,11 +64,13 @@ ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES})
 ENDIF()
 
 IF(MINGW)
-    FIND_LIBRARY(SDL2MAIN NAMES SDL2main)
-    
+
+    FIND_LIBRARY(OPENAL_LIB NAMES OpenAL32.lib PATHS $ENV{OPENALDIR}/libs/Win64)
+    message(${OPENAL_LIB})
+
     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ ")
 
-    IF(NOT SDL2MAIN_FOUND)
+    IF(OPENAL_LIB)
         TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 $ENV{SDL2DIR}/lib/x64/SDL2.lib $ENV{OPENALDIR}/libs/Win64/OpenAL32.lib $ENV{ZLIBDIR}/lib_release/zlib.lib userenv)
     ELSE()
         SET(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
