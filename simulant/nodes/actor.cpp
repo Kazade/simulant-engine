@@ -153,7 +153,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     }
 
     /* Recalculate the AABB if necessary */
-    recalc_bounds();
+    mark_transformed_aabb_dirty();
 
     signal_mesh_changed_(id());
 }
