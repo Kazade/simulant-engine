@@ -71,11 +71,11 @@ IF(MINGW)
     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ ")
 
     IF(OPENAL_LIB)
-        TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 $ENV{SDL2DIR}/lib/x64/SDL2.lib $ENV{OPENALDIR}/libs/Win64/OpenAL32.lib $ENV{ZLIBDIR}/lib_release/zlib.lib userenv)
+        TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 psapi $ENV{SDL2DIR}/lib/x64/SDL2.lib $ENV{OPENALDIR}/libs/Win64/OpenAL32.lib $ENV{ZLIBDIR}/lib_release/zlib.lib userenv)
     ELSE()
         SET(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
         SET(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
-        TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 SDL2main SDL2 OpenAL32 userenv)
+        TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 psapi SDL2main SDL2 OpenAL32 userenv)
     ENDIF()  
 ENDIF()
 
