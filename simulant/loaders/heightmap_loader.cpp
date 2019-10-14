@@ -269,7 +269,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         INDEX_TYPE_32_BIT : INDEX_TYPE_16_BIT;
 
     // We divide the heightmap into patches for more efficient rendering
-    smlt::MaterialID mat = mesh->asset_manager().clone_default_material();
+    smlt::MaterialPtr mat = mesh->asset_manager().clone_default_material();
     std::vector<smlt::SubMesh*> submeshes;
     for(int i = 0; i < total_patches; ++i) {
         submeshes.push_back(mesh->new_submesh_with_material(
