@@ -69,7 +69,6 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
 Stage::~Stage() {
     sprite_manager_.reset();
     sky_manager_.reset();
-    clean_up_signal_.disconnect();
 }
 
 bool Stage::init() {    
@@ -78,6 +77,8 @@ bool Stage::init() {
 }
 
 void Stage::clean_up() {    
+    clean_up_signal_.disconnect();
+
     ui_.reset();
     debug_.reset();
 
@@ -90,6 +91,8 @@ void Stage::clean_up() {
     actor_manager_->clear();
     camera_manager_->clear();
     geom_manager_->clear();
+
+    L_DEBUG(_F("Stage {0} destroyed").format(id()));
 }
 
 ActorPtr Stage::new_actor(RenderableCullingMode mode) {

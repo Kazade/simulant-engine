@@ -118,48 +118,14 @@ VBOSlotSize VBOManager::calc_vbo_slot_size(uint32_t required_size_in_bytes) {
 
     VBOSlotSize size = VBO_SLOT_SIZE_1K;
 
-    switch(next_pow2(required_size_in_bytes)) {
-    case (1 << 1):
-    case (1 << 2):
-    case (1 << 3):
-    case (1 << 4):
-    case (1 << 5):
-    case (1 << 6):
-    case (1 << 7):
-    case (1 << 8):
-    case (1 << 9):
+    auto check = next_pow2(required_size_in_bytes);
+
+    assert(check <= (int) smlt::VBO_SLOT_SIZE_512K);
+
+    if(check <= (int) VBO_SLOT_SIZE_1K) {
         size = VBO_SLOT_SIZE_1K;
-        break;
-    case (1 << 10):
-        size = VBO_SLOT_SIZE_2K;
-        break;
-    case (1 << 11):
-        size = VBO_SLOT_SIZE_4K;
-        break;
-    case (1 << 12):
-        size = VBO_SLOT_SIZE_8K;
-        break;
-    case (1 << 13):
-        size = VBO_SLOT_SIZE_16K;
-        break;
-    case (1 << 14):
-        size = VBO_SLOT_SIZE_32K;
-        break;
-    case (1 << 15):
-        size = VBO_SLOT_SIZE_64K;
-        break;
-    case (1 << 16):
-        size = VBO_SLOT_SIZE_128K;
-        break;
-    case (1 << 17):
-        size = VBO_SLOT_SIZE_256K;
-        break;
-    case (1 << 18):
-        size = VBO_SLOT_SIZE_512K;
-        break;
-    default:
-        assert(0 && "Not Implemented");
-        size = VBO_SLOT_SIZE_512K;
+    } else {
+        size = (VBOSlotSize) check;
     }
 
     return size;

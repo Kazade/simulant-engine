@@ -39,8 +39,16 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     }
 #endif
 
+    /* Set up default client state before the run. This is necessary
+     * so that the boolean flags get correctly set */
     enable_vertex_arrays(true);
-    enable_colour_arrays(true);
+    enable_colour_arrays(true);    
+    enable_normal_arrays(true);
+    enable_texcoord_array(0, true);
+
+    for(auto i = 1u; i < MAX_TEXTURE_UNITS; ++i) {
+        disable_texcoord_array(i, true);
+    }
 
     global_ambient_ = stage->ambient_light();
     GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
@@ -366,11 +374,14 @@ void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
 
     GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
     GLCheck(glEnableClientState, GL_TEXTURE_COORD_ARRAY);
+
     textures_enabled_[which] = true;
 }
 
 void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
-    if(!force && !textures_enabled_[which]) return;
+    if(!force && !textures_enabled_[which]) {
+        return;
+    }
 
     GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
     GLCheck(glDisableClientState, GL_TEXTURE_COORD_ARRAY);
@@ -428,6 +439,7 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     GLCheck(glLoadMatrixf, projection.data());
 
     auto spec = renderable->vertex_data->vertex_specification();
+    auto stride = spec.stride();
 
     renderer_->prepare_to_render(renderable);
 
@@ -437,59 +449,64 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     assert(vertex_data);
     assert(index_data);
 
-    (spec.has_positions()) ? enable_vertex_arrays() : disable_vertex_arrays();
-    (spec.has_diffuse()) ? enable_colour_arrays() : disable_colour_arrays();
-    (spec.has_normals()) ? enable_normal_arrays() : disable_normal_arrays();
+    const auto has_positions = spec.has_positions();
+    if(has_positions) {
+        enable_vertex_arrays();
+        GLCheck(
+            glVertexPointer,
+            (spec.position_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.position_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+            GL_FLOAT,
+            stride,
+            ((const uint8_t*) vertex_data) + spec.position_offset(false)
+        );
+    } else {
+        disable_vertex_arrays();
+    }
 
-    GLCheck(
-        glVertexPointer,
-        (spec.position_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.position_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
-        GL_FLOAT,
-        spec.stride(),
-        ((const uint8_t*) vertex_data) + spec.position_offset(false)
-    );
+    const auto has_diffuse = spec.has_diffuse();
+    if(has_diffuse) {
+        enable_colour_arrays();
+        GLCheck(
+            glColorPointer,
+            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
+            GL_FLOAT,
+            stride,
+            ((const uint8_t*) vertex_data) + spec.diffuse_offset(false)
+        );
+    } else {
+        disable_colour_arrays();
+    }
 
-    const uint8_t* colour_pointer = (spec.has_diffuse()) ?
-        ((const uint8_t*) vertex_data) + spec.diffuse_offset(false) :
-        nullptr;
-
-    GLCheck(
-        glColorPointer,
-        (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
-        GL_FLOAT,
-        spec.stride(),
-        colour_pointer
-    );
-
-    const uint8_t* normal_pointer = (spec.has_normals()) ?
-        ((const uint8_t*) vertex_data) + spec.normal_offset(false) :
-        nullptr;
-
-    GLCheck(
-        glNormalPointer,
-        GL_FLOAT,
-        spec.stride(),
-        normal_pointer
-    );
+    const auto has_normals = spec.has_normals();
+    if(has_normals) {
+        enable_normal_arrays();
+        GLCheck(
+            glNormalPointer,
+            GL_FLOAT,
+            stride,
+            ((const uint8_t*) vertex_data) + spec.normal_offset(false)
+        );
+    } else {
+        disable_normal_arrays();
+    }
 
     for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
         bool enabled = spec.has_texcoordX(i);
-        auto offset = spec.texcoordX_offset(i, false);
-        const uint8_t* coord_pointer = (enabled) ?
-            ((const uint8_t*) vertex_data) + offset :
-            nullptr;
-
-        (enabled) ? enable_texcoord_array(i) : disable_texcoord_array(i);
 
         if(enabled) {
+            enable_texcoord_array(i);
+            auto offset = spec.texcoordX_offset(i, false);
+
             GLCheck(glClientActiveTexture, GL_TEXTURE0 + i);
             GLCheck(
                 glTexCoordPointer,
                 (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,
                 GL_FLOAT,
-                spec.stride(),
-                coord_pointer
+                stride,
+                ((const uint8_t*) vertex_data) + offset
             );
+        } else {
+            disable_texcoord_array(i);
         }
     }
 

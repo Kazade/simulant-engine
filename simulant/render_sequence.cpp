@@ -196,6 +196,15 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
         return;
     }
 
+    auto stage = pipeline_stage->stage();
+    auto camera = pipeline_stage->camera();
+
+    if(!stage || !camera) {
+        L_DEBUG("Stage or camera has been destroyed, disabling pipeline");
+        pipeline_stage->deactivate();
+        return;
+    }
+
     RenderTarget& target = *window_; //FIXME: Should be window or texture
 
     /*
@@ -222,9 +231,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     }
 
     signal_pipeline_started_(*pipeline_stage);
-
-    auto stage = pipeline_stage->stage();
-    auto camera = pipeline_stage->camera();
 
     profiler.checkpoint("prepare");
 
