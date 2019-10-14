@@ -39,8 +39,16 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     }
 #endif
 
+    /* Set up default client state before the run. This is necessary
+     * so that the boolean flags get correctly set */
     enable_vertex_arrays(true);
-    enable_colour_arrays(true);
+    enable_colour_arrays(true);    
+    enable_normal_arrays(true);
+    enable_texcoord_array(0, true);
+
+    for(auto i = 1u; i < MAX_TEXTURE_UNITS; ++i) {
+        disable_texcoord_array(i, true);
+    }
 
     global_ambient_ = stage->ambient_light();
     GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
@@ -366,11 +374,14 @@ void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
 
     GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
     GLCheck(glEnableClientState, GL_TEXTURE_COORD_ARRAY);
+
     textures_enabled_[which] = true;
 }
 
 void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
-    if(!force && !textures_enabled_[which]) return;
+    if(!force && !textures_enabled_[which]) {
+        return;
+    }
 
     GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
     GLCheck(glDisableClientState, GL_TEXTURE_COORD_ARRAY);
