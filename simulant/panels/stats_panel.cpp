@@ -25,8 +25,8 @@
 #include "../nodes/ui/label.h"
 
 #if defined(__WIN32__)
-#include <windows.h>
-#include <psapi.h>
+    #include <windows.h>
+    #include <psapi.h>
 #endif
 
 namespace smlt {
