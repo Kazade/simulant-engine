@@ -248,7 +248,8 @@ protected:
 
     virtual void update_transformation_from_parent();
 
-    void recalc_bounds();
+    void recalc_bounds_if_necessary() const;
+    void mark_transformed_aabb_dirty();
 
 private:
     AABB calculate_transformed_aabb() const;
@@ -263,7 +264,10 @@ private:
     Quaternion absolute_rotation_;
     Vec3 absolute_scale_ = Vec3(1, 1, 1);
 
-    AABB transformed_aabb_;
+    /* Mutable so that AABB accesses can be const, but we delay
+     * calculation until access */
+    mutable AABB transformed_aabb_;
+    mutable bool transformed_aabb_dirty_ = false;
 
     // By default, always cast and receive shadows
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;

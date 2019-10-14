@@ -126,7 +126,7 @@ void StageNode::update_transformation_from_parent() {
         absolute_scale_ = parent_scale * scale();
     }
 
-    recalc_bounds();
+    mark_transformed_aabb_dirty();
 
     for(auto node: each_child()) {
         assert(node);
@@ -150,6 +150,7 @@ AABB StageNode::calculate_transformed_aabb() const {
 }
 
 const AABB StageNode::transformed_aabb() const {
+    recalc_bounds_if_necessary();
     return transformed_aabb_;
 }
 
@@ -163,14 +164,23 @@ StageNode *StageNode::find_child_with_name(const std::string &name) {
     return nullptr;
 }
 
-void StageNode::recalc_bounds() {
+void StageNode::recalc_bounds_if_necessary() const {
+    if(!transformed_aabb_dirty_) {
+        return;
+    }
+
     auto newb = calculate_transformed_aabb();
     if(newb.min() != transformed_aabb_.min() || newb.max() != transformed_aabb_.max()) {
         transformed_aabb_ = newb;
         signal_bounds_updated_(transformed_aabb_);
     }
+
+    transformed_aabb_dirty_ = false;
 }
 
+void StageNode::mark_transformed_aabb_dirty() {
+    transformed_aabb_dirty_ = true;
+}
 
 void StageNode::update(float dt) {
     update_behaviours(dt);
