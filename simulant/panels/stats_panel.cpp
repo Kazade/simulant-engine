@@ -24,6 +24,11 @@
 #include "../render_sequence.h"
 #include "../nodes/ui/label.h"
 
+#if defined(__WIN32__)
+#include <windows.h>
+#include <psapi.h>
+#endif
+
 namespace smlt {
 
 StatsPanel::StatsPanel(Window *window):
@@ -151,6 +156,10 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
     return -1;
 #elif defined(_arch_dreamcast)
     return float(get_system_ram() - get_free_ram()) / 1024.0f / 1024.0f;
+#elif defined(__WIN32__)
+    PROCESS_MEMORY_COUNTERS info;
+    GetProcessMemoryInfo( GetCurrentProcess( ), &info, sizeof(info) );
+    return static_cast<float>(info.WorkingSetSize) / 1024.0f / 1024.0f;
 #else
     return -1;
 #endif
