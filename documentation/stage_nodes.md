@@ -36,3 +36,9 @@ for(auto node: stage->each_child()) {} // Iterate direct-children only
 `StageNodes` are only updated if the owning `Stage` is attached to an active `Pipeline`. You can check this by checking `Stage::is_part_of_active_pipeline()`. 
 
 It is highly recommended that if you are manipulating a `Stage` in a background thread (e.g. in the `load()` method of a `Scene`) that you do not attach the `Stage` to a pipeline until you are finished manipulating. This should prevent threading problems.
+
+# Destruction
+
+You can destroy a `StageNode` by calling its `destroy()` method. This won't release the `StageNode` immediately, but it will fire the `signal_destroyed` signal. The actual clean-up of the node will happen when any idle tasks have run, but before the render queue is built. This helps prevent issues where queued tasks try to access deleted nodes.
+
+When the clean-up process runs, an additional `signal_cleaned_up` signal will fire just before deletion of the node.

@@ -14,7 +14,7 @@ StageNode::~StageNode() {
 }
 
 void StageNode::clean_up() {
-    signal_destroyed_(); // Tell everyone we're going
+    signal_cleaned_up_(); // Tell everyone we're going
 
     remove_from_parent(); // Make sure we're not connected to anything
 
