@@ -1,8 +1,15 @@
 #pragma once
 
+#include "../deps/kazsignal/kazsignal.h"
+
 namespace smlt {
 
+typedef sig::signal<void ()> DestroyedSignal;
+
 class DestroyableObject {
+    // Fired when destroy() is called
+    DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
+
 public:
     virtual ~DestroyableObject() {}
 
@@ -19,10 +26,12 @@ public:
         owner_(owner) {}
 
     void destroy() override {
+        signal_destroyed()();
         owner_->destroy_object((T*) this);
     }
 
     void destroy_immediately() override {
+        signal_destroyed()();
         owner_->destroy_object_immediately((T*) this);
     }
 

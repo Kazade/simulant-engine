@@ -26,6 +26,34 @@ public:
         assert_equal(destroyed_count, 2); // Should've destroyed 2
     }
 
+    void test_stage_node_clean_up_signals() {
+        auto stage = window->new_stage();
+
+        auto actor = stage->new_actor();
+
+        bool cleaned_up = false;
+        bool destroyed = false;
+
+        actor->signal_destroyed().connect([&]() {
+            destroyed = true;
+        });
+
+        actor->signal_cleaned_up().connect([&]() {
+            cleaned_up = true;
+        });
+
+
+        actor->destroy();
+
+        assert_true(destroyed);
+        assert_false(cleaned_up);
+
+        window->run_frame();
+
+        assert_true(destroyed);
+        assert_true(cleaned_up);
+    }
+
     void test_iteration_types() {
         auto stage = window->new_stage();
 

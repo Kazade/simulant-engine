@@ -19,7 +19,7 @@ namespace smlt {
 class RenderableFactory;
 
 typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
-typedef sig::signal<void ()> DestroyedSignal;
+typedef sig::signal<void ()> CleanedUpSignal;
 
 /* Used for multiple levels of detail when rendering stage nodes */
 
@@ -106,7 +106,9 @@ class StageNode:
     public TwoPhaseConstructed {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
-    DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
+
+    // Fired when the node is cleaned up later, following destroy
+    DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up);
 
     friend class StageNodeIterator;
 
