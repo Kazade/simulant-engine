@@ -24,9 +24,7 @@ namespace _manual_manager_impl {
 
         static_assert(ChunkSize < std::numeric_limits<slot_id>::max(), "ChunkSize must be less than 256");
 
-        VectorPool() {
-            push_chunk();
-        }
+        VectorPool() {}
 
         ~VectorPool() {
             clear();
