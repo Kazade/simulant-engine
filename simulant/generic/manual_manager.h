@@ -24,9 +24,7 @@ namespace _manual_manager_impl {
 
         static_assert(ChunkSize < std::numeric_limits<slot_id>::max(), "ChunkSize must be less than 256");
 
-        VectorPool() {
-            push_chunk();
-        }
+        VectorPool() {}
 
         ~VectorPool() {
             clear();
@@ -260,7 +258,15 @@ public:
     typedef T element_type;
     typedef IDType id_type;
     typedef ManualManager<T, IDType> this_type;
+
+#ifdef _arch_dreamcast
+    // Dreamcast is far more memory constrained
+    // so we allocate in smaller chunks so that
+    // memory isn't wasted
+    const static std::size_t chunk_size = 32;
+#else
     const static std::size_t chunk_size = 128;
+#endif
 
     class iterator {
     public:
