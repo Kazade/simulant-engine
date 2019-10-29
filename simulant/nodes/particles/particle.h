@@ -7,15 +7,6 @@
 namespace smlt {
 namespace particles {
 
-struct Particle {
-    smlt::Vec3 position;
-    smlt::Vec3 velocity;
-    smlt::Vec2 dimensions;
-    smlt::Vec2 initial_dimensions;
-    float ttl;
-    float lifetime;
-    smlt::Colour colour;
-};
 
 }
 }

@@ -1,15 +1,14 @@
 #pragma once
 
-#include "../manipulator.h"
+#include "../particle_script.h"
 #include "curves.h"
 
 namespace smlt {
-namespace particles {
 
 class SizeManipulator : public Manipulator {
 public:
-    SizeManipulator(ParticleSystem* system):
-        Manipulator(system, "scalar") {}
+    SizeManipulator(ParticleScript* script):
+        Manipulator(script, "scalar") {}
 
 
 private:
@@ -31,7 +30,7 @@ private:
         Manipulator::set_linear_curve(rate);
     }
 
-    void do_manipulate(std::vector<Particle>& particles, float dt) override;
+    void do_manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) override;
 
     bool is_bell_curve_ = false;
     bool is_linear_curve_ = false;
@@ -41,6 +40,4 @@ private:
     float deviation_ = 0.0f;
 };
 
-
-}
 }
