@@ -170,6 +170,7 @@ struct Quaternion {
         );
     }
 
+    Quaternion nlerp(const Quaternion& rhs, float t);
     Quaternion slerp(const Quaternion& rhs, float t);
 
     const Degrees pitch() const {

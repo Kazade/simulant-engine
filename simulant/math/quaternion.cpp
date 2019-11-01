@@ -96,6 +96,25 @@ AxisAngle Quaternion::to_axis_angle() const {
     return ret;
 }
 
+Quaternion Quaternion::nlerp(const Quaternion &rhs, float t) {
+    auto z = rhs;
+    auto theta = this->dot(rhs);
+
+    // negate to avoid interpolation taking long way around
+    if (theta < 0.0f) {
+        z = -rhs;
+        theta = -theta;
+    }
+
+    // Linear interpolation (result normalized)
+    return Quaternion(
+        lerp(this->x, z.x, theta),
+        lerp(this->y, z.y, theta),
+        lerp(this->z, z.z, theta),
+        lerp(this->w, z.w, theta)
+    ).normalized();
+}
+
 Quaternion Quaternion::slerp(const Quaternion &rhs, float t) {
     auto z = rhs;
 
