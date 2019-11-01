@@ -46,7 +46,8 @@ void Sprite::destroy_immediately() {
 }
 
 bool Sprite::init() {
-    auto mesh = stage->assets->new_mesh_as_rectangle(1.0, 1.0);
+    auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+    mesh->new_submesh_as_rectangle("sprite", stage->assets->new_material(), 1.0, 1.0);
 
     mesh_id_ = mesh;
 

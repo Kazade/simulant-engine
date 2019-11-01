@@ -44,7 +44,7 @@ public:
         name_(name),
         particle_script_(script) {}
 
-    void manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) {
+    void manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) const {
         do_manipulate(system, particles, particle_count, dt);
     }
 
@@ -54,11 +54,12 @@ public:
 
 private:
     std::string name_;
-    virtual void do_manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) = 0;
+    virtual void do_manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) const = 0;
 
 protected:
+    typedef std::function<float (float, float, float)> CurveFunc;
     ParticleScript* particle_script_;
-    std::function<float (float, float, float)> curve_;
+    CurveFunc curve_;
 };
 
 typedef std::shared_ptr<Manipulator> ManipulatorPtr;
@@ -90,6 +91,27 @@ public:
     bool cull_each() const;
     MaterialPtr material() const;
     bool has_repeating_emitters() const;
+};
+
+class ParticleScriptTransaction:
+    public AssetTransaction<ParticleScript> {
+public:
+    ParticleScriptTransaction(std::shared_ptr<ParticleScript> particle_script):
+        AssetTransaction<ParticleScript>(particle_script) {}
+
+    void add_manipulator(std::shared_ptr<Manipulator> manipulator);
+    void clear_manipulators();
+
+    void push_emitter(const Emitter& emitter);
+    void clear_emitters();
+
+    void set_name(const std::string& name);
+    void set_quota(std::size_t quota);
+
+    void set_particle_width(float w);
+    void set_particle_height(float h);
+    void set_cull_each(bool v);
+    void set_material(MaterialPtr material);
 };
 
 }

@@ -29,8 +29,7 @@ class Mesh;
 namespace procedural {
 namespace mesh {
 
-void sphere(MeshPtr mesh, float diameter, int32_t slices=20, int32_t stacks=20);
-void icosphere(MeshPtr mesh, float diameter);
+void sphere(SubMeshPtr mesh, float diameter, int32_t slices=20, int32_t stacks=20);
 
 }
 }

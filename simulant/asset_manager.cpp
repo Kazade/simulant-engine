@@ -205,6 +205,10 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
     return result;
 }
 
+MeshPtr AssetManager::new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+    return new_mesh_from_file(path, MeshLoadOptions(), garbage_collect);
+}
+
 MeshPtr AssetManager::new_mesh_from_file(const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
     //Load the material
     auto mesh = new_mesh(VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
@@ -278,6 +282,16 @@ MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specific
 
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
     return mesh;
+}
+
+MeshPtr AssetManager::new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect) {
+    auto m = new_mesh(
+                VertexSpecification::DEFAULT,
+                GARBAGE_COLLECT_NEVER
+                );
+    smlt::procedural::mesh::box(m, width, width, width, smlt::procedural::MESH_STYLE_SUBMESH_PER_FACE);
+    mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
+    return m;
 }
 
 MeshPtr AssetManager::new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
@@ -463,6 +477,10 @@ std::size_t AssetManager::material_count() const {
 
 TexturePtr AssetManager::new_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
     NEW_X(Texture, texture, texture_manager_, width, height, format);
+}
+
+TexturePtr AssetManager::new_texture_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+    return new_texture_from_file(path, TextureFlags(), garbage_collect);
 }
 
 TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {

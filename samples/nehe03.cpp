@@ -12,7 +12,8 @@ public:
         auto pipeline = window->render(stage_, camera_);
         link_pipeline(pipeline);
 
-        smlt::MeshPtr square = stage_->assets->new_mesh_as_rectangle(1.0, 1.0);
+        smlt::MeshPtr square = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        square->new_submesh_as_rectangle("rect", stage_->assets->new_material(), 1.0, 1.0);
 
         square->vertex_data->move_to(0);
         square->vertex_data->diffuse(smlt::Colour::RED);

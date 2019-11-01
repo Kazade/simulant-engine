@@ -32,14 +32,17 @@ public:
         smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
         smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
 
-        box_mesh_id_ = window->shared_assets->new_mesh_as_box(5, 5, 5, smlt::GARBAGE_COLLECT_NEVER);
-        window->shared_assets->mesh(box_mesh_id_)->set_material_id(mat);
+        auto box_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
+        box_mesh->new_submesh_as_cube("cube", mat, 5);
+        box_mesh_id_ = box_mesh;
 
         smlt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
-        ground_mesh_id_ = window->shared_assets->new_mesh_as_box(1000, 2.5, 1000); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
-        window->shared_assets->mesh(ground_mesh_id_)->set_material_id(
-            window->shared_assets->new_material_from_texture(grass)
-        );
+        auto ground_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        ground_mesh->new_submesh_as_box(
+            "ground", window->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000
+        ); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
+
+        ground_mesh_id_ = ground_mesh;
         ground_ = stage_->new_actor_with_mesh(ground_mesh_id_);
 
         // Make the ground a staticbody

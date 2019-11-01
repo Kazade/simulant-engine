@@ -10,8 +10,6 @@ public:
     SizeManipulator(ParticleScript* script):
         Manipulator(script, "scalar") {}
 
-
-private:
     void set_bell_curve(float peak, float deviation) override {
         is_bell_curve_ = true;
         is_linear_curve_ = false;
@@ -30,7 +28,8 @@ private:
         Manipulator::set_linear_curve(rate);
     }
 
-    void do_manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) override;
+private:
+    void do_manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) const override;
 
     bool is_bell_curve_ = false;
     bool is_linear_curve_ = false;

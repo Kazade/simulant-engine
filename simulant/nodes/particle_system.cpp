@@ -1,7 +1,5 @@
 #include "particle_system.h"
 
-#include "particles/emitter.h"
-
 #include "../renderers/batching/renderable_store.h"
 #include "../frustum.h"
 #include "../stage.h"
@@ -127,11 +125,11 @@ void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr came
 }
 
 void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right) {
-    vertex_data_->resize(quota_ * 4);
+    vertex_data_->resize(script_->quota() * 4);
     vertex_data_->move_to_start();
 
     /* FIXME: Remove this when #193 is complete */
-    index_data_->resize(quota_ * 4);
+    index_data_->resize(script_->quota() * 4);
     index_data_->clear();
 
     auto i = 0;
@@ -182,11 +180,11 @@ void ParticleSystem::update(float dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
     // Resize if necessary
-    if(particles_.size() > quota) {
-        particles_.resize(quota);
+    if(particles_.size() > script_->quota()) {
+        particles_.resize(script_->quota());
         particles_.shrink_to_fit();
     } else {
-        particles_.reserve(quota);
+        particles_.reserve(script_->quota());
     }
 
     // Update existing particles, erase any that are dead
@@ -210,7 +208,7 @@ void ParticleSystem::update(float dt) {
         manipulator->manipulate(this, &particles_[0], particles_.size(), dt);
     }
 
-    for(auto i = 0; i < script_->emitter_count(); ++i) {
+    for(auto i = 0u; i < script_->emitter_count(); ++i) {
         update_emitter(i, dt);
 
         if(particles_.size() >= script_->quota()) {
@@ -247,7 +245,7 @@ void ParticleSystem::update_emitter(uint16_t e, float dt) {
     } else {
         state.time_inactive += dt;
 
-        if(state.repeat_delay > 0 && state.time_inactive >= repeat_delay) {
+        if(state.repeat_delay > 0 && state.time_inactive >= state.repeat_delay) {
             state.is_active = true;
             state.repeat_delay = 0;
             state.time_active = 0;
@@ -265,7 +263,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
 
     state.emission_accumulator += dt; //Buffer time
 
-    float decrement = 1.0 / float(script_->emission_rate()); //Work out how often to emit per second
+    float decrement = 1.0 / float(emitter->emission_rate); //Work out how often to emit per second
 
     auto scale = absolute_scaling();
 
@@ -274,9 +272,9 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         //EMIT THE PARTICLE!
         Particle p;
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            p.position = absolute_position() + relative_position();
+            p.position = absolute_position() + emitter->relative_position;
         } else {
-            p.position = absolute_position() + relative_position();
+            p.position = absolute_position() + emitter->relative_position;
 
             float hw = emitter->dimensions.x * 0.5 * scale.x;
             float hh = emitter->dimensions.y * 0.5 * scale.y;
@@ -287,7 +285,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
             p.position.z += random_.float_in_range(-hd, hd);
         }
 
-        Vec3 dir = direction();
+        Vec3 dir = emitter->direction;
         if(emitter->angle.value != 0) {
             Radians ang(emitter->angle); //Convert from degress to radians
             ang.value *= random_.float_in_range(0, 1); //Multiply by a random unit float
@@ -303,7 +301,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         p.velocity *= rot;
 
         p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first, emitter->ttl_range.second);
-        p.colour = colour();
+        p.colour = emitter->colour;
         p.initial_dimensions = p.dimensions = smlt::Vec2(script_->particle_width() * scale.x, script_->particle_height() * scale.y);
 
         //FIXME: Initialize other properties

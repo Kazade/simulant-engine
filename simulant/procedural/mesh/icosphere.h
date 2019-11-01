@@ -9,7 +9,7 @@ class SubMesh;
 namespace procedural {
 namespace mesh {
 
-void icosphere(SubMesh* out, float radius, uint32_t subdivisions);
+void icosphere(SubMesh* out, float diameter, uint32_t subdivisions);
 
 }
 }

@@ -6,6 +6,7 @@
 namespace smlt {
 
 class ParticleScriptImpl {
+    friend class ParticleScriptTransaction;
     friend class ParticleScript;
 
 public:
@@ -26,6 +27,7 @@ public:
 private:
     ParticleScript* owner_ = nullptr;
 
+    std::string name_;
     std::size_t quota_ = 0;
     float particle_width_ = 100.0f;
     float particle_height_ = 100.0f;
@@ -60,6 +62,14 @@ const Emitter* ParticleScript::emitter(std::size_t i) const {
     }
 }
 
+std::size_t ParticleScript::manipulator_count() const {
+    return pimpl_->manipulators_.size();
+}
+
+const Manipulator* ParticleScript::manipulator(std::size_t i) const {
+    return pimpl_->manipulators_.at(i).get();
+}
+
 std::size_t ParticleScript::quota() const {
     return pimpl_->quota_;
 }
@@ -92,6 +102,34 @@ void Manipulator::set_linear_curve(float rate) {
 void Manipulator::set_bell_curve(float peak, float deviation) {
     using namespace std::placeholders;
     curve_ = std::bind(&bell_curve, _1, _2, _3, peak, deviation);
+}
+
+void ParticleScriptTransaction::add_manipulator(std::shared_ptr<Manipulator> manipulator) {
+    target_->manipulators_.push_back(manipulator);
+}
+
+void ParticleScriptTransaction::set_name(const std::string& name) {
+    target_->name_ = name;
+}
+
+void ParticleScriptTransaction::set_quota(std::size_t quota) {
+    target_->quota_ = quota;
+}
+
+void ParticleScriptTransaction::set_particle_width(float w) {
+    target_->particle_width_ = w;
+}
+
+void ParticleScriptTransaction::set_particle_height(float h) {
+    target_->particle_height_ = h;
+}
+
+void ParticleScriptTransaction::set_cull_each(bool v) {
+    target_->cull_each_ = v;
+}
+
+void ParticleScriptTransaction::set_material(MaterialPtr material) {
+    target_->material_ = material;
 }
 
 }

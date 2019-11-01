@@ -14,7 +14,8 @@ public:
 
         auto stage = window->new_stage();
 
-        smlt::MeshID cube = stage->assets->new_mesh_as_cube(1.0);
+        auto cube = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        cube->new_submesh_as_cube("cube", stage->assets->new_material(), 1.0);
         smlt::ActorPtr actor = stage->new_actor_with_mesh(cube);
 
         actor->move_to(0, 0, -5);

@@ -182,12 +182,28 @@ SubMesh* Mesh::new_submesh(
     );
 }
 
-SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID material, float diameter, uint32_t subdivisions) {
+
+SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
+    MaterialID material, float diameter, std::size_t slices, std::size_t stacks) {
+
     SubMesh* sm = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);
+
+    procedural::mesh::sphere(sm, diameter, slices, stacks);
+
+    return sm;
+}
+
+
+SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID material, float diameter, uint32_t subdivisions) {
+    SubMeshPtr sm = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::icosphere(sm, diameter, subdivisions);
 
     return sm;
+}
+
+SubMeshPtr Mesh::new_submesh_as_cube(const std::string& name, MaterialID material, float size) {
+    return new_submesh_as_box(name, material, size, size, size);
 }
 
 SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, float width, float height, float depth, const Vec3& offset) {
