@@ -131,9 +131,8 @@ public:
     void destroy_geom(GeomID geom_id);
     std::size_t geom_count() const;
 
-    ParticleSystemPtr new_particle_system();
-    ParticleSystemPtr new_particle_system_from_file(const unicode& filename, bool destroy_on_completion=false);
-    ParticleSystemPtr new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion=false);
+    ParticleSystemPtr new_particle_system(ParticleScriptID particle_script);
+    ParticleSystemPtr new_particle_system_with_parent(ParticleScriptID particle_script, ActorID parent);
     ParticleSystemPtr particle_system(ParticleSystemID pid);
     bool has_particle_system(ParticleSystemID pid) const;
     void destroy_particle_system(ParticleSystemID pid);

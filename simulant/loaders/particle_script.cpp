@@ -190,7 +190,6 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
         for(uint32_t i = 0; i < emitters.length(); ++i) {
             jsonic::Node& emitter = emitters[i];
 
-
             Emitter new_emitter;
             if(emitter.has_key("type")) {
                 auto emitter_type = emitter["type"].get<jsonic::String>();
@@ -271,6 +270,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             if(emitter.has_key("emission_rate")) {
                 new_emitter.emission_rate = emitter["emission_rate"].get<jsonic::Number>();
             }
+
+            txn->push_emitter(new_emitter);
         }
 
         if(js.has_key("manipulators")) {

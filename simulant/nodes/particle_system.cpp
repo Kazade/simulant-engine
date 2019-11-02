@@ -22,15 +22,23 @@ const static VertexSpecification PS_VERTEX_SPEC(
         smlt::VERTEX_ATTRIBUTE_4F // Diffuse
 );
 
-ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* sound_driver):
+ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
     TypedDestroyableObject<ParticleSystem, Stage>(stage),
     StageNode(stage),
     generic::Identifiable<ParticleSystemID>(id),
     Source(stage, sound_driver),
+    script_(script),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)),
     index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
 
 
+    // Initialize the emitter states
+    for(auto i = 0u; i < script_->emitter_count(); ++i) {
+        auto emitter = script_->emitter(i);
+        emitter_states_[i].current_duration = random_.float_in_range(
+            emitter->duration_range.first, emitter->duration_range.second
+        );
+    }
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -193,12 +201,12 @@ void ParticleSystem::update(float dt) {
         Particle& particle = (*it);
         particle.position += particle.velocity * dt;
         particle.ttl -= dt;
-        if(particle.ttl <= 0.0f) {
-            // Erase any dead particles.
-            // FIXME: THIS IS SLOW. Switch to a list or just ignore dead
-            it = particles_.erase(it);
-        }
     }
+
+    particles_.erase(
+        std::remove_if(particles_.begin(), particles_.end(), [](const Particle& p) -> bool { return p.ttl <= 0.0f; }),
+        particles_.end()
+    );
 
     // Run any manipulations on the particles, we do this before
     // we add new particles - otherwise they get manipulated before they're
@@ -210,6 +218,10 @@ void ParticleSystem::update(float dt) {
 
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
         update_emitter(i, dt);
+
+        if(!emitter_states_[i].is_active) {
+            continue;
+        }
 
         if(particles_.size() >= script_->quota()) {
             continue;
@@ -249,6 +261,9 @@ void ParticleSystem::update_emitter(uint16_t e, float dt) {
             state.is_active = true;
             state.repeat_delay = 0;
             state.time_active = 0;
+
+            // Reset the length of this round of emission
+            state.current_duration = random_.float_in_range(emitter->duration_range.first, emitter->duration_range.second);
         }
     }
 }

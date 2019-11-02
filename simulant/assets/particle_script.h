@@ -74,6 +74,11 @@ class ParticleScript:
 public:
     const static int MAX_EMITTER_COUNT = 8;
 
+    struct BuiltIns {
+        static const std::string FIRE;
+    };
+
+
     ParticleScript(ParticleScriptID id, AssetManager* asset_manager);
 
     std::size_t emitter_count() const;

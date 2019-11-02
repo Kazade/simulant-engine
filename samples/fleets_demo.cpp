@@ -50,6 +50,10 @@ private:
 
         auto rgen = smlt::RandomGenerator();
 
+        auto pscript = stage_->assets->new_particle_script_from_file(
+            "simulant/particles/pixel_trail.kglp"
+        );
+
         for(uint32_t i = 0; i < 100; ++i) {
             Vec3 pos = centre + (Vec3(
                 rgen.float_in_range(-100, 100),
@@ -60,7 +64,7 @@ private:
             ships_.push_back(stage_->new_actor_with_mesh(ship_mesh_id_));
             ships_.back()->move_to_absolute(pos);
 
-            auto ps = stage_->new_particle_system_with_parent_from_file(ships_.back()->id(), "simulant/particles/pixel_trail.kglp");
+            auto ps = stage_->new_particle_system_with_parent(pscript, ships_.back()->id());
             ps->move_to(0, 0, 0);
         }
     }

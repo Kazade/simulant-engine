@@ -44,7 +44,7 @@ class ParticleSystem :
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed)
 
 public:
-    ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver);
+    ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver, ParticleScriptPtr script);
     virtual ~ParticleSystem();
 
     const AABB& aabb() const override;
@@ -92,7 +92,6 @@ private:
     std::array<EmitterState, ParticleScript::MAX_EMITTER_COUNT> emitter_states_;
 
     void update_emitter(uint16_t emitter, float dt);
-
     void emit_particles(uint16_t emitter, float dt, uint32_t max);
 
     AABB aabb_;

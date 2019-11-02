@@ -5,6 +5,8 @@
 
 namespace smlt {
 
+const std::string ParticleScript::BuiltIns::FIRE = "simulant/particles/fire.kglp";
+
 class ParticleScriptImpl {
     friend class ParticleScriptTransaction;
     friend class ParticleScript;
@@ -51,7 +53,7 @@ ParticleScript::ParticleScript(ParticleScriptID id, AssetManager* asset_manager)
 }
 
 std::size_t ParticleScript::emitter_count() const {
-    return pimpl_->emitters_.size();
+    return pimpl_->emitter_count_;
 }
 
 const Emitter* ParticleScript::emitter(std::size_t i) const {
@@ -106,6 +108,14 @@ void Manipulator::set_bell_curve(float peak, float deviation) {
 
 void ParticleScriptTransaction::add_manipulator(std::shared_ptr<Manipulator> manipulator) {
     target_->manipulators_.push_back(manipulator);
+}
+
+void ParticleScriptTransaction::push_emitter(const Emitter& emitter) {
+    target_->emitters_[target_->emitter_count_++] = emitter;
+}
+
+void ParticleScriptTransaction::clear_emitters() {
+    target_->emitter_count_ = 0;
 }
 
 void ParticleScriptTransaction::set_name(const std::string& name) {
