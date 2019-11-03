@@ -54,7 +54,7 @@ public:
         smlt::MeshID mesh_id = window->shared_assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
         auto mesh = window->shared_assets->mesh(mesh_id);
         smlt::SubMesh* sm = mesh->new_submesh_with_material("test", mid);
-        this->assert_equal(mid, sm->material_id());
+        this->assert_equal(mid, (smlt::MaterialID) sm->material());
     }
 
     void test_property_heirarchy() {

@@ -309,7 +309,7 @@ void Widget::rebuild() {
     new_rectangle("background", material_->id(), background_bounds, colour);
     if(has_background_image()) {
         auto sm = mesh_->submesh("background");
-        sm->material_id().fetch()->pass(0)->set_diffuse_map(background_image_);
+        sm->material()->pass(0)->set_diffuse_map(background_image_);
         apply_image_rect(sm, background_image_.fetch(), background_image_rect_);
     }
 
@@ -318,7 +318,7 @@ void Widget::rebuild() {
     new_rectangle("foreground", material_->id(), foreground_bounds, colour);
     if(has_foreground_image()) {
         auto sm = mesh_->submesh("foreground");
-        sm->material_id().fetch()->pass(0)->set_diffuse_map(foreground_image_);
+        sm->material()->pass(0)->set_diffuse_map(foreground_image_);
         apply_image_rect(sm, foreground_image_.fetch(), foreground_image_rect_);
     }
 

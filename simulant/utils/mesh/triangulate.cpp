@@ -57,7 +57,7 @@ void triangulate(MeshPtr mesh, std::vector<Vec3> &vertices, std::vector<Triangle
             new_tri.idx[0] = indexes[i];
             new_tri.idx[1] = indexes[i+1];
             new_tri.idx[2] = indexes[i+2];
-            new_tri.mat = submesh->material_id();
+            new_tri.mat = submesh->material();
 
             triangles.push_back(new_tri);
         }

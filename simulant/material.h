@@ -98,7 +98,6 @@ enum BlendType {
     BLEND_ONE_ONE_MINUS_ALPHA
 };
 
-
 BlendType blend_type_from_name(const std::string& v);
 
 namespace _material_impl {

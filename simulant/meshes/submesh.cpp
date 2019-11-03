@@ -9,7 +9,7 @@
 namespace smlt {
 
 SubMesh::SubMesh(Mesh* parent, const std::string& name,
-        MaterialID material, MeshArrangement arrangement, IndexType index_type):
+        MaterialPtr material, MeshArrangement arrangement, IndexType index_type):
     parent_(parent),
     name_(name),
     arrangement_(arrangement) {
@@ -21,14 +21,10 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
         material = parent_->asset_manager().clone_default_material();
     }
 
-    set_material_id(material);
+    set_material(material);
 
     vrecalc_ = vertex_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
     irecalc_ = index_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
-}
-
-const MaterialID SubMesh::material_id() const {
-    return material_->id();
 }
 
 VertexData *SubMesh::get_vertex_data() const {
@@ -46,35 +42,6 @@ void SubMesh::set_diffuse(const smlt::Colour& colour) {
     });
 
     vertex_data->done();
-}
-
-void SubMesh::set_material_id(MaterialID mat) {
-    auto old_material = (material_) ? material_->id() : MaterialID();
-
-    if(old_material == mat) {
-        // Don't do anything, don't fire the changed signal
-        return;
-    }
-
-    if(mat) {
-        // Set the material, store the shared_ptr to increment the ref count
-        material_ = parent_->asset_manager().material(mat);
-        if(!material_) {
-            throw std::runtime_error("Tried to set invalid material on submesh");
-        }
-
-    } else {
-        // Reset the material
-        material_.reset();
-    }
-
-    signal_material_changed_(this, old_material, mat);
-    parent_->signal_submesh_material_changed_(
-        parent_->id(),
-        this,
-        old_material,
-        mat
-    );
 }
 
 void SubMesh::reverse_winding() {
@@ -318,6 +285,44 @@ SubMesh::~SubMesh() {
 
     delete index_data_;
     index_data_ = nullptr;
+}
+
+void SubMesh::set_material(MaterialPtr material) {
+    set_material_variant(MATERIAL_VARIANT0, material);
+}
+
+void SubMesh::set_material_variant(MaterialVariant var, MaterialPtr mat) {
+    auto old_material_id = (materials_[var]) ? materials_[var]->id() : MaterialID();
+
+    if(old_material_id == mat->id()) {
+        // Don't do anything, don't fire the changed signal
+        return;
+    }
+
+    if(mat) {
+        // Set the material, store the shared_ptr to increment the ref count
+        materials_[var] = mat;
+    } else {
+        // Reset the material
+        materials_[var].reset();
+    }
+
+    signal_material_changed_(this, var, old_material_id, mat->id());
+    parent_->signal_submesh_material_changed_(
+        parent_->id(),
+        this,
+        var,
+        old_material_id,
+        mat->id()
+    );
+}
+
+MaterialPtr SubMesh::material() const {
+    return materials_[MATERIAL_VARIANT0];
+}
+
+MaterialPtr SubMesh::material_variant(MaterialVariant var) const {
+    return materials_[var];
 }
 
 

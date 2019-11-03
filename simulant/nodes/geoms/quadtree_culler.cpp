@@ -8,6 +8,7 @@
 #include "../geom.h"
 #include "../../renderers/renderer.h"
 #include "../../renderers/batching/renderable_store.h"
+#include "../../material.h"
 
 namespace smlt {
 
@@ -58,7 +59,7 @@ void QuadtreeCuller::_compile() {
     Vec3 stash[3];
 
     mesh_->each([&](const std::string&, SubMesh* submesh) {
-        auto material_id = submesh->material_id();
+        auto material_id = submesh->material();
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
             stash[0] = *data.vertices->position_at<Vec3>(a);

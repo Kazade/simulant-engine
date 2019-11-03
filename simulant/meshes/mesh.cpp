@@ -155,7 +155,10 @@ SubMesh* Mesh::new_submesh_with_material(
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
-    auto new_submesh = SubMesh::create(this, name, material, arrangement, index_type);
+    auto mat = asset_manager().material(material);
+    assert(mat);
+
+    auto new_submesh = SubMesh::create(this, name, mat, arrangement, index_type);
     submeshes_.insert(std::make_pair(name, new_submesh));
     ordered_submeshes_.push_back(new_submesh.get());
     signal_submesh_created_(id(), new_submesh.get());
@@ -461,9 +464,9 @@ SubMesh* Mesh::first_submesh() const {
     return ordered_submeshes_.front();
 }
 
-void Mesh::set_material_id(MaterialID material) {
+void Mesh::set_material(MaterialPtr material) {
     each([=](const std::string& name, SubMesh* mesh) {
-        mesh->set_material_id(material);
+        mesh->set_material(material);
     });
 }
 

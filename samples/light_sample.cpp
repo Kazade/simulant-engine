@@ -34,7 +34,7 @@ public:
         txn->set_texture_filter(TEXTURE_FILTER_BILINEAR);
         txn->commit();
 
-        auto mat = actor_->base_mesh()->first_submesh()->material_id().fetch();
+        auto mat = actor_->base_mesh()->first_submesh()->material();
         mat->set_diffuse_map(texture_);
 
         // Test Camera::look_at function

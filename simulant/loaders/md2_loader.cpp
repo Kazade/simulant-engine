@@ -291,7 +291,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     auto material = asset_manager->clone_default_material();
     material->set_diffuse_map(tex_id);
 
-    submesh->set_material_id(material->id());
+    submesh->set_material(material);
 
     // =========== TEXTURE COORDS =============
     std::vector<MD2TexCoord> texture_coordinates(header.num_st);

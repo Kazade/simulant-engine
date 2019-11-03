@@ -17,7 +17,7 @@ class SubMeshInterface:
 public:
     virtual ~SubMeshInterface() {}
 
-    virtual const MaterialID material_id() const = 0;
+    virtual MaterialPtr material() const = 0;
     virtual MeshArrangement arrangement() const = 0;
 
     Property<SubMeshInterface, VertexData, true> vertex_data = { this, &SubMeshInterface::get_vertex_data };
@@ -28,23 +28,37 @@ private:
     virtual IndexData* get_index_data() const = 0;
 };
 
+enum MaterialVariant {
+    MATERIAL_VARIANT0,
+    MATERIAL_VARIANT1,
+    MATERIAL_VARIANT2,
+    MATERIAL_VARIANT3,
+    MATERIAL_VARIANT4,
+    MATERIAL_VARIANT5,
+    MATERIAL_VARIANT6,
+    MATERIAL_VARIANT7,
+    MATERIAL_VARIANT_MAX
+};
+
 class SubMesh :
     public SubMeshInterface,
     public RefCounted<SubMesh> {
 
 public:
-    SubMesh(
-        Mesh* parent,
+    SubMesh(Mesh* parent,
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES,
         IndexType index_type = INDEX_TYPE_16_BIT
     );
 
     virtual ~SubMesh();
 
-    const MaterialID material_id() const;
-    void set_material_id(MaterialID mat);
+    void set_material(MaterialPtr material);
+    void set_material_variant(MaterialVariant var, MaterialPtr material);
+
+    MaterialPtr material() const;
+    MaterialPtr material_variant(MaterialVariant var) const;
 
     MeshArrangement arrangement() const { return arrangement_; }
 
@@ -85,7 +99,7 @@ public:
     void each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb);
 
 public:
-    typedef sig::signal<void (SubMeshPtr, MaterialID, MaterialID)> MaterialChangedCallback;
+    typedef sig::signal<void (SubMeshPtr, MaterialVariant, MaterialID, MaterialID)> MaterialChangedCallback;
 
     MaterialChangedCallback& signal_material_changed() {
         return signal_material_changed_;
@@ -99,7 +113,8 @@ private:
     Mesh* parent_;
     std::string name_;
 
-    MaterialPtr material_;
+    std::array<MaterialPtr, MATERIAL_VARIANT_MAX> materials_;
+
     MeshArrangement arrangement_;
 
     IndexData* index_data_ = nullptr;
