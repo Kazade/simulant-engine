@@ -41,6 +41,13 @@ simulant/arg_parser.cpp
 simulant/arg_parser.h
 simulant/asset.cpp
 simulant/asset.h
+simulant/assets/particle_script.cpp
+simulant/assets/particle_script.h
+simulant/assets/particles/colour_fader.h
+simulant/assets/particles/curves.cpp
+simulant/assets/particles/curves.h
+simulant/assets/particles/size_manipulator.cpp
+simulant/assets/particles/size_manipulator.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
@@ -643,10 +650,7 @@ simulant/nodes/particle_system.h
 simulant/nodes/particle_system.h
 simulant/nodes/particle_system.h
 simulant/nodes/particles/emitter.cpp
-simulant/nodes/particles/emitter.cpp
 simulant/nodes/particles/emitter.h
-simulant/nodes/particles/emitter.h
-simulant/nodes/particles/manipulator.h
 simulant/nodes/particles/manipulator.h
 simulant/nodes/particles/manipulators/size_manipulator.h
 simulant/nodes/particles/manipulators/size_manipulator.h
