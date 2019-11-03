@@ -143,7 +143,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     index_data_->clear();
 
     auto i = 0;
-    for(auto j = 0; j < particle_count_; ++j) {
+    for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
 
         auto scaled_up = up * p.dimensions.y;
