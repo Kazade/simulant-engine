@@ -38,6 +38,8 @@ ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* s
         emitter_states_[i].current_duration = random_.float_in_range(
             emitter->duration_range.first, emitter->duration_range.second
         );
+
+        emitter_states_[i].emission_accumulator = 0.0f;
     }
 }
 
@@ -133,15 +135,17 @@ void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr came
 }
 
 void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right) {
-    vertex_data_->resize(script_->quota() * 4);
+    vertex_data_->resize(particle_count_ * 4);
     vertex_data_->move_to_start();
 
     /* FIXME: Remove this when #193 is complete */
-    index_data_->resize(script_->quota() * 4);
+    index_data_->resize(particle_count_ * 4);
     index_data_->clear();
 
     auto i = 0;
-    for(auto& p: particles_) {
+    for(auto j = 0; j < particle_count_; ++j) {
+        auto& p = particles_[j];
+
         auto scaled_up = up * p.dimensions.y;
         auto scaled_right = right * p.dimensions.x;
         auto half_up = scaled_up * 0.5f;
@@ -187,33 +191,38 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
 void ParticleSystem::update(float dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
-    // Resize if necessary
-    if(particles_.size() > script_->quota()) {
+    if(particles_.size() != script_->quota()) {
         particles_.resize(script_->quota());
         particles_.shrink_to_fit();
-    } else {
-        particles_.reserve(script_->quota());
+        particle_count_ = std::min(particle_count_, particles_.size());
     }
+
 
     // Update existing particles, erase any that are dead
+    for(auto i = 0u; i < particle_count_; ++i) {
+        Particle& particle = particles_[i];
 
-    for(auto it = particles_.begin(); it != particles_.end(); ++it) {
-        Particle& particle = (*it);
         particle.position += particle.velocity * dt;
         particle.ttl -= dt;
-    }
 
-    particles_.erase(
-        std::remove_if(particles_.begin(), particles_.end(), [](const Particle& p) -> bool { return p.ttl <= 0.0f; }),
-        particles_.end()
-    );
+        if(particle.ttl <= 0) {
+            // Swap dead particles to the end of the
+            // vector and decrease the particle count
+            // this means active particles are at the
+            // start of the vector
+            std::swap(particles_[i], particles_[particle_count_ - 1]);
+
+            --particle_count_;
+            assert(particle_count_ < particles_.size());
+        }
+    }
 
     // Run any manipulations on the particles, we do this before
     // we add new particles - otherwise they get manipulated before they're
     // even displayed!
     for(auto i = 0u; i < script_->manipulator_count(); ++i) {
         auto manipulator = script_->manipulator(i);
-        manipulator->manipulate(this, &particles_[0], particles_.size(), dt);
+        manipulator->manipulate(this, &particles_[0], particle_count_, dt);
     }
 
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
@@ -223,15 +232,19 @@ void ParticleSystem::update(float dt) {
             continue;
         }
 
-        if(particles_.size() >= script_->quota()) {
+        if(particle_count_ >= particles_.size()) {
             continue;
         }
 
-        auto max_can_emit = script_->quota() - particles_.size();
+        auto max_can_emit = particles_.size() - particle_count_;
         emit_particles(i, dt, max_can_emit);
+
+        // We do this after emission so that we always emit particles
+        // on the first update
+        update_active_state(i, dt);
     }
 
-    if(particles_.empty() && !script_->has_repeating_emitters() && !has_active_emitters()) {
+    if(!particle_count_ && !script_->has_repeating_emitters() && !has_active_emitters()) {
         // If the particles are gone, and we don't have repeating emitters and all the emitters are inactive
         // Then destroy the particle system if that's what we've been told to do
         if(destroy_on_completion()) {
@@ -242,7 +255,7 @@ void ParticleSystem::update(float dt) {
     }
 }
 
-void ParticleSystem::update_emitter(uint16_t e, float dt) {
+void ParticleSystem::update_active_state(uint16_t e, float dt) {
     auto& state = emitter_states_[e];
     auto emitter = script_->emitter(e);
 
@@ -264,7 +277,16 @@ void ParticleSystem::update_emitter(uint16_t e, float dt) {
 
             // Reset the length of this round of emission
             state.current_duration = random_.float_in_range(emitter->duration_range.first, emitter->duration_range.second);
+            state.emission_accumulator = 0;
         }
+    }
+}
+
+void ParticleSystem::update_emitter(uint16_t e, float dt) {
+    auto& state = emitter_states_[e];
+
+    if(state.is_active) {
+        state.emission_accumulator += dt; //Buffer time
     }
 }
 
@@ -276,14 +298,12 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     auto& state = emitter_states_[e];
     auto emitter = script_->emitter(e);
 
-    state.emission_accumulator += dt; //Buffer time
-
     float decrement = 1.0 / float(emitter->emission_rate); //Work out how often to emit per second
 
     auto scale = absolute_scaling();
 
     uint32_t to_emit = max;
-    while(state.emission_accumulator > decrement) {
+    while(state.emission_accumulator >= decrement) {
         //EMIT THE PARTICLE!
         Particle p;
         if(emitter->type == PARTICLE_EMITTER_POINT) {
@@ -320,7 +340,9 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         p.initial_dimensions = p.dimensions = smlt::Vec2(script_->particle_width() * scale.x, script_->particle_height() * scale.y);
 
         //FIXME: Initialize other properties
-        particles_.push_back(p);
+        particles_[particle_count_++] = p;
+
+        assert(particle_count_ <= particles_.size());
 
         state.emission_accumulator -= decrement; //Decrement the accumulator while we can
         to_emit--;

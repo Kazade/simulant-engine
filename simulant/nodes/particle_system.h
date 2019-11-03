@@ -92,13 +92,17 @@ private:
     std::array<EmitterState, ParticleScript::MAX_EMITTER_COUNT> emitter_states_;
 
     void update_emitter(uint16_t emitter, float dt);
+    void update_active_state(uint16_t emitter, float dt);
     void emit_particles(uint16_t emitter, float dt, uint32_t max);
+
 
     AABB aabb_;
     void calc_aabb();
 
     ParticleScriptPtr script_;
+
     std::vector<Particle> particles_;
+    std::size_t particle_count_ = 0;
 
     VertexData* vertex_data_ = nullptr;
     IndexData* index_data_ = nullptr;
