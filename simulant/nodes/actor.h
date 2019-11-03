@@ -87,6 +87,15 @@ public:
     }
 
     void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel level) override;
+
+    void use_material_variant(MaterialVariant var) {
+        material_variant_ = var;
+    }
+
+    MaterialVariant active_material_variant() const {
+        return material_variant_;
+    }
+
 private:
     MeshPtr find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
@@ -115,6 +124,8 @@ private:
 
     RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
     MeshChangedCallback signal_mesh_changed_;
+
+    MaterialVariant material_variant_ = MATERIAL_VARIANT0;
 
     void update(float dt) override;
 

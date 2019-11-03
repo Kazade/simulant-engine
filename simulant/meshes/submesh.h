@@ -58,7 +58,7 @@ public:
     void set_material_variant(MaterialVariant var, MaterialPtr material);
 
     MaterialPtr material() const;
-    MaterialPtr material_variant(MaterialVariant var) const;
+    MaterialPtr material_variant(MaterialVariant var, bool fallback=false) const;
 
     MeshArrangement arrangement() const { return arrangement_; }
 

@@ -321,8 +321,13 @@ MaterialPtr SubMesh::material() const {
     return materials_[MATERIAL_VARIANT0];
 }
 
-MaterialPtr SubMesh::material_variant(MaterialVariant var) const {
-    return materials_[var];
+MaterialPtr SubMesh::material_variant(MaterialVariant var, bool fallback) const {
+    auto ret = materials_[var];
+    if(!ret && fallback) {
+        return materials_[MATERIAL_VARIANT0];
+    } else {
+        return ret;
+    }
 }
 
 
