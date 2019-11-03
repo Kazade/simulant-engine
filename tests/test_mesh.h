@@ -209,10 +209,11 @@ public:
 
     // Skipped, currently fails
     void X_test_cubic_texture_generation() {
-        auto mesh_id = stage_->assets->new_mesh_as_box(10.0f, 10.0f, 10.0f);
-        stage_->assets->mesh(mesh_id)->first_submesh()->generate_texture_coordinates_cube();
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_box("cubic", stage_->assets->new_material(), 10.0f, 10.0f, 10.0f);
+        stage_->assets->mesh(mesh)->first_submesh()->generate_texture_coordinates_cube();
 
-        auto& vd = *stage_->assets->mesh(mesh_id)->first_submesh()->vertex_data.get();
+        auto& vd = *stage_->assets->mesh(mesh)->first_submesh()->vertex_data.get();
 
         // Neg Z
         assert_equal(smlt::Vec2((1.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(0));

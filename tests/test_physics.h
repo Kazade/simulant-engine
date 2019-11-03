@@ -95,10 +95,11 @@ public:
     }
 
     void test_mesh_collider_addition() {
-        auto mesh_id = stage->assets->new_mesh_as_box(1.0, 1.0, 1.0);
+        auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_box("mesh", stage->assets->new_material(), 1.0, 1.0, 1.0);
         auto actor1 = stage->new_actor();
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
-        body->add_mesh_collider(mesh_id, behaviours::PhysicsMaterial::WOOD);
+        body->add_mesh_collider(mesh, behaviours::PhysicsMaterial::WOOD);
 
         float distance = 0;
         auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0.0, -2, 0), &distance);
