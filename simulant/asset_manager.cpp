@@ -147,6 +147,9 @@ void AssetManager::run_garbage_collection() {
 }
 
 
+#define DOCONCAT(x, y) x##y
+#define CONCAT(x, y) DOCONCAT(x, y)
+
 #define NEW_X(klass, name, manager_name, ...) \
     auto result = manager_name.make(this __VA_OPT__(,) __VA_ARGS__); \
     manager_name.set_garbage_collection_method(result->id(), garbage_collect); \
