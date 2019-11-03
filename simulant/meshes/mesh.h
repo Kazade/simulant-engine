@@ -174,7 +174,7 @@ public:
 
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshCreatedCallback;
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshDestroyedCallback;
-    typedef sig::signal<void (MeshID, SubMeshPtr, MaterialVariant, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+    typedef sig::signal<void (MeshID, SubMeshPtr, MaterialChoice, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
 
     SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
     SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }

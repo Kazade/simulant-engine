@@ -288,10 +288,10 @@ SubMesh::~SubMesh() {
 }
 
 void SubMesh::set_material(MaterialPtr material) {
-    set_material_variant(MATERIAL_VARIANT0, material);
+    set_material_choice(MATERIAL_CHOICE0, material);
 }
 
-void SubMesh::set_material_variant(MaterialVariant var, MaterialPtr mat) {
+void SubMesh::set_material_choice(MaterialChoice var, MaterialPtr mat) {
     auto old_material_id = (materials_[var]) ? materials_[var]->id() : MaterialID();
 
     if(old_material_id == mat->id()) {
@@ -318,13 +318,13 @@ void SubMesh::set_material_variant(MaterialVariant var, MaterialPtr mat) {
 }
 
 MaterialPtr SubMesh::material() const {
-    return materials_[MATERIAL_VARIANT0];
+    return materials_[MATERIAL_CHOICE0];
 }
 
-MaterialPtr SubMesh::material_variant(MaterialVariant var, bool fallback) const {
+MaterialPtr SubMesh::material_choice(MaterialChoice var, bool fallback) const {
     auto ret = materials_[var];
     if(!ret && fallback) {
-        return materials_[MATERIAL_VARIANT0];
+        return materials_[MATERIAL_CHOICE0];
     } else {
         return ret;
     }
