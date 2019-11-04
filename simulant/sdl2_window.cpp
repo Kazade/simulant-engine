@@ -27,6 +27,10 @@
 
 #include "renderers/renderer_config.h"
 
+static const std::string SDL_CONTROLLER_DB =
+#include "input/sdl/gamecontrollerdb.txt"
+;
+
 namespace smlt {
 
 SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync):
@@ -285,6 +289,14 @@ bool SDL2Window::create_window() {
      * die if it's not there! */
     if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
         L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
+    }
+
+    /* Load the game controller mappings */
+    auto rw_ops = SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
+    if(SDL_GameControllerAddMappingsFromRW(rw_ops, 0) < 0) {
+        L_WARN("Unable to load controller mappings!");
+    } else {
+        L_DEBUG("Successfully loaded SDL controller mappings");
     }
 
     int32_t flags = SDL_WINDOW_OPENGL;
