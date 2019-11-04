@@ -3,7 +3,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-
+#include "simulant/renderers/batching/renderable_store.h"
 
 namespace {
 
