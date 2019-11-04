@@ -99,8 +99,10 @@ test:windows-x64-mingw:
    - export SIMULANT_SOUND_DRIVER=null
    - export DISPLAY=:99
   script:
-   - cd ${TARGET}/debug
-   - wine tests/simulant_tests.exe
+   - cd ${TARGET}/debug/tests
+   - ln -s ../simulant
+   - ln -s ../sample_data
+   - wine simulant_tests.exe
   artifacts:
    paths:
     - ${TARGET}/debug/simulant/*.dll

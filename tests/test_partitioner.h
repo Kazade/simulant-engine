@@ -125,7 +125,9 @@ public:
         };
 
         StagePtr stage = window->new_stage();
-        auto ps = stage->new_particle_system();
+        auto ps = stage->new_particle_system(
+            stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
+        );
 
         MockPartitioner partitioner(stage, test);
         partitioner.add_particle_system(ps->id());
@@ -145,7 +147,9 @@ public:
         };
 
         StagePtr stage = window->new_stage();
-        auto ps = stage->new_particle_system();
+        auto ps = stage->new_particle_system(
+            stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
+        );
 
         MockPartitioner partitioner(stage, test);
         partitioner.remove_particle_system(ps->id());

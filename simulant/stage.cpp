@@ -296,8 +296,13 @@ std::size_t Stage::geom_count() const {
 
 //=============== PARTICLES =================
 
-ParticleSystemPtr Stage::new_particle_system() {
-    auto p = particle_system_manager_->make(this, window->_sound_driver());
+ParticleSystemPtr Stage::new_particle_system(ParticleScriptID particle_script) {
+    auto p = particle_system_manager_->make(
+        this,
+        window->_sound_driver(),
+        assets->particle_script(particle_script)
+    );
+
     auto new_id = p->id();
 
     /* Whenever the particle system moves, we need to tell the stage's partitioner */
@@ -305,29 +310,17 @@ ParticleSystemPtr Stage::new_particle_system() {
         this->partitioner->update_particle_system(new_id, new_bounds);
     });
 
+    p->set_parent(this);
+
     signal_particle_system_created_(new_id);
     return p;
 }
 
-ParticleSystemPtr Stage::new_particle_system_from_file(const unicode& filename, bool destroy_on_completion) {
-    auto ps = new_particle_system();
 
-    ps->set_parent(this);
-    ps->set_destroy_on_completion(destroy_on_completion);
-
-    window->loader_for(filename)->into(ps);
-
-    return ps;
-}
-
-ParticleSystemPtr Stage::new_particle_system_with_parent_from_file(ActorID parent, const unicode& filename, bool destroy_on_completion) {
-    auto ps = new_particle_system();
-    ps->set_parent(parent);
-    ps->set_destroy_on_completion(destroy_on_completion);
-
-    window->loader_for(filename)->into(ps);
-
-    return ps;
+ParticleSystemPtr Stage::new_particle_system_with_parent(ParticleScriptID particle_script, ActorID parent) {
+    auto p = new_particle_system(particle_script);
+    p->set_parent(parent);
+    return p;
 }
 
 ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {

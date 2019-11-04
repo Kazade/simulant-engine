@@ -52,7 +52,7 @@ void generate_uv(const Vec3& pos, float& u, float& v) {
     }
 }
 
-void sphere(MeshPtr mesh, float diameter, int32_t slices, int32_t stacks) {
+void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) {
     float theta, phi;
     float u, v;
     Vec3 pos, n;
@@ -74,65 +74,60 @@ void sphere(MeshPtr mesh, float diameter, int32_t slices, int32_t stacks) {
 
             generate_uv(pos, u, v);
 
-            mesh->vertex_data->position(pos);
-            mesh->vertex_data->tex_coord0(u, v);
-            mesh->vertex_data->tex_coord1(u, v);
-            mesh->vertex_data->normal(n);
-            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
-            mesh->vertex_data->move_next();
+            submesh->vertex_data->position(pos);
+            submesh->vertex_data->tex_coord0(u, v);
+            submesh->vertex_data->tex_coord1(u, v);
+            submesh->vertex_data->normal(n);
+            submesh->vertex_data->diffuse(smlt::Colour::WHITE);
+            submesh->vertex_data->move_next();
         }
     }
     pos = Vec3(0, 1 * radius, 0);
     n = pos.normalized();
     generate_uv(pos, u, v);
 
-    mesh->vertex_data->position(pos);
-    mesh->vertex_data->tex_coord0(u, v);
-    mesh->vertex_data->tex_coord1(u, v);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    mesh->vertex_data->move_next();
+    submesh->vertex_data->position(pos);
+    submesh->vertex_data->tex_coord0(u, v);
+    submesh->vertex_data->tex_coord1(u, v);
+    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    submesh->vertex_data->move_next();
 
     pos = Vec3(0, -1 * radius, 0);
     n = pos.normalized();
 
     generate_uv(pos, u, v);
 
-    mesh->vertex_data->position(pos);
-    mesh->vertex_data->tex_coord0(u, v);
-    mesh->vertex_data->tex_coord1(u, v);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    mesh->vertex_data->move_next();
+    submesh->vertex_data->position(pos);
+    submesh->vertex_data->tex_coord0(u, v);
+    submesh->vertex_data->tex_coord1(u, v);
+    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    submesh->vertex_data->move_next();
 
-    mesh->vertex_data->done();
-
-    SubMesh* sm = mesh->new_submesh(
-        "sphere",
-        MESH_ARRANGEMENT_TRIANGLES
-    );
+    submesh->vertex_data->done();
 
     for(int32_t current_stack = 0; current_stack < stacks - 3; current_stack++) {
         for(int32_t current_slice = 0; current_slice < slices - 1; current_slice++) {
-            sm->index_data->index(current_stack * slices + current_slice);
-            sm->index_data->index((current_stack + 1) * slices + current_slice + 1);
-            sm->index_data->index(current_stack * slices + current_slice + 1);
+            submesh->index_data->index(current_stack * slices + current_slice);
+            submesh->index_data->index((current_stack + 1) * slices + current_slice + 1);
+            submesh->index_data->index(current_stack * slices + current_slice + 1);
 
-            sm->index_data->index(current_stack * slices + current_slice);
-            sm->index_data->index((current_stack + 1) * slices + current_slice);
-            sm->index_data->index((current_stack + 1) * slices + current_slice + 1);
+            submesh->index_data->index(current_stack * slices + current_slice);
+            submesh->index_data->index((current_stack + 1) * slices + current_slice);
+            submesh->index_data->index((current_stack + 1) * slices + current_slice + 1);
         }
     }
 
     for(int32_t i = 0; i < slices - 1; ++i) {
-        sm->index_data->index((stacks - 2) * slices);
-        sm->index_data->index(i);
-        sm->index_data->index(i + 1);
+        submesh->index_data->index((stacks - 2) * slices);
+        submesh->index_data->index(i);
+        submesh->index_data->index(i + 1);
 
-        sm->index_data->index((stacks - 2) * slices + 1);
-        sm->index_data->index((stacks - 3) * slices + i + 1);
-        sm->index_data->index((stacks - 3) * slices + i);
+        submesh->index_data->index((stacks - 2) * slices + 1);
+        submesh->index_data->index((stacks - 3) * slices + i + 1);
+        submesh->index_data->index((stacks - 3) * slices + i);
     }
 
-    sm->index_data->done();
+    submesh->index_data->done();
 }
 
 }

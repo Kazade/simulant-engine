@@ -15,19 +15,22 @@ public:
         auto rect_cam = rect_stage_->new_camera();
 
         smlt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
-        MeshID cube_mesh = window->shared_assets->new_mesh_as_cube(1.0);
-        auto mat = cube_mesh.fetch()->first_submesh()->material_id().fetch();
+        auto cube_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        cube_mesh->new_submesh_as_cube("cube", window->shared_assets->new_material(), 1.0);
+
+        auto mat = cube_mesh->first_submesh()->material_id().fetch();
         mat->set_diffuse_map(tid);
 
         cube_ = cube_stage_->new_actor_with_mesh(cube_mesh);
         cube_->move_to_absolute(0, 0, -4);
 
-        MeshID rect_mesh = window->shared_assets->new_mesh_as_rectangle(2.0, 2.0);
+        auto rect_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        rect_mesh->new_submesh_as_rectangle("rect", window->shared_assets->new_material(), 2.0, 2.0);
         rect_ = rect_stage_->new_actor_with_mesh(rect_mesh);
         rect_->move_to_absolute(0, 0, -4);
 
         TextureID rtt = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
-        mat = rect_mesh.fetch()->first_submesh()->material_id().fetch();
+        mat = rect_mesh->first_submesh()->material_id().fetch();
         mat->set_diffuse_map(rtt);
 
         window->render(cube_stage_->id(), cube_cam->id()).to_texture(rtt);

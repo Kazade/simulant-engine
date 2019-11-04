@@ -15,28 +15,11 @@ public:
         pipeline->viewport->set_colour(smlt::Colour::GREY);
         pipeline->set_clear_flags(~0);
 
-        if(!app->args->arg_value<bool>("stress", false).value()) {
-            auto path = app->args->arg_value<std::string>("filename");
-            ps_ = stage_->new_particle_system_from_file(
-                !path.has_value() ? "simulant/particles/fire.kglp" : path.value()
-            );
+        auto path = app->args->arg_value<std::string>("filename");
 
-            ps_->move_to(0.0, 0, -4);
-            ps_->set_render_priority(smlt::RENDER_PRIORITY_MAIN + 1);
-        } else {
-            /* Generate 1024 particle system instances in a grid */
-            for(auto z = -16; z < 16; ++z) {
-                for(auto x = -16; x < 16; ++x) {
-                    auto path = app->args->arg_value<std::string>("filename", "simulant/particles/fire.kglp");
-                    auto ps = stage_->new_particle_system_from_file(
-                        path.value()
-                    );
-
-                    ps->move_to(x * 5, 0, z * 5);
-                }
-            }
-        }
-
+        script_ = stage_->assets->new_particle_script_from_file(
+            !path.has_value() ? "simulant/particles/fire.kglp" : path.value()
+        );
 
         camera_->set_perspective_projection(
             smlt::Degrees(45.0),
@@ -45,19 +28,38 @@ public:
             1000.0
         );
 
-        auto fly = camera_->new_behaviour<smlt::behaviours::Fly>(window);
-        fly->set_speed(10.0f);
+        /*auto fly = camera_->new_behaviour<smlt::behaviours::Fly>(window);
+        fly->set_speed(10.0f); */
         L_DEBUG("Scene loaded");
     }
 
+    void activate() override {
+        if(!app->args->arg_value<bool>("stress", false).value()) {
+            ps_ = stage_->new_particle_system(script_);
+            ps_->move_to(0.0, 0, -4);
+            ps_->set_render_priority(smlt::RENDER_PRIORITY_MAIN + 1);
+        } else {
+            /* Generate 1024 particle system instances in a grid */
+            for(auto z = -16; z < 16; ++z) {
+                for(auto x = -16; x < 16; ++x) {
+                    auto ps = stage_->new_particle_system(script_);
+                    ps->move_to(x * 5, 0, z * 5);
+                }
+            }
+        }
+    }
+
     void update(float dt) override {
-        ps_->rotate_global_y_by(smlt::Degrees(90.0f * dt));
+        if(ps_) {
+            ps_->rotate_global_y_by(smlt::Degrees(90.0f * dt));
+        }
     }
 
 private:
     smlt::StagePtr stage_;
     smlt::CameraPtr camera_;
     smlt::ParticleSystemPtr ps_;
+    smlt::ParticleScriptID script_;
 };
 
 class App : public smlt::Application {

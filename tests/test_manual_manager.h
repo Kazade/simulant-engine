@@ -91,16 +91,20 @@ public:
     void test_particle_systems_are_freed() {
         auto stage = window->new_stage();
 
-        auto particle_system = stage->new_particle_system()->id();
+        auto script = stage->assets->new_particle_script_from_file(
+            ParticleScript::BuiltIns::FIRE
+        );
+
+        auto particle_system = stage->new_particle_system(script)->id();
         stage->destroy_particle_system(particle_system);
 
-        // Should be different, the original light is still lingering
-        assert_not_equal(stage->new_particle_system()->id(), particle_system);
+        // Should be different, the original particle system is still lingering
+        assert_not_equal(stage->new_particle_system(script)->id(), particle_system);
 
         window->run_frame();
 
         // Same ID should be given back as it's been released
-        assert_equal(stage->new_particle_system()->id(), particle_system);
+        assert_equal(stage->new_particle_system(script)->id(), particle_system);
     }
 
     void test_geoms_are_freed() {

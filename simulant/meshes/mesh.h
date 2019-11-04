@@ -99,6 +99,13 @@ public:
         IndexType=INDEX_TYPE_16_BIT
     );
 
+    SubMeshPtr new_submesh_as_sphere(const std::string& name,
+        MaterialID material,
+        float diameter,
+        std::size_t slices,
+        std::size_t stacks
+    );
+
     SubMeshPtr new_submesh_as_icosphere(const std::string& name,
         MaterialID material,
         float diameter,
@@ -111,6 +118,12 @@ public:
         float width,
         float height,
         const Vec3& offset=Vec3()
+    );
+
+    SubMeshPtr new_submesh_as_cube(
+        const std::string& name,
+        MaterialID material,
+        float size
     );
 
     SubMeshPtr new_submesh_as_box(

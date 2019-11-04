@@ -24,7 +24,9 @@ public:
 
         stage_->set_ambient_light(smlt::Colour(1.0, 1.0, 1.0, 1.0));
 
-        actor_ = stage_->new_actor_with_mesh(stage_->assets->new_mesh_as_cube(2.0));
+        auto cube = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        cube->new_submesh_as_cube("rect", stage_->assets->new_material(), 2.0);
+        actor_ = stage_->new_actor_with_mesh(cube);
         actor_->move_to(0.0, 0.0, -5.0);
 
         texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
