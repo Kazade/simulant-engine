@@ -119,6 +119,8 @@ JoystickAxis SDL_axis_to_simulant_axis(Uint8 axis) {
     case SDL_CONTROLLER_AXIS_LEFTY: return JOYSTICK_AXIS_1;
     case SDL_CONTROLLER_AXIS_RIGHTX: return JOYSTICK_AXIS_2;
     case SDL_CONTROLLER_AXIS_RIGHTY: return JOYSTICK_AXIS_3;
+    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return JOYSTICK_AXIS_4;
+    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return JOYSTICK_AXIS_5;
     default:
         throw std::out_of_range("Invalid axis");
     }
