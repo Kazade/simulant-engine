@@ -155,7 +155,8 @@ void SDL2Window::check_events() {
 
             case SDL_JOYAXISMOTION:
                 input_state->_handle_joystick_axis_motion(
-                    event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis), float(event.jaxis.value) / 32768.0f
+                    event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis),
+                    clamp(float(event.jaxis.value) / 32768.0f, -1.0f, 1.0f)
                 );
             break;
             case SDL_JOYBUTTONDOWN:
