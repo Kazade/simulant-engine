@@ -27,6 +27,10 @@
 
 #include "renderers/renderer_config.h"
 
+static const std::string SDL_CONTROLLER_DB =
+#include "input/sdl/gamecontrollerdb.txt"
+;
+
 namespace smlt {
 
 SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync):
@@ -115,6 +119,8 @@ JoystickAxis SDL_axis_to_simulant_axis(Uint8 axis) {
     case SDL_CONTROLLER_AXIS_LEFTY: return JOYSTICK_AXIS_1;
     case SDL_CONTROLLER_AXIS_RIGHTX: return JOYSTICK_AXIS_2;
     case SDL_CONTROLLER_AXIS_RIGHTY: return JOYSTICK_AXIS_3;
+    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return JOYSTICK_AXIS_4;
+    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return JOYSTICK_AXIS_5;
     default:
         throw std::out_of_range("Invalid axis");
     }
@@ -149,7 +155,8 @@ void SDL2Window::check_events() {
 
             case SDL_JOYAXISMOTION:
                 input_state->_handle_joystick_axis_motion(
-                    event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis), float(event.jaxis.value) / 32768.0f
+                    event.jaxis.which, SDL_axis_to_simulant_axis(event.jaxis.axis),
+                    clamp(float(event.jaxis.value) / 32768.0f, -1.0f, 1.0f)
                 );
             break;
             case SDL_JOYBUTTONDOWN:
@@ -285,6 +292,14 @@ bool SDL2Window::create_window() {
      * die if it's not there! */
     if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
         L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
+    }
+
+    /* Load the game controller mappings */
+    auto rw_ops = SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
+    if(SDL_GameControllerAddMappingsFromRW(rw_ops, 0) < 0) {
+        L_WARN("Unable to load controller mappings!");
+    } else {
+        L_DEBUG("Successfully loaded SDL controller mappings");
     }
 
     int32_t flags = SDL_WINDOW_OPENGL;
