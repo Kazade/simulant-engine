@@ -207,6 +207,40 @@ public:
         assert_true(mesh_id == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
     }
 
+    void test_material_slots() {
+        auto mat1 = stage_->assets->new_material();
+        auto mat2 = stage_->assets->new_material();
+
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+
+        auto submesh = mesh->new_submesh_as_cube("cube", mat1, 1.0f);
+        submesh->set_material_at_slot(MATERIAL_SLOT1, mat2);
+
+        auto actor1 = stage_->new_actor_with_mesh(mesh);
+        auto actor2 = stage_->new_actor_with_mesh(mesh);
+        auto actor3 = stage_->new_actor_with_mesh(mesh);
+
+        actor2->use_material_slot(MATERIAL_SLOT1);
+        actor3->use_material_slot(MATERIAL_SLOT7);
+
+        auto camera = stage_->new_camera();
+        RenderableStore store;
+        auto factory = store.new_factory();
+
+        actor1->_get_renderables(factory, camera, DETAIL_LEVEL_NEAREST);
+        actor2->_get_renderables(factory, camera, DETAIL_LEVEL_NEAREST);
+        actor3->_get_renderables(factory, camera, DETAIL_LEVEL_NEAREST);
+
+        std::vector<Renderable> renderables;
+        factory->each_pushed([&](Renderable* renderable) {
+            renderables.push_back(*renderable);
+        });
+
+        assert_equal(renderables[0].material_id, mat1->id());
+        assert_equal(renderables[1].material_id, mat2->id());
+        assert_equal(renderables[2].material_id, mat1->id());
+    }
+
     // Skipped, currently fails
     void X_test_cubic_texture_generation() {
         auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
