@@ -88,12 +88,12 @@ public:
 
     void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel level) override;
 
-    void use_material_choice(MaterialChoice var) {
-        material_choice_ = var;
+    void use_material_slot(MaterialSlot var) {
+        material_slot_ = var;
     }
 
-    MaterialChoice active_material_choice() const {
-        return material_choice_;
+    MaterialSlot active_material_slot() const {
+        return material_slot_;
     }
 
 private:
@@ -125,7 +125,7 @@ private:
     RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
     MeshChangedCallback signal_mesh_changed_;
 
-    MaterialChoice material_choice_ = MATERIAL_CHOICE0;
+    MaterialSlot material_slot_ = MATERIAL_SLOT0;
 
     void update(float dt) override;
 

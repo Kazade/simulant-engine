@@ -28,16 +28,16 @@ private:
     virtual IndexData* get_index_data() const = 0;
 };
 
-enum MaterialChoice {
-    MATERIAL_CHOICE0,
-    MATERIAL_CHOICE1,
-    MATERIAL_CHOICE2,
-    MATERIAL_CHOICE3,
-    MATERIAL_CHOICE4,
-    MATERIAL_CHOICE5,
-    MATERIAL_CHOICE6,
-    MATERIAL_CHOICE7,
-    MATERIAL_CHOICE_MAX
+enum MaterialSlot {
+    MATERIAL_SLOT0,
+    MATERIAL_SLOT1,
+    MATERIAL_SLOT2,
+    MATERIAL_SLOT3,
+    MATERIAL_SLOT4,
+    MATERIAL_SLOT5,
+    MATERIAL_SLOT6,
+    MATERIAL_SLOT7,
+    MATERIAL_SLOT_MAX
 };
 
 class SubMesh :
@@ -55,10 +55,10 @@ public:
     virtual ~SubMesh();
 
     void set_material(MaterialPtr material);
-    void set_material_choice(MaterialChoice var, MaterialPtr material);
+    void set_material_at_slot(MaterialSlot var, MaterialPtr material);
 
     MaterialPtr material() const;
-    MaterialPtr material_choice(MaterialChoice var, bool fallback=false) const;
+    MaterialPtr material_at_slot(MaterialSlot var, bool fallback=false) const;
 
     MeshArrangement arrangement() const { return arrangement_; }
 
@@ -99,7 +99,7 @@ public:
     void each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb);
 
 public:
-    typedef sig::signal<void (SubMeshPtr, MaterialChoice, MaterialID, MaterialID)> MaterialChangedCallback;
+    typedef sig::signal<void (SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> MaterialChangedCallback;
 
     MaterialChangedCallback& signal_material_changed() {
         return signal_material_changed_;
@@ -113,7 +113,7 @@ private:
     Mesh* parent_;
     std::string name_;
 
-    std::array<MaterialPtr, MATERIAL_CHOICE_MAX> materials_;
+    std::array<MaterialPtr, MATERIAL_SLOT_MAX> materials_;
 
     MeshArrangement arrangement_;
 
