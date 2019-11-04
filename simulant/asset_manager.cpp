@@ -758,6 +758,21 @@ ParticleScriptPtr AssetManager::new_particle_script_from_file(const unicode& fil
     return ps;
 }
 
+ParticleScriptPtr AssetManager::new_particle_script_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
+    auto ps = new_particle_script_from_file(path, garbage_collect);
+    try {
+        particle_script_manager_.store_alias(alias, ps->id());
+    } catch(...) {
+        destroy_particle_script(ps->id());
+        throw;
+    }
+    return ps;
+}
+
+ParticleScriptPtr AssetManager::get_particle_script_with_alias(const std::string& alias) {
+    return particle_script_manager_.get_id_from_alias(alias).fetch();
+}
+
 void AssetManager::destroy_particle_script(ParticleScriptID id) {
     particle_script_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
 }
