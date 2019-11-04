@@ -174,9 +174,11 @@ void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width, uint32_
     image_height_ = stage->assets->texture(texture_id)->height();
 
     //Hold a reference to the new material
-    material_id_ = stage->assets->new_material_from_texture(texture_id);
-    stage->assets->mesh(mesh_id_)->set_material_id(material_id_);
-    material_id_.fetch()->set_blend_func(smlt::BLEND_ALPHA);
+    auto mat = stage->assets->new_material_from_texture(texture_id);
+    mat->set_blend_func(smlt::BLEND_ALPHA);
+
+    material_id_ = mat;
+    stage->assets->mesh(mesh_id_)->set_material(mat);
 
     update_texture_coordinates();
 }

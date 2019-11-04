@@ -181,7 +181,7 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
 
     SubMesh* target = result->new_submesh_with_material(
         submesh->name(),
-        submesh->material_id(),
+        submesh->material(),
         submesh->arrangement()
     );
 

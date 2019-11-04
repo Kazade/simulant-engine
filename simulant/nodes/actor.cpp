@@ -200,7 +200,7 @@ SubActor::SubActor(const Actor &parent, std::shared_ptr<SubMesh> submesh):
     parent_(parent),
     submesh_(submesh) {
 
-    material_ = parent.stage->assets->material(submesh->material_id());
+    material_ = submesh->material();
 }
 
 SubActor::~SubActor() {
@@ -295,7 +295,7 @@ void Actor::_get_renderables(RenderableFactory* factory, CameraPtr camera, Detai
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();
         new_renderable.index_element_count = new_renderable.index_data->count();
-        new_renderable.material_id = submesh->material_id(); // FIXME: Override?
+        new_renderable.material_id = submesh->material_at_slot(material_slot_, true);
         new_renderable.centre = transformed_aabb().centre();
 
         factory->push_renderable(new_renderable);

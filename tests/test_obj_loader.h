@@ -20,9 +20,9 @@ public:
         smlt::MeshPtr m = mid.fetch();
 
         assert_equal(m->submesh_count(), 1u);
-        assert_true(m->first_submesh()->material_id());
+        assert_true(m->first_submesh()->material());
 
-        smlt::MaterialPtr mat = m->first_submesh()->material_id().fetch();
+        smlt::MaterialPtr mat = m->first_submesh()->material();
         assert_equal(mat->pass(0)->cull_mode(), opts.cull_mode);
     }
 };

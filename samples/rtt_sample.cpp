@@ -18,7 +18,7 @@ public:
         auto cube_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube_mesh->new_submesh_as_cube("cube", window->shared_assets->new_material(), 1.0);
 
-        auto mat = cube_mesh->first_submesh()->material_id().fetch();
+        auto mat = cube_mesh->first_submesh()->material();
         mat->set_diffuse_map(tid);
 
         cube_ = cube_stage_->new_actor_with_mesh(cube_mesh);
@@ -30,7 +30,7 @@ public:
         rect_->move_to_absolute(0, 0, -4);
 
         TextureID rtt = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
-        mat = rect_mesh->first_submesh()->material_id().fetch();
+        mat = rect_mesh->first_submesh()->material();
         mat->set_diffuse_map(rtt);
 
         window->render(cube_stage_->id(), cube_cam->id()).to_texture(rtt);

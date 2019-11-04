@@ -87,6 +87,15 @@ public:
     }
 
     void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel level) override;
+
+    void use_material_slot(MaterialSlot var) {
+        material_slot_ = var;
+    }
+
+    MaterialSlot active_material_slot() const {
+        return material_slot_;
+    }
+
 private:
     MeshPtr find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
@@ -115,6 +124,8 @@ private:
 
     RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
     MeshChangedCallback signal_mesh_changed_;
+
+    MaterialSlot material_slot_ = MATERIAL_SLOT0;
 
     void update(float dt) override;
 

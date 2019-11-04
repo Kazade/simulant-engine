@@ -30,7 +30,7 @@ void GeomCuller::compile() {
 
     /* Grab references to materials before releasing the mesh */
     mesh_->each_submesh([this](const std::string, SubMesh* submesh) {
-        material_refs_.push_back(mesh_->asset_manager().material(submesh->material_id()));
+        material_refs_.push_back(submesh->material());
     });
 }
 

@@ -86,7 +86,7 @@ void Skybox::generate(
             mat->set_depth_write_enabled(false);
             mat->set_depth_test_enabled(false);
 
-            sm->set_material_id(mat->id());
+            sm->set_material(mat);
         });
 
         auto up_path = manager_->window->vfs->locate_file(up);
@@ -100,7 +100,7 @@ void Skybox::generate(
         flags.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;
 
         auto set_texture = [](SubMesh* sm, TextureID tex) {
-            sm->material_id().fetch()->set_diffuse_map(tex);
+            sm->material()->set_diffuse_map(tex);
         };
 
         set_texture(mesh->submesh("top"), stage->assets->new_texture_from_file(up_path, flags));

@@ -143,7 +143,7 @@ public:
     void destroy_submesh(const std::string& name);
     void clear();
 
-    void set_material_id(MaterialID material); ///< Apply material to all submeshes
+    void set_material(MaterialPtr material); ///< Apply material to all submeshes
     void set_diffuse(const smlt::Colour& colour); ///< Override vertex colour on all vertices
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
@@ -174,7 +174,7 @@ public:
 
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshCreatedCallback;
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshDestroyedCallback;
-    typedef sig::signal<void (MeshID, SubMeshPtr, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+    typedef sig::signal<void (MeshID, SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
 
     SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
     SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }

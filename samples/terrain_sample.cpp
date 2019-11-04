@@ -70,7 +70,9 @@ public:
 
         cam->new_behaviour<smlt::behaviours::Fly>(window);
 
-        terrain_material_id_ = stage_->assets->new_material_from_file("sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER);
+        auto terrain_material = stage_->assets->new_material_from_file("sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER);
+        terrain_material_id_ = terrain_material;
+
         smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
@@ -86,12 +88,12 @@ public:
             terrain_mesh->vertex_data
         );
 
-        stage_->assets->material(terrain_material_id_)->pass(0)->set_property_value(
+        terrain_material->pass(0)->set_property_value(
             "textures[4]",
             terrain_splatmap
         );
 
-        terrain_mesh->set_material_id(terrain_material_id_);
+        terrain_mesh->set_material(terrain_material);
 
         terrain_actor_ = stage_->new_actor_with_mesh(terrain_mesh_id_);
 
