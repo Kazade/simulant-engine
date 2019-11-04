@@ -101,6 +101,7 @@ test:windows-x64-mingw:
   script:
    - cd ${TARGET}/debug/tests
    - ln -s ../simulant
+   - ln -s ../sample_data
    - wine simulant_tests.exe
   artifacts:
    paths:
