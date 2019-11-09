@@ -6,6 +6,10 @@
 #include "simulant/test.h"
 #include "simulant/nodes/camera.h"
 
+namespace {
+
+using namespace smlt;
+
 class MyObject;
 
 typedef smlt::default_init_ptr<MyObject> MyObjectPtr;
@@ -191,3 +195,5 @@ public:
         assert_equal(stage->sprites->new_sprite()->id(), sprite);
     }
 };
+
+}
