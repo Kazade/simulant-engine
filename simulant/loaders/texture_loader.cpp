@@ -28,6 +28,7 @@
 #include "../texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_FAILURE_USERMSG // Enable more verbose error messages
 #include "stb_image.h"
 
 namespace smlt {

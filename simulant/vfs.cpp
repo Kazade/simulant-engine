@@ -123,7 +123,7 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
 std::shared_ptr<std::istream> VirtualFileSystem::open_file(const unicode& filename) {
     unicode path = locate_file(filename);
 
-    std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode());
+    std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode(), std::ios::in | std::ios::binary);
     return file_in;
 }
 
