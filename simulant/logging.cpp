@@ -50,6 +50,9 @@ void StdIOHandler::do_write_message(Logger* logger,
                        const std::string& level,
                        const std::string& message) {
 
+    // We lock so that we don't get interleaved logging
+    std::lock_guard<std::mutex> g(lock_);
+
         if(level == "ERROR") {
 #ifndef __ANDROID__
             std::cerr << to_string(time) << " ERROR " << message << std::endl;

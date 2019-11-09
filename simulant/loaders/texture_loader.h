@@ -19,6 +19,8 @@
 #ifndef SIMULANT_TGA_LOADER_H
 #define SIMULANT_TGA_LOADER_H
 
+#include <mutex>
+
 #include "../loader.h"
 
 namespace smlt {
@@ -31,6 +33,8 @@ public:
 
 private:
     TextureLoadResult do_load(const std::vector<uint8_t> &buffer) override;
+
+    std::mutex lock_;
 };
 
 class TextureLoaderType : public LoaderType {

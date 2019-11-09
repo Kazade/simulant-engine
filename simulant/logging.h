@@ -9,6 +9,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
+#include <mutex>
 
 #include "compat.h"
 
@@ -113,6 +114,8 @@ private:
                        const DateTime& time,
                        const std::string& level,
                        const std::string& message) override;
+
+    std::mutex lock_;
 };
 
 class FileHandler : public Handler {
