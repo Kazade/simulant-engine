@@ -46,6 +46,9 @@ public:
         auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
         auto icon = stage_->ui->new_widget_as_image(simulant_logo);
         icon->move_to(window->coordinate_from_normalized(0.5, 0.58));
+
+        auto text = stage_->ui->new_widget_as_label("Some\ntext\nwith\nnewlines");
+        text->move_to(window->coordinate_from_normalized(0.75, 0.5));
     }
 
     void update(float dt) {
