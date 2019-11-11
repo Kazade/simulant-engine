@@ -56,22 +56,38 @@ std::pair<Vec2, Vec2> Font::texture_coordinates_for_character(char32_t ch) {
 }
 
 float Font::character_width(char32_t ch) {
+    if(ch < 32) {
+        return 0;
+    }
+
     auto *b = &char_data_.at(ch - 32);
     return b->x1 - b->x0;
 }
 
 float Font::character_height(char32_t ch) {    
+    if(ch < 32) {
+        return 0;
+    }
+
     auto *b = &char_data_.at(ch - 32);
     return b->y1 - b->y0;
 }
 
 float Font::character_advance(char32_t ch, char32_t next) {
+    if(ch < 32) {
+        return 0;
+    }
+
     // FIXME: Kerning!
     auto *b = &char_data_.at(ch - 32);
     return b->xadvance;
 }
 
 std::pair<float, float> Font::character_offset(char32_t ch) {
+    if(ch < 32) {
+        return std::make_pair(0, 0);
+    }
+
     auto *b = &char_data_.at(ch - 32);
 
     return std::make_pair(
