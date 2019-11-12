@@ -55,7 +55,8 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_2F,
     VERTEX_ATTRIBUTE_3F,
-    VERTEX_ATTRIBUTE_4F
+    VERTEX_ATTRIBUTE_4F,
+    VERTEX_ATTRIBUTE_4UB,
 };
 
 class VertexSpecification;
@@ -523,7 +524,8 @@ constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
     return round_to_bytes(
        (attr == VERTEX_ATTRIBUTE_2F) ? sizeof(float) * 2 :
        (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3 :
-       (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 : 0,
+       (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 :
+       (attr == VERTEX_ATTRIBUTE_4UB) ? sizeof(uint8_t) * 4 : 0,
         BUFFER_ATTRIBUTE_ALIGNMENT
     );
 }

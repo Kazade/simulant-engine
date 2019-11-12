@@ -212,7 +212,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     vertex_specification.position_attribute = VERTEX_ATTRIBUTE_3F;
     vertex_specification.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
     vertex_specification.normal_attribute = VERTEX_ATTRIBUTE_3F;
-    vertex_specification.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    vertex_specification.diffuse_attribute = VERTEX_ATTRIBUTE_4UB;
 
     // Rebuild the mesh from the loaded data
     mesh->reset(vertex_specification);

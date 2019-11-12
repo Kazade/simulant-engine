@@ -35,7 +35,7 @@ const VertexSpecification VertexSpecification::DEFAULT = {
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_4F,
+    VERTEX_ATTRIBUTE_4UB,
     VERTEX_ATTRIBUTE_NONE
 };
 
@@ -54,7 +54,7 @@ const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = {
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_4F
+    VERTEX_ATTRIBUTE_4UB
 };
 
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec) {
@@ -301,6 +301,18 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
     tex_coordX(3, u, v, w, x);
 }
 
+void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB);
+    uint8_t* out = (uint8_t*) &data_[cursor_offset() + vertex_specification_.diffuse_offset()];
+
+    /* We store unsigned bytes in bgra format internally as this is faster
+     * on some platforms (e.g. Dreamcast) */
+    out[0] = b;
+    out[1] = g;
+    out[2] = r;
+    out[3] = a;
+}
+
 void VertexData::diffuse(float r, float g, float b, float a) {
     assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
     Vec4* out = (Vec4*) &data_[cursor_offset() + vertex_specification_.diffuse_offset()];
@@ -308,7 +320,17 @@ void VertexData::diffuse(float r, float g, float b, float a) {
 }
 
 void VertexData::diffuse(const Colour& colour) {
-    diffuse(colour.r, colour.g, colour.b, colour.a);
+    if(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F) {
+        diffuse(colour.r, colour.g, colour.b, colour.a);
+    } else {
+        const float s = 255.0f;
+        diffuse(
+            (uint8_t) (colour.r * s),
+            (uint8_t) (colour.g * s),
+            (uint8_t) (colour.b * s),
+            (uint8_t) (colour.a * s)
+        );
+    }
 }
 
 void VertexData::move_to_start() {

@@ -315,11 +315,15 @@ void send_attribute(int32_t loc,
         auto attr_size = vertex_attribute_size(attr_for_type);
         auto stride = vertex_spec.stride();
 
+        auto type = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_UNSIGNED_BYTE : GL_FLOAT;
+        auto size = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_BGRA : attr_size / sizeof(float);
+        auto normalized = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_TRUE : GL_FALSE;
+
         GLCheck(glVertexAttribPointer,
             loc,
-            attr_size / sizeof(float),
-            GL_FLOAT,
-            GL_FALSE,
+            size,
+            type,
+            normalized,
             stride,
             BUFFER_OFFSET(global_offset + offset)
         );

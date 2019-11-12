@@ -105,15 +105,15 @@ public:
         data.position(0, 0, 0);
         data.tex_coord0(1, 1);
 
-        // sizeof(float) * 9 - but rounded to the nearest 16 byte boundary == 48
-        assert_equal(48u, data.data_size());
+        // sizeof(float) * 5 + sizeof(byte) * 4 - but rounded to the nearest 16 byte boundary == 32
+        assert_equal(32u, data.data_size());
         data.move_next();
         data.position(0, 0, 0);
         data.tex_coord0(2, 2);
         data.done();
 
-        // sizeof(float) * 18, but rounded to the nearest 16 byte boundary == 96
-        assert_equal(96u, data.data_size());
+        // sizeof(float) * 10 + sizeof(byte) * 8, but rounded to the nearest 16 byte boundary == 64
+        assert_equal(64u, data.data_size());
     }
 };
 
