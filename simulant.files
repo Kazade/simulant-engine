@@ -21,6 +21,7 @@ deps/libAL/samples/streaming/Makefile
 deps/libAL/samples/streaming/main.c
 deps/libgl/GL/config.h
 deps/libgl/GL/util.c
+deps/libgl/GL/util.c
 deps/libgl/Makefile
 deps/libgl/samples/Makefile
 deps/libgl/samples/blend_test/main.c
