@@ -482,9 +482,22 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     const auto has_normals = spec.has_normals();
     if(has_normals) {
         enable_normal_arrays();
+
+        auto type = (spec.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1UI) ?
+            GL_UNSIGNED_INT_2_10_10_10_REV : GL_FLOAT;
+
+        /*
+         * According to the ARB_vertex_type_2_10_10_10_rev extension, glNormalPointer
+         * should be able to handle GL_UNSIGNED_INT_2_10_10_10_REV. However Mesa3D throws
+         * a GL_INVALID_OPERATION if you attempt this (https://gitlab.freedesktop.org/mesa/mesa/issues/2111)
+         *
+         * So, don't try this on the desktop. The DEFAULT vertex specification only enables this on
+         * the Dreamcast so we can hit the GLdc fast rendering path by matching the PVR vertex size (32 bytes)
+         */
+
         GLCheck(
             glNormalPointer,
-            GL_FLOAT,
+            type,
             stride,
             ((const uint8_t*) vertex_data) + spec.normal_offset(false)
         );

@@ -233,28 +233,24 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
 
         vd->position(ox + -1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(0, 0);
-        vd->tex_coord1(0, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(1, 0);
-        vd->tex_coord1(1, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx,  oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(1, 1);
-        vd->tex_coord1(1, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(0, 1);
-        vd->tex_coord1(0, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, 0, z);
         vd->move_next();
@@ -284,28 +280,24 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->tex_coord1(0, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->tex_coord1(1, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->tex_coord1(1, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->tex_coord1(0, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(x, 0, 0);
         vd->move_next();
@@ -336,28 +328,24 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->tex_coord1(0, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx,  oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->tex_coord1(1, 0);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->tex_coord1(1, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->tex_coord1(0, 1);
         vd->diffuse(smlt::Colour::WHITE);
         vd->normal(0, y, 0);
         vd->move_next();

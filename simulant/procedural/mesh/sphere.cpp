@@ -76,7 +76,6 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
             submesh->vertex_data->position(pos);
             submesh->vertex_data->tex_coord0(u, v);
-            submesh->vertex_data->tex_coord1(u, v);
             submesh->vertex_data->normal(n);
             submesh->vertex_data->diffuse(smlt::Colour::WHITE);
             submesh->vertex_data->move_next();
@@ -88,7 +87,6 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
     submesh->vertex_data->position(pos);
     submesh->vertex_data->tex_coord0(u, v);
-    submesh->vertex_data->tex_coord1(u, v);
     submesh->vertex_data->diffuse(smlt::Colour::WHITE);
     submesh->vertex_data->move_next();
 
@@ -99,7 +97,6 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
     submesh->vertex_data->position(pos);
     submesh->vertex_data->tex_coord0(u, v);
-    submesh->vertex_data->tex_coord1(u, v);
     submesh->vertex_data->diffuse(smlt::Colour::WHITE);
     submesh->vertex_data->move_next();
 

@@ -315,8 +315,12 @@ void send_attribute(int32_t loc,
         auto attr_size = vertex_attribute_size(attr_for_type);
         auto stride = vertex_spec.stride();
 
-        auto type = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_UNSIGNED_BYTE : GL_FLOAT;
-        auto size = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_BGRA : attr_size / sizeof(float);
+        auto type = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_UNSIGNED_BYTE :
+                    (attr_for_type == VERTEX_ATTRIBUTE_PACKED_VEC4_1UI) ? GL_UNSIGNED_INT_2_10_10_10_REV : GL_FLOAT;
+
+        auto size = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_BGRA :
+                    (attr_for_type == VERTEX_ATTRIBUTE_PACKED_VEC4_1UI) ? 4 : attr_size / sizeof(float);
+
         auto normalized = (attr_for_type == VERTEX_ATTRIBUTE_4UB) ? GL_TRUE : GL_FALSE;
 
         GLCheck(glVertexAttribPointer,

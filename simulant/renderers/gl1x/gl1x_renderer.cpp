@@ -84,11 +84,13 @@ void GL1XRenderer::init_context() {
     const GLubyte* GL_vendor = glGetString(GL_VENDOR);
     const GLubyte* GL_renderer = glGetString(GL_RENDERER);
     const GLubyte* GL_version = glGetString(GL_VERSION);
+    const GLubyte* GL_extensions = glGetString(GL_EXTENSIONS);
 
     std::cout << "\n\nOpenGL Information:\n\n";
     std::cout << _F("\tVendor: {0}\n").format(GL_vendor);
     std::cout << _F("\tRenderer: {0}\n").format(GL_renderer);
     std::cout << _F("\tVersion: {0}\n\n").format(GL_version);
+    std::cout << _F("\tExtensions: {0}\n\n").format(GL_extensions);
 
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);

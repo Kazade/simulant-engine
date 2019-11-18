@@ -208,11 +208,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     assert(mesh && "Tried to load an MD2 file into something that wasn't a mesh");
 
-    VertexSpecification vertex_specification;
-    vertex_specification.position_attribute = VERTEX_ATTRIBUTE_3F;
-    vertex_specification.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    vertex_specification.normal_attribute = VERTEX_ATTRIBUTE_3F;
-    vertex_specification.diffuse_attribute = VERTEX_ATTRIBUTE_4UB;
+    VertexSpecification vertex_specification = VertexSpecification::DEFAULT;
 
     // Rebuild the mesh from the loaded data
     mesh->reset(vertex_specification);
