@@ -51,6 +51,8 @@ bool Background::init() {
         smlt::RENDER_PRIORITY_BACKGROUND + manager_->background_count()
     );
 
+    pipeline_->activate();
+
     return true;
 }
 

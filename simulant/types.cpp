@@ -73,33 +73,25 @@ VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
 }
 
 void VertexSpecification::recalc_stride_and_offsets() {
-    normal_offset_ = vertex_attribute_size(position_attribute_);
-    texcoord0_offset_ = normal_offset_ + vertex_attribute_size(normal_attribute_);
-    texcoord1_offset_ = texcoord0_offset_ + vertex_attribute_size(texcoord0_attribute_);
+    /* The order here is designed to match the Dreamcast PVR vertex (at least at the start)
+     * on the Dreamcast we add 4 bytes of padding at the end of the vertex
+     * so that the default vertex arrangement is 32 bytes. */
+
+    texcoord0_offset_ = position_offset_ + vertex_attribute_size(position_attribute_);
+    diffuse_offset_ = texcoord0_offset_ + vertex_attribute_size(texcoord0_attribute_);
+
+    normal_offset_ = diffuse_offset_ + vertex_attribute_size(diffuse_attribute_);
+    texcoord1_offset_ = normal_offset_ + vertex_attribute_size(normal_attribute_);
     texcoord2_offset_ = texcoord1_offset_ + vertex_attribute_size(texcoord1_attribute_);
     texcoord3_offset_ = texcoord2_offset_ + vertex_attribute_size(texcoord2_attribute_);
     texcoord4_offset_ = texcoord3_offset_ + vertex_attribute_size(texcoord3_attribute_);
     texcoord5_offset_ = texcoord4_offset_ + vertex_attribute_size(texcoord4_attribute_);
     texcoord6_offset_ = texcoord5_offset_ + vertex_attribute_size(texcoord5_attribute_);
     texcoord7_offset_ = texcoord6_offset_ + vertex_attribute_size(texcoord6_attribute_);
-    diffuse_offset_ = texcoord7_offset_ + vertex_attribute_size(texcoord7_attribute_);
-    specular_offset_ = diffuse_offset_ + vertex_attribute_size(diffuse_attribute_);
+    specular_offset_ = texcoord7_offset_ + vertex_attribute_size(texcoord7_attribute_);
 
-    stride_ = round_to_bytes(
-        vertex_attribute_size(position_attribute) +
-        vertex_attribute_size(normal_attribute) +
-        vertex_attribute_size(texcoord0_attribute) +
-        vertex_attribute_size(texcoord1_attribute) +
-        vertex_attribute_size(texcoord2_attribute) +
-        vertex_attribute_size(texcoord3_attribute) +
-        vertex_attribute_size(texcoord4_attribute) +
-        vertex_attribute_size(texcoord5_attribute) +
-        vertex_attribute_size(texcoord6_attribute) +
-        vertex_attribute_size(texcoord7_attribute) +
-        vertex_attribute_size(diffuse_attribute) +
-        vertex_attribute_size(specular_attribute),
-        BUFFER_STRIDE_ALIGNMENT
-    );
+    // On the Dreamcast with the default vertex arrangement, this should be 32 bytes
+    stride_ = round_to_bytes(specular_offset_ + vertex_attribute_size(specular_attribute_), BUFFER_STRIDE_ALIGNMENT);
 }
 
 uint16_t VertexSpecification::position_offset(bool check) const {

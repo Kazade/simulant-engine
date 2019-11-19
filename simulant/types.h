@@ -57,6 +57,7 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_3F,
     VERTEX_ATTRIBUTE_4F,
     VERTEX_ATTRIBUTE_4UB,
+    VERTEX_ATTRIBUTE_PACKED_VEC4_1UI // Packed 10, 10, 10, 2 vector
 };
 
 class VertexSpecification;
@@ -100,6 +101,7 @@ class VertexSpecification {
     VertexAttribute diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
 
+    uint16_t position_offset_ = 0;
     uint16_t normal_offset_ = 0;
     uint16_t texcoord0_offset_ = 0;
     uint16_t texcoord1_offset_ = 0;

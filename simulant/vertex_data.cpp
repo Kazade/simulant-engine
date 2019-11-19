@@ -24,18 +24,41 @@
 
 namespace smlt {
 
+// Adapted from here: https://github.com/mesa3d/mesa/blob/a5f618a291e67e74c56df235d45c3eb967ebb41f/src/mesa/main/image.c
+static inline uint32_t pack_vertex_attribute_vec4_1ui(float x, float y, float z, float w) {
+    return (((uint32_t) (x * 1023.0F)))
+        | (((uint32_t) (y * 1023.0F)) << 10)
+        | (((uint32_t) (z * 1023.0F)) << 20)
+        | (((uint32_t) (w * 3.0F)) << 30);
+}
+
+static inline Vec4 unpack_vertex_attribute_vec4_1ui(uint32_t p) {
+    Vec4 ret;
+    ret.x = ((p      ) & 0x3ff) * (1.0F / 1023.0F);
+    ret.y = ((p >> 10) & 0x3ff) * (1.0F / 1023.0F);
+    ret.z = ((p >> 20) & 0x3ff) * (1.0F / 1023.0F);
+    ret.w = ((p >> 30)        ) * (1.0F /    3.0F);
+    return ret;
+}
+
 const VertexSpecification VertexSpecification::DEFAULT = {
+    VERTEX_ATTRIBUTE_3F,  // Position
+#ifdef _arch_dreamcast
+    /* We enable this only on the Dreamcast as Mesa3D suffers a bug
+     * on Linux. But it's on the DC that this matters anyway */
+    VERTEX_ATTRIBUTE_PACKED_VEC4_1UI, // Normal
+#else
     VERTEX_ATTRIBUTE_3F,
-    VERTEX_ATTRIBUTE_3F,
-    VERTEX_ATTRIBUTE_2F,
-    VERTEX_ATTRIBUTE_2F,
+#endif
+    VERTEX_ATTRIBUTE_2F, // UV
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_4UB,
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_4UB, // Diffuse
     VERTEX_ATTRIBUTE_NONE
 };
 
@@ -185,9 +208,14 @@ Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
 }
 
 void VertexData::normal(float x, float y, float z) {
-    assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3* out = (Vec3*) &data_[cursor_offset() + vertex_specification_.normal_offset()];
-    *out = Vec3(x, y, z);
+    if(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F) {
+        Vec3* out = (Vec3*) &data_[cursor_offset() + vertex_specification_.normal_offset()];
+        *out = Vec3(x, y, z);
+    } else  {
+        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1UI);
+        uint32_t* packed = (uint32_t*) &data_[cursor_offset() + vertex_specification_.normal_offset()];
+        *packed = pack_vertex_attribute_vec4_1ui(x, y, z, 1);
+    }
 }
 
 void VertexData::normal(const Vec3 &n) {

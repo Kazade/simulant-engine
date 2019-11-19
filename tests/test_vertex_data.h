@@ -29,8 +29,8 @@ public:
         smlt::VertexData::ptr data = smlt::VertexData::create(spec);
 
         assert_equal(0, (int32_t) data->vertex_specification().position_offset());
-        assert_equal(sizeof(float) * 3, data->vertex_specification().normal_offset());
-        assert_equal(sizeof(float) * 6, data->vertex_specification().texcoord0_offset());
+        assert_equal(sizeof(float) * 3, data->vertex_specification().texcoord0_offset());
+        assert_equal(sizeof(float) * 5, data->vertex_specification().normal_offset());
     }
 
     void test_moving_cursor() {
