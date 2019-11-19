@@ -8,6 +8,7 @@
 #include "nodes/stage_node.h"
 #include "generic/manual_object.h"
 #include "types.h"
+#include "interfaces/nameable.h"
 
 namespace smlt {
 
@@ -17,7 +18,8 @@ class RenderableStore;
 class Pipeline:
     public TypedDestroyableObject<Pipeline, RenderSequence>,
     public RefCounted<Pipeline>,
-    public generic::Identifiable<PipelineID> {
+    public generic::Identifiable<PipelineID>,
+    public Nameable {
 
 public:
     Pipeline(PipelineID id,

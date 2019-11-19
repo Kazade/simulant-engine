@@ -50,6 +50,8 @@ public:
         return pipeline_;
     }
 
+    PipelineHelper set_name(const std::string& name);
+
 private:
     friend class PipelineHelperAPIInterface;
 
@@ -74,6 +76,8 @@ public:
     virtual PipelinePtr destroy_pipeline(PipelineID pid) = 0;
     virtual bool has_pipeline(PipelineID pid) const = 0;
     virtual bool is_pipeline_enabled(PipelineID pid) const = 0;
+
+    virtual PipelinePtr find_pipeline_with_name(const std::string& name) = 0;
 
 protected:
     PipelineHelper new_pipeline_helper(std::shared_ptr<RenderSequence> sequence, StageID stage, CameraID cam);

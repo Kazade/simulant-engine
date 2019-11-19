@@ -125,10 +125,20 @@ bool RenderSequence::has_pipeline(PipelineID pipeline) {
     return pipeline_manager_->contains(pipeline);
 }
 
+PipelinePtr RenderSequence::find_pipeline_with_name(const std::string& name) {
+    for(auto pipeline: pipeline_manager_->_each()) {
+        if(pipeline->name() == name) {
+            return pipeline;
+        }
+    }
+
+    return PipelinePtr();
+}
+
 void RenderSequence::sort_pipelines(bool acquire_lock) {
     auto do_sort = [&]() {
         ordered_pipelines_.sort(
-            [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
+                    [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
         );
     };
 

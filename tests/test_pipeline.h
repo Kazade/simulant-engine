@@ -24,6 +24,20 @@ public:
         window->destroy_pipeline(pipeline->id());
     }
 
+    void test_find_pipeline_with_name() {
+        auto p1 = window->render(stage, camera).set_name("pipeline1").as_pipeline();
+        auto p2 = window->render(stage, camera).set_name("pipeline2").as_pipeline();
+
+        auto found = window->find_pipeline_with_name("pipeline1");
+        assert_equal(p1->id(), found->id());
+
+        found = window->find_pipeline_with_name("pipeline2");
+        assert_equal(p2->id(), found->id());
+
+        found = window->find_pipeline_with_name("bananas");
+        assert_false(found);
+    }
+
     void test_detail_range_settings() {
 
         pipeline->set_detail_level_distances(

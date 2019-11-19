@@ -44,6 +44,11 @@ PipelineID PipelineHelper::id() const {
     return pipeline_->id();
 }
 
+PipelineHelper PipelineHelper::set_name(const std::string& name) {
+    pipeline_->set_name(name);
+    return *this;
+}
+
 smlt::PipelineHelper::operator PipelineID() const {
     return pipeline_->id();
 }

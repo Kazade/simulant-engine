@@ -66,6 +66,8 @@ public:
     void destroy_all_pipelines();
     bool has_pipeline(PipelineID pipeline);
 
+    PipelinePtr find_pipeline_with_name(const std::string& name);
+
     void activate_pipelines(const std::vector<PipelineID>& pipelines);
     std::vector<PipelineID> active_pipelines() const;
     void deactivate_all_pipelines();

@@ -690,6 +690,10 @@ bool Window::disable_pipeline(PipelineID pid) {
     return state != pipeline->is_active();
 }
 
+PipelinePtr Window::find_pipeline_with_name(const std::string& name) {
+    return render_sequence_->find_pipeline_with_name(name);
+}
+
 PipelinePtr Window::destroy_pipeline(PipelineID pid) {
     if(render_sequence_) {
         render_sequence_->destroy_pipeline(pid);
