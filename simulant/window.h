@@ -169,6 +169,7 @@ public:
     virtual PipelinePtr pipeline(PipelineID pid) override;
     virtual bool enable_pipeline(PipelineID pid) override;
     virtual bool disable_pipeline(PipelineID pid) override;
+    virtual PipelinePtr find_pipeline_with_name(const std::string &name) override;
 
     /* Delete a pipeline and return a nullptr so you can use the pattern
      * pipeline_ = destroy_pipeline(pipeline->id()) for safety

@@ -44,3 +44,15 @@ called `Scene::link_pipeline`. Once you link a `Pipeline` to a `Scene` it will a
 auto pipeline1 = window->render(stage, persp_camera).as_pipeline()
 link_pipeline(pipeline1); // pipeline1 will activate when this Scene is activated
 ```
+
+# Naming Pipelines
+
+Pipelines are `Nameable` meaning that you can set a name and then find them later by that name:
+
+```
+window->render(stage, camera).set_name("pipeline1");
+
+auto p1 = window->find_pipeline_with_name("pipeline1");
+```
+
+If there is no pipeline with that name, then you will get a null PipelinePtr returned.
