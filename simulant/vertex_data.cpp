@@ -390,10 +390,10 @@ void VertexData::diffuse(const Colour& colour) {
     } else {
         const float s = 255.0f;
         diffuse(
-            (uint8_t) (colour.r * s),
-            (uint8_t) (colour.g * s),
-            (uint8_t) (colour.b * s),
-            (uint8_t) (colour.a * s)
+            (uint8_t) clamp(colour.r * s, 0, 255),
+            (uint8_t) clamp(colour.g * s, 0, 255),
+            (uint8_t) clamp(colour.b * s, 0, 255),
+            (uint8_t) clamp(colour.a * s, 0, 255)
         );
     }
 }

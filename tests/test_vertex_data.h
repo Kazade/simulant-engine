@@ -33,6 +33,26 @@ public:
         assert_equal(sizeof(float) * 5, data->vertex_specification().normal_offset());
     }
 
+    void test_colours_dont_overflow() {
+        smlt::VertexSpecification spec = {
+            smlt::VERTEX_ATTRIBUTE_3F
+        };
+
+        spec.diffuse_attribute = smlt::VERTEX_ATTRIBUTE_4UB;
+
+        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        data->position(0, 0, 0);
+        data->diffuse(smlt::Colour(1.1, 1.1, 1.1, 1.1));
+        data->move_next();
+
+        uint8_t* colour = &(data->data()[spec.diffuse_offset()]);
+
+        assert_equal(colour[0], 255);
+        assert_equal(colour[1], 255);
+        assert_equal(colour[2], 255);
+        assert_equal(colour[3], 255);
+    }
+
     void test_moving_cursor() {
         smlt::VertexSpecification spec = {
             smlt::VERTEX_ATTRIBUTE_3F,
