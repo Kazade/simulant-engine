@@ -85,6 +85,9 @@ private:
 };
 
 
+typedef int16_t AttributeOffset;
+const static AttributeOffset INVALID_ATTRIBUTE_OFFSET = -1;
+
 class VertexSpecification {
     friend struct std::hash<VertexSpecification>;
 
@@ -101,18 +104,18 @@ class VertexSpecification {
     VertexAttribute diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
 
-    uint16_t position_offset_ = 0;
-    uint16_t normal_offset_ = 0;
-    uint16_t texcoord0_offset_ = 0;
-    uint16_t texcoord1_offset_ = 0;
-    uint16_t texcoord2_offset_ = 0;
-    uint16_t texcoord3_offset_ = 0;
-    uint16_t texcoord4_offset_ = 0;
-    uint16_t texcoord5_offset_ = 0;
-    uint16_t texcoord6_offset_ = 0;
-    uint16_t texcoord7_offset_ = 0;
-    uint16_t diffuse_offset_ = 0;
-    uint16_t specular_offset_ = 0;
+    AttributeOffset position_offset_ = 0;
+    AttributeOffset normal_offset_ = 0;
+    AttributeOffset texcoord0_offset_ = 0;
+    AttributeOffset texcoord1_offset_ = 0;
+    AttributeOffset texcoord2_offset_ = 0;
+    AttributeOffset texcoord3_offset_ = 0;
+    AttributeOffset texcoord4_offset_ = 0;
+    AttributeOffset texcoord5_offset_ = 0;
+    AttributeOffset texcoord6_offset_ = 0;
+    AttributeOffset texcoord7_offset_ = 0;
+    AttributeOffset diffuse_offset_ = 0;
+    AttributeOffset specular_offset_ = 0;
 
 public:
     static const VertexSpecification DEFAULT;
@@ -265,21 +268,21 @@ public:
     bool has_diffuse() const { return bool(diffuse_attribute_); }
     bool has_specular() const { return bool(specular_attribute_); }
 
-    uint16_t position_offset(bool check=true) const;
-    uint16_t normal_offset(bool check=true) const;
-    uint16_t texcoord0_offset(bool check=true) const;
-    uint16_t texcoord1_offset(bool check=true) const;
-    uint16_t texcoord2_offset(bool check=true) const;
-    uint16_t texcoord3_offset(bool check=true) const;
-    uint16_t texcoord4_offset(bool check=true) const;
-    uint16_t texcoord5_offset(bool check=true) const;
-    uint16_t texcoord6_offset(bool check=true) const;
-    uint16_t texcoord7_offset(bool check=true) const;
+    AttributeOffset position_offset(bool check=true) const;
+    AttributeOffset normal_offset(bool check=true) const;
+    AttributeOffset texcoord0_offset(bool check=true) const;
+    AttributeOffset texcoord1_offset(bool check=true) const;
+    AttributeOffset texcoord2_offset(bool check=true) const;
+    AttributeOffset texcoord3_offset(bool check=true) const;
+    AttributeOffset texcoord4_offset(bool check=true) const;
+    AttributeOffset texcoord5_offset(bool check=true) const;
+    AttributeOffset texcoord6_offset(bool check=true) const;
+    AttributeOffset texcoord7_offset(bool check=true) const;
 
-    uint16_t texcoordX_offset(uint8_t which, bool check=true) const;
+    AttributeOffset texcoordX_offset(uint8_t which, bool check=true) const;
 
-    uint16_t diffuse_offset(bool check=true) const;
-    uint16_t specular_offset(bool check=true) const;
+    AttributeOffset diffuse_offset(bool check=true) const;
+    AttributeOffset specular_offset(bool check=true) const;
 
 private:
     friend class VertexAttributeProperty;

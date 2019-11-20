@@ -208,12 +208,20 @@ Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
 }
 
 void VertexData::normal(float x, float y, float z) {
+    auto offset = vertex_specification_.normal_offset();
+
+    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+        return;
+    }
+
+    uint8_t* ptr = (uint8_t*) &data_[cursor_offset() + offset];
+
     if(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F) {
-        Vec3* out = (Vec3*) &data_[cursor_offset() + vertex_specification_.normal_offset()];
+        Vec3* out = (Vec3*) ptr;
         *out = Vec3(x, y, z);
     } else  {
         assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1UI);
-        uint32_t* packed = (uint32_t*) &data_[cursor_offset() + vertex_specification_.normal_offset()];
+        uint32_t* packed = (uint32_t*) ptr;
         *packed = pack_vertex_attribute_vec4_1ui(x, y, z, 1);
     }
 }
@@ -223,19 +231,34 @@ void VertexData::normal(const Vec3 &n) {
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v) {
-    uint32_t offset = vertex_specification_.texcoordX_offset(which);
+    auto offset = vertex_specification_.texcoordX_offset(which);
+
+    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+        return;
+    }
+
     Vec2* out = (Vec2*) &data_[cursor_offset() + offset];
     *out = Vec2(u, v);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
-    uint32_t offset = vertex_specification_.texcoordX_offset(which);
+    auto offset = vertex_specification_.texcoordX_offset(which);
+
+    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+        return;
+    }
+
     Vec3* out = (Vec3*) &data_[cursor_offset() + offset];
     *out = Vec3(u, v, w);
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
-    uint32_t offset = vertex_specification_.texcoordX_offset(which);
+    auto offset = vertex_specification_.texcoordX_offset(which);
+
+    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+        return;
+    }
+
     Vec4* out = (Vec4*) &data_[cursor_offset() + offset];
     *out = Vec4(u, v, w, x);
 }
@@ -331,7 +354,14 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 
 void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB);
-    uint8_t* out = (uint8_t*) &data_[cursor_offset() + vertex_specification_.diffuse_offset()];
+    auto offset = vertex_specification_.diffuse_offset();
+
+    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+        return;
+    }
+
+
+    uint8_t* out = (uint8_t*) &data_[cursor_offset() + offset];
 
     /* We store unsigned bytes in bgra format internally as this is faster
      * on some platforms (e.g. Dreamcast) */
@@ -343,7 +373,14 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 
 void VertexData::diffuse(float r, float g, float b, float a) {
     assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4* out = (Vec4*) &data_[cursor_offset() + vertex_specification_.diffuse_offset()];
+
+    auto offset = vertex_specification_.diffuse_offset();
+
+    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+        return;
+    }
+
+    Vec4* out = (Vec4*) &data_[cursor_offset() + offset];
     *out = Vec4(r, g, b, a);
 }
 
