@@ -94,57 +94,57 @@ void VertexSpecification::recalc_stride_and_offsets() {
     stride_ = round_to_bytes(specular_offset_ + vertex_attribute_size(specular_attribute_), BUFFER_STRIDE_ALIGNMENT);
 }
 
-uint16_t VertexSpecification::position_offset(bool check) const {
-    if(check && !has_positions()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::position_offset(bool check) const {
+    if(check && !has_positions()) { return INVALID_ATTRIBUTE_OFFSET; }
     return 0;
 }
 
-uint16_t VertexSpecification::normal_offset(bool check) const {
-    if(check && !has_normals()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::normal_offset(bool check) const {
+    if(check && !has_normals()) { return INVALID_ATTRIBUTE_OFFSET; }
     return normal_offset_;
 }
 
-uint16_t VertexSpecification::texcoord0_offset(bool check) const {
-    if(check && !has_texcoord0()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord0_offset(bool check) const {
+    if(check && !has_texcoord0()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord0_offset_;
 }
 
-uint16_t VertexSpecification::texcoord1_offset(bool check) const {
-    if(check && !has_texcoord1()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord1_offset(bool check) const {
+    if(check && !has_texcoord1()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord1_offset_;
 }
 
-uint16_t VertexSpecification::texcoord2_offset(bool check) const {
-    if(check && !has_texcoord2()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord2_offset(bool check) const {
+    if(check && !has_texcoord2()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord2_offset_;
 }
 
-uint16_t VertexSpecification::texcoord3_offset(bool check) const {
-    if(check && !has_texcoord3()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord3_offset(bool check) const {
+    if(check && !has_texcoord3()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord3_offset_;
 }
 
-uint16_t VertexSpecification::texcoord4_offset(bool check) const {
-    if(check && !has_texcoord4()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord4_offset(bool check) const {
+    if(check && !has_texcoord4()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord4_offset_;
 }
 
-uint16_t VertexSpecification::texcoord5_offset(bool check) const {
-    if(check && !has_texcoord5()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord5_offset(bool check) const {
+    if(check && !has_texcoord5()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord5_offset_;
 }
 
-uint16_t VertexSpecification::texcoord6_offset(bool check) const {
-    if(check && !has_texcoord6()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord6_offset(bool check) const {
+    if(check && !has_texcoord6()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord6_offset_;
 }
 
-uint16_t VertexSpecification::texcoord7_offset(bool check) const {
-    if(check && !has_texcoord7()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::texcoord7_offset(bool check) const {
+    if(check && !has_texcoord7()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord7_offset_;
 }
 
-uint16_t VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
+AttributeOffset VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
     assert(which < MAX_TEXTURE_UNITS);
 
     switch(which) {
@@ -161,13 +161,13 @@ uint16_t VertexSpecification::texcoordX_offset(uint8_t which, bool check) const 
     }
 }
 
-uint16_t VertexSpecification::diffuse_offset(bool check) const {
-    if(check && !has_diffuse()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::diffuse_offset(bool check) const {
+    if(check && !has_diffuse()) { return INVALID_ATTRIBUTE_OFFSET; }
     return diffuse_offset_;
 }
 
-uint16_t VertexSpecification::specular_offset(bool check) const {
-    if(check && !has_specular()) { throw std::logic_error("No such attribute"); }
+AttributeOffset VertexSpecification::specular_offset(bool check) const {
+    if(check && !has_specular()) { return INVALID_ATTRIBUTE_OFFSET; }
     return specular_offset_;
 }
 
