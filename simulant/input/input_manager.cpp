@@ -45,6 +45,13 @@ InputManager::InputManager(InputState *controller):
     fire2_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
     fire2_js->set_positive_joystick_button(JoystickButtonID(1));
 
+    auto start = new_axis("Start");
+    start->set_positive_keyboard_key(KEYBOARD_CODE_RETURN);
+
+    auto start_js = new_axis("Start");
+    start_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
+    start_js->set_positive_joystick_button(JoystickButtonID(9)); // Hopefully this value is consistent...
+
     auto mouse_x = new_axis("MouseX");
     mouse_x->set_type(AXIS_TYPE_MOUSE_AXIS);
     mouse_x->set_mouse_axis(MOUSE_AXIS_0);
