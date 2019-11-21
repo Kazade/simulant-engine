@@ -174,6 +174,9 @@ void RenderSequence::set_renderer(Renderer* renderer) {
 void RenderSequence::run() {
     targets_rendered_this_frame_.clear();
 
+    /* Perform any pre-rendering tasks */
+    renderer_->pre_render();
+
     int actors_rendered = 0;
     for(PipelinePtr pipeline: ordered_pipelines_) {
         run_pipeline(pipeline, actors_rendered);

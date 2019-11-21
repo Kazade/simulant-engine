@@ -501,14 +501,7 @@ void Texture::clean_up() {
 }
 
 void Texture::update(float dt) {
-    // Must only be called on the main thread as the renderer may do GL things
-    assert(GLThreadCheck::is_current());
 
-    // Should have been registered by now
-    assert(renderer_->is_texture_registered(id()));
-
-    // Make sure that the renderer is aware of any changes
-    renderer_->prepare_texture(id());
 }
 
 bool Texture::has_mipmaps() const {
