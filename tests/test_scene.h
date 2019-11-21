@@ -74,6 +74,7 @@ public:
         manager_->register_scene<TestScene>("main");
 
         manager_->activate("main");
+        window->signal_post_idle()();
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         scr->set_destroy_on_unload(false); //Don't destroy on unload
@@ -84,6 +85,7 @@ public:
         assert_false(scr->unload_called);
 
         manager_->activate("main"); //activateing to the same place should do nothing
+        window->signal_post_idle()();
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -91,7 +93,14 @@ public:
         assert_false(scr->unload_called);
 
         manager_->register_scene<TestScene>("/test");
+
+        auto initial = window->signal_post_idle().connection_count();
         manager_->activate("/test");
+        assert_equal(window->signal_post_idle().connection_count(), initial + 1);
+        window->signal_post_idle()();
+
+        // Check that we disconnect the activate signal
+        assert_equal(window->signal_post_idle().connection_count(), initial);
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);

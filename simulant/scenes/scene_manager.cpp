@@ -74,27 +74,47 @@ SceneBase::ptr SceneManager::active_scene() const {
 }
 
 void SceneManager::activate(const std::string& route, SceneChangeBehaviour behaviour) {
-    auto new_scene = get_or_create_route(route);
+    struct ConnectionHolder {
+        sig::connection conn;
+    };
 
-    if(new_scene == current_scene_) {
-        return;
-    }
+    auto holder = std::make_shared<ConnectionHolder>();
+    std::weak_ptr<SceneManager> _this = shared_from_this();
 
-    new_scene->_call_load();
+    auto do_activate = [this, _this, holder, route, behaviour]() {
+        /* Little bit of cleverness to check that the scene manager is still alive */
+        if(!_this.lock()) {
+            L_DEBUG(_F("Not activating {0} as SceneManager was destroyed").format(route));
+            holder->conn.disconnect();
+            return;
+        }
 
-    auto previous = current_scene_;
+        auto new_scene = get_or_create_route(route);
+        if(new_scene != current_scene_) {
+            new_scene->_call_load();
 
-    if(previous) {
-        previous->_call_deactivate();
-    }
+            auto previous = current_scene_;
 
-    std::swap(current_scene_, new_scene);
-    current_scene_->_call_activate();
+            if(previous) {
+                previous->_call_deactivate();
+            }
 
-    if(previous && behaviour == SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
-        // If requested, we unload the previous scene once the new on is active
-        unload(previous->name());
-    }
+            std::swap(current_scene_, new_scene);
+            current_scene_->_call_activate();
+
+            if(previous && behaviour == SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
+                // If requested, we unload the previous scene once the new on is active
+                unload(previous->name());
+            }
+        }
+
+        holder->conn.disconnect();
+    };
+
+    /* Little bit of trickery here. We want to activate the scene after idle tasks
+     * have run, but then we want to immediately disconnect. So we pass the connection
+     * wrapped in a shared_ptr which has been bound to the lambda */
+    holder->conn = window_->signal_post_idle().connect(do_activate);
 }
 
 void SceneManager::load(const std::string& route) {
