@@ -268,6 +268,11 @@ bool Window::_init() {
     render_sequence_ = std::make_shared<RenderSequence>(this);
 
     if(result && !initialized_) {
+        /* Swap buffers immediately after creation, this makes sure that
+         * on platforms like the Dreamcast we definitely clear to black before
+         * spending time loading anything */
+        swap_buffers();
+
         //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
