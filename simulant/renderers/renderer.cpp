@@ -41,14 +41,18 @@ bool Renderer::is_texture_registered(TextureID texture_id) const {
     return texture_registry_.count(texture_id);
 }
 
-void Renderer::prepare_texture(TextureID texture_id) {
-    if(is_texture_registered(texture_id)) {
-        read_lock<shared_mutex> lock(texture_registry_mutex_);
-        auto tex = texture_registry_.at(texture_id).lock();
-        if(tex) {
-            on_texture_prepare(tex);
+void Renderer::pre_render() {
+    read_lock<shared_mutex> lock(texture_registry_mutex_);
+    for(auto wptr: texture_registry_){
+        if(auto ptr = wptr.second.lock()) {
+            prepare_texture(ptr);
         }
     }
+}
+
+void Renderer::prepare_texture(TexturePtr tex) {
+    assert(tex);
+    on_texture_prepare(tex);
 }
 
 

@@ -78,9 +78,11 @@ public:
      */
     bool is_texture_registered(TextureID texture_id) const;
 
-    void prepare_texture(TextureID texture_id);
+    void pre_render();
 
-private:    
+private:
+    void prepare_texture(TexturePtr texture);
+
     Window* window_ = nullptr;
 
     /*

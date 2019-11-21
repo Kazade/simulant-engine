@@ -113,7 +113,7 @@ protected:
 
 private:
     std::shared_ptr<Window> window_;
-    std::unique_ptr<SceneManager> scene_manager_;
+    std::shared_ptr<SceneManager> scene_manager_;
 
     bool initialized_ = false;
 
