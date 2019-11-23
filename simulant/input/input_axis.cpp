@@ -23,11 +23,11 @@ void InputAxis::set_negative_mouse_button(MouseButtonID button) {
     negative_mouse_button_ = button;
 }
 
-void InputAxis::set_positive_joystick_button(JoystickButtonID button) {
+void InputAxis::set_positive_joystick_button(JoystickButton button) {
     positive_joystick_button_ = button;
 }
 
-void InputAxis::set_negative_joystick_button(JoystickButtonID button) {
+void InputAxis::set_negative_joystick_button(JoystickButton button) {
     negative_joystick_button_ = button;
 }
 

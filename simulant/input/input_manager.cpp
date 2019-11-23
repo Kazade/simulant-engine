@@ -36,21 +36,21 @@ InputManager::InputManager(InputState *controller):
 
     auto fire1_js = new_axis("Fire1");
     fire1_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
-    fire1_js->set_positive_joystick_button(JoystickButtonID(0));
+    fire1_js->set_positive_joystick_button(JOYSTICK_BUTTON_A);
 
     auto fire2 = new_axis("Fire2");
     fire2->set_positive_keyboard_key(KEYBOARD_CODE_LALT);
 
     auto fire2_js = new_axis("Fire2");
     fire2_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
-    fire2_js->set_positive_joystick_button(JoystickButtonID(1));
+    fire2_js->set_positive_joystick_button(JOYSTICK_BUTTON_B);
 
     auto start = new_axis("Start");
     start->set_positive_keyboard_key(KEYBOARD_CODE_RETURN);
 
     auto start_js = new_axis("Start");
     start_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
-    start_js->set_positive_joystick_button(JoystickButtonID(9)); // Hopefully this value is consistent...
+    start_js->set_positive_joystick_button(JOYSTICK_BUTTON_START);
 
     auto mouse_x = new_axis("MouseX");
     mouse_x->set_type(AXIS_TYPE_MOUSE_AXIS);

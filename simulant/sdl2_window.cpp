@@ -168,10 +168,11 @@ void SDL2Window::check_events() {
                 );
             } break;
             case SDL_JOYBUTTONDOWN:
-                input_state->_handle_joystick_button_down(event.jbutton.which, event.jbutton.button);
+                // JoystickButton is consistent with SDL's SDL_GameControllerButton
+                input_state->_handle_joystick_button_down(event.jbutton.which, (JoystickButton) event.jbutton.button);
             break;
             case SDL_JOYBUTTONUP:
-                input_state->_handle_joystick_button_up(event.jbutton.which, event.jbutton.button);
+                input_state->_handle_joystick_button_up(event.jbutton.which, (JoystickButton) event.jbutton.button);
             break;
             case SDL_JOYHATMOTION:
                 input_state->_handle_joystick_hat_motion(event.jhat.which, event.jhat.hat, (HatPosition) event.jhat.value);

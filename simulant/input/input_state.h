@@ -61,7 +61,6 @@ typedef int8_t KeyboardID;
 typedef int8_t MouseID;
 typedef int8_t JoystickID;
 typedef int8_t MouseButtonID;
-typedef int8_t JoystickButtonID;
 typedef int8_t JoystickHatID;
 
 static const KeyboardID ALL_KEYBOARDS = -1;
@@ -97,8 +96,27 @@ enum JoystickHatAxis {
     JOYSTICK_HAT_AXIS_Y
 };
 
+enum JoystickButton {
+    JOYSTICK_BUTTON_INVALID = -1,
+    JOYSTICK_BUTTON_A,
+    JOYSTICK_BUTTON_B,
+    JOYSTICK_BUTTON_X,
+    JOYSTICK_BUTTON_Y,
+    JOYSTICK_BUTTON_BACK,
+    JOYSTICK_BUTTON_GUIDE,
+    JOYSTICK_BUTTON_START,
+    JOYSTICK_BUTTON_LEFT_STICK,
+    JOYSTICK_BUTTON_RIGHT_STICK,
+    JOYSTICK_BUTTON_LEFT_SHOULDER,
+    JOYSTICK_BUTTON_RIGHT_SHOULDER,
+    JOYSTICK_BUTTON_DPAD_UP,
+    JOYSTICK_BUTTON_DPAD_DOWN,
+    JOYSTICK_BUTTON_DPAD_LEFT,
+    JOYSTICK_BUTTON_DPAT_RIGHT,
+    JOYSTICK_BUTTON_MAX
+};
+
 const static std::size_t MAX_MOUSE_BUTTONS = 16u;
-const static std::size_t MAX_JOYSTICK_BUTTONS = 16u;
 const static std::size_t MAX_JOYSTICK_HATS = 4u;
 const static std::size_t MAX_DEVICE_TYPE_COUNT = 4u;
 
@@ -137,14 +155,7 @@ public:
         keyboard_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
     }
 
-    void _update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info) {
-        joystick_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
-        for(decltype(joystick_count_) i = 0; i < joystick_count_; ++i) {
-            joysticks_[i].button_count = device_info[i].button_count;
-            joysticks_[i].axis_count = device_info[i].axis_count;
-            joysticks_[i].hat_count = device_info[i].hat_count;
-        }
-    }
+    void _update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info);
 
     void _handle_key_down(KeyboardID keyboard_id, KeyboardCode code);
     void _handle_key_up(KeyboardID keyboard_id, KeyboardCode code);
@@ -156,19 +167,19 @@ public:
     // value must be a value between -1.0f and 1.0f!
     void _handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis axis, float value);
 
-    void _handle_joystick_button_down(JoystickID joypad_id, JoystickButtonID button_id);
-    void _handle_joystick_button_up(JoystickID joypad_id, JoystickButtonID button_id);
+    void _handle_joystick_button_down(JoystickID joypad_id, JoystickButton button);
+    void _handle_joystick_button_up(JoystickID joypad_id, JoystickButton button);
     void _handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position);
 
     // Public state accessor functions
     bool keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const;
 
-    bool mouse_button_state(MouseID mouse_id, JoystickButtonID button) const;
+    bool mouse_button_state(MouseID mouse_id, MouseButtonID button) const;
 
     float mouse_axis_state(MouseID mouse_id, MouseAxis axis) const;
     Vec2 mouse_position(MouseID mouse_id) const;
 
-    bool joystick_button_state(JoystickID joystick_id, JoystickButtonID button) const;
+    bool joystick_button_state(JoystickID joystick_id, JoystickButton button) const;
     float joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const;
     HatPosition joystick_hat_state(JoystickID joystick_id, JoystickHatID hat) const;
 
@@ -204,7 +215,7 @@ private:
         uint8_t axis_count = 0;
         uint8_t hat_count = 0;
 
-        std::array<bool, MAX_JOYSTICK_BUTTONS> buttons = {};
+        std::array<bool, JOYSTICK_BUTTON_MAX> buttons = {};
         std::array<float, JOYSTICK_AXIS_MAX> axises = {};
         std::array<HatPosition, MAX_JOYSTICK_HATS> hats = {};
     };

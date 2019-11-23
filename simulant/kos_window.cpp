@@ -88,6 +88,19 @@ void KOSWindow::probe_vmus() {
     }
 }
 
+static inline JoystickButton dc_button_to_simulant_button(uint16_t dc_button) {
+    auto ret = (dc_button == CONT_A) ? JOYSTICK_BUTTON_A :
+           (dc_button == CONT_B) ? JOYSTICK_BUTTON_B :
+           (dc_button == CONT_C) ? JOYSTICK_BUTTON_LEFT_SHOULDER :
+           (dc_button == CONT_X) ? JOYSTICK_BUTTON_X :
+           (dc_button == CONT_Y) ? JOYSTICK_BUTTON_Y :
+           (dc_button == CONT_Z) ? JOYSTICK_BUTTON_RIGHT_SHOULDER :
+           (dc_button == CONT_START) ? JOYSTICK_BUTTON_START :
+           JOYSTICK_BUTTON_INVALID;
+
+    assert(ret != JOYSTICK_BUTTON_INVALID);
+    return ret;
+}
 
 void KOSWindow::check_events() {
     probe_vmus();
@@ -105,7 +118,7 @@ void KOSWindow::check_events() {
         CONT_DPAD2_UP, CONT_DPAD2_DOWN, CONT_DPAD2_LEFT, CONT_DPAD2_RIGHT
     };
 
-    static std::array<uint16_t, MAX_CONTROLLERS> previous_controller_button_state = {{0, 0, 0, 0}};
+    static std::array<uint32_t, MAX_CONTROLLERS> previous_controller_button_state = {{0, 0, 0, 0}};
     static std::array<HatPosition, MAX_CONTROLLERS> previous_hat1_state = {
         {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
     };
@@ -157,17 +170,18 @@ void KOSWindow::check_events() {
                 // Check the current button state against the previous one
                 // and update the input controller appropriately
                 for(auto button: CONTROLLER_BUTTONS) {
-                    if((button_state & button) && !(prev_state & button)) {
+                    bool prev = prev_state & button;
+                    bool curr = button_state & button;
+
+                    if(!prev && curr) {
                         // Button down
                         input_state->_handle_joystick_button_down(
-                            i, button
+                            i, dc_button_to_simulant_button(button)
                         );
-                    }
-
-                    if(!(button_state & button) && (prev_state & button)) {
+                    } else if(prev && !curr) {
                         // Button up
                         input_state->_handle_joystick_button_up(
-                            i, button
+                            i, dc_button_to_simulant_button(button)
                         );
                     }
                 }
