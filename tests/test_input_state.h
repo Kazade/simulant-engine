@@ -97,13 +97,13 @@ public:
 
         controller_->_update_joystick_devices(joysticks);
 
-        controller_->_handle_joystick_button_down(0, 0);
+        controller_->_handle_joystick_button_down(0, JOYSTICK_BUTTON_A);
 
-        assert_true(controller_->joystick_button_state(0, 0));
+        assert_true(controller_->joystick_button_state(0, JOYSTICK_BUTTON_A));
 
-        controller_->_handle_joystick_button_up(0, 0);
+        controller_->_handle_joystick_button_up(0, JOYSTICK_BUTTON_A);
 
-        assert_false(controller_->joystick_button_state(0, 0));
+        assert_false(controller_->joystick_button_state(0, JOYSTICK_BUTTON_A));
     }
 
     void test_mouse_axis_input() {

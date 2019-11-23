@@ -70,17 +70,17 @@ void InputState::_handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis
     }
 }
 
-void InputState::_handle_joystick_button_down(JoystickID joypad_id, JoystickButtonID button_id) {
+void InputState::_handle_joystick_button_down(JoystickID joypad_id, JoystickButton button) {
     if(joypad_id < joystick_count_) {
         auto& js = joysticks_[joypad_id];
-        js.buttons[button_id] = true;
+        js.buttons[button] = true;
     }
 }
 
-void InputState::_handle_joystick_button_up(JoystickID joypad_id, JoystickButtonID button_id) {
+void InputState::_handle_joystick_button_up(JoystickID joypad_id, JoystickButton button) {
     if(joypad_id < joystick_count_) {
         auto& js = joysticks_[joypad_id];
-        js.buttons[button_id] = false;
+        js.buttons[button] = false;
     }
 }
 
@@ -99,7 +99,7 @@ bool InputState::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) c
     return false;
 }
 
-bool InputState::mouse_button_state(MouseID mouse_id, JoystickButtonID button) const {
+bool InputState::mouse_button_state(MouseID mouse_id, MouseButtonID button) const {
     if(mouse_id < mouse_count_) {
         return mice_[mouse_id].buttons[button];
     }
@@ -107,7 +107,7 @@ bool InputState::mouse_button_state(MouseID mouse_id, JoystickButtonID button) c
     return false;
 }
 
-bool InputState::joystick_button_state(JoystickID joystick_id, JoystickButtonID button) const {
+bool InputState::joystick_button_state(JoystickID joystick_id, JoystickButton button) const {
     if(joystick_id < joystick_count_) {
         return joysticks_[joystick_id].buttons[button];
     }
@@ -155,6 +155,21 @@ void InputState::update(float dt) {
     if(virtual_joypad_) {
         virtual_joypad_->_update(dt);
     }*/
+}
+
+void InputState::_update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info) {
+    if(device_info.size() > joystick_count_) {
+        L_INFO(_F("{0} controllers connected").format(device_info.size() - joystick_count_));
+    } else if(device_info.size() < joystick_count_) {
+        L_INFO(_F("{0} controllers removed").format(joystick_count_ - device_info.size()));
+    }
+
+    joystick_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
+    for(decltype(joystick_count_) i = 0; i < joystick_count_; ++i) {
+        joysticks_[i].button_count = device_info[i].button_count;
+        joysticks_[i].axis_count = device_info[i].axis_count;
+        joysticks_[i].hat_count = device_info[i].hat_count;
+    }
 }
 
 void InputState::init_virtual_joypad() {

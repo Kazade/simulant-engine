@@ -37,10 +37,10 @@ public:
     void set_mouse_source(MouseID mouse);
     MouseID mouse_source() const { return mouse_source_; }
 
-    void set_positive_joystick_button(JoystickButtonID button);
-    void set_negative_joystick_button(JoystickButtonID button);
-    JoystickButtonID positive_joystick_button() const { return positive_joystick_button_; }
-    JoystickButtonID negative_joystick_button() const { return negative_joystick_button_; }
+    void set_positive_joystick_button(JoystickButton button);
+    void set_negative_joystick_button(JoystickButton button);
+    JoystickButton positive_joystick_button() const { return positive_joystick_button_; }
+    JoystickButton negative_joystick_button() const { return negative_joystick_button_; }
     void set_joystick_source(JoystickID joystick);
     JoystickID joystick_source() const { return joystick_source_; }
 
@@ -74,8 +74,8 @@ private:
     MouseButtonID negative_mouse_button_ = -1;
 
     JoystickID joystick_source_ = ALL_JOYSTICKS;
-    JoystickButtonID positive_joystick_button_ = -1;
-    JoystickButtonID negative_joystick_button_ = -1;
+    JoystickButton positive_joystick_button_ = JOYSTICK_BUTTON_INVALID;
+    JoystickButton negative_joystick_button_ = JOYSTICK_BUTTON_INVALID;
 
     MouseAxis mouse_axis_ = MOUSE_AXIS_0;
     JoystickAxis joystick_axis_ = JOYSTICK_AXIS_0;
