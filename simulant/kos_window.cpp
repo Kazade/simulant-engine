@@ -118,7 +118,7 @@ void KOSWindow::check_events() {
         CONT_DPAD2_UP, CONT_DPAD2_DOWN, CONT_DPAD2_LEFT, CONT_DPAD2_RIGHT
     };
 
-    static std::array<uint16_t, MAX_CONTROLLERS> previous_controller_button_state = {{0, 0, 0, 0}};
+    static std::array<uint32_t, MAX_CONTROLLERS> previous_controller_button_state = {{0, 0, 0, 0}};
     static std::array<HatPosition, MAX_CONTROLLERS> previous_hat1_state = {
         {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
     };
