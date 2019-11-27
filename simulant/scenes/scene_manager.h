@@ -64,7 +64,9 @@ public:
 
     bool is_loaded(const std::string& route) const;
     void reset();
+
     SceneBasePtr active_scene() const;
+    bool scene_queued_for_activation() const;
 
     template<typename T, typename... Args>
     void register_scene(const std::string& name, Args&&... args) {
@@ -106,6 +108,8 @@ private:
     std::unordered_map<std::string, SceneBasePtr> routes_;
 
     SceneBasePtr current_scene_;
+    int scenes_queued_for_activation_ = 0;
+
 
     SceneBasePtr get_or_create_route(const std::string& route);
 

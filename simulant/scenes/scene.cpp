@@ -51,12 +51,18 @@ void SceneBase::_call_unload() {
         return;
     }
 
+    _call_deactivate();
+
     is_loaded_ = false;
     unload();
     post_unload();
 }
 
 void SceneBase::_call_activate() {
+    if(is_active_) {
+        return;
+    }
+
     activate();
     is_active_ = true;
 
@@ -66,6 +72,10 @@ void SceneBase::_call_activate() {
 }
 
 void SceneBase::_call_deactivate() {
+    if(!is_active_) {
+        return;
+    }
+
     for(auto pid: linked_pipelines_) {
         window->pipeline(pid)->deactivate();
     }
