@@ -1,5 +1,8 @@
 
 #include "vec2.h"
+#include "vec3.h"
+#include "vec4.h"
+
 #include "../types.h"
 
 namespace smlt {
@@ -13,6 +16,14 @@ Vec2 Vec2::rotated_by(const Degrees& degrees) const {
         x * cosR - y * sinR,
         x * sinR - y * cosR
     );
+}
+
+Vec3 Vec2::xyz(float z) const {
+    return Vec3(x, y, z);
+}
+
+Vec4 Vec2::xyzw(float z, float w) const {
+    return Vec4(x, y, z, w);
 }
 
 

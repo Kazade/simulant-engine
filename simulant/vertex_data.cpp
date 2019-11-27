@@ -25,19 +25,39 @@
 namespace smlt {
 
 // Adapted from here: https://github.com/mesa3d/mesa/blob/a5f618a291e67e74c56df235d45c3eb967ebb41f/src/mesa/main/image.c
-static inline uint32_t pack_vertex_attribute_vec4_1ui(float x, float y, float z, float w) {
-    return (((uint32_t) (x * 1023.0F)))
-        | (((uint32_t) (y * 1023.0F)) << 10)
-        | (((uint32_t) (z * 1023.0F)) << 20)
-        | (((uint32_t) (w * 3.0F)) << 30);
+static uint32_t pack_vertex_attribute_vec3_1i(float x, float y, float z) {
+    const float w = 0.0f;
+
+    const uint32_t xs = x < 0;
+    const uint32_t ys = y < 0;
+    const uint32_t zs = z < 0;
+    const uint32_t ws = w < 0;
+
+    uint32_t vi =
+        ws << 31 | ((uint32_t)(w + (ws << 1)) & 1) << 30 |
+        zs << 29 | ((uint32_t)(z * 511 + (zs << 9)) & 511) << 20 |
+        ys << 19 | ((uint32_t)(y * 511 + (ys << 9)) & 511) << 10 |
+        xs << 9  | ((uint32_t)(x * 511 + (xs << 9)) & 511);
+
+    return vi;
 }
 
-static inline Vec4 unpack_vertex_attribute_vec4_1ui(uint32_t p) {
-    Vec4 ret;
-    ret.x = ((p      ) & 0x3ff) * (1.0F / 1023.0F);
-    ret.y = ((p >> 10) & 0x3ff) * (1.0F / 1023.0F);
-    ret.z = ((p >> 20) & 0x3ff) * (1.0F / 1023.0F);
-    ret.w = ((p >> 30)        ) * (1.0F /    3.0F);
+static Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
+    auto unpack = [](int i) -> float {
+        struct attr_bits_10 {
+            signed int x:10;
+        };
+
+        struct attr_bits_10 val;
+        val.x = i;
+        return (2.0F * (float)val.x + 1.0F) * (1.0F / 1023.0F);
+    };
+
+    Vec3 ret;
+    ret.x = unpack(p & 0x3ff);
+    ret.y = unpack((p >> 10) & 0x3ff);
+    ret.z = unpack((p >> 20) & 0x3ff);
+
     return ret;
 }
 
@@ -46,7 +66,7 @@ const VertexSpecification VertexSpecification::DEFAULT = {
 #ifdef _arch_dreamcast
     /* We enable this only on the Dreamcast as Mesa3D suffers a bug
      * on Linux. But it's on the DC that this matters anyway */
-    VERTEX_ATTRIBUTE_PACKED_VEC4_1UI, // Normal
+    VERTEX_ATTRIBUTE_PACKED_VEC4_1I, // Normal
 #else
     VERTEX_ATTRIBUTE_3F,
 #endif
@@ -190,8 +210,18 @@ const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const {
 
 template<>
 const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
-    return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
+    /* Warning, pointer may not be unique! */
+
+    if(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F) {
+        return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
+    } else {
+        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
+
+        static Vec3 ret; // This is mega nasty, need to rethink the pointer return
+        auto data = (uint32_t*) &data_[(idx * stride()) + vertex_specification_.normal_offset()];
+        ret = unpack_vertex_attribute_vec3_1i(*data);
+        return &ret;
+    }
 }
 
 Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
@@ -220,9 +250,9 @@ void VertexData::normal(float x, float y, float z) {
         Vec3* out = (Vec3*) ptr;
         *out = Vec3(x, y, z);
     } else  {
-        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1UI);
+        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
         uint32_t* packed = (uint32_t*) ptr;
-        *packed = pack_vertex_attribute_vec4_1ui(x, y, z, 1);
+        *packed = pack_vertex_attribute_vec3_1i(x, y, z);
     }
 }
 

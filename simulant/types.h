@@ -57,7 +57,7 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_3F,
     VERTEX_ATTRIBUTE_4F,
     VERTEX_ATTRIBUTE_4UB,
-    VERTEX_ATTRIBUTE_PACKED_VEC4_1UI // Packed 10, 10, 10, 2 vector
+    VERTEX_ATTRIBUTE_PACKED_VEC4_1I // Packed 10, 10, 10, 2 vector
 };
 
 class VertexSpecification;
@@ -530,7 +530,8 @@ constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
        (attr == VERTEX_ATTRIBUTE_2F) ? sizeof(float) * 2 :
        (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3 :
        (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 :
-       (attr == VERTEX_ATTRIBUTE_4UB) ? sizeof(uint8_t) * 4 : 0,
+       (attr == VERTEX_ATTRIBUTE_4UB) ? sizeof(uint8_t) * 4 :
+       (attr == VERTEX_ATTRIBUTE_PACKED_VEC4_1I) ? sizeof(uint32_t) : 0,
         BUFFER_ATTRIBUTE_ALIGNMENT
     );
 }

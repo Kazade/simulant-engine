@@ -15,6 +15,7 @@ struct Mat4;
 struct Degrees;
 struct Mat3;
 struct Mat4;
+struct Vec4;
 
 struct Vec3 {
 private:
@@ -237,6 +238,9 @@ public:
 
     Vec3 perpendicular() const;
     Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
+
+    Vec2 xy() const;
+    Vec4 xyzw(float w=1.0f) const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);

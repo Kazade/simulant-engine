@@ -483,7 +483,7 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     if(has_normals) {
         enable_normal_arrays();
 
-        auto type = (spec.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1UI) ?
+        auto type = (spec.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I) ?
             GL_UNSIGNED_INT_2_10_10_10_REV : GL_FLOAT;
 
         /*

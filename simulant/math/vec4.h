@@ -5,7 +5,7 @@
 
 namespace smlt {
 
-
+struct Vec2;
 struct Vec3;
 
 struct Vec4 {
@@ -74,6 +74,9 @@ struct Vec4 {
     Vec4 operator+(const Vec4& rhs) const {
         return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
     }
+
+    Vec3 xyz() const;
+    Vec2 xy() const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec4& vec);

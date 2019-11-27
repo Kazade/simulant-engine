@@ -56,6 +56,14 @@ Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
 
 }
 
+Vec2 Vec3::xy() const {
+    return Vec2(x, y);
+}
+
+Vec4 Vec3::xyzw(float w) const {
+    return Vec4(x, y, z, w);
+}
+
 Vec3 Vec3::operator*(const Quaternion &rhs) const {
     return rhs.rotate_vector(*this);
 }
