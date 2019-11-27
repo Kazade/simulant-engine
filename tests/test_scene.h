@@ -68,6 +68,21 @@ public:
         assert_false(manager_->has_scene("main"));
     }
 
+    void test_scenes_queued_for_activation() {
+        assert_false(manager_->scene_queued_for_activation());
+        manager_->register_scene<TestScene>("main");
+
+        assert_false(manager_->scene_queued_for_activation());
+        manager_->activate("main");
+        assert_true(manager_->scene_queued_for_activation());
+
+        manager_->activate("main");
+        assert_true(manager_->scene_queued_for_activation());
+
+        window->signal_post_idle()();
+        assert_false(manager_->scene_queued_for_activation());
+    }
+
     void test_activate() {
         assert_raises(std::logic_error, std::bind(&SceneManager::activate, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
 

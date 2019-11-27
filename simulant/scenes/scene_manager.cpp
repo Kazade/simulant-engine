@@ -109,12 +109,14 @@ void SceneManager::activate(const std::string& route, SceneChangeBehaviour behav
         }
 
         holder->conn.disconnect();
+        scenes_queued_for_activation_--;
     };
 
     /* Little bit of trickery here. We want to activate the scene after idle tasks
      * have run, but then we want to immediately disconnect. So we pass the connection
      * wrapped in a shared_ptr which has been bound to the lambda */
     holder->conn = window_->signal_post_idle().connect(do_activate);
+    scenes_queued_for_activation_++;
 }
 
 void SceneManager::load(const std::string& route) {
@@ -191,6 +193,10 @@ void SceneManager::reset() {
     }
     routes_.clear();
     scene_factories_.clear();
+}
+
+bool SceneManager::scene_queued_for_activation() const {
+    return scenes_queued_for_activation_ > 0;
 }
 
 }
