@@ -210,8 +210,18 @@ const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const {
 
 template<>
 const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F);
-    return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
+    /* Warning, pointer may not be unique! */
+
+    if(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F) {
+        return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
+    } else {
+        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
+
+        static Vec3 ret; // This is mega nasty, need to rethink the pointer return
+        auto data = (uint32_t*) &data_[(idx * stride()) + vertex_specification_.normal_offset()];
+        ret = unpack_vertex_attribute_vec3_1i(*data);
+        return &ret;
+    }
 }
 
 Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
