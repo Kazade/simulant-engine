@@ -546,7 +546,7 @@ IndexData::IndexData(IndexType type):
 void IndexData::each(std::function<void (uint32_t)> cb) {
     auto st = stride();
     for(std::size_t i = 0; i < indices_.size(); i += st) {
-        uint32_t v;
+        uint32_t v = 0;
         switch(index_type_) {
         case INDEX_TYPE_8_BIT:
             v = indices_[i];
@@ -557,6 +557,8 @@ void IndexData::each(std::function<void (uint32_t)> cb) {
         case INDEX_TYPE_32_BIT:
             v = *((uint32_t*)&indices_[i]);
             break;
+        default:
+            continue;
         }
 
         cb(v);

@@ -39,7 +39,7 @@ struct PackedBitField {
 
 #pragma pack(1)
 struct Common {
-    uint16_t line_height;
+    uint16_t line_height = 0;
     uint16_t base;
     uint16_t scale_w;
     uint16_t scale_h;
