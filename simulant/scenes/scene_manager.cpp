@@ -110,6 +110,7 @@ void SceneManager::activate(const std::string& route, SceneChangeBehaviour behav
 
         holder->conn.disconnect();
         scenes_queued_for_activation_--;
+        assert(scenes_queued_for_activation_ >= 0);
     };
 
     /* Little bit of trickery here. We want to activate the scene after idle tasks
