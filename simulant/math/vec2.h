@@ -5,6 +5,8 @@
 
 namespace smlt {
 
+struct Vec3;
+struct Vec4;
 struct Degrees;
 
 struct Vec2 {
@@ -94,6 +96,10 @@ struct Vec2 {
     unicode to_string() const {
         return _u("({0},{1})").format(x, y);
     }
+
+    Vec3 xyz(float z = 0.0f) const;
+
+    Vec4 xyzw(float z=0.0f, float w=1.0f) const;
 
     friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
     friend bool operator==(const Vec2& lhs, const Vec2& rhs);
