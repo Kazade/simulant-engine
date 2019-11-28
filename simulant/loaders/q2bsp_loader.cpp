@@ -527,14 +527,15 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     L_WARN("Finished loading Quake 2 BSP");
 
     mesh->vertex_data->done();
-    mesh->each_submesh([&](const std::string& name, SubMesh* submesh) {
+
+    for(auto submesh: mesh->each_submesh()) {
         //Delete empty submeshes
         if(!submesh->index_data->count()) {
-            mesh->destroy_submesh(name);
-            return;
+            mesh->destroy_submesh(submesh->name());
+            continue;
         }
         submesh->index_data->done();
-    });
+    }
 
     //FIXME: mark mesh as uncollected
 }

@@ -202,7 +202,10 @@ void Widget::render_text() {
         v.xyz.z += -0.001;
     }
 
-    auto sm = mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
+    auto sm = mesh_->find_submesh("text");
+    if(!sm) {
+        sm = mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
+    }
 
     float min_x = std::numeric_limits<float>::max();
     float min_y = std::numeric_limits<float>::max();
@@ -234,13 +237,67 @@ void Widget::render_text() {
     content_height_ = max_y - min_y;
 }
 
-void Widget::new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour) {
+void Widget::clear_mesh() {
+    /* We don't actually clear the mesh, because destroying/creating submeshes is wasteful */
+
+    mesh_->vertex_data->clear();
+    for(auto submesh: mesh_->each_submesh()) {
+        submesh->index_data->clear();
+    }
+}
+
+SubMeshPtr Widget::new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
-    float zindex = -0.001 * (10 - mesh_->submesh_count());
-    auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, zindex);
-    auto sm = mesh_->new_submesh_as_rectangle(name, mat_id, bounds.width(), bounds.height(), offset);
-    sm->set_diffuse(colour);
+
+    auto sm = mesh_->find_submesh(name);
+    if(!sm) {
+        sm = mesh_->new_submesh_with_material(name, mat_id, MESH_ARRANGEMENT_QUADS);
+        sm->set_diffuse(colour);
+    }
+
+    auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, 0);
+    auto width = bounds.width();
+    auto height = bounds.height();
+    auto x_offset = offset.x;
+    auto y_offset = offset.y;
+    auto z_offset = -0.001 * (10 - mesh_->submesh_count());
+
+    auto prev_count = mesh_->vertex_data->count();
+    mesh_->vertex_data->move_to_end();
+
+    mesh_->vertex_data->position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
+    mesh_->vertex_data->diffuse(colour);
+    mesh_->vertex_data->tex_coord0(0.0, 0.0);
+    mesh_->vertex_data->normal(0, 0, 1);
+    mesh_->vertex_data->move_next();
+
+    mesh_->vertex_data->position(x_offset + (width / 2.0), y_offset + (-height / 2.0), z_offset);
+    mesh_->vertex_data->diffuse(colour);
+    mesh_->vertex_data->tex_coord0(1.0, 0.0);
+    mesh_->vertex_data->normal(0, 0, 1);
+    mesh_->vertex_data->move_next();
+
+    mesh_->vertex_data->position(x_offset + (width / 2.0),  y_offset + (height / 2.0), z_offset);
+    mesh_->vertex_data->diffuse(colour);
+    mesh_->vertex_data->tex_coord0(1.0, 1.0);
+    mesh_->vertex_data->normal(0, 0, 1);
+    mesh_->vertex_data->move_next();
+
+    mesh_->vertex_data->position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), z_offset);
+    mesh_->vertex_data->diffuse(colour);
+    mesh_->vertex_data->tex_coord0(0.0, 1.0);
+    mesh_->vertex_data->normal(0, 0, 1);
+    mesh_->vertex_data->move_next();
+    mesh_->vertex_data->done();
+
+    sm->index_data->index(prev_count + 0);
+    sm->index_data->index(prev_count + 1);
+    sm->index_data->index(prev_count + 2);
+    sm->index_data->index(prev_count + 3);
+    sm->index_data->done();
+
+    return sm;
 }
 
 void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect) {
@@ -277,7 +334,7 @@ void Widget::rebuild() {
 
     assert(mesh_);
 
-    mesh_->clear();
+    clear_mesh();
 
     render_text();
 
@@ -306,20 +363,18 @@ void Widget::rebuild() {
 
     colour = background_colour_;
     colour.a *= opacity_;
-    new_rectangle("background", material_->id(), background_bounds, colour);
+    auto bg = new_rectangle("background", material_->id(), background_bounds, colour);
     if(has_background_image()) {
-        auto sm = mesh_->submesh("background");
-        sm->material()->pass(0)->set_diffuse_map(background_image_);
-        apply_image_rect(sm, background_image_.fetch(), background_image_rect_);
+        bg->material()->pass(0)->set_diffuse_map(background_image_);
+        apply_image_rect(bg, background_image_.fetch(), background_image_rect_);
     }
 
     colour = foreground_colour_;
     colour.a *= opacity_;
-    new_rectangle("foreground", material_->id(), foreground_bounds, colour);
+    auto fg = new_rectangle("foreground", material_->id(), foreground_bounds, colour);
     if(has_foreground_image()) {
-        auto sm = mesh_->submesh("foreground");
-        sm->material()->pass(0)->set_diffuse_map(foreground_image_);
-        apply_image_rect(sm, foreground_image_.fetch(), foreground_image_rect_);
+        fg->material()->pass(0)->set_diffuse_map(foreground_image_);
+        apply_image_rect(fg, foreground_image_.fetch(), foreground_image_rect_);
     }
 
     /* Apply anchoring */

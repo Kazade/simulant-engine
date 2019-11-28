@@ -66,6 +66,36 @@ public:
 
 typedef std::shared_ptr<MeshFrameData> MeshFrameDataPtr;
 
+
+class SubMeshIteratorPair {
+public:
+    typedef std::vector<std::shared_ptr<SubMesh>> container_type;
+    typedef typename container_type::iterator iterator_type;
+
+private:
+    /* We copy the container because submeshes are often
+     * altered in a loop, and as they're shared pointers
+     * we can copy the container and maintain the submeshes
+     * for the lifetime of the iterator */
+
+    friend class Mesh;
+    SubMeshIteratorPair(const container_type& container):
+        container_(container) {
+
+    }
+
+    container_type container_;
+
+public:
+    iterator_type begin() {
+        return container_.begin();
+    }
+
+    iterator_type end() {
+        return container_.end();
+    }
+};
+
 class Mesh :
     public virtual Boundable,
     public Asset,
@@ -136,8 +166,8 @@ public:
     );
 
     uint32_t submesh_count() const { return submeshes_.size(); }
-    bool has_submesh(const std::string& name) const { return submeshes_.count(name); }
-    SubMeshPtr submesh(const std::string& name);
+    bool has_submesh(const std::string& name) const;
+    SubMeshPtr find_submesh(const std::string& name) const;
     SubMeshPtr first_submesh() const;
 
     void destroy_submesh(const std::string& name);
@@ -152,9 +182,7 @@ public:
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform);
 
-    // DEPRECATED use each_submesh
-    void each(std::function<void (const std::string&, SubMeshPtr)> func) const;
-    void each_submesh(std::function<void (const std::string&, SubMeshPtr)> func) const;
+    SubMeshIteratorPair each_submesh() const;
 
     void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, MeshFrameDataPtr data);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
@@ -189,8 +217,7 @@ private:
     uint32_t animation_frames_ = 0;
     MeshFrameDataPtr animated_frame_data_;
 
-    std::unordered_map<std::string, std::shared_ptr<SubMesh>> submeshes_;
-    std::list<SubMeshPtr> ordered_submeshes_; // Ordered by insertion order
+    std::vector<std::shared_ptr<SubMesh>> submeshes_;
 
     SubMeshCreatedCallback signal_submesh_created_;
     SubMeshDestroyedCallback signal_submesh_destroyed_;

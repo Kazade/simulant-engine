@@ -35,11 +35,11 @@ OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth):
 
     /* Find the size of index we need to store all indices */
     IndexType type = INDEX_TYPE_8_BIT;
-    mesh->each([&](const std::string&, SubMesh* submesh) {
+    for(auto submesh: mesh->each_submesh()) {
         if(submesh->index_data->index_type() > type) {
             type = submesh->index_data->index_type();
         }
-    });
+    };
 
     index_type_ = type;
 }
@@ -58,7 +58,7 @@ void OctreeCuller::_compile() {
 
     Vec3 stash[3];
 
-    mesh_->each([&](const std::string&, SubMesh* submesh) {
+    for(auto submesh: mesh_->each_submesh()) {
         auto material_id = submesh->material();
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
@@ -80,7 +80,7 @@ void OctreeCuller::_compile() {
             indexes.index(b);
             indexes.index(c);
         });
-    });
+    }
 }
 
 static void node_visitor(OctreeCuller* _this, RenderableFactory* factory, CullerOctree::Node* node) {

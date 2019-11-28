@@ -247,11 +247,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
 
     std::vector<std::string> empty;
-    mesh->each_submesh([&empty](std::string name, SubMeshPtr submesh) {
+    for(auto submesh: mesh->each_submesh()) {
         if(!submesh->index_data->count()) {
-            empty.push_back(name);
+            empty.push_back(submesh->name());
         }
-    });
+    }
 
     for(auto& name: empty) {
         mesh->destroy_submesh(name);

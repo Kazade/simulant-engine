@@ -39,10 +39,10 @@ void triangulate(MeshPtr mesh, std::vector<Vec3> &vertices, std::vector<Triangle
         vertices.push_back(*mesh->vertex_data->position_at<Vec3>(i));
     }
 
-    auto process_submesh = [&](const std::string& name, SubMesh* submesh) {
+    for(auto submesh: mesh->each_submesh()) {
         uint32_t offset = 0;
 
-        auto indexes = PROCESSORS.at(submesh->arrangement())(submesh);
+        auto indexes = PROCESSORS.at(submesh->arrangement())(submesh.get());
 
         // Add the offset if necessary
         if(offset) {
@@ -61,10 +61,7 @@ void triangulate(MeshPtr mesh, std::vector<Vec3> &vertices, std::vector<Triangle
 
             triangles.push_back(new_tri);
         }
-    };
-
-    // Iterate the submeshes
-    mesh->each(process_submesh);
+    }
 }
 
 

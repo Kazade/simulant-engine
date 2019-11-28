@@ -52,7 +52,6 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     adjacency_.reset();
 
     submeshes_.clear();
-    ordered_submeshes_.clear();
 
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
@@ -61,33 +60,12 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 }
 
 Mesh::~Mesh() {
-    assert(ordered_submeshes_.size() == submeshes_.size());
     vertex_data_.reset();
-}
-
-void Mesh::each(std::function<void (const std::string &, SubMeshPtr)> func) const {
-    return each_submesh(func);
-}
-
-void Mesh::each_submesh(std::function<void (const std::string&, SubMesh*)> func) const {
-    assert(ordered_submeshes_.size() == submeshes_.size());
-
-    // Respect insertion order while iterating
-    // Copy array in case of deletions during iteration
-    auto to_iterate = this->ordered_submeshes_;
-
-    for(SubMesh* submesh: to_iterate) {
-        auto sm = submesh->shared_from_this();
-        if(sm) {
-            func(sm->name(), sm.get());
-        }
-    }
 }
 
 void Mesh::clear() {
     //Delete the submeshes and clear the shared data
     submeshes_.clear();
-    ordered_submeshes_.clear();
     vertex_data->clear();
     rebuild_aabb();
 }
@@ -122,7 +100,7 @@ void Mesh::rebuild_aabb() const {
     result.set_min(smlt::Vec3(max, max, max));
     result.set_max(smlt::Vec3(min, min, min));
 
-    each([&result](const std::string& name, SubMesh* mesh) {
+    for(auto mesh: submeshes_) {
         auto sm_min = mesh->aabb().min();
         auto sm_max = mesh->aabb().max();
 
@@ -133,7 +111,7 @@ void Mesh::rebuild_aabb() const {
         if(sm_max.x > result.max().x) result.set_max_x(sm_max.x);
         if(sm_max.y > result.max().y) result.set_max_y(sm_max.y);
         if(sm_max.z > result.max().z) result.set_max_z(sm_max.z);
-    });
+    }
 
     aabb_dirty_ = false;
 }
@@ -151,7 +129,7 @@ SubMesh* Mesh::new_submesh_with_material(
     MaterialID material,
     MeshArrangement arrangement, IndexType index_type) {
 
-    if(submeshes_.count(name)) {
+    if(has_submesh(name)) {
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
@@ -159,8 +137,8 @@ SubMesh* Mesh::new_submesh_with_material(
     assert(mat);
 
     auto new_submesh = SubMesh::create(this, name, mat, arrangement, index_type);
-    submeshes_.insert(std::make_pair(name, new_submesh));
-    ordered_submeshes_.push_back(new_submesh.get());
+    submeshes_.push_back(new_submesh);
+
     signal_submesh_created_(id(), new_submesh.get());
 
     // Mark the AABB as dirty so it will be rebuilt on next access
@@ -207,6 +185,10 @@ SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID ma
 
 SubMeshPtr Mesh::new_submesh_as_cube(const std::string& name, MaterialID material, float size) {
     return new_submesh_as_box(name, material, size, size, size);
+}
+
+bool Mesh::has_submesh(const std::string& name) const {
+    return bool(find_submesh(name));
 }
 
 SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, float width, float height, float depth, const Vec3& offset) {
@@ -434,11 +416,13 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
 }
 
 void Mesh::destroy_submesh(const std::string& name) {
-    auto it = submeshes_.find(name);
+    auto it = std::find_if(submeshes_.begin(), submeshes_.end(), [name](const std::shared_ptr<SubMesh>& i) {
+        return i->name() == name;
+    });
+
     if(it != submeshes_.end()) {
-        auto submesh = (*it).second;
+        auto submesh = (*it);
         submeshes_.erase(it);
-        ordered_submeshes_.remove(submesh.get());
         signal_submesh_destroyed_(id(), submesh.get());
         aabb_dirty_ = true;
     }
@@ -449,13 +433,14 @@ SubMesh* Mesh::first_submesh() const {
         return nullptr;
     }
 
-    return ordered_submeshes_.front();
+    return submeshes_.front().get();
 }
 
 void Mesh::set_material(MaterialPtr material) {
-    each([=](const std::string& name, SubMesh* mesh) {
-        mesh->set_material(material);
-    });
+
+    for(auto submesh: submeshes_) {
+        submesh->set_material(material);
+    }
 }
 
 void Mesh::transform_vertices(const smlt::Mat4& transform) {
@@ -474,6 +459,10 @@ void Mesh::transform_vertices(const smlt::Mat4& transform) {
         vertex_data->move_next();
     }
     vertex_data->done();
+}
+
+SubMeshIteratorPair Mesh::each_submesh() const {
+    return SubMeshIteratorPair(submeshes_);
 }
 
 void Mesh::set_diffuse(const smlt::Colour& colour) {
@@ -495,15 +484,18 @@ void Mesh::normalize() {
 }
 
 void Mesh::reverse_winding() {
-    each([=](const std::string& name, SubMesh* mesh) {
-        mesh->reverse_winding();
-    });
+    for(auto submesh: submeshes_) {
+        submesh->reverse_winding();
+    }
 }
 
-SubMesh* Mesh::submesh(const std::string& name) {
-    auto it = submeshes_.find(name);
+SubMesh* Mesh::find_submesh(const std::string& name) const {
+    auto it = std::find_if(submeshes_.begin(), submeshes_.end(), [name](const std::shared_ptr<SubMesh>& i) {
+        return i->name() == name;
+    });
+
     if(it != submeshes_.end()) {
-        return it->second.get();
+        return it->get();
     }
 
     return nullptr;
