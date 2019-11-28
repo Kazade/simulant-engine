@@ -49,8 +49,13 @@ void ProgressBar::refresh_pulse(float dt) {
 }
 
 void ProgressBar::refresh_fraction() {
-    fraction_ = value() / (max() - min());
-    rebuild();
+    auto new_fraction = value() / (max() - min());
+
+    // Don't update for tiny changes
+    if(std::abs(new_fraction - fraction_) > 0.01) {
+        fraction_ = new_fraction;
+        rebuild();
+    }
 }
 
 void ProgressBar::refresh_bar(float dt) {

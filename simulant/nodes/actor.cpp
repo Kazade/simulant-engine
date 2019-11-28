@@ -278,12 +278,7 @@ void Actor::_get_renderables(RenderableFactory* factory, CameraPtr camera, Detai
         return;
     }
 
-    mesh->each([&](const std::string& name, SubMesh* submesh) {
-        /*
-         * It's important that subactors hold a reference to their counterpart
-         * submesh. Otherwise if a thread destroys a submesh while rendering is happening
-         * we get random crashes. We called shared_from_this to keep the submesh around
-         */
+    for(auto submesh: mesh->each_submesh()) {
         Renderable new_renderable;
         new_renderable.final_transformation = absolute_transformation();
         new_renderable.render_priority = render_priority();
@@ -299,7 +294,7 @@ void Actor::_get_renderables(RenderableFactory* factory, CameraPtr camera, Detai
         new_renderable.centre = transformed_aabb().centre();
 
         factory->push_renderable(new_renderable);
-    });
+    }
 }
 
 

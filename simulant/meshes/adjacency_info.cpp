@@ -48,7 +48,7 @@ void AdjacencyInfo::rebuild() {
 
     auto size = mesh_->vertex_data->count();
 
-    mesh_->each([&](const std::string&, SubMeshPtr submesh) {
+    for(auto submesh: mesh_->each_submesh()) {
         if(!submesh->contributes_to_edge_list()) {
             // Ignore submeshes which don't contribute to the edge list
             return;
@@ -73,7 +73,7 @@ void AdjacencyInfo::rebuild() {
             edge_triangles.insert(std::make_pair(std::make_pair(b, c), a));
             edge_triangles.insert(std::make_pair(std::make_pair(c, a), b));
         });
-    });
+    }
 
     /*
        (0, 1) -> 2

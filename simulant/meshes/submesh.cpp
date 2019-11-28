@@ -11,8 +11,9 @@ namespace smlt {
 SubMesh::SubMesh(Mesh* parent, const std::string& name,
         MaterialPtr material, MeshArrangement arrangement, IndexType index_type):
     parent_(parent),
-    name_(name),
     arrangement_(arrangement) {
+
+    set_name(name);
 
     index_data_ = new IndexData(index_type);
 

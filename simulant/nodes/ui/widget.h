@@ -199,7 +199,8 @@ protected:
     virtual WidgetBounds calculate_foreground_size(float content_width, float content_height) const;
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
 
-    void new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour);
+    SubMeshPtr new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour);
+    void clear_mesh();
 
     bool is_initialized() const { return initialized_; }
 

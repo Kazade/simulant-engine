@@ -79,7 +79,7 @@ void Skybox::generate(
         mesh->reverse_winding();
 
         // Set the skybox material on all submeshes
-        mesh->each([&stage](const std::string&, SubMesh* sm) {
+        for(auto sm: mesh->each_submesh()) {
             auto mat = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
 
             // Disable depth writes and depth testing, but otherwise use the default texture_only material
@@ -87,7 +87,7 @@ void Skybox::generate(
             mat->set_depth_test_enabled(false);
 
             sm->set_material(mat);
-        });
+        }
 
         auto up_path = manager_->window->vfs->locate_file(up);
         auto down_path = manager_->window->vfs->locate_file(down);
@@ -103,12 +103,12 @@ void Skybox::generate(
             sm->material()->set_diffuse_map(tex);
         };
 
-        set_texture(mesh->submesh("top"), stage->assets->new_texture_from_file(up_path, flags));
-        set_texture(mesh->submesh("bottom"), stage->assets->new_texture_from_file(down_path, flags));
-        set_texture(mesh->submesh("left"), stage->assets->new_texture_from_file(left_path, flags));
-        set_texture(mesh->submesh("right"), stage->assets->new_texture_from_file(right_path, flags));
-        set_texture(mesh->submesh("front"), stage->assets->new_texture_from_file(front_path, flags));
-        set_texture(mesh->submesh("back"), stage->assets->new_texture_from_file(back_path, flags));
+        set_texture(mesh->find_submesh("top"), stage->assets->new_texture_from_file(up_path, flags));
+        set_texture(mesh->find_submesh("bottom"), stage->assets->new_texture_from_file(down_path, flags));
+        set_texture(mesh->find_submesh("left"), stage->assets->new_texture_from_file(left_path, flags));
+        set_texture(mesh->find_submesh("right"), stage->assets->new_texture_from_file(right_path, flags));
+        set_texture(mesh->find_submesh("front"), stage->assets->new_texture_from_file(front_path, flags));
+        set_texture(mesh->find_submesh("back"), stage->assets->new_texture_from_file(back_path, flags));
     }
 
     actor_->set_mesh(mesh_id_);

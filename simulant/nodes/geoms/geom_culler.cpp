@@ -29,9 +29,9 @@ void GeomCuller::compile() {
     compiled_ = true;
 
     /* Grab references to materials before releasing the mesh */
-    mesh_->each_submesh([this](const std::string, SubMesh* submesh) {
+    for(auto submesh: mesh_->each_submesh()) {
         material_refs_.push_back(submesh->material());
-    });
+    }
 }
 
 void GeomCuller::renderables_visible(const Frustum& frustum, RenderableFactory* factory) {

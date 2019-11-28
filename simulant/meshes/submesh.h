@@ -3,6 +3,7 @@
 #include "../interfaces/boundable.h"
 #include "../generic/property.h"
 #include "../generic/managed.h"
+#include "../interfaces/nameable.h"
 
 namespace smlt {
 
@@ -42,7 +43,8 @@ enum MaterialSlot {
 
 class SubMesh :
     public SubMeshInterface,
-    public RefCounted<SubMesh> {
+    public RefCounted<SubMesh>,
+    public Nameable {
 
 public:
     SubMesh(Mesh* parent,
@@ -73,8 +75,6 @@ public:
 
     VertexData* get_vertex_data() const;
     IndexData* get_index_data() const;
-
-    const std::string& name() const { return name_; }
 
     /* Goes through the indexes in this submesh and changes the diffuse colour of the vertices
      * they point to */
@@ -111,7 +111,6 @@ private:
     sig::connection material_change_connection_;
 
     Mesh* parent_;
-    std::string name_;
 
     std::array<MaterialPtr, MATERIAL_SLOT_MAX> materials_;
 
