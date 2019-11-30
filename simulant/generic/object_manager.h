@@ -121,8 +121,7 @@ public:
     bool contains(IDType id) const {
         std::lock_guard<std::recursive_mutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
-        auto it = objects_.find(id);
-        return (it != objects_.end());
+        return objects_.count(id) > 0;
     }
 
     void each(std::function<void (uint32_t, ObjectTypePtr)> callback) {
