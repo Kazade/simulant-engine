@@ -104,6 +104,7 @@ void Background::set_spritesheet(TextureID texture_id, float frame_width, float 
 
     auto mat = sprite_->material_id().fetch();
     mat->set_depth_write_enabled(false);
+    mat->set_blend_func(smlt::BLEND_NONE);
 }
 
 void Background::set_texture(TextureID texture_id) {
@@ -127,6 +128,7 @@ void Background::set_texture(TextureID texture_id) {
 
     auto mat = sprite_->material_id().fetch();
     mat->set_depth_write_enabled(false);
+    mat->set_blend_func(smlt::BLEND_NONE);
 }
 
 void Background::set_resize_style(BackgroundResizeStyle style) {
