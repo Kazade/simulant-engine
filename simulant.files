@@ -42,6 +42,14 @@ simulant/arg_parser.cpp
 simulant/arg_parser.h
 simulant/asset.cpp
 simulant/asset.h
+simulant/assets/materials/constants.h
+simulant/assets/materials/material_object.cpp
+simulant/assets/materials/material_object.h
+simulant/assets/materials/material_property.h
+simulant/assets/materials/material_property_registry.cpp
+simulant/assets/materials/material_property_registry.h
+simulant/assets/materials/material_property_type.cpp
+simulant/assets/materials/material_property_type.h
 simulant/assets/particle_script.cpp
 simulant/assets/particle_script.h
 simulant/assets/particles/colour_fader.h
