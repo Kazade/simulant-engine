@@ -25,7 +25,7 @@ public:
 
     /* Set the texture of the Image. By default the image will be sized to the
      * full size of the texture, all set_source_rect to use a subsection of the texture */
-    void set_texture_id(const TextureID& texture_id);
+    void set_texture(const TexturePtr& texture_id);
 
     /* Selects the source region of the texture to display in the image */
     void set_source_rect(const Vec2& bottom_left, const Vec2& size);

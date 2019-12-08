@@ -1,4 +1,5 @@
 #include "material_property_registry.h"
+#include "material_object.h"
 
 namespace smlt {
 
@@ -19,13 +20,18 @@ BlendType blend_type_from_name(const std::string &v) {
     }
 }
 
-MaterialPropertyID MaterialPropertyRegistry::find_property_id(const std::string& name) {
-    auto& it = std::find_if(
+MaterialPropertyRegistry::MaterialPropertyRegistry() {
+    registered_objects_.push_back(nullptr); // Always make room for the root object
+
+    register_all_builtin_properties();
+}
+
+MaterialPropertyID MaterialPropertyRegistry::find_property_id(const std::string& name) const {
+    auto it = std::find_if(
                 properties_.begin(),
                 properties_.end(), [&name](const MaterialProperty& i) -> bool {
         return i.name == name;
-    }
-    );
+    });
 
     if(it != properties_.end()) {
         return it->id;
@@ -34,9 +40,58 @@ MaterialPropertyID MaterialPropertyRegistry::find_property_id(const std::string&
     }
 }
 
-MaterialProperty* MaterialPropertyRegistry::property(MaterialPropertyID id) {
+const MaterialProperty* MaterialPropertyRegistry::property(MaterialPropertyID id) const {
     assert(id > 0);
     return &properties_[id - 1];
+}
+
+std::size_t MaterialPropertyRegistry::registered_material_object_count() const {
+    return std::count_if(
+        registered_objects_.begin(),
+        registered_objects_.end(),
+        [](MaterialObject* i) -> bool {
+            return i != nullptr;
+        }
+    );
+}
+
+void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
+    if(&rhs == this) return;
+
+    root_ = nullptr;
+    registered_objects_.clear();
+    registered_objects_.push_back(nullptr);
+
+    properties_ = rhs.properties_;
+
+    for(auto& prop: properties_) {
+        prop.default_value.registry_ = this;
+    }
+
+    rebuild_texture_properties();
+    rebuild_custom_properties();
+
+    material_ambient_id_ = rhs.material_ambient_id_;
+    material_diffuse_id_ = rhs.material_diffuse_id_;
+    material_specular_id_ = rhs.material_specular_id_;
+    material_shininess_id_ = rhs.material_shininess_id_;
+    diffuse_map_id_ = rhs.diffuse_map_id_;
+    specular_map_id_ = rhs.specular_map_id_;
+    light_map_id_ = rhs.light_map_id_;
+    normal_map_id_ = rhs.normal_map_id_;
+
+    blending_enabled_id_ = rhs.blending_enabled_id_;
+    texturing_enabled_id_ = rhs.texturing_enabled_id_;
+    lighting_enabled_id_ = rhs.lighting_enabled_id_;
+    depth_test_enabled_id_ = rhs.depth_test_enabled_id_;
+    depth_write_enabled_id_ = rhs.depth_write_enabled_id_;
+
+    shade_model_id_ = rhs.shade_model_id_;
+    cull_mode_id_ = rhs.cull_mode_id_;
+    polygon_mode_id_ = rhs.polygon_mode_id_;
+    point_size_id_ = rhs.point_size_id_;
+    colour_material_id_ = rhs.colour_material_id_;
+    blend_func_id_ = rhs.blend_func_id_;
 }
 
 void MaterialPropertyRegistry::register_all_builtin_properties() {
@@ -45,7 +100,7 @@ void MaterialPropertyRegistry::register_all_builtin_properties() {
     material_specular_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, Vec4(1, 1, 1, 1));
     material_shininess_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, 0.0f);
 
-    diffuse_map_id_ =register_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, TextureUnit());
+    diffuse_map_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, TextureUnit());
     light_map_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, LIGHT_MAP_PROPERTY, TextureUnit());
     normal_map_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, NORMAL_MAP_PROPERTY, TextureUnit());
     specular_map_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, SPECULAR_MAP_PROPERTY, TextureUnit());
@@ -82,23 +137,34 @@ void MaterialPropertyRegistry::register_all_builtin_properties() {
 }
 
 void MaterialPropertyRegistry::register_object(MaterialObject* obj, MaterialObjectType type) {
+    auto it = std::find(registered_objects_.begin(), registered_objects_.end(), obj);
+    if(it != registered_objects_.end()) {
+        return;
+    }
+
+    /* FIXME: Look for empty slots in the registered_objects array */
     if(type == MATERIAL_OBJECT_TYPE_ROOT) {
         assert(!root_);
         obj->object_id_ = 0;
         root_ = obj;
+        registered_objects_[0] = obj;
     } else {
-        obj->object_id_ = object_values_.size();
-        object_values_.push_back(MaterialObjectValues());
+        obj->object_id_ = registered_objects_.size();
+        registered_objects_.push_back(obj);
     }
 
-    // Make sure the values are active
-    object_values_[obj->object_id].is_active = true;
+    obj->registry_ = this;
+    for(auto& prop: obj->property_values_) {
+        prop.value.registry_ = this;
+    }
 }
 
-MaterialPropertyValue* MaterialPropertyRegistry::property_value(MaterialObject* obj, MaterialPropertyID id) {
-    auto& values = object_values_[obj->object_id];
-    assert(values.is_active);
-    return &values.values.at(id);
+void MaterialPropertyRegistry::unregister_object(MaterialObject* obj) {
+    if(obj == root_) {
+        root_ = registered_objects_[0] = nullptr;
+    } else {
+        registered_objects_[obj->object_id_] = nullptr;
+    }
 }
 
 }

@@ -48,9 +48,9 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     generic::Identifiable<MaterialID>(id),
     MaterialPropertyRegistry(),
     MaterialObject(this, MATERIAL_OBJECT_TYPE_ROOT),
+    pass_count_(MAX_PASSES),
     passes_{{MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)}} {
 
-    initialize_default_properties();
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
 }
 
@@ -64,12 +64,7 @@ Material::Material(const Material& rhs):
     pass_count_(rhs.pass_count_),
     passes_(rhs.passes_) {
 
-    top_level_ = this;
-
-    for(auto& pass: passes_) {
-        pass.material_ = this;
-        pass.top_level_ = this;
-    }
+    *this = rhs;
 }
 
 Material& Material::operator=(const Material& rhs) {
@@ -77,15 +72,15 @@ Material& Material::operator=(const Material& rhs) {
     MaterialPropertyRegistry::operator=(rhs);
     MaterialObject::operator=(rhs);
 
-    top_level_ = this;
+    register_object(this, MATERIAL_OBJECT_TYPE_ROOT);
 
-    pass_count_ = rhs.pass_count_;
-
-    for(auto i = 0; i < pass_count_; ++i) {
+    for(auto i = 0; i < rhs.pass_count_; ++i) {
         passes_[i] = rhs.passes_[i];
         passes_[i].material_ = this;
-        passes_[i].top_level_ = this;
+        register_object(&passes_[i], MATERIAL_OBJECT_TYPE_LEAF);
     }
+
+    set_pass_count(rhs.pass_count_);
 
     return *this;
 }
@@ -101,7 +96,14 @@ void Material::set_pass_count(uint8_t pass_count) {
     if(pass_count > pass_count_) {
         for(auto i = pass_count_; i < pass_count; ++i) {
             passes_[i] = MaterialPass(this, i);
+            register_object(&passes_[i], MATERIAL_OBJECT_TYPE_LEAF);
         }
+    }
+
+    /* We need to unregister any passes not in use anymore
+     * from the property registry */
+    for(auto i = pass_count_ - 1; i >= pass_count; --i) {
+        unregister_object(&passes_[i]);
     }
 
     pass_count_ = pass_count;

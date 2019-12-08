@@ -74,7 +74,7 @@ public:
     bool has_foreground_image() const { return bool(foreground_image_); }
 
     /** Set the background image, pass TextureID() to clear */
-    void set_background_image(TextureID texture);
+    void set_background_image(TexturePtr texture);
 
     /** Set the background to a region of its image. Coordinates are in texels */
     void set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size);
@@ -83,7 +83,7 @@ public:
     void set_foreground_colour(const Colour& colour);
 
     /** Set the foreground image, pass TextureID() to clear */
-    void set_foreground_image(TextureID texture);   
+    void set_foreground_image(TexturePtr texture);
 
     /** Set the foreground to a region of its image. Coordinates are in texels */
     void set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size);
@@ -165,10 +165,10 @@ private:
         Vec2 size;
     };
 
-    TextureID background_image_;
+    TexturePtr background_image_;
     ImageRect background_image_rect_;
 
-    TextureID foreground_image_;
+    TexturePtr foreground_image_;
     ImageRect foreground_image_rect_;
 
     Colour background_colour_ = Colour::WHITE;

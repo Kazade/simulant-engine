@@ -48,7 +48,7 @@ public:
     Button* new_widget_as_button(const unicode& text, float width=.0f, float height=.0f);
     Label* new_widget_as_label(const unicode& text, float width=.0f, float height=.0f);
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
-    Image* new_widget_as_image(const TextureID& texture_id);
+    Image* new_widget_as_image(const TexturePtr& texture);
 
     Widget* widget(WidgetID widget_id);
 

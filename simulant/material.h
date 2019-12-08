@@ -94,8 +94,8 @@ class Material:
     public generic::Identifiable<MaterialID>,
     public RefCounted<Material>,
     public Updateable,
-    public MaterialObject,
-    public MaterialPropertyRegistry {
+    public MaterialPropertyRegistry,
+    public MaterialObject {
 
 public:
     friend class GenericRenderer;
@@ -131,7 +131,7 @@ public:
 private:
     std::mutex pass_mutex_;
     uint8_t pass_count_ = 0;
-    std::array<MaterialPass, _material_impl::MAX_PASSES> passes_;
+    std::array<MaterialPass, MAX_PASSES> passes_;
 
 protected:
     /* Assignment operator and copy constructor must be private

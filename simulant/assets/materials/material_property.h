@@ -11,43 +11,31 @@
 #include "../../math/mat4.h"
 
 #include "material_property_type.h"
+#include "fast_variant.h"
 
 namespace smlt {
 
 typedef int16_t MaterialPropertyID;
 const MaterialPropertyID MATERIAL_PROPERTY_ID_INVALID = -1;
 
-class MaterialVariant {
-public:
-    template<typename T>
-    T& get() const;
-
-    void set(int v);
-    void set(float v);
-    void set(const Vec2& v);
-    void set(const Vec3& v);
-    void set(const Vec4& v);
-    void set(const Mat3& v);
-    void set(const Mat4& v);
-    void set(const TextureUnit& v);
-};
-
+typedef FastVariant<bool, int, float, Vec2, Vec3, Vec4, Mat3, Mat4, TextureUnit> MaterialVariant;
 
 class MaterialObject;
-
-class MaterialProperty {
-public:
-    MaterialPropertyID id;
-    MaterialPropertyType type;
-    MaterialVariant default_value;
-    bool is_custom = true;
-};
-
+class MaterialPropertyRegistry;
 
 class MaterialPropertyValue {
 public:
+    friend class MaterialObject;
+    friend class MaterialPropertyRegistry;
+
+    MaterialPropertyValue(MaterialPropertyRegistry* registry, MaterialPropertyID id):
+        registry_(registry),
+        id_(id) {
+
+    }
+
     template<typename T>
-    T& value() {
+    const T& value() const {
         return variant_.get<T>();
     }
 
@@ -55,8 +43,25 @@ public:
     std::string name() const;
     bool is_custom() const;
     MaterialPropertyType type() const;
+
 private:
+    MaterialPropertyRegistry* registry_ = nullptr;
+    MaterialPropertyID id_;
+
     MaterialVariant variant_;
+};
+
+class MaterialProperty {
+public:
+    MaterialProperty(MaterialPropertyRegistry* registry, MaterialPropertyID id):
+        id(id),
+        default_value(MaterialPropertyValue(registry, id)) {}
+
+    std::string name;
+    MaterialPropertyID id;
+    MaterialPropertyType type;
+    MaterialPropertyValue default_value;
+    bool is_custom = true;
 };
 
 }

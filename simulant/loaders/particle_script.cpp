@@ -151,24 +151,28 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
         for(std::string& key: js.keys()) {
             if(key.substr(0, MATERIAL_PROPERTY_PREFIX.length()) == MATERIAL_PROPERTY_PREFIX) {
                 auto property_name = key.substr(MATERIAL_PROPERTY_PREFIX.length());
-                if(mat->property_is_defined(property_name)) {
-                    auto type = mat->defined_property_type(property_name);
+
+                auto property_id = mat->find_property_id(property_name);
+                auto property = mat->property(property_id);
+
+                if(property) {
+                    auto type = property->type;
                     if(type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                        mat->set_property_value(property_name, (bool) js[key].get<jsonic::Boolean>());
+                        mat->MaterialObject::set_property_value<bool>(property_id, (bool) js[key].get<jsonic::Boolean>());
                     } else if(type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                        mat->set_property_value(property_name, js[key].get<jsonic::Number>());
+                        mat->MaterialObject::set_property_value<float>(property_id, js[key].get<jsonic::Number>());
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
                         if(property_name == BLEND_FUNC_PROPERTY) {
-                            mat->set_property_value(property_name, (int) blend_type_from_name(js[key].get<jsonic::String>()));
+                            mat->MaterialObject::set_property_value<int>(property_id, (int) blend_type_from_name(js[key].get<jsonic::String>()));
                         } else {
-                            mat->set_property_value(property_name, (int) js[key].get<jsonic::Number>());
+                            mat->MaterialObject::set_property_value<int>(property_id, (int) js[key].get<jsonic::Number>());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
                         auto tex = ps->asset_manager().new_texture_from_file(js[key].get<jsonic::String>());
-                        mat->set_property_value(property_name, tex->id());
+                        mat->set_property_value(property_id, tex);
                         if(remove) {
                             // Remove the path if necessary
                             vfs->remove_search_path(dirname);

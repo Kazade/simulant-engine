@@ -22,16 +22,13 @@ public:
     void test_material_variant() {
         /* Make sure that destructors are called correctly */
 
-        smlt::_material_impl::MaterialVariant* variant = nullptr;
+        smlt::MaterialVariant* variant = nullptr;
 
-        smlt::TextureUnit unit;
-        unit.texture_id = window->shared_assets->new_texture(8, 8);
-        unit.texture_ = unit.texture_id.fetch();
-
+        smlt::TextureUnit unit(window->shared_assets->new_texture(8, 8));
         auto initial_count = unit.texture_.use_count();
 
         // Assign 1
-        variant = new smlt::_material_impl::MaterialVariant();
+        variant = new smlt::MaterialVariant();
         variant->set(unit);
 
         assert_equal(unit.texture_.use_count(), initial_count + 1);
@@ -75,6 +72,66 @@ public:
         assert_equal(pass2->diffuse(), smlt::Colour::RED);
     }
 
+    void test_pass_resizing() {
+        auto mat1 = window->shared_assets->new_material();
+
+        // Materials have a single pass by default, rightly or wrongly...
+        assert_equal(mat1->pass_count(), 1);
+        assert_equal(mat1->registered_material_object_count(), 2);
+
+        mat1->set_pass_count(2);
+        assert_equal(mat1->pass_count(), 2);
+        assert_equal(mat1->registered_material_object_count(), 3);
+
+        mat1->set_pass_count(1);
+        assert_equal(mat1->pass_count(), 1);
+        assert_equal(mat1->registered_material_object_count(), 2);
+
+        mat1->set_pass_count(2);
+        assert_equal(mat1->pass_count(), 2);
+        assert_equal(mat1->registered_material_object_count(), 3);
+
+        auto mat2 = window->shared_assets->clone_material(mat1);
+
+        assert_equal(mat2->pass_count(), 2);
+        assert_equal(mat2->registered_material_object_count(), 3);
+    }
+
+    void test_material_copies() {
+        auto mat1 = window->shared_assets->new_material();
+        auto tex1 = window->shared_assets->new_texture(8, 8);
+
+        mat1->set_diffuse(smlt::Colour::RED);
+        mat1->set_diffuse_map(tex1);
+
+        mat1->set_pass_count(2);
+        mat1->pass(0)->set_diffuse(smlt::Colour::BLUE);
+
+        auto mat2 = window->shared_assets->clone_material(mat1);
+
+        assert_not_equal(mat1->id(), mat2->id());
+
+        assert_equal(mat1->diffuse_map().texture_id(), tex1->id());
+        assert_equal(mat1->diffuse(), smlt::Colour::RED);
+        assert_equal(mat1->pass_count(), 2);
+        assert_equal(mat1->pass(0)->diffuse(), smlt::Colour::BLUE);
+        assert_equal(mat1->pass(1)->diffuse(), smlt::Colour::RED);
+        assert_equal(mat1->pass(0)->diffuse_map().texture_id(), tex1->id());
+
+        // Make sure the passes were copied
+        assert_not_equal(mat1->pass(0), mat2->pass(0));
+
+        assert_equal(mat2->diffuse_map().texture_id(), tex1->id());
+        assert_equal(mat2->diffuse(), smlt::Colour::RED);
+        assert_equal(mat2->pass_count(), 2);
+        assert_equal(mat2->pass(0)->diffuse(), smlt::Colour::BLUE);
+        assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::RED);
+        assert_equal(mat2->pass(0)->diffuse_map().texture_id(), tex1->id());
+
+        mat2->set_diffuse(smlt::Colour::GREEN);
+        assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::GREEN);
+    }
+
     void test_texture_unit() {
         auto mat = window->shared_assets->new_material();
         auto tex = window->shared_assets->new_texture(8, 8);
@@ -85,15 +142,15 @@ public:
         auto pass1 = mat->pass(0);
         auto pass2 = mat->pass(1);
 
-        assert_equal(pass1->diffuse_map().texture_id, tex);
-        assert_equal(pass2->diffuse_map().texture_id, tex);
+        assert_equal(pass1->diffuse_map().texture_id(), tex);
+        assert_equal(pass2->diffuse_map().texture_id(), tex);
 
         auto tex2 = window->shared_assets->new_texture(8, 8);
 
         pass1->set_diffuse_map(tex2);
 
-        assert_equal(pass1->diffuse_map().texture_id, tex2);
-        assert_equal(pass2->diffuse_map().texture_id, tex);
+        assert_equal(pass1->diffuse_map().texture_id(), tex2);
+        assert_equal(pass2->diffuse_map().texture_id(), tex);
     }
 
     void test_shininess_is_clamped() {
@@ -121,9 +178,9 @@ public:
         auto texture = window->shared_assets->new_texture(8, 8);
         assert_equal(texture.use_count(), 2);
 
-        mat->set_diffuse_map(texture->id());
+        mat->set_diffuse_map(texture);
 
-        assert_equal(mat->diffuse_map().texture_id, texture->id());
+        assert_equal(mat->diffuse_map().texture_id(), texture->id());
 
         assert_equal(texture.use_count(), 3);
     }

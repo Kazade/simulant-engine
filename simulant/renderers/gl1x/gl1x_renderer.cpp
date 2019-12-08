@@ -46,28 +46,25 @@ batcher::RenderGroup GL1XRenderer::new_render_group(
             impl->texture_id[i] = 0;
         }
     } else {
-        if(material_pass->diffuse_map().texture_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->diffuse_map().texture_id
-            );
+        TextureID tex_id;
+        tex_id = material_pass->diffuse_map().texture_id();
+        if(tex_id) {
+            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
         }
 
-        if(material_pass->light_map().texture_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->light_map().texture_id
-            );
+        tex_id = material_pass->light_map().texture_id();
+        if(tex_id) {
+            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
         }
 
-        if(material_pass->normal_map().texture_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->normal_map().texture_id
-            );
+        tex_id = material_pass->normal_map().texture_id();
+        if(tex_id) {
+            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
         }
 
-        if(material_pass->specular_map().texture_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(
-                material_pass->specular_map().texture_id
-            );
+        tex_id = material_pass->specular_map().texture_id();
+        if(tex_id) {
+            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
         }
     }
 

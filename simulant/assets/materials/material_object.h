@@ -1,33 +1,40 @@
 #pragma once
 
-#include "material_property_registry.h"
 #include "../../types.h"
+#include "material_property.h"
+#include "constants.h"
 
 namespace smlt {
 
+class MaterialPropertyRegistry;
+
 class MaterialObject {
 public:
-    MaterialObject(MaterialPropertyRegistry* registry, MaterialObjectType type=MATERIAL_OBJECT_TYPE_LEAF):
-        registry_(registry) {
-        registry->register_object(this, type);
-    }
+    friend class MaterialPropertyRegistry;
+
+    MaterialObject(MaterialPropertyRegistry* registry, MaterialObjectType type=MATERIAL_OBJECT_TYPE_LEAF);
 
     template<typename T>
-    void set_property_value(MaterialPropertyID id, const T& value) {
-        registry_->set_property_value<T>(this, id, value);
-    }
+    void set_property_value(const MaterialPropertyID& id, const T& value);
 
-    MaterialPropertyValue* property_value(MaterialPropertyID id) {
-        return registry_->property_value(this, id);
-    }
+    void set_property_value(const MaterialPropertyID& id, const TexturePtr& texture);
+
+    /* FIXME: Remove. This is slow and we want to encourage using IDs */
+    template<typename T>
+    void set_property_value(const std::string& name, const T& value);
+
+    const MaterialPropertyValue* property_value(MaterialPropertyID id) const;
+
+    /* FIXME: Remove, this is slow */
+    const MaterialPropertyValue* property_value(const std::string& name) const;
 
     /* Built-in properties */
     void set_specular(const Colour& colour);
     void set_ambient(const Colour& colour);
     void set_diffuse(const Colour& colour);
     void set_shininess(float shininess);
-    void set_diffuse_map(TextureID texture_id);
-    void set_light_map(TextureID texture_id);
+    void set_diffuse_map(TexturePtr texture);
+    void set_light_map(TexturePtr texture);
     TextureUnit diffuse_map() const;
     TextureUnit light_map() const;
     TextureUnit normal_map() const;
@@ -56,9 +63,51 @@ public:
     ColourMaterial colour_material() const;
     void set_colour_material(ColourMaterial cm);
 
+    const MaterialPropertyRegistry* registry() const;
 private:
+    struct MaterialObjectValue {
+        /* We resize the array to hold any set values indexed by
+         * property id, this will leave gaps in the vector which should be
+         * classes as "null" and ignored. That's what this flag is for. */
+        bool is_active = false;
+        MaterialPropertyValue value;
+
+        MaterialObjectValue(bool active, const MaterialPropertyValue& v):
+            is_active(active), value(v) {}
+    };
+
+    std::vector<MaterialObjectValue> property_values_;
     MaterialPropertyRegistry* registry_ = nullptr;
     int8_t object_id_ = -1;
 };
+
+}
+
+#include "material_property_registry.h"
+
+namespace smlt {
+
+template<typename T>
+void MaterialObject::set_property_value(const MaterialPropertyID& id, const T& value) {
+    auto index = id - 1;
+
+    if((uint8_t) index >= property_values_.size()) {
+        for(auto i = property_values_.size(); i <= (uint8_t) index; ++i) {
+            MaterialPropertyValue dummy(registry_, i);
+            property_values_.push_back(MaterialObjectValue{false, dummy});
+        }
+
+        assert(property_values_.size() == id);
+    }
+
+    property_values_[index].is_active = true;
+    property_values_[index].value.variant_.set(value);
+}
+
+template<typename T>
+void MaterialObject::set_property_value(const std::string& name, const T& value) {
+    set_property_value(registry_->find_property_id(name), value);
+}
+
 
 }

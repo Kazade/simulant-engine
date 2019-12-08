@@ -1,22 +1,9 @@
 #pragma once
 
 #include "material_property.h"
+#include "constants.h"
 
 namespace smlt {
-
-enum MaterialObjectType {
-    MATERIAL_OBJECT_TYPE_ROOT,
-    MATERIAL_OBJECT_TYPE_LEAF
-};
-
-enum BlendType {
-    BLEND_NONE,
-    BLEND_ADD,
-    BLEND_MODULATE,
-    BLEND_COLOUR,
-    BLEND_ALPHA,
-    BLEND_ONE_ONE_MINUS_ALPHA
-};
 
 BlendType blend_type_from_name(const std::string& v);
 
@@ -24,11 +11,26 @@ const static int MAX_PASSES = 4;
 const static int MAX_DEFINED_PROPERTIES = 64;
 
 class MaterialObject;
+class GenericRenderer;
 
 class MaterialPropertyRegistry {
 public:
-    MaterialPropertyRegistry() {
-        object_values_.resize(1); // Always make room for the root object
+    friend class MaterialObject;
+    friend class Material;
+
+    /* This is required so that the renderer
+     * can access the built-in IDs for performance */
+    friend class GenericRenderer;
+
+    MaterialPropertyRegistry();
+
+    MaterialPropertyRegistry(const MaterialPropertyRegistry& rhs) {
+        copy_from(rhs);
+    }
+
+    MaterialPropertyRegistry& operator=(const MaterialPropertyRegistry& rhs) {
+        copy_from(rhs);
+        return *this;
     }
 
     template<typename T>
@@ -37,26 +39,43 @@ public:
         std::string name,
         const T& default_value
     ) {
-        MaterialProperty prop;
-        prop.id = properties_.size() + 1;
+        MaterialProperty prop(this, properties_.size() + 1);
         prop.name = name;
         prop.type = type;
-        prop.default_value.set(default_value);
+        prop.default_value.variant_.set(default_value);
+        properties_.push_back(prop);
 
-        properties_.push_back(new_p);
+        // We keep a list of texture properties as we need
+        // to iterate them in the renderer and we need it
+        // to be fast!
+        rebuild_texture_properties();
+        rebuild_custom_properties();
 
-        return new_p.id;
-
+        return prop.id;
     }
 
     /* Property IDs should be the primary way to lookup things for performance
      * reasons, but this will allow translation from a name to and ID */
-    MaterialPropertyID find_property_id(const std::string& name);
+    MaterialPropertyID find_property_id(const std::string& name) const;
 
     /* Property ids are one-based */
-    MaterialProperty* property(MaterialPropertyID id);
+    const MaterialProperty* property(MaterialPropertyID id) const;
 
+    const std::vector<MaterialProperty*> texture_properties() const {
+        return texture_properties_;
+    }
+
+    const std::vector<MaterialProperty*> custom_properties() const {
+        return custom_properties_;
+    }
+
+    std::size_t registered_material_object_count() const;
 private:
+    /* Copying registries does the following:
+     *  - Copies the defined properties
+     *  - Doesn't copy the registered objects */
+    void copy_from(const MaterialPropertyRegistry& rhs);
+
     /* The first time a MaterialObject is registered as a root type, this is
      * set. In debug mode an assertion will raise if you do that again, in non
      * debug mode the root_ will be replaced. Don't do that */
@@ -65,16 +84,30 @@ private:
     /* A list of properties, these are indexed by MateralPropertyID minus 1 (as IDs
      * are 1-indexed) */
     std::vector<MaterialProperty> properties_;
+    std::vector<MaterialProperty*> texture_properties_;
 
-    struct MaterialObjectValues {
-        bool is_active = true; // Used when unregistering MaterialObjects to prevent shifting in the array
-        std::unordered_map<MaterialPropertyID, MaterialPropertyValue> values;
-    };
+    void rebuild_texture_properties() {
+        texture_properties_.clear();
+        for(auto& prop: properties_) {
+            if(prop.type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+                texture_properties_.push_back(&prop);
+            }
+        }
+    }
+
+    std::vector<MaterialProperty*> custom_properties_;
+    void rebuild_custom_properties() {
+        custom_properties_.clear();
+        for(auto& prop: properties_) {
+            if(prop.is_custom) {
+                custom_properties_.push_back(&prop);
+            }
+        }
+    }
 
     /* These values are indexed by MaterialObject::object_id which is more performant
-     * than an unordered_map. FIXME: Should values be moved onto the MaterialObject for
-     * cache locality? */
-    std::vector<MaterialObjectValues> object_values_;
+     * than an unordered_map */
+    std::vector<MaterialObject*> registered_objects_;
 
     MaterialPropertyID material_ambient_id_;
     MaterialPropertyID material_diffuse_id_;
@@ -114,18 +147,8 @@ private:
     /* Register the MaterialObject. All this does is store the root MaterialObject
      * if it's a root type, and sets the MaterialObject::object_id_ variable */
     void register_object(MaterialObject* obj, MaterialObjectType type);
-
-
-    template<typename T>
-    void set_property_value(MaterialObject* obj, MaterialPropertyID id, const T& value) {
-        assert(obj->object_id < object_values_.size());
-        auto& values = object_values_[obj->object_id];
-        assert(values.is_active);
-        values.values[id].set(value);
-    }
-
-    MaterialPropertyValue* property_value(MaterialObject* obj, MaterialPropertyID id);
+    void unregister_object(MaterialObject* obj);
 };
 
-
 }
+

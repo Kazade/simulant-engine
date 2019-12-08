@@ -4,6 +4,20 @@
 
 namespace smlt {
 
+enum MaterialObjectType {
+    MATERIAL_OBJECT_TYPE_ROOT,
+    MATERIAL_OBJECT_TYPE_LEAF
+};
+
+enum BlendType {
+    BLEND_NONE,
+    BLEND_ADD,
+    BLEND_MODULATE,
+    BLEND_COLOUR,
+    BLEND_ALPHA,
+    BLEND_ONE_ONE_MINUS_ALPHA
+};
+
 const std::string DIFFUSE_PROPERTY = "s_material_diffuse";
 const std::string AMBIENT_PROPERTY = "s_material_ambient";
 const std::string SPECULAR_PROPERTY = "s_material_specular";

@@ -2,6 +2,8 @@
 
 #include "../../types.h"
 
+class MaterialTest;
+
 namespace smlt {
 
 enum MaterialPropertyType {
@@ -21,7 +23,8 @@ enum MaterialPropertyType {
 struct TextureUnit {
     friend class ::MaterialTest;
 
-    TextureID texture_id;
+    TextureUnit() = default;
+    TextureUnit(const TexturePtr& texture);
 
     Mat4& texture_matrix() {
         return *texture_matrix_;
@@ -34,12 +37,15 @@ struct TextureUnit {
     void scroll_x(float amount);
     void scroll_y(float amount);
 
+    const TextureID& texture_id() const;
+
 private:
     /* Shared pointer so that copying a TextureUnit also copies the matrix */
     std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
 
     /* Set when assigned as a material property to maintain a refcount */
     std::shared_ptr<Texture> texture_;
+    TextureID texture_id_;
 };
 
 

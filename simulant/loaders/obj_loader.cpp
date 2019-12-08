@@ -134,7 +134,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         if(!material.diffuse_texname.empty()) {
             auto it = loaded_textures.find(material.diffuse_texname);
             if(it != loaded_textures.end()) {
-                new_mat->set_diffuse_map(it->second->id());
+                new_mat->set_diffuse_map(it->second);
             } else {
                 std::vector<std::string> possible_locations;
 
@@ -153,7 +153,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 for(auto& texture_file: possible_locations) {
                     if(kfs::path::exists(texture_file)) {
                         auto tex = mesh->asset_manager().new_texture_from_file(texture_file);
-                        new_mat->set_diffuse_map(tex->id());
+                        new_mat->set_diffuse_map(tex);
                         loaded_textures.insert(std::make_pair(material.diffuse_texname, tex));
                         found = true;
                         break;
