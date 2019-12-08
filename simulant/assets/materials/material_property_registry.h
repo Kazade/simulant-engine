@@ -33,6 +33,8 @@ public:
         return *this;
     }
 
+    virtual ~MaterialPropertyRegistry() {}
+
     template<typename T>
     MaterialPropertyID register_property(
         MaterialPropertyType type,

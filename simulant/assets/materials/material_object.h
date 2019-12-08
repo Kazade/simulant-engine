@@ -13,6 +13,7 @@ public:
     friend class MaterialPropertyRegistry;
 
     MaterialObject(MaterialPropertyRegistry* registry, MaterialObjectType type=MATERIAL_OBJECT_TYPE_LEAF);
+    virtual ~MaterialObject();
 
     template<typename T>
     void set_property_value(const MaterialPropertyID& id, const T& value);

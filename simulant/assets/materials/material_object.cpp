@@ -10,6 +10,10 @@ MaterialObject::MaterialObject(MaterialPropertyRegistry* registry, MaterialObjec
     registry->register_object(this, type);
 }
 
+MaterialObject::~MaterialObject() {
+    registry_->unregister_object(this);
+}
+
 void MaterialObject::set_property_value(const MaterialPropertyID& id, const TexturePtr& texture) {
     TextureUnit unit(texture);
     set_property_value(id, unit);
