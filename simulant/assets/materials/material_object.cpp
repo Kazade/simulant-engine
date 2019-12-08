@@ -63,35 +63,33 @@ void MaterialObject::set_light_map(TexturePtr texture) {
     set_property_value(registry_->light_map_id_, texture);
 }
 
-TextureUnit MaterialObject::diffuse_map() const {
+const TextureUnit& MaterialObject::diffuse_map() const {
     return property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
 }
 
-TextureUnit MaterialObject::light_map() const {
+const TextureUnit& MaterialObject::light_map() const {
     return property_value(registry_->light_map_id_)->value<TextureUnit>();
 }
 
-TextureUnit MaterialObject::normal_map() const {
+const TextureUnit& MaterialObject::normal_map() const {
     return property_value(registry_->normal_map_id_)->value<TextureUnit>();
 }
 
-TextureUnit MaterialObject::specular_map() const {
+const TextureUnit& MaterialObject::specular_map() const {
     return property_value(registry_->specular_map_id_)->value<TextureUnit>();
 }
 
-Colour MaterialObject::specular() const {
-    auto v = property_value(registry_->material_specular_id_)->value<Vec4>();
-    return Colour(v.x, v.y, v.z, v.w);
+const Colour& MaterialObject::specular() const {
+    // FIXME: Naughty cast from Vec4& -> Colour&
+    return (const Colour&) property_value(registry_->material_specular_id_)->value<Vec4>();
 }
 
-Colour MaterialObject::ambient() const {
-    auto v = property_value(registry_->material_ambient_id_)->value<Vec4>();
-    return Colour(v.x, v.y, v.z, v.w);
+const Colour& MaterialObject::ambient() const {
+    return (const Colour&) property_value(registry_->material_ambient_id_)->value<Vec4>();
 }
 
-Colour MaterialObject::diffuse() const {
-    auto v = property_value(registry_->material_diffuse_id_)->value<Vec4>();
-    return Colour(v.x, v.y, v.z, v.w);
+const Colour& MaterialObject::diffuse() const {
+    return (const Colour&) property_value(registry_->material_diffuse_id_)->value<Vec4>();
 }
 
 float MaterialObject::shininess() const {
