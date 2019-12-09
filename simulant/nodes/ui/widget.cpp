@@ -366,7 +366,7 @@ void Widget::rebuild() {
     auto bg = new_rectangle("background", material_->id(), background_bounds, colour);
     if(has_background_image()) {
         bg->material()->pass(0)->set_diffuse_map(background_image_);
-        apply_image_rect(bg, background_image_.fetch(), background_image_rect_);
+        apply_image_rect(bg, background_image_, background_image_rect_);
     }
 
     colour = foreground_colour_;
@@ -374,7 +374,7 @@ void Widget::rebuild() {
     auto fg = new_rectangle("foreground", material_->id(), foreground_bounds, colour);
     if(has_foreground_image()) {
         fg->material()->pass(0)->set_diffuse_map(foreground_image_);
-        apply_image_rect(fg, foreground_image_.fetch(), foreground_image_rect_);
+        apply_image_rect(fg, foreground_image_, foreground_image_rect_);
     }
 
     /* Apply anchoring */
@@ -468,7 +468,7 @@ const AABB &Widget::aabb() const {
     return actor_->aabb();
 }
 
-void Widget::set_background_image(TextureID texture) {
+void Widget::set_background_image(TexturePtr texture) {
     if(background_image_ == texture) {
         return;
     }
@@ -478,7 +478,7 @@ void Widget::set_background_image(TextureID texture) {
     // Triggers a rebuild
     set_background_image_source_rect(
         Vec2(),
-        texture.fetch()->dimensions()
+        texture->dimensions()
     );
 }
 
@@ -493,7 +493,7 @@ void Widget::set_background_image_source_rect(const Vec2& bottom_left, const Vec
     rebuild();
 }
 
-void Widget::set_foreground_image(TextureID texture) {
+void Widget::set_foreground_image(TexturePtr texture) {
     if(foreground_image_ == texture) {
         return;
     }
@@ -503,7 +503,7 @@ void Widget::set_foreground_image(TextureID texture) {
     // Triggers a rebuild
     set_foreground_image_source_rect(
         Vec2(),
-        texture.fetch()->dimensions()
+        texture->dimensions()
     );
 }
 

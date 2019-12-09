@@ -178,7 +178,7 @@ void RenderSequence::run() {
     renderer_->pre_render();
 
     int actors_rendered = 0;
-    for(PipelinePtr pipeline: ordered_pipelines_) {
+    for(auto& pipeline: ordered_pipelines_) {
         run_pipeline(pipeline, actors_rendered);
     }
 
@@ -283,7 +283,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
             continue;
         }
 
-        auto renderable_lights = filter(lights_visible, [=](const LightPtr& light) -> bool {
+        auto renderable_lights = filter(lights_visible, [&node](const LightPtr& light) -> bool {
             // Filter by whether or not the renderable bounds intersects the light bounds
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
                 return true;
@@ -328,7 +328,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
         node->_get_renderables(renderable_factory, camera, level);
 
         /* Go through and insert them into the render_queue */
-        renderable_factory->each_pushed([&](Renderable* renderable) {
+        renderable_factory->each_pushed([&renderable_lights, &renderables_rendered](Renderable* renderable) {
             assert(
                 renderable->arrangement == MESH_ARRANGEMENT_LINES ||
                 renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
@@ -359,7 +359,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     // Insert all the renderables we just created into the queue
     // this has to happen after the renderable_store has finished any
     // reallocs or the pointers will be invalidated
-    renderable_store_->each_renderable([&](Renderable* renderable) {
+    renderable_store_->each_renderable([&render_queue](Renderable* renderable) {
         render_queue.insert_renderable(renderable);
     });
 

@@ -20,13 +20,12 @@ void Image::clear_layers() {
     set_text("");
 }
 
-void Image::set_texture_id(const TextureID &texture_id) {
+void Image::set_texture(const TexturePtr &texture) {
     clear_layers();
-    set_background_image(texture_id);
+    set_background_image(texture);
 
     // Changing the texture resets the source rect
-    auto tex = texture_id.fetch();
-    set_source_rect(Vec2(), tex->dimensions());
+    set_source_rect(Vec2(), texture->dimensions());
 }
 
 void Image::set_source_rect(const Vec2 &bottom_left, const Vec2 &size) {

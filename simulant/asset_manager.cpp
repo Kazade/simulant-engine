@@ -73,30 +73,27 @@ bool AssetManager::init() {
     //Create the default blank texture
     /* 8x8 is the smallest size we can do without the Dreamcast pvr library
      * complaining that it's not a valid size :/ */
-    default_texture_id_ = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, GARBAGE_COLLECT_NEVER);
+    auto default_texture = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, GARBAGE_COLLECT_NEVER);
+    default_texture_id_ = default_texture;
 
     L_DEBUG("- Created texture");
 
     assert(default_texture_id_);
 
-    {
-        auto tex = texture(default_texture_id_);
+    // FIXME: This is slow! Need to allow
+    // manipulating the data on the txn to avoid
+    // two copies.
+    auto data = default_texture->data();
 
-        // FIXME: This is slow! Need to allow
-        // maniulating the data on the txn to avoid
-        // two copies.
-        auto data = tex->data();
-
-        for(uint32_t i = 0; i < 64 * 4; ++i) {
-            data[i] = 255;
-        }
-
-        auto txn = tex->begin_transaction();
-        txn->set_data(data);
-        txn->commit();
-
-        L_DEBUG("- Generated texture data");
+    for(uint32_t i = 0; i < 64 * 4; ++i) {
+        data[i] = 255;
     }
+
+    auto txn = default_texture->begin_transaction();
+    txn->set_data(data);
+    txn->commit();
+
+    L_DEBUG("- Generated texture data");
 
     //Maintain ref-count
     default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
@@ -111,7 +108,7 @@ bool AssetManager::init() {
     L_DEBUG("- Applying texture to material");
 
     //Set the default material's first texture to the default (white) texture
-    mat->set_diffuse_map(default_texture_id_);
+    mat->set_diffuse_map(default_texture);
 
     L_DEBUG("- Loading fonts");
     default_heading_font_ = new_font_from_file(HEADING_FONT);
@@ -339,7 +336,7 @@ MaterialPtr AssetManager::new_material(GarbageCollectMethod garbage_collect) {
     NEW_X(Material, material, material_manager_);
 }
 
-void AssetManager::destroy_material(MaterialID m) {
+void AssetManager::destroy_material(const MaterialID& m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
@@ -452,7 +449,7 @@ MaterialPtr AssetManager::new_material_from_texture(TextureID texture_id, Garbag
     auto m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    m->set_diffuse_map(texture_id);
+    m->set_diffuse_map(texture(texture_id));
 
     material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
@@ -462,15 +459,15 @@ MaterialPtr AssetManager::get_material_with_alias(const std::string& alias) {
     return material_manager_.get_id_from_alias(alias).fetch();
 }
 
-MaterialPtr AssetManager::material(MaterialID id) {
+MaterialPtr AssetManager::material(const MaterialID& id) {
     GET_X(Material, material, material_manager_);
 }
 
-const MaterialPtr AssetManager::material(MaterialID id) const {
+const MaterialPtr AssetManager::material(const MaterialID& id) const {
     GET_X(Material, material, material_manager_);
 }
 
-bool AssetManager::has_material(MaterialID m) const {
+bool AssetManager::has_material(const MaterialID& m) const {
     return material_manager_.contains(m);
 }
 
@@ -641,8 +638,7 @@ unicode AssetManager::default_material_filename() const {
     return window->vfs->locate_file(Material::BuiltIns::DEFAULT);
 }
 
-MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
-    auto mat_id = base_manager()->default_material_id();
+MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect) {
     assert(mat_id && "No default material, called to early?");
 
     auto& manager = base_manager()->material_manager_;
@@ -651,6 +647,10 @@ MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_co
 
     assert(new_mat_id);
     return material(new_mat_id);
+}
+
+MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
+    return clone_material(base_manager()->default_material_id());
 }
 
 // ========== FONTS ======================

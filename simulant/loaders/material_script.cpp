@@ -45,18 +45,18 @@ template<MaterialPropertyType MT>
 static void define_property(Material& material, jsonic::Node& prop) {
     std::string name = prop["name"].get<jsonic::String>(); // FIXME: Sanitize!
 
-    typedef typename _material_impl::TypeForMaterialType<MT>::type T;
+    typedef typename TypeForMaterialType<MT>::type T;
 
     if(!prop["default"].is_none()) {
         auto def = (T) jsonic::auto_cast<T>(prop["default"]);
 
-        material.define_property(
+        material.register_property(
             MT,
             name,
             def
         );
     } else {
-        material.define_property(
+        material.register_property(
             MT,
             name,
             T()
@@ -72,33 +72,35 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic:
     if(prop.has_key("default") && !prop["default"].is_none()) {
         std::string def = prop["default"].get<String>();
 
-        TextureID tex_id = material.asset_manager().new_texture_from_file(def);
-
-        material.define_property(
+        auto texture = material.asset_manager().new_texture_from_file(def);
+        material.register_property(
             MATERIAL_PROPERTY_TYPE_TEXTURE,
             name,
-            tex_id
+            TextureUnit(texture)
         );
     } else {
-        material.define_property(
+        material.register_property(
             MATERIAL_PROPERTY_TYPE_TEXTURE,
             name,
-            TextureID()
+            TextureUnit()
         );
     }
 }
 
-void read_property_values(Material& mat, _material_impl::PropertyValueHolder& holder, jsonic::Node& json) {
+void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& json) {
     if(json.has_key("property_values")) {
         for(auto& key: json["property_values"].keys()) {
             auto& value = json["property_values"][key];
 
-            if(!holder.top_level()->property_is_defined(key)) {
+            auto prop_id = holder.registry()->find_property_id(key);
+            auto property = holder.registry()->property(prop_id);
+
+            if(!property) {
                 L_ERROR(_F("Unrecognized property: {0}").format(key));
                 continue;
             }
 
-            auto property_type = holder.top_level()->defined_property_type(key);
+            auto property_type = property->type;
 
             if(property_type == MATERIAL_PROPERTY_TYPE_BOOL) {
                 if(!value.is_bool()) {
@@ -186,11 +188,8 @@ void read_property_values(Material& mat, _material_impl::PropertyValueHolder& ho
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value.get<jsonic::String>();
-                smlt::TextureID tex_id = mat.asset_manager().new_texture_from_file(
-                    path
-                );
-
-                holder.set_property_value(key, tex_id);
+                auto tex = mat.asset_manager().new_texture_from_file(path);
+                holder.set_property_value(key, tex);
             } else {
                 L_ERROR("Unhandled property type");
             }

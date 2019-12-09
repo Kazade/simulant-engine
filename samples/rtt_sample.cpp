@@ -14,7 +14,7 @@ public:
         rect_stage_ = window->new_stage();
         auto rect_cam = rect_stage_->new_camera();
 
-        smlt::TextureID tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
+        auto tid = window->shared_assets->new_texture_from_file("sample_data/sample.tga");
         auto cube_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube_mesh->new_submesh_as_cube("cube", window->shared_assets->new_material(), 1.0);
 
@@ -29,7 +29,7 @@ public:
         rect_ = rect_stage_->new_actor_with_mesh(rect_mesh);
         rect_->move_to_absolute(0, 0, -4);
 
-        TextureID rtt = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
+        auto rtt = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
         mat = rect_mesh->first_submesh()->material();
         mat->set_diffuse_map(rtt);
 

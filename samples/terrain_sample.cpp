@@ -80,11 +80,11 @@ public:
         auto terrain_mesh = stage_->assets->mesh(terrain_mesh_id_);
 
         auto terrain_data = terrain_mesh->data->get<smlt::TerrainData>("terrain_data");
-        smlt::TextureID terrain_splatmap = stage_->assets->new_texture(terrain_data.x_size, terrain_data.z_size);
+        auto terrain_splatmap = stage_->assets->new_texture(terrain_data.x_size, terrain_data.z_size);
         calculate_splat_map(
             terrain_data.x_size,
             terrain_data.z_size,
-            stage_->assets->texture(terrain_splatmap),
+            terrain_splatmap,
             terrain_mesh->vertex_data
         );
 

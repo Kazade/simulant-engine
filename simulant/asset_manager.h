@@ -140,11 +140,11 @@ public:
     /* Material API */
     MaterialPtr new_material_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MaterialPtr new_material_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    void destroy_material(MaterialID id);
-    MaterialPtr material(MaterialID id);
-    const MaterialPtr material (MaterialID id) const;
+    void destroy_material(const MaterialID& id);
+    MaterialPtr material(const MaterialID& id);
+    const MaterialPtr material (const MaterialID& id) const;
     std::size_t material_count() const;
-    bool has_material(MaterialID id) const;
+    bool has_material(const MaterialID& id) const;
     MaterialPtr get_material_with_alias(const std::string& alias);
 
 
@@ -205,6 +205,7 @@ public:
 
     unicode default_material_filename() const;
 
+    MaterialPtr clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MaterialPtr clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MaterialID default_material_id() const;

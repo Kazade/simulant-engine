@@ -74,9 +74,9 @@ Label* UIManager::new_widget_as_label(const unicode &text, float width, float he
     return label;
 }
 
-Image* UIManager::new_widget_as_image(const TextureID& texture_id) {
+Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
     auto image = (Image*) &(*manager_->make_as<Image>(this, &config_));
-    image->set_texture_id(texture_id);
+    image->set_texture(texture);
 
     stage_->add_child(image);
 

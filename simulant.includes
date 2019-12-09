@@ -217,3 +217,4 @@ deps/libgl/samples/blend_test
 deps/libgl/samples/mipmap
 simulant/assets
 simulant/assets/particles
+simulant/assets/materials

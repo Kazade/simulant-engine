@@ -99,7 +99,7 @@ void Skybox::generate(
         TextureFlags flags;
         flags.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;
 
-        auto set_texture = [](SubMesh* sm, TextureID tex) {
+        auto set_texture = [](SubMesh* sm, TexturePtr tex) {
             sm->material()->set_diffuse_map(tex);
         };
 

@@ -86,7 +86,7 @@ namespace loaders {
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_blend_func(smlt::BLEND_ALPHA);
-        font->material_->set_diffuse_map(font->texture_id());
+        font->material_->set_diffuse_map(font->texture_);
 
         L_DEBUG("Font loaded successfully");
     }

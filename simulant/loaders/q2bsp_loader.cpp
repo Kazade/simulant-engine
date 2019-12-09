@@ -132,7 +132,7 @@ void Q2BSPLoader::generate_materials(
     const std::vector<Q2::TextureInfo>& texture_infos,
     std::vector<MaterialID>& materials,
     std::vector<Q2::TexDimension>& dimensions,
-    TextureID lightmap_texture) {
+    TexturePtr lightmap_texture) {
 
     /* Given a list of texture infos, this generates counterpart materials */
 
@@ -169,7 +169,7 @@ void Q2BSPLoader::generate_materials(
             smlt::GARBAGE_COLLECT_NEVER // Disable GC for now
         );
 
-        mat->set_diffuse_map(tex->id());
+        mat->set_diffuse_map(tex);
         if(uses_lightmap) {
             // Set the second texture unit to the lightmap texture if necessary
             mat->set_light_map(lightmap_texture);
@@ -352,7 +352,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<MaterialID> materials;    
     std::vector<Q2::TexDimension> dimensions;
 
-    TextureID lightmap_texture = assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
+    auto lightmap_texture = assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
 
     generate_materials(assets, textures, materials, dimensions, lightmap_texture);
 
@@ -499,7 +499,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     L_WARN("About to pack lightmaps");
 
     auto lightmaps = extract_lightmaps(lightmap_data, faces, uv_limits);
-    auto locations = pack_lightmaps(lightmaps, lightmap_texture.fetch());
+    auto locations = pack_lightmaps(lightmaps, lightmap_texture);
 
     for(uint32_t i = 0; i < locations.size(); ++i) {
         for(auto idx: face_indexes[i]) {
@@ -522,7 +522,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
     }
 
-    lightmap_texture.fetch()->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
+    lightmap_texture->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
 
     L_WARN("Finished loading Quake 2 BSP");
 

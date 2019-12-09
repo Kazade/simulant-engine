@@ -35,7 +35,7 @@ public:
         txn->commit();
 
         auto mat = actor_->base_mesh()->first_submesh()->material();
-        mat->set_diffuse_map(texture_);
+        mat->set_diffuse_map(texture_.fetch());
 
         // Test Camera::look_at function
         camera_->look_at(actor_->absolute_position());
