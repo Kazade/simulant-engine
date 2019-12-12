@@ -94,7 +94,7 @@ void MaterialObject::set_property_value(const MaterialPropertyID& id, const T& v
 
     if((uint8_t) index >= property_values_.size()) {
         for(auto i = property_values_.size(); i <= (uint8_t) index; ++i) {
-            MaterialPropertyValue dummy(registry_, i);
+            MaterialPropertyValue dummy(registry_, i + 1);
             property_values_.push_back(MaterialObjectValue{false, dummy});
         }
 
