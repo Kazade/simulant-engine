@@ -98,7 +98,7 @@ void MaterialObject::set_property_value(const MaterialPropertyID& id, const T& v
             property_values_.push_back(MaterialObjectValue{false, dummy});
         }
 
-        assert(property_values_.size() == id);
+        assert(property_values_.size() == (unsigned) id);
     }
 
     property_values_[index].is_active = true;
