@@ -94,10 +94,16 @@ void Partitioner::remove_light(LightID obj) {
 }
 
 void Partitioner::_apply_writes() {
-    std::unordered_map<ActorID, std::set<WriteOperation>> seen_actors;
-    std::unordered_map<LightID, std::set<WriteOperation>> seen_lights;
-    std::unordered_map<GeomID, std::set<WriteOperation>> seen_geoms;
-    std::unordered_map<ParticleSystemID, std::set<WriteOperation>> seen_particle_systems;
+    /* Static to avoid continuous construction */
+    static std::unordered_map<ActorID, std::unordered_set<WriteOperation>> seen_actors;
+    static std::unordered_map<LightID, std::unordered_set<WriteOperation>> seen_lights;
+    static std::unordered_map<GeomID, std::unordered_set<WriteOperation>> seen_geoms;
+    static std::unordered_map<ParticleSystemID, std::unordered_set<WriteOperation>> seen_particle_systems;
+
+    seen_actors.clear();
+    seen_lights.clear();
+    seen_geoms.clear();
+    seen_particle_systems.clear();
 
     std::stack<StagedWrite> filtered;
 
