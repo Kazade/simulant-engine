@@ -69,7 +69,7 @@ public:
     Property<Background, Sprite> sprite = {this, &Background::sprite_};
     Property<Background, Stage> stage = {this, &Background::stage_};
 
-    std::string repr() const {
+    std::string repr() const override {
         return name();
     }
 

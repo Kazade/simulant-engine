@@ -15,12 +15,12 @@ public:
 
 class TTFLoaderType : public LoaderType {
 public:
-    unicode name() { return "ttf_font"; }
+    unicode name() override { return "ttf_font"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().ends_with(".ttf");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new TTFLoader(filename, data));
     }
 };

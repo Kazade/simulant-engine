@@ -3,7 +3,6 @@
 
 #include "../partitioner.h"
 #include "./impl/spatial_hash.h"
-#include "../stage.h"
 #include "../generic/threading/shared_mutex.h"
 
 namespace smlt {

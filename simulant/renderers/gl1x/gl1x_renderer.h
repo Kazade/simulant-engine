@@ -39,9 +39,9 @@ public:
         bool is_blended,
         float distance_to_camera
     ) override;
-    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera);
+    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) override;
 
-    void init_context();
+    void init_context() override;
 
     std::string name() const override {
         return "gl1x";

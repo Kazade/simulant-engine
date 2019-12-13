@@ -29,7 +29,7 @@ namespace smlt {
 
 class MaterialPass;
 class Renderer;
-class Renderable;
+struct Renderable;
 class Light;
 
 namespace batcher {

@@ -21,12 +21,12 @@ private:
 
 class FNTLoaderType : public LoaderType {
 public:
-    unicode name() { return "fnt_font"; }
+    unicode name() override { return "fnt_font"; }
     bool supports(const unicode& filename) const override {
         return filename.lower().ends_with(".fnt");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
+    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new FNTLoader(filename, data));
     }
 };

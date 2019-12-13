@@ -25,6 +25,7 @@
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"
 #include "../assets/particles/colour_fader.h"
+#include "../vfs.h"
 
 namespace smlt {
 namespace loaders {

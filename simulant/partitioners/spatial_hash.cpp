@@ -5,6 +5,7 @@
 #include "../nodes/particle_system.h"
 #include "../nodes/geom.h"
 #include "../nodes/geoms/geom_culler.h"
+#include "../stage.h"
 
 namespace smlt {
 

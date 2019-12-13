@@ -58,6 +58,8 @@ public:
 
     }
 
+    virtual ~ContactListener() {}
+
     void BeginContact(b3Contact* contact) {
         b3Shape* shapeA = contact->GetShapeA();
         b3Shape* shapeB = contact->GetShapeB();

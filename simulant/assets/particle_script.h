@@ -35,7 +35,7 @@ struct Emitter {
 };
 
 
-class Particle;
+struct Particle;
 class ParticleScript;
 
 class Manipulator {
@@ -43,6 +43,8 @@ public:
     Manipulator(ParticleScript* script, const std::string& name):
         name_(name),
         particle_script_(script) {}
+
+    virtual ~Manipulator() {}
 
     void manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) const {
         do_manipulate(system, particles, particle_count, dt);

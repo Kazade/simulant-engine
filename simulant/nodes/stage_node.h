@@ -219,7 +219,7 @@ public:
 
     bool parent_is_stage() const { return parent() == (TreeNode*) stage_; }
 
-    void clean_up();
+    void clean_up() override;
 
     const AABB transformed_aabb() const override;
 

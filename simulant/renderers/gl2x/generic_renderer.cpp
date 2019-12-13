@@ -30,6 +30,7 @@
 
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
+#include "../../window.h"
 
 namespace smlt {
 
@@ -434,7 +435,7 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
     return program->id();
 }
 
-smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) {
+smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) const {
     return program_manager_.get(program_id);
 }
 
