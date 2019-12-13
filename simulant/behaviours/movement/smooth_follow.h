@@ -17,7 +17,7 @@ class SmoothFollow:
 public:
     SmoothFollow();
 
-    const std::string name() const {
+    const std::string name() const override {
         return "Smooth Follow";
     }
 

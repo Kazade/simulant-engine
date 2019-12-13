@@ -85,14 +85,14 @@ public:
         Renderable *renderable, MaterialPass *material_pass,
         uint8_t pass_number, bool is_blended, float distance_to_camera
     ) override;
-    void init_context();
+    void init_context() override;
 
-    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera);
+    std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) override;
 
-    GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source);
+    GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source) override;
 
-    GPUProgramPtr gpu_program(const GPUProgramID& program_id);
-    GPUProgramID current_gpu_program_id() const;
+    GPUProgramPtr gpu_program(const GPUProgramID& program_id) const override;
+    GPUProgramID current_gpu_program_id() const override;
     bool supports_gpu_programs() const override { return true; }
     GPUProgramID default_gpu_program_id() const override;
 
@@ -100,7 +100,7 @@ public:
         return "gl2x";
     }
 
-    void prepare_to_render(Renderable *renderable);
+    void prepare_to_render(Renderable *renderable) override;
 private:
     GPUProgramManager program_manager_;
     GPUProgramID default_gpu_program_id_;

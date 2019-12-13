@@ -54,10 +54,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
         return;
     }
 
-    auto material_id = renderable->material_id;
-    assert(material_id);
-
-    auto material = stage_->assets->material(material_id);
+    auto material = renderable->material;
     assert(material);
 
     auto pos = renderable->centre;
@@ -119,7 +116,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
             auto this_pass_id = current_group->impl()->pass_number();
 
-            auto& this_mat_id = renderable->material_id;
+            const auto& this_mat_id = renderable->material->id();
             if(this_mat_id != material_id || this_pass_id != last_pass_id) {
                 auto last_pass = material_pass;
 

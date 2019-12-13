@@ -288,8 +288,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
 
+    auto spec = VertexSpecification::DEFAULT;
+    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
+
     // Make sure the passed mesh is empty and using the default vertex spec
-    mesh->reset(smlt::VertexSpecification::DEFAULT);
+    mesh->reset(spec);
 
     auto assets = &mesh->asset_manager();
 

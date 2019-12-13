@@ -84,7 +84,7 @@ public:
         auto ret2 = *result[0];
 
         // Should be different renderables that came back
-        assert_not_equal(ret1.material_id, ret2.material_id);
+        assert_not_equal(ret1.material->id(), ret2.material->id());
     }
 };
 

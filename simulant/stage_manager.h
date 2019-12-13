@@ -25,6 +25,8 @@
 #include "interfaces/updateable.h"
 #include "types.h"
 
+#include "stage.h"
+
 namespace smlt {
 
 class StageNode;
@@ -57,9 +59,7 @@ public:
 
     void destroy_all_stages();
 
-    stage_iterator_pair each_stage() {
-        return stage_manager_->_each();
-    }
+    stage_iterator_pair each_stage();
 
     /* Implementation for TypedDestroyableObject (INTERNAL) */
     void destroy_object(Stage* object);

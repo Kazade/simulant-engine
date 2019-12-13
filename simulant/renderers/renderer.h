@@ -25,7 +25,6 @@
 
 #include "../types.h"
 #include "../generic/threading/shared_mutex.h"
-#include "../window.h"
 
 #include "batching/renderable.h"
 #include "batching/render_queue.h"
@@ -33,6 +32,7 @@
 namespace smlt {
 
 class SubActor;
+class Window;
 
 class Renderer:
     public batcher::RenderGroupFactory {
@@ -55,7 +55,7 @@ public:
     }
 
     virtual GPUProgramID current_gpu_program_id() const { return GPUProgramID(); }
-    virtual GPUProgramPtr gpu_program(GPUProgramID) const { return GPUProgramPtr(); }
+    virtual GPUProgramPtr gpu_program(const GPUProgramID&) const { return GPUProgramPtr(); }
     virtual GPUProgramID default_gpu_program_id() const { return GPUProgramID(); }
 
     virtual std::string name() const = 0;

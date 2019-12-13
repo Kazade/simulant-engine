@@ -54,6 +54,12 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
 }
 
+Material::~Material() {
+    for(auto& pass: passes_) {
+        unregister_object(&pass);
+    }
+}
+
 Material::Material(const Material& rhs):
     std::enable_shared_from_this<Material>(rhs),
     Asset(rhs),

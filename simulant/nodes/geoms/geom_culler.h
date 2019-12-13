@@ -7,7 +7,7 @@
 
 namespace smlt {
 
-class Renderable;
+struct Renderable;
 
 /*
  * A GeomCuller is a class which compiles a mesh into some kind of internal representation

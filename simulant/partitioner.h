@@ -29,6 +29,7 @@
 #include "renderers/renderer.h"
 #include "types.h"
 #include "interfaces.h"
+#include "nodes/stage_node.h"
 
 namespace smlt {
 

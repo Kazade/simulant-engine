@@ -33,7 +33,7 @@ public:
         return *this;
     }
 
-    virtual ~MaterialPropertyRegistry() {}
+    virtual ~MaterialPropertyRegistry();
 
     template<typename T>
     MaterialPropertyID register_property(
@@ -143,6 +143,7 @@ private:
     ) {
         auto ret = register_property(type, name, default_value);
         properties_[ret - 1].is_custom = false;
+        rebuild_custom_properties();
         return ret;
     }
 

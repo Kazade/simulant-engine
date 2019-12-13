@@ -30,6 +30,7 @@
 
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
+#include "../../window.h"
 
 namespace smlt {
 
@@ -127,7 +128,7 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
         // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
         auto loc = program->locate_uniform(property_value->shader_variable(), true);
         if(loc > -1 && (texture_unit + 1u) < MAX_TEXTURE_UNITS) {
-            TextureUnit unit = property_value->value<TextureUnit>();
+            const TextureUnit& unit = property_value->value<TextureUnit>();
             if(unit.texture_id()) {
                 impl->texture_id[texture_unit++] = texture_objects_.at(unit.texture_id());
             } else {
@@ -434,7 +435,7 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
     return program->id();
 }
 
-smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) {
+smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) const {
     return program_manager_.get(program_id);
 }
 

@@ -26,6 +26,13 @@ MaterialPropertyRegistry::MaterialPropertyRegistry() {
     register_all_builtin_properties();
 }
 
+MaterialPropertyRegistry::~MaterialPropertyRegistry() {
+    auto to_release = registered_objects_; // Avoid manipulation in a loop
+    for(auto object: to_release) {
+        unregister_object(object);
+    }
+}
+
 MaterialPropertyID MaterialPropertyRegistry::find_property_id(const std::string& name) const {
     auto it = std::find_if(
                 properties_.begin(),
@@ -160,11 +167,17 @@ void MaterialPropertyRegistry::register_object(MaterialObject* obj, MaterialObje
 }
 
 void MaterialPropertyRegistry::unregister_object(MaterialObject* obj) {
+    if(!obj || obj->object_id_ < 0) {
+        return;
+    }
+
     if(obj == root_) {
         root_ = registered_objects_[0] = nullptr;
     } else {
         registered_objects_[obj->object_id_] = nullptr;
     }
+
+    obj->object_id_ = -1;
 }
 
 }

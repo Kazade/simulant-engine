@@ -139,6 +139,10 @@ void StageManager::destroy_all_stages() {
     stage_manager_->destroy_all();
 }
 
+StageManager::stage_iterator_pair StageManager::each_stage() {
+    return stage_manager_->_each();
+}
+
 void StageManager::destroy_object(Stage* object) {
     stage_manager_->destroy(object->id());
 }

@@ -22,6 +22,8 @@
 
 #include "background.h"
 #include "../render_sequence.h"
+#include "background_manager.h"
+#include "../window.h"
 
 namespace smlt {
 

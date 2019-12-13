@@ -109,7 +109,7 @@ public:
     static const std::unordered_map<std::string, std::string> BUILT_IN_NAMES;
 
     Material(MaterialID id, AssetManager *asset_manager);
-    virtual ~Material() {}
+    virtual ~Material();
 
 // ---------- Passes ------------------------
     void set_pass_count(uint8_t pass_count);

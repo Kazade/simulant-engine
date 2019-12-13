@@ -78,8 +78,8 @@ private:
     bool create_window() override;
     void destroy_window() override;
 
-    void check_events();
-    void swap_buffers();
+    void check_events() override;
+    void swap_buffers() override;
 
     friend int event_filter(void* user_data, SDL_Event* event);
 
@@ -87,7 +87,7 @@ private:
 
     std::shared_ptr<SoundDriver> create_sound_driver() override;
 
-    void initialize_input_controller(InputState &controller);
+    void initialize_input_controller(InputState &controller) override;
 
     /* This is for testing mainly. If you set config.desktop.enable_virtual_screen = true */
     void initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale);
