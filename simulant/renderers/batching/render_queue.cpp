@@ -122,7 +122,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
                 material_id = this_mat_id;
                 last_pass_id = this_pass_id;
-                material_pass = stage_->assets->material(material_id)->pass(this_pass_id);
+                material_pass = renderable->material->pass(this_pass_id);
                 pass_iteration_type = material_pass->iteration_type();
 
                 visitor->change_material_pass(last_pass, material_pass);
