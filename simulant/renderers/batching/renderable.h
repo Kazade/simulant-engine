@@ -62,7 +62,7 @@ struct Renderable final {
     std::size_t index_element_count = 0;
     RenderPriority render_priority = RENDER_PRIORITY_MAIN;
     Mat4 final_transformation;
-    MaterialID material_id;
+    Material* material = nullptr;
     bool is_visible = true;
     std::array<LightPtr, MAX_LIGHTS_PER_RENDERABLE> lights_affecting_this_frame;
 

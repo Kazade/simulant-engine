@@ -338,7 +338,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
                 renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP
             );
 
-            assert(renderable->material_id);
+            assert(renderable->material);
             assert(renderable->index_data);
             assert(renderable->vertex_data);
 

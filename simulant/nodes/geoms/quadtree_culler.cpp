@@ -9,6 +9,7 @@
 #include "../../renderers/renderer.h"
 #include "../../renderers/batching/renderable_store.h"
 #include "../../material.h"
+#include "../../stage.h"
 
 namespace smlt {
 
@@ -84,6 +85,8 @@ void QuadtreeCuller::_compile() {
 }
 
 static void node_visitor(QuadtreeCuller* _this, RenderableFactory* factory, CullerQuadtree::Node* node) {
+    StagePtr stage = _this->geom()->stage.get();
+
     for(auto& p: node->data->triangles) {
         auto mat_id = p.first;
         Renderable new_renderable;
@@ -95,7 +98,9 @@ static void node_visitor(QuadtreeCuller* _this, RenderableFactory* factory, Cull
         new_renderable.render_priority = _this->geom()->render_priority();
         new_renderable.index_element_count = new_renderable.index_data->count();
         new_renderable.is_visible = _this->geom()->is_visible();
-        new_renderable.material_id = mat_id;
+
+        // FIXME: Slow material lookup!
+        new_renderable.material = stage->assets->material(mat_id).get();
 
         factory->push_renderable(new_renderable);
     }

@@ -128,7 +128,7 @@ void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr came
     new_renderable.vertex_data = vertex_data_;
     new_renderable.index_element_count = index_data_->count();
     new_renderable.is_visible = is_visible();
-    new_renderable.material_id = script_->material();
+    new_renderable.material = script_->material().get();
     new_renderable.centre = transformed_aabb().centre();
 
     factory->push_renderable(new_renderable);

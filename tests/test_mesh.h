@@ -236,9 +236,9 @@ public:
             renderables.push_back(*renderable);
         });
 
-        assert_equal(renderables[0].material_id, mat1->id());
-        assert_equal(renderables[1].material_id, mat2->id());
-        assert_equal(renderables[2].material_id, mat1->id());
+        assert_equal(renderables[0].material->id(), mat1->id());
+        assert_equal(renderables[1].material->id(), mat2->id());
+        assert_equal(renderables[2].material->id(), mat1->id());
     }
 
     // Skipped, currently fails
