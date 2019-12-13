@@ -93,29 +93,46 @@ void QuadtreeCuller::_compile() {
     }
 }
 
-static void node_visitor(QuadtreeCuller* _this, RenderableFactory* factory, CullerQuadtree::Node* node) {
-    for(auto& p: node->data->triangles) {
-        Renderable new_renderable;
-
-        new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
-        new_renderable.final_transformation = Mat4();
-        new_renderable.index_data = p.second.indexes.get();
-        new_renderable.vertex_data = _this->_vertex_data();
-        new_renderable.render_priority = _this->geom()->render_priority();
-        new_renderable.index_element_count = new_renderable.index_data->count();
-        new_renderable.is_visible = _this->geom()->is_visible();
-        new_renderable.material = p.second.material;
-
-        factory->push_renderable(new_renderable);
-    }
-}
-
 void QuadtreeCuller::_gather_renderables(const Frustum &frustum, RenderableFactory* factory) {
-    pimpl_->quadtree->traverse_visible(frustum, std::bind(&node_visitor, this, factory, std::placeholders::_1));
+    auto cb = [this, factory](CullerQuadtree::Node* node) {
+        for(auto& p: node->data->triangles) {
+            Renderable new_renderable;
+
+            new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
+            new_renderable.final_transformation = Mat4();
+            new_renderable.index_data = p.second.indexes.get();
+            new_renderable.vertex_data = this->_vertex_data();
+            new_renderable.render_priority = this->geom()->render_priority();
+            new_renderable.index_element_count = new_renderable.index_data->count();
+            new_renderable.is_visible = this->geom()->is_visible();
+            new_renderable.material = p.second.material;
+
+            factory->push_renderable(new_renderable);
+        }
+    };
+
+    pimpl_->quadtree->traverse_visible(frustum, cb);
 }
 
 void QuadtreeCuller::_all_renderables(RenderableFactory* factory) {
-    pimpl_->quadtree->traverse(std::bind(&node_visitor, this, factory, std::placeholders::_1));
+    auto cb = [this, factory](CullerQuadtree::Node* node) {
+        for(auto& p: node->data->triangles) {
+            Renderable new_renderable;
+
+            new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
+            new_renderable.final_transformation = Mat4();
+            new_renderable.index_data = p.second.indexes.get();
+            new_renderable.vertex_data = this->_vertex_data();
+            new_renderable.render_priority = this->geom()->render_priority();
+            new_renderable.index_element_count = new_renderable.index_data->count();
+            new_renderable.is_visible = this->geom()->is_visible();
+            new_renderable.material = p.second.material;
+
+            factory->push_renderable(new_renderable);
+        }
+    };
+
+    pimpl_->quadtree->traverse(cb);
 }
 
 AABB QuadtreeCuller::Quadtree_bounds() const {
