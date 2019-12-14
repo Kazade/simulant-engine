@@ -110,4 +110,8 @@ private:
 
 }
 
+namespace std {
+    DEFINE_ENUM_HASH(smlt::WriteOperation);
+}
+
 #endif // PARTITIONER_H
