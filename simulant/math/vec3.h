@@ -63,6 +63,11 @@ public:
         return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
     }
 
+    Vec3& operator-=(const Vec3& rhs) {
+        *this = *this - rhs;
+        return *this;
+    }
+
     Vec3 operator*(const Vec3& rhs) const {
         return Vec3(x * rhs.x, y * rhs.y, z * rhs.z);
     }
@@ -217,6 +222,9 @@ public:
         return (rhs - lhs).length();
     }
 
+    static float sqr_distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
+        return (rhs - lhs).length_squared();
+    }
 
     inline Vec3 parallel_component(const Vec3& unit_basis) const {
         const float projection = this->dot(unit_basis);
