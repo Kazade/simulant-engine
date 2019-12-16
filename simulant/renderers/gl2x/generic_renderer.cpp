@@ -54,49 +54,9 @@ void main(void) {
 )";
 
 
-class GL2RenderGroupImpl:
-    public batcher::RenderGroupImpl,
-    public std::enable_shared_from_this<GL2RenderGroupImpl> {
-
-public:
-    GL2RenderGroupImpl(uint8_t pass_number, bool is_blended, float distance_to_camera):
-        batcher::RenderGroupImpl(pass_number, is_blended, distance_to_camera) {}
-
+struct GL2RenderGroupImpl {
     GLuint texture_id[MAX_TEXTURE_UNITS];
     GPUProgramID shader_id;
-
-    bool lt(const RenderGroupImpl& other) const override {
-        const GL2RenderGroupImpl* rhs = dynamic_cast<const GL2RenderGroupImpl*>(&other);
-
-        assert(rhs);
-
-        if(!rhs) {
-            // Should never happen... throw an error maybe?
-            return false;
-        }
-
-        // Build a list of shader + texture ids, and return true if the
-        // first non-equal id is less than the rhs equivalent
-
-        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS + 1; ++i) {
-            if(i == 0) {
-                if(shader_id.value() == rhs->shader_id.value()) {
-                    continue;
-                } else {
-                    return shader_id.value() < rhs->shader_id.value();
-                }
-            } else {
-                auto j = i - 1; // i is 1-based because of the shader check
-                if(texture_id[j] == rhs->texture_id[j]) {
-                    continue;
-                }
-
-                return texture_id[j] < rhs->texture_id[j];
-            }
-        }
-
-        return false;
-    }
 };
 
 GPUProgramID GenericRenderer::default_gpu_program_id() const {
@@ -110,8 +70,16 @@ GenericRenderer::GenericRenderer(Window *window):
 
 }
 
-batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, MaterialPass *material_pass, uint8_t pass_number, bool is_blended, float distance_to_camera) {
-    auto impl = std::make_shared<GL2RenderGroupImpl>(pass_number, is_blended, distance_to_camera);
+batcher::RenderGroupKey GenericRenderer::prepare_render_group(
+    batcher::RenderGroup* group,
+    const Renderable *renderable,
+    const MaterialPass *material_pass,
+    const uint8_t pass_number,
+    const bool is_blended,
+    const float distance_to_camera) {
+
+    static_assert(sizeof(GL2RenderGroupImpl) < batcher::RenderGroup::data_size, "RenderGroupImpl too large");
+    GL2RenderGroupImpl* impl = (GL2RenderGroupImpl*) &group->data[0];
 
     auto program = material_pass->gpu_program_id().fetch();
 
@@ -146,7 +114,13 @@ batcher::RenderGroup GenericRenderer::new_render_group(Renderable* renderable, M
 
     impl->shader_id = program->id();
 
-    return batcher::RenderGroup(impl);
+    return batcher::generate_render_group_key(
+        pass_number,
+        is_blended,
+        distance_to_camera,
+        impl->texture_id,
+        impl->shader_id
+    );
 }
 
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light) {
@@ -652,8 +626,8 @@ void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const Materi
 void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
 
     // Casting blindly because I can't see how it's possible that it's anything else!
-    auto last_group = (prev) ? (GL2RenderGroupImpl*) prev->impl() : nullptr;
-    current_group_ = (GL2RenderGroupImpl*) next->impl();
+    auto last_group = (prev) ? (GL2RenderGroupImpl*) &prev->data[0] : nullptr;
+    current_group_ = (GL2RenderGroupImpl*) &next->data[0];
 
     // Active the new program, if this render group uses a different one
     if(!last_group || current_group_->shader_id != last_group->shader_id) {

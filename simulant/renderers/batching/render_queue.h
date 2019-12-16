@@ -34,125 +34,72 @@ class Light;
 
 namespace batcher {
 
-/**
- * @brief The RenderGroupImpl class
- *
- * Instantiated by the renderer when renderer->new_render_group(renderable) is called.
- * Must be the renderers job to define the impl as batching varies (GL2 batches shaders for example)
- */
-class RenderGroupImpl {
-public:
-    typedef std::shared_ptr<RenderGroupImpl> ptr;
+struct RenderGroupKey {
+    uint8_t pass;
+    bool is_blended;
+    float distance_to_camera;
+    uint16_t textures_ids[MAX_TEXTURE_UNITS];
+    uint16_t shader_id;
 
-    RenderGroupImpl(uint8_t pass_number, bool is_blended, float distance_to_camera):
-        pass_number_(pass_number),
-        is_blended_(is_blended),
-        distance_to_camera_(distance_to_camera) {
-
+    bool operator==(const RenderGroupKey& rhs) const  {
+        return memcmp(this, &rhs, sizeof(RenderGroupKey)) == 0;
     }
 
-    RenderGroupImpl(const RenderGroupImpl&) = delete;
-    RenderGroupImpl& operator=(const RenderGroupImpl&) = delete;
-
-    virtual ~RenderGroupImpl() {}
-
-    bool operator<(const RenderGroupImpl& rhs) const {
-        // Always sort on priority first
-
-        if(this->pass_number_ < rhs.pass_number_) {
-            return true;
-        } else if(this->pass_number_ > rhs.pass_number_) {
-            return false;
-        }
-
-        if(this->is_blended_ < rhs.is_blended_) {
-            return true;
-        } else if(this->is_blended_ > rhs.is_blended_) {
-            return false;
-        }
-
-        /* If we're blended, then we sort from far-to-near, if we're not blended
-         * then we sort from near-to-far (to benefit from early-out depth testing) */
-        if(this->is_blended_) {
-            assert(rhs.is_blended_);
-
-            /* Objects are sorted from farthest first, to nearest which is why this
-               is reversed */
-            if(this->distance_to_camera_ > rhs.distance_to_camera_) {
-                return true;
-            } else if(this->distance_to_camera_ < rhs.distance_to_camera_) {
-                return false;
-            }
-        } else {
-            assert(!rhs.is_blended_);
-
-            if(this->distance_to_camera_ < rhs.distance_to_camera_) {
-                return true;
-            } else if(this->distance_to_camera_ > rhs.distance_to_camera_) {
-                return false;
-            }
-        }
-
-        return lt(rhs);
+    bool operator!=(const RenderGroupKey& rhs) const {
+        return !(*this == rhs);
     }
 
-    uint8_t pass_number() const { return pass_number_; }
-private:
-    virtual bool lt(const RenderGroupImpl& rhs) const = 0;
-
-    uint8_t pass_number_;
-    bool is_blended_;
-    float distance_to_camera_ = 0.0f;
+    bool operator<(const RenderGroupKey& rhs) const;
 };
 
-class RenderGroup {
-public:
-    RenderGroup() = delete;
 
-    RenderGroup(RenderGroupImpl::ptr impl):
-        impl_(impl) {
+struct RenderGroup {
+    /* Keep the structure 32 byte aligned */
+    // FIXME: If the size of UniqueID is reduced, then this
+    // might be reduced to 64 bytes, rather than 96 (GL2 renderer
+    // stores the GPUProgramID
+    const static std::size_t data_size = (
+        128 - sizeof(uint64_t) - sizeof(MaterialPass*) - sizeof(RenderGroupKey)
+    );
 
-        assert(impl_);
-    }
+    /* A sort key, generated from priority and material properties, this
+     * may differ per-renderer */
+    RenderGroupKey sort_key;
+
+    /* The pass this rendergroup is part of */
+    MaterialPass* pass = nullptr;
+
+    /* A place for renderer-specific data to be stored */
+    std::array<uint8_t, data_size> data = {};
 
     bool operator<(const RenderGroup& rhs) const {
-        // These things should never happen, but they do...
-        assert(impl_);
-        assert(rhs.impl_);
+        return sort_key < rhs.sort_key;
+    }
 
-        return *impl_ < *rhs.impl_;
+    bool operator==(const RenderGroup& rhs) const {
+        return sort_key == rhs.sort_key;
     }
 
     bool operator!=(const RenderGroup& rhs) const {
-        // Equivilance test is fine
-        if(*this < rhs) {
-            return true;
-        } else if(rhs < *this) {
-            return true;
-        } else {
-            return false;
-        }
+        return sort_key != rhs.sort_key;
     }
-
-    RenderGroupImpl* impl() const { return impl_.get(); }
-
-private:
-    RenderGroupImpl::ptr impl_;
-
-    friend class Renderer;
 };
 
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, const unsigned int* texture_ids, const GPUProgramID& shader_id);
 
 class RenderGroupFactory {
 public:
     virtual ~RenderGroupFactory() {}
 
-    virtual RenderGroup new_render_group(
-        Renderable* renderable,
-        MaterialPass* material_pass,
-        uint8_t pass_number,
-        bool is_blended,
-        float distance_to_camera
+    /* Initialize a render group based on the provided arguments
+     * Returns the group's sort_key */
+    virtual RenderGroupKey prepare_render_group(
+        RenderGroup* group,
+        const Renderable* renderable,
+        const MaterialPass* material_pass,
+        const uint8_t pass_number,
+        const bool is_blended,
+        const float distance_to_camera
     ) = 0;
 };
 

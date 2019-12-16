@@ -89,8 +89,8 @@ void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Sta
 
 void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
     // Casting blindly because I can't see how it's possible that it's anything else!
-    auto last_group = (prev) ? (GL1RenderGroupImpl*) prev->impl() : nullptr;
-    current_group_ = (GL1RenderGroupImpl*) next->impl();
+    auto last_group = (prev) ? (GL1RenderGroupImpl*) &prev->data[0] : nullptr;
+    current_group_ = (GL1RenderGroupImpl*) &next->data[0];
 
     // Set up the textures appropriately depending on the group textures
     for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {

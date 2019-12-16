@@ -32,6 +32,21 @@
 namespace smlt {
 namespace batcher {
 
+
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, const unsigned int* texture_ids, const GPUProgramID& shader_id) {
+    RenderGroupKey key;
+    key.pass = pass;
+    key.is_blended = is_blended;
+    key.distance_to_camera = distance_to_camera;
+
+    for(auto i = 0u; i < MAX_TEXTURE_UNITS; ++i) {
+        key.textures_ids[i] = texture_ids[i];
+    }
+
+    key.shader_id = shader_id;
+    return key;
+}
+
 RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera):
     stage_(stage),
     render_group_factory_(render_group_factory),
@@ -64,14 +79,17 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
-        MaterialPass* material_pass = material->pass(i);
+        RenderGroup group;
+        MaterialPass* pass = material->pass(i);
+        bool is_blended = pass->is_blending_enabled();
 
-        bool is_blended = material_pass->is_blending_enabled();
-
-        RenderGroup group = render_group_factory_->new_render_group(
-            renderable, material_pass,
+        group.sort_key = render_group_factory_->prepare_render_group(
+            &group,
+            renderable, pass,
             i, is_blended, renderable_dist_to_camera
         );
+
+        group.pass = pass;
 
         // Priorities run from -250 to +250, so we need to offset the index
         auto& priority_queue = priority_queues_[priority + std::abs(RENDER_PRIORITY_MIN)];
@@ -94,9 +112,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
     for(auto& queue: priority_queues_) {
         IterationType pass_iteration_type = ITERATION_TYPE_ONCE;
-        MaterialID material_id;
-        MaterialPass* material_pass = nullptr;
-        Pass last_pass_id = 0;
+        MaterialPass* material_pass = nullptr, *last_pass = nullptr;
 
         const RenderGroup* last_group = nullptr;
 
@@ -114,18 +130,12 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 visitor->change_render_group(last_group, current_group);
             }
 
-            auto this_pass_id = current_group->impl()->pass_number();
+            material_pass = (material_pass) ? material_pass : current_group->pass;
 
-            const auto& this_mat_id = renderable->material->id();
-            if(this_mat_id != material_id || this_pass_id != last_pass_id) {
-                auto last_pass = material_pass;
-
-                material_id = this_mat_id;
-                last_pass_id = this_pass_id;
-                material_pass = renderable->material->pass(this_pass_id);
+            if(material_pass != last_pass) {
                 pass_iteration_type = material_pass->iteration_type();
-
                 visitor->change_material_pass(last_pass, material_pass);
+                last_pass = material_pass;
             }
 
             uint32_t iterations = 1;
@@ -173,6 +183,43 @@ uint32_t RenderQueue::group_count(Pass pass_number) const {
     }
 
     return i;
+}
+
+bool RenderGroupKey::operator<(const RenderGroupKey& rhs) const {
+    if(pass < rhs.pass) {
+        return true;
+    }
+
+    if(is_blended < rhs.is_blended) {
+        return true;
+    }
+
+
+    if(!is_blended) {
+        if(distance_to_camera < rhs.distance_to_camera) {
+            // If the object is opaque, we want to render
+            // front-to-back, so less distance is less
+            return true;
+        }
+    } else {
+        if(rhs.distance_to_camera < distance_to_camera) {
+            // If the object is translucent, we want to render
+            // back-to-front
+            return true;
+        }
+    }
+
+    for(auto i = 0u; i < MAX_TEXTURE_UNITS; ++i) {
+        if(textures_ids[i] < rhs.textures_ids[i]) {
+            return true;
+        }
+    }
+
+    if(shader_id < rhs.shader_id) {
+        return true;
+    }
+
+    return false;
 }
 
 }
