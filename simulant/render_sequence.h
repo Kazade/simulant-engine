@@ -99,6 +99,8 @@ private:
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
+
+    batcher::RenderQueue render_queue_;
     std::shared_ptr<RenderableStore> renderable_store_;
 
     std::mutex pipeline_lock_;

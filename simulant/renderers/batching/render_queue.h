@@ -174,7 +174,7 @@ class RenderQueue {
 public:
     typedef std::function<void (bool, const RenderGroup*, Renderable*, MaterialPass*, Light*, Iteration)> TraverseCallback;
 
-    RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
+    RenderQueue();
 
     void reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 

@@ -47,10 +47,7 @@ RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blend
     return key;
 }
 
-RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera):
-    stage_(stage),
-    render_group_factory_(render_group_factory),
-    camera_(camera) {
+RenderQueue::RenderQueue() {
 
 }
 
@@ -68,6 +65,10 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
      * material passes on the renderable, calculates the render group for each one
      * and then adds the renderable to that pass's render queue
      */
+
+    assert(stage_);
+    assert(camera_);
+    assert(render_group_factory_);
 
     if(!renderable->is_visible) {
         return;
