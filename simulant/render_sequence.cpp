@@ -274,7 +274,11 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
 
     profiler.checkpoint("gather");
 
-    batcher::RenderQueue render_queue(stage, this->window->renderer.get(), camera);
+    // Statically construct the render queue to save on allocations
+    static batcher::RenderQueue render_queue(stage, this->window->renderer.get(), camera);
+
+    // Reset it, ready for this pipeline
+    render_queue.reset(stage, this->window->renderer.get(), camera);
 
     uint32_t renderables_rendered = 0;
     // Mark the visible objects as visible

@@ -54,6 +54,14 @@ RenderQueue::RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory,
 
 }
 
+void RenderQueue::reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera) {
+    stage_ = stage;
+    render_group_factory_ = render_group_factory;
+    camera_ = camera;
+
+    clear();
+}
+
 void RenderQueue::insert_renderable(Renderable* renderable) {
     /*
      * Adds a renderable to the correct render groups. This goes through the

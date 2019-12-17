@@ -176,6 +176,8 @@ public:
 
     RenderQueue(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
+    void reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
+
     void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
 
