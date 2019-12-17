@@ -12,33 +12,8 @@
 
 namespace smlt {
 
-class GL1RenderGroupImpl:
-    public batcher::RenderGroupImpl,
-    public std::enable_shared_from_this<GL1RenderGroupImpl> {
-
-public:
-    GL1RenderGroupImpl(RenderPriority priority, bool is_blended, float distance_to_camera):
-        batcher::RenderGroupImpl(priority, is_blended, distance_to_camera) {}
-
+struct GL1RenderGroupImpl {
     GLuint texture_id[MAX_TEXTURE_UNITS] = {0};
-
-    bool lt(const RenderGroupImpl& other) const override {
-        const GL1RenderGroupImpl* rhs = dynamic_cast<const GL1RenderGroupImpl*>(&other);
-        if(!rhs) {
-            // Should never happen... throw an error maybe?
-            return false;
-        }
-
-        for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            if(texture_id[i] < rhs->texture_id[i]) {
-                return true;
-            } else if(texture_id[i] > rhs->texture_id[i]) {
-                return false;
-            }
-        }
-
-        return false;
-    }
 };
 
 

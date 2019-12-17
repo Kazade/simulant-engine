@@ -33,11 +33,16 @@
 
 namespace smlt {
 
-batcher::RenderGroup GL1XRenderer::new_render_group(
-        Renderable *renderable, MaterialPass *material_pass,
-        uint8_t pass_number, bool is_blended, float distance_to_camera) {
+batcher::RenderGroupKey GL1XRenderer::prepare_render_group(
+    batcher::RenderGroup* group,
+    const Renderable *renderable,
+    const MaterialPass *material_pass,
+    const uint8_t pass_number,
+    const bool is_blended,
+    const float distance_to_camera) {
 
-    auto impl = std::make_shared<GL1RenderGroupImpl>(pass_number, is_blended, distance_to_camera);
+    static_assert(sizeof(GL1RenderGroupImpl) < batcher::RenderGroup::data_size, "RenderGroupImpl too large");
+    GL1RenderGroupImpl* impl = (GL1RenderGroupImpl*) &group->data[0];
 
     uint8_t used_count = 0;
 
@@ -68,7 +73,12 @@ batcher::RenderGroup GL1XRenderer::new_render_group(
         }
     }
 
-    return batcher::RenderGroup(impl);
+    return batcher::generate_render_group_key(
+        pass_number,
+        is_blended,
+        distance_to_camera,
+        impl->texture_id, 1
+    );
 }
 
 void GL1XRenderer::init_context() {
