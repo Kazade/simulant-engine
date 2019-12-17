@@ -72,6 +72,7 @@ simulant/generic/object_manager.h
 simulant/generic/raii.h
 simulant/generic/range_value.h
 simulant/generic/uniquely_identifiable.h
+simulant/generic/vector_pool.h
 simulant/loaders/deps/tiny_obj_loader.h
 simulant/loaders/wav_loader.cpp
 simulant/loaders/wav_loader.h

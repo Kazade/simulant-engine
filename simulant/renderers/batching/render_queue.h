@@ -24,6 +24,7 @@
 
 #include "../../types.h"
 #include "../../generic/threading/shared_mutex.h"
+#include "../../generic/vector_pool.h"
 
 namespace smlt {
 
@@ -54,6 +55,18 @@ struct RenderGroupKey {
 
 
 struct RenderGroup {
+    /* FIXME: VectorPool wasn't written generically and assumes we're using
+     * UniqueID. This hacks around that for now. */
+    struct ID {
+        uint32_t id_;
+        ID(uint32_t id):
+            id_(id) {}
+
+        uint32_t value() const {
+            return id_;
+        }
+    };
+
     /* Keep the structure 32 byte aligned */
     // FIXME: If the size of UniqueID is reduced, then this
     // might be reduced to 64 bytes, rather than 96 (GL2 renderer
@@ -61,6 +74,9 @@ struct RenderGroup {
     const static std::size_t data_size = (
         128 - sizeof(uint64_t) - sizeof(MaterialPass*) - sizeof(RenderGroupKey)
     );
+
+    RenderGroup(RenderGroup::ID, MaterialPass* pass):
+        pass(pass) {}
 
     /* A sort key, generated from priority and material properties, this
      * may differ per-renderer */
@@ -83,6 +99,10 @@ struct RenderGroup {
     bool operator!=(const RenderGroup& rhs) const {
         return sort_key != rhs.sort_key;
     }
+
+    // FIXME: Make VectorPool generic so this isn't necessary */
+    bool init() { return true; }
+    void clean_up() {}
 };
 
 RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, const unsigned int* texture_ids, const GPUProgramID& shader_id);
@@ -161,23 +181,25 @@ public:
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
-    uint32_t queue_count() const { return priority_queues_.size(); }
-    uint32_t group_count(Pass pass_number) const;
-
-    /*
-    void each_group(Pass pass, std::function<void (uint32_t, const RenderGroup&, const Batch&)> cb) {
-        uint32_t i = 0;
-        for(auto& batch: batches_[pass]){
-            cb(i++, batch.first, *batch.second);
-        }
-    } */
+    std::size_t queue_count() const { return priority_queues_.size(); }
+    std::size_t group_count(Pass pass_number) const;
 
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
-    typedef std::multimap<RenderGroup, Renderable*> SortedRenderables;
+
+    struct Compare {
+        bool operator()(RenderGroup* lhs, RenderGroup* rhs) const {
+            assert(lhs);
+            assert(rhs);
+
+            return *lhs < *rhs;
+        }
+    };
+
+    typedef std::multimap<RenderGroup*, Renderable*, Compare> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
@@ -188,6 +210,8 @@ private:
     void clean_empty_batches();
 
     mutable std::mutex queue_lock_;
+
+    VectorPool<RenderGroup, RenderGroup::ID, 128> render_group_pool_;
 };
 
 }

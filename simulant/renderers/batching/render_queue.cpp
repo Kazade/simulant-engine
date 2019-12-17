@@ -79,17 +79,16 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
-        RenderGroup group;
         MaterialPass* pass = material->pass(i);
+        RenderGroup* group = render_group_pool_.alloc<RenderGroup>(pass).second;
+
         bool is_blended = pass->is_blending_enabled();
 
-        group.sort_key = render_group_factory_->prepare_render_group(
-            &group,
+        group->sort_key = render_group_factory_->prepare_render_group(
+            group,
             renderable, pass,
             i, is_blended, renderable_dist_to_camera
         );
-
-        group.pass = pass;
 
         // Priorities run from -250 to +250, so we need to offset the index
         auto& priority_queue = priority_queues_[priority + std::abs(RENDER_PRIORITY_MIN)];
@@ -103,6 +102,8 @@ void RenderQueue::clear() {
     for(auto& queue: priority_queues_) {
         queue.clear();
     }
+
+    render_group_pool_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
@@ -117,7 +118,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         const RenderGroup* last_group = nullptr;
 
         for(auto& p: queue) {
-            const RenderGroup* current_group = &p.first;
+            const RenderGroup* current_group = p.first;
             Renderable* renderable = p.second;
 
             if(!renderable->index_element_count) {
@@ -175,7 +176,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
     visitor->end_traversal(*this, stage_);
 }
 
-uint32_t RenderQueue::group_count(Pass pass_number) const {
+std::size_t RenderQueue::group_count(Pass pass_number) const {
     uint32_t i = 0;
     auto& queue = priority_queues_.at(pass_number);
     for(auto it = queue.begin(); it != queue.end(); it = queue.upper_bound(it->first)) {
