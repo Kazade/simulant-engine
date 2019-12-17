@@ -439,13 +439,13 @@ void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* mater
     GLCheck(glMatrixMode, GL_PROJECTION);
     GLCheck(glLoadMatrixf, projection.data());
 
-    auto spec = renderable->vertex_data->vertex_specification();
-    auto stride = spec.stride();
+    const auto& spec = renderable->vertex_data->vertex_specification();
+    const auto stride = spec.stride();
 
     renderer_->prepare_to_render(renderable);
 
-    auto vertex_data = renderable->vertex_data->data();
-    auto index_data = renderable->index_data->data();
+    const auto vertex_data = renderable->vertex_data->data();
+    const auto index_data = renderable->index_data->data();
 
     assert(vertex_data);
     assert(index_data);

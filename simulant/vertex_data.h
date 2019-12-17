@@ -144,7 +144,6 @@ public:
         return stride_;
     }
 
-
     uint32_t copy_vertex_to_another(VertexData& out, uint32_t idx) {
         if(out.vertex_specification_ != this->vertex_specification_) {
             throw std::runtime_error("Cannot copy vertex as formats differ");
