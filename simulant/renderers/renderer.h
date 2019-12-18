@@ -62,7 +62,7 @@ public:
 
     /* This function is called just before drawing the renderable, it can be
      * used to upload any data to VRAM if necessary */
-    virtual void prepare_to_render(Renderable* renderable) = 0;
+    virtual void prepare_to_render(const Renderable* renderable) = 0;
 public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }

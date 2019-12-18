@@ -139,7 +139,7 @@ public:
     virtual void change_material_pass(const MaterialPass* prev, const MaterialPass* next) = 0;
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
 
-    virtual void visit(Renderable*, MaterialPass*, Iteration) = 0;
+    virtual void visit(const Renderable*, const MaterialPass*, Iteration) = 0;
     virtual void end_traversal(const RenderQueue& queue, Stage* stage) = 0;
 };
 
@@ -178,7 +178,7 @@ public:
 
     void reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
-    void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
+    void insert_renderable(Renderable&& renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
@@ -186,6 +186,10 @@ public:
     std::size_t queue_count() const { return priority_queues_.size(); }
     std::size_t group_count(Pass pass_number) const;
 
+    std::size_t renderable_count() const { return renderables_.size(); }
+    Renderable* renderable(const std::size_t i) {
+        return &renderables_[i];
+    }
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
@@ -201,12 +205,13 @@ private:
         }
     };
 
-    typedef std::multimap<RenderGroup*, Renderable*, Compare> SortedRenderables;
+    typedef std::multimap<RenderGroup*, std::size_t, Compare> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
+    std::vector<Renderable> renderables_;
     std::array<SortedRenderables, RENDER_PRIORITY_MAX - RENDER_PRIORITY_MIN> priority_queues_;
 
     void clean_empty_batches();

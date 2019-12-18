@@ -34,14 +34,12 @@
 #include "loader.h"
 
 #include "generic/manual_manager.h"
-#include "renderers/batching/renderable_store.h"
 
 namespace smlt {
 
 RenderSequence::RenderSequence(Window *window):
     window_(window),
     renderer_(window->renderer.get()),
-    renderable_store_(new RenderableStore()),
     pipeline_manager_(new PipelineManager()) {
 
     //Set up the default render options
@@ -275,7 +273,7 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     profiler.checkpoint("gather");
 
     // Reset it, ready for this pipeline
-    render_queue_.reset(stage, this->window->renderer.get(), camera);
+    render_queue_.reset(stage, window->renderer.get(), camera);
 
     uint32_t renderables_rendered = 0;
     // Mark the visible objects as visible
@@ -322,14 +320,16 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
         /* Find the ideal detail level at this distance from the camera */
         auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
 
-        /* create a new factory */
-        auto renderable_factory = renderable_store_->new_factory();
-
         /* Push any renderables for this node */
-        node->_get_renderables(renderable_factory, camera, level);
+        auto initial = render_queue_.renderable_count();
+        node->_get_renderables(&render_queue_, camera, level);
 
-        /* Go through and insert them into the render_queue */
-        renderable_factory->each_pushed([&renderable_lights, &renderables_rendered](Renderable* renderable) {
+        // FIXME: Change _get_renderables to return the number inserted
+        auto count = render_queue_.renderable_count() - initial;
+
+        for(auto i = initial; i < initial + count; ++i) {
+            auto renderable = render_queue_.renderable(i);
+
             assert(
                 renderable->arrangement == MESH_ARRANGEMENT_LINES ||
                 renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
@@ -343,26 +343,14 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
             assert(renderable->index_data);
             assert(renderable->vertex_data);
 
-            if(!renderable->index_element_count) {
-                // Don't render things with no indices
-                return;
-            }
-
             for(auto i = 0u; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
                 renderable->lights_affecting_this_frame[i] = (i < renderable_lights.size()) ? renderable_lights[i] : nullptr;
             }
             ++renderables_rendered;
-        });
+        }
     }
 
     profiler.checkpoint("lights");
-
-    // Insert all the renderables we just created into the queue
-    // this has to happen after the renderable_store has finished any
-    // reallocs or the pointers will be invalidated
-    renderable_store_->each_renderable([this](Renderable* renderable) {
-        render_queue_.insert_renderable(renderable);
-    });
 
     window->stats->set_geometry_visible(renderables_rendered);
 
@@ -380,9 +368,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
 
     signal_pipeline_finished_(*pipeline_stage);
     profiler.checkpoint("post_render");
-
-    /* Make sure we clear the renderable store each frame */
-    renderable_store_->clear();
     render_queue_.clear();
 }
 

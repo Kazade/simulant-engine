@@ -101,7 +101,6 @@ private:
     Renderer* renderer_ = nullptr;
 
     batcher::RenderQueue render_queue_;
-    std::shared_ptr<RenderableStore> renderable_store_;
 
     std::mutex pipeline_lock_;
     std::list<PipelinePtr> ordered_pipelines_;

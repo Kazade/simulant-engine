@@ -22,7 +22,6 @@
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
-#include "../renderers/batching/renderable_store.h"
 
 namespace smlt {
 
@@ -272,8 +271,8 @@ const SubMesh *SubActor::submesh() const {
     return submesh_.get();
 }
 
-void Actor::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel level) {
-    auto mesh = find_mesh(level);
+void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+    auto mesh = find_mesh(detail_level);
     if(!mesh) {
         return;
     }
@@ -293,7 +292,7 @@ void Actor::_get_renderables(RenderableFactory* factory, CameraPtr camera, Detai
         new_renderable.material = submesh->material_at_slot(material_slot_, true).get();
         new_renderable.centre = transformed_aabb().centre();
 
-        factory->push_renderable(new_renderable);
+        render_queue->insert_renderable(std::move(new_renderable));
     }
 }
 

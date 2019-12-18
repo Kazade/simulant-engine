@@ -86,8 +86,6 @@ simulant/nodes/particles/manipulators/size_manipulator.cpp
 simulant/nodes/ui/ui_config.h
 simulant/pipeline.cpp
 simulant/pipeline.h
-simulant/renderers/batching/renderable_store.cpp
-simulant/renderers/batching/renderable_store.h
 simulant/renderers/gl2x/vbo_manager.cpp
 simulant/renderers/gl2x/vbo_manager.h
 simulant/stage_manager.cpp

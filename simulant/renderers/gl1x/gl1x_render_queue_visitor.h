@@ -22,7 +22,7 @@ public:
     GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr camera);
 
     void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage);
-    void visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration);
+    void visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration);
     void end_traversal(const batcher::RenderQueue &queue, Stage* stage);
 
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
@@ -39,7 +39,7 @@ private:
 
     GL1RenderGroupImpl* current_group_ = nullptr;
 
-    void do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
+    void do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration);
 
     void enable_vertex_arrays(bool force=false);
     void disable_vertex_arrays(bool force=false);

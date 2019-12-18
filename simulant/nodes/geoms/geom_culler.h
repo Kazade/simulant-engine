@@ -5,7 +5,12 @@
 #include <functional>
 #include "../../types.h"
 
+
 namespace smlt {
+
+namespace batcher {
+class RenderQueue;
+}
 
 struct Renderable;
 
@@ -23,8 +28,6 @@ typedef std::vector<RenderablePtr> RenderableList;
 typedef std::function<void (Renderable*)> EachRenderableCallback;
 
 class Renderer;
-class RenderableFactory;
-
 
 class GeomCuller {
 public:
@@ -34,7 +37,7 @@ public:
     bool is_compiled() const;
 
     void compile();
-    void renderables_visible(const Frustum& frustum, RenderableFactory* factory);
+    void renderables_visible(const Frustum& frustum, batcher::RenderQueue* render_queue);
 
     void each_renderable(EachRenderableCallback cb);
 
@@ -47,8 +50,8 @@ private:
     bool compiled_ = false;
 
     virtual void _compile() = 0;
-    virtual void _gather_renderables(const Frustum& frustum, RenderableFactory* factory) = 0;
-    virtual void _all_renderables(RenderableFactory* factory) = 0;
+    virtual void _gather_renderables(const Frustum& frustum, batcher::RenderQueue* render_queue) = 0;
+    virtual void _all_renderables(batcher::RenderQueue* rendre_queue) = 0;
 
     virtual const VertexData* _vertex_data() const = 0;
 

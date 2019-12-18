@@ -47,7 +47,7 @@ public:
     GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera);
 
     void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage);
-    void visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration);
+    void visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration);
     void end_traversal(const batcher::RenderQueue &queue, Stage* stage);
 
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
@@ -67,7 +67,7 @@ private:
 
     uint32_t default_texture_name_ = 0;
 
-    void do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration);
+    void do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration);
 
     void rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program);
 };
@@ -105,7 +105,7 @@ public:
         return "gl2x";
     }
 
-    void prepare_to_render(Renderable *renderable) override;
+    void prepare_to_render(const Renderable* renderable) override;
 private:
     GPUProgramManager program_manager_;
     GPUProgramID default_gpu_program_id_;
@@ -114,12 +114,12 @@ private:
 
     void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
-    void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera);
+    void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);
 
-    void set_auto_attributes_on_shader(GPUProgram *program, Renderable* buffer, GPUBuffer* buffers);
+    void set_auto_attributes_on_shader(GPUProgram *program, const Renderable* buffer, GPUBuffer* buffers);
     void set_blending_mode(BlendType type);
-    void send_geometry(Renderable* renderable, GPUBuffer* buffers);
+    void send_geometry(const Renderable* renderable, GPUBuffer* buffers);
 
     /* Stashed here in prepare_to_render and used later for that renderable */
     std::shared_ptr<GPUBuffer> buffer_stash_;

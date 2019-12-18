@@ -312,7 +312,7 @@ void send_attribute(int32_t loc,
     }
 }
 
-void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, Renderable* renderable, GPUBuffer* buffers) {
+void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, const Renderable* renderable, GPUBuffer* buffers) {
     /*
      *  Binding attributes generically is hard. So we have some template magic in the send_attribute
      *  function above that takes the VertexData member functions we need to provide the attribute
@@ -419,7 +419,7 @@ GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPt
 
 }
 
-void GL2RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
+void GL2RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
     do_visit(renderable, material_pass, iteration);
 }
 
@@ -540,7 +540,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
    // rebind_attribute_locations_if_necessary(next, program_);
 }
 
-void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, Renderable* renderable, Camera* camera) {
+void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera) {
     //Calculate the modelview-projection matrix    
     const Mat4 model = renderable->final_transformation;
     const Mat4& view = camera->view_matrix();
@@ -651,12 +651,7 @@ void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     }
 }
 
-void GL2RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
-    // Don't bother doing *anything* if there is nothing to render
-    if(!renderable->index_element_count) {
-        return;
-    }
-
+void GL2RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
     renderer_->prepare_to_render(renderable);
     renderer_->set_auto_attributes_on_shader(program_, renderable, renderer_->buffer_stash_.get());
@@ -708,12 +703,8 @@ GPUProgramID GenericRenderer::current_gpu_program_id() const {
     return ret;
 }
 
-void GenericRenderer::send_geometry(Renderable *renderable, GPUBuffer *buffers) {
+void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buffers) {
     auto element_count = renderable->index_element_count;
-    if(!element_count) {
-        return;
-    }
-
     auto index_type = convert_id_type(renderable->index_data->index_type());
     auto arrangement = renderable->arrangement;
 
@@ -746,7 +737,7 @@ void GenericRenderer::init_context() {
     }
 }
 
-void GenericRenderer::prepare_to_render(Renderable *renderable) {
+void GenericRenderer::prepare_to_render(const Renderable *renderable) {
     /* Here we allocate VBOs for the renderable if necessary, and then upload
      * any new data */
     buffer_stash_.reset(new GPUBuffer(buffer_manager_->update_and_fetch_buffers(renderable)));

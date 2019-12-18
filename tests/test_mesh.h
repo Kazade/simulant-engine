@@ -3,7 +3,6 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "simulant/renderers/batching/renderable_store.h"
 
 namespace {
 
@@ -224,17 +223,17 @@ public:
         actor3->use_material_slot(MATERIAL_SLOT7);
 
         auto camera = stage_->new_camera();
-        RenderableStore store;
-        auto factory = store.new_factory();
+        batcher::RenderQueue queue;
+        queue.reset(stage_, window->renderer.get(), camera);
 
-        actor1->_get_renderables(factory, camera, DETAIL_LEVEL_NEAREST);
-        actor2->_get_renderables(factory, camera, DETAIL_LEVEL_NEAREST);
-        actor3->_get_renderables(factory, camera, DETAIL_LEVEL_NEAREST);
+        actor1->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        actor2->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        actor3->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
 
         std::vector<Renderable> renderables;
-        factory->each_pushed([&](Renderable* renderable) {
-            renderables.push_back(*renderable);
-        });
+        for(auto i = 0u; i < queue.renderable_count(); ++i) {
+            renderables.push_back(*queue.renderable(i));
+        }
 
         assert_equal(renderables[0].material->id(), mat1->id());
         assert_equal(renderables[1].material->id(), mat2->id());

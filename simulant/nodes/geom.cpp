@@ -22,7 +22,6 @@
 #include "geoms/octree_culler.h"
 #include "geoms/quadtree_culler.h"
 #include "camera.h"
-#include "../renderers/batching/renderable_store.h"
 
 namespace smlt {
 
@@ -64,8 +63,8 @@ const AABB &Geom::aabb() const {
     return aabb_;
 }
 
-void Geom::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) {
-    culler_->renderables_visible(camera->frustum(), factory);
+void Geom::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+    culler_->renderables_visible(camera->frustum(), render_queue);
 }
 
 

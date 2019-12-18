@@ -79,7 +79,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     }
 }
 
-void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {
+void GL1RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration iteration) {
     do_visit(renderable, pass, iteration);
 }
 
@@ -420,7 +420,7 @@ static GLenum convert_index_type(IndexType type) {
     }
 }
 
-void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
+void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
     auto element_count = renderable->index_element_count;
     // Don't bother doing *anything* if there is nothing to render
     if(!element_count) {

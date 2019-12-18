@@ -51,15 +51,15 @@ RenderQueue::RenderQueue() {
 
 }
 
-void RenderQueue::reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera) {
+void RenderQueue::reset(Stage* stage, RenderGroupFactory* factory, CameraPtr camera) {
     stage_ = stage;
-    render_group_factory_ = render_group_factory;
+    render_group_factory_ = factory;
     camera_ = camera;
 
     clear();
 }
 
-void RenderQueue::insert_renderable(Renderable* renderable) {
+void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     /*
      * Adds a renderable to the correct render groups. This goes through the
      * material passes on the renderable, calculates the render group for each one
@@ -70,11 +70,12 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
     assert(camera_);
     assert(render_group_factory_);
 
-    if(!renderable->is_visible) {
-        return;
-    }
+    auto idx = renderables_.size();
+    renderables_.push_back(src_renderable);
+    auto renderable = &renderables_.back();
 
-    if(!renderable->index_element_count) {
+    if(!renderable->is_visible || !renderable->index_element_count) {
+        renderables_.pop_back();
         return;
     }
 
@@ -101,7 +102,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
         // Priorities run from -250 to +250, so we need to offset the index
         auto& priority_queue = priority_queues_[priority + std::abs(RENDER_PRIORITY_MIN)];
-        priority_queue.insert(std::make_pair(group, renderable));
+        priority_queue.insert(std::make_pair(group, idx));
     }
 }
 
@@ -113,6 +114,7 @@ void RenderQueue::clear() {
     }
 
     render_group_pool_.clear();
+    renderables_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
@@ -128,11 +130,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
         for(auto& p: queue) {
             const RenderGroup* current_group = p.first;
-            Renderable* renderable = p.second;
-
-            if(!renderable->index_element_count) {
-                return;
-            }
+            const Renderable* renderable = &renderables_[p.second];
 
             /* We do this here so that we don't change render group unless something in the
              * new group is visible */

@@ -74,7 +74,7 @@ std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, 
     return std::make_pair(vvbo, vslot);
 }
 
-GPUBuffer VBOManager::update_and_fetch_buffers(Renderable *renderable) {
+GPUBuffer VBOManager::update_and_fetch_buffers(const Renderable *renderable) {
     const auto& vdata = renderable->vertex_data;
     const auto& idata = renderable->index_data;
 
