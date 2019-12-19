@@ -33,17 +33,11 @@ namespace smlt {
 namespace batcher {
 
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, const unsigned int* texture_ids, const GPUProgramID& shader_id) {
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera) {
     RenderGroupKey key;
     key.pass = pass;
     key.is_blended = is_blended;
     key.distance_to_camera = distance_to_camera;
-
-    for(auto i = 0u; i < MAX_TEXTURE_UNITS; ++i) {
-        key.textures_ids[i] = texture_ids[i];
-    }
-
-    key.shader_id = shader_id;
     return key;
 }
 
@@ -51,15 +45,15 @@ RenderQueue::RenderQueue() {
 
 }
 
-void RenderQueue::reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera) {
+void RenderQueue::reset(Stage* stage, RenderGroupFactory* factory, CameraPtr camera) {
     stage_ = stage;
-    render_group_factory_ = render_group_factory;
+    render_group_factory_ = factory;
     camera_ = camera;
 
     clear();
 }
 
-void RenderQueue::insert_renderable(Renderable* renderable) {
+void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     /*
      * Adds a renderable to the correct render groups. This goes through the
      * material passes on the renderable, calculates the render group for each one
@@ -70,11 +64,12 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
     assert(camera_);
     assert(render_group_factory_);
 
-    if(!renderable->is_visible) {
-        return;
-    }
+    auto idx = renderables_.size();
+    renderables_.push_back(src_renderable);
+    auto renderable = &renderables_.back();
 
-    if(!renderable->index_element_count) {
+    if(!renderable->is_visible || !renderable->index_element_count) {
+        renderables_.pop_back();
         return;
     }
 
@@ -89,7 +84,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
         MaterialPass* pass = material->pass(i);
-        RenderGroup* group = render_group_pool_.alloc<RenderGroup>(pass).second;
+        RenderGroup* group = render_group_pool_.alloc<RenderGroup>(0).second;
 
         bool is_blended = pass->is_blending_enabled();
 
@@ -101,7 +96,7 @@ void RenderQueue::insert_renderable(Renderable* renderable) {
 
         // Priorities run from -250 to +250, so we need to offset the index
         auto& priority_queue = priority_queues_[priority + std::abs(RENDER_PRIORITY_MIN)];
-        priority_queue.insert(std::make_pair(group, renderable));
+        priority_queue.insert(std::make_pair(group, idx));
     }
 }
 
@@ -113,6 +108,7 @@ void RenderQueue::clear() {
     }
 
     render_group_pool_.clear();
+    renderables_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
@@ -128,11 +124,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
         for(auto& p: queue) {
             const RenderGroup* current_group = p.first;
-            Renderable* renderable = p.second;
-
-            if(!renderable->index_element_count) {
-                return;
-            }
+            const Renderable* renderable = &renderables_[p.second];
 
             /* We do this here so that we don't change render group unless something in the
              * new group is visible */
@@ -140,7 +132,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 visitor->change_render_group(last_group, current_group);
             }
 
-            material_pass = (material_pass) ? material_pass : current_group->pass;
+            material_pass = renderable->material->pass(current_group->sort_key.pass);
 
             if(material_pass != last_pass) {
                 pass_iteration_type = material_pass->iteration_type();
@@ -204,7 +196,6 @@ bool RenderGroupKey::operator<(const RenderGroupKey& rhs) const {
         return true;
     }
 
-
     if(!is_blended) {
         if(distance_to_camera < rhs.distance_to_camera) {
             // If the object is opaque, we want to render
@@ -217,16 +208,6 @@ bool RenderGroupKey::operator<(const RenderGroupKey& rhs) const {
             // back-to-front
             return true;
         }
-    }
-
-    for(auto i = 0u; i < MAX_TEXTURE_UNITS; ++i) {
-        if(textures_ids[i] < rhs.textures_ids[i]) {
-            return true;
-        }
-    }
-
-    if(shader_id < rhs.shader_id) {
-        return true;
     }
 
     return false;

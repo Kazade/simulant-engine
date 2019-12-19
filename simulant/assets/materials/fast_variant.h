@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <typeindex>
 
 namespace smlt {
 
@@ -38,8 +39,7 @@ template<typename... Args>
 struct FastVariant {
     typedef FastVariant<Args...> this_type;
 
-    std::size_t type_hash;
-
+    std::type_index type_code = typeid(bool);
 
     /* Allocate data to hold the largest type */
     uint8_t data[max_sizeof<Args...>::value];
@@ -73,7 +73,7 @@ struct FastVariant {
 
     template<typename T>
     const T& get() const {
-        assert(typeid(T).hash_code() == type_hash);
+        assert(std::type_index(typeid(T)) == type_code);
         return *((T*) data);
     }
 
@@ -87,7 +87,7 @@ struct FastVariant {
 
         new (data) T(val);
 
-        type_hash = typeid(T).hash_code();
+        type_code = typeid(T);
 
         destroy = [](this_type* _this) {
             T* thing = (T*) _this->data;

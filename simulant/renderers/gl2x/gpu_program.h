@@ -136,6 +136,14 @@ public:
     GLuint program_object() const { return program_object_; }
     void prepare_program();
 
+    void _set_renderer_specific_id(uint32_t id) {
+        renderer_id_ = id;
+    }
+
+    uint32_t _renderer_specific_id() const {
+        return renderer_id_;
+    }
+
 private:
     friend class ::ShaderTest;
 
@@ -164,6 +172,8 @@ private:
     std::unordered_map<std::string, int32_t> attribute_cache_;
 
     void link(bool force=false);
+
+    uint32_t renderer_id_ = 0;
 };
 
 

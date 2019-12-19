@@ -71,7 +71,7 @@ public:
         StageNode::clean_up();
     }
 
-    void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) override;
+    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
 
     ParticleScript* script() const {
         return script_.get();

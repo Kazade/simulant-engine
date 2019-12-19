@@ -26,19 +26,6 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 }
 
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
-    /* We work out the default texture GL name at the start of traversal to avoid repeatingly looking it up later */
-
-#ifndef _arch_dreamcast
-    /* FIXME: This should also happen on the Dreamcast
-     * but there's an issue with multitexturing there so this
-     * is disabled until we have a proper MT solution in
-     * GLdc using accumulation buffers */
-
-    if(!default_texture_name_) {
-        auto default_tex = renderer_->window->shared_assets->default_texture_id();
-        default_texture_name_ = renderer_->texture_objects_.at(default_tex);
-    }
-#endif
 
     /* Set up default client state before the run. This is necessary
      * so that the boolean flags get correctly set */
@@ -79,7 +66,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     }
 }
 
-void GL1RenderQueueVisitor::visit(Renderable* renderable, MaterialPass* pass, batcher::Iteration iteration) {
+void GL1RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration iteration) {
     do_visit(renderable, pass, iteration);
 }
 
@@ -88,23 +75,7 @@ void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Sta
 }
 
 void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
-    // Casting blindly because I can't see how it's possible that it's anything else!
-    auto last_group = (prev) ? (GL1RenderGroupImpl*) &prev->data[0] : nullptr;
-    current_group_ = (GL1RenderGroupImpl*) &next->data[0];
 
-    // Set up the textures appropriately depending on the group textures
-    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        auto current_tex = current_group_->texture_id[i];
-        if(!last_group || last_group->texture_id[i] != current_tex) {
-            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            if(current_tex) {
-                GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
-            } else {
-                // Bind the default texture in this case
-                GLCheck(glBindTexture, GL_TEXTURE_2D, default_texture_name_);
-            }
-        }
-    }
 }
 
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
@@ -264,6 +235,48 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glEnable, GL_COLOR_MATERIAL);
         }
     }
+
+    if(pass_->is_texturing_enabled()) {
+        uint8_t used_count = 0;
+
+        auto tex = pass_->diffuse_map().texture();
+        auto id = (tex) ? tex->_renderer_specific_id() : 0;
+        if(id) {
+            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
+            ++used_count;
+        }
+
+        tex = next->light_map().texture();
+        id = (tex) ? tex->_renderer_specific_id() : 0;
+        if(id) {
+            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
+            ++used_count;
+        }
+
+        tex = next->normal_map().texture();
+        id = (tex) ? tex->_renderer_specific_id() : 0;
+        if(id) {
+            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
+            ++used_count;
+        }
+
+        tex = next->specular_map().texture();
+        id = (tex) ? tex->_renderer_specific_id() : 0;
+
+        if(id) {
+            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
+            ++used_count;
+        }
+
+        for(auto i = used_count; i < MAX_TEXTURE_UNITS; ++i) {
+            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+        }
+    }
 }
 
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
@@ -420,7 +433,7 @@ static GLenum convert_index_type(IndexType type) {
     }
 }
 
-void GL1RenderQueueVisitor::do_visit(Renderable* renderable, MaterialPass* material_pass, batcher::Iteration iteration) {
+void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
     auto element_count = renderable->index_element_count;
     // Don't bother doing *anything* if there is nothing to render
     if(!element_count) {

@@ -1,7 +1,8 @@
 #include "geom_culler.h"
 #include "../../meshes/mesh.h"
 #include "../../asset_manager.h"
-#include "../../renderers/batching/renderable_store.h"
+#include "../../renderers/batching/render_queue.h"
+#include "../../renderers/batching/renderable.h"
 
 namespace smlt {
 
@@ -34,19 +35,18 @@ void GeomCuller::compile() {
     }
 }
 
-void GeomCuller::renderables_visible(const Frustum& frustum, RenderableFactory* factory) {
-    _gather_renderables(frustum, factory);
+void GeomCuller::renderables_visible(const Frustum& frustum, batcher::RenderQueue* render_queue) {
+    _gather_renderables(frustum, render_queue);
 }
 
 void GeomCuller::each_renderable(EachRenderableCallback cb) {
-    RenderableStore store;
+    batcher::RenderQueue queue;
 
-    auto factory = store.new_factory();
-    _all_renderables(factory);
+    _all_renderables(&queue);
 
-    factory->each_pushed([&](Renderable* r) {
-        cb(r);
-    });
+    for(auto i = 0u; i < queue.renderable_count(); ++i) {
+        cb(queue.renderable(i));
+    }
 }
 
 }

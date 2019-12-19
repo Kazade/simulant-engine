@@ -236,9 +236,9 @@ public:
 
     /* Return a list of renderables to pass into the render queue */
     virtual void _get_renderables(
-        RenderableFactory* factory,
-        CameraPtr camera,
-        DetailLevel detail_level
+        batcher::RenderQueue* render_queue,
+        const CameraPtr camera,
+        const DetailLevel detail_level
     ) = 0;
 
 protected:
@@ -283,7 +283,7 @@ public:
         StageNode(stage) {}
 
     /* Containers don't directly have renderables, but their children do */
-    void _get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) override {
+    void _get_renderables(batcher::RenderQueue*, const CameraPtr, const DetailLevel) override {
 
     }
 

@@ -1,6 +1,5 @@
 #include "particle_system.h"
 
-#include "../renderers/batching/renderable_store.h"
 #include "../frustum.h"
 #include "../stage.h"
 #include "../types.h"
@@ -116,7 +115,7 @@ bool ParticleSystem::has_active_emitters() const {
     return false;
 }
 
-void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr camera, DetailLevel detail_level) {
+void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
     /* Rebuild the vertex data with the current camera direction */
     rebuild_vertex_data(camera->up(), camera->right());
 
@@ -131,7 +130,7 @@ void ParticleSystem::_get_renderables(RenderableFactory* factory, CameraPtr came
     new_renderable.material = script_->material().get();
     new_renderable.centre = transformed_aabb().centre();
 
-    factory->push_renderable(new_renderable);
+    render_queue->insert_renderable(std::move(new_renderable));
 }
 
 void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right) {

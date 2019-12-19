@@ -49,7 +49,7 @@ public:
         return "gl1x";
     }
 
-    void prepare_to_render(Renderable *renderable) override {}
+    void prepare_to_render(const Renderable *renderable) override {}
 private:
     void on_texture_prepare(TexturePtr texture) override {
         GLRenderer::on_texture_prepare(texture);
@@ -59,8 +59,8 @@ private:
         GLRenderer::on_texture_register(tex_id, texture);
     }
 
-    void on_texture_unregister(TextureID tex_id) override {
-        GLRenderer::on_texture_unregister(tex_id);
+    void on_texture_unregister(TextureID tex_id, Texture* texture) override {
+        GLRenderer::on_texture_unregister(tex_id, texture);
     }
 };
 

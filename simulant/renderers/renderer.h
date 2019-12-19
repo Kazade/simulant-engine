@@ -62,14 +62,14 @@ public:
 
     /* This function is called just before drawing the renderable, it can be
      * used to upload any data to VRAM if necessary */
-    virtual void prepare_to_render(Renderable* renderable) = 0;
+    virtual void prepare_to_render(const Renderable* renderable) = 0;
 public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }
 
     void register_texture(TextureID tex_id, TexturePtr texture);
 
-    void unregister_texture(TextureID texture_id);
+    void unregister_texture(TextureID texture_id, Texture* texture);
 
     /*
      * Returns true if the texture has been allocated, false otherwise.
@@ -104,7 +104,7 @@ private:
      * This will be called when all render groups sharing the texture are destroyed
      * and so can be called from any thread and should be thread-safe
      */
-    virtual void on_texture_unregister(TextureID tex_id) {}
+    virtual void on_texture_unregister(TextureID tex_id, Texture* texture) {}
 
     /*
      * Given a Texture, this should take care of:

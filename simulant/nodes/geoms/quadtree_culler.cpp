@@ -7,7 +7,6 @@
 #include "../../meshes/mesh.h"
 #include "../geom.h"
 #include "../../renderers/renderer.h"
-#include "../../renderers/batching/renderable_store.h"
 #include "../../material.h"
 #include "../../stage.h"
 
@@ -93,8 +92,8 @@ void QuadtreeCuller::_compile() {
     }
 }
 
-void QuadtreeCuller::_gather_renderables(const Frustum &frustum, RenderableFactory* factory) {
-    auto cb = [this, factory](CullerQuadtree::Node* node) {
+void QuadtreeCuller::_gather_renderables(const Frustum &frustum, batcher::RenderQueue* render_queue) {
+    auto cb = [this, render_queue](CullerQuadtree::Node* node) {
         for(auto& p: node->data->triangles) {
             Renderable new_renderable;
 
@@ -107,15 +106,15 @@ void QuadtreeCuller::_gather_renderables(const Frustum &frustum, RenderableFacto
             new_renderable.is_visible = this->geom()->is_visible();
             new_renderable.material = p.second.material;
 
-            factory->push_renderable(new_renderable);
+            render_queue->insert_renderable(std::move(new_renderable));
         }
     };
 
     pimpl_->quadtree->traverse_visible(frustum, cb);
 }
 
-void QuadtreeCuller::_all_renderables(RenderableFactory* factory) {
-    auto cb = [this, factory](CullerQuadtree::Node* node) {
+void QuadtreeCuller::_all_renderables(batcher::RenderQueue* render_queue) {
+    auto cb = [this, render_queue](CullerQuadtree::Node* node) {
         for(auto& p: node->data->triangles) {
             Renderable new_renderable;
 
@@ -128,7 +127,7 @@ void QuadtreeCuller::_all_renderables(RenderableFactory* factory) {
             new_renderable.is_visible = this->geom()->is_visible();
             new_renderable.material = p.second.material;
 
-            factory->push_renderable(new_renderable);
+            render_queue->insert_renderable(std::move(new_renderable));
         }
     };
 

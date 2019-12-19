@@ -77,24 +77,24 @@ public:
 
         // Materials have a single pass by default, rightly or wrongly...
         assert_equal(mat1->pass_count(), 1);
-        assert_equal(mat1->registered_material_object_count(), 2);
+        assert_equal(mat1->registered_material_object_count(), 2u);
 
         mat1->set_pass_count(2);
         assert_equal(mat1->pass_count(), 2);
-        assert_equal(mat1->registered_material_object_count(), 3);
+        assert_equal(mat1->registered_material_object_count(), 3u);
 
         mat1->set_pass_count(1);
         assert_equal(mat1->pass_count(), 1);
-        assert_equal(mat1->registered_material_object_count(), 2);
+        assert_equal(mat1->registered_material_object_count(), 2u);
 
         mat1->set_pass_count(2);
         assert_equal(mat1->pass_count(), 2);
-        assert_equal(mat1->registered_material_object_count(), 3);
+        assert_equal(mat1->registered_material_object_count(), 3u);
 
         auto mat2 = window->shared_assets->clone_material(mat1);
 
         assert_equal(mat2->pass_count(), 2);
-        assert_equal(mat2->registered_material_object_count(), 3);
+        assert_equal(mat2->registered_material_object_count(), 3u);
     }
 
     void test_material_copies() {

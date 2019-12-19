@@ -39,8 +39,6 @@ struct RenderGroupKey {
     uint8_t pass;
     bool is_blended;
     float distance_to_camera;
-    uint16_t textures_ids[MAX_TEXTURE_UNITS];
-    uint16_t shader_id;
 
     bool operator==(const RenderGroupKey& rhs) const  {
         return memcmp(this, &rhs, sizeof(RenderGroupKey)) == 0;
@@ -67,26 +65,12 @@ struct RenderGroup {
         }
     };
 
-    /* Keep the structure 32 byte aligned */
-    // FIXME: If the size of UniqueID is reduced, then this
-    // might be reduced to 64 bytes, rather than 96 (GL2 renderer
-    // stores the GPUProgramID
-    const static std::size_t data_size = (
-        128 - sizeof(uint64_t) - sizeof(MaterialPass*) - sizeof(RenderGroupKey)
-    );
-
-    RenderGroup(RenderGroup::ID, MaterialPass* pass):
-        pass(pass) {}
+    // FIXME: VectorPool expects arguments
+    RenderGroup(RenderGroup::ID, int dummy) {}
 
     /* A sort key, generated from priority and material properties, this
      * may differ per-renderer */
     RenderGroupKey sort_key;
-
-    /* The pass this rendergroup is part of */
-    MaterialPass* pass = nullptr;
-
-    /* A place for renderer-specific data to be stored */
-    std::array<uint8_t, data_size> data = {};
 
     bool operator<(const RenderGroup& rhs) const {
         return sort_key < rhs.sort_key;
@@ -105,7 +89,7 @@ struct RenderGroup {
     void clean_up() {}
 };
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, const unsigned int* texture_ids, const GPUProgramID& shader_id);
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera);
 
 class RenderGroupFactory {
 public:
@@ -139,7 +123,7 @@ public:
     virtual void change_material_pass(const MaterialPass* prev, const MaterialPass* next) = 0;
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
 
-    virtual void visit(Renderable*, MaterialPass*, Iteration) = 0;
+    virtual void visit(const Renderable*, const MaterialPass*, Iteration) = 0;
     virtual void end_traversal(const RenderQueue& queue, Stage* stage) = 0;
 };
 
@@ -178,7 +162,7 @@ public:
 
     void reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
-    void insert_renderable(Renderable* renderable); // IMPORTANT, must update RenderGroups if they exist already
+    void insert_renderable(Renderable&& renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
@@ -186,6 +170,10 @@ public:
     std::size_t queue_count() const { return priority_queues_.size(); }
     std::size_t group_count(Pass pass_number) const;
 
+    std::size_t renderable_count() const { return renderables_.size(); }
+    Renderable* renderable(const std::size_t i) {
+        return &renderables_[i];
+    }
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
@@ -201,12 +189,13 @@ private:
         }
     };
 
-    typedef std::multimap<RenderGroup*, Renderable*, Compare> SortedRenderables;
+    typedef std::multimap<RenderGroup*, std::size_t, Compare> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
+    std::vector<Renderable> renderables_;
     std::array<SortedRenderables, RENDER_PRIORITY_MAX - RENDER_PRIORITY_MIN> priority_queues_;
 
     void clean_empty_batches();

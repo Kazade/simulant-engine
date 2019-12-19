@@ -19,8 +19,8 @@ public:
     const VertexData* _vertex_data() const override;
 private:
     void _compile() override;
-    void _gather_renderables(const Frustum &frustum, RenderableFactory* factory) override;
-    void _all_renderables(RenderableFactory* factory) override;
+    void _gather_renderables(const Frustum &frustum, batcher::RenderQueue* render_queue) override;
+    void _all_renderables(batcher::RenderQueue* render_queue) override;
 
     std::shared_ptr<_QuadtreeCullerImpl> pimpl_;
 

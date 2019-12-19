@@ -38,6 +38,7 @@ struct TextureUnit {
     void scroll_y(float amount);
 
     const TextureID& texture_id() const;
+    const TexturePtr texture() const {return texture_;}
 
 private:
     /* Shared pointer so that copying a TextureUnit also copies the matrix */

@@ -497,7 +497,7 @@ bool Texture::init() {
 
 void Texture::clean_up() {
     // Tell the renderer to forget the texture
-    renderer_->unregister_texture(id());
+    renderer_->unregister_texture(id(), this);
 }
 
 void Texture::update(float dt) {
@@ -512,10 +512,20 @@ bool Texture::auto_upload() const {
     return pimpl_->auto_upload_;
 }
 
+void Texture::_set_renderer_specific_id(const uint32_t id) {
+    std::lock_guard<std::mutex> g(lock_);
+    renderer_id_ = id;
+}
+
+uint32_t Texture::_renderer_specific_id() const {
+    std::lock_guard<std::mutex> g(lock_);
+    return renderer_id_;
+}
+
 uint8_t texture_format_stride(TextureFormat format) {
     switch(format) {
         case TEXTURE_FORMAT_R8: return 1;
-    case TEXTURE_FORMAT_RGBA4444:
+        case TEXTURE_FORMAT_RGBA4444:
     case TEXTURE_FORMAT_RGBA5551: return 2;
     case TEXTURE_FORMAT_RGB888: return 3;
     case TEXTURE_FORMAT_RGBA8888: return 4;

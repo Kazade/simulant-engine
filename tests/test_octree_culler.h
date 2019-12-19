@@ -5,7 +5,6 @@
 #include "simulant/test.h"
 #include "simulant/nodes/geoms/octree_culler.h"
 #include "simulant/nodes/geom.h"
-#include "simulant/renderers/batching/renderable_store.h"
 
 namespace {
 
@@ -50,16 +49,15 @@ public:
 
         camera->look_at(0, 0, -1); // Looking up -Z
 
-        RenderableStore store;
-        auto factory = store.new_factory();
-
+        batcher::RenderQueue queue;
+        queue.reset(stage, window->renderer.get(), camera);
         auto geom = stage->new_geom_with_mesh(mesh->id());
-        geom->culler->renderables_visible(camera->frustum(), factory);
+        geom->culler->renderables_visible(camera->frustum(), &queue);
 
         std::vector<Renderable*> result;
-        factory->each_pushed([&](Renderable* r) {
-            result.push_back(r);
-        });
+        for(auto i = 0u; i < queue.renderable_count(); ++i) {
+            result.push_back(queue.renderable(i));
+        }
 
         // FIXME: Make sure this is the right value!!!
         // things changed when we started returning a renderable
@@ -70,14 +68,13 @@ public:
 
         camera->look_at(0, 0, 1); // Looking up +Z
 
-        store.clear();
-        factory = store.new_factory();
+        queue.clear();
         result.clear();
 
-        geom->culler->renderables_visible(camera->frustum(), factory);
-        factory->each_pushed([&](Renderable* r) {
-            result.push_back(r);
-        });
+        geom->culler->renderables_visible(camera->frustum(), &queue);
+        for(auto i = 0u; i < queue.renderable_count(); ++i) {
+            result.push_back(queue.renderable(i));
+        }
 
         assert_equal(3u, result.size());
 

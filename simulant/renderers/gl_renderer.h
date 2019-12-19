@@ -20,7 +20,7 @@ protected:
         win_(window) {}
 
     void on_texture_register(TextureID tex_id, TexturePtr texture);
-    void on_texture_unregister(TextureID tex_id);
+    void on_texture_unregister(TextureID tex_id, Texture* texture);
     void on_texture_prepare(TexturePtr texture);
 
     uint32_t convert_texture_format(TextureFormat format);
