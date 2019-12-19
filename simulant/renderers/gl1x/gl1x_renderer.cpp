@@ -41,43 +41,10 @@ batcher::RenderGroupKey GL1XRenderer::prepare_render_group(
     const bool is_blended,
     const float distance_to_camera) {
 
-    static_assert(sizeof(GL1RenderGroupImpl) < batcher::RenderGroup::data_size, "RenderGroupImpl too large");
-    GL1RenderGroupImpl* impl = (GL1RenderGroupImpl*) &group->data[0];
-
-    uint8_t used_count = 0;
-
-    if(!material_pass->is_texturing_enabled()) {
-        for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-            impl->texture_id[i] = 0;
-        }
-    } else {
-        TextureID tex_id;
-        tex_id = material_pass->diffuse_map().texture_id();
-        if(tex_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
-        }
-
-        tex_id = material_pass->light_map().texture_id();
-        if(tex_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
-        }
-
-        tex_id = material_pass->normal_map().texture_id();
-        if(tex_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
-        }
-
-        tex_id = material_pass->specular_map().texture_id();
-        if(tex_id) {
-            impl->texture_id[used_count++] = texture_objects_.at(tex_id);
-        }
-    }
-
     return batcher::generate_render_group_key(
         pass_number,
         is_blended,
-        distance_to_camera,
-        impl->texture_id, 1
+        distance_to_camera
     );
 }
 

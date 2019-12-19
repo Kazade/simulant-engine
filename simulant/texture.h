@@ -218,12 +218,21 @@ public:
     bool has_mipmaps() const;
     bool auto_upload() const;
 
+
+    /* This is for storing the GL (or whatever) texture ID */
+    void _set_renderer_specific_id(const uint32_t id);
+    uint32_t _renderer_specific_id() const;
+
 private:
     Renderer* renderer_ = nullptr;
 
     // Set when transaction is committed
     bool data_dirty_ = false;
     bool params_dirty_ = false;
+
+    uint32_t renderer_id_ = 0;
+
+    mutable std::mutex lock_;
 };
 
 class TextureTransaction:

@@ -19,37 +19,26 @@ public:
     }
 
     void test_render_group_key_generation() {
-        unsigned int texture_ids[MAX_TEXTURE_UNITS] = {0};
-
-        texture_ids[0] = 1;
-
         auto pass0_unblended_100_tex1 = batcher::generate_render_group_key(
-            0, false, 100.0f, texture_ids, 1
+            0, false, 100.0f
         );
 
         auto pass0_unblended_10_tex1 = batcher::generate_render_group_key(
-            0, false, 10.0f, texture_ids, 1
+            0, false, 10.0f
         );
 
-        texture_ids[0] = 2;
-        auto pass0_unblended_100_tex2 = batcher::generate_render_group_key(
-            0, false, 100.0f, texture_ids, 1
-        );
-
-        texture_ids[0] = 1;
         auto pass0_blended_100_tex1 = batcher::generate_render_group_key(
-            0, true, 100.0f, texture_ids, 1
+            0, true, 100.0f
         );
 
         auto pass0_blended_10_tex1 = batcher::generate_render_group_key(
-            0, true, 10.0f, texture_ids, 1
+            0, true, 10.0f
         );
 
         auto pass1_blended_10_tex1 = batcher::generate_render_group_key(
-            1, true, 10.0f, texture_ids, 1
+            1, true, 10.0f
         );
 
-        assert_true(pass0_unblended_100_tex1 < pass0_unblended_100_tex2);
         assert_true(pass0_unblended_100_tex1 < pass0_blended_100_tex1);
         assert_true(pass0_unblended_100_tex1 < pass0_blended_10_tex1);
 

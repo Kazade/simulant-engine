@@ -65,8 +65,6 @@ private:
 
     GL2RenderGroupImpl* current_group_ = nullptr;
 
-    uint32_t default_texture_name_ = 0;
-
     void do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration);
 
     void rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program);
@@ -134,8 +132,8 @@ private:
         GLRenderer::on_texture_register(tex_id, texture);
     }
 
-    void on_texture_unregister(TextureID tex_id) override {
-        GLRenderer::on_texture_unregister(tex_id);
+    void on_texture_unregister(TextureID tex_id, Texture* texture) override {
+        GLRenderer::on_texture_unregister(tex_id, texture);
     }
 };
 

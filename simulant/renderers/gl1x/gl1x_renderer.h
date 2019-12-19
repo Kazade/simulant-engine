@@ -59,8 +59,8 @@ private:
         GLRenderer::on_texture_register(tex_id, texture);
     }
 
-    void on_texture_unregister(TextureID tex_id) override {
-        GLRenderer::on_texture_unregister(tex_id);
+    void on_texture_unregister(TextureID tex_id, Texture* texture) override {
+        GLRenderer::on_texture_unregister(tex_id, texture);
     }
 };
 

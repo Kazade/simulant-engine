@@ -39,8 +39,6 @@ struct RenderGroupKey {
     uint8_t pass;
     bool is_blended;
     float distance_to_camera;
-    uint16_t textures_ids[MAX_TEXTURE_UNITS];
-    uint16_t shader_id;
 
     bool operator==(const RenderGroupKey& rhs) const  {
         return memcmp(this, &rhs, sizeof(RenderGroupKey)) == 0;
@@ -67,26 +65,12 @@ struct RenderGroup {
         }
     };
 
-    /* Keep the structure 32 byte aligned */
-    // FIXME: If the size of UniqueID is reduced, then this
-    // might be reduced to 64 bytes, rather than 96 (GL2 renderer
-    // stores the GPUProgramID
-    const static std::size_t data_size = (
-        128 - sizeof(uint64_t) - sizeof(MaterialPass*) - sizeof(RenderGroupKey)
-    );
-
-    RenderGroup(RenderGroup::ID, MaterialPass* pass):
-        pass(pass) {}
+    // FIXME: VectorPool expects arguments
+    RenderGroup(RenderGroup::ID, int dummy) {}
 
     /* A sort key, generated from priority and material properties, this
      * may differ per-renderer */
     RenderGroupKey sort_key;
-
-    /* The pass this rendergroup is part of */
-    MaterialPass* pass = nullptr;
-
-    /* A place for renderer-specific data to be stored */
-    std::array<uint8_t, data_size> data = {};
 
     bool operator<(const RenderGroup& rhs) const {
         return sort_key < rhs.sort_key;
@@ -105,7 +89,7 @@ struct RenderGroup {
     void clean_up() {}
 };
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, const unsigned int* texture_ids, const GPUProgramID& shader_id);
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera);
 
 class RenderGroupFactory {
 public:

@@ -78,48 +78,10 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     const bool is_blended,
     const float distance_to_camera) {
 
-    static_assert(sizeof(GL2RenderGroupImpl) < batcher::RenderGroup::data_size, "RenderGroupImpl too large");
-    GL2RenderGroupImpl* impl = (GL2RenderGroupImpl*) &group->data[0];
-
-    auto program = material_pass->gpu_program_id().fetch();
-
-    /* First we bind any used texture properties to their associated variables */
-    uint8_t texture_unit = 0;
-    for(auto& defined_property: material_pass->material()->texture_properties()) {
-        auto property_value = material_pass->property_value(defined_property->id);
-
-        // Do we use this texture property? Then bind the texture appropriately
-        // FIXME: Is this right? The GL1 renderer uses the existence of a texture_id
-        // to decide whether or not to bind a texture to a unit. This checks the variable exists
-        // and also whether there's a texture ID. The question is, should the material have some other
-        // type of existence check for texture properties? Is checking the texture_id right for all situations?
-        // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
-        auto loc = program->locate_uniform(property_value->shader_variable(), true);
-        if(loc > -1 && (texture_unit + 1u) < MAX_TEXTURE_UNITS) {
-            const TextureUnit& unit = property_value->value<TextureUnit>();
-            if(unit.texture_id()) {
-                impl->texture_id[texture_unit++] = texture_objects_.at(unit.texture_id());
-            } else {
-                // Bind the default (white) texture if the unit is used, but doesn't have a
-                // texture bound.
-                impl->texture_id[texture_unit++] = 0;
-            }
-        }
-    }
-
-    /* Next, we wipe out any unused texture units */
-    for(uint8_t i = texture_unit; i < MAX_TEXTURE_UNITS; ++i) {
-        impl->texture_id[i] = TextureID();
-    }
-
-    impl->shader_id = program->id();
-
     return batcher::generate_render_group_key(
         pass_number,
         is_blended,
-        distance_to_camera,
-        impl->texture_id,
-        impl->shader_id
+        distance_to_camera
     );
 }
 
@@ -424,11 +386,6 @@ void GL2RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
 }
 
 void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
-    if(!default_texture_name_) {
-        auto default_tex = renderer_->window->shared_assets->default_texture_id();
-        default_texture_name_ = renderer_->texture_objects_.at(default_tex);
-    }
-
     global_ambient_ = stage->ambient_light();
 }
 
@@ -447,6 +404,41 @@ void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
 void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
+
+    // Active the new program, if this render group uses a different one
+    if(!prev || prev->gpu_program_id() != next->gpu_program_id()) {
+        program_ = this->renderer_->gpu_program(pass_->gpu_program_id()).get();
+        program_->build();
+        program_->activate();
+    }
+
+    /* First we bind any used texture properties to their associated variables */
+    uint8_t texture_unit = 0;
+    for(auto& defined_property: pass_->material()->texture_properties()) {
+        auto property_value = pass_->property_value(defined_property->id);
+
+        // Do we use this texture property? Then bind the texture appropriately
+        // FIXME: Is this right? The GL1 renderer uses the existence of a texture_id
+        // to decide whether or not to bind a texture to a unit. This checks the variable exists
+        // and also whether there's a texture ID. The question is, should the material have some other
+        // type of existence check for texture properties? Is checking the texture_id right for all situations?
+        // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
+        auto loc = program_->locate_uniform(property_value->shader_variable(), true);
+        if(loc > -1 && (texture_unit + 1u) < MAX_TEXTURE_UNITS) {
+            const TextureUnit& unit = property_value->value<TextureUnit>();
+
+            auto tex = unit.texture();
+            GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
+            GLCheck(glBindTexture, GL_TEXTURE_2D, (tex) ? tex->_renderer_specific_id() : 0);
+            texture_unit++;
+        }
+    }
+
+    /* Next, we wipe out any unused texture units */
+    for(uint8_t i = texture_unit; i < MAX_TEXTURE_UNITS; ++i) {
+        GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
+        GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
+    }
 
     if(!prev || prev->is_depth_test_enabled() != next->is_depth_test_enabled()) {
         if(next->is_depth_test_enabled()) {
@@ -515,6 +507,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glShadeModel, GL_FLAT);
         }
     }
+
+
 
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
@@ -625,30 +619,6 @@ void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const Materi
 
 void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
 
-    // Casting blindly because I can't see how it's possible that it's anything else!
-    auto last_group = (prev) ? (GL2RenderGroupImpl*) &prev->data[0] : nullptr;
-    current_group_ = (GL2RenderGroupImpl*) &next->data[0];
-
-    // Active the new program, if this render group uses a different one
-    if(!last_group || current_group_->shader_id != last_group->shader_id) {
-        program_ = this->renderer_->gpu_program(current_group_->shader_id).get();
-        program_->build();
-        program_->activate();
-    }
-
-    // Set up the textures appropriately depending on the group textures
-    for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
-        auto current_tex = current_group_->texture_id[i];
-        if(!last_group || last_group->texture_id[i] != current_tex) {
-            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-            if(current_tex) {
-                GLCheck(glBindTexture, GL_TEXTURE_2D, current_tex);
-            } else {
-                // Bind the default texture in this case
-                GLCheck(glBindTexture, GL_TEXTURE_2D, default_texture_name_);
-            }
-        }
-    }
 }
 
 void GL2RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {

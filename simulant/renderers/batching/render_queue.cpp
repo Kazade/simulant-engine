@@ -33,17 +33,11 @@ namespace smlt {
 namespace batcher {
 
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, const unsigned int* texture_ids, const GPUProgramID& shader_id) {
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera) {
     RenderGroupKey key;
     key.pass = pass;
     key.is_blended = is_blended;
     key.distance_to_camera = distance_to_camera;
-
-    for(auto i = 0u; i < MAX_TEXTURE_UNITS; ++i) {
-        key.textures_ids[i] = texture_ids[i];
-    }
-
-    key.shader_id = shader_id;
     return key;
 }
 
@@ -90,7 +84,7 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
         MaterialPass* pass = material->pass(i);
-        RenderGroup* group = render_group_pool_.alloc<RenderGroup>(pass).second;
+        RenderGroup* group = render_group_pool_.alloc<RenderGroup>(0).second;
 
         bool is_blended = pass->is_blending_enabled();
 
@@ -138,7 +132,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 visitor->change_render_group(last_group, current_group);
             }
 
-            material_pass = (material_pass) ? material_pass : current_group->pass;
+            material_pass = renderable->material->pass(current_group->sort_key.pass);
 
             if(material_pass != last_pass) {
                 pass_iteration_type = material_pass->iteration_type();
@@ -202,7 +196,6 @@ bool RenderGroupKey::operator<(const RenderGroupKey& rhs) const {
         return true;
     }
 
-
     if(!is_blended) {
         if(distance_to_camera < rhs.distance_to_camera) {
             // If the object is opaque, we want to render
@@ -215,16 +208,6 @@ bool RenderGroupKey::operator<(const RenderGroupKey& rhs) const {
             // back-to-front
             return true;
         }
-    }
-
-    for(auto i = 0u; i < MAX_TEXTURE_UNITS; ++i) {
-        if(textures_ids[i] < rhs.textures_ids[i]) {
-            return true;
-        }
-    }
-
-    if(shader_id < rhs.shader_id) {
-        return true;
     }
 
     return false;

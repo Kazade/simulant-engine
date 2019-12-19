@@ -28,17 +28,11 @@ void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
         GLCheck(glGenTextures, 1, &gl_tex);
     }
 
-    std::lock_guard<std::mutex> lock(texture_object_mutex_);
-    texture_objects_[tex_id] = gl_tex;
+    texture->_set_renderer_specific_id(gl_tex);
 }
 
-void GLRenderer::on_texture_unregister(TextureID tex_id) {
-    GLuint gl_tex;
-    {
-        std::lock_guard<std::mutex> lock(texture_object_mutex_);
-        gl_tex = texture_objects_.at(tex_id);
-        texture_objects_.erase(tex_id);
-    }
+void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
+    uint32_t gl_tex = texture->_renderer_specific_id();
 
     if(!GLThreadCheck::is_current()) {
         win_->idle->run_sync([&gl_tex]() {
@@ -47,6 +41,9 @@ void GLRenderer::on_texture_unregister(TextureID tex_id) {
     } else {
         GLCheck(glDeleteTextures, 1, &gl_tex);
     }
+
+    texture->_set_renderer_specific_id(0);
+
 }
 
 uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
@@ -105,15 +102,8 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
     }
 
     GLint active;
+    GLuint target = texture->_renderer_specific_id();
     GLCheck(glGetIntegerv, GL_TEXTURE_BINDING_2D, &active);
-
-    GLuint target;
-
-    {
-        std::lock_guard<std::mutex> lock(texture_object_mutex_);
-        target = texture_objects_.at(texture->id());
-    }
-
     GLCheck(glBindTexture, GL_TEXTURE_2D, target);
 
     /* Only upload data if it's enabled on the texture */

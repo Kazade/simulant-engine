@@ -28,12 +28,13 @@ void Renderer::register_texture(TextureID tex_id, TexturePtr texture) {
     texture_registry_.insert(std::make_pair(tex_id, std::weak_ptr<Texture>(texture)));
 }
 
-void Renderer::unregister_texture(TextureID texture_id) {
+void Renderer::unregister_texture(TextureID texture_id, Texture* texture) {
     {
         write_lock<shared_mutex> lock(texture_registry_mutex_);
         texture_registry_.erase(texture_id);
     }
-    on_texture_unregister(texture_id);
+
+    on_texture_unregister(texture_id, texture);
 }
 
 bool Renderer::is_texture_registered(TextureID texture_id) const {
