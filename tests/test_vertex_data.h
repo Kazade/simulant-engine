@@ -44,9 +44,9 @@ public:
         spec.normal_attribute = VERTEX_ATTRIBUTE_PACKED_VEC4_1I;
         spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
 
-        assert_equal(spec.diffuse_offset(), sizeof(float) * 5);
-        assert_equal(spec.normal_offset(), (sizeof(float) * 5) + sizeof(uint32_t));
-        assert_equal(spec.texcoord1_offset(), (sizeof(float) * 5) + (sizeof(uint32_t) * 2));
+        assert_equal((uint32_t) spec.diffuse_offset(), sizeof(float) * 5u);
+        assert_equal((uint32_t) spec.normal_offset(), (sizeof(float) * 5u) + sizeof(uint32_t));
+        assert_equal((uint32_t) spec.texcoord1_offset(), (sizeof(float) * 5u) + (sizeof(uint32_t) * 2));
 
         smlt::VertexData::ptr data = smlt::VertexData::create(spec);
         data->position(smlt::Vec3());
