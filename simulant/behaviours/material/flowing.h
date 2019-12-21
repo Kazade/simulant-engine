@@ -39,7 +39,7 @@ public:
     const std::string name() const override { return "Flowing Material"; }
 private:
     void update(float dt) override;
-    double time_ = 0.0f;
+    float time_ = 0.0f;
 };
 
 }

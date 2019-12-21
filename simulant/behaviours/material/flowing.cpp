@@ -31,9 +31,9 @@ void Flowing::update(float dt) {
     auto tex_unit = pass->diffuse_map();
 
     tex_unit.texture_matrix()[12] = scroll;
-    tex_unit.texture_matrix()[13] = sin(time_ * 5.0) * 0.125;
+    tex_unit.texture_matrix()[13] = std::sin(time_ * 5.0f) * 0.125f;
 
-    time_ += (dt * 0.125);
+    time_ += (dt * 0.125f);
 }
 
 }

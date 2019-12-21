@@ -375,31 +375,31 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
     sm->vertex_data->move_to_end();
 
     //Build some shared vertex data
-    sm->vertex_data->position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
+    sm->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
     if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 0.0);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 0.0);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 0.0f);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 0.0f);
     if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->move_next();
 
-    sm->vertex_data->position(x_offset + (width / 2.0), y_offset + (-height / 2.0), z_offset);
+    sm->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
     if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 0.0);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 0.0);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 0.0f);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 0.0f);
     if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->move_next();
 
-    sm->vertex_data->position(x_offset + (width / 2.0),  y_offset + (height / 2.0), z_offset);
+    sm->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
     if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 1.0);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 1.0);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 1.0f);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 1.0f);
     if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->move_next();
 
-    sm->vertex_data->position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), z_offset);
+    sm->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
     if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 1.0);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 1.0);
+    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 1.0f);
+    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 1.0f);
     if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
     sm->vertex_data->done();
 

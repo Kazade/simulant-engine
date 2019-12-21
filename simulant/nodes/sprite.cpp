@@ -47,7 +47,7 @@ void Sprite::destroy_immediately() {
 
 bool Sprite::init() {
     auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-    mesh->new_submesh_as_rectangle("sprite", stage->assets->new_material(), 1.0, 1.0);
+    mesh->new_submesh_as_rectangle("sprite", stage->assets->new_material(), 1.0, 1.0f);
 
     mesh_id_ = mesh;
 
@@ -130,11 +130,11 @@ void Sprite::update_texture_coordinates() {
     y0 = y0 / float(image_height_);
     y1 = y1 / float(image_height_);
 
-    x0 += 0.5 / image_width_;
-    x1 -= 0.5 / image_width_;
+    x0 += 0.5f / image_width_;
+    x1 -= 0.5f / image_width_;
 
-    y0 += 0.5 / image_height_;
-    y1 -= 0.5 / image_height_;
+    y0 += 0.5f / image_height_;
+    y1 -= 0.5f / image_height_;
 
     if(flipped_horizontally_) {
         std::swap(x0, x1);
@@ -225,16 +225,16 @@ void Sprite::set_render_dimensions(float width, float height) {
     auto mesh = stage->assets->mesh(mesh_id_);
 
     mesh->vertex_data->move_to_start();
-    mesh->vertex_data->position((-width / 2.0), (-height / 2.0), 0);
+    mesh->vertex_data->position((-width / 2.0f), (-height / 2.0f), 0);
 
     mesh->vertex_data->move_next();
-    mesh->vertex_data->position((width / 2.0), (-height / 2.0), 0);
+    mesh->vertex_data->position((width / 2.0f), (-height / 2.0f), 0);
 
     mesh->vertex_data->move_next();
-    mesh->vertex_data->position((width / 2.0),  (height / 2.0), 0);
+    mesh->vertex_data->position((width / 2.0f),  (height / 2.0f), 0);
 
     mesh->vertex_data->move_next();
-    mesh->vertex_data->position((-width / 2.0),  (height / 2.0), 0);
+    mesh->vertex_data->position((-width / 2.0f),  (height / 2.0f), 0);
 
     mesh->vertex_data->done();
 }

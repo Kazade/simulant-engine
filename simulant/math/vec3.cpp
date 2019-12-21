@@ -46,7 +46,7 @@ Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
     //Lovingly adapted from ogre
     Vec3 new_up = (up == Vec3()) ? perpendicular() : up;
 
-    Quaternion q(*this, Radians(RandomGenerator().float_in_range(0, 1) * (PI * 2.0)));
+    Quaternion q(*this, Radians(RandomGenerator().float_in_range(0, 1) * (PI * 2.0f)));
 
     new_up = new_up * q;
 
@@ -84,9 +84,9 @@ Vec3 Vec3::transformed_by(const Mat4 &trans) const {
     const float* m = &trans[0];
 
     return Vec3(
-        x * m[0] + y * m[4] + z * m[8] + 1.0 * m[12],
-        x * m[1] + y * m[5] + z * m[9] + 1.0 * m[13],
-        x * m[2] + y * m[6] + z * m[10] + 1.0 * m[14]
+        x * m[0] + y * m[4] + z * m[8] + 1.0f * m[12],
+        x * m[1] + y * m[5] + z * m[9] + 1.0f * m[13],
+        x * m[2] + y * m[6] + z * m[10] + 1.0f * m[14]
     );
 }
 

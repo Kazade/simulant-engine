@@ -74,9 +74,9 @@ void ParticleSystem::calc_aabb() {
             // If this is not a point emitter, then calculate the max/min possible for
             // each emitter using their dimensions.
 
-            float hw = (emitter->dimensions.x / 2.0);
-            float hh = (emitter->dimensions.y / 2.0);
-            float hd = (emitter->dimensions.z / 2.0);
+            float hw = (emitter->dimensions.x / 2.0f);
+            float hh = (emitter->dimensions.y / 2.0f);
+            float hd = (emitter->dimensions.z / 2.0f);
 
             float minx = pos.x - hw;
             float maxx = pos.x + hw;
@@ -297,7 +297,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     auto& state = emitter_states_[e];
     auto emitter = script_->emitter(e);
 
-    float decrement = 1.0 / float(emitter->emission_rate); //Work out how often to emit per second
+    float decrement = 1.0f / float(emitter->emission_rate); //Work out how often to emit per second
 
     auto scale = absolute_scaling();
 
@@ -310,9 +310,9 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         } else {
             p.position = absolute_position() + emitter->relative_position;
 
-            float hw = emitter->dimensions.x * 0.5 * scale.x;
-            float hh = emitter->dimensions.y * 0.5 * scale.y;
-            float hd = emitter->dimensions.z * 0.5 * scale.z;
+            float hw = emitter->dimensions.x * 0.5f * scale.x;
+            float hh = emitter->dimensions.y * 0.5f * scale.y;
+            float hd = emitter->dimensions.z * 0.5f * scale.z;
 
             p.position.x += random_.float_in_range(-hw, hw);
             p.position.y += random_.float_in_range(-hh, hh);
