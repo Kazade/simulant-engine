@@ -16,6 +16,7 @@ OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSantizer" ON)
 
+SET(SIMULANT_SEPERATE_DEBUGINFO DREAMCAST_BUILD)
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
@@ -102,8 +103,7 @@ IF(NOT DREAMCAST_BUILD)
     MESSAGE("-- Enabling old C++11 ABI")
     ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
 ELSE()
-    MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
-    SET(CMAKE_BUILD_TYPE Release)
+    MESSAGE("-- Cross-Compiling for the Sega Dreamcast.")
 
     SET(OPENAL_INCLUDE_DIRS "")
     SET(OPENAL_LIBRARY "")

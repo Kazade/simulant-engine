@@ -20,3 +20,32 @@ ADD_EXECUTABLE(nehe03 nehe03.cpp)
 ADD_EXECUTABLE(ui_demo ui_demo.cpp)
 ADD_EXECUTABLE(particles particles.cpp)
 
+
+SET(SAMPLES
+    sample
+    2d_sample
+    viewport_sample
+    selection_sample
+    light_sample
+    rtt_sample
+    q2bsp_sample
+    fleets_demo
+    terrain_demo
+    physics_demo
+    nehe02
+    nehe03
+    ui_demo
+    particles
+)
+
+if(SIMULANT_SEPERATE_DEBUGINFO)
+foreach(sample ${SAMPLES})
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${sample}.debug
+    COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${CMAKE_CURRENT_BINARY_DIR}/${sample} ${CMAKE_CURRENT_BINARY_DIR}/${sample}.debug && ${CMAKE_OBJCOPY} --strip-debug ${CMAKE_CURRENT_BINARY_DIR}/${sample}
+    DEPENDS ${sample}
+    COMMENT "Separating debug info for ${sample}"
+)
+add_custom_target(${sample}.debug.target ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${sample}.debug)
+endforeach()
+endif()
