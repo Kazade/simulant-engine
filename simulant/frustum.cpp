@@ -110,7 +110,7 @@ float Frustum::height_at_distance(float distance) const {
 
 Degrees Frustum::field_of_view() const {
     float cosb = planes_[FRUSTUM_PLANE_TOP].normal().dot(planes_[FRUSTUM_PLANE_NEAR].normal());
-    return Degrees(Radians(2.0f * atanf(cosb * (1.0 / sqrtf(1.0f - cosb * cosb)))));
+    return Degrees(Radians(2.0f * std::atan(cosb * (1.0f / sqrtf(1.0f - cosb * cosb)))));
 }
 
 void Frustum::build(const Mat4* modelview_projection) {

@@ -551,7 +551,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
              * has a length of 416 units, so we divide that by 33.3 to get to roughly
              * the right size
              */
-            submesh.vertex_data->position(pos.x / 33.3, pos.y / 33.3, pos.z / 33.3);
+            submesh.vertex_data->position(pos.x / 33.3f, pos.y / 33.3f, pos.z / 33.3f);
             submesh.vertex_data->tex_coord0(tex_coord);
             submesh.vertex_data->tex_coord1(tex_coord.x, tex_coord.y);
             submesh.vertex_data->diffuse(smlt::Colour::WHITE);

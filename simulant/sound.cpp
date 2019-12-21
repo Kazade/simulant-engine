@@ -105,7 +105,7 @@ void SourceInstance::update(float dt) {
             // a hack... FIXME maybe..
             // FIXME: This is value is "scaled" to assume the velocity over a second
             // this isn't accurate as update isn't called with a fixed timestep
-            (first_update_) ? smlt::Vec3() : (pos - previous_position_) * (1.0 / dt)
+            (first_update_) ? smlt::Vec3() : (pos - previous_position_) * (1.0f / dt)
         );
 
         previous_position_ = pos;

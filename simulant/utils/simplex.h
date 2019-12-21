@@ -31,9 +31,9 @@ public:
     Simplex(int seed=time(NULL));
     bool init();
 
-    float noise(float x, float y);
-    float noise(float x, float y, float z);
-    float noise(float x, float y, float z, float w);
+    float noise(double x, double y);
+    float noise(double x, double y, double z);
+    float noise(double x, double y, double z, double w);
 
 private:
     std::vector<int> p;

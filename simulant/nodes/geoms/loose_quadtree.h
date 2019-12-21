@@ -47,7 +47,7 @@ public:
 
         /* Make sure the bounds are square */
         float maxd = root_width_;
-        auto halfd = maxd / 2.0;
+        auto halfd = maxd / 2.0f;
 
         auto half = Vec3(halfd, 0, halfd);
         bounds_.set_min(centre_ - half);
@@ -70,11 +70,11 @@ public:
     }
 
     Quadtree::Node* find_destination_for_sphere(const Vec3& centre, float radius) {
-        auto diameter = radius * 2;
+        auto diameter = radius * 2.0f;
         auto level_and_node_width = level_for_width(diameter);
 
         /* Calculate the cell index to insert the sphere */
-        auto half_width = root_width_ * 0.5;
+        auto half_width = root_width_ * 0.5f;
 
         assert(centre.x <= bounds_.max().x && centre.x >= bounds_.min().x);
         assert(centre.z <= bounds_.max().z && centre.z >= bounds_.min().z);

@@ -205,19 +205,19 @@ public:
 
         assert_false(stay_count);
 
-        physics->fixed_update(1.0 / 60.0f);
+        physics->fixed_update(1.0f / 60.0f);
         window->run_frame();
 
         assert_equal(stay_count, 1u);
 
-        physics->fixed_update(1.0 / 60.0f);
+        physics->fixed_update(1.0f / 60.0f);
         window->run_frame();
 
         assert_equal(stay_count, 2u);
 
         actor2->destroy();
 
-        physics->fixed_update(1.0 / 60.0f);
+        physics->fixed_update(1.0f / 60.0f);
         window->run_frame();
 
         assert_equal(stay_count, 1u);

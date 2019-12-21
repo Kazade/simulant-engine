@@ -105,11 +105,11 @@ private:
 
     KeyFrameAnimated::Animation* current_animation_ = nullptr;
     KeyFrameAnimated::Animation* next_animation_ = nullptr;
-    float current_animation_duration_ = 0.0;
+    float current_animation_duration_ = 0.0f;
 
     uint32_t current_frame_ = 0;
     uint32_t next_frame_ = 0;
-    double interp_ = 0.0;
+    float interp_ = 0.0f;
 
     AnimationUpdatedCallback refresh_animation_state_;
     sig::connection on_animation_added_;

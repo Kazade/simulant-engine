@@ -153,7 +153,7 @@ struct Quaternion {
     }
 
     Radians angle() const {
-        return Radians(acos(w) * 2.0f);
+        return Radians(std::acos(w) * 2.0f);
     }
 
     Vec3 operator*(const Vec3& v) const {
