@@ -78,7 +78,7 @@ private:
     };
 
     struct DebugElement {
-        double time_since_created = 0.0;
+        float time_since_created = 0.0;
         DebugElementType type = DET_LINE;
         Colour colour = Colour::WHITE;
         bool depth_test = true;

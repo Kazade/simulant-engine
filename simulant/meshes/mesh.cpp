@@ -476,7 +476,7 @@ void Mesh::set_diffuse(const smlt::Colour& colour) {
 
 void Mesh::normalize() {
     float dia = this->diameter();
-    float scaling = 1.0 / dia;
+    float scaling = 1.0f / dia;
 
     smlt::Mat4 scale_matrix = Mat4::as_scaling(scaling);
 

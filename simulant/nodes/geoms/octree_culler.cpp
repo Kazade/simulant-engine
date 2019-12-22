@@ -95,6 +95,8 @@ void OctreeCuller::_compile() {
 void OctreeCuller::_gather_renderables(const Frustum &frustum, batcher::RenderQueue* render_queue) {
     auto cb = [this, render_queue](CullerOctree::Node* node) {
         for(auto& p: node->data->triangles) {
+            if(node->data->triangles.empty()) continue;
+
             Renderable new_renderable;
 
             new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
