@@ -27,25 +27,25 @@ void Splash::load() {
     sound_ = window->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav", smlt::GARBAGE_COLLECT_NEVER);
 
     /* Scale for window resolution */
-    float scale = 0.5 * (window->height() / 720.0f);
+    float scale = 0.5f * (window->height() / 720.0f);
 
     auto round = [](float x, float f) -> float {
-        return f * ceil(x / f);
+        return f * std::ceil(x / f);
     };
 
-    round(scale, 0.25);
+    round(scale, 0.25f);
 
-    image_->set_width(image_->width() * scale * 0.75);
-    image_->set_height(image_->height() * scale * 0.75);
-    image_->set_anchor_point(0.5, 0.0);
+    image_->set_width(image_->width() * scale * 0.75f);
+    image_->set_height(image_->height() * scale * 0.75f);
+    image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);
 
     text_->set_width(text_->width() * scale);
     text_->set_height(text_->height() * scale);
     text_->set_anchor_point(0.5, 1.0);
 
-    image_->move_to(window->coordinate_from_normalized(0.5, 0.5));
-    text_->move_to(window->coordinate_from_normalized(0.5, 0.5));
+    image_->move_to(window->coordinate_from_normalized(0.5f, 0.5f));
+    text_->move_to(window->coordinate_from_normalized(0.5f, 0.5f));
 
     //Create an orthographic camera
     camera_ = stage_->new_camera();
