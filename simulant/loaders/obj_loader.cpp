@@ -128,6 +128,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             // be up to 128 so we scale that here
             pass->set_shininess((material.shininess / 1000.0f) * 128);
             pass->set_cull_mode(mesh_opts.cull_mode);
+
+            if(!mesh_opts.blending_enabled) {
+                pass->set_blend_func(smlt::BLEND_NONE);
+            }
         });
 
         /* Apply the diffuse texture (if any) */

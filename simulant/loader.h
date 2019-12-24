@@ -163,6 +163,11 @@ struct MeshLoadOptions {
      * The spec says that these should just have no texture applied, but in some files
      * they need to be skipped entirely */
     bool obj_include_faces_with_missing_texture_vertices = false;
+
+    /* If set to false, the materials created by the model loader will have blending
+     * force disabled. This is useful on the Dreamcast where having blending enabled
+     * is costly */
+    bool blending_enabled = true;
 };
 
 #define MESH_LOAD_OPTIONS_KEY "mesh_options"
