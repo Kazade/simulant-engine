@@ -3,6 +3,7 @@
 #include "fnt_loader.h"
 #include "../font.h"
 #include "../asset_manager.h"
+#include "../utils/string.h"
 
 namespace smlt {
 namespace loaders {
@@ -69,16 +70,16 @@ struct Char {
 void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &options) {
     typedef std::unordered_map<std::string, std::string> Options;
 
-    auto parse_line = [](const unicode& line, std::string& line_type) -> Options {
+    auto parse_line = [](const std::string& line, std::string& line_type) -> Options {
         Options result;
-        auto parts = line.split(" ");
-        line_type = parts[0].strip().encode();
+        auto parts = split(line, " ");
+        line_type = strip(parts[0]);
 
         for(auto i = 1u; i < parts.size(); ++i) {
-            auto part = parts[i].strip();
-            auto lhs_rhs = part.split("=");
+            auto part = strip(parts[i]);
+            auto lhs_rhs = split(part, "=");
             if(lhs_rhs.size() == 2) {
-                result[lhs_rhs[0].strip().encode()] = lhs_rhs[1].strip().encode();
+                result[strip(lhs_rhs[0])] = strip(lhs_rhs[1]);
             }
         }
 
