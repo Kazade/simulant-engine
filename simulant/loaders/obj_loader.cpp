@@ -66,11 +66,13 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     L_DEBUG(_F("Loading mesh from {0}").format(filename_));
 
     MeshLoadOptions mesh_opts;
-    if(options.count(MESH_LOAD_OPTIONS_KEY)) {
-        mesh_opts = smlt::any_cast<MeshLoadOptions>(
-            options.at(MESH_LOAD_OPTIONS_KEY)
-        );
+    auto it = options.find(MESH_LOAD_OPTIONS_KEY);
+
+    if(it != options.end()) {
+        mesh_opts = smlt::any_cast<MeshLoadOptions>(it->second);
     }
+
+    L_DEBUG("Got MeshOptions");
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -78,6 +80,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     std::string warn;
     std::string err;
+
+    L_DEBUG("About to read the obj model");
 
     SimulantMaterialReader reader(vfs.get(), filename_);
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, data_.get(), &reader);
@@ -176,6 +180,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         material_submeshes.insert(std::make_pair(i++, submesh));
     }
 
+    L_DEBUG("Loaded materials for obj model");
+
     typedef std::tuple<int, int, int> VertexKey;
 
     std::unordered_map<VertexKey, uint32_t> shared_vertices;
@@ -198,6 +204,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                         mesh->new_submesh("__default__", MESH_ARRANGEMENT_TRIANGLES, index_type)
                     )
                 );
+            }
+
+            if(!material_submeshes.count(mat_id)) {
+                L_ERROR(_F("Unable to find submesh with mat id: {0}").format(mat_id));
             }
 
             auto submeshptr = material_submeshes.at(mat_id);
@@ -250,6 +260,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
     }
 
+    L_DEBUG("Loaded shapes for obj model");
+
     std::vector<std::string> empty;
     for(auto submesh: mesh->each_submesh()) {
         if(!submesh->index_data->count()) {
@@ -260,6 +272,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(auto& name: empty) {
         mesh->destroy_submesh(name);
     }
+
+    L_DEBUG("Removed empty submeshes");
 
     mesh->vertex_data->done();
 
