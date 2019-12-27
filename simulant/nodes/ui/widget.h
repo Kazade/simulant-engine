@@ -137,6 +137,9 @@ public:
 
     void set_opacity(RangeValue<0, 1> alpha);
 
+public:
+    MaterialPtr material() const { return material_; }
+    
 private:
     bool initialized_ = false;
     UIManager* owner_ = nullptr;
