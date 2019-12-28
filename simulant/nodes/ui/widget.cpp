@@ -41,7 +41,7 @@ bool Widget::init() {
     material_->set_blend_func(BLEND_ALPHA);
 
     // Assign the default font as default
-    set_font(stage->assets->default_font_id());
+    set_font(stage->assets->default_font(DEFAULT_FONT_STYLE_BODY));
     rebuild();
 
     initialized_ = true;

@@ -68,5 +68,9 @@ Now the torpedo_mesh will never be garbage collected. When you are absolutely fi
     
 The torpedo will then be cleaned up at the next run of the garbage collector.
 
+# Default materials and fonts
+
+Simulant needs at minimum a default material, and a default font file. These are normally set to `Material::BuiltIns::DEFAULT` and Orbitron respectively but you can set them per manager by calling `AssetManager::set_default_material_filename()` and `AssetManager::set_default_font_filename()`
+
 
 
