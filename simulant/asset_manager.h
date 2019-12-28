@@ -203,14 +203,15 @@ public:
 
     void update(float dt);
 
+    void set_default_material_filename(const unicode& filename);
     unicode default_material_filename() const;
+    MaterialPtr default_material() const;
+    void set_default_font_filename(DefaultFontStyle style, const unicode& filename);
+    unicode default_font_filename(DefaultFontStyle style) const;
+    FontPtr default_font(DefaultFontStyle style) const;
 
     MaterialPtr clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MaterialPtr clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-
-    MaterialID default_material_id() const;
-    TextureID default_texture_id() const;
-    FontID default_font_id(DefaultFontStyle style=DEFAULT_FONT_STYLE_BODY) const;
 
     AssetManager* base_manager() const {
         AssetManager* ret = const_cast<AssetManager*>(this);
@@ -232,10 +233,14 @@ public:
 private:
     AssetManager* parent_ = nullptr;
 
-    MaterialID default_material_id_;
-    TextureID default_texture_id_;
-    FontPtr default_body_font_;
-    FontPtr default_heading_font_;
+    mutable MaterialPtr default_material_;
+    unicode default_material_filename_;
+
+    mutable FontPtr default_body_font_;
+    unicode default_body_font_filename_;
+
+    mutable FontPtr default_heading_font_;
+    unicode default_heading_font_filename_;
 
     TextureManager texture_manager_;
     MaterialManager material_manager_;

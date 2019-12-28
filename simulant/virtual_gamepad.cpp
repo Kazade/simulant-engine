@@ -52,11 +52,11 @@ bool VirtualGamepad::init() {
         button1->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
         button2->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
 
-        button1->set_font(stage_->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
-        button2->set_font(stage_->assets->default_font_id(DEFAULT_FONT_STYLE_HEADING));
+        button1->set_font(stage_->assets->default_font(DEFAULT_FONT_STYLE_HEADING));
+        button2->set_font(stage_->assets->default_font(DEFAULT_FONT_STYLE_HEADING));
 
-        button1->move_to(window_.coordinate_from_normalized(0.10, 0.10 * window_.aspect_ratio()));
-        button2->move_to(window_.coordinate_from_normalized(0.90, 0.10 * window_.aspect_ratio()));
+        button1->move_to(window_.coordinate_from_normalized(0.10f, 0.10f * window_.aspect_ratio()));
+        button2->move_to(window_.coordinate_from_normalized(0.90f, 0.10f * window_.aspect_ratio()));
 
         button1->resize(button_size, button_size);
         button2->resize(button_size, button_size);

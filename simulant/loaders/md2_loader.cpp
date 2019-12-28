@@ -281,7 +281,6 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(!found) {
         L_WARN("Unable to locate MD2 skin: " + skin_name);
-        tex_id = asset_manager->default_texture_id();
     }
 
     auto material = asset_manager->clone_default_material();
