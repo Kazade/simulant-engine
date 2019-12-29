@@ -169,6 +169,7 @@ public:
             while(first_used) {
                 auto meta = meta_block(first_used);
                 assert(meta->used);
+                assert(chunk->used_count_);
 
                 slot_id slot = (first_used - &chunk->elements_[0]) / element_size;
                 id_type id = id_for_chunk_slot(chunk_id, slot);

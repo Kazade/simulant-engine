@@ -275,7 +275,7 @@ test:dreamcast-sh4-gcc:
     - microdnf install -y lxdream
   script:
     - cd ${TARGET}/release
-    - lxdream --audio=null -H -b tests/simulant_tests.cdi | tee log.out
+    - lxdream --audio=null -H tests/simulant_tests.cdi | tee log.out
   artifacts:
    paths:
     - ${TARGET}/release/simulant/*.a
