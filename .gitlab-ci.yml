@@ -270,13 +270,12 @@ test:dreamcast-sh4-gcc:
     - build:dreamcast-sh4-gcc
   before_script:
     - microdnf install -y wget && microdnf clean all
+    - wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+    - rpm -i rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+    - microdnf update
+    - microdnf install -y lxdream
     - wget http://download1.rpmfusion.org/free/fedora/releases/29/Everything/i386/os/Packages/l/lxdream-0.9.1-14.fc29.i686.rpm
-    - microdnf install -y lxdream  # Install any deps
     - rpm -i lxdream-0.9.1-14.fc29.i686.rpm
-#    - wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-#    - rpm -i rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-#    - microdnf update
-#    - microdnf install -y lxdream
     - mkdir ~/.lxdream
     - cp platforms/dreamcast/bios/* ~/.lxdream
   script:
