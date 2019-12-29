@@ -89,6 +89,11 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.enable_vsync
     );
 
+    if(!window_) {
+        L_ERROR("[FATAL] There was an error creating the window");
+        return;
+    }
+
     if(!config_copy.show_cursor) {
         // By default, don't show the cursor
         window_->show_cursor(false);

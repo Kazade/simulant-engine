@@ -143,7 +143,6 @@ public:
         T* element = get(id);
 
         assert(element);
-
         element->clean_up();
         // Call the destructor
         element->~T();
