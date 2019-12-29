@@ -43,7 +43,12 @@ Application::Application(const AppConfig &config):
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
 
-    construct_window(config);
+    try {
+        construct_window(config);
+    } catch(std::runtime_error&) {
+        L_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
+        exit(1);
+    }
 }
 
 void Application::construct_window(const AppConfig& config) {
@@ -88,6 +93,11 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.fullscreen,
         config_copy.enable_vsync
     );
+
+    if(!window_) {
+        L_ERROR("[FATAL] There was an error creating the window");
+        return;
+    }
 
     if(!config_copy.show_cursor) {
         // By default, don't show the cursor

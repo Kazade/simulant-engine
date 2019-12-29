@@ -433,7 +433,6 @@ private:
             config.search_paths.push_back("sample_data");
             config.search_paths.push_back("/cd/assets");
             config.search_paths.push_back("/cd/sample_data");
-	    config.log_level = smlt::LOG_LEVEL_DEBUG;
 
             application.reset(new TestApp(config));
         } else {

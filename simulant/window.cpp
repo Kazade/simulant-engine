@@ -123,7 +123,14 @@ RenderSequence* Window::render_sequence() {
 }
 
 LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
-    unicode final_file = vfs->locate_file(filename);
+
+    unicode final_file;
+    try {
+        final_file = vfs->locate_file(filename);
+    } catch(AssetMissingError&) {
+        L_ERROR("Couldn't get loader as file doesn't exist");
+        return LoaderPtr();
+    }
 
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 

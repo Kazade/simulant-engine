@@ -279,6 +279,7 @@ test:dreamcast-sh4-gcc:
   artifacts:
    paths:
     - ${TARGET}/release/simulant/*.a
+    - ${TARGET}/release/*.out
 
 deploy:dreamcast-sh4-gcc:
   stage: deploy

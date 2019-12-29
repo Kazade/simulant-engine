@@ -240,7 +240,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
                 final.x = 2.0f / 3.0f + (final.y / 3.0f);
                 final.y = 2.0f / 4.0f + (final.z / 4.0f);
             } else {
-                final.x = final.y / 3.0;
+                final.x = final.y / 3.0f;
                 final.y = 2.0f / 4.0f + (final.z / 4.0f);
             }
         } else if(y) {

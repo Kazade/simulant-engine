@@ -143,7 +143,6 @@ public:
         T* element = get(id);
 
         assert(element);
-
         element->clean_up();
         // Call the destructor
         element->~T();
@@ -171,6 +170,7 @@ public:
             while(chunk->first_used_) {
                 auto meta = meta_block(chunk->first_used_);
                 assert(meta->used);
+                assert(chunk->used_count_);
 
                 slot_id slot = (chunk->first_used_ - &chunk->elements_[0]) / element_size;
                 id_type id = id_for_chunk_slot(chunk_id, slot);

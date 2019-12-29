@@ -116,6 +116,7 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
         }
     }
 #endif
+    L_ERROR(_F("Unable to find file: {0}").format(final_name));
     throw AssetMissingError("Unable to find file: " + final_name);
 }
 
@@ -157,6 +158,7 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& f
     std::ifstream file_in(path.encode(), std::ios::in | std::ios::binary);
 
     if(!file_in) {
+        L_ERROR(_F("Unable to load file: {0}").format(filename));
         throw AssetMissingError("Unable to load file: " + filename.encode());
     }
 
@@ -173,6 +175,7 @@ std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filen
     std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
     
     if(!file_in) {
+        L_ERROR(_F("Unable to load file: {0}").format(filename));
         throw AssetMissingError("Unable to load file: " + filename.encode());
     }
 

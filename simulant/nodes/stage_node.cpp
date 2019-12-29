@@ -16,8 +16,6 @@ StageNode::~StageNode() {
 void StageNode::clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
 
-    remove_from_parent(); // Make sure we're not connected to anything
-
     // Go through the subnodes and ask each for destruction in-turn
     std::vector<StageNode*> to_destroy;
     for(auto stage_node: each_child()) {
@@ -29,6 +27,8 @@ void StageNode::clean_up() {
         // Don't wait for the next frame, just destroy now
         stage_node->destroy_immediately();
     }
+
+    detach(); // Make sure we're not connected to anything
 
     TwoPhaseConstructed::clean_up();
 }
