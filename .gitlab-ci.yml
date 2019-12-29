@@ -251,11 +251,11 @@ build:dreamcast-sh4-gcc:
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
    - source /etc/bash.bashrc
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=ON -DSIMULANT_BUILD_SAMPLE_CDI=ON ../..
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
-     - ${TARGET}/release/tests/simulant_tests.cdi
+     - ${TARGET}/release/tests/simulant_tests.elf
      - ${TARGET}/release/simulant/
      - ${TARGET}/release/sample_data/
 
@@ -272,7 +272,6 @@ test:dreamcast-sh4-gcc:
     - microdnf install -y wget && microdnf clean all
     - wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
     - rpm -i rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-    - microdnf update
     - microdnf install -y lxdream
   script:
     - cd ${TARGET}/release
