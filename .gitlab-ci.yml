@@ -274,8 +274,8 @@ test:dreamcast-sh4-gcc:
     - rpm -i rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
     - microdnf update
     - microdnf install -y lxdream
-    - wget http://download1.rpmfusion.org/free/fedora/releases/29/Everything/i386/os/Packages/l/lxdream-0.9.1-14.fc29.i686.rpm
-    - rpm -i lxdream-0.9.1-14.fc29.i686.rpm
+    #- wget http://download1.rpmfusion.org/free/fedora/releases/29/Everything/i386/os/Packages/l/lxdream-0.9.1-14.fc29.i686.rpm
+    #- rpm -i lxdream-0.9.1-14.fc29.i686.rpm
     - mkdir ~/.lxdream
     - cp platforms/dreamcast/bios/* ~/.lxdream
   script:
