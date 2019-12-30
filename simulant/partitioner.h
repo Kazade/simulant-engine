@@ -38,7 +38,8 @@ class SubActor;
 enum WriteOperation {
     WRITE_OPERATION_ADD,
     WRITE_OPERATION_UPDATE,
-    WRITE_OPERATION_REMOVE
+    WRITE_OPERATION_REMOVE,
+    WRITE_OPERATION_MAX
 };
 
 enum StageNodeType {
@@ -51,12 +52,6 @@ enum StageNodeType {
 struct StagedWrite {
     WriteOperation operation;
     StageNodeType stage_node_type;
-
-    GeomID geom_id;
-    ActorID actor_id;
-    LightID light_id;
-    ParticleSystemID particle_system_id;
-
     AABB new_bounds;
 };
 
@@ -97,15 +92,34 @@ protected:
 
     Stage* get_stage() const { return stage_; }
 
-    void stage_write(const StagedWrite& op);
+    virtual void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) = 0;
 
-    virtual void apply_staged_write(const StagedWrite& write) = 0;
+    template<typename ID>
+    void stage_write(const ID& id, const StagedWrite& op) {
+        auto key = make_unique_id_key(id);
+        auto& value = staged_writes_[key];
+        value.slot[op.operation] = op;
+
+        if(!(value.bits & (1 << WRITE_OPERATION_ADD)) && op.operation == WRITE_OPERATION_REMOVE) {
+            /* If no write op has happened, and this was a remove operation, we store
+             * that this was the first operation of the two */
+            value.bits |= (1 << WRITE_OPERATION_MAX);
+        }
+
+        value.bits |= (1 << op.operation);
+    }
 
 private:
     Stage* stage_;
 
     std::mutex staging_lock_;
-    std::stack<StagedWrite> staged_writes_;
+
+    struct WriteSlots {
+        StagedWrite slot[WRITE_OPERATION_MAX];
+        uint8_t bits = 0;
+    };
+
+    std::map<UniqueIDKey, WriteSlots> staged_writes_;
 };
 
 }

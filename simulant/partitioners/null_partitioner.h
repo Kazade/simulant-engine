@@ -37,13 +37,8 @@ public:
     );
 
 private:
-    void apply_staged_write(const StagedWrite& write);
-
-
-    std::set<ParticleSystemID> all_particle_systems_;
-    std::set<ActorID> all_actors_;
-    std::set<GeomID> all_geoms_;
-    std::set<LightID> all_lights_;
+    void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) override;
+    std::set<UniqueIDKey> all_nodes_;
 };
 
 }
