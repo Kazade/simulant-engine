@@ -28,9 +28,9 @@ namespace procedural {
 namespace mesh {
 
 void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int32_t stacks) {
-    float radius = diameter * 0.5;
+    float radius = diameter * 0.5f;
     float half_length = length * 0.5f;
-    float delta_angle = (PI * 2.0) / (float) segments;
+    float delta_angle = (PI * 2.0f) / (float) segments;
     float delta_height = length / (float) stacks;
     int offset = 0;
 

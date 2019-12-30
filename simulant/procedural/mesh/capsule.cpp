@@ -37,8 +37,8 @@ SubMesh* capsule(MeshPtr mesh, float diameter, float height,
     auto& vdata = submesh->vertex_data;
     auto& idata = submesh->index_data;
 
-    float delta_ring_angle = ((PI / 2.0) / ring_count);
-    float delta_seg_angle = ((PI * 2.0) / segment_count);
+    float delta_ring_angle = ((PI / 2.0f) / ring_count);
+    float delta_seg_angle = ((PI * 2.0f) / segment_count);
 
     float sphere_ratio = radius / (2 * radius + height);
     float cylinder_ratio = height / (2 * radius + height);
@@ -85,7 +85,7 @@ SubMesh* capsule(MeshPtr mesh, float diameter, float height,
     }
 
     // Cylinder part
-    float delta_angle = ((PI * 2.0) / segment_count);
+    float delta_angle = ((PI * 2.0f) / segment_count);
     float delta_height = height / (float) vertical_segment_count;
 
     for(uint16_t i = 1; i < vertical_segment_count; i++) {
@@ -127,8 +127,8 @@ SubMesh* capsule(MeshPtr mesh, float diameter, float height,
 
     // Generate the group of rings for the sphere
     for(uint32_t ring = 0; ring <= ring_count; ring++) {
-        float r0 = radius * sinf((PI / 2.0) + ring * delta_ring_angle);
-        float y0 = radius * cosf((PI / 2.0) + ring * delta_ring_angle);
+        float r0 = radius * sinf((PI / 2.0f) + ring * delta_ring_angle);
+        float y0 = radius * cosf((PI / 2.0f) + ring * delta_ring_angle);
 
         // Generate the group of segments for the current ring
         for(uint32_t seg = 0; seg <= segment_count; seg++) {

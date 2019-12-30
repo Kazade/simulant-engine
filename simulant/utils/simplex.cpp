@@ -227,7 +227,7 @@ float Simplex::noise(double x, double y, double z, double w) {
     }
 
     // Sum up and scale the result to cover the range [-1,1]
-    return 27.0f * (n0 + n1 + n2 + n3 + n4);
+    return 27.0f * (float)(n0 + n1 + n2 + n3 + n4);
 }
 
 }
