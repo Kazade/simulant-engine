@@ -168,8 +168,12 @@ public:
         std::size_t chunk_id = 0;
         for(auto& chunk: chunks_) {
             while(chunk->first_used_) {
+
+#ifndef NDEBUG
                 auto meta = meta_block(chunk->first_used_);
                 assert(meta->used);
+#endif
+
                 assert(chunk->used_count_);
 
                 slot_id slot = (chunk->first_used_ - &chunk->elements_[0]) / element_size;

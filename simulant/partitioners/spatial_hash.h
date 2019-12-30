@@ -70,7 +70,7 @@ private:
     void _update_particle_system(const AABB& bounds, ParticleSystemID ps);
     void _update_light(const AABB& bounds, LightID light);
 
-    void apply_staged_write(const StagedWrite& write);
+    void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) override;
 
     SpatialHash* hash_ = nullptr;
 

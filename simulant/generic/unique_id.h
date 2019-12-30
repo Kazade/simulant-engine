@@ -24,6 +24,7 @@
 #include <memory>
 #include <type_traits>
 #include <ostream>
+#include <typeindex>
 
 namespace smlt {
 
@@ -176,6 +177,23 @@ private:
 
     MembersType members_;
 };
+
+typedef std::pair<std::type_index, uint32_t> UniqueIDKey;
+
+template<typename ID>
+UniqueIDKey make_unique_id_key(const ID& id) {
+    return std::make_pair(
+        std::type_index(typeid(typename ID::element_type)),
+        id.value()
+    );
+}
+
+template<typename UniqueID>
+UniqueID make_unique_id_from_key(const UniqueIDKey& key) {
+    assert(key.first == std::type_index(typeid(typename UniqueID::element_type)));
+    return UniqueID(key.second);
+}
+
 
 }
 
