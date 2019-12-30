@@ -13,15 +13,15 @@ AABB::AABB(const Vec3 &min, const Vec3 &max) {
 }
 
 AABB::AABB(const Vec3 &centre, float width) {
-    set_min(centre - Vec3(width * 0.5, width * 0.5, width * 0.5));
-    set_max(centre + Vec3(width * 0.5, width * 0.5, width * 0.5));
+    set_min(centre - Vec3(width * 0.5f, width * 0.5f, width * 0.5f));
+    set_max(centre + Vec3(width * 0.5f, width * 0.5f, width * 0.5f));
 
     corners_dirty_ = true;
 }
 
 AABB::AABB(const Vec3 &centre, float xsize, float ysize, float zsize) {
-    set_min(centre - Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5));
-    set_max(centre + Vec3(xsize * 0.5, ysize * 0.5, zsize * 0.5));
+    set_min(centre - Vec3(xsize * 0.5f, ysize * 0.5f, zsize * 0.5f));
+    set_max(centre + Vec3(xsize * 0.5f, ysize * 0.5f, zsize * 0.5f));
 
     corners_dirty_ = true;
 }

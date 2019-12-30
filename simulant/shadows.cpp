@@ -28,7 +28,7 @@ MeshSilhouette::MeshSilhouette(MeshPtr mesh, const Mat4& mesh_transformation, co
         //        position should be rotated into the mesh identity first...
         within_range = mesh->aabb().intersects_sphere(
             light_direction_or_position_ + inverse_mesh_position_,
-            light->range() * 2.0 // Range is radius, intersects_sphere takes diameter
+            light->range() * 2.0f // Range is radius, intersects_sphere takes diameter
         );
     } else if(light->type() == LIGHT_TYPE_SPOT_LIGHT) {
         // FIXME: need to check spotlight cone for AABB intersection

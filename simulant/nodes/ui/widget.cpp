@@ -209,7 +209,7 @@ void Widget::render_text() {
     // Now we have to shift the entire thing up to vertically center!
     for(Vertex& v: vertices) {
         v.xyz.y += top / 2.0f;
-        v.xyz.z += -0.001;
+        v.xyz.z += -0.001f;
     }
 
     auto sm = mesh_->find_submesh("text");
@@ -408,8 +408,8 @@ void Widget::rebuild() {
 
 Widget::WidgetBounds Widget::calculate_background_size(float content_width, float content_height) const {
     /* By default, we just return the content_width + padding */
-    auto hw = content_width / 2.0;
-    auto hh = content_height / 2.0;
+    auto hw = content_width / 2.0f;
+    auto hh = content_height / 2.0f;
 
     WidgetBounds bounds;
     bounds.min = smlt::Vec2(-(hw + padding_.left), -(hh + padding_.bottom));
