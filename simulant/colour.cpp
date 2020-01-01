@@ -166,10 +166,10 @@ const Colour Colour::YELLOW_GREEN = Colour(0.6015625, 0.80078125, 0.1953125, 1.0
 const Colour Colour::NONE = Colour(0, 0, 0, 0); // Transparent
 
 std::string Colour::to_hex_string() const {
-    auto rval = int(255.0 * r);
-    auto gval = int(255.0 * g);
-    auto bval = int(255.0 * b);
-    auto aval = int(255.0 * a);
+    auto rval = int(255.0f * r);
+    auto gval = int(255.0f * g);
+    auto bval = int(255.0f * b);
+    auto aval = int(255.0f * a);
 
     std::string final;
 
@@ -189,10 +189,10 @@ Colour Colour::from_hex_string(const std::string& hex_string) {
     std::string apart(hex_string.begin() + 6, hex_string.end());
 
     return Colour(
-        float(strtoul(rpart.c_str(), nullptr, 16)) / 255.0,
-        float(strtoul(gpart.c_str(), nullptr, 16)) / 255.0,
-        float(strtoul(bpart.c_str(), nullptr, 16)) / 255.0,
-        float(strtoul(apart.c_str(), nullptr, 16)) / 255.0
+        float(strtoul(rpart.c_str(), nullptr, 16)) / 255.0f,
+        float(strtoul(gpart.c_str(), nullptr, 16)) / 255.0f,
+        float(strtoul(bpart.c_str(), nullptr, 16)) / 255.0f,
+        float(strtoul(apart.c_str(), nullptr, 16)) / 255.0f
     );
 }
 

@@ -109,23 +109,22 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
 
         } else if(type == "char") {
             auto id = std::stoi(line_settings["id"]) - 32;
+            if(id >= 0) {
+                CharInfo c;
+                c.x0 = std::stof(line_settings["x"]);
+                c.x1 = c.x0 + std::stoi(line_settings["width"]);
+                c.y0 = std::stof(line_settings["y"]);
+                c.y1 = c.y0 + std::stoi(line_settings["height"]);
 
-            assert(id >= 0);
+                c.xoff = std::stoi(line_settings["xoffset"]);
+                c.yoff = std::stoi(line_settings["yoffset"]);
+                c.xadvance = std::stoi(line_settings["xadvance"]);
 
-            CharInfo c;
-            c.x0 = std::stof(line_settings["x"]);
-            c.x1 = c.x0 + std::stoi(line_settings["width"]);
-            c.y0 = std::stof(line_settings["y"]);
-            c.y1 = c.y0 + std::stoi(line_settings["height"]);
-
-            c.xoff = std::stoi(line_settings["xoffset"]);
-            c.yoff = std::stoi(line_settings["yoffset"]);
-            c.xadvance = std::stoi(line_settings["xadvance"]);
-
-            // Make sure we can contain this character and
-            // assign to the right place
-            font->char_data_.resize(id + 1);
-            font->char_data_[id] = c;
+                // Make sure we can contain this character and
+                // assign to the right place
+                font->char_data_.resize(id + 1);
+                font->char_data_[id] = c;
+            }
         } else if(type == "kernings") {
 
         } else if(type == "kerning") {

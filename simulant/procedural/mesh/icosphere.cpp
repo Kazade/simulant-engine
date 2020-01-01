@@ -27,7 +27,7 @@ class IcoSphereCreator {
 
     // add vertex to mesh, fix position to be on unit sphere, return index
     int add_vertex(float x, float y, float z) {
-        double length = std::sqrt(x * x + y * y + z * z);
+        float length = std::sqrt(x * x + y * y + z * z);
         positions_.push_back(Vec3(x / length, y / length, z / length));
         return index_++;
     }
@@ -51,9 +51,9 @@ class IcoSphereCreator {
 
         // add vertex makes sure point is on unit sphere
         auto i = add_vertex(
-            (point1.x + point2.x) / 2.0,
-            (point1.y + point2.y) / 2.0,
-            (point1.z + point2.z) / 2.0
+            (point1.x + point2.x) / 2.0f,
+            (point1.y + point2.y) / 2.0f,
+            (point1.z + point2.z) / 2.0f
         );
 
         // store it, return index
@@ -68,7 +68,7 @@ public:
         index_ = 0;
 
         // create 12 vertices of a icosahedron
-        auto t = (1.0 + sqrt(5.0f)) / 2.0;
+        auto t = (1.0f + sqrtf(5.0f)) / 2.0f;
 
         add_vertex(-1,  t,  0);
         add_vertex( 1,  t,  0);
