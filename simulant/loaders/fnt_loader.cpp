@@ -204,8 +204,8 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
             } break;
             case KERNING_PAIRS: {
                 // Do nothing with this for now, just skip to the end of the file
-                char buffer[header.size];
-                data.read(buffer, header.size);
+                std::vector<char> buffer(header.size);
+                data.read(&buffer[0], header.size);
             } break;
         }
     }
