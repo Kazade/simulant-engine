@@ -55,11 +55,11 @@ RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
 
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make install clean
-RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && mkdir makeip && cd makeip && curl http://www.boob.co.uk/files/makeip.tar.gz > makeip.tar.gz && tar -xf makeip.tar.gz && rm makeip.tar.gz && gcc makeip.c -o makeip
+RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils/makeip && gcc makeip.c -o makeip
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://github.com/Kazade/img4dc.git && cd img4dc && mkdir build && cd build && cmake .. && make BUMP=9
 
 # Add GLdc as a kos port
-RUN mkdir -p /opt/toolchains/dc/kos-ports/GLdc/files
+RUN mkdir -p /opt/toolchains/dc/kos-ports/GLdc/files && BUMP=2
 RUN echo $'\n\
 TARGET = libGLdc.a\n\
 OBJS = GL/draw.o GL/flush.o GL/framebuffer.o GL/immediate.o GL/lighting.o GL/state.o GL/texture.o GL/glu.o\n\
@@ -90,6 +90,10 @@ KOS_DISTFILES =		KOSMakefile.mk\n\
 \n\
 include ${KOS_PORTS}/scripts/kos-ports.mk\n\
 ' > /opt/toolchains/dc/kos-ports/GLdc/Makefile
+
+RUN mkdir -p /opt/toolchains/dc/kos-ports/GLdc/build/GLdc-1.0.0/GL
+RUN touch /opt/toolchains/dc/kos-ports/GLdc/build/GLdc-1.0.0/GL/version.h
+RUN echo -e '#pragma once\n#define GLDC_VERSION "$(shell git describe --abbrev=4 --dirty --always --tags)"\n' > /opt/toolchains/dc/kos-ports/GLdc/build/GLdc-1.0.0/GL/version.h
 
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make install clean
 
