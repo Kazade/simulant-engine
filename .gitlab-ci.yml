@@ -248,6 +248,7 @@ build:dreamcast-sh4-gcc:
   variables:
    TARGET: dreamcast-sh4-gcc
   script:
+   - source /etc/bash.bashrc
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
