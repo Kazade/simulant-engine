@@ -108,7 +108,7 @@ void generate_boxes_for_frustum(const Frustum& frustum, std::vector<AABB>& resul
     auto p = start_point;
     while(distance_left > 0) {
         float box_size = std::max(frustum.width_at_distance(distance_left), frustum.height_at_distance(distance_left));
-        float hw = box_size / 2.0;
+        float hw = box_size / 2.0f;
 
         std::array<Vec3, 8> corners;
 

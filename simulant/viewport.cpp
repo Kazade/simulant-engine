@@ -129,12 +129,12 @@ void calculate_ratios_from_viewport(ViewportType type, float& x, float& y, float
             x = 0.5; y = 0; width = 0.5; height = 1.0;
         break;
         case VIEWPORT_TYPE_BLACKBAR_16_BY_9:
-            x = 0; width = 1.0; height = (9.0 / 16.0);
-            y = (1.0 - height) / 2.0;
+            x = 0; width = 1.0; height = (9.0f / 16.0f);
+            y = (1.0f - height) / 2.0f;
         break;
         case VIEWPORT_TYPE_BLACKBAR_4_BY_3:
-            x = 0; width = 1.0; height = (3.0 / 4.0);
-            y = (1.0 - height) / 2.0;
+            x = 0; width = 1.0; height = (3.0f / 4.0f);
+            y = (1.0f - height) / 2.0f;
         break;
         default:
             throw std::logic_error("Unknown viewport mode");

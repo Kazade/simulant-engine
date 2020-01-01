@@ -38,10 +38,20 @@ bool Widget::init() {
     actor_->set_parent(this);
 
     material_ = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+    if(!material_) {
+        L_ERROR("[CRITICAL] Unable to load the material for widgets!");
+        return false;
+    }
     material_->set_blend_func(BLEND_ALPHA);
 
     // Assign the default font as default
-    set_font(stage->assets->default_font_id());
+    auto font = stage->assets->default_font(DEFAULT_FONT_STYLE_BODY);
+    if(!font) {
+        L_ERROR("[CRITICAL] Unable to load the font for widgets!");
+        return false;
+    }
+
+    set_font(font);
     rebuild();
 
     initialized_ = true;
@@ -63,7 +73,7 @@ void Widget::set_font(FontID font_id) {
     }
 
     font_ = stage->assets->font(font_id);
-    line_height_ = ::round(float(font_->size()) * 1.1);
+    line_height_ = ::round(float(font_->size()) * 1.1f);
 
     on_size_changed();
 }
@@ -199,7 +209,7 @@ void Widget::render_text() {
     // Now we have to shift the entire thing up to vertically center!
     for(Vertex& v: vertices) {
         v.xyz.y += top / 2.0f;
-        v.xyz.z += -0.001;
+        v.xyz.z += -0.001f;
     }
 
     auto sm = mesh_->find_submesh("text");
@@ -266,27 +276,27 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, MaterialID mat_id, Wid
     auto prev_count = mesh_->vertex_data->count();
     mesh_->vertex_data->move_to_end();
 
-    mesh_->vertex_data->position(x_offset + (-width / 2.0), y_offset + (-height / 2.0), z_offset);
+    mesh_->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
     mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(0.0, 0.0);
+    mesh_->vertex_data->tex_coord0(0.0, 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (width / 2.0), y_offset + (-height / 2.0), z_offset);
+    mesh_->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
     mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(1.0, 0.0);
+    mesh_->vertex_data->tex_coord0(1.0, 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (width / 2.0),  y_offset + (height / 2.0), z_offset);
+    mesh_->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
     mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(1.0, 1.0);
+    mesh_->vertex_data->tex_coord0(1.0, 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (-width / 2.0),  y_offset + (height / 2.0), z_offset);
+    mesh_->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
     mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(0.0, 1.0);
+    mesh_->vertex_data->tex_coord0(0.0, 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
     mesh_->vertex_data->done();
@@ -381,8 +391,8 @@ void Widget::rebuild() {
     auto width = mesh_->aabb().width();
     auto height = mesh_->aabb().height();
 
-    float xoff = -((anchor_point_.x * width) - (width / 2.0));
-    float yoff = -((anchor_point_.y * height) - (height / 2.0));
+    float xoff = -((anchor_point_.x * width) - (width / 2.0f));
+    float yoff = -((anchor_point_.y * height) - (height / 2.0f));
     auto& vdata = mesh_->vertex_data;
     for(auto i = 0u; i < vdata->count(); ++i) {
         auto p = *vdata->position_at<smlt::Vec3>(i);
@@ -398,8 +408,8 @@ void Widget::rebuild() {
 
 Widget::WidgetBounds Widget::calculate_background_size(float content_width, float content_height) const {
     /* By default, we just return the content_width + padding */
-    auto hw = content_width / 2.0;
-    auto hh = content_height / 2.0;
+    auto hw = content_width / 2.0f;
+    auto hh = content_height / 2.0f;
 
     WidgetBounds bounds;
     bounds.min = smlt::Vec2(-(hw + padding_.left), -(hh + padding_.bottom));

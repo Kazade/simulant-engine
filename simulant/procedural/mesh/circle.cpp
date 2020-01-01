@@ -44,11 +44,11 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
 
         float rads = 2 * PI * i / point_count;
 
-        float x = radius * cos(rads);
-        float y = radius * sin(rads);
+        float x = radius * std::cos(rads);
+        float y = radius * std::sin(rads);
 
-        float u = cos(rads) * 0.5 + 0.5f;
-        float v = sin(rads) * 0.5 + 0.5f;
+        float u = std::cos(rads) * 0.5f + 0.5f;
+        float v = std::sin(rads) * 0.5f + 0.5f;
 
         vdata->position(x_offset + x, y_offset + y, z_offset);
         vdata->diffuse(smlt::Colour::WHITE);
@@ -87,11 +87,11 @@ SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, f
 
         float rads = 2 * PI * i / point_count;
 
-        float x = radius * cos(rads);
-        float y = radius * sin(rads);
+        float x = radius * std::cos(rads);
+        float y = radius * std::sin(rads);
 
-        float u = cos(rads) * 0.5 + 0.5f;
-        float v = sin(rads) * 0.5 + 0.5f;
+        float u = std::cos(rads) * 0.5f + 0.5f;
+        float v = std::sin(rads) * 0.5f + 0.5f;
 
         vdata->position(x_offset + x, y_offset + y, z_offset);
         vdata->diffuse(smlt::Colour::WHITE);

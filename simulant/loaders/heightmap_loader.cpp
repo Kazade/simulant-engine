@@ -160,19 +160,19 @@ smlt::Colour colour_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal
 
     for(auto& neighbour_pos: surrounding_points) {
         auto neighbour_offset = (neighbour_pos - point).normalized();
-        sum += acos(normal.dot(neighbour_offset));
+        sum += std::acos(normal.dot(neighbour_offset));
     }
 
     float v = sum / float(surrounding_points.size());
 
     // If the average angle > 90 degrees, then we are white
-    if(v > 3.142f / 2.0) {
+    if(v > 3.142f / 2.0f) {
         return smlt::Colour::WHITE;
     } else {
-        v /= (3.142 / 2.0);
+        v /= (3.142f / 2.0f);
     }
 
-    return smlt::Colour(v, v, v, 1.0);
+    return smlt::Colour(v, v, v, 1.0f);
 }
 
 std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int height, uint32_t i) {
@@ -326,8 +326,8 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
             // Second texture coordinate makes the texture span the entire terrain
             mesh->vertex_data->tex_coord1(
-                (1.0 / float(width)) * float(x),
-                (1.0 / float(height)) * float(z)
+                (1.0f / float(width)) * float(x),
+                (1.0f / float(height)) * float(z)
             );
 
             mesh->vertex_data->move_next();

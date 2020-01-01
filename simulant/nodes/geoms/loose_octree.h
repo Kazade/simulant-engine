@@ -49,7 +49,7 @@ public:
 
         /* Make sure the bounds are square */
         float maxd = root_width_;
-        auto halfd = maxd / 2.0;
+        auto halfd = maxd / 2.0f;
 
         auto half = Vec3(halfd, halfd, halfd);
         bounds_.set_min(centre_ - half);
@@ -76,7 +76,7 @@ public:
         auto level_and_node_width = level_for_width(diameter);
 
         /* Calculate the cell index to insert the sphere */
-        auto half_width = root_width_ * 0.5;
+        auto half_width = root_width_ * 0.5f;
 
         assert(centre.x <= bounds_.max().x && centre.x >= bounds_.min().x);
         assert(centre.y <= bounds_.max().y && centre.y >= bounds_.min().y);

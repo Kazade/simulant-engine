@@ -6,7 +6,7 @@ namespace smlt {
 bool Ray::intersects_aabb(const AABB &aabb) const {
     //http://gamedev.stackexchange.com/a/18459/15125
     Vec3 rdir = this->dir.normalized();
-    Vec3 dirfrac(1.0 / rdir.x, 1.0 / rdir.y, 1.0 / rdir.z);
+    Vec3 dirfrac(1.0f / rdir.x, 1.0f / rdir.y, 1.0f / rdir.z);
 
     float t1 = (aabb.min().x - start.x) * dirfrac.x;
     float t2 = (aabb.max().x - start.x) * dirfrac.x;

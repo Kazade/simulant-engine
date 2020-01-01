@@ -11,6 +11,12 @@
 
 #include "splash.h"
 
+#define SIMULANT_TEXT_512 "simulant/textures/simulant-text-512.png"
+#define SIMULANT_TEXT_1024 "simulant/textures/simulant-text.png"
+
+#define SIMULANT_LOGO_256 "simulant/textures/simulant-icon-256.png"
+#define SIMULANT_LOGO_512 "simulant/textures/simulant-icon.png"
+
 namespace smlt {
 namespace scenes {
 
@@ -18,34 +24,24 @@ void Splash::load() {
     //Create a stage
     stage_ = window->new_stage();
 
-    auto text_texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-text.png");
+    auto text_file = (window->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
+    auto logo_file = (window->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
+
+    auto text_texture = stage_->assets->new_texture_from_file(text_file);
     text_ = stage_->ui->new_widget_as_image(text_texture);
 
-    auto texture = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
+    auto texture = stage_->assets->new_texture_from_file(logo_file);
     image_ = stage_->ui->new_widget_as_image(texture);
 
     sound_ = window->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav", smlt::GARBAGE_COLLECT_NEVER);
 
-    /* Scale for window resolution */
-    float scale = 0.5 * (window->height() / 720.0f);
-
-    auto round = [](float x, float f) -> float {
-        return f * ceil(x / f);
-    };
-
-    round(scale, 0.25);
-
-    image_->set_width(image_->width() * scale * 0.75);
-    image_->set_height(image_->height() * scale * 0.75);
-    image_->set_anchor_point(0.5, 0.0);
+    image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);
 
-    text_->set_width(text_->width() * scale);
-    text_->set_height(text_->height() * scale);
     text_->set_anchor_point(0.5, 1.0);
 
-    image_->move_to(window->coordinate_from_normalized(0.5, 0.5));
-    text_->move_to(window->coordinate_from_normalized(0.5, 0.5));
+    image_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
+    text_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
 
     //Create an orthographic camera
     camera_ = stage_->new_camera();

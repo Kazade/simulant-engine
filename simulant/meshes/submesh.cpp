@@ -237,27 +237,27 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         // Finally, offset the uv coordinate to the right 'square' of the cubic texture
         if(x) {
             if(dir.x >= 0) {
-                final.x = 2.0 / 3.0 + (final.y / 3.0);
-                final.y = 2.0 / 4.0 + (final.z / 4.0);
+                final.x = 2.0f / 3.0f + (final.y / 3.0f);
+                final.y = 2.0f / 4.0f + (final.z / 4.0f);
             } else {
-                final.x = final.y / 3.0;
-                final.y = 2.0 / 4.0 + (final.z / 4.0);
+                final.x = final.y / 3.0f;
+                final.y = 2.0f / 4.0f + (final.z / 4.0f);
             }
         } else if(y) {
             if(dir.y >= 0) {
-                final.x = 1.0 / 3.0 + (final.z / 3.0);
-                final.y = 3.0 / 4.0 + (final.x / 4.0);
+                final.x = 1.0f / 3.0f + (final.z / 3.0f);
+                final.y = 3.0f / 4.0f + (final.x / 4.0f);
             } else {
-                final.x = 1.0 / 3.0 + (final.z / 3.0);
-                final.y = 1.0 / 4.0 + (final.x / 4.0);
+                final.x = 1.0f / 3.0f + (final.z / 3.0f);
+                final.y = 1.0f / 4.0f + (final.x / 4.0f);
             }
         } else {
             if(dir.z >= 0) {
-                final.x = 1.0 / 3.0 + (final.x / 3.0);
-                final.y = 2.0 / 4.0 + (final.y / 4.0);
+                final.x = 1.0f / 3.0f + (final.x / 3.0f);
+                final.y = 2.0f / 4.0f + (final.y / 4.0f);
             } else {
-                final.x = 1.0 / 3.0 + (final.x / 3.0);
-                final.y = (final.y / 4.0);
+                final.x = 1.0f / 3.0f + (final.x / 3.0f);
+                final.y = (final.y / 4.0f);
             }
         }
 

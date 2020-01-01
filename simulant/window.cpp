@@ -123,7 +123,14 @@ RenderSequence* Window::render_sequence() {
 }
 
 LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
-    unicode final_file = vfs->locate_file(filename);
+
+    unicode final_file;
+    try {
+        final_file = vfs->locate_file(filename);
+    } catch(AssetMissingError&) {
+        L_ERROR("Couldn't get loader as file doesn't exist");
+        return LoaderPtr();
+    }
 
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 
@@ -370,15 +377,15 @@ void Window::run_update() {
     frame_counter_time_ += dt;
     frame_counter_frames_++;
 
-    if(frame_counter_time_ >= 1.0) {
+    if(frame_counter_time_ >= 1.0f) {
         stats->set_frames_per_second(frame_counter_frames_);
 
-        frame_time_in_milliseconds_ = 1000.0 / float(frame_counter_frames_);
+        frame_time_in_milliseconds_ = 1000.0f / float(frame_counter_frames_);
 
         stats->set_frame_time(frame_time_in_milliseconds_);
 
         frame_counter_frames_ = 0;
-        frame_counter_time_ = 0.0;
+        frame_counter_time_ = 0.0f;
     }
 
     _update_thunk(dt);
@@ -402,6 +409,16 @@ void Window::request_frame_time(float ms) {
 }
 
 void Window::await_frame_time() {
+#ifdef _arch_dreamcast
+    /* Don't do anything on the DC if the requested frame rate
+     * is greater or equal to 60FPS (59 to account for rounding errors or whatever)
+     * as the DC is capped at that anyway
+     */
+    if(requested_frame_time_ms_ <= 1.0f / 59.0f) {
+        return;
+    }
+#endif
+
     auto this_time = time_keeper_->now_in_us();
     while((float(this_time - last_frame_time_us_) * 0.001f) < requested_frame_time_ms_) {
 

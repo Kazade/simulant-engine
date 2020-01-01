@@ -65,15 +65,15 @@ Simplex::Simplex(int seed):
 
 }
 
-float Simplex::noise(float x, float y) {
+float Simplex::noise(double x, double y) {
     return noise(x, y, 0, 0);
 }
 
-float Simplex::noise(float x, float y, float z) {
+float Simplex::noise(double x, double y, double z) {
     return noise(x, y, z, 0);
 }
 
-float Simplex::noise(float x, float y, float z, float w) {
+float Simplex::noise(double x, double y, double z, double w) {
     if(!initialized_) {
         init();
     }
@@ -227,7 +227,7 @@ float Simplex::noise(float x, float y, float z, float w) {
     }
 
     // Sum up and scale the result to cover the range [-1,1]
-    return 27.0f * (n0 + n1 + n2 + n3 + n4);
+    return 27.0f * (float)(n0 + n1 + n2 + n3 + n4);
 }
 
 }

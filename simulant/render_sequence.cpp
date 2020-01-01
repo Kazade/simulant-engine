@@ -275,7 +275,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     // Reset it, ready for this pipeline
     render_queue_.reset(stage, window->renderer.get(), camera);
 
-    uint32_t renderables_rendered = 0;
     // Mark the visible objects as visible
     for(auto& node: nodes_visible) {
         if(!node->is_visible()) {
@@ -346,13 +345,12 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
             for(auto i = 0u; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
                 renderable->lights_affecting_this_frame[i] = (i < renderable_lights.size()) ? renderable_lights[i] : nullptr;
             }
-            ++renderables_rendered;
         }
     }
 
     profiler.checkpoint("lights");
 
-    window->stats->set_geometry_visible(renderables_rendered);
+    actors_rendered += render_queue_.renderable_count();
 
     using namespace std::placeholders;
 

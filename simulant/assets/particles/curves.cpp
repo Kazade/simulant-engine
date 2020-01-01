@@ -7,7 +7,7 @@ float bell_curve(float initial, float t, float s, float peak, float deviation) {
     const int b = 50;
     const int c = (int) (deviation * 100.0f);
 
-    const float y = a * exp(-(pow(x - b, 2) / pow(2 * c, 2)));
+    const float y = a * expf(-(powf(x - b, 2) / powf(2 * c, 2)));
 
     return initial + y;
 }

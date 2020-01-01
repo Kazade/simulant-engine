@@ -61,61 +61,11 @@ AssetManager::~AssetManager() {
 }
 
 bool AssetManager::init() {
-    if(base_manager() != this) {
-        // Only the base manager needs to load default materials and textures
-        L_DEBUG("Not the base manager, so not initializing");
-        return true;
-    }
-
-    L_DEBUG("Initalizing default materials, textures, and fonts");
-
-    //FIXME: Should lock the default texture and material during construction!
-    //Create the default blank texture
-    /* 8x8 is the smallest size we can do without the Dreamcast pvr library
-     * complaining that it's not a valid size :/ */
-    auto default_texture = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, GARBAGE_COLLECT_NEVER);
-    default_texture_id_ = default_texture;
-
-    L_DEBUG("- Created texture");
-
-    assert(default_texture_id_);
-
-    // FIXME: This is slow! Need to allow
-    // manipulating the data on the txn to avoid
-    // two copies.
-    auto data = default_texture->data();
-
-    for(uint32_t i = 0; i < 64 * 4; ++i) {
-        data[i] = 255;
-    }
-
-    auto txn = default_texture->begin_transaction();
-    txn->set_data(data);
-    txn->commit();
-
-    L_DEBUG("- Generated texture data");
-
-    //Maintain ref-count
-    default_material_id_ = new_material_from_file(default_material_filename(), GARBAGE_COLLECT_NEVER);
-    L_DEBUG("- Created material");
-
-    assert(default_material_id_);
-
-    auto mat = material(default_material_id_);
-
-    assert(mat && "Material was missing?!");
-
-    L_DEBUG("- Applying texture to material");
-
-    //Set the default material's first texture to the default (white) texture
-    mat->set_diffuse_map(default_texture);
-
-    L_DEBUG("- Loading fonts");
-    default_heading_font_ = new_font_from_file(HEADING_FONT);
-    default_body_font_ = new_font_from_file(BODY_FONT);
-
+    L_DEBUG(_F("Initalizing default materials, textures, and fonts (AssetManager: {0})").format(this));
+    set_default_material_filename(Material::BuiltIns::DEFAULT);
+    set_default_font_filename(DEFAULT_FONT_STYLE_BODY, BODY_FONT);
+    set_default_font_filename(DEFAULT_FONT_STYLE_HEADING, HEADING_FONT);
     L_DEBUG("Finished initializing defaults");
-
     return true;
 }
 
@@ -127,6 +77,63 @@ void AssetManager::update(float dt) {
     texture_manager_.each([dt](uint32_t, TexturePtr tex) {
         tex->update(dt);
     });
+}
+
+void AssetManager::set_default_material_filename(const unicode& filename) {
+    default_material_filename_ = filename;
+    default_material_.reset();
+}
+
+unicode AssetManager::default_material_filename() const {
+    return default_material_filename_;
+}
+
+MaterialPtr AssetManager::default_material() const {
+    if(!default_material_) {
+        default_material_ = const_cast<AssetManager*>(this)->new_material_from_file(
+            default_material_filename_
+        );
+    }
+
+    return default_material_;
+}
+
+void AssetManager::set_default_font_filename(DefaultFontStyle style, const unicode& filename) {
+    if(style == DEFAULT_FONT_STYLE_BODY) {
+        default_body_font_filename_ = filename;
+        default_body_font_.reset();
+    } else {
+        default_heading_font_filename_ = filename;
+        default_heading_font_.reset();
+    }
+}
+
+unicode AssetManager::default_font_filename(DefaultFontStyle style) const {
+    if(style == DEFAULT_FONT_STYLE_BODY) {
+        return default_body_font_filename_;
+    } else {
+        return default_heading_font_filename_;
+    }
+}
+
+FontPtr AssetManager::default_font(DefaultFontStyle style) const {
+    if(style == DEFAULT_FONT_STYLE_BODY) {
+        if(!default_body_font_) {
+            default_body_font_ = const_cast<AssetManager*>(this)->new_font_from_file(
+                default_body_font_filename_
+            );
+        }
+
+        return default_body_font_;
+    } else {
+        if(!default_heading_font_) {
+            default_heading_font_ = const_cast<AssetManager*>(this)->new_font_from_file(
+                default_heading_font_filename_
+            );
+        }
+
+        return default_heading_font_;
+    }
 }
 
 void AssetManager::run_garbage_collection() {
@@ -605,39 +612,6 @@ void AssetManager::destroy_sound(SoundID t) {
     sound_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
-TextureID AssetManager::default_texture_id() const {
-    if(base_manager() != this) {
-        return base_manager()->default_texture_id();
-    } else {
-        return default_texture_id_;
-    }
-}
-
-FontID AssetManager::default_font_id(DefaultFontStyle style) const {
-    if(base_manager() != this) {
-        return base_manager()->default_font_id(style);
-    } else {
-        switch(style) {
-        case DEFAULT_FONT_STYLE_HEADING:
-            return default_heading_font_->id();
-        default:
-            return default_body_font_->id();
-        }
-    }
-}
-
-MaterialID AssetManager::default_material_id() const {
-    if(base_manager() != this) {
-        return base_manager()->default_material_id();
-    } else {
-        return default_material_id_;
-    }
-}
-
-unicode AssetManager::default_material_filename() const {
-    return window->vfs->locate_file(Material::BuiltIns::DEFAULT);
-}
-
 MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect) {
     assert(mat_id && "No default material, called to early?");
 
@@ -650,7 +624,7 @@ MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollec
 }
 
 MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
-    return clone_material(base_manager()->default_material_id());
+    return clone_material(base_manager()->default_material());
 }
 
 // ========== FONTS ======================

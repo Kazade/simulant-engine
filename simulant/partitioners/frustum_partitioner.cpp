@@ -33,60 +33,39 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
         std::vector<StageNode*> &geom_out) {
 
     auto frustum = stage->camera(camera_id)->frustum();
+    for(auto& key: all_nodes_) {
+        if(key.first == typeid(Light)) {
+            auto light = stage->light(make_unique_id_from_key<LightID>(key));
+            if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(light->transformed_aabb())) {
+                lights_out.push_back(make_unique_id_from_key<LightID>(key));
+            }
 
-    for(LightID lid: all_lights_) {
-        auto light = stage->light(lid);
-        auto aabb = light->transformed_aabb();
-        if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(aabb)) {
-            lights_out.push_back(lid);
-        }
-    }
-
-    for(ActorID eid: all_actors_) {
-        auto actor = stage->actor(eid);
-
-        if(frustum.intersects_aabb(actor->transformed_aabb())) {
-            geom_out.push_back(actor);
-        }
-    }
-
-    for(GeomID gid: all_geoms_) {
-        auto geom = stage->geom(gid);
-        if(frustum.intersects_aabb(geom->aabb())) {
-            geom_out.push_back(geom);
-        }
-    }
-
-    for(ParticleSystemID ps: all_particle_systems_) {
-        auto system = stage->particle_system(ps);
-        auto aabb = system->transformed_aabb();
-        if(frustum.intersects_aabb(aabb)) {
-            geom_out.push_back(system);
+        } else if(key.first == typeid(Actor)) {
+            auto actor = stage->actor(make_unique_id_from_key<ActorID>(key));
+            if(frustum.intersects_aabb(actor->transformed_aabb())) {
+                geom_out.push_back(actor);
+            }
+        } else if(key.first == typeid(Geom)) {
+            auto geom = stage->geom(make_unique_id_from_key<GeomID>(key));
+            if(frustum.intersects_aabb(geom->aabb())) {
+                geom_out.push_back(geom);
+            }
+        } else if(key.first == typeid(ParticleSystem)) {
+            auto ps = stage->particle_system(make_unique_id_from_key<ParticleSystemID>(key));
+            if(frustum.intersects_aabb(ps->transformed_aabb())) {
+                geom_out.push_back(ps);
+            }
+        } else {
+            assert(0 && "Not implemented");
         }
     }
 }
 
-void FrustumPartitioner::apply_staged_write(const StagedWrite &write) {
+void FrustumPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
     if(write.operation == WRITE_OPERATION_ADD) {
-        if(write.actor_id) {
-            all_actors_.insert(write.actor_id);
-        } else if(write.geom_id) {
-            all_geoms_.insert(write.geom_id);
-        } else if(write.light_id) {
-            all_lights_.insert(write.light_id);
-        } else if(write.particle_system_id) {
-            all_particle_systems_.insert(write.particle_system_id);
-        }
+        all_nodes_.insert(key);
     } else if(write.operation == WRITE_OPERATION_REMOVE) {
-        if(write.actor_id) {
-            all_actors_.erase(write.actor_id);
-        } else if(write.geom_id) {
-            all_geoms_.erase(write.geom_id);
-        } else if(write.light_id) {
-            all_lights_.erase(write.light_id);
-        } else if(write.particle_system_id) {
-            all_particle_systems_.erase(write.particle_system_id);
-        }
+        all_nodes_.erase(key);
     } else if(write.operation == WRITE_OPERATION_UPDATE) {
         // Do nothing!
     }

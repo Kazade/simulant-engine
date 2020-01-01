@@ -41,7 +41,7 @@ public:
 
 private:
     void update(float dt) override;
-    double time_ = 0.0f;
+    float time_ = 0.0f;
 };
 
 }

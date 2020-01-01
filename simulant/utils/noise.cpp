@@ -40,7 +40,7 @@ Perlin::Perlin(uint32_t seed) {
     std::copy(p.begin(), mid_range, mid_range); //Copy the lower half to the upper half
     //p now has the numbers 0-255, shuffled, and duplicated
 
-    float r = 3.1 * PIOver180; //Arbitrary 3.1 degrees in radians
+    float r = 3.1f * PIOver180; //Arbitrary 3.1 degrees in radians
     rotation_ = Quaternion(Radians(r), Radians(r), Radians(r)); //Create a quaternion rotated 3.1 degrees around each axis
 }
 

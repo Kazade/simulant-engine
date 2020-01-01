@@ -57,7 +57,7 @@ smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Vie
     Vec4 out = view_matrix() * in;
     in = projection_matrix() * out;
 
-    if(in.w == 0.0) {
+    if(in.w == 0.0f) {
         return smlt::optional<Vec3>();
     }
 
@@ -65,9 +65,9 @@ smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Vie
     in.y /= in.w;
     in.z /= in.w;
 
-    in.x = in.x * 0.5 + 0.5;
-    in.y = in.y * 0.5 + 0.5;
-    in.z = in.z * 0.5 + 0.5;
+    in.x = in.x * 0.5f + 0.5f;
+    in.y = in.y * 0.5f + 0.5f;
+    in.z = in.z * 0.5f + 0.5f;
 
     float vp_width = viewport.width_in_pixels(target);
     float vp_height = viewport.height_in_pixels(target);
@@ -97,10 +97,10 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
     float vw = (float) viewport.width_in_pixels(target);
     float vh = (float) viewport.height_in_pixels(target);
 
-    in.x = (win.x - vx) / vw * 2.0 - 1.0;
-    in.y = (win.y - vy) / vh * 2.0 - 1.0;
-    in.z = 2.0 * win.z - 1.0;
-    in.w = 1.0;
+    in.x = (win.x - vx) / vw * 2.0f - 1.0f;
+    in.y = (win.y - vy) / vh * 2.0f - 1.0f;
+    in.z = 2.0f * win.z - 1.0f;
+    in.w = 1.0f;
 
     Vec4 out = m * in;
 
@@ -108,7 +108,7 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
         return smlt::optional<Vec3>();
     }
 
-    out.w = 1.0 / out.w;
+    out.w = 1.0f / out.w;
 
     Vec3 ret;
 

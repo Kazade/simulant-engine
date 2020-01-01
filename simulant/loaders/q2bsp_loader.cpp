@@ -201,8 +201,8 @@ std::vector<Lightmap> extract_lightmaps(const std::vector<uint8_t> lightmap_data
         auto& uv_limit = uv_limits[i];
 
         Lightmap lmap;
-        lmap.width = std::ceil(uv_limit.max.x / 16.0) - std::floor(uv_limit.min.x / 16.0) + 1;
-        lmap.height = std::ceil(uv_limit.max.y / 16.0) - std::floor(uv_limit.min.y / 16.0) + 1;
+        lmap.width = std::ceil(uv_limit.max.x / 16.0f) - std::floor(uv_limit.min.x / 16.0f) + 1.0f;
+        lmap.height = std::ceil(uv_limit.max.y / 16.0f) - std::floor(uv_limit.min.y / 16.0f) + 1.0f;
 
         auto data_size = lmap.width * lmap.height * 3;
         lmap.data.assign(&lightmap_data[face.lightmap_offset], &lightmap_data[face.lightmap_offset + data_size]);

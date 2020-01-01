@@ -52,7 +52,7 @@ void ProgressBar::refresh_fraction() {
     auto new_fraction = value() / (max() - min());
 
     // Don't update for tiny changes
-    if(std::abs(new_fraction - fraction_) > 0.01) {
+    if(std::abs(new_fraction - fraction_) > 0.01f) {
         fraction_ = new_fraction;
         rebuild();
     }

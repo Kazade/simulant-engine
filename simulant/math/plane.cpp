@@ -16,16 +16,17 @@ float Plane::distance_to(const Vec3 &p) {
 }
 
 PlaneClassification Plane::classify_point(const Vec3 &p) const {
+    const static float E = std::numeric_limits<float>::epsilon();
+
     /* This function will determine if a point is on, in front of, or behind*/
     /* the plane.  First we store the dot product of the plane and the point.*/
     auto distance = n.x * p.x + n.y * p.y + n.z * p.z + d;
 
     /* Simply put if the dot product is greater than 0 then it is infront of it.*/
     /* If it is less than 0 then it is behind it.  And if it is 0 then it is on it.*/
-    if(distance > std::numeric_limits<float>::epsilon()) return PLANE_CLASSIFICATION_IS_IN_FRONT_OF_PLANE;
-    if(distance < -std::numeric_limits<float>::epsilon()) return PLANE_CLASSIFICATION_IS_BEHIND_PLANE;
-
-    return PLANE_CLASSIFICATION_IS_ON_PLANE;
+    if(distance > E) return PLANE_CLASSIFICATION_IS_IN_FRONT_OF_PLANE;
+    else if(distance < -E) return PLANE_CLASSIFICATION_IS_BEHIND_PLANE;
+    else return PLANE_CLASSIFICATION_IS_ON_PLANE;
 }
 
 smlt::optional<Vec3> Plane::intersect_planes(const Plane &p1, const Plane &p2, const Plane &p3) {
@@ -50,7 +51,7 @@ smlt::optional<Vec3> Plane::intersect_planes(const Plane &p1, const Plane &p2, c
 
     auto ret = r1 - r2 - r3;
 
-    ret *= 1.0 / denom;
+    ret *= 1.0f / denom;
 
     return smlt::optional<Vec3>(std::move(ret));
 }

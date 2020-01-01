@@ -82,21 +82,24 @@ public:
                 MetaBlock* meta = meta_block(new_thing);
                 assert(meta->used); // Should've been allocated
 
-                T* ret = new (new_thing) U(id, args...);
-
-                if(!ret->init()) {
-                    ret->clean_up();
-                    ret->~T(); // Call the destructor
-
-                    // Release the slot by manipulating the linked list
+                /* Construct the object, release the slot
+                 * if it throws */
+                T* ret = nullptr;
+                try {
+                    ++chunk->used_count_;
+                    ret = new (new_thing) U(id, args...);
+                    if(!ret->init()) {
+                        ret->clean_up();
+                        ret->~T(); // Call the destructor
+                        throw InstanceInitializationError(typeid(T).name());
+                    }
+                } catch(...) {
                     chunk->release_slot(new_thing);
-
-                    assert(!meta->used);
-
-                    throw InstanceInitializationError(typeid(T).name());
+                    --chunk->used_count_;
+                    throw;
                 }
 
-                ++chunk->used_count_;
+
                 ++size_;
 
                 return std::make_pair(
@@ -140,7 +143,6 @@ public:
         T* element = get(id);
 
         assert(element);
-
         element->clean_up();
         // Call the destructor
         element->~T();
@@ -165,17 +167,20 @@ public:
         /* Release all the slots, but don't delete the chunks */
         std::size_t chunk_id = 0;
         for(auto& chunk: chunks_) {
-            auto first_used = chunk->first_used_;
-            while(first_used) {
-                auto meta = meta_block(first_used);
-                assert(meta->used);
+            while(chunk->first_used_) {
 
-                slot_id slot = (first_used - &chunk->elements_[0]) / element_size;
+#ifndef NDEBUG
+                auto meta = meta_block(chunk->first_used_);
+                assert(meta->used);
+#endif
+
+                assert(chunk->used_count_);
+
+                slot_id slot = (chunk->first_used_ - &chunk->elements_[0]) / element_size;
                 id_type id = id_for_chunk_slot(chunk_id, slot);
                 release(id);
 
                 assert(!meta->used);
-                first_used = meta->next_used;
             }
 
             ++chunk_id;

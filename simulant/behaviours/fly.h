@@ -60,7 +60,7 @@ private:
         }
 
         stage_node_->move_forward_by(input->axis_value("Vertical") * speed_ * dt);
-        stage_node_->rotate_global_y_by(Degrees(input->axis_value("Horizontal") * -50.0 * dt));
+        stage_node_->rotate_global_y_by(Degrees(input->axis_value("Horizontal") * -50.0f * dt));
         stage_node_->rotate_global_y_by(Degrees(input->axis_value("MouseX") * -50.0f * dt));
         stage_node_->rotate_x_by(Degrees(input->axis_value("MouseY") * -50.0f * dt));
     }

@@ -135,35 +135,48 @@ void SpatialHashPartitioner::stage_remove_particle_system(ParticleSystemID ps) {
     }
 }
 
-void SpatialHashPartitioner::apply_staged_write(const StagedWrite &write) {
-    if(write.operation == WRITE_OPERATION_ADD) {
-        if(write.actor_id) {
-            stage_add_actor(write.actor_id);
-        } else if(write.geom_id) {
-            stage_add_geom(write.geom_id);
-        } else if(write.light_id) {
-            stage_add_light(write.light_id);
-        } else if(write.particle_system_id) {
-            stage_add_particle_system(write.particle_system_id);
+void SpatialHashPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
+    bool is_actor = key.first == typeid(Actor);
+    bool is_geom = key.first == typeid(Geom);
+    bool is_light = key.first == typeid(Light);
+    bool is_ps = key.first == typeid(ParticleSystem);
+
+    if(is_actor) {
+        auto aid = make_unique_id_from_key<ActorID>(key);
+        if(write.operation == WRITE_OPERATION_ADD) {
+            stage_add_actor(aid);
+        } else if(write.operation == WRITE_OPERATION_UPDATE) {
+            _update_actor(write.new_bounds, aid);
+        } else if(write.operation == WRITE_OPERATION_REMOVE) {
+            stage_remove_actor(aid);
         }
-    } else if(write.operation == WRITE_OPERATION_REMOVE) {
-        if(write.actor_id) {
-            stage_remove_actor(write.actor_id);
-        } else if(write.geom_id) {
-            stage_remove_geom(write.geom_id);
-        } else if(write.light_id) {
-            stage_remove_light(write.light_id);
-        } else if(write.particle_system_id) {
-            stage_remove_particle_system(write.particle_system_id);
+    } else if(is_geom) {
+        auto aid = make_unique_id_from_key<GeomID>(key);
+        if(write.operation == WRITE_OPERATION_ADD) {
+            stage_add_geom(aid);
+        } else if(write.operation == WRITE_OPERATION_REMOVE) {
+            stage_remove_geom(aid);
         }
-    } else if(write.operation == WRITE_OPERATION_UPDATE) {
-        if(write.stage_node_type == STAGE_NODE_TYPE_ACTOR) {
-            _update_actor(write.new_bounds, write.actor_id);
-        } else if(write.stage_node_type == STAGE_NODE_TYPE_LIGHT) {
-            _update_light(write.new_bounds, write.light_id);
-        } else if(write.stage_node_type == STAGE_NODE_TYPE_PARTICLE_SYSTEM) {
-            _update_particle_system(write.new_bounds, write.particle_system_id);
+    } else if(is_light) {
+        auto lid = make_unique_id_from_key<LightID>(key);
+        if(write.operation == WRITE_OPERATION_ADD) {
+            stage_add_light(lid);
+        } else if(write.operation == WRITE_OPERATION_UPDATE) {
+            _update_light(write.new_bounds, lid);
+        } else if(write.operation == WRITE_OPERATION_REMOVE) {
+            stage_remove_light(lid);
         }
+    } else if(is_ps) {
+        auto pid = make_unique_id_from_key<ParticleSystemID>(key);
+        if(write.operation == WRITE_OPERATION_ADD) {
+            stage_add_particle_system(pid);
+        } else if(write.operation == WRITE_OPERATION_UPDATE) {
+            _update_particle_system(write.new_bounds, pid);
+        } else if(write.operation == WRITE_OPERATION_REMOVE) {
+            stage_remove_particle_system(pid);
+        }
+    } else {
+        assert(0 && "Not implemented");
     }
 }
 

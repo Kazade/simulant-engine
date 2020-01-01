@@ -78,11 +78,11 @@ private:
     };
 
     struct DebugElement {
-        double time_since_created = 0.0;
+        float time_since_created = 0.0;
         DebugElementType type = DET_LINE;
         Colour colour = Colour::WHITE;
         bool depth_test = true;
-        double duration = 0.0;
+        float duration = 0.0;
 
         smlt::Vec3 points[2]; // For lines, or the first one for points
         float size; // Diameter for spheres + points

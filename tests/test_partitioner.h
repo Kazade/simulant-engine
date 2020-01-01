@@ -19,7 +19,7 @@ public:
         Partitioner(stage),
         cb_(cb) {}
 
-    void apply_staged_write(const StagedWrite& write) {
+    void apply_staged_write(const UniqueIDKey& k, const StagedWrite& write) {
         cb_(write);
     }
 
@@ -34,14 +34,44 @@ private:
 
 class PartitionerTests : public smlt::test::SimulantTestCase {
 public:
+    void test_remove_first() {
+        /* Because IDs could be reused, we need to handle both cases
+         * that a remove is staged before an add, and an add is staged
+         * before a remove */
+
+        bool exists = false;
+
+        auto test = [&exists](const StagedWrite& write) {
+            if(write.operation == WRITE_OPERATION_ADD) {
+                exists = true;
+            }
+
+            if(write.operation == WRITE_OPERATION_REMOVE) {
+                exists = false;
+            }
+        };
+
+        StagePtr stage = window->new_stage();
+        ActorPtr actor = stage->new_actor();
+
+        MockPartitioner partitioner(stage, test);
+        partitioner.remove_actor(actor);
+        partitioner.add_actor(actor);
+        partitioner._apply_writes();
+
+        assert_true(exists);
+        exists = false;
+
+        partitioner.add_actor(actor);
+        partitioner.remove_actor(actor);
+        partitioner._apply_writes();
+        assert_false(exists);
+    }
+
     void test_add_actor_stages_write() {
         auto test = [=](const StagedWrite& write) {
             assert_equal(write.stage_node_type, STAGE_NODE_TYPE_ACTOR);
             assert_equal(write.operation, WRITE_OPERATION_ADD);
-            assert_true(write.actor_id);
-            assert_false(write.light_id);
-            assert_false(write.particle_system_id);
-            assert_false(write.geom_id);
         };
 
         StagePtr stage = window->new_stage();
@@ -58,10 +88,6 @@ public:
         auto test = [=](const StagedWrite& write) {
             assert_equal(write.stage_node_type, STAGE_NODE_TYPE_ACTOR);
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
-            assert_true(write.actor_id);
-            assert_false(write.light_id);
-            assert_false(write.particle_system_id);
-            assert_false(write.geom_id);
         };
 
         StagePtr stage = window->new_stage();
@@ -78,10 +104,6 @@ public:
         auto test = [=](const StagedWrite& write) {
             assert_equal(write.stage_node_type, STAGE_NODE_TYPE_LIGHT);
             assert_equal(write.operation, WRITE_OPERATION_ADD);
-            assert_false(write.actor_id);
-            assert_true(write.light_id);
-            assert_false(write.particle_system_id);
-            assert_false(write.geom_id);
         };
 
         StagePtr stage = window->new_stage();
@@ -98,10 +120,6 @@ public:
         auto test = [=](const StagedWrite& write) {
             assert_equal(write.stage_node_type, STAGE_NODE_TYPE_LIGHT);
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
-            assert_false(write.actor_id);
-            assert_true(write.light_id);
-            assert_false(write.particle_system_id);
-            assert_false(write.geom_id);
         };
 
         StagePtr stage = window->new_stage();
@@ -118,10 +136,6 @@ public:
         auto test = [=](const StagedWrite& write) {
             assert_equal(write.stage_node_type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
             assert_equal(write.operation, WRITE_OPERATION_ADD);
-            assert_false(write.actor_id);
-            assert_false(write.light_id);
-            assert_true(write.particle_system_id);
-            assert_false(write.geom_id);
         };
 
         StagePtr stage = window->new_stage();
@@ -140,10 +154,6 @@ public:
         auto test = [=](const StagedWrite& write) {
             assert_equal(write.stage_node_type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
-            assert_false(write.actor_id);
-            assert_false(write.light_id);
-            assert_true(write.particle_system_id);
-            assert_false(write.geom_id);
         };
 
         StagePtr stage = window->new_stage();

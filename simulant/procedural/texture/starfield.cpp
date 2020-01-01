@@ -82,7 +82,7 @@ void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
 
     for(uint32_t y = 0; y < height; ++y) {
         for(uint32_t x = 0; x < width; ++x) {
-            float this_density = (noise->noise(x, y) + 1.0) / 2.0;
+            float this_density = (noise->noise(x, y) + 1.0f) / 2.0f;
 
             if(rgen.float_in_range(0, 1) < this_density * GLOBAL_DENSITY) {
                 float weight = rgen.float_in_range(0, 1) * this_density;
@@ -91,11 +91,11 @@ void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
 
                 smlt::Colour colour = smlt::Colour::WHITE;
                 float col_rand = rgen.float_in_range(0, 1);
-                if(col_rand < 0.05) {
+                if(col_rand < 0.05f) {
                     colour = smlt::Colour::ORANGE;
-                } else if(col_rand < 0.07) {
+                } else if(col_rand < 0.07f) {
                     colour = smlt::Colour::YELLOW;
-                } else if(col_rand < 0.1) {
+                } else if(col_rand < 0.1f) {
                     colour = smlt::Colour::BLUE;
                 }
                 draw_circle(texture_ptr, x, y, size, brightness, colour);

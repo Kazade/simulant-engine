@@ -34,7 +34,7 @@ RaycastVehicle::RaycastVehicle(RigidBodySimulation* simulation, float wheel_heig
     BoundableEntity* entity = dynamic_cast<BoundableEntity*>(stage_node.get());
     AABB aabb = entity->aabb();
 
-    float offset = 0.001;
+    float offset = 0.001f;
 
     auto min = aabb.min();
     auto max = aabb.max();
@@ -62,7 +62,7 @@ void RaycastVehicle::recalculate_rays() {
 
     ground_detector_.start = ground_detector_local_ * rot;
     ground_detector_.start = Vec3(ground_detector_.start) + pos;
-    ground_detector_.dir = (DOWN * rot).normalized() * (wheel_height_ / 2.0);
+    ground_detector_.dir = (DOWN * rot).normalized() * (wheel_height_ / 2.0f);
 }
 
 bool RaycastVehicle::init() {
@@ -131,7 +131,7 @@ void RaycastVehicle::fixed_update(float dt) {
         Vec3 Cf = up.project_onto_vec3(Cv);
 
         // Calculate a value between 0.0 and 1.0 that shows how compressed the suspension is
-        float compression_ratio = 1.0 - (intersection.dist / intersection.ray_dir.length());
+        float compression_ratio = 1.0f - (intersection.dist / intersection.ray_dir.length());
 
         auto Nf = up * compression_ratio * SUSPENSION_STIFFNESS;
         auto Df = Nf - Cf;
@@ -156,11 +156,11 @@ void RaycastVehicle::fixed_update(float dt) {
         std::cout << "Fo: " << forward().x << ", " << forward().y << ", " << forward().z << std::endl;
         std::cout << "Pf: " << proj_forward.x << ", " << proj_forward.y << ", " << proj_forward.z << std::endl;
 
-        if(fabs(drive_force_) > FLOAT_EPSILON) {
+        if(fabsf(drive_force_) > FLOAT_EPSILON) {
             average_surface_normal_.normalize();
             add_force(proj_forward * drive_force_);
         }
-        if(fabs(turn_force_) > FLOAT_EPSILON) {
+        if(fabsf(turn_force_) > FLOAT_EPSILON) {
             Vec3 torque = Vec3(0, 1, 0);
             add_torque(torque * turn_force_);
         }
