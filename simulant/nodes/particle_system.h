@@ -41,7 +41,7 @@ class ParticleSystem :
     public Loadable,
     public HasMutableRenderPriority {
 
-    DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed)
+    DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
     ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver, ParticleScriptPtr script);
