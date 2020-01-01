@@ -91,10 +91,6 @@ KOS_DISTFILES =		KOSMakefile.mk\n\
 include ${KOS_PORTS}/scripts/kos-ports.mk\n\
 ' > /opt/toolchains/dc/kos-ports/GLdc/Makefile
 
-RUN mkdir -p /opt/toolchains/dc/kos-ports/GLdc/build/GLdc-1.0.0/GL
-RUN touch /opt/toolchains/dc/kos-ports/GLdc/build/GLdc-1.0.0/GL/version.h
-RUN echo -e '#pragma once\n#define GLDC_VERSION "$(shell git describe --abbrev=4 --dirty --always --tags)"\n' > /opt/toolchains/dc/kos-ports/GLdc/build/GLdc-1.0.0/GL/version.h
-
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make install clean
 
 # Now install dcload-ip

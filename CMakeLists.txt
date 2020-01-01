@@ -14,7 +14,7 @@ ENDIF()
 OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
-OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSantizer" ON)
+OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" ON)
 
 SET(SIMULANT_SEPERATE_DEBUGINFO DREAMCAST_BUILD)
 SET(OpenGL_GL_PREFERENCE "LEGACY")
@@ -164,51 +164,6 @@ ENDIF()
 
 IF(SIMULANT_BUILD_SAMPLES)
     ADD_SUBDIRECTORY(samples)
-
-    IF(DREAMCAST_BUILD)
-    IF(SIMULANT_BUILD_SAMPLE_CDI)
-        SET(DC_EXECUTABLES # Names without .elf extension
-            tests/simulant_tests
-            samples/nehe02
-            samples/nehe03
-            samples/2d_sample
-            samples/fleets_demo
-            samples/light_sample
-            samples/physics_demo
-            samples/q2bsp_sample
-            samples/rtt_sample
-            samples/sample
-            samples/selection_sample
-            samples/terrain_demo
-            samples/ui_demo
-            samples/viewport_sample
-            samples/particles
-        )
-
-        FOREACH(EXE ${DC_EXECUTABLES})
-        get_filename_component(EXE_FILENAME ${EXE} NAME)
-        ADD_CUSTOM_TARGET(
-            ${EXE_FILENAME}.bin ALL
-            COMMAND $ENV{KOS_OBJCOPY} -R .stack -O binary -S -g ${CMAKE_BINARY_DIR}/${EXE}.elf ${CMAKE_BINARY_DIR}/${EXE}.bin
-            COMMAND rm -rf ${CMAKE_BINARY_DIR}/${EXE}
-            COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}
-            COMMAND $ENV{KOS_BASE}/utils/scramble/scramble ${CMAKE_BINARY_DIR}/${EXE}.bin ${CMAKE_BINARY_DIR}/${EXE}/1ST_READ.BIN
-            COMMAND IP_TEMPLATE_FILE=${CMAKE_SOURCE_DIR}/platforms/dreamcast/IP.TMPL $ENV{KOS_BASE}/utils/makeip/makeip ${CMAKE_SOURCE_DIR}/platforms/dreamcast/ip.txt ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN
-            COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/materials ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/particles ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/textures ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/sounds ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/samples/data ${CMAKE_BINARY_DIR}/${EXE}/sample_data
-            COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}
-            COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_BINARY_DIR}/${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}.cdi
-            DEPENDS ${EXE}
-            COMMENT "Converting ${EXE}.elf to ${EXE}.bin"
-        )
-        ENDFOREACH()
-    ENDIF()
-    ENDIF()
 ENDIF()
 
 

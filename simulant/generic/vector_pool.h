@@ -79,8 +79,10 @@ public:
                 slot_id slot = (new_thing - &chunk->elements_[0]) / element_size;
                 id_type id = id_for_chunk_slot(chunk_id, slot);
 
+#ifndef NDEBUG
                 MetaBlock* meta = meta_block(new_thing);
                 assert(meta->used); // Should've been allocated
+#endif
 
                 /* Construct the object, release the slot
                  * if it throws */
