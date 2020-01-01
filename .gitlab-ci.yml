@@ -248,16 +248,21 @@ build:dreamcast-sh4-gcc:
   variables:
    TARGET: dreamcast-sh4-gcc
   script:
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+   - cd ../..
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
-   - source /etc/bash.bashrc
    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
-     - ${TARGET}/release/tests/simulant_tests.elf
+     - ${TARGET}/debug/simulant/
+     - ${TARGET}/debug/sample_data/
+     - ${TARGET}/debug/tests/simulant_tests.elf
      - ${TARGET}/release/simulant/
-     - ${TARGET}/release/sample_data/
 
 test:dreamcast-sh4-gcc:
   stage: test
@@ -274,10 +279,11 @@ test:dreamcast-sh4-gcc:
     - rpm -i rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
     - microdnf install -y lxdream
   script:
-    - cd ${TARGET}/release
+    - cd ${TARGET}/debug
     - lxdream --audio=null -H tests/simulant_tests.elf | tee log.out
   artifacts:
    paths:
+    - ${TARGET}/debug/simulant/*.a
     - ${TARGET}/release/simulant/*.a
     - ${TARGET}/release/*.out
 
@@ -296,8 +302,10 @@ deploy:dreamcast-sh4-gcc:
    - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
+   - mkdir -p ./upload/${TARGET}/lib/debug
    - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/*.a ./upload/${TARGET}/lib/
+   - cp ${TARGET}/release/simulant/libsimulant.a* ./upload/${TARGET}/lib/
+   - cp ${TARGET}/debug/simulant/libsimulant.a* ./upload/${TARGET}/lib/debug/
    - rsync -avm -L --include='*.h' --include='*.hpp' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
