@@ -126,13 +126,19 @@ public:
         return x * x + y * y + z * z;
     }
 
-    const smlt::Vec3 normalized() const {
+    const Vec3 normalized() const {
+    #ifdef _arch_dreamcast
+        Vec3 ret(x, y, z);
+        vec3f_normalize(ret.x, ret.y, ret.z);
+        return ret;
+    #else
         float l = 1.0f / length();
         return Vec3(
             x * l,
             y * l,
             z * l
         );
+    #endif
     }
 
     void normalize() {
