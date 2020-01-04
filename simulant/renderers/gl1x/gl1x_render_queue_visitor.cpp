@@ -71,11 +71,13 @@ void GL1RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
 }
 
 void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
-
+    _S_UNUSED(queue);
+    _S_UNUSED(stage);
 }
 
 void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
-
+    _S_UNUSED(prev);
+    _S_UNUSED(next);
 }
 
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {

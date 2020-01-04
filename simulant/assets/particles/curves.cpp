@@ -1,7 +1,11 @@
 #include <cmath>
 #include <iostream>
 
+#include "../../macros.h"
+
 float bell_curve(float initial, float t, float s, float peak, float deviation) {
+    _S_UNUSED(s);
+
     const int x = (int) (t * 100.0f);
     const float a = peak;
     const int b = 50;
@@ -13,5 +17,7 @@ float bell_curve(float initial, float t, float s, float peak, float deviation) {
 }
 
 float linear_curve(float initial, float t, float s, float rate) {
+    _S_UNUSED(t);
+
     return initial + (s * rate);
 }

@@ -2,6 +2,7 @@
 
 #include "behaviour.h"
 #include "../nodes/stage_node.h"
+#include "../macros.h"
 
 namespace smlt {
 
@@ -20,6 +21,8 @@ protected:
     }
 
     void on_behaviour_removed(Organism *controllable) override {
+        _S_UNUSED(controllable);
+
         stage_node_ = nullptr;
     }
 

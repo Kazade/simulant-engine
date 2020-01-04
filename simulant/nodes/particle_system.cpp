@@ -290,6 +290,8 @@ void ParticleSystem::update_emitter(uint16_t e, float dt) {
 }
 
 void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
+    _S_UNUSED(dt);
+
     if(!max) {
         return; //Do nothing
     }

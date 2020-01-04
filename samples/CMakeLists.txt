@@ -78,7 +78,7 @@ foreach(sample ${SAMPLES})
             COMMAND cp -r ${CMAKE_SOURCE_DIR}/samples/data ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/sample_data
             COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_CURRENT_BINARY_DIR}/${EXE}
             COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.iso ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.cdi
-            DEPENDS ${EXE}
+            DEPENDS ${EXE_FILENAME}.debug.target
             COMMENT "Converting ${EXE}.elf to ${EXE}.cdi"
         )
     endif()

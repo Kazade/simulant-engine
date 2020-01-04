@@ -55,28 +55,27 @@ public:
 
     bool initialized() const { return initialized_; }
 
-    double near_height() const {
+    float near_height() const {
         assert(initialized_);
         return (near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - near_corners_[FRUSTUM_CORNER_TOP_LEFT]).length();
     }
 
-    double far_height() const {
+    float far_height() const {
         assert(initialized_);
         return (far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - far_corners_[FRUSTUM_CORNER_TOP_LEFT]).length();
     }
 
-    double near_width() const {
+    float near_width() const {
         assert(initialized_);
         return (near_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - near_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]).length();
     }
 
-    double far_width() const {
+    float far_width() const {
         assert(initialized_);
         return (far_corners_[FRUSTUM_CORNER_BOTTOM_LEFT] - far_corners_[FRUSTUM_CORNER_BOTTOM_RIGHT]).length();
     }
 
-
-    double depth() const {
+    float depth() const {
         assert(initialized_);
 
         /*

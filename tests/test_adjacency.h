@@ -3,6 +3,7 @@
 
 #include "../simulant/meshes/adjacency_info.h"
 #include "../simulant/asset_manager.h"
+#include "../simulant/macros.h"
 
 namespace {
 
@@ -11,6 +12,7 @@ using namespace smlt;
 class AdjacencyTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_adjacency_build() {
+
         auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", window->shared_assets->new_material(), 1.0, 1.0f);
 
@@ -25,6 +27,8 @@ public:
 
         // Count the shared edges, make sure there is only one
         adjacency->each_edge([&](std::size_t i, const EdgeInfo& edge) {
+            _S_UNUSED(i);
+
             if(edge.triangle_count == 2) {
                 shared++;
             } else if(edge.triangle_count == 1) {
@@ -65,6 +69,8 @@ public:
 
         // Count the shared edges, make sure there is only one
         adjacency->each_edge([&](std::size_t i, const EdgeInfo& edge) {
+            _S_UNUSED(i);
+
             if(edge.triangle_count == 2) {
                 shared++;
             } else if(edge.triangle_count == 1) {

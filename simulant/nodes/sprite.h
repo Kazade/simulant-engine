@@ -27,6 +27,7 @@
 #include "../generic/identifiable.h"
 #include "../sound.h"
 #include "../animation.h"
+#include "../macros.h"
 
 namespace smlt {
 
@@ -111,6 +112,10 @@ private:
     bool flipped_horizontally_ = false;
 
     void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
+        _S_UNUSED(current_frame);
+        _S_UNUSED(next_frame);
+        _S_UNUSED(interp);
+
         update_texture_coordinates();
     }
 

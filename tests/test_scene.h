@@ -3,7 +3,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-
+#include "simulant/macros.h"
 
 namespace {
 
@@ -41,7 +41,10 @@ class SceneWithArgs : public Scene<SceneWithArgs> {
 public:
     // Boilerplate
     SceneWithArgs(smlt::Window* window, const std::string& some_arg):
-        smlt::Scene<SceneWithArgs>(window) {}
+        smlt::Scene<SceneWithArgs>(window) {
+
+        _S_UNUSED(some_arg);
+    }
 
     void load() {}
 

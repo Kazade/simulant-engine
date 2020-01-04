@@ -28,50 +28,50 @@ public:
         std::vector<Vec3> near_corners = frustum.near_corners();
 
         //Bottom left near corner
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001);
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].y, 0.00001);
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].z, 0.00001); //Near distance
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001f);
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].y, 0.00001f);
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_BOTTOM_LEFT].z, 0.00001f); //Near distance
 
         //Bottom right near corner
-        assert_close(1.0, near_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].x, 0.00001);
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].y, 0.00001);
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].z, 0.00001); //Near distance
+        assert_close(1.0f, near_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].x, 0.00001f);
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].y, 0.00001f);
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].z, 0.00001f); //Near distance
 
         //Top right near corner
-        assert_close(1.0, near_corners[FRUSTUM_CORNER_TOP_RIGHT].x, 0.00001);
-        assert_close(1.0, near_corners[FRUSTUM_CORNER_TOP_RIGHT].y, 0.00001);
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_TOP_RIGHT].z, 0.00001); //Near distance
+        assert_close(1.0f, near_corners[FRUSTUM_CORNER_TOP_RIGHT].x, 0.00001f);
+        assert_close(1.0f, near_corners[FRUSTUM_CORNER_TOP_RIGHT].y, 0.00001f);
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_TOP_RIGHT].z, 0.00001f); //Near distance
 
         //Top left near corner
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_TOP_LEFT].x, 0.00001);
-        assert_close(1.0, near_corners[FRUSTUM_CORNER_TOP_LEFT].y, 0.00001);
-        assert_close(-1.0, near_corners[FRUSTUM_CORNER_TOP_LEFT].z, 0.00001); //Near distance
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_TOP_LEFT].x, 0.00001f);
+        assert_close(1.0f, near_corners[FRUSTUM_CORNER_TOP_LEFT].y, 0.00001f);
+        assert_close(-1.0f, near_corners[FRUSTUM_CORNER_TOP_LEFT].z, 0.00001f); //Near distance
 
         std::vector<Vec3> far_corners = frustum.far_corners();
 
         //Bottom left near corner
-        assert_close(-1.0, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001);
-        assert_close(-1.0, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].y, 0.00001);
-        assert_close(-10.0, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].z, 0.00001); //Near distance
+        assert_close(-1.0f, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].x, 0.00001f);
+        assert_close(-1.0f, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].y, 0.00001f);
+        assert_close(-10.0f, far_corners[FRUSTUM_CORNER_BOTTOM_LEFT].z, 0.00001f); //Near distance
 
         //Bottom right near corner
-        assert_close(1.0, far_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].x, 0.00001);
-        assert_close(-1.0, far_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].y, 0.00001);
-        assert_close(-10.0, far_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].z, 0.00001); //Near distance
+        assert_close(1.0f, far_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].x, 0.00001f);
+        assert_close(-1.0f, far_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].y, 0.00001f);
+        assert_close(-10.0f, far_corners[FRUSTUM_CORNER_BOTTOM_RIGHT].z, 0.00001f); //Near distance
 
         //Top right near corner
-        assert_close(1.0, far_corners[FRUSTUM_CORNER_TOP_RIGHT].x, 0.00001);
-        assert_close(1.0, far_corners[FRUSTUM_CORNER_TOP_RIGHT].y, 0.00001);
-        assert_close(-10.0, far_corners[FRUSTUM_CORNER_TOP_RIGHT].z, 0.00001); //Near distance
+        assert_close(1.0f, far_corners[FRUSTUM_CORNER_TOP_RIGHT].x, 0.00001f);
+        assert_close(1.0f, far_corners[FRUSTUM_CORNER_TOP_RIGHT].y, 0.00001f);
+        assert_close(-10.0f, far_corners[FRUSTUM_CORNER_TOP_RIGHT].z, 0.00001f); //Near distance
 
         //Top left near corner
-        assert_close(-1.0, far_corners[FRUSTUM_CORNER_TOP_LEFT].x, 0.00001);
-        assert_close(1.0, far_corners[FRUSTUM_CORNER_TOP_LEFT].y, 0.00001);
-        assert_close(-10.0, far_corners[FRUSTUM_CORNER_TOP_LEFT].z, 0.00001); //Near distance
+        assert_close(-1.0f, far_corners[FRUSTUM_CORNER_TOP_LEFT].x, 0.00001f);
+        assert_close(1.0f, far_corners[FRUSTUM_CORNER_TOP_LEFT].y, 0.00001f);
+        assert_close(-10.0f, far_corners[FRUSTUM_CORNER_TOP_LEFT].z, 0.00001f); //Near distance
 
-        assert_close(2.0, frustum.near_height(), 0.0001);
-        assert_close(2.0, frustum.far_height(), 0.0001);
-        assert_close(9.0, frustum.depth(), 0.0001);
+        assert_close(2.0f, frustum.near_height(), 0.0001f);
+        assert_close(2.0f, frustum.far_height(), 0.0001f);
+        assert_close(9.0f, frustum.depth(), 0.0001f);
     }
 
     void test_aspect_ratio() {
@@ -90,7 +90,7 @@ public:
         frustum.build(&modelview_projection);
         assert_true(frustum.initialized());
 
-        assert_close(frustum.aspect_ratio(), 1.0, 0.0001);
+        assert_close(frustum.aspect_ratio(), 1.0f, 0.0001f);
     }
 
     void test_field_of_view() {
@@ -109,7 +109,7 @@ public:
         frustum.build(&modelview_projection);
         assert_true(frustum.initialized());
 
-        assert_close(frustum.field_of_view().value, 45.0, 0.0001);
+        assert_close(frustum.field_of_view().value, 45.0f, 0.0001f);
     }
 
     void test_depth() {
@@ -128,7 +128,7 @@ public:
         frustum.build(&modelview_projection);
         assert_true(frustum.initialized());
 
-        assert_close(frustum.depth(), 99.0, 0.001);
+        assert_close(frustum.depth(), 99.0f, 0.001f);
     }
 };
 

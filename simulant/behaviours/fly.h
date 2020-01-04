@@ -51,6 +51,7 @@ private:
     }
 
     void on_behaviour_removed(Organism *controllable) override {
+        _S_UNUSED(controllable);
         stage_node_ = nullptr;
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
-
+#include "simulant/test.h"
+#include "simulant/macros.h"
 
 namespace {
 
@@ -13,6 +14,8 @@ public:
         uint8_t added = 0;
 
         auto conn = window->signal_screen_added().connect([&](std::string name, Screen* screen) {
+            _S_UNUSED(name);
+            _S_UNUSED(screen);
             added++;
         });
 

@@ -11,6 +11,7 @@
 
 #include "../logging.h"
 #include "../deps/kazsignal/kazsignal.h"
+#include "../macros.h"
 
 namespace smlt {
 
@@ -192,10 +193,17 @@ protected:
     sig::signal<void (ObjectType&, IDType)> signal_post_create_;
     sig::signal<void (ObjectType&, IDType)> signal_pre_destroy_;
 
-    virtual void on_make(IDType id) {}
-    virtual void on_get(IDType id) {}
+    virtual void on_make(IDType id) {
+        _S_UNUSED(id);
+    }
 
-    virtual void on_destroy(IDType id) {}
+    virtual void on_get(IDType id) {
+        _S_UNUSED(id);
+    }
+
+    virtual void on_destroy(IDType id) {
+        _S_UNUSED(id);
+    }
 };
 
 

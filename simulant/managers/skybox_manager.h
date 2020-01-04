@@ -71,7 +71,9 @@ public:
 
     const AABB& aabb() const override;
 
-    void update(float step) override {}
+    void update(float step) override {
+        _S_UNUSED(step);
+    }
 
 private:
     friend class SkyManager;

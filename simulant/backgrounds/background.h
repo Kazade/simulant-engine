@@ -31,8 +31,6 @@
 
 namespace smlt {
 
-class BackgroundManager;
-
 enum BackgroundType {
     BACKGROUND_TYPE_SCROLL,
     BACKGROUND_TYPE_ANIMATED
@@ -51,7 +49,7 @@ class Background:
     public Printable {
 
 public:
-    Background(BackgroundID background_id, BackgroundManager *manager, BackgroundType type);
+    Background(BackgroundID background_id, Window *window, BackgroundType type);
 
     bool init() override;
     void clean_up() override;
@@ -74,7 +72,7 @@ public:
     }
 
 private:
-    BackgroundManager* manager_ = nullptr;
+    Window* window_ = nullptr;
 
     BackgroundType type_;
     StagePtr stage_;

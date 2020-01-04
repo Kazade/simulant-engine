@@ -1,6 +1,7 @@
 #include "input_axis.h"
 #include "input_manager.h"
 #include "input_state.h"
+#include "../macros.h"
 
 namespace smlt {
 
@@ -268,6 +269,8 @@ void InputManager::update(float dt) {
 }
 
 void InputManager::_update_mouse_axis_axis(InputAxis *axis, float dt) {
+    _S_UNUSED(dt);
+
     float new_value = 0.0f;
 
     auto process_mouse = [this, axis](MouseID mouse_id) {
@@ -292,6 +295,8 @@ void InputManager::_update_mouse_axis_axis(InputAxis *axis, float dt) {
 }
 
 void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
+    _S_UNUSED(dt);
+
     float new_value = 0.0f;
 
     auto process_joystick = [this, axis](JoystickID joystick_id) {

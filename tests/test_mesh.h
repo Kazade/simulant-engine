@@ -3,6 +3,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
+#include "simulant/macros.h"
 
 namespace {
 
@@ -24,6 +25,8 @@ public:
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
+        _S_UNUSED(stage);
+
         smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
         auto mesh = stage_->assets->mesh(mid);
 
@@ -115,9 +118,9 @@ public:
 
         auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
 
-        assert_close(2.0, mesh->diameter(), 0.00001);
+        assert_close(2.0f, mesh->diameter(), 0.00001f);
         mesh->normalize();
-        assert_close(1.0, mesh->diameter(), 0.00001);
+        assert_close(1.0f, mesh->diameter(), 0.00001f);
     }
 
     void test_user_data_works() {

@@ -25,7 +25,7 @@
 
 #include "../types.h"
 #include "../generic/threading/shared_mutex.h"
-
+#include "../macros.h"
 #include "batching/renderable.h"
 #include "batching/render_queue.h"
 
@@ -51,6 +51,8 @@ public:
     // virtual void upload_texture(Texture* texture) = 0;
 
     virtual GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader, const std::string& fragment_shader) {
+        _S_UNUSED(vertex_shader);
+        _S_UNUSED(fragment_shader);
         return GPUProgramID();
     }
 
@@ -95,7 +97,10 @@ private:
      * This will be called when a render group (which uses textures) is created, which
      * means it can be called from any thread and should be thread-safe.
      */
-    virtual void on_texture_register(TextureID tex_id, TexturePtr texture) {}
+    virtual void on_texture_register(TextureID tex_id, TexturePtr texture) {
+        _S_UNUSED(tex_id);
+        _S_UNUSED(texture);
+    }
 
     /*
      * Called when a texture is destroyed, should perform any clean_up from
@@ -104,7 +109,10 @@ private:
      * This will be called when all render groups sharing the texture are destroyed
      * and so can be called from any thread and should be thread-safe
      */
-    virtual void on_texture_unregister(TextureID tex_id, Texture* texture) {}
+    virtual void on_texture_unregister(TextureID tex_id, Texture* texture) {
+        _S_UNUSED(tex_id);
+        _S_UNUSED(texture);
+    }
 
     /*
      * Given a Texture, this should take care of:
@@ -115,7 +123,9 @@ private:
      * Guaranteed to be called from the main (render) thread, although must obviously
      * be aware of register/unregister
      */
-    virtual void on_texture_prepare(TexturePtr texture) {}
+    virtual void on_texture_prepare(TexturePtr texture) {
+        _S_UNUSED(texture);
+    }
 
     mutable shared_mutex texture_registry_mutex_;
     std::unordered_map<TextureID, std::weak_ptr<Texture>> texture_registry_;

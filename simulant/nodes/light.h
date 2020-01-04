@@ -103,7 +103,9 @@ public:
 
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
-    void update(float step) override {}
+    void update(float step) override {
+        _S_UNUSED(step);
+    }
 
     void clean_up() override {
         StageNode::clean_up();

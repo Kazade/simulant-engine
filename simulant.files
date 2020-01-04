@@ -76,6 +76,7 @@ simulant/generic/vector_pool.h
 simulant/loaders/deps/tiny_obj_loader.h
 simulant/loaders/wav_loader.cpp
 simulant/loaders/wav_loader.h
+simulant/macros.h
 simulant/nodes/geoms/loose_quadtree.h
 simulant/nodes/geoms/quadtree_culler.cpp
 simulant/nodes/geoms/quadtree_culler.h
@@ -234,8 +235,6 @@ simulant/backgrounds/background.cpp
 simulant/backgrounds/background.h
 simulant/backgrounds/background.h
 simulant/backgrounds/background_manager.cpp
-simulant/backgrounds/background_manager.cpp
-simulant/backgrounds/background_manager.h
 simulant/backgrounds/background_manager.h
 simulant/behaviours/behaviour.cpp
 simulant/behaviours/behaviour.h

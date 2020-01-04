@@ -22,21 +22,20 @@
 
 #include "background.h"
 #include "../render_sequence.h"
-#include "background_manager.h"
 #include "../window.h"
 
 namespace smlt {
 
-Background::Background(BackgroundID background_id, BackgroundManager *manager, BackgroundType type):
+Background::Background(BackgroundID background_id, Window* window, BackgroundType type):
     generic::Identifiable<BackgroundID>(background_id),
-    manager_(manager),
+    window_(window),
     type_(type) {
 
 }
 
 bool Background::init() {
     //Create a stage to add to the render pipeline
-    stage_ = manager_->window->new_stage(PARTITIONER_NULL);
+    stage_ = window_->new_stage(PARTITIONER_NULL);
     //We need to create an orthographic camera
     camera_ = stage_->new_camera();
 
@@ -49,8 +48,8 @@ bool Background::init() {
     sprite_ = stage->sprites->new_sprite();
 
     //Add a pass for this background
-    pipeline_ = manager_->window->render(stage_, camera_).with_priority(
-        smlt::RENDER_PRIORITY_BACKGROUND + manager_->background_count()
+    pipeline_ = window_->render(stage_, camera_).with_priority(
+        smlt::RENDER_PRIORITY_BACKGROUND + window_->background_count()
     );
 
     pipeline_->activate();
@@ -61,8 +60,8 @@ bool Background::init() {
 void Background::clean_up() {
     //Remove the pipeline and delete the stage, everything else is cleaned
     //up automatically
-    manager_->window->destroy_pipeline(pipeline_->id());
-    manager_->window->destroy_stage(stage_->id());
+    window_->destroy_pipeline(pipeline_->id());
+    window_->destroy_stage(stage_->id());
 }
 
 void Background::update(float dt) {
@@ -138,7 +137,7 @@ void Background::set_resize_style(BackgroundResizeStyle style) {
 }
 
 void Background::destroy() {
-    manager_->destroy_background(id());
+    window_->destroy_background(id());
 }
 
 

@@ -2,6 +2,7 @@
 #include "../physics/rigid_body.h"
 #include "../../window.h"
 #include "../../input/input_axis.h"
+#include "../../macros.h"
 
 namespace smlt {
 namespace behaviours {
@@ -30,6 +31,8 @@ void Airplane::fixed_update(float step) {
 }
 
 void Airplane::on_behaviour_added(Organism *controllable) {
+    _S_UNUSED(controllable);
+
     if(!input->axis_count("Roll")) {
         auto axis = input->new_axis("Roll");
         axis->set_positive_keyboard_key(KEYBOARD_CODE_E);

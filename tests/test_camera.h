@@ -50,14 +50,14 @@ public:
         camera_->look_at(pos);
 
         auto f = camera_->forward();
-        assert_close(0.0f, f.x, 0.000001);
-        assert_close(-1.0f, f.y, 0.000001);
-        assert_close(0.0f, f.z, 0.000001);
+        assert_close(0.0f, f.x, 0.000001f);
+        assert_close(-1.0f, f.y, 0.000001f);
+        assert_close(0.0f, f.z, 0.000001f);
 
         auto res = camera_->up();
-        assert_close(res.x, 0, 0.000001);
-        assert_close(res.y, 0, 0.000001);
-        assert_close(res.z, 1, 0.000001);
+        assert_close(res.x, 0.0f, 0.000001f);
+        assert_close(res.y, 0.0f, 0.000001f);
+        assert_close(res.z, 1.0f, 0.000001f);
     }
 
     void test_camera_attached_to_parent_moves() {

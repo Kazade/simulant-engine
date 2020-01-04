@@ -25,6 +25,7 @@
 #include "../../types.h"
 #include "../../generic/threading/shared_mutex.h"
 #include "../../generic/vector_pool.h"
+#include "../../macros.h"
 
 namespace smlt {
 
@@ -66,7 +67,9 @@ struct RenderGroup {
     };
 
     // FIXME: VectorPool expects arguments
-    RenderGroup(RenderGroup::ID, int dummy) {}
+    RenderGroup(RenderGroup::ID, int dummy) {
+        _S_UNUSED(dummy);
+    }
 
     /* A sort key, generated from priority and material properties, this
      * may differ per-renderer */

@@ -41,9 +41,9 @@ public:
         actor->rotate_to(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
         actor->move_forward_by(200);
 
-        assert_close(actor->absolute_position().x, -200.0, 0.0001);
-        assert_close(actor->absolute_position().y, 0.0, 0.0001);
-        assert_close(actor->absolute_position().z, 0.0, 0.0001);
+        assert_close(actor->absolute_position().x, -200.0f, 0.0001f);
+        assert_close(actor->absolute_position().y, 0.0f, 0.0001f);
+        assert_close(actor->absolute_position().z, 0.0f, 0.0001f);
     }
 
     void test_positional_constraints() {
@@ -69,9 +69,9 @@ public:
 
         auto transform = actor->absolute_transformation();
 
-        assert_equal(transform[0], 2.0);
-        assert_equal(transform[5], 1.0);
-        assert_equal(transform[10], 0.5);
+        assert_equal(transform[0], 2.0f);
+        assert_equal(transform[5], 1.0f);
+        assert_equal(transform[10], 0.5f);
 
         auto actor2 = stage_->new_actor();
 
@@ -101,8 +101,8 @@ public:
 
         actor1->rotate_to(Quaternion(Degrees(0), Degrees(90), Degrees(0)));
 
-        assert_close(actor2->absolute_rotation().x, actor1->rotation().x, 0.00001);
-        assert_close(actor2->absolute_rotation().y, actor1->rotation().y, 0.00001);
+        assert_close(actor2->absolute_rotation().x, actor1->rotation().x, 0.00001f);
+        assert_close(actor2->absolute_rotation().y, actor1->rotation().y, 0.00001f);
     }
 
     void test_parent_transformation_applied() {
@@ -138,15 +138,15 @@ public:
         smlt::Quaternion expected_rel(smlt::Vec3::POSITIVE_Z, smlt::Degrees(10));
         smlt::Quaternion expected_abs(smlt::Vec3::POSITIVE_Z, smlt::Degrees(20));
 
-        assert_close(expected_abs.x, actor2->absolute_rotation().x, 0.000001);
-        assert_close(expected_abs.y, actor2->absolute_rotation().y, 0.000001);
-        assert_close(expected_abs.z, actor2->absolute_rotation().z, 0.000001);
-        assert_close(expected_abs.w, actor2->absolute_rotation().w, 0.000001);
+        assert_close(expected_abs.x, actor2->absolute_rotation().x, 0.000001f);
+        assert_close(expected_abs.y, actor2->absolute_rotation().y, 0.000001f);
+        assert_close(expected_abs.z, actor2->absolute_rotation().z, 0.000001f);
+        assert_close(expected_abs.w, actor2->absolute_rotation().w, 0.000001f);
 
-        assert_close(expected_rel.x, actor2->rotation().x, 0.000001);
-        assert_close(expected_rel.y, actor2->rotation().y, 0.000001);
-        assert_close(expected_rel.z, actor2->rotation().z, 0.000001);
-        assert_close(expected_rel.w, actor2->rotation().w, 0.000001);
+        assert_close(expected_rel.x, actor2->rotation().x, 0.000001f);
+        assert_close(expected_rel.y, actor2->rotation().y, 0.000001f);
+        assert_close(expected_rel.z, actor2->rotation().z, 0.000001f);
+        assert_close(expected_rel.w, actor2->rotation().w, 0.000001f);
     }
 
     void test_set_absolute_position() {

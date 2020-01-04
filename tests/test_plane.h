@@ -14,7 +14,7 @@ public:
         smlt::Plane p(up, 1.0);
         smlt::Vec3 point(0, 2, 0);
 
-        assert_equal(1.0, p.distance_to(point));
+        assert_equal(1.0f, p.distance_to(point));
     }
 
     void test_plane_from_point_and_normal() {

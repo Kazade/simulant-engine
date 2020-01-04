@@ -1,10 +1,13 @@
 
 #include "event_listener.h"
 #include "window.h"
+#include "macros.h"
 
 namespace smlt {
 
 void EventListener::handle_touch_begin(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
+    _S_UNUSED(pressure); // FIXME: Pass down pressure
+
     TouchEvent evt;
     evt.type = TOUCH_EVENT_TYPE_FINGER_DOWN;
     evt.touch_id = touch_id;
@@ -36,6 +39,8 @@ void EventListener::handle_touch_move(Window* window, TouchPointID touch_id, flo
 }
 
 void EventListener::handle_key_down(Window* window, KeyboardCode code, ModifierKeyState modifiers) {
+    _S_UNUSED(window);
+
     KeyEvent evt;
     evt.type = KEY_EVENT_TYPE_KEY_DOWN;
     evt.keyboard_code = code;
@@ -45,6 +50,8 @@ void EventListener::handle_key_down(Window* window, KeyboardCode code, ModifierK
 }
 
 void EventListener::handle_key_up(Window* window, KeyboardCode code, ModifierKeyState modifiers) {
+    _S_UNUSED(window);
+
     KeyEvent evt;
     evt.type = KEY_EVENT_TYPE_KEY_UP;
     evt.keyboard_code = code;

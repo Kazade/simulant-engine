@@ -81,11 +81,18 @@ private:
     }
 
     /* Don't call these directly, use set_organism instead */
-    virtual void on_behaviour_added(Organism* controllable) {}
-    virtual void on_behaviour_removed(Organism* controllable) {}
+    virtual void on_behaviour_added(Organism* controllable) {
+        _S_UNUSED(controllable);
+    }
+
+    virtual void on_behaviour_removed(Organism* controllable) {
+        _S_UNUSED(controllable);
+    }
 
     /* Called on the first update after being enabled */
-    virtual void on_behaviour_first_update(Organism* controllable) {}
+    virtual void on_behaviour_first_update(Organism* controllable) {
+        _S_UNUSED(controllable);
+    }
 
     bool is_enabled_ = true;
     bool first_update_done_ = false;

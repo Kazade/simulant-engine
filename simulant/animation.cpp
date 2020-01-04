@@ -20,14 +20,19 @@
 #include <cassert>
 #include "animation.h"
 #include "logging.h"
+#include "macros.h"
 
 namespace smlt {
 
 void KeyFrameAnimated::add_sequence(const std::string& name, const std::vector<AnimationSequenceStage>& stages) {
+    _S_UNUSED(name);
+    _S_UNUSED(stages);
+
     assert(0 && "Not implemented");
 }
 
 void KeyFrameAnimationState::play_sequence(const std::string& name) {
+    _S_UNUSED(name);
     assert(0 && "Not implemented");
 }
 

@@ -40,6 +40,8 @@
 #include "asset_manager.h"
 #include "fog_settings.h"
 
+#include "macros.h"
+
 namespace smlt {
 
 namespace ui {
@@ -149,6 +151,10 @@ public:
     void set_ambient_light(const smlt::Colour& c) { ambient_light_ = c; }
 
     void move(float x, float y, float z) {
+        _S_UNUSED(x);
+        _S_UNUSED(y);
+        _S_UNUSED(z);
+
         throw std::logic_error("You cannot move the stage");
     }
 

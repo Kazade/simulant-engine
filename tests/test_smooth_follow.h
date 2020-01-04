@@ -44,7 +44,7 @@ public:
         controller->set_target(actor);
         controller->set_follow_height(0);
 
-        float step = 1.0 / 60.0f;
+        float step = 1.0f / 60.0f;
         int seconds = 5;
 
         // Rotate the target 90 degrees
@@ -58,7 +58,7 @@ public:
         // Follower should now be facing negative Z
         assert_close(
             follower->absolute_rotation().forward().x,
-            -1.0, 0.0001
+            -1.0f, 0.0001f
         );
 
         // Rotate the target 180 degrees
@@ -72,7 +72,7 @@ public:
         // Follower should now be facing positive Z
         assert_close(
             follower->absolute_rotation().forward().z,
-            1.0f, 0.0001
+            1.0f, 0.0001f
         );
 
     }

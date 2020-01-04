@@ -624,7 +624,7 @@ MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollec
 }
 
 MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
-    return clone_material(base_manager()->default_material());
+    return clone_material(base_manager()->default_material(), garbage_collect);
 }
 
 // ========== FONTS ======================

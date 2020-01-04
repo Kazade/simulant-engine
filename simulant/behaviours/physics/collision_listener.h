@@ -2,6 +2,7 @@
 
 #include <unordered_set>
 #include "body.h"
+#include "../../macros.h"
 
 namespace smlt {
 namespace behaviours {
@@ -16,9 +17,13 @@ public:
     }
 
 private:
-    virtual void on_collision_enter(const Collision& collision) {}
+    virtual void on_collision_enter(const Collision& collision) {
+        _S_UNUSED(collision);
+    }
     virtual void on_collision_stay() {}
-    virtual void on_collision_exit(const Collision& collision) {}
+    virtual void on_collision_exit(const Collision& collision) {
+        _S_UNUSED(collision);
+    }
 
     virtual void on_trigger_enter() {}
     virtual void on_trigger_stay() {}
