@@ -31,7 +31,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -fomit-frame-poin
 
 # Note, we can't use -Wextra on all platforms so that only gets added conditionally
 set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -Wdouble-promotion -O0")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -Wdouble-promotion -O0")
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DFRAME_POINTERS -fno-omit-frame-pointer -Wdouble-promotion -O0")
 
 IF(NOT DREAMCAST_BUILD)
 # There's a bug in GCC 4.7.4 that causes an internal compiler error
