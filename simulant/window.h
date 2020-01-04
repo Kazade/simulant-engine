@@ -95,17 +95,17 @@ class Window :
     public RenderTarget,
     public EventListenerManager {
 
-    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started)
-    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished)
-    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap)
-    DEFINE_SIGNAL(PostIdleSignal, signal_post_idle)
-    DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update)
-    DEFINE_SIGNAL(UpdateSignal, signal_update)
-    DEFINE_SIGNAL(LateUpdateSignal, signal_late_update)
-    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown)
+    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
+    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
+    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
+    DEFINE_SIGNAL(PostIdleSignal, signal_post_idle);
+    DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update);
+    DEFINE_SIGNAL(UpdateSignal, signal_update);
+    DEFINE_SIGNAL(LateUpdateSignal, signal_late_update);
+    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
-    DEFINE_SIGNAL(ScreenAddedSignal, signal_screen_added)
-    DEFINE_SIGNAL(ScreenRemovedSignal, signal_screen_removed)
+    DEFINE_SIGNAL(ScreenAddedSignal, signal_screen_added);
+    DEFINE_SIGNAL(ScreenRemovedSignal, signal_screen_removed);
 
     friend class Screen;  /* Screen needs to call render_screen */
 public:    
