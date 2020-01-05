@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
@@ -20,7 +20,7 @@ SET(SIMULANT_SEPERATE_DEBUGINFO DREAMCAST_BUILD)
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdouble-promotion")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
 SET(CMAKE_ASM_FLAGS "")
 
@@ -28,10 +28,6 @@ SET(CMAKE_ASM_FLAGS "")
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -s -fomit-frame-pointer -g0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -fomit-frame-pointer -g0")
-
-# Note, we can't use -Wextra on all platforms so that only gets added conditionally
-set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -Wdouble-promotion -O0")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DFRAME_POINTERS -fno-omit-frame-pointer -Wdouble-promotion -O0")
 
 IF(NOT DREAMCAST_BUILD)
 # There's a bug in GCC 4.7.4 that causes an internal compiler error

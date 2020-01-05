@@ -109,7 +109,7 @@ public:
         auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0.0, -2, 0), &distance);
 
         assert_true(hit.second);
-        assert_close(distance, 1.5, 0.0001);
+        assert_close(distance, 1.5f, 0.0001f);
     }
 
     void test_collision_listener_enter() {

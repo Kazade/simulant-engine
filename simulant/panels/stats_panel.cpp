@@ -29,6 +29,21 @@
     #include <psapi.h>
 #endif
 
+#ifdef _arch_dreamcast
+#include <malloc.h>
+#include <kos.h>
+
+static unsigned long systemRam = 0x00000000;
+static unsigned long elfOffset = 0x00000000;
+static unsigned long stackSize = 0x00000000;
+
+extern unsigned long end;
+extern unsigned long start;
+
+#define _end end
+#define _start start
+#endif
+
 namespace smlt {
 
 StatsPanel::StatsPanel(Window *window):
@@ -109,18 +124,6 @@ void StatsPanel::clean_up() {
 }
 
 #ifdef _arch_dreamcast
-#include <malloc.h>
-#include <kos.h>
-
-static unsigned long systemRam = 0x00000000;
-static unsigned long elfOffset = 0x00000000;
-static unsigned long stackSize = 0x00000000;
-
-extern unsigned long end;
-extern unsigned long start;
-
-#define _end end
-#define _start start
 
 void set_system_ram() {
    systemRam = 0x8d000000 - 0x8c000000;
