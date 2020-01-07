@@ -58,7 +58,7 @@ static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
     return true;
 }
 
-static bool read_junk(std::istream* stream, Sound* sound, std::size_t len) {
+static bool read_junk(std::istream*, Sound*, std::size_t) {
     return true;
 }
 
@@ -71,13 +71,15 @@ static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
     return true;
 }
 
-void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
-    const static std::map<std::string, std::function<bool (std::istream* stream, Sound* sound, std::size_t len)>> CHUNK_MAP = {
-        {"RIFF", read_riff},
-        {"junk", read_junk},
-        {"data", read_data}
-    };
+typedef std::function<bool (std::istream* stream, Sound* sound, std::size_t len)> ChunkFunc;
 
+static ChunkFunc get_chunk_func(const std::string& name) {
+    if(name == std::string("RIFF")) return read_riff;
+    else if(name == std::string("data")) return read_data;
+    return read_junk;
+}
+
+void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");
@@ -99,14 +101,9 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
             size = 36 - 8;
         }
 
-        auto it = CHUNK_MAP.find(chunk_id);
-        if(it != CHUNK_MAP.end()) {
-            if(!it->second(data_.get(), sound, size)) {
-                L_ERROR("Unsupported .wav format");
-                return;
-            }
-        } else {
-            L_ERROR(_F("Invalid chunk type {0}").format(chunk_id));
+        auto func = get_chunk_func(chunk_id);
+        if(!func(data_.get(), sound, size)) {
+            L_ERROR("Unsupported .wav format");
             return;
         }
 
