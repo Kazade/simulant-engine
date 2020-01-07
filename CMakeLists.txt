@@ -16,7 +16,12 @@ OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" ON)
 
-SET(SIMULANT_SEPERATE_DEBUGINFO DREAMCAST_BUILD)
+IF(DREAMCAST_BUILD)
+OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
+ELSE()
+OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" OFF)
+ENDIF()
+
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
