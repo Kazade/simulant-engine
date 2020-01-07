@@ -52,7 +52,7 @@ foreach(sample ${SAMPLES})
     if(SIMULANT_SEPERATE_DEBUGINFO)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug
-            COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME} ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug && ${CMAKE_OBJCOPY} --strip-debug ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}
+            COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME} ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug && ${CMAKE_OBJCOPY} -S ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}
             DEPENDS ${sample}
             COMMENT "Separating debug info for ${EXE_FILENAME}"
         )
