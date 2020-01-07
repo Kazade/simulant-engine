@@ -38,6 +38,9 @@ IF(NOT DREAMCAST_BUILD)
 # There's a bug in GCC 4.7.4 that causes an internal compiler error
 # on some template code if you have -Wextra enabled
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
+ELSE()
+# On the Dreamcast, force a frame pointer when debugging
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -g -O0")
 ENDIF()
 
 IF(SIMULANT_ENABLE_ASAN)
