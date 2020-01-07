@@ -99,3 +99,5 @@ RUN . /etc/bash.bashrc; git clone https://git.code.sf.net/p/cadcdev/dcload-ip /o
 RUN . /etc/bash.bashrc; cp /opt/toolchains/dc/dc-load-ip/example-src/dc4.x /opt/toolchains/dc/dc-load-ip/example-src/dc5.x
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
 RUN . /etc/bash.bashrc; mkdir -p /opt/toolchains/dc/bin && cp /opt/toolchains/dc/dc-load-ip/host-src/tool/dc-tool /opt/toolchains/dc/bin
+
+RUN . /etc/bash.bashrc; pip install --user git+https://github.com/Kazade/puncover.git && BUMP=1
