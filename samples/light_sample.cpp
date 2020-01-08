@@ -1,6 +1,7 @@
 #include "simulant/simulant.h"
 #include "simulant/shortcuts.h"
 #include "simulant/extra.h"
+#include "simulant/macros.h"
 
 using namespace smlt;
 
@@ -63,6 +64,8 @@ public:
     }
 
     void update(float dt) {
+        _S_UNUSED(dt);
+
         if(input->axis_value_hard("F") == 1 && !f_down) {
             current_filter_++;
             if(current_filter_ == 3) {
@@ -82,9 +85,9 @@ public:
     void fixed_update(float dt) {
         actor_->rotate_global_y_by(smlt::Degrees(input->axis_value("Horizontal") * 360.0f * dt));
 
-        actor_->rotate_x_by(smlt::Degrees(dt * 20.0));
-        actor_->rotate_y_by(smlt::Degrees(dt * 15.0));
-        actor_->rotate_z_by(smlt::Degrees(dt * 25.0));
+        actor_->rotate_x_by(smlt::Degrees(dt * 20.0f));
+        actor_->rotate_y_by(smlt::Degrees(dt * 15.0f));
+        actor_->rotate_z_by(smlt::Degrees(dt * 25.0f));
     }
 
 private:
@@ -116,6 +119,9 @@ private:
 };
 
 int main(int argc, char* argv[]) {
+    _S_UNUSED(argc);
+    _S_UNUSED(argv);
+
     smlt::AppConfig config;
     config.title = "Light Sample";
     config.fullscreen = false;

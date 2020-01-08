@@ -101,6 +101,8 @@ private:
 
     void fixed_update(float dt) override;
     void pre_update(float dt) {
+        _S_UNUSED(dt);
+
         // Before we read any input or anything, clear the forces
         drive_force_ = 0.0f;
         turn_force_ = 0.0f;

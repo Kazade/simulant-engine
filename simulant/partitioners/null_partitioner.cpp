@@ -32,6 +32,8 @@ void NullPartitioner::lights_and_geometry_visible_from(
         CameraID camera_id, std::vector<LightID> &lights_out,
         std::vector<StageNode*> &geom_out) {
 
+    _S_UNUSED(camera_id);
+
     for(auto& key: all_nodes_) {
         if(key.first == typeid(Light)) {
             lights_out.push_back(make_unique_id_from_key<LightID>(key));

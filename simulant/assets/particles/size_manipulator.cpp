@@ -2,10 +2,13 @@
 
 #include "curves.h"
 #include "../../nodes/particle_system.h"
+#include "../../macros.h"
 
 namespace smlt {
 
 void SizeManipulator::do_manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) const {
+    _S_UNUSED(dt);
+
     /* We always have to set the curve before manipulation to take into
          * account any scaling of the particle system */
 

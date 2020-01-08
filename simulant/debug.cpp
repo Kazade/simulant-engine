@@ -23,6 +23,7 @@
 #include "nodes/actor.h"
 #include "random.h"
 #include "window.h"
+#include "macros.h"
 
 namespace smlt {
 
@@ -66,6 +67,8 @@ void Debug::frame_finished() {
 }
 
 void Debug::update(float dt) {
+    _S_UNUSED(dt);
+
     auto mesh = mesh_.fetch();
 
     mesh->vertex_data->clear();

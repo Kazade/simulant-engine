@@ -20,11 +20,15 @@ public:
         cb_(cb) {}
 
     void apply_staged_write(const UniqueIDKey& k, const StagedWrite& write) {
+        _S_UNUSED(k);
+
         cb_(write);
     }
 
     void lights_and_geometry_visible_from(CameraID camera_id, std::vector<LightID> &lights_out, std::vector<StageNode*> &geom_out) {
-
+        _S_UNUSED(camera_id);
+        _S_UNUSED(lights_out);
+        _S_UNUSED(geom_out);
     }
 
 private:

@@ -285,6 +285,8 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 }
 
 void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
+    _S_UNUSED(options);
+
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
 

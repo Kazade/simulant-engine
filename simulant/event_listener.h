@@ -3,6 +3,7 @@
 #include <list>
 #include "types.h"
 #include "keycodes.h"
+#include "macros.h"
 
 namespace smlt {
 
@@ -73,12 +74,25 @@ public:
     void handle_key_up(Window* window, KeyboardCode code, ModifierKeyState modifiers);
 
 private:
-    virtual void on_key_down(const KeyEvent& evt) {}
-    virtual void on_key_up(const KeyEvent& evt) {}
+    virtual void on_key_down(const KeyEvent& evt) {
+        _S_UNUSED(evt);
+    }
 
-    virtual void on_touch_begin(const TouchEvent& evt) {}
-    virtual void on_touch_end(const TouchEvent& evt) {}
-    virtual void on_touch_move(const TouchEvent& evt) {}
+    virtual void on_key_up(const KeyEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_touch_begin(const TouchEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_touch_end(const TouchEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_touch_move(const TouchEvent& evt) {
+        _S_UNUSED(evt);
+    }
 
     virtual void on_window_focus() {}
     virtual void on_window_blur() {}

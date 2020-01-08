@@ -135,9 +135,18 @@ private:
     }
 
     virtual bool init() = 0;
-    virtual void fixed_update(float dt) {}
-    virtual void update(float dt) {}
-    virtual void late_update(float dt) {}
+    virtual void fixed_update(float dt) {
+        _S_UNUSED(dt);
+    }
+
+    virtual void update(float dt) {
+        _S_UNUSED(dt);
+    }
+
+    virtual void late_update(float dt) {
+        _S_UNUSED(dt);
+    }
+
     virtual void clean_up() {}
 
     generic::DataCarrier data_carrier_;

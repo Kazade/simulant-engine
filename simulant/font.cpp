@@ -1,6 +1,7 @@
 #include "font.h"
 #include "texture.h"
 #include "material.h"
+#include "macros.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation
 #define STBTT_STATIC
@@ -66,7 +67,8 @@ float Font::character_height(char32_t ch) {
 }
 
 float Font::character_advance(char32_t ch, char32_t next) {
-    // FIXME: Kerning!
+    _S_UNUSED(next); // FIXME: Kerning!
+
     auto *b = &char_data_.at(ch - 32);
     return b->xadvance;
 }
@@ -89,11 +91,15 @@ float Font::descent() const {
 }
 
 uint16_t Font::page_width(char ch) {
+    _S_UNUSED(ch);
+
     // FIXME: This will need to change when we support multiple pages
     return page_width_;
 }
 
 uint16_t Font::page_height(char ch) {
+    _S_UNUSED(ch);
+
     return page_height_;
 }
 

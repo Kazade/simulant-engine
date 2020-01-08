@@ -4,6 +4,7 @@
 #include "../font.h"
 #include "../asset_manager.h"
 #include "../utils/string.h"
+#include "../macros.h"
 
 namespace smlt {
 namespace loaders {
@@ -68,6 +69,8 @@ struct Char {
 
 
 void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &options) {
+    _S_UNUSED(options);
+
     typedef std::unordered_map<std::string, std::string> Options;
 
     auto parse_line = [](const std::string& line, std::string& line_type) -> Options {
@@ -138,6 +141,8 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
 }
 
 void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions& options) {
+    _S_UNUSED(options);
+
     enum BlockType {
         INFO = 1,
         COMMON = 2,

@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
@@ -14,21 +14,34 @@ ENDIF()
 OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
-OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSantizer" ON)
+OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" ON)
+
+IF(DREAMCAST_BUILD)
+OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
+ELSE()
+OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" OFF)
+ENDIF()
 
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdelete-non-virtual-dtor")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdouble-promotion")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
 SET(CMAKE_ASM_FLAGS "")
 
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer -g0")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -s -fomit-frame-pointer -g0")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -s -fomit-frame-pointer -g0")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -s -fomit-frame-pointer -g0")
 
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -Wextra -Wno-unused-parameter -Wdouble-promotion -O0")
+IF(NOT DREAMCAST_BUILD)
+# There's a bug in GCC 4.7.4 that causes an internal compiler error
+# on some template code if you have -Wextra enabled
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
+ELSE()
+# On the Dreamcast, force a frame pointer when debugging
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -g -O0")
+ENDIF()
 
 IF(SIMULANT_ENABLE_ASAN)
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -102,8 +115,7 @@ IF(NOT DREAMCAST_BUILD)
     MESSAGE("-- Enabling old C++11 ABI")
     ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
 ELSE()
-    MESSAGE("-- Cross-Compiling for the Sega Dreamcast. Forcing Release build.")
-    SET(CMAKE_BUILD_TYPE Release)
+    MESSAGE("-- Cross-Compiling for the Sega Dreamcast.")
 
     SET(OPENAL_INCLUDE_DIRS "")
     SET(OPENAL_LIBRARY "")
@@ -164,51 +176,6 @@ ENDIF()
 
 IF(SIMULANT_BUILD_SAMPLES)
     ADD_SUBDIRECTORY(samples)
-
-    IF(DREAMCAST_BUILD)
-    IF(SIMULANT_BUILD_SAMPLE_CDI)
-        SET(DC_EXECUTABLES # Names without .elf extension
-            tests/simulant_tests
-            samples/nehe02
-            samples/nehe03
-            samples/2d_sample
-            samples/fleets_demo
-            samples/light_sample
-            samples/physics_demo
-            samples/q2bsp_sample
-            samples/rtt_sample
-            samples/sample
-            samples/selection_sample
-            samples/terrain_demo
-            samples/ui_demo
-            samples/viewport_sample
-            samples/particles
-        )
-
-        FOREACH(EXE ${DC_EXECUTABLES})
-        get_filename_component(EXE_FILENAME ${EXE} NAME)
-        ADD_CUSTOM_TARGET(
-            ${EXE_FILENAME}.bin ALL
-            COMMAND $ENV{KOS_OBJCOPY} -R .stack -O binary -S -g ${CMAKE_BINARY_DIR}/${EXE}.elf ${CMAKE_BINARY_DIR}/${EXE}.bin
-            COMMAND rm -rf ${CMAKE_BINARY_DIR}/${EXE}
-            COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}
-            COMMAND $ENV{KOS_BASE}/utils/scramble/scramble ${CMAKE_BINARY_DIR}/${EXE}.bin ${CMAKE_BINARY_DIR}/${EXE}/1ST_READ.BIN
-            COMMAND IP_TEMPLATE_FILE=${CMAKE_SOURCE_DIR}/platforms/dreamcast/IP.TMPL $ENV{KOS_BASE}/utils/makeip/makeip ${CMAKE_SOURCE_DIR}/platforms/dreamcast/ip.txt ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN
-            COMMAND mkdir -p ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/fonts ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/materials ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/particles ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/textures ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/sounds ${CMAKE_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/samples/data ${CMAKE_BINARY_DIR}/${EXE}/sample_data
-            COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}
-            COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_BINARY_DIR}/${EXE}.iso ${CMAKE_BINARY_DIR}/${EXE}.cdi
-            DEPENDS ${EXE}
-            COMMENT "Converting ${EXE}.elf to ${EXE}.bin"
-        )
-        ENDFOREACH()
-    ENDIF()
-    ENDIF()
 ENDIF()
 
 

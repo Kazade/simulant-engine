@@ -15,6 +15,8 @@ public:
         leave_called(leave_called) {}
 
     void on_collision_enter(const behaviours::Collision& collision) override {
+        _S_UNUSED(collision);
+
         if(enter_called) {
             *enter_called = true;
         }
@@ -27,6 +29,8 @@ public:
     }
 
     void on_collision_exit(const behaviours::Collision& collision) override {
+        _S_UNUSED(collision);
+
         if(leave_called) {
             *leave_called = true;
         }
@@ -64,7 +68,7 @@ public:
         auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0, -2, 0), &distance);
 
         assert_true(hit.second);
-        assert_close(distance, 1.0, 0.0001);
+        assert_close(distance, 1.0f, 0.0001f);
 
         // Check that the box doesn't extend to 3 on the X-axis
         hit = physics->intersect_ray(Vec3(3, 2, 0), Vec3(0, -2, 0), &distance);
@@ -78,7 +82,7 @@ public:
         body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD, Vec3(5, 0, 0));
         hit = physics->intersect_ray(Vec3(5.0, 2, 0), Vec3(0, -2, 0), &distance);
         assert_true(hit.second);
-        assert_close(1.5, distance, 0.0001);
+        assert_close(1.5f, distance, 0.0001f);
     }
 
     void test_sphere_collider_addition() {
@@ -91,7 +95,7 @@ public:
         auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0, -2, 0), &distance);
 
         assert_true(hit.second);
-        assert_close(distance, 1.0, 0.0001);
+        assert_close(distance, 1.0f, 0.0001f);
     }
 
     void test_mesh_collider_addition() {
@@ -105,7 +109,7 @@ public:
         auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0.0, -2, 0), &distance);
 
         assert_true(hit.second);
-        assert_close(distance, 1.5, 0.0001);
+        assert_close(distance, 1.5f, 0.0001f);
     }
 
     void test_collision_listener_enter() {
@@ -172,7 +176,7 @@ public:
         auto body2 = actor2->new_behaviour<behaviours::RigidBody>(physics.get());
         body2->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD);
 
-        physics->fixed_update(1.0 / 60.0f);
+        physics->fixed_update(1.0f / 60.0f);
 
         assert_true(enter_called);
         assert_false(leave_called);

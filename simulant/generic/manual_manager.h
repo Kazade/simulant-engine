@@ -169,11 +169,6 @@ public:
         return pool_.get(id);
     }
 
-    // Makes a new object, resizing the pool if necessary
-    template<typename... Args>
-    T* make(Args&&... args) {
-        return make_as<T, Args...>(std::forward<Args>(args)...);
-    }
 
     // Makes a new object as a subclass
     template<typename Derived, typename... Args>
@@ -183,6 +178,15 @@ public:
 
         auto p = pool_.template alloc<Derived, Args...>(std::forward<Args>(args)...);
         Derived* ret = dynamic_cast<Derived*>(p.second);
+        ret->_bind_id_pointer(ret);
+        return ret;
+    }
+
+    // Makes a new object, resizing the pool if necessary
+    template<typename... Args>
+    T* make(Args&&... args) {
+        auto alloc = &PoolType::template alloc<T, Args...>;
+        auto ret = (pool_.*alloc)(std::forward<Args>(args)...).second;
         ret->_bind_id_pointer(ret);
         return ret;
     }

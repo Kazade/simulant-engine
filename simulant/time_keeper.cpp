@@ -40,7 +40,7 @@ void TimeKeeper::update() {
     auto diff = now - last_update_;
     last_update_ = now;
 
-    delta_time_ = float(diff) * 0.000001;
+    delta_time_ = float(diff) * 0.000001f;
 #else
     auto now = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float> seconds = now - last_update_;

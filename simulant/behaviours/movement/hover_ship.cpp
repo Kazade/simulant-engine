@@ -4,6 +4,7 @@
 #include "../../window.h"
 #include "../physics/rigid_body.h"
 #include "../physics/simulation.h"
+#include "../../macros.h"
 
 namespace smlt {
 namespace behaviours {
@@ -36,11 +37,15 @@ void HoverShip::set_turn_speed(float s) {
 }
 
 void HoverShip::update(float dt) {
+    _S_UNUSED(dt);
+
     power_input_ = input->axis_value("Vertical");
     turn_input_ = input->axis_value("Horizontal");
 }
 
 void HoverShip::fixed_update(float step) {
+    _S_UNUSED(step);
+
     float dist = 0.0f;
     auto hit = simulation_->intersect_ray(body_->position(), -body_->up() * hover_height_, &dist);
     if(hit.second) {

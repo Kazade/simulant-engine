@@ -19,6 +19,7 @@
 
 #include "../logging.h"
 #include "../utils/unicode.h"
+#include "../macros.h"
 
 #include "input_state.h"
 
@@ -140,6 +141,8 @@ HatPosition InputState::joystick_hat_state(JoystickID joystick_id, JoystickHatID
 }
 
 void InputState::pre_update(float dt) {
+    _S_UNUSED(dt);
+
     /* Reset the mouse motion each frame, as motion events only come in
      * when the mouse moves, not every frame */
     for(uint8_t i = 0; i < mouse_count_; ++i) {
@@ -150,7 +153,7 @@ void InputState::pre_update(float dt) {
 }
 
 void InputState::update(float dt) {
-
+    _S_UNUSED(dt);
     /*
     if(virtual_joypad_) {
         virtual_joypad_->_update(dt);

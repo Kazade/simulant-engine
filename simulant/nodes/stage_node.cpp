@@ -135,6 +135,9 @@ void StageNode::update_transformation_from_parent() {
 }
 
 void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
+    _S_UNUSED(oldp);
+    _S_UNUSED(newp);
+
     update_transformation_from_parent();
 }
 

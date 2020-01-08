@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iterator>
 
+#include "../macros.h"
 #include "../generic/check_signature.h"
 
 /* Basic tree node class with sibling and parent/child access */
@@ -41,7 +42,10 @@ protected:
     TreeNode* detach(); //< Detach from all other nodes, return the first orphaned child (if any)
     TreeNode* last_child() const;
 
-    virtual void on_parent_set(TreeNode* oldp, TreeNode* newp) {}
+    virtual void on_parent_set(TreeNode* oldp, TreeNode* newp) {
+        _S_UNUSED(oldp);
+        _S_UNUSED(newp);
+    }
 };
 
 

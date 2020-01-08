@@ -190,38 +190,38 @@ public:
     void init_virtual_joypad();
 private:
     struct KeyboardState {
-        std::array<bool, MAX_KEYBOARD_CODES> keys = {};
+        bool keys[MAX_KEYBOARD_CODES] = {0};
     };
 
     uint8_t keyboard_count_ = 0;
-    std::array<KeyboardState, 4> keyboards_;
+    KeyboardState keyboards_[4];
 
     struct MouseState {
         uint8_t button_count = 0;
         uint8_t axis_count = 0;
 
-        std::array<bool, MAX_MOUSE_BUTTONS> buttons = {};
-        std::array<float, MOUSE_AXIS_MAX> axises = {};
+        bool buttons[MAX_MOUSE_BUTTONS] = {0};
+        float axises[MOUSE_AXIS_MAX] = {0};
 
         uint32_t x = 0;
         uint32_t y = 0;
     };
 
     uint8_t mouse_count_ = 0;
-    std::array<MouseState, 4> mice_;
+    MouseState mice_[4];
 
     struct JoystickState {
         uint8_t button_count = 0;
         uint8_t axis_count = 0;
         uint8_t hat_count = 0;
 
-        std::array<bool, JOYSTICK_BUTTON_MAX> buttons = {};
-        std::array<float, JOYSTICK_AXIS_MAX> axises = {};
-        std::array<HatPosition, MAX_JOYSTICK_HATS> hats = {};
+        bool buttons[JOYSTICK_BUTTON_MAX] = {0};
+        float axises[JOYSTICK_AXIS_MAX] = {0};
+        HatPosition hats[MAX_JOYSTICK_HATS] = {HAT_POSITION_CENTERED};
     };
 
     uint8_t joystick_count_ = 0;
-    std::array<JoystickState, 4> joysticks_;
+    JoystickState joysticks_[4];
 };
 
 }

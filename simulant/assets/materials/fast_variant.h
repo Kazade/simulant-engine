@@ -74,7 +74,8 @@ struct FastVariant {
     template<typename T>
     const T& get() const {
         assert(std::type_index(typeid(T)) == type_code);
-        return *((T*) data);
+        auto ret = reinterpret_cast<const T*>(data);
+        return *ret;
     }
 
     template<typename T>

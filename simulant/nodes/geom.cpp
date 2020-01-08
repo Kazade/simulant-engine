@@ -64,6 +64,8 @@ const AABB &Geom::aabb() const {
 }
 
 void Geom::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+    _S_UNUSED(detail_level);
+
     culler_->renderables_visible(camera->frustum(), render_queue);
 }
 

@@ -93,8 +93,8 @@ namespace smlt {
 Window::Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync):
     Source(this),
     StageManager(this),
-    BackgroundManager(this),
     asset_manager_(new AssetManager(this)),
+    backgrounds_(new BackgroundManager()),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -209,8 +209,8 @@ void Window::_clean_up() {
     }
     panels.clear();
 
-    destroy_all_backgrounds();
-    BackgroundManager::clean_up();
+    backgrounds_->destroy_all();;
+    backgrounds_->clean_up();
 
     destroy_all_stages();
     StageManager::clean_up();
@@ -361,7 +361,12 @@ void Window::_update_thunk(float dt) {
         //it's still accessible through get_deltatime if the user needs it
     }
 
-    BackgroundManager::update(dt);
+    /* Update all the backgrounds */
+    for(auto bg: backgrounds_->_each()) {
+        assert(bg);
+        bg->update(dt);
+    }
+
     StageManager::_update_thunk(dt);
 }
 
@@ -656,8 +661,8 @@ void Window::reset() {
 
     render_sequence_->destroy_all_pipelines();
 
-    BackgroundManager::destroy_all_backgrounds();
-    BackgroundManager::clean_up();
+    backgrounds_->destroy_all();
+    backgrounds_->clean_up();
 
     StageManager::destroy_all_stages();
     StageManager::clean_up();
@@ -807,6 +812,57 @@ void Window::on_finger_motion(
             dy
         );
     });
+}
+
+BackgroundPtr Window::new_background(BackgroundType type) {
+    return backgrounds_->make(this, type);
+}
+
+BackgroundPtr Window::new_background_as_scrollable_from_file(const unicode& filename, float scroll_x, float scroll_y) {
+    BackgroundPtr bg = new_background(BACKGROUND_TYPE_SCROLL);
+    try {
+        bg->set_texture(shared_assets->new_texture_from_file(filename));
+        bg->set_horizontal_scroll_rate(scroll_x);
+        bg->set_vertical_scroll_rate(scroll_y);
+    } catch(...) {
+        destroy_background(bg->id());
+        throw;
+    }
+
+    return bg;
+}
+
+BackgroundPtr Window::new_background_as_animated_from_file(const unicode& filename) {
+    BackgroundPtr bg = new_background(BACKGROUND_TYPE_ANIMATED);
+    try {
+        bg->set_texture(shared_assets->new_texture_from_file(filename));
+    } catch(...) {
+        destroy_background(bg->id());
+        throw;
+    }
+
+    return bg;
+}
+
+BackgroundPtr Window::background(BackgroundID bid) {
+    return backgrounds_->get(bid);
+}
+
+bool Window::has_background(BackgroundID bid) const {
+    return backgrounds_->contains(bid);
+}
+
+BackgroundPtr Window::destroy_background(BackgroundID bid) {
+    backgrounds_->destroy(bid);
+    return BackgroundPtr();
+}
+
+uint32_t Window::background_count() const {
+    return backgrounds_->size();
+}
+
+void Window::destroy_all_backgrounds() {
+    backgrounds_->destroy_all();
 }
 
 }

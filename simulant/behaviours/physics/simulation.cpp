@@ -2,11 +2,11 @@
 #include "body.h"
 #include "../../nodes/stage_node.h"
 #include "../../deps/bounce/bounce.h"
-
+#include "../../macros.h"
 
 /* Need for bounce */
 void b3BeginProfileScope(const char* name) {
-
+    _S_UNUSED(name);
 }
 
 void b3EndProfileScope() {
@@ -109,7 +109,7 @@ public:
     }
 
     void PreSolve(b3Contact* contact) {
-
+        _S_UNUSED(contact);
     }
 
     std::vector<b3Contact*> ActiveContactsForBody(b3Body* body) {

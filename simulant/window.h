@@ -27,13 +27,13 @@
 #include "generic/object_manager.h"
 #include "generic/data_carrier.h"
 
+#include "backgrounds/background.h"
 #include "vfs.h"
 #include "idle_task_manager.h"
 #include "input/input_state.h"
 #include "types.h"
 #include "sound.h"
 #include "stage_manager.h"
-#include "backgrounds/background_manager.h"
 #include "pipeline_helper.h"
 #include "scenes/scene_manager.h"
 #include "loader.h"
@@ -84,12 +84,13 @@ typedef sig::signal<void ()> ShutdownSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
 
+typedef ManualManager<Background, BackgroundID, Background> BackgroundManager;
+
 class Platform;
 
 class Window :
     public Source,
     public StageManager,
-    public BackgroundManager,
     public Loadable,
     public PipelineHelperAPIInterface,
     public RenderTarget,
@@ -256,6 +257,20 @@ public:
     /* Returns true if an explicit audio listener is being used */
     bool has_explicit_audio_listener() const;
 
+
+    /* Background management */
+    BackgroundPtr new_background(BackgroundType type);
+    BackgroundPtr new_background_as_scrollable_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
+    BackgroundPtr new_background_as_animated_from_file(const unicode& filename);
+
+    BackgroundPtr background(BackgroundID bid);
+    bool has_background(BackgroundID bid) const;
+    BackgroundPtr destroy_background(BackgroundID bid);
+    uint32_t background_count() const;
+
+    void destroy_all_backgrounds();
+    /* End background management */
+
 protected:    
     std::shared_ptr<Renderer> renderer_;
 
@@ -310,6 +325,8 @@ private:
     bool can_attach_sound_by_id() const { return false; }
 
     std::shared_ptr<AssetManager> asset_manager_;
+    std::shared_ptr<BackgroundManager> backgrounds_;
+
     bool initialized_;
 
     uint16_t width_ = 0;
@@ -353,7 +370,6 @@ private:
     std::shared_ptr<scenes::Loading> loading_;
     std::shared_ptr<smlt::RenderSequence> render_sequence_;
     generic::DataCarrier data_carrier_;
-
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
     std::shared_ptr<TimeKeeper> time_keeper_;
 
@@ -373,11 +389,20 @@ private:
     std::unordered_map<std::string, Screen::ptr> screens_;
 
     /* This is called by Screens to render themselves to devices. Default behaviour is a no-op */
-    virtual void render_screen(Screen* screen, const uint8_t* data) {}
+    virtual void render_screen(Screen* screen, const uint8_t* data) {
+        _S_UNUSED(screen);
+        _S_UNUSED(data);
+    }
 
     /* To be overridden by subclasses if external screens need some kind of initialization/clean_up */
-    virtual bool initialize_screen(Screen* screen) { return true; }
-    virtual void shutdown_screen(Screen* screen) {}
+    virtual bool initialize_screen(Screen* screen) {
+        _S_UNUSED(screen);
+        return true;
+    }
+
+    virtual void shutdown_screen(Screen* screen) {
+        _S_UNUSED(screen);
+    }
 
     StageNode* audio_listener_ = nullptr;
 protected:

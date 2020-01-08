@@ -40,10 +40,10 @@ public:
 
         smlt::Quaternion quat(mat);
 
-        assert_close(quat.x, 0, 0.001);
-        assert_close(quat.y, 0, 0.001);
-        assert_close(quat.z, 0.707, 0.001);
-        assert_close(quat.w, 0.707, 0.001);
+        assert_close(quat.x, 0.0f, 0.001f);
+        assert_close(quat.y, 0.0f, 0.001f);
+        assert_close(quat.z, 0.707f, 0.001f);
+        assert_close(quat.w, 0.707f, 0.001f);
     }
 
     void test_forward_right_up() {
@@ -55,7 +55,7 @@ public:
 
         q = Quaternion(Vec3(0, 1, 0), Degrees(90));
 
-        assert_close(-1, q.forward().x, 0.0001);
+        assert_close(-1.0f, q.forward().x, 0.0001f);
     }
 
 };

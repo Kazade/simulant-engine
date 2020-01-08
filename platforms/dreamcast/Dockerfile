@@ -7,7 +7,7 @@ MAINTAINER kazade <kazade@gmail.com>
 RUN yum clean all && yum -y install yum-plugin-ovl
 RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
-RUN git clone git://git.code.sf.net/p/cadcdev/kallistios /opt/toolchains/dc/kos
+RUN git clone https://gitlab.com/simulant/KallistiOS.git /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
 
 ## Uncomment the below to enable a 5.2 toolchain
@@ -22,9 +22,9 @@ RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolcha
 #RUN cd /opt/toolchains/dc/kos && patch -p1 < /opt/toolchains/dc/kos/utils/dc-chain/patches/kos.diff
 #
 ## Update GCC
-#RUN sed -i 's/4.7.3/5.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
-#RUN sed -i 's/4.7.3/5.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
-#RUN sed -i 's/4.7.3/5.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
+RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
+RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
+RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
 #
 ## Update newlib
 #RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
@@ -55,11 +55,11 @@ RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
 
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make install clean
-RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && mkdir makeip && cd makeip && curl http://www.boob.co.uk/files/makeip.tar.gz > makeip.tar.gz && tar -xf makeip.tar.gz && rm makeip.tar.gz && gcc makeip.c -o makeip
+RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils/makeip && gcc makeip.c -o makeip
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://github.com/Kazade/img4dc.git && cd img4dc && mkdir build && cd build && cmake .. && make BUMP=9
 
 # Add GLdc as a kos port
-RUN mkdir -p /opt/toolchains/dc/kos-ports/GLdc/files
+RUN mkdir -p /opt/toolchains/dc/kos-ports/GLdc/files && BUMP=2
 RUN echo $'\n\
 TARGET = libGLdc.a\n\
 OBJS = GL/draw.o GL/flush.o GL/framebuffer.o GL/immediate.o GL/lighting.o GL/state.o GL/texture.o GL/glu.o\n\
@@ -99,3 +99,5 @@ RUN . /etc/bash.bashrc; git clone https://git.code.sf.net/p/cadcdev/dcload-ip /o
 RUN . /etc/bash.bashrc; cp /opt/toolchains/dc/dc-load-ip/example-src/dc4.x /opt/toolchains/dc/dc-load-ip/example-src/dc5.x
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
 RUN . /etc/bash.bashrc; mkdir -p /opt/toolchains/dc/bin && cp /opt/toolchains/dc/dc-load-ip/host-src/tool/dc-tool /opt/toolchains/dc/bin
+
+RUN . /etc/bash.bashrc; pip install --user git+https://github.com/Kazade/puncover.git && BUMP=1

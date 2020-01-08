@@ -2,6 +2,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
+#include "simulant/macros.h"
 
 namespace {
 
@@ -13,6 +14,7 @@ public:
     TestBehaviour() {}
 
     void on_behaviour_first_update(Organism* controllable) {
+        _S_UNUSED(controllable);
         call_count++;
     }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../macros.h"
 
 namespace smlt {
 
@@ -30,9 +31,15 @@ public:
     }
 
 private:
-    virtual void update(float dt) {}
-    virtual void late_update(float dt) {}
-    virtual void fixed_update(float step) {}
+    virtual void update(float dt) {
+        _S_UNUSED(dt);
+    }
+    virtual void late_update(float dt) {
+        _S_UNUSED(dt);
+    }
+    virtual void fixed_update(float step) {
+        _S_UNUSED(step);
+    }
 };
 
 }
