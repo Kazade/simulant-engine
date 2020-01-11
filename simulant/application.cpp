@@ -21,6 +21,7 @@
 #include <future>
 
 #ifdef _arch_dreamcast
+#include "platforms/dreamcast/profiler.h"
 #include "kos_window.h"
 namespace smlt { typedef KOSWindow SysWindow; }
 #else
@@ -37,6 +38,8 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #define SIMULANT_DEBUG_KEY "SIMULANT_DEBUG"
 
 namespace smlt {
+
+static bool PROFILING = false;
 
 Application::Application(const AppConfig &config):
     config_(config) {
@@ -56,7 +59,7 @@ void Application::construct_window(const AppConfig& config) {
     AppConfig config_copy = config;
 
     /* If we're profiling, disable the frame time and vsync */
-    if(std::getenv(SIMULANT_PROFILE_KEY)) {
+    if(PROFILING) {
         config_copy.target_frame_rate = std::numeric_limits<uint16_t>::max();
         config_copy.enable_vsync = false;
     }
@@ -178,6 +181,27 @@ bool Application::_call_init() {
 }
 
 int32_t Application::run() {
+    PROFILING = std::getenv(SIMULANT_PROFILE_KEY);
+
+#ifdef SIMULANT_PROFILE
+    L_WARN("Forcing profiling mode via compiler flag");
+    PROFILING = true;
+#endif
+
+#ifdef _arch_dreamcast
+    if(PROFILING) {
+        profiler_init("/pc/gmon.out");
+        profiler_start();
+    }
+
+    /* Try to write samples even if bad things happen */
+    std::set_terminate([&]() {
+        profiler_stop();
+        profiler_clean_up();
+    });
+
+#endif
+
     if(!_call_init()) {
         L_ERROR("Error while initializing, terminating application");
         return 1;
@@ -193,6 +217,13 @@ int32_t Application::run() {
     window_->_clean_up();
     window_.reset();
 
+#ifdef _arch_dreamcast
+    if(PROFILING) {
+        profiler_stop();
+        profiler_clean_up();
+    }
+#endif
+
     return 0;
 }
 
@@ -206,7 +237,8 @@ int32_t Application::run(int argc, char* argv[]) {
         return 0;
     }
 
-    return Application::run();
+    auto ret = Application::run();
+    return ret;
 }
 
 }

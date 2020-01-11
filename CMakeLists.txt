@@ -15,6 +15,7 @@ OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" ON)
+OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 
 IF(DREAMCAST_BUILD)
 OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
@@ -29,6 +30,12 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdoubl
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
 SET(CMAKE_ASM_FLAGS "")
 
+# If we're forcing profiling mode, set that define
+IF(SIMULANT_PROFILE)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_PROFILE")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_PROFILE")
+ENDIF()
+
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -s -fomit-frame-pointer -g0")
@@ -40,7 +47,7 @@ IF(NOT DREAMCAST_BUILD)
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
 ELSE()
 # On the Dreamcast, force a frame pointer when debugging
-set (CMAKE_CXX_FLAGS_DEBUG " -DFRAME_POINTERS -v -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS_DEBUG}")
+set (CMAKE_CXX_FLAGS_DEBUG " -fno-omit-frame-pointer ${CMAKE_CXX_FLAGS_DEBUG}")
 ENDIF()
 
 IF(SIMULANT_ENABLE_ASAN)
