@@ -30,8 +30,8 @@ static Sample SAMPLES[BUCKET_SIZE];
 
 #define BUFFER_SIZE (1024 * 1024 * 8)  // 8K buffer
 
-const static uint32_t MAX_SAMPLE_COUNT = BUFFER_SIZE / sizeof(Sample);
-static uint32_t SAMPLE_COUNT = 0;
+const static size_t MAX_SAMPLE_COUNT = BUFFER_SIZE / sizeof(Sample);
+static size_t SAMPLE_COUNT = 0;
 
 static bool WRITE_TO_STDOUT = false;
 
@@ -94,6 +94,8 @@ static void record_samples() {
     /* Go through all the active threads and increase
      * the sample count for the PC for each of them */
 
+    size_t initial = SAMPLE_COUNT;
+
     /* Note: This is a function added to kallistios-nitro that's
      * not yet available upstream */
     thd_each(&thd_each_cb, NULL);
@@ -103,11 +105,9 @@ static void record_samples() {
         if(!write_samples(OUTPUT_FILENAME)) {
             fprintf(stderr, "Error writing samples\n");
         }
-
-        clear_samples();
     }
 
-    if(SAMPLE_COUNT % 1000 == 0) {
+    if((initial != SAMPLE_COUNT) && ((SAMPLE_COUNT % 1000) == 0)) {
         printf("-- %d samples recorded...\n", SAMPLE_COUNT);
     }
 }
@@ -195,6 +195,7 @@ static bool write_samples(const char* path) {
     }
 
     fclose(out);
+    clear_samples();
 
     return true;
 }
@@ -312,6 +313,8 @@ bool profiler_stop() {
 }
 
 void profiler_clean_up() {
+    profiler_stop(); // Make sure everything is stopped
+
     PROFILER_RUNNING = false;
     thd_join(THREAD, NULL);
 }
