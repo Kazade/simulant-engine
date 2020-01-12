@@ -118,7 +118,7 @@ extern int dcload_type;
 
 
 typedef struct {
-    char cookie[4];  // 'G','M','O','N'
+    char cookie[4];  // 'g','m','o','n'
     int32_t version; // 1
     char spare[3 * 4]; // Padding
 } GmonHeader;
@@ -149,10 +149,10 @@ static bool init_sample_file(const char* path) {
     /* Write the GMON header */
 
     GmonHeader header;
-    header.cookie[0] = 'G';
-    header.cookie[1] = 'M';
-    header.cookie[2] = 'O';
-    header.cookie[3] = 'N';
+    header.cookie[0] = 'g';
+    header.cookie[1] = 'm';
+    header.cookie[2] = 'o';
+    header.cookie[3] = 'n';
     header.version = 1;
     memset(header.spare, 0, sizeof(header.spare));
 
@@ -171,10 +171,16 @@ static bool write_samples(const char* path) {
         return true;
     }
 
-    FILE* out = fopen(path, "a");  /* Append, as init_sample_file would have created the file */
+    FILE* out = fopen(path, "r+");  /* Append, as init_sample_file would have created the file */
     if(!out) {
+        fprintf(stderr, "-- Error writing samples to output file\n");
         return false;
     }
+
+    // Seek to the end of the file
+    fseek(out, 0, SEEK_END);
+
+    printf("-- Writing %d samples\n", SAMPLE_COUNT);
 
     /* Write all the addresses as a basic block sequence */
     GmonBBHeader header;
@@ -183,18 +189,50 @@ static bool write_samples(const char* path) {
 
     fwrite(&header, sizeof(header), 1, out);
 
+    printf("-- Header written\n");
+
+#ifndef NDEBUG
+    size_t written = 0;
+#endif
+
+
     Sample* root = SAMPLES;
-    for(int i = 0; i < BUCKET_SIZE; ++i) {
-        Sample* s = root;
-        while(s->next) {
-            fwrite(&s->pc, sizeof(unsigned int), 1, out);
-            fwrite(&s->count, sizeof(unsigned int), 1, out);
-            s = s->next;
+    for(int i = 0; i < BUCKET_SIZE; ++i) {        
+        if(root->pc) {
+            printf(".");
+
+            /* Write the root sample if it has a program counter */
+            fwrite(&root->pc, sizeof(unsigned int), 1, out);
+            fwrite(&root->count, sizeof(unsigned int), 1, out);
+
+#ifndef NDEBUG
+            ++written;
+#endif
+
+            /* If there's a next pointer, traverse the list */
+            Sample* s = root->next;
+            while(s) {
+                fwrite(&s->pc, sizeof(unsigned int), 1, out);
+                fwrite(&s->count, sizeof(unsigned int), 1, out);
+
+#ifndef NDEBUG
+                ++written;
+#endif
+
+                s = s->next;
+            }
         }
+
         root++;
     }
 
+    printf("\n");
+
     fclose(out);
+
+    /* We should have written all the recorded samples */
+    assert(written == SAMPLE_COUNT);
+
     clear_samples();
 
     return true;
