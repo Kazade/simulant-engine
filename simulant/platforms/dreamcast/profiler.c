@@ -20,18 +20,22 @@ static volatile bool PROFILER_RECORDING = false;
 /* Simple hash table of samples. An array of Samples
  * but, each sample in that array can be the head of
  * a linked list of other samples */
-typedef struct Sample {
+typedef struct Arc {
     uint32_t pc;
+    uint32_t pr; // Caller return address
     uint32_t count;
-    struct Sample* next;
-} Sample;
+    struct Arc* next;
+} Arc;
 
-static Sample SAMPLES[BUCKET_SIZE];
+static Arc ARCS[BUCKET_SIZE];
+
+/* Hashing function for two uint32_ts */
+#define HASH_PAIR(x, y) (x * 0x1f1f1f1f) ^ y;
 
 #define BUFFER_SIZE (1024 * 1024 * 8)  // 8K buffer
 
-const static size_t MAX_SAMPLE_COUNT = BUFFER_SIZE / sizeof(Sample);
-static size_t SAMPLE_COUNT = 0;
+const static size_t MAX_ARC_COUNT = BUFFER_SIZE / sizeof(Arc);
+static size_t ARC_COUNT = 0;
 
 static bool WRITE_TO_STDOUT = false;
 
@@ -39,30 +43,31 @@ static bool write_samples(const char* path);
 static bool write_samples_to_stdout();
 static void clear_samples();
 
-static Sample* new_sample(uint32_t PC) {
-    Sample* s = (Sample*) malloc(sizeof(Sample));
+static Arc* new_arc(uint32_t PC, uint32_t PR) {
+    Arc* s = (Arc*) malloc(sizeof(Arc));
     s->count = 1;
     s->pc = PC;
+    s->pr = PR;
     s->next = NULL;
 
-    ++SAMPLE_COUNT;
+    ++ARC_COUNT;
 
     return s;
 }
 
-static void record_thread(uint32_t PC) {
-    uint32_t bucket = PC % BUCKET_SIZE;
+static void record_thread(uint32_t PC, uint32_t PR) {
+    uint32_t bucket = HASH_PAIR(PC, PR) % BUCKET_SIZE;
 
-    Sample* s = &SAMPLES[bucket];
+    Arc* s = &ARCS[bucket];
 
     if(s->pc) {
         /* Initialized sample in this bucket,
          * does it match though? */
-        while(s->pc != PC) {
+        while(s->pc != PC || s->pr != PR) {
             if(s->next) {
                 s = s->next;
             } else {
-                s->next = new_sample(PC);
+                s->next = new_arc(PC, PR);
                 return; // We're done
             }
         }
@@ -72,8 +77,9 @@ static void record_thread(uint32_t PC) {
         /* Initialize this sample */
         s->count = 1;
         s->pc = PC;
+        s->pr = PR;
         s->next = NULL;
-        ++SAMPLE_COUNT;
+        ++ARC_COUNT;
     }
 }
 
@@ -86,7 +92,8 @@ static int thd_each_cb(kthread_t* thd, void* data) {
      * PC will change so it's not like this is a true snapshot
      * in time across threads */
     uint32_t PC = thd->context.pc;
-    record_thread(PC);
+    uint32_t PR = thd->context.pr;
+    record_thread(PC, PR);
     return 0;
 }
 
@@ -94,13 +101,13 @@ static void record_samples() {
     /* Go through all the active threads and increase
      * the sample count for the PC for each of them */
 
-    size_t initial = SAMPLE_COUNT;
+    size_t initial = ARC_COUNT;
 
     /* Note: This is a function added to kallistios-nitro that's
      * not yet available upstream */
     thd_each(&thd_each_cb, NULL);
 
-    if(SAMPLE_COUNT >= MAX_SAMPLE_COUNT) {
+    if(ARC_COUNT >= MAX_ARC_COUNT) {
         /* TIME TO FLUSH! */
         if(!write_samples(OUTPUT_FILENAME)) {
             fprintf(stderr, "Error writing samples\n");
@@ -108,8 +115,8 @@ static void record_samples() {
     }
 
     /* We log when the number of PCs recorded hits a certain increment */
-    if((initial != SAMPLE_COUNT) && ((SAMPLE_COUNT % 1000) == 0)) {
-        printf("-- %d samples recorded...\n", SAMPLE_COUNT);
+    if((initial != ARC_COUNT) && ((ARC_COUNT % 1000) == 0)) {
+        printf("-- %d arcs recorded...\n", ARC_COUNT);
     }
 }
 
@@ -120,6 +127,7 @@ extern int dcload_type;
 
 #define GMON_COOKIE "gmon"
 #define GMON_VERSION 1
+
 
 typedef struct {
     char cookie[4];  // 'g','m','o','n'
@@ -181,12 +189,12 @@ static bool write_samples(const char* path) {
     // Seek to the end of the file
     fseek(out, 0, SEEK_END);
 
-    printf("-- Writing %d samples\n", SAMPLE_COUNT);
+    printf("-- Writing %d arcs\n", ARC_COUNT);
 
     /* Write all the addresses as a basic block sequence */
     GmonBBHeader header;
     header.tag = 2;
-    header.ncounts = SAMPLE_COUNT;
+    header.ncounts = ARC_COUNT;
 
     fwrite(&header, sizeof(header), 1, out);
 
@@ -197,7 +205,7 @@ static bool write_samples(const char* path) {
 #endif
 
 
-    Sample* root = SAMPLES;
+    Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {        
         if(root->pc) {
             /* Write the root sample if it has a program counter */
@@ -209,7 +217,7 @@ static bool write_samples(const char* path) {
 #endif
 
             /* If there's a next pointer, traverse the list */
-            Sample* s = root->next;
+            Arc* s = root->next;
             while(s) {
                 fwrite(&s->pc, sizeof(unsigned int), 1, out);
                 fwrite(&s->count, sizeof(unsigned int), 1, out);
@@ -230,7 +238,7 @@ static bool write_samples(const char* path) {
     fclose(out);
 
     /* We should have written all the recorded samples */
-    assert(written == SAMPLE_COUNT);
+    assert(written == ARC_COUNT);
 
     clear_samples();
 
@@ -244,9 +252,9 @@ static bool write_samples_to_stdout() {
     printf("--------------\n");
     printf("\"SP\", \"COUNT\"\n");
 
-    Sample* root = SAMPLES;
+    Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
-        Sample* s = root;
+        Arc* s = root;
         while(s->next) {
             printf("\"%x\", \"%d\"\n", (unsigned int) s->pc, (unsigned int) s->count);
             s = s->next;
@@ -288,7 +296,7 @@ void profiler_init(const char* output) {
 
     printf("Creating profiler thread...\n");
     // Initialize the samples to zero
-    memset(SAMPLES, 0, sizeof(SAMPLES));
+    memset(ARCS, 0, sizeof(ARCS));
 
     PROFILER_RUNNING = true;
     THREAD = thd_create(0, run, NULL);
@@ -309,10 +317,10 @@ void profiler_start() {
 
 static void clear_samples() {
     /* Free the samples we've collected to start again */
-    Sample* root = SAMPLES;
+    Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
-        Sample* s = root;
-        Sample* next = s->next;
+        Arc* s = root;
+        Arc* next = s->next;
 
         // While we have a next pointer
         while(next) {
@@ -328,8 +336,8 @@ static void clear_samples() {
     }
 
     // Wipe the lot
-    memset(SAMPLES, 0, sizeof(SAMPLES));
-    SAMPLE_COUNT = 0;
+    memset(ARCS, 0, sizeof(ARCS));
+    ARC_COUNT = 0;
 }
 
 bool profiler_stop() {
