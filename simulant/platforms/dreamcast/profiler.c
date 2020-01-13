@@ -107,6 +107,7 @@ static void record_samples() {
         }
     }
 
+    /* We log when the number of PCs recorded hits a certain increment */
     if((initial != SAMPLE_COUNT) && ((SAMPLE_COUNT % 1000) == 0)) {
         printf("-- %d samples recorded...\n", SAMPLE_COUNT);
     }
@@ -116,6 +117,9 @@ static void record_samples() {
 int fs_dcload_detected();
 extern int dcload_type;
 
+
+#define GMON_COOKIE "gmon"
+#define GMON_VERSION 1
 
 typedef struct {
     char cookie[4];  // 'g','m','o','n'
@@ -149,12 +153,9 @@ static bool init_sample_file(const char* path) {
     /* Write the GMON header */
 
     GmonHeader header;
-    header.cookie[0] = 'g';
-    header.cookie[1] = 'm';
-    header.cookie[2] = 'o';
-    header.cookie[3] = 'n';
+    memcpy(&header.cookie[0], GMON_COOKIE, sizeof(header.cookie));
     header.version = 1;
-    memset(header.spare, 0, sizeof(header.spare));
+    memset(header.spare, '\0', sizeof(header.spare));
 
     fwrite(&header, sizeof(header), 1, out);
 
@@ -199,8 +200,6 @@ static bool write_samples(const char* path) {
     Sample* root = SAMPLES;
     for(int i = 0; i < BUCKET_SIZE; ++i) {        
         if(root->pc) {
-            printf(".");
-
             /* Write the root sample if it has a program counter */
             fwrite(&root->pc, sizeof(unsigned int), 1, out);
             fwrite(&root->count, sizeof(unsigned int), 1, out);
