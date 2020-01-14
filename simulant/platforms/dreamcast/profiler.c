@@ -30,7 +30,7 @@ typedef struct Arc {
 static Arc ARCS[BUCKET_SIZE];
 
 /* Hashing function for two uint32_ts */
-#define HASH_PAIR(x, y) (x * 0x1f1f1f1f) ^ y;
+#define HASH_PAIR(x, y) ((x * 0x1f1f1f1f) ^ y)
 
 #define BUFFER_SIZE (1024 * 1024 * 8)  // 8K buffer
 
@@ -86,6 +86,12 @@ static void record_thread(uint32_t PC, uint32_t PR) {
 static int thd_each_cb(kthread_t* thd, void* data) {
     (void) data;
 
+
+    /* Only record the main thread (for now) */
+    if(strcmp(thd->label, "[kernel]") != 0) {
+        return 0;
+    }
+
     /* The idea is that if this code right here is running in the profiling
      * thread, then all the PCs from the other threads are
      * current. Obviouly thought between iterations the
@@ -128,7 +134,6 @@ extern int dcload_type;
 #define GMON_COOKIE "gmon"
 #define GMON_VERSION 1
 
-
 typedef struct {
     char cookie[4];  // 'g','m','o','n'
     int32_t version; // 1
@@ -140,6 +145,11 @@ typedef struct {
     size_t ncounts; // Number of address/count pairs in this sequence
 } GmonBBHeader;
 
+typedef struct {
+    uint32_t from_pc;	/* address within caller's body */
+    uint32_t self_pc;	/* address within callee's body */
+    uint32_t count;			/* number of arc traversals */
+} GmonArc;
 
 static bool init_sample_file(const char* path) {
     printf("Detecting dcload... ");
@@ -191,14 +201,7 @@ static bool write_samples(const char* path) {
 
     printf("-- Writing %d arcs\n", ARC_COUNT);
 
-    /* Write all the addresses as a basic block sequence */
-    GmonBBHeader header;
-    header.tag = 2;
-    header.ncounts = ARC_COUNT;
-
-    fwrite(&header, sizeof(header), 1, out);
-
-    printf("-- Header written\n");
+    size_t tag = 1;
 
 #ifndef NDEBUG
     size_t written = 0;
@@ -208,9 +211,14 @@ static bool write_samples(const char* path) {
     Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {        
         if(root->pc) {
+            GmonArc arc;
+            arc.from_pc = root->pr;
+            arc.self_pc = root->pc;
+            arc.count = root->count;
+
             /* Write the root sample if it has a program counter */
-            fwrite(&root->pc, sizeof(unsigned int), 1, out);
-            fwrite(&root->count, sizeof(unsigned int), 1, out);
+            fwrite(&tag, sizeof(size_t), 1, out);
+            fwrite(&arc, sizeof(GmonArc), 1, out);
 
 #ifndef NDEBUG
             ++written;
@@ -219,8 +227,13 @@ static bool write_samples(const char* path) {
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
             while(s) {
-                fwrite(&s->pc, sizeof(unsigned int), 1, out);
-                fwrite(&s->count, sizeof(unsigned int), 1, out);
+                arc.from_pc = s->pr;
+                arc.self_pc = s->pc;
+                arc.count = s->count;
+
+                /* Write the root sample if it has a program counter */
+                fwrite(&tag, sizeof(size_t), 1, out);
+                fwrite(&arc, sizeof(GmonArc), 1, out);
 
 #ifndef NDEBUG
                 ++written;
@@ -250,13 +263,13 @@ static bool write_samples_to_stdout() {
      * for processing */
 
     printf("--------------\n");
-    printf("\"SP\", \"COUNT\"\n");
+    printf("\"PC\", \"PR\", \"COUNT\"\n");
 
     Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         Arc* s = root;
         while(s->next) {
-            printf("\"%x\", \"%d\"\n", (unsigned int) s->pc, (unsigned int) s->count);
+            printf("\"%x\", \"%x\", \"%d\"\n", (unsigned int) s->pc, (unsigned int) s->pr, (unsigned int) s->count);
             s = s->next;
         }
 
