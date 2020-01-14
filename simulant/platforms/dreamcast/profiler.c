@@ -80,12 +80,19 @@ static void record_thread(uint32_t PC) {
 static int thd_each_cb(kthread_t* thd, void* data) {
     (void) data;
 
+
+    /* Only record the main thread (for now) */
+    if(strcmp(thd->label, "[kernel]") != 0) {
+        return 0;
+    }
+
     /* The idea is that if this code right here is running in the profiling
      * thread, then all the PCs from the other threads are
      * current. Obviouly thought between iterations the
      * PC will change so it's not like this is a true snapshot
      * in time across threads */
     uint32_t PC = thd->context.pc;
+    printf("%x\n", PC);
     record_thread(PC);
     return 0;
 }
@@ -292,6 +299,10 @@ void profiler_init(const char* output) {
 
     PROFILER_RUNNING = true;
     THREAD = thd_create(0, run, NULL);
+
+    /* We ramp up the priority, we don't want to just run
+     * when the main thread is sleeping! */
+    //thd_set_prio(THREAD, PRIO_DEFAULT + 10);
 
     printf("Thread started.\n");
 }

@@ -84,6 +84,25 @@ struct AppConfig {
         uint16_t virtual_screen_height = 32;
         uint16_t virtual_screen_integer_scale = 1;
     } desktop;
+
+    struct Development {
+        /* If set to true, profiling mode will be enabled
+         * regardless of the SIMULANT_PROFILE environment variable.
+         *
+         * When profiling mode is enabled, the frame limit is uncapped
+         * and on some platforms a profiler is enabled.
+         */
+#ifdef SIMULANT_PROFILE
+        bool force_profiling = true;
+#else
+        bool force_profiling = false;
+#endif
+        /*
+         * Set to gl1x or gl2x to force that renderer if available
+            FIXME: Not yet working
+        */
+        std::string force_renderer = "";
+    } development;
 };
 
 class Application {
