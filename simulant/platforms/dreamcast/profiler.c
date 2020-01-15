@@ -15,7 +15,10 @@ static kthread_t* THREAD;
 static volatile bool PROFILER_RUNNING = false;
 static volatile bool PROFILER_RECORDING = false;
 
+#define BASE_ADDRESS 0x8c010000
 #define BUCKET_SIZE 10000
+#define BIN_COUNT 16
+#define INTERVAL_IN_MS 10
 
 /* Simple hash table of samples. An array of Samples
  * but, each sample in that array can be the head of
@@ -141,6 +144,15 @@ typedef struct {
 } GmonHeader;
 
 typedef struct {
+    uint32_t low_pc;
+    uint32_t high_pc;
+    uint32_t hist_size;
+    uint32_t prof_rate;
+    char dimen[15];			/* phys. dim., usually "seconds" */
+    char dimen_abbrev;			/* usually 's' for "seconds" */
+} GmonHistHeader;
+
+typedef struct {
     unsigned char tag; // GMON_TAG_TIME_HIST = 0, GMON_TAG_CG_ARC = 1, GMON_TAG_BB_COUNT = 2
     size_t ncounts; // Number of address/count pairs in this sequence
 } GmonBBHeader;
@@ -182,13 +194,27 @@ static bool init_sample_file(const char* path) {
 }
 
 static bool write_samples(const char* path) {
-    /* Write samples to the given path as a CSV file
-     * for processing */
+    /* Appends the samples to the output file in gmon format
+     *
+     * We iterate the data twice, first generating arcs, then generating
+     * basic block counts. While we do that though we calculate the data
+     * for the histogram so we don't need a third iteration */
 
     if(WRITE_TO_STDOUT) {
         write_samples_to_stdout();
         return true;
     }
+
+    /* Histogram data */
+    uint16_t bins[BIN_COUNT];
+    memset(bins, 0, sizeof(bins));
+
+    /* We know the lowest address, it's the same for all DC games */
+    uint32_t lowest_address = BASE_ADDRESS;
+
+    /* We need to calculate the highest address though */
+    uint32_t highest_address = 0;
+
 
     FILE* out = fopen(path, "r+");  /* Append, as init_sample_file would have created the file */
     if(!out) {
@@ -201,23 +227,26 @@ static bool write_samples(const char* path) {
 
     printf("-- Writing %d arcs\n", ARC_COUNT);
 
-    size_t tag = 1;
+    uint8_t tag = 1;
 
 #ifndef NDEBUG
     size_t written = 0;
 #endif
 
-
+    /* Write arcs */
     Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {        
         if(root->pc) {
+            /* Update histogram bins */
+            highest_address = (root->pc > highest_address) ? root->pc : highest_address;
+
             GmonArc arc;
             arc.from_pc = root->pr;
             arc.self_pc = root->pc;
             arc.count = root->count;
 
             /* Write the root sample if it has a program counter */
-            fwrite(&tag, sizeof(size_t), 1, out);
+            fwrite(&tag, sizeof(tag), 1, out);
             fwrite(&arc, sizeof(GmonArc), 1, out);
 
 #ifndef NDEBUG
@@ -227,12 +256,14 @@ static bool write_samples(const char* path) {
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
             while(s) {
+                highest_address = (s->pc > highest_address) ? s->pc : highest_address;
+
                 arc.from_pc = s->pr;
                 arc.self_pc = s->pc;
                 arc.count = s->count;
 
                 /* Write the root sample if it has a program counter */
-                fwrite(&tag, sizeof(size_t), 1, out);
+                fwrite(&tag, sizeof(tag), 1, out);
                 fwrite(&arc, sizeof(GmonArc), 1, out);
 
 #ifndef NDEBUG
@@ -246,7 +277,74 @@ static bool write_samples(const char* path) {
         root++;
     }
 
-    printf("\n");
+    uint32_t histogram_range = highest_address - lowest_address;
+    uint32_t bin_size = histogram_range / BIN_COUNT;
+
+    /* Write basic blocks */
+
+    GmonBBHeader bb;
+    bb.tag = 2;
+    bb.ncounts = 32;  // Batch in 32 counts
+
+    uint32_t bbcount = 0;
+    typedef struct {
+        uint32_t address;
+        uint32_t count;
+    } BB;
+
+    BB bbs[32];
+
+    root = ARCS;
+    for(int i = 0; i < BUCKET_SIZE; ++i) {
+        if(root->pc) {
+            bins[(root->pc - lowest_address) / bin_size]++;
+
+            BB* count = &bbs[bbcount++];
+            count->address = root->pc;
+            count->count = root->count;
+
+            if(bbcount == 32) {
+                fwrite(&bb, sizeof(bb), 1, out); // Write header
+                fwrite(bbs, sizeof(BB), bbcount, out);
+                bbcount = 0;
+            }
+
+            /* If there's a next pointer, traverse the list */
+            Arc* s = root->next;
+            while(s) {
+                bins[(s->pc - lowest_address) / bin_size]++;
+
+                count = &bbs[bbcount++];
+                count->address = s->pc;
+                count->count = s->count;
+
+                if(bbcount == 32) {
+                    fwrite(&bb, sizeof(bb), 1, out); // Write header
+                    fwrite(bbs, sizeof(BB), bbcount, out);
+                    bbcount = 0;
+                }
+
+                s = s->next;
+            }
+        }
+
+        root++;
+    }
+
+
+    /* Write histogram now that we have all the information we need */
+    GmonHistHeader hist_header;
+    hist_header.low_pc = lowest_address;
+    hist_header.high_pc = highest_address;
+    hist_header.hist_size = sizeof(bins);
+    hist_header.prof_rate = INTERVAL_IN_MS;
+    strcpy(hist_header.dimen, "seconds");
+    hist_header.dimen_abbrev = 's';
+
+    unsigned char hist_tag = 0;
+    fwrite(&hist_tag, sizeof(hist_tag), 1, out);
+    fwrite(&hist_header, sizeof(hist_header), 1, out);
+    fwrite(bins, sizeof(uint16_t), BIN_COUNT, out);
 
     fclose(out);
 
@@ -288,7 +386,7 @@ static void* run(void* args) {
     while(PROFILER_RUNNING){
         if(PROFILER_RECORDING) {
             record_samples();
-            usleep(10);
+            usleep(INTERVAL_IN_MS);
         }
     }
 
