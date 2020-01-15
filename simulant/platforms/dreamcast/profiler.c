@@ -294,11 +294,14 @@ static bool write_samples(const char* path) {
 
     BB bbs[32];
 
+#define ENABLE_BB 0
+
     root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
             bins[(root->pc - lowest_address) / bin_size]++;
 
+#if ENABLE_BB
             BB* count = &bbs[bbcount++];
             count->address = root->pc;
             count->count = root->count;
@@ -308,12 +311,13 @@ static bool write_samples(const char* path) {
                 fwrite(bbs, sizeof(BB), bbcount, out);
                 bbcount = 0;
             }
-
+#endif
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
             while(s) {
                 bins[(s->pc - lowest_address) / bin_size]++;
 
+#if ENABLE_BB
                 count = &bbs[bbcount++];
                 count->address = s->pc;
                 count->count = s->count;
@@ -323,7 +327,7 @@ static bool write_samples(const char* path) {
                     fwrite(bbs, sizeof(BB), bbcount, out);
                     bbcount = 0;
                 }
-
+#endif
                 s = s->next;
             }
         }
@@ -336,7 +340,7 @@ static bool write_samples(const char* path) {
     GmonHistHeader hist_header;
     hist_header.low_pc = lowest_address;
     hist_header.high_pc = highest_address;
-    hist_header.hist_size = sizeof(bins);
+    hist_header.hist_size = BIN_COUNT; //sizeof(bins);
     hist_header.prof_rate = INTERVAL_IN_MS;
     strcpy(hist_header.dimen, "seconds");
     hist_header.dimen_abbrev = 's';
