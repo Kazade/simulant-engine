@@ -17,7 +17,7 @@ static volatile bool PROFILER_RECORDING = false;
 
 #define BASE_ADDRESS 0x8c010000
 #define BUCKET_SIZE 10000
-#define BIN_COUNT 16
+#define BIN_COUNT 256
 #define INTERVAL_IN_MS 10
 
 /* Simple hash table of samples. An array of Samples
@@ -209,11 +209,13 @@ static bool write_samples(const char* path) {
     uint16_t bins[BIN_COUNT];
     memset(bins, 0, sizeof(bins));
 
+    extern char _etext;
+
     /* We know the lowest address, it's the same for all DC games */
     uint32_t lowest_address = BASE_ADDRESS;
 
     /* We need to calculate the highest address though */
-    uint32_t highest_address = 0;
+    uint32_t highest_address = &_etext;
 
 
     FILE* out = fopen(path, "r+");  /* Append, as init_sample_file would have created the file */
@@ -237,9 +239,6 @@ static bool write_samples(const char* path) {
     Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {        
         if(root->pc) {
-            /* Update histogram bins */
-            highest_address = (root->pc > highest_address) ? root->pc : highest_address;
-
             GmonArc arc;
             arc.from_pc = root->pr;
             arc.self_pc = root->pc;
@@ -256,8 +255,6 @@ static bool write_samples(const char* path) {
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
             while(s) {
-                highest_address = (s->pc > highest_address) ? s->pc : highest_address;
-
                 arc.from_pc = s->pr;
                 arc.self_pc = s->pc;
                 arc.count = s->count;
@@ -340,7 +337,7 @@ static bool write_samples(const char* path) {
     GmonHistHeader hist_header;
     hist_header.low_pc = lowest_address;
     hist_header.high_pc = highest_address;
-    hist_header.hist_size = BIN_COUNT; //sizeof(bins);
+    hist_header.hist_size = BIN_COUNT;
     hist_header.prof_rate = INTERVAL_IN_MS;
     strcpy(hist_header.dimen, "seconds");
     hist_header.dimen_abbrev = 's';
@@ -390,7 +387,7 @@ static void* run(void* args) {
     while(PROFILER_RUNNING){
         if(PROFILER_RECORDING) {
             record_samples();
-            usleep(INTERVAL_IN_MS);
+            usleep(INTERVAL_IN_MS * 1000); //usleep takes milliseconds
         }
     }
 
