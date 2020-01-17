@@ -17,7 +17,7 @@ static volatile bool PROFILER_RECORDING = false;
 
 #define BASE_ADDRESS 0x8c010000
 #define BUCKET_SIZE 10000
-#define BIN_COUNT 256
+
 #define INTERVAL_IN_MS 10
 
 /* Simple hash table of samples. An array of Samples
@@ -205,18 +205,18 @@ static bool write_samples(const char* path) {
         return true;
     }
 
-    /* Histogram data */
-    uint16_t bins[BIN_COUNT];
-    memset(bins, 0, sizeof(bins));
-
     extern char _etext;
 
     /* We know the lowest address, it's the same for all DC games */
     uint32_t lowest_address = BASE_ADDRESS;
 
     /* We need to calculate the highest address though */
-    uint32_t highest_address = &_etext;
+    uint32_t highest_address = (uint32_t) &_etext;
 
+    /* Histogram data */
+    const int BIN_COUNT = ((highest_address - lowest_address) >> 3) + 1;
+    uint16_t* bins = (uint16_t*) malloc(BIN_COUNT * sizeof(uint16_t));
+    memset(bins, 0, sizeof(uint16_t) * BIN_COUNT);
 
     FILE* out = fopen(path, "r+");  /* Append, as init_sample_file would have created the file */
     if(!out) {
@@ -277,54 +277,18 @@ static bool write_samples(const char* path) {
     uint32_t histogram_range = highest_address - lowest_address;
     uint32_t bin_size = histogram_range / BIN_COUNT;
 
-    /* Write basic blocks */
-
-    GmonBBHeader bb;
-    bb.tag = 2;
-    bb.ncounts = 32;  // Batch in 32 counts
-
-    uint32_t bbcount = 0;
-    typedef struct {
-        uint32_t address;
-        uint32_t count;
-    } BB;
-
-    BB bbs[32];
-
-#define ENABLE_BB 0
-
     root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
+            printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
             bins[(root->pc - lowest_address) / bin_size]++;
+            printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
 
-#if ENABLE_BB
-            BB* count = &bbs[bbcount++];
-            count->address = root->pc;
-            count->count = root->count;
-
-            if(bbcount == 32) {
-                fwrite(&bb, sizeof(bb), 1, out); // Write header
-                fwrite(bbs, sizeof(BB), bbcount, out);
-                bbcount = 0;
-            }
-#endif
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
             while(s) {
+                assert(s->pc);
                 bins[(s->pc - lowest_address) / bin_size]++;
-
-#if ENABLE_BB
-                count = &bbs[bbcount++];
-                count->address = s->pc;
-                count->count = s->count;
-
-                if(bbcount == 32) {
-                    fwrite(&bb, sizeof(bb), 1, out); // Write header
-                    fwrite(bbs, sizeof(BB), bbcount, out);
-                    bbcount = 0;
-                }
-#endif
                 s = s->next;
             }
         }
@@ -348,6 +312,7 @@ static bool write_samples(const char* path) {
     fwrite(bins, sizeof(uint16_t), BIN_COUNT, out);
 
     fclose(out);
+    free(bins);
 
     /* We should have written all the recorded samples */
     assert(written == ARC_COUNT);
@@ -412,6 +377,9 @@ void profiler_init(const char* output) {
 
     PROFILER_RUNNING = true;
     THREAD = thd_create(0, run, NULL);
+
+    /* Lower priority is... er, higher */
+    thd_set_prio(THREAD, PRIO_DEFAULT / 2);
 
     printf("Thread started.\n");
 }
