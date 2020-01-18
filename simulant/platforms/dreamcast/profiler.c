@@ -18,7 +18,7 @@ static volatile bool PROFILER_RECORDING = false;
 #define BASE_ADDRESS 0x8c010000
 #define BUCKET_SIZE 10000
 
-#define INTERVAL_IN_MS 10
+#define INTERVAL_IN_MS 1
 
 /* Simple hash table of samples. An array of Samples
  * but, each sample in that array can be the head of
