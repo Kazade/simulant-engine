@@ -18,7 +18,7 @@ static volatile bool PROFILER_RECORDING = false;
 #define BASE_ADDRESS 0x8c010000
 #define BUCKET_SIZE 10000
 
-#define INTERVAL_IN_MS 1
+#define INTERVAL_IN_MS 10
 
 /* Simple hash table of samples. An array of Samples
  * but, each sample in that array can be the head of
@@ -193,6 +193,9 @@ static bool init_sample_file(const char* path) {
     return true;
 }
 
+#define ROUNDDOWN(x,y) (((x)/(y))*(y))
+#define ROUNDUP(x,y) ((((x)+(y)-1)/(y))*(y))
+
 static bool write_samples(const char* path) {
     /* Appends the samples to the output file in gmon format
      *
@@ -207,14 +210,16 @@ static bool write_samples(const char* path) {
 
     extern char _etext;
 
+    const uint32_t HISTFRACTION = 8;
+
     /* We know the lowest address, it's the same for all DC games */
-    uint32_t lowest_address = BASE_ADDRESS;
+    uint32_t lowest_address = ROUNDDOWN(BASE_ADDRESS, HISTFRACTION);
 
     /* We need to calculate the highest address though */
-    uint32_t highest_address = (uint32_t) &_etext;
+    uint32_t highest_address = ROUNDUP((uint32_t) &_etext, HISTFRACTION);
 
     /* Histogram data */
-    const int BIN_COUNT = ((highest_address - lowest_address) >> 3) + 1;
+    const int BIN_COUNT = ((highest_address - lowest_address) / HISTFRACTION);
     uint16_t* bins = (uint16_t*) malloc(BIN_COUNT * sizeof(uint16_t));
     memset(bins, 0, sizeof(uint16_t) * BIN_COUNT);
 
