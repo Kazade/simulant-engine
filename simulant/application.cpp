@@ -52,7 +52,7 @@ Application::Application(const AppConfig &config):
      * to true */
     PROFILING = (
         config_.development.force_profiling ||
-        std::getenv(SIMULANT_PROFILE_KEY) != std::string("")
+        std::getenv(SIMULANT_PROFILE_KEY) != NULL
     );
 
     /* Remove frame limiting in profiling mode */
