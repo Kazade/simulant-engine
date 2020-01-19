@@ -36,5 +36,6 @@ This section covers the base subsystems and usages of Simulant.
  - Supported File Formats: [Mesh Formats](mesh_formats.md) | [Image Formats](image_formats.md)
  - Assets: [Textures](textures.md) | [Meshes](meshes.md) | [Materials](materials.md)
  - Debugging: [Debugging](debugging.md)
+ - Profiling: [Profiling](profiling.md)
  - Devices: [Screens](screens.md)
 
