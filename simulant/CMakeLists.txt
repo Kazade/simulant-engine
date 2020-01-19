@@ -2,6 +2,7 @@ FILE(GLOB_RECURSE SIMULANT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc)
 
 # Remove all the renderer files so we can add them specifically
 FILE(GLOB_RECURSE TO_REMOVE
+    "platforms/*"  # Remove platform specific additions
     "renderers/glad/*"
     "renderers/gl2x/*"
     "deps/SOIL/original/*"
@@ -33,6 +34,12 @@ IF(DREAMCAST_BUILD)
     FILE(GLOB_RECURSE LIBGL_SAMPLES ${CMAKE_SOURCE_DIR}/deps/libgl/samples/*.c)
     LIST(REMOVE_ITEM LIBGL ${LIBGL_SAMPLES})
 
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.c)
+
+    IF(PLATFORM)
+    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+    ENDIF()
+
     SET(
         LIBAL
         ${CMAKE_SOURCE_DIR}/deps/libAL/AL/mojoal.c
@@ -46,6 +53,7 @@ IF(DREAMCAST_BUILD)
         ${LIBGL}
         ${LIBGL_ASM}
         ${LIBAL}
+        ${PLATFORM}
     )
 
     SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp sound_drivers/null_sound_driver.cpp)

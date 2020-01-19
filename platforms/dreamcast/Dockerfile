@@ -7,7 +7,7 @@ MAINTAINER kazade <kazade@gmail.com>
 RUN yum clean all && yum -y install yum-plugin-ovl
 RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
-RUN git clone https://gitlab.com/simulant/KallistiOS.git /opt/toolchains/dc/kos
+RUN git clone https://gitlab.com/simulant/community/kallistios-nitro.git /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
 
 ## Uncomment the below to enable a 5.2 toolchain
@@ -94,10 +94,11 @@ include ${KOS_PORTS}/scripts/kos-ports.mk\n\
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make install clean
 
 # Now install dcload-ip
-RUN yum install -y elfutils-libelf-devel
+RUN yum install -y elfutils-libelf-devel wodim
 RUN . /etc/bash.bashrc; git clone https://git.code.sf.net/p/cadcdev/dcload-ip /opt/toolchains/dc/dc-load-ip
 RUN . /etc/bash.bashrc; cp /opt/toolchains/dc/dc-load-ip/example-src/dc4.x /opt/toolchains/dc/dc-load-ip/example-src/dc5.x
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
 RUN . /etc/bash.bashrc; mkdir -p /opt/toolchains/dc/bin && cp /opt/toolchains/dc/dc-load-ip/host-src/tool/dc-tool /opt/toolchains/dc/bin
 
 RUN . /etc/bash.bashrc; pip install --user git+https://github.com/Kazade/puncover.git && BUMP=1
+RUN . /etc/bash.bashrc; chmod 4755 /usr/bin/wodim

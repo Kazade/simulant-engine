@@ -414,15 +414,9 @@ void Window::request_frame_time(float ms) {
 }
 
 void Window::await_frame_time() {
-#ifdef _arch_dreamcast
-    /* Don't do anything on the DC if the requested frame rate
-     * is greater or equal to 60FPS (59 to account for rounding errors or whatever)
-     * as the DC is capped at that anyway
-     */
-    if(requested_frame_time_ms_ <= 1.0f / 59.0f) {
+    if(requested_frame_time_ms_ == 0) {
         return;
     }
-#endif
 
     auto this_time = time_keeper_->now_in_us();
     while((float(this_time - last_frame_time_us_) * 0.001f) < requested_frame_time_ms_) {

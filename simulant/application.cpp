@@ -21,6 +21,7 @@
 #include <future>
 
 #ifdef _arch_dreamcast
+#include "platforms/dreamcast/profiler.h"
 #include "kos_window.h"
 namespace smlt { typedef KOSWindow SysWindow; }
 #else
@@ -38,10 +39,27 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 namespace smlt {
 
+static bool PROFILING = false;
+
 Application::Application(const AppConfig &config):
     config_(config) {
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
+
+    /* We're in profiling mode if we've forced it via app config
+     * or the environment variable is set. If it's done by compile
+     * flag the AppConfig force_profiling variable would default
+     * to true */
+    PROFILING = (
+        config_.development.force_profiling ||
+        std::getenv(SIMULANT_PROFILE_KEY) != NULL
+    );
+
+    /* Remove frame limiting in profiling mode */
+    if(PROFILING) {
+        config_.enable_vsync = false;
+        config_.target_frame_rate = 0;
+    }
 
     try {
         construct_window(config);
@@ -56,7 +74,7 @@ void Application::construct_window(const AppConfig& config) {
     AppConfig config_copy = config;
 
     /* If we're profiling, disable the frame time and vsync */
-    if(std::getenv(SIMULANT_PROFILE_KEY)) {
+    if(PROFILING) {
         config_copy.target_frame_rate = std::numeric_limits<uint16_t>::max();
         config_copy.enable_vsync = false;
     }
@@ -110,8 +128,19 @@ void Application::construct_window(const AppConfig& config) {
     }
 
     if(config_copy.target_frame_rate) {
+        /* Don't do anything on the DC if the requested frame rate
+         * is greater or equal to 60FPS
+         * as the DC is capped at that anyway
+         */
+#ifdef _arch_dreamcast
+        if(config_copy.target_frame_rate < 60) {
+            float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
+            window_->request_frame_time(frame_time);
+        }
+#else
         float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
         window_->request_frame_time(frame_time);
+#endif
     }
 
     for(auto& search_path: config.search_paths) {
@@ -178,6 +207,20 @@ bool Application::_call_init() {
 }
 
 int32_t Application::run() {
+#ifdef _arch_dreamcast
+    if(PROFILING) {
+        profiler_init("/pc/gmon.out");
+        profiler_start();
+    }
+
+    /* Try to write samples even if bad things happen */
+    std::set_terminate([&]() {
+        profiler_stop();
+        profiler_clean_up();
+    });
+
+#endif
+
     if(!_call_init()) {
         L_ERROR("Error while initializing, terminating application");
         return 1;
@@ -193,6 +236,13 @@ int32_t Application::run() {
     window_->_clean_up();
     window_.reset();
 
+#ifdef _arch_dreamcast
+    if(PROFILING) {
+        profiler_stop();
+        profiler_clean_up();
+    }
+#endif
+
     return 0;
 }
 
@@ -206,7 +256,8 @@ int32_t Application::run(int argc, char* argv[]) {
         return 0;
     }
 
-    return Application::run();
+    auto ret = Application::run();
+    return ret;
 }
 
 }
