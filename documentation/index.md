@@ -6,7 +6,7 @@
  - Tutorial: [1. Basic Application](tutorial_1.md)
  - Platforms: [Platform Notes](platform_notes.md)
  - Licensing: [FAQ](license.md)
- - Contributing: [Compile on Fedora](develop_fedora.md)
+ - Contributing: [Compile on Fedora](develop_fedora.md) | [C++ Guidelines](cpp_guidelines.md)
 
 ## Architecture
 

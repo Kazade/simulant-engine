@@ -1,10 +1,17 @@
 stages:
+ - check
  - build
  - test
  - deploy
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+
+check:thread-usage:
+  stage: check
+  image: registry.fedoraproject.org/fedora-minimal:28
+  script:
+    - python tools/find_std_thread.py
 
 android:
   stage: build
