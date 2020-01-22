@@ -13,7 +13,7 @@ check:thread-usage:
   before_script:
     - microdnf install -y python3
   script:
-    - python tools/find_std_thread.py
+    - python3 tools/find_std_thread.py
 
 android:
   stage: build
