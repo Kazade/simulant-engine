@@ -11,21 +11,29 @@ namespace smlt {
 template<typename T>
 class optional {
 public:
-    optional():
-        has_value_(false) {
+    optional() = default;
 
+    template<typename U>
+    optional(optional<U>&& other) {
+        set_value(std::move(*other.value_ptr()));
     }
 
-    optional(T&& value):
-        has_value_(true),
-        value_(value) {
-
+    optional(T&& value) {
+        set_value(std::move(value));
     }
 
-    optional(const optional<T>& rhs):
-        has_value_(rhs.has_value_),
-        value_(std::move(rhs.value_)){
+    optional(const optional<T>& rhs) {
+        if(rhs.has_value()) {
+            set_value(rhs.value());
+        }
+    }
 
+    optional& operator=(const optional& other) {
+        if(other.has_value()) {
+            set_value(other.value());
+        }
+
+        return *this;
     }
 
     explicit operator bool() const {
@@ -34,19 +42,14 @@ public:
 
     bool has_value() const { return has_value_; }
 
-    void reset() {
-        has_value_ = false;
-        value_ = T();
-    }
-
     const T& value() const {
         assert(has_value());
-        return value_;
+        return *value_ptr();
     }
 
     T& value() {
         assert(has_value());
-        return value_;
+        return *value_ptr();
     }
 
     T value_or(T&& def) const {
@@ -59,27 +62,58 @@ public:
 
     const T* operator->() const {
         assert(has_value());
-        return &value_;
+        return value_ptr();
     }
 
     T* operator->() {
         assert(has_value());
-        return &value_;
+        return value_ptr();
     }
 
     const T& operator*() const {
         assert(has_value());
-        return value_;
+        return *value_ptr();
     }
 
     T& operator*() {
         assert(has_value());
-        return value_;
+        return *value_ptr();
     }
 
 private:
     bool has_value_ = false;
-    T value_;
+    char data_[sizeof(T)] = {0};
+
+    T* value_ptr() const {
+        return (has_value()) ? (T*) data_ : nullptr;
+    }
+
+    void set_value(const T& value) {
+        if(has_value()) {
+            reset();
+        }
+
+        new (data_) T(value);
+        has_value_ = true;
+    }
+
+    void set_value(T&& value) {
+        if(has_value()) {
+            // We destroy the current value if we have one
+            reset();
+        }
+
+        *((T*) data_) = std::move(value);
+        has_value_ = true;
+    }
+
+    void reset() {
+        T* v = value_ptr();
+        if(v) {
+            has_value_ = false;
+            v->~T();
+        }
+    }
 };
 
 

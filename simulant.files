@@ -93,6 +93,12 @@ simulant/renderers/gl2x/vbo_manager.cpp
 simulant/renderers/gl2x/vbo_manager.h
 simulant/stage_manager.cpp
 simulant/stage_manager.h
+simulant/threads/async.h
+simulant/threads/mutex.cpp
+simulant/threads/mutex.h
+simulant/threads/promise.h
+simulant/threads/thread.cpp
+simulant/threads/thread.h
 simulant/utils/throttle.h
 simulant/vfs.cpp
 simulant/vfs.h
@@ -101,6 +107,7 @@ tests/test_heightmap.h
 tests/test_loose_quadtree.h
 tests/test_manual_manager.h
 tests/test_stage.h
+tests/test_threads.h
 tools/test_generator.py
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h
