@@ -15,7 +15,7 @@ def scan_file(full_path):
     if not os.path.exists(full_path):
         return count
 
-    with open(full_path, "r") as f:
+    with open(full_path, "r", errors='ignore') as f:
         data = f.read()
 
         if ("include <thread>" in data or
