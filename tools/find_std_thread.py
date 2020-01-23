@@ -41,7 +41,7 @@ if __name__ == '__main__':
             full_path = os.path.realpath(os.path.join(folder, name))
             if os.path.isdir(full_path):
                 recurse(full_path)
-            else:
+            elif full_path.endswith(".cpp") or full_path.endswith(".h"):
                 recurse.count += scan_file(full_path)
     recurse.count = 0
 
