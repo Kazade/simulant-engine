@@ -23,6 +23,8 @@
 #include "../logging.h"
 #include "gl_thread_check.h"
 
+namespace smlt {
+
 void check_and_log_error(const char* function_name);
 
 namespace GLChecker {
@@ -76,8 +78,10 @@ Res _GLCheck(const char* function_name, Func&& func, Args&&... args) {
     return GLChecker::Checker<Res, Func, Args...>::run(function_name, std::forward<Func>(func), std::forward<Args>(args)...);
 }
 
+}
+
 #ifndef GLCheck
-#define GLCheck(...) _GLCheck(__func__, __VA_ARGS__)
+#define GLCheck(...) smlt::_GLCheck(__func__, __VA_ARGS__)
 #endif
 
 #endif

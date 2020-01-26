@@ -371,7 +371,7 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
 
     bool load_material = false;
     {
-        std::lock_guard<std::mutex> lock(template_material_lock_);
+        thread::Lock<thread::Mutex> lock(template_material_lock_);
         if(!template_materials_.count(path)) {
             template_materials_[path] = template_id = new_material(GARBAGE_COLLECT_NEVER);
             materials_loading_.insert(template_id);

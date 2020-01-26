@@ -1,5 +1,6 @@
 #pragma once
 
+namespace smlt {
 namespace utils {
 
 namespace static_if_detail {
@@ -36,4 +37,5 @@ static_if_detail::statement<Condition> static_if(const Function& f) {
     return if_;
 }
 
+}
 }

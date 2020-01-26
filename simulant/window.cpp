@@ -17,8 +17,6 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <thread>
-
 #ifdef _arch_dreamcast
     #include <kos.h>
 #endif
@@ -420,9 +418,7 @@ void Window::await_frame_time() {
 
     auto this_time = time_keeper_->now_in_us();
     while((float(this_time - last_frame_time_us_) * 0.001f) < requested_frame_time_ms_) {
-
-        platform->sleep_ms(0);
-
+        thread::sleep(0);
         this_time = time_keeper_->now_in_us();
     }
     last_frame_time_us_ = this_time;
@@ -519,7 +515,7 @@ bool Window::run_frame() {
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
     {
-        std::lock_guard<std::mutex> rendering_lock(context_lock_);
+        thread::Lock<thread::Mutex> rendering_lock(context_lock_);
         if(has_context()) {
 
             stats->reset_polygons_rendered();

@@ -3,10 +3,11 @@
 /* This is the window implementation for the Dreamcast using KallistiOS */
 
 #include <kos.h>
-#include <mutex>
 
 #include "window.h"
 #include "platform.h"
+
+#include "threads/mutex.h"
 
 namespace smlt {
 
@@ -14,9 +15,6 @@ class KOSWindow : public Window {
     class DreamcastPlatform : public Platform {
     public:
         std::string name() const override { return "dreamcast"; }
-        void sleep_ms(uint32_t ms) const {
-            usleep(ms * 1000);
-        }
     };
 
 public:
@@ -47,7 +45,7 @@ private:
 
     /* Name, to port/unit combo. This only includes VMUs we've seen during the last probe */
 
-    std::mutex vmu_mutex_;
+    thread::Mutex vmu_mutex_;
     std::unordered_map<std::string, std::pair<int, int>> vmu_lookup_;
 };
 

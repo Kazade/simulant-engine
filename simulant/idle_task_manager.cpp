@@ -34,7 +34,7 @@ IdleTaskManager::IdleTaskManager(Window &window):
 }
 
 IdleConnectionID IdleTaskManager::add(std::function<bool ()> callback) {
-    std::lock_guard<std::mutex> lock(signals_mutex_);
+    thread::Lock<thread::Mutex> lock(signals_mutex_);
 
     IdleConnectionID new_id = ++connection_counter;
     signals_.insert(std::make_pair(new_id, callback));
@@ -42,7 +42,7 @@ IdleConnectionID IdleTaskManager::add(std::function<bool ()> callback) {
 }
 
 IdleConnectionID IdleTaskManager::add_once(std::function<void ()> callback) {
-    std::lock_guard<std::mutex> lock(signals_once_mutex_);
+    thread::Lock<thread::Mutex> lock(signals_once_mutex_);
 
     IdleConnectionID new_id = ++connection_counter;
     signals_once_.insert(std::make_pair(new_id, callback));
@@ -122,7 +122,7 @@ IdleConnectionID IdleTaskManager::add_timeout_once(float seconds, std::function<
 }
 
 void IdleTaskManager::wait() {
-    std::unique_lock<std::mutex> lk(cv_mutex_);
+    thread::ToggleLock<thread::Mutex> lk(cv_mutex_);
     cv_.wait(lk);
 }
 
@@ -130,7 +130,7 @@ void IdleTaskManager::execute() {
     {
         SignalMap signals_copy;
         {
-            std::lock_guard<std::mutex> lock(signals_mutex_);
+            thread::Lock<thread::Mutex> lock(signals_mutex_);
             signals_copy = signals_;
         }
 
@@ -145,7 +145,7 @@ void IdleTaskManager::execute() {
         }
 
         {
-            std::lock_guard<std::mutex> lock(signals_mutex_);
+            thread::Lock<thread::Mutex> lock(signals_mutex_);
             for(auto conn: to_erase) {
                 signals_.erase(conn);
             }
@@ -155,7 +155,7 @@ void IdleTaskManager::execute() {
     SignalOnceMap to_iter; //Create an empty map
     {
         //Lock the signals once mutex and then swap to clear
-        std::lock_guard<std::mutex> lock(signals_once_mutex_);
+        thread::Lock<thread::Mutex> lock(signals_once_mutex_);
         std::swap(to_iter, signals_once_);
     }
 
@@ -168,8 +168,8 @@ void IdleTaskManager::execute() {
 }
 
 void IdleTaskManager::remove(IdleConnectionID connection) {
-    std::lock_guard<std::mutex> lock1(signals_mutex_);
-    std::lock_guard<std::mutex> lock2(signals_once_mutex_);
+    thread::Lock<thread::Mutex> lock1(signals_mutex_);
+    thread::Lock<thread::Mutex> lock2(signals_once_mutex_);
 
     signals_.erase(connection);
     signals_once_.erase(connection);

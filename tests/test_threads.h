@@ -3,7 +3,7 @@
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 
-#include "simulant/threads/async.h"
+#include "simulant/threads/future.h"
 
 namespace {
 
@@ -21,19 +21,28 @@ public:
             return arg + 1;
         };
 
+        auto except = []() -> int {
+            throw std::runtime_error("Error!");
+        };
+
         auto promise = async(func_argless);
 
-        window->platform->sleep_ms(500);
+        thread::sleep(100);
 
         assert_true(promise.is_ready());
-        assert_equal(1, promise.value());
+        assert_equal(1, promise.get());
 
         promise = async(func, 1);
 
-        window->platform->sleep_ms(500);
+        thread::sleep(100);
 
         assert_true(promise.is_ready());
-        assert_equal(2, promise.value());
+        assert_equal(2, promise.get());
+
+        promise = async(except);
+        thread::sleep(100);
+        assert_true(promise.is_ready());
+        assert_true(promise.is_failed());
     }
 };
 

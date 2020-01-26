@@ -22,9 +22,9 @@
 #include <cstdint>
 #include <functional>
 #include <map>
-#include <mutex>
 #include <condition_variable>
 
+#include "threads/mutex.h"
 #include "types.h"
 
 namespace smlt {
@@ -57,11 +57,11 @@ private:
     SignalMap signals_;
     SignalOnceMap signals_once_;
 
-    std::mutex signals_mutex_;
-    std::mutex signals_once_mutex_;
+    thread::Mutex signals_mutex_;
+    thread::Mutex signals_once_mutex_;
 
-    std::mutex cv_mutex_;
-    std::condition_variable cv_;
+    thread::Mutex cv_mutex_;
+    thread::Condition cv_;
 };
 
 }

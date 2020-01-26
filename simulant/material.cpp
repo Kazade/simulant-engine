@@ -96,7 +96,7 @@ void Material::set_pass_count(uint8_t pass_count) {
         return;
     }
 
-    std::lock_guard<std::mutex> lock(pass_mutex_);
+    thread::Lock<thread::Mutex> lock(pass_mutex_);
 
     /* We're adding more passes, so let's make sure they're clean */
     if(pass_count > pass_count_) {

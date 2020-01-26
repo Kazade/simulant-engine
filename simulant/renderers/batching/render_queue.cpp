@@ -102,7 +102,7 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
 
 
 void RenderQueue::clear() {
-    std::lock_guard<std::mutex> lock(queue_lock_);
+    thread::Lock<thread::Mutex> lock(queue_lock_);
     for(auto& queue: priority_queues_) {
         queue.clear();
     }
@@ -112,7 +112,7 @@ void RenderQueue::clear() {
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
-    std::lock_guard<std::mutex> lock(queue_lock_);
+    thread::Lock<thread::Mutex> lock(queue_lock_);
 
     visitor->start_traversal(*this, frame_id, stage_);
 

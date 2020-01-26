@@ -20,6 +20,7 @@
 #include "../logging.h"
 #include "gl_thread_check.h"
 
+namespace smlt {
 std::shared_ptr<GLThreadCheck> GL_thread;
 
 void GLThreadCheck::check() {
@@ -29,4 +30,6 @@ void GLThreadCheck::check() {
         L_ERROR("Tried to call OpenGL dependent code from the wrong thread");
         throw;
     }
+}
+
 }

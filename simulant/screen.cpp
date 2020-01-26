@@ -1,21 +1,16 @@
 #include <chrono>
 
-#include "generic/simple_future.h"
-
 #include "window.h"
 #include "screen.h"
+
+#include "threads/future.h"
 
 namespace smlt {
 
 
 void Screen::render(const uint8_t *data, ScreenFormat format) {
-#ifdef __DREAMCAST__
-    using namespace stdX;
-#else
-    using namespace std;
-#endif
 
-    static future<void> fut;
+    static thread::Future<void> fut;
 
     if(format != this->format()) {
         L_WARN("Not uploading screen image due to format mismatch. Conversion not yet supported");
@@ -24,36 +19,38 @@ void Screen::render(const uint8_t *data, ScreenFormat format) {
 
 
     {
-        std::lock_guard<std::mutex> lock(buffer_mutex_);
+        thread::Lock<thread::Mutex> lock(buffer_mutex_);
 
         buffer_.resize(data_size());
         buffer_.assign(data, data + data_size());
     }
 
     /* Is there already a valid future? */
-    if(fut.valid()) {
+    if(fut.is_valid()) {
         /* If so, is it ready? */
-        if(fut.wait_for(std::chrono::milliseconds(0)) == future_status::ready) {
+        if(fut.wait_for(std::chrono::milliseconds(0)) == thread::FutureStatus::ready) {
             /* Then get it, and mark it as not valid */
             fut.get();
         }
     }
 
     /* We don't have a valid future, defer a new one */
-    if(!fut.valid()) {
+    if(!fut.is_valid()) {
         /* We async this and return immediately */
-        fut = async(launch::async, [this]() {
+        std::function<void()> f = [this]() {
             std::vector<uint8_t> tmp;
             {
                 /* Copy the buffer while locking */
-                std::lock_guard<std::mutex> lock(buffer_mutex_);
+                thread::Lock<thread::Mutex> lock(buffer_mutex_);
                 tmp = buffer_;
             }
 
             /* Now if this blocks, it doesn't matter. The main thread
              * can continue to update buffer_ without waiting */
             window_->render_screen(this, &tmp[0]);
-        });
+        };
+
+        fut = thread::async(f);
     }
 }
 

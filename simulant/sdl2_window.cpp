@@ -87,7 +87,7 @@ int event_filter(void* user_data, SDL_Event* event) {
             _this->set_paused(true);
             {
                 //See Window::context_lock_ for details
-                std::lock_guard<std::mutex> context_lock(_this->context_lock());
+                thread::Lock<thread::Mutex> context_lock(_this->context_lock());
                 _this->set_has_context(false);
             }
         } break;
@@ -100,7 +100,7 @@ int event_filter(void* user_data, SDL_Event* event) {
             L_INFO("Application is entering the foreground, enabling rendering");
             {
                 //See Window::context_lock_ for details
-                std::lock_guard<std::mutex> context_lock(_this->context_lock());
+                thread::Lock<thread::Mutex> context_lock(_this->context_lock());
                 _this->set_has_context(true);
             }
             //FIXME: Reload textures and shaders
@@ -483,10 +483,6 @@ void SDL2Window::destroy_window() {
 
 void SDL2Window::swap_buffers() {
     SDL_GL_SwapWindow(screen_);
-}
-
-void SDL2Window::SDLPlatform::sleep_ms(uint32_t ms) const {
-    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 bool SDL2Window::initialize_screen(Screen *screen) {

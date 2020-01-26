@@ -2,10 +2,11 @@
 
 #include <cstdint>
 #include <utility>
-#include <mutex>
 #include <vector>
 #include <array>
 
+#include "../threads/thread.h"
+#include "../threads/mutex.h"
 #include "managed.h"
 
 namespace smlt {
@@ -69,7 +70,7 @@ public:
                 continue;
             } else {
                 // We lock the chunk whenever we update metadata
-                std::lock_guard<std::mutex> g(chunk->lock_);
+                thread::Lock<thread::Mutex> g(chunk->lock_);
 
                 uint8_t* new_thing = chunk->alloc_free_slot();
                 assert(new_thing);
@@ -149,7 +150,7 @@ public:
         // Call the destructor
         element->~T();
 
-        std::lock_guard<std::mutex> g(p.first->lock_);
+        thread::Lock<thread::Mutex> g(p.first->lock_);
         p.first->release_slot((uint8_t*) element);
 
         // Decrement the used count on the chunk
@@ -201,7 +202,7 @@ public:
     }
 
 private:
-    std::mutex chunk_lock_;
+    thread::Mutex chunk_lock_;
 
     struct Chunk {
         Chunk() {
@@ -360,7 +361,7 @@ private:
             }
         }
 
-        std::mutex lock_;
+        thread::Mutex lock_;
         uint8_t* first_used_ = nullptr;
         std::array<uint8_t, array_size> elements_ = {}; // Zero-initialize
         uint8_t used_count_ = 0;
@@ -369,7 +370,7 @@ private:
     std::vector<std::shared_ptr<Chunk>> chunks_;
 
     void push_chunk() {
-        std::lock_guard<std::mutex> g(chunk_lock_);
+        thread::Lock<thread::Mutex> g(chunk_lock_);
         chunks_.push_back(std::make_shared<Chunk>());
     }
 
@@ -390,7 +391,7 @@ private:
             first_used = meta->next_used;
         }
 
-        std::lock_guard<std::mutex> g(chunk_lock_);
+        thread::Lock<thread::Mutex> g(chunk_lock_);
         chunks_.pop_back();
     }
 

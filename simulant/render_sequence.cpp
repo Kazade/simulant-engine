@@ -141,7 +141,7 @@ void RenderSequence::sort_pipelines(bool acquire_lock) {
     };
 
     if(acquire_lock) {
-        std::lock_guard<std::mutex> lock(pipeline_lock_);
+        thread::Lock<thread::Mutex> lock(pipeline_lock_);
         do_sort();
     } else {
         do_sort();
@@ -158,7 +158,7 @@ PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const V
     pipeline->set_viewport(viewport);
     pipeline->set_target(target);
     pipeline->set_priority(priority);
-    std::lock_guard<std::mutex> lock(pipeline_lock_);
+    thread::Lock<thread::Mutex> lock(pipeline_lock_);
     ordered_pipelines_.push_back(pipeline);
     sort_pipelines();
 

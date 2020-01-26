@@ -45,7 +45,7 @@ private:
 template<typename M>
 class Lock {
 public:
-    explicit Lock(Mutex& m):
+    explicit Lock(M& m):
         mutex_(m) {
 
         mutex_.lock();
@@ -58,6 +58,43 @@ public:
 private:
     M& mutex_;
 };
+
+template<typename M>
+class ToggleLock;
+
+template<>
+class ToggleLock<Mutex> {
+public:
+    explicit ToggleLock(Mutex& m):
+        mutex_(m) {
+        mutex_.lock();
+    }
+
+    ~ToggleLock() {
+        mutex_.unlock();
+    }
+
+    void lock() {
+        mutex_.lock();
+    }
+
+    void unlock() {
+        mutex_.unlock();
+    }
+
+private:
+    Mutex& mutex_;
+};
+
+class Condition {
+public:
+    Condition();
+
+    void wait(ToggleLock<Mutex>& mutex);
+    void notify_one();
+    void notify_all();
+};
+
 
 }
 }

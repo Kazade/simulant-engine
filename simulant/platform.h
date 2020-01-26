@@ -9,9 +9,6 @@ class Platform {
 public:
     // Information
     virtual std::string name() const = 0;
-
-    // Platform-specific utils
-    virtual void sleep_ms(uint32_t ms) const = 0;
 };
 
 }

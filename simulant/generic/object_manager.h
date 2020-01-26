@@ -1,6 +1,5 @@
 #pragma once
 
-#include <mutex>
 #include <chrono>
 #include <unordered_map>
 #include <unordered_set>
@@ -40,7 +39,7 @@ public:
     virtual void update() = 0;
 
     uint32_t count() const {
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
         return objects_.size();
     }
@@ -62,7 +61,7 @@ public:
         // Bind the copy to the ID
         copy->_bind_id_pointer(copy);       
 
-        std::lock_guard<std::recursive_mutex> g(target_manager->objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(target_manager->objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
         target_manager->objects_.insert(std::make_pair(copy->id(), copy));
         target_manager->on_make(copy->id());
@@ -81,7 +80,7 @@ public:
         auto obj = T::create(new_id, std::forward<Args>(args)...);
         obj->_bind_id_pointer(obj);
 
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
         objects_.insert(std::make_pair(obj->id(), obj));
 
@@ -91,14 +90,14 @@ public:
     }
 
     void destroy(IDType id) {
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
         on_destroy(id);
         objects_.erase(id);
     }
 
     void destroy_all() {
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
 
         for(auto& p: objects_) {
@@ -109,7 +108,7 @@ public:
     }
 
     ObjectTypePtr get(IDType id) const {
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
         auto it = objects_.find(id);
         if(it == objects_.end()) {
@@ -120,13 +119,13 @@ public:
     }
 
     bool contains(IDType id) const {
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
         return objects_.count(id) > 0;
     }
 
     void each(std::function<void (uint32_t, ObjectTypePtr)> callback) {
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
 
         uint32_t i = 0;
@@ -137,7 +136,7 @@ public:
     }
 
     void each(std::function<void (uint32_t, const ObjectTypePtr)> callback) const {
-        std::lock_guard<std::recursive_mutex> g(objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
 
         uint32_t i = 0;
@@ -148,12 +147,12 @@ public:
     }
 
     void store_alias(const std::string& alias, IDType id) {
-        std::lock_guard<std::recursive_mutex> g(aliases_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(aliases_mutex_);
         aliases_.insert(std::make_pair(alias, id));
     }
 
     ObjectTypePtr get_by_alias(const std::string& alias) const {
-        std::lock_guard<std::recursive_mutex> g(aliases_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(aliases_mutex_);
         auto it = aliases_.find(alias);
         if(it == aliases_.end()) {
             return ObjectTypePtr();
@@ -163,7 +162,7 @@ public:
     }
 
     IDType get_id_from_alias(const std::string& alias) const {
-        std::lock_guard<std::recursive_mutex> g(aliases_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(aliases_mutex_);
         auto it = aliases_.find(alias);
         if(it == aliases_.end()) {
             return IDType();
@@ -177,8 +176,8 @@ protected:
         return IDCounter<ObjectType>::next_id();
     }
 
-    mutable std::recursive_mutex objects_mutex_;
-    mutable std::recursive_mutex aliases_mutex_;
+    mutable thread::RecursiveMutex objects_mutex_;
+    mutable thread::RecursiveMutex aliases_mutex_;
 
     typedef std::shared_ptr<ObjectType> ObjectTypeInternalPtrType;
 
@@ -268,13 +267,13 @@ public:
     void update() override {
         // FIXME: Throttle collections per update
 
-        std::lock_guard<std::recursive_mutex> g(this->objects_mutex_);
+        thread::Lock<thread::RecursiveMutex> g(this->objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
         for(auto it = this->objects_.begin(); it != this->objects_.end();) {
             ObjMeta meta;
 
             {
-                std::lock_guard<std::mutex> g(metas_mutex_);
+                thread::Lock<thread::Mutex> g(metas_mutex_);
                 meta = object_metas_.at(it->first);
             }
 
@@ -292,7 +291,7 @@ public:
     }
 
     void set_garbage_collection_method(IDType id, GarbageCollectMethod method) {
-        std::lock_guard<std::mutex> g(metas_mutex_);
+        thread::Lock<thread::Mutex> g(metas_mutex_);
         auto& meta = object_metas_.at(id);
         meta.collection_method = method;
         if(method != GARBAGE_COLLECT_NEVER) {
@@ -311,11 +310,11 @@ private:
         date_time created;
     };
 
-    std::mutex metas_mutex_;
+    thread::Mutex metas_mutex_;
     std::unordered_map<IDType, ObjMeta> object_metas_;
 
     void on_make(IDType id) override {
-        std::lock_guard<std::mutex> g(metas_mutex_);
+        thread::Lock<thread::Mutex> g(metas_mutex_);
         object_metas_.insert(std::make_pair(id, ObjMeta()));
     }
 
@@ -324,7 +323,7 @@ private:
             _F("Garbage collecting {0}").format(id)
         );
 
-        std::lock_guard<std::mutex> g(metas_mutex_);
+        thread::Lock<thread::Mutex> g(metas_mutex_);
         object_metas_.erase(id);
     }
 };

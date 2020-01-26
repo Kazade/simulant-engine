@@ -232,7 +232,7 @@ private:
 
     uint32_t renderer_id_ = 0;
 
-    mutable std::mutex lock_;
+    mutable thread::Mutex lock_;
 };
 
 class TextureTransaction:

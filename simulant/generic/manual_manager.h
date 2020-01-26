@@ -7,7 +7,6 @@
 #include <array>
 #include <unordered_set>
 #include <memory>
-#include <mutex>
 
 #include "managed.h"
 #include "vector_pool.h"

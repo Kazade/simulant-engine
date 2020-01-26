@@ -1,9 +1,10 @@
 #pragma once
 
-#include <mutex>
 #include <unordered_map>
+
 #include "../types.h"
 #include "../texture.h"
+#include "../threads/mutex.h"
 
 namespace smlt {
 
@@ -26,7 +27,7 @@ protected:
     uint32_t convert_texture_format(TextureFormat format);
     uint32_t convert_texel_type(TextureTexelType type);
 
-    std::mutex texture_object_mutex_;
+    thread::Mutex texture_object_mutex_;
     std::unordered_map<TextureID, uint32_t> texture_objects_;
 
 private:

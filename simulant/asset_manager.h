@@ -249,7 +249,7 @@ private:
     SoundManager sound_manager_;
     ParticleScriptManager particle_script_manager_;
 
-    std::mutex template_material_lock_;
+    thread::Mutex template_material_lock_;
     std::unordered_map<unicode, MaterialID> template_materials_;
     std::set<MaterialID> materials_loading_;
 

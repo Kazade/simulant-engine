@@ -27,6 +27,7 @@
     #include "../renderers/glad/glad/glad.h"
 #endif
 
+namespace smlt {
 namespace GLChecker {
 
 bool USE_GL_GET_ERROR = false;
@@ -73,4 +74,5 @@ void check_and_log_error(const char *function_name) {
 
         throw std::runtime_error(_F("GL ERROR: {0}").format(error_string));
     }
+}
 }

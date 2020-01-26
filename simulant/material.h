@@ -129,7 +129,7 @@ public:
     void update(float dt);
 
 private:
-    std::mutex pass_mutex_;
+    thread::Mutex pass_mutex_;
     uint8_t pass_count_ = 0;
     std::array<MaterialPass, MAX_PASSES> passes_;
 

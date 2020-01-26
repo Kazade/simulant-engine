@@ -19,7 +19,6 @@
 #pragma once
 
 #include <cassert>
-#include <mutex>
 #include <string>
 #include <chrono>
 #include <memory>
