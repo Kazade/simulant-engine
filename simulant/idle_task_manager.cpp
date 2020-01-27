@@ -122,8 +122,7 @@ IdleConnectionID IdleTaskManager::add_timeout_once(float seconds, std::function<
 }
 
 void IdleTaskManager::wait() {
-    thread::ToggleLock<thread::Mutex> lk(cv_mutex_);
-    cv_.wait(lk);
+    cv_.wait(cv_mutex_);
 }
 
 void IdleTaskManager::execute() {

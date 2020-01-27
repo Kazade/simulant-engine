@@ -32,9 +32,6 @@ public:
 
     Future(std::shared_ptr<FutureState> state):
         state_(state) {
-
-        state_->is_ready_ = true;
-        state_->is_failed_ = false;
     }
 
     Future() {}
@@ -44,6 +41,7 @@ public:
     Future& operator=(Future&& other) {
         Lock<Mutex> guard(state_mutex_);
         state_ = std::move(other.state_);
+        state_mutex_ = std::move(other.state_mutex_);
         return *this;
     }
 
@@ -55,21 +53,28 @@ public:
         Lock<Mutex> lock(state_->lock_);
         Lock<Mutex> guard(state_mutex_);
 
-        auto state = state_;
+        if(state_->is_failed_) {
+            throw PromiseFailedError();
+        }
+
+        assert(state_->is_ready_);
+        auto ret = state_->result_;
         state_.reset();
-        return state->result_;
+        return ret;
     }
 
     template< class Rep, class Period >
     FutureStatus wait_for(const std::chrono::duration<Rep,Period>& timeout_duration) const {
         auto deadline = std::chrono::system_clock::now() + timeout_duration;
 
-        while(deadline > std::chrono::system_clock::now()) {
-            Lock<Mutex> lock(state_->lock_);
-            if(state_->is_ready_) {
-                break;
+        while(std::chrono::system_clock::now() < deadline) {
+            {
+                Lock<Mutex> lock(state_->lock_);
+                if(state_->is_ready_) {
+                    return FutureStatus::ready;
+                }
             }
-            yield();
+            sleep(0);
         }
 
         Lock<Mutex> lock(state_->lock_);
@@ -127,16 +132,16 @@ public:
 
     Future& operator=(const Future& other) = delete;
 
-    template< class Rep, class Period >
+    template<class Rep, class Period>
     FutureStatus wait_for(const std::chrono::duration<Rep,Period>& timeout_duration) const {
         auto deadline = std::chrono::system_clock::now() + timeout_duration;
 
         while(deadline > std::chrono::system_clock::now()) {
             Lock<Mutex> lock(state_->lock_);
             if(state_->is_ready_) {
-                break;
+                return FutureStatus::ready;
             }
-            yield();
+            sleep(0);
         }
 
         Lock<Mutex> lock(state_->lock_);
@@ -189,34 +194,31 @@ using enable_if_t = typename std::enable_if<B,T>::type;
 namespace simple_Future_detail {
 
 template<typename ResultType, typename Function, typename... Args, enable_if_t<std::is_void<ResultType>::value, int> = 42>
-void call_func(typename Future<ResultType>::FutureState& state, Function&& f, Args&&... args) {
+void call_func(std::shared_ptr<typename Future<ResultType>::FutureState> state, Function&& f, Args&&... args) {
     f(std::forward<Args>(args)...);
-    Lock<Mutex> lock(state.lock_);
-    state.is_ready_ = true;
+    Lock<Mutex> lock(state->lock_);
+    state->is_ready_ = true;
 }
 
 template<typename ResultType, typename Function, typename... Args, enable_if_t<!std::is_void<ResultType>::value, int> = 42>
-void call_func(typename Future<ResultType>::FutureState& state, Function&& f, Args&&... args) {
+void call_func(std::shared_ptr<typename Future<ResultType>::FutureState> state, Function&& f, Args&&... args) {
     ResultType ret = f(std::forward<Args>(args)...);
-    Lock<Mutex> lock(state.lock_);
-    state.result_ = ret;
-    state.is_ready_ = true;
+    Lock<Mutex> lock(state->lock_);
+    state->result_ = ret;
+    state->is_ready_ = true;
 }
 
 }
-
-enum class launch : int {
-    async = 0,
-    deferred = 1
-};
-
 
 template<typename ResultType, typename Function, typename ...Args>
 void processor(std::shared_ptr<typename Future<ResultType>::FutureState> state, Function&& f, Args&&... args) {
     try {
-        simple_Future_detail::call_func<ResultType, Function, Args...>(*state, std::forward<Function>(f), std::forward<Args>(args)...);
+        simple_Future_detail::call_func<ResultType, Function, Args...>(
+            state, std::forward<Function>(f), std::forward<Args>(args)...
+        );
     } catch (std::exception& e) {
         Lock<Mutex> lock(state->lock_);
+        fprintf(stderr, e.what());
         state->is_ready_ = true;
         state->is_failed_ = true;
     }

@@ -7,6 +7,8 @@ namespace thread {
 
 class Mutex {
 public:
+    friend class Condition;
+
     Mutex();
     ~Mutex();
 
@@ -26,6 +28,8 @@ private:
 
 class RecursiveMutex {
 public:
+    friend class Condition;
+
     RecursiveMutex();
     ~RecursiveMutex();
 
@@ -85,16 +89,6 @@ public:
 private:
     Mutex& mutex_;
 };
-
-class Condition {
-public:
-    Condition();
-
-    void wait(ToggleLock<Mutex>& mutex);
-    void notify_one();
-    void notify_all();
-};
-
 
 }
 }

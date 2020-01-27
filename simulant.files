@@ -93,6 +93,8 @@ simulant/renderers/gl2x/vbo_manager.h
 simulant/stage_manager.cpp
 simulant/stage_manager.h
 simulant/threads/atomic.h
+simulant/threads/condition.cpp
+simulant/threads/condition.h
 simulant/threads/future.h
 simulant/threads/mutex.cpp
 simulant/threads/mutex.h

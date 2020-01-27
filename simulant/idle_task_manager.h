@@ -25,6 +25,8 @@
 #include <condition_variable>
 
 #include "threads/mutex.h"
+#include "threads/condition.h"
+
 #include "types.h"
 
 namespace smlt {
