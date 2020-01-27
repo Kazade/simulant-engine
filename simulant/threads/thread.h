@@ -2,6 +2,7 @@
 
 #include <pthread.h>
 #include <cstdint>
+#include <cstdlib>
 #include <stdexcept>
 #include <cstdlib>
 #include <functional>
@@ -9,8 +10,7 @@
 #include <cassert>
 #include <utility>
 
-
-#include "../generic/any/utility.h"  // integer_sequence
+#include "../macros.h"
 
 namespace smlt {
 namespace thread {
@@ -22,10 +22,18 @@ typedef uint32_t ThreadID;
 
 class ThreadSpawnError: public std::runtime_error {
 public:
+#ifdef _arch_dreamcast
+    /* No std::to_string on the DC */
+    ThreadSpawnError(int code):
+        std::runtime_error("Error spawning thread") {
+
+        _S_UNUSED(code);
+    }
+#else
     ThreadSpawnError(int code):
         std::runtime_error("Error spawning thread: " + std::to_string(code)) {
-
     }
+#endif
 };
 
 
@@ -76,7 +84,14 @@ public:
     void detach();
 
     ThreadID id() const {
-        return thread_;
+        /* NOTE: This assumes that pthread_t is implicitly convertible
+         * to an unsigned int without losing information. On the Dreamcast
+         * this is a kthread_t* but pointers are 32 bit, so that's "ok".
+         */
+#ifndef _arch_dreamcast
+        static_assert(std::is_convertible<pthread_t, ThreadID>::value, "pthread_t is not convertible");
+#endif
+        return (ThreadID) thread_;
     }
 
 private:
