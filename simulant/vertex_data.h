@@ -20,8 +20,8 @@
 
 #include <cstdint>
 #include <vector>
-#include "deps/kazsignal/kazsignal.h"
 
+#include "signals/signal.h"
 #include "generic/managed.h"
 #include "generic/uniquely_identifiable.h"
 #include "generic/notifies_destruction.h"

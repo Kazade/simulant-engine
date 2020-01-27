@@ -9,7 +9,7 @@
 #include "unique_id.h"
 
 #include "../logging.h"
-#include "../deps/kazsignal/kazsignal.h"
+#include "../signals/signal.h"
 #include "../macros.h"
 
 namespace smlt {

@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include "deps/kazsignal/kazsignal.h"
+#include "signals/signal.h"
 #include "utils/throttle.h"
 
 namespace smlt {

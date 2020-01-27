@@ -20,11 +20,11 @@
 #define GENERIC_TREE_H
 
 #include <list>
-#include "../deps/kazsignal/kazsignal.h"
+#include "../signals/signal.h"
 
 class GenericTreeNode;
 
-typedef sig::signal<void (GenericTreeNode*, GenericTreeNode*)> ParentChangedSignal;
+typedef smlt::sig::signal<void (GenericTreeNode*, GenericTreeNode*)> ParentChangedSignal;
 
 class GenericTreeNode {
 public:

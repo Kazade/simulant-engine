@@ -23,7 +23,7 @@
 #include <map>
 #include <unordered_map>
 
-#include "../../deps/kazsignal/kazsignal.h"
+#include "../../signals/signal.h"
 #include "../../types.h"
 #include "../../generic/property.h"
 #include "../../generic/managed.h"

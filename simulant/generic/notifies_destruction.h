@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../deps/kazsignal/kazsignal.h"
+#include "../signals/signal.h"
 #include "../logging.h"
 
 namespace smlt {

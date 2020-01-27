@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../generic/managed.h"
-#include "../../deps/kazsignal/kazsignal.h"
+#include "../../signals/signal.h"
 #include "../../types.h"
 
 #include "collider.h"

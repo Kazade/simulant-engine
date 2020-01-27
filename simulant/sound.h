@@ -27,7 +27,7 @@
 #include "generic/managed.h"
 #include "generic/identifiable.h"
 
-#include "deps/kazsignal/kazsignal.h"
+#include "signals/signal.h"
 
 #include "asset.h"
 #include "loadable.h"

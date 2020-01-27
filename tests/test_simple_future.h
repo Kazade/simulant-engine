@@ -2,6 +2,7 @@
 
 
 #include "simulant/threads/future.h"
+#include "simulant/threads/atomic.h"
 
 namespace {
 
@@ -31,7 +32,7 @@ public:
         thread::Future<bool> my_future;
         assert_false(my_future.is_valid());
 
-        std::atomic<bool> running;
+        thread::Atomic<bool> running = {false};
         running = true;
 
         my_future = thread::async([&running]() -> bool {

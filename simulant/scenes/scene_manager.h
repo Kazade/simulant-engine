@@ -27,7 +27,7 @@
 #include "scene.h"
 
 #include "../generic/managed.h"
-#include "../deps/kazsignal/kazsignal.h"
+#include "../signals/signal.h"
 
 namespace smlt {
 
