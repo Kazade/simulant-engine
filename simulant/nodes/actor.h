@@ -22,7 +22,7 @@
 #include "../generic/identifiable.h"
 #include "../generic/managed.h"
 
-#include "../deps/kazsignal/kazsignal.h"
+#include "../signals/signal.h"
 
 #include "stage_node.h"
 #include "../interfaces.h"

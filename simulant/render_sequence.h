@@ -102,7 +102,7 @@ private:
 
     batcher::RenderQueue render_queue_;
 
-    std::mutex pipeline_lock_;
+    thread::Mutex pipeline_lock_;
     std::list<PipelinePtr> ordered_pipelines_;
 
     sig::signal<void (Pipeline&)> signal_pipeline_started_;

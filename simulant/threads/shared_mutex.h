@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "../atomic.h"
+#include "atomic.h"
 
 /*
  * Shoddy implementation of a multi-reader/single-writer lock until
@@ -41,12 +41,13 @@
  */
 
 namespace smlt {
+namespace thread {
 
-class shared_mutex {
+class SharedMutex {
 public:
-    shared_mutex() = default;
-    shared_mutex(const shared_mutex& rhs) = delete;
-    shared_mutex& operator=(const shared_mutex& rhs) = delete;
+    SharedMutex() = default;
+    SharedMutex(const SharedMutex& rhs) = delete;
+    SharedMutex& operator=(const SharedMutex& rhs) = delete;
 
     void lock() {
         global_lock_.lock(); // Writer lock
@@ -57,62 +58,63 @@ public:
     }
 
     void lock_shared() {
-        std::lock_guard<std::mutex> g(read_lock_);
+        thread::Lock<thread::Mutex> g(read_lock_);
         if(++counter_ == 1) {
             global_lock_.lock();
         }
     }
 
     void unlock_shared() {
-        std::lock_guard<std::mutex> g(read_lock_);
+        thread::Lock<thread::Mutex> g(read_lock_);
         if(--counter_ == 0) {
             global_lock_.unlock();
         }
     }
 
 private:
-    atomic<int32_t> counter_ = {0};
-    std::mutex read_lock_;
-    std::mutex global_lock_;
+    Atomic<int32_t> counter_ = {0};
+    thread::Mutex read_lock_;
+    thread::Mutex global_lock_;
 };
 
 template<typename Mutex>
-class write_lock;
+class WriteLock;
 
 template<>
-class write_lock<shared_mutex> {
+class WriteLock<SharedMutex> {
 public:
-    write_lock(shared_mutex& mutex):
+    WriteLock(SharedMutex& mutex):
         mutex_(mutex) {
         mutex_.lock();
     }
 
-    ~write_lock() {
+    ~WriteLock() {
         mutex_.unlock();
     }
 
 private:
-    shared_mutex& mutex_;
+    SharedMutex& mutex_;
 };
 
 template<typename Mutex>
-class read_lock;
+class ReadLock;
 
 template<>
-class read_lock<shared_mutex> {
+class ReadLock<SharedMutex> {
 public:
-    read_lock(shared_mutex& mutex):
+    ReadLock(SharedMutex& mutex):
         mutex_(mutex) {
 
         mutex_.lock_shared();
     }
 
-    ~read_lock() {
+    ~ReadLock() {
         mutex_.unlock_shared();
     }
 
 private:
-    shared_mutex& mutex_;
+    SharedMutex& mutex_;
 };
 
+}
 }

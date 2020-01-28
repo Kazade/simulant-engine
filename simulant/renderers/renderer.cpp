@@ -24,13 +24,13 @@ namespace smlt {
 void Renderer::register_texture(TextureID tex_id, TexturePtr texture) {
     on_texture_register(tex_id, texture);
 
-    write_lock<shared_mutex> lock(texture_registry_mutex_);
+    thread::WriteLock<thread::SharedMutex> lock(texture_registry_mutex_);
     texture_registry_.insert(std::make_pair(tex_id, std::weak_ptr<Texture>(texture)));
 }
 
 void Renderer::unregister_texture(TextureID texture_id, Texture* texture) {
     {
-        write_lock<shared_mutex> lock(texture_registry_mutex_);
+        thread::WriteLock<thread::SharedMutex> lock(texture_registry_mutex_);
         texture_registry_.erase(texture_id);
     }
 
@@ -38,12 +38,12 @@ void Renderer::unregister_texture(TextureID texture_id, Texture* texture) {
 }
 
 bool Renderer::is_texture_registered(TextureID texture_id) const {
-    read_lock<shared_mutex> lock(texture_registry_mutex_);
+    thread::ReadLock<thread::SharedMutex> lock(texture_registry_mutex_);
     return texture_registry_.count(texture_id);
 }
 
 void Renderer::pre_render() {
-    read_lock<shared_mutex> lock(texture_registry_mutex_);
+    thread::ReadLock<thread::SharedMutex> lock(texture_registry_mutex_);
     for(auto wptr: texture_registry_){
         if(auto ptr = wptr.second.lock()) {
             prepare_texture(ptr);

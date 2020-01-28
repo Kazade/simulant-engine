@@ -6,7 +6,7 @@
  - Tutorial: [1. Basic Application](tutorial_1.md)
  - Platforms: [Platform Notes](platform_notes.md)
  - Licensing: [FAQ](license.md)
- - Contributing: [Compile on Fedora](develop_fedora.md)
+ - Contributing: [Compile on Fedora](develop_fedora.md) | [C++ Guidelines](cpp_guidelines.md)
 
 ## Architecture
 
@@ -30,7 +30,7 @@ This section covers the base subsystems and usages of Simulant.
 
  - Scene Management: [The Scene](scene.md) | [Managing Scenes](scene_management.md)
  - Behaviours: [Organisms and Behaviours](behaviours.md)
- - Helpers: [Backgrounds](backgrounds.md)
+ - Helpers: [Backgrounds](backgrounds.md) | [Threads](threading.md)
  - Scripting: [Particle System File Format](particle_system_format.md)
  - Scene Tree: [Stage Nodes](stage_nodes.md) | [Actors](actors.md)
  - Supported File Formats: [Mesh Formats](mesh_formats.md) | [Image Formats](image_formats.md)

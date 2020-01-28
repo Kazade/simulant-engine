@@ -20,7 +20,7 @@
 #define VIRTUAL_GAMEPAD_H
 
 #include <unordered_map>
-#include "deps/kazsignal/kazsignal.h"
+#include "signals/signal.h"
 #include "generic/managed.h"
 #include "generic/property.h"
 #include "types.h"

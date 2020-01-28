@@ -1,10 +1,12 @@
 #pragma once
 
 
-#include "simulant/generic/simple_future.h"
+#include "simulant/threads/future.h"
+#include "simulant/threads/atomic.h"
 
 namespace {
 
+using namespace smlt;
 /*
  * Because of limitations of atomic operations on the Dreamcast std::future
  * from GCC doesn't work, so on this platform we use a custom future-like construct
@@ -22,27 +24,27 @@ public:
     }
 
     void test_get() {
-        auto future = stdX::async([]() -> bool { return true; });
+        auto future = thread::async([]() -> bool { return true; });
         assert_true(future.get());
     }
 
     void test_valid() {
-        stdX::future<bool> my_future;
-        assert_false(my_future.valid());
+        thread::Future<bool> my_future;
+        assert_false(my_future.is_valid());
 
-        std::atomic<bool> running;
+        thread::Atomic<bool> running = {false};
         running = true;
 
-        my_future = stdX::async([&running]() -> bool {
+        my_future = thread::async([&running]() -> bool {
             while(running) {}
             return true;
         });
 
-        assert_true(my_future.valid());
+        assert_true(my_future.is_valid());
         running = false;
         my_future.get();
 
-        assert_false(my_future.valid());
+        assert_false(my_future.is_valid());
     }
 };
 

@@ -62,7 +62,6 @@ simulant/assets/particles/size_manipulator.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
-simulant/generic/atomic.h
 simulant/generic/cow_vector.h
 simulant/generic/manual_manager.h
 simulant/generic/manual_object.cpp
@@ -91,8 +90,19 @@ simulant/platforms/dreamcast/profiler.c
 simulant/platforms/dreamcast/profiler.h
 simulant/renderers/gl2x/vbo_manager.cpp
 simulant/renderers/gl2x/vbo_manager.h
+simulant/signals/ring_buffer.h
+simulant/signals/signal.h
 simulant/stage_manager.cpp
 simulant/stage_manager.h
+simulant/threads/atomic.h
+simulant/threads/condition.cpp
+simulant/threads/condition.h
+simulant/threads/future.h
+simulant/threads/mutex.cpp
+simulant/threads/mutex.h
+simulant/threads/shared_mutex.h
+simulant/threads/thread.cpp
+simulant/threads/thread.h
 simulant/utils/throttle.h
 simulant/vfs.cpp
 simulant/vfs.h
@@ -101,6 +111,7 @@ tests/test_heightmap.h
 tests/test_loose_quadtree.h
 tests/test_manual_manager.h
 tests/test_stage.h
+tests/test_threads.h
 tools/test_generator.py
 .gitlab-ci.yml
 deps/kfs/kfs/realpath.h
@@ -470,7 +481,6 @@ simulant/generic/cloneable.h
 simulant/generic/creator.h
 simulant/generic/data_carrier.h
 simulant/generic/default_init_ptr.h
-simulant/generic/exception_ptr_lite.hpp
 simulant/generic/generic_tree.cpp
 simulant/generic/generic_tree.h
 simulant/generic/identifiable.h
@@ -483,8 +493,6 @@ simulant/generic/manual_manager.h
 simulant/generic/optional.h
 simulant/generic/property.h
 simulant/generic/relation.h
-simulant/generic/simple_apply.h
-simulant/generic/simple_this_thread.h
 simulant/generic/static_if.h
 simulant/generic/threading/shared_mutex.h
 simulant/generic/unique_id.h
@@ -821,7 +829,6 @@ simulant/stage.cpp
 simulant/stage.h
 simulant/stats_recorder.cpp
 simulant/stats_recorder.h
-simulant/std/optional.hpp
 simulant/testing/mock_window.h
 simulant/texture.cpp
 simulant/texture.h
@@ -1487,7 +1494,6 @@ simulant/sound_drivers/openal_sound_driver.h
 simulant/sound_drivers/kos_sound_driver.h
 simulant/sound_drivers/openal_sound_driver.cpp
 simulant/kos_keycodes.h
-simulant/generic/simple_future.h
 tests/test_simple_future.h
 simulant/generic/static_if.h
 simulant/generic/exception_ptr_lite.hpp

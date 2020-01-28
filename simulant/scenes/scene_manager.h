@@ -22,16 +22,12 @@
 #include <unordered_map>
 #include <functional>
 
-#ifdef _arch_dreamcast
-#include "../generic/simple_future.h"
-#else
-#include <future>
-#endif
+#include "../threads/future.h"
 
 #include "scene.h"
 
 #include "../generic/managed.h"
-#include "../deps/kazsignal/kazsignal.h"
+#include "../signals/signal.h"
 
 namespace smlt {
 
@@ -115,11 +111,7 @@ private:
 
     struct BackgroundTask {
         std::string route;
-#ifdef _arch_dreamcast
-        stdX::future<void> future;
-#else
-        std::future<void> future;
-#endif
+        thread::Future<void> future;
     };
 
     sig::connection step_conn_;

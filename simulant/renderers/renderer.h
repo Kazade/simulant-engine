@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "../types.h"
-#include "../generic/threading/shared_mutex.h"
+#include "../threads/shared_mutex.h"
 #include "../macros.h"
 #include "batching/renderable.h"
 #include "batching/render_queue.h"
@@ -127,7 +127,7 @@ private:
         _S_UNUSED(texture);
     }
 
-    mutable shared_mutex texture_registry_mutex_;
+    mutable thread::SharedMutex texture_registry_mutex_;
     std::unordered_map<TextureID, std::weak_ptr<Texture>> texture_registry_;
 };
 

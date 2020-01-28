@@ -3,7 +3,7 @@
 
 #include "../partitioner.h"
 #include "./impl/spatial_hash.h"
-#include "../generic/threading/shared_mutex.h"
+#include "../threads/shared_mutex.h"
 
 namespace smlt {
 
@@ -83,7 +83,7 @@ private:
 
     std::unordered_set<LightID> directional_lights_;
 
-    shared_mutex lock_;
+    thread::SharedMutex lock_;
 };
 
 }

@@ -305,7 +305,7 @@ protected:
     void set_has_context(bool value=true);
 
     bool has_context() const { return has_context_; }
-    std::mutex& context_lock() { return context_lock_; }
+    thread::Mutex& context_lock() { return context_lock_; }
 
     void set_application(Application* app) { application_ = app; }
 
@@ -357,7 +357,7 @@ private:
      *  main thread, then bad things happen. This lock exists so that we don't destroy the context while we are rendering.
      *  We obtain the lock before rendering, and release it after. Likewise we obtain the lock while destroying the context
      *  (we can use has_context to make sure we don't start rendering when there is no context) */
-    std::mutex context_lock_;
+    thread::Mutex context_lock_;
 
     void destroy() {}
 

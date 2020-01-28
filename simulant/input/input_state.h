@@ -29,7 +29,7 @@
 #include "../keycodes.h"
 #include "../types.h"
 
-#include "../deps/kazsignal/kazsignal.h"
+#include "../signals/signal.h"
 #include "../generic/managed.h"
 #include "../generic/identifiable.h"
 #include "../generic/unique_id.h"

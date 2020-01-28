@@ -22,8 +22,6 @@
 #include <cstdint>
 #include <memory>
 #include <list>
-#include <thread>
-#include <future>
 
 #include "arg_parser.h"
 #include "keycodes.h"
@@ -35,7 +33,6 @@
 #include "generic/data_carrier.h"
 #include "scenes/scene_manager.h"
 #include "screen.h"
-
 #include "logging.h"
 
 namespace smlt {

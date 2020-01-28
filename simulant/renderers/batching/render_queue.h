@@ -23,7 +23,7 @@
 #include <map>
 
 #include "../../types.h"
-#include "../../generic/threading/shared_mutex.h"
+#include "../../threads/shared_mutex.h"
 #include "../../generic/vector_pool.h"
 #include "../../macros.h"
 
@@ -203,7 +203,7 @@ private:
 
     void clean_empty_batches();
 
-    mutable std::mutex queue_lock_;
+    mutable thread::Mutex queue_lock_;
 
     VectorPool<RenderGroup, RenderGroup::ID, 128> render_group_pool_;
 };

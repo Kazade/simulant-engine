@@ -112,7 +112,7 @@ protected:
 private:
     Stage* stage_;
 
-    std::mutex staging_lock_;
+    thread::Mutex staging_lock_;
 
     struct WriteSlots {
         StagedWrite slot[WRITE_OPERATION_MAX];

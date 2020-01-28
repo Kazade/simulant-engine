@@ -1,7 +1,7 @@
 #pragma once
 
+#include <chrono>
 #include <string>
-#include <thread>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -9,7 +9,9 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
-#include <mutex>
+
+#include "threads/mutex.h"
+#include "threads/thread.h"
 
 #include "compat.h"
 
@@ -115,7 +117,7 @@ private:
                        const std::string& level,
                        const std::string& message) override;
 
-    std::mutex lock_;
+    thread::Mutex lock_;
 };
 
 class FileHandler : public Handler {
@@ -203,7 +205,7 @@ private:
                        const std::string& file, int32_t line) {
 
         std::stringstream s;
-        s << std::this_thread::get_id() << ": ";
+        s << thread::this_thread_id() << ": ";
         s << text << " (" << file << ":" << Formatter("{0}").format(line) << ")";
         for(uint32_t i = 0; i < handlers_.size(); ++i) {
             handlers_[i]->write_message(this, std::chrono::system_clock::now(), level, s.str());

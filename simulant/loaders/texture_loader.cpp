@@ -35,7 +35,7 @@ namespace smlt {
 namespace loaders {
 
 TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
-    std::lock_guard<std::mutex> g(lock_); // STB isn't entirely thread-safe
+    thread::Lock<thread::Mutex> g(lock_); // STB isn't entirely thread-safe
 
     TextureLoadResult result;
 

@@ -8,7 +8,6 @@
 
 #include <cassert>
 #include <string>
-#include <mutex>
 #include <exception>
 
 #ifndef __clang__

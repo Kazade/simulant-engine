@@ -20,10 +20,12 @@
 #define GL_THREAD_CHECK_H
 
 #include <stdexcept>
-#include <thread>
 #include <memory>
 
+#include "../threads/thread.h"
 #include "../logging.h"
+
+namespace smlt {
 
 class WrongThreadError:
     public std::runtime_error {
@@ -40,7 +42,7 @@ extern std::shared_ptr<GLThreadCheck> GL_thread;
 class GLThreadCheck {
 public:
     static void init() {
-        GL_thread.reset(new GLThreadCheck(std::this_thread::get_id()));
+        GL_thread.reset(new GLThreadCheck(thread::this_thread_id()));
     }
 
     static void clean_up() {
@@ -58,12 +60,12 @@ public:
     }
 
 private:
-    GLThreadCheck(std::thread::id render_thread):
+    GLThreadCheck(thread::ThreadID render_thread):
         render_thread_id_(render_thread) {}
 
     bool do_check(bool raise=true) {
 
-        if(std::this_thread::get_id() != render_thread_id_) {
+        if(thread::this_thread_id() != render_thread_id_) {
             if(raise) {
                 throw WrongThreadError();
             } else {
@@ -75,7 +77,9 @@ private:
     }
 
 
-    std::thread::id render_thread_id_;
+    thread::ThreadID render_thread_id_;
 };
+
+}
 
 #endif // GL_THREAD_CHECK_H

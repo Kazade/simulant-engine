@@ -71,7 +71,7 @@ void KOSWindow::probe_vmus() {
 
     const static int MAX_VMUS = 8;  // Four ports, two slots in each
 
-    std::lock_guard<std::mutex> g(vmu_mutex_);
+    thread::Lock<thread::Mutex> g(vmu_mutex_);
 
     vmu_lookup_.clear();
 
@@ -342,7 +342,7 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
 }
 
 void KOSWindow::render_screen(Screen* screen, const uint8_t* data) {
-    std::lock_guard<std::mutex> g(vmu_mutex_);
+    thread::Lock<thread::Mutex> g(vmu_mutex_);
 
     auto it = vmu_lookup_.find(screen->name());
 

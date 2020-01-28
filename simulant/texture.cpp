@@ -513,12 +513,12 @@ bool Texture::auto_upload() const {
 }
 
 void Texture::_set_renderer_specific_id(const uint32_t id) {
-    std::lock_guard<std::mutex> g(lock_);
+    thread::Lock<thread::Mutex> g(lock_);
     renderer_id_ = id;
 }
 
 uint32_t Texture::_renderer_specific_id() const {
-    std::lock_guard<std::mutex> g(lock_);
+    thread::Lock<thread::Mutex> g(lock_);
     return renderer_id_;
 }
 

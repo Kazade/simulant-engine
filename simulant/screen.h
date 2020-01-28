@@ -1,10 +1,10 @@
 #pragma once
 
-#include <mutex>
 #include <vector>
 
 #include "generic/managed.h"
 #include "generic/data_carrier.h"
+#include "threads/mutex.h"
 
 namespace smlt {
 
@@ -80,7 +80,7 @@ private:
     uint8_t integer_scale_ = 1;
 
     std::vector<uint8_t> buffer_;
-    std::mutex buffer_mutex_;
+    thread::Mutex buffer_mutex_;
 
     friend class Window;
 };

@@ -53,8 +53,6 @@ class SDL2Window :
     #error Currently unsupported platform
 #endif
         }
-
-        void sleep_ms(uint32_t ms) const override;
     };
 
 

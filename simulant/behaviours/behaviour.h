@@ -22,10 +22,7 @@
 #include <vector>
 #include <set>
 #include <memory>
-#include <thread>
-#include <mutex>
 #include <type_traits>
-#include <thread>
 
 #include "../logging.h"
 
@@ -33,6 +30,8 @@
 #include "../generic/managed.h"
 #include "../interfaces/updateable.h"
 #include "../input/input_manager.h"
+
+#include "../threads/mutex.h"
 
 namespace smlt {
 
@@ -131,7 +130,7 @@ public:
 
     template<typename T>
     bool has_behaviour() const {
-        std::lock_guard<std::mutex> lock(container_lock_);
+        thread::Lock<thread::Mutex> lock(container_lock_);
         return behaviour_types_.count(typeid(T).hash_code()) > 0;
     }
 
@@ -140,7 +139,7 @@ public:
         // FIXME: What if the behaviour is removed from another thread?
         // should this return a shared_ptr?
 
-        std::lock_guard<std::mutex> lock(container_lock_);
+        thread::Lock<thread::Mutex> lock(container_lock_);
         auto hash_code = typeid(T).hash_code();
         if(!behaviour_types_.count(hash_code)) {
             return nullptr;
@@ -168,7 +167,7 @@ public:
     }
 
     void fixed_update_behaviours(float step) {
-        std::lock_guard<std::mutex> lock(container_lock_);
+        thread::Lock<thread::Mutex> lock(container_lock_);
 
         for(auto& behaviour: behaviours_) {
             behaviour->_fixed_update_thunk(step);
@@ -176,7 +175,7 @@ public:
     }
 
     void update_behaviours(float dt) {
-        std::lock_guard<std::mutex> lock(container_lock_);
+        thread::Lock<thread::Mutex> lock(container_lock_);
 
         for(auto& behaviour: behaviours_) {
 
@@ -191,7 +190,7 @@ public:
     }
 
     void late_update_behaviours(float dt) {
-        std::lock_guard<std::mutex> lock(container_lock_);
+        thread::Lock<thread::Mutex> lock(container_lock_);
 
         for(auto& behaviour: behaviours_) {
             behaviour->_late_update_thunk(dt);
@@ -209,7 +208,7 @@ private:
         }
 
         {
-            std::lock_guard<std::mutex> lock(container_lock_);
+            thread::Lock<thread::Mutex> lock(container_lock_);
 
             if(behaviour_names_.count(behaviour->name())) {
                 L_WARN(_F("Tried to add a duplicate behaviour: {0}").format((std::string)behaviour->name()));
@@ -226,7 +225,7 @@ private:
         behaviour->set_organism(this);
     }
 
-    mutable std::mutex container_lock_;
+    mutable thread::Mutex container_lock_;
 
     std::vector<BehaviourPtr> behaviours_;
     std::unordered_set<std::string> behaviour_names_;
