@@ -42,7 +42,6 @@ public:
     Future& operator=(Future&& other) {
         Lock<Mutex> guard(state_mutex_);
         state_ = std::move(other.state_);
-        state_mutex_ = std::move(other.state_mutex_);
         return *this;
     }
 
@@ -51,15 +50,19 @@ public:
     T get() {
         wait();
 
-        Lock<Mutex> lock(state_->lock_);
-        Lock<Mutex> guard(state_mutex_);
+        T ret;
 
-        if(state_->is_failed_) {
-            throw PromiseFailedError();
+        {
+            Lock<Mutex> lock(state_->lock_);
+            if(state_->is_failed_) {
+                throw PromiseFailedError();
+            }
+
+            assert(state_->is_ready_);
+            ret = state_->result_;
         }
 
-        assert(state_->is_ready_);
-        auto ret = state_->result_;
+        Lock<Mutex> guard(state_mutex_);
         state_.reset();
         return ret;
     }

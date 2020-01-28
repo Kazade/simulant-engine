@@ -15,7 +15,7 @@ Mutex::Mutex() {
 Mutex::~Mutex() {
     int err = pthread_mutex_destroy(&mutex_);
     _S_UNUSED(err);
-    assert(err);
+    assert(!err);
 }
 
 RecursiveMutex::RecursiveMutex() {
@@ -49,7 +49,7 @@ RecursiveMutex::~RecursiveMutex() {
     err = pthread_mutex_destroy(&mutex_);
 #endif
     _S_UNUSED(err);
-    assert(err != 0);
+    assert(!err);
 }
 
 void RecursiveMutex::lock() {
