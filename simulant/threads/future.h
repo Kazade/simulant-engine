@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdio>
 #include <chrono>
 #include <type_traits>
 #include "thread.h"

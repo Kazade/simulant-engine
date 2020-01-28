@@ -1,4 +1,6 @@
 
+#include <pthread.h>
+
 #ifdef __WIN32__
 #include <windows.h>
 #else
@@ -46,11 +48,16 @@ void sleep(size_t ms) {
 }
 
 void yield() {
+#ifndef _arch_dreamcast
     pthread_yield();
+#else
+    /* Dreamcast pthreads is missing yield */
+    sleep(0);
+#endif
 }
 
 ThreadID this_thread_id() {
-    return pthread_self();
+    return (ThreadID) pthread_self();
 }
 
 }

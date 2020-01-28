@@ -1,9 +1,19 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "pthread.h"
 
 namespace smlt {
 namespace thread {
+
+class MutexInitialisationError:
+    public std::runtime_error {
+
+public:
+    MutexInitialisationError():
+        std::runtime_error("Mutex initialisation failed") {}
+};
 
 class Mutex {
 public:
@@ -35,13 +45,8 @@ public:
 
     RecursiveMutex(const RecursiveMutex&) = delete;
 
-    void lock() {
-        pthread_mutex_lock(&mutex_);
-    }
-
-    void unlock() {
-        pthread_mutex_unlock(&mutex_);
-    }
+    void lock();
+    void unlock();
 private:
     pthread_mutex_t mutex_;
 };
