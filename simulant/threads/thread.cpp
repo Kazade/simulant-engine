@@ -48,11 +48,15 @@ void sleep(size_t ms) {
 }
 
 void yield() {
-#ifndef _arch_dreamcast
-    pthread_yield();
-#else
-    /* Dreamcast pthreads is missing yield */
+#if defined(__WIN32__) || defined(_arch_dreamcast)
+    /*
+     * Dreamcast + Windows pthreads are missing yield.
+     * Massive debates around whether this should be
+     * sleep(0) or no-op. My money's on sleep(0).
+     */
     sleep(0);
+#else
+    pthread_yield();
 #endif
 }
 
