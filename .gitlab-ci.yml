@@ -15,6 +15,15 @@ check:thread-usage:
   script:
     - python3 tools/find_std_thread.py simulant
 
+check:stream-usage:
+  stage: check
+  image: registry.fedoraproject.org/fedora-minimal:28
+  allow_failure: true
+  before_script:
+    - microdnf install -y python3
+  script:
+    - python3 tools/find_std_stream.py simulant
+
 android:
   stage: build
   image: kazade/android-sdk
