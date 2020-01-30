@@ -23,10 +23,10 @@ void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
 }
 
 void to_b3quat(const Quaternion& q, b3Quat& ret) {
-    ret.x = q.x;
-    ret.y = q.y;
-    ret.z = q.z;
-    ret.w = q.w;
+    ret.v.x = q.x;
+    ret.v.y = q.y;
+    ret.v.z = q.z;
+    ret.s = q.w;
 }
 
 void to_vec3(const b3Vec3& rhs, Vec3& ret) {
@@ -42,10 +42,10 @@ void to_mat3(const b3Mat33& rhs, Mat3& out) {
 
 void to_quat(const b3Quat& rhs, Quaternion& out) {
     out = Quaternion(
-        rhs.x,
-        rhs.y,
-        rhs.z,
-        rhs.w
+        rhs.v.x,
+        rhs.v.y,
+        rhs.v.z,
+        rhs.s
     );
 }
 
@@ -201,7 +201,14 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
     to_b3vec3(start, s);
     to_b3vec3(start + direction, d);
 
-    bool hit = scene_->RayCastSingle(&result, s, d);
+    static struct RayCastFilter : public b3RayCastFilter {
+        virtual bool ShouldRayCast(b3Shape* shape) override {
+            _S_UNUSED(shape);
+            return true;
+        }
+    } filter;
+
+    bool hit = scene_->RayCastSingle(&result, &filter, s, d);
 
     float closest = std::numeric_limits<float>::max();
     Vec3 impact_point, closest_normal;
@@ -228,7 +235,13 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
 
     bool is_dynamic = body->is_dynamic();
     def.type = (is_dynamic) ? b3BodyType::e_dynamicBody : b3BodyType::e_staticBody;
-    def.gravityScale = (is_dynamic) ? 1.0 : 0.0;
+
+    float gs = (is_dynamic) ? 1.0 : 0.0;
+
+    def.gravityScale.x = gs;
+    def.gravityScale.y = gs;
+    def.gravityScale.z = gs;
+
     def.userData = this;
 
     // If the body is attached to a stage node then set up the initial rotation
@@ -272,7 +285,10 @@ void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& posit
     b3Vec3 p, a;
     to_b3vec3(position, p);
     to_b3vec3(axis_angle.axis, a);
-    b->SetTransform(p, a, axis_angle.angle.value);
+
+    b3Quat q;
+    q.SetAxisAngle(a, axis_angle.angle.value);
+    b->SetTransform(p, q);
 }
 
 

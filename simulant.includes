@@ -221,3 +221,4 @@ simulant/assets/materials
 simulant/platforms/dreamcast
 simulant/threads
 simulant/signals
+deps/bounce/external/triangle

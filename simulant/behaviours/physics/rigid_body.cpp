@@ -62,7 +62,7 @@ void RigidBody::set_linear_damping(const float d) {
     }
 
     b3Body* b = sim->bodies_.at(this);
-    b->SetLinearDamping(d);
+    b->SetLinearDamping(b3Vec3(d, d, d));
 }
 
 void RigidBody::set_angular_damping(const float d) {
@@ -72,7 +72,7 @@ void RigidBody::set_angular_damping(const float d) {
     }
 
     b3Body* b = sim->bodies_.at(this);
-    b->SetAngularDamping(d);
+    b->SetAngularDamping(b3Vec3(d, d, d));
 }
 
 void RigidBody::add_force(const Vec3 &force) {

@@ -15,7 +15,7 @@ struct b3World;
 struct b3Body;
 struct b3Hull;
 struct b3Mesh;
-struct b3Triangle;
+struct b3MeshTriangle;
 struct b3Vec3;
 struct b3Shape;
 

@@ -31,7 +31,7 @@ void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
 }
 
 void StaticBody::b3MeshGenerator::append_triangle(const utils::Triangle& src) {
-    b3Triangle tri;
+    b3MeshTriangle tri;
     tri.v1 = src.idx[0];
     tri.v2 = src.idx[1];
     tri.v3 = src.idx[2];

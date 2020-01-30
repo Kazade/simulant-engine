@@ -1,3 +1,5 @@
+deps/bounce/external/triangle/triangle.c
+deps/bounce/include/bounce/collision/shapes/aabb3.h
 deps/libAL/AL/aldc.c
 deps/libAL/AL/alut.c
 deps/libAL/AL/mojoal.c
