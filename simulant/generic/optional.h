@@ -15,7 +15,12 @@ public:
 
     template<typename U>
     optional(optional<U>&& other) {
-        set_value(std::move(*other.value_ptr()));
+        auto src = other.value_ptr();
+        if(src) {
+            set_value(std::move(*src));
+        } else {
+            reset();
+        }
     }
 
     optional(T&& value) {
