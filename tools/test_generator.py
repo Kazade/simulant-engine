@@ -35,13 +35,19 @@ int main(int argc, char* argv[]) {
     auto runner = std::make_shared<smlt::test::TestRunner>();
 
     std::string test_case;
-    if(argc > 1) {
+    printf(argv[1]);
+    if(argc > 1 && argv[1] != std::string("*")) {
         test_case = argv[1];
+    }
+
+    std::string junit_xml;
+    if(argc > 2) {
+        junit_xml = argv[2];
     }
 
     %(registrations)s
 
-    return runner->run(test_case);
+    return runner->run(test_case, junit_xml);
 }
 
 

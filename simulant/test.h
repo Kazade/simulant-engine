@@ -300,7 +300,7 @@ public:
         }
     }
 
-    int32_t run(const std::string& test_case) {
+    int32_t run(const std::string& test_case, const std::string& junit_output="") {
         int failed = 0;
         int skipped = 0;
         int ran = 0;
@@ -323,8 +323,26 @@ public:
 
         std::cout << std::endl << "Running " << new_tests.size() << " tests" << std::endl << std::endl;
 
+        std::vector<std::string> junit_lines;
+        junit_lines.push_back("<testsuites>\n");
+
+        std::string klass = "";
+
         for(std::function<void ()> test: new_tests) {
+            std::string name = new_names[ran];
+            std::string this_klass(name.begin(), name.begin() + name.find_first_of(":"));
+            bool close_klass = ran == (int) new_tests.size() - 1;
+
+            if(this_klass != klass) {
+                if(!klass.empty()) {
+                    junit_lines.push_back("  </testsuite>\n");
+                }
+                klass = this_klass;
+                junit_lines.push_back("  <testsuite name=\"" + this_klass + "\">\n");
+            }
+
             try {
+                junit_lines.push_back("    <testcase name=\"" + new_names[ran] + "\">\n");
                 std::string output = "    " + new_names[ran];
 
                 for(int i = output.length(); i < 76; ++i) {
@@ -334,12 +352,15 @@ public:
                 std::cout << output;
                 test();
                 std::cout << "\033[32m" << "   OK   " << "\033[0m" << std::endl;
+                junit_lines.push_back("    </testcase>\n");
             } catch(test::NotImplementedError& e) {
                 std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
                 ++skipped;
-        } catch(test::SkippedTestError& e) {
+                junit_lines.push_back("    </testcase>\n");
+            } catch(test::SkippedTestError& e) {
                 std::cout << "\033[34m" << " SKIPPED" << "\033[0m" << std::endl;
                 ++skipped;
+                junit_lines.push_back("    </testcase>\n");
             } catch(test::AssertionError& e) {
                 std::cout << "\033[33m" << " FAILED " << "\033[0m" << std::endl;
                 std::cout << "        " << e.what() << std::endl;
@@ -348,11 +369,11 @@ public:
 
                     std::ifstream ifs(e.file);
                     if(ifs.good()) {
-            std::string buffer;
-            std::vector<std::string> lines;
-            while(std::getline(ifs, buffer)) {
+                        std::string buffer;
+                        std::vector<std::string> lines;
+                        while(std::getline(ifs, buffer)) {
                             lines.push_back(buffer);
-            }
+                        }
 
                         int line_count = lines.size();
                         if(line_count && e.line <= line_count) {
@@ -361,13 +382,36 @@ public:
                     }
                 }
                 ++failed;
+
+                junit_lines.push_back("      <failure message=\"" + std::string(e.what()) + "\"/>\n");
+                junit_lines.push_back("    </testcase>\n");
             } catch(std::exception& e) {
                 std::cout << "\033[31m" << " EXCEPT " << std::endl;
                 std::cout << "        " << e.what() << "\033[0m" << std::endl;
                 ++crashed;
+
+                junit_lines.push_back("      <failure message=\"" + std::string(e.what()) + "\"/>\n");
+                junit_lines.push_back("    </testcase>\n");
             }
             std::cout << "\033[0m";
             ++ran;
+
+            if(close_klass) {
+                junit_lines.push_back("  </testsuite>\n");
+            }
+        }
+
+        junit_lines.push_back("</testsuites>\n");
+
+        if(!junit_output.empty()) {
+            FILE* f = fopen(junit_output.c_str(), "wt");
+            if(f) {
+                for(auto& line: junit_lines) {
+                    fwrite(line.c_str(), sizeof(char), line.length(), f);
+                }
+            }
+
+            fclose(f);
         }
 
         std::cout << "-----------------------" << std::endl;
