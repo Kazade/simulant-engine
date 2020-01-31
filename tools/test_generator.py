@@ -26,22 +26,61 @@ MAIN_TEMPLATE = """
 
 #include <functional>
 #include <memory>
+#include <map>
 
 #include "simulant/test.h"
 
 %(includes)s
 
+
+std::map<std::string, std::string> parse_args(int argc, char* argv[]) {
+    std::map<std::string, std::string> ret;
+
+    for(int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        auto eq = arg.find('=');
+        if(eq != std::string::npos && arg[0] == '-' && arg[1] == '-') {
+            auto key = std::string(arg.begin(), arg.begin() + eq);
+            auto value = std::string(arg.begin() + eq + 1, arg.end());
+            ret[key] = value;
+        } else if(arg[0] == '-' && arg[1] == '-') {
+            auto key = arg;
+            if(i < (argc - 1)) {
+                auto value = argv[++i];
+                ret[key] = value;
+            } else {
+                ret[key] = "";
+            }
+        } else {
+            ret[arg] = "";  // Positional, not key=value
+        }
+    }
+
+    return ret;
+}
+
 int main(int argc, char* argv[]) {
     auto runner = std::make_shared<smlt::test::TestRunner>();
 
+    auto args = parse_args(argc, argv);
+
+    std::string junit_xml;
+    auto junit_xml_it = args.find("--junit-xml");
+    if(junit_xml_it != args.end()) {
+        junit_xml = junit_xml_it->second;
+        std::cout << "    Outputting junit XML to: " << junit_xml << std::endl;
+        args.erase(junit_xml_it);
+    }
+
     std::string test_case;
-    if(argc > 1) {
-        test_case = argv[1];
+    if(args.size()) {
+        test_case = args.begin()->first;
     }
 
     %(registrations)s
 
-    return runner->run(test_case);
+    return runner->run(test_case, junit_xml);
 }
 
 
