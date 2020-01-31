@@ -120,7 +120,7 @@ test:windows-x64-mingw:
    - cd ${TARGET}/debug/tests
    - ln -s ../simulant
    - ln -s ../sample_data
-   - wine simulant_tests.exe * report.xml
+   - wine simulant_tests.exe --junit-xml=report.xml
   artifacts:
    reports:
     junit: report.xml
@@ -227,7 +227,7 @@ test:linux-x64-gcc:
   script:
    - cd ${TARGET}/debug
    - export SIMULANT_SOUND_DRIVER=null
-   - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests * report.xml
+   - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
   artifacts:
    reports:
       junit: report.xml
