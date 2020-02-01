@@ -62,6 +62,7 @@ simulant/assets/particles/size_manipulator.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
+simulant/generic/containers/contiguous_map.h
 simulant/generic/cow_vector.h
 simulant/generic/manual_manager.h
 simulant/generic/manual_object.cpp
@@ -106,6 +107,7 @@ simulant/threads/thread.h
 simulant/utils/throttle.h
 simulant/vfs.cpp
 simulant/vfs.h
+tests/test_contiguous_map.h
 tests/test_cow_vector.h
 tests/test_heightmap.h
 tests/test_loose_quadtree.h
