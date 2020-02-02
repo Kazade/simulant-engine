@@ -14,6 +14,8 @@
 
 
 #include <vector>
+#include <stack>
+#include <utility>
 #include <cstdint>
 #include <cassert>
 #include <stdexcept>
@@ -25,10 +27,9 @@ namespace _contiguous_map {
 template<typename K, typename V>
 struct NodeMeta {
     NodeMeta(const K& key, const V& value):
-        key(key), value(value) {}
+        pair(std::make_pair(key, value)) {}
 
-    K key;
-    V value;
+    std::pair<const K, V> pair;
 
     int32_t left_index_ = -1;
     int32_t right_index_ = -1;
@@ -42,6 +43,94 @@ class ContiguousMap {
 public:
     typedef K key_type;
     typedef V value_type;
+
+    class iterator {
+    private:
+        iterator(ContiguousMap<K, V>& map, bool is_end=false):
+            map_(map),
+            is_end_(is_end) {
+
+            if(!is_end_) {
+                prev_nodes_.push(-1);
+                current_node_ = map.root_index_;
+
+                if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
+                    ++(*this);
+                }
+            } else {
+                current_node_ = -1;
+            }
+        }
+
+        inline typename ContiguousMap<K, V>::node_type* _node(int32_t index) const {
+            assert(index > -1);
+            return &map_.nodes_[index];
+        }
+
+        int32_t _next(int32_t index) {
+            auto start = _node(index);
+            if(start->left_index_ > -1) {
+                prev_nodes_.push(index);
+                return _next(start->left_index_);
+            } else {
+                return index;
+            }
+        }
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = std::pair<const K, V>;
+        using difference_type = uint32_t;
+        using pointer = std::pair<const K, V>*;
+        using reference = std::pair<const K, V>&;
+
+        iterator& operator++() {
+            if(current_node_ < 0) return *this; // Do nothing
+
+            auto current = _node(current_node_);
+            if(current->left_index_ > -1 && prev_nodes_.top() != current_node_) {
+                prev_nodes_.push(current_node_);
+                current_node_ = _next(current->left_index_);
+            } else {
+                if(current_node_ == prev_nodes_.top()) {
+                    prev_nodes_.pop();
+                }
+
+                if(current->right_index_ > -1) {
+                    current_node_ = _next(current->right_index_);
+                } else {
+                    current_node_ = prev_nodes_.top();
+                }
+            }
+
+            return *this;
+        }
+
+        bool operator==(const iterator& other) const {
+            return  (
+                &map_ == &other.map_ &&
+                current_node_ == other.current_node_
+            );
+        }
+
+        bool operator!=(const iterator& other) const {
+            return (
+                &map_ != &other.map_ ||
+                current_node_ != other.current_node_
+            );
+        }
+
+        reference operator*() const {
+            return _node(current_node_)->pair;
+        }
+
+    private:
+        ContiguousMap<K, V>& map_;
+        bool is_end_ = false;
+
+        int32_t current_node_;
+        std::stack<int32_t> prev_nodes_;
+    };
 
     ContiguousMap() = default;
 
@@ -85,7 +174,15 @@ public:
         if(!node) {
             throw std::out_of_range("Key not found");
         }
-        return node->value;
+        return node->pair.second;
+    }
+
+    iterator begin() {
+        return iterator(*this);
+    }
+
+    iterator end() {
+        return iterator(*this, true);
     }
 
 private:
@@ -97,9 +194,9 @@ private:
         const node_type* current = &nodes_[root_index_];
 
         while(current) {
-            if(current->key == key) {
+            if(current->pair.first == key) {
                 return current;
-            } else if(less_(key, current->key)) {
+            } else if(less_(key, current->pair.first)) {
                 if(current->left_index_ != -1) {
                     current = &nodes_[current->left_index_];
                 } else {
@@ -137,7 +234,7 @@ private:
         assert(root_index > -1);
 
         node_type* root = &nodes_[root_index];
-        if(less_(key, root->key)) {
+        if(less_(key, root->pair.first)) {
             if(root->left_index_ == -1) {
                 auto new_idx = new_node(std::move(key), std::move(value));
                 /* The insert could have invalidated the root pointer */
@@ -151,9 +248,9 @@ private:
             }
         } else {
             if(root->right_index_ == -1) {
-                if(root->key == key) {
+                if(root->pair.first == key) {
                     if(overwrite) {
-                        root->value = std::move(value);
+                        root->pair.second = std::move(value);
                         return true;
                     } else {
                         return false;

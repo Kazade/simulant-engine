@@ -44,6 +44,25 @@ public:
             std::bind(&ContiguousMap<std::string, int>::at, &map, "third")
         );
     }
+
+    void test_iteration() {
+        ContiguousMap<int, std::string> map;
+
+        map.insert(3, "three");
+        map.insert(2, "two");
+        map.insert(4, "four");
+        map.insert(1, "one");
+
+        std::vector<int> keys;
+        for(auto& p: map) {
+            keys.push_back(p.first);
+        }
+
+        assert_equal(keys[0], 1);
+        assert_equal(keys[1], 2);
+        assert_equal(keys[2], 3);
+        assert_equal(keys[3], 4);
+    }
 };
 
 }
