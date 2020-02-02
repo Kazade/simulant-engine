@@ -285,9 +285,7 @@ static bool write_samples(const char* path) {
     root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
-            printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
             bins[(root->pc - lowest_address) / bin_size]++;
-            printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
 
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
