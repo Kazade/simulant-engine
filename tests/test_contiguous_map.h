@@ -11,11 +11,63 @@ using namespace smlt;
 
 class ContiguousMultiMapTest : public smlt::test::SimulantTestCase {
 public:
+
+    template<typename F, typename... Args>
+    float time_execution(uint32_t iterations, const F& function, Args&& ...args) {
+        auto start = std::chrono::high_resolution_clock::now();
+        auto i = iterations;
+        while(i--) {
+            function(std::forward<Args>(args)...);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<float, std::milli> diff = end - start;
+        return diff.count();
+    }
+
+    void test_performance() {
+        ContiguousMultiMap<int, int> CMMap;
+        std::multimap<int, int> MMap;
+
+        auto f1 = [&CMMap]() {
+            for(int i = 0; i < 10; ++i) {
+                CMMap.insert(i, i);
+            }
+
+            CMMap.clear();
+        };
+
+        auto f2 = [&MMap]() {
+            for(int i = 0; i < 10; ++i) {
+                MMap.insert(std::make_pair(i, i));
+            }
+
+            MMap.clear();
+        };
+
+        float perf1 = time_execution(10000, f1);
+        float perf2 = time_execution(10000, f2);
+
+        assert_true(perf1 < perf2);
+    }
+
     void test_construction() {
         ContiguousMultiMap<std::string, int> map(5);
 
         assert_true(map.empty());
         assert_false(map.size());
+    }
+
+    void test_upper_bound() {
+        ContiguousMultiMap<std::string, int> map;
+
+        map.insert("00000", 0);
+        map.insert("00001", 1);
+        map.insert("00001", 1);
+        map.insert("00001", 1);
+        map.insert("00002", 2);
+
+        assert_equal(map.upper_bound("00001")->second, 2);
     }
 
     void test_insertion() {

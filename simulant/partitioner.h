@@ -22,6 +22,7 @@
 #include <stack>
 #include <memory>
 #include <set>
+#include <map>
 #include <vector>
 
 #include "generic/property.h"

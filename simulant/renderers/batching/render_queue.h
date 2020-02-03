@@ -20,7 +20,8 @@
 
 #include <list>
 #include <set>
-#include <map>
+
+#include "../../generic/containers/contiguous_map.h"
 
 #include "../../types.h"
 #include "../../threads/shared_mutex.h"
@@ -192,7 +193,7 @@ private:
         }
     };
 
-    typedef std::multimap<RenderGroup*, std::size_t, Compare> SortedRenderables;
+    typedef ContiguousMultiMap<RenderGroup*, std::size_t, Compare> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;

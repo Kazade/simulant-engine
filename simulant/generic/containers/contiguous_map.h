@@ -46,15 +46,29 @@ public:
 
     class iterator_base {
     protected:
-        iterator_base(ContiguousMultiMap<K, V>& map, bool is_end=false):
-            map_(map),
-            is_end_(is_end) {
+        /* This is the equivalent of begin */
+        iterator_base(ContiguousMultiMap* map):
+            map_(map) {
 
-            if(!is_end_) {
+            prev_nodes_.push(-1);
+            current_node_ = map->root_index_;
+
+            if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
+                increment();
+            }
+        }
+
+        /* Passing -1 means end(), anything else points to the specified node */
+        iterator_base(ContiguousMultiMap* map, int32_t index):
+            map_(map) {
+
+            if(index != -1) {
                 prev_nodes_.push(-1);
-                current_node_ = map.root_index_;
+                current_node_ = map->root_index_;
 
-                if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
+                /* FIXME: There must be a faster way to do this */
+                auto compare_node = _node(index);
+                while(current_node_ > -1 && _node(current_node_) != compare_node) {
                     increment();
                 }
             } else {
@@ -62,17 +76,11 @@ public:
             }
         }
 
-        iterator_base(ContiguousMultiMap<K, V>& map, int32_t index):
-            map_(map) {
+        iterator_base(const iterator_base& other) = default;
 
+        inline typename ContiguousMultiMap::node_type* _node(int32_t index) const {
             assert(index > -1);
-            prev_nodes_.push(-1);
-            current_node_ = index;
-        }
-
-        inline typename ContiguousMultiMap<K, V>::node_type* _node(int32_t index) const {
-            assert(index > -1);
-            return &map_.nodes_[index];
+            return &map_->nodes_[index];
         }
 
         int32_t _next(int32_t index) {
@@ -107,7 +115,7 @@ public:
 
         bool is_equal(const iterator_base& other) const {
             return (
-                &map_ == &other.map_ &&
+                map_ == other.map_ &&
                 current_node_ == other.current_node_
             );
         }
@@ -115,18 +123,17 @@ public:
         int32_t current_node_ = -1;
 
     private:
-        ContiguousMultiMap<K, V>& map_;
-        bool is_end_ = false;
+        ContiguousMultiMap* map_ = nullptr;
 
         std::stack<int32_t> prev_nodes_;
     };
 
     class iterator : private iterator_base {
     private:
-        iterator(ContiguousMultiMap<K, V>& map, bool is_end=false):
-            iterator_base(map, is_end) {}
+        iterator(ContiguousMultiMap* map):
+            iterator_base(map) {}
 
-        iterator(ContiguousMultiMap<K, V>& map, int32_t index):
+        iterator(ContiguousMultiMap* map, int32_t index):
             iterator_base(map, index) {}
 
     public:
@@ -135,6 +142,10 @@ public:
         using difference_type = uint32_t;
         using pointer = std::pair<const K, V>*;
         using reference = std::pair<const K, V>&;
+
+        iterator(const iterator& other) = default;
+        iterator& operator=(const iterator&) = default;
+        iterator& operator=(iterator&&) = default;
 
         iterator& operator++() {
             this->increment();
@@ -152,22 +163,33 @@ public:
         reference operator*() const {
             return this->_node(this->current_node_)->pair;
         }
+
+        pointer operator->() const {
+            return &this->_node(this->current_node_)->pair;
+        }
     };
 
     class const_iterator : private iterator_base {
     private:
-        const_iterator(ContiguousMultiMap<K, V>& map, bool is_end=false):
-            iterator_base(map, is_end) {}
+        friend class ContiguousMultiMap;
 
-        const_iterator(ContiguousMultiMap<K, V>& map, int32_t index):
+        const_iterator(ContiguousMultiMap* map):
+            iterator_base(map) {}
+
+        const_iterator(ContiguousMultiMap* map, int32_t index):
             iterator_base(map, index) {}
 
     public:
+
         using iterator_category = std::forward_iterator_tag;
         using value_type = std::pair<const K, V>;
         using difference_type = uint32_t;
         using pointer = const std::pair<const K, V>*;
         using reference = const std::pair<const K, V>&;
+
+        const_iterator(const const_iterator& other) = default;
+        const_iterator& operator=(const const_iterator&) = default;
+        const_iterator& operator=(const_iterator&&) = default;
 
         const_iterator& operator++() {
             this->increment();
@@ -184,6 +206,10 @@ public:
 
         reference operator*() const {
             return this->_node(this->current_node_)->pair;
+        }
+
+        pointer operator->() const {
+            return &this->_node(this->current_node_)->pair;
         }
     };
 
@@ -229,7 +255,7 @@ public:
         if(index == -1) {
             return end();
         }
-        return iterator(*this, index);
+        return iterator(this, index);
     }
 
     const_iterator find(const K &key) const {
@@ -239,30 +265,44 @@ public:
         }
 
         return const_iterator(
-            const_cast<ContiguousMultiMap&>(*this),
+            const_cast<ContiguousMultiMap*>(this),
             index
         );
     }
 
+    const_iterator upper_bound(const K& key) const {
+        auto it = find(key);
+
+        while(it != end() && it->first == key) {
+            ++it;
+        }
+
+        return it;
+    }
+
     iterator begin() {
-        return iterator(*this);
+        return iterator(this);
     }
 
     iterator end() {
-        return iterator(*this, true);
+        return iterator(this, -1);
     }
 
     const_iterator begin() const {
-        return const_iterator(*this);
+        return const_iterator(
+            const_cast<ContiguousMultiMap*>(this)
+        );
     }
 
     const_iterator end() const {
         return const_iterator(
-            const_cast<ContiguousMultiMap&>(*this),
-            true
+            const_cast<ContiguousMultiMap*>(this),
+            -1
         );
     }
 private:
+    friend class iterator_base;
+
     typedef _contiguous_map::NodeMeta<K, V> node_type;
 
     int32_t _find(const K& key) const {
