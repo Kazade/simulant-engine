@@ -238,6 +238,7 @@ public:
 
     void clear() {
         nodes_.clear();
+        root_index_ = -1;
     }
 
     void shrink_to_fit() {
@@ -359,7 +360,21 @@ private:
         assert(root_index > -1);
 
         node_type* root = &nodes_[root_index];
-        if(less_(key, root->pair.first)) {
+
+        // FIXME: Should be equivalence?
+        if(key == root->pair.first) {
+            /* If we're equal, we can add to either tree directly, we don't need
+             * to search to the end. Let's go right */
+            auto new_idx = new_node(std::move(key), std::move(value));
+            root = &nodes_[root_index];
+            if(root->right_index_ != -1) {
+                // Copy the sibling to the new node if it already pointed
+                // somewhere
+                nodes_[new_idx].left_index_ = root->right_index_;
+            }
+            root->right_index_ = new_idx;
+            return true;
+        } else if(less_(key, root->pair.first)) {
             if(root->left_index_ == -1) {
                 auto new_idx = new_node(std::move(key), std::move(value));
                 /* The insert could have invalidated the root pointer */

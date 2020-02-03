@@ -51,6 +51,29 @@ public:
         assert_true(perf1 < perf2);
     }
 
+    void test_insertion_performance() {
+        ContiguousMultiMap<int, int> CMMap;
+        std::multimap<int, int> MMap;
+
+        auto f1 = [&CMMap]() {
+            for(int i = 0; i < 100; ++i) {
+                CMMap.insert(i, i);
+            }
+        };
+
+        auto f2 = [&MMap]() {
+            for(int i = 0; i < 100; ++i) {
+                MMap.insert(std::make_pair(i, i));
+            }
+        };
+
+        float perf1 = time_execution(1000, f1);
+        float perf2 = time_execution(1000, f2);
+
+        /* FIXME: We should be faster! */
+        assert_close(perf1, perf2, 25.0f);
+    }
+
     void test_construction() {
         ContiguousMultiMap<std::string, int> map(5);
 
