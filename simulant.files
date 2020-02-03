@@ -760,8 +760,6 @@ simulant/procedural/mesh/sphere.h
 simulant/procedural/texture.h
 simulant/procedural/texture/starfield.cpp
 simulant/procedural/texture/starfield.h
-simulant/profiler.cpp
-simulant/profiler.h
 simulant/random.cpp
 simulant/random.cpp
 simulant/random.h
