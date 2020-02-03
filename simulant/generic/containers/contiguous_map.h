@@ -137,6 +137,8 @@ public:
             iterator_base(map, index) {}
 
     public:
+        friend class ContiguousMultiMap;
+
         using iterator_category = std::forward_iterator_tag;
         using value_type = std::pair<const K, V>;
         using difference_type = uint32_t;
@@ -285,7 +287,7 @@ public:
     }
 
     iterator end() {
-        return iterator(this, -1);
+        return end_;
     }
 
     const_iterator begin() const {
@@ -295,15 +297,17 @@ public:
     }
 
     const_iterator end() const {
-        return const_iterator(
-            const_cast<ContiguousMultiMap*>(this),
-            -1
-        );
+        return cend_;
     }
 private:
     friend class iterator_base;
 
     typedef _contiguous_map::NodeMeta<K, V> node_type;
+
+    iterator end_ = iterator(this, -1);
+    const_iterator cend_ = const_iterator(
+        const_cast<ContiguousMultiMap*>(this), -1
+    );
 
     int32_t _find(const K& key) const {
         if(root_index_ == -1) return -1;
@@ -345,9 +349,10 @@ private:
         }
     }
 
-    int32_t new_node(K&& key, V&& value) {
+    inline int32_t new_node(K&& key, V&& value) {
+        auto ret = nodes_.size();
         nodes_.push_back(node_type(key, value));
-        return nodes_.size() - 1;
+        return ret;
     }
 
     bool _insert_recurse(int32_t root_index, K&& key, V&& value) {
