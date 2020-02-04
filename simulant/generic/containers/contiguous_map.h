@@ -31,6 +31,7 @@ struct NodeMeta {
 
     std::pair<const K, V> pair;
 
+    int32_t parent_index_ = -1;
     int32_t left_index_ = -1;
     int32_t right_index_ = -1;
 };
@@ -341,7 +342,7 @@ private:
 
     bool _insert(K&& key, V&& value) {
         if(root_index_ == -1) {
-            root_index_ = new_node(std::move(key), std::move(value));
+            root_index_ = new_node(-1, std::move(key), std::move(value));
             return true;
         } else {
             return _insert_recurse(
@@ -350,9 +351,10 @@ private:
         }
     }
 
-    inline int32_t new_node(K&& key, V&& value) {
+    inline int32_t new_node(int32_t parent_index, K&& key, V&& value) {
         auto ret = nodes_.size();
         nodes_.push_back(node_type(key, value));
+        nodes_.back().parent_index_ = parent_index;
         return ret;
     }
 
@@ -365,7 +367,7 @@ private:
         if(key == root->pair.first) {
             /* If we're equal, we can add to either tree directly, we don't need
              * to search to the end. Let's go right */
-            auto new_idx = new_node(std::move(key), std::move(value));
+            auto new_idx = new_node(root_index, std::move(key), std::move(value));
             root = &nodes_[root_index];
             if(root->right_index_ != -1) {
                 // Copy the sibling to the new node if it already pointed
@@ -376,7 +378,7 @@ private:
             return true;
         } else if(less_(key, root->pair.first)) {
             if(root->left_index_ == -1) {
-                auto new_idx = new_node(std::move(key), std::move(value));
+                auto new_idx = new_node(root_index, std::move(key), std::move(value));
                 /* The insert could have invalidated the root pointer */
                 root = &nodes_[root_index];
                 root->left_index_ = new_idx;
@@ -388,7 +390,7 @@ private:
             }
         } else {
             if(root->right_index_ == -1) {
-                auto new_idx = new_node(std::move(key), std::move(value));
+                auto new_idx = new_node(root_index, std::move(key), std::move(value));
                 /* The insert could have invalidated the root pointer */
                 root = &nodes_[root_index];
                 root->right_index_ = new_idx;
