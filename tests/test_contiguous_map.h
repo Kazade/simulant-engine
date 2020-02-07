@@ -74,6 +74,68 @@ public:
         assert_close(perf1, perf2, 25.0f);
     }
 
+    void test_complex_insertion() {
+        ContiguousMultiMap<int, int> map;
+
+        map.insert(2, 2);
+        assert_equal(map.path_key(""), 2);
+
+        map.insert(1, 1);
+        assert_equal(map.path_key(""), 2);
+        assert_equal(map.path_key("L"), 1);
+
+        map.insert(4, 4);
+
+        assert_equal(map.path_key(""), 2);
+        assert_equal(map.path_key("L"), 1);
+        assert_equal(map.path_key("R"), 4);
+
+        map.insert(5, 5);
+
+        assert_equal(map.path_key(""), 2);
+        assert_equal(map.path_key("L"), 1);
+        assert_equal(map.path_key("R"), 4);
+        assert_equal(map.path_key("RR"), 5);
+
+        map.insert(9, 9);
+
+        assert_equal(map.path_key(""), 2);
+        assert_equal(map.path_key("L"), 1);
+        assert_equal(map.path_key("R"), 5);
+        assert_equal(map.path_key("RL"), 4);
+        assert_equal(map.path_key("RR"), 9);
+
+        map.insert(3, 3);
+
+        assert_equal(map.path_key(""), 2);
+        assert_equal(map.path_key("L"), 1);
+        assert_equal(map.path_key("R"), 5);
+        assert_equal(map.path_key("RL"), 4);
+        assert_equal(map.path_key("RR"), 9);
+        assert_equal(map.path_key("RLL"), 3);
+
+        map.insert(6, 6);
+
+        assert_equal(map.path_key(""), 2);
+        assert_equal(map.path_key("L"), 1);
+        assert_equal(map.path_key("R"), 5);
+        assert_equal(map.path_key("RL"), 4);
+        assert_equal(map.path_key("RR"), 9);
+        assert_equal(map.path_key("RLL"), 3);
+        assert_equal(map.path_key("RRL"), 6);
+
+        map.insert(7, 7);
+
+        assert_equal(map.path_key(""), 2);
+        assert_equal(map.path_key("L"), 1);
+        assert_equal(map.path_key("R"), 5);
+        assert_equal(map.path_key("RL"), 4);
+        assert_equal(map.path_key("RR"), 7);
+        assert_equal(map.path_key("RLL"), 3);
+        assert_equal(map.path_key("RRL"), 6);
+        assert_equal(map.path_key("RRR"), 9);
+    }
+
     void test_construction() {
         ContiguousMultiMap<std::string, int> map(5);
 
