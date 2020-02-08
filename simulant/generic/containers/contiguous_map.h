@@ -569,6 +569,8 @@ private:
             /* We're inserting a duplicate, so we use the equal_index_ */
 
             auto new_idx = new_node(-1, std::move(key), std::move(value));
+            root = &nodes_[root_index]; // new_node could realloc
+
             auto dupe_node = &nodes_[new_idx];
 
             dupe_node->equal_index_ = root->equal_index_;
