@@ -32,6 +32,11 @@ struct NodeMeta {
     std::pair<const K, V> pair;
 
     bool is_black = false;
+
+    /* If this is not -1, then this is the start
+     * of a linked list of equal values */
+    int32_t equal_index_ = -1;
+
     int32_t parent_index_ = -1;
     int32_t left_index_ = -1;
     int32_t right_index_ = -1;
@@ -512,6 +517,8 @@ private:
             nodes_.back().is_black = true;
             return true;
         } else {
+            /* Returns new index, and whether or not the
+             * parent is a black node */
             auto p = _insert_recurse(
                 root_index_, std::move(key), std::move(value)
             );
@@ -543,7 +550,7 @@ private:
     }
 
     inline int32_t new_node(int32_t parent_index, K&& key, V&& value) {
-        auto ret = nodes_.size();
+        auto ret = (int32_t) nodes_.size();
         nodes_.push_back(node_type(key, value));
         nodes_.back().parent_index_ = parent_index;
         return ret;
@@ -555,20 +562,23 @@ private:
 
         node_type* root = &nodes_[root_index];
 
-        // FIXME: Should be equivalence?
+        // FIXME: Should be equivalence? That will incur a performance
+        // hit though :thinking_face:
         if(key == root->pair.first) {
-            /* If we're equal, we can add to either tree directly, we don't need
-             * to search to the end. Let's go right */
-            auto new_idx = new_node(root_index, std::move(key), std::move(value));
-            root = &nodes_[root_index];
-            if(root->right_index_ != -1) {
-                // Copy the sibling to the new node if it already pointed
-                // somewhere
-                nodes_[new_idx].left_index_ = root->right_index_;
-            }
-            root->right_index_ = new_idx;
 
-            return std::make_pair(new_idx, root->is_black);
+            /* We're inserting a duplicate, so we use the equal_index_ */
+
+            auto new_idx = new_node(-1, std::move(key), std::move(value));
+            auto dupe_node = &nodes_[new_idx];
+
+            dupe_node->equal_index_ = root->equal_index_;
+            root->equal_index_ = new_idx;
+
+            /* We return the new node index, and we say the parent
+             * is black (because this node was added to a linked list
+             * not the tree itself and we don't want any recursive fixing
+             * of the red-black tree) */
+            return std::make_pair(new_idx, true);
 
         } else if(less_(key, root->pair.first)) {
             if(root->left_index_ == -1) {

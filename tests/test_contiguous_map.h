@@ -52,11 +52,6 @@ public:
     }
 
     void test_insertion_performance() {
-        skip_if(
-            true,
-            "Need to store duplicated key nodes in a different way to improve perf"
-        );
-
         ContiguousMultiMap<int, int> CMMap;
         std::multimap<int, int> MMap;
 
