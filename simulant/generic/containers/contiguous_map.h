@@ -108,6 +108,24 @@ public:
             if(current_node_ < 0) return; // Do nothing
 
             auto current = _node(current_node_);
+
+            if(current->equal_index_ > -1 && list_head_index_ == -1) {
+                list_head_index_ = current_node_;
+                current_node_ = current->equal_index_;
+                return;
+            } else if(list_head_index_ > -1) {
+                current_node_ = current->equal_index_;
+                if(current_node_ == -1) {
+                    /* We've finished iterating the list, now back to recursing */
+                    current_node_ = list_head_index_; // Restore back to the head node
+                    list_head_index_ = -1; // We're no longer iterating the list
+                    current = _node(current_node_); // Set current so we can continue normally
+                } else {
+                    /* We've updated the current node */
+                    return;
+                }
+            }
+
             if(current->left_index_ > -1 && prev_nodes_.top() != current_node_) {
                 prev_nodes_.push(current_node_);
                 current_node_ = _next(current->left_index_);
@@ -136,6 +154,7 @@ public:
     private:
         ContiguousMultiMap* map_ = nullptr;
 
+        int32_t list_head_index_ = -1;
         std::stack<int32_t> prev_nodes_;
     };
 
@@ -412,7 +431,7 @@ private:
 
         /* Fetch the parent if it wasn't passed */
         int32_t parent_index = node->parent_index_;
-        parent = (parent) ? parent : &nodes_[parent_index];
+        parent = (parent) ? parent : (parent_index == -1) ? nullptr : &nodes_[parent_index];
 
         node_type* nnew = &nodes_[nnew_index];
 
