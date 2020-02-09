@@ -50,6 +50,7 @@ class ContiguousMultiMap {
 public:
     typedef K key_type;
     typedef V value_type;
+    typedef _contiguous_map::NodeMeta<K, V> node_type;
 
     class iterator_base {
     protected:
@@ -359,8 +360,6 @@ public:
     }
 private:
     friend class iterator_base;
-
-    typedef _contiguous_map::NodeMeta<K, V> node_type;
 
     iterator end_ = iterator(this, -1);
     const_iterator cend_ = const_iterator(
