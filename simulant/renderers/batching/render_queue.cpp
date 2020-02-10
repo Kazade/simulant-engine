@@ -96,7 +96,7 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
 
         // Priorities run from -250 to +250, so we need to offset the index
         auto& priority_queue = priority_queues_[priority + std::abs(RENDER_PRIORITY_MIN)];
-        priority_queue.insert(std::make_pair(group, idx));
+        priority_queue.insert(group, idx);
     }
 }
 

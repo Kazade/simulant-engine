@@ -1,5 +1,6 @@
 #pragma once
 
+#include <simulant/test.h>
 #include "../simulant/generic/optional.h"
 
 namespace {

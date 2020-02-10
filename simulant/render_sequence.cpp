@@ -19,8 +19,6 @@
 
 #include <unordered_map>
 
-#include "profiler.h"
-
 #include "generic/algorithm.h"
 #include "render_sequence.h"
 #include "stage.h"
@@ -199,8 +197,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
      * which means figuring out some kind of locking around the render queue building and traversal, or
      * some deep-copying (of materials/textures/renderables) to make sure that nothing changes during traversal
      */
-    Profiler profiler(__func__);
-
     uint64_t frame_id = generate_frame_id();
 
     if(!pipeline_stage->is_active()) {
@@ -243,17 +239,11 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
 
     signal_pipeline_started_(*pipeline_stage);
 
-    profiler.checkpoint("prepare");
-
     // Trigger a signal to indicate the stage is about to be rendered
     stage->signal_stage_pre_render()(camera->id(), viewport);
 
-    profiler.checkpoint("pre_render");
-
     // Apply any outstanding writes to the partitioner
     stage->partitioner->_apply_writes();
-
-    profiler.checkpoint("apply_writes");
 
     static std::vector<LightID> light_ids;
     static std::vector<StageNode*> nodes_visible;
@@ -269,8 +259,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
         light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
     );
-
-    profiler.checkpoint("gather");
 
     // Reset it, ready for this pipeline
     render_queue_.reset(stage, window->renderer.get(), camera);
@@ -348,8 +336,6 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
         }
     }
 
-    profiler.checkpoint("lights");
-
     actors_rendered += render_queue_.renderable_count();
 
     using namespace std::placeholders;
@@ -359,13 +345,10 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
     // Render the visible objects
     render_queue_.traverse(visitor.get(), frame_id);
 
-    profiler.checkpoint("traversal");
-
     // Trigger a signal to indicate the stage has been rendered
     stage->signal_stage_post_render()(camera->id(), viewport);
 
     signal_pipeline_finished_(*pipeline_stage);
-    profiler.checkpoint("post_render");
     render_queue_.clear();
 }
 

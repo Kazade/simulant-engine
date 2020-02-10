@@ -20,7 +20,8 @@
 
 #include <list>
 #include <set>
-#include <map>
+
+#include "../../generic/containers/contiguous_map.h"
 
 #include "../../types.h"
 #include "../../threads/shared_mutex.h"
@@ -42,7 +43,11 @@ struct RenderGroupKey {
     float distance_to_camera;
 
     bool operator==(const RenderGroupKey& rhs) const  {
-        return memcmp(this, &rhs, sizeof(RenderGroupKey)) == 0;
+        return (
+            pass == rhs.pass &&
+            is_blended == rhs.is_blended &&
+            distance_to_camera == rhs.distance_to_camera
+        );
     }
 
     bool operator!=(const RenderGroupKey& rhs) const {
@@ -192,7 +197,7 @@ private:
         }
     };
 
-    typedef std::multimap<RenderGroup*, std::size_t, Compare> SortedRenderables;
+    typedef ContiguousMultiMap<RenderGroup*, std::size_t, Compare> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
