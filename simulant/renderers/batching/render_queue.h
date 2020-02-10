@@ -43,7 +43,11 @@ struct RenderGroupKey {
     float distance_to_camera;
 
     bool operator==(const RenderGroupKey& rhs) const  {
-        return memcmp(this, &rhs, sizeof(RenderGroupKey)) == 0;
+        return (
+            pass == rhs.pass &&
+            is_blended == rhs.is_blended &&
+            distance_to_camera == rhs.distance_to_camera
+        );
     }
 
     bool operator!=(const RenderGroupKey& rhs) const {
