@@ -118,7 +118,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
     );
 
 
-    auto txn = ps->begin_transaction();
+    auto txn = ps->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
     txn->set_name((js.has_key("name")) ? js["name"].get<jsonic::String>(): "");
 
     if(js.has_key("quota")) {

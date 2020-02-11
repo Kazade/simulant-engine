@@ -9,7 +9,7 @@ inline T clamp(T x, T a = 0, T b = 1) {
 }
 
 void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& vertices) {
-    auto txn = texture->begin_transaction();
+    auto txn = texture->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
     txn->resize(width, length);
 
     for(uint32_t i = 0; i < vertices.count(); ++i) {
@@ -19,8 +19,8 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
         float height = (vertices.position_at<Vec3>(i)->y + 64.0f) / 128.0f;
 
         float rock = clamp(steepness.value / 45.0f);
-        float sand = clamp(1.0 - (height * 4.0f));
-        float grass = (sand > 0.5) ? 0.0 : 0.5f;
+        float sand = clamp(1.0f - (height * 4.0f));
+        float grass = (sand > 0.5f) ? 0.0f : 0.5f;
         float snow = height * clamp(n->z);
 
         float z = rock + sand + grass + snow;
@@ -101,7 +101,7 @@ public:
     }
 
     void fixed_update(float dt) override {
-        terrain_actor_->rotate_global_y_by(smlt::Degrees(dt * 5.0));
+        terrain_actor_->rotate_global_y_by(smlt::Degrees(dt * 5.0f));
     }
 
 private:

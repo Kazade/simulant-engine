@@ -40,7 +40,7 @@ void draw_circle(smlt::TexturePtr texture_ptr, float x, float y, float size, flo
 
     int32_t bytes_per_pixel = texture.bytes_per_pixel();
 
-    auto txn = texture.begin_transaction();
+    auto txn = texture.begin_transaction(ASSET_TRANSACTION_READ_WRITE);
     auto data = texture.data();
 
     for(uint32_t j = start_y; j < end_y; ++j) {
@@ -68,7 +68,7 @@ void draw_circle(smlt::TexturePtr texture_ptr, float x, float y, float size, flo
 void starfield(smlt::TexturePtr texture_ptr, uint32_t width, uint32_t height) {
     smlt::Texture& texture = *texture_ptr;
 
-    auto txn = texture.begin_transaction();
+    auto txn = texture.begin_transaction(ASSET_TRANSACTION_READ_WRITE);
     txn->resize(width, height);
     txn->set_format(TEXTURE_FORMAT_RGBA8888);
     txn->commit();

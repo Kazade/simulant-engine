@@ -17,7 +17,7 @@ public:
         assert_false(tex->_data_dirty());
         assert_false(tex->_params_dirty());
 
-        auto txn = tex->begin_transaction();
+        auto txn = tex->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
         txn->resize(64, 64);
         txn->commit();
 
@@ -28,7 +28,7 @@ public:
     void test_conversion_from_r8_to_rgba4444() {
         auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
 
-        auto txn = tex->begin_transaction();
+        auto txn = tex->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
         auto& data = txn->data();
         data[0] = 255;
         data[1] = 128;
