@@ -257,7 +257,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
 
     font->material_->set_blend_func(BLEND_ALPHA);
 
-    auto txn = font->texture_->begin_transaction();
+    auto txn = font->texture_->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
 
     if(font->texture_->channels() == 1) {
         /*

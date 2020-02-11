@@ -31,7 +31,7 @@ public:
         actor_->move_to(0.0, 0.0, -5.0);
 
         texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
-        auto txn = texture_.fetch()->begin_transaction();
+        auto txn = texture_.fetch()->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
         txn->set_texture_filter(TEXTURE_FILTER_BILINEAR);
         txn->commit();
 
@@ -72,7 +72,7 @@ public:
                 current_filter_ = 0;
             }
 
-            auto txn = texture_.fetch()->begin_transaction();
+            auto txn = texture_.fetch()->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
             txn->set_texture_filter(filters_[current_filter_]);
             txn->commit();
 

@@ -27,6 +27,8 @@
 #include "generic/data_carrier.h"
 #include "generic/object_manager.h"
 
+#include "threads/mutex.h"
+
 namespace smlt {
 
 class AssetManager;
@@ -46,56 +48,13 @@ class AssetManager;
  * pattern to make sure that things are thread-safe
  */
 
-template<typename T>
-class AssetTransaction {
-public:
-    typedef typename T::impl_type impl_type;
-
-    AssetTransaction(std::shared_ptr<T> source):
-        source_(source) {
-
-        assert(source);
-        target_ = source->pimpl_;
-    }
-
-    virtual ~AssetTransaction() {
-        rollback();
-    }
-
-    void commit() {
-        if(is_dirty_) {
-            on_commit();
-            std::swap(source_->pimpl_, target_);
-        }
-        committed_ = true;
-    }
-
-    void rollback() {
-        if(committed_) return;
-
-        on_rollback();
-
-        L_WARN("Rolling back uncommitted asset transaction");
-    }
-
-protected:
-    /* If a change is made, the transaction needs to be marked "dirty"
-     * otherwise commit() will be a no-op */
-
-    void mark_dirty() {
-        is_dirty_ = true;
-    }
-
-    std::shared_ptr<T> source_;
-    std::shared_ptr<impl_type> target_;
-
-private:
-    virtual void on_commit() {}
-    virtual void on_rollback() {}
-
-    bool is_dirty_ = false;
-    bool committed_ = false;
+enum AssetTransactionScope {
+    ASSET_TRANSACTION_READ,
+    ASSET_TRANSACTION_READ_WRITE
 };
+
+template<typename T>
+class AssetTransaction;
 
 /*
  * All assets that implement AtomicAsset store their
@@ -119,14 +78,100 @@ public:
     virtual ~AtomicAsset() {}
 
 
-    transaction_pointer_type begin_transaction() {
-        return std::make_shared<transaction_type>(this->shared_from_this());
+    transaction_pointer_type begin_transaction(AssetTransactionScope type) {
+        return std::make_shared<transaction_type>(this->shared_from_this(), type);
     }
 
 protected:
     std::shared_ptr<AssetImplType> pimpl_;
+
+    thread::Mutex write_mutex_;
+    thread::Mutex commit_mutex_;
 };
 
+template<typename T>
+class AssetTransaction {
+public:
+    typedef typename T::impl_type impl_type;
+
+    AssetTransaction(std::shared_ptr<T> source, AssetTransactionScope type=ASSET_TRANSACTION_READ_WRITE):
+        source_(source),
+        type_(type) {
+
+        assert(source);
+
+        target_ = source->pimpl_;
+
+        if(type_ == ASSET_TRANSACTION_READ_WRITE) {
+            /* Read-write transactions must hold a mutex
+             * for the lifetime of the transaction. Read
+             * transactions only hold the mutex for committing */
+            source_->write_mutex_.lock();
+        } else {
+            /* Read only transactions hold the commit lock so that read-write
+             * transactions can do their stuff up until that point */
+            source_->commit_mutex_.lock();
+        }
+    }
+
+    virtual ~AssetTransaction() {
+        rollback();
+
+        /* Read transactions acquire this in
+         * the constructor and release it here */
+        if(type_ == ASSET_TRANSACTION_READ) {
+            source_->commit_mutex_.unlock();
+        }
+    }
+
+    void commit() {
+        if(type_ == ASSET_TRANSACTION_READ) {
+            return;
+        }
+
+        /* All transactions hold the commit mutex
+         * but read-write ones should also be holding
+         * the update mutex */
+        thread::Lock<thread::Mutex> guard(source_->commit_mutex_);
+        if(is_dirty_) {
+            on_commit();
+            std::swap(source_->pimpl_, target_);
+            is_dirty_ = false;
+        }
+        committed_ = true;
+        source_->write_mutex_.unlock();
+    }
+
+    void rollback() {
+        if(type_ == ASSET_TRANSACTION_READ_WRITE && !committed_) {
+            on_rollback();
+            source_->write_mutex_.unlock();
+            L_WARN("Rolling back uncommitted asset transaction");
+        } else if(type_ == ASSET_TRANSACTION_READ && is_dirty_) {
+            /* We made changes in a read transaction? Log this! */
+            L_ERROR("Attempted to make changes in a read-only transaction");
+        }
+    }
+
+protected:
+    /* If a change is made, the transaction needs to be marked "dirty"
+     * otherwise commit() will be a no-op */
+
+    void mark_dirty() {
+        is_dirty_ = true;
+    }
+
+    std::shared_ptr<T> source_;
+    std::shared_ptr<impl_type> target_;
+
+private:
+    virtual void on_commit() {}
+    virtual void on_rollback() {}
+
+    AssetTransactionScope type_ = ASSET_TRANSACTION_READ;
+    bool is_dirty_ = false;
+    bool committed_ = false;
+};
 
 class Asset {
 public:

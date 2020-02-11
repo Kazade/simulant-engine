@@ -64,7 +64,7 @@ namespace loaders {
         // Convert from 8bpp to 32bpp
         {
             // Lock against updates
-            auto txn = font->texture_->begin_transaction();
+            auto txn = font->texture_->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
 
             auto source_data = texture->data();
 

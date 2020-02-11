@@ -238,8 +238,8 @@ private:
 class TextureTransaction:
     public AssetTransaction<Texture> {
 public:
-    TextureTransaction(std::shared_ptr<Texture> texture):
-        AssetTransaction<Texture>(texture) {}
+    TextureTransaction(std::shared_ptr<Texture> texture, AssetTransactionScope type):
+        AssetTransaction<Texture>(texture, type) {}
 
     void set_format(TextureFormat format, TextureTexelType texel_type=TEXTURE_TEXEL_TYPE_UNSPECIFIED);
 

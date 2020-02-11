@@ -238,7 +238,7 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     // Make sure we lock the texture so that the renderer doesn't
     // upload it while we're working on it!
-    auto txn = output_texture->begin_transaction();
+    auto txn = output_texture->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
 
     // Finally generate the texture!
     txn->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);

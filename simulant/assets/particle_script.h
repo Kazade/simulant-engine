@@ -103,8 +103,8 @@ public:
 class ParticleScriptTransaction:
     public AssetTransaction<ParticleScript> {
 public:
-    ParticleScriptTransaction(std::shared_ptr<ParticleScript> particle_script):
-        AssetTransaction<ParticleScript>(particle_script) {}
+    ParticleScriptTransaction(std::shared_ptr<ParticleScript> particle_script, AssetTransactionScope type):
+        AssetTransaction<ParticleScript>(particle_script, type) {}
 
     void add_manipulator(std::shared_ptr<Manipulator> manipulator);
     void clear_manipulators();
