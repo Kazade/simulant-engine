@@ -94,7 +94,7 @@ class AssetTransaction {
 public:
     typedef typename T::impl_type impl_type;
 
-    AssetTransaction(std::shared_ptr<T> source, AssetTransactionScope type):
+    AssetTransaction(std::shared_ptr<T> source, AssetTransactionScope type=ASSET_TRANSACTION_READ_WRITE):
         source_(source),
         type_(type) {
 
