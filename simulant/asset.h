@@ -77,8 +77,7 @@ public:
 
     virtual ~AtomicAsset() {}
 
-
-    transaction_pointer_type begin_transaction(AssetTransactionScope type) {
+    transaction_pointer_type begin_transaction(AssetTransactionScope type=ASSET_TRANSACTION_READ_WRITE) {
         return std::make_shared<transaction_type>(this->shared_from_this(), type);
     }
 
