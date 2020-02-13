@@ -17,27 +17,28 @@ texture->set_free_data_mode(TEXTURE_FREE_DATA_NEVER);
 
 The default setting is `TEXTURE_FREE_DATA_AFTER_UPLOAD`. 
 
-## Locking textures
+## Texture Transactions
 
-Every frame the active renderer will check to see if any textures need to be (re-)uploaded to the GPU. If you are manipulating texture data in another thread this could cause issues.
-
-To protect against this you can lock a texture while you manipulate it. While a `Texture` is locked the renderer will not upload it to the GPU, update any filters, or generate any mipmaps.
-
-To lock a texture you call the `Texture::lock()` method and store the resulting `TextureLock` object while you manipulate the data.
-
-For example:
+`Textures` are `AtomicAsset<T>`s therefore they provide a transaction interface for manipulation:
 
 ```
-{   // Start of scope
-    auto lock = texture->lock();
-    
-    // ... manipulate the texture
-}   // End of scope, texture will be unlocked
+auto txn = texture->begin_transaction();
+txn->flip_vertically();
+txn->commit();  // <- Texture is updated here
 ```
 
-## Manipulating data
+The transaction pattern allows for thread-safe manipulation of the texture, but it does incur a cost
+in copying the texture attributes. This is particularly costly if you manipulate the texture data
+directly. To save on data copies, `TextureTransaction` provides a concept called data mutations:
 
-When you manipulate the `Texture` data, you will need to notify the renderer that the data changed. You do this by calling `Texture::mark_data_changed()`, and the texture data will be uploaded to the GPU during the following frame. You should call `mark_data_changed()` while the `Texture` is locked.
+```
+void some_func(uint8_t* data, uint16_t width, uint16_t height, TextureFormat format);
+
+auto txn = texture->begin_transaction();
+txn->mutate_data(some_func);
+txn->commit();  // <- some_func is called during the commit phase, when the lock is held
+```
+
 
 ## Filter modes
 
