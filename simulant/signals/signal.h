@@ -2,7 +2,6 @@
 
 #include <functional>
 #include <memory>
-#include <deque>
 #include <algorithm>
 
 #include "../threads/atomic.h"

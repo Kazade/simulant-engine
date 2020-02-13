@@ -211,9 +211,14 @@ void StatsPanel::rebuild_ram_graph() {
     float highest_y = 0;
 
     auto idx = vdata->count();
-    for(auto i = 1u; i < free_ram_history_.size(); ++i) {
-        auto sample = free_ram_history_[i];
-        auto last_sample = free_ram_history_[i - 1];
+
+    auto last_sample_it = free_ram_history_.begin();
+    auto this_sample_it = last_sample_it;
+    this_sample_it++;
+
+    for(; this_sample_it != free_ram_history_.end(); ++this_sample_it) {
+        auto last_sample = *last_sample_it;
+        auto sample = *this_sample_it;
 
         float y = (height / graph_max) * last_sample;
         vdata->position(x, y, -1);
@@ -262,6 +267,8 @@ void StatsPanel::rebuild_ram_graph() {
             highest_y = y;
             highest_mem = sample;
         }
+
+        last_sample_it = this_sample_it;
     }
 
     low_mem_->set_text(_u("{0}M").format(lowest_mem));

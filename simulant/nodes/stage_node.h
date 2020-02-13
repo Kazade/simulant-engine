@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stack>
-
 #include "./tree_node.h"
 #include "../interfaces/nameable.h"
 #include "../interfaces/printable.h"
@@ -89,7 +87,7 @@ private:
 
     /* For leaf-first iteration we need to store the parents
      * we haven't visited */
-    std::stack<StageNode*> history_;
+    std::vector<StageNode*> history_;
 };
 
 

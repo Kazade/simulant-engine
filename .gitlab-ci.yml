@@ -15,6 +15,14 @@ check:thread-usage:
   script:
     - python3 tools/find_std_thread.py simulant
 
+check:deque-usage:
+  stage: check
+  image: registry.fedoraproject.org/fedora-minimal:28
+  before_script:
+    - microdnf install -y python3
+  script:
+    - python3 tools/find_std_deque.py simulant
+
 check:stream-usage:
   stage: check
   image: registry.fedoraproject.org/fedora-minimal:28

@@ -284,12 +284,12 @@ StageNodeIterator& StageNodeIterator::operator++() {
                 // If we've moved to a sibling with children
                 // go right down to the first child
                 while(current_->first_child_) {
-                    history_.push(current_);
+                    history_.push_back(current_);
                     current_ = (StageNode*) current_->first_child_;
                 }
             } else if(!history_.empty()) {
-                current_ = history_.top();
-                history_.pop();
+                current_ = history_.back();
+                history_.pop_back();
 
                 /* If we've worked our way back up to the start
                  * but we're not including the root, then just end now */
@@ -336,7 +336,7 @@ StageNodeIterator::StageNodeIterator(StageNode* root, StageNodeIterator::Iterati
         // If we're doing a leaf-first iteration, we start at the first
         // leaf and push a stack of nodes that we skipped
         while(current_->first_child_) {
-            history_.push(current_);
+            history_.push_back(current_);
             current_ = (StageNode*) current_->first_child_;
         }
     } else if(itype == ITERATION_TYPE_DESCENDENTS && !include_root) {
