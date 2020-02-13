@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <list>
+
 #include "panel.h"
 #include "../types.h"
 #include "../generic/managed.h"
@@ -58,7 +60,7 @@ private:
     MaterialPtr graph_material_;
     MeshPtr ram_graph_mesh_;
     ActorPtr ram_graph_;
-    std::deque<float> free_ram_history_;
+    std::list<float> free_ram_history_;
 
     void rebuild_ram_graph();
 

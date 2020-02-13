@@ -14,7 +14,6 @@
 
 
 #include <vector>
-#include <stack>
 #include <utility>
 #include <cstdint>
 #include <cassert>

@@ -19,7 +19,6 @@
 #ifndef PARTITIONER_H
 #define PARTITIONER_H
 
-#include <stack>
 #include <memory>
 #include <set>
 #include <map>

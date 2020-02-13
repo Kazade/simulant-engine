@@ -18,7 +18,6 @@
 //
 
 #include <queue>
-#include <deque>
 
 #include "../meshes/mesh.h"
 #include "../texture.h"

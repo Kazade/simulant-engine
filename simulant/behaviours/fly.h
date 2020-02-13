@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <deque>
 #include "./behaviour.h"
 #include "../window.h"
 
