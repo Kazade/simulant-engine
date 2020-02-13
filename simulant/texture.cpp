@@ -312,29 +312,35 @@ void TextureTransaction::convert(TextureFormat new_format, const TextureChannelS
     mark_dirty();
 }
 
-void TextureTransaction::flip_vertically() {
+
+static void do_flip_vertically(uint8_t* data, uint16_t width, uint16_t height, TextureFormat format) {
     /**
      *  Flips the texture data vertically
      */
-    auto w = (uint32_t) target_->width_;
-    auto h = (uint32_t) target_->height_;
-    auto c = (uint32_t) channels_for_format(target_->format_);
+    auto w = (uint32_t) width;
+    auto h = (uint32_t) height;
+    auto c = (uint32_t) channels_for_format(format);
 
     auto row_size = w * c;
 
-    std::vector<uint8_t> new_data(target_->data_.size());
+    uint8_t* src_row = &data[0];
+    uint8_t* dst_row = &data[(h - 1) * row_size];
+    char tmp[row_size];
 
-    auto* in = &target_->data_[0];
-    auto* out = &new_data[row_size * (h - 1)];
+    for(auto i = 0u; i < h / 2; ++i) {
+        if(src_row != dst_row) {
+            memcpy(tmp, src_row, row_size);
+            memcpy(src_row, dst_row, row_size);
+            memcpy(dst_row, tmp, row_size);
+        }
 
-    for(uint32_t j = 0; j < h; ++j) {
-        std::memcpy(out, in, row_size);
-        in += row_size;
-        out -= row_size;
+        src_row += row_size;
+        dst_row -= row_size;
     }
+}
 
-    set_data(new_data);
-    mark_dirty();
+void TextureTransaction::flip_vertically() {
+    mutate_data(&do_flip_vertically);
 }
 
 void TextureTransaction::set_source(const unicode& source) {
@@ -351,6 +357,19 @@ void TextureTransaction::free() {
 
 Texture::Data& TextureTransaction::data() {
     return target_->data_;
+}
+
+void TextureTransaction::mutate_data(TextureTransaction::MutationFunc func) {
+    mutations_.push(func);
+    mark_dirty();
+}
+
+void TextureTransaction::process_mutations(Texture::Data& data, uint16_t width, uint16_t height, TextureFormat format) {
+    while(!mutations_.empty()) {
+        auto& func = mutations_.front();
+        func(&data[0], width, height, format);
+        mutations_.pop();
+    }
 }
 
 bool Texture::is_compressed() const {
@@ -478,6 +497,11 @@ void TextureTransaction::on_commit() {
         // If the data changed, the mipmaps are out of date
         _set_has_mipmaps(false);
     }
+
+    TextureImpl* impl = dynamic_cast<TextureImpl*>(source_->pimpl_.get());
+    assert(impl);
+
+    process_mutations(impl->data_, impl->width_, impl->height_, impl->format_);
 
     // Set some flags on the texture itself
     if(!source_->params_dirty_) {
