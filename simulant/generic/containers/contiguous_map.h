@@ -58,7 +58,7 @@ public:
         iterator_base(ContiguousMultiMap* map):
             map_(map) {
 
-            prev_nodes_.push(-1);
+            prev_nodes_.push_back(-1);
             current_node_ = map->root_index_;
 
             if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
@@ -71,7 +71,7 @@ public:
             map_(map) {
 
             if(index != -1) {
-                prev_nodes_.push(-1);
+                prev_nodes_.push_back(-1);
 
                 current_node_ = map->root_index_;
                 if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
@@ -98,7 +98,7 @@ public:
         int32_t _next(int32_t index) {
             auto start = _node(index);
             if(start->left_index_ > -1) {
-                prev_nodes_.push(index);
+                prev_nodes_.push_back(index);
                 return _next(start->left_index_);
             } else {
                 return index;
@@ -127,18 +127,18 @@ public:
                 }
             }
 
-            if(current->left_index_ > -1 && prev_nodes_.top() != current_node_) {
-                prev_nodes_.push(current_node_);
+            if(current->left_index_ > -1 && prev_nodes_.back() != current_node_) {
+                prev_nodes_.push_back(current_node_);
                 current_node_ = _next(current->left_index_);
             } else {
-                if(current_node_ == prev_nodes_.top()) {
-                    prev_nodes_.pop();
+                if(current_node_ == prev_nodes_.back()) {
+                    prev_nodes_.pop_back();
                 }
 
                 if(current->right_index_ > -1) {
                     current_node_ = _next(current->right_index_);
                 } else {
-                    current_node_ = prev_nodes_.top();
+                    current_node_ = prev_nodes_.back();
                 }
             }
         }
@@ -156,7 +156,7 @@ public:
         ContiguousMultiMap* map_ = nullptr;
 
         int32_t list_head_index_ = -1;
-        std::stack<int32_t> prev_nodes_;
+        std::vector<int32_t> prev_nodes_;
     };
 
     class iterator : private iterator_base {
