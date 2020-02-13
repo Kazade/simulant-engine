@@ -28,3 +28,4 @@ When you want to access the properties of an AtomicAsset you have 3 options:
  
  txn.commit();  // Update "texture"
  ```
+ 

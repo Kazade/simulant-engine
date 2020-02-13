@@ -133,8 +133,8 @@ public:
          * the update mutex */
         thread::Lock<thread::Mutex> guard(source_->commit_mutex_);
         if(is_dirty_) {
-            on_commit();
             std::swap(source_->pimpl_, target_);
+            on_commit();
             is_dirty_ = false;
         }
         committed_ = true;

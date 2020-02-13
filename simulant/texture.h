@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <queue>
 #include <vector>
 #include "generic/identifiable.h"
 #include "generic/managed.h"
@@ -299,9 +300,19 @@ public:
 
     Texture::Data& data();
 
+    typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
+
+    /* Push a texture data mutation function onto a queue that will be applied
+     * during the commit of the transaction */
+    void mutate_data(MutationFunc func);
+
 private:
     bool data_dirty_ = false;
     bool params_dirty_ = false;
+
+    /* A queue of mutations to apply to the texture data on commit */
+    std::queue<MutationFunc> mutations_;
+    void process_mutations(Texture::Data& data, uint16_t width, uint16_t height, TextureFormat format);
 
     void on_commit() override;
 };
