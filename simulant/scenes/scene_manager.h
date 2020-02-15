@@ -37,6 +37,8 @@ class Window;
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
 typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
+template<typename T>
+class SerializedScene;
 
 enum SceneChangeBehaviour {
     SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE,
@@ -63,6 +65,16 @@ public:
 
     SceneBasePtr active_scene() const;
     bool scene_queued_for_activation() const;
+
+    template<typename T>
+    void register_scene_from_file(const std::string& name, const std::string& file_path) {
+        static_assert(std::is_base_of<SerializedScene<T>, T>::value, "T must subclass SerializedScene<T>");
+
+        /* Everything is the same as register_scene except
+         * we pass the file path to the constructor and the
+         * class must be a SerializedScene. */
+        register_scene<T>(name, file_path);
+    }
 
     template<typename T, typename... Args>
     void register_scene(const std::string& name, Args&&... args) {
