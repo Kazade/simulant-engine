@@ -222,3 +222,4 @@ simulant/platforms/dreamcast
 simulant/threads
 simulant/signals
 simulant/generic/containers
+deps/libgl/samples/lights
