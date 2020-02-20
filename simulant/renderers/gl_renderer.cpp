@@ -101,6 +101,8 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
         return;
     }
 
+    auto txn = texture->begin_transaction();
+
     GLint active;
     GLuint target = texture->_renderer_specific_id();
     GLCheck(glGetIntegerv, GL_TEXTURE_BINDING_2D, &active);
@@ -109,53 +111,50 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
     /* Only upload data if it's enabled on the texture */
     if(texture->_data_dirty() && texture->auto_upload()) {
         // Upload
-        {
-            auto read_txn = texture->begin_transaction(ASSET_TRANSACTION_READ);
-            auto format = convert_texture_format(texture->format());
-            auto internal_format = texture_format_to_internal_format(texture->format());
-            auto type = convert_texel_type(texture->texel_type());
 
-            if(format > 0 && type > 0) {
-                if(texture->is_compressed()) {
-                    GLCheck(glCompressedTexImage2D,
-                        GL_TEXTURE_2D,
-                        0,
-                        format,
-                        texture->width(), texture->height(), 0,
-                        texture->data().size(),
-                        &texture->data()[0]
-                    );
-                } else {
-                    GLCheck(glTexImage2D,
-                        GL_TEXTURE_2D,
-                        0, internal_format,
-                        texture->width(), texture->height(), 0,
-                        format,
-                        type, &texture->data()[0]
-                    );
-                }
+        auto format = convert_texture_format(texture->format());
+        auto internal_format = texture_format_to_internal_format(texture->format());
+        auto type = convert_texel_type(texture->texel_type());
+
+        if(format > 0 && type > 0) {
+            if(texture->is_compressed()) {
+                GLCheck(glCompressedTexImage2D,
+                    GL_TEXTURE_2D,
+                    0,
+                    format,
+                    texture->width(), texture->height(), 0,
+                    texture->data().size(),
+                    &texture->data()[0]
+                );
             } else {
-                // If the format isn't supported, don't upload anything, but warn about it!
-                L_WARN_ONCE("Tried to use unsupported texture format in the GL renderer");
+                GLCheck(glTexImage2D,
+                    GL_TEXTURE_2D,
+                    0, internal_format,
+                    texture->width(), texture->height(), 0,
+                    format,
+                    type, &texture->data()[0]
+                );
             }
+        } else {
+            // If the format isn't supported, don't upload anything, but warn about it!
+            L_WARN_ONCE("Tried to use unsupported texture format in the GL renderer");
         }
 
         /* Free the data if that's what is wanted */
         if(texture->free_data_mode() == TEXTURE_FREE_DATA_AFTER_UPLOAD) {
-            auto txn = texture->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
             txn->free();
-            txn->commit();
         }
 
-        if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE) {
+        /* Generate mipmaps if we don't have them already */
+        if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE && !texture->has_mipmaps()) {
 #ifdef _arch_dreamcast
             if(texture->width() == texture->height()) {
 #endif
-            GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
-
-            auto txn = texture->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-            txn->_set_has_mipmaps(true);
-            txn->commit();
+                L_DEBUG(_F("Generating mipmaps. W: {0}, H:{1}").format(
+                    texture->width(), texture->height()
+                ));
+                GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
+                txn->_set_has_mipmaps(true);
 #ifdef _arch_dreamcast
             } else {
                 L_WARN("Not generating mipmaps as texture is non-square (PVR limitation)");
@@ -211,6 +210,9 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
 
         texture->_set_params_clean();
     }
+
+    /* Commit any changes */
+    txn->commit();
 
     if(active != (GLint) target) {
         GLCheck(glBindTexture, GL_TEXTURE_2D, active);

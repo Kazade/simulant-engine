@@ -146,7 +146,9 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     pimpl_->texel_type_ = texel_type_from_texture_format(format);
     pimpl_->data_.resize(width * height * bytes_per_texel(format, pimpl_->texel_type_));
     pimpl_->data_.shrink_to_fit();
-    data_dirty_ = true;
+
+    /* We intentionally don't mark data dirty here. All that would happen is
+     * we would upload a blank texture */
 
     renderer_ = asset_manager->window->renderer;
 }
@@ -351,7 +353,10 @@ void TextureTransaction::set_source(const unicode& source) {
 void TextureTransaction::free() {
     target_->data_.clear();
     target_->data_.shrink_to_fit();
-    data_dirty_ = true;
+
+    /* We don't mark data dirty here, we don't want
+     * anything to be updated in GL, we're just freeing
+     * the RAM */
     mark_dirty();
 }
 
@@ -361,6 +366,10 @@ Texture::Data& TextureTransaction::data() {
 
 void TextureTransaction::mutate_data(TextureTransaction::MutationFunc func) {
     mutations_.push(func);
+
+    /* A mutation by definition updates the data */
+    data_dirty_ = true;
+
     mark_dirty();
 }
 
