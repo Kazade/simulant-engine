@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../threads/atomic.h"
+
 /* Adds a uuid() method to objects which is distinct
  * across objects of this type. Copying / assigning the object will
  * generate a new uuid! */
@@ -33,7 +35,7 @@ public:
 private:
     /* FIXME: Do something better */
     static uuid64 generate_uuid() {
-        static uuid64 counter = ~0;
+        static thread::Atomic<uuid64> counter(~0);
         return --counter;
     }
 
