@@ -24,6 +24,10 @@ public:
 
     Mutex(const Mutex&) = delete;
 
+    bool try_lock() {
+        return pthread_mutex_trylock(&mutex_) == 0;
+    }
+
     void lock() {
         pthread_mutex_lock(&mutex_);
     }

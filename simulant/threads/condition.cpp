@@ -1,4 +1,4 @@
-
+#include <cassert>
 #include "condition.h"
 
 namespace smlt {
@@ -13,7 +13,8 @@ Condition::~Condition() {
 }
 
 void Condition::wait(Mutex& mutex) {
-    pthread_cond_wait(&cond_, &mutex.mutex_);
+    assert(!mutex.try_lock());  /* Mutex should've been locked by this thread */
+    pthread_cond_wait(&cond_, &mutex.mutex_); /* FIXME: I've heard that this can wake early? */
 }
 
 void Condition::notify_one() {
