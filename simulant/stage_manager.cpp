@@ -68,42 +68,49 @@ StagePtr StageManager::destroy_stage(StageID s) {
     return nullptr;
 }
 
-void StageManager::fixed_update(float dt) {
-    for(auto stage: stage_manager_->_each()) {
-        if(!stage->is_part_of_active_pipeline()) {
-            continue;
-        }
 
-        for(auto stage_node: stage->each_descendent_and_self()) {
-            stage_node->fixed_update(dt);
-        }
+static void _fixed_update(Stage* stage, float* dt) {
+    if(!stage->is_part_of_active_pipeline()) {
+        return;
+    }
+
+    for(auto stage_node: stage->each_descendent_and_self()) {
+        stage_node->fixed_update(*dt);
+    }
+}
+
+void StageManager::fixed_update(float dt) {
+    /* safe_each locks the entire loop */
+    stage_manager_->safe_each(_fixed_update, &dt);
+}
+
+static void _late_update(Stage* stage, float* dt) {
+    if(!stage->is_part_of_active_pipeline()) {
+        return;
+    }
+
+    for(auto stage_node: stage->each_descendent_and_self()) {
+        stage_node->late_update(*dt);
     }
 }
 
 void StageManager::late_update(float dt) {
-    for(auto stage: stage_manager_->_each()) {
-        if(!stage->is_part_of_active_pipeline()) {
-            continue;
-        }
+    stage_manager_->safe_each(_late_update, &dt);
+}
 
-        for(auto stage_node: stage->each_descendent_and_self()) {
-            stage_node->late_update(dt);
-        }
+static void _update(Stage* stage, float* dt) {
+    if(!stage->is_part_of_active_pipeline()) {
+        return;
+    }
+
+    for(auto stage_node: stage->each_descendent_and_self()) {
+        stage_node->update(*dt);
     }
 }
 
-
 void StageManager::update(float dt) {
     //Update the stages
-    for(auto stage: stage_manager_->_each()) {
-        if(!stage->is_part_of_active_pipeline()) {
-            continue;
-        }
-
-        for(auto stage_node: stage->each_descendent_and_self()) {
-            stage_node->update(dt);
-        }
-    }
+    stage_manager_->safe_each(_update, &dt);
 }
 
 void StageManager::print_tree() {
