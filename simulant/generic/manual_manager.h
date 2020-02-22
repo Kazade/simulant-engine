@@ -211,9 +211,6 @@ public:
 
     // Mark the element for destruction at clean_up
     void destroy(id_type id) {
-#ifndef NDEBUG
-        change_counter_++;
-#endif
         to_release_.insert(id);
     }
 
