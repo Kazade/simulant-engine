@@ -59,8 +59,11 @@ public:
         };
 
         iterator(ManualManager* container, Position pos):
-            container_(container),
-            change_counter_(container->change_counter_) {
+            container_(container)
+#ifndef NDEBUG
+            , change_counter_(container->change_counter_)
+#endif
+            {
 
             assert(container_);
 
