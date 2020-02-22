@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <memory>
 
+#include "../threads/atomic.h"
 #include "managed.h"
 #include "vector_pool.h"
 
@@ -58,7 +59,8 @@ public:
         };
 
         iterator(ManualManager* container, Position pos):
-            container_(container) {
+            container_(container),
+            change_counter_(container->change_counter_) {
 
             assert(container_);
 
@@ -74,6 +76,9 @@ public:
         }
 
         iterator& operator++() {
+            /* Check the parent container didn't change */
+            assert(change_counter_ == container_->change_counter_);
+
             while(1) {
                 current_++;
 
@@ -104,6 +109,8 @@ public:
         }
 
         reference operator*() const {
+            assert(change_counter_ == container_->change_counter_);
+
             id_type id(current_ + 1);
             auto ret = container_->get(id);
             assert(ret);
@@ -113,6 +120,10 @@ public:
     private:
         ManualManager* container_ = nullptr;
         uint32_t current_ = 0;
+
+#ifndef NDEBUG
+        int change_counter_;
+#endif
     };
 
     class iterator_pair {
@@ -172,6 +183,10 @@ public:
     // Makes a new object as a subclass
     template<typename Derived, typename... Args>
     Derived* make_as(Args&&... args) {
+#ifndef NDEBUG
+        change_counter_++;
+#endif
+
         static_assert(_manual_manager_impl::contains<Derived, T, Subtypes...>::value, "Requested unlisted type");
         static_assert(sizeof(Derived) <= PoolType::max_element_size(), "Something went wrong with size calculation");
 
@@ -184,6 +199,10 @@ public:
     // Makes a new object, resizing the pool if necessary
     template<typename... Args>
     T* make(Args&&... args) {
+#ifndef NDEBUG
+        change_counter_++;
+#endif
+
         auto alloc = &PoolType::template alloc<T, Args...>;
         auto ret = (pool_.*alloc)(std::forward<Args>(args)...).second;
         ret->_bind_id_pointer(ret);
@@ -192,18 +211,29 @@ public:
 
     // Mark the element for destruction at clean_up
     void destroy(id_type id) {
+#ifndef NDEBUG
+        change_counter_++;
+#endif
         to_release_.insert(id);
     }
 
     // This deletes the object immediately, without any
     // grace period
     void destroy_immediately(id_type id) {
+#ifndef NDEBUG
+        change_counter_++;
+#endif
+
         pool_.release(id);
         to_release_.erase(id);
     }
 
     // Clean up deleted objects
     void clean_up() {
+#ifndef NDEBUG
+        change_counter_++;
+#endif
+
         while(to_release_.size()) {
             auto id = *to_release_.begin();
             pool_.release(id);
@@ -220,6 +250,10 @@ public:
 
     // Immediately clear the manager
     void clear() {
+#ifndef NDEBUG
+        change_counter_++;
+#endif
+
         pool_.clear();
         to_release_.clear();
     }
@@ -244,6 +278,11 @@ private:
     typedef VectorPool<T, id_type, chunk_size, Subtypes...> PoolType;
     PoolType pool_;
     std::unordered_set<id_type> to_release_;
+
+#ifndef NDEBUG
+    /* Used to detect threading issues */
+    thread::Atomic<int> change_counter_;
+#endif
 };
 
 
