@@ -84,19 +84,19 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
         MaterialPass* pass = material->pass(i);
-        RenderGroup* group = render_group_pool_.alloc<RenderGroup>(0).second;
+        RenderGroup group;
 
         bool is_blended = pass->is_blending_enabled();
 
-        group->sort_key = render_group_factory_->prepare_render_group(
-            group,
+        group.sort_key = render_group_factory_->prepare_render_group(
+            &group,
             renderable, pass,
             i, is_blended, renderable_dist_to_camera
         );
 
         // Priorities run from -250 to +250, so we need to offset the index
         auto& priority_queue = priority_queues_[priority + std::abs(RENDER_PRIORITY_MIN)];
-        priority_queue.insert(group, idx);
+        priority_queue.insert(std::move(group), std::move(idx));
     }
 }
 
@@ -107,7 +107,6 @@ void RenderQueue::clear() {
         queue.clear();
     }
 
-    render_group_pool_.clear();
     renderables_.clear();
 }
 
@@ -123,7 +122,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         const RenderGroup* last_group = nullptr;
 
         for(auto& p: queue) {
-            const RenderGroup* current_group = p.first;
+            const RenderGroup* current_group = &p.first;
             const Renderable* renderable = &renderables_[p.second];
 
             /* We do this here so that we don't change render group unless something in the
@@ -185,32 +184,6 @@ std::size_t RenderQueue::group_count(Pass pass_number) const {
     }
 
     return i;
-}
-
-bool RenderGroupKey::operator<(const RenderGroupKey& rhs) const {
-    if(pass < rhs.pass) {
-        return true;
-    }
-
-    if(is_blended < rhs.is_blended) {
-        return true;
-    }
-
-    if(!is_blended) {
-        if(distance_to_camera < rhs.distance_to_camera) {
-            // If the object is opaque, we want to render
-            // front-to-back, so less distance is less
-            return true;
-        }
-    } else {
-        if(rhs.distance_to_camera < distance_to_camera) {
-            // If the object is translucent, we want to render
-            // back-to-front
-            return true;
-        }
-    }
-
-    return false;
 }
 
 }

@@ -38,63 +38,55 @@ class Light;
 namespace batcher {
 
 struct RenderGroupKey {
-    uint8_t pass;
-    bool is_blended;
-    float distance_to_camera;
-
-    bool operator==(const RenderGroupKey& rhs) const  {
-        return (
-            pass == rhs.pass &&
-            is_blended == rhs.is_blended &&
-            distance_to_camera == rhs.distance_to_camera
-        );
-    }
-
-    bool operator!=(const RenderGroupKey& rhs) const {
-        return !(*this == rhs);
-    }
-
-    bool operator<(const RenderGroupKey& rhs) const;
+    uint8_t pass; // 1 byte
+    bool is_blended; // 1 byte
+    float distance_to_camera; // 4 bytes
+    uint16_t padding; // 2-bytes to get 8-byte alignment
 };
 
 
 struct RenderGroup {
-    /* FIXME: VectorPool wasn't written generically and assumes we're using
-     * UniqueID. This hacks around that for now. */
-    struct ID {
-        uint32_t id_;
-        ID(uint32_t id):
-            id_(id) {}
-
-        uint32_t value() const {
-            return id_;
-        }
-    };
-
-    // FIXME: VectorPool expects arguments
-    RenderGroup(RenderGroup::ID, int dummy) {
-        _S_UNUSED(dummy);
-    }
-
     /* A sort key, generated from priority and material properties, this
      * may differ per-renderer */
     RenderGroupKey sort_key;
 
     bool operator<(const RenderGroup& rhs) const {
-        return sort_key < rhs.sort_key;
+        if(sort_key.pass < rhs.sort_key.pass) {
+            return true;
+        }
+
+        if(sort_key.is_blended < rhs.sort_key.is_blended) {
+            return true;
+        }
+
+        if(!sort_key.is_blended) {
+            if(sort_key.distance_to_camera < rhs.sort_key.distance_to_camera) {
+                // If the object is opaque, we want to render
+                // front-to-back, so less distance is less
+                return true;
+            }
+        } else {
+            if(rhs.sort_key.distance_to_camera < sort_key.distance_to_camera) {
+                // If the object is translucent, we want to render
+                // back-to-front
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    bool operator==(const RenderGroup& rhs) const {
-        return sort_key == rhs.sort_key;
+    bool operator==(const RenderGroup& rhs) const  {
+        return (
+            sort_key.pass == rhs.sort_key.pass &&
+            sort_key.is_blended == rhs.sort_key.is_blended &&
+            sort_key.distance_to_camera == rhs.sort_key.distance_to_camera
+        );
     }
 
     bool operator!=(const RenderGroup& rhs) const {
-        return sort_key != rhs.sort_key;
+        return !(*this == rhs);
     }
-
-    // FIXME: Make VectorPool generic so this isn't necessary */
-    bool init() { return true; }
-    void clean_up() {}
 };
 
 RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera);
@@ -187,17 +179,7 @@ private:
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
-
-    struct Compare {
-        bool operator()(RenderGroup* lhs, RenderGroup* rhs) const {
-            assert(lhs);
-            assert(rhs);
-
-            return *lhs < *rhs;
-        }
-    };
-
-    typedef ContiguousMultiMap<RenderGroup*, std::size_t, Compare> SortedRenderables;
+    typedef ContiguousMultiMap<RenderGroup, std::size_t> SortedRenderables;
 
     Stage* stage_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
@@ -209,8 +191,6 @@ private:
     void clean_empty_batches();
 
     mutable thread::Mutex queue_lock_;
-
-    VectorPool<RenderGroup, RenderGroup::ID, 128> render_group_pool_;
 };
 
 }
