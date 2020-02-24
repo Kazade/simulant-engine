@@ -175,7 +175,7 @@ void Q2BSPLoader::generate_materials(
             mat->set_light_map(lightmap_texture);
         }
 
-        materials.push_back(mat->id());
+        materials.push_back(mat->id());       
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
 }
@@ -246,40 +246,43 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     std::vector<LightmapLocation> locations(lightmaps.size());
 
-    auto data = output_texture->data();
+    txn->mutate_data([&](uint8_t* data, uint16_t width, uint16_t height, TextureFormat format) {
+        _S_UNUSED(width);
+        _S_UNUSED(height);
+        _S_UNUSED(format);
 
-    bool logged = false;
-    for(uint32_t i = 0; i < lightmaps.size(); ++i) {
-        auto& rect = rects[i];
+        bool logged = false;
+        for(uint32_t i = 0; i < lightmaps.size(); ++i) {
+            auto& rect = rects[i];
 
-        if(!rect.was_packed) {
-            if(!logged) {
-                L_ERROR("Ran out of space packing lightmaps!");
-                logged = true;
+            if(!rect.was_packed) {
+                if(!logged) {
+                    L_ERROR("Ran out of space packing lightmaps!");
+                    logged = true;
+                }
+
+                continue;
             }
 
-            continue;
-        }
+            uint32_t src_idx = 0;
+            for(uint32_t y = rect.y; y < rect.y + rect.h; ++y) {
+                for(uint32_t x = rect.x; x < rect.x + rect.w; ++x) {
+                    uint32_t idx = (y * LIGHTMAP_DIMENSION * 4) + (x * 4);
 
-        uint32_t src_idx = 0;
-        for(uint32_t y = rect.y; y < rect.y + rect.h; ++y) {
-            for(uint32_t x = rect.x; x < rect.x + rect.w; ++x) {
-                uint32_t idx = (y * LIGHTMAP_DIMENSION * 4) + (x * 4);
+                    data[idx] = lightmaps[i].data[src_idx];
+                    data[idx + 1] = lightmaps[i].data[src_idx + 1];
+                    data[idx + 2] = lightmaps[i].data[src_idx + 2];
+                    data[idx + 3] = 255;
 
-                data[idx] = lightmaps[i].data[src_idx];
-                data[idx + 1] = lightmaps[i].data[src_idx + 1];
-                data[idx + 2] = lightmaps[i].data[src_idx + 2];
-                data[idx + 3] = 255;
-
-                src_idx += 3;
+                    src_idx += 3;
+                }
             }
-        }
 
-        locations[i] = LightmapLocation(rect.x, rect.y);
-    }
+            locations[i] = LightmapLocation(rect.x, rect.y);
+        }
+    });
 
     // output_texture->save_to_file("/tmp/lightmap.tga");
-    txn->set_data(data);
     txn->commit();
     return locations;
 }

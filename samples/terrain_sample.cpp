@@ -11,25 +11,26 @@ inline T clamp(T x, T a = 0, T b = 1) {
 void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& vertices) {
     auto txn = texture->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
     txn->resize(width, length);
+    txn->mutate_data([&](uint8_t* data, uint16_t, uint16_t, TextureFormat) {
+        for(uint32_t i = 0; i < vertices.count(); ++i) {
+            auto n = vertices.normal_at<Vec3>(i);
 
-    for(uint32_t i = 0; i < vertices.count(); ++i) {
-        auto n = vertices.normal_at<Vec3>(i);
+            Degrees steepness = Radians(acos(n->dot(Vec3(0, 1, 0))));
+            float height = (vertices.position_at<Vec3>(i)->y + 64.0f) / 128.0f;
 
-        Degrees steepness = Radians(acos(n->dot(Vec3(0, 1, 0))));
-        float height = (vertices.position_at<Vec3>(i)->y + 64.0f) / 128.0f;
+            float rock = clamp(steepness.value / 45.0f);
+            float sand = clamp(1.0f - (height * 4.0f));
+            float grass = (sand > 0.5f) ? 0.0f : 0.5f;
+            float snow = height * clamp(n->z);
 
-        float rock = clamp(steepness.value / 45.0f);
-        float sand = clamp(1.0f - (height * 4.0f));
-        float grass = (sand > 0.5f) ? 0.0f : 0.5f;
-        float snow = height * clamp(n->z);
+            float z = rock + sand + grass + snow;
 
-        float z = rock + sand + grass + snow;
-
-        txn->data()[i * 4] = 255.0f * (sand / z);
-        txn->data()[(i * 4) + 1] = 255.0f * (grass / z);
-        txn->data()[(i * 4) + 2] = 255.0f * (rock / z);
-        txn->data()[(i * 4) + 3] = 255.0f * (snow / z);
-    }
+            data[i * 4] = 255.0f * (sand / z);
+            data[(i * 4) + 1] = 255.0f * (grass / z);
+            data[(i * 4) + 2] = 255.0f * (rock / z);
+            data[(i * 4) + 3] = 255.0f * (snow / z);
+        }
+    });
 
     txn->commit();
 }
@@ -133,6 +134,9 @@ private:
 
 
 int main(int argc, char* argv[]) {
+    _S_UNUSED(argc);
+    _S_UNUSED(argv);
+
     smlt::AppConfig config;
     config.title = "Terrain Demo";
     config.fullscreen = false;

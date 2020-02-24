@@ -295,14 +295,13 @@ public:
     void set_auto_upload(bool v=true);
     void set_mipmap_generation(MipmapGenerate type);
 
+    const Texture::Data& data() const;
     void set_data(const Texture::Data& data);
 
     void _set_has_mipmaps(bool v);
 
     /* Clear the data buffer */
     void free();
-
-    Texture::Data& data();
 
     typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
 

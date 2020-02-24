@@ -360,10 +360,6 @@ void TextureTransaction::free() {
     mark_dirty();
 }
 
-Texture::Data& TextureTransaction::data() {
-    return target_->data_;
-}
-
 void TextureTransaction::mutate_data(TextureTransaction::MutationFunc func) {
     mutations_.push(func);
 
@@ -488,6 +484,10 @@ void TextureTransaction::set_mipmap_generation(MipmapGenerate type) {
     target_->mipmap_generation_ = type;
     params_dirty_ = true;
     mark_dirty();
+}
+
+const Texture::Data& TextureTransaction::data() const {
+    return target_->data_;
 }
 
 void TextureTransaction::set_data(const Texture::Data& data) {

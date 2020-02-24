@@ -29,7 +29,7 @@ public:
         auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
 
         auto txn = tex->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-        auto& data = txn->data();
+        auto data = txn->data();
         data[0] = 255;
         data[1] = 128;
         data[2] = 0;
