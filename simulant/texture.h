@@ -225,6 +225,8 @@ public:
     uint32_t _renderer_specific_id() const;
 
 private:
+    friend class AssetTransaction<Texture>;
+
     Renderer* renderer_ = nullptr;
 
     // Set when transaction is committed
@@ -234,6 +236,8 @@ private:
     uint32_t renderer_id_ = 0;
 
     mutable thread::Mutex lock_;
+
+    std::shared_ptr<TextureImpl> clone_impl() override;
 };
 
 class TextureTransaction:

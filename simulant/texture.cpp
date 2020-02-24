@@ -555,6 +555,10 @@ uint32_t Texture::_renderer_specific_id() const {
     return renderer_id_;
 }
 
+std::shared_ptr<TextureImpl> Texture::clone_impl() {
+    return std::make_shared<TextureImpl>(*pimpl_);
+}
+
 uint8_t texture_format_stride(TextureFormat format) {
     switch(format) {
         case TEXTURE_FORMAT_R8: return 1;

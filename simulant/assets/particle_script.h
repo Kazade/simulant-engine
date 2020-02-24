@@ -73,6 +73,10 @@ class ParticleScript:
     public generic::Identifiable<ParticleScriptID>,
     public RefCounted<ParticleScript> {
 
+private:
+    friend class AssetTransaction<ParticleScript>;
+
+    std::shared_ptr<ParticleScriptImpl> clone_impl() override;
 public:
     const static int MAX_EMITTER_COUNT = 8;
 
