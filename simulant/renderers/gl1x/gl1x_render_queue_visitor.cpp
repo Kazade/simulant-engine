@@ -436,6 +436,8 @@ static GLenum convert_index_type(IndexType type) {
 }
 
 void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
+    _S_UNUSED(material_pass);
+
     auto element_count = renderable->index_element_count;
     // Don't bother doing *anything* if there is nothing to render
     if(!element_count) {

@@ -14,7 +14,7 @@ ENDIF()
 OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
-OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" ON)
+OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 OPTION(SIMULANT_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 

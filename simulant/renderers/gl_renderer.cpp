@@ -18,6 +18,8 @@
 namespace smlt {
 
 void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
+    _S_UNUSED(tex_id);
+
     GLuint gl_tex;
 
     if(!GLThreadCheck::is_current()) {
