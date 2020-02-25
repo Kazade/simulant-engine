@@ -53,7 +53,6 @@ void Splash::load() {
     //Create an inactive pipeline
     pipeline_ = window->render(stage_, camera_);
     link_pipeline(pipeline_);
-    timer_ = 0.0f;
 }
 
 void Splash::unload() {
@@ -64,15 +63,7 @@ void Splash::unload() {
 }
 
 void Splash::activate() {
-    /* Add gradual fade in */
-    std::shared_ptr<float> opacity = std::make_shared<float>(0.0f);
-    connection_ = window->idle->add_timeout(1.0 / 60, [opacity, this]() -> bool {
-        const float SPEED = 2.0f;
-        *opacity += window->time_keeper->delta_time() * SPEED;
-        image_->set_opacity(std::min(*opacity, 1.0f));
-        return *opacity < 1.0f;
-    });
-
+    start_time_ = window->time_keeper->now_in_us();
     window->play_sound(sound_);
 }
 
@@ -82,12 +73,23 @@ void Splash::deactivate() {
 }
 
 void Splash::update(float dt) {
+    /* We can't use dt as we load the scene in the main thread, and
+     * by the time we hit update dt will be large and we'll
+     * we'll immediately start loading the next scene */
+    _S_UNUSED(dt);
+
+    const float FADE_SPEED = 2.0f;
+
     if(!this->is_active()) {
         return;
     }
 
-    timer_ += dt;
-    if(timer_ >= time_) {
+    auto diff = window->time_keeper->now_in_us() - start_time_;
+    float elapsed = float(diff) / 1000000.0f;
+
+    image_->set_opacity(std::min(elapsed * FADE_SPEED, 1.0f));
+
+    if(elapsed >= time_) {
         scenes->activate(target_);
     }
 }
