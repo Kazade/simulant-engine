@@ -368,8 +368,8 @@ private:
             }
         }
 
-        /* Must be first for alignment reasons */
-        byte elements_[array_size];
+        /* Force 8-byte alignment */
+        byte elements_[array_size] __attribute__((aligned(8)));
 
         thread::Mutex lock_;
         byte* first_used_ = nullptr;
