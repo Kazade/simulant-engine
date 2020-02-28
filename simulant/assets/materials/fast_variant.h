@@ -41,8 +41,8 @@ struct FastVariant {
 
     std::type_index type_code = typeid(bool);
 
-    /* Allocate data to hold the largest type */
-    char data[max_sizeof<Args...>::value];
+    /* Allocate data to hold the largest type. Must be 8-byte aligned! */
+    char data[max_sizeof<Args...>::value] __attribute__((aligned(8)));
 
     std::function<void (this_type*)> destroy;
     std::function<void (this_type*, const this_type*)> copy;
