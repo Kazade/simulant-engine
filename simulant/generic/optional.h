@@ -87,10 +87,10 @@ public:
 
 private:
     bool has_value_ = false;
-    char data_[sizeof(T)] = {0};
+    char data_[sizeof(T)] __attribute__((aligned(8)));
 
     T* value_ptr() const {
-        return (has_value()) ? (T*) data_ : nullptr;
+        return (has_value()) ? (T*) (data_) : nullptr;
     }
 
     void set_value(const T& value) {
@@ -108,7 +108,7 @@ private:
             reset();
         }
 
-        *((T*) data_) = std::move(value);
+        *(reinterpret_cast<T*>(data_)) = std::move(value);
         has_value_ = true;
     }
 
