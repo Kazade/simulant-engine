@@ -60,6 +60,7 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 }
 
 Mesh::~Mesh() {
+    submeshes_.clear();
     vertex_data_.reset();
 }
 

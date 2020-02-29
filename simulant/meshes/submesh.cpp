@@ -200,9 +200,9 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         auto v = vd->normal_at<Vec3>(i); // Get the vertex normal
 
         // Work out the component with the largest value
-        float absx = fabs(v->x);
-        float absy = fabs(v->y);
-        float absz = fabs(v->z);
+        float absx = std::fabs(v->x);
+        float absy = std::fabs(v->y);
+        float absz = std::fabs(v->z);
 
         bool x = (absx > absy && absx > absz);
         bool y = (absy > absx && absy > absz);
@@ -329,6 +329,10 @@ MaterialPtr SubMesh::material_at_slot(MaterialSlot var, bool fallback) const {
     } else {
         return ret;
     }
+}
+
+SubMeshInterface::~SubMeshInterface() {
+
 }
 
 

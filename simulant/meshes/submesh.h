@@ -13,10 +13,10 @@ class Mesh;
 class Renderer;
 
 class SubMeshInterface:
-    public virtual Boundable {
+        public virtual Boundable {
 
 public:
-    virtual ~SubMeshInterface() {}
+    virtual ~SubMeshInterface();
 
     virtual MaterialPtr material() const = 0;
     virtual MeshArrangement arrangement() const = 0;
