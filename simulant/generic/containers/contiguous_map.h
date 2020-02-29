@@ -75,6 +75,8 @@ public:
                 if(current->left_index_ > -1) {
                     previous_node_index_ = current->left_index_;
                 }
+            } else {
+                previous_node_index_ = -1;
             }
         }
 
@@ -111,8 +113,21 @@ public:
 
             auto previous = current_node_;
 
-            if(current->right_index_ == -1 || current->right_index_ == previous_node_index_) {
+            if(current->right_index_ == -1) {
+                /* We've reached the end, now we go up until we come from
+                 * the left branch */
+
                 current_node_ = current->parent_index_;
+                while(current_node_ > -1) {
+                    current = _node(current_node_);
+                    if(previous == current->left_index_) {
+                        /* We came from the left, so break */
+                        break;
+                    } else {
+                        current_node_ = current->parent_index_;
+                    }
+                }
+
             } else {
                 current_node_ = current->right_index_;
                 if(current_node_ > -1) {
@@ -141,7 +156,6 @@ public:
         ContiguousMultiMap* map_ = nullptr;
 
         int32_t list_head_index_ = -1;
-        int32_t current_node_index_ = -1;
         int32_t previous_node_index_ = -1;
     };
 
