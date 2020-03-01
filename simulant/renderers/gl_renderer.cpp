@@ -22,10 +22,16 @@ void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
 
     GLuint gl_tex;
 
-    if(!GLThreadCheck::is_current()) {
-        win_->idle->run_sync([&gl_tex]() {
+    if(within_coroutine()) {
+        /* If we're in a coroutine, we need to make sure
+         * we run the GL function on the idle task manager
+         * and then yield. FIXME: When/if coroutines
+         * aren't implemented using threads we won't
+         * need to do this */
+        win_->idle->add_once([&gl_tex]() {
             GLCheck(glGenTextures, 1, &gl_tex);
         });
+        yield_coroutine();
     } else {
         GLCheck(glGenTextures, 1, &gl_tex);
     }

@@ -491,6 +491,9 @@ bool Window::run_frame() {
 
     idle_.execute(); //Execute idle tasks before render
 
+    // Update coroutines
+    update_coroutines();
+
     // Garbage collect resources after idle, but before rendering
     asset_manager_->run_garbage_collection();
 

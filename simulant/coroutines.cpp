@@ -51,33 +51,57 @@ COResult resume_coroutine(coroutine_id id) {
         return CO_RESULT_INVALID;
     }
 
+    /* We've finished, do nothing */
     if(it->second.is_finished) {
         return CO_RESULT_FINISHED;
     }
 
     auto& context = it->second;
     context.mutex.lock();
-    if(!it->second.is_started) {
+    context.is_running = true;
+    if(!context.is_started) {
+        /* Start the coroutine running */
         context.thread = new thread::Thread(&run_coroutine, &context);
         context.is_started = true;
+        context.mutex.unlock();
     } else {
-        context.is_running = true;
+        /* Tell the coroutine to run */
+        context.mutex.unlock();
         context.cond.notify_one();
     }
+
+    context.mutex.lock();
+    /* Wait for the coroutine to yield */
+    while(context.is_running) {
+        context.cond.wait(context.mutex);
+    }
+
     context.mutex.unlock();
 
     return CO_RESULT_RUNNING;
 }
 
 void yield_coroutine() {
+    if(!CURRENT_CONTEXT) {
+        /* Yield called from outside a coroutine
+         * just return */
+        return;
+    }
+
     CURRENT_CONTEXT->is_running = false;
     CURRENT_CONTEXT->cond.notify_one();
     while(!CURRENT_CONTEXT->is_running) {
         CURRENT_CONTEXT->cond.wait(CURRENT_CONTEXT->mutex);
         if(CURRENT_CONTEXT->is_terminating) {
+            /* This forces an incomplete coroutine to
+             * end if stop_coroutine has been called */
             thread::Thread::exit();
         }
     }
+}
+
+bool within_coroutine() {
+    return bool(CURRENT_CONTEXT);
 }
 
 void stop_coroutine(coroutine_id id) {
