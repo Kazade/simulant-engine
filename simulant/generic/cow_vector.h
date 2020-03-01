@@ -110,6 +110,10 @@ public:
         return unique_;
     }
 
+    std::vector<T> copy() const {
+        return *vector_;
+    }
+
 private:
     void copy() {
         if(unique_) return;

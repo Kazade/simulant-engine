@@ -37,6 +37,8 @@ public:
 
         assert_equal(4u, data.size());
 
+        txn->set_data(data);
+
         // Should convert each pixel to: {1, 0, 0, v}
         txn->convert(
             TEXTURE_FORMAT_RGBA4444,
