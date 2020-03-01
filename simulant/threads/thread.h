@@ -83,6 +83,8 @@ public:
     bool joinable() const;
     void detach();
 
+    static void exit();
+
     ThreadID id() const {
         /* NOTE: This assumes that pthread_t is implicitly convertible
          * to an unsigned int without losing information. On the Dreamcast

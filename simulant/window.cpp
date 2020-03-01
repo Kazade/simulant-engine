@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef _arch_dreamcast
+#ifdef __arch_dreamcast
     #include <kos.h>
 #endif
 
@@ -207,7 +207,7 @@ void Window::_clean_up() {
     }
     panels.clear();
 
-    backgrounds_->destroy_all();;
+    backgrounds_->destroy_all();
     backgrounds_->clean_up();
 
     destroy_all_stages();
@@ -832,6 +832,25 @@ uint32_t Window::background_count() const {
 
 void Window::destroy_all_backgrounds() {
     backgrounds_->destroy_all();
+}
+
+void Window::start_coroutine(std::function<void ()> func) {
+    coroutines_.push_back(smlt::start_coroutine(func));
+}
+
+void Window::update_coroutines() {
+    for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
+        if(resume_coroutine(*it) == CO_RESULT_FINISHED) {
+            stop_coroutine(*it);
+            it = coroutines_.erase(it);
+        }
+    }
+}
+
+void Window::stop_all_coroutines() {
+    for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
+        stop_coroutine(*it);
+    }
 }
 
 }
