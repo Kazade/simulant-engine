@@ -4,7 +4,7 @@
 
 namespace smlt {
 
-typedef uint32_t coroutine_id;
+typedef uint32_t CoroutineID;
 
 enum COResult {
     CO_RESULT_RUNNING = 0,
@@ -12,9 +12,9 @@ enum COResult {
     CO_RESULT_INVALID
 };
 
-coroutine_id start_coroutine(std::function<void ()> f);
-void stop_coroutine(coroutine_id id);
-COResult resume_coroutine(coroutine_id id);
+CoroutineID start_coroutine(std::function<void ()> f);
+void stop_coroutine(CoroutineID id);
+COResult resume_coroutine(CoroutineID id);
 void yield_coroutine();
 bool within_coroutine();
 

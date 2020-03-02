@@ -41,7 +41,7 @@
 #include "time_keeper.h"
 #include "stats_recorder.h"
 #include "screen.h"
-#include "coroutines.h"
+#include "coroutines/coroutine.h"
 
 namespace smlt {
 
@@ -277,7 +277,7 @@ public:
     void start_coroutine(std::function<void ()> func);
 
 private:
-    std::list<coroutine_id> coroutines_;
+    std::list<CoroutineID> coroutines_;
     void update_coroutines();
     void stop_all_coroutines();
 

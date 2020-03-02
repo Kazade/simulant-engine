@@ -1,14 +1,14 @@
 #include <map>
 #include <utility>
-#include "coroutines.h"
-#include "threads/thread.h"
-#include "threads/mutex.h"
-#include "threads/condition.h"
+#include "coroutine.h"
+#include "../threads/thread.h"
+#include "../threads/mutex.h"
+#include "../threads/condition.h"
 
 namespace smlt {
 
 struct Context {
-    coroutine_id id;
+    CoroutineID id;
     bool is_running = false;
     bool is_started = false;
     bool is_finished = false;
@@ -20,12 +20,12 @@ struct Context {
     thread::Condition cond;
 };
 
-static std::map<coroutine_id, Context> CONTEXTS;
-static coroutine_id ID_COUNTER = 0;
+static std::map<CoroutineID, Context> CONTEXTS;
+static CoroutineID ID_COUNTER = 0;
 
 thread_local static Context* CURRENT_CONTEXT = nullptr;
 
-coroutine_id start_coroutine(std::function<void ()> f) {
+CoroutineID start_coroutine(std::function<void ()> f) {
     auto& new_context = CONTEXTS[++ID_COUNTER];
     new_context.id = ID_COUNTER;
     new_context.func = f;
@@ -43,7 +43,7 @@ static void run_coroutine(Context* context) {
     context->mutex.unlock();
 }
 
-COResult resume_coroutine(coroutine_id id) {
+COResult resume_coroutine(CoroutineID id) {
     assert(!CURRENT_CONTEXT);
 
     auto it = CONTEXTS.find(id);
@@ -104,7 +104,7 @@ bool within_coroutine() {
     return bool(CURRENT_CONTEXT);
 }
 
-void stop_coroutine(coroutine_id id) {
+void stop_coroutine(CoroutineID id) {
     assert(!CURRENT_CONTEXT);
 
     auto it = CONTEXTS.find(id);
