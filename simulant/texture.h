@@ -111,19 +111,13 @@ enum TextureChannel {
 
 typedef std::array<TextureChannel, 4> TextureChannelSet;
 
-class TextureImpl;
-class TextureTransaction;
-
 class Texture :
     public Asset,
-    public AtomicAsset<Texture, TextureImpl, TextureTransaction>,
     public Loadable,
     public generic::Identifiable<TextureID>,
     public RefCounted<Texture>,
     public Updateable,
     public RenderTarget {
-
-    friend class TextureTransaction;
 
 public:
     static const TextureChannelSet DEFAULT_SOURCE_CHANNELS;
@@ -134,118 +128,11 @@ public:
     };
 
     typedef std::shared_ptr<Texture> ptr;
-    typedef cow_vector<uint8_t> Data;
+    typedef std::vector<uint8_t> Data;
 
     Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888);
 
-    TextureTexelType texel_type() const;
-
     TextureFormat format() const;
-
-    uint16_t width() const override;
-
-    uint16_t height() const override;
-
-    Vec2 dimensions() const { return Vec2(width(), height()); }
-
-    /*
-     * Returns true if this Texture uses a compressed format
-     */
-    bool is_compressed() const;
-
-    /* Returns the data size of each texel in bytes */
-    std::size_t bytes_per_pixel() const;
-
-    /* Returns the data size of each texel in bits */
-    std::size_t bits_per_pixel() const;
-
-    /*
-     * Returns the number of channels that this texture has
-     */
-    uint8_t channels() const;
-
-    /*
-     * Return a const-reference to the internal data buffer
-     */
-    const Texture::Data& data() const;
-
-    /*
-     * Save a texture to the specified file. Will only work for
-     * uncompressed Textures
-     */
-    void save_to_file(const unicode& filename);
-
-    unicode source() const;
-    TextureFilter texture_filter() const;
-    TextureWrap wrap_u() const;
-    TextureWrap wrap_v() const;
-    TextureWrap wrap_w() const;
-    MipmapGenerate mipmap_generation() const;
-    TextureFreeData free_data_mode() const;
-
-    /*
-     * INTERNAL: returns true if the filters are dirty
-     */
-    bool _params_dirty() const {
-        return params_dirty_;
-    }
-
-    /*
-     * INTERNAL: Clears the params dirty flag
-     */
-    void _set_params_clean() {
-        params_dirty_ = false;
-    }
-
-    /*
-     * INTERNAL: returns true if the data needs re-uploading
-     */
-    bool _data_dirty() const {
-        return data_dirty_;
-    }
-
-    /*
-     * INTERNAL: clears the dirty data flag
-     */
-    void _set_data_clean() {
-        data_dirty_ = false;
-    }
-
-
-    /* These are overridden to notify the renderer of texture changes */
-    bool init() override;
-    void clean_up() override;
-    void update(float dt) override;
-    bool has_mipmaps() const;
-    bool auto_upload() const;
-
-
-    /* This is for storing the GL (or whatever) texture ID */
-    void _set_renderer_specific_id(const uint32_t id);
-    uint32_t _renderer_specific_id() const;
-
-private:
-    friend class AssetTransaction<Texture>;
-
-    Renderer* renderer_ = nullptr;
-
-    // Set when transaction is committed
-    bool data_dirty_ = false;
-    bool params_dirty_ = false;
-
-    uint32_t renderer_id_ = 0;
-
-    mutable thread::Mutex lock_;
-
-    std::shared_ptr<TextureImpl> clone_impl() override;
-};
-
-class TextureTransaction:
-    public AssetTransaction<Texture> {
-public:
-    TextureTransaction(std::shared_ptr<Texture> texture, AssetTransactionScope type):
-        AssetTransaction<Texture>(texture, type) {}
-
     void set_format(TextureFormat format, TextureTexelType texel_type=TEXTURE_TEXEL_TYPE_UNSPECIFIED);
 
     /* Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
@@ -298,26 +185,99 @@ public:
     const Texture::Data& data() const;
     void set_data(const Texture::Data& data);
 
-    void _set_has_mipmaps(bool v);
-
     /* Clear the data buffer */
     void free();
 
     typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
 
-    /* Push a texture data mutation function onto a queue that will be applied
-     * during the commit of the transaction */
+    /* Apply a mutation function to the current texture data */
     void mutate_data(MutationFunc func);
 
+    TextureTexelType texel_type() const;
+    uint16_t width() const override;
+    uint16_t height() const override;
+    Vec2 dimensions() const { return Vec2(width(), height()); }
+
+    /*
+     * Returns true if this Texture uses a compressed format
+     */
+    bool is_compressed() const;
+
+    /* Returns the data size of each texel in bytes */
+    std::size_t bytes_per_pixel() const;
+
+    /* Returns the data size of each texel in bits */
+    std::size_t bits_per_pixel() const;
+
+    /*
+     * Returns the number of channels that this texture has
+     */
+    uint8_t channels() const;
+
+    /*
+     * Save a texture to the specified file. Will only work for
+     * uncompressed Textures
+     */
+    void save_to_file(const unicode& filename);
+
+    unicode source() const;
+    TextureFilter texture_filter() const;
+    TextureWrap wrap_u() const;
+    TextureWrap wrap_v() const;
+    TextureWrap wrap_w() const;
+    MipmapGenerate mipmap_generation() const;
+    TextureFreeData free_data_mode() const;
+
+    /* These are overridden to notify the renderer of texture changes */
+    bool init() override;
+    void clean_up() override;
+    void update(float dt) override;
+    bool has_mipmaps() const;
+    bool auto_upload() const;
+
+
+    /* This is for storing the GL (or whatever) texture ID */
+    void _set_renderer_specific_id(const uint32_t id);
+    uint32_t _renderer_specific_id() const;
+
+    /* INTERNAL: Clears the params dirty flag */
+    void _set_params_clean();
+
+    /* INTERNAL: returns true if the data needs re-uploading */
+    bool _data_dirty() const;
+
+    /* INTERNAL: clears the dirty data flag */
+    void _set_data_clean();
+
+    /* INTERNAL: returns true if the filters are dirty */
+    bool _params_dirty() const;
+    void _set_has_mipmaps(bool v);
 private:
-    bool data_dirty_ = false;
-    bool params_dirty_ = false;
+    Renderer* renderer_ = nullptr;
 
-    /* A queue of mutations to apply to the texture data on commit */
-    std::queue<MutationFunc> mutations_;
-    void process_mutations(Texture::Data& data, uint16_t width, uint16_t height, TextureFormat format);
+    uint16_t width_ = 0;
+    uint16_t height_ = 0;
 
-    void on_commit() override;
+    TextureTexelType texel_type_ = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
+    TextureFormat format_ = TEXTURE_FORMAT_RGBA8888;
+
+    unicode source_;
+
+    bool auto_upload_ = true; /* If true, the texture is uploaded by the renderer asap */
+    bool data_dirty_ = true;
+    Texture::Data data_;
+    TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
+
+    MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;
+    bool has_mipmaps_ = false;
+
+    bool params_dirty_ = true;
+    TextureFilter filter_ = TEXTURE_FILTER_POINT;
+    TextureWrap wrap_u_ = TEXTURE_WRAP_REPEAT;
+    TextureWrap wrap_v_ = TEXTURE_WRAP_REPEAT;
+    TextureWrap wrap_w_ = TEXTURE_WRAP_REPEAT;
+
+    uint32_t renderer_id_ = 0;
 };
 
 }

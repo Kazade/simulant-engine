@@ -44,55 +44,6 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_ALPHA
 }};
 
-
-class TextureImpl {
-    friend class TextureTransaction;
-    friend class Texture;
-
-public:
-    TextureImpl(uint16_t w, uint16_t h, TextureFormat format):
-        width_(w), height_(h), format_(format) {
-
-    }
-
-private:
-    uint16_t width_ = 0;
-    uint16_t height_ = 0;
-
-    TextureTexelType texel_type_ = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
-    TextureFormat format_ = TEXTURE_FORMAT_RGBA8888;
-
-    unicode source_;
-
-    bool auto_upload_ = true; /* If true, the texture is uploaded by the renderer asap */
-    bool data_dirty_ = true;
-    Texture::Data data_;
-    TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
-
-    MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;
-    bool has_mipmaps_ = false;
-
-    bool params_dirty_ = true;
-    TextureFilter filter_ = TEXTURE_FILTER_POINT;
-    TextureWrap wrap_u_ = TEXTURE_WRAP_REPEAT;
-    TextureWrap wrap_v_ = TEXTURE_WRAP_REPEAT;
-    TextureWrap wrap_w_ = TEXTURE_WRAP_REPEAT;
-
-    bool is_compressed() const {
-        switch(format_) {
-        case TEXTURE_FORMAT_R8:
-        case TEXTURE_FORMAT_RGB888:
-        case TEXTURE_FORMAT_RGBA8888:
-        case TEXTURE_FORMAT_RGBA4444:
-        case TEXTURE_FORMAT_RGBA5551:
-            return false;
-        default:
-            return true;
-        }
-    }
-
-};
-
 static uint8_t channels_for_format(TextureFormat format) {
     switch(format) {
     case TEXTURE_FORMAT_R8:
@@ -113,10 +64,6 @@ static uint8_t channels_for_format(TextureFormat format) {
     case TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT:
     case TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT:
         return 4;
-    default:
-        assert(0 && "Not implemented");
-        // Shouldn't happen, but will be more obviously debuggable if it does
-        return 0;
     }
 }
 
@@ -138,15 +85,12 @@ static std::size_t bytes_per_texel(TextureFormat format, TextureTexelType type) 
 
 Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
     Asset(asset_manager),
-    AtomicAsset<Texture, TextureImpl, TextureTransaction>(
-        std::make_shared<TextureImpl>(width, height, format)
-    ),
     generic::Identifiable<TextureID>(id) {
 
     // Default the texel type to what is probably required
-    pimpl_->texel_type_ = texel_type_from_texture_format(format);
-    pimpl_->data_.resize(width * height * bytes_per_texel(format, pimpl_->texel_type_));
-    pimpl_->data_.shrink_to_fit();
+    texel_type_ = texel_type_from_texture_format(format);
+    data_.resize(width * height * bytes_per_texel(format, texel_type_));
+    data_.shrink_to_fit();
 
     /* We intentionally don't mark data dirty here. All that would happen is
      * we would upload a blank texture */
@@ -155,74 +99,71 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
 }
 
 TextureTexelType Texture::texel_type() const {
-    return pimpl_->texel_type_;
+    return texel_type_;
 }
 
 TextureFormat Texture::format() const {
-    return pimpl_->format_;
+    return format_;
 }
 
 uint16_t Texture::width() const {
-    return pimpl_->width_;
+    return width_;
 }
 
 uint16_t Texture::height() const {
-    return pimpl_->height_;
+    return height_;
 }
 
-void TextureTransaction::set_format(TextureFormat format, TextureTexelType texel_type) {
-    if(target_->format_ == format) {
+void Texture::set_format(TextureFormat format, TextureTexelType texel_type) {
+    if(format_ == format) {
         return;
     }
 
-    target_->format_ = format;
+    format_ = format;
 
     // Default the texel type to what is probably required
-    target_->texel_type_ = (
+    texel_type_ = (
         (texel_type == TEXTURE_TEXEL_TYPE_UNSPECIFIED) ?
         texel_type_from_texture_format(format) : texel_type
     );
 
-    target_->data_.resize(
-        target_->width_ * target_->height_ * bytes_per_texel(target_->format_, target_->texel_type_)
+    data_.resize(
+        width_ * height_ * bytes_per_texel(format_, texel_type_)
     );
-    target_->data_.shrink_to_fit();
+    data_.shrink_to_fit();
 
     data_dirty_ = true;
-    mark_dirty();
 }
 
-void TextureTransaction::resize(uint16_t width, uint16_t height, uint32_t data_size) {
-    if(target_->width_ == width && target_->height_ == height && target_->data_.size() == data_size) {
+void Texture::resize(uint16_t width, uint16_t height, uint32_t data_size) {
+    if(width_ == width && height_ == height && data_.size() == data_size) {
         return;
     }
 
-    target_->width_ = width;
-    target_->height_ = height;
-    target_->data_.resize(data_size);
-    target_->data_.shrink_to_fit();
+    width_ = width;
+    height_ = height;
+    data_.resize(data_size);
+    data_.shrink_to_fit();
 
     data_dirty_ = true;
-    mark_dirty();
 }
 
-void TextureTransaction::resize(uint16_t width, uint16_t height) {
-    if(target_->width_ == width && target_->height_ == height) {
+void Texture::resize(uint16_t width, uint16_t height) {
+    if(width_ == width && height_ == height) {
         return;
     }
 
-    if(target_->is_compressed()) {
+    if(is_compressed()) {
         throw std::logic_error("Unable to resize a compressed texture with width and height");
     }
 
-    target_->width_ = width;
-    target_->height_ = height;
+    width_ = width;
+    height_ = height;
 
-    target_->data_.resize(width * height * bytes_per_texel(target_->format_, target_->texel_type_));
-    target_->data_.shrink_to_fit();
+    data_.resize(width * height * bytes_per_texel(format_, texel_type_));
+    data_.shrink_to_fit();
 
     data_dirty_ = true;
-    mark_dirty();
 }
 
 static void explode_r8(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
@@ -279,9 +220,9 @@ static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
     {TEXTURE_FORMAT_RGBA8888, compress_rgba8888}
 };
 
-void TextureTransaction::convert(TextureFormat new_format, const TextureChannelSet &channels) {
-    auto original_data = data().copy();
-    auto original_format = source_->format();
+void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
+    auto original_data = data();
+    auto original_format = format();
 
     set_format(new_format);
 
@@ -339,44 +280,41 @@ static void do_flip_vertically(uint8_t* data, uint16_t width, uint16_t height, T
     }
 }
 
-void TextureTransaction::flip_vertically() {
+void Texture::flip_vertically() {
     mutate_data(&do_flip_vertically);
 }
 
-void TextureTransaction::set_source(const unicode& source) {
-    target_->source_ = source;
-    mark_dirty();
+void Texture::set_source(const unicode& source) {
+    source_ = source;
 }
 
-void TextureTransaction::free() {
-    target_->data_.clear();
-    target_->data_.shrink_to_fit();
+void Texture::free() {
+    data_.clear();
+    data_.shrink_to_fit();
 
     /* We don't mark data dirty here, we don't want
      * anything to be updated in GL, we're just freeing
      * the RAM */
-    mark_dirty();
 }
 
-void TextureTransaction::mutate_data(TextureTransaction::MutationFunc func) {
-    mutations_.push(func);
+void Texture::mutate_data(Texture::MutationFunc func) {
+    func(&data_[0], width_, height_, format_);
 
     /* A mutation by definition updates the data */
     data_dirty_ = true;
-
-    mark_dirty();
-}
-
-void TextureTransaction::process_mutations(Texture::Data& data, uint16_t width, uint16_t height, TextureFormat format) {
-    while(!mutations_.empty()) {
-        auto& func = mutations_.front();
-        func(&data[0], width, height, format);
-        mutations_.pop();
-    }
 }
 
 bool Texture::is_compressed() const {
-    return pimpl_->is_compressed();
+    switch(format_) {
+    case TEXTURE_FORMAT_R8:
+    case TEXTURE_FORMAT_RGB888:
+    case TEXTURE_FORMAT_RGBA8888:
+    case TEXTURE_FORMAT_RGBA4444:
+    case TEXTURE_FORMAT_RGBA5551:
+        return false;
+    default:
+        return true;
+    }
 }
 
 std::size_t Texture::bytes_per_pixel() const {
@@ -388,136 +326,118 @@ std::size_t Texture::bits_per_pixel() const {
 }
 
 uint8_t Texture::channels() const {
-    return channels_for_format(pimpl_->format_);
+    return channels_for_format(format_);
 }
 
 const Texture::Data &Texture::data() const {
-    return pimpl_->data_;
+    return data_;
 }
 
 void Texture::save_to_file(const unicode& filename) {
+    _S_UNUSED(filename);
     assert(0 && "Not Implemented");
 }
 
 unicode Texture::source() const {
-    return pimpl_->source_;
+    return source_;
 }
 
 TextureFilter Texture::texture_filter() const {
-    return pimpl_->filter_;
+    return filter_;
 }
 
 TextureWrap Texture::wrap_u() const {
-    return pimpl_->wrap_u_;
+    return wrap_u_;
 }
 
 TextureWrap Texture::wrap_v() const {
-    return pimpl_->wrap_v_;
+    return wrap_v_;
 }
 
 TextureWrap Texture::wrap_w() const {
-    return pimpl_->wrap_w_;
+    return wrap_w_;
 }
 
 MipmapGenerate Texture::mipmap_generation() const {
-    return pimpl_->mipmap_generation_;
+    return mipmap_generation_;
 }
 
-void TextureTransaction::set_texture_filter(TextureFilter filter) {
-    if(filter != target_->filter_) {
-        target_->filter_ = filter;
+void Texture::set_texture_filter(TextureFilter filter) {
+    if(filter != filter_) {
+        filter_ = filter;
         params_dirty_ = true;
     }
-
-    mark_dirty();
 }
 
-void TextureTransaction::set_free_data_mode(TextureFreeData mode) {
-    target_->free_data_mode_ = mode;
+void Texture::set_free_data_mode(TextureFreeData mode) {
+    free_data_mode_ = mode;
     params_dirty_ = true;
-    mark_dirty();
 }
 
 TextureFreeData Texture::free_data_mode() const {
-    return pimpl_->free_data_mode_;
+    return free_data_mode_;
 }
 
-void TextureTransaction::set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w) {
+bool Texture::_params_dirty() const {
+    return params_dirty_;
+}
+
+void Texture::_set_params_clean() {
+    params_dirty_ = false;
+}
+
+bool Texture::_data_dirty() const {
+    return data_dirty_;
+}
+
+void Texture::_set_data_clean() {
+    data_dirty_ = false;
+}
+
+void Texture::set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w) {
     set_texture_wrap_u(wrap_u);
     set_texture_wrap_v(wrap_v);
     set_texture_wrap_w(wrap_w);
 }
 
-void TextureTransaction::set_texture_wrap_u(TextureWrap wrap_u) {
-    if(wrap_u != target_->wrap_u_) {
-        target_->wrap_u_ = wrap_u;
-        params_dirty_ = true;
-        mark_dirty();
+void Texture::set_texture_wrap_u(TextureWrap wrap_u) {
+    if(wrap_u != wrap_u_) {
+        wrap_u_ = wrap_u;
+        params_dirty_ = true;       
     }
 }
 
-void TextureTransaction::set_texture_wrap_v(TextureWrap wrap_v) {
-    if(wrap_v != target_->wrap_v_) {
-        target_->wrap_v_ = wrap_v;
+void Texture::set_texture_wrap_v(TextureWrap wrap_v) {
+    if(wrap_v != wrap_v_) {
+        wrap_v_ = wrap_v;
         params_dirty_ = true;
-        mark_dirty();
     }
 }
 
-void TextureTransaction::set_texture_wrap_w(TextureWrap wrap_w) {
-    if(wrap_w != target_->wrap_w_) {
-        target_->wrap_w_ = wrap_w;
+void Texture::set_texture_wrap_w(TextureWrap wrap_w) {
+    if(wrap_w != wrap_w_) {
+        wrap_w_ = wrap_w;
         params_dirty_ = true;
-        mark_dirty();
     }
 }
 
-void TextureTransaction::set_auto_upload(bool v) {
-    target_->auto_upload_ = v;
+void Texture::set_auto_upload(bool v) {
+    auto_upload_ = v;
     params_dirty_ = true;
-    mark_dirty();
 }
 
-void TextureTransaction::set_mipmap_generation(MipmapGenerate type) {
-    target_->mipmap_generation_ = type;
+void Texture::set_mipmap_generation(MipmapGenerate type) {
+    mipmap_generation_ = type;
     params_dirty_ = true;
-    mark_dirty();
 }
 
-const Texture::Data& TextureTransaction::data() const {
-    return target_->data_;
-}
-
-void TextureTransaction::set_data(const Texture::Data& data) {
-    target_->data_ = data;
-    target_->data_.shrink_to_fit();
+void Texture::set_data(const Texture::Data& d) {
+    data_ = d;
     data_dirty_ = true;
-    mark_dirty();
 }
 
-void TextureTransaction::_set_has_mipmaps(bool v) {
-    target_->has_mipmaps_ = v;
-}
-
-void TextureTransaction::on_commit() {
-    if(data_dirty_) {
-        // If the data changed, the mipmaps are out of date
-        _set_has_mipmaps(false);
-    }
-
-    TextureImpl* impl = dynamic_cast<TextureImpl*>(source_->pimpl_.get());
-    assert(impl);
-
-    process_mutations(impl->data_, impl->width_, impl->height_, impl->format_);
-
-    // Set some flags on the texture itself
-    if(!source_->params_dirty_) {
-        source_->params_dirty_ = params_dirty_;
-    }
-
-    if(!source_->data_dirty_) {
-        source_->data_dirty_ = data_dirty_;
-    }
+void Texture::_set_has_mipmaps(bool v) {
+    has_mipmaps_ = v;
 }
 
 bool Texture::init() {
@@ -532,29 +452,23 @@ void Texture::clean_up() {
 }
 
 void Texture::update(float dt) {
-
+    _S_UNUSED(dt);
 }
 
 bool Texture::has_mipmaps() const {
-    return pimpl_->has_mipmaps_;
+    return has_mipmaps_;
 }
 
 bool Texture::auto_upload() const {
-    return pimpl_->auto_upload_;
+    return auto_upload_;
 }
 
 void Texture::_set_renderer_specific_id(const uint32_t id) {
-    thread::Lock<thread::Mutex> g(lock_);
     renderer_id_ = id;
 }
 
 uint32_t Texture::_renderer_specific_id() const {
-    thread::Lock<thread::Mutex> g(lock_);
     return renderer_id_;
-}
-
-std::shared_ptr<TextureImpl> Texture::clone_impl() {
-    return std::make_shared<TextureImpl>(*pimpl_);
 }
 
 uint8_t texture_format_stride(TextureFormat format) {

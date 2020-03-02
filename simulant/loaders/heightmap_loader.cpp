@@ -243,9 +243,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     TextureLoader loader(this->filename_, this->data_);    
     loader.into(*tex, {{"auto_upload", false}});
 
-    auto txn = tex->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-    txn->flip_vertically();
-    txn->commit();
+    tex->flip_vertically();
 
     // Now generate the heightmap from it
 

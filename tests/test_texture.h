@@ -17,9 +17,7 @@ public:
         assert_false(tex->_data_dirty());
         assert_false(tex->_params_dirty());
 
-        auto txn = tex->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-        txn->resize(64, 64);
-        txn->commit();
+        tex->resize(64, 64);
 
         assert_true(tex->_data_dirty());
         assert_false(tex->_params_dirty());
@@ -28,8 +26,7 @@ public:
     void test_conversion_from_r8_to_rgba4444() {
         auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
 
-        auto txn = tex->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-        auto data = txn->data();
+        auto data = tex->data();
         data[0] = 255;
         data[1] = 128;
         data[2] = 0;
@@ -37,15 +34,13 @@ public:
 
         assert_equal(4u, data.size());
 
-        txn->set_data(data);
+        tex->set_data(data);
 
         // Should convert each pixel to: {1, 0, 0, v}
-        txn->convert(
+        tex->convert(
             TEXTURE_FORMAT_RGBA4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ZERO, TEXTURE_CHANNEL_GREEN, TEXTURE_CHANNEL_RED}}
         );
-
-        txn->commit();
 
         assert_equal(8u, tex->data().size());
 

@@ -184,7 +184,7 @@ public:
             keys.push_back(p.first);
         }
 
-        assert_equal(keys.size(), 5);
+        assert_equal(keys.size(), 5u);
         assert_equal(keys[0], 1);
         assert_equal(keys[1], 2);
         assert_equal(keys[2], 3);

@@ -497,17 +497,14 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
     {
         window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
-        auto txn = tex->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-
         if(flags.flip_vertically) {
-            txn->flip_vertically();
+            tex->flip_vertically();
         }
 
-        txn->set_mipmap_generation(flags.mipmap);
-        txn->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
-        txn->set_texture_filter(flags.filter);
-        txn->set_auto_upload(flags.auto_upload);
-        txn->commit();
+        tex->set_mipmap_generation(flags.mipmap);
+        tex->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
+        tex->set_texture_filter(flags.filter);
+        tex->set_auto_upload(flags.auto_upload);
     }
 
     return tex;

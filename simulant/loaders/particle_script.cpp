@@ -30,8 +30,8 @@
 namespace smlt {
 namespace loaders {
 
-static smlt::Manipulator* spawn_size_manipulator(ParticleScript* script, std::shared_ptr<ParticleScriptTransaction> ps, jsonic::Node& manipulator) {
-    auto m = std::make_shared<SizeManipulator>(script);
+static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, jsonic::Node& manipulator) {
+    auto m = std::make_shared<SizeManipulator>(ps);
     ps->add_manipulator(m);
 
     if(manipulator.has_key("rate")) {
@@ -69,7 +69,7 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* script, std::sh
     return m.get();
 }
 
-static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* script, std::shared_ptr<ParticleScriptTransaction> ps, jsonic::Node& js) {
+static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, jsonic::Node& js) {
     auto parse_colour = [](const std::string& colour) -> smlt::Colour {
         auto parts = unicode(colour).split(" ");
         if(parts.size() == 3) {
@@ -102,13 +102,15 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* script,
 
     bool interpolate = js["interpolate"].get<jsonic::Boolean>();
 
-    auto m = std::make_shared<ColourFader>(script, colours, interpolate);
+    auto m = std::make_shared<ColourFader>(ps, colours, interpolate);
     ps->add_manipulator(m);
     return m.get();
 }
 
 
 void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options) {
+    _S_UNUSED(options);
+
     ParticleScript* ps = loadable_to<ParticleScript>(resource);
     jsonic::Node js;
 
@@ -117,24 +119,22 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
         js
     );
 
-
-    auto txn = ps->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-    txn->set_name((js.has_key("name")) ? js["name"].get<jsonic::String>(): "");
+    ps->set_name((js.has_key("name")) ? js["name"].get<jsonic::String>(): "");
 
     if(js.has_key("quota")) {
-        txn->set_quota(js["quota"].get<jsonic::Number>());
+        ps->set_quota(js["quota"].get<jsonic::Number>());
     }
 
     if(js.has_key("particle_width")) {
-        txn->set_particle_width(js["particle_width"].get<jsonic::Number>());
+        ps->set_particle_width(js["particle_width"].get<jsonic::Number>());
     }
 
     if(js.has_key("particle_height")) {
-        txn->set_particle_height(js["particle_height"].get<jsonic::Number>());
+        ps->set_particle_height(js["particle_height"].get<jsonic::Number>());
     }
 
     if(js.has_key("cull_each")) {
-        txn->set_cull_each(js["cull_each"].get<jsonic::Boolean>());
+        ps->set_cull_each(js["cull_each"].get<jsonic::Boolean>());
     }
 
     if(js.has_key("material")) {
@@ -145,7 +145,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
         }
 
         auto mat = ps->asset_manager().new_material_from_file(material);
-        txn->set_material(mat);
+        ps->set_material(mat);
 
         /* Apply any specified material properties */
         const std::string MATERIAL_PROPERTY_PREFIX = "material.";
@@ -276,7 +276,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 new_emitter.emission_rate = emitter["emission_rate"].get<jsonic::Number>();
             }
 
-            txn->push_emitter(new_emitter);
+            ps->push_emitter(new_emitter);
         }
 
         if(js.has_key("manipulators")) {
@@ -285,15 +285,13 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 auto& manipulator = manipulators[i];
 
                 if(manipulator["type"].get<jsonic::String>() == "size") {
-                    spawn_size_manipulator(ps, txn, manipulator);
+                    spawn_size_manipulator(ps, manipulator);
                 } else if(manipulator["type"].get<jsonic::String>() == "colour_fader") {
-                    spawn_colour_fader_manipulator(ps, txn, manipulator);
+                    spawn_colour_fader_manipulator(ps, manipulator);
                 }
             }
         }
     }
-
-    txn->commit();
 }
 
 }

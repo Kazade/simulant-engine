@@ -27,6 +27,10 @@ Asset::Asset(AssetManager* manager):
     created_(std::chrono::system_clock::now()) {
 }
 
+Asset::~Asset() {
+
+}
+
 int Asset::age() const {
     return std::chrono::duration_cast<std::chrono::seconds>(
                 created_ - std::chrono::system_clock::now()

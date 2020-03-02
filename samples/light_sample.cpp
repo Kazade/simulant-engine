@@ -31,12 +31,10 @@ public:
         actor_->move_to(0.0, 0.0, -5.0);
 
         texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
-        auto txn = texture_.fetch()->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-        txn->set_texture_filter(TEXTURE_FILTER_BILINEAR);
-        txn->commit();
+        texture_->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
         auto mat = actor_->base_mesh()->first_submesh()->material();
-        mat->set_diffuse_map(texture_.fetch());
+        mat->set_diffuse_map(texture_);
 
         // Test Camera::look_at function
         camera_->look_at(actor_->absolute_position());
@@ -72,10 +70,7 @@ public:
                 current_filter_ = 0;
             }
 
-            auto txn = texture_.fetch()->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-            txn->set_texture_filter(filters_[current_filter_]);
-            txn->commit();
-
+            texture_->set_texture_filter(filters_[current_filter_]);
             f_down = true;
         } else if(input->axis_value_hard("F") == 0) {
             f_down = false;
@@ -94,7 +89,7 @@ private:
     CameraPtr camera_;
     StagePtr stage_;
     ActorPtr actor_;
-    TextureID texture_;
+    TexturePtr texture_;
 
     bool f_down = false;
     uint8_t current_filter_ = 0;

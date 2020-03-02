@@ -104,8 +104,6 @@ GLint texture_format_to_internal_format(TextureFormat format) {
 }
 
 void GLRenderer::on_texture_prepare(TexturePtr texture) {
-    auto txn = texture->begin_transaction();
-
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;
@@ -150,7 +148,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
 
         /* Free the data if that's what is wanted */
         if(texture->free_data_mode() == TEXTURE_FREE_DATA_AFTER_UPLOAD) {
-            txn->free();
+            texture->free();
         }
 
         /* Generate mipmaps if we don't have them already */
@@ -162,7 +160,7 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
                     texture->width(), texture->height()
                 ));
                 GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
-                txn->_set_has_mipmaps(true);
+                texture->_set_has_mipmaps(true);
 #ifdef _arch_dreamcast
             } else {
                 L_WARN("Not generating mipmaps as texture is non-square (PVR limitation)");
@@ -218,9 +216,6 @@ void GLRenderer::on_texture_prepare(TexturePtr texture) {
 
         texture->_set_params_clean();
     }
-
-    /* Commit any changes */
-    txn->commit();
 
     if(active != (GLint) target) {
         GLCheck(glBindTexture, GL_TEXTURE_2D, active);

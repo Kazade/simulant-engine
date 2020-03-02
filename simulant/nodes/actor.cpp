@@ -272,6 +272,8 @@ const SubMesh *SubActor::submesh() const {
 }
 
 void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+    _S_UNUSED(camera);
+
     auto mesh = find_mesh(detail_level);
     if(!mesh) {
         return;

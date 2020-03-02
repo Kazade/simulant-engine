@@ -9,9 +9,6 @@
 
 namespace smlt {
 
-class ParticleScriptImpl;
-class ParticleScriptTransaction;
-
 enum EmitterType {
     PARTICLE_EMITTER_POINT,
     PARTICLE_EMITTER_BOX
@@ -68,15 +65,10 @@ typedef std::shared_ptr<Manipulator> ManipulatorPtr;
 
 class ParticleScript:
     public Asset,
-    public AtomicAsset<ParticleScript, ParticleScriptImpl, ParticleScriptTransaction>,
     public Loadable,
     public generic::Identifiable<ParticleScriptID>,
     public RefCounted<ParticleScript> {
 
-private:
-    friend class AssetTransaction<ParticleScript>;
-
-    std::shared_ptr<ParticleScriptImpl> clone_impl() override;
 public:
     const static int MAX_EMITTER_COUNT = 8;
 
@@ -102,13 +94,6 @@ public:
     bool cull_each() const;
     MaterialPtr material() const;
     bool has_repeating_emitters() const;
-};
-
-class ParticleScriptTransaction:
-    public AssetTransaction<ParticleScript> {
-public:
-    ParticleScriptTransaction(std::shared_ptr<ParticleScript> particle_script, AssetTransactionScope type):
-        AssetTransaction<ParticleScript>(particle_script, type) {}
 
     void add_manipulator(std::shared_ptr<Manipulator> manipulator);
     void clear_manipulators();
@@ -123,6 +108,21 @@ public:
     void set_particle_height(float h);
     void set_cull_each(bool v);
     void set_material(MaterialPtr material);
+
+private:
+    ParticleScript* owner_ = nullptr;
+
+    std::string name_;
+    std::size_t quota_ = 0;
+    float particle_width_ = 100.0f;
+    float particle_height_ = 100.0f;
+    bool cull_each_ = false;
+
+    std::array<Emitter, ParticleScript::MAX_EMITTER_COUNT> emitters_;
+    uint16_t emitter_count_ = 0;
+
+    std::vector<ManipulatorPtr> manipulators_;
+    MaterialPtr material_;
 };
 
 }

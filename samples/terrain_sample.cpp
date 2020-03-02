@@ -9,9 +9,8 @@ inline T clamp(T x, T a = 0, T b = 1) {
 }
 
 void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& vertices) {
-    auto txn = texture->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-    txn->resize(width, length);
-    txn->mutate_data([&](uint8_t* data, uint16_t, uint16_t, TextureFormat) {
+    texture->resize(width, length);
+    texture->mutate_data([&](uint8_t* data, uint16_t, uint16_t, TextureFormat) {
         for(uint32_t i = 0; i < vertices.count(); ++i) {
             auto n = vertices.normal_at<Vec3>(i);
 
@@ -31,8 +30,6 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
             data[(i * 4) + 3] = 255.0f * (snow / z);
         }
     });
-
-    txn->commit();
 }
 
 class Gamescene : public smlt::Scene<Gamescene> {
@@ -40,7 +37,7 @@ public:
     Gamescene(smlt::Window* window):
         smlt::Scene<Gamescene>(window) {}
 
-    void load() {
+    void load() override {
         auto loading = scenes->resolve_scene_as<scenes::Loading>("_loading");
         assert(loading);
 

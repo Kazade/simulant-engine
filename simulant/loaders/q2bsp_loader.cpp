@@ -236,17 +236,13 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
     // Pack the rectangles
     stbrp_pack_rects(&context, &rects[0], rects.size());
 
-    // Make sure we lock the texture so that the renderer doesn't
-    // upload it while we're working on it!
-    auto txn = output_texture->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
-
     // Finally generate the texture!
-    txn->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
-    txn->set_format(TEXTURE_FORMAT_RGBA8888);
+    output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
+    output_texture->set_format(TEXTURE_FORMAT_RGBA8888);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
 
-    txn->mutate_data([&](uint8_t* data, uint16_t width, uint16_t height, TextureFormat format) {
+    output_texture->mutate_data([&](uint8_t* data, uint16_t width, uint16_t height, TextureFormat format) {
         _S_UNUSED(width);
         _S_UNUSED(height);
         _S_UNUSED(format);
@@ -283,7 +279,6 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
     });
 
     // output_texture->save_to_file("/tmp/lightmap.tga");
-    txn->commit();
     return locations;
 }
 
