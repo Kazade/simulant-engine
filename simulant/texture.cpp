@@ -18,6 +18,7 @@
 //
 
 #include <cassert>
+#include <cstring>
 #include <stdexcept>
 
 #include "utils/gl_thread_check.h"
@@ -224,7 +225,7 @@ void TextureTransaction::resize(uint16_t width, uint16_t height) {
     mark_dirty();
 }
 
-static void explode_r8(uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
+static void explode_r8(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
     float sr = float(*source) / 255.0f;
 
     auto calculate_component = [&channels](uint8_t i, float sr, float sg, float sb, float sa) -> float {
@@ -235,8 +236,6 @@ static void explode_r8(uint8_t* source, const TextureChannelSet& channels, float
             case TEXTURE_CHANNEL_GREEN: return sg;
             case TEXTURE_CHANNEL_BLUE: return sb;
             case TEXTURE_CHANNEL_ALPHA: return sa;
-            default:
-                return 0.0f;
         }
     };
 
@@ -249,10 +248,10 @@ static void explode_r8(uint8_t* source, const TextureChannelSet& channels, float
 static void compress_rgba4444(uint8_t* dest, float r, float g, float b, float a) {
     uint16_t* out = (uint16_t*) dest;
 
-    uint8_t rr = (uint8_t) float(15) * r;
-    uint8_t rg = (uint8_t) float(15) * g;
-    uint8_t rb = (uint8_t) float(15) * b;
-    uint8_t ra = (uint8_t) float(15) * a;
+    uint8_t rr = (uint8_t) (15.0f * r);
+    uint8_t rg = (uint8_t) (15.0f * g);
+    uint8_t rb = (uint8_t) (15.0f * b);
+    uint8_t ra = (uint8_t) (15.0f * a);
 
     *out = (rr << 12) | (rg << 8) | (rb << 4) | ra;
 }
@@ -268,7 +267,7 @@ static void compress_rgba8888(uint8_t* dest, float r, float g, float b, float a)
     *out = (rr << 24) | (rg << 16) | (rb << 8) | ra;
 }
 
-typedef void (*ExplodeFunc)(uint8_t*, const TextureChannelSet&, float&, float&, float&, float&);
+typedef void (*ExplodeFunc)(const uint8_t*, const TextureChannelSet&, float&, float&, float&, float&);
 typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
 static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
@@ -281,37 +280,36 @@ static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
 };
 
 void TextureTransaction::convert(TextureFormat new_format, const TextureChannelSet &channels) {
-    if(target_->data_.empty()) {
-        throw std::logic_error("Tried to convert a texture with no data");
-    }
-
-    auto original_format = target_->format_;
-    auto original_data = target_->data_;
+    auto original_data = data().copy();
+    auto original_format = source_->format();
 
     set_format(new_format);
 
-    if(original_format == TEXTURE_FORMAT_R8 && new_format == TEXTURE_FORMAT_RGBA4444) {
+    mutate_data([=](uint8_t* data, uint16_t, uint16_t, TextureFormat nf) {
+        _S_UNUSED(nf);
+        assert(nf == new_format); // Make sure the new format was applied
+
         auto source_stride = texture_format_stride(original_format);
         auto dest_stride = texture_format_stride(new_format);
 
-        uint8_t* source_ptr = &original_data[0];
-        uint8_t* dest_ptr = &target_->data_[0];
+        if(original_format == TEXTURE_FORMAT_R8 && new_format == TEXTURE_FORMAT_RGBA4444) {
+            const uint8_t* source_ptr = &original_data[0];
+            uint8_t* dest_ptr = &data[0];
 
-        auto explode = EXPLODERS.at(original_format);
-        auto compress = COMPRESSORS.at(new_format);
+            auto explode = EXPLODERS.at(original_format);
+            auto compress = COMPRESSORS.at(new_format);
 
-        for(auto i = 0u; i < original_data.size(); i += source_stride, source_ptr += source_stride, dest_ptr += dest_stride) {
-            float r, g, b, a;
+            for(auto i = 0u; i < original_data.size(); i += source_stride, source_ptr += source_stride, dest_ptr += dest_stride) {
+                float r, g, b, a;
 
-            explode(source_ptr, channels, r, g, b, a);
-            compress(dest_ptr, r, g, b, a);
+                explode(source_ptr, channels, r, g, b, a);
+                compress(dest_ptr, r, g, b, a);
+            }
+        } else {
+            throw std::logic_error("Unsupported texture conversion");
         }
-    } else {
-        throw std::logic_error("Unsupported texture conversion");
-    }
 
-    data_dirty_ = true;
-    mark_dirty();
+    });
 }
 
 
@@ -327,13 +325,13 @@ static void do_flip_vertically(uint8_t* data, uint16_t width, uint16_t height, T
 
     uint8_t* src_row = &data[0];
     uint8_t* dst_row = &data[(h - 1) * row_size];
-    char tmp[row_size];
+    std::vector<char> tmp(row_size);
 
     for(auto i = 0u; i < h / 2; ++i) {
         if(src_row != dst_row) {
-            memcpy(tmp, src_row, row_size);
+            memcpy(&tmp[0], src_row, row_size);
             memcpy(src_row, dst_row, row_size);
-            memcpy(dst_row, tmp, row_size);
+            memcpy(dst_row, &tmp[0], row_size);
         }
 
         src_row += row_size;
@@ -358,10 +356,6 @@ void TextureTransaction::free() {
      * anything to be updated in GL, we're just freeing
      * the RAM */
     mark_dirty();
-}
-
-Texture::Data& TextureTransaction::data() {
-    return target_->data_;
 }
 
 void TextureTransaction::mutate_data(TextureTransaction::MutationFunc func) {
@@ -490,6 +484,10 @@ void TextureTransaction::set_mipmap_generation(MipmapGenerate type) {
     mark_dirty();
 }
 
+const Texture::Data& TextureTransaction::data() const {
+    return target_->data_;
+}
+
 void TextureTransaction::set_data(const Texture::Data& data) {
     target_->data_ = data;
     target_->data_.shrink_to_fit();
@@ -553,6 +551,10 @@ void Texture::_set_renderer_specific_id(const uint32_t id) {
 uint32_t Texture::_renderer_specific_id() const {
     thread::Lock<thread::Mutex> g(lock_);
     return renderer_id_;
+}
+
+std::shared_ptr<TextureImpl> Texture::clone_impl() {
+    return std::make_shared<TextureImpl>(*pimpl_);
 }
 
 uint8_t texture_format_stride(TextureFormat format) {

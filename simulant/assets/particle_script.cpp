@@ -42,6 +42,10 @@ private:
     MaterialPtr material_;
 };
 
+std::shared_ptr<ParticleScriptImpl> ParticleScript::clone_impl() {
+    return std::make_shared<ParticleScriptImpl>(*pimpl_);
+}
+
 ParticleScript::ParticleScript(ParticleScriptID id, AssetManager* asset_manager):
     Asset(asset_manager),
     AtomicAsset<ParticleScript, ParticleScriptImpl, ParticleScriptTransaction>(

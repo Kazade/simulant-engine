@@ -57,11 +57,10 @@ public:
         iterator_base(ContiguousMultiMap* map):
             map_(map) {
 
-            prev_nodes_.push_back(-1);
             current_node_ = map->root_index_;
 
             if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
-                increment();
+                current_node_ = _node(current_node_)->left_index_;
             }
         }
 
@@ -69,21 +68,15 @@ public:
         iterator_base(ContiguousMultiMap* map, int32_t index):
             map_(map) {
 
-            if(index != -1) {
-                prev_nodes_.push_back(-1);
+            current_node_ = index;
 
-                current_node_ = map->root_index_;
-                if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
-                    increment();
-                }
-
-                /* FIXME: There must be a faster way to do this */
-                auto compare_node = _node(index);
-                while(current_node_ > -1 && _node(current_node_) != compare_node) {
-                    increment();
+            if(index > -1) {
+                auto current = _node(current_node_);
+                if(current->left_index_ > -1) {
+                    previous_node_index_ = current->left_index_;
                 }
             } else {
-                current_node_ = -1;
+                previous_node_index_ = -1;
             }
         }
 
@@ -94,26 +87,18 @@ public:
             return &map_->nodes_[index];
         }
 
-        int32_t _next(int32_t index) {
-            auto start = _node(index);
-            if(start->left_index_ > -1) {
-                prev_nodes_.push_back(index);
-                return _next(start->left_index_);
-            } else {
-                return index;
-            }
-        }
-
         void increment() {
             if(current_node_ < 0) return; // Do nothing
 
             auto current = _node(current_node_);
 
+            /* We have a pointer to an equal value node, but we haven't started iterating */
             if(current->equal_index_ > -1 && list_head_index_ == -1) {
                 list_head_index_ = current_node_;
                 current_node_ = current->equal_index_;
                 return;
             } else if(list_head_index_ > -1) {
+                /* We're iterating equal value nodes */
                 current_node_ = current->equal_index_;
                 if(current_node_ == -1) {
                     /* We've finished iterating the list, now back to recursing */
@@ -126,20 +111,36 @@ public:
                 }
             }
 
-            if(current->left_index_ > -1 && prev_nodes_.back() != current_node_) {
-                prev_nodes_.push_back(current_node_);
-                current_node_ = _next(current->left_index_);
-            } else {
-                if(current_node_ == prev_nodes_.back()) {
-                    prev_nodes_.pop_back();
+            auto previous = current_node_;
+
+            if(current->right_index_ == -1) {
+                /* We've reached the end, now we go up until we come from
+                 * the left branch */
+
+                current_node_ = current->parent_index_;
+                while(current_node_ > -1) {
+                    current = _node(current_node_);
+                    if(previous == current->left_index_) {
+                        /* We came from the left, so break */
+                        break;
+                    } else {
+                        current_node_ = current->parent_index_;
+                    }
                 }
 
-                if(current->right_index_ > -1) {
-                    current_node_ = _next(current->right_index_);
-                } else {
-                    current_node_ = prev_nodes_.back();
+            } else {
+                current_node_ = current->right_index_;
+                if(current_node_ > -1) {
+                    /* Go down the left branch to start iterating this one */
+                    current = _node(current_node_);
+                    while(current->left_index_ > -1) {
+                        current_node_ = current->left_index_;
+                        current = _node(current_node_);
+                    }
                 }
             }
+
+            previous_node_index_ = previous;
         }
 
         bool is_equal(const iterator_base& other) const {
@@ -155,7 +156,7 @@ public:
         ContiguousMultiMap* map_ = nullptr;
 
         int32_t list_head_index_ = -1;
-        std::vector<int32_t> prev_nodes_;
+        int32_t previous_node_index_ = -1;
     };
 
     class iterator : private iterator_base {

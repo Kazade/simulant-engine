@@ -26,7 +26,7 @@ public:
 private:
     std::string target_;
     float time_;
-    float timer_ = 0.0f;
+    uint64_t start_time_ = 0;
 
     void activate() override;
     void deactivate() override;

@@ -81,6 +81,11 @@ public:
         return std::make_shared<transaction_type>(this->shared_from_this(), type);
     }
 
+private:
+    /* Must be overridden by a subclass (due to template sizeof issues)
+     * but effectively do std::make_shared<AssetImplType>(*pimpl_) */
+    virtual std::shared_ptr<AssetImplType> clone_impl() = 0;
+
 protected:
     std::shared_ptr<AssetImplType> pimpl_;
 
@@ -99,8 +104,6 @@ public:
 
         assert(source);
 
-        target_ = source->pimpl_;
-
         if(type_ == ASSET_TRANSACTION_READ_WRITE) {
             /* Read-write transactions must hold a mutex
              * for the lifetime of the transaction. Read
@@ -111,6 +114,10 @@ public:
              * transactions can do their stuff up until that point */
             source_->commit_mutex_.lock();
         }
+
+        /* At this point we have some kind of lock so
+         * we should be safe to take a copy of the impl */
+        target_ = source->clone_impl();
     }
 
     virtual ~AssetTransaction() {
@@ -145,7 +152,9 @@ public:
         if(type_ == ASSET_TRANSACTION_READ_WRITE && !committed_) {
             on_rollback();
             source_->write_mutex_.unlock();
-            L_WARN("Rolling back uncommitted asset transaction");
+            if(is_dirty_) {
+                L_WARN("Rolling back uncommitted asset transaction");
+            }
         } else if(type_ == ASSET_TRANSACTION_READ && is_dirty_) {
             /* We made changes in a read transaction? Log this! */
             L_ERROR("Attempted to make changes in a read-only transaction");

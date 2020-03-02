@@ -87,43 +87,36 @@ public:
 
 private:
     bool has_value_ = false;
-    T* data_ = nullptr;
+    char data_[sizeof(T)] __attribute__((aligned(8)));
 
     T* value_ptr() const {
-        return data_;
+        return (has_value()) ? (T*) (data_) : nullptr;
     }
 
     void set_value(const T& value) {
-        if(has_value_) {
+        if(has_value()) {
             reset();
         }
 
-        assert(!has_value_);
-
-        data_ = new T(value);
+        new (data_) T(value);
         has_value_ = true;
     }
 
     void set_value(T&& value) {
-        if(has_value_) {
+        if(has_value()) {
             // We destroy the current value if we have one
             reset();
         }
 
-        assert(!has_value_);
-
-        data_ = new T(std::move(value));
+        *(reinterpret_cast<T*>(data_)) = std::move(value);
         has_value_ = true;
     }
 
     void reset() {
         T* v = value_ptr();
         if(v) {
-            assert(has_value_);
-
             has_value_ = false;
-            delete data_;
-            data_ = nullptr;
+            v->~T();
         }
     }
 };

@@ -13,6 +13,18 @@ Mutex::Mutex() {
 }
 
 Mutex::~Mutex() {
+#ifndef NDEBUG
+    /* This checks to make sure that the mutex
+     * was unlocked, if it was locked this would return
+     * non-zero, destroying a locked mutex is undefined
+     * behaviour */
+    assert(!pthread_mutex_trylock(&mutex_));
+
+    /* If it was unlocked, it will now be locked, so
+     * unlock it again */
+    pthread_mutex_unlock(&mutex_);
+#endif
+
     int err = pthread_mutex_destroy(&mutex_);
     _S_UNUSED(err);
     assert(!err);

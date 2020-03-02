@@ -11,18 +11,19 @@
 
 namespace smlt {
 
+typedef unsigned char byte;
 
 struct MetaBlock {
 #ifndef NDEBUG
     // If we're debugging, we add marker bytes between each element
     // and initalize them to 0xAB we can then assert that these
     // haven't been overwritten to detect overflows
-    uint8_t marker_byte;
+    byte marker_byte;
 #endif
     // We store the next_used item for fast iteration (e.g. skipping free blocks)
     bool used = false;
-    uint8_t* next_used = nullptr;
-    uint8_t* prev_used = nullptr;
+    byte* next_used = nullptr;
+    byte* prev_used = nullptr;
 };
 
 template<typename T, typename IDType, int ChunkSize, typename ...Subtypes>
@@ -30,7 +31,7 @@ class VectorPool {
 public:
     typedef T element_type;
     typedef IDType id_type;
-    typedef uint8_t slot_id;
+    typedef byte slot_id;
 
     template<typename... Others> struct MaxSize {
       static constexpr size_t value = 0;
@@ -43,7 +44,10 @@ public:
     };
 
     const static uint32_t object_size = MaxSize<T, Subtypes...>::value;
-    const static uint32_t element_size = object_size + sizeof(MetaBlock);
+    const static uint32_t element_size_unpadded = object_size + sizeof(MetaBlock);
+    const static uint32_t element_size = element_size_unpadded + (
+        ((element_size_unpadded % 8) != 0) ? (8 - (element_size_unpadded % 8)) : 0
+    );
     const static uint32_t array_size = element_size * ChunkSize;
 
     static_assert(ChunkSize < std::numeric_limits<slot_id>::max(), "ChunkSize must be less than 256");
@@ -54,7 +58,7 @@ public:
         clear();
     }
 
-    static MetaBlock* meta_block(const uint8_t* element) {
+    static MetaBlock* meta_block(const byte* element) {
         if(!element) return nullptr;
 
         return (MetaBlock*) (element + object_size);
@@ -72,7 +76,7 @@ public:
                 // We lock the chunk whenever we update metadata
                 thread::Lock<thread::Mutex> g(chunk->lock_);
 
-                uint8_t* new_thing = chunk->alloc_free_slot();
+                byte* new_thing = chunk->alloc_free_slot();
                 assert(new_thing);
 
                 // Hopefully this works... address of the new element, minus the start
@@ -119,7 +123,7 @@ public:
     }
 
     bool used(id_type id) const {
-        uint8_t* addr = find_address(id);
+        byte* addr = find_address(id);
         if(!addr) {
             return false;
         }
@@ -130,7 +134,7 @@ public:
     T* get(id_type id) const {
         assert(used(id));
 #ifndef NDEBUG
-        uint8_t* addr = find_address(id);
+        byte* addr = find_address(id);
         MetaBlock* meta = meta_block(addr);
         assert(meta->marker_byte == 0xAB);
         return reinterpret_cast<T*>(addr);
@@ -206,6 +210,9 @@ private:
 
     struct Chunk {
         Chunk() {
+            // Make sure everything is zeroed out to start
+            std::fill(elements_, elements_ + array_size, 0);
+
             // Get a pointer to the first meta block (which follows the object)
             MetaBlock* meta = (MetaBlock*) &elements_[object_size];
 
@@ -221,7 +228,7 @@ private:
             }
         }
 
-        void release_slot(uint8_t* addr) {
+        void release_slot(byte* addr) {
             auto meta = meta_block(addr);
 
 #ifndef NDEBUG
@@ -249,12 +256,12 @@ private:
             meta->used = false;
         }
 
-        uint8_t* alloc_free_slot() {
+        byte* alloc_free_slot() {
             if(this->used_count_ == ChunkSize) {
                 return nullptr;
             }
 
-            auto insert_before = [](uint8_t* after) -> uint8_t* {
+            auto insert_before = [](byte* after) -> byte* {
                 auto this_addr = after - element_size;
                 auto after_meta = meta_block(after);
                 auto this_meta = meta_block(this_addr);
@@ -280,10 +287,10 @@ private:
                 return this_addr;
             };
 
-            auto insert_after = [](uint8_t* before) -> uint8_t* {
-                auto this_addr = before + element_size;
+            auto insert_after = [](byte* before) -> byte* {
                 auto before_meta = meta_block(before);
-                auto this_meta = meta_block(before + element_size);
+                auto this_addr = before + element_size;
+                auto this_meta = meta_block(this_addr);
 
                 assert(!this_meta->used);
 #ifndef NDEBUG
@@ -307,7 +314,7 @@ private:
             };
 
             if(!first_used_) {
-                uint8_t* it = &elements_[0];
+                byte* it = &elements_[0];
                 auto meta = meta_block(it);
 
                 assert(!meta->used);
@@ -321,7 +328,7 @@ private:
                 first_used_ = it;
                 return it;
             } else {
-                uint8_t* it = first_used_;
+                byte* it = first_used_;
 
                 while(it) {
                     /* First we look behind this element, if that is unused
@@ -345,7 +352,7 @@ private:
                         /* We've reached the final used block, but, is there
                          * space afterwards? */
                         next = it + element_size;
-                        if(next < &elements_[ChunkSize * element_size]) {
+                        if(next < &elements_[array_size]) {
                             return insert_after(it);
                         } else {
                             // No space left!
@@ -361,10 +368,12 @@ private:
             }
         }
 
+        /* Force 8-byte alignment */
+        byte elements_[array_size] __attribute__((aligned(8)));
+
         thread::Mutex lock_;
-        uint8_t* first_used_ = nullptr;
-        std::array<uint8_t, array_size> elements_ = {}; // Zero-initialize
-        uint8_t used_count_ = 0;
+        byte* first_used_ = nullptr;
+        byte used_count_ = 0;
     };
 
     std::vector<std::shared_ptr<Chunk>> chunks_;
@@ -414,13 +423,13 @@ private:
         return ((chunk_id * ChunkSize) + slot) + 1;
     }
 
-    uint8_t* find_address(id_type id) const {
+    byte* find_address(id_type id) const {
         auto chunk = find_chunk_and_slot(id);
         if(!chunk.first) {
             return nullptr;
         }
 
-        return &chunk.first->elements_.at(chunk.second * element_size);
+        return &chunk.first->elements_[chunk.second * element_size];
     }
 
     uint32_t size_ = 0;

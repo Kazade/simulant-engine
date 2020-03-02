@@ -18,6 +18,8 @@
 namespace smlt {
 
 void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
+    _S_UNUSED(tex_id);
+
     GLuint gl_tex;
 
     if(!GLThreadCheck::is_current()) {
@@ -96,12 +98,12 @@ GLint texture_format_to_internal_format(TextureFormat format) {
 }
 
 void GLRenderer::on_texture_prepare(TexturePtr texture) {
+    auto txn = texture->begin_transaction();
+
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;
     }
-
-    auto txn = texture->begin_transaction();
 
     GLint active;
     GLuint target = texture->_renderer_specific_id();

@@ -35,12 +35,17 @@ void TimeKeeper::clean_up() {
 }
 
 void TimeKeeper::update() {
+    const float DELTATIME_MAX = 0.25f;
+    const float ACCUMULATOR_MAX = 0.25f;
+
 #ifdef _arch_dreamcast
     auto now = timer_us_gettime64();
     auto diff = now - last_update_;
     last_update_ = now;
 
     delta_time_ = float(diff) * 0.000001f;
+    delta_time_ = std::min(DELTATIME_MAX, delta_time_);
+
 #else
     auto now = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float> seconds = now - last_update_;
@@ -51,6 +56,8 @@ void TimeKeeper::update() {
 #endif
 
     accumulator_ += delta_time_;
+    accumulator_ = std::min(ACCUMULATOR_MAX, accumulator_);
+
     total_time_ += delta_time_;
 }
 

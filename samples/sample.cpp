@@ -70,9 +70,12 @@ private:
 };
 
 int main(int argc, char* argv[]) {
+    _S_UNUSED(argc);
+    _S_UNUSED(argv);
+
     smlt::AppConfig config;
     config.title = "Basic Sample";
-    config.fullscreen = true;
+    config.fullscreen = false;
     config.width = 640;
     config.height = 480;
 

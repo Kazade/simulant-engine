@@ -127,7 +127,7 @@ private:
         _S_UNUSED(texture);
     }
 
-    mutable thread::SharedMutex texture_registry_mutex_;
+    mutable thread::Mutex texture_registry_mutex_;
     std::unordered_map<TextureID, std::weak_ptr<Texture>> texture_registry_;
 };
 

@@ -225,6 +225,8 @@ public:
     uint32_t _renderer_specific_id() const;
 
 private:
+    friend class AssetTransaction<Texture>;
+
     Renderer* renderer_ = nullptr;
 
     // Set when transaction is committed
@@ -234,6 +236,8 @@ private:
     uint32_t renderer_id_ = 0;
 
     mutable thread::Mutex lock_;
+
+    std::shared_ptr<TextureImpl> clone_impl() override;
 };
 
 class TextureTransaction:
@@ -291,14 +295,13 @@ public:
     void set_auto_upload(bool v=true);
     void set_mipmap_generation(MipmapGenerate type);
 
+    const Texture::Data& data() const;
     void set_data(const Texture::Data& data);
 
     void _set_has_mipmaps(bool v);
 
     /* Clear the data buffer */
     void free();
-
-    Texture::Data& data();
 
     typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
 
