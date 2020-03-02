@@ -139,7 +139,7 @@ public:
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
         manager_->load_in_background("main");
-        thread::sleep(100);
+        window->run_frame();
         assert_true(scr->load_called);
     }
 

@@ -1,3 +1,4 @@
+
 # Textures
 
 Textures represent images which can either be applied as a mesh, or less commonly to a framebuffer.
@@ -16,28 +17,6 @@ texture->set_free_data_mode(TEXTURE_FREE_DATA_NEVER);
 ```
 
 The default setting is `TEXTURE_FREE_DATA_AFTER_UPLOAD`. 
-
-## Texture Transactions
-
-`Textures` are `AtomicAsset<T>`s therefore they provide a transaction interface for manipulation:
-
-```
-auto txn = texture->begin_transaction();
-txn->flip_vertically();
-txn->commit();  // <- Texture is updated here
-```
-
-The transaction pattern allows for thread-safe manipulation of the texture, but it does incur a cost
-in copying the texture attributes. This is particularly costly if you manipulate the texture data
-directly. To save on data copies, `TextureTransaction` provides a concept called data mutations:
-
-```
-void some_func(uint8_t* data, uint16_t width, uint16_t height, TextureFormat format);
-
-auto txn = texture->begin_transaction();
-txn->mutate_data(some_func);
-txn->commit();  // <- some_func is called during the commit phase, when the lock is held
-```
 
 
 ## Filter modes

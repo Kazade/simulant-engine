@@ -128,28 +128,14 @@ void SceneManager::load(const std::string& route) {
 void SceneManager::load_in_background(const std::string& route, bool redirect_after) {
     auto scene = get_or_create_route(route);
 
-    //Create a background task for loading the scene
-    auto new_task = std::shared_ptr<BackgroundTask>(new BackgroundTask{
-        route,
-        thread::async([scene](){ scene->_call_load(); })
-    });
-
-    // Add an idle task to check for when the background task completes
-    window_->idle->add([=]() -> bool {
-        // Checks for complete or failed tasks
-        auto status = new_task->future.wait_for(std::chrono::microseconds(0));
-        if(status != thread::FutureStatus::ready) {
-            return true; //Try again next frame
+    window_->start_coroutine(
+        [=](){
+            scene->_call_load();
+            if(redirect_after) {
+                activate(route);
+            }
         }
-
-        new_task->future.get();
-
-        if(redirect_after) {
-            activate(route);
-        }
-
-        return false;
-    });
+    );
 }
 
 void SceneManager::unload(const std::string& route) {

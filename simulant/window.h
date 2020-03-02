@@ -41,6 +41,7 @@
 #include "time_keeper.h"
 #include "stats_recorder.h"
 #include "screen.h"
+#include "coroutines/coroutine.h"
 
 namespace smlt {
 
@@ -270,6 +271,15 @@ public:
 
     void destroy_all_backgrounds();
     /* End background management */
+
+
+    /* Coroutines */
+    void start_coroutine(std::function<void ()> func);
+
+private:
+    std::list<CoroutineID> coroutines_;
+    void update_coroutines();
+    void stop_all_coroutines();
 
 protected:    
     std::shared_ptr<Renderer> renderer_;

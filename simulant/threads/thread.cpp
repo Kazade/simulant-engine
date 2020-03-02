@@ -13,7 +13,7 @@ namespace smlt {
 namespace thread {
 
 void Thread::join() {
-    pthread_join(thread_, NULL);
+    pthread_join(thread_, nullptr);
 }
 
 bool Thread::joinable() const {
@@ -25,6 +25,11 @@ void Thread::detach() {
     thread_ = 0;
 }
 
+void Thread::exit() {
+    int status = 0;
+    pthread_exit(&status);
+}
+
 void* Thread::thread_runner(void* data) {
     CallableWrapperBase* func = reinterpret_cast<CallableWrapperBase*>(data);
     assert(func);
@@ -33,7 +38,7 @@ void* Thread::thread_runner(void* data) {
         delete func;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void sleep(size_t ms) {

@@ -23,6 +23,8 @@ public:
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/aggression.bsp");
         stage_->new_geom_with_mesh(mesh->id());
 
+        yield_coroutine();
+
         auto entities = mesh->data->get<smlt::Q2EntityList>("entities");
 
         std::for_each(entities.begin(), entities.end(), [&](Q2Entity& ent) {
@@ -44,6 +46,8 @@ public:
                 pos = pos.rotated_by(rotation);
                 camera_->move_to_absolute(pos);
             }
+
+            yield_coroutine();
         });
 
         // Add a fly controller to the camera for user input
@@ -57,6 +61,7 @@ public:
         );
 
         stage_->new_light_as_directional();
+        yield_coroutine();
     }
 
 private:

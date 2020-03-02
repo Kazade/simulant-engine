@@ -23,6 +23,8 @@ static int convert_to_int(char* buffer, int len) {
 }
 
 static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
+    _S_UNUSED(len);
+
     char buffer[4];
 
     AudioDataFormat format;
@@ -80,6 +82,8 @@ static ChunkFunc get_chunk_func(const std::string& name) {
 }
 
 void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
+    _S_UNUSED(options);
+
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");

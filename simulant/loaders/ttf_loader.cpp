@@ -62,27 +62,12 @@ namespace loaders {
         L_DEBUG("F: Converting font texture from 8bit -> 32bit");
 
         // Convert from 8bpp to 32bpp
-        {
-            // Lock against updates
-            auto txn = font->texture_->begin_transaction(ASSET_TRANSACTION_READ_WRITE);
+        texture->convert(
+            TEXTURE_FORMAT_RGBA8888,
+            {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
+        );
 
-            auto source_data = texture->data();
-
-            // Manipulate the data buffer
-            auto data = &source_data[0];
-            uint32_t i = 0;
-            for(auto& b: tmp_buffer) {
-                uint32_t idx = i * 4;
-                data[idx] = data[idx + 1] = data[idx + 2] = 255;
-                data[idx + 3] = b;
-                ++i;
-            }
-            L_DEBUG("F: Finished conversion");
-
-            // Mark the data as changed
-            txn->set_data(source_data);
-            txn->commit();
-        }
+        L_DEBUG("F: Finished conversion");
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_blend_func(smlt::BLEND_ALPHA);

@@ -289,7 +289,6 @@ private:
                     for(GridCoord x = 0; x < nodes_across; ++x) {
                         auto idx = calc_index(k, x, y, z);
                         assert(idx < nodes_.size());
-                        assert(idx >= 0);
 
                         auto& new_node = nodes_[idx];
 

@@ -63,6 +63,8 @@ simulant/assets/particles/size_manipulator.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
+simulant/coroutines.cpp
+simulant/coroutines.h
 simulant/generic/containers/contiguous_map.h
 simulant/generic/cow_vector.h
 simulant/generic/manual_manager.h
@@ -757,8 +759,6 @@ simulant/procedural/mesh/rectangle.h
 simulant/procedural/mesh/sphere.cpp
 simulant/procedural/mesh/sphere.h
 simulant/procedural/texture.h
-simulant/procedural/texture/starfield.cpp
-simulant/procedural/texture/starfield.h
 simulant/random.cpp
 simulant/random.cpp
 simulant/random.h

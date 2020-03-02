@@ -160,7 +160,6 @@ public:
 
     template<typename CB, typename Data>
     void safe_each(const CB& callback, Data* data=nullptr) {
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
         for(auto item: _each()) {
             callback(item, data);
         }
@@ -173,7 +172,6 @@ public:
 
     // Returns the number of items
     std::size_t size() const {
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
         return _size();
     }
 
@@ -184,19 +182,16 @@ public:
 
     // The current capacity of the pool
     std::size_t capacity() const {
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
         return _capacity();
     }
 
     std::size_t capacity_available() const {
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
         return pool_.capacity() - pool_.size();
     }
 
     // Fetch an element by ID, returns nullptr
     // if it doesn't exist
     T* get(id_type id) const {
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
         return _get(id);
     }
 
@@ -219,8 +214,6 @@ public:
         static_assert(_manual_manager_impl::contains<Derived, T, Subtypes...>::value, "Requested unlisted type");
         static_assert(sizeof(Derived) <= PoolType::max_element_size(), "Something went wrong with size calculation");
 
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
-
         auto p = pool_.template alloc<Derived, Args...>(std::forward<Args>(args)...);
         Derived* ret = dynamic_cast<Derived*>(p.second);
         ret->_bind_id_pointer(ret);
@@ -233,9 +226,6 @@ public:
 #ifndef NDEBUG
         change_counter_++;
 #endif
-
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
-
         auto alloc = &PoolType::template alloc<T, Args...>;
         auto ret = (pool_.*alloc)(std::forward<Args>(args)...).second;
         ret->_bind_id_pointer(ret);
@@ -246,7 +236,6 @@ public:
     // returns true if the object wasn't already marked
     // to be destroyed
     bool destroy(id_type id) {
-        thread::Lock<thread::Mutex> guard(release_mutex_);
         if(to_release_.count(id)) {
             return false;
         }
@@ -263,14 +252,10 @@ public:
         change_counter_++;
 #endif
 
-        thread::Lock<thread::RecursiveMutex> guard2(pool_mutex_);
-        {
-            thread::Lock<thread::Mutex> guard1(release_mutex_);
-            if(to_release_.count(id)) {
-                return false;
-            }
-            to_release_.erase(id);
+        if(to_release_.count(id)) {
+            return false;
         }
+        to_release_.erase(id);
 
         pool_.release(id);
         return true;
@@ -281,20 +266,14 @@ public:
 #ifndef NDEBUG
         change_counter_++;
 #endif
-        thread::Lock<thread::RecursiveMutex> guard2(pool_mutex_);
-
-        release_mutex_.lock();
         while(to_release_.size()) {
             auto id = *to_release_.begin();
             to_release_.erase(id);
 
             /* pool_.release might try to get the release
              * mutex indirectly */
-            release_mutex_.unlock();
-                pool_.release(id);
-            release_mutex_.lock();
+            pool_.release(id);
         }
-        release_mutex_.unlock();
     }
 
     void destroy_all() {
@@ -310,12 +289,7 @@ public:
         change_counter_++;
 #endif
 
-        thread::Lock<thread::RecursiveMutex> guard1(pool_mutex_);
-        {
-            thread::Lock<thread::Mutex> guard2(release_mutex_);
-            to_release_.clear();
-        }
-
+        to_release_.clear();
         pool_.clear();
     }
 
@@ -326,7 +300,6 @@ public:
 
     // Returns true if the ID is allocated
     bool contains(id_type id) const {
-        thread::Lock<thread::RecursiveMutex> guard(pool_mutex_);
         return _contains(id);
     }
 
@@ -338,17 +311,14 @@ public:
     }
 
     bool is_marked_for_destruction(id_type id) const {
-        thread::Lock<thread::Mutex> guard(release_mutex_);
         return to_release_.count(id) > 0;
     }
 
 private:
     typedef VectorPool<T, id_type, chunk_size, Subtypes...> PoolType;
 
-    mutable thread::RecursiveMutex pool_mutex_;
     PoolType pool_;
 
-    mutable thread::Mutex release_mutex_;
     std::unordered_set<id_type> to_release_;
 
 #ifndef NDEBUG
