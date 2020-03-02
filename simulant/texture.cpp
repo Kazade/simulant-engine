@@ -87,10 +87,8 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     Asset(asset_manager),
     generic::Identifiable<TextureID>(id) {
 
-    // Default the texel type to what is probably required
-    texel_type_ = texel_type_from_texture_format(format);
-    data_.resize(width * height * bytes_per_texel(format, texel_type_));
-    data_.shrink_to_fit();
+    resize(width, height);
+    set_format(format);
 
     /* We intentionally don't mark data dirty here. All that would happen is
      * we would upload a blank texture */
@@ -233,23 +231,22 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
         auto source_stride = texture_format_stride(original_format);
         auto dest_stride = texture_format_stride(new_format);
 
-        if(original_format == TEXTURE_FORMAT_R8 && new_format == TEXTURE_FORMAT_RGBA4444) {
-            const uint8_t* source_ptr = &original_data[0];
-            uint8_t* dest_ptr = &data[0];
+        const uint8_t* source_ptr = &original_data[0];
+        uint8_t* dest_ptr = &data[0];
 
-            auto explode = EXPLODERS.at(original_format);
-            auto compress = COMPRESSORS.at(new_format);
-
-            for(auto i = 0u; i < original_data.size(); i += source_stride, source_ptr += source_stride, dest_ptr += dest_stride) {
-                float r, g, b, a;
-
-                explode(source_ptr, channels, r, g, b, a);
-                compress(dest_ptr, r, g, b, a);
-            }
-        } else {
+        if(!EXPLODERS.count(original_format) || !COMPRESSORS.count(new_format)) {
             throw std::logic_error("Unsupported texture conversion");
         }
 
+        auto explode = EXPLODERS.at(original_format);
+        auto compress = COMPRESSORS.at(new_format);
+
+        for(auto i = 0u; i < original_data.size(); i += source_stride, source_ptr += source_stride, dest_ptr += dest_stride) {
+            float r, g, b, a;
+
+            explode(source_ptr, channels, r, g, b, a);
+            compress(dest_ptr, r, g, b, a);
+        }
     });
 }
 
