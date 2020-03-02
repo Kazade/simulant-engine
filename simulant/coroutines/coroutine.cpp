@@ -18,18 +18,53 @@ struct Context {
 
     thread::Mutex mutex;
     thread::Condition cond;
+
+    Context* next = nullptr;
+    Context* prev = nullptr;
 };
 
-static std::map<CoroutineID, Context> CONTEXTS;
+static Context* CONTEXTS = nullptr;
 static CoroutineID ID_COUNTER = 0;
 
-thread_local static Context* CURRENT_CONTEXT = nullptr;
+/* GCC < 4.8 doesn't have thread_local so we use the __thread
+ * extension instead */
+#ifdef __GNUC__
+#if __GNUC_MAJOR__ < 5
+    #define thread_local __thread
+#endif
+#endif
+
+static thread_local Context* CURRENT_CONTEXT = nullptr;
 
 CoroutineID start_coroutine(std::function<void ()> f) {
-    auto& new_context = CONTEXTS[++ID_COUNTER];
-    new_context.id = ID_COUNTER;
-    new_context.func = f;
-    return new_context.id;
+    if(!CONTEXTS) {
+        CONTEXTS = new Context();
+        CONTEXTS->id = ++ID_COUNTER;
+        CONTEXTS->func = f;
+    } else {
+        auto prev_root = CONTEXTS;
+        CONTEXTS = new Context();
+        CONTEXTS->next = prev_root;
+
+        if(prev_root) {
+            prev_root->prev = CONTEXTS;
+        }
+
+        CONTEXTS->id = ++ID_COUNTER;
+        CONTEXTS->func = f;
+    }
+
+    return CONTEXTS->id;
+}
+
+static Context* find_coroutine(CoroutineID id) {
+    for(auto c = CONTEXTS; c; c = c->next) {
+        if(c->id == id) {
+            return c;
+        }
+    }
+
+    return nullptr;
 }
 
 static void run_coroutine(Context* context) {
@@ -46,17 +81,18 @@ static void run_coroutine(Context* context) {
 COResult resume_coroutine(CoroutineID id) {
     assert(!CURRENT_CONTEXT);
 
-    auto it = CONTEXTS.find(id);
-    if(it == CONTEXTS.end()) {
+    auto routine = find_coroutine(id);
+
+    if(!routine) {
         return CO_RESULT_INVALID;
     }
 
     /* We've finished, do nothing */
-    if(it->second.is_finished) {
+    if(routine->is_finished) {
         return CO_RESULT_FINISHED;
     }
 
-    auto& context = it->second;
+    auto& context = *routine;
     context.mutex.lock();
     context.is_running = true;
     if(!context.is_started) {
@@ -107,9 +143,10 @@ bool within_coroutine() {
 void stop_coroutine(CoroutineID id) {
     assert(!CURRENT_CONTEXT);
 
-    auto it = CONTEXTS.find(id);
-    if(it != CONTEXTS.end()) {
-        auto& context = it->second;
+    auto routine = find_coroutine(id);
+
+    if(routine) {
+        auto& context = *routine;
         if(context.is_started) {
             context.mutex.lock();
             context.is_terminating = true;
@@ -125,7 +162,10 @@ void stop_coroutine(CoroutineID id) {
             context.thread = nullptr;
         }
 
-        CONTEXTS.erase(it);
+        if(routine->next) routine->next->prev = routine->prev;
+        if(routine->prev) routine->prev->next = routine->next;
+
+        delete routine;
     }
 }
 
