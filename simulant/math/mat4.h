@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstring>
+#include <cstdint>
 
 namespace smlt {
 

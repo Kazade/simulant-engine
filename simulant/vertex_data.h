@@ -94,6 +94,9 @@ public:
     template<typename T>
     const T* texcoord1_at(uint32_t idx) const;
 
+    template<typename T>
+    const T* diffuse_at(const uint32_t index) const;
+
     /*
      * Position Non-Dimensional
      * Returns the position as a Vec4 with the remaining components
@@ -242,6 +245,11 @@ const Vec3* VertexData::texcoord1_at<Vec3>(uint32_t idx) const;
 template<>
 const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 
+template<>
+const Colour* VertexData::diffuse_at(const uint32_t index) const;
+
+template<>
+const uint8_t* VertexData::diffuse_at(const uint32_t index) const;
 
 typedef uint32_t Index;
 

@@ -346,6 +346,18 @@ const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
     return ((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
 }
 
+template<>
+const Colour* VertexData::diffuse_at(const uint32_t idx) const {
+    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
+    return ((Colour*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
+}
+
+template<>
+const uint8_t* VertexData::diffuse_at(const uint32_t idx) const {
+    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB);
+    return ((uint8_t*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
+}
+
 void VertexData::tex_coord1(float u, float v) {
     tex_coordX(1, u, v);
 }
