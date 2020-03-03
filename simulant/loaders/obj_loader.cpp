@@ -230,12 +230,20 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 auto it = shared_vertices.find(key);
                 if(it == shared_vertices.end()) {
                     float* pos = &attrib.vertices[3 * index.vertex_index];
+                    float* colour = &attrib.colors[3 * index.vertex_index];
                     float* tc = (index.texcoord_index == -1) ?
                         &default_tc[0] : &attrib.texcoords[2 * index.texcoord_index];
                     float* n = (index.normal_index == -1) ?
                         &default_n[0] : &attrib.normals[3 * index.normal_index];
 
                     mesh->vertex_data->position(pos[0], pos[1], pos[2]);
+
+                    /* Tinyobj loader loads the non-standard vertex colour extension
+                     * but defaults to white anyway so it's safe to just read them in */
+                    if(spec.has_diffuse()) {
+                        mesh->vertex_data->diffuse(colour[0], colour[1], colour[2], 1.0);
+                    }
+
                     if(spec.has_normals()) {
                         mesh->vertex_data->normal(n[0], n[1], n[2]);
                     }
