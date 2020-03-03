@@ -1,9 +1,13 @@
-#ifndef TEST_OBJ_LOADER_H
-#define TEST_OBJ_LOADER_H
+#pragma once
 
+#include "simulant/test.h"
 #include "simulant/deps/kfs/kfs.h"
 #include "simulant/loaders/obj_loader.h"
 #include "simulant/asset_manager.h"
+
+namespace {
+
+using namespace smlt;
 
 class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
@@ -25,6 +29,38 @@ public:
         smlt::MaterialPtr mat = m->first_submesh()->material();
         assert_equal(mat->pass(0)->cull_mode(), opts.cull_mode);
     }
+
+    void test_vertex_colours() {
+
+        std::string obj_file(R"(
+            v 0.0 0.0 0.0 1.0 0.0 0.0
+            v 1.0 0.0 0.0 0.0 1.0 0.0
+            v 0.0 1.0 0.0 0.0 0.0 1.0
+            f 1 2 3
+        )");
+
+        loaders::OBJLoader loader(
+            "test.obj",
+            std::make_shared<std::istringstream>(obj_file)
+        );
+
+        auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        loader.into(*mesh);
+
+        assert_equal(mesh->vertex_data->count(), 3);
+
+        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        assert_equal(bytes[0], 0);  // B
+        assert_equal(bytes[1], 0);  // G
+        assert_equal(bytes[2], 255);  // R
+        assert_equal(bytes[3], 255);  // A
+
+        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        assert_equal(bytes[0], 0);  // B
+        assert_equal(bytes[1], 255);  // G
+        assert_equal(bytes[2], 0);  // R
+        assert_equal(bytes[3], 255);  // A
+    }
 };
 
-#endif // TEST_OBJ_LOADER_H
+}

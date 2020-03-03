@@ -98,15 +98,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     L_DEBUG(_F("Mesh has {0} shapes and {1} materials").format(shapes.size(), materials.size()));
 
-    VertexSpecification spec(VERTEX_ATTRIBUTE_3F);
-    if(!attrib.normals.empty()) {
-        spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
-    }
-
-    if(!attrib.texcoords.empty()) {
-        spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    }
-
+    VertexSpecification spec = mesh->vertex_data->vertex_specification();
     mesh->reset(spec);  // Make sure we're empty before we begin
 
     std::unordered_map<std::string, MaterialPtr> final_materials;
@@ -241,7 +233,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                     /* Tinyobj loader loads the non-standard vertex colour extension
                      * but defaults to white anyway so it's safe to just read them in */
                     if(spec.has_diffuse()) {
-                        mesh->vertex_data->diffuse(colour[0], colour[1], colour[2], 1.0);
+                        mesh->vertex_data->diffuse(
+                            smlt::Colour(colour[0], colour[1], colour[2], 1.0)
+                        );
                     }
 
                     if(spec.has_normals()) {
