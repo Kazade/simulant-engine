@@ -127,7 +127,6 @@ public:
 
 
     /* Mesh API */
-    MeshPtr new_mesh_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_mesh(MeshID id);
     MeshPtr mesh(MeshID id);
@@ -178,7 +177,7 @@ public:
 
     MeshPtr new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr new_mesh_from_file(const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_from_file(const unicode& path, const VertexSpecification& desired_specification=VertexSpecification::DEFAULT, const MeshLoadOptions& options=MeshLoadOptions(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     /*

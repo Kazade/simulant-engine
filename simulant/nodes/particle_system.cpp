@@ -116,6 +116,8 @@ bool ParticleSystem::has_active_emitters() const {
 }
 
 void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+    _S_UNUSED(detail_level);
+
     /* Rebuild the vertex data with the current camera direction */
     rebuild_vertex_data(camera->up(), camera->right());
 

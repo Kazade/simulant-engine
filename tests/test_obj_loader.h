@@ -20,7 +20,7 @@ public:
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj", opts);
+        smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
         smlt::MeshPtr m = mid.fetch();
 
         assert_equal(m->submesh_count(), 1u);
@@ -47,7 +47,7 @@ public:
         auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         loader.into(*mesh);
 
-        assert_equal(mesh->vertex_data->count(), 3);
+        assert_equal(mesh->vertex_data->count(), 3u);
 
         const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
         assert_equal(bytes[0], 0);  // B
@@ -60,6 +60,65 @@ public:
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 0);  // R
         assert_equal(bytes[3], 255);  // A
+    }
+
+    void test_vertex_colours_default_white() {
+
+        std::string obj_file(R"(
+            v 0.0 0.0 0.0
+            v 1.0 0.0 0.0
+            v 0.0 1.0 0.0
+            f 1 2 3
+        )");
+
+        loaders::OBJLoader loader(
+            "test.obj",
+            std::make_shared<std::istringstream>(obj_file)
+        );
+
+        auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        loader.into(*mesh);
+
+        assert_equal(mesh->vertex_data->count(), 3u);
+
+        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        assert_equal(bytes[0], 255);  // B
+        assert_equal(bytes[1], 255);  // G
+        assert_equal(bytes[2], 255);  // R
+        assert_equal(bytes[3], 255);  // A
+
+        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        assert_equal(bytes[0], 255);  // B
+        assert_equal(bytes[1], 255);  // G
+        assert_equal(bytes[2], 255);  // R
+        assert_equal(bytes[3], 255);  // A
+    }
+
+    void test_specification_override() {
+        std::string obj_file(R"(
+            v 0.0 0.0 0.0
+            v 1.0 0.0 0.0
+            v 0.0 1.0 0.0
+            f 1 2 3
+        )");
+
+        loaders::OBJLoader loader(
+            "test.obj",
+            std::make_shared<std::istringstream>(obj_file)
+        );
+
+        auto mesh = window->shared_assets->new_mesh_from_file(
+            "cube.obj",
+            smlt::VertexSpecification::POSITION_ONLY
+        );
+        loader.into(*mesh);
+
+        assert_equal(mesh->vertex_data->count(), 3u);
+
+        auto spec = mesh->vertex_data->vertex_specification();
+        assert_false(spec.has_diffuse());
+        assert_false(spec.has_normals());
+        assert_false(spec.has_texcoord0());
     }
 };
 

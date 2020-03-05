@@ -26,6 +26,8 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 }
 
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+    _S_UNUSED(queue);
+    _S_UNUSED(frame_id);
 
     /* Set up default client state before the run. This is necessary
      * so that the boolean flags get correctly set */
@@ -437,6 +439,7 @@ static GLenum convert_index_type(IndexType type) {
 
 void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
     _S_UNUSED(material_pass);
+    _S_UNUSED(iteration);
 
     auto element_count = renderable->index_element_count;
     // Don't bother doing *anything* if there is nothing to render
