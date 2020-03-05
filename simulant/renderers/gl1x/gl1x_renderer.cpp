@@ -41,6 +41,10 @@ batcher::RenderGroupKey GL1XRenderer::prepare_render_group(
     const bool is_blended,
     const float distance_to_camera) {
 
+    _S_UNUSED(renderable);
+    _S_UNUSED(material_pass);
+    _S_UNUSED(group);
+
     return batcher::generate_render_group_key(
         pass_number,
         is_blended,

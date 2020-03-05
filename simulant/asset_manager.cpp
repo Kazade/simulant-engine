@@ -212,13 +212,14 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
     return result;
 }
 
-MeshPtr AssetManager::new_mesh_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
-    return new_mesh_from_file(path, MeshLoadOptions(), garbage_collect);
-}
+MeshPtr AssetManager::new_mesh_from_file(
+    const unicode& path,
+    const VertexSpecification& desired_specification,
+    const MeshLoadOptions& options,
+    GarbageCollectMethod garbage_collect) {
 
-MeshPtr AssetManager::new_mesh_from_file(const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
     //Load the material
-    auto mesh = new_mesh(VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
+    auto mesh = new_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
     auto loader = window->loader_for(path.encode());
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
@@ -313,7 +314,7 @@ MeshPtr AssetManager::new_mesh_with_alias(const std::string& alias, VertexSpecif
 }
 
 MeshPtr AssetManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
-    auto m = new_mesh_from_file(path, options, garbage_collect);
+    auto m = new_mesh_from_file(path, VertexSpecification::DEFAULT, options, garbage_collect);
     try {
         mesh_manager_.store_alias(alias, m->id());
     } catch(...) {
