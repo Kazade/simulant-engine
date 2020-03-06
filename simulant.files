@@ -115,6 +115,7 @@ tests/test_cow_vector.h
 tests/test_heightmap.h
 tests/test_loose_quadtree.h
 tests/test_manual_manager.h
+tests/test_panels.h
 tests/test_stage.h
 tests/test_threads.h
 tools/test_generator.py
