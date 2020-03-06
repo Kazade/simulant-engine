@@ -349,6 +349,26 @@ void Window::unregister_panel(uint8_t function_key) {
     panels_.erase(function_key);
 }
 
+void Window::toggle_panel(uint8_t id) {
+    if(panels_[id].panel->is_active()) {
+        panels_[id].panel->deactivate();
+    } else {
+        panels_[id].panel->activate();
+    }
+}
+
+void Window::activate_panel(uint8_t id) {
+    panels_[id].panel->activate();
+}
+
+void Window::deactivate_panel(uint8_t id) {
+    panels_[id].panel->deactivate();
+}
+
+bool Window::panel_is_active(uint8_t id) {
+    return panels_[id].panel->is_active();
+}
+
 void Window::set_logging_level(LogLevel level) {
     smlt::get_logger("/")->set_level(level);
 }

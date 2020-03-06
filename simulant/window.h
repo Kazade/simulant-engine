@@ -325,7 +325,10 @@ public:
     // Panels
     void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
     void unregister_panel(uint8_t function_key);
-
+    void toggle_panel(uint8_t id);
+    void activate_panel(uint8_t id);
+    void deactivate_panel(uint8_t id);
+    bool panel_is_active(uint8_t id);
 private:    
     Application* application_ = nullptr;
 
