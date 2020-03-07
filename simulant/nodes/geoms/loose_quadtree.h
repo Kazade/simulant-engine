@@ -43,7 +43,7 @@ public:
     typedef TreeData tree_data_type;
     typedef NodeData node_data_type;
 
-    Quadtree(const AABB& bounds, uint8_t max_level_count=4, TreeData* tree_data=nullptr):
+    Quadtree(const AABB& bounds, uint8_t max_level_count=4, std::shared_ptr<TreeData> tree_data=std::shared_ptr<TreeData>()):
         tree_data_(tree_data),
         root_width_(bounds.max_dimension()),
         bounds_(bounds),
@@ -150,6 +150,7 @@ public:
 
     AABB bounds() const { return bounds_; }
 
+    TreeData* data() const { return tree_data_.get(); }
 private:
     template<typename Callback>
     void _visible_visitor(const Frustum& frustum, const Callback& callback, Quadtree::Node& node) {
@@ -258,7 +259,6 @@ private:
                 for(GridCoord x = 0; x < nodes_across; ++x) {
                     auto idx = calc_index(k, x, z);
                     assert(idx < nodes_.size());
-
                     auto& new_node = nodes_[idx];
 
                     assert(!new_node.data);
@@ -275,7 +275,7 @@ private:
         }
     }
 
-    TreeData* tree_data_ = nullptr;
+    std::shared_ptr<TreeData> tree_data_;
 
     float root_width_;
     AABB bounds_;

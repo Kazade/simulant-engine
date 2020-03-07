@@ -23,7 +23,7 @@ public:
 class VertexDataTest : public smlt::test::SimulantTestCase {
 public:
     void test_offsets() {
-        smlt::VertexSpecification spec = {
+        smlt::VertexSpecification spec = VertexSpecification{
             smlt::VERTEX_ATTRIBUTE_3F,
             smlt::VERTEX_ATTRIBUTE_3F,
             smlt::VERTEX_ATTRIBUTE_2F
@@ -81,7 +81,7 @@ public:
     }
 
     void test_colours_dont_overflow() {
-        smlt::VertexSpecification spec = {
+        smlt::VertexSpecification spec = VertexSpecification{
             smlt::VERTEX_ATTRIBUTE_3F
         };
 
@@ -101,7 +101,7 @@ public:
     }
 
     void test_moving_cursor() {
-        smlt::VertexSpecification spec = {
+        smlt::VertexSpecification spec = VertexSpecification{
             smlt::VERTEX_ATTRIBUTE_3F,
             smlt::VERTEX_ATTRIBUTE_3F,
             smlt::VERTEX_ATTRIBUTE_2F
@@ -132,7 +132,7 @@ public:
     }
 
     void test_clone_into() {
-        smlt::VertexSpecification spec = { smlt::VERTEX_ATTRIBUTE_2F };
+        smlt::VertexSpecification spec = VertexSpecification{smlt::VERTEX_ATTRIBUTE_2F};
 
         smlt::VertexData source(spec);
 

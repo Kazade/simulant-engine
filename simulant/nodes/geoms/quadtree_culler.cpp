@@ -13,7 +13,7 @@
 namespace smlt {
 
 struct CullerTreeData {
-    const VertexData* vertices;
+    std::unique_ptr<VertexData> vertices;
 };
 
 struct TriangleData {
@@ -52,17 +52,17 @@ QuadtreeCuller::QuadtreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth
     index_type_ = type;
 }
 
-const VertexData *QuadtreeCuller::_vertex_data() const {
-    assert(mesh_);
-    return mesh_->vertex_data.get();
-}
+void QuadtreeCuller::_compile(const Vec3& pos, const Quaternion& rot) {
+    auto data = std::make_shared<CullerTreeData>();
 
-void QuadtreeCuller::_compile() {
-    CullerTreeData data;
-    data.vertices = _vertex_data();
+    data->vertices.reset(new VertexData(mesh_->vertex_data->vertex_specification()));
+    mesh_->vertex_data->clone_into(*data->vertices);
 
-    AABB bounds(*data.vertices);
-    pimpl_->quadtree.reset(new CullerQuadtree(bounds, max_depth_, &data));
+    Mat4 transform(rot, pos);
+    data->vertices->transform_by(transform);
+
+    AABB bounds(*data->vertices);
+    pimpl_->quadtree.reset(new CullerQuadtree(bounds, max_depth_, data));
 
     Vec3 stash[3];
 
@@ -70,9 +70,9 @@ void QuadtreeCuller::_compile() {
         auto material = submesh->material();
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
-            stash[0] = *data.vertices->position_at<Vec3>(a);
-            stash[1] = *data.vertices->position_at<Vec3>(b);
-            stash[2] = *data.vertices->position_at<Vec3>(c);
+            stash[0] = *data->vertices->position_at<Vec3>(a);
+            stash[1] = *data->vertices->position_at<Vec3>(b);
+            stash[2] = *data->vertices->position_at<Vec3>(c);
 
             auto node = pimpl_->quadtree->find_destination_for_triangle(stash);
 
@@ -100,7 +100,7 @@ void QuadtreeCuller::_gather_renderables(const Frustum &frustum, batcher::Render
             new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
             new_renderable.final_transformation = Mat4();
             new_renderable.index_data = p.second.indexes.get();
-            new_renderable.vertex_data = this->_vertex_data();
+            new_renderable.vertex_data = pimpl_->quadtree->data()->vertices.get();
             new_renderable.render_priority = this->geom()->render_priority();
             new_renderable.index_element_count = new_renderable.index_data->count();
             new_renderable.is_visible = this->geom()->is_visible();
@@ -121,7 +121,7 @@ void QuadtreeCuller::_all_renderables(batcher::RenderQueue* render_queue) {
             new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
             new_renderable.final_transformation = Mat4();
             new_renderable.index_data = p.second.indexes.get();
-            new_renderable.vertex_data = this->_vertex_data();
+            new_renderable.vertex_data = pimpl_->quadtree->data()->vertices.get();
             new_renderable.render_priority = this->geom()->render_priority();
             new_renderable.index_element_count = new_renderable.index_data->count();
             new_renderable.is_visible = this->geom()->is_visible();

@@ -16,9 +16,8 @@ public:
 
     AABB octree_bounds() const;
 
-    const VertexData* _vertex_data() const override;
 private:
-    void _compile() override;
+    void _compile(const Vec3& pos, const Quaternion& rot) override;
     void _gather_renderables(const Frustum &frustum, batcher::RenderQueue* render_queue) override;
     void _all_renderables(batcher::RenderQueue* queue) override;
 

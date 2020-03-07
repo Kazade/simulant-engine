@@ -36,7 +36,7 @@ public:
 
     bool is_compiled() const;
 
-    void compile();
+    void compile(const Vec3& pos, const Quaternion& rot);
     void renderables_visible(const Frustum& frustum, batcher::RenderQueue* render_queue);
 
     void each_renderable(EachRenderableCallback cb);
@@ -49,11 +49,9 @@ protected:
 private:
     bool compiled_ = false;
 
-    virtual void _compile() = 0;
+    virtual void _compile(const Vec3& pos, const Quaternion& rot) = 0;
     virtual void _gather_renderables(const Frustum& frustum, batcher::RenderQueue* render_queue) = 0;
     virtual void _all_renderables(batcher::RenderQueue* rendre_queue) = 0;
-
-    virtual const VertexData* _vertex_data() const = 0;
 
     friend class GeomCullerRenderable;
 

@@ -45,7 +45,7 @@ public:
     typedef TreeData tree_data_type;
     typedef NodeData node_data_type;
 
-    Octree(const AABB& bounds, uint8_t max_level_count=4, TreeData* tree_data=nullptr):
+    Octree(const AABB& bounds, uint8_t max_level_count=4, std::shared_ptr<TreeData> tree_data=std::shared_ptr<TreeData>()):
         tree_data_(tree_data),
         root_width_(bounds.max_dimension()),
         bounds_(bounds),
@@ -156,7 +156,7 @@ public:
     }
 
     AABB bounds() const { return bounds_; }
-
+    TreeData* data() const { return tree_data_.get(); }
 private:
     template<typename Callback>
     void _visible_visitor(const Frustum& frustum, const Callback& callback, Octree::Node& node) {
@@ -290,7 +290,7 @@ private:
         }
     }
 
-    TreeData* tree_data_ = nullptr;
+    std::shared_ptr<TreeData> tree_data_;
 
     float root_width_;
     AABB bounds_;

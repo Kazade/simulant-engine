@@ -20,19 +20,22 @@ bool GeomCuller::is_compiled() const {
     return compiled_;
 }
 
-void GeomCuller::compile() {
+void GeomCuller::compile(const Vec3 &pos, const Quaternion &rot) {
     if(compiled_) {
         // You can only compile once!
         return;
     }
 
-    _compile(); // Do whatever the subclass does
+    _compile(pos, rot); // Do whatever the subclass does
     compiled_ = true;
 
     /* Grab references to materials before releasing the mesh */
     for(auto submesh: mesh_->each_submesh()) {
         material_refs_.push_back(submesh->material());
     }
+
+    /* Release our handle on the mesh */
+    mesh_.reset();
 }
 
 void GeomCuller::renderables_visible(const Frustum& frustum, batcher::RenderQueue* render_queue) {

@@ -25,7 +25,7 @@
 namespace smlt {
 
 // Adapted from here: https://github.com/mesa3d/mesa/blob/a5f618a291e67e74c56df235d45c3eb967ebb41f/src/mesa/main/image.c
-static uint32_t pack_vertex_attribute_vec3_1i(float x, float y, float z) {
+_S_FORCE_INLINE uint32_t pack_vertex_attribute_vec3_1i(float x, float y, float z) {
     const float w = 0.0f;
 
     const uint32_t xs = x < 0;
@@ -42,7 +42,7 @@ static uint32_t pack_vertex_attribute_vec3_1i(float x, float y, float z) {
     return vi;
 }
 
-static Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
+_S_FORCE_INLINE Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
     auto unpack = [](int i) -> float {
         struct attr_bits_10 {
             signed int x:10;
@@ -61,7 +61,7 @@ static Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
     return ret;
 }
 
-const VertexSpecification VertexSpecification::DEFAULT = {
+const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
     VERTEX_ATTRIBUTE_3F,  // Position
 #ifdef _arch_dreamcast
     /* We enable this only on the Dreamcast as Mesa3D suffers a bug
@@ -82,11 +82,11 @@ const VertexSpecification VertexSpecification::DEFAULT = {
     VERTEX_ATTRIBUTE_NONE
 };
 
-const VertexSpecification VertexSpecification::POSITION_ONLY = {
+const VertexSpecification VertexSpecification::POSITION_ONLY = VertexSpecification{
     VERTEX_ATTRIBUTE_3F
 };
 
-const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = {
+const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = VertexSpecification{
     VERTEX_ATTRIBUTE_3F,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
@@ -224,14 +224,14 @@ const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
     }
 }
 
-Vec4 VertexData::position_nd_at(uint32_t idx, float def) const {
+Vec4 VertexData::position_nd_at(uint32_t idx, float defz, float defw) const {
     const auto& attr = vertex_specification_.position_attribute;
     if(attr == VERTEX_ATTRIBUTE_2F) {
         auto v = *position_at<Vec2>(idx);
-        return Vec4(v.x, v.y, def, def);
+        return Vec4(v.x, v.y, defz, defw);
     } else if(attr == VERTEX_ATTRIBUTE_3F) {
         auto v = *position_at<Vec3>(idx);
-        return Vec4(v.x, v.y, v.z, def);
+        return Vec4(v.x, v.y, v.z, defw);
     } else {
         return *position_at<Vec4>(idx);
     }
