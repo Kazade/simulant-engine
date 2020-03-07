@@ -213,7 +213,7 @@ public:
         return *this;
     }
 
-    VertexSpecification(
+    explicit VertexSpecification(
         VertexAttribute position,
         VertexAttribute normal = VERTEX_ATTRIBUTE_NONE,
         VertexAttribute texcoord0 = VERTEX_ATTRIBUTE_NONE,
