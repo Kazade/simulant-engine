@@ -31,7 +31,9 @@ Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, cons
     generic::Identifiable<GeomID>(id),
     Source(stage, sound_driver),
     mesh_id_(mesh),
-    culler_options_(culler_options) {
+    culler_options_(culler_options),
+    desired_transform(position),
+    desired_rotation(rotation) {
 
     set_parent(stage);
 }
@@ -54,7 +56,7 @@ bool Geom::init() {
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    culler_->compile();
+    culler_->compile(desired_transform, desired_rotation);
     return true;
 }
 

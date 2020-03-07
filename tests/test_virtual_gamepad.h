@@ -260,8 +260,7 @@ public:
         window->on_finger_down(0, x / w, y / h);
 
         // FIXME: So the problem here is that the touchscreen coord can't be calculated until pre-render but, the while down processing happens
-        // before the rendering. e.g.
-        /*
+        // before the rendering. e.g.        
          * 1. finger_down
          * 2. process joypad while down stuff
          * 3. pre render -> only now mark button as down

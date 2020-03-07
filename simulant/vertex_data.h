@@ -103,7 +103,7 @@ public:
      * set to default (e.g. if your vertices are 2D, this will return
      * Vec4(x, y, def, def)
      */
-    Vec4 position_nd_at(uint32_t idx, float def=0.0f) const;
+    Vec4 position_nd_at(uint32_t idx, float defz=0.0f, float defw=1.0f) const;
 
     void normal(float x, float y, float z);
     void normal(const Vec3& n);
@@ -160,6 +160,24 @@ public:
 
         // Return the index to the new vertex
         return out.count() - 1;
+    }
+
+    void transform_by(const Mat4& transform) {
+        for(auto i = 0u; i < count(); ++i) {
+            move_to(i);
+
+            Vec4 pos = position_nd_at(i);
+            pos = transform * pos;
+            if(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F) {
+                position(pos.x, pos.y);
+            } else if(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F) {
+                position(pos.x, pos.y, pos.z);
+            } else if(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F) {
+                position(pos);
+            } else {
+                L_ERROR("Attempted to transform unsupported position attribute type");
+            }
+        }
     }
 
     void interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);

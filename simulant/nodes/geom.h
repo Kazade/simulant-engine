@@ -87,6 +87,8 @@ public:
 private:
     MeshID mesh_id_;
     GeomCullerOptions culler_options_;
+    Vec3 desired_transform;
+    Quaternion desired_rotation;
 
     std::shared_ptr<GeomCuller> culler_;
 
