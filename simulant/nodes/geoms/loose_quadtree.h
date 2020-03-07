@@ -33,6 +33,9 @@ public:
         GridCoord grid[2] = {0, 0};
         NodeData* data = nullptr;
         uint32_t child_indexes[4];
+
+        Vec3 centre;
+        float size;
     };
 
     using TraverseCallback = void(Quadtree::Node*);
@@ -150,8 +153,7 @@ public:
 private:
     template<typename Callback>
     void _visible_visitor(const Frustum& frustum, const Callback& callback, Quadtree::Node& node) {
-        auto bounds = calc_loose_bounds(node);
-        if(frustum.intersects_cube(bounds.centre(), bounds.max_dimension())) {
+        if(frustum.intersects_cube(node.centre, node.size * 2.0f)) {
             callback(&node);
 
             if(!is_leaf(node)) {
@@ -196,30 +198,16 @@ private:
         return std::make_pair(depth - 1, node_width * 2);
     }
 
-    AABB calc_loose_bounds(const Quadtree::Node& node) const {
-        /* Returns the loose bounds of the cell which is
-         * twice the size, but with the same centre */
-
-        AABB bounds = calc_bounds(node);
-        auto centre = bounds.centre();
-
-        float r = bounds.width();
-
-        Vec3 diff(r, 0, r);
-        bounds.set_min(centre - diff);
-        bounds.set_max(centre + diff);
-        return bounds;
-    }
-
-    AABB calc_bounds(const Quadtree::Node& node) const {
+    void calc_bounds(Quadtree::Node& node) const {
         auto grid_width = ipow(2, node.level);
         auto cell_width = bounds_.max_dimension() / grid_width;
 
         Vec3 min(node.grid[0] * cell_width, 0, node.grid[1] * cell_width);
         min += bounds_.min();
 
-        Vec3 max = min + Vec3(cell_width, 0, cell_width);
-        return AABB(min, max);
+        float hw = cell_width * 0.5f;
+        node.centre = min + Vec3(hw, hw, hw);
+        node.size = cell_width;
     }
 
     static uint32_t calc_base(uint8_t level) {
@@ -281,6 +269,7 @@ private:
                     new_node.data = new NodeData();
 
                     calc_child_indexes(new_node);
+                    calc_bounds(new_node);
                 }
             }
         }
