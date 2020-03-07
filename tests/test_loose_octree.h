@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <simulant/test.h>
 #include "../simulant/nodes/geoms/loose_octree.h"
 #include "../simulant/frustum.h"
 
@@ -26,9 +26,9 @@ public:
         root.level = 0;
         root.grid[0] = root.grid[1] = root.grid[2] = 0;
 
-        auto indexes = TestOctree::child_indexes(root);
+        TestOctree::calc_child_indexes(root);
 
-        assert_equal(indexes.size(), 8u);
+        auto& indexes = root.child_indexes;
 
         assert_equal(indexes[0], 1u);
         assert_equal(indexes[1], 2u);
@@ -41,9 +41,7 @@ public:
         assert_equal(indexes[7], 8u);
 
         root.level = 1;
-        indexes = TestOctree::child_indexes(root);
-
-        assert_equal(indexes.size(), 8u);
+        TestOctree::calc_child_indexes(root);
 
         assert_equal(indexes[0], 9u);
     }

@@ -32,6 +32,7 @@ public:
         Level level = 0;
         GridCoord grid[2] = {0, 0};
         NodeData* data = nullptr;
+        uint32_t child_indexes[4];
     };
 
     using TraverseCallback = void(Quadtree::Node*);
@@ -123,9 +124,7 @@ public:
             cb(&node);
 
             if(!is_leaf(node)) {
-                auto indexes = child_indexes(node);
-
-                for(auto child: indexes) {
+                for(auto child: node.child_indexes) {
                     assert(child < nodes_.size());
                     visitor(nodes_[child]);
                 }
@@ -156,9 +155,7 @@ private:
             callback(&node);
 
             if(!is_leaf(node)) {
-                auto indexes = child_indexes(node);
-
-                for(auto child: indexes) {
+                for(auto child: node.child_indexes) {
                     assert(child < nodes_.size());
                     _visible_visitor(frustum, callback, nodes_[child]);
                 }
@@ -242,21 +239,17 @@ private:
         return level_base + idx;
     }
 
-    static std::vector<uint32_t> child_indexes(Quadtree::Node& node) {
-        std::vector<uint32_t> indexes;
-        indexes.reserve(4);
-
+    static void calc_child_indexes(Quadtree::Node& node) {
+        uint8_t count = 0;
         for(uint32_t z = 0; z <= 1; ++z) {
             for(uint32_t x = 0; x <= 1; ++x) {
-                indexes.push_back(calc_index(
+                node.child_indexes[count++] = calc_index(
                     node.level + 1,
                     2 * node.grid[0] + x,
                     2 * node.grid[1] + z
-                ));
+                );
             }
         }
-
-        return indexes;
     }
 
     void grow(uint8_t required_levels) {
@@ -277,7 +270,6 @@ private:
                 for(GridCoord x = 0; x < nodes_across; ++x) {
                     auto idx = calc_index(k, x, z);
                     assert(idx < nodes_.size());
-                    assert(idx >= 0);
 
                     auto& new_node = nodes_[idx];
 
@@ -287,6 +279,8 @@ private:
                     new_node.grid[1] = z;
                     new_node.level = k;
                     new_node.data = new NodeData();
+
+                    calc_child_indexes(new_node);
                 }
             }
         }
