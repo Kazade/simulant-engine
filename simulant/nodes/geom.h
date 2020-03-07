@@ -59,7 +59,8 @@ class Geom :
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<GeomID>,
-    public Source {
+    public Source,
+    public HasMutableRenderPriority {
 
 public:
     Geom(
@@ -74,8 +75,6 @@ public:
 
     const AABB& aabb() const override;
 
-    RenderPriority render_priority() const { return render_priority_; }
-
     void clean_up() override {
         StageNode::clean_up();
     }
@@ -87,7 +86,6 @@ public:
     void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
 private:
     MeshID mesh_id_;
-    RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
     GeomCullerOptions culler_options_;
 
     std::shared_ptr<GeomCuller> culler_;

@@ -31,7 +31,6 @@ Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, cons
     generic::Identifiable<GeomID>(id),
     Source(stage, sound_driver),
     mesh_id_(mesh),
-    render_priority_(RENDER_PRIORITY_MAIN),
     culler_options_(culler_options) {
 
     set_parent(stage);
