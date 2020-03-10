@@ -47,6 +47,11 @@ struct FastVariant {
     std::function<void (this_type*)> destroy;
     std::function<void (this_type*, const this_type*)> copy;
 
+    template<typename T>
+    FastVariant(const T& value) {
+        set<T>(value);
+    }
+
     FastVariant() {
         set<bool>(false);
     }

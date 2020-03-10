@@ -10,17 +10,18 @@
 #include "../../math/mat3.h"
 #include "../../math/mat4.h"
 
+#include "constants.h"
 #include "material_property_type.h"
 #include "fast_variant.h"
 
 namespace smlt {
 
-typedef int16_t MaterialPropertyID;
 const MaterialPropertyID MATERIAL_PROPERTY_ID_INVALID = -1;
 
 typedef FastVariant<bool, int, float, Vec2, Vec3, Vec4, Mat3, Mat4, TextureUnit> MaterialVariant;
 
 class MaterialObject;
+struct MaterialProperty;
 class MaterialPropertyRegistry;
 
 class MaterialPropertyValue {
@@ -28,9 +29,12 @@ public:
     friend class MaterialObject;
     friend class MaterialPropertyRegistry;
 
-    MaterialPropertyValue(MaterialPropertyRegistry* registry, MaterialPropertyID id):
-        registry_(registry),
-        id_(id) {
+    MaterialPropertyValue() = default;
+
+    template<typename T>
+    MaterialPropertyValue(MaterialProperty* property, const T& value):
+        property_(property),
+        variant_(value) {
 
     }
 
@@ -45,23 +49,50 @@ public:
     MaterialPropertyType type() const;
 
 private:
-    MaterialPropertyRegistry* registry_ = nullptr;
-    MaterialPropertyID id_;
-
+    MaterialProperty* property_ = nullptr;
     MaterialVariant variant_;
 };
 
-class MaterialProperty {
-public:
-    MaterialProperty(MaterialPropertyRegistry* registry, MaterialPropertyID id):
-        id(id),
-        default_value(MaterialPropertyValue(registry, id)) {}
+struct MaterialPropertyValueEntry {
+    const void* object = nullptr;
+    MaterialPropertyValue value;
+};
+
+struct MaterialProperty {
+    MaterialProperty(MaterialPropertyID id):
+        id(id) {}
 
     std::string name;
     MaterialPropertyID id;
     MaterialPropertyType type;
-    MaterialPropertyValue default_value;
     bool is_custom = true;
+
+    /* Realistically the only objects are the passes and the material itself
+     * the material is the registry and takes slot 0 */
+    MaterialPropertyValueEntry entries[MAX_MATERIAL_PASSES + 1];
+
+    MaterialPropertyValue* value(MaterialObject* obj);
+
+    MaterialPropertyValue* value(MaterialPropertyRegistry*) {
+        return &entries[0].value;
+    }
+
+    template<typename T>
+    void set_value(const MaterialObject* object, const T& value);
+
+    template<typename T>
+    void set_value(const MaterialPropertyRegistry* registry, T&& value) {
+        auto entry = &entries[0];
+        entry->object = registry;
+        entry->value = MaterialPropertyValue(this, value);
+    }
+
+private:
+    friend class MaterialPropertyRegistry;
+
+    MaterialPropertyValueEntry* get_or_push_entry(const MaterialObject *object);
+    void release_entry(const MaterialObject* object);
 };
 
 }
+

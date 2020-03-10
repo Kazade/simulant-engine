@@ -40,21 +40,7 @@ public:
         MaterialPropertyType type,
         std::string name,
         const T& default_value
-    ) {
-        MaterialProperty prop(this, properties_.size() + 1);
-        prop.name = name;
-        prop.type = type;
-        prop.default_value.variant_.set(default_value);
-        properties_.push_back(prop);
-
-        // We keep a list of texture properties as we need
-        // to iterate them in the renderer and we need it
-        // to be fast!
-        rebuild_texture_properties();
-        rebuild_custom_properties();
-
-        return prop.id;
-    }
+    );
 
     /* Property IDs should be the primary way to lookup things for performance
      * reasons, but this will allow translation from a name to and ID */
@@ -109,7 +95,7 @@ private:
 
     /* These values are indexed by MaterialObject::object_id which is more performant
      * than an unordered_map */
-    std::vector<MaterialObject*> registered_objects_;
+    MaterialObject* registered_objects_[MAX_MATERIAL_PASSES + 1];
 
     MaterialPropertyID material_ambient_id_;
     MaterialPropertyID material_diffuse_id_;
@@ -151,7 +137,37 @@ private:
      * if it's a root type, and sets the MaterialObject::object_id_ variable */
     void register_object(MaterialObject* obj, MaterialObjectType type);
     void unregister_object(MaterialObject* obj);
+
+    std::vector<uint8_t> free_object_ids_;
 };
 
+}
+
+#include "material_property.inl"
+
+namespace smlt {
+template<typename T>
+MaterialPropertyID MaterialPropertyRegistry::register_property(
+    MaterialPropertyType type,
+    std::string name,
+    const T& default_value
+) {
+    MaterialProperty prop(properties_.size() + 1);
+    prop.name = name;
+    prop.type = type;
+
+    /* We set the default value in the registry slot (0)
+     * in the material property entries */
+    prop.set_value(this, default_value);
+    properties_.push_back(prop);
+
+    // We keep a list of texture properties as we need
+    // to iterate them in the renderer and we need it
+    // to be fast!
+    rebuild_texture_properties();
+    rebuild_custom_properties();
+
+    return prop.id;
+}
 }
 

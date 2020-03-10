@@ -1,6 +1,9 @@
 
-#include "material_object.h"
+
+#include "material_property_registry.h"
 #include "constants.h"
+
+#include "material_object.inl"
 
 namespace smlt {
 
@@ -20,17 +23,12 @@ void MaterialObject::set_property_value(const MaterialPropertyID& id, const Text
 }
 
 const MaterialPropertyValue* MaterialObject::property_value(MaterialPropertyID id) const {
-    auto index = id - 1;
-    if((uint8_t) index < property_values_.size() && property_values_[index].is_active) {
-        return &property_values_[index].value;
-    } else if(registry_->root_ == this) {
-        /* If the root is this, and we have no value, then fallback to whatever
-         * the specified default was */
-        return &registry_->property(id)->default_value;
-    } else {
-        assert(this != registry_->root_);
-        return registry_->root_->property_value(id);
-    }
+    const auto& property = registry_->properties_[id - 1];
+    const auto& entry = property.entries[object_id_];
+
+    /* We use a valid pointer to mark that this value
+     * was set by the object, otherwise it will be nullptr */
+    return (entry.object) ? &entry.value : &property.entries[0].value;
 }
 
 const MaterialPropertyValue* MaterialObject::property_value(const std::string& name) const {

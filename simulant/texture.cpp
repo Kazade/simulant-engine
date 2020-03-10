@@ -176,6 +176,8 @@ static void explode_r8(const uint8_t* source, const TextureChannelSet& channels,
             case TEXTURE_CHANNEL_BLUE: return sb;
             case TEXTURE_CHANNEL_ALPHA: return sa;
         }
+
+        return 0.0f;
     };
 
     r = calculate_component(0, sr, 0, 0, 0);

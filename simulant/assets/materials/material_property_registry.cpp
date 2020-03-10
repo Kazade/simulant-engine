@@ -1,5 +1,6 @@
 #include "material_property_registry.h"
 #include "material_object.h"
+#include "material_property.h"
 
 namespace smlt {
 
@@ -21,15 +22,20 @@ BlendType blend_type_from_name(const std::string &v) {
 }
 
 MaterialPropertyRegistry::MaterialPropertyRegistry() {
-    registered_objects_.push_back(nullptr); // Always make room for the root object
+    for(auto i = 1u; i < MAX_MATERIAL_PASSES; ++i) {
+        free_object_ids_.push_back(i);
+    }
+
+    for(auto& obj: registered_objects_) {
+        obj = nullptr;
+    }
 
     register_all_builtin_properties();
 }
 
 MaterialPropertyRegistry::~MaterialPropertyRegistry() {
-    auto to_release = registered_objects_; // Avoid manipulation in a loop
-    for(auto object: to_release) {
-        unregister_object(object);
+    for(auto object: registered_objects_) {
+        if(object) unregister_object(object);
     }
 }
 
@@ -53,26 +59,34 @@ const MaterialProperty* MaterialPropertyRegistry::property(MaterialPropertyID id
 }
 
 std::size_t MaterialPropertyRegistry::registered_material_object_count() const {
-    return std::count_if(
-        registered_objects_.begin(),
-        registered_objects_.end(),
-        [](MaterialObject* i) -> bool {
-            return i != nullptr;
-        }
-    );
+    std::size_t ret = 0;
+    for(auto& obj: registered_objects_) {
+        if(obj) ret++;
+    }
+
+    return ret;
 }
 
 void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
     if(&rhs == this) return;
 
     root_ = nullptr;
-    registered_objects_.clear();
-    registered_objects_.push_back(nullptr);
+
+    for(auto& obj: registered_objects_) {
+        obj = nullptr;
+    }
+
+    for(auto i = 1u; i < MAX_MATERIAL_PASSES; ++i) {
+        free_object_ids_.push_back(i);
+    }
 
     properties_ = rhs.properties_;
 
+    /* Update property pointers on entries */
     for(auto& prop: properties_) {
-        prop.default_value.registry_ = this;
+        for(auto& entry: prop.entries) {
+            entry.value.property_ = &prop;
+        }
     }
 
     rebuild_texture_properties();
@@ -144,26 +158,27 @@ void MaterialPropertyRegistry::register_all_builtin_properties() {
 }
 
 void MaterialPropertyRegistry::register_object(MaterialObject* obj, MaterialObjectType type) {
-    auto it = std::find(registered_objects_.begin(), registered_objects_.end(), obj);
-    if(it != registered_objects_.end()) {
-        return;
+    for(auto& robj: registered_objects_) {
+        if(robj == obj) {
+            // Already registered
+            return;
+        }
     }
 
-    /* FIXME: Look for empty slots in the registered_objects array */
     if(type == MATERIAL_OBJECT_TYPE_ROOT) {
         assert(!root_);
         obj->object_id_ = 0;
         root_ = obj;
         registered_objects_[0] = obj;
     } else {
-        obj->object_id_ = registered_objects_.size();
-        registered_objects_.push_back(obj);
+        assert(!free_object_ids_.empty());
+
+        obj->object_id_ = free_object_ids_.back();
+        free_object_ids_.pop_back();
+        registered_objects_[obj->object_id_] = obj;
     }
 
     obj->registry_ = this;
-    for(auto& prop: obj->property_values_) {
-        prop.value.registry_ = this;
-    }
 }
 
 void MaterialPropertyRegistry::unregister_object(MaterialObject* obj) {
@@ -177,6 +192,12 @@ void MaterialPropertyRegistry::unregister_object(MaterialObject* obj) {
         registered_objects_[obj->object_id_] = nullptr;
     }
 
+    /* Clear the entry slots for this object */
+    for(auto& property: properties_) {
+        property.release_entry(obj);
+    }
+
+    free_object_ids_.push_back(obj->object_id_);
     obj->object_id_ = -1;
 }
 
