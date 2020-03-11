@@ -47,9 +47,8 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     Asset(asset_manager),
     generic::Identifiable<MaterialID>(id),
     MaterialPropertyRegistry(),
-    MaterialObject(this, MATERIAL_OBJECT_TYPE_ROOT),
-    pass_count_(MAX_PASSES),
-    passes_{{MaterialPass(this, 0), MaterialPass(this, 1), MaterialPass(this, 2), MaterialPass(this, 3)}} {
+    pass_count_(MAX_MATERIAL_PASSES),
+    passes_{{MaterialPass(this), MaterialPass(this), MaterialPass(this), MaterialPass(this)}} {
 
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
 }
@@ -65,28 +64,76 @@ Material::Material(const Material& rhs):
     Asset(rhs),
     generic::Identifiable<MaterialID>(rhs),
     RefCounted<Material>(rhs),
-    MaterialPropertyRegistry(rhs),
-    MaterialObject(rhs),
-    pass_count_(rhs.pass_count_),
-    passes_(rhs.passes_) {
+    passes_{{MaterialPass(this), MaterialPass(this), MaterialPass(this), MaterialPass(this)}}{
 
     *this = rhs;
 }
 
 Material& Material::operator=(const Material& rhs) {
     Asset::operator=(rhs);
-    MaterialPropertyRegistry::operator=(rhs);
-    MaterialObject::operator=(rhs);
 
-    register_object(this, MATERIAL_OBJECT_TYPE_ROOT);
+    /* Copy the material registry, then all the passes and register those
+       while maintaining their property value entries */
+    initialize_free_object_ids();
+    clear_registered_objects();
 
+    // First object is the registry
+    registered_objects_[0] = this;
+
+    // Copy all properties
+    properties_ = rhs.properties_;
+    pass_count_ = rhs.pass_count_;
+
+    /* Copy the passes */
     for(auto i = 0; i < rhs.pass_count_; ++i) {
-        passes_[i] = rhs.passes_[i];
-        passes_[i].material_ = this;
-        register_object(&passes_[i], MATERIAL_OBJECT_TYPE_LEAF);
+        // MaterialObject
+        passes_[i].registry_ = this;
+        passes_[i].object_id_ = rhs.passes_[i].object_id_;
+
+        // MaterialPass
+        passes_[i].copy_from(rhs.passes_[i], this);
+
+        /* Rebuild the registered objects manually */
+        assert(passes_[i].object_id_ > 0);
+        registered_objects_[passes_[i].object_id_] = &passes_[i];
     }
 
-    set_pass_count(rhs.pass_count_);
+    /* Update property pointers on entries */
+    for(auto& prop: properties_) {
+        prop.entries[0].object = this;
+        prop.entries[0].is_set = true;
+        prop.entries[0].value.property_ = &prop;
+
+        for(uint8_t i = 1u; i < _S_ARRAY_LENGTH(prop.entries); ++i) {
+            prop.entries[i].object = &passes_[i - 1];
+            prop.entries[i].value.property_ = &prop;
+        }
+    }
+
+    rebuild_texture_properties();
+    rebuild_custom_properties();
+
+    material_ambient_id_ = rhs.material_ambient_id_;
+    material_diffuse_id_ = rhs.material_diffuse_id_;
+    material_specular_id_ = rhs.material_specular_id_;
+    material_shininess_id_ = rhs.material_shininess_id_;
+    diffuse_map_id_ = rhs.diffuse_map_id_;
+    specular_map_id_ = rhs.specular_map_id_;
+    light_map_id_ = rhs.light_map_id_;
+    normal_map_id_ = rhs.normal_map_id_;
+
+    blending_enabled_id_ = rhs.blending_enabled_id_;
+    texturing_enabled_id_ = rhs.texturing_enabled_id_;
+    lighting_enabled_id_ = rhs.lighting_enabled_id_;
+    depth_test_enabled_id_ = rhs.depth_test_enabled_id_;
+    depth_write_enabled_id_ = rhs.depth_write_enabled_id_;
+
+    shade_model_id_ = rhs.shade_model_id_;
+    cull_mode_id_ = rhs.cull_mode_id_;
+    polygon_mode_id_ = rhs.polygon_mode_id_;
+    point_size_id_ = rhs.point_size_id_;
+    colour_material_id_ = rhs.colour_material_id_;
+    blend_func_id_ = rhs.blend_func_id_;
 
     return *this;
 }
@@ -101,8 +148,8 @@ void Material::set_pass_count(uint8_t pass_count) {
     /* We're adding more passes, so let's make sure they're clean */
     if(pass_count > pass_count_) {
         for(auto i = pass_count_; i < pass_count; ++i) {
-            passes_[i] = MaterialPass(this, i);
-            register_object(&passes_[i], MATERIAL_OBJECT_TYPE_LEAF);
+            new (&passes_[i]) MaterialPass(this);
+            register_object(&passes_[i]);
         }
     }
 
@@ -126,12 +173,12 @@ MaterialPass *Material::pass(uint8_t pass) {
 }
 
 void Material::update(float dt) {
-
+    _S_UNUSED(dt);
 }
 
 
-MaterialPass::MaterialPass(Material *material, uint8_t index):
-    MaterialObject(material, MATERIAL_OBJECT_TYPE_LEAF),
+MaterialPass::MaterialPass(Material *material):
+    MaterialObject(material),
     material_(material) {
 
     /* If the renderer supports GPU programs, at least specify *something* */

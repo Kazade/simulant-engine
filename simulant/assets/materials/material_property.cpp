@@ -24,18 +24,21 @@ MaterialPropertyType MaterialPropertyValue::type() const {
 /* Find the object in the entry list, and either mark it as
  * empty, or, if it's the final entry then reduce the entry
  * count */
-MaterialPropertyValue *MaterialProperty::value(MaterialObject *obj) {
-    auto entry = &entries[obj->object_id_];
-    if(!entry->object) {
-        return &entries[0].value;
-    } else {
-        return &entry->value;
-    }
+MaterialPropertyValue *MaterialProperty::value(const MaterialObject *obj) {
+    return &entries[obj->object_id_].value;
+}
+
+const MaterialPropertyValue *MaterialProperty::value(const MaterialObject *obj) const {
+    return &entries[obj->object_id_].value;
 }
 
 void MaterialProperty::release_entry(const MaterialObject *object) {
     /* Wipe the object pointer to make the slot unset */
     entries[object->object_id_].object = nullptr;
+
+    /* Restore the default value */
+    entries[object->object_id_].is_set = false;
+    entries[object->object_id_].value = entries[0].value;
 }
 
 }

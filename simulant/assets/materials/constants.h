@@ -8,11 +8,6 @@ namespace smlt {
 
 typedef int16_t MaterialPropertyID;
 
-enum MaterialObjectType {
-    MATERIAL_OBJECT_TYPE_ROOT,
-    MATERIAL_OBJECT_TYPE_LEAF
-};
-
 enum BlendType {
     BLEND_NONE,
     BLEND_ADD,

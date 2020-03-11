@@ -21,14 +21,14 @@ BlendType blend_type_from_name(const std::string &v) {
     }
 }
 
-MaterialPropertyRegistry::MaterialPropertyRegistry() {
-    for(auto i = 1u; i < MAX_MATERIAL_PASSES; ++i) {
-        free_object_ids_.push_back(i);
-    }
+MaterialPropertyRegistry::MaterialPropertyRegistry():
+    MaterialObject(this) {
 
-    for(auto& obj: registered_objects_) {
-        obj = nullptr;
-    }
+    initialize_free_object_ids();
+    clear_registered_objects();
+
+    /* We take up slot zero */
+    registered_objects_[0] = this;
 
     register_all_builtin_properties();
 }
@@ -67,15 +67,16 @@ std::size_t MaterialPropertyRegistry::registered_material_object_count() const {
     return ret;
 }
 
+#if 0
 void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
     if(&rhs == this) return;
-
-    root_ = nullptr;
 
     for(auto& obj: registered_objects_) {
         obj = nullptr;
     }
+    registered_objects_[0] = this;
 
+    free_object_ids_.clear();
     for(auto i = 1u; i < MAX_MATERIAL_PASSES; ++i) {
         free_object_ids_.push_back(i);
     }
@@ -84,8 +85,14 @@ void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
 
     /* Update property pointers on entries */
     for(auto& prop: properties_) {
-        for(auto& entry: prop.entries) {
-            entry.value.property_ = &prop;
+        prop.entries[0].object = this;
+        prop.entries[0].is_set = true;
+        prop.entries[0].value.property_ = &prop;
+
+        for(uint8_t i = 1u; i < _S_ARRAY_LENGTH(prop.entries); ++i) {
+            prop.entries[i].object = nullptr;
+            prop.entries[i].is_set = false;
+            prop.entries[i].value = prop.entries[0].value;
         }
     }
 
@@ -114,6 +121,7 @@ void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
     colour_material_id_ = rhs.colour_material_id_;
     blend_func_id_ = rhs.blend_func_id_;
 }
+#endif
 
 void MaterialPropertyRegistry::register_all_builtin_properties() {
     material_ambient_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, Vec4(1, 1, 1, 1));
@@ -157,7 +165,11 @@ void MaterialPropertyRegistry::register_all_builtin_properties() {
     register_builtin_property(MATERIAL_PROPERTY_TYPE_MAT3, INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY, Mat3());
 }
 
-void MaterialPropertyRegistry::register_object(MaterialObject* obj, MaterialObjectType type) {
+void MaterialPropertyRegistry::register_object(MaterialObject* obj) {
+    if(obj == this) {
+        return;
+    }
+
     for(auto& robj: registered_objects_) {
         if(robj == obj) {
             // Already registered
@@ -165,18 +177,12 @@ void MaterialPropertyRegistry::register_object(MaterialObject* obj, MaterialObje
         }
     }
 
-    if(type == MATERIAL_OBJECT_TYPE_ROOT) {
-        assert(!root_);
-        obj->object_id_ = 0;
-        root_ = obj;
-        registered_objects_[0] = obj;
-    } else {
-        assert(!free_object_ids_.empty());
+    /* We are the root object, so just set ourselves up */
+    assert(!free_object_ids_.empty());
 
-        obj->object_id_ = free_object_ids_.back();
-        free_object_ids_.pop_back();
-        registered_objects_[obj->object_id_] = obj;
-    }
+    obj->object_id_ = free_object_ids_.back();
+    free_object_ids_.pop_back();
+    registered_objects_[obj->object_id_] = obj;
 
     obj->registry_ = this;
 }
@@ -186,11 +192,12 @@ void MaterialPropertyRegistry::unregister_object(MaterialObject* obj) {
         return;
     }
 
-    if(obj == root_) {
-        root_ = registered_objects_[0] = nullptr;
-    } else {
-        registered_objects_[obj->object_id_] = nullptr;
+    /* Can't unregister ourselves */
+    if(obj == this) {
+        return;
     }
+
+    registered_objects_[obj->object_id_] = nullptr;
 
     /* Clear the entry slots for this object */
     for(auto& property: properties_) {

@@ -26,6 +26,7 @@ class MaterialPropertyRegistry;
 
 class MaterialPropertyValue {
 public:
+    friend class Material;
     friend class MaterialObject;
     friend class MaterialPropertyRegistry;
 
@@ -55,6 +56,7 @@ private:
 
 struct MaterialPropertyValueEntry {
     const void* object = nullptr;
+    bool is_set = false;
     MaterialPropertyValue value;
 };
 
@@ -71,21 +73,11 @@ struct MaterialProperty {
      * the material is the registry and takes slot 0 */
     MaterialPropertyValueEntry entries[MAX_MATERIAL_PASSES + 1];
 
-    MaterialPropertyValue* value(MaterialObject* obj);
-
-    MaterialPropertyValue* value(MaterialPropertyRegistry*) {
-        return &entries[0].value;
-    }
+    const MaterialPropertyValue* value(const MaterialObject* obj) const;
+    MaterialPropertyValue* value(const MaterialObject* obj);
 
     template<typename T>
     void set_value(const MaterialObject* object, const T& value);
-
-    template<typename T>
-    void set_value(const MaterialPropertyRegistry* registry, T&& value) {
-        auto entry = &entries[0];
-        entry->object = registry;
-        entry->value = MaterialPropertyValue(this, value);
-    }
 
 private:
     friend class MaterialPropertyRegistry;

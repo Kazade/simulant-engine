@@ -7,14 +7,20 @@
 
 namespace smlt {
 
-MaterialObject::MaterialObject(MaterialPropertyRegistry* registry, MaterialObjectType type):
+MaterialObject::MaterialObject(MaterialPropertyRegistry* registry):
     registry_(registry) {
 
-    registry->register_object(this, type);
+    if(registry == this) {
+        object_id_ = 0;
+    } else if(registry) {
+        registry->register_object(this);
+    }
 }
 
 MaterialObject::~MaterialObject() {
-    registry_->unregister_object(this);
+    if(registry_ && registry_ != this) {
+        registry_->unregister_object(this);
+    }
 }
 
 void MaterialObject::set_property_value(const MaterialPropertyID& id, const TexturePtr& texture) {
@@ -24,11 +30,7 @@ void MaterialObject::set_property_value(const MaterialPropertyID& id, const Text
 
 const MaterialPropertyValue* MaterialObject::property_value(MaterialPropertyID id) const {
     const auto& property = registry_->properties_[id - 1];
-    const auto& entry = property.entries[object_id_];
-
-    /* We use a valid pointer to mark that this value
-     * was set by the object, otherwise it will be nullptr */
-    return (entry.object) ? &entry.value : &property.entries[0].value;
+    return property.value(this);
 }
 
 const MaterialPropertyValue* MaterialObject::property_value(const std::string& name) const {

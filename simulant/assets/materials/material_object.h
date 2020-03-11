@@ -10,10 +10,14 @@ class MaterialPropertyValue;
 
 class MaterialObject {
 public:
+    friend class Material;
     friend struct MaterialProperty;
     friend class MaterialPropertyRegistry;
 
-    MaterialObject(MaterialPropertyRegistry* registry, MaterialObjectType type=MATERIAL_OBJECT_TYPE_LEAF);
+    MaterialObject(MaterialPropertyRegistry* registry);
+    MaterialObject(const MaterialObject&) = delete;
+    MaterialObject& operator=(MaterialObject&) = delete;
+
     virtual ~MaterialObject();
 
     template<typename T>
@@ -65,6 +69,8 @@ public:
     void set_colour_material(ColourMaterial cm);
 
     const MaterialPropertyRegistry* registry() const;
+
+    int8_t object_id() const { return object_id_; }
 private:
 
     MaterialPropertyRegistry* registry_ = nullptr;
