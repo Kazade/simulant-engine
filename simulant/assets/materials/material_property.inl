@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MATERIAL_PROPERTY_INL
+#define MATERIAL_PROPERTY_INL
 
 #include "material_object.h"
 
@@ -26,3 +27,5 @@ void MaterialProperty::set_value(const MaterialObject* object, const T& value) {
 }
 
 }
+
+#endif
