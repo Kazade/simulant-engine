@@ -185,6 +185,10 @@ void MaterialPropertyRegistry::register_object(MaterialObject* obj) {
     registered_objects_[obj->object_id_] = obj;
 
     obj->registry_ = this;
+
+    for(auto& property: properties_) {
+        property.init_entry(obj);
+    }
 }
 
 void MaterialPropertyRegistry::unregister_object(MaterialObject* obj) {

@@ -78,31 +78,15 @@ public:
     }
 
 private:
-    /* These constructors exist solely to initialize the passes_ array in Material
-     * FIXME: If someone can figure out how to initialize that passes_ array
-     * without making it pointers (and hurting cache-locality) in C++11
-     * that would be awesome. */
+    /* This shouldn't exist, but it exists so that the passes_
+     * array can be instantiated */
+    friend class ::std::array<MaterialPass, MAX_MATERIAL_PASSES>;
     MaterialPass():
-        MaterialObject(nullptr) {
-    }
-
-    MaterialPass(const MaterialPass& rhs):
-        MaterialObject((MaterialPropertyRegistry*) rhs.material_),
-        material_(rhs.material_),
-        iteration_type_(rhs.iteration_type_),
-        max_iterations_(rhs.max_iterations_),
-        program_(rhs.program_) {
-
-    }
+        MaterialObject(nullptr) {}
 
     /* This isn't an assigment operator because copying the
      * material pointer would be an error */
-    void copy_from(const MaterialPass& rhs, Material* new_parent) {
-        material_ = new_parent;
-        iteration_type_ = rhs.iteration_type_;
-        max_iterations_ = rhs.max_iterations_;
-        program_ = rhs.program_;
-    }
+    void copy_from(const MaterialPass& rhs, Material* new_parent);
 
     Material* material_ = nullptr;
 

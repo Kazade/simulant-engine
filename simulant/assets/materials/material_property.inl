@@ -18,7 +18,7 @@ void MaterialProperty::set_value(const MaterialObject* object, const T& value) {
          * value on all objects that haven't been set */
         for(auto i = 1u; i < _S_ARRAY_LENGTH(entries); ++i) {
             auto& e = entries[i];
-            if(!e.is_set) {
+            if(e.object && !e.is_set) {
                 e.value = MaterialPropertyValue(this, value);
             }
         }

@@ -17,6 +17,7 @@ class MaterialPropertyRegistry:
 
 public:
     friend class MaterialObject;
+    friend class MaterialPass;
     friend class Material;
 
     /* This is required so that the renderer
@@ -56,7 +57,7 @@ public:
 protected:
     void initialize_free_object_ids() {
         free_object_ids_.clear();
-        for(uint8_t i = 1u; i < MAX_MATERIAL_PASSES; ++i) {
+        for(uint8_t i = 1u; i < MAX_MATERIAL_PASSES + 1; ++i) {
             free_object_ids_.push_back(i);
         }
     }

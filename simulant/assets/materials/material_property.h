@@ -29,6 +29,7 @@ public:
     friend class Material;
     friend class MaterialObject;
     friend class MaterialPropertyRegistry;
+    friend struct MaterialProperty;
 
     MaterialPropertyValue() = default;
 
@@ -50,6 +51,11 @@ public:
     MaterialPropertyType type() const;
 
 private:
+    template<typename T>
+    void set_value(const T& v) {
+        variant_.set(v);
+    }
+
     MaterialProperty* property_ = nullptr;
     MaterialVariant variant_;
 };
@@ -82,7 +88,7 @@ struct MaterialProperty {
 private:
     friend class MaterialPropertyRegistry;
 
-    MaterialPropertyValueEntry* get_or_push_entry(const MaterialObject *object);
+    void init_entry(const MaterialObject* object);
     void release_entry(const MaterialObject* object);
 };
 

@@ -47,8 +47,7 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     Asset(asset_manager),
     generic::Identifiable<MaterialID>(id),
     MaterialPropertyRegistry(),
-    pass_count_(MAX_MATERIAL_PASSES),
-    passes_{{MaterialPass(this), MaterialPass(this), MaterialPass(this), MaterialPass(this)}} {
+    pass_count_(0) {
 
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
 }
@@ -63,8 +62,7 @@ Material::Material(const Material& rhs):
     std::enable_shared_from_this<Material>(rhs),
     Asset(rhs),
     generic::Identifiable<MaterialID>(rhs),
-    RefCounted<Material>(rhs),
-    passes_{{MaterialPass(this), MaterialPass(this), MaterialPass(this), MaterialPass(this)}}{
+    RefCounted<Material>(rhs) {
 
     *this = rhs;
 }
@@ -74,7 +72,6 @@ Material& Material::operator=(const Material& rhs) {
 
     /* Copy the material registry, then all the passes and register those
        while maintaining their property value entries */
-    initialize_free_object_ids();
     clear_registered_objects();
 
     // First object is the registry
@@ -83,6 +80,7 @@ Material& Material::operator=(const Material& rhs) {
     // Copy all properties
     properties_ = rhs.properties_;
     pass_count_ = rhs.pass_count_;
+    free_object_ids_ = rhs.free_object_ids_;
 
     /* Copy the passes */
     for(auto i = 0; i < rhs.pass_count_; ++i) {
@@ -104,8 +102,11 @@ Material& Material::operator=(const Material& rhs) {
         prop.entries[0].is_set = true;
         prop.entries[0].value.property_ = &prop;
 
+        for(uint8_t i = 0; i < pass_count_; ++i) {
+            prop.entries[passes_[i].object_id()].object = &passes_[i];
+        }
+
         for(uint8_t i = 1u; i < _S_ARRAY_LENGTH(prop.entries); ++i) {
-            prop.entries[i].object = &passes_[i - 1];
             prop.entries[i].value.property_ = &prop;
         }
     }
@@ -137,8 +138,7 @@ Material& Material::operator=(const Material& rhs) {
 
     return *this;
 }
-
-void Material::set_pass_count(uint8_t pass_count) {
+ void Material::set_pass_count(uint8_t pass_count) {
     if(pass_count == pass_count_) {
         return;
     }
@@ -190,6 +190,13 @@ MaterialPass::MaterialPass(Material *material):
 
 GPUProgramID MaterialPass::gpu_program_id() const {
     return program_->id();
+}
+
+void MaterialPass::copy_from(const MaterialPass &rhs, Material *new_parent) {
+    material_ = new_parent;
+    iteration_type_ = rhs.iteration_type_;
+    max_iterations_ = rhs.max_iterations_;
+    program_ = rhs.program_;
 }
 
 }

@@ -32,13 +32,21 @@ const MaterialPropertyValue *MaterialProperty::value(const MaterialObject *obj) 
     return &entries[obj->object_id_].value;
 }
 
+void MaterialProperty::init_entry(const MaterialObject* object) {
+    assert(object->object_id_ > 0);
+    entries[object->object_id_].object = object;
+    entries[object->object_id_].value = entries[0].value;
+}
+
 void MaterialProperty::release_entry(const MaterialObject *object) {
+    assert(object->object_id_ > 0);
+
     /* Wipe the object pointer to make the slot unset */
     entries[object->object_id_].object = nullptr;
 
     /* Restore the default value */
     entries[object->object_id_].is_set = false;
-    entries[object->object_id_].value = entries[0].value;
+    entries[object->object_id_].value.set_value(false);
 }
 
 }
