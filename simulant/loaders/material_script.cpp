@@ -316,7 +316,7 @@ void MaterialScript::generate(Material& material) {
 
 namespace loaders {
 
-void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions& options) {
+void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions&) {
     Material* mat = loadable_to<Material>(resource);
     parser_->generate(*mat);
 }

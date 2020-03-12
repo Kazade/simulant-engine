@@ -14,7 +14,7 @@ public:
         interpolate_(interpolate) {}
 
 private:
-    void do_manipulate(ParticleSystem* system, Particle* particles, std::size_t particle_count, float dt) const {
+    void do_manipulate(ParticleSystem*, Particle* particles, std::size_t particle_count, float) const {
         auto size = colours_.size();
         auto particle = particles;
         for(auto i = 0u; i < particle_count; ++i) {
