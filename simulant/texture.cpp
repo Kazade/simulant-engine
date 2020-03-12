@@ -65,6 +65,9 @@ static uint8_t channels_for_format(TextureFormat format) {
     case TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT:
         return 4;
     }
+
+    L_ERROR("Invalid TextureFormat!");
+    return 4;
 }
 
 static std::size_t bits_per_texel(TextureFormat format, TextureTexelType type) {
