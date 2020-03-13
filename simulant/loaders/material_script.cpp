@@ -29,8 +29,6 @@
 #include "../deps/jsonic/jsonic.h"
 #include "../window.h"
 
-#include "../assets/materials/material_object.inl"
-
 #ifndef _arch_dreamcast
 #include "../renderers/gl2x/gpu_program.h"
 #endif

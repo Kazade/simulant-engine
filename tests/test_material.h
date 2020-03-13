@@ -5,7 +5,7 @@
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 
-#include "simulant/assets/materials/material_property.inl"
+#include "simulant/assets/materials/material_property.inl.h"
 
 class MaterialTest : public smlt::test::SimulantTestCase {
 public:

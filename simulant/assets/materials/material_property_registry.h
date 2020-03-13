@@ -142,7 +142,7 @@ private:
 
 }
 
-#include "material_property.inl"
+#include "material_property.inl.h"
 
 namespace smlt {
 template<typename T>

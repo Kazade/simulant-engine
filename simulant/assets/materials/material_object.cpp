@@ -2,8 +2,7 @@
 
 #include "material_property_registry.h"
 #include "constants.h"
-
-#include "material_object.inl"
+#include "material_object.h"
 
 namespace smlt {
 

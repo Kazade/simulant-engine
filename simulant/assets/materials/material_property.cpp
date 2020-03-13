@@ -1,6 +1,6 @@
 #include "material_object.h"
 #include "material_property.h"
-#include "material_property.inl"
+#include "material_property.inl.h"
 #include "material_property_registry.h"
 
 namespace smlt {

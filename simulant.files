@@ -47,10 +47,9 @@ simulant/assets/materials/constants.h
 simulant/assets/materials/fast_variant.h
 simulant/assets/materials/material_object.cpp
 simulant/assets/materials/material_object.h
-simulant/assets/materials/material_object.inl
 simulant/assets/materials/material_property.cpp
 simulant/assets/materials/material_property.h
-simulant/assets/materials/material_property.inl
+simulant/assets/materials/material_property.inl.h
 simulant/assets/materials/material_property_registry.cpp
 simulant/assets/materials/material_property_registry.h
 simulant/assets/materials/material_property_type.cpp
