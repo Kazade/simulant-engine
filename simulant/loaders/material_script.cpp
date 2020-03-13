@@ -29,6 +29,8 @@
 #include "../deps/jsonic/jsonic.h"
 #include "../window.h"
 
+#include "../assets/materials/material_object.inl"
+
 #ifndef _arch_dreamcast
 #include "../renderers/gl2x/gpu_program.h"
 #endif
@@ -108,7 +110,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                     continue;
                 }
 
-                holder.set_property_value(key, (bool) value.get<jsonic::Boolean>());
+                holder.set_property_value(prop_id, (bool) value.get<jsonic::Boolean>());
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
                 if(!value.is_string()) {
                     L_ERROR(_F("Invalid property value for: {0}").format(key));
@@ -126,7 +128,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 float y = parts[1].to_float();
                 float z = parts[2].to_float();
 
-                holder.set_property_value(key, Vec3(x, y, z));
+                holder.set_property_value(prop_id, Vec3(x, y, z));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC4) {
                 if(!value.is_string()) {
                     L_ERROR(_F("Invalid property value for: {0}").format(key));
@@ -145,7 +147,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 float z = parts[2].to_float();
                 float w = parts[3].to_float();
 
-                holder.set_property_value(key, Vec4(x, y, z, w));
+                holder.set_property_value(prop_id, Vec4(x, y, z, w));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
                 if(!value.is_string()) {
                     L_ERROR(_F("Invalid property value for: {0}").format(key));
@@ -153,13 +155,13 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 }
 
                 if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                    holder.set_property_value(key, value.get<jsonic::Number>());
+                    holder.set_property_value(prop_id, value.get<jsonic::Number>());
                 } else {
                     /* Special cases for enums - need a better way to handle this */
                     if(key == BLEND_FUNC_PROPERTY) {
                         std::string v = value.get<jsonic::String>();
                         BlendType type = blend_type_from_name(v);
-                        holder.set_property_value(key, (int) type);
+                        holder.set_property_value(prop_id, (int) type);
                     } else if(key == SHADE_MODEL_PROPERTY) {
                         std::string v = value.get<jsonic::String>();
                         if(v == "smooth") {
@@ -183,13 +185,13 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                             L_WARN(_F("Unrecognised cull value {0}").format(v));
                         }
                     } else {
-                        holder.set_property_value(key, (int) value.get<jsonic::Number>());
+                        holder.set_property_value(prop_id, (int) value.get<jsonic::Number>());
                     }
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value.get<jsonic::String>();
                 auto tex = mat.asset_manager().new_texture_from_file(path);
-                holder.set_property_value(key, tex);
+                holder.set_property_value(prop_id, tex);
             } else {
                 L_ERROR("Unhandled property type");
             }
@@ -314,7 +316,7 @@ void MaterialScript::generate(Material& material) {
 
 namespace loaders {
 
-void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions& options) {
+void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions&) {
     Material* mat = loadable_to<Material>(resource);
     parser_->generate(*mat);
 }

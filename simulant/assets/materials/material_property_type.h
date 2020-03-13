@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../types.h"
+#include "constants.h"
 
 class MaterialTest;
 
@@ -17,36 +18,6 @@ enum MaterialPropertyType {
     MATERIAL_PROPERTY_TYPE_VEC4,
     MATERIAL_PROPERTY_TYPE_MAT3,
     MATERIAL_PROPERTY_TYPE_MAT4
-};
-
-/* Value type, if the type is texture */
-struct TextureUnit {
-    friend class ::MaterialTest;
-
-    TextureUnit() = default;
-    TextureUnit(const TexturePtr& texture);
-
-    Mat4& texture_matrix() {
-        return *texture_matrix_;
-    }
-
-    const Mat4& texture_matrix() const {
-        return *texture_matrix_;
-    }
-
-    void scroll_x(float amount);
-    void scroll_y(float amount);
-
-    const TextureID& texture_id() const;
-    const TexturePtr texture() const {return texture_;}
-
-private:
-    /* Shared pointer so that copying a TextureUnit also copies the matrix */
-    std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
-
-    /* Set when assigned as a material property to maintain a refcount */
-    std::shared_ptr<Texture> texture_;
-    TextureID texture_id_;
 };
 
 

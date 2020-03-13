@@ -49,7 +49,7 @@ class MaterialPass:
 public:
     friend class Material;
 
-    MaterialPass(Material* material, uint8_t index);
+    MaterialPass(Material* material);
 
     void set_iteration_type(IterationType iteration) {
         iteration_type_ = iteration;
@@ -78,7 +78,17 @@ public:
     }
 
 private:
-    Material* material_;
+    /* This shouldn't exist, but it exists so that the passes_
+     * array can be instantiated */
+    friend class ::std::array<MaterialPass, MAX_MATERIAL_PASSES>;
+    MaterialPass():
+        MaterialObject(nullptr) {}
+
+    /* This isn't an assigment operator because copying the
+     * material pointer would be an error */
+    void copy_from(const MaterialPass& rhs, Material* new_parent);
+
+    Material* material_ = nullptr;
 
     IterationType iteration_type_ = ITERATION_TYPE_ONCE;
     uint8_t max_iterations_ = 1;
@@ -94,8 +104,7 @@ class Material:
     public generic::Identifiable<MaterialID>,
     public RefCounted<Material>,
     public Updateable,
-    public MaterialPropertyRegistry,
-    public MaterialObject {
+    public MaterialPropertyRegistry {
 
 public:
     friend class GenericRenderer;
@@ -131,7 +140,7 @@ public:
 private:
     thread::Mutex pass_mutex_;
     uint8_t pass_count_ = 0;
-    std::array<MaterialPass, MAX_PASSES> passes_;
+    std::array<MaterialPass, MAX_MATERIAL_PASSES> passes_;
 
 protected:
     /* Assignment operator and copy constructor must be private

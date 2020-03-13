@@ -40,6 +40,8 @@ void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
 }
 
 void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
+    _S_UNUSED(tex_id);
+
     GLuint gl_tex = texture->_renderer_specific_id();
 
     if(!GLThreadCheck::is_current()) {

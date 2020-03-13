@@ -47,6 +47,11 @@ struct FastVariant {
     std::function<void (this_type*)> destroy;
     std::function<void (this_type*, const this_type*)> copy;
 
+    template<typename T>
+    FastVariant(const T& value) {
+        set<T>(value);
+    }
+
     FastVariant() {
         set<bool>(false);
     }
@@ -58,8 +63,10 @@ struct FastVariant {
     }
 
     this_type& operator=(const this_type& rhs) {
-        if(rhs.copy) {
-            rhs.copy(this, &rhs);
+        if(&rhs != this) {
+            if(rhs.copy) {
+                rhs.copy(this, &rhs);
+            }
         }
 
         return *this;
@@ -91,6 +98,7 @@ struct FastVariant {
         type_code = typeid(T);
 
         destroy = [](this_type* _this) {
+            assert(std::type_index(typeid(T)) == _this->type_code);
             T* thing = (T*) _this->data;
             thing->~T();
         };

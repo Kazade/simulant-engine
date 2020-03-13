@@ -1,13 +1,12 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include "../../types.h"
 
 namespace smlt {
 
-enum MaterialObjectType {
-    MATERIAL_OBJECT_TYPE_ROOT,
-    MATERIAL_OBJECT_TYPE_LEAF
-};
+typedef int16_t MaterialPropertyID;
 
 enum BlendType {
     BLEND_NONE,
@@ -16,6 +15,34 @@ enum BlendType {
     BLEND_COLOUR,
     BLEND_ALPHA,
     BLEND_ONE_ONE_MINUS_ALPHA
+};
+
+/* Value type, if the type is texture */
+struct TextureUnit {
+    TextureUnit() = default;
+    TextureUnit(const TexturePtr& texture);
+
+    Mat4& texture_matrix() {
+        return *texture_matrix_;
+    }
+
+    const Mat4& texture_matrix() const {
+        return *texture_matrix_;
+    }
+
+    void scroll_x(float amount);
+    void scroll_y(float amount);
+
+    const TextureID& texture_id() const;
+    const TexturePtr texture() const {return texture_;}
+
+private:
+    /* Shared pointer so that copying a TextureUnit also copies the matrix */
+    std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
+
+    /* Set when assigned as a material property to maintain a refcount */
+    std::shared_ptr<Texture> texture_;
+    TextureID texture_id_;
 };
 
 const char* const DIFFUSE_PROPERTY = "s_material_diffuse";

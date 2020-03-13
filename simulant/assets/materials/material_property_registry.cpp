@@ -1,5 +1,6 @@
 #include "material_property_registry.h"
 #include "material_object.h"
+#include "material_property.h"
 
 namespace smlt {
 
@@ -20,16 +21,21 @@ BlendType blend_type_from_name(const std::string &v) {
     }
 }
 
-MaterialPropertyRegistry::MaterialPropertyRegistry() {
-    registered_objects_.push_back(nullptr); // Always make room for the root object
+MaterialPropertyRegistry::MaterialPropertyRegistry():
+    MaterialObject(this) {
+
+    initialize_free_object_ids();
+    clear_registered_objects();
+
+    /* We take up slot zero */
+    registered_objects_[0] = this;
 
     register_all_builtin_properties();
 }
 
 MaterialPropertyRegistry::~MaterialPropertyRegistry() {
-    auto to_release = registered_objects_; // Avoid manipulation in a loop
-    for(auto object: to_release) {
-        unregister_object(object);
+    for(auto object: registered_objects_) {
+        if(object) unregister_object(object);
     }
 }
 
@@ -53,26 +59,41 @@ const MaterialProperty* MaterialPropertyRegistry::property(MaterialPropertyID id
 }
 
 std::size_t MaterialPropertyRegistry::registered_material_object_count() const {
-    return std::count_if(
-        registered_objects_.begin(),
-        registered_objects_.end(),
-        [](MaterialObject* i) -> bool {
-            return i != nullptr;
-        }
-    );
+    std::size_t ret = 0;
+    for(auto& obj: registered_objects_) {
+        if(obj) ret++;
+    }
+
+    return ret;
 }
 
+#if 0
 void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
     if(&rhs == this) return;
 
-    root_ = nullptr;
-    registered_objects_.clear();
-    registered_objects_.push_back(nullptr);
+    for(auto& obj: registered_objects_) {
+        obj = nullptr;
+    }
+    registered_objects_[0] = this;
+
+    free_object_ids_.clear();
+    for(auto i = 1u; i < MAX_MATERIAL_PASSES; ++i) {
+        free_object_ids_.push_back(i);
+    }
 
     properties_ = rhs.properties_;
 
+    /* Update property pointers on entries */
     for(auto& prop: properties_) {
-        prop.default_value.registry_ = this;
+        prop.entries[0].object = this;
+        prop.entries[0].is_set = true;
+        prop.entries[0].value.property_ = &prop;
+
+        for(uint8_t i = 1u; i < _S_ARRAY_LENGTH(prop.entries); ++i) {
+            prop.entries[i].object = nullptr;
+            prop.entries[i].is_set = false;
+            prop.entries[i].value = prop.entries[0].value;
+        }
     }
 
     rebuild_texture_properties();
@@ -100,6 +121,7 @@ void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
     colour_material_id_ = rhs.colour_material_id_;
     blend_func_id_ = rhs.blend_func_id_;
 }
+#endif
 
 void MaterialPropertyRegistry::register_all_builtin_properties() {
     material_ambient_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, Vec4(1, 1, 1, 1));
@@ -143,26 +165,29 @@ void MaterialPropertyRegistry::register_all_builtin_properties() {
     register_builtin_property(MATERIAL_PROPERTY_TYPE_MAT3, INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY, Mat3());
 }
 
-void MaterialPropertyRegistry::register_object(MaterialObject* obj, MaterialObjectType type) {
-    auto it = std::find(registered_objects_.begin(), registered_objects_.end(), obj);
-    if(it != registered_objects_.end()) {
+void MaterialPropertyRegistry::register_object(MaterialObject* obj) {
+    if(obj == this) {
         return;
     }
 
-    /* FIXME: Look for empty slots in the registered_objects array */
-    if(type == MATERIAL_OBJECT_TYPE_ROOT) {
-        assert(!root_);
-        obj->object_id_ = 0;
-        root_ = obj;
-        registered_objects_[0] = obj;
-    } else {
-        obj->object_id_ = registered_objects_.size();
-        registered_objects_.push_back(obj);
+    for(auto& robj: registered_objects_) {
+        if(robj == obj) {
+            // Already registered
+            return;
+        }
     }
 
+    /* We are the root object, so just set ourselves up */
+    assert(!free_object_ids_.empty());
+
+    obj->object_id_ = free_object_ids_.back();
+    free_object_ids_.pop_back();
+    registered_objects_[obj->object_id_] = obj;
+
     obj->registry_ = this;
-    for(auto& prop: obj->property_values_) {
-        prop.value.registry_ = this;
+
+    for(auto& property: properties_) {
+        property.init_entry(obj);
     }
 }
 
@@ -171,12 +196,19 @@ void MaterialPropertyRegistry::unregister_object(MaterialObject* obj) {
         return;
     }
 
-    if(obj == root_) {
-        root_ = registered_objects_[0] = nullptr;
-    } else {
-        registered_objects_[obj->object_id_] = nullptr;
+    /* Can't unregister ourselves */
+    if(obj == this) {
+        return;
     }
 
+    registered_objects_[obj->object_id_] = nullptr;
+
+    /* Clear the entry slots for this object */
+    for(auto& property: properties_) {
+        property.release_entry(obj);
+    }
+
+    free_object_ids_.push_back(obj->object_id_);
     obj->object_id_ = -1;
 }
 

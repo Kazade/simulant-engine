@@ -1,9 +1,11 @@
+
 #ifndef TEST_MATERIAL_H
 #define TEST_MATERIAL_H
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 
+#include "simulant/assets/materials/material_property.inl"
 
 class MaterialTest : public smlt::test::SimulantTestCase {
 public:
@@ -182,7 +184,10 @@ public:
 
         assert_equal(mat->diffuse_map().texture_id(), texture->id());
 
-        assert_equal(texture.use_count(), 3);
+        /* This takes some explanation. Basically the texture unit is copied
+         * across all entries when set. There is 1 pass, plus 1 material so the
+         * use count goes up by 2, not 1 */
+        assert_equal(texture.use_count(), 4);
     }
 
     // FIXME: Restore this

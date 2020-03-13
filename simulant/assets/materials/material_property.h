@@ -10,27 +10,33 @@
 #include "../../math/mat3.h"
 #include "../../math/mat4.h"
 
+#include "constants.h"
 #include "material_property_type.h"
 #include "fast_variant.h"
 
 namespace smlt {
 
-typedef int16_t MaterialPropertyID;
 const MaterialPropertyID MATERIAL_PROPERTY_ID_INVALID = -1;
 
 typedef FastVariant<bool, int, float, Vec2, Vec3, Vec4, Mat3, Mat4, TextureUnit> MaterialVariant;
 
 class MaterialObject;
+struct MaterialProperty;
 class MaterialPropertyRegistry;
 
 class MaterialPropertyValue {
 public:
+    friend class Material;
     friend class MaterialObject;
     friend class MaterialPropertyRegistry;
+    friend struct MaterialProperty;
 
-    MaterialPropertyValue(MaterialPropertyRegistry* registry, MaterialPropertyID id):
-        registry_(registry),
-        id_(id) {
+    MaterialPropertyValue() = default;
+
+    template<typename T>
+    MaterialPropertyValue(MaterialProperty* property, const T& value):
+        property_(property),
+        variant_(value) {
 
     }
 
@@ -45,23 +51,46 @@ public:
     MaterialPropertyType type() const;
 
 private:
-    MaterialPropertyRegistry* registry_ = nullptr;
-    MaterialPropertyID id_;
+    template<typename T>
+    void set_value(const T& v) {
+        variant_.set(v);
+    }
 
+    MaterialProperty* property_ = nullptr;
     MaterialVariant variant_;
 };
 
-class MaterialProperty {
-public:
-    MaterialProperty(MaterialPropertyRegistry* registry, MaterialPropertyID id):
-        id(id),
-        default_value(MaterialPropertyValue(registry, id)) {}
+struct MaterialPropertyValueEntry {
+    const void* object = nullptr;
+    bool is_set = false;
+    MaterialPropertyValue value;
+};
+
+struct MaterialProperty {
+    MaterialProperty(MaterialPropertyID id):
+        id(id) {}
 
     std::string name;
     MaterialPropertyID id;
     MaterialPropertyType type;
-    MaterialPropertyValue default_value;
     bool is_custom = true;
+
+    /* Realistically the only objects are the passes and the material itself
+     * the material is the registry and takes slot 0 */
+    MaterialPropertyValueEntry entries[MAX_MATERIAL_PASSES + 1];
+
+    const MaterialPropertyValue* value(const MaterialObject* obj) const;
+    MaterialPropertyValue* value(const MaterialObject* obj);
+
+    template<typename T>
+    void set_value(const MaterialObject* object, const T& value);
+
+private:
+    friend class MaterialPropertyRegistry;
+
+    void init_entry(const MaterialObject* object);
+    void release_entry(const MaterialObject* object);
 };
 
 }
+

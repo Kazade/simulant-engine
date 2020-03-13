@@ -222,7 +222,7 @@ void processor(std::shared_ptr<typename Future<ResultType>::FutureState> state, 
         );
     } catch (std::exception& e) {
         Lock<Mutex> lock(state->lock_);
-        fprintf(stderr, e.what());
+        fprintf(stderr, "%s", e.what());
         state->is_ready_ = true;
         state->is_failed_ = true;
     }

@@ -379,6 +379,10 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
     uint32_t i = 0;
     for(auto& material: materials) {
+        if(!material) {
+            continue;
+        }
+
         submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
         if(material) {
             material.fetch()->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC); // Re-enable GC now the material has been applied

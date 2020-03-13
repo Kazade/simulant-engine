@@ -25,7 +25,7 @@ namespace procedural {
 namespace mesh {
 
 SubMesh* capsule(MeshPtr mesh, float diameter, float height,
-    uint32_t segment_count, uint32_t vertical_segment_count, uint32_t ring_count, const smlt::Vec3& pos_offset) {
+    uint32_t segment_count, uint32_t vertical_segment_count, uint32_t ring_count, const smlt::Vec3&) {
 
     float radius = diameter * 0.5f;
 

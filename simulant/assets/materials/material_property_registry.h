@@ -2,20 +2,22 @@
 
 #include "material_property.h"
 #include "constants.h"
+#include "material_object.h"
 
 namespace smlt {
 
 BlendType blend_type_from_name(const std::string& v);
 
-const static int MAX_PASSES = 4;
 const static int MAX_DEFINED_PROPERTIES = 64;
 
-class MaterialObject;
 class GenericRenderer;
 
-class MaterialPropertyRegistry {
+class MaterialPropertyRegistry:
+    public MaterialObject {
+
 public:
     friend class MaterialObject;
+    friend class MaterialPass;
     friend class Material;
 
     /* This is required so that the renderer
@@ -23,15 +25,8 @@ public:
     friend class GenericRenderer;
 
     MaterialPropertyRegistry();
-
-    MaterialPropertyRegistry(const MaterialPropertyRegistry& rhs) {
-        copy_from(rhs);
-    }
-
-    MaterialPropertyRegistry& operator=(const MaterialPropertyRegistry& rhs) {
-        copy_from(rhs);
-        return *this;
-    }
+    MaterialPropertyRegistry(const MaterialPropertyRegistry& rhs) = delete;
+    MaterialPropertyRegistry& operator=(const MaterialPropertyRegistry& rhs) = delete;
 
     virtual ~MaterialPropertyRegistry();
 
@@ -40,21 +35,7 @@ public:
         MaterialPropertyType type,
         std::string name,
         const T& default_value
-    ) {
-        MaterialProperty prop(this, properties_.size() + 1);
-        prop.name = name;
-        prop.type = type;
-        prop.default_value.variant_.set(default_value);
-        properties_.push_back(prop);
-
-        // We keep a list of texture properties as we need
-        // to iterate them in the renderer and we need it
-        // to be fast!
-        rebuild_texture_properties();
-        rebuild_custom_properties();
-
-        return prop.id;
-    }
+    );
 
     /* Property IDs should be the primary way to lookup things for performance
      * reasons, but this will allow translation from a name to and ID */
@@ -72,17 +53,21 @@ public:
     }
 
     std::size_t registered_material_object_count() const;
+
+protected:
+    void initialize_free_object_ids() {
+        free_object_ids_.clear();
+        for(uint8_t i = 1u; i < MAX_MATERIAL_PASSES + 1; ++i) {
+            free_object_ids_.push_back(i);
+        }
+    }
+
+    void clear_registered_objects() {
+        for(auto& obj: registered_objects_) {
+            obj = nullptr;
+        }
+    }
 private:
-    /* Copying registries does the following:
-     *  - Copies the defined properties
-     *  - Doesn't copy the registered objects */
-    void copy_from(const MaterialPropertyRegistry& rhs);
-
-    /* The first time a MaterialObject is registered as a root type, this is
-     * set. In debug mode an assertion will raise if you do that again, in non
-     * debug mode the root_ will be replaced. Don't do that */
-    MaterialObject* root_ = nullptr;
-
     /* A list of properties, these are indexed by MateralPropertyID minus 1 (as IDs
      * are 1-indexed) */
     std::vector<MaterialProperty> properties_;
@@ -109,7 +94,7 @@ private:
 
     /* These values are indexed by MaterialObject::object_id which is more performant
      * than an unordered_map */
-    std::vector<MaterialObject*> registered_objects_;
+    MaterialObject* registered_objects_[MAX_MATERIAL_PASSES + 1];
 
     MaterialPropertyID material_ambient_id_;
     MaterialPropertyID material_diffuse_id_;
@@ -149,9 +134,39 @@ private:
 
     /* Register the MaterialObject. All this does is store the root MaterialObject
      * if it's a root type, and sets the MaterialObject::object_id_ variable */
-    void register_object(MaterialObject* obj, MaterialObjectType type);
+    void register_object(MaterialObject* obj);
     void unregister_object(MaterialObject* obj);
+
+    std::vector<uint8_t> free_object_ids_;
 };
 
+}
+
+#include "material_property.inl"
+
+namespace smlt {
+template<typename T>
+MaterialPropertyID MaterialPropertyRegistry::register_property(
+    MaterialPropertyType type,
+    std::string name,
+    const T& default_value
+) {
+    MaterialProperty prop(properties_.size() + 1);
+    prop.name = name;
+    prop.type = type;
+
+    /* We set the default value in the registry slot (0)
+     * in the material property entries */
+    prop.set_value(this, default_value);
+    properties_.push_back(prop);
+
+    // We keep a list of texture properties as we need
+    // to iterate them in the renderer and we need it
+    // to be fast!
+    rebuild_texture_properties();
+    rebuild_custom_properties();
+
+    return prop.id;
+}
 }
 

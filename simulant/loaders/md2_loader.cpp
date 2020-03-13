@@ -308,6 +308,8 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     uint16_t current_frame = 0;
     for(auto& frame_transform: frame_data->frames_) {
+        _S_UNUSED(frame_transform);
+
         std::map<VertexKey, uint16_t> seen_vertices;
 
         for(auto& triangle: triangles) {
