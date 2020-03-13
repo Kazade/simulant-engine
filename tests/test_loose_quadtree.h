@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <simulant/test.h>
 #include "../simulant/nodes/geoms/loose_quadtree.h"
 #include "../simulant/frustum.h"
 
@@ -26,9 +26,9 @@ public:
         root.level = 0;
         root.grid[0] = root.grid[1] = 0;
 
-        auto indexes = TestQuadtree::child_indexes(root);
+        TestQuadtree::calc_child_indexes(root);
 
-        assert_equal(indexes.size(), 4u);
+        auto& indexes = root.child_indexes;
 
         assert_equal(indexes[0], 1u);
         assert_equal(indexes[1], 2u);
@@ -36,9 +36,7 @@ public:
         assert_equal(indexes[3], 4u);
 
         root.level = 1;
-        indexes = TestQuadtree::child_indexes(root);
-
-        assert_equal(indexes.size(), 4u);
+        TestQuadtree::calc_child_indexes(root);
 
         assert_equal(indexes[0], 5u);
     }

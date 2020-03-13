@@ -34,6 +34,10 @@ public:
         Level level = 0;
         GridCoord grid[3] = {0, 0, 0};
         NodeData* data = nullptr;
+        uint32_t child_indexes[8];
+
+        Vec3 centre;
+        float size;
     };
 
     using TraverseCallback = void(Octree::Node*);
@@ -130,9 +134,7 @@ public:
             cb(&node);
 
             if(!is_leaf(node)) {
-                auto indexes = child_indexes(node);
-
-                for(auto child: indexes) {
+                for(auto child: node.child_indexes) {
                     assert(child < nodes_.size());
                     visitor(nodes_[child]);
                 }
@@ -158,14 +160,11 @@ public:
 private:
     template<typename Callback>
     void _visible_visitor(const Frustum& frustum, const Callback& callback, Octree::Node& node) {
-        auto bounds = calc_loose_bounds(node);
-        if(frustum.intersects_cube(bounds.centre(), bounds.max_dimension())) {
+        if(frustum.intersects_cube(node.centre, node.size * 2.0f)) {
             callback(&node);
 
             if(!is_leaf(node)) {
-                auto indexes = child_indexes(node);
-
-                for(auto child: indexes) {
+                for(auto child: node.child_indexes) {
                     assert(child < nodes_.size());
                     _visible_visitor(frustum, callback, nodes_[child]);
                 }
@@ -206,30 +205,16 @@ private:
         return std::make_pair(depth - 1, node_width * 2);
     }
 
-    AABB calc_loose_bounds(const Octree::Node& node) const {
-        /* Returns the loose bounds of the cell which is
-         * twice the size, but with the same centre */
-
-        AABB bounds = calc_bounds(node);
-        auto centre = bounds.centre();
-
-        float r = bounds.width();
-
-        Vec3 diff(r, r, r);
-        bounds.set_min(centre - diff);
-        bounds.set_max(centre + diff);
-        return bounds;
-    }
-
-    AABB calc_bounds(const Octree::Node& node) const {
+    void calc_bounds(Octree::Node& node) const {
         auto grid_width = _loose_octree::ipow(2, node.level);
         auto cell_width = bounds_.max_dimension() / grid_width;
 
         Vec3 min(node.grid[0] * cell_width, node.grid[1] * cell_width, node.grid[2] * cell_width);
         min += bounds_.min();
 
-        Vec3 max = min + Vec3(cell_width, cell_width, cell_width);
-        return AABB(min, max);
+        float hw = cell_width * 0.5f;
+        node.centre = min + Vec3(hw, hw, hw);
+        node.size = cell_width;
     }
 
     static uint32_t calc_base(uint8_t level) {
@@ -250,24 +235,21 @@ private:
         return level_base + idx;
     }
 
-    static std::vector<uint32_t> child_indexes(Octree::Node& node) {
-        std::vector<uint32_t> indexes;
-        indexes.reserve(8);
+    static void calc_child_indexes(Octree::Node& node) {
+        uint8_t count = 0;
 
         for(uint32_t z = 0; z <= 1; ++z) {
             for(uint32_t y = 0; y <= 1; ++y) {
                 for(uint32_t x = 0; x <= 1; ++x) {
-                    indexes.push_back(calc_index(
+                    node.child_indexes[count++] = calc_index(
                         node.level + 1,
                         2 * node.grid[0] + x,
                         2 * node.grid[1] + y,
                         2 * node.grid[2] + z
-                    ));
+                    );
                 }
             }
         }
-
-        return indexes;
     }
 
     void grow(uint8_t required_levels) {
@@ -299,6 +281,9 @@ private:
                         new_node.grid[2] = z;
                         new_node.level = k;
                         new_node.data = new NodeData();
+
+                        calc_child_indexes(new_node);
+                        calc_bounds(new_node);
                     }
                 }
             }
