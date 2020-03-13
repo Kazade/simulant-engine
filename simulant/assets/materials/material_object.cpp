@@ -7,6 +7,7 @@
 
 namespace smlt {
 
+
 MaterialObject::MaterialObject(MaterialPropertyRegistry* registry):
     registry_(registry) {
 
@@ -21,6 +22,38 @@ MaterialObject::~MaterialObject() {
     if(registry_ && registry_ != this) {
         registry_->unregister_object(this);
     }
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const bool &value) {
+    registry_->properties_[id - 1].set_value(this, value);
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const int &value) {
+    registry_->properties_[id - 1].set_value(this, value);
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const float &value) {
+    registry_->properties_[id - 1].set_value(this, value);
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const Vec3 &value) {
+    registry_->properties_[id - 1].set_value(this, value);
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const Vec4 &value) {
+    registry_->properties_[id - 1].set_value(this, value);
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const Mat3 &value) {
+    registry_->properties_[id - 1].set_value(this, value);
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const TextureUnit &value) {
+    registry_->properties_[id - 1].set_value(this, value);
+}
+
+void MaterialObject::set_property_value(const MaterialPropertyID &id, const Vec2 &value) {
+    registry_->properties_[id - 1].set_value(this, value);
 }
 
 void MaterialObject::set_property_value(const MaterialPropertyID& id, const TexturePtr& texture) {
@@ -38,21 +71,21 @@ const MaterialPropertyValue* MaterialObject::property_value(const std::string& n
 }
 
 void MaterialObject::set_specular(const Colour &colour) {
-    set_property_value(SPECULAR_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
+    set_property_value(registry_->material_specular_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
 }
 
 void MaterialObject::set_ambient(const Colour &colour) {
-    set_property_value(AMBIENT_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
+    set_property_value(registry_->material_ambient_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
 }
 
 void MaterialObject::set_diffuse(const Colour &colour) {
-    set_property_value(DIFFUSE_PROPERTY, Vec4(colour.r, colour.g, colour.b, colour.a));
+    set_property_value(registry_->material_diffuse_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
 }
 
 void MaterialObject::set_shininess(float shininess) {
     // OpenGL expects shininess to range between 0 and 128 otherwise it throws
     // an invalid_value error
-    set_property_value(SHININESS_PROPERTY, clamp(shininess, 0, 128));
+    set_property_value(registry_->material_shininess_id_, clamp(shininess, 0, 128));
 }
 
 void MaterialObject::set_diffuse_map(TexturePtr texture) {

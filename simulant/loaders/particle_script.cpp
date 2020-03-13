@@ -159,14 +159,14 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 if(property) {
                     auto type = property->type;
                     if(type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                        mat->MaterialObject::set_property_value<bool>(property_id, (bool) js[key].get<jsonic::Boolean>());
+                        mat->MaterialObject::set_property_value(property_id, (bool) js[key].get<jsonic::Boolean>());
                     } else if(type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                        mat->MaterialObject::set_property_value<float>(property_id, js[key].get<jsonic::Number>());
+                        mat->MaterialObject::set_property_value(property_id, js[key].get<jsonic::Number>());
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
                         if(property_name == BLEND_FUNC_PROPERTY) {
-                            mat->MaterialObject::set_property_value<int>(property_id, (int) blend_type_from_name(js[key].get<jsonic::String>()));
+                            mat->MaterialObject::set_property_value(property_id, (int) blend_type_from_name(js[key].get<jsonic::String>()));
                         } else {
-                            mat->MaterialObject::set_property_value<int>(property_id, (int) js[key].get<jsonic::Number>());
+                            mat->MaterialObject::set_property_value(property_id, (int) js[key].get<jsonic::Number>());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());

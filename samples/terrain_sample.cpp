@@ -87,7 +87,7 @@ public:
         );
 
         terrain_material->pass(0)->set_property_value(
-            "textures[4]",
+            terrain_material->find_property_id("textures[4]"),
             terrain_splatmap
         );
 

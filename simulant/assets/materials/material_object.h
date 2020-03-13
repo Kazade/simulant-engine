@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../../types.h"
 #include "constants.h"
@@ -20,13 +20,15 @@ public:
 
     virtual ~MaterialObject();
 
-    template<typename T>
-    void set_property_value(const MaterialPropertyID& id, const T& value);
+    void set_property_value(const MaterialPropertyID& id, const bool& value);
+    void set_property_value(const MaterialPropertyID& id, const int& value);
+    void set_property_value(const MaterialPropertyID& id, const float& value);
+    void set_property_value(const MaterialPropertyID& id, const Vec2& value);
+    void set_property_value(const MaterialPropertyID& id, const Vec3& value);
+    void set_property_value(const MaterialPropertyID& id, const Vec4& value);
+    void set_property_value(const MaterialPropertyID& id, const Mat3& value);
+    void set_property_value(const MaterialPropertyID& id, const TextureUnit& value);
     void set_property_value(const MaterialPropertyID& id, const TexturePtr& texture);
-
-    /* FIXME: Remove. This is slow and we want to encourage using IDs */
-    template<typename T>
-    void set_property_value(const std::string& name, const T& value);
 
     const MaterialPropertyValue* property_value(MaterialPropertyID id) const;
 
