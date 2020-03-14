@@ -360,10 +360,14 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
     program_manager_.set_garbage_collection_method(program->id(), GARBAGE_COLLECT_PERIODIC);
 
     /* Build the GPU program on the main thread */
-    if(!GLThreadCheck::is_current()) {
-        window->idle->run_sync([&]() {
+    if(within_coroutine()) {
+        window->idle->add_once([&]() {
             program->build();
         });
+
+        /* Let the main routine do the build before
+         * resuming */
+        yield_coroutine();
     } else {
         program->build();
     }

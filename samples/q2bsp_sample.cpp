@@ -57,7 +57,7 @@ public:
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
-            10000.0
+            1000.0
         );
 
         stage_->new_light_as_directional();
