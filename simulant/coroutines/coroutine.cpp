@@ -162,6 +162,10 @@ void stop_coroutine(CoroutineID id) {
             context.thread = nullptr;
         }
 
+        if(CONTEXTS == routine) {
+            CONTEXTS = routine->next;
+        }
+
         if(routine->next) routine->next->prev = routine->prev;
         if(routine->prev) routine->prev->next = routine->next;
 
