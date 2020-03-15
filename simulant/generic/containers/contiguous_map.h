@@ -59,7 +59,7 @@ public:
 
             current_node_ = map->root_index_;
 
-            if(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
+            while(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
                 current_node_ = _node(current_node_)->left_index_;
             }
         }
