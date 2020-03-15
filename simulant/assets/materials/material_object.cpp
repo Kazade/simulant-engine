@@ -65,6 +65,11 @@ const MaterialPropertyValue* MaterialObject::property_value(MaterialPropertyID i
     return property.value(this);
 }
 
+MaterialPropertyValue* MaterialObject::property_value(MaterialPropertyID id) {
+    auto& property = registry_->properties_[id - 1];
+    return property.value(this);
+}
+
 const MaterialPropertyValue* MaterialObject::property_value(const std::string& name) const {
     return property_value(registry_->find_property_id(name));
 }
@@ -108,6 +113,22 @@ const TextureUnit& MaterialObject::normal_map() const {
 }
 
 const TextureUnit& MaterialObject::specular_map() const {
+    return property_value(registry_->specular_map_id_)->value<TextureUnit>();
+}
+
+TextureUnit& MaterialObject::diffuse_map() {
+    return property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
+}
+
+TextureUnit& MaterialObject::light_map() {
+    return property_value(registry_->light_map_id_)->value<TextureUnit>();
+}
+
+TextureUnit& MaterialObject::normal_map() {
+    return property_value(registry_->normal_map_id_)->value<TextureUnit>();
+}
+
+TextureUnit& MaterialObject::specular_map() {
     return property_value(registry_->specular_map_id_)->value<TextureUnit>();
 }
 

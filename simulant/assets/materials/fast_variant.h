@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <functional>
 #include <typeindex>
 
@@ -13,12 +14,12 @@ constexpr const T &T_max(const T &a, const T &b) {
 
 template<typename T, typename... Ts>
 struct max_sizeof {
-    static const size_t value = T_max(sizeof(T), max_sizeof<Ts...>::value);
+    static const std::size_t value = T_max(sizeof(T), max_sizeof<Ts...>::value);
 };
 
 template<typename T>
 struct max_sizeof<T> {
-    static const size_t value = sizeof(T);
+    static const std::size_t value = sizeof(T);
 };
 
 template < typename Tp, typename... List >
@@ -82,6 +83,13 @@ struct FastVariant {
     const T& get() const {
         assert(std::type_index(typeid(T)) == type_code);
         auto ret = reinterpret_cast<const T*>(data);
+        return *ret;
+    }
+
+    template<typename T>
+    T& get() {
+        assert(std::type_index(typeid(T)) == type_code);
+        auto ret = reinterpret_cast<T*>(data);
         return *ret;
     }
 

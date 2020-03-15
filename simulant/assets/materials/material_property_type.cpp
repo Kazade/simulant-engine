@@ -8,13 +8,11 @@ TextureUnit::TextureUnit(const TexturePtr& texture):
     texture_id_(texture_->id()) {}
 
 void TextureUnit::scroll_x(float amount) {
-    Mat4 diff = Mat4::as_translation(Vec3(amount, 0, 0));
-    *texture_matrix_ = *texture_matrix_ * diff;
+    texture_matrix_[12] += amount;
 }
 
 void TextureUnit::scroll_y(float amount) {
-    Mat4 diff = Mat4::as_translation(Vec3(0, amount, 0));
-    *texture_matrix_ = *texture_matrix_ * diff;
+    texture_matrix_[13] += amount;
 }
 
 const TextureID& TextureUnit::texture_id() const {
