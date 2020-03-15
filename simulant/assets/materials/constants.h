@@ -23,11 +23,11 @@ struct TextureUnit {
     TextureUnit(const TexturePtr& texture);
 
     Mat4& texture_matrix() {
-        return *texture_matrix_;
+        return texture_matrix_;
     }
 
     const Mat4& texture_matrix() const {
-        return *texture_matrix_;
+        return texture_matrix_;
     }
 
     void scroll_x(float amount);
@@ -36,9 +36,8 @@ struct TextureUnit {
     const TextureID& texture_id() const;
     const TexturePtr texture() const {return texture_;}
 
-private:
-    /* Shared pointer so that copying a TextureUnit also copies the matrix */
-    std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
+private:    
+    Mat4 texture_matrix_;
 
     /* Set when assigned as a material property to maintain a refcount */
     std::shared_ptr<Texture> texture_;

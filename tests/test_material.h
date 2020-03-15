@@ -153,6 +153,10 @@ public:
 
         assert_equal(pass1->diffuse_map().texture_id(), tex2);
         assert_equal(pass2->diffuse_map().texture_id(), tex);
+
+        /* Now to test scrolling */
+        pass1->diffuse_map().scroll_x(0.5f);
+        assert_equal(pass1->diffuse_map().texture_matrix()[12], 0.5f);
     }
 
     void test_shininess_is_clamped() {

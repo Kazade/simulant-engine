@@ -45,6 +45,11 @@ public:
         return variant_.get<T>();
     }
 
+    template<typename T>
+    T& value() {
+        return variant_.get<T>();
+    }
+
     std::string shader_variable() const;
     std::string name() const;
     bool is_custom() const;
