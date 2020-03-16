@@ -20,14 +20,19 @@ enum BlendType {
 /* Value type, if the type is texture */
 struct TextureUnit {
     TextureUnit() = default;
+    TextureUnit(const TextureUnit& rhs):
+        texture_matrix_(rhs.texture_matrix_),
+        texture_(rhs.texture_),
+        texture_id_(rhs.texture_id_) {}
+
     TextureUnit(const TexturePtr& texture);
 
     Mat4& texture_matrix() {
-        return texture_matrix_;
+        return *texture_matrix_;
     }
 
     const Mat4& texture_matrix() const {
-        return texture_matrix_;
+        return *texture_matrix_;
     }
 
     void scroll_x(float amount);
@@ -37,7 +42,9 @@ struct TextureUnit {
     const TexturePtr texture() const {return texture_;}
 
 private:    
-    Mat4 texture_matrix_;
+    TextureUnit& operator=(const TextureUnit&) = delete;
+
+    std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
 
     /* Set when assigned as a material property to maintain a refcount */
     std::shared_ptr<Texture> texture_;

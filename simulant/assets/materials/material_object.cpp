@@ -100,36 +100,36 @@ void MaterialObject::set_light_map(TexturePtr texture) {
     set_property_value(registry_->light_map_id_, texture);
 }
 
-const TextureUnit& MaterialObject::diffuse_map() const {
-    return property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
+const TextureUnit* MaterialObject::diffuse_map() const {
+    return &property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
 }
 
-const TextureUnit& MaterialObject::light_map() const {
-    return property_value(registry_->light_map_id_)->value<TextureUnit>();
+const TextureUnit* MaterialObject::light_map() const {
+    return &property_value(registry_->light_map_id_)->value<TextureUnit>();
 }
 
-const TextureUnit& MaterialObject::normal_map() const {
-    return property_value(registry_->normal_map_id_)->value<TextureUnit>();
+const TextureUnit* MaterialObject::normal_map() const {
+    return &property_value(registry_->normal_map_id_)->value<TextureUnit>();
 }
 
-const TextureUnit& MaterialObject::specular_map() const {
-    return property_value(registry_->specular_map_id_)->value<TextureUnit>();
+const TextureUnit* MaterialObject::specular_map() const {
+    return &property_value(registry_->specular_map_id_)->value<TextureUnit>();
 }
 
-TextureUnit& MaterialObject::diffuse_map() {
-    return property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
+TextureUnit* MaterialObject::diffuse_map() {
+    return &property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
 }
 
-TextureUnit& MaterialObject::light_map() {
-    return property_value(registry_->light_map_id_)->value<TextureUnit>();
+TextureUnit* MaterialObject::light_map() {
+    return &property_value(registry_->light_map_id_)->value<TextureUnit>();
 }
 
-TextureUnit& MaterialObject::normal_map() {
-    return property_value(registry_->normal_map_id_)->value<TextureUnit>();
+TextureUnit* MaterialObject::normal_map() {
+    return &property_value(registry_->normal_map_id_)->value<TextureUnit>();
 }
 
-TextureUnit& MaterialObject::specular_map() {
-    return property_value(registry_->specular_map_id_)->value<TextureUnit>();
+TextureUnit* MaterialObject::specular_map() {
+    return &property_value(registry_->specular_map_id_)->value<TextureUnit>();
 }
 
 const Colour& MaterialObject::specular() const {

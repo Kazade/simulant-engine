@@ -75,8 +75,8 @@ void Background::update(float dt) {
     assert(mat);
 
     auto diffuse_map = mat->diffuse_map();
-    diffuse_map.scroll_x(x_rate_ * dt);
-    diffuse_map.scroll_y(y_rate_ * dt);
+    diffuse_map->scroll_x(x_rate_ * dt);
+    diffuse_map->scroll_y(y_rate_ * dt);
 }
 
 void Background::set_horizontal_scroll_rate(float x_rate) {

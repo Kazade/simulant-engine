@@ -113,22 +113,22 @@ public:
 
         assert_not_equal(mat1->id(), mat2->id());
 
-        assert_equal(mat1->diffuse_map().texture_id(), tex1->id());
+        assert_equal(mat1->diffuse_map()->texture_id(), tex1->id());
         assert_equal(mat1->diffuse(), smlt::Colour::RED);
         assert_equal(mat1->pass_count(), 2);
         assert_equal(mat1->pass(0)->diffuse(), smlt::Colour::BLUE);
         assert_equal(mat1->pass(1)->diffuse(), smlt::Colour::RED);
-        assert_equal(mat1->pass(0)->diffuse_map().texture_id(), tex1->id());
+        assert_equal(mat1->pass(0)->diffuse_map()->texture_id(), tex1->id());
 
         // Make sure the passes were copied
         assert_not_equal(mat1->pass(0), mat2->pass(0));
 
-        assert_equal(mat2->diffuse_map().texture_id(), tex1->id());
+        assert_equal(mat2->diffuse_map()->texture_id(), tex1->id());
         assert_equal(mat2->diffuse(), smlt::Colour::RED);
         assert_equal(mat2->pass_count(), 2);
         assert_equal(mat2->pass(0)->diffuse(), smlt::Colour::BLUE);
         assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::RED);
-        assert_equal(mat2->pass(0)->diffuse_map().texture_id(), tex1->id());
+        assert_equal(mat2->pass(0)->diffuse_map()->texture_id(), tex1->id());
 
         mat2->set_diffuse(smlt::Colour::GREEN);
         assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::GREEN);
@@ -144,19 +144,19 @@ public:
         auto pass1 = mat->pass(0);
         auto pass2 = mat->pass(1);
 
-        assert_equal(pass1->diffuse_map().texture_id(), tex);
-        assert_equal(pass2->diffuse_map().texture_id(), tex);
+        assert_equal(pass1->diffuse_map()->texture_id(), tex);
+        assert_equal(pass2->diffuse_map()->texture_id(), tex);
 
         auto tex2 = window->shared_assets->new_texture(8, 8);
 
         pass1->set_diffuse_map(tex2);
 
-        assert_equal(pass1->diffuse_map().texture_id(), tex2);
-        assert_equal(pass2->diffuse_map().texture_id(), tex);
+        assert_equal(pass1->diffuse_map()->texture_id(), tex2);
+        assert_equal(pass2->diffuse_map()->texture_id(), tex);
 
         /* Now to test scrolling */
-        pass1->diffuse_map().scroll_x(0.5f);
-        assert_equal(pass1->diffuse_map().texture_matrix()[12], 0.5f);
+        pass1->diffuse_map()->scroll_x(0.5f);
+        assert_equal(pass1->diffuse_map()->texture_matrix()[12], 0.5f);
     }
 
     void test_shininess_is_clamped() {
@@ -186,7 +186,7 @@ public:
 
         mat->set_diffuse_map(texture);
 
-        assert_equal(mat->diffuse_map().texture_id(), texture->id());
+        assert_equal(mat->diffuse_map()->texture_id(), texture->id());
 
         /* This takes some explanation. Basically the texture unit is copied
          * across all entries when set. There is 1 pass, plus 1 material so the
