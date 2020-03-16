@@ -44,15 +44,15 @@ public:
     void set_diffuse_map(TexturePtr texture);
     void set_light_map(TexturePtr texture);
 
-    const TextureUnit& diffuse_map() const;
-    const TextureUnit& light_map() const;
-    const TextureUnit& normal_map() const;
-    const TextureUnit& specular_map() const;
+    const TextureUnit* diffuse_map() const;
+    const TextureUnit* light_map() const;
+    const TextureUnit* normal_map() const;
+    const TextureUnit* specular_map() const;
 
-    TextureUnit& diffuse_map();
-    TextureUnit& light_map();
-    TextureUnit& normal_map();
-    TextureUnit& specular_map();
+    TextureUnit* diffuse_map();
+    TextureUnit* light_map();
+    TextureUnit* normal_map();
+    TextureUnit* specular_map();
 
     const Colour& specular() const;
     const Colour& ambient() const;

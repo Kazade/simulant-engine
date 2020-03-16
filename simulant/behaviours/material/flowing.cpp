@@ -28,7 +28,7 @@ void Flowing::update(float dt) {
     float scroll = -(time_ - int(time_));
 
     auto pass = material->pass(0);
-    auto tex_unit = pass->diffuse_map();
+    auto& tex_unit = *pass->diffuse_map();
 
     tex_unit.texture_matrix()[12] = scroll;
     tex_unit.texture_matrix()[13] = std::sin(time_ * 5.0f) * 0.125f;

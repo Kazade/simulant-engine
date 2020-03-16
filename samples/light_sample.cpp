@@ -33,8 +33,8 @@ public:
         texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
         texture_->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
-        auto mat = actor_->base_mesh()->first_submesh()->material();
-        mat->set_diffuse_map(texture_);
+        material_ = actor_->base_mesh()->first_submesh()->material();
+        material_->set_diffuse_map(texture_);
 
         // Test Camera::look_at function
         camera_->look_at(actor_->absolute_position());
@@ -83,6 +83,11 @@ public:
         actor_->rotate_x_by(smlt::Degrees(dt * 20.0f));
         actor_->rotate_y_by(smlt::Degrees(dt * 15.0f));
         actor_->rotate_z_by(smlt::Degrees(dt * 25.0f));
+
+#if 0
+        // Uncomment to test texture scrolling
+        material_->diffuse_map()->scroll_x(0.5f * dt);
+#endif
     }
 
 private:
@@ -90,6 +95,7 @@ private:
     StagePtr stage_;
     ActorPtr actor_;
     TexturePtr texture_;
+    MaterialPtr material_;
 
     bool f_down = false;
     uint8_t current_filter_ = 0;
