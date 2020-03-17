@@ -82,6 +82,23 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     _S_UNUSED(next);
 }
 
+_S_FORCE_INLINE bool bind_texture(const GLubyte which, const TextureUnit* unit) {
+    auto tex = unit->texture();
+    auto id = (tex) ? tex->_renderer_specific_id() : 0;
+
+    if(!id) {
+        return false;
+    }
+
+    GLCheck(glActiveTexture, GL_TEXTURE0 + which);
+    GLCheck(glBindTexture, GL_TEXTURE_2D, id);
+
+    GLCheck(glMatrixMode, GL_TEXTURE);
+    GLCheck(glLoadMatrixf, unit->texture_matrix().data());
+
+    return true;
+}
+
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
 
@@ -243,37 +260,20 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     if(pass_->is_texturing_enabled()) {
         uint8_t used_count = 0;
 
-        auto tex = pass_->diffuse_map().texture();
-        auto id = (tex) ? tex->_renderer_specific_id() : 0;
-        if(id) {
-            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
-            ++used_count;
+        if(bind_texture(used_count, pass_->diffuse_map())) {
+            used_count++;
         }
 
-        tex = next->light_map().texture();
-        id = (tex) ? tex->_renderer_specific_id() : 0;
-        if(id) {
-            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
-            ++used_count;
+        if(bind_texture(used_count, pass_->light_map())) {
+            used_count++;
         }
 
-        tex = next->normal_map().texture();
-        id = (tex) ? tex->_renderer_specific_id() : 0;
-        if(id) {
-            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
-            ++used_count;
+        if(bind_texture(used_count, pass_->normal_map())) {
+            used_count++;
         }
 
-        tex = next->specular_map().texture();
-        id = (tex) ? tex->_renderer_specific_id() : 0;
-
-        if(id) {
-            GLCheck(glActiveTexture, GL_TEXTURE0 + used_count);
-            GLCheck(glBindTexture, GL_TEXTURE_2D, id);
-            ++used_count;
+        if(bind_texture(used_count, pass_->specular_map())) {
+            used_count++;
         }
 
         for(auto i = used_count; i < MAX_TEXTURE_UNITS; ++i) {
