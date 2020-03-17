@@ -181,21 +181,25 @@ public:
         map.insert(4, "fourf");
         map.insert(-1, "minus1");
         map.insert(4, "fourff");
+        map.insert(-2, "minus2");
+        map.insert(-3, "minus3");
 
         std::vector<int> keys;
         for(auto& p: map) {
             keys.push_back(p.first);
         }
 
-        assert_equal(keys.size(), 8u);
-        assert_equal(keys[0], -1);
-        assert_equal(keys[1], 1);
-        assert_equal(keys[2], 2);
-        assert_equal(keys[3], 3);
-        assert_equal(keys[4], 3);
-        assert_equal(keys[5], 4);
-        assert_equal(keys[6], 4);
+        assert_equal(keys.size(), 10u);
+        assert_equal(keys[0], -3);
+        assert_equal(keys[1], -2);
+        assert_equal(keys[2], -1);
+        assert_equal(keys[3], 1);
+        assert_equal(keys[4], 2);
+        assert_equal(keys[5], 3);
+        assert_equal(keys[6], 3);
         assert_equal(keys[7], 4);
+        assert_equal(keys[8], 4);
+        assert_equal(keys[9], 4);
     }
 };
 
