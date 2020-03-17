@@ -124,6 +124,7 @@ public:
                         /* We came from the left, so break */
                         break;
                     } else {
+                        previous = current_node_;
                         current_node_ = current->parent_index_;
                     }
                 }
