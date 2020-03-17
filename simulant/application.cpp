@@ -228,12 +228,19 @@ int32_t Application::run() {
 
     while(window_->run_frame()) {}
 
-    // Reset the scene manager (destroying scenes) before the window
-    // disappears
-    scene_manager_.reset();
+    /* Make sure we unload and destroy all scenes */
+    scene_manager_->destroy_all();
+
+    // Finish running any idle tasks before we shutdown
+    window_->idle->execute();
 
     // Shutdown and clean up the window
     window_->_clean_up();
+
+    // Reset the scene manager before the window
+    // disappears
+    scene_manager_.reset();
+
     window_.reset();
 
 #ifdef _arch_dreamcast

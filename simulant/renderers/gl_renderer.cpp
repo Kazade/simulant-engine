@@ -44,10 +44,11 @@ void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
 
     GLuint gl_tex = texture->_renderer_specific_id();
 
-    if(!GLThreadCheck::is_current()) {
-        win_->idle->run_sync([&gl_tex]() {
+    if(within_coroutine()) {
+        win_->idle->add_once([&gl_tex]() {
             GLCheck(glDeleteTextures, 1, &gl_tex);
         });
+        yield_coroutine();
     } else {
         GLCheck(glDeleteTextures, 1, &gl_tex);
     }

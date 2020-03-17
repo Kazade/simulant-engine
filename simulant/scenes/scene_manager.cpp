@@ -37,6 +37,21 @@ SceneManager::~SceneManager() {
     late_update_conn_.disconnect();
 }
 
+void SceneManager::destroy_all() {
+    /* Unload all the routes */
+    for(auto route: routes_) {
+        route.second->_call_unload();
+
+        auto name = route.first;
+        window_->idle->add_once([this, name]() {
+            auto it = routes_.find(name);
+            if(it != routes_.end()) {
+                routes_.erase(it);
+            }
+        });
+    }
+}
+
 void SceneManager::late_update(float dt) {
     if(active_scene()) {
         active_scene()->_late_update_thunk(dt);
@@ -144,7 +159,17 @@ void SceneManager::unload(const std::string& route) {
         auto scene = it->second;
         scene->_call_unload();
         if(scene->destroy_on_unload()) {
-            routes_.erase(it); // Destroy the scene once it's been unloaded
+            /* Destroy the scene once it's been unloaded but do
+             * it in an idle tasks so that any queued destructions
+             * from unload can happen before we destroy the scene
+             */
+
+            window_->idle->add_once([this, route, scene]() {
+                auto it = routes_.find(route);
+                if(it != routes_.end() && it->second == scene) {
+                    routes_.erase(it);
+                }
+            });
         }
     }    
 }
