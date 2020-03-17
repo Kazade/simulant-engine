@@ -121,8 +121,6 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
         const RenderGroup* last_group = nullptr;
 
-        uint32_t counter = 0;
-
         for(auto& p: queue) {
             const RenderGroup* current_group = &p.first;
             const Renderable* renderable = &renderables_[p.second];
@@ -171,11 +169,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
             }
 
             last_group = current_group;
-
-            ++counter;
         }
-
-        assert(counter == queue.size());
     }
 
     visitor->end_traversal(*this, stage_);
