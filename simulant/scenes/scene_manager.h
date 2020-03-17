@@ -58,6 +58,9 @@ public:
     void load_in_background(const std::string& route, bool redirect_after=true);
     void unload(const std::string& route);
 
+    /* Unloads and destroys all scenes */
+    void destroy_all();
+
     bool is_loaded(const std::string& route) const;
     void reset();
 

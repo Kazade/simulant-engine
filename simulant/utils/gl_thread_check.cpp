@@ -25,7 +25,9 @@ std::shared_ptr<GLThreadCheck> GL_thread;
 
 void GLThreadCheck::check() {
     try {
-        GL_thread->do_check();
+        if(GL_thread) {
+            GL_thread->do_check();
+        }
     } catch(WrongThreadError& e) {
         L_ERROR("Tried to call OpenGL dependent code from the wrong thread");
         throw;

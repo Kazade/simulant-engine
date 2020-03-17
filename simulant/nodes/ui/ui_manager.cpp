@@ -48,6 +48,7 @@ UIManager::UIManager(Stage *stage):
 }
 
 UIManager::~UIManager() {
+    manager_->clear();
     manager_.reset();
 
     pre_render_connection_.disconnect();
