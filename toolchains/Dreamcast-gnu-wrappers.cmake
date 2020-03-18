@@ -30,6 +30,10 @@ if (NOT CMAKE_BUILD_TYPE MATCHES Debug)
     ADD_DEFINITIONS(-DNDEBUG)
 endif()
 
+# DC doesn't have doubles
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fsingle-precision-constant")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fsingle-precision-constant")
+
 SET(CMAKE_ASM_FLAGS "")
 SET(CMAKE_ASM_FLAGS_RELEASE "")
 
