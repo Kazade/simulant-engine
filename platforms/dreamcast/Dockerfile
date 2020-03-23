@@ -7,7 +7,7 @@ MAINTAINER kazade <kazade@gmail.com>
 RUN yum clean all && yum -y install yum-plugin-ovl
 RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
-RUN git clone https://gitlab.com/simulant/community/kallistios-nitro.git /opt/toolchains/dc/kos
+RUN git clone https://gitlab.com/simulant/community/kallistios-nitro.git /opt/toolchains/dc/kos && BUMP=1
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
 
 ## Uncomment the below to enable a 5.2 toolchain
@@ -46,14 +46,14 @@ RUN sed -i 's/-g -fno-builtin/-g -fno-builtin -DFRAME_POINTERS/' /opt/toolchains
 RUN sed -i 's/-fno-rtti//' /opt/toolchains/dc/kos/environ_base.sh
 RUN sed -i 's/-fno-exceptions//' /opt/toolchains/dc/kos/environ_base.sh
 RUN sed -i 's/-fno-operator-names//' /opt/toolchains/dc/kos/environ_base.sh
-RUN set -i 's/-g / /' /opt/toolchains/dc/kos/environ_base.sh
+RUN sed -i 's/-g / /' /opt/toolchains/dc/kos/environ_base.sh
 
 # Remove default optimisations, so it can be controlled by CMake or whatever
 RUN sed -i 's/-O2//' /opt/toolchains/dc/kos/environ.sh
 
 RUN echo -e "\nsource /opt/toolchains/dc/kos/environ.sh" >> /etc/bash.bashrc
 RUN ln -s /etc/bash.bashrc /root/.bashrc
-RUN source /etc/bash.bashrc; echo ${KOS_BASE}
+RUN sed -i 's/dcdis//g' /opt/toolchains/dc/kos/utils/Makefile
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
 
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
