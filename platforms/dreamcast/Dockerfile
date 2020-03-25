@@ -6,7 +6,7 @@ MAINTAINER kazade <kazade@gmail.com>
 
 RUN microdnf -y update && microdnf clean all && microdnf -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && microdnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
-RUN git clone https://gitlab.com/simulant/community/kallistios-nitro.git /opt/toolchains/dc/kos
+RUN git clone https://gitlab.com/simulant/community/kallistios-nitro.git /opt/toolchains/dc/kos && BUMP=1
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
 
 ## Uncomment the below to enable a 5.2 toolchain
@@ -20,12 +20,7 @@ RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolcha
 #
 #RUN cd /opt/toolchains/dc/kos && patch -p1 < /opt/toolchains/dc/kos/utils/dc-chain/patches/kos.diff
 #
-RUN cd /opt/toolchains/dc/kos/utils/dc-chain/patches; curl -O https://gitlab.com/simulant/community/kallistios-nitro/-/raw/fix-concurrency-issue/utils/dc-chain/patches/gcc-4.7.4-kos.diff?inline=false; cd -
-## Update GCC
-RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
-RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
-RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
-#
+
 ## Update newlib
 #RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
 #RUN sed -i 's/2.0.0/2.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
