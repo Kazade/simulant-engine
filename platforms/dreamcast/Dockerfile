@@ -1,13 +1,12 @@
 # Dockerfile for generating a Fedora image with the full KallistiOS SDK installed so you can compile
 # Dreamcast applications
 
-FROM fedora:21
+FROM registry.fedoraproject.org/fedora-minimal:30 as Build
 MAINTAINER kazade <kazade@gmail.com>
 
-RUN yum clean all && yum -y install yum-plugin-ovl
-RUN yum -y update && yum clean all && yum -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip && yum clean all && pip install -U pip
+RUN microdnf -y update && microdnf clean all && microdnf -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && microdnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
-RUN git clone https://gitlab.com/simulant/community/kallistios-nitro.git /opt/toolchains/dc/kos && BUMP=1
+RUN git clone https://gitlab.com/simulant/community/kallistios-nitro.git /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
 
 ## Uncomment the below to enable a 5.2 toolchain
@@ -21,6 +20,7 @@ RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolcha
 #
 #RUN cd /opt/toolchains/dc/kos && patch -p1 < /opt/toolchains/dc/kos/utils/dc-chain/patches/kos.diff
 #
+RUN cd /opt/toolchains/dc/kos/utils/dc-chain/patches; curl -O https://gitlab.com/simulant/community/kallistios-nitro/-/raw/fix-concurrency-issue/utils/dc-chain/patches/gcc-4.7.4-kos.diff?inline=false; cd -
 ## Update GCC
 RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/download.sh
 RUN sed -i 's/4.7.3/4.7.4/' /opt/toolchains/dc/kos/utils/dc-chain/unpack.sh
@@ -97,7 +97,6 @@ include ${KOS_PORTS}/scripts/kos-ports.mk\n\
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/GLdc && BUMP=1 make install clean
 
 # Now install dcload-ip
-RUN yum install -y elfutils-libelf-devel wodim
 RUN . /etc/bash.bashrc; git clone https://git.code.sf.net/p/cadcdev/dcload-ip /opt/toolchains/dc/dc-load-ip
 RUN . /etc/bash.bashrc; cp /opt/toolchains/dc/dc-load-ip/example-src/dc4.x /opt/toolchains/dc/dc-load-ip/example-src/dc5.x
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
