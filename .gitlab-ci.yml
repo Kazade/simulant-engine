@@ -1,4 +1,5 @@
 stages:
+ - prepare
  - check
  - build
  - test
@@ -6,6 +7,19 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+
+prepare:container-dreamcast-sdk:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  only:
+    - master
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:dreamcast-sdk || true
+     - docker build -t $CI_REGISTRY_IMAGE:dreamcast-sdk platforms/dreamcast
+     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+     - docker push $CI_REGISTRY_IMAGE:dreamcast-sdk
 
 check:thread-usage:
   stage: check
