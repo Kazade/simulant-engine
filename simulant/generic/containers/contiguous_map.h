@@ -539,14 +539,15 @@ private:
         } else {
             /* Returns new index, and whether or not the
              * parent is a black node */
-            auto p = _insert_recurse(
-                root_index_, std::move(key), std::move(value)
+            int32_t new_index;
+            bool is_black = _insert_recurse(
+                root_index_, std::move(key), std::move(value), &new_index
             );
 
-            if(p.first > -1 && !p.second) {
+            if(new_index > -1 && !is_black) {
                 /* Parent was red! rebalance! */
-                node_type* inserted = &nodes_[p.first];
-                _insert_repair_tree(inserted, p.first);
+                node_type* inserted = &nodes_[new_index];
+                _insert_repair_tree(inserted, new_index);
 
                 /* Reset root index */
                 node_type* parent = inserted;
@@ -565,7 +566,7 @@ private:
             }
 
             /* p.first is the new index, it will be -1 on insert failure */
-            return p.first > -1;
+            return new_index > -1;
         }
     }
 
@@ -577,7 +578,7 @@ private:
     }
 
     /* Returns inserted, parent_is_black */
-    std::pair<int32_t, bool> _insert_recurse(int32_t root_index, K&& key, V&& value) {
+    bool _insert_recurse(int32_t root_index, K&& key, V&& value, int32_t* new_index) {
         assert(root_index > -1);
 
         node_type* root = &nodes_[root_index];
@@ -608,18 +609,26 @@ private:
              * is black (because this node was added to a linked list
              * not the tree itself and we don't want any recursive fixing
              * of the red-black tree) */
-            return std::make_pair(new_idx, true);
+            if(new_index) {
+                *new_index = new_idx;
+            }
 
+            return true;
         } else if(less_(key, root->pair.first)) {
             if(root->left_index_ == -1) {
                 auto new_idx = new_node(root_index, std::move(key), std::move(value));
                 /* The insert could have invalidated the root pointer */
                 root = &nodes_[root_index];
                 root->left_index_ = new_idx;
-                return std::make_pair(new_idx, root->is_black);
+
+                if(new_index) {
+                    *new_index = new_idx;
+                }
+
+                return root->is_black;
             } else {
                 return _insert_recurse(
-                    root->left_index_, std::move(key), std::move(value)
+                    root->left_index_, std::move(key), std::move(value), new_index
                 );
             }
         } else {
@@ -628,10 +637,15 @@ private:
                 /* The insert could have invalidated the root pointer */
                 root = &nodes_[root_index];
                 root->right_index_ = new_idx;
-                return std::make_pair(new_idx, root->is_black);
+
+                if(new_index) {
+                    *new_index = new_idx;
+                }
+
+                return root->is_black;
             } else {
                 return _insert_recurse(
-                    root->right_index_, std::move(key), std::move(value)
+                    root->right_index_, std::move(key), std::move(value), new_index
                 );
             }
         }
