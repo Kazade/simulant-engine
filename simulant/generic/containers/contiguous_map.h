@@ -35,6 +35,7 @@ struct NodeMeta {
     /* If this is not -1, then this is the start
      * of a linked list of equal values */
     int32_t equal_index_ = -1;
+    int32_t last_equal_index_ = -1;
 
     int32_t parent_index_ = -1;
     int32_t left_index_ = -1;
@@ -590,10 +591,18 @@ private:
             auto new_idx = new_node(-1, std::move(key), std::move(value));
             root = &nodes_[root_index]; // new_node could realloc
 
-            auto dupe_node = &nodes_[new_idx];
+            /* We could insert immediately after the root, but, this
+             * makes insertion unstable; iteration won't iterate in the
+             * inserted order so instead we go through to the last
+             * equal index before inserting */
 
-            dupe_node->equal_index_ = root->equal_index_;
-            root->equal_index_ = new_idx;
+            auto left = root;
+            if(root->last_equal_index_ > -1) {
+                left = &nodes_[left->last_equal_index_];
+            }
+
+            left->equal_index_ = new_idx;
+            root->last_equal_index_ = new_idx;
 
             /* We return the new node index, and we say the parent
              * is black (because this node was added to a linked list
