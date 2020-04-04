@@ -27,6 +27,26 @@ prepare:windows-container:
      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
      - docker push $CI_REGISTRY_IMAGE:windows-sdk
 
+prepare:deploy-container:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+   GIT_STRATEGY: none  # Prevent cloning the repo
+   DOCKERFILE: >-  # Generate a Dockerfile from this gitlab-ci.yaml
+     FROM registry.fedoraproject.org/fedora-minimal:30\n
+     RUN microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync\n
+     RUN pip install gsutil\n
+  before_script:  # Put the variable into a Dockerfile
+     - echo -e $DOCKERFILE > Dockerfile
+     - cat Dockerfile
+  script:  # Try to pull the image from the registry, build it, then push it back
+     - docker pull $CI_REGISTRY_IMAGE:deploy || true
+     - docker build -t $CI_REGISTRY_IMAGE:deploy .
+     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+     - docker push $CI_REGISTRY_IMAGE:deploy
+
 check:thread-usage:
   stage: check
   image: registry.fedoraproject.org/fedora-minimal:28
@@ -95,8 +115,6 @@ android:
 build:windows-x64-mingw:
   stage: build
   image: $CI_REGISTRY_IMAGE:windows-sdk
-  before_script:
-   - microdnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python
   variables:
     MINGW_BIN_DIR: /usr/x86_64-w64-mingw32/sys-root/mingw/bin/
     TARGET: windows-x64-mingw
@@ -138,7 +156,6 @@ test:windows-x64-mingw:
   dependencies:
    - build:windows-x64-mingw
   before_script:
-   - microdnf install -y wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -161,14 +178,11 @@ deploy:windows-x64-mingw:
   only:
     - master
     - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:windows-x64-mingw
   variables:
    TARGET: windows-x64-mingw
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -268,14 +282,11 @@ deploy:linux-x64-gcc:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -343,14 +354,11 @@ deploy:dreamcast-sh4-gcc:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:dreamcast-sh4-gcc
   variables:
    TARGET: dreamcast-sh4-gcc
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -372,10 +380,7 @@ deploy:assets:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
+  image: $CI_REGISTRY_IMAGE:deploy
   script:
    - mkdir -p upload
    - mv assets upload/simulant
@@ -393,10 +398,7 @@ deploy:tools:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
+  image: $CI_REGISTRY_IMAGE:deploy
   script:
    - mkdir -p upload/simulant
    - mkdir -p upload/simulant/cmake_modules
