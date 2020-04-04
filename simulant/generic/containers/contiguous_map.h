@@ -35,16 +35,31 @@ struct NodeMeta {
     /* If this is not -1, then this is the start
      * of a linked list of equal values */
     int32_t equal_index_ = -1;
+    int32_t last_equal_index_ = -1;
 
     int32_t parent_index_ = -1;
     int32_t left_index_ = -1;
     int32_t right_index_ = -1;
-};
+} __attribute__((aligned(8)));
 
 }
 
+template<typename T>
+class ThreeWayCompare {
+public:
+    enum Result : int8_t {
+        RESULT_LESS = -1,
+        RESULT_EQUAL = 0,
+        RESULT_GREATER = 1
+    };
 
-template<typename K, typename V, typename Compare=std::less<K>>
+    Result operator()(const T& a, const T& b) const {
+        return (a < b) ? RESULT_LESS : (b < a) ? RESULT_GREATER : RESULT_EQUAL;
+    }
+};
+
+
+template<typename K, typename V, typename Compare=ThreeWayCompare<K>>
 class ContiguousMultiMap {
 public:
     typedef K key_type;
@@ -374,9 +389,11 @@ private:
         const node_type* current = &nodes_[current_index];
 
         while(current) {
-            if(current->pair.first == key) {
+            auto order = compare_(key, current->pair.first);
+
+            if(order == ThreeWayCompare<K>::RESULT_EQUAL) {
                 return current_index;
-            } else if(less_(key, current->pair.first)) {
+            } else if(order == ThreeWayCompare<K>::RESULT_LESS) {
                 if(current->left_index_ != -1) {
                     current_index = current->left_index_;
                     current = &nodes_[current_index];
@@ -538,14 +555,15 @@ private:
         } else {
             /* Returns new index, and whether or not the
              * parent is a black node */
-            auto p = _insert_recurse(
-                root_index_, std::move(key), std::move(value)
+            int32_t new_index;
+            bool is_black = _insert_recurse(
+                root_index_, std::move(key), std::move(value), &new_index
             );
 
-            if(p.first > -1 && !p.second) {
+            if(new_index > -1 && !is_black) {
                 /* Parent was red! rebalance! */
-                node_type* inserted = &nodes_[p.first];
-                _insert_repair_tree(inserted, p.first);
+                node_type* inserted = &nodes_[new_index];
+                _insert_repair_tree(inserted, new_index);
 
                 /* Reset root index */
                 node_type* parent = inserted;
@@ -564,7 +582,7 @@ private:
             }
 
             /* p.first is the new index, it will be -1 on insert failure */
-            return p.first > -1;
+            return new_index > -1;
         }
     }
 
@@ -576,41 +594,56 @@ private:
     }
 
     /* Returns inserted, parent_is_black */
-    std::pair<int32_t, bool> _insert_recurse(int32_t root_index, K&& key, V&& value) {
+    bool _insert_recurse(int32_t root_index, K&& key, V&& value, int32_t* new_index) {
         assert(root_index > -1);
 
         node_type* root = &nodes_[root_index];
 
-        // FIXME: Should be equivalence? That will incur a performance
-        // hit though :thinking_face:
-        if(key == root->pair.first) {
+        auto order = compare_(key, root->pair.first);
+        if(order == ThreeWayCompare<K>::RESULT_EQUAL) {
 
             /* We're inserting a duplicate, so we use the equal_index_ */
 
             auto new_idx = new_node(-1, std::move(key), std::move(value));
             root = &nodes_[root_index]; // new_node could realloc
 
-            auto dupe_node = &nodes_[new_idx];
+            /* We could insert immediately after the root, but, this
+             * makes insertion unstable; iteration won't iterate in the
+             * inserted order so instead we go through to the last
+             * equal index before inserting */
 
-            dupe_node->equal_index_ = root->equal_index_;
-            root->equal_index_ = new_idx;
+            auto left = root;
+            if(root->last_equal_index_ > -1) {
+                left = &nodes_[left->last_equal_index_];
+            }
+
+            left->equal_index_ = new_idx;
+            root->last_equal_index_ = new_idx;
 
             /* We return the new node index, and we say the parent
              * is black (because this node was added to a linked list
              * not the tree itself and we don't want any recursive fixing
              * of the red-black tree) */
-            return std::make_pair(new_idx, true);
+            if(new_index) {
+                *new_index = new_idx;
+            }
 
-        } else if(less_(key, root->pair.first)) {
+            return true;
+        } else if(order == ThreeWayCompare<K>::RESULT_LESS) {
             if(root->left_index_ == -1) {
                 auto new_idx = new_node(root_index, std::move(key), std::move(value));
                 /* The insert could have invalidated the root pointer */
                 root = &nodes_[root_index];
                 root->left_index_ = new_idx;
-                return std::make_pair(new_idx, root->is_black);
+
+                if(new_index) {
+                    *new_index = new_idx;
+                }
+
+                return root->is_black;
             } else {
                 return _insert_recurse(
-                    root->left_index_, std::move(key), std::move(value)
+                    root->left_index_, std::move(key), std::move(value), new_index
                 );
             }
         } else {
@@ -619,10 +652,15 @@ private:
                 /* The insert could have invalidated the root pointer */
                 root = &nodes_[root_index];
                 root->right_index_ = new_idx;
-                return std::make_pair(new_idx, root->is_black);
+
+                if(new_index) {
+                    *new_index = new_idx;
+                }
+
+                return root->is_black;
             } else {
                 return _insert_recurse(
-                    root->right_index_, std::move(key), std::move(value)
+                    root->right_index_, std::move(key), std::move(value), new_index
                 );
             }
         }
@@ -631,7 +669,7 @@ private:
     std::vector<node_type> nodes_;
 
     int32_t root_index_ = -1;
-    Compare less_;
+    Compare compare_;
 };
 
 

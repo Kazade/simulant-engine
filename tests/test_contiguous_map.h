@@ -170,6 +170,22 @@ public:
         assert_true(map.empty());
     }
 
+    void test_stable_insertion() {
+        ContiguousMultiMap<int, std::string> map;
+        map.insert(1, "A");
+        map.insert(1, "B");
+        map.insert(1, "C");
+        map.insert(1, "D");
+
+        std::string result = "";
+
+        for(auto& p: map) {
+            result += p.second;
+        }
+
+        assert_equal("ABCD", result);
+    }
+
     void test_iteration() {
         ContiguousMultiMap<int, std::string> map;
 
