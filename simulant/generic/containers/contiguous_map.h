@@ -40,12 +40,26 @@ struct NodeMeta {
     int32_t parent_index_ = -1;
     int32_t left_index_ = -1;
     int32_t right_index_ = -1;
-};
+} __attribute__((aligned(8)));
 
 }
 
+template<typename T>
+class ThreeWayCompare {
+public:
+    enum Result : int8_t {
+        RESULT_LESS = -1,
+        RESULT_EQUAL = 0,
+        RESULT_GREATER = 1
+    };
 
-template<typename K, typename V, typename Compare=std::less<K>>
+    Result operator()(const T& a, const T& b) const {
+        return (a < b) ? RESULT_LESS : (b < a) ? RESULT_GREATER : RESULT_EQUAL;
+    }
+};
+
+
+template<typename K, typename V, typename Compare=ThreeWayCompare<K>>
 class ContiguousMultiMap {
 public:
     typedef K key_type;
@@ -375,9 +389,11 @@ private:
         const node_type* current = &nodes_[current_index];
 
         while(current) {
-            if(current->pair.first == key) {
+            auto order = compare_(key, current->pair.first);
+
+            if(order == ThreeWayCompare<K>::RESULT_EQUAL) {
                 return current_index;
-            } else if(less_(key, current->pair.first)) {
+            } else if(order == ThreeWayCompare<K>::RESULT_LESS) {
                 if(current->left_index_ != -1) {
                     current_index = current->left_index_;
                     current = &nodes_[current_index];
@@ -583,9 +599,8 @@ private:
 
         node_type* root = &nodes_[root_index];
 
-        // FIXME: Should be equivalence? That will incur a performance
-        // hit though :thinking_face:
-        if(key == root->pair.first) {
+        auto order = compare_(key, root->pair.first);
+        if(order == ThreeWayCompare<K>::RESULT_EQUAL) {
 
             /* We're inserting a duplicate, so we use the equal_index_ */
 
@@ -614,7 +629,7 @@ private:
             }
 
             return true;
-        } else if(less_(key, root->pair.first)) {
+        } else if(order == ThreeWayCompare<K>::RESULT_LESS) {
             if(root->left_index_ == -1) {
                 auto new_idx = new_node(root_index, std::move(key), std::move(value));
                 /* The insert could have invalidated the root pointer */
@@ -654,7 +669,7 @@ private:
     std::vector<node_type> nodes_;
 
     int32_t root_index_ = -1;
-    Compare less_;
+    Compare compare_;
 };
 
 
