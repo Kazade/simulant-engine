@@ -15,13 +15,13 @@ prepare:windows-container:
     - docker:dind
   variables:
    GIT_STRATEGY: none  # Prevent cloning the repo
-   DOCKERFILE: >-
+   DOCKERFILE: >-  # Generate a Dockerfile from this gitlab-ci.yaml
      FROM registry.fedoraproject.org/fedora-minimal:30\n
      RUN microdnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python wine winetricks wine-pulseaudio pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
-  before_script:
+  before_script:  # Put the variable into a Dockerfile
      - echo -e $DOCKERFILE > Dockerfile
      - cat Dockerfile
-  script:
+  script:  # Try to pull the image from the registry, build it, then push it back
      - docker pull $CI_REGISTRY_IMAGE:windows-sdk || true
      - docker build -t $CI_REGISTRY_IMAGE:windows-sdk .
      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -94,7 +94,7 @@ android:
 
 build:windows-x64-mingw:
   stage: build
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:windows-sdk
   before_script:
    - microdnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python
   variables:
@@ -131,7 +131,7 @@ build:windows-x64-mingw:
 
 test:windows-x64-mingw:
   stage: test
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:windows-sdk
   needs: ["build:windows-x64-mingw"]
   variables:
     TARGET: windows-x64-mingw
