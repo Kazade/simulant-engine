@@ -29,9 +29,8 @@ LINK_DIRECTORIES(
     $ENV{KOS_PORTS}/lib
 )
 
-LINK_LIBRARIES(
-    -lstdc++ -Wl,--start-group -lkallisti -lc -lgcc -Wl,--end-group
-)
+add_link_options(LINKER:--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group)
+link_libraries(stdc++ kallisti gcc c kallisti m)
 
 SET(CMAKE_EXECUTABLE_SUFFIX ".elf")
 SET(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
@@ -50,6 +49,4 @@ endif()
 
 SET(CMAKE_ASM_FLAGS "")
 SET(CMAKE_ASM_FLAGS_RELEASE "")
-
-link_libraries(m)
 
