@@ -42,7 +42,7 @@ bool Widget::init() {
         L_ERROR("[CRITICAL] Unable to load the material for widgets!");
         return false;
     }
-    material_->set_blend_func(BLEND_ALPHA);
+    material_->pass(0)->set_blend_func(BLEND_ALPHA);
 
     // Assign the default font as default
     auto font = stage->assets->default_font(DEFAULT_FONT_STYLE_BODY);
@@ -271,7 +271,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, MaterialID mat_id, Wid
     auto height = bounds.height();
     auto x_offset = offset.x;
     auto y_offset = offset.y;
-    auto z_offset = -0.001 * (10 - mesh_->submesh_count());
+    auto z_offset = -0.001 * (10 - (mesh_->vertex_data->count() / 4));
 
     auto prev_count = mesh_->vertex_data->count();
     mesh_->vertex_data->move_to_end();

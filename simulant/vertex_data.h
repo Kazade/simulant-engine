@@ -336,7 +336,7 @@ public:
     void done();
     uint64_t last_updated() const;
 
-    uint32_t at(const uint32_t i) {
+    uint32_t at(const uint32_t i) const {
         auto ptr = &indices_[i * stride()];
 
         switch(index_type_) {
