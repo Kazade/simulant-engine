@@ -33,8 +33,7 @@ void Image::set_source_rect(const Vec2 &bottom_left, const Vec2 &size) {
     set_background_image_source_rect(bottom_left, size);
 
     /* Force the widget dimensions to match */
-    set_width(size.x);
-    set_height(size.y);
+    resize(size.x, size.y);
 }
 
 void Image::set_resize_mode(ResizeMode resize_mode) {

@@ -52,6 +52,13 @@ bool Widget::init() {
     }
 
     set_font(font);
+
+    /* Now we must create the submeshes in the order we want them rendered */
+    mesh_->new_submesh_with_material("border", material_, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("background", material_, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("foreground", material_, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
+
     rebuild();
 
     initialized_ = true;
@@ -78,9 +85,19 @@ void Widget::set_font(FontID font_id) {
     on_size_changed();
 }
 
-void Widget::resize(float width, float height) {
+void Widget::resize(int32_t width, int32_t height) {
     if(requested_width_ == width && requested_height_ == height) {
         return;
+    }
+
+    if(width == -1 && height > -1) {
+        resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
+    } else if(width == -1 && height == -1) {
+        resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+    } else if(width > -1 && height == -1) {
+        resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+    } else {
+        resize_mode_ = RESIZE_MODE_FIXED;
     }
 
     requested_width_ = width;
@@ -109,6 +126,7 @@ void Widget::render_text() {
     float left = left_bound;
     uint32_t line_start = 0;
     float line_length = 0;
+    uint32_t line_char_count = 0;
 
 
     /* Generate lines of text */
@@ -121,11 +139,13 @@ void Widget::render_text() {
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
         auto finalize_line = [&]() {
-            line_ranges.push_back(std::make_pair(line_start, (i - line_start) + 1));
+            /* Ranges are (start_vertex_index, length_in_chars) */
+            line_ranges.push_back(std::make_pair(line_start, line_char_count));
             line_lengths.push_back(line_length);
             line_start = vertices.size();
             left = left_bound;
             line_length = 0;
+            line_char_count = 0;
         };
 
         bool break_line = ch == '\n';
@@ -141,7 +161,10 @@ void Widget::render_text() {
             /* We reached the end of the line, so we finalize without
              * actually processing this character, then rewind one step */
             finalize_line();
-            i--;
+
+            /* We replay the character if it's not a newline
+             * (e.g. we're wrapping width, not newline) */
+            if(ch != '\n') i--;
             continue;
         }
 
@@ -167,6 +190,7 @@ void Widget::render_text() {
         vertices.push_back(corners[3]);
 
         line_length += ch_advance;
+        line_char_count++;
 
         if(i == text().length() - 1) {
             finalize_line();
@@ -209,13 +233,10 @@ void Widget::render_text() {
     // Now we have to shift the entire thing up to vertically center!
     for(Vertex& v: vertices) {
         v.xyz.y += top / 2.0f;
-        v.xyz.z += -0.001f;
     }
 
     auto sm = mesh_->find_submesh("text");
-    if(!sm) {
-        sm = mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
-    }
+    assert(sm);
 
     float min_x = std::numeric_limits<float>::max();
     float min_y = std::numeric_limits<float>::max();
@@ -256,22 +277,24 @@ void Widget::clear_mesh() {
     }
 }
 
-SubMeshPtr Widget::new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour) {
+SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
 
     auto sm = mesh_->find_submesh(name);
-    if(!sm) {
-        sm = mesh_->new_submesh_with_material(name, mat_id, MESH_ARRANGEMENT_QUADS);
-        sm->set_diffuse(colour);
-    }
+    assert(sm);
+
+    sm->set_diffuse(colour);
 
     auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, 0);
     auto width = bounds.width();
     auto height = bounds.height();
     auto x_offset = offset.x;
     auto y_offset = offset.y;
-    auto z_offset = -0.001 * (10 - (mesh_->vertex_data->count() / 4));
+
+    /* We don't offset Z at all, submeshes are organised back to front
+     * so that when rendering they should be correctly blended */
+    auto z_offset = 0.0f;
 
     auto prev_count = mesh_->vertex_data->count();
     mesh_->vertex_data->move_to_end();
@@ -369,11 +392,11 @@ void Widget::rebuild() {
 
     auto colour = border_colour_;
     colour.a *= opacity_;
-    new_rectangle("border", material_->id(), border_bounds, colour);
+    new_rectangle("border", border_bounds, colour);
 
     colour = background_colour_;
     colour.a *= opacity_;
-    auto bg = new_rectangle("background", material_->id(), background_bounds, colour);
+    auto bg = new_rectangle("background", background_bounds, colour);
     if(has_background_image()) {
         bg->material()->pass(0)->set_diffuse_map(background_image_);
         apply_image_rect(bg, background_image_, background_image_rect_);
@@ -381,7 +404,7 @@ void Widget::rebuild() {
 
     colour = foreground_colour_;
     colour.a *= opacity_;
-    auto fg = new_rectangle("foreground", material_->id(), foreground_bounds, colour);
+    auto fg = new_rectangle("foreground", foreground_bounds, colour);
     if(has_foreground_image()) {
         fg->material()->pass(0)->set_diffuse_map(foreground_image_);
         apply_image_rect(fg, foreground_image_, foreground_image_rect_);
@@ -437,24 +460,6 @@ void Widget::set_border_colour(const Colour &colour) {
 
     border_colour_ = colour;
     rebuild();
-}
-
-void Widget::set_width(float width) {
-    if(requested_width_ == width) {
-        return;
-    }
-
-    requested_width_ = width;
-    on_size_changed();
-}
-
-void Widget::set_height(float height) {
-    if(requested_height_ == height) {
-        return;
-    }
-
-    requested_height_ = height;
-    on_size_changed();
 }
 
 void Widget::set_text(const unicode &text) {
