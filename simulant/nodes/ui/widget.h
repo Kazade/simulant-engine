@@ -38,9 +38,7 @@ public:
     virtual bool init();
     virtual void clean_up();
 
-    void resize(float width, float height);
-    void set_width(float width);
-    void set_height(float height);
+    void resize(int32_t width, int32_t height);
     void set_font(FontID font_id);
 
     /* Allow creating a double-linked list of widgets for focusing. There is no
@@ -148,20 +146,20 @@ private:
     FontPtr font_ = nullptr;
     MaterialPtr material_ = nullptr;
 
-    float requested_width_ = .0f;
-    float requested_height_ = .0f;
+    int32_t requested_width_ = 0;
+    int32_t requested_height_ = 0;
 
-    float content_width_ = .0f;
-    float content_height_ = .0f;
+    int32_t content_width_ = 0;
+    int32_t content_height_ = 0;
 
-    Float4 padding_ = {0, 0, 0, 0};
+    UInt4 padding_ = {0, 0, 0, 0};
 
     float border_width_ = 1.0f;
     Colour border_colour_ = Colour::BLACK;
 
     unicode text_;
     OverflowType overflow_;
-    ResizeMode resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+    ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
 
     struct ImageRect {
         Vec2 bottom_left;
@@ -202,7 +200,7 @@ protected:
     virtual WidgetBounds calculate_foreground_size(float content_width, float content_height) const;
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
 
-    SubMeshPtr new_rectangle(const std::string& name, MaterialID mat_id, WidgetBounds bounds, const smlt::Colour& colour);
+    SubMeshPtr new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour);
     void clear_mesh();
 
     bool is_initialized() const { return initialized_; }

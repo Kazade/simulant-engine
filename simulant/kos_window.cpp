@@ -53,6 +53,7 @@ bool KOSWindow::create_window() {
     renderer_ = new_renderer(this, "gl1x");
 
     set_has_context(true); //Mark that we have a valid GL context
+    renderer_->init_context();
 
     L_DEBUG("Renderer initialized");
 #ifdef _arch_dreamcast

@@ -211,11 +211,39 @@ static void compress_rgba8888(uint8_t* dest, float r, float g, float b, float a)
     *out = (rr << 24) | (rg << 16) | (rb << 8) | ra;
 }
 
+static void explode_rgba8888(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
+    auto calculate_component = [&channels](uint8_t i, float sr, float sg, float sb, float sa) -> float {
+        switch(channels[i]) {
+            case TEXTURE_CHANNEL_ZERO: return 0.0f;
+            case TEXTURE_CHANNEL_ONE: return 1.0f;
+            case TEXTURE_CHANNEL_RED: return sr;
+            case TEXTURE_CHANNEL_GREEN: return sg;
+            case TEXTURE_CHANNEL_BLUE: return sb;
+            case TEXTURE_CHANNEL_ALPHA: return sa;
+        }
+
+        return 0.0f;
+    };
+
+    const float inv = 1.0f / 255.0f;
+
+    float sr = float(source[0]) * inv;
+    float sg = float(source[1]) * inv;
+    float sb = float(source[2]) * inv;
+    float sa = float(source[3]) * inv;
+
+    r = calculate_component(0, sr, sg, sb, sa);
+    g = calculate_component(1, sr, sg, sb, sa);
+    b = calculate_component(2, sr, sg, sb, sa);
+    a = calculate_component(3, sr, sg, sb, sa);
+}
+
 typedef void (*ExplodeFunc)(const uint8_t*, const TextureChannelSet&, float&, float&, float&, float&);
 typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
 static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
-    {TEXTURE_FORMAT_R8, explode_r8}
+    {TEXTURE_FORMAT_R8, explode_r8},
+    {TEXTURE_FORMAT_RGBA8888, explode_rgba8888}
 };
 
 static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {

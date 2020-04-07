@@ -63,7 +63,7 @@ namespace loaders {
 
         // Convert from 8bpp to 32bpp
         texture->convert(
-            TEXTURE_FORMAT_RGBA8888,
+            TEXTURE_FORMAT_RGBA4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
 

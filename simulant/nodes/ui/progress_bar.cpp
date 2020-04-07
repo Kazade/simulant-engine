@@ -14,7 +14,7 @@ ProgressBar::ProgressBar(WidgetID id, UIManager* owner, UIConfig* config):
     set_foreground_colour(config->progress_bar_foreground_colour_);
     set_border_colour(config->progress_bar_border_colour_);
     set_border_width(config->progress_bar_border_width_);
-    set_height(config->progress_bar_height_);
+    resize(config->progress_bar_width_, config->progress_bar_height_);
 }
 
 ProgressBar::~ProgressBar() {

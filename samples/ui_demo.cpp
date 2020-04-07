@@ -15,37 +15,55 @@ public:
         auto pipeline = window->render(stage_, camera_).with_clear(smlt::BUFFER_CLEAR_ALL, smlt::Colour::BLACK);
         link_pipeline(pipeline);
 
-        //stage_->ui->transform_input_with_camera(camera_);
+        auto coord = window->coordinate_from_normalized(0.05, 0.95);
+        int x = coord.x;
+        int y = coord.y;
+        int spacing = 10;
+        int column = window->coordinate_from_normalized(0.25, 0).x;
 
-        auto title = stage_->ui->new_widget_as_label("UI Sample demonstrating widgets");
-        title->move_to(window->coordinate_from_normalized(0.5, 0.9));
+        auto label = stage_->ui->new_widget_as_label("Label");
+        label->resize(column, -1);
+        label->set_anchor_point(0, 1);
+        label->move_to(x, y);
 
-        auto button = stage_->ui->new_widget_as_button("Button 1");
-        button->move_to(window->coordinate_from_normalized(0.1, 0.25));
+        y -= label->height() + spacing;
+
+        auto button = stage_->ui->new_widget_as_button("Button");
+        button->resize(column, -1);
+        button->set_anchor_point(0, 1);
+        button->move_to(x, y);
+
+        y -= button->height() + spacing;
+
+        pg1_ = stage_->ui->new_widget_as_progress_bar();
+        pg1_->set_text("Progress Bar (pulse)");
+        pg1_->resize(column, -1);
+        pg1_->set_anchor_point(0, 1);
+        pg1_->move_to(x, y);
+
+        y -= pg1_->height() + spacing;
+
+        pg2_ = stage_->ui->new_widget_as_progress_bar();
+        pg2_->set_text("Progress Bar (percent)");
+        pg2_->resize(column, -1);
+        pg2_->set_anchor_point(0, 1);
+        pg2_->move_to(x, y);
+
+        y -= pg2_->height() + spacing;
 
         auto ttf_font = stage_->assets->new_font_from_ttf("simulant/fonts/orbitron/Orbitron-Bold.ttf", 32);
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
+        big_label->resize(column, -1);
         big_label->set_font(ttf_font);
-        big_label->move_to(window->coordinate_from_normalized(0.5, 0.6));
-
-        pg1_ = stage_->ui->new_widget_as_progress_bar();
-        pg1_->move_to(window->coordinate_from_normalized(0.5, 0.5));
-        pg1_->resize(400, 10);
-        pg1_->pulse();
-
-        pg2_ = stage_->ui->new_widget_as_progress_bar(0, 100, 0);
-        pg2_->move_to(window->coordinate_from_normalized(0.5, 0.7));
-        pg2_->resize(400, 20);
-        pg2_->set_border_colour(smlt::Colour::RED);
-        pg2_->set_border_width(1);
-
-        button->signal_clicked().connect([&]() {
-            title->set_text("Clicked!");
-        });
+        big_label->set_anchor_point(0, 1);
+        big_label->move_to(x, y);
 
         auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
         auto icon = stage_->ui->new_widget_as_image(simulant_logo);
-        icon->move_to(window->coordinate_from_normalized(0.5, 0.58));
+        icon->set_anchor_point(1, 1);
+        icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
+
+        //stage_->ui->transform_input_with_camera(camera_);
     }
 
     void update(float dt) {

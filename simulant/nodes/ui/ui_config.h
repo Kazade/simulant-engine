@@ -1,13 +1,16 @@
 #pragma once
 
+#include <cstdint>
+#include "../../colour.h"
+
 namespace smlt {
 namespace ui {
 
-struct Float4 {
-    float left;
-    float right;
-    float bottom;
-    float top;
+struct UInt4 {
+    uint32_t left;
+    uint32_t right;
+    uint32_t bottom;
+    uint32_t top;
 };
 
 enum OverflowType {
@@ -40,8 +43,8 @@ struct UIDim {
 };
 
 struct UIConfig {
-    float font_size_ = 16;
-    float line_height_ = 18;
+    uint32_t font_size_ = 16;
+    uint32_t line_height_ = 18;
 
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
@@ -50,33 +53,34 @@ struct UIConfig {
     ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
-    float scrollbar_width_ = 16;
+    uint32_t scrollbar_width_ = 16;
     Colour scrollbar_background_colour_ = Colour::LIGHT_GREY;
     Colour scrollbar_foreground_colour_ = Colour::ALICE_BLUE;
 
-    float button_height_ = 36;
-    float button_width_ = 0; // Fit content
+    uint32_t button_height_ = 36;
+    uint32_t button_width_ = 0; // Fit content
 
-    Float4 label_padding_ = { 5, 5, 5, 5 };
+    UInt4 label_padding_ = { 5, 5, 5, 5 };
     Colour label_background_colour_ = Colour::NONE;
     Colour label_foreground_colour_ = Colour::NONE;
     Colour label_border_colour_ = Colour::NONE;
     Colour label_text_colour_ = Colour::DODGER_BLUE;
 
-    Float4 button_padding_ = { 30, 30, 20, 20 };
+    UInt4 button_padding_ = { 30, 30, 20, 20 };
     Colour button_background_colour_ = Colour::DODGER_BLUE;
     Colour button_foreground_colour_ = Colour::NONE;
     Colour button_text_colour_ = Colour::WHITE;
     Colour button_border_colour_ = Colour::NONE;
 
-    float button_border_width_ = 0;
-    float button_border_radius_ = 3;
+    uint32_t button_border_width_ = 0;
+    uint32_t button_border_radius_ = 3;
 
     Colour progress_bar_foreground_colour_ = Colour::DODGER_BLUE;
     Colour progress_bar_background_colour_ = Colour::WHITE;
     Colour progress_bar_border_colour_ = Colour::DODGER_BLUE;
     float progress_bar_border_width_ = 1;
-    float progress_bar_height_ = 16.0f;
+    uint32_t progress_bar_width_ = 100;
+    uint32_t progress_bar_height_ = 16;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;
