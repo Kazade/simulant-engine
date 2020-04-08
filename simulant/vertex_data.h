@@ -64,7 +64,11 @@ public:
     VertexData& operator=(const VertexData& rhs) = delete;
 
     void reset(VertexSpecification vertex_specification);
-    void clear();
+
+    /* If release_memory is true, then allocated RAM
+     * will be freed. This can be costly which is why it defaults
+     * to false. */
+    void clear(bool release_memory=false);
 
     void move_to_start();
     void move_by(int32_t amount);
@@ -187,10 +191,9 @@ public:
 
     VertexAttribute attribute_for_type(VertexAttributeType type) const;
 
-    void resize(uint32_t size) {
-        data_.resize(size * stride(), 0);
-        vertex_count_ = size;
-    }
+    void reserve(uint32_t size);
+
+    void resize(uint32_t size);
 
     const VertexSpecification& vertex_specification() const { return vertex_specification_; }
 
@@ -283,7 +286,7 @@ public:
 
     void reset();
 
-    void clear();
+    void clear(bool release_memory=false);
 
     void resize(uint32_t size);
 
