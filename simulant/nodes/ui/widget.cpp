@@ -116,10 +116,18 @@ void Widget::render_text() {
         return;
     }
 
-    // start and length, not start and end
-    std::vector<std::pair<uint32_t, uint32_t>> line_ranges;
-    std::vector<float> line_lengths;
-    std::vector<Vertex> vertices;
+    /* static to avoid reallocating each frame */
+    static std::vector<std::pair<uint32_t, uint32_t>> line_ranges;
+    static std::vector<float> line_lengths;
+    static std::vector<Vertex> vertices;
+
+    /* Clear, but not shrink_to_fit */
+    line_ranges.clear();
+    line_lengths.clear();
+    vertices.clear();
+
+    /* We know how many vertices we'll need (roughly) */
+    vertices.reserve(text().length() * 4);
 
     float left_bound = 0;
     auto right_bound = requested_width_;
@@ -232,7 +240,7 @@ void Widget::render_text() {
 
     // Now we have to shift the entire thing up to vertically center!
     for(Vertex& v: vertices) {
-        v.xyz.y += top / 2.0f;
+        v.xyz.y += int(top / 2.0f);
     }
 
     auto sm = mesh_->find_submesh("text");
@@ -246,6 +254,11 @@ void Widget::render_text() {
     auto vdata = mesh_->vertex_data.get();
     auto idata = sm->index_data.get();
     vdata->move_to_start();
+
+    /* Allocate memory first */
+    vdata->reserve(vertices.size());
+    idata->reserve(vertices.size());
+
     auto idx = 0;
     for(auto& v: vertices) {
         min_x = std::min(min_x, v.xyz.x);
@@ -271,7 +284,7 @@ void Widget::render_text() {
 void Widget::clear_mesh() {
     /* We don't actually clear the mesh, because destroying/creating submeshes is wasteful */
 
-    mesh_->vertex_data->clear();
+    mesh_->vertex_data->clear(/*release_memory=*/false);
     for(auto submesh: mesh_->each_submesh()) {
         submesh->index_data->clear();
     }

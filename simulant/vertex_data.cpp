@@ -129,9 +129,13 @@ VertexData::~VertexData() {
     clear();
 }
 
-void VertexData::clear() {
+void VertexData::clear(bool release_memory) {
     data_.clear();
-    data_.shrink_to_fit();
+
+    if(release_memory) {
+        data_.shrink_to_fit();
+    }
+
     cursor_position_ = 0;    
     vertex_count_ = 0;
 }
@@ -295,7 +299,10 @@ void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
 
 void VertexData::push_back() {
     vertex_count_++;
-    data_.resize(vertex_count_ * stride(), 0);
+
+    for(auto i = 0u; i < stride(); ++i) {
+        data_.push_back(0);
+    }
 }
 
 void VertexData::tex_coord0(float u, float v) {
@@ -523,6 +530,15 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
     //FIXME: Interpolate normals here
 }
 
+void VertexData::reserve(uint32_t size) {
+    data_.reserve(size * stride());
+}
+
+void VertexData::resize(uint32_t size) {
+    data_.resize(size * stride(), 0);
+    vertex_count_ = size;
+}
+
 void VertexData::done() {
     signal_update_complete_();
     last_updated_ = TimeKeeper::now_in_us();
@@ -581,8 +597,11 @@ void IndexData::reset() {
     clear();
 }
 
-void IndexData::clear() {
+void IndexData::clear(bool release_memory) {
     indices_.clear();
+    if(release_memory) {
+        indices_.shrink_to_fit();
+    }
     count_ = 0;
 }
 
