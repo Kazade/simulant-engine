@@ -391,7 +391,7 @@ void SharedVBO::allocate_new_gl_buffer() {
     const auto slots_per_buffer = VBO_SIZE / slot_size_;
 
     /* Push new meta data for each slot */
-    metas_.resize(gl_ids_.size() + 1 * slots_per_buffer);
+    metas_.resize((gl_ids_.size() + 1) * slots_per_buffer);
 
     /* Push new free slots */
     auto offset = gl_ids_.size() * slots_per_buffer;

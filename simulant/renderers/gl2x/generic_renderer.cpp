@@ -78,6 +78,13 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     const bool is_blended,
     const float distance_to_camera) {
 
+    _S_UNUSED(group);
+    _S_UNUSED(renderable);
+    _S_UNUSED(material_pass);
+    _S_UNUSED(pass_number);
+    _S_UNUSED(is_blended);
+    _S_UNUSED(distance_to_camera);
+
     return batcher::generate_render_group_key(
         pass_number,
         is_blended,
@@ -201,6 +208,8 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
 }
 
 void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
+    _S_UNUSED(pass);
+
     auto varname = "s_global_ambient";
     auto loc = program->locate_uniform(varname, true);
 
@@ -390,11 +399,16 @@ void GL2RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
 }
 
 void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+    _S_UNUSED(queue);
+    _S_UNUSED(frame_id);
+    _S_UNUSED(stage);
+
     global_ambient_ = stage->ambient_light();
 }
 
 void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
-
+    _S_UNUSED(queue);
+    _S_UNUSED(stage);
 }
 
 void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
@@ -622,10 +636,13 @@ void GL2RenderQueueVisitor::rebind_attribute_locations_if_necessary(const Materi
 }*/
 
 void GL2RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) {
-
+    _S_UNUSED(prev);
+    _S_UNUSED(next);
 }
 
 void GL2RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
+    _S_UNUSED(iteration);
+
     renderer_->set_renderable_uniforms(material_pass, program_, renderable, camera_);
     renderer_->prepare_to_render(renderable);
     renderer_->set_auto_attributes_on_shader(program_, renderable, renderer_->buffer_stash_.get());
@@ -668,7 +685,7 @@ GPUProgramID GenericRenderer::current_gpu_program_id() const {
 
     GPUProgramID ret;
 
-    program_manager_.each([&](uint32_t i, GPUProgramPtr program) {
+    program_manager_.each([&](uint32_t, GPUProgramPtr program) {
         if(program->program_object() == (GLuint) id) {
             ret = program->id();
         }
@@ -696,11 +713,13 @@ void GenericRenderer::init_context() {
     const GLubyte* GL_vendor = glGetString(GL_VENDOR);
     const GLubyte* GL_renderer = glGetString(GL_RENDERER);
     const GLubyte* GL_version = glGetString(GL_VERSION);
+    const GLubyte* GL_extensions = glGetString(GL_EXTENSIONS);
 
-    L_INFO("\n\nOpenGL Information:\n\n");
-    L_INFO(_F("\tVendor: {0}\n").format(GL_vendor));
-    L_INFO(_F("\tRenderer: {0}\n").format(GL_renderer));
-    L_INFO(_F("\tVersion: {0}\n").format(GL_version));
+    std::cout << "\n\nOpenGL Information:\n\n";
+    std::cout << _F("\tVendor: {0}\n").format(GL_vendor);
+    std::cout << _F("\tRenderer: {0}\n").format(GL_renderer);
+    std::cout << _F("\tVersion: {0}\n\n").format(GL_version);
+    std::cout << _F("\tExtensions: {0}\n\n").format(GL_extensions);
 
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);

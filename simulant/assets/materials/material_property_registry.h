@@ -155,6 +155,11 @@ MaterialPropertyID MaterialPropertyRegistry::register_property(
     prop.name = name;
     prop.type = type;
 
+    /* Make sure we init entries for all registered objects */
+    for(auto object: registered_objects_) {
+        if(object && object->object_id()) prop.init_entry(object);
+    }
+
     /* We set the default value in the registry slot (0)
      * in the material property entries */
     prop.set_value(this, default_value);

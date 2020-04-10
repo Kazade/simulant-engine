@@ -256,25 +256,15 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     float x_offset = (spec.spacing * float(tex->width())) * 0.5f;
     float z_offset = (spec.spacing * float(tex->height())) * 0.5f;
 
-    const int patch_size = 100;
-
-    int patches_across = std::ceil(float(tex->width()) / float(patch_size));
-    int patches_down = std::ceil(float(tex->height()) / float(patch_size));
-
-    int total_patches = patches_across * patches_down;
-
     auto index_type = (tex->width() * tex->height() > std::numeric_limits<uint16_t>::max()) ?
         INDEX_TYPE_32_BIT : INDEX_TYPE_16_BIT;
 
     // We divide the heightmap into patches for more efficient rendering
     smlt::MaterialPtr mat = mesh->asset_manager().clone_default_material();
-    std::vector<smlt::SubMesh*> submeshes;
-    for(int i = 0; i < total_patches; ++i) {
-        submeshes.push_back(mesh->new_submesh_with_material(
-            std::to_string(i), mat, MESH_ARRANGEMENT_TRIANGLES, index_type
-        ));
-        submeshes.back()->index_data->reserve(patch_size * patch_size);
-    }
+
+    auto sm = mesh->new_submesh_with_material(
+        "terrain", mat, MESH_ARRANGEMENT_TRIANGLES, index_type
+    );
 
     int32_t height = (int32_t) tex->height();
     int32_t width = (int32_t) tex->width();
@@ -301,7 +291,6 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(int32_t z = 0; z < height; ++z) {
         for(int32_t x = 0; x < width; ++x) {
             int32_t idx = (z * width) + x;
-
             float normalized_height = heights[idx];
             float depth = range * normalized_height;
             float final_pos = spec.min_height + depth;
@@ -329,21 +318,23 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             );
 
             mesh->vertex_data->move_next();
+        }
+    }
 
-            if(z < (height - 1) && x < (width - 1)) {
-                int patch_x = (x / float(patch_size));
-                int patch_z = (z / float(patch_size));
-                int patch_idx = (patch_z * patches_across) + patch_x;
+    for(int32_t z = 0; z < height - 1; ++z) {
+        for(int32_t x = 0; x < width - 1; ++x) {
+            auto idx0 = (z * width) + x;
+            auto idx1 = idx0 + 1;
+            auto idx2 = ((z + 1) * width) + x;
+            auto idx3 = idx2 + 1;
 
-                auto sm = submeshes.at(patch_idx);
-                sm->index_data->index(idx);
-                sm->index_data->index(idx + width);
-                sm->index_data->index(idx + 1);
+            sm->index_data->index(idx0);
+            sm->index_data->index(idx2);
+            sm->index_data->index(idx1);
 
-                sm->index_data->index(idx + 1);
-                sm->index_data->index(idx + width);
-                sm->index_data->index(idx + width + 1);
-            }
+            sm->index_data->index(idx2);
+            sm->index_data->index(idx3);
+            sm->index_data->index(idx1);
         }
     }
 
@@ -355,23 +346,21 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         // The mesh don't have any normals, let's generate some!
         std::unordered_map<int, smlt::Vec3> index_to_normal;
 
-        for(auto sm: submeshes) {
-            // Go through all the triangles, add the face normal to all the vertices
-            for(uint32_t i = 0; i < sm->index_data->count(); i+=3) {
-                Index idx1 = sm->index_data->at(i);
-                Index idx2 = sm->index_data->at(i+1);
-                Index idx3 = sm->index_data->at(i+2);
+        // Go through all the triangles, add the face normal to all the vertices
+        for(uint32_t i = 0; i < sm->index_data->count(); i+=3) {
+            Index idx1 = sm->index_data->at(i);
+            Index idx2 = sm->index_data->at(i+1);
+            Index idx3 = sm->index_data->at(i+2);
 
-                auto v1 = sm->vertex_data->position_at<Vec3>(idx1);
-                auto v2 = sm->vertex_data->position_at<Vec3>(idx2);
-                auto v3 = sm->vertex_data->position_at<Vec3>(idx3);
+            auto v1 = sm->vertex_data->position_at<Vec3>(idx1);
+            auto v2 = sm->vertex_data->position_at<Vec3>(idx2);
+            auto v3 = sm->vertex_data->position_at<Vec3>(idx3);
 
-                smlt::Vec3 normal = (*v2 - *v1).normalized().cross((*v3 - *v1).normalized()).normalized();
+            smlt::Vec3 normal = (*v2 - *v1).normalized().cross((*v3 - *v1).normalized()).normalized();
 
-                index_to_normal[idx1] += normal;
-                index_to_normal[idx2] += normal;
-                index_to_normal[idx3] += normal;
-            }
+            index_to_normal[idx1] += normal;
+            index_to_normal[idx2] += normal;
+            index_to_normal[idx3] += normal;
         }
 
         // Now set the normal on the vertex data
@@ -382,9 +371,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
     }
 
-    for(auto sm: submeshes) {
-        sm->index_data->done();
-    }
+    sm->index_data->done();
     mesh->vertex_data->done();
 
     mesh->asset_manager().destroy_texture(tex->id()); //Finally delete the texture

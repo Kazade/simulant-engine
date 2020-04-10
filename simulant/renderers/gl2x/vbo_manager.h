@@ -131,7 +131,7 @@ private:
     IndexType index_type_;
     GLenum type_;
 
-    uint64_t last_updated_;
+    uint64_t last_updated_ = 0;
     bool allocated_ = false;
     GLuint gl_id_ = 0;
 };
@@ -154,6 +154,7 @@ public:
         type_(GL_ELEMENT_ARRAY_BUFFER) {}
 
     uint64_t slot_last_updated(VBOSlot slot) {
+        assert(slot < metas_.size());
         return metas_[slot].last_updated;
     }
 
