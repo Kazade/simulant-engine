@@ -99,14 +99,14 @@ public:
 
         terrain_mesh->set_material(terrain_material);
 
-        terrain_actor_ = stage_->new_actor_with_mesh(terrain_mesh_id_);
+        GeomCullerOptions opts;
+        opts.type = GEOM_CULLER_TYPE_QUADTREE;
+        terrain_actor_ = stage_->new_geom_with_mesh(terrain_mesh_id_, opts);
 
         *done = true;
     }
 
-    void fixed_update(float dt) override {
-        terrain_actor_->rotate_global_y_by(smlt::Degrees(dt * 5.0f));
-    }
+    void fixed_update(float) override {}
 
 private:
     PipelinePtr pipeline_;
@@ -114,7 +114,7 @@ private:
     CameraPtr camera_;
 
     MeshID terrain_mesh_id_;
-    ActorPtr terrain_actor_;
+    GeomPtr terrain_actor_;
     MaterialID terrain_material_id_;
 
     TextureID terrain_textures_[4];

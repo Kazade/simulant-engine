@@ -39,8 +39,8 @@ enum GeomCullerType {
 
 struct GeomCullerOptions {
     GeomCullerType type = GEOM_CULLER_TYPE_OCTREE;
-    uint8_t octree_max_depth = 5;
-    uint8_t quadtree_max_depth = 5;
+    uint8_t octree_max_depth = 4;
+    uint8_t quadtree_max_depth = 4;
 };
 
 /**
