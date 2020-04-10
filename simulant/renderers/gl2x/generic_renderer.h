@@ -29,7 +29,7 @@
 
 namespace smlt {
 
-class GL2RenderGroupImpl;
+struct GL2RenderGroupImpl;
 class GenericRenderer;
 class VBOManager;
 class GPUBuffer;
