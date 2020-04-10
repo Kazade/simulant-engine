@@ -56,14 +56,14 @@ public:
 
         stage_ = window->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
-        pipeline_ = window->render(stage_, camera_).as_pipeline();
+        pipeline_ = window->render(stage_, camera_).with_clear(
+            smlt::BUFFER_CLEAR_ALL, smlt::Colour::SKY_BLUE
+        ).as_pipeline();
         link_pipeline(pipeline_);
 
         camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
         );
-
-        pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         auto cam = camera_;
         cam->move_to(0, 50, 700);
