@@ -16,7 +16,6 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
 
             Degrees steepness = Radians(acos(n->dot(Vec3(0, 1, 0))));
             float height = (vertices.position_at<Vec3>(i)->y + 64.0f) / 128.0f;
-
             float rock = clamp(steepness.value / 45.0f);
             float sand = clamp(1.0f - (height * 4.0f));
             float grass = (sand > 0.5f) ? 0.0f : 0.5f;
@@ -41,14 +40,18 @@ public:
         auto loading = scenes->resolve_scene_as<scenes::Loading>("_loading");
         assert(loading);
 
-        bool done = false;
+        auto done = std::make_shared<bool>(false);
 
         // While we're loading, continually pulse the progress bar to show that stuff is happening
-        window->idle->add([&loading, &done]() {
+        window->idle->add([this, loading, done]() {
+            if(!scenes->has_scene("_loading")) {
+                return false;
+            }
+
             if(loading->is_loaded() && loading->progress_bar) {
                 loading->progress_bar->pulse();
             }
-            return !done;
+            return !(*done);
         });
 
         stage_ = window->new_stage(smlt::PARTITIONER_NULL);
@@ -68,7 +71,10 @@ public:
 
         cam->new_behaviour<smlt::behaviours::Fly>(window);
 
-        auto terrain_material = stage_->assets->new_material_from_file("sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER);
+        auto terrain_material = stage_->assets->new_material_from_file(
+            "sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER
+        );
+
         terrain_material_id_ = terrain_material;
 
         smlt::HeightmapSpecification spec;
@@ -95,7 +101,7 @@ public:
 
         terrain_actor_ = stage_->new_actor_with_mesh(terrain_mesh_id_);
 
-        done = true;
+        *done = true;
     }
 
     void fixed_update(float dt) override {
@@ -137,6 +143,8 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Terrain Demo";
     config.fullscreen = false;
+    config.width = 640 * 2;
+    config.height = 480 * 2;
 
     TerrainDemo app(config);
     return app.run();
