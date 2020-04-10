@@ -131,7 +131,7 @@ private:
     IndexType index_type_;
     GLenum type_;
 
-    uint64_t last_updated_;
+    uint64_t last_updated_ = 0;
     bool allocated_ = false;
     GLuint gl_id_ = 0;
 };
