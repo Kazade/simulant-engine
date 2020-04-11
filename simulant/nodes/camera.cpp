@@ -36,19 +36,24 @@ void Camera::update_frustum() {
     frustum_.build(&mvp); //Update the frustum for this camera
 }
 
-void Camera::set_perspective_projection(const Degrees& fov, double aspect, double near, double far) {
+void Camera::set_perspective_projection(const Degrees& fov, float aspect, float near, float far) {
     projection_matrix_ = Mat4::as_projection(fov, aspect, near, far);
     update_frustum();
 }
 
-void Camera::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+void Camera::set_orthographic_projection(float left, float right, float bottom, float top, float near, float far) {
     projection_matrix_ = Mat4::as_orthographic(left, right, bottom, top, near, far);
     update_frustum();
 }
 
-double Camera::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
-    double width = desired_height_in_units * ratio;
-    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);
+double Camera::set_orthographic_projection_from_height(float desired_height_in_units, float ratio) {
+    float width = desired_height_in_units * ratio;
+    set_orthographic_projection(
+        -width / 2.0f, width / 2.0f,
+        -desired_height_in_units / 2.0f,
+        desired_height_in_units / 2.0f,
+        -10.0f, 10.0f
+    );
     return width;
 }
 
