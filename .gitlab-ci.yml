@@ -32,7 +32,7 @@ check:stream-usage:
   script:
     - python3 tools/find_std_stream.py simulant
 
-android:
+build:android:
   stage: build
   image: kazade/android-sdk
   allow_failure: true
@@ -53,7 +53,7 @@ android:
    - ln -s ../../src
    - ln -s ../../include
    - cd ..
-   - export APP_PLATFORM=android-18
+   - export APP_PLATFORM=android-19
    - NDK_PROJECT_PATH=. ndk-build
 
    - cd ${CI_PROJECT_DIR}
@@ -64,12 +64,12 @@ android:
    - ln -s ../../Android.mk
    - ln -s ../../OpenAL
    - cd ..
-   - export APP_PLATFORM=android-18
+   - export APP_PLATFORM=android-19
    - NDK_PROJECT_PATH=. ndk-build
 
    # Finally Simulant
    - cd ${CI_PROJECT_DIR}/build
-   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
+   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_PLATFORM=19 ..
    - make
 
 build:windows-x64-mingw:
