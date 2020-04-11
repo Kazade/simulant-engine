@@ -12,8 +12,7 @@
 
 #include "threads/mutex.h"
 #include "threads/thread.h"
-
-#include "compat.h"
+#include "utils/string.h"
 
 namespace smlt {
 
@@ -56,15 +55,11 @@ private:
     template<typename T>
     std::string do_format(Counter count, T&& val) {
         //std::cout << "Formatting: " << count.val << " -> " << val << std::endl;
-        std::string to_replace = "{" + std::to_string(count.val) + "}";
-
-        std::stringstream ss;
-        ss << val;
-
+        std::string to_replace = "{" + smlt::to_string(count.val) + "}";
         std::string result = str_;
         auto pos = result.find(to_replace);
         if(pos != std::string::npos) {
-            return result.replace(pos, to_replace.size(), ss.str());
+            return result.replace(pos, to_replace.size(), smlt::to_string(val));
         } else {
             return result;
         }
@@ -75,15 +70,11 @@ private:
     std::string do_format(Counter count, T&& val, Args&&... args) {
         //std::cout << "Formatting: " << count.val << " -> " << val << std::endl;
 
-        std::string to_replace = "{" + std::to_string(count.val) + "}";
-
-        std::stringstream ss;
-        ss << val;
-
+        std::string to_replace = "{" + smlt::to_string(count.val) + "}";
         std::string result = str_;
         auto pos = result.find(to_replace);
         if(pos != std::string::npos) {
-            result.replace(pos, to_replace.size(), ss.str());
+            result.replace(pos, to_replace.size(), smlt::to_string(val));
         }
         return Formatter(result).do_format(Counter(count.val + 1), args...);
     }

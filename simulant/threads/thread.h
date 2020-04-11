@@ -10,6 +10,7 @@
 #include <cassert>
 #include <utility>
 
+#include "../utils/string.h"
 #include "../macros.h"
 
 namespace smlt {
@@ -22,18 +23,9 @@ typedef uint32_t ThreadID;
 
 class ThreadSpawnError: public std::runtime_error {
 public:
-#ifdef _arch_dreamcast
-    /* No std::to_string on the DC */
     ThreadSpawnError(int code):
-        std::runtime_error("Error spawning thread") {
-
-        _S_UNUSED(code);
+        std::runtime_error("Error spawning thread: " + smlt::to_string(code)) {
     }
-#else
-    ThreadSpawnError(int code):
-        std::runtime_error("Error spawning thread: " + std::to_string(code)) {
-    }
-#endif
 };
 
 

@@ -24,28 +24,11 @@
 #include <cassert>
 #include <climits>
 #include <cstdlib>
+#include <cstring>
 
 #include "utf8.h"
 #include "unicode.h"
-
-#ifndef __clang__
-#ifndef _GLIBCXX_USE_C99_STDIO
-
-/* GCC 4.7 doesn't define std::to_string... for some reason, so we just hack around it here */
-
-
-namespace std {
-
-static std::string to_string(uint32_t value) {
-    std::ostringstream ss;
-    ss << value;
-    return ss.str();
-}
-
-}
-
-#endif
-#endif
+#include "string.h"
 
 std::ostream& operator<< (std::ostream& os, const unicode& str) {
     os << str.encode();
@@ -430,7 +413,7 @@ unicode unicode::strip() const {
 }
 
 unicode unicode::_do_format(uint32_t counter, const std::string& value) {
-    unicode search = "{" + std::to_string(counter);
+    unicode search = "{" + smlt::to_string(counter);
 
     ustring replacement(value.begin(), value.end());
     unicode result = *this;

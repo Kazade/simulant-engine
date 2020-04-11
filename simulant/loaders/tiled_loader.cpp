@@ -140,7 +140,7 @@ void TiledLoader::into(Loadable &resource, const LoaderOptions &options) {
             offset.x = (float(x) * tile_render_size) + (0.5f * tile_render_size);
             offset.y = (float(layer->GetHeight() - y) * tile_render_size) - (0.5f * tile_render_size);
 
-            std::string name = layer->GetName() + " (" + std::to_string(offset.x) + "," + std::to_string(offset.y) + ")";
+            std::string name = layer->GetName() + " (" + smlt::to_string(offset.x) + "," + smlt::to_string(offset.y) + ")";
 
             //Create the submesh as a rectangle, the offset determines the location on the map
             auto submesh = mesh->new_submesh_as_rectangle(name, tileset_materials.at(tileset_index), tile_render_size, tile_render_size, Vec3(offset.x, offset.y, 0));
