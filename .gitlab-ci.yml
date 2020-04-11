@@ -69,6 +69,11 @@ build:android:
 
    # Finally Simulant
    - cd ${CI_PROJECT_DIR}/build
+   
+   # We have to add the SDL and OpenAL include directories hackily
+   - export CXXFLAGS=-isystem\ ${CI_PROJECT_DIR}/.android/sdl/include -isystem\ ${CI_PROJECT_DIR}/.android/openal/OpenAL/include
+   
+   # Now build!
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_PLATFORM=19 ..
    - make
 
