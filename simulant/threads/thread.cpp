@@ -53,7 +53,7 @@ void sleep(size_t ms) {
 }
 
 void yield() {
-#if defined(__WIN32__) || defined(_arch_dreamcast)
+#if defined(__WIN32__) || defined(_arch_dreamcast) || defined(__ANDROID__)
     /*
      * Dreamcast + Windows pthreads are missing yield.
      * Massive debates around whether this should be
