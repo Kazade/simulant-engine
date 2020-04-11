@@ -29,11 +29,20 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
 
 # On Android we need to add SDL_android_main.c to the executable
 IF(ANDROID)
-LIST(APPEND ${TEST_SOURCES} "${CMAKE_SOURCE_DIR}/platforms/android/SDL_android_main.c")
-MESSAGE("${TEST_SOURCES}")
+SET(EXTRA_SOURCES ${CMAKE_SOURCE_DIR}/platforms/android/SDL_android_main.c)
+ELSE()
+SET(EXTRA_SOURCES "")
 ENDIF()
 
-ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME})
+ADD_EXECUTABLE(
+    simulant_tests
+    ${TEST_FILES}
+    ${TEST_SOURCES}
+    ${EXTRA_SOURCES}
+    ${LIBGL_CONTAINERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME}
+)
+
 ADD_TEST(simulant_suite simulant_tests)
 
 IF(WIN32)
