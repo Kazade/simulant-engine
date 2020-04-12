@@ -90,7 +90,7 @@ struct Quaternion {
     }
 
     bool operator==(const Quaternion& rhs) const {
-        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+        return std::abs(dot(rhs)) > (1.0f - EPSILON);
     }
 
     bool operator!=(const Quaternion& rhs) const {

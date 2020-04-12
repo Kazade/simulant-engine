@@ -15,7 +15,7 @@ public:
         assert_equal(v.w, 4);
     }
 
-    void test_vec3_constructor() {
+    void test_vec4_constructor() {
         smlt::Vec4 v(smlt::Vec3(1, 2, 3), 4);
         assert_equal(v.x, 1);
         assert_equal(v.y, 2);
@@ -54,7 +54,24 @@ public:
         assert_equal(v.z, 3);
     }
 
-    void test_vec2_constructor() {
+    void test_vec3_rotation_to() {
+        smlt::Vec3 v1(0, 1, 0);
+        smlt::Vec3 v2(0, 0, 1);
+        smlt::Vec3 v3(0, -1, 0);
+
+        auto r1 = v1.rotation_to(v2);
+        auto r2 = v1.rotation_to(v3);
+
+        assert_equal(r1, smlt::Quaternion(
+            smlt::Degrees(90), smlt::Degrees(0), smlt::Degrees(0)
+        ));
+
+        assert_equal(r2, smlt::Quaternion(
+            smlt::Degrees(0), smlt::Degrees(0), smlt::Degrees(-180)
+        ));
+    }
+
+    void test_vec3_constructor() {
         smlt::Vec3 v(smlt::Vec2(1, 2), 3);
         assert_equal(v.x, 1);
         assert_equal(v.y, 2);

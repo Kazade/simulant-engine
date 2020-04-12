@@ -255,6 +255,10 @@ public:
 
     Vec2 xy() const;
     Vec4 xyzw(float w=1.0f) const;
+
+    /* Returns the Quaternion rotation between this vector
+     * and `dir` */
+    Quaternion rotation_to(const Vec3& dir) const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
