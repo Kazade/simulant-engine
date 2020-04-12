@@ -20,6 +20,16 @@ public:
         SimulantTestCase::tear_down();
     }
 
+    void test_render_priority() {
+        auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
+        assert_equal(button->render_priority(), RENDER_PRIORITY_MAIN);
+        button->set_render_priority(RENDER_PRIORITY_NEAR);
+        assert_equal(button->render_priority(), RENDER_PRIORITY_NEAR);
+        auto child = dynamic_cast<Actor*>(button->first_child());
+        assert_is_not_null(child);
+        assert_equal(child->render_priority(), RENDER_PRIORITY_NEAR);
+    }
+
     void test_anchor_point() {
         /*
          * The anchor point should allow choosing where the

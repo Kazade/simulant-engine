@@ -45,6 +45,7 @@ public:
             auto old = render_priority_;
             render_priority_ = priority;
 
+            on_render_priority_changed(old, render_priority_);
             signal_render_priority_changed_(old, render_priority_);
         }
     }
@@ -53,6 +54,13 @@ public:
 
 private:
     RenderPriority render_priority_ = RENDER_PRIORITY_MAIN;
+
+    virtual void on_render_priority_changed(
+        RenderPriority old_priority, RenderPriority new_priority
+    ) {
+        _S_UNUSED(old_priority);
+        _S_UNUSED(new_priority);
+    }
 };
 
 struct Renderable final {
