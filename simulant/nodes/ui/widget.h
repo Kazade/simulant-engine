@@ -22,7 +22,8 @@ typedef sig::signal<void ()> WidgetBlurredSignal;
 class Widget:
     public TypedDestroyableObject<Widget, UIManager>,
     public ContainerNode,
-    public generic::Identifiable<WidgetID> {
+    public generic::Identifiable<WidgetID>,
+    public HasMutableRenderPriority {
 
     DEFINE_SIGNAL(WidgetPressedSignal, signal_pressed);
     DEFINE_SIGNAL(WidgetReleasedSignal, signal_released);
@@ -139,6 +140,10 @@ public:
     MaterialPtr material() const { return material_; }
     
 private:
+    void on_render_priority_changed(
+        RenderPriority old_priority, RenderPriority new_priority
+    ) override;
+
     bool initialized_ = false;
     UIManager* owner_ = nullptr;
     ActorPtr actor_ = nullptr;

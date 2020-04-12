@@ -611,6 +611,14 @@ void Widget::set_opacity(RangeValue<0, 1> alpha) {
     }
 }
 
+void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPriority new_priority) {
+    assert(actor_);
+
+    _S_UNUSED(old_priority);
+
+    actor_->set_render_priority(new_priority);
+}
+
 void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
     if(anchor_point_.x != (float) x || anchor_point_.y != (float) y) {
         anchor_point_ = smlt::Vec2(x, y);
