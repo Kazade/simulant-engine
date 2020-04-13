@@ -62,6 +62,7 @@ simulant/assets/particles/curves.h
 simulant/assets/particles/size_manipulator.cpp
 simulant/assets/particles/size_manipulator.h
 simulant/behaviours/movement/cylindrical_billboard.h
+simulant/behaviours/movement/spherical_billboard.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
