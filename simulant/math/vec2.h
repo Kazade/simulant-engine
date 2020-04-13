@@ -28,6 +28,10 @@ struct Vec2 {
         return sqrtf(x * x + y * y);
     }
 
+    float length_squared() const {
+        return x * x + y * y;
+    }
+
     void normalize() {
         float l = 1.0f / length();
         x *= l;

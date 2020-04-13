@@ -24,16 +24,27 @@ public:
 
         if(target_) {
             auto dir = (
-                target_->absolute_position() - stage_node_->absolute_position()
-            );
+                target_->absolute_position() - stage_node->absolute_position()
+            ).normalized();
 
-            smlt::Vec3 up_plane(smlt::Vec3::POSITIVE_Y, 0);
+            smlt::Plane up_plane(smlt::Vec3::POSITIVE_Y, 0);
+
+            /* If we're right above/below the Y axis then default to
+             * looking down negative Z */
+            auto d = std::abs(dir.dot(Vec3::POSITIVE_Y));
+            if(almost_equal(d, 1.0f)) {
+                dir = Vec3::NEGATIVE_Z;
+            }
+
             dir = up_plane.project(dir).normalized();
 
-            stage_node_->rotate_to_absolute(
-                smlt::Vec3::NEGATIVE_Z.rotation_to(dir)
-            );
+            auto rot = smlt::Vec3::NEGATIVE_Z.rotation_to(dir);
+            stage_node->rotate_to_absolute(rot);
         }
+    }
+
+    const std::string name() const override {
+        return "cylindrical_billboard";
     }
 private:
     StageNode* target_ = nullptr;

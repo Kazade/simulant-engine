@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "../utils/unicode.h"
+#include "utils.h"
 
 #ifdef _arch_dreamcast
 #include <kos.h>
@@ -99,7 +100,7 @@ public:
     }
 
     bool operator==(const Vec3& rhs) const {
-        return x == rhs.x && y == rhs.y && z == rhs.z;
+        return (*this - rhs).length_squared() < EPSILON;
     }
 
     bool operator!=(const Vec3& rhs) const {

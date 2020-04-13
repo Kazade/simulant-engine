@@ -112,6 +112,7 @@ simulant/threads/thread.h
 simulant/utils/throttle.h
 simulant/vfs.cpp
 simulant/vfs.h
+tests/test_behaviours.h
 tests/test_contiguous_map.h
 tests/test_cow_vector.h
 tests/test_heightmap.h
