@@ -28,7 +28,7 @@ Vec4 Vec2::xyzw(float z, float w) const {
 
 
 bool operator==(const Vec2& lhs, const Vec2& rhs) {
-    return lhs.x == rhs.x && lhs.y == rhs.y;
+    return (lhs - rhs).length_squared() < EPSILON;
 }
 
 bool operator!=(const Vec2& lhs, const Vec2& rhs) {

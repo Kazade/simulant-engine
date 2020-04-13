@@ -64,6 +64,30 @@ Vec4 Vec3::xyzw(float w) const {
     return Vec4(x, y, z, w);
 }
 
+Quaternion Vec3::rotation_to(const Vec3 &dir) const {
+    float d = dot(dir);
+    if(d >= 1.0f) {
+       return Quaternion();
+    } else if(d < (EPSILON - 1.0f)) {
+       Vec3 axis = Vec3::POSITIVE_X.cross(*this);
+       if(std::abs(axis.length_squared()) < EPSILON) {
+           axis = Vec3::POSITIVE_Y.cross(*this);
+       }
+       axis.normalize();
+       return smlt::Quaternion(axis, smlt::Radians(smlt::PI));
+    } else {
+        float s = std::sqrt((1.0f + d) * 2.0f);
+        float inv = 1.0f / s;
+        Vec3 c = cross(dir);
+        return Quaternion(
+            c.x * inv,
+            c.y * inv,
+            c.z * inv,
+            s * 0.5f
+        ).normalized();
+   }
+}
+
 Vec3 Vec3::operator*(const Quaternion &rhs) const {
     return rhs.rotate_vector(*this);
 }

@@ -15,11 +15,21 @@ Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 
 }
 
 Quaternion::Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
-    Quaternion x = Quaternion(Vec3::POSITIVE_X, pitch);
-    Quaternion y = Quaternion(Vec3::POSITIVE_Y, yaw);
-    Quaternion z = Quaternion(Vec3::POSITIVE_Z, roll);
+    float p = smlt::Radians(pitch).value;
+    float ya = smlt::Radians(yaw).value;
+    float r = smlt::Radians(roll).value;
 
-    *this = z * x * y;
+    float cp = std::cos(p * 0.5f);
+    float sp = std::sin(p * 0.5f);
+    float cy = std::cos(ya * 0.5f);
+    float sy = std::sin(ya * 0.5f);
+    float cr = std::cos(r * 0.5f);
+    float sr = std::sin(r * 0.5f);
+
+    x = sp * cy * cr + cp * sy * sr;
+    y = cp * sy * cr - sp * cy * sr;
+    z = cp * cy * sr + sp * sy * cr;
+    w = cp * cy * cr - sp * sy * sr;
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
@@ -124,20 +134,26 @@ Quaternion Quaternion::slerp(const Quaternion &rhs, float t) {
         cos_theta = -cos_theta;
     }
 
-    const constexpr float EPSILON = std::numeric_limits<float>::epsilon();
+    const constexpr float DOT_THRESHOLD = 0.9995f;
 
     // Lerp to avoid side effect of sin(angle) becoming a zero denominator
-    if(cos_theta > 1.0f - EPSILON) {
+    if(cos_theta > DOT_THRESHOLD) {
         // Linear interpolation
         return Quaternion(
             lerp(this->x, z.x, t),
             lerp(this->y, z.y, t),
             lerp(this->z, z.z, t),
             lerp(this->w, z.w, t)
-        );
+        ).normalized();
     } else {
-        auto angle = std::acos(cos_theta);
-        return (sinf((1.0f - t) * angle) * (*this) + sinf(t * angle) * z) / sinf(angle);
+        auto theta_0 = std::acos(cos_theta);
+        auto theta = theta_0 * t;
+        auto sin_theta = std::sin(theta);
+        auto sin_theta_0 = std::sin(theta_0);
+
+        auto s0 = std::cos(theta) - cos_theta * sin_theta / sin_theta_0;
+        auto s1 = sin_theta / sin_theta_0;
+        return (s0 * (*this)) + (s1 * z);
     }
 }
 

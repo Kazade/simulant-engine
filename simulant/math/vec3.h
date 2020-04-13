@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "../utils/unicode.h"
+#include "utils.h"
 
 #ifdef _arch_dreamcast
 #include <kos.h>
@@ -99,7 +100,7 @@ public:
     }
 
     bool operator==(const Vec3& rhs) const {
-        return x == rhs.x && y == rhs.y && z == rhs.z;
+        return (*this - rhs).length_squared() < EPSILON;
     }
 
     bool operator!=(const Vec3& rhs) const {
@@ -255,6 +256,10 @@ public:
 
     Vec2 xy() const;
     Vec4 xyzw(float w=1.0f) const;
+
+    /* Returns the Quaternion rotation between this vector
+     * and `dir` */
+    Quaternion rotation_to(const Vec3& dir) const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);

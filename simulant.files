@@ -61,6 +61,8 @@ simulant/assets/particles/curves.cpp
 simulant/assets/particles/curves.h
 simulant/assets/particles/size_manipulator.cpp
 simulant/assets/particles/size_manipulator.h
+simulant/behaviours/movement/cylindrical_billboard.h
+simulant/behaviours/movement/spherical_billboard.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
@@ -111,6 +113,7 @@ simulant/threads/thread.h
 simulant/utils/throttle.h
 simulant/vfs.cpp
 simulant/vfs.h
+tests/test_behaviours.h
 tests/test_contiguous_map.h
 tests/test_cow_vector.h
 tests/test_heightmap.h
