@@ -32,7 +32,7 @@ struct Quaternion {
 
     }
 
-    Quaternion(Degrees pitch, Degrees yaw, Degrees roll);
+    Quaternion(const Degrees& pitch, const Degrees& yaw, const Degrees& roll);
 
     Quaternion(const Vec3& axis, const Degrees& degrees);
     Quaternion(const Mat3& rot_matrix);
