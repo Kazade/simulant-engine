@@ -15,16 +15,16 @@ Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 
 }
 
 Quaternion::Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
-    float p = smlt::Radians(pitch).value * 0.5f;
-    float ya = smlt::Radians(yaw).value * 0.5f;
-    float r = smlt::Radians(roll).value * 0.5f;
+    const float p = smlt::Radians(pitch).value * 0.5f;
+    const float ya = smlt::Radians(yaw).value * 0.5f;
+    const float r = smlt::Radians(roll).value * 0.5f;
 
-    float cp = std::cos(p);
-    float sp = std::sin(p);
-    float cy = std::cos(ya);
-    float sy = std::sin(ya);
-    float cr = std::cos(r);
-    float sr = std::sin(r);
+    const float cp = std::cos(p);
+    const float sp = std::sin(p);
+    const float cy = std::cos(ya);
+    const float sy = std::sin(ya);
+    const float cr = std::cos(r);
+    const float sr = std::sin(r);
 
     x = sp * cy * cr + cp * sy * sr;
     y = cp * sy * cr - sp * cy * sr;
