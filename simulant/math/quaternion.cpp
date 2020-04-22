@@ -14,7 +14,7 @@ Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 
     return ret;
 }
 
-Quaternion::Quaternion(Degrees pitch, Degrees yaw, Degrees roll) {
+Quaternion::Quaternion(const Degrees &pitch, const Degrees &yaw, const Degrees &roll) {
     const float p = smlt::Radians(pitch).value * 0.5f;
     const float ya = smlt::Radians(yaw).value * 0.5f;
     const float r = smlt::Radians(roll).value * 0.5f;
