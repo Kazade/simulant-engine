@@ -21,6 +21,7 @@
     #include <kos.h>
 #endif
 
+#include "application.h"
 #include "utils/gl_error.h"
 #include "window.h"
 #include "platform.h"
@@ -411,17 +412,27 @@ void Window::run_update() {
         frame_counter_time_ = 0.0f;
     }
 
+    auto sm = application_->scene_manager_;
+
     _update_thunk(dt);
+    sm->update(dt);
     signal_update_(dt);
 
     _late_update_thunk(dt);
+    sm->late_update(dt);
     signal_late_update_(dt);
 }
 
 void Window::run_fixed_updates() {
     while(time_keeper_->use_fixed_step()) {
-        _fixed_update_thunk(time_keeper_->fixed_step()); // Run the fixed updates on controllers
-        signal_fixed_update_(time_keeper_->fixed_step()); //Trigger any steps
+        float step = time_keeper_->fixed_step();
+        _fixed_update_thunk(step); // Run the fixed updates on controllers
+
+        /* Call the scene managed fixed update. FIXME: This is a code
+         * smell. The whole Application -> Window/Engine thing needs a bit
+         * of a rethink */
+        application_->scene_manager_->fixed_update(step);
+        signal_fixed_update_(step); //Trigger any steps
 
         stats_.increment_fixed_steps();
     }

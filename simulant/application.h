@@ -103,6 +103,7 @@ struct AppConfig {
 };
 
 class Application {
+    friend class Window;
 
 public:
     Application(const AppConfig& config);
