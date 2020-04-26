@@ -21,6 +21,7 @@
     #include <kos.h>
 #endif
 
+#include "application.h"
 #include "utils/gl_error.h"
 #include "window.h"
 #include "platform.h"
@@ -324,7 +325,7 @@ bool Window::_init() {
 #endif
 
     idle->add_once([this]() {
-        each_screen([](std::string name, Screen* screen) {
+        each_screen([](std::string, Screen* screen) {
             if(screen->width() / screen->integer_scale() == simulant_icon_vmu_width && screen->height() / screen->integer_scale() == simulant_icon_vmu_height) {
                 screen->render(simulant_icon_vmu_bits, SCREEN_FORMAT_G1);
             }
@@ -411,17 +412,35 @@ void Window::run_update() {
         frame_counter_time_ = 0.0f;
     }
 
+    auto sm = application_->scene_manager_;
+
     _update_thunk(dt);
+    if(sm) {
+        sm->update(dt);
+    }
     signal_update_(dt);
 
     _late_update_thunk(dt);
+    if(sm) {
+        sm->late_update(dt);
+    }
     signal_late_update_(dt);
 }
 
 void Window::run_fixed_updates() {
     while(time_keeper_->use_fixed_step()) {
-        _fixed_update_thunk(time_keeper_->fixed_step()); // Run the fixed updates on controllers
-        signal_fixed_update_(time_keeper_->fixed_step()); //Trigger any steps
+        float step = time_keeper_->fixed_step();
+        _fixed_update_thunk(step); // Run the fixed updates on controllers
+
+        /* Call the scene managed fixed update. FIXME: This is a code
+         * smell. The whole Application -> Window/Engine thing needs a bit
+         * of a rethink */
+        auto sm = application_->scene_manager_;
+        if(sm) {
+            sm->fixed_update(step);
+        }
+
+        signal_fixed_update_(step); //Trigger any steps
 
         stats_.increment_fixed_steps();
     }
