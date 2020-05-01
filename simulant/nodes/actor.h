@@ -75,8 +75,6 @@ public:
 
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
-    Property<Actor, KeyFrameAnimationState> animation_state = { this, &Actor::animation_state_ };
-
     bool has_animated_mesh(DetailLevel detail_level=DETAIL_LEVEL_NEAREST) const {
         auto mesh = find_mesh(detail_level);
         return mesh && mesh->is_animated();
@@ -135,6 +133,10 @@ private:
     friend class SubActor;
 
     void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp);
+
+public:
+    Property<decltype(&Actor::animation_state_)> animation_state = { this, &Actor::animation_state_ };
+
 };
 
 class SubActor :

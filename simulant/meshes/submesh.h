@@ -15,18 +15,18 @@ class Renderer;
 class SubMeshInterface:
         public virtual Boundable {
 
+private:
+    virtual VertexData* get_vertex_data() const = 0;
+    virtual IndexData* get_index_data() const = 0;
+
 public:
     virtual ~SubMeshInterface();
 
     virtual MaterialPtr material() const = 0;
     virtual MeshArrangement arrangement() const = 0;
 
-    Property<SubMeshInterface, VertexData, true> vertex_data = { this, &SubMeshInterface::get_vertex_data };
-    Property<SubMeshInterface, IndexData, true> index_data = { this, &SubMeshInterface::get_index_data };
-
-private:
-    virtual VertexData* get_vertex_data() const = 0;
-    virtual IndexData* get_index_data() const = 0;
+    S_DEFINE_PROPERTY(vertex_data, &SubMeshInterface::get_vertex_data);
+    S_DEFINE_PROPERTY(index_data, &SubMeshInterface::get_index_data);
 };
 
 enum MaterialSlot {
@@ -68,7 +68,7 @@ public:
         return bounds_;
     }
 
-    void reverse_winding();   
+    void reverse_winding();
     void _recalc_bounds();
 
     void generate_texture_coordinates_cube(uint32_t texture=0);

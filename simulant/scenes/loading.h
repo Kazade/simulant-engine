@@ -39,8 +39,6 @@ public:
     Loading(Window* window):
         Scene<Loading>(window) {}
 
-    Property<Loading, ui::ProgressBar> progress_bar = {this, &Loading::progress_bar_};
-
 private:
     void activate() override;
     void deactivate() override;
@@ -53,6 +51,9 @@ private:
     PipelinePtr pipeline_;
 
     ui::ProgressBar* progress_bar_ = nullptr;
+
+public:
+    S_DEFINE_PROPERTY(progress_bar, &Loading::progress_bar_);
 };
 
 }

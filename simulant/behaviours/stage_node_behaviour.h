@@ -13,7 +13,6 @@ class StageNodeBehaviour:
 
 public:
     StageNodeBehaviour() = default;
-    Property<StageNodeBehaviour, StageNode> stage_node = { this, &StageNodeBehaviour::stage_node_ };
 
 protected:
     void on_behaviour_added(Organism* controllable) override {
@@ -28,6 +27,9 @@ protected:
 
 private:
     StageNode* stage_node_ = nullptr;
+
+public:
+    Property<decltype(&StageNodeBehaviour::stage_node_)> stage_node = { this, &StageNodeBehaviour::stage_node_ };
 };
 
 }

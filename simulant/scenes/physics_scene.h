@@ -13,8 +13,6 @@ protected:
     PhysicsScene(Window* window):
         Scene<T>(window) {}
 
-    Property<PhysicsScene, smlt::behaviours::RigidBodySimulation> physics = { this, &PhysicsScene::physics_ };
-
     virtual void _fixed_update_thunk(float step) {
         if(physics_) {
             physics_->fixed_update(step);
@@ -33,6 +31,9 @@ private:
     }
 
     std::shared_ptr<smlt::behaviours::RigidBodySimulation> physics_;
+
+protected:
+    S_DEFINE_PROPERTY(physics, &PhysicsScene::physics_);
 };
 
 }

@@ -88,8 +88,6 @@ public:
 
     virtual MeshID debug_mesh_id() { return MeshID(); }
 protected:
-    Property<Partitioner, Stage> stage = { this, &Partitioner::stage_ };
-
     Stage* get_stage() const { return stage_; }
 
     virtual void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) = 0;
@@ -120,6 +118,10 @@ private:
     };
 
     std::map<UniqueIDKey, WriteSlots> staged_writes_;
+
+protected:
+    Property<decltype(&Partitioner::stage_)> stage = { this, &Partitioner::stage_ };
+
 };
 
 }

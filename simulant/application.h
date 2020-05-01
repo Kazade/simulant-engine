@@ -114,19 +114,12 @@ public:
     int32_t run();
     int32_t run(int argc, char* argv[]);
 
-    Property<Application, Window> window = {this, &Application::window_ };
-    Property<Application, generic::DataCarrier> data = { this, &Application::data_carrier_ };
-    Property<Application, SceneManager> scenes = {this, &Application::scene_manager_};
-    Property<Application, ArgParser> args = {this, &Application::args_};
-
     bool initialized() const { return initialized_; }
 
 protected:
     StagePtr stage(StageID stage=StageID());
 
     bool _call_init();
-
-    Property<Application, AppConfig> config = { this, &Application::config_ };
 
 private:
     std::shared_ptr<Window> window_;
@@ -172,6 +165,15 @@ private:
     void construct_window(const AppConfig& config);
 
     ArgParser args_;
+
+public:
+    S_DEFINE_PROPERTY(window, &Application::window_);
+    S_DEFINE_PROPERTY(data, &Application::data_carrier_);
+    S_DEFINE_PROPERTY(scenes, &Application::scene_manager_);
+    S_DEFINE_PROPERTY(args, &Application::args_);
+
+protected:
+    S_DEFINE_PROPERTY(config, &Application::config_);
 };
 
 }

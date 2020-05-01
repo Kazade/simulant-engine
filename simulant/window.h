@@ -110,7 +110,7 @@ class Window :
     DEFINE_SIGNAL(ScreenRemovedSignal, signal_screen_removed);
 
     friend class Screen;  /* Screen needs to call render_screen */
-public:    
+public:
     typedef std::shared_ptr<Window> ptr;
     static const int STEPS_PER_SECOND = 60;
 
@@ -123,18 +123,18 @@ public:
     }
 
     virtual ~Window();
-    
+
     LoaderPtr loader_for(const unicode& filename, LoaderHint hint=LOADER_HINT_NONE);
     LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
     LoaderTypePtr loader_type(const unicode& loader_name) const;
-    
+
     void register_loader(LoaderTypePtr loader_type);
 
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
     virtual void show_cursor(bool cursor_shown=true) = 0;
     virtual void lock_cursor(bool cursor_locked=true) = 0;
-    
+
     virtual void check_events() = 0;
     virtual void swap_buffers() = 0;
 
@@ -146,7 +146,7 @@ public:
     bool vsync_enabled() const { return vsync_enabled_; }
 
     float aspect_ratio() const;
-    
+
     bool run_frame();
 
     void set_logging_level(LogLevel level);
@@ -281,7 +281,7 @@ private:
     void update_coroutines();
     void stop_all_coroutines();
 
-protected:    
+protected:
     std::shared_ptr<Renderer> renderer_;
 
     RenderSequence* render_sequence();
@@ -291,11 +291,11 @@ protected:
     }
 
     void set_width(uint16_t width) {
-        width_ = width; 
+        width_ = width;
     }
-    
+
     void set_height(uint16_t height) {
-        height_ = height; 
+        height_ = height;
     }
 
     void set_bpp(uint16_t bpp) {
@@ -329,7 +329,7 @@ public:
     void activate_panel(uint8_t id);
     void deactivate_panel(uint8_t id);
     bool panel_is_active(uint8_t id);
-private:    
+private:
     Application* application_ = nullptr;
 
     void create_defaults();
@@ -352,7 +352,7 @@ private:
 
     std::vector<LoaderTypePtr> loaders_;
     bool is_running_;
-        
+
     IdleTaskManager idle_;
 
     bool is_paused_ = false;
@@ -424,20 +424,18 @@ protected:
     std::shared_ptr<Platform> platform_;
 public:
     //Read only properties
-    Property<Window, AssetManager> shared_assets = { this, &Window::asset_manager_ };
-    Property<Window, Application> application = { this, &Window::application_ };
-    Property<Window, VirtualGamepad> virtual_joypad = { this, &Window::virtual_gamepad_ };
-    Property<Window, Renderer> renderer = { this, &Window::renderer_ };
-    Property<Window, TimeKeeper> time_keeper = { this, &Window::time_keeper_ };
-
-    Property<Window, IdleTaskManager> idle = { this, &Window::idle_ };
-    Property<Window, generic::DataCarrier> data = { this, &Window::data_carrier_ };
-    Property<Window, VirtualFileSystem> vfs = { this, &Window::vfs_ };
-
-    Property<Window, InputManager> input = {this, &Window::input_manager_};
-    Property<Window, InputState> input_state = {this, &Window::input_state_};
-    Property<Window, StatsRecorder> stats = { this, &Window::stats_ };
-    Property<Window, Platform> platform = {this, &Window::platform_};
+    S_DEFINE_PROPERTY(shared_assets, &Window::asset_manager_);
+    S_DEFINE_PROPERTY(application, &Window::application_);
+    S_DEFINE_PROPERTY(virtual_joypad, &Window::virtual_gamepad_);
+    S_DEFINE_PROPERTY(renderer, &Window::renderer_);
+    S_DEFINE_PROPERTY(time_keeper, &Window::time_keeper_);
+    S_DEFINE_PROPERTY(idle, &Window::idle_);
+    S_DEFINE_PROPERTY(data, &Window::data_carrier_);
+    S_DEFINE_PROPERTY(vfs, &Window::vfs_);
+    S_DEFINE_PROPERTY(input, &Window::input_manager_);
+    S_DEFINE_PROPERTY(input_state, &Window::input_state_);
+    S_DEFINE_PROPERTY(stats, &Window::stats_);
+    S_DEFINE_PROPERTY(platform, &Window::platform_);
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
 

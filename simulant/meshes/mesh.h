@@ -118,7 +118,7 @@ public:
 
     SubMeshPtr new_submesh_with_material(
         const std::string& name,
-        MaterialID material,        
+        MaterialID material,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         IndexType=INDEX_TYPE_16_BIT
     );
@@ -194,9 +194,6 @@ public:
     void generate_adjacency_info();
     bool has_adjacency_info() const { return bool(adjacency_); }
 
-    /* Returns a nullptr if there is no adjacecy info */
-    Property<Mesh, AdjacencyInfo> adjacency_info = {this, &Mesh::adjacency_};
-    Property<Mesh, VertexData> vertex_data = { this, &Mesh::vertex_data_ };
 public:
     // Signals
 
@@ -229,7 +226,12 @@ private:
 
     /* Automatically maintain adjacency info for submeshes or not */
     bool maintain_adjacency_info_ = true;
-    std::unique_ptr<AdjacencyInfo> adjacency_;    
+    std::unique_ptr<AdjacencyInfo> adjacency_;
+
+public:
+    /* Returns a nullptr if there is no adjacecy info */
+    Property<decltype(&Mesh::adjacency_)> adjacency_info = {this, &Mesh::adjacency_};
+    Property<decltype(&Mesh::vertex_data_)> vertex_data = { this, &Mesh::vertex_data_ };
 };
 
 }

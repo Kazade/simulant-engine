@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <type_traits>
 #include <functional>
 #include <memory>
 #include <cstdint>
@@ -26,145 +27,221 @@
 
 namespace smlt {
 
-template<typename Container, typename T, bool IsFunction=false>
-class Property {};
+namespace property_impl {
 
-template<typename Container, typename T>
-class Property<Container, T, true> {
-public:
-    Property(Container* _this, std::function<T* (Container*)> getter):
-        this_(_this),
-        getter_(getter) {
+template<typename MP, typename C, typename T>
+struct Getter;
+
+template<typename MP, typename C, typename T>
+struct Getter<MP, C, std::weak_ptr<T>> {
+    MP mp_;
+
+    Getter(MP mp):
+        mp_(mp) {
 
     }
 
-    /*
-     *  We can't allow copy construction, because 'this_' will never be initialized
-     */
-    Property(const Property& rhs) = delete;
+    T* get(C* _this) const {
+        if(auto sptr = (_this->*mp_).lock()) {
+            return sptr.get();
+        } else {
+            return nullptr;
+        }
+    }
+};
 
-    Property operator=(const Property& rhs) {
-        assert(this_); //Make sure that this_ was initialized
+template<typename MP, typename C, typename T>
+struct Getter<MP, C, std::shared_ptr<T>> {
+    MP mp_;
 
-        getter_ = rhs.getter_;
-        // Intentionally don't transfer 'this_'
+    Getter(MP mp):
+        mp_(mp) {
+
     }
 
-    inline operator T&() const { return *getter_(this_); }
-    inline T* operator->() const { return getter_(this_); }
-
-    // Implicit conversion to a T*
-    inline operator T*() { return getter_(this_); }
-
-    T* get() const { return getter_(this_); }
-
-    operator bool() const {
-        return bool(get());
+    T* get(C* _this) const {
+        return (_this->*mp_).get();
     }
-private:
-    Container* this_ = nullptr;
+};
 
-    std::function<T* (Container*)> getter_;
+template<typename MP, typename C, typename T>
+struct Getter<MP, C, std::unique_ptr<T>> {
+    MP mp_;
+
+    Getter(MP mp):
+        mp_(mp) {
+
+    }
+
+    T* get(C* _this) const {
+        return (_this->*mp_).get();
+    }
+};
+
+template<typename MP, typename C, typename T>
+struct Getter<MP, C, default_init_ptr<T>> {
+    MP mp_;
+
+    Getter(MP mp):
+        mp_(mp) {
+
+    }
+
+    T* get(C* _this) const {
+        return (_this->*mp_);
+    }
+};
+
+template<typename MP, typename C, typename T>
+struct Getter<MP, C, T*> {
+    static_assert(!std::is_function<MP>::value, "MP was a function");
+
+    MP mp_;
+
+    Getter(MP mp):
+        mp_(mp) {
+
+    }
+
+    T* get(C* _this) const {
+        return (_this->*mp_);
+    }
 };
 
 
-template<typename Container, typename T>
-class Property<Container, T, false> {
-public:
-    typedef Property<Container, T, false> this_type;
+template<typename MP, typename C, typename T>
+struct Getter<MP, C, T* () const> {
+    MP mp_;
 
-    Property(Container* _this, T Container::* member):
-        this_(_this),
-        type_(VALUE),
-        value_member(member) {}
+    Getter(MP mp):
+        mp_(mp) {
 
-    Property(Container* _this, smlt::default_init_ptr<T> Container::* member):
-        this_(_this),
-        type_(INIT_PTR),
-        init_ptr_member(member) {}
-
-    Property(Container* _this, T* Container::* member):
-        this_(_this),
-        type_(POINTER),
-        pointer_member(member) {}
-
-    Property(Container* _this, std::unique_ptr<T> Container::* member):
-        this_(_this),
-        type_(UNIQUE_PTR),
-        unique_ptr_member(member) {}
-
-    Property(Container* _this, std::shared_ptr<T> Container::* member):
-        this_(_this),
-        type_(SHARED_PTR),
-        shared_ptr_member(member) {}
-
-    /*
-     *  We can't allow copy construction, because 'this_' will never be initialized
-     */
-    Property(const this_type& rhs) = delete;
-    Property& operator=(const this_type& rhs) {
-        assert(this_); //Make sure that this_ was initialized
-
-        // Intentionally don't transfer 'this_'
-        type_ = rhs.type_;
-        switch(type_) {
-            case VALUE: value_member = rhs.value_member; break;
-            case POINTER: pointer_member = rhs.pointer_member; break;
-            case INIT_PTR: init_ptr_member = rhs.init_ptr_member; break;
-            case SHARED_PTR: shared_ptr_member = rhs.shared_ptr_member; break;
-            case UNIQUE_PTR: unique_ptr_member = rhs.unique_ptr_member; break;
-        default:
-            break;
-        }
-
-        return *this;
     }
 
-    inline operator T&() const { return *get(); }
-    inline T* operator->() const { return get(); }
+    T* get(C* _this) const {
+        return (_this->*mp_)();
+    }
+};
 
-    // Implicit conversion to a T*
-    inline operator T*() { return get(); }
+template<typename MP, typename C, typename T>
+struct Getter {
+    MP mp_;
 
-    T* get() const {
-        switch(type_) {
-        case VALUE:
-            return &(this_->*value_member);
-        case POINTER:
-            return (this_->*pointer_member);
-        case INIT_PTR:
-            return (this_->*init_ptr_member);
-        case SHARED_PTR:
-            return (this_->*shared_ptr_member).get();
-        case UNIQUE_PTR:
-            return (this_->*unique_ptr_member).get();
-        }
-        return nullptr;
+    static_assert(!std::is_pointer<T>::value, "T was a pointer");
+    static_assert(!std::is_function<T>::value, "T was a function");
+
+    Getter(MP mp):
+        mp_(mp) {
+
     }
 
-    operator bool() const {
-        return bool(get());
+    T* get(C* _this) const {
+        return &(_this->*mp_);
     }
-
-private:
-    Container* this_ = nullptr;
-
-    enum SourceType : uint8_t {
-        POINTER,
-        VALUE,
-        INIT_PTR,
-        SHARED_PTR,
-        UNIQUE_PTR
-    };
-
-    SourceType type_;
-    union {
-        T* Container::* pointer_member;
-        T Container::* value_member;
-        smlt::default_init_ptr<T> Container::* init_ptr_member;
-        std::shared_ptr<T> Container::* shared_ptr_member;
-        std::unique_ptr<T> Container::* unique_ptr_member;
-    };
 };
 
 }
+
+template<typename T>
+struct ExtractType {
+    static_assert(!std::is_function<T>::value, "T was a function");
+
+    typedef T type;
+};
+
+template<typename T>
+struct ExtractType<T*> {
+    typedef typename std::remove_pointer<T>::type type;
+};
+
+template<typename T>
+struct ExtractType<std::weak_ptr<T>> {
+    typedef T type;
+};
+
+template<typename T>
+struct ExtractType<std::shared_ptr<T>> {
+    typedef T type;
+};
+
+template<typename T>
+struct ExtractType<std::unique_ptr<T>> {
+    typedef T type;
+};
+
+template<typename T>
+struct ExtractType<default_init_ptr<T>> {
+    typedef T type;
+};
+
+template<typename T>
+struct ExtractType<T() const> {
+    typedef typename std::remove_pointer<T>::type type;
+};
+
+
+template<typename MP>
+struct PointerToMemberHelper;
+
+
+template<typename T, typename U>
+struct PointerToMemberHelper<T U::*> {
+    typedef U class_type; /* Class */
+    typedef T variable_type; /* The source type */
+
+    /* This is the underlying type, which needs extracting */
+    typedef typename ExtractType<
+        T
+    >::type result_type;
+};
+
+template<typename MP>
+struct PointerToMember : PointerToMemberHelper<typename std::remove_cv<MP>::type> {};
+
+template<typename MP>
+class Property {
+public:
+    typedef typename PointerToMember<MP>::class_type class_type;
+    typedef typename PointerToMember<MP>::variable_type variable_type;
+    typedef typename PointerToMember<MP>::result_type T;
+
+    Property(class_type* _this, MP member):
+        this_(_this),
+        getter_(member) {}
+
+    Property() = delete;
+    Property(const Property&) = delete;
+    Property& operator=(const Property& rhs) {
+        assert(this_); /* We don't copy this */
+        getter_ = rhs.getter_;
+    }
+
+private:
+    class_type* this_;
+    property_impl::Getter<MP, class_type, variable_type> getter_;
+
+public:
+
+    inline operator T&() const {
+        return *get();
+    }
+
+    inline T* operator->() const {
+        return get();
+    }
+
+    inline operator T*() {
+        return get();
+    }
+
+    T* get() const {
+        return getter_.get(this_);
+    }
+
+    operator bool() const { return bool(get(this));}
+};
+
+}
+
+#define S_DEFINE_PROPERTY(name, member) \
+    Property<decltype(member)> name = {this, member}

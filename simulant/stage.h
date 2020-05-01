@@ -84,7 +84,7 @@ class Stage:
     public TypedDestroyableObject<Stage, Window>,
     public ContainerNode,
     public generic::Identifiable<StageID>,
-    public Loadable,    
+    public Loadable,
     public virtual WindowHolder {
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
@@ -158,15 +158,6 @@ public:
         throw std::logic_error("You cannot move the stage");
     }
 
-    Property<Stage, Debug> debug = {this, &Stage::debug_};
-    Property<Stage, Partitioner> partitioner = {this, &Stage::partitioner_};
-    Property<Stage, AssetManager> assets = {this, &Stage::asset_manager_};
-    Property<Stage, generic::DataCarrier> data = {this, &Stage::data_};
-    Property<Stage, ui::UIManager> ui = {this, &Stage::ui_};
-    Property<Stage, SkyManager> skies = {this, &Stage::sky_manager_};
-    Property<Stage, SpriteManager> sprites = {this, &Stage::sprite_manager_};
-    Property<Stage, FogSettings> fog = {this, &Stage::fog_};
-
     bool init() override;
     void clean_up() override;
 
@@ -237,7 +228,7 @@ private:
     unicode name_;
 
     //FIXME: All managers should be composition rather than inheritence,
-    // like this one!   
+    // like this one!
     std::shared_ptr<AssetManager> asset_manager_;
     smlt::Colour ambient_light_ = smlt::Colour(0.3, 0.3, 0.3, 1.0);
 
@@ -262,6 +253,17 @@ private:
 
     void clean_up_dead_objects();
     sig::connection clean_up_signal_;
+
+public:
+    Property<decltype(&Stage::debug_)> debug = {this, &Stage::debug_};
+    Property<decltype(&Stage::partitioner_)> partitioner = {this, &Stage::partitioner_};
+    Property<decltype(&Stage::asset_manager_)> assets = {this, &Stage::asset_manager_};
+    Property<decltype(&Stage::data_)> data = {this, &Stage::data_};
+    Property<decltype(&Stage::ui_)> ui = {this, &Stage::ui_};
+    Property<decltype(&Stage::sky_manager_)> skies = {this, &Stage::sky_manager_};
+    Property<decltype(&Stage::sprite_manager_)> sprites = {this, &Stage::sprite_manager_};
+    Property<decltype(&Stage::fog_)> fog = {this, &Stage::fog_};
+
 };
 
 }

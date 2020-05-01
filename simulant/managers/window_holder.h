@@ -31,7 +31,7 @@ public:
 
     virtual ~WindowHolder() {}
 
-    Property<WindowHolder, Window> window = { this, &WindowHolder::window_ };
+    Property<Window* WindowHolder::*> window = { this, &WindowHolder::window_ };
 
 protected:
     Window* get_window() const { return window_; }

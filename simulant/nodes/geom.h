@@ -79,8 +79,6 @@ public:
         StageNode::clean_up();
     }
 
-    Property<Geom, GeomCuller> culler = {this, &Geom::culler_};
-
     bool init() override;
 
     void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
@@ -97,6 +95,10 @@ private:
     void update(float dt) override {
         update_source(dt);
     }
+
+public:
+    Property<decltype(&Geom::culler_)> culler = {this, &Geom::culler_};
+
 };
 
 }

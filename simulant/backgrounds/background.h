@@ -64,9 +64,6 @@ public:
     //Ownable interface
     void destroy();
 
-    Property<Background, Sprite> sprite = {this, &Background::sprite_};
-    Property<Background, Stage> stage = {this, &Background::stage_};
-
     std::string repr() const override {
         return name();
     }
@@ -83,6 +80,11 @@ private:
     BackgroundResizeStyle style_ = BACKGROUND_RESIZE_ZOOM;
     float x_rate_ = 0.0;
     float y_rate_ = 0.0;
+
+public:
+    Property<decltype(&Background::sprite_)> sprite = {this, &Background::sprite_};
+    Property<decltype(&Background::stage_)> stage = {this, &Background::stage_};
+
 };
 
 }

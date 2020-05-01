@@ -56,7 +56,9 @@ public:
     void _late_update_thunk(float dt) override;
     void _fixed_update_thunk(float step) override;
 
-    Property<Behaviour, Organism> organism = {this, &Behaviour::organism_};
+    Property<Organism* Behaviour::*> organism = {
+        this, &Behaviour::organism_
+    };
 
     bool attached() const { return organism_ != nullptr; }
 private:
@@ -103,7 +105,9 @@ public:
         input_(input) {}
 
 protected:
-    Property<BehaviourWithInput, InputManager> input = {this, &BehaviourWithInput::input_};
+    Property<InputManager* BehaviourWithInput::*> input = {
+        this, &BehaviourWithInput::input_
+    };
 
 private:
     InputManager* input_;
@@ -116,12 +120,15 @@ public:
         material_(material) {
     }
 
-protected:
-    Property<MaterialBehaviour, Material> material = { this, &MaterialBehaviour::material_ };
-    Material* get_material() const { return material_; }
-
 private:
     Material* material_;
+
+protected:
+    Property<decltype(&MaterialBehaviour::material_)> material = {
+        this, &MaterialBehaviour::material_
+    };
+    Material* get_material() const { return material_; }
+
 };
 
 class Organism {

@@ -197,8 +197,8 @@ public:
     bool is_intended_visible() const { return is_visible_; }
     void set_visible(bool visible) { is_visible_ = visible; }
 
-    Property<StageNode, generic::DataCarrier> data = { this, &StageNode::data_ };
-    Property<StageNode, Stage> stage = { this, &StageNode::stage_ };
+    Property<generic::DataCarrier StageNode::*> data = { this, &StageNode::data_ };
+    Property<Stage* StageNode::*> stage = { this, &StageNode::stage_ };
 
     template<typename T>
     void set_parent(const UniqueID<T>& id) {

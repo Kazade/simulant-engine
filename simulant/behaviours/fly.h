@@ -31,9 +31,6 @@ class Fly:
     public RefCounted<Fly> {
 
 public:
-    Fly(const Property<smlt::SceneBase, smlt::Window>& window):
-        Fly(window.get()) {}
-
     Fly(Window* window):
         BehaviourWithInput(window->input.get()),
         window_(window) {

@@ -93,7 +93,7 @@ public:
     virtual AudioSourceState source_state(AudioSourceID source) = 0;
     virtual int32_t source_buffers_processed_count(AudioSourceID source) const = 0;
 
-    Property<SoundDriver, Window> window = {this, &SoundDriver::window_};
+    Property<Window* SoundDriver::*> window = {this, &SoundDriver::window_};
 
     /* When called this should set the source to not be affected by distance
      * this is used when playing background music etc. (i.e. the Window is the source) */
