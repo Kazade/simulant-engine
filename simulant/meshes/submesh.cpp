@@ -37,10 +37,10 @@ IndexData* SubMesh::get_index_data() const {
 }
 
 void SubMesh::set_diffuse(const smlt::Colour& colour) {
-    index_data->each([this, colour](uint32_t i) {
+    for(auto& i: *index_data) {
         vertex_data->move_to(i);
         vertex_data->diffuse(colour);
-    });
+    };
 
     vertex_data->done();
 }
@@ -101,16 +101,16 @@ void SubMesh::_recalc_bounds() {
         bounds_.set_max_z(0);
         bounds_.set_min_z(0);
 
-        index_data_->each([&](uint32_t idx) {
+        for(auto& idx: *index_data_) {
             if(idx >= vertex_count) return; // Don't read outside the bounds
             auto pos = vdata->position_at<Vec2>(idx);
             if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
             if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
             if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
             if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
-        });
+        }
     } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
-        index_data_->each([&](uint32_t idx) {
+        for(auto& idx: *index_data_) {
             if(idx >= vertex_count) return; // Don't read outside the bounds
 
             auto pos = vdata->position_at<Vec3>(idx);
@@ -121,9 +121,9 @@ void SubMesh::_recalc_bounds() {
             if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
             if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
             if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
-        });
+        }
     } else {
-        index_data_->each([&](uint32_t idx) {
+        for(auto& idx: *index_data_) {
             assert(pos_attr == VERTEX_ATTRIBUTE_4F);
 
             if(idx >= vertex_count) return; // Don't read outside the bounds
@@ -136,7 +136,7 @@ void SubMesh::_recalc_bounds() {
             if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
             if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
             if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
-        });
+        }
     }
 }
 

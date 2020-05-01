@@ -274,22 +274,68 @@ const uint8_t* VertexData::diffuse_at(const uint32_t index) const;
 
 typedef uint32_t Index;
 
+class IndexData;
+
+class IndexDataIterator {
+private:
+    friend class IndexData;
+
+    IndexDataIterator(const IndexData* owner, int pos);
+
+public:
+    IndexDataIterator& operator++() {
+        ptr_ += stride_;
+        return *this;
+    }
+
+    bool operator==(const IndexDataIterator& rhs) const {
+        return ptr_ == rhs.ptr_;
+    }
+
+    bool operator!=(const IndexDataIterator& rhs) const {
+        return !(*this == rhs);
+    }
+
+    const uint32_t& operator*() const {
+        static uint32_t value;
+        if(type_ == INDEX_TYPE_8_BIT) {
+            value = *((uint8_t*) ptr_);
+        } else if(type_ == INDEX_TYPE_16_BIT) {
+            value = *((uint16_t*) ptr_);
+        } else if(type_ == INDEX_TYPE_32_BIT) {
+            value = *((uint32_t*) ptr_);
+        }
+
+        return value;
+    }
+private:
+    const IndexData* owner_;
+    IndexType type_;
+    uint8_t stride_;
+    const uint8_t* ptr_;
+};
+
+
 class IndexData:
     public RefCounted<IndexData>,
     public UniquelyIdentifiable<IndexData>,
     public NotifiesDestruction<IndexData> {
 
+    friend class IndexDataIterator;
 public:
     IndexData(IndexType type);
 
-    void each(std::function<void (uint32_t)> cb);
+    IndexDataIterator begin() const {
+        return IndexDataIterator(this, 0);
+    }
+
+    IndexDataIterator end() const {
+        return IndexDataIterator(this, count());
+    }
 
     void reset();
-
     void clear(bool release_memory=false);
-
     void resize(uint32_t size);
-
     void reserve(uint32_t size) { indices_.reserve(size * stride()); }
 
     std::vector<uint32_t> all();
