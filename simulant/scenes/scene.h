@@ -90,11 +90,6 @@ public:
         destroy_on_unload_ = v;
     }
 protected:
-    Property<SceneBase, Window> window = {this, &SceneBase::window_};
-    Property<SceneBase, Application> app = {this, &SceneBase::app_};
-    Property<SceneBase, InputManager> input = {this, &SceneBase::input_};
-    Property<SceneBase, SceneManager> scenes = {this, &SceneBase::scene_manager_};
-
     virtual void load() = 0;
     virtual void unload() {}
     virtual void activate() {}
@@ -128,6 +123,12 @@ private:
     SceneManager* scene_manager_ = nullptr;
 
     friend class SceneManager;
+
+protected:
+    S_DEFINE_PROPERTY(window, &SceneBase::window_);
+    S_DEFINE_PROPERTY(app, &SceneBase::app_);
+    S_DEFINE_PROPERTY(input, &SceneBase::input_);
+    S_DEFINE_PROPERTY(scenes, &SceneBase::scene_manager_);
 };
 
 template<typename T>

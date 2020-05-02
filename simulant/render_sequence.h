@@ -82,8 +82,6 @@ public:
 
     RenderOptions render_options;
 
-    Property<RenderSequence, Window> window = { this, &RenderSequence::window_ };
-
     void destroy_object(PipelinePtr pipeline) {
         destroy_pipeline(pipeline->id());
     }
@@ -93,7 +91,7 @@ public:
         destroy_pipeline(pipeline->id());
     }
 
-private:    
+private:
     void sort_pipelines(bool acquire_lock=false);
     void run_pipeline(PipelinePtr stage, int& actors_rendered);
 
@@ -115,6 +113,9 @@ private:
     sig::connection clean_up_connection_;
 
     std::unique_ptr<PipelineManager> pipeline_manager_;
+
+public:
+    S_DEFINE_PROPERTY(window, &RenderSequence::window_);
 };
 
 }

@@ -81,9 +81,6 @@ public:
     void flip_horizontally(bool value=true);
 
     const AABB& aabb() const override;
-
-    Property<Sprite, Actor> actor = {this, &Sprite::actor_};
-    Property<Sprite, KeyFrameAnimationState> animations = {this, &Sprite::animation_state_};
 private:
     SpriteManager* manager_;
 
@@ -120,6 +117,10 @@ private:
     }
 
     std::shared_ptr<KeyFrameAnimationState> animation_state_;
+
+public:
+    Property<ActorPtr Sprite::*> actor = {this, &Sprite::actor_};
+    Property<decltype(&Sprite::animation_state_)> animations = {this, &Sprite::animation_state_};
 };
 
 }

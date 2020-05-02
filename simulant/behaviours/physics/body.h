@@ -86,12 +86,6 @@ public:
         const Vec3& offset=Vec3()
     );
 
-    Property<Body, RigidBodySimulation, true> simulation = {
-        this, [](Body* _this) -> RigidBodySimulation* {
-            return _this->_simulation_ptr();
-        }
-    };
-
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 
@@ -135,6 +129,11 @@ private:
     void contact_finished(const Collision &collision);
 
     void on_behaviour_added(Organism* organism) override;
+
+public:
+    Property<decltype(&Body::simulation_)> simulation = {
+        this, &Body::simulation_
+    };
 };
 
 } // End impl

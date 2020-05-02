@@ -47,9 +47,6 @@ public:
 
     AABB button_bounds(int button);
 
-
-    Property<VirtualGamepad, Stage> stage = {this, &VirtualGamepad::stage_};
-
 private:
     Window& window_;
     VirtualGamepadConfig config_ = VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS;
@@ -72,6 +69,10 @@ private:
 
     void _prepare_deletion();
     friend class Window; // For _prepare_deletion
+
+public:
+    S_DEFINE_PROPERTY(stage, &VirtualGamepad::stage_);
+
 };
 
 }

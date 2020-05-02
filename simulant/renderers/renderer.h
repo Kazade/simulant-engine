@@ -45,7 +45,7 @@ public:
 
     virtual std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) = 0;
 
-    Property<Renderer, Window> window = { this, &Renderer::window_ };
+    Property<Window* Renderer::*> window = { this, &Renderer::window_ };
 
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;

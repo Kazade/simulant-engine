@@ -48,7 +48,7 @@ public:
 
     void set_garbage_collection_method(GarbageCollectMethod method);
 
-    Property<Asset, generic::DataCarrier> data = {this, &Asset::data_};
+    Property<generic::DataCarrier Asset::*> data = {this, &Asset::data_};
 
 protected:
     Asset(const Asset& rhs);

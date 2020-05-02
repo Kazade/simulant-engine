@@ -69,7 +69,7 @@ public:
         filename_(filename),
         data_(data) {}
 
-    virtual ~Loader();    
+    virtual ~Loader();
     void into(Loadable* resource, const LoaderOptions& options = LoaderOptions()) {
         into(*resource, options);
     }
@@ -84,7 +84,7 @@ public:
 
     void set_vfs(VirtualFileSystem* locator) { locator_ = locator; }
 
-    Property<Loader, VirtualFileSystem> vfs = { this, &Loader::locator_ };
+    Property<VirtualFileSystem* Loader::*> vfs = { this, &Loader::locator_ };
 protected:
     unicode filename_;
     std::shared_ptr<std::istream> data_;
@@ -124,7 +124,7 @@ protected:
         hints_.insert(hint);
     }
 
-    std::set<LoaderHint> hints_;    
+    std::set<LoaderHint> hints_;
 };
 
 struct TextureLoadResult {

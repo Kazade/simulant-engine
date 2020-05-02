@@ -55,8 +55,6 @@ public:
 
     DetailLevel detail_level_at_distance(float dist) const;
 
-    Property<Pipeline, Viewport> viewport = { this, &Pipeline::viewport_ };
-
 private:
     void set_stage(StageID s);
     void set_camera(CameraID c) { camera_ = c; }
@@ -74,6 +72,9 @@ private:
     std::map<DetailLevel, float> detail_level_end_distances_;
 
     friend class RenderSequence;
+
+public:
+    Property<decltype(&Pipeline::viewport_)> viewport = { this, &Pipeline::viewport_ };
 };
 
 }

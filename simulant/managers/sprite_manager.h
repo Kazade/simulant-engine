@@ -44,12 +44,14 @@ public:
     std::size_t sprite_count() const;
     void destroy_all();
 
-    Property<SpriteManager, Stage> stage = { this, &SpriteManager::stage_ };
 private:
     Stage* stage_ = nullptr;
     sig::connection clean_up_conn_;
 
     std::shared_ptr<TemplatedSpriteManager> sprite_manager_;
+
+public:
+    Property<decltype(&SpriteManager::stage_)> stage = { this, &SpriteManager::stage_ };
 };
 
 }
