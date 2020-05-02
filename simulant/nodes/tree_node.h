@@ -28,16 +28,16 @@ public:
     uint32_t child_count() const;
 
     TreeNode* first_child() const { return first_child_; }
-    TreeNode* next_node() const { return right_; }
-    TreeNode* previous_node() const { return left_; }
+    TreeNode* next_node() const { return next_; }
+    TreeNode* previous_node() const { return prev_; }
 
 protected:
     TreeNode* root_ = nullptr;
     TreeNode* parent_ = nullptr;
     TreeNode* first_child_ = nullptr;
 
-    TreeNode* left_ = nullptr;
-    TreeNode* right_ = nullptr;
+    TreeNode* prev_ = this;
+    TreeNode* next_ = this;
 
     TreeNode* detach(); //< Detach from all other nodes, return the first orphaned child (if any)
     TreeNode* last_child() const;

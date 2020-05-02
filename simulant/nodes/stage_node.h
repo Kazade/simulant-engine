@@ -12,6 +12,10 @@
 #include "../shadows.h"
 #include "../generic/manual_object.h"
 
+#include "iterators/sibling_iterator.h"
+#include "iterators/child_iterator.h"
+#include "iterators/descendent_iterator.h"
+
 namespace smlt {
 
 class RenderableFactory;
@@ -37,10 +41,7 @@ class StageNodeIterator:
 
 public:
     enum IterationType {
-        ITERATION_TYPE_SIBLINGS,
-        ITERATION_TYPE_ANCESTORS,
-        ITERATION_TYPE_CHILDREN,
-        ITERATION_TYPE_DESCENDENTS
+        ITERATION_TYPE_ANCESTORS
     };
 
     StageNodeIterator():
@@ -81,7 +82,7 @@ public:
 private:
     StageNode* start_ = nullptr;
     StageNode* current_ = nullptr;
-    IterationType itype_ = ITERATION_TYPE_SIBLINGS;
+    IterationType itype_ = ITERATION_TYPE_ANCESTORS;
     bool include_root_ = false;
     bool leaf_first_ = false;
 
@@ -111,6 +112,60 @@ class StageNode:
     friend class StageNodeIterator;
 
 public:
+    class SiblingIteratorPair {
+        friend class StageNode;
+
+        SiblingIteratorPair(StageNode* root):
+            root_(root) {}
+
+        StageNode* root_;
+
+    public:
+        SiblingIterator<false> begin() {
+            return SiblingIterator<false>(root_);
+        }
+
+        SiblingIterator<false> end() {
+            return SiblingIterator<false>(root_, nullptr);
+        }
+    };
+
+    class ChildIteratorPair {
+        friend class StageNode;
+
+        ChildIteratorPair(StageNode* root):
+            root_(root) {}
+
+        StageNode* root_;
+
+    public:
+        ChildIterator<false> begin() {
+            return ChildIterator<false>((StageNode*) root_);
+        }
+
+        ChildIterator<false> end() {
+            return ChildIterator<false>(root_, nullptr);
+        }
+    };
+
+    class DescendentIteratorPair {
+        friend class StageNode;
+
+        DescendentIteratorPair(StageNode* root):
+            root_(root) {}
+
+        StageNode* root_;
+
+    public:
+        DescendentIterator<false> begin() {
+            return DescendentIterator<false>((StageNode*) root_);
+        }
+
+        DescendentIterator<false> end() {
+            return DescendentIterator<false>(root_, nullptr);
+        }
+    };
+
     class StageNodeIteratorPair {
     private:
         friend class StageNode;
@@ -142,32 +197,16 @@ public:
         return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_ANCESTORS, false, false);
     }
 
-    StageNodeIteratorPair each_descendent() {
-        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, false, false);
+    DescendentIteratorPair each_descendent() {
+        return DescendentIteratorPair(this);
     }
 
-    StageNodeIteratorPair each_descendent_lf() {
-        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, false, true);
+    SiblingIteratorPair each_sibling() {
+        return SiblingIteratorPair(this);
     }
 
-    StageNodeIteratorPair each_descendent_and_self() {
-        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, true, false);
-    }
-
-    StageNodeIteratorPair each_sibling() {
-        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_SIBLINGS, false, false);
-    }
-
-    StageNodeIteratorPair each_sibling_and_self() {
-        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_SIBLINGS, true, false);
-    }
-
-    StageNodeIteratorPair each_descendent_and_self_lf() {
-        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_DESCENDENTS, true, true);
-    }
-
-    StageNodeIteratorPair each_child() {
-        return StageNodeIteratorPair(this, StageNodeIterator::ITERATION_TYPE_CHILDREN, false, false);
+    ChildIteratorPair each_child() {
+        return ChildIteratorPair(this);
     }
 
     std::string repr() const override {
@@ -289,3 +328,7 @@ public:
 };
 
 }
+
+#include "iterators/sibling_iterator.inc"
+#include "iterators/child_iterator.inc"
+#include "iterators/descendent_iterator.inc"

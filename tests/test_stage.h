@@ -57,8 +57,8 @@ public:
     void test_iteration_types() {
         auto stage = window->new_stage();
 
-        for(auto node: stage->each_child()) {
-            node->destroy();
+        for(auto& node: stage->each_child()) {
+            node.destroy();
         }
         window->run_frame();
 
@@ -80,15 +80,15 @@ public:
         auto c4 = stage->new_actor();
         c1->set_parent(a1);
         c2->set_parent(c1);
-        c3->set_parent(c2);
+        c3->set_parent(c1);
         c4->set_parent(a2);
 
         std::multiset<smlt::StageNode*> found;
         std::multiset<smlt::StageNode*> expected;
 
         /* Should iterate a1, and a2 */
-        for(auto node: a1->each_sibling()) {
-            found.insert(node);
+        for(auto& node: a1->each_sibling()) {
+            found.insert(&node);
         }
 
         expected.insert(a2);
@@ -99,8 +99,9 @@ public:
         expected.clear();
 
         /* All nodes */
-        for(auto node: stage->each_descendent_and_self()) {
-            found.insert(node);
+        found.insert(stage);
+        for(auto& node: stage->each_descendent()) {
+            found.insert(&node);
         }
 
         expected.insert(stage);
@@ -116,8 +117,9 @@ public:
         found.clear();
 
         /* All nodes, leaf-first */
-        for(auto node: stage->each_descendent_and_self_lf()) {
-            found.insert(node);
+        found.insert(stage);
+        for(auto& node: stage->each_descendent()) {
+            found.insert(&node);
         }
 
         // FIXME: this doesn't test the order
@@ -125,8 +127,8 @@ public:
         found.clear();
         expected.clear();
 
-        for(auto node: c1->each_descendent_lf()) {
-            found.insert(node);
+        for(auto& node: c1->each_descendent()) {
+            found.insert(&node);
         }
         expected.insert(c2);
         expected.insert(c3);
@@ -135,8 +137,8 @@ public:
         expected.clear();
 
         /* a1 and a2 only */
-        for(auto node: stage->each_child()) {
-            found.insert(node);
+        for(auto& node: stage->each_child()) {
+            found.insert(&node);
         }
 
         expected.insert(a1);
@@ -147,8 +149,8 @@ public:
         found.clear();
         expected.clear();
 
-        for(auto node: a1->each_descendent()) {
-            found.insert(node);
+        for(auto& node: a1->each_descendent()) {
+            found.insert(&node);
         }
 
         expected.insert(c1);
@@ -158,8 +160,8 @@ public:
         assert_items_equal(found, expected);
 
         found.clear();
-        for(auto node: a1->each_descendent_lf()) {
-            found.insert(node);
+        for(auto& node: a1->each_descendent()) {
+            found.insert(&node);
         }
 
         assert_items_equal(found, expected);

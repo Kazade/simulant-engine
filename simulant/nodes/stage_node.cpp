@@ -18,9 +18,8 @@ void StageNode::clean_up() {
 
     // Go through the subnodes and ask each for destruction in-turn
     std::vector<StageNode*> to_destroy;
-    for(auto stage_node: each_child()) {
-        assert(stage_node);
-        to_destroy.push_back(stage_node);
+    for(auto& stage_node: each_child()) {
+        to_destroy.push_back(&stage_node);
     };
 
     for(auto stage_node: to_destroy) {
@@ -128,9 +127,8 @@ void StageNode::update_transformation_from_parent() {
 
     mark_transformed_aabb_dirty();
 
-    for(auto node: each_child()) {
-        assert(node);
-        node->update_transformation_from_parent();
+    for(auto& node: each_child()) {
+        node.update_transformation_from_parent();
     }
 }
 
@@ -158,9 +156,9 @@ const AABB StageNode::transformed_aabb() const {
 }
 
 StageNode *StageNode::find_child_with_name(const std::string &name) {
-    for(auto stage_node: each_descendent()) {
-        if(stage_node && stage_node->name() == name) {
-            return stage_node;
+    for(auto& stage_node: each_descendent()) {
+        if(stage_node.name() == name) {
+            return &stage_node;
         }
     }
 
@@ -204,18 +202,7 @@ StageNodeIterator& StageNodeIterator::operator++() {
         return *this;
     }
 
-    if(itype_ == ITERATION_TYPE_SIBLINGS || itype_ == ITERATION_TYPE_CHILDREN) {
-        // Easy! Just go right!
-        // If current_ ends up as null then we're at the end
-        // Look at how we construct the StageNodeIterator to see how we set
-        // the start node for both these types.
-        current_ = (StageNode*) current_->right_;
-
-        // Skip past the root if we're not including it
-        if(current_ == start_ && !include_root_) {
-            current_ = (StageNode*) current_->right_;
-        }
-    } else if(itype_ == ITERATION_TYPE_ANCESTORS) {
+    if(itype_ == ITERATION_TYPE_ANCESTORS) {
         // Again, easy! We just go up!
         current_ = (StageNode*) current_->parent_;
 
@@ -230,8 +217,8 @@ StageNodeIterator& StageNodeIterator::operator++() {
         if(!leaf_first_) {
             if(current_->first_child_) {
                 current_ = (StageNode*) current_->first_child_;
-            } else if(current_->right_) {
-                current_ = (StageNode*) current_->right_;
+            } else if(current_->next_) {
+                current_ = (StageNode*) current_->next_;
             } else {
                 // No children, and we're at the last one so we
                 // work back up, looking for opportunities to go
@@ -247,9 +234,9 @@ StageNodeIterator& StageNodeIterator::operator++() {
                         break;
                     }
 
-                    if(current_->right_) {
+                    if(current_->next_) {
                         // Shift to the sibling and begin descending that branch
-                        current_ = (StageNode*) current_->right_;
+                        current_ = (StageNode*) current_->next_;
                         break;
                     }
                 }
@@ -277,9 +264,9 @@ StageNodeIterator& StageNodeIterator::operator++() {
                 // at a node which isn't the true root node
                 // and we've found our way back up to it
                 current_ = nullptr;
-            } else if(current_->right_) {
+            } else if(current_->next_) {
                 // Go along any siblings
-                current_ = (StageNode*) current_->right_;
+                current_ = (StageNode*) current_->next_;
 
                 // If we've moved to a sibling with children
                 // go right down to the first child
@@ -318,31 +305,8 @@ StageNodeIterator::StageNodeIterator(StageNode* root, StageNodeIterator::Iterati
 
     current_ = start_;
 
-    /* To iterate all siblings we need to start
-         * at the parent's first child and go right from
-         * there */
-    if(itype == ITERATION_TYPE_SIBLINGS && start_->parent_) {
-        current_ = (StageNode*) start_->parent_->first_child();
-        if(current_ == start_ && !include_root) {
-            current_ = (StageNode*) current_->right_;
-        }
-    } else if(itype == ITERATION_TYPE_ANCESTORS && !include_root) {
+    if(itype == ITERATION_TYPE_ANCESTORS && !include_root) {
         current_ = (StageNode*) current_->parent();
-    } else if(itype == ITERATION_TYPE_CHILDREN) {
-        // Children is similar, we start at the first child
-        // and just go right
-        current_ = (StageNode*) start_->first_child();
-    } else if(itype == ITERATION_TYPE_DESCENDENTS && leaf_first) {
-        // If we're doing a leaf-first iteration, we start at the first
-        // leaf and push a stack of nodes that we skipped
-        while(current_->first_child_) {
-            history_.push_back(current_);
-            current_ = (StageNode*) current_->first_child_;
-        }
-    } else if(itype == ITERATION_TYPE_DESCENDENTS && !include_root) {
-        // We're not doing a leaf first iteration, but we don't want
-        // to include the root
-        current_ = (StageNode*) current_->first_child_;
     }
 }
 

@@ -223,3 +223,4 @@ simulant/threads
 simulant/signals
 simulant/generic/containers
 deps/libgl/samples/lights
+simulant/nodes/iterators

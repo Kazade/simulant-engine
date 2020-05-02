@@ -18,9 +18,16 @@ TreeNode::~TreeNode() {
 uint32_t TreeNode::child_count() const {
     uint32_t ret = 0;
     auto child = first_child_;
-    while(child) {
+    if(!child) {
+        return 0;
+    } else {
         ret++;
-        child = child->right_;
+        child = child->next_;
+    }
+
+    while(child != first_child_) {
+        ret++;
+        child = child->next_;
     }
 
     return ret;
@@ -56,18 +63,17 @@ void TreeNode::add_child(TreeNode *node) {
     node->parent_ = this;
     node->root_ = this->root_;
 
-    // If we've changed parent, then we no longer
-    // have any siblings to the right of us
-    // (we insert children to the end of the list)
-    node->right_ = nullptr;
-
     if(!first_child_) {
         first_child_ = node;
+        node->next_ = node->prev_ = node;
     } else {
-        node->left_ = last_child();
-        node->left_->right_ = node;
+        /* Insert to the end of the list (e.g. before the first child)
+         * in the circular list */
+        node->prev_ = first_child_->prev_;
+        node->next_ = first_child_;
 
-        node->parent_ = this;
+        node->next_->prev_ = node;
+        node->prev_->next_ = node;
     }
 
     node->on_parent_set(old, node->parent_);
@@ -78,21 +84,22 @@ void TreeNode::remove_from_parent() {
         return;
     }
 
-    auto left = left_;
-    auto right = right_;
-
-    if(left_) {
-        left_->right_ = right;
-        left_ = nullptr;
-    } else {
-        parent_->first_child_ = right;
+    /* Detach from parent */
+    if(parent_->first_child_ == this) {
+        parent_->first_child_ = next_;
+        if(next_ == this) {
+            parent_->first_child_ = nullptr;
+        }
     }
 
-    if(right_) {
-        right_->left_ = left;
-        right_ = nullptr;
-    }
+    /* Remove from the sibling list */
+    prev_->next_ = next_;
+    next_->prev_ = prev_;
 
+    /* Set ourselves to point only to ourselves */
+    next_ = prev_ = this;
+
+    /* We are now the root of our tree */
     parent_ = nullptr;
     root_ = this;
 }
@@ -111,24 +118,7 @@ TreeNode* TreeNode::last_child() const {
         return nullptr;
     }
 
-    TreeNode* iter = first_child_;
-    while(iter->right_) {
-        iter = iter->right_;
-    }
-
-    return iter;
+    return first_child_->prev_;
 }
-
-
-
-
-
-
-
-
-// Leaf-first versions
-
-
-
 
 }

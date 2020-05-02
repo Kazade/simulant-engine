@@ -71,20 +71,20 @@ Stage::~Stage() {
     sky_manager_.reset();
 }
 
-bool Stage::init() {    
+bool Stage::init() {
 
     return true;
 }
 
-void Stage::clean_up() {    
+void Stage::clean_up() {
     clean_up_signal_.disconnect();
 
     ui_.reset();
     debug_.reset();
 
     //Recurse through the tree, destroying all children
-    for(auto stage_node: each_descendent_lf()) {
-        stage_node->destroy();
+    for(auto& stage_node: each_descendent()) {
+        stage_node.destroy();
     }
 
     light_manager_->clear();
