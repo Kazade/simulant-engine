@@ -269,7 +269,7 @@ public:
     ShadowReceive shadow_receive() const { return shadow_receive_; }
     void set_shadow_receive(ShadowReceive receive) { shadow_receive_ = receive; }
 
-    StageNode* find_child_with_name(const std::string& name);
+    StageNode* find_descendent_with_name(const std::string& name);
 
     /* Return a list of renderables to pass into the render queue */
     virtual void _get_renderables(

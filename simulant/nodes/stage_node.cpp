@@ -155,7 +155,7 @@ const AABB StageNode::transformed_aabb() const {
     return transformed_aabb_;
 }
 
-StageNode *StageNode::find_child_with_name(const std::string &name) {
+StageNode *StageNode::find_descendent_with_name(const std::string &name) {
     for(auto& stage_node: each_descendent()) {
         if(stage_node.name() == name) {
             return &stage_node;
