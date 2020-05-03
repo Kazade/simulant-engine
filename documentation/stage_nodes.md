@@ -20,10 +20,6 @@ shows a number of examples of traversing a stage's tree:
 ```
 for(auto node: stage->each_descendent()) {}  // Root-to-leaf iteration
 
-for(auto node: stage->each_descendent_and_self()) {}  // Include the stage itself
-
-for(auto node: stage->each_descendent_lf()) {}  // Leaf-first iteration
-
 for(auto node: actor->each_ancestor()) {} // Traverse up the tree
 
 for(auto node: actor->each_sibling()) {} // Iterate the siblings of the actor
@@ -42,3 +38,8 @@ It is highly recommended that if you are manipulating a `Stage` in a background 
 You can destroy a `StageNode` by calling its `destroy()` method. This won't release the `StageNode` immediately, but it will fire the `signal_destroyed` signal. The actual clean-up of the node will happen when any idle tasks have run, but before the render queue is built. This helps prevent issues where queued tasks try to access deleted nodes.
 
 When the clean-up process runs, an additional `signal_cleaned_up` signal will fire just before deletion of the node.
+
+## Finding nodes
+
+You can give stage nodes names using `StageNode::set_name`, and later search for those nodes recursively using `StageNode::find_descendent_with_name`. If a name is duplicated, only the first match found
+will be returned.
