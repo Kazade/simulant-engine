@@ -169,8 +169,8 @@ public:
         found.clear();
         expected.clear();
 
-        for(auto node: c2->each_ancestor()) {
-            found.insert(node);
+        for(auto& node: c2->each_ancestor()) {
+            found.insert(&node);
         }
 
         expected.insert(c1);

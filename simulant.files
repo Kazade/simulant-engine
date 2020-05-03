@@ -86,6 +86,8 @@ simulant/macros.h
 simulant/nodes/geoms/loose_quadtree.h
 simulant/nodes/geoms/quadtree_culler.cpp
 simulant/nodes/geoms/quadtree_culler.h
+simulant/nodes/iterators/ancestor_iterator.h
+simulant/nodes/iterators/ancestor_iterator.inc
 simulant/nodes/iterators/child_iterator.h
 simulant/nodes/iterators/child_iterator.inc
 simulant/nodes/iterators/descendent_iterator.h
