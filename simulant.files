@@ -86,6 +86,14 @@ simulant/macros.h
 simulant/nodes/geoms/loose_quadtree.h
 simulant/nodes/geoms/quadtree_culler.cpp
 simulant/nodes/geoms/quadtree_culler.h
+simulant/nodes/iterators/ancestor_iterator.h
+simulant/nodes/iterators/ancestor_iterator.inc
+simulant/nodes/iterators/child_iterator.h
+simulant/nodes/iterators/child_iterator.inc
+simulant/nodes/iterators/descendent_iterator.h
+simulant/nodes/iterators/descendent_iterator.inc
+simulant/nodes/iterators/sibling_iterator.h
+simulant/nodes/iterators/sibling_iterator.inc
 simulant/nodes/particles/manipulators/colour_fader.h
 simulant/nodes/particles/manipulators/curves.cpp
 simulant/nodes/particles/manipulators/curves.h

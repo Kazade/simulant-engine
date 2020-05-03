@@ -136,7 +136,7 @@ void VertexData::clear(bool release_memory) {
         data_.shrink_to_fit();
     }
 
-    cursor_position_ = 0;    
+    cursor_position_ = 0;
     vertex_count_ = 0;
 }
 
@@ -571,28 +571,6 @@ IndexData::IndexData(IndexType type):
 
 }
 
-void IndexData::each(std::function<void (uint32_t)> cb) {
-    auto st = stride();
-    for(std::size_t i = 0; i < indices_.size(); i += st) {
-        uint32_t v = 0;
-        switch(index_type_) {
-        case INDEX_TYPE_8_BIT:
-            v = indices_[i];
-            break;
-        case INDEX_TYPE_16_BIT:
-            v = *((uint16_t*)&indices_[i]);
-            break;
-        case INDEX_TYPE_32_BIT:
-            v = *((uint32_t*)&indices_[i]);
-            break;
-        default:
-            continue;
-        }
-
-        cb(v);
-    }
-}
-
 void IndexData::reset() {
     clear();
 }
@@ -613,9 +591,10 @@ void IndexData::resize(uint32_t size) {
 std::vector<uint32_t> IndexData::all() {
     std::vector<uint32_t> ret;
 
-    each([&ret](uint32_t v) {
-        ret.push_back(v);
-    });
+    ret.reserve(count());
+    for(auto& idx: *this) {
+        ret.push_back(idx);
+    }
 
     return ret;
 }
@@ -627,6 +606,14 @@ void IndexData::done() {
 
 uint64_t IndexData::last_updated() const {
     return last_updated_;
+}
+
+IndexDataIterator::IndexDataIterator(const IndexData *owner, int pos):
+    owner_(owner),
+    type_(owner->index_type()),
+    stride_(owner->stride()) {
+
+    ptr_ = (&owner_->indices_[0]) + (pos * stride_);
 }
 
 }

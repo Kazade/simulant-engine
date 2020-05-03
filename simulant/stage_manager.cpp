@@ -74,8 +74,10 @@ static void _fixed_update(Stage* stage, float* dt) {
         return;
     }
 
-    for(auto stage_node: stage->each_descendent_and_self()) {
-        stage_node->fixed_update(*dt);
+    stage->fixed_update(*dt);
+
+    for(auto& stage_node: stage->each_descendent()) {
+        stage_node.fixed_update(*dt);
     }
 }
 
@@ -89,8 +91,9 @@ static void _late_update(Stage* stage, float* dt) {
         return;
     }
 
-    for(auto stage_node: stage->each_descendent_and_self()) {
-        stage_node->late_update(*dt);
+    stage->late_update(*dt);
+    for(auto& stage_node: stage->each_descendent()) {
+        stage_node.late_update(*dt);
     }
 }
 
@@ -103,8 +106,9 @@ static void _update(Stage* stage, float* dt) {
         return;
     }
 
-    for(auto stage_node: stage->each_descendent_and_self()) {
-        stage_node->update(*dt);
+    stage->update(*dt);
+    for(auto& stage_node: stage->each_descendent()) {
+        stage_node.update(*dt);
     }
 }
 
@@ -128,8 +132,8 @@ void StageManager::print_tree(StageNode *node, uint32_t& level) {
     std::cout << *dynamic_cast<Printable*>(node) << std::endl;
 
     level += 1;
-    for(auto child: node->each_child()) {
-        print_tree(child, level);
+    for(auto& child: node->each_child()) {
+        print_tree(&child, level);
     }
     level -= 1;
 }
