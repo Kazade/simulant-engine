@@ -155,7 +155,7 @@ deploy:windows-x64-mingw:
    - mkdir -p ./upload/${TARGET}/include/simulant
    - cp ${TARGET}/release/simulant/*.dll ./upload/${TARGET}/lib/
    - cp ${TARGET}/debug/simulant/*.dll ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' -f 'hide,! */' simulant ./upload/${TARGET}/include
+   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
@@ -262,7 +262,7 @@ deploy:linux-x64-gcc:
    - mkdir -p ./upload/${TARGET}/include/simulant
    - cp ${TARGET}/release/simulant/libsimulant.so* ./upload/${TARGET}/lib/
    - cp ${TARGET}/debug/simulant/libsimulant.so* ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' -f 'hide,! */' simulant ./upload/${TARGET}/include
+   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
@@ -337,7 +337,7 @@ deploy:dreamcast-sh4-gcc:
    - mkdir -p ./upload/${TARGET}/include/simulant
    - cp ${TARGET}/release/simulant/libsimulant.a* ./upload/${TARGET}/lib/
    - cp ${TARGET}/debug/simulant/libsimulant.a* ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' -f 'hide,! */' simulant ./upload/${TARGET}/include
+   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
