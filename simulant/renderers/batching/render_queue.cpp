@@ -146,15 +146,15 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
             if(pass_iteration_type == ITERATION_TYPE_N) {
                 iterations = material_pass->max_iterations();
-            } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {                
-                iterations = std::distance(lights.begin(), std::find(lights.begin(), lights.end(), nullptr));
+            } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
+                iterations = renderable->light_count;
             }
 
             for(Iteration i = 0; i < iterations; ++i) {
                 LightPtr next = nullptr;
 
                 // Pass down the light if necessary, otherwise just pass nullptr
-                if(!lights.empty()) {
+                if(!renderable->light_count) {
                     next = lights[i];
                 } else {
                     next = nullptr;
@@ -163,7 +163,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
                     visitor->apply_lights(&next, 1);
                 } else if(pass_iteration_type == ITERATION_TYPE_N || pass_iteration_type == ITERATION_TYPE_ONCE) {
-                    visitor->apply_lights(&lights[0], (uint8_t) lights.size());
+                    visitor->apply_lights(&lights[0], (uint8_t) renderable->light_count);
                 }
                 visitor->visit(renderable, material_pass, i);
             }

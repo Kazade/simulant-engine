@@ -33,24 +33,31 @@ bool Frustum::intersects_cube(const Vec3& centre, float size) const {
     const float& y = centre.y;
     const float& z = centre.z;
 
-    size /= 2;
+    size *= 0.5f;
+
+    const float xplus = x + size;
+    const float xminus = x - size;
+    const float yplus = y + size;
+    const float yminus = y - size;
+    const float zplus = z + size;
+    const float zminus = z - size;
 
     for(const Plane& plane: planes_) {
-        if(plane.n.x * (x - size) + plane.n.y * (y - size) + plane.n.z * (z - size) + plane.d > 0)
+        if(plane.n.x * xminus + plane.n.y * yminus + plane.n.z * zminus + plane.d > 0)
           continue;
-        if(plane.n.x * (x + size) + plane.n.y * (y - size) + plane.n.z * (z - size) + plane.d > 0)
+        if(plane.n.x * xplus + plane.n.y * yminus + plane.n.z * zminus + plane.d > 0)
           continue;
-        if(plane.n.x * (x - size) + plane.n.y * (y + size) + plane.n.z * (z - size) + plane.d > 0)
+        if(plane.n.x * xminus + plane.n.y * yplus + plane.n.z * zminus + plane.d > 0)
           continue;
-        if(plane.n.x * (x + size) + plane.n.y * (y + size) + plane.n.z * (z - size) + plane.d > 0)
+        if(plane.n.x * xplus + plane.n.y * yplus + plane.n.z * zminus + plane.d > 0)
           continue;
-        if(plane.n.x * (x - size) + plane.n.y * (y - size) + plane.n.z * (z + size) + plane.d > 0)
+        if(plane.n.x * xminus + plane.n.y * yminus + plane.n.z * zplus + plane.d > 0)
           continue;
-        if(plane.n.x * (x + size) + plane.n.y * (y - size) + plane.n.z * (z + size) + plane.d > 0)
+        if(plane.n.x * xplus + plane.n.y * yminus + plane.n.z * zplus + plane.d > 0)
           continue;
-        if(plane.n.x * (x - size) + plane.n.y * (y + size) + plane.n.z * (z + size) + plane.d > 0)
+        if(plane.n.x * xminus + plane.n.y * yplus + plane.n.z * zplus + plane.d > 0)
           continue;
-        if(plane.n.x * (x + size) + plane.n.y * (y + size) + plane.n.z * (z + size) + plane.d > 0)
+        if(plane.n.x * xplus + plane.n.y * yplus + plane.n.z * zplus + plane.d > 0)
           continue;
         return false;
     }

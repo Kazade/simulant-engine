@@ -27,7 +27,7 @@ public:
     }
 
     bool operator!=(const DescendentIterator& rhs) const {
-        return !(*this == rhs);
+        return start_ != rhs.start_ || current_ != rhs.current_;
     }
 
     DescendentIterator& operator++();

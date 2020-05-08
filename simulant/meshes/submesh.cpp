@@ -88,54 +88,47 @@ void SubMesh::_recalc_bounds() {
         return;
     }
 
-    auto vertex_count = this->parent_->vertex_data_->count();
-
     // Store a raw-pointer for performance
     VertexData* vdata = vertex_data.get();
     auto& pos_attr = vdata->vertex_specification().position_attribute;
+
+    const auto& min = bounds_.min();
+    const auto& max = bounds_.max();
 
     /* Awful switching is for performance
        FIXME: Is there a better way to do this? I guess templated lambda or method
     */
     if(pos_attr == VERTEX_ATTRIBUTE_2F) {
-        bounds_.set_max_z(0);
-        bounds_.set_min_z(0);
-
         for(auto& idx: *index_data_) {
-            if(idx >= vertex_count) return; // Don't read outside the bounds
             auto pos = vdata->position_at<Vec2>(idx);
-            if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
-            if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
-            if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
-            if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
+            if(pos->x < min.x) bounds_.set_min_x(pos->x);
+            if(pos->y < min.y) bounds_.set_min_y(pos->y);
+            if(pos->x > max.x) bounds_.set_max_x(pos->x);
+            if(pos->y > max.y) bounds_.set_max_y(pos->y);
         }
     } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
         for(auto& idx: *index_data_) {
-            if(idx >= vertex_count) return; // Don't read outside the bounds
-
             auto pos = vdata->position_at<Vec3>(idx);
-            if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
-            if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
-            if(pos->z < bounds_.min().z) bounds_.set_min_z(pos->z);
+            if(pos->x < min.x) bounds_.set_min_x(pos->x);
+            if(pos->y < min.y) bounds_.set_min_y(pos->y);
+            if(pos->z < min.z) bounds_.set_min_z(pos->z);
 
-            if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
-            if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
-            if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
+            if(pos->x > max.x) bounds_.set_max_x(pos->x);
+            if(pos->y > max.y) bounds_.set_max_y(pos->y);
+            if(pos->z > max.z) bounds_.set_max_z(pos->z);
         }
     } else {
+        assert(pos_attr == VERTEX_ATTRIBUTE_4F);
+
         for(auto& idx: *index_data_) {
-            assert(pos_attr == VERTEX_ATTRIBUTE_4F);
-
-            if(idx >= vertex_count) return; // Don't read outside the bounds
-
             auto pos = vdata->position_at<Vec4>(idx);
-            if(pos->x < bounds_.min().x) bounds_.set_min_x(pos->x);
-            if(pos->y < bounds_.min().y) bounds_.set_min_y(pos->y);
-            if(pos->z < bounds_.min().z) bounds_.set_min_z(pos->z);
+            if(pos->x < min.x) bounds_.set_min_x(pos->x);
+            if(pos->y < min.y) bounds_.set_min_y(pos->y);
+            if(pos->z < min.z) bounds_.set_min_z(pos->z);
 
-            if(pos->x > bounds_.max().x) bounds_.set_max_x(pos->x);
-            if(pos->y > bounds_.max().y) bounds_.set_max_y(pos->y);
-            if(pos->z > bounds_.max().z) bounds_.set_max_z(pos->z);
+            if(pos->x > max.x) bounds_.set_max_x(pos->x);
+            if(pos->y > max.y) bounds_.set_max_y(pos->y);
+            if(pos->z > max.z) bounds_.set_max_z(pos->z);
         }
     }
 }

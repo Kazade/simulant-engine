@@ -72,7 +72,9 @@ struct Renderable final {
     Mat4 final_transformation;
     Material* material = nullptr;
     bool is_visible = true;
-    std::array<LightPtr, MAX_LIGHTS_PER_RENDERABLE> lights_affecting_this_frame;
+
+    LightPtr lights_affecting_this_frame[MAX_LIGHTS_PER_RENDERABLE];
+    uint8_t light_count = 0;
 
     smlt::Vec3 centre;
 };

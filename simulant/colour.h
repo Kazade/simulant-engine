@@ -50,7 +50,7 @@ struct Colour {
     }
 
     bool operator!=(const Colour& rhs) const {
-        return !(*this == rhs);
+        return this->r != rhs.r || this->g != rhs.g || this->b != rhs.b || this->a != rhs.a;
     }
 
     bool operator<(const Colour& rhs) const {

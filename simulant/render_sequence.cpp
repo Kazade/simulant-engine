@@ -330,8 +330,9 @@ void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_render
             assert(renderable->index_data);
             assert(renderable->vertex_data);
 
-            for(auto i = 0u; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-                renderable->lights_affecting_this_frame[i] = (i < renderable_lights.size()) ? renderable_lights[i] : nullptr;
+            renderable->light_count = renderable_lights.size();
+            for(auto i = 0u; i < renderable->light_count; ++i) {
+                renderable->lights_affecting_this_frame[i] = renderable_lights[i];
             }
         }
     }

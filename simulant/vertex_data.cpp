@@ -191,25 +191,25 @@ void VertexData::position(const Vec4 &pos) {
 template<>
 const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
-    return ((Vec2*) &data_[idx * stride()]);
+    return ((Vec2*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
-    return ((Vec3*) &data_[idx * stride()]);
+    return ((Vec3*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec4* VertexData::position_at<Vec4>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
-    return ((Vec4*) &data_[idx * stride()]);
+    return ((Vec4*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const {
     assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_2F);
-    return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
+    return ((Vec2*) &data_[(idx * stride_) + vertex_specification_.normal_offset()]);
 }
 
 template<>
@@ -299,10 +299,7 @@ void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
 
 void VertexData::push_back() {
     vertex_count_++;
-
-    for(auto i = 0u; i < stride(); ++i) {
-        data_.push_back(0);
-    }
+    data_.resize(data_.size() + stride_, 0);
 }
 
 void VertexData::tex_coord0(float u, float v) {

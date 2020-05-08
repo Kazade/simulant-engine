@@ -11,8 +11,13 @@
 
 namespace smlt {
 
+template<bool>
+class DescendentIterator;
 
 class TreeNode {
+    friend class DescendentIterator<false>;
+    friend class DescendentIterator<true>;
+
 public:
     TreeNode();
     virtual ~TreeNode();

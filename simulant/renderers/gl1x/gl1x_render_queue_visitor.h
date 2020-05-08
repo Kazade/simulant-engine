@@ -87,16 +87,16 @@ private:
         }
 
         bool operator==(const LightState& rhs) const {
-            if(enabled != rhs.enabled) return false;
-            if(position != rhs.position) return false;
-            if(diffuse != rhs.diffuse) return false;
-            if(ambient != rhs.ambient) return false;
-            if(specular != rhs.specular) return false;
-            if(constant_att != rhs.constant_att) return false;
-            if(linear_att != rhs.linear_att) return false;
-            if(quadratic_att != rhs.quadratic_att) return false;
-
-            return true;
+            return (
+                enabled == rhs.enabled &&
+                position == rhs.position &&
+                diffuse == rhs.diffuse &&
+                ambient == rhs.ambient &&
+                specular == rhs.specular &&
+                constant_att == rhs.constant_att &&
+                linear_att == rhs.linear_att &&
+                quadratic_att == rhs.quadratic_att
+            );
         }
     };
 

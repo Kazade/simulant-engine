@@ -8,8 +8,8 @@
 namespace smlt {
 
 namespace _loose_octree {
-    static constexpr int64_t ipow(int64_t base, int exp, int64_t result = 1) {
-      return exp < 1 ? result : ipow(base*base, exp/2, (exp % 2) ? result*base : result);
+    static constexpr int32_t ipow(int32_t base, int32_t exp, int32_t result = 1) {
+      return exp < 1 ? result : ipow(base * base, exp / 2, (exp % 2) ? result * base : result);
     }
 }
 

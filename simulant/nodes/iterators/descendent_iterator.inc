@@ -10,16 +10,14 @@ class DescendentIterator;
 
 template<bool IsConst>
 DescendentIterator<IsConst>& DescendentIterator<IsConst>::operator++() {
-    auto next = (StageNode*) current_->next_node();
-    auto next_is_current_ = next == current_;
-    auto next_is_first_sibling = !next->parent() || next == next->parent()->first_child();
-    auto current_is_first_sibling = !current_->parent() || current_ == current_->parent()->first_child();
+    auto next = (StageNode*) current_->next_;
+    auto next_is_first_sibling = !next->parent_ || next == next->parent_->first_child_;
 
     if(next_is_first_sibling) {
         /* We've just reached the end of the current siblings, so
          * go up, then see if we can go right */
         previous_ = current_;
-        current_ = (StageNode*) current_->parent();
+        current_ = (StageNode*) current_->parent_;
         if(current_ == start_) {
             current_ = nullptr;
         }
@@ -29,8 +27,8 @@ DescendentIterator<IsConst>& DescendentIterator<IsConst>::operator++() {
     /* Go right, then down the left branch to the end */
     previous_ = current_;
     current_ = next;
-    while(current_->first_child()) {
-        current_ = (StageNode*) current_->first_child();
+    while(current_->first_child_) {
+        current_ = (StageNode*) current_->first_child_;
     }
 
     return *this;
@@ -42,9 +40,9 @@ DescendentIterator<IsConst>::DescendentIterator(StageNode *start):
 
     /* We go down the left of the tree to the far
      * bottom left node */
-    current_ = (StageNode*) start->first_child();
-    while(current_ && current_->first_child()) {
-        current_ = (StageNode*) current_->first_child();
+    current_ = (StageNode*) start->first_child_;
+    while(current_ && current_->first_child_) {
+        current_ = (StageNode*) current_->first_child_;
     }
 }
 
