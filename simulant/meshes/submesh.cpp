@@ -37,7 +37,7 @@ IndexData* SubMesh::get_index_data() const {
 }
 
 void SubMesh::set_diffuse(const smlt::Colour& colour) {
-    for(auto& i: *index_data) {
+    for(auto i: *index_data) {
         vertex_data->move_to(i);
         vertex_data->diffuse(colour);
     };
@@ -70,18 +70,10 @@ void SubMesh::reverse_winding() {
  */
 void SubMesh::_recalc_bounds() {
     //Set the min bounds to the max
-    bounds_.set_min(Vec3(
-        std::numeric_limits<float>::max(),
-        std::numeric_limits<float>::max(),
-        std::numeric_limits<float>::max()
-    ));
+    bounds_.set_min(Vec3(FLT_MAX, FLT_MAX, FLT_MAX));
 
     //Set the max bounds to the min
-    bounds_.set_max(Vec3(
-        std::numeric_limits<float>::lowest(),
-        std::numeric_limits<float>::lowest(),
-        std::numeric_limits<float>::lowest()
-    ));
+    bounds_.set_max(Vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 
     if(!index_data_->count()) {
         bounds_ = AABB();
@@ -99,7 +91,7 @@ void SubMesh::_recalc_bounds() {
        FIXME: Is there a better way to do this? I guess templated lambda or method
     */
     if(pos_attr == VERTEX_ATTRIBUTE_2F) {
-        for(auto& idx: *index_data_) {
+        for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec2>(idx);
             if(pos->x < min.x) bounds_.set_min_x(pos->x);
             if(pos->y < min.y) bounds_.set_min_y(pos->y);
@@ -107,7 +99,7 @@ void SubMesh::_recalc_bounds() {
             if(pos->y > max.y) bounds_.set_max_y(pos->y);
         }
     } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
-        for(auto& idx: *index_data_) {
+        for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec3>(idx);
             if(pos->x < min.x) bounds_.set_min_x(pos->x);
             if(pos->y < min.y) bounds_.set_min_y(pos->y);
@@ -120,7 +112,7 @@ void SubMesh::_recalc_bounds() {
     } else {
         assert(pos_attr == VERTEX_ATTRIBUTE_4F);
 
-        for(auto& idx: *index_data_) {
+        for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec4>(idx);
             if(pos->x < min.x) bounds_.set_min_x(pos->x);
             if(pos->y < min.y) bounds_.set_min_y(pos->y);

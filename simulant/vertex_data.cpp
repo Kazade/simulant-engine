@@ -589,7 +589,7 @@ std::vector<uint32_t> IndexData::all() {
     std::vector<uint32_t> ret;
 
     ret.reserve(count());
-    for(auto& idx: *this) {
+    for(auto idx: *this) {
         ret.push_back(idx);
     }
 

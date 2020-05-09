@@ -293,20 +293,19 @@ public:
     }
 
     bool operator!=(const IndexDataIterator& rhs) const {
-        return !(*this == rhs);
+        return ptr_ != rhs.ptr_;
     }
 
-    const uint32_t& operator*() const {
-        static uint32_t value;
-        if(type_ == INDEX_TYPE_8_BIT) {
-            value = *((uint8_t*) ptr_);
-        } else if(type_ == INDEX_TYPE_16_BIT) {
-            value = *((uint16_t*) ptr_);
-        } else if(type_ == INDEX_TYPE_32_BIT) {
-            value = *((uint32_t*) ptr_);
+    uint32_t operator*() const {
+        switch(type_) {
+        case INDEX_TYPE_8_BIT:
+            return *((uint8_t*) ptr_);
+        case INDEX_TYPE_16_BIT:
+            return *((uint16_t*) ptr_);
+        case INDEX_TYPE_32_BIT:
+        default:
+            return *((uint32_t*) ptr_);
         }
-
-        return value;
     }
 private:
     const IndexData* owner_;
