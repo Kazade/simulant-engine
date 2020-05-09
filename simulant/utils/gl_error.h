@@ -81,7 +81,16 @@ Res _GLCheck(const char* function_name, Func&& func, Args&&... args) {
 }
 
 #ifndef GLCheck
+
+#ifdef NDEBUG
+/* In a release build, just call the function */
+#define _S_CALL(Func, ...) Func(__VA_ARGS__)
+#define GLCheck(...) _S_CALL(__VA_ARGS__)
+#else
+/* In a debug build, check for errors */
 #define GLCheck(...) smlt::_GLCheck(__func__, __VA_ARGS__)
+#endif
+
 #endif
 
 #endif
