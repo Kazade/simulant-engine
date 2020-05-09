@@ -8,7 +8,7 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
     return stream;
 }
 
-Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up) {
+Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up) {
     float d = std::abs(up.dot(direction));
     if(almost_equal(d, 1.0f)) {
         return Quaternion();

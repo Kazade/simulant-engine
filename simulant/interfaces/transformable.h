@@ -63,7 +63,6 @@ public:
     void rotate_global_y_by(const smlt::Degrees& degrees);
     void rotate_global_z_by(const smlt::Degrees& degrees);
 
-    Quaternion calc_look_at_rotation(const smlt::Vec3& target, const smlt::Vec3& up=Vec3::POSITIVE_Y);
     virtual void look_at(const smlt::Vec3& target, const Vec3 &up=Vec3::POSITIVE_Y);
     virtual void look_at(float x, float y, float z, const Vec3 &up=Vec3::POSITIVE_Y);
 
