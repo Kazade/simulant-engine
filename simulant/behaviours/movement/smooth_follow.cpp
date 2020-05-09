@@ -39,7 +39,6 @@ void SmoothFollow::late_update(float dt) {
     }
 
     auto wanted_rotation = Quaternion::as_look_at(dir.normalized(), target->absolute_rotation().up());
-    wanted_rotation.inverse(); // << FIXME: This seems like a bug in as_look_at...
 
     // Keep within 0.0 - 1.0f;
     auto rot_damping_to_apply = std::max(std::min(rotation_damping_ * dt, 1.0f), 0.0f);

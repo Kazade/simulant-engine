@@ -38,7 +38,7 @@ public:
         assert_equal(window->height() / 2, p1.y);
     }
 
-    void test_look_at() {       
+    void test_look_at() {
         Vec3 pos(0, 0, -1);
 
         camera_->look_at(pos);
@@ -47,7 +47,7 @@ public:
         assert_true(q == Quaternion());
 
         pos = Vec3(0, -1, 0);
-        camera_->look_at(pos);
+        camera_->look_at(pos, Vec3(0, 0, -1));
 
         auto f = camera_->forward();
         assert_close(0.0f, f.x, 0.000001f);
@@ -57,7 +57,7 @@ public:
         auto res = camera_->up();
         assert_close(res.x, 0.0f, 0.000001f);
         assert_close(res.y, 0.0f, 0.000001f);
-        assert_close(res.z, 1.0f, 0.000001f);
+        assert_close(res.z, -1.0f, 0.000001f);
     }
 
     void test_camera_attached_to_parent_moves() {

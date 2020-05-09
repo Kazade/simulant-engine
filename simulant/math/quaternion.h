@@ -198,7 +198,7 @@ struct Quaternion {
         return Vec3::POSITIVE_X.rotated_by(*this);
     }
 
-    static Quaternion as_look_at(const Vec3& direction, const Vec3& up);
+    static Quaternion as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 1, 0));
 };
 
 Quaternion operator*(float s, const Quaternion& q);
