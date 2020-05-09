@@ -274,7 +274,8 @@ deploy:linux-x64-gcc:
    - tags
   image: registry.fedoraproject.org/fedora-minimal:28
   dependencies:
-   - test:linux-x64-gcc
+   - test:linux-x64-gcc-debug
+   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
   before_script:
