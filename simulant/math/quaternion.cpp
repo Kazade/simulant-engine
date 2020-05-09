@@ -8,9 +8,19 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
     return stream;
 }
 
-Quaternion Quaternion::as_look_at(const Vec3& direction, const Vec3& up=Vec3(0, 1, 0)) {
-    Mat4 lookat = Mat4::as_look_at(Vec3(), direction, up);
-    Quaternion ret = Quaternion(Mat3((lookat)));
+Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up) {
+    float d = std::abs(up.dot(direction));
+    if(almost_equal(d, 1.0f)) {
+        return Quaternion();
+    }
+
+    if(almost_equal(direction.length_squared(), 0.0f) ||
+        almost_equal(up.length_squared(), 0.0f)) {
+        return Quaternion();
+    }
+
+    Vec3 t = up.cross(-direction).normalized();
+    auto ret = Quaternion(Mat3(t, -direction.cross(t), -direction));
     return ret;
 }
 
@@ -56,13 +66,13 @@ Quaternion::Quaternion(const Mat3& rot_matrix) {
     float m22 = rot_matrix[8];
     float t = m00 + m11 + m22;
     // we protect the division by s by ensuring that s>=1
-    if (t >= 0) { // by w
-        float s = sqrt(t + 1);
-        w = 0.5f * s;
-        s = 0.5f / s;
-        x = (m21 - m12) * s;
-        y = (m02 - m20) * s;
-        z = (m10 - m01) * s;
+    if (t > 0) { // by w
+        float root = std::sqrt(t + 1.0f);
+        w = 0.5f * root;
+        root = 0.5f / root;
+        x = (m21 - m12) * root;
+        y = (m02 - m20) * root;
+        z = (m10 - m01) * root;
     } else if ((m00 > m11) && (m00 > m22)) { // by x
         float s = sqrt(1 + m00 - m11 - m22);
         x = s * 0.5f;
@@ -113,7 +123,7 @@ Quaternion Quaternion::nlerp(const Quaternion &rhs, float t) {
     if(theta < 0.0f) {
         z = -rhs;
     }
-    
+
     // Linear interpolation (result normalized)
     return Quaternion(
         lerp(this->x, z.x, t),

@@ -93,6 +93,20 @@ Mat3::Mat3(const Quaternion &q) {
     m[8] = 1.0f - 2.0f * (qxx +  qyy);
 }
 
+Mat3::Mat3(const Vec3& c0, const Vec3& c1, const Vec3& c2) {
+    m[0] = c0.x;
+    m[1] = c0.y;
+    m[2] = c0.z;
+
+    m[3] = c1.x;
+    m[4] = c1.y;
+    m[5] = c1.z;
+
+    m[6] = c2.x;
+    m[7] = c2.y;
+    m[8] = c2.z;
+}
+
 Vec3 Mat3::transform_vector(const Vec3 &v) const {
     Vec3 ret;
 
