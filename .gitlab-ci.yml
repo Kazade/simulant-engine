@@ -217,9 +217,10 @@ build:linux-x64-gcc:
       - ${TARGET}/debug/sample_data/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
+      - ${TARGET}/release/sample_data/      
       - ${TARGET}/release/tests/simulant_tests
 
-test:linux-x64-gcc:
+test:linux-x64-gcc-debug:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:28
   needs: ["build:linux-x64-gcc"]
