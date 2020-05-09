@@ -32,6 +32,7 @@ public:
 
     Mat3(const Mat4& rhs);
     Mat3(const Quaternion& q);
+    Mat3(const Vec3& c0, const Vec3& c1, const Vec3& c2);
 
     const float& operator[](const uint32_t index) const {
         return m[index];

@@ -124,21 +124,17 @@ void Transformable::rotate_global_z_by(const Degrees &degrees) {
     rotate_around(Z, degrees);
 }
 
-Quaternion Transformable::calc_look_at_rotation(const smlt::Vec3& target) {
-    Vec3 up(0, 1, 0);
-
-    Vec3 dir = (target - position_).normalized();
-    Quaternion final = Quaternion::as_look_at(dir, up);
-    final.inverse();
-    return final;
+void Transformable::look_at(const smlt::Vec3& target, const smlt::Vec3& up) {
+    set_rotation(
+        Quaternion::look_rotation(
+            (target - position_).normalized(),
+            up
+        )
+    );
 }
 
-void Transformable::look_at(const smlt::Vec3& target) {
-    set_rotation(calc_look_at_rotation(target));
-}
-
-void Transformable::look_at(float x, float y, float z) {
-    look_at(Vec3(x, y, z));
+void Transformable::look_at(float x, float y, float z, const Vec3& up) {
+    look_at(Vec3(x, y, z), up);
 }
 
 Vec3 Transformable::right() const {

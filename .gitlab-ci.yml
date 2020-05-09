@@ -217,8 +217,10 @@ build:linux-x64-gcc:
       - ${TARGET}/debug/sample_data/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
+      - ${TARGET}/release/sample_data/      
+      - ${TARGET}/release/tests/simulant_tests
 
-test:linux-x64-gcc:
+test:linux-x64-gcc-debug:
   stage: test
   image: registry.fedoraproject.org/fedora-minimal:28
   needs: ["build:linux-x64-gcc"]
@@ -243,6 +245,28 @@ test:linux-x64-gcc:
     - ${TARGET}/debug/simulant/
     - ${TARGET}/release/simulant/
 
+test:linux-x64-gcc-release:
+  stage: test
+  image: registry.fedoraproject.org/fedora-minimal:28
+  needs: ["build:linux-x64-gcc"]
+  dependencies:
+   - build:linux-x64-gcc
+  variables:
+   TARGET: linux-x64-gcc
+  before_script:
+   - microdnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
+   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
+   - sleep 3
+   - export LIBGL_ALWAYS_SOFTWARE=1
+   - export DISPLAY=:99
+  script:
+   - cd ${TARGET}/release
+   - export SIMULANT_SOUND_DRIVER=null
+   - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
+  artifacts:
+   reports:
+      junit: ${TARGET}/release/report.xml
+      
 deploy:linux-x64-gcc:
   stage: deploy
   only:
@@ -250,7 +274,8 @@ deploy:linux-x64-gcc:
    - tags
   image: registry.fedoraproject.org/fedora-minimal:28
   dependencies:
-   - test:linux-x64-gcc
+   - test:linux-x64-gcc-debug
+   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
   before_script:
