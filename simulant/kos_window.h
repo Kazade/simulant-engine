@@ -36,7 +36,7 @@ public:
 
     void initialize_input_controller(InputState &controller) override;
 
-    std::shared_ptr<SoundDriver> create_sound_driver() override;
+    std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
     void probe_vmus();

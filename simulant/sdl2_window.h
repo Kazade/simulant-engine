@@ -68,7 +68,7 @@ public:
     void show_cursor(bool value=true) override;
     void lock_cursor(bool cursor_locked=true) override;
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y) override;
-    
+
 private:
     SDL_Window* screen_;
     SDL_GLContext context_;
@@ -83,7 +83,7 @@ private:
 
     void denormalize(float x, float y, int& xout, int& yout);
 
-    std::shared_ptr<SoundDriver> create_sound_driver() override;
+    std::shared_ptr<SoundDriver> create_sound_driver(const std::string &from_config) override;
 
     void initialize_input_controller(InputState &controller) override;
 

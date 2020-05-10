@@ -390,7 +390,7 @@ private:
 
     std::shared_ptr<SoundDriver> sound_driver_;
 
-    virtual std::shared_ptr<SoundDriver> create_sound_driver() = 0;
+    virtual std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) = 0;
 
     std::shared_ptr<InputState> input_state_;
     std::shared_ptr<InputManager> input_manager_;

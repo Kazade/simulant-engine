@@ -54,7 +54,7 @@ void SDL2Window::set_title(const std::string& title) {
 }
 
 void SDL2Window::show_cursor(bool value) {
-	SDL_ShowCursor(value);
+    SDL_ShowCursor(value);
 }
 
 void SDL2Window::lock_cursor(bool cursor_locked) {
@@ -62,7 +62,7 @@ void SDL2Window::lock_cursor(bool cursor_locked) {
 }
 
 void SDL2Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
-	SDL_GetMouseState(&mouse_x, &mouse_y);
+    SDL_GetMouseState(&mouse_x, &mouse_y);
 }
 
 int event_filter(void* user_data, SDL_Event* event) {
@@ -273,9 +273,11 @@ void SDL2Window::denormalize(float x, float y, int& xout, int& yout) {
     yout = (int) (y * float(height()));
 }
 
-std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver() {
+std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver(const std::string& from_config) {
     const char* from_env = std::getenv("SIMULANT_SOUND_DRIVER");
-    std::string selected = (from_env) ? from_env : "openal";
+
+    std::string selected = (from_env) ? from_env :
+        (from_config.empty()) ? "openal" : from_config;
 
     if(selected == "null") {
         L_DEBUG("Null sound driver activated");

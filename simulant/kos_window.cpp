@@ -288,9 +288,11 @@ void KOSWindow::check_events() {
 
 }
 
-std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver() {
+std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver(const std::string& from_config) {
     const char* from_env = std::getenv("SIMULANT_SOUND_DRIVER");
-    std::string selected = (from_env) ? from_env : "openal";
+
+    std::string selected = (from_env) ? from_env :
+        (from_config.empty()) ? "openal" : from_config;
 
     if(selected == "null") {
         L_DEBUG("Null sound driver activated");

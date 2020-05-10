@@ -263,7 +263,7 @@ bool Window::_init() {
 #endif
 
     // Initialize the sound driver (here rather than constructor as it relies on subclass type)
-    sound_driver_ = create_sound_driver();
+    sound_driver_ = create_sound_driver(application_->config_.development.force_sound_driver);
     sound_driver_->startup();
 
     renderer_ = new_renderer(this, std::getenv("SIMULANT_RENDERER"));
