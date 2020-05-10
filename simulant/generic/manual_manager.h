@@ -191,12 +191,12 @@ public:
 
     // Fetch an element by ID, returns nullptr
     // if it doesn't exist
-    T* get(id_type id) const {
+    T* get(const id_type& id) const {
         return _get(id);
     }
 
     /* Un-safe version */
-    T* _get(id_type id) const {
+    T* _get(const id_type& id) const {
         if(!_contains(id)) {
             return nullptr;
         }
@@ -294,16 +294,16 @@ public:
     }
 
     /* Un-safe version */
-    bool _contains(id_type id) const {
+    bool _contains(const id_type& id) const {
         return pool_.used(id);
     }
 
     // Returns true if the ID is allocated
-    bool contains(id_type id) const {
+    bool contains(const id_type& id) const {
         return _contains(id);
     }
 
-    T* clone(id_type id, this_type* target_manager=nullptr) {
+    T* clone(const id_type& id, this_type* target_manager=nullptr) {
         target_manager = target_manager || this;
         auto source = get(id);
         auto copy = target_manager->make(*source); // Copy construction

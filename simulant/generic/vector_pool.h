@@ -34,13 +34,13 @@ public:
     typedef byte slot_id;
 
     template<typename... Others> struct MaxSize {
-      static constexpr size_t value = 0;
+      static constexpr std::size_t value = 0;
     };
 
     template<typename A, typename... Others> struct MaxSize<A, Others...> {
-        static constexpr size_t a_size = sizeof(A);
-        static constexpr size_t b_size = MaxSize<Others...>::value;
-        static constexpr size_t value = (a_size > b_size) ? a_size : b_size;
+        static constexpr std::size_t a_size = sizeof(A);
+        static constexpr std::size_t b_size = MaxSize<Others...>::value;
+        static constexpr std::size_t value = (a_size > b_size) ? a_size : b_size;
     };
 
     const static uint32_t object_size = MaxSize<T, Subtypes...>::value;
@@ -122,7 +122,7 @@ public:
         return alloc<U, Args...>(std::forward<Args>(args)...);
     }
 
-    bool used(id_type id) const {
+    bool used(const id_type& id) const {
         byte* addr = find_address(id);
         if(!addr) {
             return false;
@@ -143,10 +143,17 @@ public:
 #endif
     }
 
-    void release(id_type id) {
+    void release(const id_type& id) {
         assert(used(id));
 
-        auto p = find_chunk_and_slot(id);
+        Chunk* chunk;
+        slot_id s;
+
+        if(!find_chunk_and_slot(id, &chunk, &s)) {
+            assert(0 && "Something went wrong");
+            return;
+        }
+
         T* element = get(id);
 
         assert(element);
@@ -154,11 +161,11 @@ public:
         // Call the destructor
         element->~T();
 
-        thread::Lock<thread::Mutex> g(p.first->lock_);
-        p.first->release_slot((uint8_t*) element);
+        thread::Lock<thread::Mutex> g(chunk->lock_);
+        chunk->release_slot((uint8_t*) element);
 
         // Decrement the used count on the chunk
-        p.first->used_count_--;
+        chunk->used_count_--;
         --size_;
     }
 
@@ -404,32 +411,36 @@ private:
         chunks_.pop_back();
     }
 
-    std::pair<Chunk*, slot_id> find_chunk_and_slot(id_type id) const {
+    bool find_chunk_and_slot(const id_type& id, Chunk** chunk, slot_id* slot) const {
         assert(id.value() > 0);
 
         // We must subtract one from the id value
         auto v = id.value() - 1;
         auto idx = v / ChunkSize;
-        slot_id slot = (v % ChunkSize);
+        slot_id s = (v % ChunkSize);
 
-        if(idx >= chunks_.size() || slot >= ChunkSize) {
-            return std::make_pair(nullptr, 0);
+        if(idx >= chunks_.size() || s >= ChunkSize) {
+            return false;
         }
 
-        return std::make_pair(chunks_[idx].get(), slot);
+        *chunk = chunks_[idx].get();
+        *slot = s;
+        return true;
     }
 
     id_type id_for_chunk_slot(uint32_t chunk_id, slot_id slot) {
         return ((chunk_id * ChunkSize) + slot) + 1;
     }
 
-    byte* find_address(id_type id) const {
-        auto chunk = find_chunk_and_slot(id);
-        if(!chunk.first) {
+    byte* find_address(const id_type& id) const {
+        Chunk* chunk;
+        slot_id slot;
+
+        if(!find_chunk_and_slot(id, &chunk, &slot)) {
             return nullptr;
         }
 
-        return &chunk.first->elements_[chunk.second * element_size];
+        return &chunk->elements_[slot * element_size];
     }
 
     uint32_t size_ = 0;
