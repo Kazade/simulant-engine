@@ -1,3 +1,5 @@
+#include <cfloat>
+
 #include "submesh.h"
 #include "mesh.h"
 #include "private.h"
@@ -69,11 +71,8 @@ void SubMesh::reverse_winding() {
  * when index_data->done() is called.
  */
 void SubMesh::_recalc_bounds() {
-    //Set the min bounds to the max
-    bounds_.set_min(Vec3(FLT_MAX, FLT_MAX, FLT_MAX));
-
-    //Set the max bounds to the min
-    bounds_.set_max(Vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+    float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
+    float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
 
     if(!index_data_->count()) {
         bounds_ = AABB();
@@ -84,45 +83,43 @@ void SubMesh::_recalc_bounds() {
     VertexData* vdata = vertex_data.get();
     auto& pos_attr = vdata->vertex_specification().position_attribute;
 
-    const auto& min = bounds_.min();
-    const auto& max = bounds_.max();
-
     /* Awful switching is for performance
        FIXME: Is there a better way to do this? I guess templated lambda or method
     */
     if(pos_attr == VERTEX_ATTRIBUTE_2F) {
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec2>(idx);
-            if(pos->x < min.x) bounds_.set_min_x(pos->x);
-            if(pos->y < min.y) bounds_.set_min_y(pos->y);
-            if(pos->x > max.x) bounds_.set_max_x(pos->x);
-            if(pos->y > max.y) bounds_.set_max_y(pos->y);
+            if(pos->x < minx) minx = pos->x;
+            if(pos->y < miny) miny = pos->y;
+            if(pos->x > maxx) maxx = pos->x;
+            if(pos->y > maxy) maxy = pos->y;
         }
     } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec3>(idx);
-            if(pos->x < min.x) bounds_.set_min_x(pos->x);
-            if(pos->y < min.y) bounds_.set_min_y(pos->y);
-            if(pos->z < min.z) bounds_.set_min_z(pos->z);
-
-            if(pos->x > max.x) bounds_.set_max_x(pos->x);
-            if(pos->y > max.y) bounds_.set_max_y(pos->y);
-            if(pos->z > max.z) bounds_.set_max_z(pos->z);
+            if(pos->x < minx) minx = pos->x;
+            if(pos->y < miny) miny = pos->y;
+            if(pos->z < minz) minz = pos->z;
+            if(pos->x > maxx) maxx = pos->x;
+            if(pos->y > maxy) maxy = pos->y;
+            if(pos->z > maxz) maxz = pos->z;
         }
     } else {
         assert(pos_attr == VERTEX_ATTRIBUTE_4F);
 
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec4>(idx);
-            if(pos->x < min.x) bounds_.set_min_x(pos->x);
-            if(pos->y < min.y) bounds_.set_min_y(pos->y);
-            if(pos->z < min.z) bounds_.set_min_z(pos->z);
-
-            if(pos->x > max.x) bounds_.set_max_x(pos->x);
-            if(pos->y > max.y) bounds_.set_max_y(pos->y);
-            if(pos->z > max.z) bounds_.set_max_z(pos->z);
+            if(pos->x < minx) minx = pos->x;
+            if(pos->y < miny) miny = pos->y;
+            if(pos->z < minz) minz = pos->z;
+            if(pos->x > maxx) maxx = pos->x;
+            if(pos->y > maxy) maxy = pos->y;
+            if(pos->z > maxz) maxz = pos->z;
         }
     }
+
+    bounds_.set_min(Vec3(minx, miny, minz));
+    bounds_.set_max(Vec3(maxx, maxy, maxz));
 }
 
 void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {
