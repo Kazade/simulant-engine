@@ -81,6 +81,13 @@ void SubMesh::_recalc_bounds() {
 
     // Store a raw-pointer for performance
     VertexData* vdata = vertex_data.get();
+
+    if(vdata->empty()) {
+        /* MD2 frames don't necessarily have vertex data until they
+         * have been animated */
+        return;
+    }
+
     auto& pos_attr = vdata->vertex_specification().position_attribute;
 
     /* Awful switching is for performance
