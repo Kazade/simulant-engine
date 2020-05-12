@@ -75,11 +75,10 @@ public:
     void remove_constraint();
 
     bool rotation_locked() const { return rotation_locked_; }
+
 protected:
     void force_lock_transforms();
     void force_unlock_transforms();
-
-private:
     void set_position(const Vec3& p);
     void set_rotation(const Quaternion& q);
     void set_scaling(const Vec3& s);

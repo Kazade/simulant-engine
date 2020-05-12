@@ -67,18 +67,18 @@ Mat4 StageNode::absolute_transformation() const {
 bool StageNode::is_visible() const {
     // Debug check to make sure the parent is always a stage node. If we have a parent
     // the dynamic cast should return something truthy, if there's no parent just return true
-    assert(parent() ? (bool) dynamic_cast<StageNode*>(parent()) : true);
+    assert(parent_ ? (bool) parent_stage_node_ : true);
 
     // If this isn't visible, then fast-out, else return whether the parent is visible until
     // there are no more parents
-    return is_visible_ && ((parent()) ? ((StageNode*) parent())->is_visible() : true);
+    return is_visible_ && ((parent_stage_node_) ? parent_stage_node_->is_visible() : true);
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
     if(!parent_is_stage()) {
         // The stage itself is immovable so, we only bother with this if this isn't he stage
         // could also use if(!parent()->is_root())
-        Vec3 ppos = static_cast<StageNode*>(parent())->absolute_position();
+        Vec3 ppos = parent_stage_node_->absolute_position();
         move_to(position - ppos);
     } else {
         move_to(position);
@@ -91,7 +91,7 @@ void StageNode::move_to_absolute(float x, float y, float z) {
 
 void StageNode::rotate_to_absolute(const Quaternion& rotation) {
     if(!parent_is_stage()) {
-        auto prot = static_cast<StageNode*>(parent())->absolute_rotation();
+        auto prot = parent_stage_node_->absolute_rotation();
         prot.inverse();
 
         rotate_to((prot * rotation).normalized());
@@ -109,20 +109,20 @@ void StageNode::on_transformation_changed() {
 }
 
 void StageNode::update_transformation_from_parent() {
-    StageNode* parent = static_cast<StageNode*>(this->parent());
+    StageNode* parent = parent_stage_node_;
 
-    if(!parent || parent == stage_) {
-        absolute_rotation_ = rotation();
-        absolute_position_ = position();
-        absolute_scale_ = scale();
+    if(!parent || parent_is_stage()) {
+        absolute_rotation_ = rotation_;
+        absolute_position_ = position_;
+        absolute_scale_ = scaling_;
     } else {
         auto parent_pos = parent->absolute_position();
         auto parent_rot = parent->absolute_rotation();
         auto parent_scale = parent->absolute_scaling();
 
-        absolute_rotation_ = parent_rot * rotation();
-        absolute_position_ = parent_pos + parent_rot.rotate_vector(position());
-        absolute_scale_ = parent_scale * scale();
+        absolute_rotation_ = parent_rot * rotation_;
+        absolute_position_ = parent_pos + parent_rot.rotate_vector(position_);
+        absolute_scale_ = parent_scale * scaling_;
     }
 
     mark_transformed_aabb_dirty();
@@ -134,7 +134,9 @@ void StageNode::update_transformation_from_parent() {
 
 void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
     _S_UNUSED(oldp);
-    _S_UNUSED(newp);
+
+    parent_stage_node_ = dynamic_cast<StageNode*>(newp);
+    assert(parent_stage_node_);
 
     update_transformation_from_parent();
 }

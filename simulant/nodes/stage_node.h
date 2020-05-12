@@ -226,6 +226,7 @@ private:
     AABB calculate_transformed_aabb() const;
 
     Stage* stage_ = nullptr;
+    StageNode* parent_stage_node_ = nullptr;
 
     generic::DataCarrier data_;
 
