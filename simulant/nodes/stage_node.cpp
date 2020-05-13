@@ -49,6 +49,10 @@ Vec3 StageNode::absolute_scaling() const {
 }
 
 Mat4 StageNode::absolute_transformation() const {
+    if(!absolute_transformation_is_dirty_) {
+        return absolute_transformation_;
+    }
+
     Mat4 scale;
     Mat4 trans;
     Mat4 rot(absolute_rotation_);
@@ -61,7 +65,9 @@ Mat4 StageNode::absolute_transformation() const {
     trans[13] = absolute_position_.y;
     trans[14] = absolute_position_.z;
 
-    return trans * rot * scale;
+    absolute_transformation_ = trans * rot * scale;
+    absolute_transformation_is_dirty_ = false;
+    return absolute_transformation_;
 }
 
 bool StageNode::is_visible() const {
@@ -106,6 +112,7 @@ void StageNode::rotate_to_absolute(const Degrees& degrees, float x, float y, flo
 
 void StageNode::on_transformation_changed() {
     update_transformation_from_parent();
+    mark_absolute_transformation_dirty();
 }
 
 void StageNode::update_transformation_from_parent() {
@@ -183,6 +190,10 @@ void StageNode::recalc_bounds_if_necessary() const {
 
 void StageNode::mark_transformed_aabb_dirty() {
     transformed_aabb_dirty_ = true;
+}
+
+void StageNode::mark_absolute_transformation_dirty() {
+    absolute_transformation_is_dirty_ = true;
 }
 
 void StageNode::update(float dt) {
