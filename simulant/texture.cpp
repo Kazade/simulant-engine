@@ -433,7 +433,7 @@ void Texture::set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWr
 void Texture::set_texture_wrap_u(TextureWrap wrap_u) {
     if(wrap_u != wrap_u_) {
         wrap_u_ = wrap_u;
-        params_dirty_ = true;       
+        params_dirty_ = true;
     }
 }
 
@@ -472,7 +472,7 @@ void Texture::_set_has_mipmaps(bool v) {
 
 bool Texture::init() {
     // Tell the renderer about the texture
-    renderer_->register_texture(id(), shared_from_this());
+    renderer_->register_texture(id(), this);
     return true;
 }
 
