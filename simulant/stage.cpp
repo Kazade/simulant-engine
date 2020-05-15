@@ -54,7 +54,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     geom_manager_(new GeomManager()),
     sky_manager_(new SkyManager(parent, this)),
     sprite_manager_(new SpriteManager(parent, this)),
-    actor_manager_(new ActorManager()),
+    actor_manager_(new ActorManager(node_pool_.get())),
     particle_system_manager_(new ParticleSystemManager()),
     light_manager_(new LightManager()),
     camera_manager_(new CameraManager()) {
@@ -506,11 +506,11 @@ void Stage::destroy_object_immediately(ParticleSystem* object) {
 }
 
 void Stage::on_actor_created(ActorID actor_id) {
-
+    _S_UNUSED(actor_id);
 }
 
 void Stage::on_actor_destroyed(ActorID actor_id) {
-
+    _S_UNUSED(actor_id);
 }
 
 void Stage::clean_up_dead_objects() {

@@ -25,18 +25,16 @@
 
 namespace smlt {
 
-Actor::Actor(ActorID id, Stage* stage, SoundDriver* sound_driver):
+Actor::Actor(Stage* stage, SoundDriver* sound_driver):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage),
-    generic::Identifiable<ActorID>(id),
     Source(stage, sound_driver) {
 
 }
 
-Actor::Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh):
+Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage),
-    generic::Identifiable<ActorID>(id),
     Source(stage, sound_driver) {
 
     set_mesh(mesh);

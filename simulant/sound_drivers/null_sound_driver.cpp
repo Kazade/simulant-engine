@@ -1,4 +1,5 @@
 #include "null_sound_driver.h"
+#include "../macros.h"
 
 namespace smlt {
 
@@ -31,7 +32,7 @@ std::vector<AudioBufferID> NullSoundDriver::generate_buffers(uint32_t count) {
 }
 
 void NullSoundDriver::destroy_buffers(const std::vector<AudioBufferID>& buffers) {
-
+    _S_UNUSED(buffers);
 }
 
 void NullSoundDriver::destroy_sources(const std::vector<AudioSourceID>& sources) {
@@ -49,15 +50,24 @@ void NullSoundDriver::stop_source(AudioSourceID source_id) {
 }
 
 void NullSoundDriver::queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID>& buffers) {
-
+    _S_UNUSED(source);
+    _S_UNUSED(count);
+    _S_UNUSED(buffers);
 }
 
 std::vector<AudioBufferID> NullSoundDriver::unqueue_buffers_from_source(AudioSourceID source, uint32_t count) {
+    _S_UNUSED(source);
+    _S_UNUSED(count);
+
     return {};
 }
 
 void NullSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) {
-
+    _S_UNUSED(buffer);
+    _S_UNUSED(format);
+    _S_UNUSED(data);
+    _S_UNUSED(bytes);
+    _S_UNUSED(frequency);
 }
 
 AudioSourceState NullSoundDriver::source_state(AudioSourceID source) {
@@ -70,7 +80,23 @@ AudioSourceState NullSoundDriver::source_state(AudioSourceID source) {
 }
 
 int32_t NullSoundDriver::source_buffers_processed_count(AudioSourceID source) const {
+    _S_UNUSED(source);
     return 0;
+}
+
+void NullSoundDriver::set_source_reference_distance(AudioSourceID id, float dist) {
+    _S_UNUSED(id);
+    _S_UNUSED(dist);
+}
+
+void NullSoundDriver::set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) {
+    _S_UNUSED(id);
+    _S_UNUSED(value);
+}
+
+void NullSoundDriver::set_source_gain(AudioSourceID id, RangeValue<0, 1> value) {
+    _S_UNUSED(id);
+    _S_UNUSED(value);
 }
 
 

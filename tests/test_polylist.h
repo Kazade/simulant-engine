@@ -94,27 +94,27 @@ public:
 
         assert_equal(list.size(), 6u);
 
-        list.erase(p1.first);
+        list.erase(list.find(p1.second));
         assert_equal(list.size(), 5u);
         assert_is_null(list[p1.second]);
 
-        list.erase(p2.first);
+        list.erase(list.find(p2.second));
         assert_equal(list.size(), 4u);
         assert_is_null(list[p2.second]);
 
-        list.erase(p3.first);
+        list.erase(list.find(p3.second));
         assert_equal(list.size(), 3u);
         assert_is_null(list[p3.second]);
 
-        list.erase(p4.first);
+        list.erase(list.find(p4.second));
         assert_equal(list.size(), 2u);
         assert_is_null(list[p4.second]);
 
-        list.erase(p5.first);
+        list.erase(list.find(p5.second));
         assert_equal(list.size(), 1u);
         assert_is_null(list[p5.second]);
 
-        list.erase(p6.first);
+        list.erase(list.find(p6.second));
         assert_equal(list.size(), 0u);
         assert_is_null(list[p6.second]);
     }

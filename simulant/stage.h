@@ -27,6 +27,8 @@
 #include "generic/data_carrier.h"
 #include "threads/atomic.h"
 
+#include "nodes/stage_node_manager.h"
+
 #include "managers/window_holder.h"
 #include "managers/skybox_manager.h"
 #include "managers/sprite_manager.h"
@@ -56,7 +58,7 @@ class Sprite;
 template<typename T, typename IDType, typename ...Subtypes>
 class ManualManager;
 
-typedef ManualManager<Actor, ActorID> ActorManager;
+typedef StageNodeManager<ActorID, Actor> ActorManager;
 typedef ManualManager<Geom, GeomID> GeomManager;
 typedef ManualManager<Light, LightID> LightManager;
 typedef ManualManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
@@ -201,6 +203,9 @@ public:
     }
 
 private:
+    std::shared_ptr<StageNodePool> node_pool_ =
+        std::make_shared<StageNodePool>(128);
+
     AABB aabb_;
 
     ActorCreatedSignal signal_actor_created_;

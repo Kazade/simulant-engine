@@ -224,3 +224,5 @@ simulant/signals
 simulant/generic/containers
 deps/libgl/samples/lights
 simulant/nodes/iterators
+deps/libgl/samples/depth_funcs_alpha_testing
+deps/libgl/samples/depth_funcs_ortho

@@ -48,8 +48,8 @@ class Actor :
     public HasMutableRenderPriority {
 
 public:
-    Actor(ActorID id, Stage* stage, SoundDriver *sound_driver);
-    Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh);
+    Actor(Stage* stage, SoundDriver *sound_driver);
+    Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh);
     virtual ~Actor();
 
     const AABB& aabb() const override;

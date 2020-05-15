@@ -129,14 +129,28 @@ public:
     /* Create a new element using placement new, with the set of
      * args for the constructor. */
     template<typename T, typename... Args>
-    std::pair<iterator, id> create(Args&& ...args) {
+    std::pair<T*, id> create(Args&& ...args) {
         id new_id;
         auto meta = alloc_entry(&new_id);
 
         /* Construct the object */
-        new (meta->entry) T(std::forward<Args...>(args)...);
+        T* ret = new (meta->entry) T(std::forward<Args>(args)...);
 
-        return std::make_pair(iterator(this, meta), new_id);
+        return std::make_pair(ret, new_id);
+    }
+
+    iterator find(const id& i) const {
+        auto obj = (*this)[i];
+        if(obj) {
+            _polylist::EntryMeta* meta = (_polylist::EntryMeta*) (((byte*) obj) + entry_size);
+            assert(!meta->is_free);
+
+            return iterator(
+                this, meta
+            );
+        } else {
+            return end();
+        }
     }
 
     /* Erase an element, and return an iterator to the next used
@@ -253,33 +267,32 @@ private:
         /* Get pointers to the first meta (which follows the actual entry)
          * and the previous in the list, which would be the current free tail
          */
-        _polylist::EntryMeta* meta = (_polylist::EntryMeta*) (new_chunk.data + entry_size);
-        _polylist::EntryMeta* prev = nullptr;
+        EntryWithMeta* ewm = (EntryWithMeta*) new_chunk.data;
+
 
         /* Set the free list head to the first thing */
-        new_chunk.free_list_head_ = meta;
+        new_chunk.free_list_head_ = &ewm->meta;
 
         /* Go through all metas and set prev/next pointers */
         for(std::size_t i = 0; i < chunk_size; ++i) {
+            _polylist::EntryMeta* meta = &ewm->meta;
+            _polylist::EntryMeta* prev = (i == 0) ? nullptr : &(ewm - 1)->meta;
+
             meta->prev = prev;
             meta->is_free = true;
 
             meta->chunk = chunks_.size();
             meta->index = i;  // Set the ID
+            meta->entry = ewm->entry;
 
-            meta->entry = ((byte*) meta) - entry_size;
             if(i == chunk_size - 1) {
                 meta->next = nullptr;
+                new_chunk.free_list_tail_ = meta;
             } else {
-                meta->next = (_polylist::EntryMeta*) (((byte*) meta) + sizeof(EntryWithMeta));
-                prev = meta;
-                meta = meta->next;
+                meta->next = &(ewm + 1)->meta;
+                ewm++;
             }
         }
-
-        assert(meta);
-        assert(meta->next == nullptr);
-        new_chunk.free_list_tail_ = meta;
 
         /* Finally, make the new chunk available and set the free list tail
          * to the last of the new chunk */
@@ -357,9 +370,12 @@ private:
         std::size_t chunk_id = (idx / chunk_size);
         std::size_t index = (idx % chunk_size);
 
-        byte* entry = &chunks_[chunk_id].data[index * sizeof(EntryWithMeta)];
-        _polylist::EntryMeta* meta = (_polylist::EntryMeta*) (entry + entry_size);
-        return (meta->is_free) ? nullptr : (Base*) entry;
+        EntryWithMeta* ewm = reinterpret_cast<EntryWithMeta*>(
+            &chunks_[chunk_id].data[index * sizeof(EntryWithMeta)]
+        );
+
+        return (ewm->meta.is_free) ?
+            nullptr : reinterpret_cast<Base*>(ewm->entry);
     }
 };
 
