@@ -19,7 +19,7 @@ class Camera:
 public:
     using ContainerNode::_get_renderables;
 
-    Camera(CameraID camera_id, Stage* stage);
+    Camera(Stage* stage);
     virtual ~Camera();
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
@@ -50,7 +50,7 @@ public:
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
     double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 
-private:    
+private:
     AABB bounds_;
     Frustum frustum_;
 

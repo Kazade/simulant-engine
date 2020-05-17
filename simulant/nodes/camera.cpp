@@ -7,10 +7,9 @@
 namespace smlt {
 
 
-Camera::Camera(CameraID camera_id, Stage *stage):
+Camera::Camera(Stage *stage):
     TypedDestroyableObject<Camera, Stage>(stage),
-    ContainerNode(stage),
-    generic::Identifiable<CameraID>(camera_id) {
+    ContainerNode(stage) {
 
     assert(stage);
 

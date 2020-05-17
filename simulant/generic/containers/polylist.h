@@ -213,7 +213,8 @@ public:
         obj->~Base();
 
         /* Wipe out the entry */
-        memset(meta->entry, 0, entry_size);
+        auto ewm = get_ewm(meta);
+        memset(ewm->data, 0, entry_size);
 
         meta->entry = nullptr;
         meta->prev = chunk->free_list_tail_;

@@ -62,7 +62,7 @@ typedef StageNodeManager<ActorID, Actor> ActorManager;
 typedef ManualManager<Geom, GeomID> GeomManager;
 typedef ManualManager<Light, LightID> LightManager;
 typedef ManualManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
-typedef ManualManager<Camera, CameraID> CameraManager;
+typedef StageNodeManager<CameraID, Camera> CameraManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
@@ -267,7 +267,7 @@ public:
     Property<decltype(&Stage::sky_manager_)> skies = {this, &Stage::sky_manager_};
     Property<decltype(&Stage::sprite_manager_)> sprites = {this, &Stage::sprite_manager_};
     Property<decltype(&Stage::fog_)> fog = {this, &Stage::fog_};
-
+    Property<decltype(&Stage::node_pool_)> node_pool = {this, &Stage::node_pool_};
 };
 
 }

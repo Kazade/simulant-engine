@@ -97,7 +97,7 @@ protected:
     virtual ~RefCounted() {}
 
     template<typename...Args>
-    RefCounted(Args&&... args) {}
+    RefCounted(Args&&...) {}
 };
 
 }

@@ -48,7 +48,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     ContainerNode(this),
     generic::Identifiable<StageID>(id),
     WindowHolder(parent),
-    node_pool_(std::make_shared<StageNodePool>(1)),
+    node_pool_(std::make_shared<StageNodePool>(64)),
     ui_(new ui::UIManager(this)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
@@ -58,7 +58,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     actor_manager_(new ActorManager(node_pool_.get())),
     particle_system_manager_(new ParticleSystemManager()),
     light_manager_(new LightManager()),
-    camera_manager_(new CameraManager()) {
+    camera_manager_(new CameraManager(node_pool_.get())) {
 
     set_partitioner(partitioner);
 

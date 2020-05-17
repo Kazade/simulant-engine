@@ -43,6 +43,9 @@ public:
 };
 
 int main(int argc, char* argv[]) {
+    _S_UNUSED(argc);
+    _S_UNUSED(argv);
+
     smlt::AppConfig config;
     config.title = "NeHe 02";
     config.fullscreen = false;
