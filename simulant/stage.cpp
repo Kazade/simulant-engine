@@ -52,7 +52,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     ui_(new ui::UIManager(this)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
-    geom_manager_(new GeomManager()),
+    geom_manager_(new GeomManager(node_pool_.get())),
     sky_manager_(new SkyManager(parent, this)),
     sprite_manager_(new SpriteManager(parent, this)),
     actor_manager_(new ActorManager(node_pool_.get())),

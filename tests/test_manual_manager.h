@@ -125,16 +125,19 @@ public:
 
         auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
+        auto count = stage->node_pool->size();
+
         auto geom = stage->new_geom_with_mesh(mesh)->id();
+
+        assert_equal(stage->node_pool->size(), count + 1);
+
         stage->destroy_geom(geom);
 
-        // Should be different, the original light is still lingering
-        assert_not_equal(stage->new_geom_with_mesh(mesh)->id(), geom);
+        assert_equal(stage->node_pool->size(), count + 1);
 
         window->run_frame();
 
-        // Same ID should be given back as it's been released
-        assert_equal(stage->new_geom_with_mesh(mesh)->id(), geom);
+        assert_equal(stage->node_pool->size(), count);
     }
 
     void test_cameras_are_freed() {

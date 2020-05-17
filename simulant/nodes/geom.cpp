@@ -25,10 +25,9 @@
 
 namespace smlt {
 
-Geom::Geom(GeomID id, Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, GeomCullerOptions culler_options):
+Geom::Geom(Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, GeomCullerOptions culler_options):
     TypedDestroyableObject<Geom, Stage>(stage),
     StageNode(stage),
-    generic::Identifiable<GeomID>(id),
     Source(stage, sound_driver),
     mesh_id_(mesh),
     culler_options_(culler_options),

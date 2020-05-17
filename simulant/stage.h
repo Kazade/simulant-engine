@@ -59,7 +59,7 @@ template<typename T, typename IDType, typename ...Subtypes>
 class ManualManager;
 
 typedef StageNodeManager<ActorID, Actor> ActorManager;
-typedef ManualManager<Geom, GeomID> GeomManager;
+typedef StageNodeManager<GeomID, Geom> GeomManager;
 typedef StageNodeManager<LightID, Light> LightManager;
 typedef StageNodeManager<ParticleSystemID, ParticleSystem> ParticleSystemManager;
 typedef StageNodeManager<CameraID, Camera> CameraManager;
