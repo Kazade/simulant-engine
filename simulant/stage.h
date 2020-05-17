@@ -203,8 +203,7 @@ public:
     }
 
 private:
-    std::shared_ptr<StageNodePool> node_pool_ =
-        std::make_shared<StageNodePool>(128);
+    std::shared_ptr<StageNodePool> node_pool_;
 
     AABB aabb_;
 

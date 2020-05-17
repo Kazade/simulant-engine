@@ -39,7 +39,7 @@ public:
 
 using namespace smlt;
 
-typedef Polylist<A, B, C> List;
+typedef Polylist<A, B, C, D, E> List;
 
 class PolylistTests : public smlt::test::SimulantTestCase {
 public:

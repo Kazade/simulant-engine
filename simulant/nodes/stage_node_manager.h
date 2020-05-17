@@ -17,8 +17,8 @@ namespace smlt {
 
 typedef Polylist<
     StageNode,
-    Actor/*, Camera, Geom, Light, ParticleSystem, Sprite,
-    ui::Button, ui::Image, ui::Label, ui::ProgressBar*/
+    Actor, Camera, Geom, Light, ParticleSystem, Sprite,
+    ui::Button, ui::Image, ui::Label, ui::ProgressBar
 > StageNodePool;
 
 template<typename IDType, typename T, typename ...Subtypes>
@@ -28,6 +28,10 @@ public:
 
     StageNodeManager(StageNodePool* pool):
         pool_(pool) {}
+
+    ~StageNodeManager() {
+        clear();
+    }
 
     const StageNodePool* pool() const {
         return pool_;
@@ -44,6 +48,12 @@ public:
 
         derived->_overwrite_id(IDType(pair.second));
         derived->_bind_id_pointer(derived);
+
+        if(!derived->init()) {
+            derived->clean_up();
+            pool_->erase(pool_->find(pair.second));
+            throw InstanceInitializationError();
+        }
 
         objects_.push_back(derived);
 
@@ -106,6 +116,7 @@ public:
         if(destroy_all_next_clean_) {
             destroy_all_next_clean_ = false;
             for(auto ptr: objects_) {
+                ptr->clean_up();
                 pool_->erase(pool_->find(ptr->id().value()));
             }
             objects_.clear();
@@ -114,6 +125,7 @@ public:
                 destroy_immediately(i);
             }
         }
+        queued_for_destruction_.clear();
     }
 
     bool is_marked_for_destruction(const IDType& id) const {

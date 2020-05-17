@@ -22,54 +22,71 @@
  * list.erase(it); // or list.erase(id);
  */
 
+#include <type_traits>
 #include <cassert>
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include <memory>
+#include <cstring>
 
 namespace smlt {
 
 namespace _polylist {
 
-struct EntryMeta {
-    EntryMeta* prev = nullptr;
-    EntryMeta* next = nullptr;
-    void* entry = nullptr;
-    bool is_free = true;
+constexpr std::size_t max(std::size_t a, std::size_t b) {
+    return (a > b) ? a : b;
+}
 
-    std::size_t chunk = 0;  // Chunk index
-    std::size_t index = 0;  // Index in the chunk
+template<typename... Ts> struct MaxSize {
+    static constexpr std::size_t value = 0;
 };
 
-template<typename... Others> struct MaxSize {
-  static constexpr std::size_t value = 0;
+template<typename T, typename... Ts> struct MaxSize<T, Ts...> {
+    static constexpr std::size_t value = max(sizeof(T), MaxSize<Ts...>::value);
 };
 
-template<typename A, typename... Others> struct MaxSize<A, Others...> {
-    static constexpr std::size_t a_size = sizeof(A);
-    static constexpr std::size_t b_size = MaxSize<Others...>::value;
-    static constexpr std::size_t value = (a_size > b_size) ? a_size : b_size;
-};
+
+template < typename Tp, typename... List >
+struct contains : std::true_type {};
+
+template < typename Tp, typename Head, typename... Rest >
+struct contains<Tp, Head, Rest...>
+: std::conditional< std::is_same<Tp, Head>::value,
+    std::true_type,
+    contains<Tp, Rest...>
+>::type {};
+
+template < typename Tp >
+struct contains<Tp> : std::false_type {};
 
 }
 
 template<typename Base, typename... Classes>
 class Polylist {
+    struct EntryMeta;
+
 public:
-    const static int entry_size = _polylist::MaxSize<Base, Classes...>::value;
+    const static std::size_t entry_size = _polylist::MaxSize<Base, Classes...>::value;
+
+    static_assert(sizeof(Base) <= entry_size);
+
     const std::size_t chunk_size;
+
+    Polylist(const Polylist&) = delete;
+    Polylist& operator=(const Polylist&) = delete;
 
     template<bool IsConst>
     class PolylistIterator {
     private:
-        PolylistIterator(const Polylist* owner, _polylist::EntryMeta* meta):
+        PolylistIterator(const Polylist* owner, EntryMeta* meta):
             owner_(owner),
             current_(meta) {
 
         }
 
         const Polylist* owner_;
-        _polylist::EntryMeta* current_;
+        EntryMeta* current_;
 
         friend class Polylist;
 
@@ -94,7 +111,7 @@ public:
             } else if(owner_->chunks_.size() > current_->chunk + 1) {
                 /* If next is null, we're at the end of the current chunk
                  * so move to the next one */
-                current_ = owner_->chunks_[current_->chunk + 1].used_list_head_;
+                current_ = owner_->chunks_[current_->chunk + 1]->used_list_head_;
             } else {
                 /* We're done */
                 current_ = nullptr;
@@ -112,7 +129,7 @@ public:
                 return nullptr;
             }
 
-            return (pointer) &current_->entry;
+            return &((reference) current_->entry);
         }
     };
 
@@ -124,26 +141,44 @@ public:
     typedef std::size_t id;
 
     Polylist(std::size_t chunk_size):
-        chunk_size(chunk_size) {}
+        chunk_size(chunk_size) {
+    }
+
+    ~Polylist() {
+        clear();
+    }
 
     /* Create a new element using placement new, with the set of
      * args for the constructor. */
     template<typename T, typename... Args>
-    std::pair<T*, id> create(Args&& ...args) {
+    std::pair<T*, id> create(Args&&... args) {
+        static_assert(std::is_base_of<Base, T>::value, "Must be a subclass of Base");
+        static_assert(_polylist::contains<T, Classes...>::value, "T not in Classes...");
+        static_assert(sizeof(T) <= entry_size, "sizeof(T) was greater than entry_size");
+
         id new_id;
-        auto meta = alloc_entry(&new_id);
+        auto ewm = find_entry(&new_id);
 
         /* Construct the object */
-        T* ret = new (meta->entry) T(std::forward<Args>(args)...);
+        T* ret = new (ewm->data) T(std::forward<Args>(args)...);
+
+        assert((void*) ret == (void*) ewm->data);
+        assert((void*) ret == (void*) ewm);
+
+        alloc_entry(ewm, ret);
+
+        assert((Base*) ret == ewm->meta.entry);
 
         return std::make_pair(ret, new_id);
     }
 
     iterator find(const id& i) const {
-        auto obj = (*this)[i];
+        auto ewm = object_from_id(i);
+        Base* obj = ewm->meta.entry;
+
         if(obj) {
-            _polylist::EntryMeta* meta = (_polylist::EntryMeta*) (((byte*) obj) + entry_size);
-            assert(!meta->is_free);
+            EntryMeta* meta = &ewm->meta;
+            assert(meta->entry);
 
             return iterator(
                 this, meta
@@ -157,37 +192,41 @@ public:
      * element */
     iterator erase(iterator it) {
         auto meta = it.current_;
-
         assert(meta);
 
         auto next = iterator(this, meta->next);
 
-        assert(!meta->is_free);
+        assert(meta->entry);
 
         /* Remove from the used list */
         if(meta->prev) meta->prev->next = meta->next;
         if(meta->next) meta->next->prev = meta->prev;
 
         auto& chunk = chunks_[meta->chunk];
-        if(chunk.used_list_head_ == meta) chunk.used_list_head_ = meta->next;
-        if(chunk.used_list_tail_ == meta) chunk.used_list_tail_ = meta->prev;
+        if(chunk->used_list_head_ == meta) chunk->used_list_head_ = meta->next;
+        if(chunk->used_list_tail_ == meta) chunk->used_list_tail_ = meta->prev;
 
-        /* Add to the free list */
-        meta->is_free = true;
-        meta->prev = chunk.free_list_tail_;
+        /* Destroy and then add to the free list, an exception in
+           a destructor will terminate anyway so we don't need to worry
+           about leaving stuff in an inconsistent state
+        */
+        Base* obj = meta->entry;
+        obj->~Base();
+
+        /* Wipe out the entry */
+        memset(meta->entry, 0, entry_size);
+
+        meta->entry = nullptr;
+        meta->prev = chunk->free_list_tail_;
         meta->next = nullptr;
 
-        chunk.free_list_tail_ = meta;
-        if(!chunk.free_list_head_) {
-            chunk.free_list_head_ = meta;
+        chunk->free_list_tail_ = meta;
+        if(!chunk->free_list_head_) {
+            chunk->free_list_head_ = meta;
         }
 
         assert(size_ > 0);
         size_--;
-
-        /* Call destructor (if stuff goes down then at least the lists are consistent) */
-        Base* obj = (Base*) meta->entry;
-        obj->~Base();
 
         return next;
     }
@@ -200,8 +239,8 @@ public:
 
     iterator begin() const {
         for(auto& chunk: chunks_) {
-            if(chunk.used_list_head_){
-                return iterator(this, chunk.used_list_head_);
+            if(chunk->used_list_head_){
+                return iterator(this, chunk->used_list_head_);
             }
         }
 
@@ -217,14 +256,18 @@ public:
         for(auto it = begin(); it != end();) {
             it = erase(it);
         }
+
+        while(!chunks_.empty()) {
+            pop_chunk();
+        }
     }
 
     Base* operator[](id i) {
-        return object_from_id(i);
+        return object_from_id(i)->meta.entry;
     }
 
     const Base* operator[](id i) const {
-        return object_from_id(i);
+        return object_from_id(i)->meta.entry;
     }
 
     std::size_t size() const {
@@ -239,55 +282,66 @@ private:
     typedef uint8_t byte;
     std::size_t size_ = 0;
 
-    struct EntryWithMeta {
-        byte entry[entry_size] __attribute__((aligned(8)));
-        _polylist::EntryMeta meta;
+    struct EntryMeta {
+        EntryMeta* prev = nullptr; //4
+        EntryMeta* next = nullptr; //4
+
+        Base* entry = nullptr; // 4
+        uint32_t padding = 0; // 4
+
+        std::size_t chunk = 0;  // 4
+        std::size_t index = 0;  // 4
     };
+
+    typedef struct {
+        byte data[entry_size] __attribute__((aligned(8)));
+        EntryMeta meta;
+    } __attribute__((aligned(8))) EntryWithMeta;
 
     struct Chunk {
-        byte* data = nullptr;
+        EntryWithMeta* data = nullptr;
 
-        _polylist::EntryMeta* free_list_head_ = nullptr;
-        _polylist::EntryMeta* free_list_tail_ = nullptr;
+        EntryMeta* free_list_head_ = nullptr;
+        EntryMeta* free_list_tail_ = nullptr;
 
-        _polylist::EntryMeta* used_list_head_ = nullptr;
-        _polylist::EntryMeta* used_list_tail_ = nullptr;
+        EntryMeta* used_list_head_ = nullptr;
+        EntryMeta* used_list_tail_ = nullptr;
     };
 
+    const static std::size_t slot_size = entry_size + sizeof(EntryMeta);
 
     /* Each chunk is a dynamically allocated block of data that is
      * sizeof(ElementWithMeta) * ChunkSize in size */
-    std::vector<Chunk> chunks_;
+    std::vector<std::shared_ptr<Chunk>> chunks_;
 
     void push_chunk() {
         /* Allocate the new chunk */
-        Chunk new_chunk;
-        new_chunk.data = new byte[sizeof(EntryWithMeta) * chunk_size];
+        auto new_chunk = std::make_shared<Chunk>();
+        new_chunk->data = new EntryWithMeta[chunk_size];
 
         /* Get pointers to the first meta (which follows the actual entry)
          * and the previous in the list, which would be the current free tail
          */
-        EntryWithMeta* ewm = (EntryWithMeta*) new_chunk.data;
-
+        EntryWithMeta* ewm = new_chunk->data;
 
         /* Set the free list head to the first thing */
-        new_chunk.free_list_head_ = &ewm->meta;
+        new_chunk->free_list_head_ = &ewm->meta;
 
         /* Go through all metas and set prev/next pointers */
         for(std::size_t i = 0; i < chunk_size; ++i) {
-            _polylist::EntryMeta* meta = &ewm->meta;
-            _polylist::EntryMeta* prev = (i == 0) ? nullptr : &(ewm - 1)->meta;
+            EntryMeta* meta = &ewm->meta;
+            EntryMeta* prev = (i == 0) ? nullptr : &(ewm - 1)->meta;
+
+            memset(ewm->data, 0, entry_size);
 
             meta->prev = prev;
-            meta->is_free = true;
-
             meta->chunk = chunks_.size();
             meta->index = i;  // Set the ID
-            meta->entry = ewm->entry;
+            meta->entry = nullptr;
 
             if(i == chunk_size - 1) {
                 meta->next = nullptr;
-                new_chunk.free_list_tail_ = meta;
+                new_chunk->free_list_tail_ = meta;
             } else {
                 meta->next = &(ewm + 1)->meta;
                 ewm++;
@@ -304,9 +358,9 @@ private:
             return false;
         }
 
-        auto& chunk = chunks_.back();
+        auto chunk = chunks_.back();
 
-        auto it = iterator(this, chunk.used_list_head_);
+        auto it = iterator(this, chunk->used_list_head_);
 
         /* End really means end, because this is the final chunk *
          * this wouldn't work to delete any chunk as the end iterator
@@ -317,43 +371,49 @@ private:
             it = erase(it);
         }
 
-        delete [] chunk.data;
-        chunk.data = nullptr;
+        delete [] chunk->data;
+        chunk->data = nullptr;
 
         chunks_.pop_back();
 
         return true;
     }
 
-    _polylist::EntryMeta* alloc_entry(id* new_id) {
+    void alloc_entry(EntryWithMeta* ewm, Base* obj) {
+        auto& chunk = chunks_[ewm->meta.chunk];
+
+        if(chunk->free_list_head_ == &ewm->meta) {
+            chunk->free_list_head_ = chunk->free_list_head_->next;
+        }
+        if(chunk->free_list_tail_ == &ewm->meta) {
+            chunk->free_list_tail_ = chunk->free_list_tail_->prev;
+        }
+
+        /* Add to the end of the used list */
+        ewm->meta.prev = chunk->used_list_tail_;
+        if(ewm->meta.prev) ewm->meta.prev->next = &ewm->meta;
+        chunk->used_list_tail_ = &ewm->meta;
+
+        /* Make the head point to this if this is the first one */
+        if(!chunk->used_list_head_) {
+            chunk->used_list_head_ = &ewm->meta;
+        }
+
+        ewm->meta.next = nullptr;
+        ewm->meta.entry = obj;
+
+        ++size_;
+    }
+
+    EntryWithMeta* find_entry(id* new_id) {
         uint32_t i = 0;
-        for(auto& chunk: chunks_) {
-            if(chunk.free_list_head_) {
-                _polylist::EntryMeta* result = chunk.free_list_head_;
-
-                chunk.free_list_head_ = chunk.free_list_head_->next;
-                if(chunk.free_list_tail_ == result) {
-                    chunk.free_list_tail_ = result->prev;
-                }
-
-                /* Add to the end of the used list */
-                result->prev = chunk.used_list_tail_;
-                if(result->prev) result->prev->next = result;
-                chunk.used_list_tail_ = result;
-
-                /* Make the head point to this if this is the first one */
-                if(!chunk.used_list_head_) {
-                    chunk.used_list_head_ = result;
-                }
-
-                result->next = nullptr;
-                result->is_free = false;
+        for(auto chunk: chunks_) {
+            if(chunk->free_list_head_) {
+                EntryMeta* result = chunk->free_list_head_;
 
                 *new_id = ((i * chunk_size) + result->index) + 1;
 
-                ++size_;
-
-                return result;
+                return get_ewm(result);
             }
 
             ++i;
@@ -362,20 +422,24 @@ private:
         /* If no free entry was found, we need a new chunk */
         push_chunk();
 
-        return alloc_entry(new_id);
+        return find_entry(new_id);
     }
 
-    Base* object_from_id(id i) const {
-        uint32_t idx = i - 1;
+    EntryWithMeta* object_from_id(id i) const {
+        std::size_t idx = i - 1;
         std::size_t chunk_id = (idx / chunk_size);
         std::size_t index = (idx % chunk_size);
 
-        EntryWithMeta* ewm = reinterpret_cast<EntryWithMeta*>(
-            &chunks_[chunk_id].data[index * sizeof(EntryWithMeta)]
-        );
+        EntryWithMeta* ewm = &chunks_[chunk_id]->data[index];
 
-        return (ewm->meta.is_free) ?
-            nullptr : reinterpret_cast<Base*>(ewm->entry);
+        assert(chunk_id == ewm->meta.chunk);
+        assert(index == ewm->meta.index);
+
+        return ewm;
+    }
+
+    EntryWithMeta* get_ewm(EntryMeta* meta) {
+        return &chunks_[meta->chunk]->data[meta->index];
     }
 };
 

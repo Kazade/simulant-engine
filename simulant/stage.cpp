@@ -48,6 +48,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     ContainerNode(this),
     generic::Identifiable<StageID>(id),
     WindowHolder(parent),
+    node_pool_(std::make_shared<StageNodePool>(1)),
     ui_(new ui::UIManager(this)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
