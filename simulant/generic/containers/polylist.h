@@ -68,8 +68,7 @@ class Polylist {
 
 public:
     const static std::size_t entry_size = _polylist::MaxSize<Base, Classes...>::value;
-
-    static_assert(sizeof(Base) <= entry_size);
+    static_assert(sizeof(Base) <= entry_size, "entry_size was invalid");
 
     const std::size_t chunk_size;
 
@@ -429,6 +428,14 @@ private:
         std::size_t idx = i - 1;
         std::size_t chunk_id = (idx / chunk_size);
         std::size_t index = (idx % chunk_size);
+
+        if(chunk_id >= chunks_.size()) {
+            return nullptr;
+        }
+
+        if(index >= chunk_size) {
+            return nullptr;
+        }
 
         EntryWithMeta* ewm = &chunks_[chunk_id]->data[index];
 

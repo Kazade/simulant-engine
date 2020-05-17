@@ -112,7 +112,6 @@ void StageNode::rotate_to_absolute(const Degrees& degrees, float x, float y, flo
 
 void StageNode::on_transformation_changed() {
     update_transformation_from_parent();
-    mark_absolute_transformation_dirty();
 }
 
 void StageNode::update_transformation_from_parent() {
@@ -133,6 +132,7 @@ void StageNode::update_transformation_from_parent() {
     }
 
     mark_transformed_aabb_dirty();
+    mark_absolute_transformation_dirty();
 
     for(auto& node: each_child()) {
         node.update_transformation_from_parent();

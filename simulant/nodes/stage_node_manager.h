@@ -84,10 +84,10 @@ public:
     bool destroy(const IDType& id) {
         if(queued_for_destruction_.count(id)) {
             return false;
+        } else {
+            queued_for_destruction_.insert(id);
+            return true;
         }
-
-        queued_for_destruction_.insert(id);
-        return true;
     }
 
     void clear() {
@@ -105,8 +105,12 @@ public:
             StageNode* node = *it;
             T* a = dynamic_cast<T*>(node);
             assert((node && a) || (!node && !a));
+
+            a->clean_up();
+
             objects_.remove(a);
             pool_->erase(it);
+            queued_for_destruction_.erase(id);
             return true;
         }
         return false;
@@ -121,7 +125,8 @@ public:
             }
             objects_.clear();
         } else {
-            for(auto i: queued_for_destruction_) {
+            auto queued = queued_for_destruction_;
+            for(auto i: queued) {
                 destroy_immediately(i);
             }
         }
