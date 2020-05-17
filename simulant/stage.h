@@ -61,7 +61,7 @@ class ManualManager;
 typedef StageNodeManager<ActorID, Actor> ActorManager;
 typedef ManualManager<Geom, GeomID> GeomManager;
 typedef StageNodeManager<LightID, Light> LightManager;
-typedef ManualManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
+typedef StageNodeManager<ParticleSystemID, ParticleSystem> ParticleSystemManager;
 typedef StageNodeManager<CameraID, Camera> CameraManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;

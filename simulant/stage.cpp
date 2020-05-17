@@ -56,7 +56,7 @@ Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
     sky_manager_(new SkyManager(parent, this)),
     sprite_manager_(new SpriteManager(parent, this)),
     actor_manager_(new ActorManager(node_pool_.get())),
-    particle_system_manager_(new ParticleSystemManager()),
+    particle_system_manager_(new ParticleSystemManager(node_pool_.get())),
     light_manager_(new LightManager(node_pool_.get())),
     camera_manager_(new CameraManager(node_pool_.get())) {
 

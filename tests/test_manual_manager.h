@@ -105,16 +105,19 @@ public:
             ParticleScript::BuiltIns::FIRE
         );
 
+        auto count = stage->node_pool->size();
+
         auto particle_system = stage->new_particle_system(script)->id();
+
+        assert_equal(stage->node_pool->size(), count + 1);
+
         stage->destroy_particle_system(particle_system);
 
-        // Should be different, the original particle system is still lingering
-        assert_not_equal(stage->new_particle_system(script)->id(), particle_system);
+        assert_equal(stage->node_pool->size(), count + 1);
 
         window->run_frame();
 
-        // Same ID should be given back as it's been released
-        assert_equal(stage->new_particle_system(script)->id(), particle_system);
+        assert_equal(stage->node_pool->size(), count);
     }
 
     void test_geoms_are_freed() {
