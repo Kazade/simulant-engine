@@ -60,7 +60,7 @@ class ManualManager;
 
 typedef StageNodeManager<ActorID, Actor> ActorManager;
 typedef ManualManager<Geom, GeomID> GeomManager;
-typedef ManualManager<Light, LightID> LightManager;
+typedef StageNodeManager<LightID, Light> LightManager;
 typedef ManualManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
 typedef StageNodeManager<CameraID, Camera> CameraManager;
 

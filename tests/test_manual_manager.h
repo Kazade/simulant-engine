@@ -84,16 +84,18 @@ public:
     void test_lights_are_freed() {
         auto stage = window->new_stage();
 
+        auto count = stage->node_pool->size();
+
         auto light = stage->new_light_as_directional()->id();
+        assert_equal(stage->node_pool->size(), count + 1);
+
         stage->destroy_light(light);
 
-        // Should be different, the original light is still lingering
-        assert_not_equal(stage->new_light_as_directional()->id(), light);
+        assert_equal(stage->node_pool->size(), count + 1);
 
         window->run_frame();
 
-        // Same ID should be given back as it's been released
-        assert_equal(stage->new_light_as_directional()->id(), light);
+        assert_equal(stage->node_pool->size(), count);
     }
 
     void test_particle_systems_are_freed() {

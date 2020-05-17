@@ -22,10 +22,9 @@
 
 namespace smlt {
 
-Light::Light(LightID lid, Stage* stage):
+Light::Light(Stage* stage):
     TypedDestroyableObject<Light, Stage>(stage),
     ContainerNode(stage),
-    generic::Identifiable<LightID>(lid),
     type_(LIGHT_TYPE_POINT) {
 
     set_range(100.0f);
