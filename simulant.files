@@ -102,6 +102,10 @@ simulant/nodes/particles/manipulators/colour_fader.h
 simulant/nodes/particles/manipulators/curves.cpp
 simulant/nodes/particles/manipulators/curves.h
 simulant/nodes/particles/manipulators/size_manipulator.cpp
+simulant/nodes/skies/skybox.cpp
+simulant/nodes/skies/skybox.h
+simulant/nodes/skies/skybox_manager.cpp
+simulant/nodes/skies/skybox_manager.h
 simulant/nodes/stage_node_manager.h
 simulant/nodes/ui/ui_config.h
 simulant/pipeline.cpp

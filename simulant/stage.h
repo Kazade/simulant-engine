@@ -30,7 +30,7 @@
 #include "nodes/stage_node_manager.h"
 
 #include "managers/window_holder.h"
-#include "managers/skybox_manager.h"
+#include "nodes/skies/skybox_manager.h"
 #include "managers/sprite_manager.h"
 
 #include "nodes/actor.h"

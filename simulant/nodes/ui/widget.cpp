@@ -9,10 +9,9 @@
 namespace smlt {
 namespace ui {
 
-Widget::Widget(WidgetID id, UIManager *owner, UIConfig *defaults):
+Widget::Widget(UIManager *owner, UIConfig *defaults):
     TypedDestroyableObject<Widget, UIManager>(owner),
     ContainerNode(owner->stage()),
-    generic::Identifiable<WidgetID>(id),
     owner_(owner) {
 
 }

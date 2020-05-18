@@ -18,7 +18,8 @@ namespace smlt {
 typedef Polylist<
     StageNode,
     Actor, Camera, Geom, Light, ParticleSystem, Sprite,
-    ui::Button, ui::Image, ui::Label, ui::ProgressBar
+    ui::Button, ui::Image, ui::Label, ui::ProgressBar,
+    Skybox, Sprite
 > StageNodePool;
 
 template<typename PoolType, typename IDType, typename T, typename ...Subtypes>

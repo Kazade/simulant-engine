@@ -4,8 +4,8 @@
 namespace smlt {
 namespace ui {
 
-Button::Button(WidgetID id, UIManager *owner, UIConfig *config):
-    Widget(id, owner, config) {
+Button::Button(UIManager *owner, UIConfig *config):
+    Widget(owner, config) {
 
     set_resize_mode(config->button_resize_mode_);
     set_padding(

@@ -6,11 +6,10 @@
 #include "../../types.h"
 #include "../../event_listener.h"
 #include "ui_config.h"
+#include "../../generic/containers/polylist.h"
+#include "../stage_node.h"
 
 namespace smlt {
-
-template<typename T, typename IDType, typename ...Subtypes>
-class ManualManager;
 
 namespace ui {
 
@@ -20,8 +19,21 @@ class Label;
 class ProgressBar;
 class Image;
 
-typedef ManualManager<Widget, WidgetID, Button, Label, ProgressBar, Image> WidgetManager;
+}
 
+template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
+class StageNodeManager;
+
+typedef Polylist<
+    StageNode,
+    Actor, Camera, Geom, Light, ParticleSystem, Sprite,
+    ui::Button, ui::Image, ui::Label, ui::ProgressBar,
+    Skybox, Sprite
+> StageNodePool;
+
+namespace ui {
+
+typedef StageNodeManager<StageNodePool, WidgetID, Widget, Button, Label, ProgressBar, Image> WidgetManager;
 
 enum UIEventType {
     UI_EVENT_TYPE_TOUCH
@@ -42,7 +54,7 @@ class UIManager:
     public EventListener {
 
 public:
-    UIManager(Stage* stage);
+    UIManager(Stage* stage, StageNodePool* pool);
     virtual ~UIManager();
 
     Button* new_widget_as_button(const unicode& text, float width=.0f, float height=.0f);
@@ -60,7 +72,7 @@ public:
     void destroy_object(Widget* object);
     void destroy_object_immediately(Widget* object);
 
-private:    
+private:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
 
