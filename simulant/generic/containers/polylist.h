@@ -156,7 +156,7 @@ public:
         static_assert(sizeof(T) <= entry_size, "sizeof(T) was greater than entry_size");
 
         id new_id;
-        auto ewm = find_entry(&new_id);
+        auto ewm = find_free_entry(&new_id);
 
         /* Construct the object */
         T* ret = new (ewm->data) T(std::forward<Args>(args)...);
@@ -193,7 +193,8 @@ public:
         auto meta = it.current_;
         assert(meta);
 
-        auto next = iterator(this, meta->next);
+        auto next = iterator(this, meta);
+        ++next;
 
         assert(meta->entry);
 
@@ -268,6 +269,10 @@ public:
 
     const Base* operator[](id i) const {
         return object_from_id(i)->meta.entry;
+    }
+
+    bool empty() const {
+        return size_ == 0;
     }
 
     std::size_t size() const {
@@ -405,12 +410,13 @@ private:
         ++size_;
     }
 
-    EntryWithMeta* find_entry(id* new_id) {
+    EntryWithMeta* find_free_entry(id* new_id) {
         uint32_t i = 0;
         for(auto chunk: chunks_) {
             if(chunk->free_list_head_) {
                 EntryMeta* result = chunk->free_list_head_;
 
+                assert(result->chunk == i);
                 *new_id = ((i * chunk_size) + result->index) + 1;
 
                 return get_ewm(result);
@@ -422,7 +428,7 @@ private:
         /* If no free entry was found, we need a new chunk */
         push_chunk();
 
-        return find_entry(new_id);
+        return find_free_entry(new_id);
     }
 
     EntryWithMeta* object_from_id(id i) const {

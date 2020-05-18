@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <array>
+#include <limits>
 
 #include "../threads/thread.h"
 #include "../threads/mutex.h"

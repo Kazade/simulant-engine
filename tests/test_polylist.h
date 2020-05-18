@@ -43,6 +43,32 @@ typedef Polylist<A, B, C, D, E> List;
 
 class PolylistTests : public smlt::test::SimulantTestCase {
 public:
+    void test_erase_across_chunks() {
+        List list(1);
+
+        auto p1 = list.create<C>();
+        list.create<C>();
+        list.create<C>();
+
+        auto it = list.find(p1.second);
+        for(; it != list.end();) {
+            it = list.erase(it);
+        }
+
+        assert_true(list.empty());
+    }
+
+    void test_find_across_chunks() {
+        List list(1);
+
+        list.create<C>();
+        list.create<C>();
+        auto p3 = list.create<C>();
+
+        auto it = list.find(p3.second);
+        assert_false(it == list.end());
+    }
+
     void test_reserve() {
         List list(64);
 

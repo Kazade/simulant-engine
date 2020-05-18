@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../generic/manual_manager.h"
 #include "../nodes/sprite.h"
 #include "./window_holder.h"
 

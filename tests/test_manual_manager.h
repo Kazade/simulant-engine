@@ -169,17 +169,19 @@ public:
     }
 
     void test_stages_are_freed() {
+        auto count = window->pool_.size();
+
         auto stage = window->new_stage()->id();
+
+        assert_equal(window->pool_.size(), count + 1);
 
         window->destroy_stage(stage);
 
-        // Should be different, the original light is still lingering
-        assert_not_equal(window->new_stage()->id(), stage);
+        assert_equal(window->pool_.size(), count + 1);
 
         window->run_frame();
 
-        // Same ID should be given back as it's been released
-        assert_equal(window->new_stage()->id(), stage);
+        assert_equal(window->pool_.size(), count);
     }
 
     void test_backgrounds_are_freed() {

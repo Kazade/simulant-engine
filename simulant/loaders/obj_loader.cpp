@@ -115,7 +115,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
         auto alpha = (material.dissolve) ? 1.0f : 0.0f;
 
-        new_mat->each([&](uint32_t i, MaterialPass* pass) {
+        new_mat->each([&](uint32_t, MaterialPass* pass) {
             pass->set_diffuse(smlt::Colour(material.diffuse[0], material.diffuse[1], material.diffuse[2], alpha));
             pass->set_ambient(smlt::Colour(material.ambient[0], material.ambient[1], material.ambient[2], alpha));
             pass->set_specular(smlt::Colour(material.specular[0], material.specular[1], material.specular[2], alpha));

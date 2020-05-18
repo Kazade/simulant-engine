@@ -21,25 +21,25 @@ typedef Polylist<
     ui::Button, ui::Image, ui::Label, ui::ProgressBar
 > StageNodePool;
 
-template<typename IDType, typename T, typename ...Subtypes>
+template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
 class StageNodeManager {
 public:
-    typedef StageNodeManager<IDType, T, Subtypes...> this_type;
+    typedef StageNodeManager<PoolType, IDType, T, Subtypes...> this_type;
 
-    StageNodeManager(StageNodePool* pool):
+    StageNodeManager(PoolType* pool):
         pool_(pool) {}
 
     ~StageNodeManager() {
         clear();
     }
 
-    const StageNodePool* pool() const {
+    const PoolType* pool() const {
         return pool_;
     }
 
     template<typename Derived, typename... Args>
     Derived* make_as(Args&&... args) {
-        auto pair = pool_->create<Derived>(
+        auto pair = pool_->template create<Derived>(
             std::forward<Args>(args)...
         );
 
@@ -82,11 +82,12 @@ public:
     }
 
     bool destroy(const IDType& id) {
-        if(queued_for_destruction_.count(id)) {
-            return false;
-        } else {
+        auto it = pool_->find(id.value());
+        if(it != pool_->end()) {
             queued_for_destruction_.insert(id);
             return true;
+        } else {
+            return false;
         }
     }
 
@@ -144,8 +145,17 @@ public:
     std::size_t size() const {
         return objects_.size();
     }
+
+    typename std::list<T*>::iterator begin() {
+        return objects_.begin();
+    }
+
+    typename std::list<T*>::iterator end() {
+        return objects_.end();
+    }
+
 private:
-    StageNodePool* pool_ = nullptr;
+    PoolType* pool_ = nullptr;
     std::list<T*> objects_;
     std::set<IDType> queued_for_destruction_;
     bool destroy_all_next_clean_ = false;

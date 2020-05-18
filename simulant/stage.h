@@ -55,14 +55,11 @@ class Partitioner;
 class Debug;
 class Sprite;
 
-template<typename T, typename IDType, typename ...Subtypes>
-class ManualManager;
-
-typedef StageNodeManager<ActorID, Actor> ActorManager;
-typedef StageNodeManager<GeomID, Geom> GeomManager;
-typedef StageNodeManager<LightID, Light> LightManager;
-typedef StageNodeManager<ParticleSystemID, ParticleSystem> ParticleSystemManager;
-typedef StageNodeManager<CameraID, Camera> CameraManager;
+typedef StageNodeManager<StageNodePool, ActorID, Actor> ActorManager;
+typedef StageNodeManager<StageNodePool, GeomID, Geom> GeomManager;
+typedef StageNodeManager<StageNodePool, LightID, Light> LightManager;
+typedef StageNodeManager<StageNodePool, ParticleSystemID, ParticleSystem> ParticleSystemManager;
+typedef StageNodeManager<StageNodePool, CameraID, Camera> CameraManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
@@ -96,7 +93,7 @@ class Stage:
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
 public:
-    Stage(StageID id, Window *parent, AvailablePartitioner partitioner);
+    Stage(Window *parent, AvailablePartitioner partitioner);
     virtual ~Stage();
 
     ActorPtr new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
