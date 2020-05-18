@@ -27,7 +27,6 @@
 #include "generic/object_manager.h"
 #include "generic/data_carrier.h"
 
-#include "backgrounds/background.h"
 #include "vfs.h"
 #include "idle_task_manager.h"
 #include "input/input_state.h"
@@ -84,8 +83,6 @@ typedef sig::signal<void ()> ShutdownSignal;
 
 typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
-
-typedef ManualManager<Background, BackgroundID, Background> BackgroundManager;
 
 class Platform;
 
@@ -259,20 +256,6 @@ public:
     bool has_explicit_audio_listener() const;
 
 
-    /* Background management */
-    BackgroundPtr new_background(BackgroundType type);
-    BackgroundPtr new_background_as_scrollable_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
-    BackgroundPtr new_background_as_animated_from_file(const unicode& filename);
-
-    BackgroundPtr background(BackgroundID bid);
-    bool has_background(BackgroundID bid) const;
-    BackgroundPtr destroy_background(BackgroundID bid);
-    uint32_t background_count() const;
-
-    void destroy_all_backgrounds();
-    /* End background management */
-
-
     /* Coroutines */
     void start_coroutine(std::function<void ()> func);
 
@@ -338,7 +321,6 @@ private:
     bool can_attach_sound_by_id() const { return false; }
 
     std::shared_ptr<AssetManager> asset_manager_;
-    std::shared_ptr<BackgroundManager> backgrounds_;
 
     bool initialized_;
 

@@ -106,6 +106,8 @@ simulant/nodes/skies/skybox.cpp
 simulant/nodes/skies/skybox.h
 simulant/nodes/skies/skybox_manager.cpp
 simulant/nodes/skies/skybox_manager.h
+simulant/nodes/sprites/sprite_manager.cpp
+simulant/nodes/sprites/sprite_manager.h
 simulant/nodes/stage_node_manager.h
 simulant/nodes/ui/ui_config.h
 simulant/pipeline.cpp
@@ -271,10 +273,6 @@ simulant/animation.cpp
 simulant/animation.h
 simulant/application.cpp
 simulant/application.h
-simulant/backgrounds/background.cpp
-simulant/backgrounds/background.cpp
-simulant/backgrounds/background.h
-simulant/backgrounds/background.h
 simulant/backgrounds/background_manager.cpp
 simulant/backgrounds/background_manager.h
 simulant/behaviours/behaviour.cpp

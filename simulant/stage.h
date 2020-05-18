@@ -31,8 +31,7 @@
 
 #include "managers/window_holder.h"
 #include "nodes/skies/skybox_manager.h"
-#include "managers/sprite_manager.h"
-
+#include "nodes/sprites/sprite_manager.h"
 #include "nodes/actor.h"
 #include "nodes/geom.h"
 #include "nodes/particle_system.h"

@@ -57,7 +57,7 @@ public:
     void destroy() override;
     void destroy_immediately() override;
 
-    Sprite(SpriteID id, SpriteManager *manager, SoundDriver *sound_driver);
+    Sprite(SpriteManager *manager, SoundDriver *sound_driver);
 
     void set_render_dimensions(float width, float height);
     void set_render_dimensions_from_width(float width);

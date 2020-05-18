@@ -1,19 +1,15 @@
 #pragma once
 
-#include "../generic/manual_manager.h"
-#include "../nodes/sprite.h"
-#include "./window_holder.h"
+#include "../sprite.h"
+#include "../../managers/window_holder.h"
+#include "../stage_node_manager.h"
 
 namespace smlt {
 
-template<typename T, typename IDType, typename ...Subtypes>
-class ManualManager;
-
-typedef ManualManager<Sprite, SpriteID> TemplatedSpriteManager;
+typedef StageNodeManager<StageNodePool, SpriteID, Sprite> TemplatedSpriteManager;
 
 typedef sig::signal<void (SpriteID)> SpriteCreatedSignal;
 typedef sig::signal<void (SpriteID)> SpriteDestroyedSignal;
-
 
 class SpriteManager :
     public virtual WindowHolder {
@@ -24,7 +20,7 @@ class SpriteManager :
     friend class Sprite;
 
 public:
-    SpriteManager(Window* window, Stage* stage);
+    SpriteManager(Window* window, Stage* stage, StageNodePool *pool);
     virtual ~SpriteManager();
 
     SpritePtr new_sprite();

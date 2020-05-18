@@ -53,7 +53,7 @@ Stage::Stage(Window *parent, AvailablePartitioner partitioner):
     fog_(new FogSettings()),
     geom_manager_(new GeomManager(node_pool_.get())),
     sky_manager_(new SkyManager(parent, this, node_pool_.get())),
-    sprite_manager_(new SpriteManager(parent, this)),
+    sprite_manager_(new SpriteManager(parent, this, node_pool_.get())),
     actor_manager_(new ActorManager(node_pool_.get())),
     particle_system_manager_(new ParticleSystemManager(node_pool_.get())),
     light_manager_(new LightManager(node_pool_.get())),
