@@ -33,11 +33,11 @@ class Widget:
 public:
     typedef std::shared_ptr<Widget> ptr;
 
-    Widget(WidgetID id, UIManager* owner, UIConfig* defaults);
+    Widget(UIManager* owner, UIConfig* defaults);
     virtual ~Widget();
 
-    virtual bool init();
-    virtual void clean_up();
+    virtual bool init() override;
+    virtual void clean_up() override;
 
     void resize(int32_t width, int32_t height);
     void set_font(FontID font_id);
@@ -60,7 +60,7 @@ public:
     void click();
 
     void set_text(const unicode& text);
-    void set_border_width(float x);    
+    void set_border_width(float x);
     void set_border_colour(const Colour& colour);
     void set_overflow(OverflowType type);
     void set_padding(float x);
@@ -99,7 +99,7 @@ public:
     float outer_height() const { return content_height() + (border_width_ * 2); }
 
     /*
-    bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'    
+    bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
     bool is_enabled() const; // Widget dependent, returns true if widget has no concept of 'disabled'
     bool is_hovered() const; // Widget dependent, returns false if widget has no concept of 'hovered'
     */
@@ -138,7 +138,7 @@ public:
 
 public:
     MaterialPtr material() const { return material_; }
-    
+
 private:
     void on_render_priority_changed(
         RenderPriority old_priority, RenderPriority new_priority

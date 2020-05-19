@@ -24,17 +24,16 @@
 #include "../stage.h"
 #include "../window.h"
 #include "../animation.h"
-#include "../managers/sprite_manager.h"
+#include "sprites/sprite_manager.h"
 
 using namespace smlt;
 
-Sprite::Sprite(SpriteID id, SpriteManager *manager, SoundDriver* sound_driver):
+Sprite::Sprite(SpriteManager *manager, SoundDriver* sound_driver):
     ContainerNode(manager->stage.get()),
-    generic::Identifiable<SpriteID>(id),
     Source(manager->stage, sound_driver),
     manager_(manager) {
 
-    sprite_sheet_padding_ = std::make_pair(0, 0);  
+    sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
 void Sprite::destroy() {

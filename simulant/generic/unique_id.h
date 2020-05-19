@@ -79,7 +79,7 @@ public:
     typedef ResourceTypePtr resource_pointer_type;
     typedef typename ResourceTypePtr::element_type element_type;
 
-    operator bool() const {
+    explicit operator bool() const {
         return id_ > 0;
     }
 

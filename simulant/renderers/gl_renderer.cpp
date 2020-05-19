@@ -17,7 +17,7 @@
 
 namespace smlt {
 
-void GLRenderer::on_texture_register(TextureID tex_id, TexturePtr texture) {
+void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
     _S_UNUSED(tex_id);
 
     GLuint gl_tex;
@@ -106,7 +106,7 @@ GLint texture_format_to_internal_format(TextureFormat format) {
     }
 }
 
-void GLRenderer::on_texture_prepare(TexturePtr texture) {
+void GLRenderer::on_texture_prepare(Texture *texture) {
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;

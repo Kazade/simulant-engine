@@ -25,18 +25,16 @@
 
 namespace smlt {
 
-Actor::Actor(ActorID id, Stage* stage, SoundDriver* sound_driver):
+Actor::Actor(Stage* stage, SoundDriver* sound_driver):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage),
-    generic::Identifiable<ActorID>(id),
     Source(stage, sound_driver) {
 
 }
 
-Actor::Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh):
+Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage),
-    generic::Identifiable<ActorID>(id),
     Source(stage, sound_driver) {
 
     set_mesh(mesh);
@@ -135,8 +133,10 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     meshptr.reset();
 
     /* Only the nearest detail level is animated */
+    has_animated_mesh_ = meshes_[DETAIL_LEVEL_NEAREST]->is_animated();
+
     /* FIXME: This logic should also happen if the associated Mesh has set_animation_enabled called */
-    if(detail_level == DETAIL_LEVEL_NEAREST && has_animated_mesh(detail_level)) {
+    if(detail_level == DETAIL_LEVEL_NEAREST && has_animated_mesh_) {
         using namespace std::placeholders;
 
         interpolated_vertex_data_ = std::make_shared<VertexData>(meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_specification());

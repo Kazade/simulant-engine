@@ -95,18 +95,14 @@ protected:
     virtual void activate() {}
     virtual void deactivate() {}
 
-
     /* Linked pipelines activate and deactivate with the scene */
-    void link_pipeline(smlt::PipelineID pipeline) {
-        linked_pipelines_.insert(pipeline);
-    }
-
-    void unlink_pipeline(smlt::PipelineID pipeline) {
-        linked_pipelines_.insert(pipeline);
-    }
+    void link_pipeline(const std::string& name);
+    void unlink_pipeline(const std::string& name);
+    void link_pipeline(PipelinePtr pipeline);
+    void unlink_pipeline(PipelinePtr pipeline);
 
 private:
-    std::set<PipelineID> linked_pipelines_;
+    std::set<std::string> linked_pipelines_;
 
     virtual void pre_load() {}
     virtual void post_unload() {}

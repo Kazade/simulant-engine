@@ -504,7 +504,6 @@ typedef UniqueID<StagePtr> StageID;
 typedef UniqueID<ActorPtr> ActorID;
 typedef UniqueID<GeomPtr> GeomID;
 typedef UniqueID<SoundPtr> SoundID;
-typedef UniqueID<PipelinePtr> PipelineID;
 typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;
 typedef UniqueID<ParticleSystemPtr> ParticleSystemID;

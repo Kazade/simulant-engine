@@ -3,8 +3,8 @@
 namespace smlt {
 namespace ui {
 
-Label::Label(WidgetID id, UIManager *owner, UIConfig *config):
-    Widget(id, owner, config) {
+Label::Label(UIManager *owner, UIConfig *config):
+    Widget(owner, config) {
 
     set_resize_mode(config->label_resize_mode_);
     set_background_colour(config->label_background_colour_);

@@ -28,6 +28,8 @@ deps/libgl/samples/Makefile
 deps/libgl/samples/blend_test/main.c
 deps/libgl/samples/depth_funcs/Makefile
 deps/libgl/samples/depth_funcs/main.c
+deps/libgl/samples/depth_funcs_alpha_testing/main.c
+deps/libgl/samples/depth_funcs_ortho/main.c
 deps/libgl/samples/lights/main.c
 deps/libgl/samples/mipmap/Makefile
 deps/libgl/samples/mipmap/main.c
@@ -70,8 +72,8 @@ simulant/compat/exception_ptr_lite.hpp
 simulant/coroutines.cpp
 simulant/coroutines.h
 simulant/generic/containers/contiguous_map.h
+simulant/generic/containers/polylist.h
 simulant/generic/cow_vector.h
-simulant/generic/manual_manager.h
 simulant/generic/manual_object.cpp
 simulant/generic/manual_object.h
 simulant/generic/notifies_destruction.h
@@ -79,7 +81,6 @@ simulant/generic/object_manager.h
 simulant/generic/raii.h
 simulant/generic/range_value.h
 simulant/generic/uniquely_identifiable.h
-simulant/generic/vector_pool.h
 simulant/loaders/deps/tiny_obj_loader.h
 simulant/loaders/wav_loader.cpp
 simulant/loaders/wav_loader.h
@@ -99,6 +100,13 @@ simulant/nodes/particles/manipulators/colour_fader.h
 simulant/nodes/particles/manipulators/curves.cpp
 simulant/nodes/particles/manipulators/curves.h
 simulant/nodes/particles/manipulators/size_manipulator.cpp
+simulant/nodes/skies/skybox.cpp
+simulant/nodes/skies/skybox.h
+simulant/nodes/skies/skybox_manager.cpp
+simulant/nodes/skies/skybox_manager.h
+simulant/nodes/sprites/sprite_manager.cpp
+simulant/nodes/sprites/sprite_manager.h
+simulant/nodes/stage_node_manager.h
 simulant/nodes/ui/ui_config.h
 simulant/pipeline.cpp
 simulant/pipeline.h
@@ -127,9 +135,10 @@ tests/test_contiguous_map.h
 tests/test_cow_vector.h
 tests/test_heightmap.h
 tests/test_loose_quadtree.h
-tests/test_manual_manager.h
 tests/test_panels.h
+tests/test_polylist.h
 tests/test_stage.h
+tests/test_stage_node_manager.h
 tests/test_threads.h
 tools/test_generator.py
 .gitlab-ci.yml
@@ -262,10 +271,6 @@ simulant/animation.cpp
 simulant/animation.h
 simulant/application.cpp
 simulant/application.h
-simulant/backgrounds/background.cpp
-simulant/backgrounds/background.cpp
-simulant/backgrounds/background.h
-simulant/backgrounds/background.h
 simulant/backgrounds/background_manager.cpp
 simulant/backgrounds/background_manager.h
 simulant/behaviours/behaviour.cpp

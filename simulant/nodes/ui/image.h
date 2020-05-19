@@ -20,7 +20,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
 
-    Image(WidgetID id, UIManager* owner, UIConfig* config);
+    Image(UIManager* owner, UIConfig* config);
     virtual ~Image() {}
 
     /* Set the texture of the Image. By default the image will be sized to the

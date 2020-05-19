@@ -124,11 +124,11 @@ private:
 
     friend class GL2RenderQueueVisitor;
 
-    void on_texture_prepare(TexturePtr texture) override {
+    void on_texture_prepare(Texture* texture) override {
         GLRenderer::on_texture_prepare(texture);
     }
 
-    void on_texture_register(TextureID tex_id, TexturePtr texture) override {
+    void on_texture_register(TextureID tex_id, Texture* texture) override {
         GLRenderer::on_texture_register(tex_id, texture);
     }
 

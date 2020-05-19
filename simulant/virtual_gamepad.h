@@ -58,7 +58,6 @@ private:
 
     CameraPtr camera_;
     PipelinePtr pipeline_;
-    PipelineID pipeline_id_;
 
     sig::signal<void (int)> signal_button_down_;
     sig::signal<void (int)> signal_button_up_;

@@ -222,10 +222,12 @@ protected:
     void recalc_bounds_if_necessary() const;
     void mark_transformed_aabb_dirty();
 
+    void mark_absolute_transformation_dirty();
 private:
     AABB calculate_transformed_aabb() const;
 
     Stage* stage_ = nullptr;
+    StageNode* parent_stage_node_ = nullptr;
 
     generic::DataCarrier data_;
 
@@ -234,6 +236,9 @@ private:
     Vec3 absolute_position_;
     Quaternion absolute_rotation_;
     Vec3 absolute_scale_ = Vec3(1, 1, 1);
+
+    mutable Mat4 absolute_transformation_;
+    mutable bool absolute_transformation_is_dirty_ = true;
 
     /* Mutable so that AABB accesses can be const, but we delay
      * calculation until access */

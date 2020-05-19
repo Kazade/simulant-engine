@@ -31,123 +31,109 @@
 #include "partitioner.h"
 #include "loader.h"
 
-#include "generic/manual_manager.h"
-
 namespace smlt {
 
 RenderSequence::RenderSequence(Window *window):
     window_(window),
-    renderer_(window->renderer.get()),
-    pipeline_manager_(new PipelineManager()) {
+    renderer_(window->renderer.get()) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
     render_options.texture_enabled = true;
     render_options.backface_culling_enabled = true;
     render_options.point_size = 1;
-
-    clean_up_connection_ = window->signal_post_idle().connect([&]() {
-        pipeline_manager_->clean_up();
-    });
 }
 
 RenderSequence::~RenderSequence() {
     clean_up_connection_.disconnect();
     destroy_all_pipelines();
-    pipeline_manager_->clean_up();
-    pipeline_manager_.reset();
 }
 
-void RenderSequence::activate_pipelines(const std::vector<PipelineID>& pipelines) {
-    for(PipelineID p: pipelines) {
-        auto pip = pipeline(p);
-        if(!pip->is_active()) {
-            pip->activate();
-        }
-    }
-}
-
-std::vector<PipelineID> RenderSequence::active_pipelines() const {
-    std::vector<PipelineID> result;
-
-    for(PipelinePtr p: ordered_pipelines_) {
-        if(p->is_active()) {
-            result.push_back(p->id());
-        }
-    }
-
-    return result;
-}
-
-void RenderSequence::deactivate_all_pipelines() {
-    for(PipelinePtr p: ordered_pipelines_) {
-        if(p->is_active()) {
-            p->deactivate();
-        }
-    }
-}
-
-PipelinePtr RenderSequence::pipeline(PipelineID pipeline) {
-    return pipeline_manager_->get(pipeline);
-}
-
-void RenderSequence::destroy_pipeline(PipelineID pipeline_id) {
-    if(!pipeline_manager_->contains(pipeline_id)) {
-        return;
-    }
-
-    auto pip = pipeline(pipeline_id);
-    if(pip->is_active()) {
-        pip->deactivate();
-    }
-
-    ordered_pipelines_.remove_if([=](PipelinePtr pipeline) -> bool { return pipeline->id() == pipeline_id;});
-    pipeline_manager_->destroy(pipeline_id);
-}
-
-void RenderSequence::destroy_all_pipelines() {
-    for(auto pip: ordered_pipelines_) {
-        if(pip->is_active()) {
-            pip->deactivate();
-        }
-    }
-
-    ordered_pipelines_.clear();
-
-    pipeline_manager_->destroy_all();
-}
-
-bool RenderSequence::has_pipeline(PipelineID pipeline) {
-    return pipeline_manager_->contains(pipeline);
-}
-
-PipelinePtr RenderSequence::find_pipeline_with_name(const std::string& name) {
-    for(auto pipeline: pipeline_manager_->_each()) {
+PipelinePtr RenderSequence::find_pipeline(const std::string &name) {
+    for(auto& pipeline: ordered_pipelines_) {
         if(pipeline->name() == name) {
             return pipeline;
         }
     }
 
-    return PipelinePtr();
+    return nullptr;
 }
 
-void RenderSequence::sort_pipelines(bool acquire_lock) {
-    auto do_sort = [&]() {
-        ordered_pipelines_.sort(
-                    [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
-        );
-    };
+bool RenderSequence::destroy_pipeline(const std::string& name) {
+    auto pip = find_pipeline(name);
+    if(!pip) {
+        return false;
+    }
 
-    if(acquire_lock) {
-        thread::Lock<thread::Mutex> lock(pipeline_lock_);
-        do_sort();
-    } else {
-        do_sort();
+    if(queued_for_destruction_.count(pip)) {
+        return false;
+    }
+
+    queued_for_destruction_.insert(pip);
+
+    /* When a user requests destruction, we deactivate immediately
+     * as that's the path of least surprise. The pipeline won't be used
+     * anyway on the next render, this just makes sure that the stage for example
+     * doesn't think it's part of an active pipeline until then */
+    pip->deactivate();
+
+    return true;
+}
+
+void RenderSequence::destroy_pipeline_immediately(const std::string& name) {
+    auto pip = find_pipeline(name);
+    pip->deactivate();
+
+    queued_for_destruction_.erase(pip);
+    ordered_pipelines_.remove(pip);
+
+    pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
+        return pip->name() == name;
+    });
+}
+
+void RenderSequence::clean_up() {
+    for(auto pip: queued_for_destruction_) {
+        pip->deactivate();
+        ordered_pipelines_.remove(pip);
+
+        auto name = pip->name();
+        pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
+            return pip->name() == name;
+        });
+    }
+    queued_for_destruction_.clear();
+}
+
+void RenderSequence::destroy_all_pipelines() {
+    auto pipelines = ordered_pipelines_;
+    for(auto pip: pipelines) {
+        assert(pip);
+        destroy_pipeline(pip->name());
     }
 }
 
-PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const Viewport& viewport, TextureID target, int32_t priority) {
-    auto pipeline = pipeline_manager_->make(this, stage, camera);
+bool RenderSequence::has_pipeline(const std::string& name) {
+    return bool(find_pipeline(name));
+}
+
+void RenderSequence::sort_pipelines() {
+    auto do_sort = [&]() {
+        ordered_pipelines_.sort(
+            [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
+        );
+    };
+
+    do_sort();
+}
+
+PipelinePtr RenderSequence::new_pipeline(
+    const std::string& name, StageID stage, CameraID camera,
+    const Viewport& viewport, TextureID target, int32_t priority) {
+
+    auto pipeline = Pipeline::create(
+        this, name, stage, camera
+    );
 
     /* New pipelines should always start deactivated to avoid the attached stage
      * as being updated automatically in the main thread when the pipeline
@@ -156,11 +142,13 @@ PipelinePtr RenderSequence::new_pipeline(StageID stage, CameraID camera, const V
     pipeline->set_viewport(viewport);
     pipeline->set_target(target);
     pipeline->set_priority(priority);
-    thread::Lock<thread::Mutex> lock(pipeline_lock_);
-    ordered_pipelines_.push_back(pipeline);
+
+    pool_.push_back(pipeline);
+
+    ordered_pipelines_.push_back(pipeline.get());
     sort_pipelines();
 
-    return pipeline;
+    return pipeline.get();
 }
 
 void RenderSequence::set_renderer(Renderer* renderer) {
@@ -168,6 +156,8 @@ void RenderSequence::set_renderer(Renderer* renderer) {
 }
 
 void RenderSequence::run() {
+    clean_up();  /* Clean up any destroyed pipelines before rendering */
+
     targets_rendered_this_frame_.clear();
 
     /* Perform any pre-rendering tasks */

@@ -44,7 +44,7 @@ class ParticleSystem :
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
-    ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver *sound_driver, ParticleScriptPtr script);
+    ParticleSystem(Stage* stage, SoundDriver *sound_driver, ParticleScriptPtr script);
     virtual ~ParticleSystem();
 
     const AABB& aabb() const override;

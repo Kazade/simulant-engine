@@ -27,7 +27,6 @@
 #include "generic/object_manager.h"
 #include "generic/data_carrier.h"
 
-#include "backgrounds/background.h"
 #include "vfs.h"
 #include "idle_task_manager.h"
 #include "input/input_state.h"
@@ -84,8 +83,6 @@ typedef sig::signal<void ()> ShutdownSignal;
 
 typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
-
-typedef ManualManager<Background, BackgroundID, Background> BackgroundManager;
 
 class Platform;
 
@@ -163,22 +160,19 @@ public:
     /* PipelineHelperAPIInterface */
 
     virtual PipelineHelper render(StageID stage_id, CameraID camera_id) override {
-        return new_pipeline_helper(render_sequence_, stage_id, camera_id);
+        static int32_t counter = 0;
+        std::string name = _F("{0}").format(counter++);
+        return new_pipeline_helper(render_sequence_, name, stage_id, camera_id);
     }
 
     PipelineHelper render(StagePtr stage, CameraPtr camera);
 
-    virtual PipelinePtr pipeline(PipelineID pid) override;
-    virtual bool enable_pipeline(PipelineID pid) override;
-    virtual bool disable_pipeline(PipelineID pid) override;
-    virtual PipelinePtr find_pipeline_with_name(const std::string &name) override;
-
-    /* Delete a pipeline and return a nullptr so you can use the pattern
-     * pipeline_ = destroy_pipeline(pipeline->id()) for safety
-     */
-    virtual PipelinePtr destroy_pipeline(PipelineID pid) override;
-    virtual bool has_pipeline(PipelineID pid) const override;
-    virtual bool is_pipeline_enabled(PipelineID pid) const override;
+    virtual bool enable_pipeline(const std::string& name) override;
+    virtual bool disable_pipeline(const std::string& name) override;
+    virtual PipelinePtr find_pipeline(const std::string &name) override;
+    virtual void destroy_pipeline(const std::string& name) override;
+    virtual bool has_pipeline(const std::string& name) const override;
+    virtual bool is_pipeline_active(const std::string& name) const override;
 
     Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
         return Vec2(
@@ -259,20 +253,6 @@ public:
     bool has_explicit_audio_listener() const;
 
 
-    /* Background management */
-    BackgroundPtr new_background(BackgroundType type);
-    BackgroundPtr new_background_as_scrollable_from_file(const unicode& filename, float scroll_x=0.0, float scroll_y=0.0);
-    BackgroundPtr new_background_as_animated_from_file(const unicode& filename);
-
-    BackgroundPtr background(BackgroundID bid);
-    bool has_background(BackgroundID bid) const;
-    BackgroundPtr destroy_background(BackgroundID bid);
-    uint32_t background_count() const;
-
-    void destroy_all_backgrounds();
-    /* End background management */
-
-
     /* Coroutines */
     void start_coroutine(std::function<void ()> func);
 
@@ -338,7 +318,6 @@ private:
     bool can_attach_sound_by_id() const { return false; }
 
     std::shared_ptr<AssetManager> asset_manager_;
-    std::shared_ptr<BackgroundManager> backgrounds_;
 
     bool initialized_;
 

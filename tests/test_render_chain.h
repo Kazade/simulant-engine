@@ -10,7 +10,7 @@ namespace {
 using namespace smlt;
 
 class RenderChainTests : public smlt::test::SimulantTestCase {
-public:    
+public:
     void test_basic_usage() {
         Viewport view;
         auto stage = window->new_stage();
@@ -44,16 +44,16 @@ public:
 
         pipeline1->deactivate();
 
-        assert_false(window->is_pipeline_enabled(pipeline1->id()));
+        assert_false(window->is_pipeline_active(pipeline1->name()));
 
-        auto pid2 = pipeline2->id();
+        auto pid2 = pipeline2->name();
         window->destroy_pipeline(pid2);
         window->run_frame();
 
         assert_false(window->has_pipeline(pid2));
 
         pipeline1->activate();
-        assert_true(window->is_pipeline_enabled(pipeline1->id()));
+        assert_true(window->is_pipeline_active(pipeline1->name()));
     }
 };
 

@@ -48,8 +48,8 @@ class Actor :
     public HasMutableRenderPriority {
 
 public:
-    Actor(ActorID id, Stage* stage, SoundDriver *sound_driver);
-    Actor(ActorID id, Stage* stage, SoundDriver *sound_driver, MeshID mesh);
+    Actor(Stage* stage, SoundDriver *sound_driver);
+    Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh);
     virtual ~Actor();
 
     const AABB& aabb() const override;
@@ -75,9 +75,9 @@ public:
 
     RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
 
-    bool has_animated_mesh(DetailLevel detail_level=DETAIL_LEVEL_NEAREST) const {
-        auto mesh = find_mesh(detail_level);
-        return mesh && mesh->is_animated();
+    /* Returns true if the nearest detail level mesh is animated. */
+    bool has_animated_mesh() const {
+        return has_animated_mesh_;
     }
 
     void clean_up() override {
@@ -117,6 +117,7 @@ private:
     std::shared_ptr<VertexData> interpolated_vertex_data_;
 
     std::array<std::shared_ptr<Mesh>, DETAIL_LEVEL_MAX> meshes_;
+    bool has_animated_mesh_ = false;
 
     std::shared_ptr<KeyFrameAnimationState> animation_state_;
 

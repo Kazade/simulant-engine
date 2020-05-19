@@ -9,7 +9,7 @@ class Label:
     public Widget {
 
 public:
-    Label(WidgetID id, UIManager* owner, UIConfig* config);
+    Label(UIManager* owner, UIConfig* config);
 };
 
 }

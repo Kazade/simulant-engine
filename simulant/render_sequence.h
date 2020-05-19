@@ -41,11 +41,6 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-template<typename T, typename IDType, typename ...Subtypes>
-class ManualManager;
-
-typedef ManualManager<Pipeline, PipelineID> PipelineManager;
-
 class RenderSequence:
     public RefCounted<RenderSequence> {
 
@@ -54,6 +49,7 @@ public:
     virtual ~RenderSequence();
 
     PipelinePtr new_pipeline(
+        const std::string& name,
         StageID stage,
         CameraID camera,
         const Viewport& viewport=Viewport(),
@@ -61,21 +57,26 @@ public:
         int32_t priority=0
     );
 
-    PipelinePtr pipeline(PipelineID pipeline);
-    void destroy_pipeline(PipelineID pipeline);
+    std::list<PipelinePtr>::iterator begin() {
+        return ordered_pipelines_.begin();
+    }
+
+    std::list<PipelinePtr>::iterator end() {
+        return ordered_pipelines_.end();
+    }
+
+    PipelinePtr find_pipeline(const std::string& name);
+    bool destroy_pipeline(const std::string& name);
     void destroy_all_pipelines();
-    bool has_pipeline(PipelineID pipeline);
+    void destroy_pipeline_immediately(const std::string& name);
 
-    PipelinePtr find_pipeline_with_name(const std::string& name);
-
-    void activate_pipelines(const std::vector<PipelineID>& pipelines);
-    std::vector<PipelineID> active_pipelines() const;
-    void deactivate_all_pipelines();
+    bool has_pipeline(const std::string& name);
 
     //void set_batcher(Batcher::ptr batcher);
     void set_renderer(Renderer *renderer);
 
     void run();
+    void clean_up();
 
     sig::signal<void (Pipeline&)>& signal_pipeline_started() { return signal_pipeline_started_; }
     sig::signal<void (Pipeline&)>& signal_pipeline_finished() { return signal_pipeline_finished_; }
@@ -83,25 +84,25 @@ public:
     RenderOptions render_options;
 
     void destroy_object(PipelinePtr pipeline) {
-        destroy_pipeline(pipeline->id());
+        destroy_pipeline(pipeline->name());
     }
 
     void destroy_object_immediately(PipelinePtr pipeline) {
         // FIXME: This doesn't destroy immediately
-        destroy_pipeline(pipeline->id());
+        destroy_pipeline(pipeline->name());
     }
 
 private:
-    void sort_pipelines(bool acquire_lock=false);
+    void sort_pipelines();
     void run_pipeline(PipelinePtr stage, int& actors_rendered);
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
-
     batcher::RenderQueue render_queue_;
 
-    thread::Mutex pipeline_lock_;
+    std::list<std::shared_ptr<Pipeline>> pool_;
     std::list<PipelinePtr> ordered_pipelines_;
+    std::set<PipelinePtr> queued_for_destruction_;
 
     sig::signal<void (Pipeline&)> signal_pipeline_started_;
     sig::signal<void (Pipeline&)> signal_pipeline_finished_;
@@ -111,9 +112,6 @@ private:
     std::set<RenderTarget*> targets_rendered_this_frame_;
 
     sig::connection clean_up_connection_;
-
-    std::unique_ptr<PipelineManager> pipeline_manager_;
-
 public:
     S_DEFINE_PROPERTY(window, &RenderSequence::window_);
 };

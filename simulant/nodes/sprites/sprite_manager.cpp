@@ -1,15 +1,16 @@
 #include "sprite_manager.h"
-#include "../texture.h"
-#include "../window.h"
-#include "../stage.h"
-#include "../generic/manual_manager.h"
+#include "../../texture.h"
+#include "../../window.h"
+#include "../../stage.h"
+#include "../sprite.h"
+#include "../stage_node_manager.h"
 
 namespace smlt {
 
-SpriteManager::SpriteManager(Window* window, Stage* stage):
+SpriteManager::SpriteManager(Window* window, Stage* stage, StageNodePool* pool):
     WindowHolder(window),
     stage_(stage),
-    sprite_manager_(new TemplatedSpriteManager()) {
+    sprite_manager_(new TemplatedSpriteManager(pool)) {
 
     clean_up_conn_ = window->signal_post_idle().connect([&]() {
        sprite_manager_->clean_up();

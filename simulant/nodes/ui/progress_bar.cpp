@@ -7,8 +7,8 @@ namespace smlt {
 namespace ui {
 
 
-ProgressBar::ProgressBar(WidgetID id, UIManager* owner, UIConfig* config):
-    Widget(id, owner, config) {
+ProgressBar::ProgressBar(UIManager* owner, UIConfig* config):
+    Widget(owner, config) {
 
     set_background_colour(config->progress_bar_background_colour_);
     set_foreground_colour(config->progress_bar_foreground_colour_);

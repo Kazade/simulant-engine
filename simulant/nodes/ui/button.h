@@ -13,7 +13,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Button>
     using Widget::clean_up;
 
-    Button(WidgetID id, UIManager* owner, UIConfig* config);
+    Button(UIManager* owner, UIConfig* config);
 };
 
 }

@@ -69,21 +69,18 @@ public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }
 
-    void register_texture(TextureID tex_id, TexturePtr texture);
-
+    void register_texture(TextureID tex_id, Texture *texture);
     void unregister_texture(TextureID texture_id, Texture* texture);
 
     /*
      * Returns true if the texture has been allocated, false otherwise.
-     *
-     * Should be thread-safe along with allocate/deallocate texture.
      */
     bool is_texture_registered(TextureID texture_id) const;
 
     void pre_render();
 
 private:
-    void prepare_texture(TexturePtr texture);
+    void prepare_texture(Texture *texture);
 
     Window* window_ = nullptr;
 
@@ -97,7 +94,7 @@ private:
      * This will be called when a render group (which uses textures) is created, which
      * means it can be called from any thread and should be thread-safe.
      */
-    virtual void on_texture_register(TextureID tex_id, TexturePtr texture) {
+    virtual void on_texture_register(TextureID tex_id, Texture* texture) {
         _S_UNUSED(tex_id);
         _S_UNUSED(texture);
     }
@@ -123,12 +120,12 @@ private:
      * Guaranteed to be called from the main (render) thread, although must obviously
      * be aware of register/unregister
      */
-    virtual void on_texture_prepare(TexturePtr texture) {
+    virtual void on_texture_prepare(Texture* texture) {
         _S_UNUSED(texture);
     }
 
     mutable thread::Mutex texture_registry_mutex_;
-    std::unordered_map<TextureID, std::weak_ptr<Texture>> texture_registry_;
+    std::unordered_map<TextureID, Texture*> texture_registry_;
 };
 
 }

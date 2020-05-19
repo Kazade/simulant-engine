@@ -27,10 +27,11 @@
 #include "generic/data_carrier.h"
 #include "threads/atomic.h"
 
-#include "managers/window_holder.h"
-#include "managers/skybox_manager.h"
-#include "managers/sprite_manager.h"
+#include "nodes/stage_node_manager.h"
 
+#include "managers/window_holder.h"
+#include "nodes/skies/skybox_manager.h"
+#include "nodes/sprites/sprite_manager.h"
 #include "nodes/actor.h"
 #include "nodes/geom.h"
 #include "nodes/particle_system.h"
@@ -53,14 +54,11 @@ class Partitioner;
 class Debug;
 class Sprite;
 
-template<typename T, typename IDType, typename ...Subtypes>
-class ManualManager;
-
-typedef ManualManager<Actor, ActorID> ActorManager;
-typedef ManualManager<Geom, GeomID> GeomManager;
-typedef ManualManager<Light, LightID> LightManager;
-typedef ManualManager<ParticleSystem, ParticleSystemID> ParticleSystemManager;
-typedef ManualManager<Camera, CameraID> CameraManager;
+typedef StageNodeManager<StageNodePool, ActorID, Actor> ActorManager;
+typedef StageNodeManager<StageNodePool, GeomID, Geom> GeomManager;
+typedef StageNodeManager<StageNodePool, LightID, Light> LightManager;
+typedef StageNodeManager<StageNodePool, ParticleSystemID, ParticleSystem> ParticleSystemManager;
+typedef StageNodeManager<StageNodePool, CameraID, Camera> CameraManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
@@ -94,7 +92,7 @@ class Stage:
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
 public:
-    Stage(StageID id, Window *parent, AvailablePartitioner partitioner);
+    Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size);
     virtual ~Stage();
 
     ActorPtr new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
@@ -201,6 +199,8 @@ public:
     }
 
 private:
+    std::shared_ptr<StageNodePool> node_pool_;
+
     AABB aabb_;
 
     ActorCreatedSignal signal_actor_created_;
@@ -263,7 +263,7 @@ public:
     Property<decltype(&Stage::sky_manager_)> skies = {this, &Stage::sky_manager_};
     Property<decltype(&Stage::sprite_manager_)> sprites = {this, &Stage::sprite_manager_};
     Property<decltype(&Stage::fog_)> fog = {this, &Stage::fog_};
-
+    Property<decltype(&Stage::node_pool_)> node_pool = {this, &Stage::node_pool_};
 };
 
 }

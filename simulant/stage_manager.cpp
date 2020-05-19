@@ -20,13 +20,13 @@
 
 #include "stage_manager.h"
 #include "window.h"
+#include "application.h"
 #include "stage.h"
 #include "nodes/camera.h"
 #include "render_sequence.h"
 #include "loader.h"
 
 #include "renderers/batching/render_queue.h"
-#include "generic/manual_manager.h"
 
 namespace smlt {
 
@@ -35,35 +35,34 @@ namespace smlt {
 
 StageManager::StageManager(Window* window):
     window_(window),
-    stage_manager_(new ManualManager<Stage, StageID>()) {
+    pool_(16),
+    manager_(&pool_) {
 
 }
 
-StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
-    auto ret = stage_manager_->make(this->window_, partitioner);
+StagePtr StageManager::new_stage(AvailablePartitioner partitioner, uint32_t pool_size) {
+    pool_size = (pool_size) ? pool_size:
+        window_->application->config->general.stage_node_pool_size;
+    auto ret = manager_.make(window_, partitioner, pool_size);
     signal_stage_added_(ret->id());
     return ret;
 }
 
 std::size_t StageManager::stage_count() const {
-    return stage_manager_->size();
+    return pool_.size();
 }
 
 /**
  * @brief StageManager::stage
  * @return A shared_ptr to the stage
- *
- * We don't return a ProtectedPtr because it makes usage a nightmare. Stages don't suffer the same potential
- * threading issues as other objects as they are the highest level object. Returning a weak_ptr means that
- * we retain ownership, and calling code won't die if the stage goes missing.
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return stage_manager_->get(s);
+    return manager_.get(s.value());
 }
 
 StagePtr StageManager::destroy_stage(StageID s) {
-    stage_manager_->destroy(s);
+    manager_.destroy(s.value());
     signal_stage_removed_(s);
     return nullptr;
 }
@@ -83,7 +82,9 @@ static void _fixed_update(Stage* stage, float* dt) {
 
 void StageManager::fixed_update(float dt) {
     /* safe_each locks the entire loop */
-    stage_manager_->safe_each(_fixed_update, &dt);
+    for(auto stage: manager_) {
+        _fixed_update(stage, &dt);
+    }
 }
 
 static void _late_update(Stage* stage, float* dt) {
@@ -98,7 +99,9 @@ static void _late_update(Stage* stage, float* dt) {
 }
 
 void StageManager::late_update(float dt) {
-    stage_manager_->safe_each(_late_update, &dt);
+    for(auto stage: manager_) {
+        _late_update(stage, &dt);
+    }
 }
 
 static void _update(Stage* stage, float* dt) {
@@ -114,52 +117,33 @@ static void _update(Stage* stage, float* dt) {
 
 void StageManager::update(float dt) {
     //Update the stages
-    stage_manager_->safe_each(_update, &dt);
-}
-
-void StageManager::print_tree() {
-    for(auto stage: stage_manager_->_each()) {
-        uint32_t counter = 0;
-        print_tree(stage, counter);
+    for(auto stage: manager_) {
+        _update(stage, &dt);
     }
-}
-
-void StageManager::print_tree(StageNode *node, uint32_t& level) {
-    for(uint32_t i = 0; i < level; ++i) {
-        std::cout << "    ";
-    }
-
-    std::cout << *dynamic_cast<Printable*>(node) << std::endl;
-
-    level += 1;
-    for(auto& child: node->each_child()) {
-        print_tree(&child, level);
-    }
-    level -= 1;
 }
 
 void StageManager::clean_up() {
-    stage_manager_->clean_up();
+    manager_.clean_up();
 }
 
 bool StageManager::has_stage(StageID stage_id) const {
-    return stage_manager_->contains(stage_id);
+    return manager_.contains(stage_id);
 }
 
 void StageManager::destroy_all_stages() {
-    stage_manager_->destroy_all();
+    manager_.destroy_all();
 }
 
-StageManager::stage_iterator_pair StageManager::each_stage() {
-    return stage_manager_->_each();
+StageManager::IteratorPair StageManager::each_stage() {
+    return IteratorPair(this);
 }
 
 void StageManager::destroy_object(Stage* object) {
-    stage_manager_->destroy(object->id());
+    manager_.destroy(object->id());
 }
 
 void StageManager::destroy_object_immediately(Stage* object) {
-    stage_manager_->destroy_immediately(object->id());
+    manager_.destroy_immediately(object->id());
 }
 
 // ============= END STAGES ===========

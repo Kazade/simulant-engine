@@ -8,28 +8,26 @@
 namespace smlt {
 
 const static VertexSpecification PS_VERTEX_SPEC(
-        smlt::VERTEX_ATTRIBUTE_3F, // Position
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_2F, // Texcoord 0
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_NONE,
-        smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+    smlt::VERTEX_ATTRIBUTE_3F, // Position
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_2F, // Texcoord 0
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_NONE,
+    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
 );
 
-ParticleSystem::ParticleSystem(ParticleSystemID id, Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
+ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
     TypedDestroyableObject<ParticleSystem, Stage>(stage),
     StageNode(stage),
-    generic::Identifiable<ParticleSystemID>(id),
     Source(stage, sound_driver),
     script_(script),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)),
     index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
-
 
     // Initialize the emitter states
     for(auto i = 0u; i < script_->emitter_count(); ++i) {

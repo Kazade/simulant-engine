@@ -20,7 +20,7 @@
 
 #include "generic/generic_tree.h"
 #include "generic/property.h"
-#include "generic/manual_manager.h"
+#include "generic/containers/polylist.h"
 #include "interfaces.h"
 #include "interfaces/updateable.h"
 #include "types.h"
@@ -42,35 +42,55 @@ class StageManager:
     DEFINE_SIGNAL(StageRemovedSignal, signal_stage_removed);
 
 public:
-    typedef ManualManager<Stage, StageID>::iterator_pair stage_iterator_pair;
+    struct IteratorPair {
+        friend class StageManager;
+
+        std::list<Stage*>::iterator begin() {
+            return owner_->manager_.begin();
+        }
+
+        std::list<Stage*>::iterator end() {
+            return owner_->manager_.end();
+        }
+
+    private:
+        IteratorPair(StageManager* owner):
+            owner_(owner) {}
+
+        StageManager* owner_;
+    };
+
+    friend struct IteratorPair;
 
     StageManager(Window* window);
 
-    StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM);
+    StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM, uint32_t pool_size=0);
     StagePtr stage(StageID s);
     StagePtr destroy_stage(StageID s);
     std::size_t stage_count() const;
     bool has_stage(StageID stage_id) const;
 
-    void print_tree();
     void fixed_update(float dt) override;
     void update(float dt) override;
     void late_update(float dt) override;
 
     void destroy_all_stages();
 
-    stage_iterator_pair each_stage();
+    IteratorPair each_stage();
 
     /* Implementation for TypedDestroyableObject (INTERNAL) */
     void destroy_object(Stage* object);
     void destroy_object_immediately(Stage* object);
 private:
     Window* window_ = nullptr;
-    void print_tree(StageNode* node, uint32_t& level);
 
 protected:
     void clean_up();
-    std::shared_ptr<ManualManager<Stage, StageID>> stage_manager_;
+
+    typedef Polylist<StageNode, Stage> StagePool;
+
+    StagePool pool_;
+    StageNodeManager<StagePool, StageID, Stage> manager_;
 };
 
 }

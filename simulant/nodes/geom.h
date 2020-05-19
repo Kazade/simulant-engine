@@ -64,7 +64,6 @@ class Geom :
 
 public:
     Geom(
-        GeomID id,
         Stage* stage,
         SoundDriver *sound_driver,
         MeshID mesh,

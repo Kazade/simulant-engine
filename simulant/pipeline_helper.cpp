@@ -40,17 +40,9 @@ PipelineHelper PipelineHelper::with_clear(uint32_t viewport_clear_flags, const s
     return *this;
 }
 
-PipelineID PipelineHelper::id() const {
-    return pipeline_->id();
-}
-
 PipelineHelper PipelineHelper::set_name(const std::string& name) {
     pipeline_->set_name(name);
     return *this;
-}
-
-smlt::PipelineHelper::operator PipelineID() const {
-    return pipeline_->id();
 }
 
 PipelineHelper PipelineHelper::with_priority(smlt::RenderPriority priority) {
@@ -58,9 +50,8 @@ PipelineHelper PipelineHelper::with_priority(smlt::RenderPriority priority) {
     return *this;
 }
 
-
-PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::ptr sequence, StageID stage, CameraID cam) {
-    PipelinePtr pid = sequence->new_pipeline(stage, cam);
+PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::ptr sequence, const std::string& name, StageID stage, CameraID cam) {
+    PipelinePtr pid = sequence->new_pipeline(name, stage, cam);
     return PipelineHelper(sequence, pid);
 }
 

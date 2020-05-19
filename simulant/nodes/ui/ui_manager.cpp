@@ -20,18 +20,18 @@
 #include "../../stage.h"
 #include "../camera.h"
 #include "../../window.h"
-#include "../../generic/manual_manager.h"
+#include "../stage_node_manager.h"
 
 namespace smlt {
 namespace ui {
 
 using namespace std::placeholders;
 
-UIManager::UIManager(Stage *stage):
+UIManager::UIManager(Stage *stage, StageNodePool *pool):
     stage_(stage),
     window_(stage->window.get()){
 
-    manager_.reset(new WidgetManager());
+    manager_.reset(new WidgetManager(pool));
 
     window_->register_event_listener(this);
 
@@ -176,7 +176,7 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
                 if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_MOVE || evt.touch.type == TOUCH_EVENT_TYPE_FINGER_UP) {
                     // Go through all the widgets, if one is being pressed and it's different
                     // than the one above, then trigger a fingerleave event
-                    for(auto iter: manager_->_each()) {
+                    for(auto iter: *manager_) {
                         if(iter->is_pressed_by_finger(evt.touch.touch_id) && iter != widget) {
                             iter->fingerleave(evt.touch.touch_id);
                         }
@@ -197,7 +197,7 @@ void UIManager::clear_event_queue() {
 WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
     WidgetPtr result = nullptr;
 
-    for(auto widget: manager_->_each()) {
+    for(auto widget: *manager_) {
         auto aabb = widget->transformed_aabb();
         std::vector<Vec3> ss_points;
 

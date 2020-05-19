@@ -106,8 +106,10 @@ std::vector<Vec3> get_surrounding_vertices(MeshPtr terrain, int x, int z) {
     return get_surrounding_vertices_from_index(terrain, i);
 }
 
-
 static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
+    _S_UNUSED(width);
+    _S_UNUSED(height);
+
     VertexData& vertex_data = mesh->vertex_data;
 
     vertex_data.move_to_start();
@@ -240,7 +242,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // Load the texture using the texture loader
     TexturePtr tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R8);
-    TextureLoader loader(this->filename_, this->data_);    
+    TextureLoader loader(this->filename_, this->data_);
     loader.into(*tex, {{"auto_upload", false}});
 
     tex->flip_vertically();

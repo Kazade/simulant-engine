@@ -36,28 +36,27 @@
 #include "partitioners/null_partitioner.h"
 #include "partitioners/spatial_hash.h"
 #include "partitioners/frustum_partitioner.h"
-#include "generic/manual_manager.h"
 
 namespace smlt {
 
 // Apparently this is the colour of a high noon sun (colour temp 5400 - 255, 255, 251)
 const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
-Stage::Stage(StageID id, Window *parent, AvailablePartitioner partitioner):
+Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size):
     TypedDestroyableObject<Stage, Window>(parent),
     ContainerNode(this),
-    generic::Identifiable<StageID>(id),
     WindowHolder(parent),
-    ui_(new ui::UIManager(this)),
+    node_pool_(std::make_shared<StageNodePool>(pool_size)),
+    ui_(new ui::UIManager(this, node_pool_.get())),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
-    geom_manager_(new GeomManager()),
-    sky_manager_(new SkyManager(parent, this)),
-    sprite_manager_(new SpriteManager(parent, this)),
-    actor_manager_(new ActorManager()),
-    particle_system_manager_(new ParticleSystemManager()),
-    light_manager_(new LightManager()),
-    camera_manager_(new CameraManager()) {
+    geom_manager_(new GeomManager(node_pool_.get())),
+    sky_manager_(new SkyManager(parent, this, node_pool_.get())),
+    sprite_manager_(new SpriteManager(parent, this, node_pool_.get())),
+    actor_manager_(new ActorManager(node_pool_.get())),
+    particle_system_manager_(new ParticleSystemManager(node_pool_.get())),
+    light_manager_(new LightManager(node_pool_.get())),
+    camera_manager_(new CameraManager(node_pool_.get())) {
 
     set_partitioner(partitioner);
 
@@ -506,11 +505,11 @@ void Stage::destroy_object_immediately(ParticleSystem* object) {
 }
 
 void Stage::on_actor_created(ActorID actor_id) {
-
+    _S_UNUSED(actor_id);
 }
 
 void Stage::on_actor_destroyed(ActorID actor_id) {
-
+    _S_UNUSED(actor_id);
 }
 
 void Stage::clean_up_dead_objects() {

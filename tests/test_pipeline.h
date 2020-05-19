@@ -21,20 +21,20 @@ public:
 
     void tear_down() {
         window->destroy_stage(stage->id());
-        window->destroy_pipeline(pipeline->id());
+        window->destroy_pipeline(pipeline->name());
     }
 
     void test_find_pipeline_with_name() {
         auto p1 = window->render(stage, camera).set_name("pipeline1").as_pipeline();
         auto p2 = window->render(stage, camera).set_name("pipeline2").as_pipeline();
 
-        auto found = window->find_pipeline_with_name("pipeline1");
-        assert_equal(p1->id(), found->id());
+        auto found = window->find_pipeline("pipeline1");
+        assert_equal(p1->name(), found->name());
 
-        found = window->find_pipeline_with_name("pipeline2");
-        assert_equal(p2->id(), found->id());
+        found = window->find_pipeline("pipeline2");
+        assert_equal(p2->name(), found->name());
 
-        found = window->find_pipeline_with_name("bananas");
+        found = window->find_pipeline("bananas");
         assert_false(found);
     }
 
@@ -63,7 +63,7 @@ public:
 
         assert_true(stage->is_part_of_active_pipeline());
 
-        window->destroy_pipeline(pipeline);
+        window->destroy_pipeline(pipeline->name());
 
         assert_false(stage->is_part_of_active_pipeline());
 
