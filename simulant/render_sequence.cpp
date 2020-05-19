@@ -31,8 +31,6 @@
 #include "partitioner.h"
 #include "loader.h"
 
-#include "generic/manual_manager.h"
-
 namespace smlt {
 
 RenderSequence::RenderSequence(Window *window):

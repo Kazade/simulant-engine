@@ -25,7 +25,6 @@
 
 #include "../../types.h"
 #include "../../threads/shared_mutex.h"
-#include "../../generic/vector_pool.h"
 #include "../../macros.h"
 
 namespace smlt {

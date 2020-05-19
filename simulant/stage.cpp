@@ -36,7 +36,6 @@
 #include "partitioners/null_partitioner.h"
 #include "partitioners/spatial_hash.h"
 #include "partitioners/frustum_partitioner.h"
-#include "generic/manual_manager.h"
 
 namespace smlt {
 

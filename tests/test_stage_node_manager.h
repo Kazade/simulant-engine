@@ -1,10 +1,10 @@
 #pragma once
 
-#include "simulant/generic/manual_manager.h"
 #include "simulant/generic/unique_id.h"
 #include "simulant/stage.h"
 #include "simulant/test.h"
 #include "simulant/nodes/camera.h"
+#include "simulant/nodes/stage_node_manager.h"
 
 namespace {
 
@@ -15,40 +15,30 @@ class MyObject;
 typedef smlt::default_init_ptr<MyObject> MyObjectPtr;
 typedef smlt::UniqueID<MyObjectPtr> MyObjectID;
 
-typedef smlt::ManualManager<MyObject, MyObjectID> MyObjectManager;
+typedef smlt::StageNodeManager<StageNodePool, ActorID, Actor> MyObjectManager;
 
-class MyObject {
-public:
-    MyObjectID id_;
-
-    MyObject(MyObjectID id): id_(id) {}
-
-    bool init() { return true; }
-    void clean_up() {}
-    void _bind_id_pointer(MyObject*) {}
-};
-
-class ManualManagerTests : public smlt::test::SimulantTestCase {
+class StageNodeManagerTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        MyObjectManager manager;
-        MyObject* obj = manager.make();
-        auto id = obj->id_;
+        StageNodePool pool(10);
+        MyObjectManager manager(&pool);
+        Actor* obj = manager.make(nullptr, nullptr);
 
         assert_is_not_null(obj);
-        assert_true(obj->id_);
-        assert_true(manager.contains(obj->id_));
+        assert_true(manager.contains(obj->id()));
         assert_equal(manager.size(), 1u);
-        assert_equal(manager.capacity(), MyObjectManager::chunk_size);
-        assert_is_not_null(manager.get(obj->id_));
+        assert_equal(pool.capacity(), 10u);
+        assert_is_not_null(manager.get(obj->id()));
 
-        manager.destroy(obj->id_);
+        manager.destroy(obj->id());
 
-        assert_is_not_null(manager.get(obj->id_));
-        assert_true(manager.is_marked_for_destruction(obj->id_));
+        assert_is_not_null(manager.get(obj->id()));
+        assert_true(manager.is_marked_for_destruction(obj->id()));
         assert_equal(manager.size(), 1u); // Still there
-        assert_true(manager.contains(obj->id_));
+        assert_true(manager.contains(obj->id()));
+
+        auto id = obj->id();
 
         manager.clean_up();
 

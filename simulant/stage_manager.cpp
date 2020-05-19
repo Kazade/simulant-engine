@@ -26,7 +26,6 @@
 #include "loader.h"
 
 #include "renderers/batching/render_queue.h"
-#include "generic/manual_manager.h"
 
 namespace smlt {
 
