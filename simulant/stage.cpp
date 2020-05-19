@@ -42,11 +42,11 @@ namespace smlt {
 // Apparently this is the colour of a high noon sun (colour temp 5400 - 255, 255, 251)
 const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
-Stage::Stage(Window *parent, AvailablePartitioner partitioner):
+Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size):
     TypedDestroyableObject<Stage, Window>(parent),
     ContainerNode(this),
     WindowHolder(parent),
-    node_pool_(std::make_shared<StageNodePool>(64)),
+    node_pool_(std::make_shared<StageNodePool>(pool_size)),
     ui_(new ui::UIManager(this, node_pool_.get())),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),

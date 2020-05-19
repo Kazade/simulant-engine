@@ -92,7 +92,7 @@ class Stage:
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
 public:
-    Stage(Window *parent, AvailablePartitioner partitioner);
+    Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size);
     virtual ~Stage();
 
     ActorPtr new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);

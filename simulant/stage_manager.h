@@ -64,7 +64,7 @@ public:
 
     StageManager(Window* window);
 
-    StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM);
+    StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM, uint32_t pool_size=0);
     StagePtr stage(StageID s);
     StagePtr destroy_stage(StageID s);
     std::size_t stage_count() const;

@@ -71,7 +71,7 @@ struct AppConfig {
     bool show_cursor = false;
 
     struct General {
-
+        uint32_t stage_node_pool_size = 64;
     } general;
 
     struct Desktop {
@@ -173,8 +173,6 @@ public:
     S_DEFINE_PROPERTY(data, &Application::data_carrier_);
     S_DEFINE_PROPERTY(scenes, &Application::scene_manager_);
     S_DEFINE_PROPERTY(args, &Application::args_);
-
-protected:
     S_DEFINE_PROPERTY(config, &Application::config_);
 };
 

@@ -20,6 +20,7 @@
 
 #include "stage_manager.h"
 #include "window.h"
+#include "application.h"
 #include "stage.h"
 #include "nodes/camera.h"
 #include "render_sequence.h"
@@ -39,8 +40,10 @@ StageManager::StageManager(Window* window):
 
 }
 
-StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
-    auto ret = manager_.make(window_, partitioner);
+StagePtr StageManager::new_stage(AvailablePartitioner partitioner, uint32_t pool_size) {
+    pool_size = (pool_size) ? pool_size:
+        window_->application->config->general.stage_node_pool_size;
+    auto ret = manager_.make(window_, partitioner, pool_size);
     signal_stage_added_(ret->id());
     return ret;
 }

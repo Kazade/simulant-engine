@@ -29,6 +29,7 @@
 #include <vector>
 #include <memory>
 #include <cstring>
+#include <stdexcept>
 
 namespace smlt {
 
@@ -141,6 +142,10 @@ public:
 
     Polylist(std::size_t chunk_size):
         chunk_size(chunk_size) {
+
+        if(chunk_size == 0) {
+            throw std::logic_error("Invalid pool size");
+        }
     }
 
     ~Polylist() {
