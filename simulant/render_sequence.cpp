@@ -87,12 +87,9 @@ void RenderSequence::destroy_pipeline_immediately(const std::string& name) {
     queued_for_destruction_.erase(pip);
     ordered_pipelines_.remove(pip);
 
-    pool_.erase(
-        std::remove_if(pool_.begin(), pool_.end(), [name](const Pipeline::ptr& pip) -> bool {
-            return pip->name() == name;
-        }),
-        pool_.end()
-    );
+    pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
+        return pip->name() == name;
+    });
 }
 
 void RenderSequence::clean_up() {
@@ -101,12 +98,9 @@ void RenderSequence::clean_up() {
         ordered_pipelines_.remove(pip);
 
         auto name = pip->name();
-        pool_.erase(
-            std::remove_if(pool_.begin(), pool_.end(), [name](const Pipeline::ptr& pip) -> bool {
-                return pip->name() == name;
-            }),
-            pool_.end()
-        );
+        pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
+            return pip->name() == name;
+        });
     }
     queued_for_destruction_.clear();
 }

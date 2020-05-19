@@ -59,7 +59,7 @@ public:
         copy->_overwrite_id(new_id);
 
         // Bind the copy to the ID
-        copy->_bind_id_pointer(copy);       
+        copy->_bind_id_pointer(copy);
 
         thread::Lock<thread::RecursiveMutex> g(target_manager->objects_mutex_);
         // DebugScopedLog("Locked", __FILE__, __LINE__);
@@ -265,21 +265,11 @@ public:
     typedef typename parent_class::object_type object_type;
 
     void update() override {
-        // FIXME: Throttle collections per update
-
-        thread::Lock<thread::RecursiveMutex> g(this->objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
         for(auto it = this->objects_.begin(); it != this->objects_.end();) {
-            ObjMeta meta;
-
-            {
-                thread::Lock<thread::Mutex> g(metas_mutex_);
-                meta = object_metas_.at(it->first);
-            }
-
+            ObjMeta meta = object_metas_.at(it->first);
             bool collect = meta.collection_method == GARBAGE_COLLECT_PERIODIC;
 
-            if(it->second.unique() && collect) {
+            if(collect && it->second.unique()) {
                 // The user accessed this, and GC is enabled, and now there is only the
                 // single ref left
                 on_destroy(it->first);
@@ -291,7 +281,6 @@ public:
     }
 
     void set_garbage_collection_method(IDType id, GarbageCollectMethod method) {
-        thread::Lock<thread::Mutex> g(metas_mutex_);
         auto& meta = object_metas_.at(id);
         meta.collection_method = method;
         if(method != GARBAGE_COLLECT_NEVER) {
@@ -310,11 +299,9 @@ private:
         date_time created;
     };
 
-    thread::Mutex metas_mutex_;
     std::unordered_map<IDType, ObjMeta> object_metas_;
 
     void on_make(IDType id) override {
-        thread::Lock<thread::Mutex> g(metas_mutex_);
         object_metas_.insert(std::make_pair(id, ObjMeta()));
     }
 
@@ -323,7 +310,6 @@ private:
             _F("Garbage collecting {0}").format(id)
         );
 
-        thread::Lock<thread::Mutex> g(metas_mutex_);
         object_metas_.erase(id);
     }
 };

@@ -100,7 +100,7 @@ private:
     Renderer* renderer_ = nullptr;
     batcher::RenderQueue render_queue_;
 
-    std::vector<std::shared_ptr<Pipeline>> pool_;
+    std::list<std::shared_ptr<Pipeline>> pool_;
     std::list<PipelinePtr> ordered_pipelines_;
     std::set<PipelinePtr> queued_for_destruction_;
 
