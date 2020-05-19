@@ -41,10 +41,6 @@ public:
         return pipeline_;
     }
 
-    operator PipelineID() const;
-
-    PipelineID id() const;
-
     /* Explicit conversion */
     PipelinePtr as_pipeline() const {
         return pipeline_;
@@ -70,17 +66,19 @@ public:
 
     virtual PipelineHelper render(StageID, CameraID) = 0;
 
-    virtual PipelinePtr pipeline(PipelineID pid) = 0;
-    virtual bool enable_pipeline(PipelineID pid) = 0;
-    virtual bool disable_pipeline(PipelineID pid) = 0;
-    virtual PipelinePtr destroy_pipeline(PipelineID pid) = 0;
-    virtual bool has_pipeline(PipelineID pid) const = 0;
-    virtual bool is_pipeline_enabled(PipelineID pid) const = 0;
+    virtual bool enable_pipeline(const std::string& name) = 0;
+    virtual bool disable_pipeline(const std::string& name) = 0;
+    virtual void destroy_pipeline(const std::string& name) = 0;
+    virtual bool has_pipeline(const std::string& name) const = 0;
+    virtual bool is_pipeline_active(const std::string& name) const = 0;
 
-    virtual PipelinePtr find_pipeline_with_name(const std::string& name) = 0;
+    virtual PipelinePtr find_pipeline(const std::string& name) = 0;
 
 protected:
-    PipelineHelper new_pipeline_helper(std::shared_ptr<RenderSequence> sequence, StageID stage, CameraID cam);
+    PipelineHelper new_pipeline_helper(
+        std::shared_ptr<RenderSequence> sequence, const std::string& name,
+        StageID stage, CameraID cam
+    );
 };
 
 }

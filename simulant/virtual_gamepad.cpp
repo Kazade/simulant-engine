@@ -88,7 +88,6 @@ bool VirtualGamepad::init() {
     //Finally add to the render sequence, give a ridiculously high priority
     pipeline_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     pipeline_->activate();
-    pipeline_id_ = pipeline_->id();
 
     return true;
 }
@@ -109,9 +108,8 @@ void VirtualGamepad::clean_up() {
     // Remove any signal connections
     connections_.clear();
 
-    if(window_.has_pipeline(pipeline_id_)) {
-        pipeline_ = window_.destroy_pipeline(pipeline_id_);
-    }
+    window_.destroy_pipeline(pipeline_->name());
+    pipeline_ = nullptr;
 
     if(window_.has_stage(stage_id_)) {
         stage_ = window_.destroy_stage(stage_id_);

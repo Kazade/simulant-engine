@@ -18,13 +18,14 @@ class RenderableStore;
 class Pipeline:
     public TypedDestroyableObject<Pipeline, RenderSequence>,
     public RefCounted<Pipeline>,
-    public generic::Identifiable<PipelineID>,
     public Nameable {
 
 public:
-    Pipeline(PipelineID id,
+    Pipeline(
         RenderSequence* render_sequence,
-        StageID stage_id, CameraID camera_id);
+        const std::string& name,
+        StageID stage_id, CameraID camera_id
+    );
 
     virtual ~Pipeline();
 

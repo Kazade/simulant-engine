@@ -160,22 +160,19 @@ public:
     /* PipelineHelperAPIInterface */
 
     virtual PipelineHelper render(StageID stage_id, CameraID camera_id) override {
-        return new_pipeline_helper(render_sequence_, stage_id, camera_id);
+        static int32_t counter = 0;
+        std::string name = _F("{0}").format(counter++);
+        return new_pipeline_helper(render_sequence_, name, stage_id, camera_id);
     }
 
     PipelineHelper render(StagePtr stage, CameraPtr camera);
 
-    virtual PipelinePtr pipeline(PipelineID pid) override;
-    virtual bool enable_pipeline(PipelineID pid) override;
-    virtual bool disable_pipeline(PipelineID pid) override;
-    virtual PipelinePtr find_pipeline_with_name(const std::string &name) override;
-
-    /* Delete a pipeline and return a nullptr so you can use the pattern
-     * pipeline_ = destroy_pipeline(pipeline->id()) for safety
-     */
-    virtual PipelinePtr destroy_pipeline(PipelineID pid) override;
-    virtual bool has_pipeline(PipelineID pid) const override;
-    virtual bool is_pipeline_enabled(PipelineID pid) const override;
+    virtual bool enable_pipeline(const std::string& name) override;
+    virtual bool disable_pipeline(const std::string& name) override;
+    virtual PipelinePtr find_pipeline(const std::string &name) override;
+    virtual void destroy_pipeline(const std::string& name) override;
+    virtual bool has_pipeline(const std::string& name) const override;
+    virtual bool is_pipeline_active(const std::string& name) const override;
 
     Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
         return Vec2(

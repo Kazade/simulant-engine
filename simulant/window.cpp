@@ -228,10 +228,10 @@ StageNode* Window::audio_listener()  {
         return audio_listener_;
     } else {
         // Return the first camera we're going to render with
-        auto active = render_sequence_->active_pipelines();
-        if(!active.empty()) {
-            auto p = pipeline(active[0]);
-            return p->camera();
+        for(auto pip: *render_sequence_) {
+            if(pip->is_active()) {
+                return pip->camera();
+            }
         }
 
         return nullptr;
@@ -661,6 +661,7 @@ void Window::reset() {
     panels.clear();
 
     render_sequence_->destroy_all_pipelines();
+    render_sequence_->clean_up();
 
     StageManager::destroy_all_stages();
     StageManager::clean_up();
@@ -689,50 +690,45 @@ PipelineHelper Window::render(StagePtr stage, CameraPtr camera) {
 }
 
 /* PipelineHelperAPIInterface */
-PipelinePtr Window::pipeline(PipelineID pid){
-    return render_sequence_->pipeline(pid);
-}
 
-bool Window::enable_pipeline(PipelineID pid) {
+bool Window::enable_pipeline(const std::string& name) {
     /*
      * Enables the specified pipeline, returns true if the pipeline
      * was enabled, or false if it was already enabled
      */
-    auto pipeline = render_sequence_->pipeline(pid);
+    auto pipeline = render_sequence_->find_pipeline(name);
     bool state = pipeline->is_active();
     pipeline->activate();
     return state != pipeline->is_active();
 }
 
-bool Window::disable_pipeline(PipelineID pid) {
+bool Window::disable_pipeline(const std::string& name) {
     /*
      * Disables the specified pipeline, returns true if the pipeline
      * was disabled, or false if it was already disabled
      */
-    auto pipeline = render_sequence_->pipeline(pid);
+    auto pipeline = render_sequence_->find_pipeline(name);
     bool state = pipeline->is_active();
     pipeline->deactivate();
     return state != pipeline->is_active();
 }
 
-PipelinePtr Window::find_pipeline_with_name(const std::string& name) {
-    return render_sequence_->find_pipeline_with_name(name);
+PipelinePtr Window::find_pipeline(const std::string& name) {
+    return render_sequence_->find_pipeline(name);
 }
 
-PipelinePtr Window::destroy_pipeline(PipelineID pid) {
+void Window::destroy_pipeline(const std::string& name) {
     if(render_sequence_) {
-        render_sequence_->destroy_pipeline(pid);
+        render_sequence_->destroy_pipeline(name);
     }
-
-    return nullptr;
 }
 
-bool Window::has_pipeline(PipelineID pid) const {
-    return render_sequence_->has_pipeline(pid);
+bool Window::has_pipeline(const std::string& name) const {
+    return render_sequence_->has_pipeline(name);
 }
 
-bool Window::is_pipeline_enabled(PipelineID pid) const {
-    return render_sequence_->pipeline(pid)->is_active();
+bool Window::is_pipeline_active(const std::string& name) const {
+    return render_sequence_->find_pipeline(name)->is_active();
 }
 /* End PipelineHelperAPIInterface */
 

@@ -5,14 +5,18 @@
 
 namespace smlt {
 
-Pipeline::Pipeline(PipelineID id,
-        RenderSequence* render_sequence, StageID stage_id, CameraID camera_id):
-    TypedDestroyableObject<Pipeline, RenderSequence>(render_sequence),
-    generic::Identifiable<PipelineID>(id),
-    sequence_(render_sequence),
-    priority_(0),
-    is_active_(false) {
+Pipeline::Pipeline(RenderSequence* render_sequence,
+    const std::string &name, StageID stage_id, CameraID camera_id):
+        TypedDestroyableObject<Pipeline, RenderSequence>(render_sequence),
+        sequence_(render_sequence),
+        priority_(0),
+        is_active_(false) {
 
+    if(name.empty()) {
+        throw std::logic_error("You must specify a name for a pipeline");
+    }
+
+    set_name(name);
     set_stage(stage_id);
     set_camera(camera_id);
 
@@ -52,7 +56,7 @@ void Pipeline::set_priority(int32_t priority) {
         priority_ = priority;
 
         /* If the priority changed, we need to update the render sequence */
-        sequence_->sort_pipelines(/*acquire_lock=*/true);
+        sequence_->sort_pipelines();
     }
 }
 

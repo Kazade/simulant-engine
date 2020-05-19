@@ -108,7 +108,7 @@ void StatsPanel::clean_up() {
     frame_started_.disconnect();
 
     if(pipeline_) {
-        window_->destroy_pipeline(pipeline_);
+        window_->destroy_pipeline(pipeline_->name());
     }
 
     if(stage_) {

@@ -57,7 +57,7 @@ void Splash::load() {
 
 void Splash::unload() {
     //Clean up
-    window->destroy_pipeline(pipeline_->id());
+    window->destroy_pipeline(pipeline_->name());
     window->destroy_stage(stage_->id());
     window->shared_assets->destroy_sound(sound_);
 }

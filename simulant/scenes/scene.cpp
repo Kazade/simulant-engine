@@ -66,8 +66,8 @@ void SceneBase::_call_activate() {
     activate();
     is_active_ = true;
 
-    for(auto pid: linked_pipelines_) {
-        window->pipeline(pid)->activate();
+    for(auto name: linked_pipelines_) {
+        window->find_pipeline(name)->activate();
     }
 }
 
@@ -76,12 +76,28 @@ void SceneBase::_call_deactivate() {
         return;
     }
 
-    for(auto pid: linked_pipelines_) {
-        window->pipeline(pid)->deactivate();
+    for(auto name: linked_pipelines_) {
+        window->find_pipeline(name)->deactivate();
     }
 
     deactivate();
     is_active_ = false;
+}
+
+void SceneBase::link_pipeline(const std::string &name) {
+    linked_pipelines_.insert(name);
+}
+
+void SceneBase::unlink_pipeline(const std::string &name) {
+    linked_pipelines_.insert(name);
+}
+
+void SceneBase::link_pipeline(PipelinePtr pipeline) {
+    link_pipeline(pipeline->name());
+}
+
+void SceneBase::unlink_pipeline(PipelinePtr pipeline) {
+    unlink_pipeline(pipeline->name());
 }
 
 
