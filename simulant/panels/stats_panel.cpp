@@ -21,7 +21,7 @@
 #include "../window.h"
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
-#include "../render_sequence.h"
+#include "../compositor.h"
 #include "../nodes/ui/label.h"
 
 #if defined(__WIN32__)

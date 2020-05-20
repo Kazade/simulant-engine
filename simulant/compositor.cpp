@@ -20,7 +20,7 @@
 #include <unordered_map>
 
 #include "generic/algorithm.h"
-#include "render_sequence.h"
+#include "compositor.h"
 #include "stage.h"
 #include "nodes/actor.h"
 #include "nodes/camera.h"
@@ -33,7 +33,7 @@
 
 namespace smlt {
 
-RenderSequence::RenderSequence(Window *window):
+Compositor::Compositor(Window *window):
     window_(window),
     renderer_(window->renderer.get()) {
 
@@ -44,12 +44,12 @@ RenderSequence::RenderSequence(Window *window):
     render_options.point_size = 1;
 }
 
-RenderSequence::~RenderSequence() {
+Compositor::~Compositor() {
     clean_up_connection_.disconnect();
     destroy_all_pipelines();
 }
 
-PipelinePtr RenderSequence::find_pipeline(const std::string &name) {
+PipelinePtr Compositor::find_pipeline(const std::string &name) {
     for(auto& pipeline: ordered_pipelines_) {
         if(pipeline->name() == name) {
             return pipeline;
@@ -59,7 +59,7 @@ PipelinePtr RenderSequence::find_pipeline(const std::string &name) {
     return nullptr;
 }
 
-bool RenderSequence::destroy_pipeline(const std::string& name) {
+bool Compositor::destroy_pipeline(const std::string& name) {
     auto pip = find_pipeline(name);
     if(!pip) {
         return false;
@@ -80,7 +80,7 @@ bool RenderSequence::destroy_pipeline(const std::string& name) {
     return true;
 }
 
-void RenderSequence::destroy_pipeline_immediately(const std::string& name) {
+void Compositor::destroy_pipeline_immediately(const std::string& name) {
     auto pip = find_pipeline(name);
     pip->deactivate();
 
@@ -92,7 +92,7 @@ void RenderSequence::destroy_pipeline_immediately(const std::string& name) {
     });
 }
 
-void RenderSequence::clean_up() {
+void Compositor::clean_up() {
     for(auto pip: queued_for_destruction_) {
         pip->deactivate();
         ordered_pipelines_.remove(pip);
@@ -105,7 +105,7 @@ void RenderSequence::clean_up() {
     queued_for_destruction_.clear();
 }
 
-void RenderSequence::destroy_all_pipelines() {
+void Compositor::destroy_all_pipelines() {
     auto pipelines = ordered_pipelines_;
     for(auto pip: pipelines) {
         assert(pip);
@@ -113,11 +113,11 @@ void RenderSequence::destroy_all_pipelines() {
     }
 }
 
-bool RenderSequence::has_pipeline(const std::string& name) {
+bool Compositor::has_pipeline(const std::string& name) {
     return bool(find_pipeline(name));
 }
 
-void RenderSequence::sort_pipelines() {
+void Compositor::sort_pipelines() {
     auto do_sort = [&]() {
         ordered_pipelines_.sort(
             [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
@@ -127,7 +127,7 @@ void RenderSequence::sort_pipelines() {
     do_sort();
 }
 
-PipelinePtr RenderSequence::new_pipeline(
+PipelinePtr Compositor::new_pipeline(
     const std::string& name, StageID stage, CameraID camera,
     const Viewport& viewport, TextureID target, int32_t priority) {
 
@@ -151,11 +151,11 @@ PipelinePtr RenderSequence::new_pipeline(
     return pipeline.get();
 }
 
-void RenderSequence::set_renderer(Renderer* renderer) {
+void Compositor::set_renderer(Renderer* renderer) {
     renderer_ = renderer;
 }
 
-void RenderSequence::run() {
+void Compositor::run() {
     clean_up();  /* Clean up any destroyed pipelines before rendering */
 
     targets_rendered_this_frame_.clear();
@@ -177,7 +177,7 @@ uint64_t generate_frame_id() {
     return ++frame_id;
 }
 
-void RenderSequence::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) {
+void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) {
     /*
      * This is where rendering actually happens.
      *

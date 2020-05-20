@@ -60,7 +60,7 @@ class InputState;
 
 class Loader;
 class LoaderType;
-class RenderSequence;
+class Compositor;
 class SceneImpl;
 class VirtualGamepad;
 class Renderer;
@@ -264,7 +264,7 @@ private:
 protected:
     std::shared_ptr<Renderer> renderer_;
 
-    RenderSequence* render_sequence();
+    Compositor* render_sequence();
 
     void set_vsync_enabled(bool vsync) {
         vsync_enabled_ = vsync;
@@ -360,7 +360,7 @@ private:
     float frame_time_in_milliseconds_;
 
     std::shared_ptr<scenes::Loading> loading_;
-    std::shared_ptr<smlt::RenderSequence> render_sequence_;
+    std::shared_ptr<smlt::Compositor> render_sequence_;
     generic::DataCarrier data_carrier_;
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
     std::shared_ptr<TimeKeeper> time_keeper_;

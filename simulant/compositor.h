@@ -41,12 +41,12 @@ struct RenderOptions {
     uint8_t point_size;
 };
 
-class RenderSequence:
-    public RefCounted<RenderSequence> {
+class Compositor:
+    public RefCounted<Compositor> {
 
 public:
-    RenderSequence(Window* window);
-    virtual ~RenderSequence();
+    Compositor(Window* window);
+    virtual ~Compositor();
 
     PipelinePtr new_pipeline(
         const std::string& name,
@@ -113,7 +113,7 @@ private:
 
     sig::connection clean_up_connection_;
 public:
-    S_DEFINE_PROPERTY(window, &RenderSequence::window_);
+    S_DEFINE_PROPERTY(window, &Compositor::window_);
 };
 
 }

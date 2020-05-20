@@ -18,7 +18,7 @@
 //
 
 #include "pipeline_helper.h"
-#include "render_sequence.h"
+#include "compositor.h"
 
 namespace smlt {
 
@@ -50,7 +50,7 @@ PipelineHelper PipelineHelper::with_priority(smlt::RenderPriority priority) {
     return *this;
 }
 
-PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(RenderSequence::ptr sequence, const std::string& name, StageID stage, CameraID cam) {
+PipelineHelper PipelineHelperAPIInterface::new_pipeline_helper(Compositor::ptr sequence, const std::string& name, StageID stage, CameraID cam) {
     PipelinePtr pid = sequence->new_pipeline(name, stage, cam);
     return PipelineHelper(sequence, pid);
 }

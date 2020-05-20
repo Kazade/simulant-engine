@@ -48,7 +48,7 @@
 
 #include "renderers/renderer_config.h"
 #include "sound.h"
-#include "render_sequence.h"
+#include "compositor.h"
 #include "stage.h"
 #include "virtual_gamepad.h"
 #include "scenes/loading.h"
@@ -114,7 +114,7 @@ Window::~Window() {
 
 }
 
-RenderSequence* Window::render_sequence() {
+Compositor* Window::render_sequence() {
     return render_sequence_.get();
 }
 
@@ -267,7 +267,7 @@ bool Window::_init() {
     bool result = create_window();
 
     // Initialize the render_sequence once we have a renderer
-    render_sequence_ = std::make_shared<RenderSequence>(this);
+    render_sequence_ = std::make_shared<Compositor>(this);
 
     if(result && !initialized_) {
         /* Swap buffers immediately after creation, this makes sure that

@@ -23,7 +23,7 @@
 #include "application.h"
 #include "stage.h"
 #include "nodes/camera.h"
-#include "render_sequence.h"
+#include "compositor.h"
 #include "loader.h"
 
 #include "renderers/batching/render_queue.h"

@@ -1,13 +1,13 @@
 #include "window.h"
 #include "stage.h"
-#include "render_sequence.h"
+#include "compositor.h"
 #include "pipeline.h"
 
 namespace smlt {
 
-Pipeline::Pipeline(RenderSequence* render_sequence,
+Pipeline::Pipeline(Compositor* render_sequence,
     const std::string &name, StageID stage_id, CameraID camera_id):
-        TypedDestroyableObject<Pipeline, RenderSequence>(render_sequence),
+        TypedDestroyableObject<Pipeline, Compositor>(render_sequence),
         sequence_(render_sequence),
         priority_(0),
         is_active_(false) {

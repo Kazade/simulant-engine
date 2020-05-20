@@ -12,17 +12,17 @@
 
 namespace smlt {
 
-class RenderSequence;
+class Compositor;
 class RenderableStore;
 
 class Pipeline:
-    public TypedDestroyableObject<Pipeline, RenderSequence>,
+    public TypedDestroyableObject<Pipeline, Compositor>,
     public RefCounted<Pipeline>,
     public Nameable {
 
 public:
     Pipeline(
-        RenderSequence* render_sequence,
+        Compositor* render_sequence,
         const std::string& name,
         StageID stage_id, CameraID camera_id
     );
@@ -60,7 +60,7 @@ private:
     void set_stage(StageID s);
     void set_camera(CameraID c) { camera_ = c; }
 
-    RenderSequence* sequence_ = nullptr;
+    Compositor* sequence_ = nullptr;
     int32_t priority_ = 0;
     StageID stage_;
     TextureID target_;
@@ -72,7 +72,7 @@ private:
 
     std::map<DetailLevel, float> detail_level_end_distances_;
 
-    friend class RenderSequence;
+    friend class Compositor;
 
 public:
     Property<decltype(&Pipeline::viewport_)> viewport = { this, &Pipeline::viewport_ };

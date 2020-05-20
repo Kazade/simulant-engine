@@ -51,7 +51,7 @@ public:
 private:
     friend class PipelineHelperAPIInterface;
 
-    typedef std::shared_ptr<RenderSequence> RenderSequencePtr;
+    typedef std::shared_ptr<Compositor> RenderSequencePtr;
 
     PipelineHelper(RenderSequencePtr sequence, PipelinePtr pid):
         sequence_(sequence), pipeline_(pid) {}
@@ -76,7 +76,7 @@ public:
 
 protected:
     PipelineHelper new_pipeline_helper(
-        std::shared_ptr<RenderSequence> sequence, const std::string& name,
+        std::shared_ptr<Compositor> sequence, const std::string& name,
         StageID stage, CameraID cam
     );
 };

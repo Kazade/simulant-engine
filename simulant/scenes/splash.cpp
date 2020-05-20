@@ -1,7 +1,7 @@
 #include "splash.h"
 
 #include "../stage.h"
-#include "../render_sequence.h"
+#include "../compositor.h"
 #include "../nodes/actor.h"
 #include "../nodes/camera.h"
 #include "../window.h"

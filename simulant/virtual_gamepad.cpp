@@ -22,7 +22,7 @@
 #include "virtual_gamepad.h"
 #include "window.h"
 #include "stage.h"
-#include "render_sequence.h"
+#include "compositor.h"
 #include "nodes/ui/ui_manager.h"
 #include "nodes/ui/button.h"
 
