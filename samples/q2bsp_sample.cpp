@@ -12,7 +12,7 @@ public:
     void load() {
         stage_ = window->new_stage(smlt::PARTITIONER_FRUSTUM);
         camera_ = stage_->new_camera();
-        pipeline_ = window->render(stage_, camera_).as_pipeline();
+        pipeline_ = compositor->render(stage_, camera_);
 
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
         pipeline_->viewport->set_colour(smlt::Colour::GREY);

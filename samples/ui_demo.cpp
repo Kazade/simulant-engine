@@ -12,7 +12,11 @@ public:
         stage_ = window->new_stage();
         camera_ = stage_->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
 
-        auto pipeline = window->render(stage_, camera_).with_clear(smlt::BUFFER_CLEAR_ALL, smlt::Colour::BLACK);
+        auto pipeline = compositor->render(
+            stage_, camera_
+        )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
+        pipeline->viewport->set_colour(smlt::Colour::BLACK);
+
         link_pipeline(pipeline);
 
         auto coord = window->coordinate_from_normalized(0.05, 0.95);

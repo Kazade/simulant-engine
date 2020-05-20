@@ -25,7 +25,6 @@
 #include "nodes/actor.h"
 #include "nodes/camera.h"
 #include "nodes/light.h"
-
 #include "meshes/mesh.h"
 #include "window.h"
 #include "partitioner.h"
@@ -47,6 +46,11 @@ Compositor::Compositor(Window *window):
 Compositor::~Compositor() {
     clean_up_connection_.disconnect();
     destroy_all_pipelines();
+}
+
+PipelinePtr Compositor::render(StagePtr stage, CameraPtr camera) {
+    // This is a common enough requirement to provide a nice shortcut
+    return render(stage->id(), camera->id());
 }
 
 PipelinePtr Compositor::find_pipeline(const std::string &name) {

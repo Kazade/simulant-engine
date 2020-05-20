@@ -149,13 +149,14 @@ public:
 
     void test_pipelines_are_freed() {
         auto stage = window->new_stage();
-        auto pipeline = window->render(stage, stage->new_camera()).as_pipeline();
+        auto pipeline = window->compositor->render(stage, stage->new_camera());
 
-        window->destroy_pipeline(pipeline->name());
-        assert_true(window->has_pipeline(pipeline->name()));
+        auto name = pipeline->name();
+        pipeline->destroy();
+        assert_true(window->compositor->has_pipeline(name));
 
         window->run_frame();
-        assert_false(window->has_pipeline(pipeline->name()));
+        assert_false(window->compositor->has_pipeline(name));
     }
 
     void test_stages_are_freed() {

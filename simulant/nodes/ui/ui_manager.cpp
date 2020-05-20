@@ -21,6 +21,7 @@
 #include "../camera.h"
 #include "../../window.h"
 #include "../stage_node_manager.h"
+#include "../../viewport.h"
 
 namespace smlt {
 namespace ui {

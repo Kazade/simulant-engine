@@ -13,7 +13,9 @@ public:
     void load() {
         stage_ = window->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
-        pipeline_ = window->render(stage_, camera_).as_pipeline();
+        pipeline_ = compositor->render(
+            stage_, camera_
+        );
         link_pipeline(pipeline_);
 
         pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);

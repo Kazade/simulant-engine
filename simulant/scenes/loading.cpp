@@ -54,7 +54,7 @@ void Loading::load() {
     );
 
     //Create an inactive pipeline
-    pipeline_ = window->render(stage_, camera_);
+    pipeline_ = compositor->render(stage_, camera_);
     pipeline_->deactivate();
 }
 

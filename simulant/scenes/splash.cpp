@@ -51,13 +51,13 @@ void Splash::load() {
     );
 
     //Create an inactive pipeline
-    pipeline_ = window->render(stage_, camera_);
+    pipeline_ = compositor->render(stage_, camera_);
     link_pipeline(pipeline_);
 }
 
 void Splash::unload() {
     //Clean up
-    window->destroy_pipeline(pipeline_->name());
+    pipeline_->destroy();
     window->destroy_stage(stage_->id());
     window->shared_assets->destroy_sound(sound_);
 }

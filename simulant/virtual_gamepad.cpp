@@ -86,7 +86,9 @@ bool VirtualGamepad::init() {
     camera_ = stage_->new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    pipeline_ = window_.render(stage_, camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_ = window_.compositor->render(
+        stage_, camera_
+    )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     pipeline_->activate();
 
     return true;
@@ -108,7 +110,7 @@ void VirtualGamepad::clean_up() {
     // Remove any signal connections
     connections_.clear();
 
-    window_.destroy_pipeline(pipeline_->name());
+    pipeline_->destroy();
     pipeline_ = nullptr;
 
     if(window_.has_stage(stage_id_)) {

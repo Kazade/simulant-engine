@@ -18,7 +18,7 @@ public:
         auto actor = stage->new_actor();
         auto camera = stage->new_camera();
 
-        auto pipeline = window->render(stage, camera).as_pipeline();
+        auto pipeline = window->compositor->render(stage, camera);
         pipeline->activate();
 
         actor->new_behaviour<behaviours::CylindricalBillboard>(camera);
@@ -50,7 +50,7 @@ public:
         auto actor = stage->new_actor();
         auto camera = stage->new_camera();
 
-        auto pipeline = window->render(stage, camera).as_pipeline();
+        auto pipeline = window->compositor->render(stage, camera);
         pipeline->activate();
 
         actor->new_behaviour<behaviours::SphericalBillboard>(camera);

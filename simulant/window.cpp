@@ -114,10 +114,6 @@ Window::~Window() {
 
 }
 
-Compositor* Window::render_sequence() {
-    return render_sequence_.get();
-}
-
 LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 
     unicode final_file;
@@ -210,7 +206,7 @@ void Window::_clean_up() {
     destroy_all_stages();
     StageManager::clean_up();
 
-    render_sequence_.reset();
+    compositor_.reset();
 
     if(sound_driver_) {
         sound_driver_->shutdown();
@@ -228,7 +224,7 @@ StageNode* Window::audio_listener()  {
         return audio_listener_;
     } else {
         // Return the first camera we're going to render with
-        for(auto pip: *render_sequence_) {
+        for(auto pip: *compositor_) {
             if(pip->is_active()) {
                 return pip->camera();
             }
@@ -267,7 +263,7 @@ bool Window::_init() {
     bool result = create_window();
 
     // Initialize the render_sequence once we have a renderer
-    render_sequence_ = std::make_shared<Compositor>(this);
+    compositor_ = std::make_shared<Compositor>(this);
 
     if(result && !initialized_) {
         /* Swap buffers immediately after creation, this makes sure that
@@ -536,7 +532,7 @@ bool Window::run_frame() {
         if(has_context()) {
 
             stats->reset_polygons_rendered();
-            render_sequence_->run();
+            compositor_->run();
 
             signal_pre_swap_();
 
@@ -660,8 +656,8 @@ void Window::reset() {
     }
     panels.clear();
 
-    render_sequence_->destroy_all_pipelines();
-    render_sequence_->clean_up();
+    compositor_->destroy_all_pipelines();
+    compositor_->clean_up();
 
     StageManager::destroy_all_stages();
     StageManager::clean_up();
@@ -683,54 +679,6 @@ void Window::reset() {
     register_panel(1, StatsPanel::create(this));
     register_panel(2, PartitionerPanel::create(this));
 }
-
-PipelineHelper Window::render(StagePtr stage, CameraPtr camera) {
-    // This is a common enough requirement to provide a nice shortcut
-    return render(stage->id(), camera->id());
-}
-
-/* PipelineHelperAPIInterface */
-
-bool Window::enable_pipeline(const std::string& name) {
-    /*
-     * Enables the specified pipeline, returns true if the pipeline
-     * was enabled, or false if it was already enabled
-     */
-    auto pipeline = render_sequence_->find_pipeline(name);
-    bool state = pipeline->is_active();
-    pipeline->activate();
-    return state != pipeline->is_active();
-}
-
-bool Window::disable_pipeline(const std::string& name) {
-    /*
-     * Disables the specified pipeline, returns true if the pipeline
-     * was disabled, or false if it was already disabled
-     */
-    auto pipeline = render_sequence_->find_pipeline(name);
-    bool state = pipeline->is_active();
-    pipeline->deactivate();
-    return state != pipeline->is_active();
-}
-
-PipelinePtr Window::find_pipeline(const std::string& name) {
-    return render_sequence_->find_pipeline(name);
-}
-
-void Window::destroy_pipeline(const std::string& name) {
-    if(render_sequence_) {
-        render_sequence_->destroy_pipeline(name);
-    }
-}
-
-bool Window::has_pipeline(const std::string& name) const {
-    return render_sequence_->has_pipeline(name);
-}
-
-bool Window::is_pipeline_active(const std::string& name) const {
-    return render_sequence_->find_pipeline(name)->is_active();
-}
-/* End PipelineHelperAPIInterface */
 
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
