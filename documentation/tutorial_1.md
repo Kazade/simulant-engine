@@ -157,19 +157,23 @@ Creating a pipeline is easy:
 ```
 auto stage = window->new_stage();  // Create a stage
 auto camera = stage->new_camera();  // Create a camera within the stage
-auto pipeline = window->render(stage, camera);  // Create your pipeline
+auto pipeline = compositor->render(stage, camera);  // Create your pipeline
 ```
 
-It is recommended you activate and deactivate your pipeline in the `activate()` and `deactivate()` methods of your `Scene`.
-Pipelines are created deactivated.
+It is recommended you activate and deactivate your pipeline by linking it to the scene:
 
 ```
 void MyScene::load() {
     // ...
     
-    pipeline_ = window->render(stage, camera);
+    pipeline_ = compositor->render(stage, camera);
+    link_pipeline(pipeline_);
 }
+```
 
+This is the equivalent of doing:
+
+```
 void MyScene::activate() {
     pipeline_->activate();
 }
