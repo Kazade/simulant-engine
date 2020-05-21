@@ -18,6 +18,7 @@
 //
 
 #include "scene.h"
+#include "../compositor.h"
 #include "../stage.h"
 #include "../window.h"
 #include "../pipeline.h"
@@ -27,7 +28,8 @@ namespace smlt {
 SceneBase::SceneBase(Window *window):
     window_(window),
     input_(window->input.get()),
-    app_(window->application){
+    app_(window->application),
+    compositor_(window->compositor) {
 
 }
 
@@ -67,7 +69,7 @@ void SceneBase::_call_activate() {
     is_active_ = true;
 
     for(auto name: linked_pipelines_) {
-        window->find_pipeline(name)->activate();
+        compositor->find_pipeline(name)->activate();
     }
 }
 
@@ -77,7 +79,7 @@ void SceneBase::_call_deactivate() {
     }
 
     for(auto name: linked_pipelines_) {
-        window->find_pipeline(name)->deactivate();
+        compositor->find_pipeline(name)->deactivate();
     }
 
     deactivate();

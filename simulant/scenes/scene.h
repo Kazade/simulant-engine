@@ -117,6 +117,7 @@ private:
     InputManager* input_;
     Application* app_;
     SceneManager* scene_manager_ = nullptr;
+    Compositor* compositor_ = nullptr;
 
     friend class SceneManager;
 
@@ -125,6 +126,7 @@ protected:
     S_DEFINE_PROPERTY(app, &SceneBase::app_);
     S_DEFINE_PROPERTY(input, &SceneBase::input_);
     S_DEFINE_PROPERTY(scenes, &SceneBase::scene_manager_);
+    S_DEFINE_PROPERTY(compositor, &SceneBase::compositor_);
 };
 
 template<typename T>

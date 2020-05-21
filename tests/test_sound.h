@@ -10,8 +10,8 @@ class SoundTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
 #ifdef __APPLE__
-	bool skip = bool(std::getenv("TRAVIS"));
-	skip_if(skip, "OSX Travis builds hang on sound tests :(");
+    bool skip = bool(std::getenv("TRAVIS"));
+    skip_if(skip, "OSX Travis builds hang on sound tests :(");
 #endif
 
         SimulantTestCase::set_up();
@@ -29,7 +29,7 @@ public:
         assert_false(window->has_explicit_audio_listener());
         assert_is_null(window->audio_listener());
 
-        auto p = window->render(stage_, camera_).as_pipeline();
+        auto p = window->compositor->render(stage_, camera_);
         p->activate();
 
         // Make the first camera of the first pipeline the audio listener

@@ -9,7 +9,7 @@ public:
     void load() {
         stage_ = window->new_stage();
         camera_ = stage_->new_camera();
-        auto pipeline = window->render(stage_, camera_);
+        auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
 
         smlt::MeshPtr square = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);

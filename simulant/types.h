@@ -474,8 +474,8 @@ typedef default_init_ptr<Widget> WidgetPtr;
 class AssetManager;
 typedef std::shared_ptr<AssetManager> ResourceManagerPtr;
 
-class RenderSequence;
-typedef std::shared_ptr<RenderSequence> RenderSequencePtr;
+class Compositor;
+typedef std::shared_ptr<Compositor> CompositorPtr;
 
 class Pipeline;
 typedef default_init_ptr<Pipeline> PipelinePtr;

@@ -21,7 +21,7 @@
 #include "../window.h"
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
-#include "../render_sequence.h"
+#include "../compositor.h"
 #include "../nodes/ui/label.h"
 
 #if defined(__WIN32__)
@@ -55,7 +55,9 @@ bool StatsPanel::init() {
     stage_ = window_->new_stage(smlt::PARTITIONER_NULL);
 
     ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
-    pipeline_ = window_->render(stage_, ui_camera_).with_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_ = window_->compositor->render(
+        stage_, ui_camera_
+    )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     pipeline_->deactivate();
 
     auto overlay = stage_;
@@ -108,7 +110,8 @@ void StatsPanel::clean_up() {
     frame_started_.disconnect();
 
     if(pipeline_) {
-        window_->destroy_pipeline(pipeline_->name());
+        pipeline_->destroy();
+        pipeline_ = nullptr;
     }
 
     if(stage_) {

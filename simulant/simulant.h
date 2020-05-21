@@ -42,7 +42,7 @@
 
 #include "sound.h"
 #include "random.h"
-#include "render_sequence.h"
+#include "compositor.h"
 #include "nodes/light.h"
 #include "meshes/mesh.h"
 #include "procedural/mesh.h"
