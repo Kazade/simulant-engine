@@ -475,7 +475,7 @@ class AssetManager;
 typedef std::shared_ptr<AssetManager> ResourceManagerPtr;
 
 class Compositor;
-typedef std::shared_ptr<Compositor> RenderSequencePtr;
+typedef std::shared_ptr<Compositor> CompositorPtr;
 
 class Pipeline;
 typedef default_init_ptr<Pipeline> PipelinePtr;
