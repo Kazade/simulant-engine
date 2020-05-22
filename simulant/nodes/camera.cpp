@@ -3,6 +3,7 @@
 
 #include "../stage.h"
 #include "../window.h"
+#include "../viewport.h"
 
 namespace smlt {
 

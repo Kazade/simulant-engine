@@ -9,7 +9,7 @@ public:
     void load() {
         stage_ = window->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
-        auto pipeline = window->render(stage_, camera_).as_pipeline();
+        auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
 
         pipeline->viewport->set_colour(smlt::Colour::GREY);

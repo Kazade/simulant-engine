@@ -13,7 +13,7 @@ as inputs, and an optional target TextureID as an output. If the TextureID is om
 then the output of the pipeline is applied directly to the framebuffer.
 
 Pipelines also have an ordering value. The higher the ordering, the later in the
-render sequence the pipeline runs. The RenderSequence class manages Pipelines
+render sequence the pipeline runs. The Compositor class manages Pipelines
 and is responsible for processing them in order.
 
 The Render System is structured in this way for flexibility. Imagine for a second that
@@ -28,7 +28,7 @@ and output to the framebuffer.
 ### The Scene
 
 As mentioned in the [Render System] section above, when you add a Pipeline to the 
-RenderSequence you must specify which Stage you are rendering. Stages are where
+Compositor you must specify which Stage you are rendering. Stages are where
 you define your scene, and a Scene consists of many Stages. It's up to you how you
 divide your Scene into Stages, (even if you divide it at all), but you'll need to 
 do so while considering how your rendered output will be composited using pipelines.

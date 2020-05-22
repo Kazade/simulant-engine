@@ -8,7 +8,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        cube_stage_ = window->new_stage();        
+        cube_stage_ = window->new_stage();
         auto cube_cam = cube_stage_->new_camera();
 
         rect_stage_ = window->new_stage();
@@ -33,10 +33,16 @@ public:
         mat = rect_mesh->first_submesh()->material();
         mat->set_diffuse_map(rtt);
 
-        window->render(cube_stage_->id(), cube_cam->id()).to_texture(rtt);
-        window->render(rect_stage_->id(), rect_cam->id()).to_framebuffer(
+        compositor->render(
+            cube_stage_,
+            cube_cam
+        )->set_target(rtt);
+
+        compositor->render(
+            rect_stage_, rect_cam
+        )->set_viewport(
             Viewport(VIEWPORT_TYPE_FULL, smlt::Colour::GREY)
-        ).with_clear();
+        )->set_clear_flags(BUFFER_CLEAR_ALL);
     }
 
     void fixed_update(float dt) {

@@ -24,7 +24,7 @@ public:
     }
 
     void test_move_to_origin() {
-        auto pipeline = window->render(stage_, camera_);
+        window->compositor->render(stage_, camera_);
 
         // A bug was reported that this caused a crash (see #219)
         auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);

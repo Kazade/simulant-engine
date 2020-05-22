@@ -24,7 +24,7 @@
 #include "nodes/light.h"
 #include "nodes/camera.h"
 #include "debug.h"
-
+#include "viewport.h"
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
 #include "nodes/geom.h"

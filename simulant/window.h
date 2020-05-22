@@ -33,7 +33,6 @@
 #include "types.h"
 #include "sound.h"
 #include "stage_manager.h"
-#include "pipeline_helper.h"
 #include "scenes/scene_manager.h"
 #include "loader.h"
 #include "event_listener.h"
@@ -60,7 +59,7 @@ class InputState;
 
 class Loader;
 class LoaderType;
-class RenderSequence;
+class Compositor;
 class SceneImpl;
 class VirtualGamepad;
 class Renderer;
@@ -90,7 +89,6 @@ class Window :
     public Source,
     public StageManager,
     public Loadable,
-    public PipelineHelperAPIInterface,
     public RenderTarget,
     public EventListenerManager {
 
@@ -156,23 +154,6 @@ public:
     bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
 
     void reset();
-
-    /* PipelineHelperAPIInterface */
-
-    virtual PipelineHelper render(StageID stage_id, CameraID camera_id) override {
-        static int32_t counter = 0;
-        std::string name = _F("{0}").format(counter++);
-        return new_pipeline_helper(render_sequence_, name, stage_id, camera_id);
-    }
-
-    PipelineHelper render(StagePtr stage, CameraPtr camera);
-
-    virtual bool enable_pipeline(const std::string& name) override;
-    virtual bool disable_pipeline(const std::string& name) override;
-    virtual PipelinePtr find_pipeline(const std::string &name) override;
-    virtual void destroy_pipeline(const std::string& name) override;
-    virtual bool has_pipeline(const std::string& name) const override;
-    virtual bool is_pipeline_active(const std::string& name) const override;
 
     Vec2 coordinate_from_normalized(Ratio rx, Ratio ry) {
         return Vec2(
@@ -263,8 +244,6 @@ private:
 
 protected:
     std::shared_ptr<Renderer> renderer_;
-
-    RenderSequence* render_sequence();
 
     void set_vsync_enabled(bool vsync) {
         vsync_enabled_ = vsync;
@@ -360,7 +339,7 @@ private:
     float frame_time_in_milliseconds_;
 
     std::shared_ptr<scenes::Loading> loading_;
-    std::shared_ptr<smlt::RenderSequence> render_sequence_;
+    std::shared_ptr<smlt::Compositor> compositor_;
     generic::DataCarrier data_carrier_;
     std::shared_ptr<VirtualGamepad> virtual_gamepad_;
     std::shared_ptr<TimeKeeper> time_keeper_;
@@ -415,6 +394,7 @@ public:
     S_DEFINE_PROPERTY(input_state, &Window::input_state_);
     S_DEFINE_PROPERTY(stats, &Window::stats_);
     S_DEFINE_PROPERTY(platform, &Window::platform_);
+    S_DEFINE_PROPERTY(compositor, &Window::compositor_);
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
 

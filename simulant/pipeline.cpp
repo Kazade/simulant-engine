@@ -1,13 +1,13 @@
 #include "window.h"
 #include "stage.h"
-#include "render_sequence.h"
+#include "compositor.h"
 #include "pipeline.h"
 
 namespace smlt {
 
-Pipeline::Pipeline(RenderSequence* render_sequence,
+Pipeline::Pipeline(Compositor* render_sequence,
     const std::string &name, StageID stage_id, CameraID camera_id):
-        TypedDestroyableObject<Pipeline, RenderSequence>(render_sequence),
+        TypedDestroyableObject<Pipeline, Compositor>(render_sequence),
         sequence_(render_sequence),
         priority_(0),
         is_active_(false) {
@@ -28,13 +28,15 @@ Pipeline::Pipeline(RenderSequence* render_sequence,
     detail_level_end_distances_[DETAIL_LEVEL_FARTHEST] = 400.0f;
 }
 
-void Pipeline::set_detail_level_distances(float nearest_cutoff,
+PipelinePtr Pipeline::set_detail_level_distances(float nearest_cutoff,
     float near_cutoff, float mid_cutoff, float far_cutoff) {
 
     detail_level_end_distances_[DETAIL_LEVEL_NEAREST] = nearest_cutoff;
     detail_level_end_distances_[DETAIL_LEVEL_NEAR] = near_cutoff;
     detail_level_end_distances_[DETAIL_LEVEL_MID] = mid_cutoff;
     detail_level_end_distances_[DETAIL_LEVEL_FAR] = far_cutoff;
+
+    return this;
 }
 
 DetailLevel Pipeline::detail_level_at_distance(float dist) const {
@@ -51,13 +53,15 @@ DetailLevel Pipeline::detail_level_at_distance(float dist) const {
 }
 
 
-void Pipeline::set_priority(int32_t priority) {
+PipelinePtr Pipeline::set_priority(int32_t priority) {
     if(priority_ != priority) {
         priority_ = priority;
 
         /* If the priority changed, we need to update the render sequence */
         sequence_->sort_pipelines();
     }
+
+    return this;
 }
 
 Pipeline::~Pipeline() {

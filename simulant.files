@@ -69,6 +69,8 @@ simulant/behaviours/movement/spherical_billboard.h
 simulant/compat.cpp
 simulant/compat.h
 simulant/compat/exception_ptr_lite.hpp
+simulant/compositor.cpp
+simulant/compositor.h
 simulant/coroutines.cpp
 simulant/coroutines.h
 simulant/generic/containers/contiguous_map.h
@@ -758,8 +760,6 @@ simulant/partitioners/null_partitioner.cpp
 simulant/partitioners/null_partitioner.h
 simulant/partitioners/spatial_hash.cpp
 simulant/partitioners/spatial_hash.h
-simulant/pipeline_helper.cpp
-simulant/pipeline_helper.h
 simulant/platform.h
 simulant/procedural/constants.h
 simulant/procedural/mesh.h
@@ -782,8 +782,6 @@ simulant/random.cpp
 simulant/random.cpp
 simulant/random.h
 simulant/random.h
-simulant/render_sequence.cpp
-simulant/render_sequence.h
 simulant/renderers/batching/render_queue.cpp
 simulant/renderers/batching/render_queue.h
 simulant/renderers/batching/renderable.h

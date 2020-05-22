@@ -2,7 +2,7 @@
 
 A render pipeline (just called a `Pipeline` in the API) is a combination of a `Stage`, `Camera` and some kind of render target (often the framebuffer) which controls the visual output of your scene. `Pipelines` can be combined to "layer up" the finally displayed frame.
 
-`Pipelines` are controlled by the `RenderSequence` which is a property of the `Window` and each frame are run in order to generate the final image. For example, if you want to create a 3D scene, with a 2D UI layer you may do the following:
+`Pipelines` are controlled by the `Compositor` which is a property of the `Window` and each frame are run in order to generate the final image. For example, if you want to create a 3D scene, with a 2D UI layer you may do the following:
 
  1. Create a `Stage` and a perspective `Camera` for the 3D portion
  2. Create a `Stage` and an orthographic `Camera` for the UI
@@ -18,10 +18,10 @@ auto persp_camera = stage->new_camera();
 auto overlay = window->new_stage();
 auto ortho_camera = overlay->new_camera();
 
-auto pipeline1 = window->render(stage, persp_camera).as_pipeline();
-auto pipeline2 = window->render(
+auto pipeline1 = compositor->render(stage, persp_camera);
+auto pipeline2 = compositor->render(
     overlay, ortho_camera
-).with_priority(RENDER_PRIORITY_FOREGROUND).as_pipeline();
+)->set_priority(RENDER_PRIORITY_FOREGROUND);
 
 pipeline1->activate();
 pipeline2->activate();
@@ -41,7 +41,7 @@ This boilerplate overriding of `Scene::activate()` and `Scene::deactivate()` can
 called `Scene::link_pipeline`. Once you link a `Pipeline` to a `Scene` it will activate and deactivate along with it.
 
 ```
-auto pipeline1 = window->render(stage, persp_camera).as_pipeline()
+auto pipeline1 = compositor->render(stage, persp_camera);
 link_pipeline(pipeline1); // pipeline1 will activate when this Scene is activated
 ```
 
@@ -50,9 +50,9 @@ link_pipeline(pipeline1); // pipeline1 will activate when this Scene is activate
 Pipelines are `Nameable` meaning that you can set a name and then find them later by that name:
 
 ```
-window->render(stage, camera).set_name("pipeline1");
+compositor->render(stage, camera)->set_name("pipeline1");
 
-auto p1 = window->find_pipeline_with_name("pipeline1");
+auto p1 = window->find_pipeline("pipeline1");
 ```
 
 If there is no pipeline with that name, then you will get a null PipelinePtr returned.
