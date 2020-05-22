@@ -166,7 +166,7 @@ public:
     bool is_visible() const;
 
     bool is_intended_visible() const { return is_visible_; }
-    void set_visible(bool visible) { is_visible_ = visible; }
+    void set_visible(bool visible);
 
     Property<generic::DataCarrier StageNode::*> data = { this, &StageNode::data_ };
     Property<Stage* StageNode::*> stage = { this, &StageNode::stage_ };
@@ -232,6 +232,8 @@ private:
     generic::DataCarrier data_;
 
     bool is_visible_ = true;
+    bool self_and_parents_visible_ = true;
+    void recalc_visibility();
 
     Vec3 absolute_position_;
     Quaternion absolute_rotation_;

@@ -34,6 +34,8 @@ void StageNode::clean_up() {
 
 void StageNode::set_parent(CameraID id) {
     TreeNode::set_parent(stage_->camera(id));
+
+    recalc_visibility();
 }
 
 Vec3 StageNode::absolute_position() const {
@@ -70,14 +72,32 @@ Mat4 StageNode::absolute_transformation() const {
     return absolute_transformation_;
 }
 
-bool StageNode::is_visible() const {
+void StageNode::recalc_visibility() {
     // Debug check to make sure the parent is always a stage node. If we have a parent
     // the dynamic cast should return something truthy, if there's no parent just return true
     assert(parent_ ? (bool) parent_stage_node_ : true);
 
+    bool previously_visible = self_and_parents_visible_;
+
     // If this isn't visible, then fast-out, else return whether the parent is visible until
     // there are no more parents
-    return is_visible_ && ((parent_stage_node_) ? parent_stage_node_->is_visible() : true);
+    self_and_parents_visible_ = is_visible_ && ((parent_stage_node_) ? parent_stage_node_->is_visible() : true);
+
+    if(previously_visible != self_and_parents_visible_) {
+        /* Recurse through children to update */
+        for(auto& node: each_child()) {
+            node.recalc_visibility();
+        }
+    }
+}
+
+bool StageNode::is_visible() const {
+    return self_and_parents_visible_;
+}
+
+void StageNode::set_visible(bool visible) {
+    is_visible_ = visible;
+    recalc_visibility();
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
