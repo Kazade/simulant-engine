@@ -98,25 +98,20 @@ private:
     MeshPtr find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
          * from the level to NEAREST and return the first non-null result */
-
-        auto mesh = meshes_[level];
-        while(!mesh) {
-            if(level == DETAIL_LEVEL_NEAREST) {
-                break;
-            }
-
-            level = (DetailLevel) (int(level) - 1);
-            mesh = meshes_[level];
-        }
-
-        return mesh;
+        return effective_meshes_[level];
     }
-
 
     // Used for animated meshes
     std::shared_ptr<VertexData> interpolated_vertex_data_;
 
-    std::array<std::shared_ptr<Mesh>, DETAIL_LEVEL_MAX> meshes_;
+    /* Meshes specified for each level */
+    MeshPtr meshes_[DETAIL_LEVEL_MAX];
+
+    /* Quick lookup for which mesh is active at a detail level */
+    MeshPtr effective_meshes_[DETAIL_LEVEL_MAX];
+
+    void recalc_effective_meshes();
+
     bool has_animated_mesh_ = false;
 
     std::shared_ptr<KeyFrameAnimationState> animation_state_;
