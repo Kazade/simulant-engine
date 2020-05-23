@@ -9,7 +9,9 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
+#include <iomanip>
 
+#include "utils/string.h"
 #include "threads/mutex.h"
 #include "threads/thread.h"
 
@@ -53,39 +55,74 @@ public:
 private:
     std::string str_;
 
+    struct TokenFound {
+        std::string group;
+        std::string index;
+        std::string remainder;
+    };
+
+    std::vector<TokenFound> scan(int c, const std::string& s) {
+        std::vector<TokenFound> result;
+        auto cs = std::to_string(c);
+        auto text = "{" + cs;
+        auto it = s.find(text);
+        while(it != std::string::npos) {
+            auto end = s.find("}", it);
+            if(end == std::string::npos) {
+                break;
+            }
+
+            TokenFound found;
+            found.index = cs;
+            found.group = s.substr(it, (end - it) + 1);
+
+            auto sep = s.find(":", it);
+            if(sep != std::string::npos) {
+                found.remainder = s.substr(sep + 1, end + 1);
+            }
+
+            result.push_back(found);
+
+            it = s.find(text, it + found.group.size());
+        }
+        return result;
+    }
+
     template<typename T>
     std::string do_format(Counter count, T&& val) {
-        //std::cout << "Formatting: " << count.val << " -> " << val << std::endl;
         std::string to_replace = "{" + std::to_string(count.val) + "}";
 
         std::stringstream ss;
-        ss << val;
 
         std::string result = str_;
-        auto pos = result.find(to_replace);
-        if(pos != std::string::npos) {
-            return result.replace(pos, to_replace.size(), ss.str());
-        } else {
-            return result;
+        auto found = scan(count.val, result);
+
+        for(auto& tok: found) {
+            if(!tok.remainder.empty()) {
+                // Something else is going on!
+                if(tok.remainder[0] == '.') {
+                    // Precision (e.g. {0:.2})
+
+                    auto p = std::stoi(tok.remainder.substr(1));
+                    ss << std::setprecision(p) << val;
+                }
+            } else {
+                ss << val;
+            }
+
+            std::string replacement = ss.str();
+
+            result = replace_all(
+                result, tok.group, replacement
+            );
         }
 
+        return result;
     }
 
     template<typename T, typename... Args>
     std::string do_format(Counter count, T&& val, Args&&... args) {
-        //std::cout << "Formatting: " << count.val << " -> " << val << std::endl;
-
-        std::string to_replace = "{" + std::to_string(count.val) + "}";
-
-        std::stringstream ss;
-        ss << val;
-
-        std::string result = str_;
-        auto pos = result.find(to_replace);
-        if(pos != std::string::npos) {
-            result.replace(pos, to_replace.size(), ss.str());
-        }
-        return Formatter(result).do_format(Counter(count.val + 1), args...);
+        return Formatter(do_format(count, val)).do_format(Counter(count.val + 1), args...);
     }
 };
 

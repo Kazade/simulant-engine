@@ -43,4 +43,21 @@ public:
 };
 
 
+class StringFormatterTests : public smlt::test::TestCase {
+public:
+    void test_basic_formatting() {
+        assert_equal(
+            _F("{0} {0} {1} {2}").format(1, 2, 3),
+            "1 1 2 3"
+        );
+    }
+
+    void test_precision_formatting() {
+        assert_equal(
+            _F("{0:.3} {0:.3} {1:.4} {2:.2}").format(11.1111, 2.2222, 3.3333),
+            "11.1 11.1 2.222 3.3"
+        );
+    }
+};
+
 }

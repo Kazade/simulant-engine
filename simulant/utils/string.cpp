@@ -106,4 +106,17 @@ std::string strip(const std::string& s, const std::string& what) {
     return std::string(s.begin() + i, s.begin() + (j + 1));
 }
 
+std::string replace_all(const std::string &s, const std::string &search, const std::string &replace) {
+    std::string result = s;
+
+    auto pos = result.find(search);
+
+    while( pos != std::string::npos) {
+        result.replace(pos, search.size(), replace);
+        pos = result.find(search, pos + replace.size());
+    }
+
+    return result;
+}
+
 }
