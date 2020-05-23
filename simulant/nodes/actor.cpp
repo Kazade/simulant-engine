@@ -282,14 +282,13 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         return;
     }
 
+    auto vdata = (has_animated_mesh()) ? interpolated_vertex_data_.get() : mesh->vertex_data.get();
+
     for(auto submesh: mesh->each_submesh()) {
         Renderable new_renderable;
         new_renderable.final_transformation = absolute_transformation();
         new_renderable.render_priority = render_priority();
         new_renderable.is_visible = is_visible();
-
-        auto vdata = (has_animated_mesh()) ? interpolated_vertex_data_.get() : mesh->vertex_data.get();
-
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();

@@ -32,7 +32,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     /* Set up default client state before the run. This is necessary
      * so that the boolean flags get correctly set */
     enable_vertex_arrays(true);
-    enable_colour_arrays(true);    
+    enable_colour_arrays(true);
     enable_normal_arrays(true);
     enable_texcoord_array(0, true);
 

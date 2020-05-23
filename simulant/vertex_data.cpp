@@ -190,25 +190,25 @@ void VertexData::position(const Vec4 &pos) {
 
 template<>
 const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_2F);
     return ((Vec2*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F);
     return ((Vec3*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec4* VertexData::position_at<Vec4>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
     return ((Vec4*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_2F);
+    assert(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_2F);
     return ((Vec2*) &data_[(idx * stride_) + vertex_specification_.normal_offset()]);
 }
 
@@ -216,10 +216,10 @@ template<>
 const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
     /* Warning, pointer may not be unique! */
 
-    if(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F) {
+    if(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_3F) {
         return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
     } else {
-        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
+        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
 
         static Vec3 ret; // This is mega nasty, need to rethink the pointer return
         auto data = (uint32_t*) &data_[(idx * stride()) + vertex_specification_.normal_offset()];
@@ -229,7 +229,7 @@ const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
 }
 
 Vec4 VertexData::position_nd_at(uint32_t idx, float defz, float defw) const {
-    const auto& attr = vertex_specification_.position_attribute;
+    const auto& attr = vertex_specification_.position_attribute_;
     if(attr == VERTEX_ATTRIBUTE_2F) {
         auto v = *position_at<Vec2>(idx);
         return Vec4(v.x, v.y, defz, defw);
@@ -250,11 +250,11 @@ void VertexData::normal(float x, float y, float z) {
 
     uint8_t* ptr = (uint8_t*) &data_[cursor_offset() + offset];
 
-    if(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_3F) {
+    if(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_3F) {
         Vec3* out = (Vec3*) ptr;
         *out = Vec3(x, y, z);
     } else  {
-        assert(vertex_specification_.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
+        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
         uint32_t* packed = (uint32_t*) ptr;
         *packed = pack_vertex_attribute_vec3_1i(x, y, z);
     }
@@ -399,7 +399,7 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 }
 
 void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB);
+    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB);
     auto offset = vertex_specification_.diffuse_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
@@ -418,7 +418,7 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 }
 
 void VertexData::diffuse(float r, float g, float b, float a) {
-    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F);
 
     auto offset = vertex_specification_.diffuse_offset();
 
@@ -431,7 +431,7 @@ void VertexData::diffuse(float r, float g, float b, float a) {
 }
 
 void VertexData::diffuse(const Colour& colour) {
-    if(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F) {
+    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F) {
         diffuse(colour.r, colour.g, colour.b, colour.a);
     } else {
         const float s = 255.0f;
