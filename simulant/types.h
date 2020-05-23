@@ -90,6 +90,7 @@ const static AttributeOffset INVALID_ATTRIBUTE_OFFSET = -1;
 
 class VertexSpecification {
     friend struct std::hash<VertexSpecification>;
+    friend class VertexData;
 
     VertexAttribute position_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute normal_attribute_ = VERTEX_ATTRIBUTE_NONE;

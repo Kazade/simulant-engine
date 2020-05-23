@@ -109,6 +109,22 @@ public:
         assert_equal(stage_->assets->mesh_count(), initial + 0);
     }
 
+    void test_set_mesh_detail_level() {
+        auto actor = stage_->new_actor();
+
+        auto m1 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m2 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+
+        actor->set_mesh(m1);
+        actor->set_mesh(m2, DETAIL_LEVEL_MID);
+
+        assert_equal(actor->best_mesh(DETAIL_LEVEL_NEAREST), m1);
+        assert_equal(actor->best_mesh(DETAIL_LEVEL_NEAR), m1);
+        assert_equal(actor->best_mesh(DETAIL_LEVEL_MID), m2);
+        assert_equal(actor->best_mesh(DETAIL_LEVEL_FAR), m2);
+        assert_equal(actor->best_mesh(DETAIL_LEVEL_FARTHEST), m2);
+    }
+
     void test_mesh_normalization() {
         /*
          *  The normalize function scales the mesh so that it has a diameter of 1

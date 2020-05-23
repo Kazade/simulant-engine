@@ -116,6 +116,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
 
         meshes_[detail_level].reset();
         interpolated_vertex_data_.reset();
+        recalc_effective_meshes();
 
         // FIXME: Delete vertex buffer!
         return;
@@ -150,6 +151,8 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
         /* Make sure we update the vertex data immediately */
         refresh_animation_state(animation_state_->current_frame(), animation_state_->next_frame(), 0);
     }
+
+    recalc_effective_meshes();
 
     /* Recalculate the AABB if necessary */
     mark_transformed_aabb_dirty();
@@ -279,14 +282,13 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         return;
     }
 
+    auto vdata = (has_animated_mesh()) ? interpolated_vertex_data_.get() : mesh->vertex_data.get();
+
     for(auto submesh: mesh->each_submesh()) {
         Renderable new_renderable;
         new_renderable.final_transformation = absolute_transformation();
         new_renderable.render_priority = render_priority();
         new_renderable.is_visible = is_visible();
-
-        auto vdata = (has_animated_mesh()) ? interpolated_vertex_data_.get() : mesh->vertex_data.get();
-
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();
@@ -295,6 +297,19 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         new_renderable.centre = transformed_aabb().centre();
 
         render_queue->insert_renderable(std::move(new_renderable));
+    }
+}
+
+void Actor::recalc_effective_meshes() {
+    MeshPtr current = meshes_[0];
+    for(auto i = 0; i < DETAIL_LEVEL_MAX; ++i) {
+        effective_meshes_[i] = current;
+
+        if(i < DETAIL_LEVEL_MAX - 1) {
+            if(meshes_[i + 1]) {
+                current = meshes_[i + 1];
+            }
+        }
     }
 }
 
