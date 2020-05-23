@@ -18,7 +18,13 @@ namespace thread {
 template< class T >
 using decay_t = typename std::decay<T>::type;
 
+#ifndef __arch_dreamcast__
+// Use 64bit IDs so that pointers are safely convertible
+typedef uint64_t ThreadID;
+#else
+// On Dreamcast, we're in 32 bit land
 typedef uint32_t ThreadID;
+#endif
 
 class ThreadSpawnError: public std::runtime_error {
 public:
