@@ -258,7 +258,7 @@ bool Window::_init() {
     sound_driver_ = create_sound_driver(application_->config_.development.force_sound_driver);
     sound_driver_->startup();
 
-    renderer_ = new_renderer(this, std::getenv("SIMULANT_RENDERER"));
+    renderer_ = new_renderer(this, application_->config_.development.force_renderer);
 
     bool result = create_window();
 
