@@ -28,6 +28,7 @@ This section covers the base subsystems and usages of Simulant.
 
 ### Using Simulant
 
+ - Application: [The Application](application.md)
  - Scene Management: [The Scene](scene.md) | [Managing Scenes](scene_management.md)
  - Behaviours: [Organisms and Behaviours](behaviours.md)
  - Helpers: [Threads](threading.md)
