@@ -99,7 +99,6 @@ struct AppConfig {
             FIXME: Not yet working
         */
         std::string force_renderer = "";
-
         std::string force_sound_driver = "";
     } development;
 };

@@ -21,6 +21,6 @@
 #include "renderer.h"
 
 namespace smlt {
-    Renderer::ptr new_renderer(Window *window, const char* name);
+    Renderer::ptr new_renderer(Window *window, const std::string &name);
 }
 
