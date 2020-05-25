@@ -37,8 +37,6 @@ public:
 
 private:
     void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write);
-
-    std::set<UniqueIDKey> all_nodes_;
 };
 
 }
