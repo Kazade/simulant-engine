@@ -33,42 +33,34 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
         std::vector<StageNode*> &geom_out) {
 
     auto frustum = stage->camera(camera_id)->frustum();
-    for(auto& key: all_nodes_) {
-        if(key.first == typeid(Light)) {
-            auto light = stage->light(make_unique_id_from_key<LightID>(key));
-            if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(light->transformed_aabb())) {
-                lights_out.push_back(make_unique_id_from_key<LightID>(key));
-            }
 
-        } else if(key.first == typeid(Actor)) {
-            auto actor = stage->actor(make_unique_id_from_key<ActorID>(key));
-            if(frustum.intersects_aabb(actor->transformed_aabb())) {
-                geom_out.push_back(actor);
+    for(auto& node: *stage->node_pool) {
+        if(!node->is_marked_for_destruction()) {
+
+            // FIXME: Storing a STAGE_NODE_TYPE in the StageNode
+            // class would be faster to check than a dynamic cast
+            // for every node (most likely)
+            if(auto light = dynamic_cast<Light*>(node)) {
+                if(light->type() == LIGHT_TYPE_DIRECTIONAL ||
+                   frustum.intersects_sphere(light->absolute_position(), light->aabb().max_dimension())) {
+                    lights_out.push_back(light->id());
+                }
+            } else {
+                if(frustum.intersects_sphere(
+                    node->absolute_position(), node->aabb().max_dimension()
+                )) {
+                    geom_out.push_back(node);
+                }
             }
-        } else if(key.first == typeid(Geom)) {
-            auto geom = stage->geom(make_unique_id_from_key<GeomID>(key));
-            if(frustum.intersects_aabb(geom->aabb())) {
-                geom_out.push_back(geom);
-            }
-        } else if(key.first == typeid(ParticleSystem)) {
-            auto ps = stage->particle_system(make_unique_id_from_key<ParticleSystemID>(key));
-            if(frustum.intersects_aabb(ps->transformed_aabb())) {
-                geom_out.push_back(ps);
-            }
-        } else {
-            assert(0 && "Not implemented");
         }
     }
 }
 
 void FrustumPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
-    if(write.operation == WRITE_OPERATION_ADD) {
-        all_nodes_.insert(key);
-    } else if(write.operation == WRITE_OPERATION_REMOVE) {
-        all_nodes_.erase(key);
-    } else if(write.operation == WRITE_OPERATION_UPDATE) {
-        // Do nothing!
-    }
+    _S_UNUSED(key);
+    _S_UNUSED(write);
+    // Do nothing, we don't need to!
+
 }
 
 

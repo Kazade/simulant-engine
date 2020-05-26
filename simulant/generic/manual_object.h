@@ -10,11 +10,20 @@ class DestroyableObject {
     // Fired when destroy() is called
     DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
 
+    template<typename PolyType, typename IDType, typename T, typename ...SubTypes>
+    friend class StageNodeManager;
+
+    bool is_marked_for_destruction_ = false;
+
 public:
     virtual ~DestroyableObject() {}
 
     virtual void destroy() = 0;
     virtual void destroy_immediately() = 0;
+
+    bool is_marked_for_destruction() const {
+        return is_marked_for_destruction_;
+    }
 };
 
 class Stage;

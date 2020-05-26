@@ -50,6 +50,8 @@ public:
     std::vector<Vec3> far_corners() const; ///< Returns the far 4 corners of the frustum
 
     bool contains_point(const Vec3& point) const; ///< Returns true if the frustum contains point
+
+    bool intersects_sphere(const Vec3& pos, const float diameter);
     bool intersects_aabb(const AABB &box) const;
     bool intersects_cube(const Vec3& centre, float size) const;
 
@@ -93,7 +95,7 @@ public:
         far_avg /= FRUSTUM_CORNER_MAX;
 
         return (far_avg - near_avg).length();
-    }    
+    }
 
     Plane plane(FrustumPlane p) const {
         return planes_[p];

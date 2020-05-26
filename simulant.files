@@ -135,6 +135,7 @@ simulant/vfs.h
 tests/test_behaviours.h
 tests/test_contiguous_map.h
 tests/test_cow_vector.h
+tests/test_frustum_partitioner.h
 tests/test_heightmap.h
 tests/test_loose_quadtree.h
 tests/test_panels.h

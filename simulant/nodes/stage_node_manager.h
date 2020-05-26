@@ -85,6 +85,7 @@ public:
     bool destroy(const IDType& id) {
         auto it = pool_->find(id.value());
         if(it != pool_->end()) {
+            get(id)->is_marked_for_destruction_ = true;
             queued_for_destruction_.insert(id);
             return true;
         } else {
@@ -136,11 +137,12 @@ public:
     }
 
     bool is_marked_for_destruction(const IDType& id) const {
-        return std::find(
-            queued_for_destruction_.begin(),
-            queued_for_destruction_.end(),
-            id
-        ) != queued_for_destruction_.end();
+        auto obj = get(id);
+        if(obj) {
+            return obj->is_marked_for_destruction_;
+        }
+
+        return false;
     }
 
     std::size_t size() const {
