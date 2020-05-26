@@ -137,7 +137,12 @@ public:
     }
 
     bool is_marked_for_destruction(const IDType& id) const {
-        return get(id)->is_marked_for_destruction_;
+        auto obj = get(id);
+        if(obj) {
+            return obj->is_marked_for_destruction_;
+        }
+
+        return false;
     }
 
     std::size_t size() const {

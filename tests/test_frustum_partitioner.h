@@ -27,10 +27,11 @@ public:
         auto camera = stage_->new_camera();
         camera->move_to(784, 58, -775);
 
-        auto forward = camera->forward();
-
         auto a1 = stage_->new_actor_with_mesh(box_);
-        a1->move_to(791, 33, -810);
+
+        assert_close(a1->aabb().max_dimension(), 1.0f, 0.0001f);
+
+        a1->move_to(791, 58, -810);
 
         std::vector<LightID> lights;
         std::vector<StageNode*> nodes;
