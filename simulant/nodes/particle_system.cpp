@@ -23,7 +23,7 @@ const static VertexSpecification PS_VERTEX_SPEC(
 
 ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
     TypedDestroyableObject<ParticleSystem, Stage>(stage),
-    StageNode(stage),
+    StageNode(stage, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
     Source(stage, sound_driver),
     script_(script),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)),

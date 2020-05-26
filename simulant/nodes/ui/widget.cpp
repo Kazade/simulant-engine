@@ -11,7 +11,7 @@ namespace ui {
 
 Widget::Widget(UIManager *owner, UIConfig *defaults):
     TypedDestroyableObject<Widget, UIManager>(owner),
-    ContainerNode(owner->stage()),
+    ContainerNode(owner->stage(), STAGE_NODE_TYPE_OTHER),
     owner_(owner) {
 
 }

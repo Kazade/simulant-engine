@@ -3,14 +3,19 @@
 
 namespace smlt {
 
-StageNode::StageNode(Stage *stage):
+StageNode::StageNode(Stage *stage, smlt::StageNodeType node_type):
     TreeNode(),
-    stage_(stage) {
+    stage_(stage),
+    node_type_(node_type) {
 
 }
 
 StageNode::~StageNode() {
 
+}
+
+StageNodeType StageNode::node_type() const {
+    return node_type_;
 }
 
 void StageNode::clean_up() {
