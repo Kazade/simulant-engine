@@ -20,6 +20,7 @@
 #include <cassert>
 #include "frustum.h"
 #include "types.h"
+#include "math/plane.h"
 
 namespace smlt {
 
@@ -197,6 +198,22 @@ bool Frustum::contains_point(const Vec3 &point) const {
         auto classify = plane.classify_point(point);
         if(classify == PLANE_CLASSIFICATION_IS_BEHIND_PLANE) {
             return false;
+        }
+    }
+
+    return true;
+}
+
+bool Frustum::intersects_sphere(const Vec3 &pos, const float diameter) {
+    const float r = diameter * 0.5f;
+    for(const Plane& p: planes_) {
+        float d = p.n.dot(pos) + p.d;
+        if(d < -r) {
+            return false;
+        }
+
+        if(std::abs(d) < r) {
+            return true;
         }
     }
 

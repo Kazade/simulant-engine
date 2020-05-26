@@ -41,11 +41,14 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
             // class would be faster to check than a dynamic cast
             // for every node (most likely)
             if(auto light = dynamic_cast<Light*>(node)) {
-                if(light->type() == LIGHT_TYPE_DIRECTIONAL || frustum.intersects_aabb(light->transformed_aabb())) {
+                if(light->type() == LIGHT_TYPE_DIRECTIONAL ||
+                   frustum.intersects_sphere(light->absolute_position(), light->aabb().max_dimension())) {
                     lights_out.push_back(light->id());
                 }
             } else {
-                if(frustum.intersects_aabb(node->transformed_aabb())) {
+                if(frustum.intersects_sphere(
+                    node->absolute_position(), node->aabb().max_dimension()
+                )) {
                     geom_out.push_back(node);
                 }
             }

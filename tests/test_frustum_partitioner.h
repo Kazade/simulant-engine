@@ -24,7 +24,23 @@ public:
     }
 
     void test_visibility() {
+        auto camera = stage_->new_camera();
+        camera->move_to(784, 58, -775);
 
+        auto forward = camera->forward();
+
+        auto a1 = stage_->new_actor_with_mesh(box_);
+        a1->move_to(791, 33, -810);
+
+        std::vector<LightID> lights;
+        std::vector<StageNode*> nodes;
+        FrustumPartitioner partitioner(stage_);
+
+        partitioner.lights_and_geometry_visible_from(
+            camera, lights, nodes
+        );
+
+        assert_equal(nodes.size(), 1u);
     }
 
     void test_destroyed_nodes_not_returned() {
