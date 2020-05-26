@@ -10,7 +10,7 @@ namespace smlt {
 
 Camera::Camera(Stage *stage):
     TypedDestroyableObject<Camera, Stage>(stage),
-    ContainerNode(stage) {
+    ContainerNode(stage, STAGE_NODE_TYPE_CAMERA) {
 
     assert(stage);
 

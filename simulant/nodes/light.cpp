@@ -24,7 +24,7 @@ namespace smlt {
 
 Light::Light(Stage* stage):
     TypedDestroyableObject<Light, Stage>(stage),
-    ContainerNode(stage),
+    ContainerNode(stage, STAGE_NODE_TYPE_LIGHT),
     type_(LIGHT_TYPE_POINT) {
 
     set_range(100.0f);

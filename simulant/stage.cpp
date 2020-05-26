@@ -44,7 +44,7 @@ const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size):
     TypedDestroyableObject<Stage, Window>(parent),
-    ContainerNode(this),
+    ContainerNode(this, STAGE_NODE_TYPE_STAGE),
     WindowHolder(parent),
     node_pool_(std::make_shared<StageNodePool>(pool_size)),
     ui_(new ui::UIManager(this, node_pool_.get())),

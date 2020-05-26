@@ -35,6 +35,16 @@ enum DetailLevel {
     DETAIL_LEVEL_MAX
 };
 
+enum StageNodeType {
+    STAGE_NODE_TYPE_STAGE,
+    STAGE_NODE_TYPE_CAMERA,
+    STAGE_NODE_TYPE_ACTOR,
+    STAGE_NODE_TYPE_LIGHT,
+    STAGE_NODE_TYPE_PARTICLE_SYSTEM,
+    STAGE_NODE_TYPE_GEOM,
+    STAGE_NODE_TYPE_OTHER
+};
+
 class StageNode:
     public virtual DestroyableObject,
     public TreeNode,
@@ -145,10 +155,11 @@ public:
         return name();
     }
 
-    StageNode(Stage* stage);
+    StageNode(Stage* stage, StageNodeType node_type);
 
     virtual ~StageNode();
 
+    StageNodeType node_type() const;
 
     /* Without a parent, these are the same as move_to/rotate_to. With a parent
      * this applies a relative position / rotation to the parent position / rotation
@@ -229,6 +240,8 @@ private:
     Stage* stage_ = nullptr;
     StageNode* parent_stage_node_ = nullptr;
 
+    StageNodeType node_type_ = STAGE_NODE_TYPE_ACTOR;
+
     generic::DataCarrier data_;
 
     bool is_visible_ = true;
@@ -255,8 +268,8 @@ private:
 
 class ContainerNode : public StageNode {
 public:
-    ContainerNode(Stage* stage):
-        StageNode(stage) {}
+    ContainerNode(Stage* stage, StageNodeType node_type):
+        StageNode(stage, node_type) {}
 
     /* Containers don't directly have renderables, but their children do */
     void _get_renderables(batcher::RenderQueue*, const CameraPtr, const DetailLevel) override {
