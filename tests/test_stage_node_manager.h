@@ -57,7 +57,8 @@ public:
 
         auto count = stage->node_pool->size();
 
-        auto actor = stage->new_actor()->id();
+        auto actor = stage->new_actor();
+        assert_equal(actor->node_type(), STAGE_NODE_TYPE_ACTOR);
         assert_equal(stage->node_pool->size(), count + 1);
 
         stage->destroy_actor(actor);
@@ -76,7 +77,8 @@ public:
 
         auto count = stage->node_pool->size();
 
-        auto light = stage->new_light_as_directional()->id();
+        auto light = stage->new_light_as_directional();
+        assert_equal(light->node_type(), STAGE_NODE_TYPE_LIGHT);
         assert_equal(stage->node_pool->size(), count + 1);
 
         stage->destroy_light(light);
@@ -97,7 +99,8 @@ public:
 
         auto count = stage->node_pool->size();
 
-        auto particle_system = stage->new_particle_system(script)->id();
+        auto particle_system = stage->new_particle_system(script);
+        assert_equal(particle_system->node_type(), STAGE_NODE_TYPE_PARTICLE_SYSTEM);
 
         assert_equal(stage->node_pool->size(), count + 1);
 
@@ -117,8 +120,9 @@ public:
 
         auto count = stage->node_pool->size();
 
-        auto geom = stage->new_geom_with_mesh(mesh)->id();
+        auto geom = stage->new_geom_with_mesh(mesh);
 
+        assert_equal(geom->node_type(), STAGE_NODE_TYPE_GEOM);
         assert_equal(stage->node_pool->size(), count + 1);
 
         stage->destroy_geom(geom);
@@ -135,7 +139,8 @@ public:
 
         auto count = stage->node_pool->size();
 
-        auto camera = stage->new_camera()->id();
+        auto camera = stage->new_camera();
+        assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);
 
         assert_equal(stage->node_pool->size(), count + 1);
         stage->destroy_camera(camera);
@@ -193,6 +198,7 @@ public:
         auto count = stage->node_pool->size();
 
         auto sprite = stage->sprites->new_sprite();
+        assert_equal(sprite->node_type(), STAGE_NODE_TYPE_OTHER);
 
         assert_true(stage->node_pool->size() >= count + 1);
 

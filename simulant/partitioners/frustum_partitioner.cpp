@@ -40,7 +40,10 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
             // FIXME: Storing a STAGE_NODE_TYPE in the StageNode
             // class would be faster to check than a dynamic cast
             // for every node (most likely)
-            if(auto light = dynamic_cast<Light*>(node)) {
+            if(node->node_type() == STAGE_NODE_TYPE_LIGHT) {
+                auto light = dynamic_cast<Light*>(node);
+                assert(light);
+
                 if(light->type() == LIGHT_TYPE_DIRECTIONAL ||
                    frustum.intersects_sphere(light->absolute_position(), light->aabb().max_dimension())) {
                     lights_out.push_back(light->id());
