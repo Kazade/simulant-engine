@@ -566,16 +566,20 @@ private:
                 _insert_repair_tree(inserted, new_index);
 
                 /* Reset root index */
-                node_type* parent = inserted;
-                while(parent->parent_index_ != -1) {
-                    node_type* next_parent = &nodes_[parent->parent_index_];
+                if(inserted->parent_index_ == -1) {
+                    root_index_ = new_index;
+                } else {
+                    node_type* parent = inserted;
+                    while(parent->parent_index_ != -1) {
+                        node_type* next_parent = &nodes_[parent->parent_index_];
 
-                    if(next_parent->parent_index_ == -1) {
-                        root_index_ = parent->parent_index_;
-                        break;
+                        if(next_parent->parent_index_ == -1) {
+                            root_index_ = parent->parent_index_;
+                            break;
+                        }
+
+                        parent = next_parent;
                     }
-
-                    parent = next_parent;
                 }
 
                 return true;
