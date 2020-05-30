@@ -87,6 +87,22 @@ public:
         assert_equal(second_mesh->first_submesh()->arrangement(), submesh->arrangement());
     }
 
+    void test_skeleton() {
+        auto mesh1 = generate_test_mesh(stage_).fetch();
+
+        bool added = mesh1->add_skeleton(mesh1->vertex_data->count(), 3);
+
+        assert_true(added);
+
+        Skeleton* s = mesh1->skeleton;
+
+        assert_equal(s->vertex_count(), mesh1->vertex_data->count());
+        assert_equal(s->joint_count(), 3);
+
+        assert_false(mesh1->add_skeleton(mesh1->vertex_data->count(), 2));
+        assert_equal(s->joint_count(), 3); // Didn't change
+    }
+
     void test_mesh_garbage_collection() {
         auto initial = stage_->assets->mesh_count();
 

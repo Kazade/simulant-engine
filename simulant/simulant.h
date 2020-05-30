@@ -57,6 +57,8 @@
 #include "virtual_gamepad.h"
 #include "platform.h"
 
+#include "assets/meshes/skeleton.h"
+
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"
 #include "scenes/physics_scene.h"

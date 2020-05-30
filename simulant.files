@@ -57,6 +57,8 @@ simulant/assets/materials/material_property_registry.cpp
 simulant/assets/materials/material_property_registry.h
 simulant/assets/materials/material_property_type.cpp
 simulant/assets/materials/material_property_type.h
+simulant/assets/meshes/skeleton.cpp
+simulant/assets/meshes/skeleton.h
 simulant/assets/particle_script.cpp
 simulant/assets/particle_script.h
 simulant/assets/particles/colour_fader.h

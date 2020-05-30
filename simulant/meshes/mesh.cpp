@@ -21,6 +21,7 @@
 
 #include "mesh.h"
 #include "adjacency_info.h"
+#include "../assets/meshes/skeleton.h"
 
 #include "../window.h"
 #include "../asset_manager.h"
@@ -50,18 +51,31 @@ Mesh::Mesh(MeshID id,
 
 void Mesh::reset(VertexSpecification vertex_specification) {
     adjacency_.reset();
-
     submeshes_.clear();
 
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
 
     vertex_data_ = std::make_shared<VertexData>(vertex_specification);
+
+    delete skeleton_;
+    skeleton_ = nullptr;
+}
+
+bool Mesh::add_skeleton(uint32_t num_vertices, uint32_t num_joints) {
+    if(!skeleton_) {
+        skeleton_ = new Skeleton(this, num_vertices, num_joints);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 Mesh::~Mesh() {
     submeshes_.clear();
     vertex_data_.reset();
+
+    delete skeleton_;
 }
 
 void Mesh::clear() {
@@ -158,7 +172,7 @@ SubMesh* Mesh::new_submesh(
 
     return new_submesh_with_material(
         name,
-        asset_manager().clone_default_material(),        
+        asset_manager().clone_default_material(),
         arrangement,
         index_type
     );
