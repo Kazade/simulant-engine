@@ -42,7 +42,7 @@ public:
         auto actor2= stage_->new_actor_with_mesh(ms3d_mesh);
         actor2->move_to(-40.0f, 0.0f, -95.0f);
         actor2->rotate_global_y_by(smlt::Degrees(180));
-        actor2->animation_state->play_animation("idle");
+        //actor2->animation_state->play_animation("idle");
 
         // Add a fly controller to the camera for user input
         camera_->new_behaviour<behaviours::Fly>(window);

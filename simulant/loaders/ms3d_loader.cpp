@@ -1,6 +1,9 @@
 #include "ms3d_loader.h"
 #include "../vertex_data.h"
 #include "../meshes/mesh.h"
+#include "../asset_manager.h"
+#include "../vfs.h"
+#include "../window.h"
 
 namespace smlt {
 namespace loaders {
@@ -20,10 +23,10 @@ struct MS3DVertex {
 
 struct MS3DTriangle {
     uint16_t flags;
-    uint16_t vertexIndices[3];
-    smlt::Vec3 vertexNormals[3];
-    smlt::Vec3 s;
-    smlt::Vec3 t;
+    uint16_t indices[3];
+    smlt::Vec3 normals[3];
+    float s[3];
+    float t[3];
     uint8_t smoothingGroup;
     uint8_t groupIndex;
 };
@@ -34,6 +37,49 @@ struct MS3DGroup {
     uint16_t num_triangles;                       //
     std::vector<uint16_t> triangle_indices;      // the groups group the triangles
     char material_index;                      // -1 = no material
+};
+
+struct MS3DMaterial {
+    char name[32];
+    smlt::Colour ambient;
+    smlt::Colour diffuse;
+    smlt::Colour specular;
+    smlt::Colour emissive;
+    float shininess;  // 0.0f - 128.0f
+    float transparency;   // 0.0f - 1.0f
+    uint8_t mode;  // 0, 1, 2 is unused now
+    char texture[128];  // texture.bmp
+    char alphamap[128];  // alpha.bmp
+};
+
+struct MS3DAnimData {
+    float fps;
+    float current_time;
+    int32_t total_frames;
+};
+
+struct MS3DRotationKeyFrame {
+    float time;
+    smlt::Vec3 rotation;
+};
+
+struct MS3DPositionKeyFrame {
+    float time;
+    smlt::Vec3 position;
+};
+
+struct MS3DJoint {
+    uint8_t flags;                              // SELECTED | DIRTY
+    char name[32];                           //
+    char parent_name[32];                     //
+    smlt::Vec3 rotation;                        // local reference matrix
+    smlt::Vec3 position;
+
+    uint16_t num_rotation_key_frames;
+    uint16_t num_position_key_frames;
+
+    std::vector<MS3DRotationKeyFrame> rotation_key_frames;
+    std::vector<MS3DPositionKeyFrame> position_key_frames;
 };
 
 #pragma pack(pop)
@@ -62,6 +108,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     uint16_t num_triangles;
     uint16_t num_groups;
     uint16_t num_materials;
+    uint16_t num_joints;
 
     data_->read((char*) &num_vertices, sizeof(uint16_t));
     std::vector<MS3DVertex> vertices(num_vertices);
@@ -85,6 +132,86 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     }
 
     data_->read((char*) &num_materials, sizeof(uint16_t));
+    std::vector<MS3DMaterial> materials(num_materials);
+    data_->read((char*) &materials[0], sizeof(MS3DMaterial) * num_materials);
+
+    MS3DAnimData anim_data;
+    data_->read((char*) &anim_data, sizeof(MS3DAnimData));
+    data_->read((char*) &num_joints, sizeof(uint16_t));
+
+    std::vector<MS3DJoint> joints(num_joints);
+    for(uint16_t i = 0; i < num_joints; ++i) {
+        data_->read((char*) &joints[i].flags, sizeof(uint8_t));
+        data_->read((char*) &joints[i].name, sizeof(char) * 32);
+        data_->read((char*) &joints[i].parent_name, sizeof(char) * 32);
+        data_->read((char*) &joints[i].rotation, sizeof(float) * 3);
+        data_->read((char*) &joints[i].position, sizeof(float) * 3);
+        data_->read((char*) &joints[i].num_rotation_key_frames, sizeof(uint16_t));
+        data_->read((char*) &joints[i].num_position_key_frames, sizeof(uint16_t));
+
+        joints[i].rotation_key_frames.resize(joints[i].num_rotation_key_frames);
+        joints[i].position_key_frames.resize(joints[i].num_position_key_frames);
+
+        data_->read(
+            (char*) &joints[i].rotation_key_frames[0],
+            sizeof(MS3DRotationKeyFrame) * joints[i].num_rotation_key_frames
+        );
+
+        data_->read(
+            (char*) &joints[i].position_key_frames[0],
+            sizeof(MS3DPositionKeyFrame) * joints[i].num_position_key_frames
+        );
+    }
+
+    auto dir = kfs::path::dir_name(filename_.encode());
+    bool remove_path = assets->window->vfs->add_search_path(dir);
+
+    auto vdata = mesh->vertex_data.get();
+
+    for(auto& group: groups) {
+        auto& material = materials[group.material_index];
+        smlt::MaterialPtr mat = assets->new_material();
+
+        mat->set_ambient(material.ambient);
+        mat->set_diffuse(material.diffuse);
+        mat->set_specular(material.specular);
+        //mat->set_emission(material.emissive);
+        mat->set_shininess(material.shininess);
+
+        auto texname = kfs::path::norm_path(material.texture);
+        if(texname[0] == '.' && texname[1] == '\\') {
+            texname = texname.substr(2);
+        }
+
+        auto tex = assets->new_texture_from_file(texname);
+        mat->set_diffuse_map(tex);
+        mat->set_texturing_enabled(true);
+
+        auto sm = mesh->new_submesh_with_material(material.name, mat);
+        auto idata = sm->index_data.get();
+
+        for(auto idx: group.triangle_indices) {
+            auto& triangle = triangles[idx];
+            for(int i = 0; i < 3; ++i) {
+                vdata->position(vertices[triangle.indices[i]].xyz);
+                vdata->tex_coord0(triangle.s[i], triangle.t[i]);
+                vdata->normal(triangle.normals[i]);
+                vdata->move_next();
+
+                idata->index(vdata->count() - 1);
+            }
+        }
+
+        idata->done();
+    }
+
+    vdata->done();
+
+    if(remove_path) {
+        assets->window->vfs->remove_search_path(dir);
+    }
+
+    //mesh->enable_animation(MESH_ANIMATION_TYPE_SKELETAL, anim_data.total_frames, nullptr);
 }
 
 }
