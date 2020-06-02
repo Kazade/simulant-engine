@@ -175,7 +175,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         mat->set_ambient(material.ambient);
         mat->set_diffuse(material.diffuse);
         mat->set_specular(material.specular);
-        //mat->set_emission(material.emissive);
+        mat->set_emission(material.emissive);
         mat->set_shininess(material.shininess);
 
         auto texname = kfs::path::norm_path(material.texture);
@@ -185,7 +185,9 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         auto tex = assets->new_texture_from_file(texname);
         mat->set_diffuse_map(tex);
+
         mat->set_texturing_enabled(true);
+        mat->set_lighting_enabled(true);
 
         auto sm = mesh->new_submesh_with_material(material.name, mat);
         auto idata = sm->index_data.get();
@@ -196,6 +198,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 vdata->position(vertices[triangle.indices[i]].xyz);
                 vdata->tex_coord0(triangle.s[i], triangle.t[i]);
                 vdata->normal(triangle.normals[i]);
+                vdata->diffuse(Colour::WHITE);
                 vdata->move_next();
 
                 idata->index(vdata->count() - 1);

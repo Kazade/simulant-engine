@@ -41,7 +41,7 @@ struct TextureUnit {
     const TextureID& texture_id() const;
     const TexturePtr texture() const {return texture_;}
 
-private:    
+private:
     TextureUnit& operator=(const TextureUnit&) = delete;
 
     std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
@@ -53,6 +53,7 @@ private:
 
 const char* const DIFFUSE_PROPERTY = "s_material_diffuse";
 const char* const AMBIENT_PROPERTY = "s_material_ambient";
+const char* const EMISSION_PROPERTY = "s_material_emission";
 const char* const SPECULAR_PROPERTY = "s_material_specular";
 const char* const SHININESS_PROPERTY = "s_material_shininess";
 const char* const DIFFUSE_MAP_PROPERTY = "s_diffuse_map";

@@ -126,7 +126,8 @@ void MaterialPropertyRegistry::copy_from(const MaterialPropertyRegistry& rhs) {
 void MaterialPropertyRegistry::register_all_builtin_properties() {
     material_ambient_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, AMBIENT_PROPERTY, Vec4(1, 1, 1, 1));
     material_diffuse_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, DIFFUSE_PROPERTY, Vec4(1, 1, 1, 1));
-    material_specular_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, Vec4(1, 1, 1, 1));
+    material_emission_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, EMISSION_PROPERTY, Vec4(0, 0, 0, 1));
+    material_specular_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_VEC4, SPECULAR_PROPERTY, Vec4(0, 0, 0, 1));
     material_shininess_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_FLOAT, SHININESS_PROPERTY, 0.0f);
 
     diffuse_map_id_ = register_builtin_property(MATERIAL_PROPERTY_TYPE_TEXTURE, DIFFUSE_MAP_PROPERTY, TextureUnit());

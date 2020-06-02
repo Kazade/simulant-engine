@@ -98,6 +98,7 @@ private:
 
     MaterialPropertyID material_ambient_id_;
     MaterialPropertyID material_diffuse_id_;
+    MaterialPropertyID material_emission_id_;
     MaterialPropertyID material_specular_id_;
     MaterialPropertyID material_shininess_id_;
     MaterialPropertyID diffuse_map_id_;

@@ -112,6 +112,11 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
     }
 
+    if(!prev || prev->emission() != next->emission()) {
+        auto emission = next->emission();
+        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &emission.r);
+    }
+
     if(!prev || prev->specular() != next->specular()) {
         auto specular = next->specular();
         GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
