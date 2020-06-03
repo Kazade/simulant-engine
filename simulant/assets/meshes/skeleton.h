@@ -94,7 +94,13 @@ private:
  * data with the new vertex positions and normals */
 class SkeletalFrameUnpacker : public MeshFrameData {
 public:
+    SkeletalFrameUnpacker(Mesh* mesh):
+        mesh_(mesh) {}
+
     virtual void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out);
+
+private:
+    Mesh* mesh_ = nullptr;
 };
 
 }

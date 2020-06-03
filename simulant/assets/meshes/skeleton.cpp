@@ -29,7 +29,10 @@ Bone* Joint::link_to(Joint* other) {
 }
 
 void SkeletalFrameUnpacker::unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out) {
+    /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
+    mesh_->vertex_data->clone_into(*out);
 
+    /* Now, update the positions and normals based on the skeleton */
 }
 
 }

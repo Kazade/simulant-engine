@@ -244,7 +244,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     mesh->enable_animation(
         MESH_ANIMATION_TYPE_SKELETAL,
         anim_data.total_frames,
-        std::make_shared<SkeletalFrameUnpacker>()
+        std::make_shared<SkeletalFrameUnpacker>(mesh)
     );
 }
 
