@@ -4,6 +4,7 @@
 
 #include "../../math/quaternion.h"
 #include "../../math/vec3.h"
+#include "../../meshes/mesh.h"
 
 #define MAX_BONES_PER_VERTEX 4
 #define MAX_BONES_PER_MESH 64
@@ -87,6 +88,13 @@ private:
 
     Bone bones_[MAX_BONES_PER_MESH];
     uint8_t bone_count_ = 0;
+};
+
+/* This processes the skeleton and updates the vertex
+ * data with the new vertex positions and normals */
+class SkeletalFrameUnpacker : public MeshFrameData {
+public:
+    virtual void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out);
 };
 
 }

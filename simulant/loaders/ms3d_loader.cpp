@@ -4,6 +4,7 @@
 #include "../asset_manager.h"
 #include "../vfs.h"
 #include "../window.h"
+#include "../assets/meshes/skeleton.h"
 
 namespace smlt {
 namespace loaders {
@@ -196,7 +197,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             auto& triangle = triangles[idx];
             for(int i = 0; i < 3; ++i) {
                 vdata->position(vertices[triangle.indices[i]].xyz);
-                vdata->tex_coord0(triangle.s[i], triangle.t[i]);
+                vdata->tex_coord0(triangle.s[i], 1.0f - triangle.t[i]);
                 vdata->normal(triangle.normals[i]);
                 vdata->diffuse(Colour::WHITE);
                 vdata->move_next();
@@ -214,7 +215,37 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         assets->window->vfs->remove_search_path(dir);
     }
 
-    //mesh->enable_animation(MESH_ANIMATION_TYPE_SKELETAL, anim_data.total_frames, nullptr);
+    /* Add a skeleton with the same number of vertices and joints as
+     * the MS3D model. Note, the number of vertices in the triangles does
+     * not match as indexes share positions in the MS3D file and we need to
+     * duplicate them in Simulant */
+    mesh->add_skeleton(vertices.size(), joints.size());
+
+    Skeleton* skeleton = mesh->skeleton;
+
+    for(std::size_t i = 0; i < joints.size(); ++i) {
+        auto joint_out = skeleton->joint(i);
+        auto joint_in = &joints[i];
+
+        joint_out->set_name(std::string(joint_in->name));
+
+        L_DEBUG(_F("Loaded joint {0}").format(joint_in->name));
+
+        /* If we have a parent */
+        if(joint_in->parent_name[0] != '\0') {
+            /* Find the parent joint, and link it to this joint */
+            auto parent_joint = skeleton->find_joint(joint_in->parent_name);
+            assert(parent_joint);
+
+            parent_joint->link_to(joint_out);
+        }
+    }
+
+    mesh->enable_animation(
+        MESH_ANIMATION_TYPE_SKELETAL,
+        anim_data.total_frames,
+        std::make_shared<SkeletalFrameUnpacker>()
+    );
 }
 
 }

@@ -5,8 +5,9 @@
 namespace smlt {
 
 void Joint::set_name(const std::string& name) {
-    strncpy(name_, name.c_str(), name.length());
-    name_[31] = 0;
+    strncpy(name_, name.c_str(), 32);
+    assert(name.length() < 32);
+    name_[name.length()] = '\0';
 }
 
 Bone* Joint::link_to(Joint* other) {
@@ -25,6 +26,10 @@ Bone* Joint::link_to(Joint* other) {
     new_bone->joints[0] = this;
     new_bone->joints[1] = other;
     return new_bone;
+}
+
+void SkeletalFrameUnpacker::unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out) {
+
 }
 
 }

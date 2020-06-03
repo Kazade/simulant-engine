@@ -94,6 +94,10 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
         throw std::logic_error("You must specify the number of frames when enabling mesh animations");
     }
 
+    if(animation_type == MESH_ANIMATION_TYPE_SKELETAL && !skeleton.get()) {
+        throw std::logic_error("enable_animation called without skeleton");
+    }
+
     animation_type_ = animation_type;
     animation_frames_ = animation_frames;
     animated_frame_data_ = data;
