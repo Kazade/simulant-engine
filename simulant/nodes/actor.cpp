@@ -23,6 +23,8 @@
 #include "../animation.h"
 #include "../renderers/renderer.h"
 
+#define DEBUG_ANIMATION 1  /* If enabled, will show debug animation overlay */
+
 namespace smlt {
 
 Actor::Actor(Stage* stage, SoundDriver* sound_driver):
@@ -174,6 +176,9 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
 
     meshes_[DETAIL_LEVEL_NEAREST]->animated_frame_data_->unpack_frame(
         current_frame, next_frame, interp, interpolated_vertex_data_.get()
+#if DEBUG_ANIMATION
+        , stage->debug
+#endif
     );
 }
 

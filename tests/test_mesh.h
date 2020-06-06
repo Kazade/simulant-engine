@@ -97,10 +97,10 @@ public:
         Skeleton* s = mesh1->skeleton;
 
         assert_equal(s->vertex_count(), mesh1->vertex_data->count());
-        assert_equal(s->joint_count(), 3);
+        assert_equal(s->joint_count(), 3u);
 
         assert_false(mesh1->add_skeleton(mesh1->vertex_data->count(), 2));
-        assert_equal(s->joint_count(), 3); // Didn't change
+        assert_equal(s->joint_count(), 3u); // Didn't change
     }
 
     void test_mesh_garbage_collection() {

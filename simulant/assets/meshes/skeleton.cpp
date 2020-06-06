@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "skeleton.h"
+#include "../../debug.h"
 
 namespace smlt {
 
@@ -64,7 +65,10 @@ SkeletalFrameUnpacker::SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames)
     }
 }
 
-void SkeletalFrameUnpacker::unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out) {
+void SkeletalFrameUnpacker::unpack_frame(
+    uint32_t current_frame, uint32_t next_frame, float t, VertexData* out, Debug* debug
+) {
+
     /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
     mesh_->vertex_data->clone_into(*out);
     auto skeleton = mesh_->skeleton.get();
@@ -72,6 +76,11 @@ void SkeletalFrameUnpacker::unpack_frame(uint32_t current_frame, uint32_t next_f
     for(std::size_t i = 0; i < skeleton->joint_count(); ++i) {
         auto& state0 = joint_state_at_frame(current_frame, i);
         auto& state1 = joint_state_at_frame(next_frame, i);
+
+        /* Debug draw the joints */
+        if(debug) {
+            debug->draw_point(state0.absolute_translation, Colour::BLUE, 0.0f, false);
+        }
 
         // FIXME: Transform bone vertices and update positions
     }

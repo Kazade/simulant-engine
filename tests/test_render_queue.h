@@ -51,10 +51,11 @@ public:
 
         queue.insert(key3, 1);
 
-        assert_equal(queue.size(), 20);
+        assert_equal(queue.size(), 20u);
         auto count = 0;
 
         for(auto& p: queue) {
+            _S_UNUSED(p);
             count++;
         }
 

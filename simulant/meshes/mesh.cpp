@@ -525,5 +525,4 @@ void Mesh::generate_adjacency_info() {
     adjacency_->rebuild();
 }
 
-
 }

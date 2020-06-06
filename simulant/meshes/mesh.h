@@ -46,6 +46,7 @@ class AssetManager;
 class AdjacencyInfo;
 class Renderer;
 class Skeleton;
+class Debug;
 
 enum MeshAnimationType {
     MESH_ANIMATION_TYPE_NONE,
@@ -63,7 +64,13 @@ typedef sig::signal<void (Mesh*, MeshAnimationType, uint32_t)> SignalAnimationEn
 class MeshFrameData {
 public:
     virtual ~MeshFrameData() {}
-    virtual void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out) = 0;
+
+    virtual void unpack_frame(
+        uint32_t current_frame,
+        uint32_t next_frame,
+        float t, VertexData* out,
+        Debug* debug=nullptr
+    ) = 0;
 };
 
 typedef std::shared_ptr<MeshFrameData> MeshFrameDataPtr;

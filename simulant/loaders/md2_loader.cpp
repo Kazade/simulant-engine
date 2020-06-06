@@ -164,7 +164,9 @@ public:
         }
     }
 
-    void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData *out) {
+    void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData *out, Debug* debug=nullptr) {
+        _S_UNUSED(debug);  // We don't have any debugging for MD2 models. Maybe normals?
+
         _expand_verts(current_frame);
         _expand_verts(next_frame);
 

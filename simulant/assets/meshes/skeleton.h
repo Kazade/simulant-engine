@@ -119,7 +119,13 @@ class SkeletalFrameUnpacker : public MeshFrameData {
 public:
     SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames);
 
-    virtual void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out);
+    virtual void unpack_frame(
+        uint32_t current_frame,
+        uint32_t next_frame,
+        float t,
+        VertexData* out,
+        Debug *debug=nullptr
+    );
 
     void set_joint_state_at_frame(std::size_t frame, std::size_t joint, JointState state) {
         skeleton_frames_[frame].joints[joint] = state;
