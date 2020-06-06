@@ -231,6 +231,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         auto joint_out = skeleton->joint(i);
         auto joint_in = &joints[i];
 
+        joint_out->set_id(i);
         joint_out->set_name(std::string(joint_in->name));
         joint_out->move_to(joint_in->position);
         joint_out->rotate_to(to_quaternion(joint_in->rotation));
@@ -332,6 +333,10 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 i, j, state
             );
         }
+
+        /* Calculate the absolute transformations of all joints in
+         * all keyframes */
+        frame_data->rebuild_key_frame_absolute_transforms();
     }
 
     mesh->enable_animation(

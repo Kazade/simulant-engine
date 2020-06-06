@@ -28,8 +28,14 @@ public:
     Bone* link_to(Joint* other);
 
     Joint* parent() const;
+    std::size_t id() const;
+    void set_id(std::size_t id) {
+        id_ = id;
+    }
 private:
     Skeleton* skeleton_ = nullptr;
+    std::size_t id_ = 0;  // 0 == root
+
     Joint* parent_ = nullptr;
 
     char name_[32];
@@ -122,6 +128,11 @@ public:
     const JointState& joint_state_at_frame(std::size_t frame, std::size_t joint) const {
         return skeleton_frames_[frame].joints[joint];
     }
+
+    /* Recursively visit joints from the root (0) and
+     * recalculate the absolute_rotation and translation
+     * for each. */
+    void rebuild_key_frame_absolute_transforms();
 
 private:
     Mesh* mesh_ = nullptr;

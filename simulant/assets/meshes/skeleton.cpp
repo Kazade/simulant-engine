@@ -48,6 +48,10 @@ Joint* Joint::parent() const {
     return parent_;
 }
 
+std::size_t Joint::id() const {
+    return id_;
+}
+
 SkeletalFrameUnpacker::SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames):
     mesh_(mesh) {
 
@@ -70,6 +74,29 @@ void SkeletalFrameUnpacker::unpack_frame(uint32_t current_frame, uint32_t next_f
         auto& state1 = joint_state_at_frame(next_frame, i);
 
         // FIXME: Transform bone vertices and update positions
+    }
+}
+
+void SkeletalFrameUnpacker::rebuild_key_frame_absolute_transforms() {
+    for(auto& frame: skeleton_frames_) {
+        for(std::size_t i = 0; i < mesh_->skeleton->joint_count(); ++i) {
+            Joint* joint = mesh_->skeleton->joint(i);
+            Joint* parent = joint->parent();
+            if(!parent) {
+                frame.joints[i].absolute_rotation = frame.joints[i].rotation;
+                frame.joints[i].absolute_translation = frame.joints[i].translation;
+            } else {
+                auto& parent_rot = frame.joints[parent->id()].absolute_rotation;
+                frame.joints[i].absolute_rotation = (
+                    parent_rot * frame.joints[i].rotation
+                );
+
+                frame.joints[i].absolute_translation = (
+                    frame.joints[parent->id()].absolute_translation +
+                    parent_rot.rotate_vector(frame.joints[i].translation)
+                );
+            }
+        }
     }
 }
 
