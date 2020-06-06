@@ -55,11 +55,11 @@ protected:
         Animation():
             duration(0) {}
 
-        Animation(double duration, uint32_t start, uint32_t end):
+        Animation(float duration, uint32_t start, uint32_t end):
             duration(duration),
             frames(std::make_pair(start, end)) {}
 
-        double duration;
+        float duration;
         std::pair<uint32_t, uint32_t> frames;
     };
 
@@ -100,6 +100,7 @@ public:
     uint32_t current_frame() const { return current_frame_; }
     uint32_t next_frame() const { return next_frame_; }
     float interp() const { return interp_; }
+
 private:
     KeyFrameAnimated* animatable_;
 

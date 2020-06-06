@@ -27,8 +27,10 @@ public:
 
     Bone* link_to(Joint* other);
 
+    Joint* parent() const;
 private:
     Skeleton* skeleton_ = nullptr;
+    Joint* parent_ = nullptr;
 
     char name_[32];
     Quaternion rotation_;
@@ -90,17 +92,42 @@ private:
     uint8_t bone_count_ = 0;
 };
 
+struct JointState {
+    /* The translation and rotation from the parent joint */
+    smlt::Quaternion rotation;
+    smlt::Vec3 translation;
+
+    /* The absolute rotation/translation taking into account all
+     * parents */
+    smlt::Quaternion absolute_rotation;
+    smlt::Vec3 absolute_translation;
+};
+
+struct SkeletonFrame {
+    std::vector<JointState> joints;
+};
+
 /* This processes the skeleton and updates the vertex
  * data with the new vertex positions and normals */
 class SkeletalFrameUnpacker : public MeshFrameData {
 public:
-    SkeletalFrameUnpacker(Mesh* mesh):
-        mesh_(mesh) {}
+    SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames);
 
     virtual void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out);
 
+    void set_joint_state_at_frame(std::size_t frame, std::size_t joint, JointState state) {
+        skeleton_frames_[frame].joints[joint] = state;
+    }
+
+    const JointState& joint_state_at_frame(std::size_t frame, std::size_t joint) const {
+        return skeleton_frames_[frame].joints[joint];
+    }
+
 private:
     Mesh* mesh_ = nullptr;
+
+    /* Key frames for skeletal animation */
+    std::vector<SkeletonFrame> skeleton_frames_;
 };
 
 }

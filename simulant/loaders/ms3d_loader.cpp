@@ -221,6 +221,10 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
      * duplicate them in Simulant */
     mesh->add_skeleton(vertices.size(), joints.size());
 
+    auto to_quaternion = [](const Vec3& angles) -> Quaternion {
+        return Quaternion(Radians(angles.x), Radians(angles.y), Radians(angles.z));
+    };
+
     Skeleton* skeleton = mesh->skeleton;
 
     for(std::size_t i = 0; i < joints.size(); ++i) {
@@ -228,6 +232,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         auto joint_in = &joints[i];
 
         joint_out->set_name(std::string(joint_in->name));
+        joint_out->move_to(joint_in->position);
+        joint_out->rotate_to(to_quaternion(joint_in->rotation));
 
         L_DEBUG(_F("Loaded joint {0}").format(joint_in->name));
 
@@ -241,10 +247,97 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
     }
 
+    /* MS3D files don't store entire joint keyframes of animation, they only
+     * store the rotations or translations that changed. What we do here is
+     * unpack them into our structure where we duplicate some state for better
+     * performance during animation at the cost of a bit of memory */
+
+    auto frame_data = std::make_shared<SkeletalFrameUnpacker>(
+        mesh,
+        anim_data.total_frames
+    );
+
+    for(std::size_t i = 0; i < (std::size_t) anim_data.total_frames; ++i) {
+        float frame_time = i / anim_data.fps;
+
+        for(std::size_t j = 0; j < joints.size(); ++j) {
+            JointState state;
+
+            // FIXME: set state
+            /* MS3D joints store key frames at the time in seconds
+             * what we want to do is work out which keyframe is active
+             * at the time of this frame */
+
+            auto& source_joint = joints[j];
+
+            /* Note: assumes keyframes are stored in order of time... */
+            /* FIXME: Duplication of logic makes me sad. Maybe we can templatise this */
+
+            MS3DPositionKeyFrame* last_pos_frame = nullptr;
+            bool pos_frame_found = false;
+            for(auto& kf: source_joint.position_key_frames) {
+                if(kf.time > frame_time) {
+                    /* OK, this frame is too late, choose the last one */
+                    if(!last_pos_frame) {
+                        /* We have to assume that this is the first frame, although
+                         * this shouldn't happen, so let's log a warning */
+                        L_WARN(
+                            "First frame time was unexpectedly > 0, floating point issue?"
+                        );
+                        state.translation = source_joint.position_key_frames[0].position;
+                    } else {
+                        state.translation = last_pos_frame->position;
+                    }
+
+                    pos_frame_found = true;
+                    break;
+                }
+
+                last_pos_frame = &kf;
+            }
+
+            if(!pos_frame_found) {
+                // If we didn't find anything, set it to the last position
+                state.translation = source_joint.position_key_frames.back().position;
+            }
+
+            MS3DRotationKeyFrame* last_rot_frame = nullptr;
+            bool rot_frame_found = false;
+            for(auto& kf: source_joint.rotation_key_frames) {
+                if(kf.time > frame_time) {
+                    /* OK, this frame is too late, choose the last one */
+                    if(!last_rot_frame) {
+                        /* We have to assume that this is the first frame, although
+                         * this shouldn't happen, so let's log a warning */
+                        L_WARN(
+                            "First frame time was unexpectedly > 0, floating point issue?"
+                        );
+                        state.rotation = to_quaternion(source_joint.rotation_key_frames[0].rotation);
+                    } else {
+                        state.rotation = to_quaternion(last_rot_frame->rotation);
+                    }
+
+                    rot_frame_found = true;
+                    break;
+                }
+
+                last_rot_frame = &kf;
+            }
+
+            if(!rot_frame_found) {
+                state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
+            }
+
+            frame_data->set_joint_state_at_frame(
+                i, j, state
+            );
+        }
+    }
+
     mesh->enable_animation(
         MESH_ANIMATION_TYPE_SKELETAL,
         anim_data.total_frames,
-        std::make_shared<SkeletalFrameUnpacker>(mesh)
+        frame_data
     );
 }
 

@@ -11,3 +11,4 @@ tests/main-dc.cpp
 *.user
 \.android*
 dc-build.sh
+.autosave
