@@ -19,6 +19,7 @@
 
 #include "actor.h"
 
+#include "../debug.h"
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
@@ -174,12 +175,21 @@ void Actor::update(float dt) {
 void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
     assert(meshes_[DETAIL_LEVEL_NEAREST] && meshes_[DETAIL_LEVEL_NEAREST]->is_animated());
 
+#ifdef DEBUG_ANIMATION
+    stage->enable_debug();
+    stage->debug->set_transform(absolute_transformation());
+#endif
+
     meshes_[DETAIL_LEVEL_NEAREST]->animated_frame_data_->unpack_frame(
         current_frame, next_frame, interp, interpolated_vertex_data_.get()
 #if DEBUG_ANIMATION
         , stage->debug
 #endif
     );
+
+#ifdef DEBUG_ANIMATION
+    stage->debug->set_transform(Mat4());
+#endif
 }
 
 

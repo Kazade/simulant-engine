@@ -222,7 +222,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     mesh->add_skeleton(vertices.size(), joints.size());
 
     auto to_quaternion = [](const Vec3& angles) -> Quaternion {
-        return Quaternion(Radians(angles.x), Radians(angles.y), Radians(angles.z));
+        return Quaternion(Radians(angles.z), Radians(angles.x), Radians(angles.y));
     };
 
     Skeleton* skeleton = mesh->skeleton;
@@ -273,6 +273,32 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
             /* Note: assumes keyframes are stored in order of time... */
             /* FIXME: Duplication of logic makes me sad. Maybe we can templatise this */
+            MS3DRotationKeyFrame* last_rot_frame = nullptr;
+            bool rot_frame_found = false;
+            for(auto& kf: source_joint.rotation_key_frames) {
+                if(kf.time > frame_time) {
+                    /* OK, this frame is too late, choose the last one */
+                    if(!last_rot_frame) {
+                        /* We have to assume that this is the first frame, although
+                         * this shouldn't happen, so let's log a warning */
+                        L_WARN(
+                            "First frame time was unexpectedly > 0, floating point issue?"
+                        );
+                        state.rotation = to_quaternion(source_joint.rotation_key_frames[0].rotation);
+                    } else {
+                        state.rotation = to_quaternion(last_rot_frame->rotation);
+                    }
+
+                    rot_frame_found = true;
+                    break;
+                }
+
+                last_rot_frame = &kf;
+            }
+
+            if(!rot_frame_found) {
+                state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
+            }
 
             MS3DPositionKeyFrame* last_pos_frame = nullptr;
             bool pos_frame_found = false;
@@ -300,33 +326,6 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(!pos_frame_found) {
                 // If we didn't find anything, set it to the last position
                 state.translation = source_joint.position_key_frames.back().position;
-            }
-
-            MS3DRotationKeyFrame* last_rot_frame = nullptr;
-            bool rot_frame_found = false;
-            for(auto& kf: source_joint.rotation_key_frames) {
-                if(kf.time > frame_time) {
-                    /* OK, this frame is too late, choose the last one */
-                    if(!last_rot_frame) {
-                        /* We have to assume that this is the first frame, although
-                         * this shouldn't happen, so let's log a warning */
-                        L_WARN(
-                            "First frame time was unexpectedly > 0, floating point issue?"
-                        );
-                        state.rotation = to_quaternion(source_joint.rotation_key_frames[0].rotation);
-                    } else {
-                        state.rotation = to_quaternion(last_rot_frame->rotation);
-                    }
-
-                    rot_frame_found = true;
-                    break;
-                }
-
-                last_rot_frame = &kf;
-            }
-
-            if(!rot_frame_found) {
-                state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
             }
 
             frame_data->set_joint_state_at_frame(

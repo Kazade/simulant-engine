@@ -32,6 +32,15 @@ public:
     void set_id(std::size_t id) {
         id_ = id;
     }
+
+    smlt::Quaternion rotation() const {
+        return rotation_;
+    }
+
+    smlt::Vec3 translation() const {
+        return position_;
+    }
+
 private:
     Skeleton* skeleton_ = nullptr;
     std::size_t id_ = 0;  // 0 == root
@@ -44,7 +53,7 @@ private:
 };
 
 struct Bone {
-    Joint* joints[2];
+    Joint* joints[2] = {nullptr, nullptr};
 };
 
 struct SkeletonVertex {
