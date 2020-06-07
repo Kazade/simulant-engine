@@ -62,7 +62,12 @@ public:
 
     void update(float dt);
 
+    void set_transform(const Mat4& mat);
+    Mat4 transform() const;
+
 private:
+    Mat4 transform_;
+
     void frame_finished();
 
     bool initialized_ = false;
