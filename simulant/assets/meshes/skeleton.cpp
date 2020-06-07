@@ -69,9 +69,6 @@ void SkeletalFrameUnpacker::unpack_frame(
     uint32_t current_frame, uint32_t next_frame, float t, VertexData* out, Debug* debug
 ) {
 
-    current_frame = 0; //FIXME: Remove - testing only!
-    next_frame = 1;
-
     /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
     mesh_->vertex_data->clone_into(*out);
     auto skeleton = mesh_->skeleton.get();
@@ -102,17 +99,17 @@ void SkeletalFrameUnpacker::rebuild_key_frame_absolute_transforms() {
             Joint* joint = mesh_->skeleton->joint(i);
             Joint* parent = joint->parent();
             if(!parent) {
-                frame.joints[i].absolute_rotation = joint->rotation() /* * frame.joints[i].rotation */;
-                frame.joints[i].absolute_translation = joint->translation() /* + frame.joints[i].translation */;
+                frame.joints[i].absolute_rotation = joint->rotation() * frame.joints[i].rotation;
+                frame.joints[i].absolute_translation = joint->translation() + frame.joints[i].translation;
             } else {
                 auto& parent_rot = frame.joints[parent->id()].absolute_rotation;
                 frame.joints[i].absolute_rotation = (
-                    /*frame.joints[i].rotation * */parent_rot * joint->rotation()
+                    parent_rot * joint->rotation() * frame.joints[i].rotation
                 );
 
                 frame.joints[i].absolute_translation = (
                     frame.joints[parent->id()].absolute_translation +
-                    parent_rot.rotate_vector(joint->translation() /*+ frame.joints[i].translation */)
+                    parent_rot.rotate_vector(joint->translation() + frame.joints[i].translation)
                 );
             }
         }
