@@ -6,20 +6,33 @@
 #include "../../math/vec3.h"
 #include "../../meshes/mesh.h"
 
-#define MAX_BONES_PER_VERTEX 4
-#define MAX_BONES_PER_MESH 64
+#define MAX_JOINTS_PER_VERTEX 4
+#define MAX_JOINTS_PER_MESH 64
 
 namespace smlt {
 
 struct Bone;
 class Skeleton;
 
+/* This is an index into the vertex data array
+ * that and the weight that this joint affects that
+ * vertex */
+struct JointVertex {
+    std::size_t vertex_id = 0;
+    float weight = 0.0f;
+};
+
 class Joint {
     friend class Skeleton;
 
 public:
     Joint(Skeleton* skeleton):
-        skeleton_(skeleton) {}
+        skeleton_(skeleton) {
+
+        // Just give a joint a bit of memory for
+        // vertices to start with
+        vertices_.reserve(32);
+    }
 
     void rotate_to(const Quaternion& q);
     void move_to(const smlt::Vec3& v);
@@ -50,16 +63,12 @@ private:
     char name_[32];
     Quaternion rotation_;
     Vec3 position_;
+
+    std::vector<JointVertex> vertices_;
 };
 
 struct Bone {
     Joint* joints[2] = {nullptr, nullptr};
-};
-
-struct SkeletonVertex {
-    smlt::Vec3 position;
-    Bone* bones[MAX_BONES_PER_VERTEX];
-    float weights[MAX_BONES_PER_VERTEX];
 };
 
 class Mesh;
@@ -67,14 +76,9 @@ class Mesh;
 class Skeleton {
     friend class Joint;
 public:
-    Skeleton(Mesh* mesh, uint32_t num_vertices, uint32_t num_joints):
+    Skeleton(Mesh* mesh, uint32_t num_joints):
         mesh_(mesh) {
         joints_.resize(num_joints, Joint(this));
-        vertices_.resize(num_vertices);
-    }
-
-    SkeletonVertex* vertex(uint32_t idx) {
-        return &vertices_[idx];
     }
 
     Joint* joint(uint32_t idx) {
@@ -91,19 +95,22 @@ public:
         return nullptr;
     }
 
-    std::size_t vertex_count() const {
-        return vertices_.size();
-    }
-
     std::size_t joint_count() const {
         return joints_.size();
     }
+
+    void attach_vertex_to_joint(std::size_t j, std::size_t vertex_index, float weight) {
+        JointVertex v;
+        v.vertex_id = vertex_index;
+        v.weight = weight;
+        joint(j)->vertices_.push_back(v);
+    }
+
 private:
     Mesh* mesh_ = nullptr;
     std::vector<Joint> joints_;
-    std::vector<SkeletonVertex> vertices_;
 
-    Bone bones_[MAX_BONES_PER_MESH];
+    Bone bones_[MAX_JOINTS_PER_MESH];
     uint8_t bone_count_ = 0;
 };
 

@@ -127,7 +127,7 @@ public:
 
     /* Add a skeleton to this mesh, returns False if
      * the mesh already had a skeleton, otherwise returns true */
-    bool add_skeleton(uint32_t num_vertices, uint32_t num_joints);
+    bool add_skeleton(uint32_t num_joints);
 
     SubMeshPtr new_submesh_with_material(
         const std::string& name,

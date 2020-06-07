@@ -219,7 +219,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
      * the MS3D model. Note, the number of vertices in the triangles does
      * not match as indexes share positions in the MS3D file and we need to
      * duplicate them in Simulant */
-    mesh->add_skeleton(vertices.size(), joints.size());
+    mesh->add_skeleton(joints.size());
 
     auto to_quaternion = [](const Vec3& angles) -> Quaternion {
         /* This is what OGRE does... so it should be right! */

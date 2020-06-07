@@ -62,9 +62,9 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     skeleton_ = nullptr;
 }
 
-bool Mesh::add_skeleton(uint32_t num_vertices, uint32_t num_joints) {
+bool Mesh::add_skeleton(uint32_t num_joints) {
     if(!skeleton_) {
-        skeleton_ = new Skeleton(this, num_vertices, num_joints);
+        skeleton_ = new Skeleton(this, num_joints);
         return true;
     } else {
         return false;
