@@ -52,6 +52,18 @@ void KeyFrameAnimated::add_animation(const std::string& name,
     signal_animation_added_(this, name);
 }
 
+void KeyFrameAnimated::add_animation(const std::string& name, uint32_t start_frame, uint32_t end_frame) {
+    add_animation(name, start_frame, end_frame, default_fps_);
+}
+
+void KeyFrameAnimated::set_default_fps(float fps) {
+    default_fps_ = fps;
+}
+
+float KeyFrameAnimated::default_fps() const {
+    return default_fps_;
+}
+
 KeyFrameAnimationState::KeyFrameAnimationState(KeyFrameAnimated* animatable, AnimationUpdatedCallback refresh_animation_state):
     animatable_(animatable),
     refresh_animation_state_(refresh_animation_state) {

@@ -170,6 +170,9 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
      * duplicate them in Simulant */
     mesh->add_skeleton(joints.size());
 
+    /* Set the default fps to what's in the file */
+    mesh->set_default_fps(anim_data.fps);
+
     auto frame_data = std::make_shared<SkeletalFrameUnpacker>(
         mesh,
         anim_data.total_frames,
