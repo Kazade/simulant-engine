@@ -46,12 +46,20 @@ public:
         id_ = id;
     }
 
-    smlt::Quaternion rotation() const {
+    const smlt::Quaternion& rotation() const {
         return rotation_;
     }
 
-    smlt::Vec3 translation() const {
-        return position_;
+    const smlt::Vec3& translation() const {
+        return translation_;
+    }
+
+    const smlt::Quaternion& absolute_rotation() const {
+        return absolute_rotation_;
+    }
+
+    const smlt::Vec3 absolute_translation() const {
+        return absolute_translation_;
     }
 
 private:
@@ -61,10 +69,16 @@ private:
     Joint* parent_ = nullptr;
 
     char name_[32];
+
     Quaternion rotation_;
-    Vec3 position_;
+    Quaternion absolute_rotation_;
+
+    Vec3 translation_;
+    Vec3 absolute_translation_;
 
     std::vector<JointVertex> vertices_;
+
+    void recalc_absolute_transformation();
 };
 
 struct Bone {
@@ -129,11 +143,16 @@ struct SkeletonFrame {
     std::vector<JointState> joints;
 };
 
+struct SkeletonVertex {
+    int32_t joints[MAX_JOINTS_PER_VERTEX] = {-1, -1, -1, -1};
+    float weights[MAX_JOINTS_PER_VERTEX] = {0, 0, 0, 0};
+};
+
 /* This processes the skeleton and updates the vertex
  * data with the new vertex positions and normals */
 class SkeletalFrameUnpacker : public MeshFrameData {
 public:
-    SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames);
+    SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames, std::size_t num_vertices);
 
     virtual void unpack_frame(
         uint32_t current_frame,
@@ -156,11 +175,30 @@ public:
      * for each. */
     void rebuild_key_frame_absolute_transforms();
 
+    const SkeletonVertex* vertex_at(std::size_t i);
+
+    bool link_vertex_to_joint(std::size_t vertex, std::size_t j, float weight) {
+        auto vert = &vertices_[vertex];
+        for(uint8_t i = 0; i < MAX_JOINTS_PER_VERTEX; ++i) {
+            if(vert->joints[i] < 0) {
+                vert->joints[i] = j;
+                vert->weights[i] = weight;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    const std::vector<SkeletonVertex>& vertices() const {
+        return vertices_;
+    }
 private:
     Mesh* mesh_ = nullptr;
 
     /* Key frames for skeletal animation */
     std::vector<SkeletonFrame> skeleton_frames_;
+    std::vector<SkeletonVertex> vertices_;
 };
 
 }

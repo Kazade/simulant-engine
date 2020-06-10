@@ -164,6 +164,18 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         );
     }
 
+    /* Add a skeleton with the same number joints as
+     * the MS3D model. Note, the number of vertices in the triangles does
+     * not match as indexes share positions in the MS3D file and we need to
+     * duplicate them in Simulant */
+    mesh->add_skeleton(joints.size());
+
+    auto frame_data = std::make_shared<SkeletalFrameUnpacker>(
+        mesh,
+        anim_data.total_frames,
+        triangles.size() * 3  /* Vertex count */
+    );
+
     auto dir = kfs::path::dir_name(filename_.encode());
     bool remove_path = assets->window->vfs->add_search_path(dir);
 
@@ -202,6 +214,11 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 vdata->diffuse(Colour::WHITE);
                 vdata->move_next();
 
+                char bone = vertices[triangle.indices[i]].bone;
+                if(bone > -1) {
+                    frame_data->link_vertex_to_joint(vdata->count() - 1, bone, 1.0);
+                }
+
                 idata->index(vdata->count() - 1);
             }
         }
@@ -214,12 +231,6 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     if(remove_path) {
         assets->window->vfs->remove_search_path(dir);
     }
-
-    /* Add a skeleton with the same number of vertices and joints as
-     * the MS3D model. Note, the number of vertices in the triangles does
-     * not match as indexes share positions in the MS3D file and we need to
-     * duplicate them in Simulant */
-    mesh->add_skeleton(joints.size());
 
     auto to_quaternion = [](const Vec3& angles) -> Quaternion {
         /* This is what OGRE does... so it should be right! */
@@ -258,11 +269,6 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
      * store the rotations or translations that changed. What we do here is
      * unpack them into our structure where we duplicate some state for better
      * performance during animation at the cost of a bit of memory */
-
-    auto frame_data = std::make_shared<SkeletalFrameUnpacker>(
-        mesh,
-        anim_data.total_frames
-    );
 
     for(std::size_t i = 0; i < (std::size_t) anim_data.total_frames; ++i) {
         float frame_time = i / anim_data.fps;
