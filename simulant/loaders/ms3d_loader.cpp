@@ -83,6 +83,20 @@ struct MS3DJoint {
     std::vector<MS3DPositionKeyFrame> position_key_frames;
 };
 
+struct MS3DComment {
+    int32_t index;
+    int32_t comment_length;
+    std::vector<char> comment;
+};
+
+struct MS3DVertexExtra {
+    int8_t bone_ids[3];
+    // 0 is the weight for the vertex bone, 1 for bone_ids[0] and 2 for bone_ids[1]
+    // weight for bone_ids[2] is 1.0 - other_weights
+    uint8_t weights[3];
+    uint32_t extra; // Only if subversion is 2
+};
+
 #pragma pack(pop)
 
 
@@ -110,6 +124,13 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     uint16_t num_groups;
     uint16_t num_materials;
     uint16_t num_joints;
+
+    int32_t subversion;
+    uint32_t num_group_comments;
+    int32_t num_material_comments;
+    int32_t num_joint_comments;
+    int32_t has_model_comment;
+    int32_t vertex_extra_subversion;
 
     data_->read((char*) &num_vertices, sizeof(uint16_t));
     std::vector<MS3DVertex> vertices(num_vertices);
@@ -164,6 +185,44 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         );
     }
 
+    MS3DComment comment; // We do nothing with this for now
+    data_->read((char*) &num_material_comments, sizeof(int32_t));
+    for(int32_t i = 0; i < num_material_comments; ++i) {
+        data_->read((char*) &comment.index, sizeof(comment.index));
+        data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
+        comment.comment.resize(comment.comment_length);
+        data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
+    }
+
+    data_->read((char*) &num_joint_comments, sizeof(int32_t));
+    for(int32_t i = 0; i < num_joint_comments; ++i) {
+        data_->read((char*) &comment.index, sizeof(comment.index));
+        data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
+        comment.comment.resize(comment.comment_length);
+        data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
+    }
+
+    data_->read((char*) &has_model_comment, sizeof(int32_t));
+    for(int32_t i = 0; i < has_model_comment; ++i) {
+        data_->read((char*) &comment.index, sizeof(comment.index));
+        data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
+        comment.comment.resize(comment.comment_length);
+        data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
+    }
+
+    data_->read((char*) &vertex_extra_subversion, sizeof(vertex_extra_subversion));
+
+    std::vector<MS3DVertexExtra> vertex_extras;
+    vertex_extras.resize(num_vertices);
+    for(uint16_t i = 0; i < num_vertices; ++i) {
+        MS3DVertexExtra& extra = vertex_extras[i];
+        data_->read((char*) extra.bone_ids, sizeof(uint8_t) * 3);
+        data_->read((char*) extra.weights, sizeof(uint8_t) * 3);
+        if(vertex_extra_subversion == 2) {
+            data_->read((char*) &extra.extra, sizeof(extra.extra));
+        }
+    }
+
     /* Add a skeleton with the same number joints as
      * the MS3D model. Note, the number of vertices in the triangles does
      * not match as indexes share positions in the MS3D file and we need to
@@ -211,15 +270,41 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         for(auto idx: group.triangle_indices) {
             auto& triangle = triangles[idx];
             for(int i = 0; i < 3; ++i) {
-                vdata->position(vertices[triangle.indices[i]].xyz);
+                auto vert_index = triangle.indices[i];
+                vdata->position(vertices[vert_index].xyz);
                 vdata->tex_coord0(triangle.s[i], 1.0f - triangle.t[i]);
                 vdata->normal(triangle.normals[i]);
                 vdata->diffuse(Colour::WHITE);
                 vdata->move_next();
 
-                char bone = vertices[triangle.indices[i]].bone;
-                if(bone > -1) {
-                    frame_data->link_vertex_to_joint(vdata->count() - 1, bone, 1.0);
+                int8_t bones[4] = {
+                    vertices[vert_index].bone,
+                    vertex_extras[vert_index].bone_ids[0],
+                    vertex_extras[vert_index].bone_ids[1],
+                    vertex_extras[vert_index].bone_ids[2],
+                };
+
+                uint8_t weights[4] = {
+                    (bones[0] > -1) ? vertex_extras[vert_index].weights[0] : (uint8_t) 0,
+                    (bones[1] > -1) ? vertex_extras[vert_index].weights[1] : (uint8_t) 0,
+                    (bones[2] > -1) ? vertex_extras[vert_index].weights[2] : (uint8_t) 0,
+                    0
+                };
+
+                weights[3] = (bones[3] > -1) ?
+                    255 - weights[2] - weights[1] - weights[0] : 0;
+
+                if(weights[0] + weights[1] + weights[2] + weights[3] == 0) {
+                    weights[0] = 255;
+                }
+
+                for(uint8_t k = 0; k < 4; ++k) {
+                    char bone = bones[k];
+                    if(bone > -1) {
+                        frame_data->link_vertex_to_joint(
+                            vdata->count() - 1, bone, float(weights[k]) / 255.0f
+                        );
+                    }
                 }
 
                 idata->index(vdata->count() - 1);
