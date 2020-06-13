@@ -116,7 +116,7 @@ AxisAngle Quaternion::to_axis_angle() const {
     return ret;
 }
 
-Quaternion Quaternion::nlerp(const Quaternion &rhs, float t) {
+Quaternion Quaternion::nlerp(const Quaternion &rhs, float t) const {
     auto z = rhs;
     auto theta = this->dot(rhs);
 
@@ -133,7 +133,7 @@ Quaternion Quaternion::nlerp(const Quaternion &rhs, float t) {
     ).normalized();
 }
 
-Quaternion Quaternion::slerp(const Quaternion &rhs, float t) {
+Quaternion Quaternion::slerp(const Quaternion &rhs, float t) const {
     auto z = rhs;
 
     auto cos_theta = this->dot(rhs);

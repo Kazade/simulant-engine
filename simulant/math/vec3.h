@@ -154,12 +154,7 @@ public:
     #endif
     }
 
-    Vec3 lerp(const Vec3& end, float t) {
-        t = std::min(t, 1.0f);
-        t = std::max(t, 0.0f);
-
-        return *this + ((end - *this) * t);
-    }
+    Vec3 lerp(const Vec3& end, float t) const;
 
     Vec3 rotated_by(const Quaternion& q) const;
 

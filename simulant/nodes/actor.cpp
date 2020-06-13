@@ -24,7 +24,7 @@
 #include "../animation.h"
 #include "../renderers/renderer.h"
 
-#define DEBUG_ANIMATION 1  /* If enabled, will show debug animation overlay */
+#define DEBUG_ANIMATION 0  /* If enabled, will show debug animation overlay */
 
 namespace smlt {
 

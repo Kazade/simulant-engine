@@ -121,20 +121,32 @@ void SkeletalFrameUnpacker::unpack_frame(
      * joint position vs the original joint position for each joint that has a
      * weighting */
     for(std::size_t i = 0; i < vertices_.size(); ++i) {
-        Vec3 p = *mesh_->vertex_data->position_at<Vec3>(i);
+        Vec3 p = *vdata->position_at<Vec3>(i);
+        Vec3 n = *vdata->normal_at<Vec3>(i);
         auto sv = vertices_[i];
 
+        Vec3 po, no;
         for(auto k = 0; k < MAX_JOINTS_PER_VERTEX; ++k) {
             auto j = sv.joints[k];
             if(j > -1) {
                 auto& state0 = joint_state_at_frame(current_frame, j);
+                auto& state1 = joint_state_at_frame(next_frame, j);
+
+                auto q = state0.absolute_rotation.slerp(state1.absolute_rotation, t);
+                auto d = state0.absolute_translation.lerp(state1.absolute_translation, t);
+
                 auto joint = skeleton->joint(j);
-                p += (state0.absolute_translation - joint->absolute_translation()) * sv.weights[k];
+
+                /* FIXME: Optimise! Using matrices may be fewer instructions */
+                Quaternion rot = q * joint->absolute_rotation().inversed();
+                po += ((p - joint->absolute_translation()) * rot) + d * sv.weights[k];
+                no += rot * n;
             }
         }
 
         out->move_to(i);
-        out->position(p);
+        out->position(po);
+        out->normal(no.normalized());
     }
 
     out->done();

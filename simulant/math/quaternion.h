@@ -170,8 +170,8 @@ struct Quaternion {
         );
     }
 
-    Quaternion nlerp(const Quaternion& rhs, float t);
-    Quaternion slerp(const Quaternion& rhs, float t);
+    Quaternion nlerp(const Quaternion& rhs, float t) const;
+    Quaternion slerp(const Quaternion& rhs, float t) const;
 
     const Degrees pitch() const {
         return Radians(atan2(2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));

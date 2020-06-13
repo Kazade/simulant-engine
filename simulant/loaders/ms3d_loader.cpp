@@ -18,7 +18,7 @@ struct MS3DHeader {
 struct MS3DVertex {
     uint8_t flags;
     smlt::Vec3 xyz;
-    uint8_t bone;
+    int8_t bone;
     uint8_t ref_count;
 };
 
@@ -298,11 +298,14 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                     weights[0] = 255;
                 }
 
+                float weight_scalar = (vertex_extra_subversion == 1) ?
+                    1.0f / 255.0f : 1.0f / 100.0f;
+
                 for(uint8_t k = 0; k < 4; ++k) {
                     char bone = bones[k];
                     if(bone > -1) {
                         frame_data->link_vertex_to_joint(
-                            vdata->count() - 1, bone, float(weights[k]) / 255.0f
+                            vdata->count() - 1, bone, float(weights[k]) * weight_scalar
                         );
                     }
                 }
