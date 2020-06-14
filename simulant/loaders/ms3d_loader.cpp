@@ -435,11 +435,11 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 i, j, state
             );
         }
-
-        /* Calculate the absolute transformations of all joints in
-         * all keyframes */
-        frame_data->rebuild_key_frame_absolute_transforms();
     }
+
+    /* Calculate the absolute transformations of all joints in
+     * all keyframes */
+    frame_data->rebuild_key_frame_absolute_transforms();
 
     mesh->enable_animation(
         MESH_ANIMATION_TYPE_SKELETAL,
