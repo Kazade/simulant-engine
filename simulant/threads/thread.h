@@ -28,7 +28,7 @@ typedef uint32_t ThreadID;
 
 class ThreadSpawnError: public std::runtime_error {
 public:
-#ifdef _arch_dreamcast
+#if defined(_arch_dreamcast) || defined(__ANDROID__)
     /* No std::to_string on the DC */
     ThreadSpawnError(int code):
         std::runtime_error("Error spawning thread") {
