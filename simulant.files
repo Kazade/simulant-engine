@@ -57,6 +57,8 @@ simulant/assets/materials/material_property_registry.cpp
 simulant/assets/materials/material_property_registry.h
 simulant/assets/materials/material_property_type.cpp
 simulant/assets/materials/material_property_type.h
+simulant/assets/meshes/skeleton.cpp
+simulant/assets/meshes/skeleton.h
 simulant/assets/particle_script.cpp
 simulant/assets/particle_script.h
 simulant/assets/particles/colour_fader.h
@@ -84,6 +86,8 @@ simulant/generic/raii.h
 simulant/generic/range_value.h
 simulant/generic/uniquely_identifiable.h
 simulant/loaders/deps/tiny_obj_loader.h
+simulant/loaders/ms3d_loader.cpp
+simulant/loaders/ms3d_loader.h
 simulant/loaders/wav_loader.cpp
 simulant/loaders/wav_loader.h
 simulant/macros.h
@@ -138,6 +142,7 @@ tests/test_cow_vector.h
 tests/test_frustum_partitioner.h
 tests/test_heightmap.h
 tests/test_loose_quadtree.h
+tests/test_ms3d_loader.h
 tests/test_panels.h
 tests/test_polylist.h
 tests/test_stage.h

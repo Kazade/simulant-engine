@@ -45,10 +45,13 @@ namespace smlt {
 class AssetManager;
 class AdjacencyInfo;
 class Renderer;
+class Skeleton;
+class Debug;
 
 enum MeshAnimationType {
     MESH_ANIMATION_TYPE_NONE,
-    MESH_ANIMATION_TYPE_VERTEX_MORPH
+    MESH_ANIMATION_TYPE_VERTEX_MORPH,
+    MESH_ANIMATION_TYPE_SKELETAL
 };
 
 
@@ -61,7 +64,13 @@ typedef sig::signal<void (Mesh*, MeshAnimationType, uint32_t)> SignalAnimationEn
 class MeshFrameData {
 public:
     virtual ~MeshFrameData() {}
-    virtual void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData* out) = 0;
+
+    virtual void unpack_frame(
+        uint32_t current_frame,
+        uint32_t next_frame,
+        float t, VertexData* out,
+        Debug* debug=nullptr
+    ) = 0;
 };
 
 typedef std::shared_ptr<MeshFrameData> MeshFrameDataPtr;
@@ -115,6 +124,10 @@ public:
     virtual ~Mesh();
 
     void reset(VertexSpecification vertex_specification);
+
+    /* Add a skeleton to this mesh, returns False if
+     * the mesh already had a skeleton, otherwise returns true */
+    bool add_skeleton(uint32_t num_joints);
 
     SubMeshPtr new_submesh_with_material(
         const std::string& name,
@@ -209,6 +222,8 @@ private:
     friend class SubMesh;
     friend class Actor;
 
+    Skeleton* skeleton_ = nullptr;
+
     std::shared_ptr<VertexData> vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
@@ -230,8 +245,12 @@ private:
 
 public:
     /* Returns a nullptr if there is no adjacecy info */
-    Property<decltype(&Mesh::adjacency_)> adjacency_info = {this, &Mesh::adjacency_};
-    Property<decltype(&Mesh::vertex_data_)> vertex_data = { this, &Mesh::vertex_data_ };
+    S_DEFINE_PROPERTY(adjacency_info, &Mesh::adjacency_);
+
+    S_DEFINE_PROPERTY(vertex_data, &Mesh::vertex_data_);
+
+    /* Returns a nullptr if there is no skeleton */
+    S_DEFINE_PROPERTY(skeleton, &Mesh::skeleton_);
 };
 
 }

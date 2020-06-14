@@ -40,6 +40,7 @@ public:
     void set_specular(const Colour& colour);
     void set_ambient(const Colour& colour);
     void set_diffuse(const Colour& colour);
+    void set_emission(const Colour& colour);
     void set_shininess(float shininess);
     void set_diffuse_map(TexturePtr texture);
     void set_light_map(TexturePtr texture);
@@ -56,6 +57,7 @@ public:
 
     const Colour& specular() const;
     const Colour& ambient() const;
+    const Colour& emission() const;
     const Colour& diffuse() const;
     float shininess() const;
     bool is_blending_enabled() const;

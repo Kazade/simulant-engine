@@ -22,6 +22,13 @@ Vec3::Vec3(const Vec2 &v2, float z):
 
 }
 
+Vec3 Vec3::lerp(const Vec3& end, float t) const {
+    t = std::min(t, 1.0f);
+    t = std::max(t, 0.0f);
+
+    return *this + ((end - *this) * t);
+}
+
 Vec3 Vec3::rotated_by(const Quaternion &q) const {
     return q * (*this);
 }

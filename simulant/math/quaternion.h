@@ -156,13 +156,7 @@ struct Quaternion {
         return Radians(std::acos(w) * 2.0f);
     }
 
-    Vec3 operator*(const Vec3& v) const {
-        const Vec3 quat_vector(x, y, z);
-        const Vec3 uv = quat_vector.cross(v);
-        const Vec3 uuv = quat_vector.cross(uv);
-
-        return v + ((uv * w) + uuv) * 2.0f;
-    }
+    Vec3 operator*(const Vec3& v) const;
 
     Quaternion operator-() const {
         return Quaternion(
@@ -170,8 +164,8 @@ struct Quaternion {
         );
     }
 
-    Quaternion nlerp(const Quaternion& rhs, float t);
-    Quaternion slerp(const Quaternion& rhs, float t);
+    Quaternion nlerp(const Quaternion& rhs, float t) const;
+    Quaternion slerp(const Quaternion& rhs, float t) const;
 
     const Degrees pitch() const {
         return Radians(atan2(2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
