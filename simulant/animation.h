@@ -44,9 +44,13 @@ public:
 
     void add_sequence(const std::string& name, const std::vector<AnimationSequenceStage>& stages);
     void add_animation(const std::string& name, uint32_t start_frame, uint32_t end_frame, float fps);
+    void add_animation(const std::string& name, uint32_t start_frame, uint32_t end_frame);
 
     bool has_animations() const { return !animations_.empty(); }
     uint32_t animation_count() const { return animations_.size(); }
+
+    void set_default_fps(float fps);
+    float default_fps() const;
 protected:
     //Animation stuff
     friend class KeyFrameAnimationState;
@@ -55,11 +59,11 @@ protected:
         Animation():
             duration(0) {}
 
-        Animation(double duration, uint32_t start, uint32_t end):
+        Animation(float duration, uint32_t start, uint32_t end):
             duration(duration),
             frames(std::make_pair(start, end)) {}
 
-        double duration;
+        float duration;
         std::pair<uint32_t, uint32_t> frames;
     };
 
@@ -73,6 +77,9 @@ protected:
 
         return (*it).second.get();
     }
+
+private:
+    float default_fps_ = 7.0f;  // This is a common frame rate on MD2 models
 };
 
 // args: current_frame, next_frame, interp
@@ -100,6 +107,7 @@ public:
     uint32_t current_frame() const { return current_frame_; }
     uint32_t next_frame() const { return next_frame_; }
     float interp() const { return interp_; }
+
 private:
     KeyFrameAnimated* animatable_;
 

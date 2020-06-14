@@ -19,9 +19,12 @@
 
 #include "actor.h"
 
+#include "../debug.h"
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
+
+#define DEBUG_ANIMATION 0  /* If enabled, will show debug animation overlay */
 
 namespace smlt {
 
@@ -172,9 +175,21 @@ void Actor::update(float dt) {
 void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
     assert(meshes_[DETAIL_LEVEL_NEAREST] && meshes_[DETAIL_LEVEL_NEAREST]->is_animated());
 
+#ifdef DEBUG_ANIMATION
+    stage->enable_debug();
+    stage->debug->set_transform(absolute_transformation());
+#endif
+
     meshes_[DETAIL_LEVEL_NEAREST]->animated_frame_data_->unpack_frame(
         current_frame, next_frame, interp, interpolated_vertex_data_.get()
+#if DEBUG_ANIMATION
+        , stage->debug
+#endif
     );
+
+#ifdef DEBUG_ANIMATION
+    stage->debug->set_transform(Mat4());
+#endif
 }
 
 
@@ -282,7 +297,9 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         return;
     }
 
-    auto vdata = (has_animated_mesh()) ? interpolated_vertex_data_.get() : mesh->vertex_data.get();
+    auto vdata = (has_animated_mesh()) ?
+        interpolated_vertex_data_.get() :
+        mesh->vertex_data.get();
 
     for(auto submesh: mesh->each_submesh()) {
         Renderable new_renderable;

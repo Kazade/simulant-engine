@@ -82,6 +82,10 @@ void MaterialObject::set_ambient(const Colour &colour) {
     set_property_value(registry_->material_ambient_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
 }
 
+void MaterialObject::set_emission(const Colour& colour) {
+    set_property_value(registry_->material_emission_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
+}
+
 void MaterialObject::set_diffuse(const Colour &colour) {
     set_property_value(registry_->material_diffuse_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
 }
@@ -139,6 +143,10 @@ const Colour& MaterialObject::specular() const {
 
 const Colour& MaterialObject::ambient() const {
     return (const Colour&) property_value(registry_->material_ambient_id_)->value<Vec4>();
+}
+
+const Colour& MaterialObject::emission() const {
+    return (const Colour&) property_value(registry_->material_emission_id_)->value<Vec4>();
 }
 
 const Colour& MaterialObject::diffuse() const {

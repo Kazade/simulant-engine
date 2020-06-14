@@ -134,6 +134,14 @@ void Debug::update(float dt) {
     points_with_depth_->index_data->done();
 }
 
+void Debug::set_transform(const Mat4& mat) {
+    transform_ = mat;
+}
+
+Mat4 Debug::transform() const {
+    return transform_;
+}
+
 void Debug::initialize_actor() {
     /*
      * We don't initialize the actor until first use to avoid unnecessary
@@ -151,8 +159,9 @@ void Debug::initialize_actor() {
         RENDERABLE_CULLING_MODE_NEVER // Important!
     );
 
-    // Always render debug stuff last
-    actor_->set_render_priority(smlt::RENDER_PRIORITY_MAX);
+    // Always render debug stuff last, and don't cull
+    actor_->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
+    actor_->set_render_priority(RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
 
     initialized_ = true;
 }
@@ -200,8 +209,8 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;
-    element.points[0] = start;
-    element.points[1] = end;
+    element.points[0] = start.transformed_by(transform_);
+    element.points[1] = end.transformed_by(transform_);
     element.size = 0.25f;
     element.type = DebugElementType::DET_LINE;
     elements_.push_back(element);
@@ -220,7 +229,7 @@ void Debug::draw_point(const Vec3 &position, const Colour &colour, double durati
     element.colour = colour;
     element.duration = duration;
     element.depth_test = depth_test;
-    element.points[0] = position;
+    element.points[0] = position.transformed_by(transform_);
     element.type = DebugElementType::DET_POINT;
     element.size = current_point_size_;
     elements_.push_back(element);

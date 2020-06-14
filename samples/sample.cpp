@@ -33,10 +33,16 @@ public:
         actor->move_to(0.0f, 0.0f, -80.0f);
         actor->rotate_global_y_by(smlt::Degrees(180));
 
-        auto actor3 = stage_->new_actor_with_mesh(mesh_id);
-        actor3->move_to(-40.0f, 0.0f, -95.0f);
-        actor3->rotate_global_y_by(smlt::Degrees(180));
-        actor3->animation_state->play_animation("idle_2");
+        smlt::MeshPtr ms3d_mesh = stage_->assets->new_mesh_from_file(
+            "sample_data/fellguard/fellguard_animated-ms3d.ms3d"
+        );
+
+        ms3d_mesh->add_animation("idle", 0, 100, /*FIXME*/7);
+
+        auto actor2= stage_->new_actor_with_mesh(ms3d_mesh);
+        actor2->move_to(-40.0f, 0.0f, -95.0f);
+        actor2->rotate_global_y_by(smlt::Degrees(180));
+        //actor2->animation_state->play_animation("idle");
 
         // Add a fly controller to the camera for user input
         camera_->new_behaviour<behaviours::Fly>(window);

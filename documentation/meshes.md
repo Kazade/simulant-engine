@@ -27,3 +27,31 @@ auto actor1 = stage->new_actor_with_mesh(mesh); // Uses the default material at 
 auto actor2 = stage->new_actor_with_mesh(mesh);
 actor2->use_material_slot(MATERIAL_SLOT1);  // actor2 now uses the other material
 ```
+
+## Skeletons
+
+A mesh may optional have a skeleton assigned to it - this is normally created implicitly
+by loading a mesh file from a format that supports skeletal animation (e.g. .ms3d).
+
+A skeleton contains a number of joints, and these joints are linked together to form
+bones. A joint has both a relative rotation + translation (to the parent) and an absolute
+rotation + translation. 
+
+You can find and manipulate a joint by it's name:
+
+```
+Joint* joint = mesh->skeleton->find_joint("neck");
+neck->rotate_to(my_rotation);
+neck->move_to(my_translation);
+```
+
+Finally, skeletons maintain a relationship from vertices to joints. You can link
+a vertex index to a joint by calling:
+
+```
+mesh->skeleton->attach_vertex_to_joint(joint, vertex_index, weight);
+```
+
+The `vertex_index` should be an index into the mesh's `vertex_data` array. `weight`
+should be a value between 0.0 and 1.0. The total weights for a vertex should add up
+to 1.0.
