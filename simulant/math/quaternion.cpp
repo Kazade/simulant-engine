@@ -116,6 +116,14 @@ AxisAngle Quaternion::to_axis_angle() const {
     return ret;
 }
 
+Vec3 Quaternion::operator*(const Vec3& v) const {
+    const Vec3 quat_vector(x, y, z);
+    const Vec3 uv = quat_vector.cross(v);
+    const Vec3 uuv = quat_vector.cross(uv);
+
+    return v + ((uv * w) + uuv) * 2.0f;
+}
+
 Quaternion Quaternion::nlerp(const Quaternion &rhs, float t) const {
     auto z = rhs;
     auto theta = this->dot(rhs);
