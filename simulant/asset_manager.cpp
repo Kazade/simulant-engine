@@ -22,6 +22,7 @@
 #include "loader.h"
 #include "procedural/mesh.h"
 #include "utils/gl_thread_check.h"
+#include "loaders/heightmap_loader.h"
 
 /** FIXME
  *
@@ -254,6 +255,20 @@ MeshPtr AssetManager::new_mesh_from_heightmap(const unicode& image_file, const H
 
     return mesh;
 }
+
+MeshPtr AssetManager::new_mesh_from_heightmap(const TextureID& texture_id, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+    auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+
+    loaders::HeightmapLoader loader(texture(texture_id));
+
+    loader.into(*mesh, {
+        {"spec", spec},
+    });
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
+
+    return mesh;
+}
+
 
 MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
     auto mesh = new_mesh(vertex_specification, GARBAGE_COLLECT_NEVER);

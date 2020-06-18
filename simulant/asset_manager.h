@@ -189,6 +189,13 @@ public:
     MeshPtr new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
+
+    MeshPtr new_mesh_from_heightmap(
+        const TextureID& texture,
+        const HeightmapSpecification& spec=HeightmapSpecification(),
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
+
     MeshPtr new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -220,7 +227,7 @@ public:
             return ret;
         }
 
-        // Constness applies to the resource manager itself, not the returned base manager        
+        // Constness applies to the resource manager itself, not the returned base manager
         while(ret->parent_) {
             ret = ret->parent_;
         }

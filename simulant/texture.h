@@ -183,6 +183,8 @@ public:
     void set_mipmap_generation(MipmapGenerate type);
 
     const Texture::Data& data() const;
+
+    void set_data(const uint8_t* data);
     void set_data(const Texture::Data& data);
 
     /* Clear the data buffer */

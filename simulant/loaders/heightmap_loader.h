@@ -26,12 +26,29 @@ namespace smlt {
 
 typedef std::function<smlt::Colour (const smlt::Vec3&, const smlt::Vec3&, const std::vector<Vec3>&)> HeightmapDiffuseGenerator;
 
+struct TerrainTriangle {
+    uint32_t index[3];
+};
+
 struct TerrainData {
+    Mesh* terrain = nullptr;
+
     uint32_t x_size;
     uint32_t z_size;
     float max_height;
     float min_height;
     float grid_spacing;
+
+    /* Get the height at the specified coordinate, returns false if
+     * the coordinate falls outside the height grid */
+    optional<float> height_at_xz(const Vec2& xz) const;
+
+    /* Get the triangle indexes at the specified coordinate, returns false if
+     * the coordinate is outside the height grid */
+    optional<TerrainTriangle> triangle_at_xz(const Vec2& xz) const;
+
+    /* Get all the triangles that intersect the area defined by minxz -> maxxz */
+    std::vector<TerrainTriangle> triangles_in_area(const Vec2& min_xz, const Vec2& max_xz) const;
 };
 
 
@@ -61,9 +78,16 @@ public:
     HeightmapLoader(const unicode& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
+    /* Hack! This exists for the ability to generate a heightmap from an already
+     * loaded texture. */
+    HeightmapLoader(const TexturePtr texture):
+        Loader("", std::make_shared<std::istringstream>()),
+        texture_(texture) {}
+
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 
 private:
+    TexturePtr texture_ = nullptr;
     void smooth_terrain_iteration(Mesh *mesh, int width, int height);
 };
 

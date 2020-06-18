@@ -24,16 +24,68 @@
 
 namespace smlt {
 
-namespace terrain {
-    // Mesh helper functions specific to heightmaps
-
-float get_height_at(MeshPtr terrain, float x_point, float z_point) {
+optional<float> TerrainData::height_at_xz(const Vec2& xz) const {
     /*
      * Returns the interpolated height of the terrain at the specified location
      */
 
-    return 0.0f;
+    float xw = grid_spacing * x_size;
+    float zw = grid_spacing * z_size;
+
+    float hx = xw * 0.5f;
+    float hz = zw * 0.5f;
+
+    if(xz.x < -hx || xz.x > hx) return optional<float>();
+    if(xz.y < -hz || xz.y > hz) return optional<float>();
+
+    /* This returns the coordinate position of the next grid
+     * point down towards neg x and z*/
+    float low_x = xz.x - std::fmod(xz.x, grid_spacing);
+    float low_z = xz.y - std::fmod(xz.y, grid_spacing);
+
+    /* Shift the coordinates into 0 -> width */
+    low_x += hx;
+    low_z += hz;
+
+    /* Divide by grid spacing and int-ify to get the index
+     * of the x/z of this point */
+    uint32_t low_x_index = (uint32_t) low_x / grid_spacing;
+    uint32_t low_z_index = (uint32_t) low_z / grid_spacing;
+
+    /* Calculate the other surrounding indexes */
+    uint32_t idx0 = (low_z_index * x_size) + low_x_index;
+    uint32_t idx1 = idx0 + 1;
+    uint32_t idx2 = ((low_z_index + 1) * x_size) + low_x_index;
+    uint32_t idx3 = idx2 + 1;
+
+    /* Get the 4 points surrounding the original coordinate */
+    auto v0 = terrain->vertex_data->position_at<Vec3>(idx0);
+    auto v1 = terrain->vertex_data->position_at<Vec3>(idx1);
+    auto v2 = terrain->vertex_data->position_at<Vec3>(idx2);
+    auto v3 = terrain->vertex_data->position_at<Vec3>(idx3);
+
+    float high_y = std::max(v0->y, std::max(v1->y, std::max(v2->y, v3->y)));
+    float low_y = std::min(v0->y, std::min(v1->y, std::min(v2->y, v3->y)));
+
+    Ray r;
+    r.start = Vec3(xz.x, high_y + 0.1f, xz.y);
+    r.dir = Vec3(0, -((high_y - low_y) + 0.1f), 0);
+
+    Vec3 intersection;
+
+    if(r.intersects_triangle(*v0, *v2, *v1, &intersection)) {
+        return optional<float>(intersection.y);
+    } else {
+        bool hit = r.intersects_triangle(*v2, *v3, *v1, &intersection);
+        assert(hit);
+        return optional<float>(intersection.y);
+    }
 }
+
+
+namespace terrain {
+    // Mesh helper functions specific to heightmaps
+
 
 Vec3 get_vertex_at(MeshPtr terrain, int x, int z) {
     /* Returns the vertex at the specified point */
@@ -240,15 +292,18 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         HeightmapSpecification()
     );
 
-    // Load the texture using the texture loader
-    TexturePtr tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R8);
-    TextureLoader loader(this->filename_, this->data_);
-    loader.into(*tex, {{"auto_upload", false}});
+    /* texture_ may have been already set in the constructor */
+    TexturePtr tex = texture_;
 
-    tex->flip_vertically();
+    if(!tex) {
+        // Load the texture using the texture loader
+        tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R8);
+        TextureLoader loader(this->filename_, this->data_);
+        loader.into(*tex, {{"auto_upload", false}});
+        tex->flip_vertically();
+    }
 
     // Now generate the heightmap from it
-
     if(tex->is_compressed()) {
         throw std::logic_error("Creating a heightmap from a compressed texture is currently unimplemented");
     }
@@ -282,6 +337,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // Add some properties for the user to access if they need to
     TerrainData data;
+    data.terrain = mesh;
     data.x_size = width;
     data.z_size = height;
     data.min_height = spec.min_height;

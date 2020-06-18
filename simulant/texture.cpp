@@ -363,6 +363,10 @@ const Texture::Data &Texture::data() const {
     return data_;
 }
 
+void Texture::set_data(const uint8_t* data) {
+    data_.assign(data, data + (width() * height() * bytes_per_pixel()));
+}
+
 void Texture::save_to_file(const unicode& filename) {
     _S_UNUSED(filename);
     assert(0 && "Not Implemented");
