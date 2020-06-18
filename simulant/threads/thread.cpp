@@ -17,7 +17,7 @@ void Thread::join() {
 }
 
 bool Thread::joinable() const {
-    return thread_ > 0;
+    return (ThreadID)thread_ > 0;
 }
 
 void Thread::detach() {
