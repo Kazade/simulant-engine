@@ -37,6 +37,13 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_PROFILE")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_PROFILE")
 ENDIF()
 
+include(CheckFunctionExists)
+check_function_exists("pthread_yield" HAS_PTHREAD_YIELD)
+IF(${HAS_PTHREAD_YIELD})
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
+ENDIF()
+
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s -fomit-frame-pointer -g0 -ffast-math")
