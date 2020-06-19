@@ -97,7 +97,7 @@ public:
          * to an unsigned int without losing information. On the Dreamcast
          * this is a kthread_t* but pointers are 32 bit, so that's "ok".
          */
-#ifndef _arch_dreamcast
+#if !defined(_arch_dreamcast) && !defined(__APPLE__)
         static_assert(std::is_convertible<pthread_t, ThreadID>::value, "pthread_t is not convertible");
 #endif
         return (ThreadID) thread_;
