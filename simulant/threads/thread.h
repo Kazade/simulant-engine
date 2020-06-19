@@ -9,6 +9,7 @@
 #include <memory>
 #include <cassert>
 #include <utility>
+#include <string>
 
 #include "../macros.h"
 
