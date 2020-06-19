@@ -69,7 +69,7 @@ optional<float> TerrainData::height_at_xz(const Vec2& xz) const {
 
     Ray r;
     r.start = Vec3(xz.x, high_y + 0.1f, xz.y);
-    r.dir = Vec3(0, -((high_y - low_y) + 0.1f), 0);
+    r.dir = Vec3(0, -((high_y - low_y) + 0.2f), 0);
 
     Vec3 intersection;
 
@@ -331,8 +331,9 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<float> heights(total);
     auto& tex_data = tex->data();
     auto stride = tex->bytes_per_pixel();
+    float m = 1.0f / 256.0f;
     for(int32_t i = 0; i < total; i++) {
-        heights[i] = float(tex_data[i * stride]) / 256.0f;
+        heights[i] = float(tex_data[i * stride]) * m;
     }
 
     // Add some properties for the user to access if they need to

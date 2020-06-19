@@ -31,61 +31,59 @@ bool Ray::intersects_aabb(const AABB &aabb) const {
     return false;
 }
 
-static bool intersect_line_triangle(const Vec3& orig, const Vec3& dir,
-    const Vec3& vert0, const Vec3& vert1, const Vec3& vert2,
-    Vec3& position
-) {
-    const float epsilon = std::numeric_limits<float>::epsilon();
-
-    auto edge1 = vert1 - vert0;
-    auto edge2 = vert2 - vert0;
-    auto pvec = dir.cross(edge2);
-
-    float det = edge1.dot(pvec);
-
-    if(det > -epsilon && det < epsilon) {
-        return false;
-    }
-
-    float inv_det = 1.0f / det;
-
-    auto tvec = orig - vert0;
-
-    position.y = tvec.dot(pvec) * inv_det;
-
-    if(position.y < 0.0f || position.y > 1.0f) {
-        return false;
-    }
-
-    auto qvec = tvec.cross(edge1);
-
-    position.z = dir.dot(qvec) * inv_det;
-
-    if(position.z < 0.0f || position.y + position.z > 1.0f) {
-        return false;
-    }
-
-    position.x = edge2.dot(qvec) * inv_det;
-
-    return true;
-}
-
 bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Vec3 *intersection, Vec3 *normal, float *distance) const {
-    Vec3 hit;
-    bool ret = intersect_line_triangle(start, dir, v1, v2, v3, hit);
+    Vec3 e1, e2;  //Edge1, Edge2
+    Vec3 P, Q, T;
+    float det, inv_det, u, v;
+    float t;
 
-    if(ret) {
-        if(intersection) *intersection = hit;
-        if(normal) {
-            *normal = (v2 - v1).cross(v3 - v1).normalized();
-        }
+    e1 = v2 - v1;
+    e2 = v3 - v1;
 
-        if(distance) {
-            *distance = (hit - start).length();
-        }
+    P = dir.cross(e2);
+    det = e1.dot(P);
+
+    if(det > -EPSILON && det < EPSILON) {
+        return false;
     }
 
-    return ret;
+    inv_det = 1.f / det;
+
+    T = start - v1;
+    u = T.dot(P) * inv_det;
+
+    //The intersection lies outside of the triangle
+    if(u < 0.f || u > 1.f) {
+        return false;
+    }
+
+    Q = T.cross(e1);
+    v = dir.dot(Q) * inv_det;
+
+    if(v < 0.f || u + v  > 1.f) {
+        return false;
+    }
+
+    t = e2.dot(Q) * inv_det;
+
+    if(t > EPSILON && t <= 1.0f) { //ray intersection
+        float dist = t * dir.length();
+        if(distance) {
+            *distance = dist;
+        }
+
+        if(intersection) {
+            *intersection = start + (dir.normalized() * dist);
+        }
+
+        if(normal) {
+            *normal = e1.cross(e2);
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 

@@ -44,24 +44,29 @@ public:
         assert_false(data.height_at_xz(Vec2(5 * spec.spacing / 2, 5 * spec.spacing / 2)));
 
         float hw = spec.spacing * 2;
+
+        auto normalized_height = [spec](float n) -> float {
+            return spec.min_height + (spec.max_height - spec.min_height) * n;
+        };
+
         assert_close(
             data.height_at_xz(Vec2((0 * spec.spacing) - hw, 0)).value(),
-            0.0f, 0.001f
+            normalized_height(0.0f), 0.001f
         );
 
         assert_close(
             data.height_at_xz(Vec2((1 * spec.spacing) - hw, 0)).value(),
-            0.5f, 0.001f
+            normalized_height(0.5f), 0.001f
         );
 
         assert_close(
             data.height_at_xz(Vec2((2 * spec.spacing) - hw, 0)).value(),
-            1.0f, 0.001f
+            normalized_height(1.0f), 0.5f
         );
 
         assert_close(
             data.height_at_xz(Vec2((3 * spec.spacing) - hw, 0)).value(),
-            0.0f, 0.001f
+            normalized_height(0.0f), 0.001f
         );
     }
 
