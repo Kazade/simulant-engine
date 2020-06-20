@@ -37,15 +37,15 @@ optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
     /* This returns the coordinate position of the next grid
      * point down towards neg x and z*/
 
-    float fmx = std::fmod(xz.x, grid_spacing);
-    float fmz = std::fmod(xz.y, grid_spacing);
-
-    float low_x = xz.x - fmx;
-    float low_z = xz.y - fmz;
-
     /* Shift the coordinates into 0 -> width */
-    low_x += hx;
-    low_z += hz;
+    float sx = xz.x + hx;
+    float sz = xz.y + hz;
+
+    float fmx = std::fmod(sx, grid_spacing);
+    float fmz = std::fmod(sz, grid_spacing);
+
+    float low_x = sx - fmx;
+    float low_z = sz - fmz;
 
     /* Divide by grid spacing and int-ify to get the index
      * of the x/z of this point */

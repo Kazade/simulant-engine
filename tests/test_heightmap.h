@@ -89,22 +89,22 @@ public:
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
 
-        auto tri = data.triangle_at_xz(-10.0f, -10.0f).value();
+        auto tri = data.triangle_at_xz(-5.0f, -5.0f).value();
 
         assert_equal(tri.index[0], 0u);
-        assert_equal(tri.index[1], 2u);
+        assert_equal(tri.index[1], 4u);
         assert_equal(tri.index[2], 1u);
 
-        tri = data.triangle_at_xz(-8.0f, -10.0f).value();
+        tri = data.triangle_at_xz(-2.6f, -5.0f).value();
 
         assert_equal(tri.index[0], 0u);
-        assert_equal(tri.index[1], 2u);
+        assert_equal(tri.index[1], 4u);
         assert_equal(tri.index[2], 1u);
 
-        tri = data.triangle_at_xz(-8.0f, -8.0f).value();
+        tri = data.triangle_at_xz(-2.6f, -2.6f).value();
 
-        assert_equal(tri.index[0], 2u);
-        assert_equal(tri.index[1], 3u);
+        assert_equal(tri.index[0], 4u);
+        assert_equal(tri.index[1], 5u);
         assert_equal(tri.index[2], 1u);
     }
 };
