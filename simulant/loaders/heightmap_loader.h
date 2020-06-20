@@ -42,13 +42,16 @@ struct TerrainData {
     /* Get the height at the specified coordinate, returns false if
      * the coordinate falls outside the height grid */
     optional<float> height_at_xz(const Vec2& xz) const;
+    optional<float> height_at_xz(float x, float z) const {
+        return height_at_xz(Vec2(x, z));
+    }
 
     /* Get the triangle indexes at the specified coordinate, returns false if
      * the coordinate is outside the height grid */
     optional<TerrainTriangle> triangle_at_xz(const Vec2& xz) const;
-
-    /* Get all the triangles that intersect the area defined by minxz -> maxxz */
-    std::vector<TerrainTriangle> triangles_in_area(const Vec2& min_xz, const Vec2& max_xz) const;
+    optional<TerrainTriangle> triangle_at_xz(float x, float z) const {
+        return triangle_at_xz(Vec2(x, z));
+    }
 };
 
 

@@ -24,24 +24,24 @@
 
 namespace smlt {
 
-optional<float> TerrainData::height_at_xz(const Vec2& xz) const {
-    /*
-     * Returns the interpolated height of the terrain at the specified location
-     */
-
+optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
     float xw = grid_spacing * x_size;
     float zw = grid_spacing * z_size;
 
     float hx = xw * 0.5f;
     float hz = zw * 0.5f;
 
-    if(xz.x < -hx || xz.x > hx) return optional<float>();
-    if(xz.y < -hz || xz.y > hz) return optional<float>();
+    if(xz.x < -hx || xz.x > hx) return optional<TerrainTriangle>();
+    if(xz.y < -hz || xz.y > hz) return optional<TerrainTriangle>();
 
     /* This returns the coordinate position of the next grid
      * point down towards neg x and z*/
-    float low_x = xz.x - std::fmod(xz.x, grid_spacing);
-    float low_z = xz.y - std::fmod(xz.y, grid_spacing);
+
+    float fmx = std::fmod(xz.x, grid_spacing);
+    float fmz = std::fmod(xz.y, grid_spacing);
+
+    float low_x = xz.x - fmx;
+    float low_z = xz.y - fmz;
 
     /* Shift the coordinates into 0 -> width */
     low_x += hx;
@@ -58,14 +58,40 @@ optional<float> TerrainData::height_at_xz(const Vec2& xz) const {
     uint32_t idx2 = ((low_z_index + 1) * x_size) + low_x_index;
     uint32_t idx3 = idx2 + 1;
 
+    TerrainTriangle ret;
+    if(fmx <= 0.5f || fmz <= 0.5f) {
+        ret.index[0] = idx0;
+        ret.index[1] = idx2;
+        ret.index[2] = idx1;
+    } else {
+        ret.index[0] = idx2;
+        ret.index[1] = idx3;
+        ret.index[2] = idx1;
+    }
+    return ret;
+}
+
+optional<float> TerrainData::height_at_xz(const Vec2& xz) const {
+    /*
+     * Returns the interpolated height of the terrain at the specified location
+     */
+
+    auto triangle = triangle_at_xz(xz);
+    if(!triangle) {
+        return optional<float>();
+    }
+
+    auto idx0 = triangle->index[0];
+    auto idx1 = triangle->index[1];
+    auto idx2 = triangle->index[2];
+
     /* Get the 4 points surrounding the original coordinate */
     auto v0 = terrain->vertex_data->position_at<Vec3>(idx0);
     auto v1 = terrain->vertex_data->position_at<Vec3>(idx1);
     auto v2 = terrain->vertex_data->position_at<Vec3>(idx2);
-    auto v3 = terrain->vertex_data->position_at<Vec3>(idx3);
 
-    float high_y = std::max(v0->y, std::max(v1->y, std::max(v2->y, v3->y)));
-    float low_y = std::min(v0->y, std::min(v1->y, std::min(v2->y, v3->y)));
+    float high_y = std::max(v0->y, std::max(v1->y, v2->y));
+    float low_y = std::min(v0->y, std::min(v1->y, v2->y));
 
     Ray r;
     r.start = Vec3(xz.x, high_y + 0.1f, xz.y);
@@ -73,13 +99,12 @@ optional<float> TerrainData::height_at_xz(const Vec2& xz) const {
 
     Vec3 intersection;
 
-    if(r.intersects_triangle(*v0, *v2, *v1, &intersection)) {
-        return optional<float>(intersection.y);
-    } else {
-        bool hit = r.intersects_triangle(*v2, *v3, *v1, &intersection);
-        assert(hit);
-        return optional<float>(intersection.y);
-    }
+    bool hit = r.intersects_triangle(*v0, *v1, *v2, &intersection);
+
+    _S_UNUSED(hit);
+    assert(hit);
+
+    return optional<float>(intersection.y);
 }
 
 

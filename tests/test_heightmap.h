@@ -71,7 +71,41 @@ public:
     }
 
     void test_triangle_at_xz() {
+        uint8_t heightmap_data [] = {
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+        };
 
+        HeightmapSpecification spec;
+
+        auto stage = window->new_stage();
+
+        auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R8);
+        tex->set_auto_upload(false);
+        tex->set_data(heightmap_data);
+        auto mesh = stage->assets->new_mesh_from_heightmap(tex, spec);
+
+        auto data = mesh->data->get<TerrainData>("terrain_data");
+
+        auto tri = data.triangle_at_xz(-10.0f, -10.0f).value();
+
+        assert_equal(tri.index[0], 0u);
+        assert_equal(tri.index[1], 2u);
+        assert_equal(tri.index[2], 1u);
+
+        tri = data.triangle_at_xz(-8.0f, -10.0f).value();
+
+        assert_equal(tri.index[0], 0u);
+        assert_equal(tri.index[1], 2u);
+        assert_equal(tri.index[2], 1u);
+
+        tri = data.triangle_at_xz(-8.0f, -8.0f).value();
+
+        assert_equal(tri.index[0], 2u);
+        assert_equal(tri.index[1], 3u);
+        assert_equal(tri.index[2], 1u);
     }
 };
 
