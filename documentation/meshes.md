@@ -55,3 +55,18 @@ mesh->skeleton->attach_vertex_to_joint(joint, vertex_index, weight);
 The `vertex_index` should be an index into the mesh's `vertex_data` array. `weight`
 should be a value between 0.0 and 1.0. The total weights for a vertex should add up
 to 1.0.
+
+# Heightmaps
+
+Simulant has built-in support for building heightmap terrain meshes from textures. You can create a heightmap terrain using the `new_mesh_from_heightmap` method on the `AssetManager`.
+
+When a `Mesh` has been created from a heightmap, the mesh gains a `TerrainData` attribute in its `data`:
+
+```
+        auto data = mesh->data->get<TerrainData>("terrain_data");
+```
+
+This struct provides information about how the heightmap was generated, for example its grid spacing, min/max heights etc. `TerrainData` also provides some utility functions:
+
+ - `TerrainData::height_at_xz(float x, float z)` - Returns the Y coordinate at the position specified. Returns an `optional<float>` which will be "falsey" if the coordinate was outside the terrain
+ - `TerrainData::triangle_at_xz(float x, float z)` - Returns the 3 indexes of the triangle at the given coordinate. Returns an optional<TerrainTriangle> which will be "falsey" if the coordinate was outside the terrain
