@@ -23,6 +23,10 @@ public:
         }
     }
 
+    optional(const T& value) {
+        set_value(value);
+    }
+
     optional(T&& value) {
         set_value(std::move(value));
     }

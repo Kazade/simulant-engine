@@ -19,6 +19,94 @@ public:
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").z_size, tex->height());
     }
 
+    void test_height_at_xz() {
+        uint8_t heightmap_data [] = {
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+        };
+
+        HeightmapSpecification spec;
+
+        auto stage = window->new_stage();
+
+        auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R8);
+        tex->set_auto_upload(false);
+        tex->set_data(heightmap_data);
+        auto mesh = stage->assets->new_mesh_from_heightmap(tex, spec);
+
+        auto data = mesh->data->get<TerrainData>("terrain_data");
+        assert_equal(data.x_size, 4u);
+        assert_equal(data.z_size, 4u);
+
+        /* Outside the bounds */
+        assert_false(data.height_at_xz(Vec2(5 * spec.spacing / 2, 5 * spec.spacing / 2)));
+
+        float hw = spec.spacing * 2;
+
+        auto normalized_height = [spec](float n) -> float {
+            return spec.min_height + (spec.max_height - spec.min_height) * n;
+        };
+
+        assert_close(
+            data.height_at_xz(Vec2((0 * spec.spacing) - hw, 0)).value(),
+            normalized_height(0.0f), 0.001f
+        );
+
+        assert_close(
+            data.height_at_xz(Vec2((1 * spec.spacing) - hw, 0)).value(),
+            normalized_height(0.5f), 0.001f
+        );
+
+        assert_close(
+            data.height_at_xz(Vec2((2 * spec.spacing) - hw, 0)).value(),
+            normalized_height(1.0f), 0.5f
+        );
+
+        assert_close(
+            data.height_at_xz(Vec2((3 * spec.spacing) - hw, 0)).value(),
+            normalized_height(0.0f), 0.001f
+        );
+    }
+
+    void test_triangle_at_xz() {
+        uint8_t heightmap_data [] = {
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+            0, 128, 255, 0,
+        };
+
+        HeightmapSpecification spec;
+
+        auto stage = window->new_stage();
+
+        auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R8);
+        tex->set_auto_upload(false);
+        tex->set_data(heightmap_data);
+        auto mesh = stage->assets->new_mesh_from_heightmap(tex, spec);
+
+        auto data = mesh->data->get<TerrainData>("terrain_data");
+
+        auto tri = data.triangle_at_xz(-5.0f, -5.0f).value();
+
+        assert_equal(tri.index[0], 0u);
+        assert_equal(tri.index[1], 4u);
+        assert_equal(tri.index[2], 1u);
+
+        tri = data.triangle_at_xz(-2.6f, -5.0f).value();
+
+        assert_equal(tri.index[0], 0u);
+        assert_equal(tri.index[1], 4u);
+        assert_equal(tri.index[2], 1u);
+
+        tri = data.triangle_at_xz(-2.6f, -2.6f).value();
+
+        assert_equal(tri.index[0], 4u);
+        assert_equal(tri.index[1], 5u);
+        assert_equal(tri.index[2], 1u);
+    }
 };
 
 }

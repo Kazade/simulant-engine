@@ -5,6 +5,7 @@
 #include "simulant/test.h"
 #include "simulant/nodes/camera.h"
 #include "simulant/nodes/stage_node_manager.h"
+#include "simulant/compositor.h"
 
 namespace {
 
