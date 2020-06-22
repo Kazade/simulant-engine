@@ -25,7 +25,6 @@
 namespace smlt {
 
 optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
-    float one_over_grid_spacing = 1.0f / grid_spacing;
     float xw = grid_spacing * x_size;
     float zw = grid_spacing * z_size;
 
@@ -374,6 +373,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     data.min_height = spec.min_height;
     data.max_height = spec.max_height;
     data.grid_spacing = spec.spacing;
+    data.one_over_grid_spacing = 1.0f / data.grid_spacing;
     mesh->data->stash(data, "terrain_data");
 
     // Generate the vertices from the heightmap
