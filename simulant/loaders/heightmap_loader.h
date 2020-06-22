@@ -38,6 +38,7 @@ struct TerrainData {
     float max_height;
     float min_height;
     float grid_spacing;
+    float one_over_grid_spacing;
 
     /* Get the height at the specified coordinate, returns false if
      * the coordinate falls outside the height grid */

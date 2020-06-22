@@ -19,6 +19,26 @@ public:
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").z_size, tex->height());
     }
 
+    void test_height_at_xz_big() {
+        auto stage = window->new_stage();
+
+        std::vector<uint8_t> heightmap_data(64 * 64, 0);
+
+        HeightmapSpecification spec;
+        spec.spacing = 75;
+
+        auto tex = stage->assets->new_texture(64, 64, TEXTURE_FORMAT_R8);
+        tex->set_auto_upload(false);
+        tex->set_data(heightmap_data);
+        auto mesh = stage->assets->new_mesh_from_heightmap(tex, spec);
+
+        auto data = mesh->data->get<TerrainData>("terrain_data");
+        assert_equal(data.x_size, 64u);
+        assert_equal(data.z_size, 64u);
+
+        assert_true(data.height_at_xz(695.243286, -3.61446357));
+    }
+
     void test_height_at_xz() {
         uint8_t heightmap_data [] = {
             0, 128, 255, 0,

@@ -49,8 +49,8 @@ optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
 
     /* Divide by grid spacing and int-ify to get the index
      * of the x/z of this point */
-    uint32_t low_x_index = (uint32_t) low_x / grid_spacing;
-    uint32_t low_z_index = (uint32_t) low_z / grid_spacing;
+    uint32_t low_x_index = (uint32_t) low_x * one_over_grid_spacing;
+    uint32_t low_z_index = (uint32_t) low_z * one_over_grid_spacing;
 
     /* Calculate the other surrounding indexes */
     uint32_t idx0 = (low_z_index * x_size) + low_x_index;
@@ -59,7 +59,11 @@ optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
     uint32_t idx3 = idx2 + 1;
 
     TerrainTriangle ret;
-    if(fmx <= 0.5f || fmz <= 0.5f) {
+
+    float fmx_percent = fmx * one_over_grid_spacing;
+    float fmz_percent = fmz * one_over_grid_spacing;
+
+    if(fmx_percent + fmz_percent <= 1.0f) {
         ret.index[0] = idx0;
         ret.index[1] = idx2;
         ret.index[2] = idx1;
@@ -369,6 +373,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     data.min_height = spec.min_height;
     data.max_height = spec.max_height;
     data.grid_spacing = spec.spacing;
+    data.one_over_grid_spacing = 1.0f / data.grid_spacing;
     mesh->data->stash(data, "terrain_data");
 
     // Generate the vertices from the heightmap
