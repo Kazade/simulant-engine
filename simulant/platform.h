@@ -7,6 +7,8 @@ namespace smlt {
 
 class Platform {
 public:
+    virtual ~Platform() {}
+
     // Information
     virtual std::string name() const = 0;
 };

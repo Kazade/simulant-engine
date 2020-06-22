@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <array>
 #include "vec3.h"
 
@@ -115,15 +116,15 @@ public:
     AABB(const VertexData& vertex_data);
 
     float width() const {
-        return fabs(max_.x - min_.x);
+        return std::abs(max_.x - min_.x);
     }
 
     float height() const {
-        return fabs(max_.y - min_.y);
+        return std::abs(max_.y - min_.y);
     }
 
     float depth() const  {
-        return fabs(max_.z - min_.z);
+        return std::abs(max_.z - min_.z);
     }
 
     const Vec3 dimensions() const {

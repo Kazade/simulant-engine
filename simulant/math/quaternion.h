@@ -168,15 +168,15 @@ struct Quaternion {
     Quaternion slerp(const Quaternion& rhs, float t) const;
 
     const Degrees pitch() const {
-        return Radians(atan2(2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
+        return Radians(std::atan2(2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
     }
 
     const Degrees yaw() const {
-        return Radians(asin(clamp(-2.0f * (x * z - w * y), -1.0f, 1.0f)));
+        return Radians(std::asin(clamp(-2.0f * (x * z - w * y), -1.0f, 1.0f)));
     }
 
     const Degrees roll() const {
-        return Radians(atan2(2.0f * (x * y + w * z), w * w + x * x - y * y - z * z));
+        return Radians(std::atan2(2.0f * (x * y + w * z), w * w + x * x - y * y - z * z));
     }
 
     Vec3 forward() const {
