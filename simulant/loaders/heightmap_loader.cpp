@@ -59,7 +59,11 @@ optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
     uint32_t idx3 = idx2 + 1;
 
     TerrainTriangle ret;
-    if(fmx <= (grid_spacing * 0.5f) || fmz <= (grid_spacing * 0.5f)) {
+
+    float fmx_percent = fmx / grid_spacing;
+    float fmz_percent = fmz / grid_spacing;
+
+    if(fmx_percent <= 0.5f || fmz_percent <= 0.5f) {
         ret.index[0] = idx0;
         ret.index[1] = idx2;
         ret.index[2] = idx1;
