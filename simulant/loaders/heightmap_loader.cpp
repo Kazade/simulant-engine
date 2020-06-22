@@ -25,6 +25,7 @@
 namespace smlt {
 
 optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
+    float one_over_grid_spacing = 1.0f / grid_spacing;
     float xw = grid_spacing * x_size;
     float zw = grid_spacing * z_size;
 
@@ -49,8 +50,8 @@ optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
 
     /* Divide by grid spacing and int-ify to get the index
      * of the x/z of this point */
-    uint32_t low_x_index = (uint32_t) low_x / grid_spacing;
-    uint32_t low_z_index = (uint32_t) low_z / grid_spacing;
+    uint32_t low_x_index = (uint32_t) low_x * one_over_grid_spacing;
+    uint32_t low_z_index = (uint32_t) low_z * one_over_grid_spacing;
 
     /* Calculate the other surrounding indexes */
     uint32_t idx0 = (low_z_index * x_size) + low_x_index;
@@ -60,10 +61,10 @@ optional<TerrainTriangle> TerrainData::triangle_at_xz(const Vec2& xz) const {
 
     TerrainTriangle ret;
 
-    float fmx_percent = fmx / grid_spacing;
-    float fmz_percent = fmz / grid_spacing;
+    float fmx_percent = fmx * one_over_grid_spacing;
+    float fmz_percent = fmz * one_over_grid_spacing;
 
-    if(fmx_percent <= 0.5f || fmz_percent <= 0.5f) {
+    if(fmx_percent + fmz_percent <= 1.0f) {
         ret.index[0] = idx0;
         ret.index[1] = idx2;
         ret.index[2] = idx1;
