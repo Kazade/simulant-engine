@@ -45,6 +45,18 @@ public:
 
 class StringFormatterTests : public smlt::test::TestCase {
 public:
+    void test_formatting_int8() {
+        assert_equal(
+            _F("{0}").format((int8_t) 1),
+            "1"
+        );
+
+        assert_equal(
+            _F("{0} {1}").format((int8_t) 1, 2),
+            "1 2"
+        );
+    }
+
     void test_basic_formatting() {
         assert_equal(
             _F("{0} {0} {1} {2}").format(1, 2, 3),
