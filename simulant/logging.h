@@ -44,12 +44,16 @@ public:
 
     template<typename T>
     std::string format(T&& arg) {
-        return do_format(Counter(), arg);
+        return do_format(Counter(), std::forward<T>(arg));
+    }
+
+    std::string format(int8_t&& arg) {
+        return do_format(Counter(), (int16_t) arg);
     }
 
     template<typename... Args>
     std::string format(Args&& ... args) {
-        return do_format(Counter(), args...);
+        return do_format(Counter(), std::forward<Args>(args)...);
     }
 
 private:
@@ -88,6 +92,13 @@ private:
         return result;
     }
 
+    /* Specialize so that an integer isn't treated like an ascii character..
+     * (Why isn't int8_t its own type instead of `signed char` ??!)*/
+    std::string do_format(Counter count, int8_t&& val) {
+        int16_t c = val;
+        return do_format(count, std::move(c));
+    }
+
     template<typename T>
     std::string do_format(Counter count, T&& val) {
         std::string to_replace = "{" + std::to_string(count.val) + "}";
@@ -122,7 +133,9 @@ private:
 
     template<typename T, typename... Args>
     std::string do_format(Counter count, T&& val, Args&&... args) {
-        return Formatter(do_format(count, val)).do_format(Counter(count.val + 1), args...);
+        return Formatter(
+            do_format(count, std::forward<T>(val))
+        ).do_format(Counter(count.val + 1), std::forward<Args>(args)...);
     }
 };
 
