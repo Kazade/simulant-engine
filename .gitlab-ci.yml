@@ -216,12 +216,9 @@ build:linux-x64-clang:
 
 build:linux-x64-gcc:
   stage: build
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
-  before_script:
-   - microdnf upgrade -y && microdnf clean all
-   - microdnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
