@@ -49,26 +49,20 @@ prepare:windows-x64-mingw:
 
 check:thread-usage:
   stage: check
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-    - microdnf install -y python3
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   script:
     - python3 tools/find_std_thread.py simulant
 
 check:deque-usage:
   stage: check
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-    - microdnf install -y python3
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   script:
     - python3 tools/find_std_deque.py simulant
 
 check:stream-usage:
   stage: check
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   allow_failure: true
-  before_script:
-    - microdnf install -y python3
   script:
     - python3 tools/find_std_stream.py simulant
 
