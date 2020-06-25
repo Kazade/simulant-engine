@@ -37,12 +37,6 @@ void StageNode::clean_up() {
     TwoPhaseConstructed::clean_up();
 }
 
-void StageNode::set_parent(CameraID id) {
-    TreeNode::set_parent(stage_->camera(id));
-
-    recalc_visibility();
-}
-
 Vec3 StageNode::absolute_position() const {
     return absolute_position_;
 }
