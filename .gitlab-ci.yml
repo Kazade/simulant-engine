@@ -1,4 +1,5 @@
 stages:
+ - prepare
  - check
  - build
  - test
@@ -6,6 +7,26 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+
+prepare:linux-x64-gcc:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    GIT_STRATEGY: none  # Prevent cloning
+    DOCKERFILE: >- # Generate a Dockerfile for the build image
+      FROM ubuntu:18.04\n
+      RUN apt-get update\n
+      RUN apt-get install -y python3-pip git python3-setuptools cmake build-essential libsdl2-dev libopenal-dev\n
+  before_script:  # Put the variable into a Dockerfile
+     - echo -e $DOCKERFILE > Dockerfile
+     - cat Dockerfile
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:linux-x64-gcc || true
+     - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc -t $CI_REGISTRY_IMAGE:linux-x64-gcc .
+     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+     - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc
 
 check:thread-usage:
   stage: check
