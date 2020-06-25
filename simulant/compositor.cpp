@@ -259,6 +259,8 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
 
     // Mark the visible objects as visible
     for(auto& node: nodes_visible) {
+        assert(node);
+
         if(!node->is_visible()) {
             continue;
         }
