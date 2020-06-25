@@ -1,29 +1,100 @@
 #pragma once
 
+#include <set>
+
 #include "simulant/simulant.h"
 #include "simulant/test.h"
+
+namespace {
+
+using namespace smlt;
 
 class StageTests : public smlt::test::SimulantTestCase {
 public:
 
-    void test_destruction() {
+    void test_actor_destruction() {
         auto stage = window->new_stage();
         auto destroyed_count = 0;
 
-        stage->signal_actor_destroyed().connect([&](smlt::ActorID) {
+        std::set<ActorID> destroyed_ids;
+        sig::scoped_connection conn = stage->signal_actor_destroyed().connect([&](smlt::ActorID id) {
             destroyed_count++;
+            destroyed_ids.insert(id);
         });
 
         auto a1 = stage->new_actor();
         auto a2 = stage->new_actor_with_parent(a1);
         stage->new_actor_with_parent(a2);
 
+        auto a2id = a2->id();
         a2->destroy();
 
         window->run_frame();
 
         assert_false(a1->child_count()); // No children now
         assert_equal(destroyed_count, 2); // Should've destroyed 2
+
+        assert_true(destroyed_ids.count(a2id));
+
+
+    }
+
+    void test_camera_destruction() {
+        auto stage = window->new_stage();
+        auto destroyed_count = 0;
+
+        std::set<CameraID> destroyed_ids;
+        sig::scoped_connection conn = stage->signal_camera_destroyed().connect([&](smlt::CameraID id) {
+            destroyed_count++;
+            destroyed_ids.insert(id);
+        });
+
+        auto a1 = stage->new_camera();
+        auto a2 = stage->new_camera();
+        a2->set_parent(a1);
+
+        auto a3 = stage->new_camera();
+        a3->set_parent(a2);
+
+        auto a2id = a2->id();
+        a2->destroy();
+
+        window->run_frame();
+
+        assert_false(a1->child_count()); // No children now
+        assert_equal(destroyed_count, 2); // Should've destroyed 2
+
+        assert_true(destroyed_ids.count(a2id));
+    }
+
+    void test_particle_system_destruction() {
+        auto stage = window->new_stage();
+        auto destroyed_count = 0;
+
+        std::set<ParticleSystemID> destroyed_ids;
+        sig::scoped_connection conn = stage->signal_particle_system_destroyed().connect([&](smlt::ParticleSystemID id) {
+            destroyed_count++;
+            destroyed_ids.insert(id);
+        });
+
+        auto script = stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);
+        auto a1 = stage->new_particle_system(script);
+
+        auto a2 = stage->new_particle_system(script);
+        a2->set_parent(a1);
+
+        auto a3 = stage->new_particle_system(script);
+        a3->set_parent(a2);
+
+        auto a2id = a2->id();
+        a2->destroy();
+
+        window->run_frame();
+
+        assert_false(a1->child_count()); // No children now
+        assert_equal(destroyed_count, 2); // Should've destroyed 2
+
+        assert_true(destroyed_ids.count(a2id));
     }
 
     void test_stage_node_clean_up_signals() {
@@ -34,14 +105,13 @@ public:
         bool cleaned_up = false;
         bool destroyed = false;
 
-        actor->signal_destroyed().connect([&]() {
+        sig::scoped_connection conn = actor->signal_destroyed().connect([&]() {
             destroyed = true;
         });
 
-        actor->signal_cleaned_up().connect([&]() {
+        sig::scoped_connection conn2 = actor->signal_cleaned_up().connect([&]() {
             cleaned_up = true;
         });
-
 
         actor->destroy();
 
@@ -180,3 +250,5 @@ public:
         assert_items_equal(found, expected);
     }
 };
+
+}

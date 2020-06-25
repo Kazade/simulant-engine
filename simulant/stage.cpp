@@ -444,63 +444,73 @@ Debug* Stage::enable_debug(bool v) {
 }
 
 void Stage::destroy_object(Actor* object) {
-    if(actor_manager_->destroy(object->id())) {
-        signal_actor_destroyed_(object->id());
+    auto id = object->id();
+    if(actor_manager_->destroy(id)) {
+        signal_actor_destroyed_(id);
     }
 }
 
 void Stage::destroy_object(Light* object) {
-    if(light_manager_->destroy(object->id())) {
-        signal_light_destroyed_(object->id());
+    auto id = object->id();
+    if(light_manager_->destroy(id)) {
+        signal_light_destroyed_(id);
     }
 }
 
 void Stage::destroy_object(Camera* object) {
-    if(camera_manager_->destroy(object->id())) {
-        signal_camera_destroyed_(object->id());
+    auto id = object->id();
+    if(camera_manager_->destroy(id)) {
+        signal_camera_destroyed_(id);
     }
 }
 
 void Stage::destroy_object(Geom* object) {
-    if(geom_manager_->destroy(object->id())) {
-        signal_geom_destroyed_(object->id());
+    auto id = object->id();
+    if(geom_manager_->destroy(id)) {
+        signal_geom_destroyed_(id);
     }
 }
 
 void Stage::destroy_object(ParticleSystem* object) {
-    if(particle_system_manager_->destroy(object->id())) {
-        signal_particle_system_destroyed_(object->id());
+    auto id = object->id();
+    if(particle_system_manager_->destroy(id)) {
+        signal_particle_system_destroyed_(id);
     }
 }
 
 void Stage::destroy_object_immediately(Actor* object) {
     // Only send the signal if we didn't already
-    if(actor_manager_->destroy_immediately(object->id())) {
-        signal_actor_destroyed_(object->id());
+    auto id = object->id();
+    if(actor_manager_->destroy_immediately(id)) {
+        signal_actor_destroyed_(id);
     }
 }
 
 void Stage::destroy_object_immediately(Light* object) {
-    if(light_manager_->destroy_immediately(object->id())) {
-        signal_light_destroyed_(object->id());
+    auto id = object->id();
+    if(light_manager_->destroy_immediately(id)) {
+        signal_light_destroyed_(id);
     }
 }
 
 void Stage::destroy_object_immediately(Camera* object) {
-    if(camera_manager_->destroy_immediately(object->id())) {
-        signal_camera_destroyed_(object->id());
+    auto id = object->id();
+    if(camera_manager_->destroy_immediately(id)) {
+        signal_camera_destroyed_(id);
     }
 }
 
 void Stage::destroy_object_immediately(Geom* object) {
-    if(geom_manager_->destroy_immediately(object->id())) {
-        signal_geom_destroyed_(object->id());
+    auto id = object->id();
+    if(geom_manager_->destroy_immediately(id)) {
+        signal_geom_destroyed_(id);
     }
 }
 
 void Stage::destroy_object_immediately(ParticleSystem* object) {
-    if(particle_system_manager_->destroy_immediately(object->id())) {
-        signal_particle_system_destroyed_(object->id());
+    auto id = object->id();
+    if(particle_system_manager_->destroy_immediately(id)) {
+        signal_particle_system_destroyed_(id);
     }
 }
 

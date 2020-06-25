@@ -189,9 +189,8 @@ public:
 
     void set_parent(TreeNode* node) {
         TreeNode::set_parent(node);
+        recalc_visibility();
     }
-
-    void set_parent(CameraID id);
 
     void update(float dt) override;
     void late_update(float dt) override;
