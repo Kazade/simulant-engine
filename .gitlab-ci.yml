@@ -18,7 +18,7 @@ prepare:linux-x64-gcc:
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM ubuntu:18.04\n
       RUN apt-get update\n
-      RUN apt-get install -y python3-pip git python3-setuptools cmake build-essential libsdl2-dev libopenal-dev\n
+      RUN apt-get install -y python3 python3-pip git python3-setuptools cmake build-essential libsdl2-dev libopenal-dev\n
   before_script:  # Put the variable into a Dockerfile
      - echo -e $DOCKERFILE > Dockerfile
      - cat Dockerfile
