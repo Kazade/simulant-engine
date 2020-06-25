@@ -35,6 +35,8 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
     auto frustum = stage->camera(camera_id)->frustum();
 
     for(auto& node: *stage->node_pool) {
+        assert(node);
+
         if(!node->is_marked_for_destruction()) {
 
             // FIXME: Storing a STAGE_NODE_TYPE in the StageNode

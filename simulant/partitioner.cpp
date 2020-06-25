@@ -59,6 +59,8 @@ void Partitioner::update_actor(ActorID actor_id, const AABB &bounds) {
 }
 
 void Partitioner::remove_actor(ActorID obj) {
+    assert(obj);
+
     StagedWrite write;
     write.operation = WRITE_OPERATION_REMOVE;
     write.stage_node_type = STAGE_NODE_TYPE_ACTOR;
