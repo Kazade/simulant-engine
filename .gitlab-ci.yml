@@ -17,7 +17,7 @@ prepare:linux-x64-gcc:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM registry.fedoraproject.org/fedora-minimal:28\n
-      RUN microdnf upgrade -y && microdnf clean all\n
+      RUN microdnf update -y && microdnf clean all\n
       RUN microdnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
   before_script:  # Put the variable into a Dockerfile
      - echo -e $DOCKERFILE > Dockerfile
