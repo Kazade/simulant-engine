@@ -14,7 +14,7 @@ public:
         test::SimulantTestCase::set_up();
 
         stage_ = window->new_stage();
-        box_ = stage_->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
+        box_ = window->shared_assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
     void tear_down() override {
@@ -42,6 +42,34 @@ public:
         );
 
         assert_equal(nodes.size(), 1u);
+    }
+
+    void test_nodes_returned_if_never_culled() {
+        auto stage = window->new_stage();
+        auto camera = stage->new_camera();
+        auto a1 = stage->new_actor_with_mesh(box_);
+
+        a1->move_to(0, 0, 100);
+
+        std::vector<LightID> lights;
+        std::vector<StageNode*> nodes;
+        FrustumPartitioner partitioner(stage);
+
+        partitioner.lights_and_geometry_visible_from(
+            camera, lights, nodes
+        );
+
+        /* Not visible */
+        assert_true(std::find(nodes.begin(), nodes.end(), a1) == nodes.end());
+
+        a1->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
+
+        partitioner.lights_and_geometry_visible_from(
+            camera, lights, nodes
+        );
+
+        /* Now visible */
+        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
     }
 
     void test_destroyed_nodes_not_returned() {

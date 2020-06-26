@@ -39,6 +39,8 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
 
         if(!node->is_marked_for_destruction()) {
 
+            auto rcm = node->renderable_culling_mode();
+
             // FIXME: Storing a STAGE_NODE_TYPE in the StageNode
             // class would be faster to check than a dynamic cast
             // for every node (most likely)
@@ -50,6 +52,9 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
                    frustum.intersects_sphere(light->absolute_position(), light->aabb().max_dimension())) {
                     lights_out.push_back(light->id());
                 }
+            } else if(rcm == RENDERABLE_CULLING_MODE_NEVER) {
+                /* If the culling mode is NEVER then we always return */
+                geom_out.push_back(node);
             } else {
                 if(frustum.intersects_sphere(
                     node->absolute_position(), node->aabb().max_dimension()

@@ -220,6 +220,14 @@ public:
         const DetailLevel detail_level
     ) = 0;
 
+    void set_renderable_culling_mode(RenderableCullingMode mode) {
+        culling_mode_ = mode;
+    }
+
+    RenderableCullingMode renderable_culling_mode() const {
+        return culling_mode_;
+    }
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Stage* get_stage() const { return stage_; }
@@ -262,6 +270,8 @@ private:
     // By default, always cast and receive shadows
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
     ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
+
+    RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
 };
 
 
