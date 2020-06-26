@@ -1,4 +1,5 @@
 stages:
+ - prepare
  - check
  - build
  - test
@@ -7,28 +8,81 @@ stages:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
+prepare:linux-x64-gcc:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    GIT_STRATEGY: none  # Prevent cloning
+    DOCKERFILE: >- # Generate a Dockerfile for the build image
+      FROM registry.fedoraproject.org/fedora-minimal:28\n
+      RUN microdnf update -y && microdnf clean all\n
+      RUN microdnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
+  before_script:  # Put the variable into a Dockerfile
+     - echo -e $DOCKERFILE > Dockerfile
+     - cat Dockerfile
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:linux-x64-gcc || true
+     - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc -t $CI_REGISTRY_IMAGE:linux-x64-gcc .
+     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+     - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc
+
+prepare:windows-x64-mingw:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    GIT_STRATEGY: none  # Prevent cloning
+    DOCKERFILE: >- # Generate a Dockerfile for the build image
+      FROM registry.fedoraproject.org/fedora-minimal:28\n
+      RUN microdnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python\n
+  before_script:  # Put the variable into a Dockerfile
+     - echo -e $DOCKERFILE > Dockerfile
+     - cat Dockerfile
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:windows-x64-mingw || true
+     - docker build --cache-from $CI_REGISTRY_IMAGE:windows-x64-mingw -t $CI_REGISTRY_IMAGE:windows-x64-mingw .
+     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+     - docker push $CI_REGISTRY_IMAGE:windows-x64-mingw
+
+prepare:deploy:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    GIT_STRATEGY: none  # Prevent cloning
+    DOCKERFILE: >- # Generate a Dockerfile for the build image
+      FROM registry.fedoraproject.org/fedora-minimal:28\n
+      RUN microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync\n
+      RUN pip install gsutil\n
+  before_script:  # Put the variable into a Dockerfile
+     - echo -e $DOCKERFILE > Dockerfile
+     - cat Dockerfile
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:deploy || true
+     - docker build --cache-from $CI_REGISTRY_IMAGE:deploy -t $CI_REGISTRY_IMAGE:deploy .
+     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+     - docker push $CI_REGISTRY_IMAGE:deploy
+
 check:thread-usage:
   stage: check
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-    - microdnf install -y python3
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   script:
     - python3 tools/find_std_thread.py simulant
 
 check:deque-usage:
   stage: check
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-    - microdnf install -y python3
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   script:
     - python3 tools/find_std_deque.py simulant
 
 check:stream-usage:
   stage: check
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   allow_failure: true
-  before_script:
-    - microdnf install -y python3
   script:
     - python3 tools/find_std_stream.py simulant
 
@@ -74,9 +128,7 @@ android:
 
 build:windows-x64-mingw:
   stage: build
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-   - microdnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python
+  image: $CI_REGISTRY_IMAGE:windows-x64-mingw
   variables:
     MINGW_BIN_DIR: /usr/x86_64-w64-mingw32/sys-root/mingw/bin/
     TARGET: windows-x64-mingw
@@ -141,14 +193,11 @@ deploy:windows-x64-mingw:
   only:
     - master
     - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:windows-x64-mingw
   variables:
    TARGET: windows-x64-mingw
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -195,12 +244,9 @@ build:linux-x64-clang:
 
 build:linux-x64-gcc:
   stage: build
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
-  before_script:
-   - microdnf upgrade -y && microdnf clean all
-   - microdnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
@@ -222,14 +268,13 @@ build:linux-x64-gcc:
 
 test:linux-x64-gcc-debug:
   stage: test
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   needs: ["build:linux-x64-gcc"]
   dependencies:
    - build:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - microdnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -247,14 +292,13 @@ test:linux-x64-gcc-debug:
 
 test:linux-x64-gcc-release:
   stage: test
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   needs: ["build:linux-x64-gcc"]
   dependencies:
    - build:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - microdnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -272,15 +316,12 @@ deploy:linux-x64-gcc:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:linux-x64-gcc-debug
    - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -348,14 +389,11 @@ deploy:dreamcast-sh4-gcc:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:dreamcast-sh4-gcc
   variables:
    TARGET: dreamcast-sh4-gcc
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -377,10 +415,7 @@ deploy:assets:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
+  image: $CI_REGISTRY_IMAGE:deploy
   script:
    - mkdir -p upload
    - mv assets upload/simulant
@@ -398,10 +433,7 @@ deploy:tools:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
+  image: $CI_REGISTRY_IMAGE:deploy
   script:
    - mkdir -p upload/simulant
    - mkdir -p upload/simulant/cmake_modules
