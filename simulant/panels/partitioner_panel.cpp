@@ -52,18 +52,20 @@ bool PartitionerPanel::init() {
         }
 
         debug_actors_[stage->id()] = stage->new_actor_with_mesh(
-            stage->partitioner->debug_mesh_id(),
-            RENDERABLE_CULLING_MODE_NEVER //Important, we never want this to use the partitioner itself
+            stage->partitioner->debug_mesh_id()
         );
+
+        debug_actors_[stage->id()]->set_cullable(false);
     }
 
     stage_added_ = window_->signal_stage_added().connect([=](StageID stage_id) {
         auto stage = window_->stage(stage_id);
 
         debug_actors_[stage->id()] = stage->new_actor_with_mesh(
-            stage->partitioner->debug_mesh_id(),
-            RENDERABLE_CULLING_MODE_NEVER //Important, we never want this to use the partitioner itself
+            stage->partitioner->debug_mesh_id()
         );
+
+        debug_actors_[stage->id()]->set_cullable(false);
     });
 
     stage_removed_ = window_->signal_stage_removed().connect([=](StageID stage_id) {

@@ -96,7 +96,8 @@ bool StatsPanel::init() {
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
     ram_graph_mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-    ram_graph_ = stage_->new_actor_with_mesh(ram_graph_mesh_, RENDERABLE_CULLING_MODE_NEVER);
+    ram_graph_ = stage_->new_actor_with_mesh(ram_graph_mesh_);
+    ram_graph_->set_cullable(false);
 
     low_mem_ = overlay->ui->new_widget_as_label("0M");
     high_mem_ = overlay->ui->new_widget_as_label("0M");

@@ -193,6 +193,14 @@ StageNode *StageNode::find_descendent_with_name(const std::string &name) {
     return nullptr;
 }
 
+void StageNode::set_cullable(bool v) {
+    cullable_ = v;
+}
+
+bool StageNode::is_cullable() const {
+    return cullable_;
+}
+
 void StageNode::recalc_bounds_if_necessary() const {
     if(!transformed_aabb_dirty_) {
         return;

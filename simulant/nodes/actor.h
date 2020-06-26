@@ -69,12 +69,6 @@ public:
 
     MeshChangedCallback& signal_mesh_changed() { return signal_mesh_changed_; }
 
-    void set_renderable_culling_mode(RenderableCullingMode mode) {
-        culling_mode_ = mode;
-    }
-
-    RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
-
     /* Returns true if the nearest detail level mesh is animated. */
     bool has_animated_mesh() const {
         return has_animated_mesh_;
@@ -116,7 +110,6 @@ private:
 
     std::shared_ptr<KeyFrameAnimationState> animation_state_;
 
-    RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
     MeshChangedCallback signal_mesh_changed_;
 
     MaterialSlot material_slot_ = MATERIAL_SLOT0;

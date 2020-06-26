@@ -37,13 +37,8 @@ public:
     typedef std::shared_ptr<Light> ptr;
 
     Light(Stage* stage);
-    void set_type(LightType type) {
-        type_ = type;
 
-        // We should never cull directional lights
-        culling_mode_ = (type_ == LIGHT_TYPE_DIRECTIONAL) ?
-            RENDERABLE_CULLING_MODE_NEVER : RENDERABLE_CULLING_MODE_PARTITIONER;
-    }
+    void set_type(LightType type);
 
     /*
      *  Direction (ab)uses the light's position.
@@ -101,8 +96,6 @@ public:
         return bounds_;
     }
 
-    RenderableCullingMode renderable_culling_mode() const { return culling_mode_; }
-
     void update(float step) override {
         _S_UNUSED(step);
     }
@@ -122,8 +115,6 @@ private:
     float const_attenuation_;
     float linear_attenuation_;
     float quadratic_attenuation_;
-
-    RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
 };
 
 }

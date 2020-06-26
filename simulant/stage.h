@@ -95,15 +95,15 @@ public:
     Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size);
     virtual ~Stage();
 
-    ActorPtr new_actor(RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorPtr new_actor_with_name(const std::string& name, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor();
+    ActorPtr new_actor_with_name(const std::string& name);
 
-    ActorPtr new_actor_with_mesh(MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorPtr new_actor_with_name_and_mesh(const std::string& name, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_mesh(MeshID mid);
+    ActorPtr new_actor_with_name_and_mesh(const std::string& name, MeshID mid);
 
-    ActorPtr new_actor_with_parent(ActorID parent, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorPtr new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
-    ActorPtr new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode=RENDERABLE_CULLING_MODE_PARTITIONER);
+    ActorPtr new_actor_with_parent(ActorID parent);
+    ActorPtr new_actor_with_parent_and_mesh(ActorID parent, MeshID mid);
+    ActorPtr new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid);
     ActorPtr actor(ActorID e);
     ActorPtr actor(ActorID e) const;
     bool has_actor(ActorID e) const;

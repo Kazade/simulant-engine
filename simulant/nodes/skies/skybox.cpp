@@ -91,7 +91,7 @@ void Skybox::generate(
     actor_->set_mesh(mesh_id_);
     actor_->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
     actor_->lock_rotation();
-    actor_->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
+    actor_->set_cullable(false);
 }
 
 
