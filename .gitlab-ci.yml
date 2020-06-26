@@ -16,9 +16,9 @@ prepare:linux-x64-gcc:
   variables:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
-      FROM ubuntu:18.04\n
-      RUN apt-get update\n
-      RUN apt-get install -y python3 python3-pip git python3-setuptools cmake build-essential libsdl2-dev libopenal-dev\n
+      FROM registry.fedoraproject.org/fedora-minimal:28\n
+      RUN microdnf upgrade -y && microdnf clean all\n
+      RUN microdnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
   before_script:  # Put the variable into a Dockerfile
      - echo -e $DOCKERFILE > Dockerfile
      - cat Dockerfile
@@ -268,14 +268,13 @@ build:linux-x64-gcc:
 
 test:linux-x64-gcc-debug:
   stage: test
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   needs: ["build:linux-x64-gcc"]
   dependencies:
    - build:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - microdnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -293,14 +292,13 @@ test:linux-x64-gcc-debug:
 
 test:linux-x64-gcc-release:
   stage: test
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   needs: ["build:linux-x64-gcc"]
   dependencies:
    - build:linux-x64-gcc
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - microdnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
