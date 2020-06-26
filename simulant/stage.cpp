@@ -94,12 +94,11 @@ void Stage::clean_up() {
     L_DEBUG(_F("Stage {0} destroyed").format(id()));
 }
 
-ActorPtr Stage::new_actor(RenderableCullingMode mode) {
+ActorPtr Stage::new_actor() {
     using namespace std::placeholders;
 
     auto a = actor_manager_->make(this, window->_sound_driver());
 
-    a->set_renderable_culling_mode(mode);
     a->set_parent(this);
 
     auto id = a->id();
@@ -113,17 +112,16 @@ ActorPtr Stage::new_actor(RenderableCullingMode mode) {
     return a;
 }
 
-ActorPtr Stage::new_actor_with_name(const std::string& name, RenderableCullingMode mode) {
-    auto a = new_actor(mode);
+ActorPtr Stage::new_actor_with_name(const std::string& name) {
+    auto a = new_actor();
     a->set_name(name);
     return a;
 }
 
-ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
+ActorPtr Stage::new_actor_with_mesh(MeshID mid) {
     using namespace std::placeholders;
 
     auto a = actor_manager_->make(this, window->_sound_driver());
-    a->set_renderable_culling_mode(mode);
     a->set_parent(this);
 
     auto id = a->id();
@@ -145,26 +143,26 @@ ActorPtr Stage::new_actor_with_mesh(MeshID mid, RenderableCullingMode mode) {
     return a;
 }
 
-ActorPtr Stage::new_actor_with_name_and_mesh(const std::string& name, MeshID mid, RenderableCullingMode mode) {
-    auto a = new_actor_with_mesh(mid, mode);
+ActorPtr Stage::new_actor_with_name_and_mesh(const std::string& name, MeshID mid) {
+    auto a = new_actor_with_mesh(mid);
     a->set_name(name);
     return a;
 }
 
-ActorPtr Stage::new_actor_with_parent(ActorID parent, RenderableCullingMode mode) {
-    auto a = new_actor(mode);
+ActorPtr Stage::new_actor_with_parent(ActorID parent) {
+    auto a = new_actor();
     a->set_parent(parent);
     return a;
 }
 
-ActorPtr Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid, RenderableCullingMode mode) {
-    auto a = new_actor_with_mesh(mid, mode);
+ActorPtr Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid) {
+    auto a = new_actor_with_mesh(mid);
     a->set_parent(parent);
     return a;
 }
 
-ActorPtr Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid, RenderableCullingMode mode) {
-    auto a = new_actor_with_mesh(mid, mode);
+ActorPtr Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid) {
+    auto a = new_actor_with_mesh(mid);
     a->set_parent(parent);
     return a;
 }

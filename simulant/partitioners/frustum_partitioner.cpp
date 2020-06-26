@@ -38,7 +38,6 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
         assert(node);
 
         if(!node->is_marked_for_destruction()) {
-
             // FIXME: Storing a STAGE_NODE_TYPE in the StageNode
             // class would be faster to check than a dynamic cast
             // for every node (most likely)
@@ -46,10 +45,13 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
                 auto light = dynamic_cast<Light*>(node);
                 assert(light);
 
-                if(light->type() == LIGHT_TYPE_DIRECTIONAL ||
+                if(!light->is_cullable() ||
                    frustum.intersects_sphere(light->absolute_position(), light->aabb().max_dimension())) {
                     lights_out.push_back(light->id());
                 }
+            } else if(!node->is_cullable()) {
+                /* If the culling mode is NEVER then we always return */
+                geom_out.push_back(node);
             } else {
                 if(frustum.intersects_sphere(
                     node->absolute_position(), node->aabb().max_dimension()

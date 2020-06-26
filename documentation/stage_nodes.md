@@ -43,3 +43,12 @@ When the clean-up process runs, an additional `signal_cleaned_up` signal will fi
 
 You can give stage nodes names using `StageNode::set_name`, and later search for those nodes recursively using `StageNode::find_descendent_with_name`. If a name is duplicated, only the first match found
 will be returned.
+
+# Disabling Culling
+
+By default, stage nodes (excluding cameras) will be culled with a scene partitioner if they are deemed to be offscreen. You can disable this behaviour for a stage node by toggling its cullable state:
+
+```
+node->set_cullable(false);  // Will always be renderered
+assert(!node->is_cullable());
+```

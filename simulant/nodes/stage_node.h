@@ -220,6 +220,9 @@ public:
         const DetailLevel detail_level
     ) = 0;
 
+    void set_cullable(bool v);
+    bool is_cullable() const;
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Stage* get_stage() const { return stage_; }
@@ -262,6 +265,9 @@ private:
     // By default, always cast and receive shadows
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
     ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
+
+    /* Whether or not this node should be culled by the partitioner (e.g. when offscreen) */
+    bool cullable_ = true;
 };
 
 
