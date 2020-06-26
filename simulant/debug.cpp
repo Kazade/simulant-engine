@@ -155,12 +155,13 @@ void Debug::initialize_actor() {
     }
 
     actor_ = stage_.new_actor_with_mesh(
-        mesh_,
-        RENDERABLE_CULLING_MODE_NEVER // Important!
+        mesh_
     );
 
+    // Important. Debug stuff shouldn't be culled
+    actor_->set_cullable(false);
+
     // Always render debug stuff last, and don't cull
-    actor_->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
     actor_->set_render_priority(RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
 
     initialized_ = true;

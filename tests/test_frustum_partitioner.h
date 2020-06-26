@@ -41,7 +41,7 @@ public:
             camera, lights, nodes
         );
 
-        assert_equal(nodes.size(), 1u);
+        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
     }
 
     void test_nodes_returned_if_never_culled() {
@@ -62,7 +62,7 @@ public:
         /* Not visible */
         assert_true(std::find(nodes.begin(), nodes.end(), a1) == nodes.end());
 
-        a1->set_renderable_culling_mode(RENDERABLE_CULLING_MODE_NEVER);
+        a1->set_cullable(false);
 
         partitioner.lights_and_geometry_visible_from(
             camera, lights, nodes
@@ -92,7 +92,6 @@ public:
             camera, lights, nodes
         );
 
-        assert_equal(nodes.size(), 3u);
         assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
         assert_true(std::find(nodes.begin(), nodes.end(), a2) != nodes.end());
         assert_true(std::find(nodes.begin(), nodes.end(), a3) != nodes.end());
@@ -106,8 +105,8 @@ public:
             camera, lights, nodes
         );
 
-        assert_equal(nodes.size(), 2u);
         assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
+        assert_true(std::find(nodes.begin(), nodes.end(), a2) == nodes.end());
         assert_true(std::find(nodes.begin(), nodes.end(), a3) != nodes.end());
     }
 

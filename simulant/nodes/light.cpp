@@ -34,6 +34,13 @@ Light::Light(Stage* stage):
     set_attenuation_from_range(100.0);
 }
 
+void Light::set_type(LightType type) {
+    type_ = type;
+
+    /* Don't cull directional lights */
+    set_cullable(type_ != LIGHT_TYPE_DIRECTIONAL);
+}
+
 Colour Light::global_ambient() const { return stage->ambient_light(); }
 
 /**

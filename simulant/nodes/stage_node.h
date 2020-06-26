@@ -220,13 +220,8 @@ public:
         const DetailLevel detail_level
     ) = 0;
 
-    void set_renderable_culling_mode(RenderableCullingMode mode) {
-        culling_mode_ = mode;
-    }
-
-    RenderableCullingMode renderable_culling_mode() const {
-        return culling_mode_;
-    }
+    void set_cullable(bool v);
+    bool is_cullable() const;
 
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
@@ -271,7 +266,8 @@ private:
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
     ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
 
-    RenderableCullingMode culling_mode_ = RENDERABLE_CULLING_MODE_PARTITIONER;
+    /* Whether or not this node should be culled by the partitioner (e.g. when offscreen) */
+    bool cullable_ = true;
 };
 
 
