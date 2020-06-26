@@ -47,6 +47,26 @@ prepare:windows-x64-mingw:
      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
      - docker push $CI_REGISTRY_IMAGE:windows-x64-mingw
 
+prepare:deploy:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    GIT_STRATEGY: none  # Prevent cloning
+    DOCKERFILE: >- # Generate a Dockerfile for the build image
+      FROM registry.fedoraproject.org/fedora-minimal:28\n
+      RUN microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync\n
+      RUN pip install gsutil\n
+  before_script:  # Put the variable into a Dockerfile
+     - echo -e $DOCKERFILE > Dockerfile
+     - cat Dockerfile
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:deploy || true
+     - docker build --cache-from $CI_REGISTRY_IMAGE:deploy -t $CI_REGISTRY_IMAGE:deploy .
+     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+     - docker push $CI_REGISTRY_IMAGE:deploy
+
 check:thread-usage:
   stage: check
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc
@@ -173,14 +193,11 @@ deploy:windows-x64-mingw:
   only:
     - master
     - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:windows-x64-mingw
   variables:
    TARGET: windows-x64-mingw
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -301,15 +318,12 @@ deploy:linux-x64-gcc:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:linux-x64-gcc-debug
    - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -377,14 +391,11 @@ deploy:dreamcast-sh4-gcc:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
+  image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:dreamcast-sh4-gcc
   variables:
    TARGET: dreamcast-sh4-gcc
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
@@ -406,10 +417,7 @@ deploy:assets:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
+  image: $CI_REGISTRY_IMAGE:deploy
   script:
    - mkdir -p upload
    - mv assets upload/simulant
@@ -427,10 +435,7 @@ deploy:tools:
   only:
    - master
    - tags
-  image: registry.fedoraproject.org/fedora-minimal:28
-  before_script:
-   - microdnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync
-   - pip install gsutil
+  image: $CI_REGISTRY_IMAGE:deploy
   script:
    - mkdir -p upload/simulant
    - mkdir -p upload/simulant/cmake_modules
