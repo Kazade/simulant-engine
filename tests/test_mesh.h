@@ -319,6 +319,22 @@ public:
         assert_equal(smlt::Vec2(1.0 / 3.0, 4.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(23));
     }
 
+    void test_mesh_aabb_generated_correctly() {
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_box(
+            "test", stage_->assets->default_material(),
+            1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
+        );
+
+        auto& aabb = mesh->aabb();
+
+        assert_close(aabb.centre().x, -100.0f, EPSILON);
+        assert_close(aabb.max().x, -99.5f, EPSILON);
+        assert_close(aabb.width(), 1.0f, EPSILON);
+        assert_close(aabb.height(), 1.0f, EPSILON);
+        assert_close(aabb.depth(), 1.0f, EPSILON);
+    }
+
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;

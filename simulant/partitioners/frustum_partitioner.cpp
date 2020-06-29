@@ -37,16 +37,19 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
     for(auto& node: *stage->node_pool) {
         assert(node);
 
-        if(!node->is_marked_for_destruction()) {
-            // FIXME: Storing a STAGE_NODE_TYPE in the StageNode
-            // class would be faster to check than a dynamic cast
-            // for every node (most likely)
+        auto& aabb = node->aabb();
+        auto centre = aabb.centre() + node->absolute_position();
+
+        /* Check that the node isn't being destroyed, and it's supposed to
+         * be visible (otherwise we could end up doing work for nothing) */
+        if(!node->is_marked_for_destruction() && node->is_visible()) {
             if(node->node_type() == STAGE_NODE_TYPE_LIGHT) {
                 auto light = dynamic_cast<Light*>(node);
                 assert(light);
 
                 if(!light->is_cullable() ||
-                   frustum.intersects_sphere(light->absolute_position(), light->aabb().max_dimension())) {
+                    frustum.intersects_sphere(centre, aabb.max_dimension())
+                ) {
                     lights_out.push_back(light->id());
                 }
             } else if(!node->is_cullable()) {
@@ -54,7 +57,7 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
                 geom_out.push_back(node);
             } else {
                 if(frustum.intersects_sphere(
-                    node->absolute_position(), node->aabb().max_dimension()
+                    centre, aabb.max_dimension()
                 )) {
                     geom_out.push_back(node);
                 }

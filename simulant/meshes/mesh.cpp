@@ -114,7 +114,7 @@ void Mesh::rebuild_aabb() const {
     }
 
     float max = std::numeric_limits<float>::max();
-    float min = std::numeric_limits<float>::min();
+    float min = std::numeric_limits<float>::lowest();
 
     result.set_min(smlt::Vec3(max, max, max));
     result.set_max(smlt::Vec3(min, min, min));
