@@ -11,3 +11,7 @@ The Window and Scene have a property called `input`, both refer to the `InputMan
 
 ## Pre-defined Axises
 
+
+## Axis forces
+
+`InputAxis` have a `force` variable that is used when processing inputs from digitial devices like keyboard keys, or joystick buttons. The force is the speed in units-per-second that the axis value increases until it gets to +/- 1.0. You can adjust the force of an axis with the `set_force` method. This is conceptually the opposite of `return_speed`, but only applies to digital inputs.

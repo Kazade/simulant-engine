@@ -116,7 +116,7 @@ float sgn(float v) {
 }
 
 void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
-    float new_value = 0.0f;
+    float new_value = axis->value_;
 
     auto pbtn = axis->positive_mouse_button();
     auto nbtn = axis->negative_mouse_button();
@@ -147,8 +147,13 @@ void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     }
 
     // If either positive or negative were pressed, adjust the value
-    if(positive_pressed) new_value = 1.0f;
-    if(negative_pressed) new_value = -1.0f;
+    if(positive_pressed) {
+        new_value = std::min(1.0f, new_value + (axis->force_ * dt));
+    }
+
+    if(negative_pressed) {
+        new_value = std::max(-1.0f, new_value - (axis->force_ * dt));
+    }
 
     // If neither were pressed, then apply the return speed (making sure we don't pass zero)
     if(!positive_pressed && !negative_pressed) {
@@ -160,7 +165,7 @@ void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
 }
 
 void InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
-    float new_value = 0.0f;
+    float new_value = axis->value_;
 
     auto pbtn = axis->positive_joystick_button();
     auto nbtn = axis->negative_joystick_button();
@@ -191,8 +196,13 @@ void InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     }
 
     // If either positive or negative were pressed, adjust the value
-    if(positive_pressed) new_value = 1.0f;
-    if(negative_pressed) new_value = -1.0f;
+    if(positive_pressed) {
+        new_value = std::min(1.0f, new_value + (axis->force_ * dt));
+    }
+
+    if(negative_pressed) {
+        new_value = std::max(-1.0f, new_value - (axis->force_ * dt));
+    }
 
     // If neither were pressed, then apply the return speed (making sure we don't pass zero)
     if(!positive_pressed && !negative_pressed) {
@@ -204,7 +214,7 @@ void InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
 }
 
 void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
-    float new_value = 0.0f;
+    float new_value = axis->value_;
 
     auto pkey = axis->positive_keyboard_key();
     auto nkey = axis->negative_keyboard_key();
@@ -235,8 +245,14 @@ void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     }
 
     // If either positive or negative were pressed, adjust the value
-    if(positive_pressed) new_value = 1.0f;
-    if(negative_pressed) new_value = -1.0f;
+    if(positive_pressed) {
+        new_value = std::min(1.0f, new_value + (axis->force_ * dt));
+        fprintf(stderr, "%f\n", new_value);
+    }
+
+    if(negative_pressed) {
+        new_value = std::max(-1.0f, new_value - (axis->force_ * dt));
+    }
 
     // If neither were pressed, then apply the return speed (making sure we don't pass zero)
     if(!positive_pressed && !negative_pressed) {

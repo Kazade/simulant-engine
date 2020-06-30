@@ -48,6 +48,10 @@ void InputAxis::set_joystick_hat_axis(JoystickHatID hat, JoystickHatAxis axis) {
     joystick_hat_axis_ = axis;
 }
 
+void InputAxis::set_force(float f) {
+    force_ = f;
+}
+
 void InputAxis::set_return_speed(float ret) {
     return_speed_ = ret;
 }

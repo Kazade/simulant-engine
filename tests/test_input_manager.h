@@ -21,6 +21,20 @@ public:
         manager_.reset(new InputManager(state_.get()));
     }
 
+    void test_axis_force() {
+        InputAxis* axis = manager_->new_axis("Test");
+        axis->set_positive_keyboard_key(KEYBOARD_CODE_A);
+        state_->_handle_key_down(0, KEYBOARD_CODE_A);
+        manager_->update(0.1f);
+
+        // Default is 3.0
+        assert_close(axis->value(), 0.3f, EPSILON);
+        axis->set_force(1.0f);
+
+        manager_->update(1.0f);
+        assert_close(axis->value(), 1.0f, EPSILON);
+    }
+
     void test_axis_return() {
         InputAxis* axis = manager_->new_axis("Test");
         axis->set_return_speed(0.1f);
