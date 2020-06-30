@@ -247,7 +247,6 @@ void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     // If either positive or negative were pressed, adjust the value
     if(positive_pressed) {
         new_value = std::min(1.0f, new_value + (axis->force_ * dt));
-        fprintf(stderr, "%f\n", new_value);
     }
 
     if(negative_pressed) {
