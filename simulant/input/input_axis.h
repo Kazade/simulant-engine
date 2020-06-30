@@ -48,6 +48,10 @@ public:
     void set_joystick_axis(JoystickAxis axis);
     void set_joystick_hat_axis(JoystickHatID hat, JoystickHatAxis axis);
 
+    /* For digital inputs only. The force multiplier (in units-per-second)
+     * to change the axis value when pressed. Defaults to 3.0 (i.e.
+     * it'll take 1/3rd second to hit an axis value of 1.0 */
+    void set_force(float f);
     void set_return_speed(float ret);
 
     const std::string& name() const { return name_; }
@@ -84,6 +88,8 @@ private:
     JoystickHatAxis joystick_hat_axis_ = JOYSTICK_HAT_AXIS_X;
 
     float return_speed_ = 3.0f;
+    float force_ = 3.0f;
+
     float value_ = 0.0f;
     float dead_zone_ = 0.001f;
 
