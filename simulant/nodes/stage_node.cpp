@@ -99,6 +99,16 @@ void StageNode::set_visible(bool visible) {
     recalc_visibility();
 }
 
+void StageNode::set_parent(TreeNode* node) {
+    if(!node) {
+        TreeNode::set_parent(stage_);
+    } else {
+        TreeNode::set_parent(node);
+    }
+
+    recalc_visibility();
+}
+
 void StageNode::move_to_absolute(const Vec3& position) {
     if(!parent_is_stage()) {
         // The stage itself is immovable so, we only bother with this if this isn't he stage
@@ -233,6 +243,10 @@ void StageNode::late_update(float dt) {
 
 void StageNode::fixed_update(float step) {
     fixed_update_behaviours(step);
+}
+
+bool StageNode::parent_is_stage() const {
+    return bool(dynamic_cast<Stage*>(parent_));
 }
 
 }

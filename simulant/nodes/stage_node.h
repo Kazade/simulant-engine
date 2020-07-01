@@ -184,19 +184,16 @@ public:
 
     template<typename T>
     void set_parent(const UniqueID<T>& id) {
-        TreeNode::set_parent(id.fetch());
+        set_parent(id.fetch());
     }
 
-    void set_parent(TreeNode* node) {
-        TreeNode::set_parent(node);
-        recalc_visibility();
-    }
+    void set_parent(TreeNode* node);
 
     void update(float dt) override;
     void late_update(float dt) override;
     void fixed_update(float step) override;
 
-    bool parent_is_stage() const { return parent() == (TreeNode*) stage_; }
+    bool parent_is_stage() const;
 
     void clean_up() override;
 
