@@ -101,6 +101,7 @@ void StageNode::set_visible(bool visible) {
 
 void StageNode::set_parent(TreeNode* node) {
     if(!node) {
+        /* If someone passes null, we reattach to the stage */
         TreeNode::set_parent(stage_);
     } else {
         TreeNode::set_parent(node);

@@ -11,6 +11,24 @@ Each `Stage` is the root of a heirachy of `StageNodes`. Classes that inherit `St
  
 These are the basic building blocks of your scene.
 
+## Building a Heirarchy
+
+`StageNodes` can be parents and children of other `StageNodes`. To build this heirarchy you make use of the `StageNode::set_parent` method. `set_parent` can take a node ID, or the node itself.
+
+All `StageNodes` by default are children of the `Stage` they belong to. If you want to detach a node from its parent (and reparent it under the `Stage`) then simply pass a `nullptr` to `set_parent`:
+
+```
+auto a1 = stage_->new_actor();
+auto a2 = stage_->new_actor();
+a2->set_parent(a1);
+
+// a1 is now a2's parent
+
+a2->set_parent(nullptr);
+
+// a1 and a2 are now both direct children of stage_
+```
+
 ## Traversal
 
 There are a number of ways to traverse your stage heirarchy but they are all exposed through
