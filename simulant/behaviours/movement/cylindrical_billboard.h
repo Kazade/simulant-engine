@@ -12,8 +12,9 @@ class CylindricalBillboard:
     public RefCounted<CylindricalBillboard> {
 
 public:
-    CylindricalBillboard(StageNode* target):
-        target_(target) {}
+    CylindricalBillboard(StageNode* target, const Vec3& forward=Vec3::NEGATIVE_Z):
+        target_(target),
+        forward_(forward) {}
 
     void set_target(StageNode* target) {
         target_ = target;
@@ -33,12 +34,12 @@ public:
              * looking down negative Z */
             auto d = std::abs(dir.dot(Vec3::POSITIVE_Y));
             if(almost_equal(d, 1.0f)) {
-                dir = Vec3::NEGATIVE_Z;
+                dir = forward_;
             }
 
             dir = up_plane.project(dir).normalized();
 
-            auto rot = smlt::Vec3::NEGATIVE_Z.rotation_to(dir);
+            auto rot = forward_.rotation_to(dir);
             stage_node->rotate_to_absolute(rot);
         }
     }
@@ -48,6 +49,7 @@ public:
     }
 private:
     StageNode* target_ = nullptr;
+    Vec3 forward_;
 };
 
 }

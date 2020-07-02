@@ -105,6 +105,23 @@ public:
         assert_close(actor2->absolute_rotation().y, actor1->rotation().y, 0.00001f);
     }
 
+    void test_parent_is_stage() {
+        auto a1 = stage_->new_actor();
+        auto a2 = stage_->new_actor();
+        auto a3 = stage_->new_actor();
+
+        a2->set_parent(a1);
+        a3->set_parent(a2);
+
+        assert_true(a1->parent_is_stage());
+        assert_false(a2->parent_is_stage());
+        assert_false(a3->parent_is_stage());
+
+        a3->set_parent(nullptr);
+
+        assert_true(a3->parent_is_stage());
+    }
+
     void test_parent_transformation_applied() {
         auto actor1 = stage_->new_actor();
         auto actor2 = stage_->new_actor();
