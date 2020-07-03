@@ -8,7 +8,8 @@ namespace smlt {
 const std::string ParticleScript::BuiltIns::FIRE = "simulant/particles/fire.kglp";
 
 bool ParticleScript::has_repeating_emitters() const {
-    for(auto& e: emitters_) {
+    for(auto i = 0u; i < emitter_count_; ++i) {
+        auto& e = emitters_[i];
         auto range = e.repeat_delay_range;
         if(range.first > 0.0f || range.second > 0.0f) {
             return true;
@@ -35,6 +36,10 @@ const Emitter* ParticleScript::emitter(std::size_t i) const {
     } else {
         return nullptr;
     }
+}
+
+Emitter* ParticleScript::mutable_emitter(std::size_t i) {
+    return (i < emitters_.size()) ? &emitters_[i] : nullptr;
 }
 
 std::size_t ParticleScript::manipulator_count() const {

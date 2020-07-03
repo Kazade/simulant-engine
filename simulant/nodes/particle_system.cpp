@@ -104,7 +104,12 @@ const AABB &ParticleSystem::aabb() const {
 
 
 bool ParticleSystem::has_active_emitters() const {
-    for(auto e: emitter_states_) {
+    if(!emitters_active_) {
+        return false;
+    }
+
+    for(auto i = 0u; i < script_->emitter_count(); ++i) {
+        auto& e = emitter_states_[i];
         if(e.is_active) {
             return true;
         }
@@ -225,18 +230,16 @@ void ParticleSystem::update(float dt) {
     }
 
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
-        update_emitter(i, dt);
-
         if(!emitter_states_[i].is_active) {
             continue;
         }
 
-        if(particle_count_ >= particles_.size()) {
-            continue;
-        }
+        update_emitter(i, dt);
 
-        auto max_can_emit = particles_.size() - particle_count_;
-        emit_particles(i, dt, max_can_emit);
+        if(particle_count_ < particles_.size()) {
+            auto max_can_emit = particles_.size() - particle_count_;
+            emit_particles(i, dt, max_can_emit);
+        }
 
         // We do this after emission so that we always emit particles
         // on the first update
@@ -248,8 +251,6 @@ void ParticleSystem::update(float dt) {
         // Then destroy the particle system if that's what we've been told to do
         if(destroy_on_completion()) {
             destroy();
-            // No point doing anything else!
-            return;
         }
     }
 }
@@ -291,6 +292,11 @@ void ParticleSystem::update_emitter(uint16_t e, float dt) {
 
 void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     _S_UNUSED(dt);
+
+    if(!emitters_active_) {
+        // If emitters were disabled, don't emit!
+        return;
+    }
 
     if(!max) {
         return; //Do nothing
