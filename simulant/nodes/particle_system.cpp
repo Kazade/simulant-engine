@@ -104,7 +104,12 @@ const AABB &ParticleSystem::aabb() const {
 
 
 bool ParticleSystem::has_active_emitters() const {
-    for(auto e: emitter_states_) {
+    if(!emitters_active_) {
+        return false;
+    }
+
+    for(auto i = 0u; i < script_->emitter_count(); ++i) {
+        auto& e = emitter_states_[i];
         if(e.is_active) {
             return true;
         }
@@ -248,8 +253,6 @@ void ParticleSystem::update(float dt) {
         // Then destroy the particle system if that's what we've been told to do
         if(destroy_on_completion()) {
             destroy();
-            // No point doing anything else!
-            return;
         }
     }
 }
