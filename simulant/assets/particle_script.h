@@ -82,6 +82,9 @@ public:
     std::size_t emitter_count() const;
     const Emitter* emitter(std::size_t i) const;
 
+    /* Note: this is an unstable API */
+    Emitter* mutable_emitter(std::size_t i);
+
     std::size_t manipulator_count() const;
     const Manipulator* manipulator(std::size_t i) const;
 

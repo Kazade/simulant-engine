@@ -38,6 +38,10 @@ const Emitter* ParticleScript::emitter(std::size_t i) const {
     }
 }
 
+Emitter* ParticleScript::mutable_emitter(std::size_t i) {
+    return (i < emitters_.size()) ? &emitters_[i] : nullptr;
+}
+
 std::size_t ParticleScript::manipulator_count() const {
     return manipulators_.size();
 }
