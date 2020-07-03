@@ -230,18 +230,16 @@ void ParticleSystem::update(float dt) {
     }
 
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
-        update_emitter(i, dt);
-
         if(!emitter_states_[i].is_active) {
             continue;
         }
 
-        if(particle_count_ >= particles_.size()) {
-            continue;
-        }
+        update_emitter(i, dt);
 
-        auto max_can_emit = particles_.size() - particle_count_;
-        emit_particles(i, dt, max_can_emit);
+        if(particle_count_ < particles_.size()) {
+            auto max_can_emit = particles_.size() - particle_count_;
+            emit_particles(i, dt, max_can_emit);
+        }
 
         // We do this after emission so that we always emit particles
         // on the first update
