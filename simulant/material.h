@@ -104,7 +104,8 @@ class Material:
     public generic::Identifiable<MaterialID>,
     public RefCounted<Material>,
     public Updateable,
-    public MaterialPropertyRegistry {
+    public MaterialPropertyRegistry,
+    public ChainNameable<Material> {
 
 public:
     friend class GenericRenderer;

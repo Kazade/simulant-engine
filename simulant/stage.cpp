@@ -43,9 +43,9 @@ namespace smlt {
 const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size):
+    WindowHolder(parent),
     TypedDestroyableObject<Stage, Window>(parent),
     ContainerNode(this, STAGE_NODE_TYPE_STAGE),
-    WindowHolder(parent),
     node_pool_(std::make_shared<StageNodePool>(pool_size)),
     ui_(new ui::UIManager(this, node_pool_.get())),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),

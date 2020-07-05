@@ -45,7 +45,8 @@ class Actor :
     public virtual Boundable,
     public generic::Identifiable<ActorID>,
     public Source,
-    public HasMutableRenderPriority {
+    public HasMutableRenderPriority,
+    public ChainNameable<Actor> {
 
 public:
     Actor(Stage* stage, SoundDriver *sound_driver);

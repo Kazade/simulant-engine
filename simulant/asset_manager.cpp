@@ -317,30 +317,8 @@ MeshPtr AssetManager::new_mesh_as_cube_with_submesh_per_face(float width, Garbag
     return m;
 }
 
-MeshPtr AssetManager::new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
-    auto m = new_mesh(vertex_specification, garbage_collect);
-    try {
-        mesh_manager_.store_alias(alias, m->id());
-    } catch(...) {
-        destroy_mesh(m->id());
-        throw;
-    }
-    return m;
-}
-
-MeshPtr AssetManager::new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect) {
-    auto m = new_mesh_from_file(path, VertexSpecification::DEFAULT, options, garbage_collect);
-    try {
-        mesh_manager_.store_alias(alias, m->id());
-    } catch(...) {
-        destroy_mesh(m->id());
-        throw;
-    }
-    return m;
-}
-
-MeshPtr AssetManager::get_mesh_with_alias(const std::string& alias) {
-    return mesh(mesh_manager_.get_id_from_alias(alias));
+MeshPtr AssetManager::find_mesh(const std::string& name) {
+    return mesh_manager_.find_object(name);
 }
 
 void AssetManager::destroy_mesh(MeshID m) {
@@ -442,32 +420,6 @@ MaterialPtr AssetManager::new_material_from_file(const unicode& path, GarbageCol
     return new_mat;
 }
 
-MaterialPtr AssetManager::new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect) {
-    auto m = new_material(garbage_collect);
-    assert(m);
-
-    try {
-        material_manager_.store_alias(alias, m->id());
-    } catch(...) {
-        destroy_material(m->id());
-        throw;
-    }
-    return m;
-}
-
-MaterialPtr AssetManager::new_material_with_alias_from_file(const std::string &alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    auto m = new_material_from_file(path, garbage_collect);
-    assert(m);
-
-    try {
-        material_manager_.store_alias(alias, m->id());
-    } catch(...) {
-        destroy_material(m->id());
-        throw;
-    }
-    return m;
-}
-
 MaterialPtr AssetManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
     auto m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
@@ -478,8 +430,8 @@ MaterialPtr AssetManager::new_material_from_texture(TextureID texture_id, Garbag
     return m;
 }
 
-MaterialPtr AssetManager::get_material_with_alias(const std::string& alias) {
-    return material_manager_.get_id_from_alias(alias).fetch();
+MaterialPtr AssetManager::find_material(const std::string& name) {
+    return material_manager_.find_object(name);
 }
 
 MaterialPtr AssetManager::material(const MaterialID& id) {
@@ -530,30 +482,8 @@ void AssetManager::destroy_texture(TextureID t) {
     texture_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
-TexturePtr AssetManager::new_texture_with_alias(const std::string& alias, uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
-    auto t = new_texture(width, height, format, garbage_collect);
-    try {
-        texture_manager_.store_alias(alias, t->id());
-    } catch(...) {
-        destroy_texture(t->id());
-        throw;
-    }
-    return t;
-}
-
-TexturePtr AssetManager::new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
-    auto t = new_texture_from_file(path, flags, garbage_collect);
-    try {
-        texture_manager_.store_alias(alias, t->id());
-    } catch(...) {
-        destroy_texture(t->id());
-        throw;
-    }
-    return t;
-}
-
-TexturePtr AssetManager::get_texture_with_alias(const std::string& alias) {
-    return texture_manager_.get_id_from_alias(alias).fetch();
+TexturePtr AssetManager::find_texture(const std::string& name) {
+    return texture_manager_.find_object(name);
 }
 
 TexturePtr AssetManager::texture(TextureID id) {
@@ -590,19 +520,8 @@ SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMe
     return snd;
 }
 
-SoundPtr AssetManager::new_sound_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    auto s = new_sound_from_file(path, garbage_collect);
-    try {
-        sound_manager_.store_alias(alias, s->id());
-    } catch(...) {
-        destroy_sound(s->id());
-        throw;
-    }
-    return s;
-}
-
-SoundPtr AssetManager::get_sound_with_alias(const std::string &alias) {
-    return sound_manager_.get_id_from_alias(alias).fetch();
+SoundPtr AssetManager::find_sound(const std::string &name) {
+    return sound_manager_.find_object(name);
 }
 
 SoundPtr AssetManager::sound(SoundID id) {
@@ -660,17 +579,6 @@ FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollect
     return font;
 }
 
-FontPtr AssetManager::new_font_with_alias_from_file(const std::string& alias, const unicode& filename, GarbageCollectMethod garbage_collect) {
-    auto fid = new_font_from_file(filename, garbage_collect);
-    try {
-        font_manager_.store_alias(alias, fid);
-    } catch(...) {
-        destroy_font(fid);
-        throw;
-    }
-    return fid;
-}
-
 FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
@@ -693,19 +601,8 @@ FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_s
     return font;
 }
 
-FontPtr AssetManager::new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
-    auto fid = new_font_from_ttf(filename, font_size, charset, garbage_collect);
-    try {
-        font_manager_.store_alias(alias, fid);
-    } catch(...) {
-        destroy_font(fid);
-        throw;
-    }
-    return fid;
-}
-
-FontPtr AssetManager::get_font_with_alias(const std::string& alias) {
-    return font_manager_.get_id_from_alias(alias).fetch();
+FontPtr AssetManager::find_font(const std::string& name) {
+    return font_manager_.find_object(name);
 }
 
 void AssetManager::destroy_font(FontID f) {
@@ -745,19 +642,8 @@ ParticleScriptPtr AssetManager::new_particle_script_from_file(const unicode& fil
     return ps;
 }
 
-ParticleScriptPtr AssetManager::new_particle_script_with_alias_from_file(const std::string& alias, const unicode& path, GarbageCollectMethod garbage_collect) {
-    auto ps = new_particle_script_from_file(path, garbage_collect);
-    try {
-        particle_script_manager_.store_alias(alias, ps->id());
-    } catch(...) {
-        destroy_particle_script(ps->id());
-        throw;
-    }
-    return ps;
-}
-
-ParticleScriptPtr AssetManager::get_particle_script_with_alias(const std::string& alias) {
-    return particle_script_manager_.get_id_from_alias(alias).fetch();
+ParticleScriptPtr AssetManager::find_particle_script(const std::string& name) {
+    return particle_script_manager_.find_object(name);
 }
 
 void AssetManager::destroy_particle_script(ParticleScriptID id) {

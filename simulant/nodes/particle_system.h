@@ -39,7 +39,8 @@ class ParticleSystem :
     public generic::Identifiable<ParticleSystemID>,
     public Source,
     public Loadable,
-    public HasMutableRenderPriority {
+    public HasMutableRenderPriority,
+    public ChainNameable<ParticleSystem>  {
 
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 

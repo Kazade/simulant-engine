@@ -67,7 +67,8 @@ class ParticleScript:
     public Asset,
     public Loadable,
     public generic::Identifiable<ParticleScriptID>,
-    public RefCounted<ParticleScript> {
+    public RefCounted<ParticleScript>,
+    public ChainNameable<ParticleScript> {
 
 public:
     const static int MAX_EMITTER_COUNT = 8;

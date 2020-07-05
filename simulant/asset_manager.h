@@ -72,13 +72,12 @@ enum DefaultFontStyle {
  * TEMPLATE="""
     // %(klass)s API
     %(klass)sPtr new_%(name)s_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    %(klass)sPtr new_%(name)s_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_%(name)s(%(klass)sID id);
     %(klass)sPtr %(name)s(%(klass)sID id);
     const %(klass)sPtr %(name)s (%(klass)sID id) const;
     std::size_t %(name)s_count() const;
     bool has_%(name)s(%(klass)sID id) const;
-    %(klass)sPtr get_%(name)s_with_alias(const std::string& alias);
+    %(klass)sPtr find_%(name)s(const std::string& name);
 """
 
 for klass, name in (
@@ -106,79 +105,70 @@ public:
 
     /* ParticleScript API */
     ParticleScriptPtr new_particle_script_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    ParticleScriptPtr new_particle_script_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_particle_script(ParticleScriptID id);
     ParticleScriptPtr particle_script(ParticleScriptID id);
     const ParticleScriptPtr particle_script (ParticleScriptID id) const;
     std::size_t particle_script_count() const;
     bool has_particle_script(ParticleScriptID id) const;
-    ParticleScriptPtr get_particle_script_with_alias(const std::string& alias);
-
+    ParticleScriptPtr find_particle_script(const std::string& name);
 
     /* Texture API */
     TexturePtr new_texture_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TexturePtr new_texture_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_texture(TextureID id);
     TexturePtr texture(TextureID id);
     const TexturePtr texture (TextureID id) const;
     std::size_t texture_count() const;
     bool has_texture(TextureID id) const;
-    TexturePtr get_texture_with_alias(const std::string& alias);
+    TexturePtr find_texture(const std::string& alias);
 
 
     /* Mesh API */
-    MeshPtr new_mesh_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_mesh(MeshID id);
     MeshPtr mesh(MeshID id);
     const MeshPtr mesh (MeshID id) const;
     std::size_t mesh_count() const;
     bool has_mesh(MeshID id) const;
-    MeshPtr get_mesh_with_alias(const std::string& alias);
+    MeshPtr find_mesh(const std::string& name);
 
 
     /* Material API */
     MaterialPtr new_material_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialPtr new_material_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_material(const MaterialID& id);
     MaterialPtr material(const MaterialID& id);
     const MaterialPtr material (const MaterialID& id) const;
     std::size_t material_count() const;
     bool has_material(const MaterialID& id) const;
-    MaterialPtr get_material_with_alias(const std::string& alias);
+    MaterialPtr find_material(const std::string& name);
 
 
     /* Sound API */
     SoundPtr new_sound_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    SoundPtr new_sound_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_sound(SoundID id);
     SoundPtr sound(SoundID id);
     const SoundPtr sound (SoundID id) const;
     std::size_t sound_count() const;
     bool has_sound(SoundID id) const;
-    SoundPtr get_sound_with_alias(const std::string& alias);
+    SoundPtr find_sound(const std::string& name);
 
 
     /* Font API */
     FontPtr new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_with_alias_from_file(const std::string &alias, const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(FontID id);
     FontPtr font(FontID id);
     const FontPtr font (FontID id) const;
     std::size_t font_count() const;
     bool has_font(FontID id) const;
-    FontPtr get_font_with_alias(const std::string& alias);
+    FontPtr find_font(const std::string& alias);
 
     // Customisations
     TexturePtr new_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TexturePtr new_texture_with_alias(const std::string &alias, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialPtr new_material_with_alias(const std::string& alias, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MeshPtr new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr new_mesh_with_alias(const std::string& alias, VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_from_file(const unicode& path, const VertexSpecification& desired_specification=VertexSpecification::DEFAULT, const MeshLoadOptions& options=MeshLoadOptions(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr new_mesh_with_alias_from_file(const std::string &alias, const unicode& path, const MeshLoadOptions& options, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     /*
      * Given a submesh, this creates a new mesh with just that single submesh
@@ -200,12 +190,8 @@ public:
     MeshPtr new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    TexturePtr new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TexturePtr new_texture_with_alias_from_file(const std::string &alias, const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MaterialPtr new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_with_alias_from_ttf(const std::string& alias, const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     void update(float dt);
 

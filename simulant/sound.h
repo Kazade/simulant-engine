@@ -44,7 +44,8 @@ class Sound :
     public RefCounted<Sound>,
     public generic::Identifiable<SoundID>,
     public Asset,
-    public Loadable {
+    public Loadable,
+    public ChainNameable<Sound> {
 
 public:
     Sound(SoundID id, AssetManager* asset_manager, SoundDriver* sound_driver);

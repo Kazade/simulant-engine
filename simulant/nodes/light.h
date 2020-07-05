@@ -31,7 +31,8 @@ namespace smlt {
 class Light :
     public TypedDestroyableObject<Light, Stage>,
     public ContainerNode,
-    public generic::Identifiable<LightID> {
+    public generic::Identifiable<LightID>,
+    public ChainNameable<Light> {
 
 public:
     typedef std::shared_ptr<Light> ptr;
