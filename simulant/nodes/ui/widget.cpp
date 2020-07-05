@@ -41,7 +41,9 @@ bool Widget::init() {
         L_ERROR("[CRITICAL] Unable to load the material for widgets!");
         return false;
     }
-    material_->pass(0)->set_blend_func(BLEND_ALPHA);
+    material_->set_blend_func(BLEND_ALPHA);
+    material_->set_depth_test_enabled(false);
+    material_->set_cull_mode(CULL_MODE_NONE);
 
     // Assign the default font as default
     auto font = stage->assets->default_font(DEFAULT_FONT_STYLE_BODY);

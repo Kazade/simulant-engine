@@ -249,6 +249,8 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
 
     font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
     font->material_->set_diffuse_map(font->texture_);
+    font->material_->set_cull_mode(CULL_MODE_NONE);
+    font->material_->set_depth_test_enabled(false);
 
     // Set the page dimensions
     // FIXME: Multiple pages
@@ -256,6 +258,8 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     font->page_width_ = font->texture_->width();
 
     font->material_->set_blend_func(BLEND_ALPHA);
+    font->material_->set_depth_test_enabled(false);
+    font->material_->set_cull_mode(CULL_MODE_NONE);
 
     if(font->texture_->channels() == 1) {
         /*
