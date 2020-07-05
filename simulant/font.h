@@ -29,7 +29,8 @@ class Font:
     public RefCounted<Font>,
     public Asset,
     public Loadable,
-    public generic::Identifiable<FontID> {
+    public generic::Identifiable<FontID>,
+    public ChainNameable<Font> {
 
 public:
     Font(FontID id, AssetManager* asset_manager);

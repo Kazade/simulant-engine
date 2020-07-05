@@ -14,7 +14,8 @@ class RenderTarget;
 class Camera:
     public TypedDestroyableObject<Camera, Stage>,
     public ContainerNode,
-    public generic::Identifiable<CameraID> {
+    public generic::Identifiable<CameraID>,
+    public ChainNameable<Camera> {
 
 public:
     using ContainerNode::_get_renderables;

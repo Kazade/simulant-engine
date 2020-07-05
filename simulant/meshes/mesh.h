@@ -111,7 +111,8 @@ class Mesh :
     public Loadable,
     public RefCounted<Mesh>,
     public generic::Identifiable<MeshID>,
-    public KeyFrameAnimated {
+    public KeyFrameAnimated,
+    public ChainNameable<Mesh> {
 
     DEFINE_SIGNAL(SignalAnimationEnabled, signal_animation_enabled);
 

@@ -26,14 +26,16 @@
 #include "generic/property.h"
 #include "generic/data_carrier.h"
 #include "generic/object_manager.h"
-
+#include "interfaces/nameable.h"
 #include "threads/mutex.h"
 
 namespace smlt {
 
 class AssetManager;
 
-class Asset {
+class Asset:
+    public virtual Nameable {
+
 public:
     friend class AssetManager;
 

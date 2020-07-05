@@ -45,7 +45,8 @@ class Sprite :
     public ContainerNode,
     public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
-    public Source {
+    public Source,
+    public ChainNameable<Sprite> {
 
 public:
     using ContainerNode::_get_renderables;

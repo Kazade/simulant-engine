@@ -83,7 +83,8 @@ class Stage:
     public ContainerNode,
     public generic::Identifiable<StageID>,
     public Loadable,
-    public virtual WindowHolder {
+    public virtual WindowHolder,
+    public ChainNameable<Stage> {
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
     DEFINE_SIGNAL(ParticleSystemDestroyedSignal, signal_particle_system_destroyed);

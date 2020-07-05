@@ -255,6 +255,15 @@ public:
         assert_true(a3->is_intended_visible());
     }
 
+    void test_actor_findable() {
+        auto a1 = stage_->new_actor()->set_name_and_get("Actor 1");
+        assert_equal(a1, stage_->find_descendent_with_name("Actor 1"));
+    }
+
+    void test_light_findable() {
+        auto l1 = stage_->new_light_as_point()->set_name_and_get("Light 1");
+        assert_equal(l1, stage_->find_descendent_with_name("Light 1"));
+    }
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;

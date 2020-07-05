@@ -23,7 +23,8 @@ class Widget:
     public TypedDestroyableObject<Widget, UIManager>,
     public ContainerNode,
     public generic::Identifiable<WidgetID>,
-    public HasMutableRenderPriority {
+    public HasMutableRenderPriority,
+    public ChainNameable<Widget>  {
 
     DEFINE_SIGNAL(WidgetPressedSignal, signal_pressed);
     DEFINE_SIGNAL(WidgetReleasedSignal, signal_released);

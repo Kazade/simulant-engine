@@ -32,7 +32,8 @@ class SkyManager;
 
 class Skybox :
     public generic::Identifiable<SkyID>,
-    public ContainerNode {
+    public ContainerNode,
+    public ChainNameable<Skybox> {
 
 public:
     constexpr static float DEFAULT_SIZE = 1024.0f;

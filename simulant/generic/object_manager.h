@@ -146,29 +146,14 @@ public:
         }
     }
 
-    void store_alias(const std::string& alias, IDType id) {
-        thread::Lock<thread::RecursiveMutex> g(aliases_mutex_);
-        aliases_.insert(std::make_pair(alias, id));
-    }
-
-    ObjectTypePtr get_by_alias(const std::string& alias) const {
-        thread::Lock<thread::RecursiveMutex> g(aliases_mutex_);
-        auto it = aliases_.find(alias);
-        if(it == aliases_.end()) {
-            return ObjectTypePtr();
-        } else {
-            return get(it->second);
+    ObjectTypePtr find_object(const std::string& name) const {
+        for(auto& p: objects_) {
+            if(p.second->name() == name) {
+                return p.second;
+            }
         }
-    }
 
-    IDType get_id_from_alias(const std::string& alias) const {
-        thread::Lock<thread::RecursiveMutex> g(aliases_mutex_);
-        auto it = aliases_.find(alias);
-        if(it == aliases_.end()) {
-            return IDType();
-        } else {
-            return it->second;
-        }
+        return ObjectTypePtr();
     }
 
 protected:
@@ -177,17 +162,12 @@ protected:
     }
 
     mutable thread::RecursiveMutex objects_mutex_;
-    mutable thread::RecursiveMutex aliases_mutex_;
 
     typedef std::shared_ptr<ObjectType> ObjectTypeInternalPtrType;
 
     std::unordered_map<
         IDType, ObjectTypeInternalPtrType
     > objects_;
-
-    std::unordered_map<
-        std::string, IDType
-    > aliases_;
 
     sig::signal<void (ObjectType&, IDType)> signal_post_create_;
     sig::signal<void (ObjectType&, IDType)> signal_pre_destroy_;

@@ -60,7 +60,8 @@ class Geom :
     public virtual Boundable,
     public generic::Identifiable<GeomID>,
     public Source,
-    public HasMutableRenderPriority {
+    public HasMutableRenderPriority,
+    public ChainNameable<Geom>  {
 
 public:
     Geom(

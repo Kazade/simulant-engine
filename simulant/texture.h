@@ -117,7 +117,8 @@ class Texture :
     public generic::Identifiable<TextureID>,
     public RefCounted<Texture>,
     public Updateable,
-    public RenderTarget {
+    public RenderTarget,
+    public ChainNameable<Texture> {
 
 public:
     static const TextureChannelSet DEFAULT_SOURCE_CHANNELS;

@@ -48,7 +48,7 @@ enum StageNodeType {
 class StageNode:
     public virtual DestroyableObject,
     public TreeNode,
-    public Nameable,
+    public virtual Nameable,
     public Printable,
     public Transformable,
     public Updateable,
