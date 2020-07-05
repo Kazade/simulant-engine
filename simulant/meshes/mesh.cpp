@@ -182,7 +182,6 @@ SubMesh* Mesh::new_submesh(
     );
 }
 
-
 SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
     MaterialID material, float diameter, std::size_t slices, std::size_t stacks) {
 
@@ -193,6 +192,157 @@ SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
     return sm;
 }
 
+SubMeshPtr Mesh::new_submesh_as_capsule(
+    const std::string& name,
+    MaterialID material, float diameter, float length,
+    std::size_t segment_count, std::size_t vertical_segment_count, std::size_t ring_count) {
+
+    SubMesh* submesh = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);
+
+    float radius = diameter * 0.5f;
+
+    auto& vdata = submesh->vertex_data;
+    auto& idata = submesh->index_data;
+
+    float delta_ring_angle = ((PI / 2.0f) / ring_count);
+    float delta_seg_angle = ((PI * 2.0f) / segment_count);
+
+    float sphere_ratio = radius / (2 * radius + length);
+    float cylinder_ratio = length / (2 * radius + length);
+    float cylinder_length = length - diameter;
+
+    auto offset = vertex_data->count();
+
+    for(uint32_t ring = 0; ring <= ring_count; ++ring) {
+        float r0 = radius * std::sin(ring * delta_ring_angle);
+        float y0 = radius * std::cos(ring * delta_ring_angle);
+
+        // Generate the group of segments for the current ring
+        for(uint32_t seg = 0; seg <= segment_count; ++seg) {
+            float x0 = r0 * std::cos(seg * delta_seg_angle);
+            float z0 = r0 * std::sin(seg * delta_seg_angle);
+
+            smlt::Vec3 new_point(x0, 0.5f * cylinder_length + y0, z0);
+
+            smlt::Vec3 new_normal(x0, y0, z0);
+            new_normal.normalize();
+
+            smlt::Vec2 new_tex(
+                (float) seg / (float) segment_count,
+                (float) ring / (float) ring_count * sphere_ratio
+            );
+
+            // Add one vertex to the strip which makes up the sphere
+            vdata->position(new_point);
+            vdata->tex_coord0(new_tex);
+            vdata->tex_coord1(new_tex);
+            vdata->normal(new_normal);
+            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->move_next();
+
+            // each vertex (except the last) has six indices pointing to it
+            idata->index(offset + segment_count + 1);
+            idata->index(offset + segment_count);
+            idata->index(offset);
+            idata->index(offset + segment_count + 1);
+            idata->index(offset);
+            idata->index(offset + 1);
+
+            offset ++;
+        } // end for seg
+    }
+
+    // Cylinder part
+
+    float delta_angle = ((PI * 2.0f) / segment_count);
+    float delta_height = cylinder_length / (float) vertical_segment_count;
+
+    for(uint16_t i = 1; i < vertical_segment_count; i++) {
+        for (uint16_t j = 0; j <= segment_count; j++) {
+            float x0 = radius * std::cos(j * delta_angle);
+            float z0 = radius * std::sin(j * delta_angle);
+
+            Vec3 new_point(
+                x0,
+                0.5f * cylinder_length - i * delta_height,
+                z0
+            );
+
+            Vec3 new_normal(x0, 0, z0);
+            new_normal.normalize();
+
+            Vec2 new_tex(
+                j / (float)segment_count,
+                i / (float)vertical_segment_count * cylinder_ratio + sphere_ratio
+            );
+
+            vdata->position(new_point);
+            vdata->tex_coord0(new_tex);
+            vdata->tex_coord1(new_tex);
+            vdata->normal(new_normal);
+            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->move_next();
+
+            idata->index(offset + segment_count + 1);
+            idata->index(offset + segment_count);
+            idata->index(offset);
+            idata->index(offset + segment_count + 1);
+            idata->index(offset);
+            idata->index(offset + 1);
+
+            offset ++;
+        }
+    }
+
+    // Generate the group of rings for the sphere
+    for(uint32_t ring = 0; ring <= ring_count; ring++) {
+        float r0 = radius * sinf((PI / 2.0f) + ring * delta_ring_angle);
+        float y0 = radius * cosf((PI / 2.0f) + ring * delta_ring_angle);
+
+        // Generate the group of segments for the current ring
+        for(uint32_t seg = 0; seg <= segment_count; seg++) {
+            float x0 = r0 * cosf(seg * delta_seg_angle);
+            float z0 = r0 * sinf(seg * delta_seg_angle);
+
+            Vec3 new_point(
+                x0,
+                -0.5f * cylinder_length + y0,
+                z0
+            );
+
+            Vec3 new_normal(x0, y0, z0);
+            new_normal.normalize();
+
+            Vec2 new_tex(
+               (float) seg / (float) segment_count,
+               (float) ring / (float) ring_count * sphere_ratio + cylinder_ratio + sphere_ratio
+            );
+
+            vdata->position(new_point);
+            vdata->tex_coord0(new_tex);
+            vdata->tex_coord1(new_tex);
+            vdata->normal(new_normal);
+            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->move_next();
+
+            if (ring != ring_count) {
+                // each vertex (except the last) has six indices pointing to it
+                idata->index(offset + segment_count + 1);
+                idata->index(offset + segment_count);
+                idata->index(offset);
+                idata->index(offset + segment_count + 1);
+                idata->index(offset);
+                idata->index(offset + 1);
+            }
+            offset++;
+        } // end for seg
+    } // end for ring
+
+    idata->done();
+    vdata->done();
+
+    return submesh;
+}
 
 SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID material, float diameter, uint32_t subdivisions) {
     SubMeshPtr sm = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);

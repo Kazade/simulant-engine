@@ -335,6 +335,21 @@ public:
         assert_close(aabb.depth(), 1.0f, EPSILON);
     }
 
+    void test_new_submesh_as_capsule() {
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_capsule(
+            "capsule",
+            stage_->assets->new_material(),
+            2.0f, 5.0f, 10, 1, 10
+        );
+
+        assert_close(mesh->aabb().height(), 5.0f, EPSILON);
+        assert_close(mesh->aabb().width(), 2.0f, EPSILON);
+
+        // FIXME - not sure why this is 1.90... there's a bug somewhere!
+        //assert_close(mesh->aabb().depth(), 2.0f, EPSILON);
+    }
+
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;

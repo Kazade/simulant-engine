@@ -143,6 +143,16 @@ public:
         IndexType=INDEX_TYPE_16_BIT
     );
 
+    SubMeshPtr new_submesh_as_capsule(
+        const std::string& name,
+        MaterialID material,
+        float diameter,
+        float length,
+        std::size_t segment_count,
+        std::size_t vertical_segment_count,
+        std::size_t ring_count
+    );
+
     SubMeshPtr new_submesh_as_sphere(const std::string& name,
         MaterialID material,
         float diameter,

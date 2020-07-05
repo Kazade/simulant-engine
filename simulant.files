@@ -770,8 +770,6 @@ simulant/partitioners/spatial_hash.h
 simulant/platform.h
 simulant/procedural/constants.h
 simulant/procedural/mesh.h
-simulant/procedural/mesh/capsule.cpp
-simulant/procedural/mesh/capsule.h
 simulant/procedural/mesh/circle.cpp
 simulant/procedural/mesh/circle.h
 simulant/procedural/mesh/cube.cpp
