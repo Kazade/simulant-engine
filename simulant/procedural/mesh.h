@@ -23,7 +23,6 @@
 #include "mesh/cube.h"
 #include "mesh/sphere.h"
 #include "mesh/circle.h"
-#include "mesh/capsule.h"
 #include "mesh/cylinder.h"
 #include "mesh/icosphere.h"
 
