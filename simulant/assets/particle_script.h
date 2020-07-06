@@ -105,7 +105,6 @@ public:
     void push_emitter(const Emitter& emitter);
     void clear_emitters();
 
-    void set_name(const std::string& name);
     void set_quota(std::size_t quota);
 
     void set_particle_width(float w);
@@ -116,7 +115,6 @@ public:
 private:
     ParticleScript* owner_ = nullptr;
 
-    std::string name_;
     std::size_t quota_ = 0;
     float particle_width_ = 100.0f;
     float particle_height_ = 100.0f;

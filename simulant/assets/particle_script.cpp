@@ -92,10 +92,6 @@ void ParticleScript::clear_emitters() {
     emitter_count_ = 0;
 }
 
-void ParticleScript::set_name(const std::string& name) {
-    name_ = name;
-}
-
 void ParticleScript::set_quota(std::size_t quota) {
     quota_ = quota;
 }
