@@ -350,6 +350,15 @@ public:
         //assert_close(mesh->aabb().depth(), 2.0f, EPSILON);
     }
 
+    void test_find_mesh() {
+        auto mesh = stage_->assets->new_mesh(VertexSpecification::DEFAULT)->set_name_and_get("Mesh 1");
+        stage_->assets->new_mesh(VertexSpecification::DEFAULT)->set_name("Mesh 2");
+
+        assert_equal(mesh->id(), stage_->assets->find_mesh("Mesh 1")->id());
+        assert_is_not_null(stage_->assets->find_mesh("Mesh 2").get());
+        assert_not_equal(mesh->id(), stage_->assets->find_mesh("Mesh 2")->id());
+    }
+
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;
