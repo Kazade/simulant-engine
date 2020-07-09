@@ -69,6 +69,23 @@ public:
         assert_false(it == list.end());
     }
 
+    void test_stress_insert_erase() {
+        List list(64);
+
+        std::vector<List::id> ids;
+        for(auto i = 0; i < 64; ++i) {
+            for(auto j = 0; j < 5; ++j) {
+                ids.push_back(list.create<C>().second);
+            }
+            for(auto id: ids) {
+                list.erase(list.find(id));
+            }
+            ids.clear();
+        }
+
+        assert_equal(list.capacity(), 64u);
+    }
+
     void test_reserve() {
         List list(64);
 
