@@ -220,9 +220,11 @@ public:
 
         /* Wipe out the entry */
         auto ewm = get_ewm(meta);
-        memset(ewm->data, 0, entry_size);
+        memset(ewm->data, 0, sizeof(ewm->data));
 
         meta->entry = nullptr;
+
+        if(chunk->free_list_tail_) chunk->free_list_tail_->next = meta;
         meta->prev = chunk->free_list_tail_;
         meta->next = nullptr;
 
@@ -230,6 +232,10 @@ public:
         if(!chunk->free_list_head_) {
             chunk->free_list_head_ = meta;
         }
+
+        /* If we just deallocated, this must be non-null */
+        assert(chunk->free_list_head_);
+        assert(chunk->free_list_tail_);
 
         assert(size_ > 0);
         size_--;
@@ -337,26 +343,31 @@ private:
         /* Set the free list head to the first thing */
         new_chunk->free_list_head_ = &ewm->meta;
 
+        EntryMeta* prev = nullptr;
         /* Go through all metas and set prev/next pointers */
         for(std::size_t i = 0; i < chunk_size; ++i) {
             EntryMeta* meta = &ewm->meta;
-            EntryMeta* prev = (i == 0) ? nullptr : &(ewm - 1)->meta;
-
-            memset(ewm->data, 0, entry_size);
+            memset(ewm->data, 0, sizeof(ewm->data));
 
             meta->prev = prev;
             meta->chunk = chunks_.size();
             meta->index = i;  // Set the ID
             meta->entry = nullptr;
 
-            if(i == chunk_size - 1) {
-                meta->next = nullptr;
-                new_chunk->free_list_tail_ = meta;
-            } else {
+            if(i < chunk_size - 1) {
                 meta->next = &(ewm + 1)->meta;
-                ewm++;
             }
+
+            ewm++;
+            prev = meta;
         }
+
+        new_chunk->free_list_tail_ = prev;
+
+        assert(new_chunk->free_list_head_);
+        assert(new_chunk->free_list_tail_);
+        assert(!new_chunk->used_list_head_);
+        assert(!new_chunk->used_list_tail_);
 
         /* Finally, make the new chunk available and set the free list tail
          * to the last of the new chunk */
@@ -411,6 +422,10 @@ private:
 
         ewm->meta.next = nullptr;
         ewm->meta.entry = obj;
+
+        /* If we just allocated, this must be non-null */
+        assert(chunk->used_list_head_);
+        assert(chunk->used_list_tail_);
 
         ++size_;
     }
