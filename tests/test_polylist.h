@@ -77,6 +77,15 @@ public:
             for(auto j = 0; j < 5; ++j) {
                 ids.push_back(list.create<C>().second);
             }
+
+            int k = 0;
+            for(auto node: list) {
+                assert_is_not_null(node);
+                ++k;
+            }
+
+            assert_equal(k, 5);
+
             for(auto id: ids) {
                 list.erase(list.find(id));
             }
