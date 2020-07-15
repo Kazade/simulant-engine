@@ -113,8 +113,14 @@ public:
                 current_ = current_->next;
             } else if(current_->chunk < owner_->chunks_.size() - 1) {
                 /* If next is null, we're at the end of the current chunk
-                 * so move to the next one */
-                current_ = owner_->chunks_[current_->chunk + 1]->used_list_head_;
+                 * so move to the next one that isn't empty */
+                auto next_chunk_id = current_->chunk + 1;
+                auto next_chunk = owner_->chunks_[next_chunk_id];
+                while((!next_chunk->used_list_head_) && next_chunk_id < owner_->chunks_.size() - 1) {
+                    next_chunk = owner_->chunks_[++next_chunk_id];
+                }
+
+                current_ = next_chunk->used_list_head_; // May be null if we reached the end
             } else {
                 /* We're done */
                 current_ = nullptr;

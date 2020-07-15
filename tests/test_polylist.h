@@ -58,6 +58,31 @@ public:
         assert_true(list.empty());
     }
 
+    void test_iterating_with_empty_chunks() {
+        List list(1);
+
+        auto l1 = list.create<C>().second;
+        auto l2 = list.create<C>().second;
+        auto l3 = list.create<C>().second;
+        auto l4 = list.create<C>().second;
+        auto l5 = list.create<C>().second;
+
+        _S_UNUSED(l1);
+        _S_UNUSED(l4);
+
+        list.erase(list.find(l2));
+        list.erase(list.find(l3));
+        list.erase(list.find(l5));
+
+        auto i = 0;
+        for(auto& l: list) {
+            _S_UNUSED(l);
+            ++i;
+        }
+
+        assert_equal(i, 2);
+    }
+
     void test_find_across_chunks() {
         List list(1);
 
