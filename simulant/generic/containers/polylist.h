@@ -106,12 +106,21 @@ public:
         }
 
         PolylistIterator& operator++() {
-            if(current_->next) {
+            auto& chunk = owner_->chunks_[current_->chunk];
+
+            if(current_ != chunk->used_list_tail_) {
+                /* We reached the end last iteration */
                 current_ = current_->next;
-            } else if(owner_->chunks_.size() > current_->chunk + 1) {
+            } else if(current_->chunk < owner_->chunks_.size() - 1) {
                 /* If next is null, we're at the end of the current chunk
-                 * so move to the next one */
-                current_ = owner_->chunks_[current_->chunk + 1]->used_list_head_;
+                 * so move to the next one that isn't empty */
+                auto next_chunk_id = current_->chunk + 1;
+                auto next_chunk = owner_->chunks_[next_chunk_id];
+                while((!next_chunk->used_list_head_) && next_chunk_id < owner_->chunks_.size() - 1) {
+                    next_chunk = owner_->chunks_[++next_chunk_id];
+                }
+
+                current_ = next_chunk->used_list_head_; // May be null if we reached the end
             } else {
                 /* We're done */
                 current_ = nullptr;
@@ -166,6 +175,7 @@ public:
         /* Construct the object */
         T* ret = new (ewm->data) T(std::forward<Args>(args)...);
 
+        assert(ret);
         assert((void*) ret == (void*) ewm->data);
         assert((void*) ret == (void*) ewm);
 
@@ -203,13 +213,25 @@ public:
 
         assert(meta->entry);
 
-        /* Remove from the used list */
-        if(meta->prev) meta->prev->next = meta->next;
-        if(meta->next) meta->next->prev = meta->prev;
-
         auto& chunk = chunks_[meta->chunk];
-        if(chunk->used_list_head_ == meta) chunk->used_list_head_ = meta->next;
-        if(chunk->used_list_tail_ == meta) chunk->used_list_tail_ = meta->prev;
+
+        assert(meta->next);
+        assert(meta->prev);
+
+        /* Remove from the used list */
+        meta->prev->next = meta->next;
+        meta->next->prev = meta->prev;
+
+        if(chunk->used_list_head_ == meta && chunk->used_list_tail_ == meta) {
+            chunk->used_list_head_ = chunk->used_list_tail_ = nullptr;
+        } else if(chunk->used_list_head_ == meta) {
+            chunk->used_list_head_ = meta->next;
+        } else if(chunk->used_list_tail_ == meta) {
+            chunk->used_list_tail_ = meta->prev;
+        }
+
+        /* Detach completely */
+        meta->next = meta->prev = meta;
 
         /* Destroy and then add to the free list, an exception in
            a destructor will terminate anyway so we don't need to worry
@@ -222,20 +244,39 @@ public:
         auto ewm = get_ewm(meta);
         memset(ewm->data, 0, sizeof(ewm->data));
 
+        assert(meta->entry);
         meta->entry = nullptr;
 
-        if(chunk->free_list_tail_) chunk->free_list_tail_->next = meta;
-        meta->prev = chunk->free_list_tail_;
-        meta->next = nullptr;
+        /* No free list? */
+        if(!chunk->free_list_tail_) {
+            assert(!chunk->free_list_head_);
+            /* This is now the free list */
+            chunk->free_list_head_ = chunk->free_list_tail_ = meta;
+        } else {
+            /* Otherwise, add to the end, and update the tail */
+            meta->prev = chunk->free_list_tail_;
+            meta->next = chunk->free_list_head_;
 
-        chunk->free_list_tail_ = meta;
-        if(!chunk->free_list_head_) {
-            chunk->free_list_head_ = meta;
+            chunk->free_list_tail_->next = meta;
+            chunk->free_list_head_->prev = meta;
+
+            chunk->free_list_tail_ = meta;
         }
 
         /* If we just deallocated, this must be non-null */
         assert(chunk->free_list_head_);
         assert(chunk->free_list_tail_);
+
+        /* Check all the things */
+        assert(chunk->free_list_head_ != chunk->used_list_head_);
+        assert(chunk->free_list_head_ != chunk->used_list_tail_);
+        assert(chunk->free_list_tail_ != chunk->used_list_head_);
+        assert(chunk->free_list_tail_ != chunk->used_list_tail_);
+
+        assert(
+            (chunk->used_list_head_ && chunk->used_list_tail_) ||
+            (!chunk->used_list_head_ && !chunk->used_list_tail_)
+        );
 
         assert(size_ > 0);
         size_--;
@@ -364,6 +405,12 @@ private:
 
         new_chunk->free_list_tail_ = prev;
 
+        /* Make circular */
+        new_chunk->free_list_head_->prev = new_chunk->free_list_tail_;
+        new_chunk->free_list_tail_->next = new_chunk->free_list_head_;
+        assert(new_chunk->free_list_head_->prev);
+        assert(new_chunk->free_list_tail_->next);
+
         assert(new_chunk->free_list_head_);
         assert(new_chunk->free_list_tail_);
         assert(!new_chunk->used_list_head_);
@@ -403,29 +450,49 @@ private:
     void alloc_entry(EntryWithMeta* ewm, Base* obj) {
         auto& chunk = chunks_[ewm->meta.chunk];
 
-        if(chunk->free_list_head_ == &ewm->meta) {
+        assert(ewm->meta.next);
+        assert(ewm->meta.prev);
+
+        assert(chunk->free_list_head_);
+        assert(chunk->free_list_tail_);
+
+        if(chunk->free_list_head_ == &ewm->meta && chunk->free_list_tail_ == &ewm->meta) {
+            // Last entry in the free list! Wipe out the head and tail
+            chunk->free_list_head_ = chunk->free_list_tail_ = nullptr;
+        } else if(chunk->free_list_head_ == &ewm->meta) {
             chunk->free_list_head_ = chunk->free_list_head_->next;
-        }
-        if(chunk->free_list_tail_ == &ewm->meta) {
+        } else if(chunk->free_list_tail_ == &ewm->meta) {
             chunk->free_list_tail_ = chunk->free_list_tail_->prev;
         }
 
-        /* Add to the end of the used list */
-        ewm->meta.prev = chunk->used_list_tail_;
-        if(ewm->meta.prev) ewm->meta.prev->next = &ewm->meta;
-        chunk->used_list_tail_ = &ewm->meta;
+        if(!chunk->used_list_tail_) {
+            assert(!chunk->used_list_head_);
 
-        /* Make the head point to this if this is the first one */
-        if(!chunk->used_list_head_) {
-            chunk->used_list_head_ = &ewm->meta;
+            chunk->used_list_head_ = chunk->used_list_tail_ = &ewm->meta;
+        } else {
+            /* Add to the end of the used list */
+            ewm->meta.prev = chunk->used_list_tail_;
+            ewm->meta.next = chunk->used_list_head_;
+
+            ewm->meta.prev->next = &ewm->meta;
+            ewm->meta.next->prev = &ewm->meta;
+
+            chunk->used_list_tail_ = &ewm->meta;
         }
 
-        ewm->meta.next = nullptr;
         ewm->meta.entry = obj;
+
+        assert(ewm->meta.next);
+        assert(ewm->meta.prev);
 
         /* If we just allocated, this must be non-null */
         assert(chunk->used_list_head_);
         assert(chunk->used_list_tail_);
+
+        assert(
+            (!chunk->free_list_head_ && !chunk->free_list_tail_) ||
+            (chunk->free_list_head_ && chunk->free_list_tail_)
+        );
 
         ++size_;
     }

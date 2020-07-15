@@ -34,7 +34,9 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
 
     auto frustum = stage->camera(camera_id)->frustum();
 
-    for(auto& node: *stage->node_pool) {
+    for(auto it = stage->node_pool->begin(); it != stage->node_pool->end(); ++it) {
+        auto node = (*it);
+
         assert(node);
 
         auto& aabb = node->aabb();
