@@ -99,6 +99,10 @@ public:
         return result;
     }
 
+    bool equals(const Vec3& rhs) const {
+        return x == rhs.x && y == rhs.y && z == rhs.z;
+    }
+
     bool operator==(const Vec3& rhs) const {
         return (*this - rhs).length_squared() < EPSILON;
     }

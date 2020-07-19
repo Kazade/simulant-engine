@@ -28,6 +28,10 @@ struct Vec4 {
 
     Vec4(const Vec3& v, float w);
 
+    bool equals(const Vec4& rhs) const {
+        return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
+    }
+
     bool operator==(const Vec4& rhs) const {
         return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
     }

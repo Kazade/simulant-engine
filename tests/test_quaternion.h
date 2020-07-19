@@ -9,6 +9,16 @@ using namespace smlt;
 
 class QuaternionTest : public smlt::test::TestCase {
 public:
+    void test_equals() {
+        Quaternion q1(0, 0, 0, 1);
+        Quaternion q2(0, 0, 0, 0.9999);
+        Quaternion q3(0, 0, 0, 1);
+
+        assert_false(q1.equals(q2));
+        assert_false(q2.equals(q1));
+        assert_true(q1.equals(q3));
+        assert_true(q3.equals(q1));
+    }
 
     void test_component_constructor() {
         smlt::Quaternion q(1, 2, 3, 4);
