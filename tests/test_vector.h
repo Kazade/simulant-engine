@@ -46,6 +46,17 @@ public:
 
 class Vec3Test : public smlt::test::TestCase {
 public:
+    void test_equals() {
+        smlt::Vec3 v1(0, 0, 1);
+        smlt::Vec3 v2(0, 0, 0.9999);
+        smlt::Vec3 v3(0, 0, 1);
+
+        assert_false(v1.equals(v2));
+        assert_false(v2.equals(v1));
+        assert_true(v1.equals(v3));
+        assert_true(v3.equals(v1));
+    }
+
     void test_component_constructor() {
         smlt::Vec3 v(1, 2, 3);
 

@@ -106,6 +106,11 @@ struct Vec2 {
     Vec4 xyzw(float z=0.0f, float w=1.0f) const;
 
     friend std::ostream& operator<<(std::ostream& stream, const Vec2& vec);
+
+    bool equals(const Vec2& rhs) const {
+        return x == rhs.x && y == rhs.y;
+    }
+
     friend bool operator==(const Vec2& lhs, const Vec2& rhs);
 };
 
