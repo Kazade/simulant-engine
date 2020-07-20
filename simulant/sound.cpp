@@ -18,7 +18,7 @@
 //
 
 #include "logging.h"
-#include "window.h"
+#include "core.h"
 #include "stage.h"
 #include "sound.h"
 #include "sound_driver.h"

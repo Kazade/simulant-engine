@@ -21,7 +21,7 @@
 #include <cassert>
 #include <map>
 
-#include "window.h"
+#include "core.h"
 #include "material.h"
 #include "asset_manager.h"
 #include "renderers/renderer.h"

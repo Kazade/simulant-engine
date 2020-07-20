@@ -25,7 +25,7 @@
 #include "deps/kfs/kfs.h"
 #include "logging.h"
 #include "vfs.h"
-#include "window.h"
+#include "core.h"
 #include "renderers/renderer.h"
 #include "loader.h"
 #include "platform.h"

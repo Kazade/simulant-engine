@@ -1,7 +1,7 @@
 
 #include "progress_bar.h"
 #include "../../stage.h"
-#include "../../window.h"
+#include "../../core.h"
 
 namespace smlt {
 namespace ui {

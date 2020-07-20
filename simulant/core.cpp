@@ -23,7 +23,7 @@
 
 #include "application.h"
 #include "utils/gl_error.h"
-#include "window.h"
+#include "core.h"
 #include "platform.h"
 #include "input/input_state.h"
 

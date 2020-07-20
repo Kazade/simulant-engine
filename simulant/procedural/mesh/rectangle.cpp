@@ -18,7 +18,7 @@
 //
 
 #include "../../asset_manager.h"
-#include "../../window.h"
+#include "../../core.h"
 #include "rectangle.h"
 
 namespace smlt {

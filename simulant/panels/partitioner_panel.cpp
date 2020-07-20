@@ -19,7 +19,7 @@
 
 
 #include "partitioner_panel.h"
-#include "../window.h"
+#include "../core.h"
 #include "../stage.h"
 #include "../nodes/actor.h"
 #include "../partitioner.h"

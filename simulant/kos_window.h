@@ -4,7 +4,7 @@
 
 #include <kos.h>
 
-#include "window.h"
+#include "core.h"
 #include "platform.h"
 
 #include "threads/mutex.h"

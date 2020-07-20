@@ -1,4 +1,4 @@
-#include "window.h"
+#include "core.h"
 #include "stage.h"
 #include "compositor.h"
 #include "pipeline.h"

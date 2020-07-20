@@ -23,7 +23,7 @@
 #include "adjacency_info.h"
 #include "../assets/meshes/skeleton.h"
 
-#include "../window.h"
+#include "../core.h"
 #include "../asset_manager.h"
 #include "../loader.h"
 #include "../material.h"

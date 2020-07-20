@@ -27,7 +27,7 @@
 
 #include "logging.h"
 
-#include "window.h"
+#include "core.h"
 #include "texture.h"
 #include "asset_manager.h"
 #include "renderers/renderer.h"

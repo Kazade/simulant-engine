@@ -3,7 +3,7 @@
 #include "../meshes/mesh.h"
 #include "../asset_manager.h"
 #include "../vfs.h"
-#include "../window.h"
+#include "../core.h"
 #include "../assets/meshes/skeleton.h"
 
 namespace smlt {

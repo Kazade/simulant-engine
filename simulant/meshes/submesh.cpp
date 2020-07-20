@@ -6,7 +6,7 @@
 #include "adjacency_info.h"
 
 #include "../asset_manager.h"
-#include "../window.h"
+#include "../core.h"
 
 namespace smlt {
 

@@ -19,7 +19,7 @@
 
 
 #include "stage_manager.h"
-#include "window.h"
+#include "core.h"
 #include "application.h"
 #include "stage.h"
 #include "nodes/camera.h"

@@ -27,7 +27,7 @@
 #endif
 #include "sdl2_keycodes.h"
 #include "generic/managed.h"
-#include "window.h"
+#include "core.h"
 #include "platform.h"
 
 namespace smlt {

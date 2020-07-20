@@ -23,7 +23,7 @@
 
 #include "input_state.h"
 
-#include "../window.h"
+#include "../core.h"
 #include "../virtual_gamepad.h"
 
 namespace smlt {

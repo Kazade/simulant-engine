@@ -2,7 +2,7 @@
 #include "actor.h"
 
 #include "../stage.h"
-#include "../window.h"
+#include "../core.h"
 #include "../viewport.h"
 
 namespace smlt {

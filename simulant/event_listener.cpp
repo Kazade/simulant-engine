@@ -1,6 +1,6 @@
 
 #include "event_listener.h"
-#include "window.h"
+#include "core.h"
 #include "macros.h"
 
 namespace smlt {

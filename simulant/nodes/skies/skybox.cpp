@@ -3,7 +3,7 @@
 #include "skybox_manager.h"
 #include "../../stage.h"
 #include "../../material.h"
-#include "../../window.h"
+#include "../../core.h"
 
 namespace smlt {
 

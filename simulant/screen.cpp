@@ -1,6 +1,6 @@
 #include <chrono>
 
-#include "window.h"
+#include "core.h"
 #include "screen.h"
 
 #include "threads/future.h"

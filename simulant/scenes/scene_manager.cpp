@@ -19,7 +19,7 @@
 
 #include "scene_manager.h"
 #include "scene.h"
-#include "../window.h"
+#include "../core.h"
 
 namespace smlt {
 

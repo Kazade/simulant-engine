@@ -19,7 +19,7 @@
 #include "image.h"
 #include "../../stage.h"
 #include "../camera.h"
-#include "../../window.h"
+#include "../../core.h"
 #include "../stage_node_manager.h"
 #include "../../viewport.h"
 

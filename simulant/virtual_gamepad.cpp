@@ -20,7 +20,7 @@
 #include "logging.h"
 #include "utils/unicode.h"
 #include "virtual_gamepad.h"
-#include "window.h"
+#include "core.h"
 #include "stage.h"
 #include "compositor.h"
 #include "nodes/ui/ui_manager.h"

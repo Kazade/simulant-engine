@@ -14,7 +14,7 @@
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../utils/gl_error.h"
-#include "../../window.h"
+#include "../../core.h"
 
 namespace smlt {
 

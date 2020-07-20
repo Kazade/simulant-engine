@@ -1,6 +1,6 @@
 #include "sprite_manager.h"
 #include "../../texture.h"
-#include "../../window.h"
+#include "../../core.h"
 #include "../../stage.h"
 #include "../sprite.h"
 #include "../stage_node_manager.h"

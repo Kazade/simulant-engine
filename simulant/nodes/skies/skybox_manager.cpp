@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../../window.h"
+#include "../../core.h"
 #include "../../loader.h"
 #include "../../stage.h"
 #include "../actor.h"

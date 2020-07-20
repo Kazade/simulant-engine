@@ -27,7 +27,7 @@
 #include "../renderers/renderer.h"
 #include "../generic/raii.h"
 #include "../deps/jsonic/jsonic.h"
-#include "../window.h"
+#include "../core.h"
 
 #ifndef _arch_dreamcast
 #include "../renderers/gl2x/gpu_program.h"

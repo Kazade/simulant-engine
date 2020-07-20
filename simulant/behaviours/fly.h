@@ -19,7 +19,7 @@
 #pragma once
 
 #include "./behaviour.h"
-#include "../window.h"
+#include "../core.h"
 
 #include "../interfaces/transformable.h"
 

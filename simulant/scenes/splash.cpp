@@ -4,7 +4,7 @@
 #include "../compositor.h"
 #include "../nodes/actor.h"
 #include "../nodes/camera.h"
-#include "../window.h"
+#include "../core.h"
 #include "../platform.h"
 #include "../nodes/ui/ui_manager.h"
 #include "../nodes/ui/label.h"

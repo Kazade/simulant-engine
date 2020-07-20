@@ -21,7 +21,7 @@
 #include <functional>
 #include "logging.h"
 #include "idle_task_manager.h"
-#include "window.h"
+#include "core.h"
 #include "utils/gl_thread_check.h"
 
 namespace smlt {

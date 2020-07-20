@@ -319,6 +319,8 @@ simulant/controllers/movement/airplane.cpp
 simulant/controllers/movement/airplane.h
 simulant/controllers/movement/hover_ship.cpp
 simulant/controllers/movement/hover_ship.h
+simulant/core.cpp
+simulant/core.h
 simulant/debug.cpp
 simulant/debug.h
 simulant/deps/SOIL/SOIL.c
@@ -895,8 +897,6 @@ simulant/viewport.cpp
 simulant/viewport.h
 simulant/virtual_gamepad.cpp
 simulant/virtual_gamepad.h
-simulant/window.cpp
-simulant/window.h
 tests/CMakeLists.txt
 CMakeLists.txt
 samples/combined_sample_1.cpp

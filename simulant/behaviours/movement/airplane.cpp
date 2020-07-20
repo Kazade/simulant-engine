@@ -1,6 +1,6 @@
 #include "airplane.h"
 #include "../physics/rigid_body.h"
-#include "../../window.h"
+#include "../../core.h"
 #include "../../input/input_axis.h"
 #include "../../macros.h"
 

@@ -1,7 +1,7 @@
 
 #include "hover_ship.h"
 
-#include "../../window.h"
+#include "../../core.h"
 #include "../physics/rigid_body.h"
 #include "../physics/simulation.h"
 #include "../../macros.h"

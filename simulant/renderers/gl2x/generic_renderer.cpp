@@ -30,7 +30,7 @@
 
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
-#include "../../window.h"
+#include "../../core.h"
 
 namespace smlt {
 

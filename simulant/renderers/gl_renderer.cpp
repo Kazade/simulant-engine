@@ -1,6 +1,6 @@
 #include "gl_renderer.h"
 
-#include "../window.h"
+#include "../core.h"
 #include "../utils/gl_error.h"
 #include "../utils/gl_thread_check.h"
 

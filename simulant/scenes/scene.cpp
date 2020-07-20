@@ -20,7 +20,7 @@
 #include "scene.h"
 #include "../compositor.h"
 #include "../stage.h"
-#include "../window.h"
+#include "../core.h"
 #include "../pipeline.h"
 
 namespace smlt {
