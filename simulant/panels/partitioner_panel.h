@@ -25,20 +25,20 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 
 class PartitionerPanel:
     public Panel,
     public RefCounted<PartitionerPanel> {
 
 public:
-    PartitionerPanel(Window* window);
+    PartitionerPanel(Core* core);
 
     bool init() override;
     void clean_up() override;
 
 private:
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
 
     void do_activate() override;
     void do_deactivate() override;

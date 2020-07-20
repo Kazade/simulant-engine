@@ -12,11 +12,11 @@ class WidgetTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
     }
 
     void tear_down() {
-        window->destroy_stage(stage_->id());
+        core->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 
@@ -86,11 +86,11 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
     }
 
     void tear_down() {
-        window->destroy_stage(stage_->id());
+        core->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 
@@ -118,11 +118,11 @@ class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
     }
 
     void tear_down() {
-        window->destroy_stage(stage_->id());
+        core->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 

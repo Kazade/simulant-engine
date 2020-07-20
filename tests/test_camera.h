@@ -13,29 +13,29 @@ class CameraTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
         stage_->destroy_camera(camera_->id());
-        window->destroy_stage(stage_->id());
+        core->destroy_stage(stage_->id());
     }
 
     void test_project_point() {
         auto camera = camera_;
-        camera->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()));
+        camera->set_perspective_projection(Degrees(45.0), float(core->width()) / float(core->height()));
 
-        Vec3 p1 = camera->project_point(*window, Viewport(), Vec3(0, 0, -10)).value();
+        Vec3 p1 = camera->project_point(*core, Viewport(), Vec3(0, 0, -10)).value();
 
-        assert_equal(window->width() / 2, p1.x);
-        assert_equal(window->height() / 2, p1.y);
+        assert_equal(core->width() / 2, p1.x);
+        assert_equal(core->height() / 2, p1.y);
 
-        p1 = camera->project_point(*window, Viewport(), Vec3(1, 0, -10)).value();
+        p1 = camera->project_point(*core, Viewport(), Vec3(1, 0, -10)).value();
 
-        assert_true(p1.x > (window->width() / 2));
-        assert_equal(window->height() / 2, p1.y);
+        assert_true(p1.x > (core->width() / 2));
+        assert_equal(core->height() / 2, p1.y);
     }
 
     void test_look_at() {

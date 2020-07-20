@@ -78,10 +78,6 @@ public:
         into(*resource, options);
     }
 
-    void into(Window& window, const LoaderOptions& options=LoaderOptions()) {
-        into((Loadable&) window, options);
-    }
-
     void set_vfs(VirtualFileSystem* locator) { locator_ = locator; }
 
     Property<VirtualFileSystem* Loader::*> vfs = { this, &Loader::locator_ };

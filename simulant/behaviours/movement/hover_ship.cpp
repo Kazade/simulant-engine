@@ -9,8 +9,8 @@
 namespace smlt {
 namespace behaviours {
 
-HoverShip::HoverShip(Window* window):
-    BehaviourWithInput(window->input.get()) {
+HoverShip::HoverShip(Core* core):
+    BehaviourWithInput(core->input.get()) {
 
 }
 

@@ -28,7 +28,7 @@ class BehaviourTests : public smlt::test::SimulantTestCase {
 public:
     void test_behaviour_first_update() {
 
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
         auto actor = stage->new_actor();
 
         auto behaviour = actor->new_behaviour<TestBehaviour>();

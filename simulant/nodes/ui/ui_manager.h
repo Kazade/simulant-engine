@@ -74,7 +74,7 @@ public:
 
 private:
     Stage* stage_ = nullptr;
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
 
     std::shared_ptr<WidgetManager> manager_;
     UIConfig config_;
@@ -89,7 +89,7 @@ private:
 
     std::queue<UIEvent> queued_events_;
 
-    WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport& viewport, const Vec2& window_coord) const;
+    WidgetPtr find_widget_at_core_coordinate(const Camera *camera, const Viewport& viewport, const Vec2& core_coord) const;
 
     sig::connection frame_finished_connection_;
     sig::connection pre_render_connection_;

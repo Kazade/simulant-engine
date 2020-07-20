@@ -79,7 +79,7 @@ typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
 class Stage:
-    public TypedDestroyableObject<Stage, Window>,
+    public TypedDestroyableObject<Stage, Core>,
     public ContainerNode,
     public generic::Identifiable<StageID>,
     public Loadable,
@@ -93,7 +93,7 @@ class Stage:
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
 public:
-    Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size);
+    Stage(Core *parent, AvailablePartitioner partitioner, uint32_t pool_size);
     virtual ~Stage();
 
     ActorPtr new_actor();

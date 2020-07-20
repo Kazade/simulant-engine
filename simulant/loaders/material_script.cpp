@@ -263,8 +263,8 @@ void MaterialScript::generate(Material& material) {
     material.set_pass_count(json["passes"].length());
 
     /* Feels dirty... */
-    Window* window = material.asset_manager().window;
-    Renderer* renderer = window->renderer;
+    Core* core = material.asset_manager().core;
+    Renderer* renderer = core->renderer;
 
     for(uint32_t i = 0u; i < json["passes"].length(); ++i) {
         jsonic::Node& pass = json["passes"][i];
@@ -293,14 +293,14 @@ void MaterialScript::generate(Material& material) {
             // Make sure we always remove the search path we add (if it didn't exist before)
             raii::Finally then([&]() {
                 if(added) {
-                    window->vfs->remove_search_path(parent_dir);
+                    core->vfs->remove_search_path(parent_dir);
                 }
             });
 
-            added = window->vfs->add_search_path(parent_dir);
+            added = core->vfs->add_search_path(parent_dir);
 
-            auto vertex_shader = window->vfs->read_file(vertex_shader_path);
-            auto fragment_shader = window->vfs->read_file(fragment_shader_path);
+            auto vertex_shader = core->vfs->read_file(vertex_shader_path);
+            auto fragment_shader = core->vfs->read_file(fragment_shader_path);
 
             auto program = renderer->new_or_existing_gpu_program(
                 std::string{std::istreambuf_iterator<char>(*vertex_shader), std::istreambuf_iterator<char>()},

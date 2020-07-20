@@ -103,7 +103,7 @@ void Application::construct_window(const AppConfig& config) {
         }
     }
 
-    window_ = SysWindow::create(
+    core_ = SysWindow::create(
         this,
         config_copy.width,
         config_copy.height,
@@ -112,19 +112,19 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.enable_vsync
     );
 
-    if(!window_) {
+    if(!core_) {
         L_ERROR("[FATAL] There was an error creating the window");
         return;
     }
 
     if(!config_copy.show_cursor) {
         // By default, don't show the cursor
-        window_->show_cursor(false);
+        core_->show_cursor(false);
 
         // Lock the cursor by default
-        window_->lock_cursor(true);
+        core_->lock_cursor(true);
     } else {
-        window_->show_cursor(true);
+        core_->show_cursor(true);
     }
 
     if(config_copy.target_frame_rate) {
@@ -135,37 +135,37 @@ void Application::construct_window(const AppConfig& config) {
 #ifdef _arch_dreamcast
         if(config_copy.target_frame_rate < 60) {
             float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
-            window_->request_frame_time(frame_time);
+            core_->request_frame_time(frame_time);
         }
 #else
         float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
-        window_->request_frame_time(frame_time);
+        core_->request_frame_time(frame_time);
 #endif
     }
 
     for(auto& search_path: config.search_paths) {
-        window_->vfs->add_search_path(search_path);
+        core_->vfs->add_search_path(search_path);
     }
 
     L_DEBUG("Search paths added successfully");
 
-    if(!window_->_init()) {
+    if(!core_->_init()) {
         throw InstanceInitializationError("Unable to create window");
     }
 
-    window_->set_title(config.title.encode());
+    core_->set_title(config.title.encode());
 
     /* FIXME: This is weird, the Application owns the Window, yet we're using the Window to call up to the App?
      * Not sure how to fix this without substantial changes to the frame running code */
-    window_->signal_update().connect(std::bind(&Application::_call_update, this, std::placeholders::_1));
-    window_->signal_late_update().connect(std::bind(&Application::_call_late_update, this, std::placeholders::_1));
-    window_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
-    window_->signal_shutdown().connect(std::bind(&Application::_call_clean_up, this));
+    core_->signal_update().connect(std::bind(&Application::_call_update, this, std::placeholders::_1));
+    core_->signal_late_update().connect(std::bind(&Application::_call_late_update, this, std::placeholders::_1));
+    core_->signal_fixed_update().connect(std::bind(&Application::_call_fixed_update, this, std::placeholders::_1));
+    core_->signal_shutdown().connect(std::bind(&Application::_call_clean_up, this));
 
     /* Is this a desktop window? */
 
 #if defined(__WIN32__) || defined(__APPLE__) || defined(__LINUX__)
-    SDL2Window* desktop = dynamic_cast<SDL2Window*>(window_.get());
+    SDL2Window* desktop = dynamic_cast<SDL2Window*>(core_.get());
 
     if(desktop) {
         if(config.desktop.enable_virtual_screen) {
@@ -182,13 +182,13 @@ void Application::construct_window(const AppConfig& config) {
 }
 
 StagePtr Application::stage(StageID stage) {
-    return window->stage(stage);
+    return core->stage(stage);
 }
 
 bool Application::_call_init() {
     L_DEBUG("Initializing the application");
 
-    scene_manager_.reset(new SceneManager(window_.get()));
+    scene_manager_.reset(new SceneManager(core_.get()));
 
     // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
@@ -226,22 +226,22 @@ int32_t Application::run() {
         return 1;
     }
 
-    while(window_->run_frame()) {}
+    while(core_->run_frame()) {}
 
     /* Make sure we unload and destroy all scenes */
     scene_manager_->destroy_all();
 
     // Finish running any idle tasks before we shutdown
-    window_->idle->execute();
+    core_->idle->execute();
 
     // Shutdown and clean up the window
-    window_->_clean_up();
+    core_->_clean_up();
 
     // Reset the scene manager before the window
     // disappears
     scene_manager_.reset();
 
-    window_.reset();
+    core_.reset();
 
 #ifdef _arch_dreamcast
     if(PROFILING) {

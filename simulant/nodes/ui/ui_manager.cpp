@@ -30,11 +30,11 @@ using namespace std::placeholders;
 
 UIManager::UIManager(Stage *stage, StageNodePool *pool):
     stage_(stage),
-    window_(stage->window.get()){
+    core_(stage->core.get()){
 
     manager_.reset(new WidgetManager(pool));
 
-    window_->register_event_listener(this);
+    core_->register_event_listener(this);
 
     /* Each time the stage is rendered with a camera and viewport, we need to process any queued events
      * so that (for example) we can interact with the same widget rendered to different viewports */
@@ -43,7 +43,7 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool):
     });
 
     /* We clear queued events at the end of each frame */
-    frame_finished_connection_ = window_->signal_frame_finished().connect([this]() {
+    frame_finished_connection_ = core_->signal_frame_finished().connect([this]() {
         this->clear_event_queue();
     });
 }
@@ -54,7 +54,7 @@ UIManager::~UIManager() {
 
     pre_render_connection_.disconnect();
     frame_finished_connection_.disconnect();
-    window_->unregister_event_listener(this);
+    core_->unregister_event_listener(this);
 }
 
 Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {
@@ -156,7 +156,7 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
 
         switch(evt.type) {
             case UI_EVENT_TYPE_TOUCH: {
-                auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y));
+                auto widget = find_widget_at_core_coordinate(camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y));
                 if(widget) {
                     if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_DOWN) {
                         widget->fingerdown(evt.touch.touch_id);
@@ -195,7 +195,7 @@ void UIManager::clear_event_queue() {
     queued_events_ = std::queue<UIEvent>();
 }
 
-WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
+WidgetPtr UIManager::find_widget_at_core_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &core_coord) const {
     WidgetPtr result = nullptr;
 
     for(auto widget: *manager_) {
@@ -203,13 +203,13 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
         std::vector<Vec3> ss_points;
 
         for(auto& corner: aabb.corners()) {
-            ss_points.push_back(camera->project_point(*window_, viewport, corner).value());
+            ss_points.push_back(camera->project_point(*core_, viewport, corner).value());
         }
 
         AABB ss_aabb(&ss_points[0], ss_points.size());
 
         // FIXME: Return the nearest if overlapping!
-        if(ss_aabb.contains_point(Vec3(window_coord, 0.5))) {
+        if(ss_aabb.contains_point(Vec3(core_coord, 0.5))) {
             result = widget;
         }
     };

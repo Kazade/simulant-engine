@@ -5,12 +5,12 @@ class MainScene:
     public smlt::Scene<MainScene> {
 
 public:
-    MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+    MainScene(smlt::Core* core):
+        smlt::Scene<MainScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage();
-        camera_ = stage_->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
+        stage_ = core->new_stage();
+        camera_ = stage_->new_camera_with_orthographic_projection(0, core->width(), 0, core->height());
 
         auto pipeline = compositor->render(
             stage_, camera_
@@ -19,11 +19,11 @@ public:
 
         link_pipeline(pipeline);
 
-        auto coord = window->coordinate_from_normalized(0.05, 0.95);
+        auto coord = core->coordinate_from_normalized(0.05, 0.95);
         int x = coord.x;
         int y = coord.y;
         int spacing = 10;
-        int column = window->coordinate_from_normalized(0.25, 0).x;
+        int column = core->coordinate_from_normalized(0.25, 0).x;
 
         auto label = stage_->ui->new_widget_as_label("Label");
         label->resize(column, -1);
@@ -65,7 +65,7 @@ public:
         auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
         auto icon = stage_->ui->new_widget_as_image(simulant_logo);
         icon->set_anchor_point(1, 1);
-        icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
+        icon->move_to(core->coordinate_from_normalized(0.95, 0.95));
 
         //stage_->ui->transform_input_with_camera(camera_);
     }

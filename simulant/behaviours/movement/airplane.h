@@ -11,7 +11,7 @@ class Airplane:
     public RefCounted<Airplane> {
 
 public:
-    Airplane(Window* window);
+    Airplane(Core* core);
 
     void set_turn_speed(float x) { turn_speed_ = x; }
 
@@ -22,7 +22,7 @@ public:
 private:
     void on_behaviour_added(Organism *controllable);
 
-    Window* window_;
+    Core* core_;
 
     float turn_speed_ = 10.0f;
     float throttle_speed_ = 200.0f;

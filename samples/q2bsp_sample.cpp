@@ -6,11 +6,11 @@ using namespace smlt;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(smlt::Window* window):
-        smlt::Scene<GameScene>(window) {}
+    GameScene(smlt::Core* core):
+        smlt::Scene<GameScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_FRUSTUM);
+        stage_ = core->new_stage(smlt::PARTITIONER_FRUSTUM);
         camera_ = stage_->new_camera();
         pipeline_ = compositor->render(stage_, camera_);
 
@@ -18,7 +18,7 @@ public:
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
         link_pipeline(pipeline_);
 
-        window->vfs->add_search_path("sample_data/quake2/textures");
+        core->vfs->add_search_path("sample_data/quake2/textures");
 
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/demo1.bsp");
         stage_->new_geom_with_mesh(mesh->id());
@@ -51,11 +51,11 @@ public:
         });
 
         // Add a fly controller to the camera for user input
-        camera_->new_behaviour<behaviours::Fly>(window);
+        camera_->new_behaviour<behaviours::Fly>(core);
 
         camera_->set_perspective_projection(
             Degrees(45.0),
-            float(window->width()) / float(window->height()),
+            float(core->width()) / float(core->height()),
             1.0,
             1000.0
         );

@@ -36,8 +36,8 @@ class Loading:
     public Scene<Loading> {
 
 public:
-    Loading(Window* window):
-        Scene<Loading>(window) {}
+    Loading(Core* core):
+        Scene<Loading>(core) {}
 
 private:
     void activate() override;

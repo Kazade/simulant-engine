@@ -12,7 +12,7 @@
 
 namespace smlt {
 
-Renderer::ptr new_renderer(Window* window, const std::string& name) {
+Renderer::ptr new_renderer(Core* core, const std::string& name) {
     /*
      * Different platforms return different renderers, the full list of supported renderers is
      * currently:
@@ -31,9 +31,9 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
     if(chosen.empty()) {
         /* NULL? Then return the default for the platform */
 #ifdef _arch_dreamcast
-        return std::make_shared<GL1XRenderer>(window);
+        return std::make_shared<GL1XRenderer>(core);
 #else
-        return std::make_shared<GenericRenderer>(window);
+        return std::make_shared<GenericRenderer>(core);
 #endif
     }
 
@@ -42,14 +42,14 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         L_ERROR(_F("{0} is not a supported renderer").format(name));
         return NOT_SUPPORTED;
 #else
-        return std::make_shared<GL1XRenderer>(window);
+        return std::make_shared<GL1XRenderer>(core);
 #endif
     } else if(chosen == "gl2x") {
 #ifdef _arch_dreamcast
         L_ERROR(_F("{0} is not a supported renderer").format(name));
         return NOT_SUPPORTED;
 #else
-        return std::make_shared<GenericRenderer>(window);
+        return std::make_shared<GenericRenderer>(core);
 #endif
     }
 

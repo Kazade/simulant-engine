@@ -33,8 +33,8 @@ namespace smlt {
 
 //=========== START STAGES ==================
 
-StageManager::StageManager(Window* window):
-    window_(window),
+StageManager::StageManager(Core* core):
+    core_(core),
     pool_(16),
     manager_(&pool_) {
 
@@ -42,8 +42,8 @@ StageManager::StageManager(Window* window):
 
 StagePtr StageManager::new_stage(AvailablePartitioner partitioner, uint32_t pool_size) {
     pool_size = (pool_size) ? pool_size:
-        window_->application->config->general.stage_node_pool_size;
-    auto ret = manager_.make(window_, partitioner, pool_size);
+        core_->application->config->general.stage_node_pool_size;
+    auto ret = manager_.make(core_, partitioner, pool_size);
     signal_stage_added_(ret->id());
     return ret;
 }

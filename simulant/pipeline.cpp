@@ -73,7 +73,7 @@ CameraPtr Pipeline::camera() const {
 }
 
 StagePtr Pipeline::stage() const {
-    return sequence_->window->stage(stage_);
+    return sequence_->core->stage(stage_);
 }
 
 TexturePtr Pipeline::target() const {
@@ -94,7 +94,7 @@ void Pipeline::deactivate() {
     is_active_ = false;
 
     if(stage_) {
-        auto s = sequence_->window->stage(stage_);
+        auto s = sequence_->core->stage(stage_);
         if(s) {
             s->active_pipeline_count_--;
         }
@@ -107,7 +107,7 @@ void Pipeline::activate() {
     is_active_ = true;
 
     if(stage_) {
-        auto s = sequence_->window->stage(stage_);
+        auto s = sequence_->core->stage(stage_);
         if(s) {
             s->active_pipeline_count_++;
         }
@@ -116,14 +116,14 @@ void Pipeline::activate() {
 
 void Pipeline::set_stage(StageID s) {
     if(stage_ && is_active()) {
-        StagePtr s = sequence_->window->stage(stage_);
+        StagePtr s = sequence_->core->stage(stage_);
         s->active_pipeline_count_--;
     }
 
     stage_ = s;
 
     if(stage_&& is_active()) {
-        StagePtr s = sequence_->window->stage(stage_);
+        StagePtr s = sequence_->core->stage(stage_);
         if(s) {
             s->active_pipeline_count_++;
         }

@@ -11,10 +11,10 @@ using namespace smlt;
 class MeshSilhouetteTests : public smlt::test::SimulantTestCase {
 public:
     void test_directional_silhouette_generation() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
-        auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_rectangle("rect", window->shared_assets->new_material(), 1.0, 1.0f);
+        auto mesh = core->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_rectangle("rect", core->shared_assets->new_material(), 1.0, 1.0f);
 
         auto light = stage->new_light_as_directional();
         light->move_to(0, 0, -10);
@@ -24,10 +24,10 @@ public:
     }
 
     void test_point_silhouette_generation() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
-        auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_rectangle("rect", window->shared_assets->new_material(), 1.0, 1.0f);
+        auto mesh = core->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_rectangle("rect", core->shared_assets->new_material(), 1.0, 1.0f);
 
         auto light = stage->new_light_as_point();
         light->move_to(0, 0, -10);
@@ -37,10 +37,10 @@ public:
     }
 
     void test_out_of_range_generates_none() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
-        auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_rectangle("rect", window->shared_assets->new_material(), 1.0, 1.0f);
+        auto mesh = core->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_rectangle("rect", core->shared_assets->new_material(), 1.0, 1.0f);
 
         auto light = stage->new_light_as_point();
         light->move_to(0, 0, -10);

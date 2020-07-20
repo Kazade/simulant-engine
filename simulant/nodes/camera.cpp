@@ -14,7 +14,7 @@ Camera::Camera(Stage *stage):
 
     assert(stage);
 
-    set_perspective_projection(smlt::Degrees(45.0f), stage->window->aspect_ratio());
+    set_perspective_projection(smlt::Degrees(45.0f), stage->core->aspect_ratio());
 }
 
 Camera::~Camera() {

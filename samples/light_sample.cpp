@@ -7,18 +7,18 @@ using namespace smlt;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(Window* window):
-        smlt::Scene<GameScene>(window) {}
+    GameScene(Core* core):
+        smlt::Scene<GameScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = core->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
 
         camera_->set_perspective_projection(
             Degrees(45.0),
-            float(window->width()) / float(window->height()),
+            float(core->width()) / float(core->height()),
             0.1,
             1000.0
         );
@@ -56,7 +56,7 @@ public:
         stage_->fog->set_linear(0.0f, 50.0f);
 
         /* FIXME: Replace
-        window->new_background_as_scrollable_from_file("sample_data/background.png"); */
+        core->new_background_as_scrollable_from_file("sample_data/background.png"); */
 
         auto axis = input->new_axis("F");
         axis->set_positive_keyboard_key(smlt::KEYBOARD_CODE_F);

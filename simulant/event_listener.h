@@ -11,7 +11,7 @@ namespace smlt {
  * (e.g. input)
  *
  *  An EventListener must be properly registered/unregistered with the window
- * with window->register_event_listener() and window->unregister_event_listener()
+ * with core->register_event_listener() and core->unregister_event_listener()
  */
 
 typedef uint32_t TouchPointID;
@@ -66,12 +66,12 @@ public:
     EventListener() {}
     virtual ~EventListener() {}
 
-    void handle_touch_begin(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y, float pressure);
-    void handle_touch_end(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y);
-    void handle_touch_move(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy);
+    void handle_touch_begin(Core* core, TouchPointID touch_id, float normalized_x, float normalized_y, float pressure);
+    void handle_touch_end(Core* core, TouchPointID touch_id, float normalized_x, float normalized_y);
+    void handle_touch_move(Core* core, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy);
 
-    void handle_key_down(Window* window, KeyboardCode code, ModifierKeyState modifiers);
-    void handle_key_up(Window* window, KeyboardCode code, ModifierKeyState modifiers);
+    void handle_key_down(Core* core, KeyboardCode code, ModifierKeyState modifiers);
+    void handle_key_up(Core* core, KeyboardCode code, ModifierKeyState modifiers);
 
 private:
     virtual void on_key_down(const KeyEvent& evt) {
@@ -94,10 +94,10 @@ private:
         _S_UNUSED(evt);
     }
 
-    virtual void on_window_focus() {}
-    virtual void on_window_blur() {}
-    virtual void on_window_minimize() {}
-    virtual void on_window_restore() {}
+    virtual void on_core_focus() {}
+    virtual void on_core_blur() {}
+    virtual void on_core_minimize() {}
+    virtual void on_core_restore() {}
 };
 
 class EventListenerManager {

@@ -30,7 +30,7 @@ class GL1XRenderer:
 public:
     friend class GL1RenderQueueVisitor;
 
-    GL1XRenderer(Window* window);
+    GL1XRenderer(Core* core);
 
     batcher::RenderGroupKey prepare_render_group(
         batcher::RenderGroup* group,

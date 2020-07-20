@@ -7,12 +7,12 @@
 
 namespace smlt {
 
-SpriteManager::SpriteManager(Window* window, Stage* stage, StageNodePool* pool):
-    WindowHolder(window),
+SpriteManager::SpriteManager(Core* core, Stage* stage, StageNodePool* pool):
+    WindowHolder(core),
     stage_(stage),
     sprite_manager_(new TemplatedSpriteManager(pool)) {
 
-    clean_up_conn_ = window->signal_post_idle().connect([&]() {
+    clean_up_conn_ = core->signal_post_idle().connect([&]() {
        sprite_manager_->clean_up();
     });
 }
@@ -26,7 +26,7 @@ void SpriteManager::destroy_all() {
 }
 
 SpritePtr SpriteManager::new_sprite() {
-    auto s = sprite_manager_->make(this, window->_sound_driver());
+    auto s = sprite_manager_->make(this, core->_sound_driver());
     s->set_parent(stage_->id());
     signal_sprite_created_(s->id());
     return s;

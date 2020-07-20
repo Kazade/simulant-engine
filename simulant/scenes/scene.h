@@ -50,7 +50,7 @@
 namespace smlt {
 
 class Application;
-class Window;
+class Core;
 class InputManager;
 class SceneManager;
 
@@ -61,7 +61,7 @@ class SceneBase:
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
-    SceneBase(Window* window);
+    SceneBase(Core* core);
     virtual ~SceneBase();
 
     void _call_load();
@@ -113,7 +113,7 @@ private:
 
     bool destroy_on_unload_ = true;
 
-    Window* window_;
+    Core* core_;
     InputManager* input_;
     Application* app_;
     SceneManager* scene_manager_ = nullptr;
@@ -122,7 +122,7 @@ private:
     friend class SceneManager;
 
 protected:
-    S_DEFINE_PROPERTY(window, &SceneBase::window_);
+    S_DEFINE_PROPERTY(core, &SceneBase::core_);
     S_DEFINE_PROPERTY(app, &SceneBase::app_);
     S_DEFINE_PROPERTY(input, &SceneBase::input_);
     S_DEFINE_PROPERTY(scenes, &SceneBase::scene_manager_);
@@ -132,8 +132,8 @@ protected:
 template<typename T>
 class Scene : public SceneBase, public RefCounted<T> {
 public:
-    Scene(Window* window):
-        SceneBase(window) {}
+    Scene(Core* core):
+        SceneBase(core) {}
 
     void clean_up() override {
         _call_unload();

@@ -54,7 +54,7 @@ public:
     }
 
     void test_actors_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto count = stage->node_pool->size();
 
@@ -67,14 +67,14 @@ public:
         // Should be the same, the original actor is still lingering
         assert_equal(stage->node_pool->size(), count + 1);
 
-        window->run_frame();
+        core->run_frame();
 
         // Back to where we were
         assert_equal(stage->node_pool->size(), count);
     }
 
     void test_lights_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto count = stage->node_pool->size();
 
@@ -86,13 +86,13 @@ public:
 
         assert_equal(stage->node_pool->size(), count + 1);
 
-        window->run_frame();
+        core->run_frame();
 
         assert_equal(stage->node_pool->size(), count);
     }
 
     void test_particle_systems_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto script = stage->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
@@ -109,13 +109,13 @@ public:
 
         assert_equal(stage->node_pool->size(), count + 1);
 
-        window->run_frame();
+        core->run_frame();
 
         assert_equal(stage->node_pool->size(), count);
     }
 
     void test_geoms_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
@@ -130,13 +130,13 @@ public:
 
         assert_equal(stage->node_pool->size(), count + 1);
 
-        window->run_frame();
+        core->run_frame();
 
         assert_equal(stage->node_pool->size(), count);
     }
 
     void test_cameras_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto count = stage->node_pool->size();
 
@@ -148,37 +148,37 @@ public:
 
         assert_equal(stage->node_pool->size(), count + 1);
 
-        window->run_frame();
+        core->run_frame();
 
         assert_equal(stage->node_pool->size(), count);
     }
 
     void test_pipelines_are_freed() {
-        auto stage = window->new_stage();
-        auto pipeline = window->compositor->render(stage, stage->new_camera());
+        auto stage = core->new_stage();
+        auto pipeline = core->compositor->render(stage, stage->new_camera());
 
         auto name = pipeline->name();
         pipeline->destroy();
-        assert_true(window->compositor->has_pipeline(name));
+        assert_true(core->compositor->has_pipeline(name));
 
-        window->run_frame();
-        assert_false(window->compositor->has_pipeline(name));
+        core->run_frame();
+        assert_false(core->compositor->has_pipeline(name));
     }
 
     void test_stages_are_freed() {
-        auto count = window->pool_.size();
+        auto count = core->pool_.size();
 
-        auto stage = window->new_stage()->id();
+        auto stage = core->new_stage()->id();
 
-        assert_equal(window->pool_.size(), count + 1);
+        assert_equal(core->pool_.size(), count + 1);
 
-        window->destroy_stage(stage);
+        core->destroy_stage(stage);
 
-        assert_equal(window->pool_.size(), count + 1);
+        assert_equal(core->pool_.size(), count + 1);
 
-        window->run_frame();
+        core->run_frame();
 
-        assert_equal(window->pool_.size(), count);
+        assert_equal(core->pool_.size(), count);
     }
 
     void test_backgrounds_are_freed() {
@@ -194,7 +194,7 @@ public:
     }
 
     void test_sprites_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto count = stage->node_pool->size();
 
@@ -207,7 +207,7 @@ public:
 
         assert_true(stage->node_pool->size() >= count + 1);
 
-        window->run_frame();
+        core->run_frame();
 
         assert_equal(stage->node_pool->size(), count);
     }

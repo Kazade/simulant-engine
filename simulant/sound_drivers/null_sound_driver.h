@@ -8,8 +8,8 @@ namespace smlt {
 
 class NullSoundDriver : public SoundDriver {
 public:
-    NullSoundDriver(Window* window):
-        SoundDriver(window) {}
+    NullSoundDriver(Core* core):
+        SoundDriver(core) {}
 
     virtual ~NullSoundDriver();
 

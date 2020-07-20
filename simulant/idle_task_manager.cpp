@@ -28,8 +28,8 @@ namespace smlt {
 
 static IdleConnectionID connection_counter = 0;
 
-IdleTaskManager::IdleTaskManager(Window &window):
-    window_(window) {
+IdleTaskManager::IdleTaskManager(Core &core):
+    core_(core) {
 
 }
 
@@ -69,8 +69,8 @@ struct TimedTriggerOnce {
         callback_(callback) {
     }
 
-    bool update(smlt::Window* window) {
-        auto now = window->time_keeper->total_elapsed_seconds();
+    bool update(smlt::Core* core) {
+        auto now = core->time_keeper->total_elapsed_seconds();
         if(!start_time_) {
             start_time_ = now;
         }
@@ -93,8 +93,8 @@ struct TimedTrigger {
         callback_(callback) {
     }
 
-    bool update(smlt::Window* window) {
-        auto now = window->time_keeper->total_elapsed_seconds();
+    bool update(smlt::Core* core) {
+        auto now = core->time_keeper->total_elapsed_seconds();
         if(!start_time_) {
             start_time_ = now;
         }
@@ -113,12 +113,12 @@ struct TimedTrigger {
 
 IdleConnectionID IdleTaskManager::add_timeout(float seconds, std::function<bool()> callback) {
     std::shared_ptr<TimedTrigger> trigger(new TimedTrigger(seconds, callback));
-    return add(std::bind(&TimedTrigger::update, trigger, &this->window_));
+    return add(std::bind(&TimedTrigger::update, trigger, &this->core_));
 }
 
 IdleConnectionID IdleTaskManager::add_timeout_once(float seconds, std::function<void()> callback) {
     std::shared_ptr<TimedTriggerOnce> trigger(new TimedTriggerOnce(seconds, callback));
-    return add(std::bind(&TimedTriggerOnce::update, trigger, &this->window_));
+    return add(std::bind(&TimedTriggerOnce::update, trigger, &this->core_));
 }
 
 void IdleTaskManager::wait() {

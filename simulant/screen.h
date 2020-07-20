@@ -8,7 +8,7 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 
 enum ScreenFormat {
     SCREEN_FORMAT_G1, /* 1 grey bit per pixel */
@@ -20,7 +20,7 @@ class Screen:
     public generic::DataCarrier {
 
 public:
-    Screen(Window* window, const std::string& name);
+    Screen(Core* core, const std::string& name);
 
     /* Render image data. data must be of size width x height x bits where bits
      * is defined by the ScreenFormat. Data should be arranged from top-left.
@@ -31,7 +31,7 @@ public:
      * refresh_rate will give you some indication of the rate to submit images,
      * but if you experience frame skipping then reduce the update time.
      *
-     * You can use a Scene fixed_update, a Behaviour or window->idle->add_timeout
+     * You can use a Scene fixed_update, a Behaviour or core->idle->add_timeout
      * to update with a regular frequency.
      */
     void render(const uint8_t* data, ScreenFormat format);
@@ -60,7 +60,7 @@ public:
         return integer_scale_;
     }
 
-    /* Private API, should only be called by the window
+    /* Private API, should only be called by the core
      * class that knows how to handle it */
     void _set_integer_scale(uint8_t scale) {
         integer_scale_ = scale;
@@ -70,19 +70,19 @@ public:
     std::string name() const;
 
 private:
-    Window* window_;
+    Core* core_;
     std::string name_;
 
     uint16_t width_ = 0;
     uint16_t height_ = 0;
     ScreenFormat format_ = SCREEN_FORMAT_G1;
-    uint16_t refresh_rate_ = 60;    
+    uint16_t refresh_rate_ = 60;
     uint8_t integer_scale_ = 1;
 
     std::vector<uint8_t> buffer_;
     thread::Mutex buffer_mutex_;
 
-    friend class Window;
+    friend class Core;
 };
 
 }

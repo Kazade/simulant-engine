@@ -11,9 +11,9 @@ using namespace smlt;
 class TextureTests : public smlt::test::SimulantTestCase {
 public:
     void test_transaction_api() {
-        TexturePtr tex = window->shared_assets->new_texture(0, 0);
+        TexturePtr tex = core->shared_assets->new_texture(0, 0);
 
-        window->run_frame();
+        core->run_frame();
         assert_false(tex->_data_dirty());
         assert_false(tex->_params_dirty());
 
@@ -24,7 +24,7 @@ public:
     }
 
     void test_conversion_from_r8_to_rgba4444() {
-        auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
+        auto tex = core->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
 
         auto data = tex->data();
         data[0] = 255;

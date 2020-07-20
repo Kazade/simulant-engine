@@ -40,7 +40,7 @@ class SkyManager :
     friend class Skybox;
 
 public:
-    SkyManager(Window* window, Stage* stage, StageNodePool *pool);
+    SkyManager(Core* core, Stage* stage, StageNodePool *pool);
 
     SkyManager(const SkyManager& rhs) = delete;
     SkyManager& operator=(const SkyManager&) = delete;

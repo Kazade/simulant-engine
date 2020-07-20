@@ -17,8 +17,8 @@ namespace smlt {
 
 class GLRenderer {
 protected:
-    GLRenderer(Window* window):
-        win_(window) {}
+    GLRenderer(Core* core):
+        win_(core) {}
 
     void on_texture_register(TextureID tex_id, Texture *texture);
     void on_texture_unregister(TextureID tex_id, Texture* texture);
@@ -31,8 +31,8 @@ protected:
     std::unordered_map<TextureID, uint32_t> texture_objects_;
 
 private:
-    // Not called window_ to avoid name clashes in subclasses
-    Window* win_;
+    // Not called core_ to avoid name clashes in subclasses
+    Core* win_;
 };
 
 }

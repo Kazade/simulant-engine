@@ -10,7 +10,7 @@ using namespace smlt;
 class HeightmapTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
         auto path = "flare.tga";
         auto tex = stage->assets->new_texture_from_file(path);
         auto heightmap = stage->assets->new_mesh_from_heightmap(path, HeightmapSpecification());
@@ -20,7 +20,7 @@ public:
     }
 
     void test_height_at_xz_big() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         std::vector<uint8_t> heightmap_data(64 * 64, 0);
 
@@ -49,7 +49,7 @@ public:
 
         HeightmapSpecification spec;
 
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R8);
         tex->set_auto_upload(false);
@@ -100,7 +100,7 @@ public:
 
         HeightmapSpecification spec;
 
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R8);
         tex->set_auto_upload(false);

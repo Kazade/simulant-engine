@@ -16,50 +16,50 @@ public:
 
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->destroy_stage(stage_->id());
+        core->destroy_stage(stage_->id());
     }
 
     void test_audio_listener() {
-        assert_false(window->has_explicit_audio_listener());
-        assert_is_null(window->audio_listener());
+        assert_false(core->has_explicit_audio_listener());
+        assert_is_null(core->audio_listener());
 
-        auto p = window->compositor->render(stage_, camera_);
+        auto p = core->compositor->render(stage_, camera_);
         p->activate();
 
         // Make the first camera of the first pipeline the audio listener
-        assert_equal(window->audio_listener(), camera_);
-        assert_false(window->has_explicit_audio_listener());
+        assert_equal(core->audio_listener(), camera_);
+        assert_false(core->has_explicit_audio_listener());
 
         auto actor = stage_->new_actor();
-        window->set_audio_listener(actor);
+        core->set_audio_listener(actor);
 
-        assert_equal(window->audio_listener(), actor);
-        assert_true(window->has_explicit_audio_listener());
+        assert_equal(core->audio_listener(), actor);
+        assert_true(core->has_explicit_audio_listener());
 
         stage_->destroy_actor(actor);
-        window->run_frame(); // actually destroy
+        core->run_frame(); // actually destroy
 
-        assert_equal(window->audio_listener(), camera_);
-        assert_false(window->has_explicit_audio_listener());
+        assert_equal(core->audio_listener(), camera_);
+        assert_false(core->has_explicit_audio_listener());
     }
 
     void test_2d_sound_output() {
-        smlt::SoundID sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundID sound = core->shared_assets->new_sound_from_file("test_sound.ogg");
 
-        assert_false(window->playing_sound_count());
+        assert_false(core->playing_sound_count());
 
-        window->play_sound(sound);
+        core->play_sound(sound);
 
-        assert_true(window->playing_sound_count());
+        assert_true(core->playing_sound_count());
 
-        while(window->playing_sound_count()) {
-            window->run_frame();
+        while(core->playing_sound_count()) {
+            core->run_frame();
         }
     }
 
@@ -76,8 +76,8 @@ public:
         assert_true(actor->playing_sound_count());
 
         // Finish playing the sound
-        while(window->playing_sound_count()) {
-            window->run_frame();
+        while(core->playing_sound_count()) {
+            core->run_frame();
         }
     }
 

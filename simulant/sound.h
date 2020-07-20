@@ -132,7 +132,7 @@ public:
 
 class Source {
 public:
-    Source(Window* window);
+    Source(Core* core);
     Source(Stage* stage, SoundDriver *driver);
     virtual ~Source();
 
@@ -151,7 +151,7 @@ private:
     SoundDriver* _sound_driver() const;
 
     Stage* stage_ = nullptr;
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
     SoundDriver* driver_ = nullptr;
     StageNode* node_ = nullptr;
 

@@ -27,7 +27,7 @@
 #include "utils/unicode.h"
 
 namespace smlt {
-class Window;
+class Core;
 
 class AssetMissingError : public std::runtime_error {
 public:
@@ -40,7 +40,7 @@ class VirtualFileSystem :
     public RefCounted<VirtualFileSystem> {
 
 public:
-    VirtualFileSystem(Window* window);
+    VirtualFileSystem(Core* core);
 
     std::list<unicode>& search_path() { return resource_path_; }
 
@@ -58,7 +58,7 @@ private:
 
     std::list<unicode> resource_path_;
 
-    Window* window_;
+    Core* core_;
 };
 
 }

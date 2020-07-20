@@ -77,7 +77,7 @@ class GenericRenderer:
     private GLRenderer {
 
 public:
-    GenericRenderer(Window* window);
+    GenericRenderer(Core* core);
 
     batcher::RenderGroupKey prepare_render_group(
         batcher::RenderGroup* group,

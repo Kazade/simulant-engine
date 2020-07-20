@@ -564,7 +564,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         (const void*) index_data
     );
 
-    renderer_->window->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+    renderer_->core->stats->increment_polygons_rendered(renderable->arrangement, element_count);
 }
 
 }

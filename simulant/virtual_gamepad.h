@@ -32,7 +32,7 @@ namespace smlt {
 class VirtualGamepad:
     public RefCounted<VirtualGamepad> {
 public:
-    VirtualGamepad(Window& window, VirtualGamepadConfig config);
+    VirtualGamepad(Core& window, VirtualGamepadConfig config);
 
     bool init();
     void clean_up();
@@ -48,7 +48,7 @@ public:
     AABB button_bounds(int button);
 
 private:
-    Window& window_;
+    Core& core_;
     VirtualGamepadConfig config_ = VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS;
 
     std::vector<ui::Button*> buttons_;
@@ -67,7 +67,7 @@ private:
     std::vector<sig::ScopedConnection> connections_;
 
     void _prepare_deletion();
-    friend class Window; // For _prepare_deletion
+    friend class Core; // For _prepare_deletion
 
 public:
     S_DEFINE_PROPERTY(stage, &VirtualGamepad::stage_);

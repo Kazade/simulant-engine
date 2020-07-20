@@ -62,7 +62,7 @@ public:
 
     friend struct IteratorPair;
 
-    StageManager(Window* window);
+    StageManager(Core* core);
 
     StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM, uint32_t pool_size=0);
     StagePtr stage(StageID s);
@@ -82,7 +82,7 @@ public:
     void destroy_object(Stage* object);
     void destroy_object_immediately(Stage* object);
 private:
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
 
 protected:
     void clean_up();

@@ -32,9 +32,9 @@
 
 namespace smlt {
 
-Compositor::Compositor(Window *window):
-    window_(window),
-    renderer_(window->renderer.get()) {
+Compositor::Compositor(Core *core):
+    core_(core),
+    renderer_(core->renderer.get()) {
 
     //Set up the default render options
     render_options.wireframe_enabled = false;
@@ -172,7 +172,7 @@ void Compositor::run() {
         run_pipeline(pipeline, actors_rendered);
     }
 
-    window->stats->set_subactors_rendered(actors_rendered);
+    core->stats->set_subactors_rendered(actors_rendered);
 }
 
 
@@ -206,7 +206,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
         return;
     }
 
-    RenderTarget& target = *window_; //FIXME: Should be window or texture
+    RenderTarget& target = *core_; //FIXME: Should be window or texture
 
     /*
      *  Render targets can specify whether their buffer should be cleared at the start of each frame. We do this the first
@@ -255,7 +255,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     );
 
     // Reset it, ready for this pipeline
-    render_queue_.reset(stage, window->renderer.get(), camera);
+    render_queue_.reset(stage, core->renderer.get(), camera);
 
     // Mark the visible objects as visible
     for(auto& node: nodes_visible) {

@@ -58,7 +58,7 @@ constexpr uint32_t audio_data_format_byte_size(AudioDataFormat format) {
 }
 
 
-class Window;
+class Core;
 
 /* Basically a hacky abstraction over OpenAL with the thinking that the only other drivers will be:
  *
@@ -69,8 +69,8 @@ class Window;
  */
 class SoundDriver {
 public:
-    SoundDriver(Window* window):
-        window_(window) {}
+    SoundDriver(Core* core):
+        core_(core) {}
 
     virtual ~SoundDriver() {}
 
@@ -93,7 +93,7 @@ public:
     virtual AudioSourceState source_state(AudioSourceID source) = 0;
     virtual int32_t source_buffers_processed_count(AudioSourceID source) const = 0;
 
-    Property<Window* SoundDriver::*> window = {this, &SoundDriver::window_};
+    Property<Core* SoundDriver::*> core = {this, &SoundDriver::core_};
 
     /* When called this should set the source to not be affected by distance
      * this is used when playing background music etc. (i.e. the Window is the source) */
@@ -106,7 +106,7 @@ public:
     virtual void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) = 0;
     virtual void set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) = 0;
 private:
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
 };
 
 

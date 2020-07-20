@@ -21,7 +21,7 @@ public:
         smlt::test::SimulantTestCase::set_up();
 
         vbo_manager_ = VBOManager::create();
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
 
         mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh_->new_submesh_as_cube("cube", stage_->assets->new_material(), 1.0f);
@@ -127,7 +127,7 @@ public:
         auto actor = stage_->new_actor_with_mesh(mesh_->id());
 
         batcher::RenderQueue queue;
-        queue.reset(stage_, window->renderer.get(), camera_);
+        queue.reset(stage_, core->renderer.get(), camera_);
 
         actor->_get_renderables(&queue, camera_, DETAIL_LEVEL_NEAREST);
 

@@ -32,10 +32,10 @@
 namespace smlt {
 
 class Application;
-class Window;
+class Core;
 
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
-typedef std::function<SceneBasePtr (Window*)> SceneFactory;
+typedef std::function<SceneBasePtr (Core*)> SceneFactory;
 
 
 enum SceneChangeBehaviour {
@@ -46,10 +46,10 @@ enum SceneChangeBehaviour {
 class SceneManager :
     public RefCounted<SceneManager> {
 
-    friend class Window;
+    friend class Core;
 
 public:
-    SceneManager(Window* window);
+    SceneManager(Core* core);
     ~SceneManager();
 
     bool has_scene(const std::string& route) const;
@@ -72,12 +72,12 @@ public:
     template<typename T, typename... Args>
     void register_scene(const std::string& name, Args&&... args) {
         SceneFactory func = std::bind(
-            &T::template create<Window*, typename std::decay<Args>::type&...>,
+            &T::template create<Core*, typename std::decay<Args>::type&...>,
             std::placeholders::_1, std::forward<Args>(args)...
         );
 
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
-            auto ret = func(window);
+        _store_scene_factory(name, [=](Core* core) -> SceneBasePtr {
+            auto ret = func(core);
             ret->set_name(name);
             ret->scene_manager_ = this;
             return ret;
@@ -86,8 +86,8 @@ public:
 
     template<typename T>
     void register_scene(const std::string& name) {
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
-            auto ret = T::create(window);
+        _store_scene_factory(name, [=](Core* core) -> SceneBasePtr {
+            auto ret = T::create(core);
             ret->set_name(name);
             ret->scene_manager_ = this;
             return ret;
@@ -103,7 +103,7 @@ private:
         scene_factories_[name] = func;
     }
 
-    Window* window_;
+    Core* core_;
 
     std::unordered_map<std::string, SceneFactory> scene_factories_;
     std::unordered_map<std::string, SceneBasePtr> routes_;

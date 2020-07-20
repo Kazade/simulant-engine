@@ -96,7 +96,7 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     /* We intentionally don't mark data dirty here. All that would happen is
      * we would upload a blank texture */
 
-    renderer_ = asset_manager->window->renderer;
+    renderer_ = asset_manager->core->renderer;
 }
 
 TextureTexelType Texture::texel_type() const {

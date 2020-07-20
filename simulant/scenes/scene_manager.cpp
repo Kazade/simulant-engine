@@ -23,8 +23,8 @@
 
 namespace smlt {
 
-SceneManager::SceneManager(Window *window):
-    window_(window) {
+SceneManager::SceneManager(Core *core):
+    core_(core) {
 
 }
 
@@ -38,7 +38,7 @@ void SceneManager::destroy_all() {
         route.second->_call_unload();
 
         auto name = route.first;
-        window_->idle->add_once([this, name]() {
+        core_->idle->add_once([this, name]() {
             auto it = routes_.find(name);
             if(it != routes_.end()) {
                 routes_.erase(it);
@@ -73,7 +73,7 @@ SceneBase::ptr SceneManager::get_or_create_route(const std::string& route) {
             throw std::logic_error("No such route available: " + route);
         }
 
-        routes_[route] = (*factory).second(window_);
+        routes_[route] = (*factory).second(core_);
         it = routes_.find(route);
     }
     return it->second;
@@ -126,7 +126,7 @@ void SceneManager::activate(const std::string& route, SceneChangeBehaviour behav
     /* Little bit of trickery here. We want to activate the scene after idle tasks
      * have run, but then we want to immediately disconnect. So we pass the connection
      * wrapped in a shared_ptr which has been bound to the lambda */
-    holder->conn = window_->signal_post_idle().connect(do_activate);
+    holder->conn = core_->signal_post_idle().connect(do_activate);
     scenes_queued_for_activation_++;
 }
 
@@ -138,7 +138,7 @@ void SceneManager::load(const std::string& route) {
 void SceneManager::load_in_background(const std::string& route, bool redirect_after) {
     auto scene = get_or_create_route(route);
 
-    window_->start_coroutine(
+    core_->start_coroutine(
         [=](){
             scene->_call_load();
             if(redirect_after) {
@@ -159,7 +159,7 @@ void SceneManager::unload(const std::string& route) {
              * from unload can happen before we destroy the scene
              */
 
-            window_->idle->add_once([this, route, scene]() {
+            core_->idle->add_once([this, route, scene]() {
                 auto it = routes_.find(route);
                 if(it != routes_.end() && it->second == scene) {
                     routes_.erase(it);

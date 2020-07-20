@@ -22,22 +22,22 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 
 class WindowHolder {
 public:
-    WindowHolder(Window* window):
-        window_(window) {}
+    WindowHolder(Core* core):
+        core_(core) {}
 
     virtual ~WindowHolder() {}
 
-    Property<Window* WindowHolder::*> window = { this, &WindowHolder::window_ };
+    Property<Core* WindowHolder::*> core = { this, &WindowHolder::core_ };
 
 protected:
-    Window* get_window() const { return window_; }
+    Core* get_core() const { return core_; }
 
 private:
-    Window* window_;
+    Core* core_;
 };
 
 }

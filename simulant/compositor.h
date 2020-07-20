@@ -45,7 +45,7 @@ class Compositor:
     public RefCounted<Compositor> {
 
 public:
-    Compositor(Window* window);
+    Compositor(Core* core);
     virtual ~Compositor();
 
     PipelinePtr new_pipeline(
@@ -103,7 +103,7 @@ private:
     void sort_pipelines();
     void run_pipeline(PipelinePtr stage, int& actors_rendered);
 
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
     Renderer* renderer_ = nullptr;
     batcher::RenderQueue render_queue_;
 
@@ -120,7 +120,7 @@ private:
 
     sig::connection clean_up_connection_;
 public:
-    S_DEFINE_PROPERTY(window, &Compositor::window_);
+    S_DEFINE_PROPERTY(core, &Compositor::core_);
 };
 
 }

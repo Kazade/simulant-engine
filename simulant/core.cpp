@@ -88,7 +88,7 @@ static unsigned char simulant_icon_vmu_bits[] = {
 
 namespace smlt {
 
-Window::Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync):
+Core::Core(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync):
     Source(this),
     StageManager(this),
     asset_manager_(new AssetManager(this)),
@@ -101,7 +101,7 @@ Window::Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, b
     frame_counter_time_(0),
     frame_counter_frames_(0),
     frame_time_in_milliseconds_(0),
-    time_keeper_(TimeKeeper::create(1.0 / Window::STEPS_PER_SECOND)) {
+    time_keeper_(TimeKeeper::create(1.0 / Core::STEPS_PER_SECOND)) {
 
     set_width(width);
     set_height(height);
@@ -111,11 +111,11 @@ Window::Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, b
 
 }
 
-Window::~Window() {
+Core::~Core() {
 
 }
 
-LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
+LoaderPtr Core::loader_for(const unicode &filename, LoaderHint hint) {
 
     unicode final_file;
     try {
@@ -156,7 +156,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 }
 
 
-LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename) {
+LoaderPtr Core::loader_for(const unicode& loader_name, const unicode &filename) {
     unicode final_file = vfs->locate_file(filename);
 
     for(LoaderTypePtr loader_type: loaders_) {
@@ -174,7 +174,7 @@ LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename
     return LoaderPtr();
 }
 
-LoaderTypePtr Window::loader_type(const unicode& loader_name) const {
+LoaderTypePtr Core::loader_type(const unicode& loader_name) const {
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             return loader_type;
@@ -183,7 +183,7 @@ LoaderTypePtr Window::loader_type(const unicode& loader_name) const {
     return LoaderTypePtr();
 }
 
-void Window::create_defaults() {
+void Core::create_defaults() {
     loading_ = scenes::Loading::create(this);
 
     //This needs to happen after SDL or whatever is initialized
@@ -194,7 +194,7 @@ void Window::create_defaults() {
     initialize_input_controller(*input_state_);
 }
 
-void Window::_clean_up() {
+void Core::_clean_up() {
     virtual_gamepad_.reset();
     loading_.reset();
 
@@ -220,7 +220,7 @@ void Window::_clean_up() {
     GLThreadCheck::clean_up();
 }
 
-StageNode* Window::audio_listener()  {
+StageNode* Core::audio_listener()  {
     if(audio_listener_) {
         return audio_listener_;
     } else {
@@ -235,18 +235,18 @@ StageNode* Window::audio_listener()  {
     }
 }
 
-void Window::set_audio_listener(StageNode* node) {
+void Core::set_audio_listener(StageNode* node) {
     audio_listener_ = node;
     audio_listener_->signal_destroyed().connect([this]() {
         audio_listener_ = nullptr;
     });
 }
 
-bool Window::has_explicit_audio_listener() const {
+bool Core::has_explicit_audio_listener() const {
     return audio_listener_ != nullptr;
 }
 
-bool Window::_init() {
+bool Core::_init() {
     GLThreadCheck::init();
 
     L_DEBUG("Starting initialization");
@@ -329,7 +329,7 @@ bool Window::_init() {
     return result;
 }
 
-void Window::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
+void Core::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
     PanelEntry entry;
     entry.panel = panel;
 
@@ -339,12 +339,12 @@ void Window::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) 
     register_event_listener(panel.get());
 }
 
-void Window::unregister_panel(uint8_t function_key) {
+void Core::unregister_panel(uint8_t function_key) {
     unregister_event_listener(panels_[function_key].panel.get());
     panels_.erase(function_key);
 }
 
-void Window::toggle_panel(uint8_t id) {
+void Core::toggle_panel(uint8_t id) {
     if(panels_[id].panel->is_active()) {
         panels_[id].panel->deactivate();
     } else {
@@ -352,23 +352,23 @@ void Window::toggle_panel(uint8_t id) {
     }
 }
 
-void Window::activate_panel(uint8_t id) {
+void Core::activate_panel(uint8_t id) {
     panels_[id].panel->activate();
 }
 
-void Window::deactivate_panel(uint8_t id) {
+void Core::deactivate_panel(uint8_t id) {
     panels_[id].panel->deactivate();
 }
 
-bool Window::panel_is_active(uint8_t id) {
+bool Core::panel_is_active(uint8_t id) {
     return panels_[id].panel->is_active();
 }
 
-void Window::set_logging_level(LogLevel level) {
+void Core::set_logging_level(LogLevel level) {
     smlt::get_logger("/")->set_level(level);
 }
 
-void Window::_update_thunk(float dt) {
+void Core::_update_thunk(float dt) {
     if(is_paused()) {
         dt = 0.0; //If the application window is not displayed, don't send a deltatime down
         //it's still accessible through get_deltatime if the user needs it
@@ -377,13 +377,13 @@ void Window::_update_thunk(float dt) {
     StageManager::_update_thunk(dt);
 }
 
-void Window::_fixed_update_thunk(float dt) {
+void Core::_fixed_update_thunk(float dt) {
     if(is_paused()) return;
     StageManager::_fixed_update_thunk(dt);
 }
 
 
-void Window::run_update() {
+void Core::run_update() {
     float dt = time_keeper_->delta_time();
 
     frame_counter_time_ += dt;
@@ -415,7 +415,7 @@ void Window::run_update() {
     signal_late_update_(dt);
 }
 
-void Window::run_fixed_updates() {
+void Core::run_fixed_updates() {
     while(time_keeper_->use_fixed_step()) {
         float step = time_keeper_->fixed_step();
         _fixed_update_thunk(step); // Run the fixed updates on controllers
@@ -434,11 +434,11 @@ void Window::run_fixed_updates() {
     }
 }
 
-void Window::request_frame_time(float ms) {
+void Core::request_frame_time(float ms) {
     requested_frame_time_ms_ = ms;
 }
 
-void Window::await_frame_time() {
+void Core::await_frame_time() {
     if(requested_frame_time_ms_ == 0) {
         return;
     }
@@ -451,7 +451,7 @@ void Window::await_frame_time() {
     last_frame_time_us_ = this_time;
 }
 
-Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t height, ScreenFormat format, uint16_t refresh_rate) {
+Screen* Core::_create_screen(const std::string &name, uint16_t width, uint16_t height, ScreenFormat format, uint16_t refresh_rate) {
     if(screens_.count(name)) {
         L_WARN("Tried to add duplicate Screen");
         return screens_.at(name).get();
@@ -474,7 +474,7 @@ Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t
     return screen.get();
 }
 
-void Window::_destroy_screen(const std::string &name) {
+void Core::_destroy_screen(const std::string &name) {
     auto screen = screens_.at(name);
     screens_.erase(name);
     signal_screen_removed_(name, screen.get());
@@ -482,7 +482,7 @@ void Window::_destroy_screen(const std::string &name) {
     shutdown_screen(screen.get());
 }
 
-bool Window::run_frame() {
+bool Core::run_frame() {
     static bool first_frame = true;
 
     await_frame_time(); /* Frame limiter */
@@ -575,7 +575,7 @@ bool Window::run_frame() {
 
 }
 
-void Window::register_loader(LoaderTypePtr loader) {
+void Core::register_loader(LoaderTypePtr loader) {
     if(std::find(loaders_.begin(), loaders_.end(), loader) != loaders_.end()) {
         throw std::logic_error("Tried to add the same loader twice");
     }
@@ -583,14 +583,14 @@ void Window::register_loader(LoaderTypePtr loader) {
     loaders_.push_back(loader);
 }
 
-float Window::aspect_ratio() const {
+float Core::aspect_ratio() const {
     assert(width_ > 0);
     assert(height_ > 0);
 
     return float(width_) / float(height_);
 }
 
-void Window::set_paused(bool value) {
+void Core::set_paused(bool value) {
     if(value == is_paused_) return;
 
     if(value) {
@@ -602,13 +602,13 @@ void Window::set_paused(bool value) {
     is_paused_ = value;
 }
 
-void Window::set_has_context(bool value) {
+void Core::set_has_context(bool value) {
     if(value == has_context_) return;
 
     has_context_ = value;
 }
 
-void Window::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
+void Core::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
     if(virtual_gamepad_) {
         virtual_gamepad_.reset();
     }
@@ -621,7 +621,7 @@ void Window::enable_virtual_joypad(VirtualGamepadConfig config, bool flipped) {
     }
 }
 
-void Window::disable_virtual_joypad() {
+void Core::disable_virtual_joypad() {
     /*
      * This is a little hacky, but basically when we disable the virtual gamepad's
      * UI, it triggers a series of events that release any buttons which are currently
@@ -645,7 +645,7 @@ void Window::disable_virtual_joypad() {
  * Destroys all stages and releases all loadables. Then resets the
  * window to its original state.
  */
-void Window::reset() {
+void Core::reset() {
     L_DEBUG("Resetting Window state");
 
     idle->execute(); //Execute any idle tasks before we go deleting things
@@ -682,7 +682,7 @@ void Window::reset() {
     register_panel(2, PartitionerPanel::create(this));
 }
 
-void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
+void Core::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
         stop_running();
     }
@@ -692,17 +692,17 @@ void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     });
 }
 
-void Window::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
+void Core::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
     each_event_listener([=](EventListener* listener) {
         listener->handle_key_up(this, code, modifiers);
     });
 }
 
-std::size_t Window::screen_count() const {
+std::size_t Core::screen_count() const {
     return screens_.size();
 }
 
-Screen *Window::screen(const std::string &name) const {
+Screen *Core::screen(const std::string &name) const {
     auto it = screens_.find(name);
     if(it != screens_.end()) {
         return it->second.get();
@@ -712,13 +712,13 @@ Screen *Window::screen(const std::string &name) const {
     return nullptr;
 }
 
-void Window::each_screen(std::function<void (std::string, Screen *)> callback) {
+void Core::each_screen(std::function<void (std::string, Screen *)> callback) {
     for(auto p: screens_) {
         callback(p.first, p.second.get());
     }
 }
 
-void Window::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
+void Core::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_begin(
                     this,
@@ -730,7 +730,7 @@ void Window::on_finger_down(TouchPointID touch_id, float normalized_x, float nor
     });
 }
 
-void Window::on_finger_up(TouchPointID touch_id, float normalized_x, float normalized_y) {
+void Core::on_finger_up(TouchPointID touch_id, float normalized_x, float normalized_y) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_end(
             this,
@@ -741,7 +741,7 @@ void Window::on_finger_up(TouchPointID touch_id, float normalized_x, float norma
     });
 }
 
-void Window::on_finger_motion(
+void Core::on_finger_motion(
     TouchPointID touch_id,
     float normalized_x, float normalized_y,
     float dx, float dy // Between -1.0 and +1.0
@@ -758,11 +758,11 @@ void Window::on_finger_motion(
     });
 }
 
-void Window::start_coroutine(std::function<void ()> func) {
+void Core::start_coroutine(std::function<void ()> func) {
     coroutines_.push_back(smlt::start_coroutine(func));
 }
 
-void Window::update_coroutines() {
+void Core::update_coroutines() {
     for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
         if(resume_coroutine(*it) == CO_RESULT_FINISHED) {
             stop_coroutine(*it);
@@ -771,7 +771,7 @@ void Window::update_coroutines() {
     }
 }
 
-void Window::stop_all_coroutines() {
+void Core::stop_all_coroutines() {
     for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
         stop_coroutine(*it);
     }

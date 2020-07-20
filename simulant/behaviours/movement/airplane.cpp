@@ -7,9 +7,9 @@
 namespace smlt {
 namespace behaviours {
 
-Airplane::Airplane(Window *window):
-    BehaviourWithInput(window->input.get()),
-    window_(window) {
+Airplane::Airplane(Core *core):
+    BehaviourWithInput(core->input.get()),
+    core_(core) {
 }
 
 void Airplane::fixed_update(float step) {

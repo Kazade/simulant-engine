@@ -46,16 +46,16 @@ extern unsigned long start;
 
 namespace smlt {
 
-StatsPanel::StatsPanel(Window *window):
-    window_(window) {
+StatsPanel::StatsPanel(Core *core):
+    core_(core) {
 
 }
 
 bool StatsPanel::init() {
-    stage_ = window_->new_stage(smlt::PARTITIONER_NULL);
+    stage_ = core_->new_stage(smlt::PARTITIONER_NULL);
 
-    ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
-    pipeline_ = window_->compositor->render(
+    ui_camera_ = stage_->new_camera_with_orthographic_projection(0, core_->width(), 0, core_->height());
+    pipeline_ = core_->compositor->render(
         stage_, ui_camera_
     )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     pipeline_->deactivate();
@@ -63,10 +63,10 @@ bool StatsPanel::init() {
     auto overlay = stage_;
 
     auto hw = 32;
-    float label_width = window_->width() * 0.5f;
+    float label_width = core_->width() * 0.5f;
 
     const float diff = 32;
-    float vheight = window_->height() - diff;
+    float vheight = core_->height() - diff;
 
     auto heading1 = overlay->ui->new_widget_as_label("Performance", label_width);
     heading1->move_to(hw, vheight);
@@ -102,7 +102,7 @@ bool StatsPanel::init() {
     low_mem_ = overlay->ui->new_widget_as_label("0M");
     high_mem_ = overlay->ui->new_widget_as_label("0M");
 
-    frame_started_ = window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
+    frame_started_ = core_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
     return true;
 }
@@ -182,8 +182,8 @@ void StatsPanel::rebuild_ram_graph() {
     smlt::Colour colour = smlt::Colour::SKY_BLUE;
     colour.a = 0.35;
 
-    float width = window_->width();
-    float height = window_->height() * 0.4f;
+    float width = core_->width();
+    float height = core_->height() * 0.4f;
 
     ram_graph_mesh_->clear();
 
@@ -286,11 +286,11 @@ void StatsPanel::rebuild_ram_graph() {
 }
 
 void StatsPanel::update() {
-    last_update_ += window_->time_keeper->delta_time();
+    last_update_ += core_->time_keeper->delta_time();
 
     if(first_update_ || last_update_ >= 1.0f) {
         auto mem_usage = get_memory_usage_in_megabytes();
-        auto actors_rendered = window_->stats->subactors_rendered();
+        auto actors_rendered = core_->stats->subactors_rendered();
 
         free_ram_history_.push_back(mem_usage);
         if(free_ram_history_.size() > RAM_SAMPLES) {
@@ -299,11 +299,11 @@ void StatsPanel::update() {
 
         rebuild_ram_graph();
 
-        fps_->set_text(_u("FPS: {0}").format(window_->stats->frames_per_second()));
-        frame_time_->set_text(_F("Frame Time: {0}ms").format(window_->stats->frame_time()));
+        fps_->set_text(_u("FPS: {0}").format(core_->stats->frames_per_second()));
+        frame_time_->set_text(_F("Frame Time: {0}ms").format(core_->stats->frame_time()));
         ram_usage_->set_text(_u("RAM Used: {0} MB").format(mem_usage));
         actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
-        polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
+        polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(core_->stats->polygons_rendered()));
 
         last_update_ = 0.0f;
         first_update_ = false;
@@ -313,7 +313,7 @@ void StatsPanel::update() {
         auto stages = overlay->find("#stages");
         stages.remove_children();
 
-        this->window_->each_stage([&](uint32_t i, Stage* stage) {
+        this->core_->each_stage([&](uint32_t i, Stage* stage) {
             auto stage_row = stages.append_row();
             stage_row.append_row().append_label(
                 (stage->name().empty()) ? "Stage " + std::to_string(i) : stage->name().encode()

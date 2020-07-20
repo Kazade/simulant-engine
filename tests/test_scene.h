@@ -23,8 +23,8 @@ public:
 
 class TestScene : public Scene<TestScene> {
 public:
-    TestScene(Window* window):
-        Scene<TestScene>(window) {}
+    TestScene(Core* core):
+        Scene<TestScene>(core) {}
 
     void load() override { load_called = true; }
     void unload() override { unload_called = true; }
@@ -40,8 +40,8 @@ public:
 class SceneWithArgs : public Scene<SceneWithArgs> {
 public:
     // Boilerplate
-    SceneWithArgs(smlt::Window* window, const std::string& some_arg):
-        smlt::Scene<SceneWithArgs>(window) {
+    SceneWithArgs(smlt::Core* core, const std::string& some_arg):
+        smlt::Scene<SceneWithArgs>(core) {
 
         _S_UNUSED(some_arg);
     }
@@ -58,7 +58,7 @@ private:
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        manager_ = std::make_shared<SceneManager>(window);
+        manager_ = std::make_shared<SceneManager>(core);
     }
 
     void test_route() {
@@ -82,7 +82,7 @@ public:
         manager_->activate("main");
         assert_true(manager_->scene_queued_for_activation());
 
-        window->signal_post_idle()();
+        core->signal_post_idle()();
         assert_false(manager_->scene_queued_for_activation());
     }
 
@@ -92,7 +92,7 @@ public:
         manager_->register_scene<TestScene>("main");
 
         manager_->activate("main");
-        window->signal_post_idle()();
+        core->signal_post_idle()();
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         scr->set_destroy_on_unload(false); //Don't destroy on unload
@@ -103,7 +103,7 @@ public:
         assert_false(scr->unload_called);
 
         manager_->activate("main"); //activateing to the same place should do nothing
-        window->signal_post_idle()();
+        core->signal_post_idle()();
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -112,13 +112,13 @@ public:
 
         manager_->register_scene<TestScene>("/test");
 
-        auto initial = window->signal_post_idle().connection_count();
+        auto initial = core->signal_post_idle().connection_count();
         manager_->activate("/test");
-        assert_equal(window->signal_post_idle().connection_count(), initial + 1);
-        window->signal_post_idle()();
+        assert_equal(core->signal_post_idle().connection_count(), initial + 1);
+        core->signal_post_idle()();
 
         // Check that we disconnect the activate signal
-        assert_equal(window->signal_post_idle().connection_count(), initial);
+        assert_equal(core->signal_post_idle().connection_count(), initial);
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -139,7 +139,7 @@ public:
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
         manager_->load_in_background("main");
-        window->run_frame();
+        core->run_frame();
         assert_true(scr->load_called);
     }
 
@@ -156,7 +156,7 @@ public:
     }
 
     void test_register_scene() {
-        SceneManager manager(window);
+        SceneManager manager(core);
         manager.register_scene<SceneWithArgs>("test", "arg");
     }
 };

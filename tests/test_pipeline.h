@@ -13,28 +13,28 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = window->new_stage();
+        stage = core->new_stage();
         camera = stage->new_camera();
 
-        pipeline = window->compositor->render(stage, camera);
+        pipeline = core->compositor->render(stage, camera);
     }
 
     void tear_down() {
-        window->destroy_stage(stage->id());
+        core->destroy_stage(stage->id());
         pipeline->destroy();
     }
 
     void test_find_pipeline_with_name() {
-        auto p1 = window->compositor->render(stage, camera)->set_name("pipeline1");
-        auto p2 = window->compositor->render(stage, camera)->set_name("pipeline2");
+        auto p1 = core->compositor->render(stage, camera)->set_name("pipeline1");
+        auto p2 = core->compositor->render(stage, camera)->set_name("pipeline2");
 
-        auto found = window->compositor->find_pipeline("pipeline1");
+        auto found = core->compositor->find_pipeline("pipeline1");
         assert_equal(p1->name(), found->name());
 
-        found = window->compositor->find_pipeline("pipeline2");
+        found = core->compositor->find_pipeline("pipeline2");
         assert_equal(p2->name(), found->name());
 
-        found = window->compositor->find_pipeline("bananas");
+        found = core->compositor->find_pipeline("bananas");
         assert_false(found);
     }
 
@@ -58,7 +58,7 @@ public:
 
         assert_false(stage->is_part_of_active_pipeline());
 
-        smlt::PipelinePtr pipeline = window->compositor->render(stage, camera);
+        smlt::PipelinePtr pipeline = core->compositor->render(stage, camera);
         pipeline->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
@@ -67,10 +67,10 @@ public:
 
         assert_false(stage->is_part_of_active_pipeline());
 
-        pipeline = window->compositor->render(stage, camera);
+        pipeline = core->compositor->render(stage, camera);
         pipeline->activate();
 
-        smlt::PipelinePtr pipeline2 = window->compositor->render(stage, camera);
+        smlt::PipelinePtr pipeline2 = core->compositor->render(stage, camera);
         pipeline2->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
@@ -85,7 +85,7 @@ public:
     }
 
     void test_pipeline_starts_deactivated() {
-        auto p = window->compositor->render(stage, camera);
+        auto p = core->compositor->render(stage, camera);
         assert_false(p->is_active());
     }
 

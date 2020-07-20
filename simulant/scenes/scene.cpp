@@ -25,11 +25,11 @@
 
 namespace smlt {
 
-SceneBase::SceneBase(Window *window):
-    window_(window),
-    input_(window->input.get()),
-    app_(window->application),
-    compositor_(window->compositor) {
+SceneBase::SceneBase(Core *core):
+    core_(core),
+    input_(core->input.get()),
+    app_(core->application),
+    compositor_(core->compositor) {
 
 }
 

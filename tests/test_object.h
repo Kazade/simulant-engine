@@ -14,17 +14,17 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->destroy_stage(stage_->id());
+        core->destroy_stage(stage_->id());
     }
 
     void test_move_to_origin() {
-        window->compositor->render(stage_, camera_);
+        core->compositor->render(stage_, camera_);
 
         // A bug was reported that this caused a crash (see #219)
         auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
@@ -32,7 +32,7 @@ public:
 
         auto actor = stage_->new_actor_with_mesh(mesh);
         actor->move_to(0, 0, 0);
-        window->run_frame();
+        core->run_frame();
     }
 
     void test_move_forward_by() {

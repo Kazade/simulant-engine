@@ -16,8 +16,7 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SIMULANT_WINDOW_BASE_H
-#define SIMULANT_WINDOW_BASE_H
+#pragma once
 
 #include <memory>
 
@@ -85,10 +84,9 @@ typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
 
 class Platform;
 
-class Window :
+class Core :
     public Source,
     public StageManager,
-    public Loadable,
     public RenderTarget,
     public EventListenerManager {
 
@@ -106,18 +104,17 @@ class Window :
 
     friend class Screen;  /* Screen needs to call render_screen */
 public:
-    typedef std::shared_ptr<Window> ptr;
+    typedef std::shared_ptr<Core> ptr;
     static const int STEPS_PER_SECOND = 60;
 
-
     template<typename T>
-    static std::shared_ptr<Window> create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
-        std::shared_ptr<Window> window(new T(width, height, bpp, fullscreen, enable_vsync));
-        window->set_application(app);
-        return window;
+    static std::shared_ptr<Core> create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
+        std::shared_ptr<Core> core(new T(width, height, bpp, fullscreen, enable_vsync));
+        core->set_application(app);
+        return core;
     }
 
-    virtual ~Window();
+    virtual ~Core();
 
     LoaderPtr loader_for(const unicode& filename, LoaderHint hint=LOADER_HINT_NONE);
     LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
@@ -268,7 +265,7 @@ protected:
     virtual bool create_window() = 0;
     virtual void destroy_window() = 0;
 
-    Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync);
+    Core(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync);
 
     void set_paused(bool value=true);
     void set_has_context(bool value=true);
@@ -382,19 +379,19 @@ protected:
     std::shared_ptr<Platform> platform_;
 public:
     //Read only properties
-    S_DEFINE_PROPERTY(shared_assets, &Window::asset_manager_);
-    S_DEFINE_PROPERTY(application, &Window::application_);
-    S_DEFINE_PROPERTY(virtual_joypad, &Window::virtual_gamepad_);
-    S_DEFINE_PROPERTY(renderer, &Window::renderer_);
-    S_DEFINE_PROPERTY(time_keeper, &Window::time_keeper_);
-    S_DEFINE_PROPERTY(idle, &Window::idle_);
-    S_DEFINE_PROPERTY(data, &Window::data_carrier_);
-    S_DEFINE_PROPERTY(vfs, &Window::vfs_);
-    S_DEFINE_PROPERTY(input, &Window::input_manager_);
-    S_DEFINE_PROPERTY(input_state, &Window::input_state_);
-    S_DEFINE_PROPERTY(stats, &Window::stats_);
-    S_DEFINE_PROPERTY(platform, &Window::platform_);
-    S_DEFINE_PROPERTY(compositor, &Window::compositor_);
+    S_DEFINE_PROPERTY(shared_assets, &Core::asset_manager_);
+    S_DEFINE_PROPERTY(application, &Core::application_);
+    S_DEFINE_PROPERTY(virtual_joypad, &Core::virtual_gamepad_);
+    S_DEFINE_PROPERTY(renderer, &Core::renderer_);
+    S_DEFINE_PROPERTY(time_keeper, &Core::time_keeper_);
+    S_DEFINE_PROPERTY(idle, &Core::idle_);
+    S_DEFINE_PROPERTY(data, &Core::data_carrier_);
+    S_DEFINE_PROPERTY(vfs, &Core::vfs_);
+    S_DEFINE_PROPERTY(input, &Core::input_manager_);
+    S_DEFINE_PROPERTY(input_state, &Core::input_state_);
+    S_DEFINE_PROPERTY(stats, &Core::stats_);
+    S_DEFINE_PROPERTY(platform, &Core::platform_);
+    S_DEFINE_PROPERTY(compositor, &Core::compositor_);
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }
 
@@ -404,5 +401,3 @@ public:
 };
 
 }
-
-#endif

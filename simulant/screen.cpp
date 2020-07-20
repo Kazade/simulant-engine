@@ -47,7 +47,7 @@ void Screen::render(const uint8_t *data, ScreenFormat format) {
 
             /* Now if this blocks, it doesn't matter. The main thread
              * can continue to update buffer_ without waiting */
-            window_->render_screen(this, &tmp[0]);
+            core_->render_screen(this, &tmp[0]);
         };
 
         fut = thread::async(f);
@@ -63,8 +63,8 @@ uint32_t Screen::data_size() const {
     }
 }
 
-Screen::Screen(Window *window, const std::string &name):
-    window_(window),
+Screen::Screen(Core *core, const std::string &name):
+    core_(core),
     name_(name) {
 
 }

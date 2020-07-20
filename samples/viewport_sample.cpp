@@ -4,15 +4,15 @@
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+    MainScene(smlt::Core* core):
+        smlt::Scene<MainScene>(core) {}
 
     void load() {
         // Create two viewports for the left and right hand side of the screen, set different clear colours
         smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Colour::RED);
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Colour::GREEN);
 
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
 
         auto cube = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube->new_submesh_as_cube("cube", stage->assets->new_material(), 1.0);

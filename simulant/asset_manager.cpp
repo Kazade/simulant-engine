@@ -35,8 +35,8 @@ namespace smlt {
 #define HEADING_FONT "simulant/fonts/orbitron/orbitron-regular-48.fnt"
 #define BODY_FONT "simulant/fonts/orbitron/orbitron-regular-18.fnt"
 
-AssetManager::AssetManager(Window* window, AssetManager *parent):
-    WindowHolder(window),
+AssetManager::AssetManager(Core* core, AssetManager *parent):
+    WindowHolder(core),
     parent_(parent) {
 
     if(parent_) {
@@ -221,7 +221,7 @@ MeshPtr AssetManager::new_mesh_from_file(
 
     //Load the material
     auto mesh = new_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
-    auto loader = window->loader_for(path.encode());
+    auto loader = core->loader_for(path.encode());
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
     LoaderOptions loader_options;
@@ -236,7 +236,7 @@ MeshPtr AssetManager::new_mesh_from_file(
 MeshPtr AssetManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
-    window->loader_for(tmx_file.encode())->into(mesh, {
+    core->loader_for(tmx_file.encode())->into(mesh, {
         {"layer", layer_name},
         {"render_size", tile_render_size}
     });
@@ -248,7 +248,7 @@ MeshPtr AssetManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unic
 MeshPtr AssetManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
-    window->loader_for("heightmap_loader", image_file)->into(mesh, {
+    core->loader_for("heightmap_loader", image_file)->into(mesh, {
         { "spec", spec},
     });
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
@@ -381,12 +381,12 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
             /* If we aren't loading the material in this thread, but this is the main thread and the material is loading
              * in another thread we *must* run the idle tasks while we wait for it to finish. Otherwise it will deadlock
              * on a run_sync call */
-            window->idle->execute();
+            core->idle->execute();
         } else if(load_material) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
             L_INFO(_F("Loading material {0} into {1}").format(path, template_id));
             auto mat = material(template_id);
-            auto loader = window->loader_for(path.encode());
+            auto loader = core->loader_for(path.encode());
             if(!loader) {
                 L_ERROR(_F("Unable to find loader for {0}").format(path));
                 materials_loading_.erase(template_id);
@@ -463,7 +463,7 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
     smlt::TexturePtr tex = texture(new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect));
 
     {
-        window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
+        core->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
 
         if(flags.flip_vertically) {
             tex->flip_vertically();
@@ -504,10 +504,10 @@ std::size_t AssetManager::texture_count() const {
 
 SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
     //Load the sound
-    auto snd = sound_manager_.make(this, window->_sound_driver());
+    auto snd = sound_manager_.make(this, core->_sound_driver());
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 
-    auto loader = window->loader_for(path.encode());
+    auto loader = core->loader_for(path.encode());
 
     if(loader) {
         loader->into(snd);
@@ -568,7 +568,7 @@ FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollect
 
     try {
         LoaderOptions options;
-        window->loader_for(filename)->into(font.get(), options);
+        core->loader_for(filename)->into(font.get(), options);
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
@@ -589,7 +589,7 @@ FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_s
         LoaderOptions options;
         options["size"] = font_size;
         options["charset"] = charset;
-        window->loader_for(filename)->into(font.get(), options);
+        core->loader_for(filename)->into(font.get(), options);
 
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
@@ -632,7 +632,7 @@ ParticleScriptPtr AssetManager::new_particle_script_from_file(const unicode& fil
 
     try {
         LoaderOptions options;
-        window->loader_for(filename)->into(ps.get(), options);
+        core->loader_for(filename)->into(ps.get(), options);
     } catch (...) {
         // Make sure we don't leave the font hanging around
         destroy_particle_script(ps_id);

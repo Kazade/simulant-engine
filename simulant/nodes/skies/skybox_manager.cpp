@@ -28,8 +28,8 @@
 
 namespace smlt {
 
-SkyManager::SkyManager(Window* window, Stage* stage, StageNodePool* pool):
-    WindowHolder(window),
+SkyManager::SkyManager(Core* core, Stage* stage, StageNodePool* pool):
+    WindowHolder(core),
     stage_(stage),
     sky_manager_(new TemplatedSkyboxManager(pool)) {
 
@@ -47,7 +47,7 @@ SkyManager::SkyManager(Window* window, Stage* stage, StageNodePool* pool):
 SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
     std::map<SkyboxFace, std::string> files;
 
-    auto path = window->vfs->locate_file(folder);
+    auto path = core->vfs->locate_file(folder);
 
     for(auto& file: kfs::path::list_dir(path.encode())) {
         SkyboxFace face;
@@ -75,7 +75,7 @@ SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
         auto full_path = kfs::path::join(folder.encode(), file);
 
         // Make sure this is a supported texture file
-        if(!window->loader_type("texture")->supports(full_path)) {
+        if(!core->loader_type("texture")->supports(full_path)) {
             continue;
         }
 

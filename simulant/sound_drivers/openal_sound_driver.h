@@ -14,8 +14,8 @@ namespace smlt {
 
 class OpenALSoundDriver : public SoundDriver {
 public:
-    OpenALSoundDriver(Window* window):
-        SoundDriver(window) {}
+    OpenALSoundDriver(Core* core):
+        SoundDriver(core) {}
 
     bool startup() override;
     void shutdown() override;

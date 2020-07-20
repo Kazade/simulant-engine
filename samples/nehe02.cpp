@@ -3,11 +3,11 @@
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+    MainScene(smlt::Core* core):
+        smlt::Scene<MainScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = core->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(
             stage_, camera_
@@ -35,7 +35,7 @@ public:
     App(const smlt::AppConfig& config):
         smlt::Application(config) {
 
-        window->set_logging_level(smlt::LOG_LEVEL_DEBUG);
+        core->set_logging_level(smlt::LOG_LEVEL_DEBUG);
     }
 
     bool init() {

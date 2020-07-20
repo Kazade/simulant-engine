@@ -37,7 +37,7 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 class Stage;
 
 class BackgroundLoadException : public std::runtime_error {
@@ -104,7 +104,7 @@ struct AppConfig {
 };
 
 class Application {
-    friend class Window;
+    friend class Core;
 
 public:
     Application(const AppConfig& config);
@@ -123,7 +123,7 @@ protected:
     bool _call_init();
 
 private:
-    std::shared_ptr<Window> window_;
+    std::shared_ptr<Core> core_;
     std::shared_ptr<SceneManager> scene_manager_;
 
     bool initialized_ = false;
@@ -168,7 +168,7 @@ private:
     ArgParser args_;
 
 public:
-    S_DEFINE_PROPERTY(window, &Application::window_);
+    S_DEFINE_PROPERTY(core, &Application::core_);
     S_DEFINE_PROPERTY(data, &Application::data_carrier_);
     S_DEFINE_PROPERTY(scenes, &Application::scene_manager_);
     S_DEFINE_PROPERTY(args, &Application::args_);

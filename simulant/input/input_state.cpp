@@ -181,7 +181,7 @@ void InputState::init_virtual_joypad() {
         virtual_joypad_ = std::make_shared<Joypad>();
     }
 
-    auto& vpad = window_.virtual_joypad;
+    auto& vpad = core_.virtual_joypad;
 
     for(auto conn: virtual_joypad_connections_) {
         conn.disconnect();

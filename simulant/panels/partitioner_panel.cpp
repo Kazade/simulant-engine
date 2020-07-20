@@ -26,8 +26,8 @@
 
 namespace smlt {
 
-PartitionerPanel::PartitionerPanel(Window* window):
-    window_(window) {
+PartitionerPanel::PartitionerPanel(Core* core):
+    core_(core) {
 
 }
 
@@ -45,7 +45,7 @@ void PartitionerPanel::do_deactivate() {
 
 bool PartitionerPanel::init() {
     /* for stage in stages: stage->new_actor(stage->partitioner->debug_mesh_id()) */
-    for(auto stage: window_->each_stage()) {
+    for(auto stage: core_->each_stage()) {
         // Don't add another mesh if it already exists
         if(debug_actors_.count(stage->id())) {
             continue;
@@ -58,8 +58,8 @@ bool PartitionerPanel::init() {
         debug_actors_[stage->id()]->set_cullable(false);
     }
 
-    stage_added_ = window_->signal_stage_added().connect([=](StageID stage_id) {
-        auto stage = window_->stage(stage_id);
+    stage_added_ = core_->signal_stage_added().connect([=](StageID stage_id) {
+        auto stage = core_->stage(stage_id);
 
         debug_actors_[stage->id()] = stage->new_actor_with_mesh(
             stage->partitioner->debug_mesh_id()
@@ -68,7 +68,7 @@ bool PartitionerPanel::init() {
         debug_actors_[stage->id()]->set_cullable(false);
     });
 
-    stage_removed_ = window_->signal_stage_removed().connect([=](StageID stage_id) {
+    stage_removed_ = core_->signal_stage_removed().connect([=](StageID stage_id) {
         debug_actors_.erase(stage_id);
     });
 

@@ -13,8 +13,8 @@ public:
     void set_up() override {
         test::SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
-        box_ = window->shared_assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
+        stage_ = core->new_stage();
+        box_ = core->shared_assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
     void tear_down() override {
@@ -45,7 +45,7 @@ public:
     }
 
     void test_nodes_returned_if_never_culled() {
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
         auto camera = stage->new_camera();
         auto a1 = stage->new_actor_with_mesh(box_);
 

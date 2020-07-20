@@ -451,7 +451,7 @@ class Viewport;
 class Background;
 typedef default_init_ptr<Background> BackgroundPtr;
 
-class Window;
+class Core;
 
 class Stage;
 typedef default_init_ptr<Stage> StagePtr;
@@ -477,7 +477,7 @@ class Pipeline;
 typedef default_init_ptr<Pipeline> PipelinePtr;
 
 class Frustum;
-class Window;
+class Core;
 class Partitioner;
 
 class GPUProgram;

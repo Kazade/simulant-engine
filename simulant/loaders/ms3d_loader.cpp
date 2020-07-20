@@ -239,7 +239,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     );
 
     auto dir = kfs::path::dir_name(filename_.encode());
-    bool remove_path = assets->window->vfs->add_search_path(dir);
+    bool remove_path = assets->core->vfs->add_search_path(dir);
 
     auto vdata = mesh->vertex_data.get();
 
@@ -320,7 +320,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     vdata->done();
 
     if(remove_path) {
-        assets->window->vfs->remove_search_path(dir);
+        assets->core->vfs->remove_search_path(dir);
     }
 
     auto to_quaternion = [](const Vec3& angles) -> Quaternion {

@@ -22,10 +22,10 @@ namespace scenes {
 
 void Splash::load() {
     //Create a stage
-    stage_ = window->new_stage();
+    stage_ = core->new_stage();
 
-    auto text_file = (window->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
-    auto logo_file = (window->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
+    auto text_file = (core->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
+    auto logo_file = (core->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
 
     auto text_texture = stage_->assets->new_texture_from_file(text_file);
     text_ = stage_->ui->new_widget_as_image(text_texture);
@@ -33,21 +33,21 @@ void Splash::load() {
     auto texture = stage_->assets->new_texture_from_file(logo_file);
     image_ = stage_->ui->new_widget_as_image(texture);
 
-    sound_ = window->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav", smlt::GARBAGE_COLLECT_NEVER);
+    sound_ = core->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav", smlt::GARBAGE_COLLECT_NEVER);
 
     image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);
 
     text_->set_anchor_point(0.5, 1.0);
 
-    image_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
-    text_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
+    image_->move_to(core->coordinate_from_normalized(0.5f, 0.4f));
+    text_->move_to(core->coordinate_from_normalized(0.5f, 0.4f));
 
     //Create an orthographic camera
     camera_ = stage_->new_camera();
 
     camera_->set_orthographic_projection(
-        0, window->width(), 0, window->height()
+        0, core->width(), 0, core->height()
     );
 
     //Create an inactive pipeline
@@ -58,18 +58,18 @@ void Splash::load() {
 void Splash::unload() {
     //Clean up
     pipeline_->destroy();
-    window->destroy_stage(stage_->id());
-    window->shared_assets->destroy_sound(sound_);
+    core->destroy_stage(stage_->id());
+    core->shared_assets->destroy_sound(sound_);
 }
 
 void Splash::activate() {
-    start_time_ = window->time_keeper->now_in_us();
-    window->play_sound(sound_);
+    start_time_ = core->time_keeper->now_in_us();
+    core->play_sound(sound_);
 }
 
 void Splash::deactivate() {
     //Deactivate the Splash pipeline
-    window->idle->remove(connection_);
+    core->idle->remove(connection_);
 }
 
 void Splash::update(float dt) {
@@ -84,7 +84,7 @@ void Splash::update(float dt) {
         return;
     }
 
-    auto diff = window->time_keeper->now_in_us() - start_time_;
+    auto diff = core->time_keeper->now_in_us() - start_time_;
     float elapsed = float(diff) / 1000000.0f;
 
     image_->set_opacity(std::min(elapsed * FADE_SPEED, 1.0f));

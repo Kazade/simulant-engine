@@ -14,7 +14,7 @@ public:
 #ifndef _arch_dreamcast
         smlt::GPUProgram::ptr program = smlt::GPUProgram::create(
             smlt::GPUProgramID(1),
-            window->renderer,
+            core->renderer,
             "uniform vec3 c; attribute vec3 tns; void main(){ gl_Position = vec4(c, tns.x); }",
             "void main(){ gl_FragColor = vec4(1.0); }"
         );

@@ -26,19 +26,19 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 
 class StatsPanel:
     public Panel,
     public RefCounted<StatsPanel> {
 
 public:
-    StatsPanel(Window* window);
+    StatsPanel(Core* core);
 
     bool init() override;
     void clean_up() override;
 private:
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
 
     void do_activate() override;
     void do_deactivate() override;

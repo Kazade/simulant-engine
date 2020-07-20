@@ -20,7 +20,7 @@ class SpriteManager :
     friend class Sprite;
 
 public:
-    SpriteManager(Window* window, Stage* stage, StageNodePool *pool);
+    SpriteManager(Core* core, Stage* stage, StageNodePool *pool);
     virtual ~SpriteManager();
 
     SpritePtr new_sprite();

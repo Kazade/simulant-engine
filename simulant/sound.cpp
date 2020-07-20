@@ -146,14 +146,14 @@ void SourceInstance::update(float dt) {
     }
 }
 
-Source::Source(Window *window):
+Source::Source(Core *core):
     stage_(nullptr),
-    window_(window) {
+    core_(core) {
 }
 
 Source::Source(Stage *stage, SoundDriver* driver):
     stage_(stage),
-    window_(nullptr),
+    core_(nullptr),
     driver_(driver) {
 
     // Store whether or not this source is a stagenode
@@ -184,7 +184,7 @@ void Source::play_sound(SoundID sound, AudioRepeat repeat) {
         auto s = stage_->assets->sound(sound);
         s->init_source(*new_source);
     } else {
-        auto s = window_->shared_assets->sound(sound);
+        auto s = core_->shared_assets->sound(sound);
         s->init_source(*new_source);
     }
 
@@ -228,7 +228,7 @@ void Source::set_gain(RangeValue<0, 1> gain) {
 }
 
 SoundDriver *Source::_sound_driver() const {
-    return (window_) ? window_->_sound_driver() : driver_;
+    return (core_) ? core_->_sound_driver() : driver_;
 }
 
 int32_t Source::playing_sound_count() const {

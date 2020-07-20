@@ -33,8 +33,8 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
 
 class Gamescene : public smlt::Scene<Gamescene> {
 public:
-    Gamescene(smlt::Window* window):
-        smlt::Scene<Gamescene>(window) {}
+    Gamescene(smlt::Core* core):
+        smlt::Scene<Gamescene>(core) {}
 
     void load() override {
         auto loading = scenes->resolve_scene_as<scenes::Loading>("_loading");
@@ -43,7 +43,7 @@ public:
         auto done = std::make_shared<bool>(false);
 
         // While we're loading, continually pulse the progress bar to show that stuff is happening
-        window->idle->add([this, loading, done]() {
+        core->idle->add([this, loading, done]() {
             if(!scenes->has_scene("_loading")) {
                 return false;
             }
@@ -54,7 +54,7 @@ public:
             return !(*done);
         });
 
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = core->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         pipeline_ = compositor->render(
             stage_, camera_
@@ -66,14 +66,14 @@ public:
         link_pipeline(pipeline_);
 
         camera_->set_perspective_projection(
-            Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
+            Degrees(45.0), float(core->width()) / float(core->height()), 10.0, 10000.0
         );
 
         auto cam = camera_;
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
-        cam->new_behaviour<smlt::behaviours::Fly>(window);
+        cam->new_behaviour<smlt::behaviours::Fly>(core);
 
         auto terrain_material = stage_->assets->new_material_from_file(
             "sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER

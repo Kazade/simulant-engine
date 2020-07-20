@@ -462,7 +462,7 @@ private:
 
 class SimulantTestCase : public TestCase {
 private:
-    void set_app_and_window(std::shared_ptr<Application>* app, Window** window) {
+    void set_app_and_core(std::shared_ptr<Application>* app, Core** core) {
         static std::shared_ptr<Application> application;
 
         if(!application) {
@@ -480,22 +480,22 @@ private:
 
             application.reset(new TestApp(config));
         } else {
-            application->window->reset();
+            application->core->reset();
         }
 
         *app = application;
-        *window = (*app)->window;
+        *core = (*app)->core;
     }
 
 protected:
-    Window* window;
+    Core* core;
     std::shared_ptr<Application> application;
 
 public:
     virtual void set_up() {
         TestCase::set_up();
 
-        set_app_and_window(&application, &window);
+        set_app_and_core(&application, &core);
     }
 };
 

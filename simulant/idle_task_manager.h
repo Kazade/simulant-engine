@@ -31,17 +31,17 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 
 class IdleTaskManager {
 public:
-    IdleTaskManager(Window& window);
+    IdleTaskManager(Core& core);
 
     IdleConnectionID add(std::function<bool ()> callback);
     IdleConnectionID add_once(std::function<void ()> callback);
     IdleConnectionID add_timeout(float seconds, std::function<bool()> callback);
     IdleConnectionID add_timeout_once(float seconds, std::function<void()> callback);
-    
+
     void run_sync(std::function<void()> callback);
 
     void remove(IdleConnectionID connection);
@@ -54,7 +54,7 @@ private:
     typedef std::map<IdleConnectionID, std::function<bool ()> > SignalMap;
     typedef std::map<IdleConnectionID, std::function<void ()> > SignalOnceMap;
 
-    Window& window_;
+    Core& core_;
 
     SignalMap signals_;
     SignalOnceMap signals_once_;

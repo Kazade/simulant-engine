@@ -31,9 +31,9 @@ class Fly:
     public RefCounted<Fly> {
 
 public:
-    Fly(Window* window):
-        BehaviourWithInput(window->input.get()),
-        window_(window) {
+    Fly(Core* core):
+        BehaviourWithInput(core->input.get()),
+        core_(core) {
     }
 
     const std::string name() const override { return "Fly by Keyboard"; }
@@ -43,7 +43,7 @@ private:
     void on_behaviour_added(Organism* controllable) override {
         stage_node_ = dynamic_cast<StageNode*>(controllable);
 
-        window_->lock_cursor();
+        core_->lock_cursor();
     }
 
     void on_behaviour_removed(Organism *controllable) override {
@@ -63,7 +63,7 @@ private:
     }
 
     StageNode* stage_node_ = nullptr;
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
     float speed_ = 600.0f;
 };
 

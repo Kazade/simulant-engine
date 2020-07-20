@@ -30,7 +30,7 @@ namespace smlt {
 Debug::Debug(Stage &stage):
     stage_(stage) {
 
-    frame_finished_connection_ = stage_.window->signal_frame_finished().connect(
+    frame_finished_connection_ = stage_.core->signal_frame_finished().connect(
         std::bind(&Debug::frame_finished, this)
     );
 }
@@ -55,7 +55,7 @@ Debug::~Debug() {
 }
 
 void Debug::frame_finished() {
-    auto dt = stage_.window->time_keeper->delta_time();
+    auto dt = stage_.core->time_keeper->delta_time();
 
     for(auto it = elements_.begin(); it != elements_.end(); ++it) {
         auto& element = (*it);

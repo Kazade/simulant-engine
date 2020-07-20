@@ -7,11 +7,11 @@ using namespace smlt;
 
 class GameScene : public smlt::PhysicsScene<GameScene> {
 public:
-    GameScene(smlt::Window* window):
-        smlt::PhysicsScene<GameScene>(window) {}
+    GameScene(smlt::Core* core):
+        smlt::PhysicsScene<GameScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = core->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         pipeline_ = compositor->render(
             stage_, camera_
@@ -21,28 +21,28 @@ public:
         pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
 
         camera_->set_perspective_projection(
-            Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
+            Degrees(45.0), float(core->width()) / float(core->height()), 1.0, 1000.0
         );
 
         camera_->move_to(0, 10, 50);
 
         // Create a nice skybox (not on DC, the image is too big)
-        if(window->platform->name() != "dreamcast") {
+        if(core->platform->name() != "dreamcast") {
             stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
         }
 
-        smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
-        smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
+        smlt::TextureID crate = core->shared_assets->new_texture_from_file("sample_data/crate.png");
+        smlt::MaterialID mat = core->shared_assets->new_material_from_texture(crate);
 
-        auto box_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
+        auto box_mesh = core->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->new_submesh_as_cube("cube", mat, 5);
         box_mesh_id_ = box_mesh;
 
-        smlt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
-        auto ground_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        smlt::TextureID grass = core->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
+        auto ground_mesh = core->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         ground_mesh->new_submesh_as_box(
-            "ground", window->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000
-        ); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
+            "ground", core->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000
+        ); //core->shared_assets->new_mesh_from_file("sample_data/playground.obj");
 
         ground_mesh_id_ = ground_mesh;
         ground_ = stage_->new_actor_with_mesh(ground_mesh_id_);

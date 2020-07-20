@@ -10,8 +10,8 @@ class PhysicsScene:
     public Scene<T> {
 
 protected:
-    PhysicsScene(Window* window):
-        Scene<T>(window) {}
+    PhysicsScene(Core* core):
+        Scene<T>(core) {}
 
     virtual void _fixed_update_thunk(float step) {
         if(physics_) {
@@ -23,7 +23,9 @@ protected:
 
 private:
     void pre_load() override {
-        physics_.reset(new smlt::behaviours::RigidBodySimulation(this->window->time_keeper));
+        physics_.reset(new smlt::behaviours::RigidBodySimulation(
+            this->core->time_keeper
+        ));
     }
 
     void post_unload() override {

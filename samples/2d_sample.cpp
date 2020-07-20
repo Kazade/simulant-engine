@@ -6,11 +6,11 @@ using namespace smlt;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(smlt::Window* window):
-        smlt::Scene<GameScene>(window) {}
+    GameScene(smlt::Core* core):
+        smlt::Scene<GameScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = core->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(
             stage_, camera_
@@ -24,7 +24,7 @@ public:
         //+1 and -1 in the vertical direction, -1.0 - +1.0 near/far, and width would be calculated from the aspect
         float render_height = 16.0;
         float render_width = cam->set_orthographic_projection_from_height(
-            render_height, float(window->width()) / float(window->height())
+            render_height, float(core->width()) / float(core->height())
         );
 
         {
@@ -53,7 +53,7 @@ public:
     }
 
     void activate() {
-        window->enable_virtual_joypad(smlt::VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS);
+        core->enable_virtual_joypad(smlt::VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS);
     }
 
 private:

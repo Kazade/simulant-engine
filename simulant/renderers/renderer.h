@@ -32,7 +32,7 @@
 namespace smlt {
 
 class SubActor;
-class Window;
+class Core;
 
 class Renderer:
     public batcher::RenderGroupFactory {
@@ -40,12 +40,12 @@ class Renderer:
 public:
     typedef std::shared_ptr<Renderer> ptr;
 
-    Renderer(Window* window):
-        window_(window) {}
+    Renderer(Core* core):
+        core_(core) {}
 
     virtual std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) = 0;
 
-    Property<Window* Renderer::*> window = { this, &Renderer::window_ };
+    Property<Core* Renderer::*> core = { this, &Renderer::core_ };
 
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
@@ -82,7 +82,7 @@ public:
 private:
     void prepare_texture(Texture *texture);
 
-    Window* window_ = nullptr;
+    Core* core_ = nullptr;
 
     /*
      * Called when a texture is created. This should do whatever is necessary to

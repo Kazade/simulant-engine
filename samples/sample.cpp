@@ -4,11 +4,11 @@ using namespace smlt;
 
 class GameScene : public smlt::Scene<GameScene> {
 public:
-    GameScene(Window* window):
-        smlt::Scene<GameScene>(window) {}
+    GameScene(Core* core):
+        smlt::Scene<GameScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_FRUSTUM);
+        stage_ = core->new_stage(smlt::PARTITIONER_FRUSTUM);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
@@ -17,7 +17,7 @@ public:
 
         camera_->set_perspective_projection(
             Degrees(45.0),
-            float(window->width()) / float(window->height()),
+            float(core->width()) / float(core->height()),
             1.0,
             1000.0
         );
@@ -45,7 +45,7 @@ public:
         //actor2->animation_state->play_animation("idle");
 
         // Add a fly controller to the camera for user input
-        camera_->new_behaviour<behaviours::Fly>(window);
+        camera_->new_behaviour<behaviours::Fly>(core);
 
         // Load a zombie sound and play it
         sound_ = stage_->assets->new_sound_from_file("sample_data/zombie.wav");

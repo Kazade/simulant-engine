@@ -11,15 +11,15 @@
 
 namespace smlt {
 
-class KOSWindow : public Window {
+class KOSWindow : public Core {
     class DreamcastPlatform : public Platform {
     public:
         std::string name() const override { return "dreamcast"; }
     };
 
 public:
-    static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
-        return Window::create<KOSWindow>(app, width, height, bpp, fullscreen, enable_vsync);
+    static Core::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
+        return Core::create<KOSWindow>(app, width, height, bpp, fullscreen, enable_vsync);
     }
 
     KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled);

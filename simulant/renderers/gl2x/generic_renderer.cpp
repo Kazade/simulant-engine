@@ -63,9 +63,9 @@ GPUProgramID GenericRenderer::default_gpu_program_id() const {
     return default_gpu_program_id_;
 }
 
-GenericRenderer::GenericRenderer(Window *window):
-    Renderer(window),
-    GLRenderer(window),
+GenericRenderer::GenericRenderer(Core *core):
+    Renderer(core),
+    GLRenderer(core),
     buffer_manager_(VBOManager::create()) {
 
 }
@@ -289,7 +289,7 @@ void GenericRenderer::set_auto_attributes_on_shader(GPUProgram* program, const R
      *  function above that takes the VertexData member functions we need to provide the attribute
      *  and just makes the whole thing generic. Before this was 100s of lines of boilerplate. Thank god
      *  for templates!
-     */        
+     */
     const VertexSpecification& vertex_spec = renderable->vertex_data->vertex_specification();
     auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
 
@@ -370,7 +370,7 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
 
     /* Build the GPU program on the main thread */
     if(within_coroutine()) {
-        window->idle->add_once([&]() {
+        core->idle->add_once([&]() {
             program->build();
         });
 
@@ -553,7 +553,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 }
 
 void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera) {
-    //Calculate the modelview-projection matrix    
+    //Calculate the modelview-projection matrix
     const Mat4 model = renderable->final_transformation;
     const Mat4& view = camera->view_matrix();
     const Mat4& projection = camera->projection_matrix();
@@ -702,7 +702,7 @@ void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buf
     auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
 
     GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(offset));
-    window->stats->increment_polygons_rendered(arrangement, element_count);
+    core->stats->increment_polygons_rendered(arrangement, element_count);
 }
 
 void GenericRenderer::init_context() {

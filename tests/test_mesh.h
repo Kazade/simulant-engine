@@ -14,14 +14,14 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = core->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
         stage_->destroy_camera(camera_->id());
-        window->destroy_stage(stage_->id());
+        core->destroy_stage(stage_->id());
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
@@ -117,7 +117,7 @@ public:
 
         stage_->destroy_actor(actor->id());
 
-        window->run_frame();
+        core->run_frame();
 
         stage_->assets->run_garbage_collection();
 
@@ -166,7 +166,7 @@ public:
 
         auto id = actor->id();
         stage_->destroy_actor(actor->id());
-        window->run_frame();
+        core->run_frame();
 
         this->assert_true(!stage_->has_actor(id));
     }
@@ -185,7 +185,7 @@ public:
         this->assert_equal((uint32_t)0, c2->child_count());
 
         stage_->destroy_actor(mid);
-        window->run_frame();
+        core->run_frame();
 
         this->assert_true(!stage_->has_actor(mid));
         this->assert_true(!stage_->has_actor(cid1));
@@ -258,7 +258,7 @@ public:
 
         auto camera = stage_->new_camera();
         batcher::RenderQueue queue;
-        queue.reset(stage_, window->renderer.get(), camera);
+        queue.reset(stage_, core->renderer.get(), camera);
 
         actor1->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
         actor2->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);

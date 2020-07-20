@@ -36,8 +36,8 @@
 
 namespace smlt {
 
-VirtualFileSystem::VirtualFileSystem(Window *window):
-    window_(window) {
+VirtualFileSystem::VirtualFileSystem(Core *core):
+    core_(core) {
 
     resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
 
@@ -81,10 +81,10 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
 
     std::string final_name = filename.replace(
         "${RENDERER}",
-        window_->renderer->name()
+        core_->renderer->name()
     ).replace(
         "${PLATFORM}",
-        window_->platform->name()
+        core_->platform->name()
     ).encode();
 
     final_name = kfs::path::norm_path(final_name);
@@ -173,7 +173,7 @@ std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filen
 
     // Load as binary and let portable_getline do its thing
     std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
-    
+
     if(!file_in) {
         L_ERROR(_F("Unable to load file: {0}").format(filename));
         throw AssetMissingError("Unable to load file: " + filename.encode());

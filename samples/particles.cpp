@@ -3,11 +3,11 @@
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
-    MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+    MainScene(smlt::Core* core):
+        smlt::Scene<MainScene>(core) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = core->new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
@@ -23,7 +23,7 @@ public:
 
         camera_->set_perspective_projection(
             smlt::Degrees(45.0),
-            float(window->width()) / float(window->height()),
+            float(core->width()) / float(core->height()),
             0.1,
             1000.0
         );
@@ -69,7 +69,7 @@ public:
 
         args->define_arg("--stress", smlt::ARG_TYPE_BOOLEAN, "stress test the particle system");
         args->define_arg("--filename", smlt::ARG_TYPE_STRING, "display the selected file");
-        window->set_logging_level(smlt::LOG_LEVEL_DEBUG);
+        core->set_logging_level(smlt::LOG_LEVEL_DEBUG);
     }
 
     bool init() {

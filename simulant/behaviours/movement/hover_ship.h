@@ -4,7 +4,7 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 
 namespace behaviours {
 
@@ -16,7 +16,7 @@ class HoverShip:
     public RefCounted<HoverShip> {
 
 public:
-    HoverShip(Window* window);
+    HoverShip(Core* core);
 
     const std::string name() const {
         return "Hover Ship";

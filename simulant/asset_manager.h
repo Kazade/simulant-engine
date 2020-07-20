@@ -96,7 +96,7 @@ class AssetManager:
     public RefCounted<AssetManager> {
 
 public:
-    AssetManager(Window* window, AssetManager* parent=nullptr);
+    AssetManager(Core* core, AssetManager* parent=nullptr);
     virtual ~AssetManager();
 
     bool init();

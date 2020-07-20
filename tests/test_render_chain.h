@@ -13,14 +13,14 @@ class RenderChainTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_usage() {
         Viewport view;
-        auto stage = window->new_stage();
+        auto stage = core->new_stage();
         auto cam = stage->new_camera();
-        TextureID tex = window->shared_assets->new_texture(256, 256);
+        TextureID tex = core->shared_assets->new_texture(256, 256);
 
-        PipelinePtr pipeline1 = window->compositor->render(stage, cam);
-        PipelinePtr pipeline2 = window->compositor->render(stage, cam)->set_target(tex);
-        PipelinePtr pipeline3 = window->compositor->render(stage, cam)->set_viewport(view);
-        PipelinePtr pipeline4 = window->compositor->render(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
+        PipelinePtr pipeline1 = core->compositor->render(stage, cam);
+        PipelinePtr pipeline2 = core->compositor->render(stage, cam)->set_target(tex);
+        PipelinePtr pipeline3 = core->compositor->render(stage, cam)->set_viewport(view);
+        PipelinePtr pipeline4 = core->compositor->render(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
 
         assert_equal(cam->id(), pipeline1->camera()->id());
         assert_equal(stage->id(), pipeline1->stage()->id());
@@ -47,10 +47,10 @@ public:
         assert_false(pipeline1->is_active());
 
         auto pid2 = pipeline2->name();
-        window->compositor->destroy_pipeline(pid2);
-        window->run_frame();
+        core->compositor->destroy_pipeline(pid2);
+        core->run_frame();
 
-        assert_false(window->compositor->has_pipeline(pid2));
+        assert_false(core->compositor->has_pipeline(pid2));
 
         pipeline1->activate();
         assert_true(pipeline1->is_active());

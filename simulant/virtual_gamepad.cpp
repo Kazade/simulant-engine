@@ -29,8 +29,8 @@
 
 namespace smlt {
 
-VirtualGamepad::VirtualGamepad(Window &window, VirtualGamepadConfig config):
-    window_(window),
+VirtualGamepad::VirtualGamepad(Core &core, VirtualGamepadConfig config):
+    core_(core),
     config_(config) {
 
 }
@@ -40,10 +40,10 @@ AABB VirtualGamepad::button_bounds(int button) {
 }
 
 bool VirtualGamepad::init() {
-    stage_ = window_.new_stage(); //Create a Stage to hold the controller buttons
+    stage_ = core_.new_stage(); //Create a Stage to hold the controller buttons
     stage_id_ = stage_->id();
 
-    uint32_t button_size = int(float(window_.width() / 10.0));
+    uint32_t button_size = int(float(core_.width() / 10.0));
 
     if(this->config_ == VIRTUAL_GAMEPAD_CONFIG_TWO_BUTTONS) {
         auto button1 = stage_->ui->new_widget_as_button("L");
@@ -55,8 +55,8 @@ bool VirtualGamepad::init() {
         button1->set_font(stage_->assets->default_font(DEFAULT_FONT_STYLE_HEADING));
         button2->set_font(stage_->assets->default_font(DEFAULT_FONT_STYLE_HEADING));
 
-        button1->move_to(window_.coordinate_from_normalized(0.10f, 0.10f * window_.aspect_ratio()));
-        button2->move_to(window_.coordinate_from_normalized(0.90f, 0.10f * window_.aspect_ratio()));
+        button1->move_to(core_.coordinate_from_normalized(0.10f, 0.10f * core_.aspect_ratio()));
+        button2->move_to(core_.coordinate_from_normalized(0.90f, 0.10f * core_.aspect_ratio()));
 
         button1->resize(button_size, button_size);
         button2->resize(button_size, button_size);
@@ -86,7 +86,7 @@ bool VirtualGamepad::init() {
     camera_ = stage_->new_camera_with_orthographic_projection();
 
     //Finally add to the render sequence, give a ridiculously high priority
-    pipeline_ = window_.compositor->render(
+    pipeline_ = core_.compositor->render(
         stage_, camera_
     )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     pipeline_->activate();
@@ -113,8 +113,8 @@ void VirtualGamepad::clean_up() {
     pipeline_->destroy();
     pipeline_ = nullptr;
 
-    if(window_.has_stage(stage_id_)) {
-        stage_ = window_.destroy_stage(stage_id_);
+    if(core_.has_stage(stage_id_)) {
+        stage_ = core_.destroy_stage(stage_id_);
     }
 }
 

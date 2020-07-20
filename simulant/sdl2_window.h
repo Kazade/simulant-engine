@@ -16,8 +16,8 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SIMULANT_WINDOW_H_INCLUDED
-#define SIMULANT_WINDOW_H_INCLUDED
+#ifndef SIMULANT_core_H_INCLUDED
+#define SIMULANT_core_H_INCLUDED
 
 #include <string>
 
@@ -35,7 +35,7 @@ namespace smlt {
 int event_filter(void* user_data, SDL_Event* event);
 
 class SDL2Window :
-    public Window {
+    public Core {
 
 
     class SDLPlatform : public Platform {
@@ -57,8 +57,8 @@ class SDL2Window :
 
 
 public:
-    static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
-        return Window::create<SDL2Window>(app, width, height, bpp, fullscreen, enable_vsync);
+    static Core::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
+        return Core::create<SDL2Window>(app, width, height, bpp, fullscreen, enable_vsync);
     }
 
     SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync);
@@ -102,4 +102,4 @@ private:
 
 }
 
-#endif // WINDOW_H_INCLUDED
+#endif // core_H_INCLUDED

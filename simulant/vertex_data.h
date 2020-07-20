@@ -31,7 +31,7 @@
 
 namespace smlt {
 
-class Window;
+class Core;
 
 enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_EMPTY = 0,
