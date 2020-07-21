@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../sprite.h"
-#include "../../managers/window_holder.h"
+#include "../../managers/core_holder.h"
 #include "../stage_node_manager.h"
 
 namespace smlt {
@@ -12,7 +12,7 @@ typedef sig::signal<void (SpriteID)> SpriteCreatedSignal;
 typedef sig::signal<void (SpriteID)> SpriteDestroyedSignal;
 
 class SpriteManager :
-    public virtual WindowHolder {
+    public virtual CoreHolder {
 
     DEFINE_SIGNAL(SpriteCreatedSignal, signal_sprite_created);
     DEFINE_SIGNAL(SpriteDestroyedSignal, signal_sprite_destroyed);

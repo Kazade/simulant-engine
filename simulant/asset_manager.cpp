@@ -36,7 +36,7 @@ namespace smlt {
 #define BODY_FONT "simulant/fonts/orbitron/orbitron-regular-18.fnt"
 
 AssetManager::AssetManager(Core* core, AssetManager *parent):
-    WindowHolder(core),
+    CoreHolder(core),
     parent_(parent) {
 
     if(parent_) {

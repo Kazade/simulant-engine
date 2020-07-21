@@ -8,7 +8,7 @@
 namespace smlt {
 
 SpriteManager::SpriteManager(Core* core, Stage* stage, StageNodePool* pool):
-    WindowHolder(core),
+    CoreHolder(core),
     stage_(stage),
     sprite_manager_(new TemplatedSpriteManager(pool)) {
 

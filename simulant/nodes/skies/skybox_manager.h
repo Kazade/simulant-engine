@@ -24,7 +24,7 @@
 #include "../../generic/identifiable.h"
 #include "../stage_node.h"
 #include "../../types.h"
-#include "../../managers/window_holder.h"
+#include "../../managers/core_holder.h"
 #include "../stage_node_manager.h"
 #include "skybox.h"
 
@@ -35,7 +35,7 @@ class Stage;
 typedef StageNodeManager<StageNodePool, SkyID, Skybox> TemplatedSkyboxManager;
 
 class SkyManager :
-    public virtual WindowHolder {
+    public virtual CoreHolder {
 
     friend class Skybox;
 

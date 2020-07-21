@@ -29,7 +29,7 @@
 namespace smlt {
 
 SkyManager::SkyManager(Core* core, Stage* stage, StageNodePool* pool):
-    WindowHolder(core),
+    CoreHolder(core),
     stage_(stage),
     sky_manager_(new TemplatedSkyboxManager(pool)) {
 

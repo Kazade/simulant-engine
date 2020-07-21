@@ -24,14 +24,14 @@ namespace smlt {
 
 class Core;
 
-class WindowHolder {
+class CoreHolder {
 public:
-    WindowHolder(Core* core):
+    CoreHolder(Core* core):
         core_(core) {}
 
-    virtual ~WindowHolder() {}
+    virtual ~CoreHolder() {}
 
-    Property<Core* WindowHolder::*> core = { this, &WindowHolder::core_ };
+    Property<Core* CoreHolder::*> core = { this, &CoreHolder::core_ };
 
 protected:
     Core* get_core() const { return core_; }

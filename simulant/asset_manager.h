@@ -22,7 +22,7 @@
 #include <map>
 
 #include "generic/object_manager.h"
-#include "managers/window_holder.h"
+#include "managers/core_holder.h"
 #include "loaders/heightmap_loader.h"
 #include "loader.h"
 #include "texture.h"
@@ -92,7 +92,7 @@ for klass, name in (
 */
 
 class AssetManager:
-    public virtual WindowHolder,
+    public virtual CoreHolder,
     public RefCounted<AssetManager> {
 
 public:

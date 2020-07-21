@@ -29,7 +29,7 @@
 
 #include "nodes/stage_node_manager.h"
 
-#include "managers/window_holder.h"
+#include "managers/core_holder.h"
 #include "nodes/skies/skybox_manager.h"
 #include "nodes/sprites/sprite_manager.h"
 #include "nodes/actor.h"
@@ -83,7 +83,7 @@ class Stage:
     public ContainerNode,
     public generic::Identifiable<StageID>,
     public Loadable,
-    public virtual WindowHolder,
+    public virtual CoreHolder,
     public ChainNameable<Stage> {
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
