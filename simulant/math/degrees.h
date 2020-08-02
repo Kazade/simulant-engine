@@ -21,6 +21,18 @@ struct Degrees {
         return ret;
     }
 
+    Degrees operator-=(const Degrees& rhs) const {
+        Degrees ret = *this;
+        ret.value -= rhs.value;
+        return ret;
+    }
+
+    Degrees operator+=(const Degrees& rhs) const {
+        Degrees ret = *this;
+        ret.value += rhs.value;
+        return ret;
+    }
+
     bool operator==(const Degrees& rhs) const {
         return value == rhs.value;
     }
@@ -43,6 +55,5 @@ struct Degrees {
 
 Degrees to_degrees(const Radians& radians);
 Degrees lerp_angle(Degrees a, Degrees b, float t);
-
 
 }
