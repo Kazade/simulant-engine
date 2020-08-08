@@ -27,6 +27,13 @@ ADD_CUSTOM_COMMAND(
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
 
+IF(ANDROID)
+    # If we're building for Android, we need to link with SDL_android_main.c which should 
+    # exist in the current directory. You may need to copy it there after running the prepare
+    # script
+    SET(TEST_SOURCES ${TEST_SOURCES} SDL_android_main.c)
+ENDIF()
+
 ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME})
 ADD_TEST(simulant_suite simulant_tests)
 
