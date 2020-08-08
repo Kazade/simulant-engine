@@ -31,7 +31,9 @@ IF(ANDROID)
     # If we're building for Android, we need to link with SDL_android_main.c which should 
     # exist in the current directory. You may need to copy it there after running the prepare
     # script
-    SET(TEST_SOURCES ${TEST_SOURCES} SDL_android_main.c)
+    SET(TEST_SOURCES ${TEST_SOURCES} ./SDL_android_main.c)
+    MESSAGE("-- Android platforms, so added SDL_android_main.c")
+    MESSAGE("-- Sources: ${TEST_SOURCES}")
 ENDIF()
 
 ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME})

@@ -107,8 +107,7 @@ android:
    - ln -s ../../src
    - ln -s ../../include
    - cd ..
-   - export APP_PLATFORM=android-18
-   - NDK_PROJECT_PATH=. ndk-build
+   - NDK_PROJECT_PATH=. ndk-build APP_PLATFORM=android-26
 
    - cd ${CI_PROJECT_DIR}
 
@@ -118,17 +117,16 @@ android:
    - ln -s ../../Android.mk
    - ln -s ../../OpenAL
    - cd ..
-   - export APP_PLATFORM=android-18
-   - NDK_PROJECT_PATH=. ndk-build
+   - NDK_PROJECT_PATH=. ndk-build APP_PLATFORM=android-26
 
    # Copy SDL_android_main.c into the tests directory so we can
    # include it during linking
    - cd ${CI_PROJECT_DIR}
-   - cp .android/sdl/src/main/android/SDL_android_main.c tests/
+   - cp platforms/android/SDL_android_main.c tests/
 
    # Finally Simulant
    - cd ${CI_PROJECT_DIR}/build
-   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
+   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_PLATFORM=android-26 -DANDROID_ABI=armeabi-v7a ..
    - make
 
 build:windows-x64-mingw:
