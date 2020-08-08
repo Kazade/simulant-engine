@@ -60,11 +60,7 @@ std::map<std::string, std::string> parse_args(int argc, char* argv[]) {
     return ret;
 }
 
-#ifdef __ANDROID__
-int SDL_main(int argc, char* argv[]) {
-#else
 int main(int argc, char* argv[]) {
-#endif
     auto runner = std::make_shared<smlt::test::TestRunner>();
 
     auto args = parse_args(argc, argv);
