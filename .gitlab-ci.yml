@@ -89,7 +89,6 @@ check:stream-usage:
 android:
   stage: build
   image: kazade/android-sdk
-  allow_failure: true
   before_script:
    - apt-get update -y
    - apt-get install -y file
