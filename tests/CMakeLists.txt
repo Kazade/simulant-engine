@@ -47,7 +47,7 @@ if(ANDROID)
 else()
     ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME})
     ADD_TEST(simulant_suite simulant_tests)
-end()
+endif()
 
 IF(WIN32)
 # Necessary when compiling tests on mingw because the main.cpp file gets too large
