@@ -28,7 +28,7 @@ ADD_CUSTOM_COMMAND(
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
 
 IF(ANDROID)
-    # If we're building for Android, we need to link with SDL_android_main.c which should 
+    # If we're building for Android, we need to link with SDL_android_main.c which should
     # exist in the current directory. You may need to copy it there after running the prepare
     # script
     SET(TEST_SOURCES ${TEST_SOURCES} ./SDL_android_main.c)
@@ -36,8 +36,18 @@ IF(ANDROID)
     MESSAGE("-- Sources: ${TEST_SOURCES}")
 ENDIF()
 
-ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME})
-ADD_TEST(simulant_suite simulant_tests)
+if(ANDROID)
+    # On Android we build a .so and then use gradle to build the test application
+    ADD_LIBRARY(
+        simulant_tests
+        SHARED
+        ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME}
+    )
+else()
+    ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME})
+    ADD_TEST(simulant_suite simulant_tests)
+end()
 
 IF(WIN32)
 # Necessary when compiling tests on mingw because the main.cpp file gets too large
