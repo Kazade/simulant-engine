@@ -400,7 +400,11 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             }
 
             if(!rot_frame_found) {
-                state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
+                if(source_joint.rotation_key_frames.empty()) {
+                    state.rotation = to_quaternion(source_joint.rotation);
+                } else {
+                    state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
+                }
             }
 
             MS3DPositionKeyFrame* last_pos_frame = nullptr;
@@ -428,7 +432,12 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
             if(!pos_frame_found) {
                 // If we didn't find anything, set it to the last position
-                state.translation = source_joint.position_key_frames.back().position;
+                // or if there are no keyframes just set to the joint position
+                if(source_joint.position_key_frames.empty()) {
+                    state.translation = source_joint.position;
+                } else {
+                    state.translation = source_joint.position_key_frames.back().position;
+                }
             }
 
             frame_data->set_joint_state_at_frame(
