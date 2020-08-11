@@ -104,6 +104,8 @@ MS3DLoader::MS3DLoader(const unicode& filename, std::shared_ptr<std::istream> da
     Loader(filename, data) {}
 
 void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
+    _S_UNUSED(options);
+
     Mesh* mesh = loadable_to<Mesh>(resource);
     assert(mesh && "Tried to load an MS3D file into a non-mesh");
 
@@ -125,12 +127,11 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     uint16_t num_materials;
     uint16_t num_joints;
 
-    int32_t subversion;
-    uint32_t num_group_comments;
+    int32_t comment_subversion = 0;
     int32_t num_material_comments;
     int32_t num_joint_comments;
     int32_t has_model_comment;
-    int32_t vertex_extra_subversion;
+    int32_t vertex_extra_subversion = 0;
 
     data_->read((char*) &num_vertices, sizeof(uint16_t));
     std::vector<MS3DVertex> vertices(num_vertices);
@@ -185,41 +186,50 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         );
     }
 
-    MS3DComment comment; // We do nothing with this for now
-    data_->read((char*) &num_material_comments, sizeof(int32_t));
-    for(int32_t i = 0; i < num_material_comments; ++i) {
-        data_->read((char*) &comment.index, sizeof(comment.index));
-        data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
-        comment.comment.resize(comment.comment_length);
-        data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
-    }
-
-    data_->read((char*) &num_joint_comments, sizeof(int32_t));
-    for(int32_t i = 0; i < num_joint_comments; ++i) {
-        data_->read((char*) &comment.index, sizeof(comment.index));
-        data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
-        comment.comment.resize(comment.comment_length);
-        data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
-    }
-
-    data_->read((char*) &has_model_comment, sizeof(int32_t));
-    for(int32_t i = 0; i < has_model_comment; ++i) {
-        data_->read((char*) &comment.index, sizeof(comment.index));
-        data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
-        comment.comment.resize(comment.comment_length);
-        data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
-    }
-
-    data_->read((char*) &vertex_extra_subversion, sizeof(vertex_extra_subversion));
-
     std::vector<MS3DVertexExtra> vertex_extras;
-    vertex_extras.resize(num_vertices);
-    for(uint16_t i = 0; i < num_vertices; ++i) {
-        MS3DVertexExtra& extra = vertex_extras[i];
-        data_->read((char*) extra.bone_ids, sizeof(uint8_t) * 3);
-        data_->read((char*) extra.weights, sizeof(uint8_t) * 3);
-        if(vertex_extra_subversion == 2) {
-            data_->read((char*) &extra.extra, sizeof(extra.extra));
+
+    /* Try to read the comment subversion, we might then trip over the
+     * end of the file if this is a V0 file */
+    data_->read((char*) &comment_subversion, sizeof(int32_t));
+
+    if(data_->eof()) {
+        vertex_extra_subversion = 0;
+    } else {
+        MS3DComment comment; // We do nothing with this for now
+        data_->read((char*) &num_material_comments, sizeof(int32_t));
+        for(int32_t i = 0; i < num_material_comments; ++i) {
+            data_->read((char*) &comment.index, sizeof(comment.index));
+            data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
+            comment.comment.resize(comment.comment_length);
+            data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
+        }
+
+        data_->read((char*) &num_joint_comments, sizeof(int32_t));
+        for(int32_t i = 0; i < num_joint_comments; ++i) {
+            data_->read((char*) &comment.index, sizeof(comment.index));
+            data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
+            comment.comment.resize(comment.comment_length);
+            data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
+        }
+
+        data_->read((char*) &has_model_comment, sizeof(int32_t));
+        for(int32_t i = 0; i < has_model_comment; ++i) {
+            data_->read((char*) &comment.index, sizeof(comment.index));
+            data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
+            comment.comment.resize(comment.comment_length);
+            data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
+        }
+
+        data_->read((char*) &vertex_extra_subversion, sizeof(vertex_extra_subversion));
+
+        vertex_extras.resize(num_vertices);
+        for(uint16_t i = 0; i < num_vertices; ++i) {
+            MS3DVertexExtra& extra = vertex_extras[i];
+            data_->read((char*) extra.bone_ids, sizeof(uint8_t) * 3);
+            data_->read((char*) extra.weights, sizeof(uint8_t) * 3);
+            if(vertex_extra_subversion == 2) {
+                data_->read((char*) &extra.extra, sizeof(extra.extra));
+            }
         }
     }
 
@@ -259,7 +269,9 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         auto tex = assets->new_texture_from_file(texname);
-        mat->set_diffuse_map(tex);
+        if(tex) {
+            mat->set_diffuse_map(tex);
+        }
 
         mat->set_texturing_enabled(true);
         mat->set_lighting_enabled(true);
@@ -279,27 +291,28 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
                 int8_t bones[4] = {
                     vertices[vert_index].bone,
-                    vertex_extras[vert_index].bone_ids[0],
-                    vertex_extras[vert_index].bone_ids[1],
-                    vertex_extras[vert_index].bone_ids[2],
+                    (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[0],
+                    (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[1],
+                    (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[2],
                 };
 
                 uint8_t weights[4] = {
-                    (bones[0] > -1) ? vertex_extras[vert_index].weights[0] : (uint8_t) 0,
-                    (bones[1] > -1) ? vertex_extras[vert_index].weights[1] : (uint8_t) 0,
-                    (bones[2] > -1) ? vertex_extras[vert_index].weights[2] : (uint8_t) 0,
+                    (bones[0] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[0] : (uint8_t) 0,
+                    (bones[1] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[1] : (uint8_t) 0,
+                    (bones[2] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[2] : (uint8_t) 0,
                     0
                 };
 
+                int range = (vertex_extra_subversion <= 1) ? 255 : 100;
+
                 weights[3] = (bones[3] > -1) ?
-                    255 - weights[2] - weights[1] - weights[0] : 0;
+                    range - weights[2] - weights[1] - weights[0] : 0;
 
                 if(weights[0] + weights[1] + weights[2] + weights[3] == 0) {
-                    weights[0] = 255;
+                    weights[0] = range;
                 }
 
-                float weight_scalar = (vertex_extra_subversion == 1) ?
-                    1.0f / 255.0f : 1.0f / 100.0f;
+                float weight_scalar = 1.0f / float(range);
 
                 for(uint8_t k = 0; k < 4; ++k) {
                     char bone = bones[k];
@@ -400,7 +413,11 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             }
 
             if(!rot_frame_found) {
-                state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
+                if(source_joint.rotation_key_frames.empty()) {
+                    state.rotation = Quaternion();
+                } else {
+                    state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
+                }
             }
 
             MS3DPositionKeyFrame* last_pos_frame = nullptr;
@@ -428,7 +445,12 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
             if(!pos_frame_found) {
                 // If we didn't find anything, set it to the last position
-                state.translation = source_joint.position_key_frames.back().position;
+                // or if there are no keyframes just set to the joint position
+                if(source_joint.position_key_frames.empty()) {
+                    state.translation = Vec3();
+                } else {
+                    state.translation = source_joint.position_key_frames.back().position;
+                }
             }
 
             frame_data->set_joint_state_at_frame(

@@ -463,7 +463,12 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
     smlt::TexturePtr tex = texture(new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect));
 
     {
-        window->loader_for(path, LOADER_HINT_TEXTURE)->into(tex);
+        auto loader = window->loader_for(path, LOADER_HINT_TEXTURE);
+        if(!loader) {
+            return smlt::TexturePtr();
+        }
+
+        loader->into(tex);
 
         if(flags.flip_vertically) {
             tex->flip_vertically();
