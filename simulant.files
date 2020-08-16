@@ -280,6 +280,8 @@ simulant/animation.cpp
 simulant/animation.h
 simulant/application.cpp
 simulant/application.h
+simulant/assets/meshes/rig.cpp
+simulant/assets/meshes/rig.h
 simulant/backgrounds/background_manager.cpp
 simulant/backgrounds/background_manager.h
 simulant/behaviours/behaviour.cpp
@@ -511,6 +513,7 @@ simulant/generic/any/type_traits.h
 simulant/generic/any/utility.h
 simulant/generic/check_signature.h
 simulant/generic/cloneable.h
+simulant/generic/containers/heap_array.h
 simulant/generic/creator.h
 simulant/generic/data_carrier.h
 simulant/generic/default_init_ptr.h
@@ -1529,3 +1532,4 @@ simulant/sound_drivers/kos_sound_driver.cpp
 cmake_modules/simulant-config.cmake
 simulant/utils/noise.cpp
 simulant/utils/noise.h
+tests/test_rig.h

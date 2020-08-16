@@ -130,6 +130,9 @@ public:
      * the mesh already had a skeleton, otherwise returns true */
     bool add_skeleton(uint32_t num_joints);
 
+    /* Returns true if the Mesh has had a skeleton added */
+    bool has_skeleton() const;
+
     SubMeshPtr new_submesh_with_material(
         const std::string& name,
         MaterialID material,
@@ -221,9 +224,12 @@ public:
 public:
     // Signals
 
+    typedef sig::signal<void (Skeleton*)> SkeletonAddedSignal;
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshCreatedCallback;
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshDestroyedCallback;
     typedef sig::signal<void (MeshID, SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+
+    DEFINE_SIGNAL(SkeletonAddedSignal, signal_skeleton_added);
 
     SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
     SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }

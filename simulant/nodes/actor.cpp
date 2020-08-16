@@ -23,6 +23,7 @@
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
+#include "../assets/meshes/rig.h"
 
 #define DEBUG_ANIMATION 0  /* If enabled, will show debug animation overlay */
 
@@ -44,7 +45,9 @@ Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
 }
 
 Actor::~Actor() {
-
+    mesh_skeleton_added_.disconnect();
+    submesh_created_connection_.disconnect();
+    submesh_destroyed_connection_.disconnect();
 }
 
 VertexSpecification SubActor::vertex_specification() const {
@@ -155,6 +158,23 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
         refresh_animation_state(animation_state_->current_frame(), animation_state_->next_frame(), 0);
     }
 
+    /* Update the rig if a skeleton is added to the mesh, or, if it
+     * has one at the time of setting */
+    if(detail_level == DETAIL_LEVEL_NEAREST) {
+        mesh_skeleton_added_.disconnect();
+
+        mesh_skeleton_added_ = meshes_[DETAIL_LEVEL_NEAREST]->signal_skeleton_added().connect(
+            std::bind(&Actor::add_rig, this, std::placeholders::_1)
+        );
+
+        if(meshes_[DETAIL_LEVEL_NEAREST]->has_skeleton()) {
+            add_rig(meshes_[DETAIL_LEVEL_NEAREST]->skeleton);
+        } else {
+            /* No skeleton on the mesh we just set, so delete the rig */
+            rig_.reset();
+        }
+    }
+
     recalc_effective_meshes();
 
     /* Recalculate the AABB if necessary */
@@ -190,6 +210,12 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
 #ifdef DEBUG_ANIMATION
     stage->debug->set_transform(Mat4());
 #endif
+}
+
+void Actor::add_rig(const Skeleton* skeleton) {
+    assert(!rig_);
+
+    rig_.reset(new Rig(skeleton));
 }
 
 

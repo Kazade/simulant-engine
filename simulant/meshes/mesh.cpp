@@ -65,10 +65,15 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 bool Mesh::add_skeleton(uint32_t num_joints) {
     if(!skeleton_) {
         skeleton_ = new Skeleton(this, num_joints);
+        signal_skeleton_added_(skeleton_);
         return true;
     } else {
         return false;
     }
+}
+
+bool Mesh::has_skeleton() const {
+    return skeleton_ != nullptr;
 }
 
 Mesh::~Mesh() {
