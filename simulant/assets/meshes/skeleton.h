@@ -90,12 +90,16 @@ class Mesh;
 class Skeleton {
     friend class Joint;
 public:
-    Skeleton(Mesh* mesh, uint32_t num_joints):
+    Skeleton(Mesh* mesh, std::size_t num_joints):
         mesh_(mesh) {
         joints_.resize(num_joints, Joint(this));
     }
 
-    Joint* joint(uint32_t idx) {
+    Joint* joint(std::size_t idx) {
+        return &joints_[idx];
+    }
+
+    const Joint* joint(std::size_t idx) const {
         return &joints_[idx];
     }
 

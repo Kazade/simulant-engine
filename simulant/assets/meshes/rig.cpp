@@ -9,6 +9,7 @@ Rig::Rig(const Skeleton* skeleton):
 
     for(std::size_t i = 0; i < joints_.size(); ++i) {
         joints_[i].rig_ = this;
+        joints_[i].skeleton_joint_ = skeleton->joint(i);
     }
 }
 
@@ -40,6 +41,22 @@ void RigJoint::move_to(const Vec3& translation) {
 
     active_state_ |= TRANSLATION_ACTIVE;
     translation_ = translation;
+}
+
+Quaternion RigJoint::effective_rotation() const {
+    if(active_state_ & ROTATION_ACTIVE) {
+        return rotation_;
+    } else {
+        return skeleton_joint_->rotation();
+    }
+}
+
+Vec3 RigJoint::effective_translation() const {
+    if(active_state_ & TRANSLATION_ACTIVE) {
+        return translation_;
+    } else {
+        return skeleton_joint_->translation();
+    }
 }
 
 void RigJoint::reset_rotation() {

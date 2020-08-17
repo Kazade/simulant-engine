@@ -10,6 +10,7 @@ namespace smlt {
 
 class Rig;
 class Skeleton;
+class Joint;
 
 class RigJoint {
 public:
@@ -17,6 +18,9 @@ public:
 
     void rotate_to(const smlt::Quaternion& rotation);
     void move_to(const smlt::Vec3& translation);
+
+    Vec3 effective_translation() const;
+    Quaternion effective_rotation() const;
 
     bool overrides_rotation() const {
         return active_state_ & ROTATION_ACTIVE;
@@ -43,6 +47,7 @@ private:
     friend class Rig;
 
     Rig* rig_ = nullptr;
+    const Joint* skeleton_joint_ = nullptr;
 
     Vec3 translation_;
     Quaternion rotation_;
