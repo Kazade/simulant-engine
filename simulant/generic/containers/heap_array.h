@@ -26,12 +26,12 @@ public:
         return size_;
     }
 
-    T* begin() {
-        return array_;
+    T& operator[](std::size_t idx) {
+        return array_[idx];
     }
 
-    T* end() {
-        return array_ + size_;
+    const T& operator[](std::size_t idx) const {
+        return array_[idx];
     }
 
 private:

@@ -16,7 +16,15 @@ public:
     RigJoint() {}
 
     void rotate_to(const smlt::Quaternion& rotation);
-    void translate_to(const smlt::Vec3& translation);
+    void move_to(const smlt::Vec3& translation);
+
+    bool overrides_rotation() const {
+        return active_state_ & ROTATION_ACTIVE;
+    }
+
+    bool overrides_translation() const {
+        return active_state_ & TRANSLATION_ACTIVE;
+    }
 
     void reset_rotation();
     void reset_translation();
@@ -27,19 +35,37 @@ public:
     }
 
 private:
+    enum ActiveState {
+        TRANSLATION_ACTIVE = 1,
+        ROTATION_ACTIVE = 2
+    };
+
     friend class Rig;
 
-    const Rig* rig_ = nullptr;
+    Rig* rig_ = nullptr;
+
+    Vec3 translation_;
+    Quaternion rotation_;
+    uint8_t active_state_ = 0;
 };
 
 
 class Rig {
 public:
     Rig(const Skeleton* skeleton);
-    RigJoint* joint(const std::string& name);
+    RigJoint* joint(std::size_t index);
 
+    /* Should always be equal to the skeleton joint count */
+    std::size_t joint_count() const;
+
+    /* Returns true if this Rig is overriding the associated
+     * skeleton */
+    bool is_active() const;
 private:
+    friend class RigJoint;
+
     heap_array<RigJoint> joints_;
+    std::size_t joints_overridden_count_ = 0;
 };
 
 };
