@@ -45,6 +45,7 @@ namespace smlt {
 class AssetManager;
 class AdjacencyInfo;
 class Renderer;
+class Rig;
 class Skeleton;
 class Debug;
 
@@ -65,11 +66,27 @@ class FrameUnpacker {
 public:
     virtual ~FrameUnpacker() {}
 
-    virtual void unpack_frame(
+    /*
+     * Used to interpolate the rig (if any) or do
+     * any other kind of preparation during update()
+     */
+    virtual void prepare_unpack(
         uint32_t current_frame,
         uint32_t next_frame,
-        float t, VertexData* out,
-        Debug* debug=nullptr
+        float t, Rig* const rig,
+        Debug* const debug=nullptr
+    ) = 0;
+
+    /* Used before rendering to generate the output
+     * vertices with the given Rig (if any) and interpolated
+     * value */
+    virtual void unpack_frame(
+        const uint32_t current_frame,
+        const uint32_t next_frame,
+        const float t,
+        const Rig* const rig,
+        VertexData* const out,
+        Debug* const debug=nullptr
     ) = 0;
 };
 

@@ -90,9 +90,12 @@ SkeletalFrameUnpacker::SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames,
     vertices_.resize(num_vertices);
 }
 
-void SkeletalFrameUnpacker::unpack_frame(
-        uint32_t current_frame, uint32_t next_frame,
-    float t, VertexData* out, Debug* debug
+void SkeletalFrameUnpacker::prepare_unpack(uint32_t current_frame, uint32_t next_frame, float t, Rig* const rig, Debug* const debug) {
+    for(auto& joint: ske)
+}
+
+void SkeletalFrameUnpacker::unpack_frame(const uint32_t current_frame, const uint32_t next_frame,
+                                         const float t, const Rig* const rig, VertexData* const out, Debug* const debug
 ) {
 
     /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
