@@ -122,6 +122,10 @@ void SkeletalFrameUnpacker::unpack_frame(
     _S_UNUSED(next_frame);
     _S_UNUSED(t);
 
+    if(!rig) {
+        return;
+    }
+
     /* Make sure everything is up-to-date */
     rig->recalc_absolute_transformations();
 

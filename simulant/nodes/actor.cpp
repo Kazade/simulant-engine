@@ -193,17 +193,19 @@ void Actor::update(float dt) {
 }
 
 void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
-    assert(meshes_[DETAIL_LEVEL_NEAREST] && meshes_[DETAIL_LEVEL_NEAREST]->is_animated());
+    MeshPtr base_mesh = meshes_[DETAIL_LEVEL_NEAREST];
+
+    assert(base_mesh && base_mesh->is_animated());
 
 #ifdef DEBUG_ANIMATION
     stage->enable_debug();
     stage->debug->set_transform(absolute_transformation());
 #endif
 
-    meshes_[DETAIL_LEVEL_NEAREST]->animated_frame_data_->unpack_frame(
-        current_frame, next_frame, interp, interpolated_vertex_data_.get()
+    base_mesh->animated_frame_data_->prepare_unpack(
+        current_frame, next_frame, interp, rig_.get()
 #if DEBUG_ANIMATION
-        , stage->debug
+        ,stage->debug
 #endif
     );
 
@@ -321,6 +323,24 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
     auto mesh = find_mesh(detail_level);
     if(!mesh) {
         return;
+    }
+
+    if(mesh->is_animated()) {
+        /*
+         * Update the vertices for the animated base mesh if that's the
+         * detail level we're using - if this is a skeletal animation then
+         * the current rig will be used
+         */
+        mesh->animated_frame_data_->unpack_frame(
+            animation_state->current_frame(),
+            animation_state->next_frame(),
+            animation_state->interp(),
+            rig_.get(),
+            interpolated_vertex_data_.get()
+    #if DEBUG_ANIMATION
+            , stage->debug
+    #endif
+        );
     }
 
     auto vdata = (has_animated_mesh()) ?
