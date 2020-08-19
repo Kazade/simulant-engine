@@ -31,6 +31,8 @@ public:
         return parent_;
     }
 
+    std::string name() const;
+
 private:
     friend class Rig;
     friend class SkeletalFrameUnpacker;
@@ -49,6 +51,7 @@ class Rig {
 public:
     Rig(const Skeleton* skeleton);
     RigJoint* joint(std::size_t index);
+    RigJoint* find_joint(const std::string& name);
 
     /* Should always be equal to the skeleton joint count */
     std::size_t joint_count() const;

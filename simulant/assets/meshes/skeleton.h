@@ -36,6 +36,8 @@ public:
 
     void rotate_to(const Quaternion& q);
     void move_to(const smlt::Vec3& v);
+
+    std::string name() const;
     void set_name(const std::string& name);
 
     Bone* link_to(Joint* other);

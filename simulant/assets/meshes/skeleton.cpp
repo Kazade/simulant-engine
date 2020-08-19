@@ -23,6 +23,10 @@ void Joint::move_to(const Vec3& v) {
     }
 }
 
+std::string Joint::name() const {
+    return std::string(name_);
+}
+
 void Joint::set_name(const std::string& name) {
     strncpy(name_, name.c_str(), 32);
     assert(name.length() < 32);
