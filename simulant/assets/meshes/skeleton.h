@@ -154,7 +154,7 @@ struct SkeletonVertex {
 
 /* This processes the skeleton and updates the vertex
  * data with the new vertex positions and normals */
-class SkeletalFrameUnpacker : public MeshFrameData {
+class SkeletalFrameUnpacker : public FrameUnpacker {
 public:
     SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames, std::size_t num_vertices);
 

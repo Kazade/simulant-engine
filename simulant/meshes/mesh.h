@@ -61,9 +61,9 @@ typedef sig::signal<void (Mesh*, MeshAnimationType, uint32_t)> SignalAnimationEn
 /* When enabling animations you must pass MeshFrameData which holds all the data necessary to
  * produce a frame
  */
-class MeshFrameData {
+class FrameUnpacker {
 public:
-    virtual ~MeshFrameData() {}
+    virtual ~FrameUnpacker() {}
 
     virtual void unpack_frame(
         uint32_t current_frame,
@@ -73,7 +73,7 @@ public:
     ) = 0;
 };
 
-typedef std::shared_ptr<MeshFrameData> MeshFrameDataPtr;
+typedef std::shared_ptr<FrameUnpacker> FrameUnpackerPtr;
 
 
 class SubMeshIteratorPair {
@@ -211,7 +211,7 @@ public:
 
     SubMeshIteratorPair each_submesh() const;
 
-    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, MeshFrameDataPtr data);
+    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
@@ -244,7 +244,7 @@ private:
     std::shared_ptr<VertexData> vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
-    MeshFrameDataPtr animated_frame_data_;
+    FrameUnpackerPtr animated_frame_data_;
 
     std::vector<std::shared_ptr<SubMesh>> submeshes_;
 

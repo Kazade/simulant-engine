@@ -90,7 +90,7 @@ void Mesh::clear() {
     rebuild_aabb();
 }
 
-void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, MeshFrameDataPtr data) {
+void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data) {
     if(animation_type_ != MESH_ANIMATION_TYPE_NONE) {
         throw std::logic_error("Tried to re-enable animations on an animated mesh");
     }
