@@ -29,8 +29,25 @@ std::size_t Rig::joint_count() const {
     return joints_.size();
 }
 
-bool Rig::is_active() const {
-    return joints_overridden_count_ > 0;
+void Rig::recalc_absolute_transformations() {
+    for(std::size_t i = 0; i < joint_count(); ++i) {
+        RigJoint* joint = &joints_[i];
+        RigJoint* parent = joint->parent();
+        if(!parent) {
+            joint->absolute_rotation_ = joint->rotation() * joint->rotation_;
+            joint->absolute_translation_ = joint->translation() + joint->translation_;
+        } else {
+            auto& parent_rot = parent->absolute_rotation_;
+            joint->absolute_rotation_ = (
+                parent_rot * joint->rotation() * joint->rotation_
+            );
+
+            joint->absolute_translation_ = (
+                parent->absolute_translation_ +
+                parent_rot.rotate_vector(joint->translation() + joint->translation_)
+            );
+        }
+    }
 }
 
 RigJoint* Rig::joint(std::size_t index) {
@@ -38,64 +55,11 @@ RigJoint* Rig::joint(std::size_t index) {
 }
 
 void RigJoint::rotate_to(const Quaternion& rotation) {
-    if(!active_state_) {
-        rig_->joints_overridden_count_++;
-    }
-
-    active_state_ |= ROTATION_ACTIVE;
     rotation_ = rotation;
 }
 
 void RigJoint::move_to(const Vec3& translation) {
-    if(!active_state_) {
-        rig_->joints_overridden_count_++;
-    }
-
-    active_state_ |= TRANSLATION_ACTIVE;
     translation_ = translation;
-}
-
-Quaternion RigJoint::effective_rotation() const {
-    if(active_state_ & ROTATION_ACTIVE) {
-        return rotation_;
-    } else {
-        return skeleton_joint_->rotation();
-    }
-}
-
-Vec3 RigJoint::effective_translation() const {
-    if(active_state_ & TRANSLATION_ACTIVE) {
-        return translation_;
-    } else {
-        return skeleton_joint_->translation();
-    }
-}
-
-void RigJoint::reset_rotation() {
-    active_state_  &= ~ROTATION_ACTIVE;
-    if(!active_state_) {
-        rig_->joints_overridden_count_--;
-    }
-}
-
-void RigJoint::reset_translation() {
-    active_state_  &= ~TRANSLATION_ACTIVE;
-    if(!active_state_) {
-        rig_->joints_overridden_count_--;
-    }
-}
-
-void RigJoint::recalc_absolute_transformation() {
-    if(parent_) {
-        absolute_rotation_ = parent_->absolute_rotation_ * rotation_;
-        absolute_translation_ = (
-            parent_->absolute_translation_ +
-            parent_->absolute_rotation_.rotate_vector(translation_)
-        );
-    } else {
-        absolute_rotation_ = rotation_;
-        absolute_translation_ = translation_;
-    }
 }
 
 }

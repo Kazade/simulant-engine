@@ -169,7 +169,7 @@ public:
         const uint32_t current_frame,
         const uint32_t next_frame,
         const float t,
-        const Rig* const rig,
+        Rig* const rig,
         VertexData* const out,
         Debug* const debug=nullptr
     ) override;

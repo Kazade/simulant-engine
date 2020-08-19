@@ -19,32 +19,21 @@ public:
     void rotate_to(const smlt::Quaternion& rotation);
     void move_to(const smlt::Vec3& translation);
 
-    Vec3 effective_translation() const;
-    Quaternion effective_rotation() const;
-
-    bool overrides_rotation() const {
-        return active_state_ & ROTATION_ACTIVE;
+    const Vec3& translation() const {
+        return translation_;
     }
 
-    bool overrides_translation() const {
-        return active_state_ & TRANSLATION_ACTIVE;
+    const Quaternion& rotation() const {
+        return rotation_;
     }
 
-    void reset_rotation();
-    void reset_translation();
-
-    void reset() {
-        reset_rotation();
-        reset_translation();
+    RigJoint* parent() const {
+        return parent_;
     }
 
 private:
-    enum ActiveState {
-        TRANSLATION_ACTIVE = 1,
-        ROTATION_ACTIVE = 2
-    };
-
     friend class Rig;
+    friend class SkeletalFrameUnpacker;
 
     Rig* rig_ = nullptr;
     RigJoint* parent_ = nullptr;
@@ -52,10 +41,7 @@ private:
     const Joint* skeleton_joint_ = nullptr;
 
     Vec3 translation_, absolute_translation_;
-    Quaternion rotation_, absolute_rotation_;
-    uint8_t active_state_ = 0;
-
-    void recalc_absolute_transformation();
+    Quaternion rotation_, absolute_rotation_;    
 };
 
 
@@ -67,14 +53,13 @@ public:
     /* Should always be equal to the skeleton joint count */
     std::size_t joint_count() const;
 
-    /* Returns true if this Rig is overriding the associated
-     * skeleton */
-    bool is_active() const;
 private:
     friend class RigJoint;
+    friend class SkeletalFrameUnpacker;
+
+    void recalc_absolute_transformations();
 
     heap_array<RigJoint> joints_;
-    std::size_t joints_overridden_count_ = 0;
 };
 
-};
+}
