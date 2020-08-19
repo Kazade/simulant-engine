@@ -47,11 +47,15 @@ private:
     friend class Rig;
 
     Rig* rig_ = nullptr;
+    RigJoint* parent_ = nullptr;
+
     const Joint* skeleton_joint_ = nullptr;
 
-    Vec3 translation_;
-    Quaternion rotation_;
+    Vec3 translation_, absolute_translation_;
+    Quaternion rotation_, absolute_rotation_;
     uint8_t active_state_ = 0;
+
+    void recalc_absolute_transformation();
 };
 
 
