@@ -73,9 +73,9 @@ void Joint::recalc_absolute_transformation() {
     if(parent_) {
         absolute_rotation_ = parent_->absolute_rotation_ * rotation_;
         absolute_translation_ = (
-                    parent_->absolute_translation_ +
-                    parent_->absolute_rotation_.rotate_vector(translation_)
-                    );
+            parent_->absolute_translation_ +
+            (parent_->absolute_rotation_ * translation_)
+        );
     } else {
         absolute_rotation_ = rotation_;
         absolute_translation_ = translation_;
@@ -202,7 +202,7 @@ void SkeletalFrameUnpacker::rebuild_key_frame_absolute_transforms() {
 
                 frame.joints[i].absolute_translation = (
                     frame.joints[parent->id()].absolute_translation +
-                    parent_rot.rotate_vector(joint->translation() + frame.joints[i].translation)
+                    parent_rot * (joint->translation() + frame.joints[i].translation)
                 );
             }
         }

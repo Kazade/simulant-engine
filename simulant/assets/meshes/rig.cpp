@@ -46,7 +46,7 @@ void Rig::recalc_absolute_transformations() {
 
             joint->absolute_translation_ = (
                 parent->absolute_translation_ +
-                parent_rot.rotate_vector(skj->translation() + joint->translation_)
+                parent_rot * (skj->translation() + joint->translation_)
             );
         }
     }

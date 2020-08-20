@@ -157,7 +157,7 @@ void StageNode::update_transformation_from_parent() {
         auto parent_scale = parent->absolute_scaling();
 
         absolute_rotation_ = parent_rot * rotation_;
-        absolute_position_ = parent_pos + parent_rot.rotate_vector(position_);
+        absolute_position_ = parent_pos + parent_rot * position_;
         absolute_scale_ = parent_scale * scaling_;
     }
 

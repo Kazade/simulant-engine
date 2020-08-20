@@ -97,10 +97,6 @@ Quaternion::Quaternion(const Mat3& rot_matrix) {
     }
 }
 
-Vec3 Quaternion::rotate_vector(const Vec3 &v) const {
-    return (*this) * v;
-}
-
 Euler Quaternion::to_euler() const {
     return Euler(
         Degrees(pitch()).value,
