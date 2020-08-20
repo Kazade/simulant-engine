@@ -124,8 +124,13 @@ public:
         clear();
     }
 
-    bool is_connected() const { return conn_.is_connected(); }
+    bool is_connected() const {
+        return conn_.is_connected();
+    }
 
+    void disconnect() {
+        conn_.disconnect();
+    }
 private:
     int* counter_ = nullptr;
     Connection conn_;

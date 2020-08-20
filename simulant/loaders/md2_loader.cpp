@@ -78,7 +78,7 @@ static Vec3 ANORMS [] = {
 
 uint16_t MD2Loader::MAX_RESIDENT_FRAMES = 32;
 
-class MD2MeshFrameData : public MeshFrameData {
+class MD2MeshFrameData : public FrameUnpacker {
     /*
      * This stores the compressed MD2 mesh data as stored in the file. At any one time we
      * have up to MD2Loader::MAX_RESIDENT_FRAMES (default 32) uncompressed in memory. This allows balancing
@@ -164,7 +164,19 @@ public:
         }
     }
 
-    void unpack_frame(uint32_t current_frame, uint32_t next_frame, float t, VertexData *out, Debug* debug=nullptr) {
+    void prepare_unpack(uint32_t, uint32_t, float, Rig* const, Debug* const = nullptr) override {
+        // INTENTIONALLY BLANK
+    }
+
+    void unpack_frame(
+      const uint32_t current_frame,
+      const uint32_t next_frame,
+      const float t,
+      Rig* const rig,
+      VertexData* const out,
+      Debug* const debug=nullptr
+    ) {
+        _S_UNUSED(rig);
         _S_UNUSED(debug);  // We don't have any debugging for MD2 models. Maybe normals?
 
         _expand_verts(current_frame);
@@ -205,6 +217,8 @@ typedef std::shared_ptr<MD2MeshFrameData> MD2MeshFrameDataPtr;
 const int32_t MAGIC_NUMBER_ID = 844121161;
 
 void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
+    _S_UNUSED(options);
+
     Mesh* mesh = loadable_to<Mesh>(resource);
     AssetManager* asset_manager = &mesh->asset_manager();
 

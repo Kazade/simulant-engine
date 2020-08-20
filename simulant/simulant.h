@@ -58,6 +58,7 @@
 #include "platform.h"
 
 #include "assets/meshes/skeleton.h"
+#include "assets/meshes/rig.h"
 
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"

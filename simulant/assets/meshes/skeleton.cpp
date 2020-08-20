@@ -1,6 +1,8 @@
 #include <cstring>
 
 #include "skeleton.h"
+#include "rig.h"
+
 #include "../../debug.h"
 
 namespace smlt {
@@ -19,6 +21,10 @@ void Joint::move_to(const Vec3& v) {
     if(recalc) {
         recalc_absolute_transformation();
     }
+}
+
+std::string Joint::name() const {
+    return std::string(name_);
 }
 
 void Joint::set_name(const std::string& name) {
@@ -67,9 +73,9 @@ void Joint::recalc_absolute_transformation() {
     if(parent_) {
         absolute_rotation_ = parent_->absolute_rotation_ * rotation_;
         absolute_translation_ = (
-                    parent_->absolute_translation_ +
-                    parent_->absolute_rotation_.rotate_vector(translation_)
-                    );
+            parent_->absolute_translation_ +
+            (parent_->absolute_rotation_ * translation_)
+        );
     } else {
         absolute_rotation_ = rotation_;
         absolute_translation_ = translation_;
@@ -90,10 +96,42 @@ SkeletalFrameUnpacker::SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames,
     vertices_.resize(num_vertices);
 }
 
+void SkeletalFrameUnpacker::prepare_unpack(uint32_t current_frame, uint32_t next_frame, float t, Rig* const rig, Debug* const debug) {
+    _S_UNUSED(debug);
+
+    const Skeleton* sk = mesh_->skeleton.get();
+
+    if(!rig || !sk) {
+        return;
+    }
+
+    /* Update the rig with the interpolated frame state */
+    for(std::size_t j = 0; j < rig->joint_count(); ++j) {
+        const JointState& state0 = joint_state_at_frame(current_frame, j);
+        const JointState& state1 = joint_state_at_frame(next_frame, j);
+
+        auto q = state0.rotation.slerp(state1.rotation, t);
+        auto d = state0.translation.lerp(state1.translation, t);
+
+        rig->joint(j)->rotate_to(q);
+        rig->joint(j)->move_to(d);
+    }
+}
+
 void SkeletalFrameUnpacker::unpack_frame(
-        uint32_t current_frame, uint32_t next_frame,
-    float t, VertexData* out, Debug* debug
+    const uint32_t current_frame, const uint32_t next_frame,
+    const float t, Rig* const rig, VertexData* const out, Debug* const debug
 ) {
+    _S_UNUSED(current_frame);
+    _S_UNUSED(next_frame);
+    _S_UNUSED(t);
+
+    if(!rig) {
+        return;
+    }
+
+    /* Make sure everything is up-to-date */
+    rig->recalc_absolute_transformations();
 
     /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
     mesh_->vertex_data->clone_into(*out);
@@ -101,13 +139,12 @@ void SkeletalFrameUnpacker::unpack_frame(
 
     /* Debug draw the joints */
     if(debug) {
-        for(std::size_t i = 0; i < skeleton->joint_count(); ++i) {
-            auto& state0 = joint_state_at_frame(current_frame, i);
-            auto parent_joint = skeleton->joint(i)->parent();
+        for(std::size_t i = 0; i < rig->joint_count(); ++i) {
+            auto parent_joint = rig->joint(i)->parent();
             if(parent_joint) {
                 debug->draw_line(
-                    joint_state_at_frame(current_frame, parent_joint->id()).absolute_translation,
-                    state0.absolute_translation,
+                    parent_joint->absolute_translation_,
+                    rig->joint(i)->absolute_translation_,
                     Colour::YELLOW, 0.1f, false
                 );
             }
@@ -129,11 +166,8 @@ void SkeletalFrameUnpacker::unpack_frame(
         for(auto k = 0; k < MAX_JOINTS_PER_VERTEX; ++k) {
             auto j = sv.joints[k];
             if(j > -1) {
-                auto& state0 = joint_state_at_frame(current_frame, j);
-                auto& state1 = joint_state_at_frame(next_frame, j);
-
-                auto q = state0.absolute_rotation.slerp(state1.absolute_rotation, t);
-                auto d = state0.absolute_translation.lerp(state1.absolute_translation, t);
+                auto q = rig->joint(j)->absolute_rotation_;
+                auto d = rig->joint(j)->absolute_translation_;
 
                 auto joint = skeleton->joint(j);
 
@@ -168,7 +202,7 @@ void SkeletalFrameUnpacker::rebuild_key_frame_absolute_transforms() {
 
                 frame.joints[i].absolute_translation = (
                     frame.joints[parent->id()].absolute_translation +
-                    parent_rot.rotate_vector(joint->translation() + frame.joints[i].translation)
+                    parent_rot * (joint->translation() + frame.joints[i].translation)
                 );
             }
         }
