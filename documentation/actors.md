@@ -54,5 +54,5 @@ Quaternion rotation = calculate_rotation_to_look();
 actor->rig->find_joint("Neck")->rotate_to(rotation);
 ```
 
-This allows you to take manual control of joints, even if the reset of the mesh is animated.
+This allows you to take manual control of joints, even if the rest of the mesh is animated.
 
