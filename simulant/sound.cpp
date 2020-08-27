@@ -151,14 +151,12 @@ Source::Source(Window *window):
     window_(window) {
 }
 
-Source::Source(Stage *stage, SoundDriver* driver):
+Source::Source(Stage *stage, StageNode* this_as_node, SoundDriver* driver):
     stage_(stage),
     window_(nullptr),
-    driver_(driver) {
+    driver_(driver),
+    node_(this_as_node) {
 
-    // Store whether or not this source is a stagenode
-    // if it is, we'll update the position etc.
-    node_ = dynamic_cast<StageNode*>(this);
 }
 
 Source::~Source() {

@@ -133,7 +133,7 @@ public:
 class Source {
 public:
     Source(Window* window);
-    Source(Stage* stage, SoundDriver *driver);
+    Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~Source();
 
     void play_sound(SoundID sound, AudioRepeat repeat=AUDIO_REPEAT_NONE);
