@@ -38,7 +38,7 @@ public:
     Seconds():
         value_(0) {}
 
-    Seconds(float t):
+    explicit Seconds(float t):
         value_(t) {}
 
     Seconds operator+(const Seconds& rhs) const {

@@ -82,8 +82,8 @@ struct TimedTriggerOnce {
         return true;
     }
 
-    Seconds timeout_ = 0.0;
-    float start_time_ = 0.0;
+    Seconds timeout_ = Seconds(0.0f);
+    float start_time_ = 0.0f;
     std::function<void ()> callback_;
 };
 
@@ -106,8 +106,8 @@ struct TimedTrigger {
         return true;
     }
 
-    Seconds timeout_ = 0.0;
-    float start_time_ = 0.0;
+    Seconds timeout_ = Seconds(0.0f);
+    float start_time_ = 0.0f;
     std::function<bool ()> callback_;
 };
 
