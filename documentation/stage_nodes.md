@@ -57,6 +57,12 @@ You can destroy a `StageNode` by calling its `destroy()` method. This won't rele
 
 When the clean-up process runs, an additional `signal_cleaned_up` signal will fire just before deletion of the node.
 
+## Delayed Destruction
+
+`StageNodes` have a helper method called `destroy_after(Seconds)` that you can call to fire `destroy()` after the number of seconds have passed. Internally this simply queues an idle task to call `destroy()`. Be aware, `destroy_after` is a fire-and-forget method - you can't cancel once you've triggered it! 
+
+ > Note: `is_marked_for_destruction()` will return false until the elapsed time has passed, and `destroy()` has been called.
+
 ## Finding nodes
 
 You can give stage nodes names using `StageNode::set_name`, and later search for those nodes recursively using `StageNode::find_descendent_with_name`. If a name is duplicated, only the first match found
