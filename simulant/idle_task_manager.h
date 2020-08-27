@@ -33,15 +33,40 @@ namespace smlt {
 
 class Window;
 
+class Seconds {
+public:
+    Seconds():
+        value_(0) {}
+
+    Seconds(float t):
+        value_(t) {}
+
+    Seconds operator+(const Seconds& rhs) const {
+        return Seconds(value_ + rhs.value_);
+    }
+
+    Seconds& operator+=(const Seconds& rhs) {
+        value_ += rhs.value_;
+        return *this;
+    }
+
+    float to_float() {
+        return value_;
+    }
+
+private:
+    float value_;
+};
+
 class IdleTaskManager {
 public:
     IdleTaskManager(Window& window);
 
     IdleConnectionID add(std::function<bool ()> callback);
     IdleConnectionID add_once(std::function<void ()> callback);
-    IdleConnectionID add_timeout(float seconds, std::function<bool()> callback);
-    IdleConnectionID add_timeout_once(float seconds, std::function<void()> callback);
-    
+    IdleConnectionID add_timeout(const Seconds& seconds, std::function<bool()> callback);
+    IdleConnectionID add_timeout_once(const Seconds& seconds, std::function<void()> callback);
+
     void run_sync(std::function<void()> callback);
 
     void remove(IdleConnectionID connection);

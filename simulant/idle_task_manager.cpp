@@ -64,7 +64,7 @@ void IdleTaskManager::run_sync(std::function<void()> callback) {
 }
 
 struct TimedTriggerOnce {
-    TimedTriggerOnce(float time, std::function<void ()> callback):
+    TimedTriggerOnce(const Seconds& time, std::function<void ()> callback):
         timeout_(time),
         callback_(callback) {
     }
@@ -75,20 +75,20 @@ struct TimedTriggerOnce {
             start_time_ = now;
         }
 
-        if((now - start_time_) > timeout_) {
+        if((now - start_time_) > timeout_.to_float()) {
             callback_();
             return false;
         }
         return true;
     }
 
-    float timeout_ = 0.0;
+    Seconds timeout_ = 0.0;
     float start_time_ = 0.0;
     std::function<void ()> callback_;
 };
 
 struct TimedTrigger {
-    TimedTrigger(float time, std::function<bool ()> callback):
+    TimedTrigger(const Seconds& time, std::function<bool ()> callback):
         timeout_(time),
         callback_(callback) {
     }
@@ -99,24 +99,24 @@ struct TimedTrigger {
             start_time_ = now;
         }
 
-        if((now - start_time_) > timeout_) {
+        if((now - start_time_) > timeout_.to_float()) {
             start_time_ = now;
             return callback_();
         }
         return true;
     }
 
-    float timeout_ = 0.0;
+    Seconds timeout_ = 0.0;
     float start_time_ = 0.0;
     std::function<bool ()> callback_;
 };
 
-IdleConnectionID IdleTaskManager::add_timeout(float seconds, std::function<bool()> callback) {
+IdleConnectionID IdleTaskManager::add_timeout(const Seconds& seconds, std::function<bool()> callback) {
     std::shared_ptr<TimedTrigger> trigger(new TimedTrigger(seconds, callback));
     return add(std::bind(&TimedTrigger::update, trigger, &this->window_));
 }
 
-IdleConnectionID IdleTaskManager::add_timeout_once(float seconds, std::function<void()> callback) {
+IdleConnectionID IdleTaskManager::add_timeout_once(const Seconds& seconds, std::function<void()> callback) {
     std::shared_ptr<TimedTriggerOnce> trigger(new TimedTriggerOnce(seconds, callback));
     return add(std::bind(&TimedTriggerOnce::update, trigger, &this->window_));
 }
