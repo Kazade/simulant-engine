@@ -7,6 +7,8 @@ Simulant has a full-featured audio system that makes it easy to load and play so
 `Sounds` are an `Asset`, like `Textures` or `Materials`, and so can be loaded using an asset manager, probably using
 `new_sound_from_file(path);`
 
+Supported sound formats are .wav and .ogg.
+
 ## Playing Sounds
 
 `Sounds` are played through `Sources`. All `StageNodes` are a sound `Source`, as is the `Window` itself. You can play a sounds
@@ -17,10 +19,24 @@ or `shared_assets`.
 Playing a sound from a `StageNode` will use positional audio to make it seem like the sound is coming from the location of the node. Sounds played
 through the `Window` will not have any positional effect - this makes the `Window` perfect for playing a level soundtrack for example.
 
+The `repeat` argument of `play_sound` can be one of the following:
+
+ - `AUDIO_REPEAT_NONE` - The sound will stop playing when it finishes
+ - `AUDIO_REPEAT_FOREVER` - The sound will loop forever until manually stopped
+
 ## Controlling the volume
 
 The volume of a playing sound can be controlled on a per-Source basis using `Source::set_gain(gain)` where gain is clamped between 0 and 1. By default
 all sounds are played at maximum gain.
+
+## The Audio Listener
+
+Simulant applications have a global audio listener which is stored on the `Window`. The audio listener represents the position and orientation of where sounds are heard.
+
+By default, the audio listener is set to the `Camera` used in the first active pipeline in the compositor. If there are no active pipelines, there is no listener.
+
+You will likely need to manually set the audio listener, particularly if you have more than one pipeline. You can do this with the `Window::set_audio_listener(node)` method. If the
+audio listener node is destroyed, then audio listener behaviour will revert back to default.
 
 ## Playing sounds beyond the lifetime of a node
 
