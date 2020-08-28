@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simulant/test.h"
+#include "simulant/simulant.h"
 
 namespace {
 

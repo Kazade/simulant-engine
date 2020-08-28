@@ -20,6 +20,7 @@
 namespace smlt {
 
 class RenderableFactory;
+class Seconds;
 
 typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
 typedef sig::signal<void ()> CleanedUpSignal;
@@ -188,6 +189,8 @@ public:
     }
 
     void set_parent(TreeNode* node);
+
+    void destroy_after(const Seconds& seconds);
 
     void update(float dt) override;
     void late_update(float dt) override;

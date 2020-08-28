@@ -1,5 +1,6 @@
 #include "../stage.h"
 #include "camera.h"
+#include "../window.h"
 
 namespace smlt {
 
@@ -108,6 +109,12 @@ void StageNode::set_parent(TreeNode* node) {
     }
 
     recalc_visibility();
+}
+
+void StageNode::destroy_after(const Seconds& seconds) {
+    stage_->window->idle->add_timeout_once(
+        seconds, std::bind(&StageNode::destroy, this)
+    );
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
