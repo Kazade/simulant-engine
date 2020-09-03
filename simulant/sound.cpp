@@ -100,7 +100,6 @@ void SourceInstance::update(float dt) {
         driver->set_source_properties(
             source_,
             pos,
-            parent_.node_->absolute_rotation(),
             // Use the last position to calculate the velocity, this is a bit of
             // a hack... FIXME maybe..
             // FIXME: This is value is "scaled" to assume the velocity over a second
