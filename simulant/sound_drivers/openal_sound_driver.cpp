@@ -128,13 +128,9 @@ void OpenALSoundDriver::set_listener_properties(const Vec3& position, const Quat
     ALCheck(alListenerfv, AL_ORIENTATION, ori);
 }
 
-void OpenALSoundDriver::set_source_properties(AudioSourceID id, const Vec3& position, const Quaternion& orientation, const Vec3& velocity) {
-    auto forward = orientation.forward();
-    auto up = orientation.up();
-    ALfloat ori[] = { forward.x, forward.y, forward.z, up.x, up.y, up.z };
+void OpenALSoundDriver::set_source_properties(AudioSourceID id, const Vec3& position, const Vec3& velocity) {
     ALCheck(alSource3f, id, AL_POSITION, position.x, position.y, position.z);
     ALCheck(alSource3f, id, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
-    ALCheck(alSourcefv, id, AL_ORIENTATION, ori);
 }
 
 void OpenALSoundDriver::set_source_reference_distance(AudioSourceID id, float dist) {

@@ -100,7 +100,6 @@ void SourceInstance::update(float dt) {
         driver->set_source_properties(
             source_,
             pos,
-            parent_.node_->absolute_rotation(),
             // Use the last position to calculate the velocity, this is a bit of
             // a hack... FIXME maybe..
             // FIXME: This is value is "scaled" to assume the velocity over a second
@@ -117,31 +116,46 @@ void SourceInstance::update(float dt) {
 
     int32_t processed = driver->source_buffers_processed_count(source_);
 
+    bool finished = false;
+
     while(processed--) {
         AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).back();
 
         uint32_t bytes = stream_func_(buffer);
 
-        if(!bytes) {
-            // Just because we have nothing left to queue, doesn't mean that all buffers
-            // are finished, so wait for the last buffer to be unqueued
-            bool finished = driver->source_state(source_) == AUDIO_SOURCE_STATE_STOPPED;
-            if(finished) {
-                parent_.signal_stream_finished_();
-                if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
-                    //Restart the sound
-                    auto sound = parent_.stage_->assets->sound(sound_);
-                    assert(sound);
-                    sound->init_source(*this);
-                    start();
-                } else {
-                    //Mark as dead
-                    is_dead_ = true;
-                }
+        if(!finished) {
+            if(!bytes) {
+                // Just because we have nothing left to queue, doesn't mean that all buffers
+                // are finished, so wait for the last buffer to be unqueued
+                finished = driver->source_state(source_) == AUDIO_SOURCE_STATE_STOPPED;
+            } else {
+                driver->queue_buffers_to_source(source_, 1, {buffer});
             }
+        }
+    }
 
+    if(finished) {
+        parent_.signal_stream_finished_();
+
+        /* Make sure we're totally stopped! */
+        driver->stop_source(source_);
+
+        /* Make totally sure we've unqueued everything */
+        processed = driver->source_buffers_processed_count(source_);
+        while(processed--) {
+            driver->unqueue_buffers_from_source(source_, 1).back();
+        }
+
+        if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
+            //Restart the sound
+            auto sound = parent_.stage_->assets->sound(sound_);
+            assert(sound);
+
+            sound->init_source(*this);
+            start();
         } else {
-            driver->queue_buffers_to_source(source_, 1, {buffer});
+            //Mark as dead
+            is_dead_ = true;
         }
     }
 }
