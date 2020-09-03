@@ -38,7 +38,7 @@ public:
 
     void set_source_as_ambient(AudioSourceID id) override;
     void set_listener_properties(const Vec3& position, const Quaternion& orientation, const Vec3& velocity) override;
-    void set_source_properties(AudioSourceID id, const Vec3& position, const Quaternion& orientation, const Vec3& velocity) override;
+    void set_source_properties(AudioSourceID id, const Vec3& position, const Vec3& velocity) override;
 
     void set_source_reference_distance(AudioSourceID id, float dist) override;
     void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) override;
