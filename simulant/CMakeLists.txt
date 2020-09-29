@@ -42,9 +42,14 @@ IF(DREAMCAST_BUILD)
 
     SET(
         LIBAL
-        ${CMAKE_SOURCE_DIR}/deps/libAL/AL/mojoal.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/AL/aldc.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/AL/alut.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/buffer.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/core.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/context.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/alut.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/math.c        
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/listener.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/platform.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/source.c
     )
 
     INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include ${CMAKE_SOURCE_DIR}/deps/libAL/include)
