@@ -43,4 +43,16 @@ pipeline->set_detail_level_distances(10.0f, 20.0f, 40.0f, 80.0f);
 Any distance above `far_cutoff` will use the `DETAIL_LEVEL_FARTHEST` level. Any below
 `nearest_cutoff` will use the `DETAIL_LEVEL_NEAREST` level.
 
+# Rigs
+
+Each `Actor` has a property called `rig`. This will be non-NULL if the base mesh is animated using skeletal animation. The `rig` is where the interpolated joints for the current frame are stored after calculation. This interpolation process happens during the stage `update()` cycle. The `rig` will have the same joints as the base mesh's Skeleton.
+
+Just before the `Actor` is added to the render queue, the final vertex transformations are calculated using vertex-weights and the interpolated joints in the `rig`. This gives you an opportunity to manipulate the rig before the vertex update happens. For example, if you have an animated character, you might want to manipulate the character's head to look in a certain direction. You could do that by creating a `Behaviour` with a `late_update()` method, and using something similar to the following:
+
+```
+Quaternion rotation = calculate_rotation_to_look();
+actor->rig->find_joint("Neck")->rotate_to(rotation);
+```
+
+This allows you to take manual control of joints, even if the rest of the mesh is animated.
 

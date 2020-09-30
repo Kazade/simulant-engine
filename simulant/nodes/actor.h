@@ -37,7 +37,7 @@ namespace smlt {
 
 class KeyFrameAnimationState;
 class SubActor;
-
+class Rig;
 
 class Actor :
     public TypedDestroyableObject<Actor, Stage>,
@@ -89,6 +89,14 @@ public:
         return material_slot_;
     }
 
+    /*
+     * Returns true if the attached base mesh has a skeleton
+     * and so can be overridden by the rig
+     */
+    bool is_rigged() const {
+        return bool(rig_);
+    }
+
 private:
     MeshPtr find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
@@ -124,8 +132,14 @@ private:
 
     void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp);
 
+    /* Only available if the base mesh has a skeleton */
+    std::unique_ptr<Rig> rig_;
+    void add_rig(const Skeleton* skeleton);
+    sig::connection mesh_skeleton_added_;
+
 public:
-    Property<decltype(&Actor::animation_state_)> animation_state = { this, &Actor::animation_state_ };
+    S_DEFINE_PROPERTY(animation_state, &Actor::animation_state_);
+    S_DEFINE_PROPERTY(rig, &Actor::rig_);
 
 };
 

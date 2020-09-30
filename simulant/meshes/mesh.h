@@ -45,6 +45,7 @@ namespace smlt {
 class AssetManager;
 class AdjacencyInfo;
 class Renderer;
+class Rig;
 class Skeleton;
 class Debug;
 
@@ -61,19 +62,35 @@ typedef sig::signal<void (Mesh*, MeshAnimationType, uint32_t)> SignalAnimationEn
 /* When enabling animations you must pass MeshFrameData which holds all the data necessary to
  * produce a frame
  */
-class MeshFrameData {
+class FrameUnpacker {
 public:
-    virtual ~MeshFrameData() {}
+    virtual ~FrameUnpacker() {}
 
-    virtual void unpack_frame(
+    /*
+     * Used to interpolate the rig (if any) or do
+     * any other kind of preparation during update()
+     */
+    virtual void prepare_unpack(
         uint32_t current_frame,
         uint32_t next_frame,
-        float t, VertexData* out,
-        Debug* debug=nullptr
+        float t, Rig* const rig,
+        Debug* const debug=nullptr
+    ) = 0;
+
+    /* Used before rendering to generate the output
+     * vertices with the given Rig (if any) and interpolated
+     * value */
+    virtual void unpack_frame(
+        const uint32_t current_frame,
+        const uint32_t next_frame,
+        const float t,
+        Rig* const rig,
+        VertexData* const out,
+        Debug* const debug=nullptr
     ) = 0;
 };
 
-typedef std::shared_ptr<MeshFrameData> MeshFrameDataPtr;
+typedef std::shared_ptr<FrameUnpacker> FrameUnpackerPtr;
 
 
 class SubMeshIteratorPair {
@@ -129,6 +146,9 @@ public:
     /* Add a skeleton to this mesh, returns False if
      * the mesh already had a skeleton, otherwise returns true */
     bool add_skeleton(uint32_t num_joints);
+
+    /* Returns true if the Mesh has had a skeleton added */
+    bool has_skeleton() const;
 
     SubMeshPtr new_submesh_with_material(
         const std::string& name,
@@ -208,7 +228,7 @@ public:
 
     SubMeshIteratorPair each_submesh() const;
 
-    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, MeshFrameDataPtr data);
+    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
@@ -221,9 +241,12 @@ public:
 public:
     // Signals
 
+    typedef sig::signal<void (Skeleton*)> SkeletonAddedSignal;
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshCreatedCallback;
     typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshDestroyedCallback;
     typedef sig::signal<void (MeshID, SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+
+    DEFINE_SIGNAL(SkeletonAddedSignal, signal_skeleton_added);
 
     SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
     SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }
@@ -238,7 +261,7 @@ private:
     std::shared_ptr<VertexData> vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
-    MeshFrameDataPtr animated_frame_data_;
+    FrameUnpackerPtr animated_frame_data_;
 
     std::vector<std::shared_ptr<SubMesh>> submeshes_;
 

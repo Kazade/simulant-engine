@@ -23,6 +23,7 @@
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"
+#include "../assets/meshes/rig.h"
 
 #define DEBUG_ANIMATION 0  /* If enabled, will show debug animation overlay */
 
@@ -31,20 +32,22 @@ namespace smlt {
 Actor::Actor(Stage* stage, SoundDriver* sound_driver):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    Source(stage, sound_driver) {
+    Source(stage, this, sound_driver) {
 
 }
 
 Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    Source(stage, sound_driver) {
+    Source(stage, this, sound_driver) {
 
     set_mesh(mesh);
 }
 
 Actor::~Actor() {
-
+    mesh_skeleton_added_.disconnect();
+    submesh_created_connection_.disconnect();
+    submesh_destroyed_connection_.disconnect();
 }
 
 VertexSpecification SubActor::vertex_specification() const {
@@ -155,6 +158,23 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
         refresh_animation_state(animation_state_->current_frame(), animation_state_->next_frame(), 0);
     }
 
+    /* Update the rig if a skeleton is added to the mesh, or, if it
+     * has one at the time of setting */
+    if(detail_level == DETAIL_LEVEL_NEAREST) {
+        mesh_skeleton_added_.disconnect();
+
+        mesh_skeleton_added_ = meshes_[DETAIL_LEVEL_NEAREST]->signal_skeleton_added().connect(
+            std::bind(&Actor::add_rig, this, std::placeholders::_1)
+        );
+
+        if(meshes_[DETAIL_LEVEL_NEAREST]->has_skeleton()) {
+            add_rig(meshes_[DETAIL_LEVEL_NEAREST]->skeleton);
+        } else {
+            /* No skeleton on the mesh we just set, so delete the rig */
+            rig_.reset();
+        }
+    }
+
     recalc_effective_meshes();
 
     /* Recalculate the AABB if necessary */
@@ -173,23 +193,31 @@ void Actor::update(float dt) {
 }
 
 void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
-    assert(meshes_[DETAIL_LEVEL_NEAREST] && meshes_[DETAIL_LEVEL_NEAREST]->is_animated());
+    MeshPtr base_mesh = meshes_[DETAIL_LEVEL_NEAREST];
+
+    assert(base_mesh && base_mesh->is_animated());
 
 #ifdef DEBUG_ANIMATION
     stage->enable_debug();
     stage->debug->set_transform(absolute_transformation());
 #endif
 
-    meshes_[DETAIL_LEVEL_NEAREST]->animated_frame_data_->unpack_frame(
-        current_frame, next_frame, interp, interpolated_vertex_data_.get()
+    base_mesh->animated_frame_data_->prepare_unpack(
+        current_frame, next_frame, interp, rig_.get()
 #if DEBUG_ANIMATION
-        , stage->debug
+        ,stage->debug
 #endif
     );
 
 #ifdef DEBUG_ANIMATION
     stage->debug->set_transform(Mat4());
 #endif
+}
+
+void Actor::add_rig(const Skeleton* skeleton) {
+    assert(!rig_);
+
+    rig_.reset(new Rig(skeleton));
 }
 
 
@@ -295,6 +323,24 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
     auto mesh = find_mesh(detail_level);
     if(!mesh) {
         return;
+    }
+
+    if(mesh->is_animated()) {
+        /*
+         * Update the vertices for the animated base mesh if that's the
+         * detail level we're using - if this is a skeletal animation then
+         * the current rig will be used
+         */
+        mesh->animated_frame_data_->unpack_frame(
+            animation_state->current_frame(),
+            animation_state->next_frame(),
+            animation_state->interp(),
+            rig_.get(),
+            interpolated_vertex_data_.get()
+    #if DEBUG_ANIMATION
+            , stage->debug
+    #endif
+        );
     }
 
     auto vdata = (has_animated_mesh()) ?

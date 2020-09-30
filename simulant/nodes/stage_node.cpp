@@ -1,5 +1,6 @@
 #include "../stage.h"
 #include "camera.h"
+#include "../window.h"
 
 namespace smlt {
 
@@ -110,6 +111,12 @@ void StageNode::set_parent(TreeNode* node) {
     recalc_visibility();
 }
 
+void StageNode::destroy_after(const Seconds& seconds) {
+    stage_->window->idle->add_timeout_once(
+        seconds, std::bind(&StageNode::destroy, this)
+    );
+}
+
 void StageNode::move_to_absolute(const Vec3& position) {
     if(!parent_is_stage()) {
         // The stage itself is immovable so, we only bother with this if this isn't he stage
@@ -157,7 +164,7 @@ void StageNode::update_transformation_from_parent() {
         auto parent_scale = parent->absolute_scaling();
 
         absolute_rotation_ = parent_rot * rotation_;
-        absolute_position_ = parent_pos + parent_rot.rotate_vector(position_);
+        absolute_position_ = parent_pos + parent_rot * position_;
         absolute_scale_ = parent_scale * scaling_;
     }
 

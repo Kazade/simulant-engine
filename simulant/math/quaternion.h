@@ -42,8 +42,6 @@ struct Quaternion {
 
     }
 
-    Vec3 rotate_vector(const Vec3& v) const;
-
     Euler to_euler() const;
 
     AxisAngle to_axis_angle() const;

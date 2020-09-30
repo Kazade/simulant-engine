@@ -96,7 +96,7 @@ Quaternion Vec3::rotation_to(const Vec3 &dir) const {
 }
 
 Vec3 Vec3::operator*(const Quaternion &rhs) const {
-    return rhs.rotate_vector(*this);
+    return rhs * (*this);
 }
 
 Vec3 Vec3::rotated_by(const Mat4 &rot) const {

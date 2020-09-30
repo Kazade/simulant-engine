@@ -65,10 +65,15 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 bool Mesh::add_skeleton(uint32_t num_joints) {
     if(!skeleton_) {
         skeleton_ = new Skeleton(this, num_joints);
+        signal_skeleton_added_(skeleton_);
         return true;
     } else {
         return false;
     }
+}
+
+bool Mesh::has_skeleton() const {
+    return skeleton_ != nullptr;
 }
 
 Mesh::~Mesh() {
@@ -85,7 +90,7 @@ void Mesh::clear() {
     rebuild_aabb();
 }
 
-void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, MeshFrameDataPtr data) {
+void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data) {
     if(animation_type_ != MESH_ANIMATION_TYPE_NONE) {
         throw std::logic_error("Tried to re-enable animations on an animated mesh");
     }

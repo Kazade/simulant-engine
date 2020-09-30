@@ -36,6 +36,8 @@ public:
 
     void rotate_to(const Quaternion& q);
     void move_to(const smlt::Vec3& v);
+
+    std::string name() const;
     void set_name(const std::string& name);
 
     Bone* link_to(Joint* other);
@@ -90,12 +92,16 @@ class Mesh;
 class Skeleton {
     friend class Joint;
 public:
-    Skeleton(Mesh* mesh, uint32_t num_joints):
+    Skeleton(Mesh* mesh, std::size_t num_joints):
         mesh_(mesh) {
         joints_.resize(num_joints, Joint(this));
     }
 
-    Joint* joint(uint32_t idx) {
+    Joint* joint(std::size_t idx) {
+        return &joints_[idx];
+    }
+
+    const Joint* joint(std::size_t idx) const {
         return &joints_[idx];
     }
 
@@ -150,17 +156,25 @@ struct SkeletonVertex {
 
 /* This processes the skeleton and updates the vertex
  * data with the new vertex positions and normals */
-class SkeletalFrameUnpacker : public MeshFrameData {
+class SkeletalFrameUnpacker : public FrameUnpacker {
 public:
     SkeletalFrameUnpacker(Mesh* mesh, std::size_t num_frames, std::size_t num_vertices);
 
-    virtual void unpack_frame(
+    void prepare_unpack(
         uint32_t current_frame,
         uint32_t next_frame,
-        float t,
-        VertexData* out,
-        Debug *debug=nullptr
-    );
+        float t, Rig* const rig,
+        Debug* const debug=nullptr
+    ) override;
+
+    virtual void unpack_frame(
+        const uint32_t current_frame,
+        const uint32_t next_frame,
+        const float t,
+        Rig* const rig,
+        VertexData* const out,
+        Debug* const debug=nullptr
+    ) override;
 
     void set_joint_state_at_frame(std::size_t frame, std::size_t joint, JointState state) {
         skeleton_frames_[frame].joints[joint] = state;
