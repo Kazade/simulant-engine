@@ -98,3 +98,9 @@ RUN . /etc/bash.bashrc; cp /opt/toolchains/dc/dc-load-ip/example-src/dc4.x /opt/
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/dc-load-ip && make
 RUN . /etc/bash.bashrc; mkdir -p /opt/toolchains/dc/bin && cp /opt/toolchains/dc/dc-load-ip/host-src/tool/dc-tool /opt/toolchains/dc/bin
 
+FROM fedora:30
+COPY --from=Build /opt/toolchains /opt/toolchains
+COPY --from=Build /etc/bash.bashrc /etc/bash.bashrc
+COPY --from=Build /root/.bashrc /root/.bashrc
+RUN dnf install -y cmake make libpng genisoimage
+
