@@ -100,7 +100,7 @@ struct MS3DVertexExtra {
 #pragma pack(pop)
 
 
-MS3DLoader::MS3DLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+MS3DLoader::MS3DLoader(const unicode& filename, StreamPtr data):
     Loader(filename, data) {}
 
 void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
@@ -117,20 +117,22 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     data_->read((char*) &header.id, sizeof(char) * 10);
     data_->read((char*) &header.version, sizeof(int32_t));
 
-    if(strncmp(header.id, "MS3D000000", 10) != 0) {
+    std::string header_id(header.id, 10);
+
+    if(header_id != "MS3D000000") {
         throw std::logic_error("Unsupported MS3D file. ID mismatch");
     }
 
-    uint16_t num_vertices;
-    uint16_t num_triangles;
-    uint16_t num_groups;
-    uint16_t num_materials;
-    uint16_t num_joints;
+    uint16_t num_vertices = 0;
+    uint16_t num_triangles = 0;
+    uint16_t num_groups = 0;
+    uint16_t num_materials = 0;
+    uint16_t num_joints = 0;
 
     int32_t comment_subversion = 0;
-    int32_t num_material_comments;
-    int32_t num_joint_comments;
-    int32_t has_model_comment;
+    int32_t num_material_comments = 0;
+    int32_t num_joint_comments = 0;
+    int32_t has_model_comment = 0;
     int32_t vertex_extra_subversion = 0;
 
     data_->read((char*) &num_vertices, sizeof(uint16_t));
@@ -140,6 +142,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     data_->read((char*) &num_triangles, sizeof(uint16_t));
     std::vector<MS3DTriangle> triangles(num_triangles);
     data_->read((char*) &triangles[0], sizeof(MS3DTriangle) * num_triangles);
+
+    printf("Triangles read\n");
 
     data_->read((char*) &num_groups, sizeof(uint16_t));
     std::vector<MS3DGroup> groups(num_groups);

@@ -84,7 +84,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     L_DEBUG("About to read the obj model");
 
     SimulantMaterialReader reader(vfs.get(), filename_);
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, data_.get(), &reader);
+
+    IStream stream(data_);
+    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &stream, &reader);
 
     if(!ret) {
         L_ERROR(_F("Unable to load .obj file {0}").format(filename_));

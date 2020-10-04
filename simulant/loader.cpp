@@ -67,10 +67,8 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
     assert(tex && "You passed a Resource that is not a texture to the texture loader");
 
-    std::vector<unsigned char> buffer(
-        (std::istreambuf_iterator<char>(*this->data_)),
-        std::istreambuf_iterator<char>()
-    );
+    std::vector<uint8_t> buffer;
+    read_into(data_, buffer);
 
     auto result = do_load(buffer);
 

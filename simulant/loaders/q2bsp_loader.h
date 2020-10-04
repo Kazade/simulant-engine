@@ -134,7 +134,7 @@ struct TexDimension {
 
 class Q2BSPLoader : public Loader {
 public:
-    Q2BSPLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    Q2BSPLoader(const unicode& filename, StreamPtr data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options=LoaderOptions());
@@ -158,7 +158,7 @@ public:
         return filename.lower().contains(".bsp");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const {
         return Loader::ptr(new Q2BSPLoader(filename, data));
     }
 };

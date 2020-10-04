@@ -241,7 +241,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         throw std::logic_error("Unsupported MD2 file: " + this->filename_.encode());
     }
 
-    data_->seekg(header.offset_frames, std::ios_base::beg);
+    data_->seek(header.offset_frames);
 
     std::vector<std::vector<MD2Vertex>> vertices_by_frame;
 
@@ -269,7 +269,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     //========== LOAD SKINS ===================
 
     std::vector<MD2Skin> skins(header.num_skins);
-    data_->seekg(header.offset_skins, std::ios::beg);
+    data_->seek(header.offset_skins);
     data_->read((char*) &skins[0], sizeof(MD2Skin) * header.num_skins);
 
     MD2Skin* skin = &skins[0];
@@ -306,12 +306,12 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     // =========== TEXTURE COORDS =============
     std::vector<MD2TexCoord> texture_coordinates(header.num_st);
-    data_->seekg(header.offset_st, std::ios_base::beg);
+    data_->seek(header.offset_st);
     data_->read((char*) &texture_coordinates[0], sizeof(MD2TexCoord) * header.num_st);
 
     // =========== TRIANGLES ==================
     std::vector<MD2Triangle> triangles(header.num_tris);
-    data_->seekg(header.offset_tris, std::ios_base::beg);
+    data_->seek(header.offset_tris);
     data_->read((char*) &triangles[0], sizeof(MD2Triangle) * header.num_tris);
 
     /* We have to combine MD2Vertices with the ST coordinates from the triangles

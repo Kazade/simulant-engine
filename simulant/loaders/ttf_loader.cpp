@@ -21,7 +21,9 @@ namespace loaders {
 
         stbtt_fontinfo* info = font->info_.get();
 
-        const std::string buffer_string((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>());
+        std::string buffer_string;
+        read_into(data_, buffer_string);
+
         const unsigned char* buffer = (const unsigned char*) buffer_string.c_str();
         // Initialize the font data
         stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));

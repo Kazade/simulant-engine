@@ -35,9 +35,9 @@
 
 namespace smlt {
 
-MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode& filename):
+MaterialScript::MaterialScript(StreamPtr data, const unicode& filename):
     filename_(filename),
-    data_(*data.get()) {
+    data_(data) {
 
 }
 
@@ -220,10 +220,10 @@ void MaterialScript::generate(Material& material) {
     };
 
     jsonic::Node json;
-    jsonic::loads(
-        std::string{std::istreambuf_iterator<char>(data_), std::istreambuf_iterator<char>()},
-        json
-    );
+    std::string str;
+    read_into(data_, str);
+
+    jsonic::loads(str, json);
 
     if(!json.has_key("passes")) {
         throw std::runtime_error("Material is missing the passes key");

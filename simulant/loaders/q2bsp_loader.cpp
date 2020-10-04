@@ -115,10 +115,10 @@ unicode locate_texture(VirtualFileSystem& locator, const unicode& filename) {
 }
 
 template<typename T>
-uint32_t read_lump(std::istream& file, const Q2::Header& header, Q2::LumpType type, std::vector<T>& lumpout) {
+uint32_t read_lump(Stream& file, const Q2::Header& header, Q2::LumpType type, std::vector<T>& lumpout) {
     uint32_t count = header.lumps[type].length / sizeof(T);
     lumpout.resize(count);
-    file.seekg((std::istream::pos_type) header.lumps[type].offset);
+    file.seek((std::size_t) header.lumps[type].offset);
     file.read((char*)&lumpout[0], (int) sizeof(T) * count);
     return count;
 }
@@ -175,7 +175,7 @@ void Q2BSPLoader::generate_materials(
             mat->set_light_map(lightmap_texture);
         }
 
-        materials.push_back(mat->id());       
+        materials.push_back(mat->id());
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
 }
@@ -352,7 +352,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    std::vector<MaterialID> materials;    
+    std::vector<MaterialID> materials;
     std::vector<Q2::TexDimension> dimensions;
 
     auto lightmap_texture = assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);

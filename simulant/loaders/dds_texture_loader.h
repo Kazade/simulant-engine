@@ -12,7 +12,7 @@ namespace loaders {
 
 class DDSTextureLoader : public BaseTextureLoader {
 public:
-    DDSTextureLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    DDSTextureLoader(const unicode& filename, StreamPtr data):
         BaseTextureLoader(filename, data) {}
 
 private:
@@ -33,7 +33,7 @@ public:
         return filename.lower().contains(".dds");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const override {
         return Loader::ptr(new DDSTextureLoader(filename, data));
     }
 };

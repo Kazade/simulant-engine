@@ -29,7 +29,7 @@ public:
     /* This is the max number of expanded frames to keep in memory */
     static uint16_t MAX_RESIDENT_FRAMES;
 
-    MD2Loader(const unicode& filename, std::shared_ptr<std::istream> data):
+    MD2Loader(const unicode& filename, StreamPtr data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options=LoaderOptions());
@@ -51,7 +51,7 @@ public:
         return filename.lower().contains(".md2");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const override {
         return Loader::ptr(new MD2Loader(filename, data));
     }
 };

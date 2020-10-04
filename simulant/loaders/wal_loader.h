@@ -30,7 +30,7 @@ namespace loaders {
 
 class WALLoader : public BaseTextureLoader {
 public:
-    WALLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    WALLoader(const unicode& filename, StreamPtr data):
         BaseTextureLoader(filename, data) {}
 
 private:
@@ -52,7 +52,7 @@ public:
         return filename.lower().contains(".wal");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const override {
         return Loader::ptr(new WALLoader(filename, data));
     }
 };

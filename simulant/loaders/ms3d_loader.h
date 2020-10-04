@@ -7,7 +7,7 @@ namespace loaders {
 
 class MS3DLoader : public Loader {
 public:
-    MS3DLoader(const unicode& filename, std::shared_ptr<std::istream> data);
+    MS3DLoader(const unicode& filename, StreamPtr data);
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
@@ -27,7 +27,7 @@ public:
         return filename.lower().contains(".ms3d");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const override {
         return Loader::ptr(new MS3DLoader(filename, data));
     }
 };

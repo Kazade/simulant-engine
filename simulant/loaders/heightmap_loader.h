@@ -79,13 +79,13 @@ namespace loaders {
 
 class HeightmapLoader : public Loader {
 public:
-    HeightmapLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    HeightmapLoader(const unicode& filename, StreamPtr data):
         Loader(filename, data) {}
 
     /* Hack! This exists for the ability to generate a heightmap from an already
      * loaded texture. */
     HeightmapLoader(const TexturePtr texture):
-        Loader("", std::make_shared<std::istringstream>()),
+        Loader("", std::make_shared<NullStream>()),
         texture_(texture) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -109,7 +109,7 @@ public:
         return filename.lower().ends_with(".tga") || filename.lower().ends_with(".png");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const override {
         return Loader::ptr(new HeightmapLoader(filename, data));
     }
 };

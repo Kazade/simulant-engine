@@ -26,7 +26,7 @@ namespace loaders {
 
 class TiledLoader : public Loader {
 public:
-    TiledLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    TiledLoader(const unicode& filename, StreamPtr data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -41,12 +41,12 @@ public:
     virtual ~TiledLoaderType() {}
 
     unicode name() override { return "tiled"; }
-    bool supports(const unicode& filename) const override {        
+    bool supports(const unicode& filename) const override {
         bool ret = filename.lower().ends_with(".tmx");
         return ret;
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const override {
         return Loader::ptr(new TiledLoader(filename, data));
     }
 };

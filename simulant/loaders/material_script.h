@@ -39,12 +39,12 @@ public:
 class MaterialScript :
     public RefCounted<MaterialScript> {
 public:
-    MaterialScript(std::shared_ptr<std::istream> data, const unicode &filename);
+    MaterialScript(StreamPtr data, const unicode &filename);
     void generate(Material& material);
 
 private:
     unicode filename_;
-    std::istream& data_;
+    StreamPtr data_;
 };
 
 namespace loaders {
@@ -54,7 +54,7 @@ class MaterialScriptLoader:
     public Loader {
 
 public:
-    MaterialScriptLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    MaterialScriptLoader(const unicode& filename, StreamPtr data):
         Loader(filename, data) {
         parser_ = MaterialScript::create(data, filename);
     }
@@ -72,7 +72,7 @@ public:
         return filename.lower().contains(".smat");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const {
         return Loader::ptr(new MaterialScriptLoader(filename, data));
     }
 };

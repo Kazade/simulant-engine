@@ -114,10 +114,10 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
     ParticleScript* ps = loadable_to<ParticleScript>(resource);
     jsonic::Node js;
 
-    jsonic::loads(
-        std::string((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>()),
-        js
-    );
+    std::string str;
+    read_into(data_, str);
+
+    jsonic::loads(str, js);
 
     ps->set_name((js.has_key("name")) ? js["name"].get<jsonic::String>(): "");
 

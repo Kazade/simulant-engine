@@ -68,7 +68,7 @@ struct Char {
 #pragma pack()
 
 
-void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &options) {
+void FNTLoader::read_text(Font* font, StreamPtr& data, const LoaderOptions &options) {
     _S_UNUSED(options);
 
     typedef std::unordered_map<std::string, std::string> Options;
@@ -89,11 +89,11 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
         return result;
     };
 
-    data.seekg(0, std::ios::beg);
+    data->seek(0);
 
     std::string page;
     std::string line;
-    while(std::getline(data, line)) {
+    while(get_line(data, line)) {
         std::string type;
         auto line_settings = parse_line(line, type);
 
@@ -140,7 +140,7 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
     prepare_texture(font, page);
 }
 
-void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions& options) {
+void FNTLoader::read_binary(Font* font, StreamPtr& data, const LoaderOptions& options) {
     _S_UNUSED(options);
 
     enum BlockType {
@@ -163,20 +163,20 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
 
     std::memset(info.name, 0, 256);
 
-    while(data.good()) {
+    while(data->ready()) {
         BlockHeader header;
-        data.read((char*)&header.type, sizeof(uint8_t));
-        data.read((char*)&header.size, sizeof(uint32_t));
+        data->read((char*)&header.type, sizeof(uint8_t));
+        data->read((char*)&header.size, sizeof(uint32_t));
 
         switch(header.type) {
             case INFO: {
                 // We allow a name up to 256 characters, this just makes sure that
                 // we don't go trashing memory
                 assert(header.size < sizeof(InfoBlock));
-                data.read((char*) &info, header.size);  // Using size, rather than sizeof(BlockHeader) is important
+                data->read((char*) &info, header.size);  // Using size, rather than sizeof(BlockHeader) is important
             } break;
             case COMMON: {
-                data.read((char*) &common, sizeof(Common));
+                data->read((char*) &common, sizeof(Common));
             } break;
             case PAGES: {
                 /* Pages are a set of null terminated strings, all the same length
@@ -184,7 +184,7 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
                  * length of all the strings
                  */
                 std::vector<char> page_data(header.size);
-                data.read(&page_data[0], header.size);
+                data->read(&page_data[0], header.size);
                 auto it = std::find(page_data.begin(), page_data.end(), '\0');
                 if(it != page_data.end()) {
                     auto length = std::distance(page_data.begin(), it);
@@ -204,12 +204,12 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
             case CHARS: {
                 auto char_count = header.size / sizeof(Char);
                 chars.resize(char_count);
-                data.read((char*) &chars[0], sizeof(Char) * char_count);
+                data->read((char*) &chars[0], sizeof(Char) * char_count);
             } break;
             case KERNING_PAIRS: {
                 // Do nothing with this for now, just skip to the end of the file
                 std::vector<char> buffer(header.size);
-                data.read(&buffer[0], header.size);
+                data->read(&buffer[0], header.size);
             } break;
         }
     }
@@ -287,9 +287,9 @@ void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
     data_->read(version_details, sizeof(char) * 4);
 
     if(std::memcmp(version_details, TEXT_MARKER, 4) == 0) {
-        read_text(font, *data_, options);
+        read_text(font, data_, options);
     } else if(std::memcmp(version_details, BINARY_MARKER, 4) == 0) {
-        read_binary(font, *data_, options);
+        read_binary(font, data_, options);
     } else {
         throw std::runtime_error("Unsupported .FNT file");
     }

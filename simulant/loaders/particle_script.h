@@ -26,7 +26,7 @@ namespace loaders {
 
 class ParticleScriptLoader : public Loader {
 public:
-    ParticleScriptLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    ParticleScriptLoader(const unicode& filename, StreamPtr data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -45,7 +45,7 @@ public:
         return filename.lower().ends_with(".spart") || filename.lower().ends_with(".kglp");
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const unicode& filename, StreamPtr data) const override {
         return Loader::ptr(new ParticleScriptLoader(filename, data));
     }
 };

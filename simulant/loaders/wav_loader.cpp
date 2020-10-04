@@ -22,7 +22,7 @@ static int convert_to_int(char* buffer, int len) {
     return a;
 }
 
-static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
+static bool read_riff(StreamPtr stream, Sound* sound, std::size_t len) {
     _S_UNUSED(len);
 
     char buffer[4];
@@ -60,11 +60,11 @@ static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
     return true;
 }
 
-static bool read_junk(std::istream*, Sound*, std::size_t) {
+static bool read_junk(StreamPtr, Sound*, std::size_t) {
     return true;
 }
 
-static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
+static bool read_data(StreamPtr stream, Sound* sound, std::size_t len) {
     std::vector<uint8_t> data;
 
     data.resize(len);
@@ -73,7 +73,7 @@ static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
     return true;
 }
 
-typedef std::function<bool (std::istream* stream, Sound* sound, std::size_t len)> ChunkFunc;
+typedef std::function<bool (StreamPtr stream, Sound* sound, std::size_t len)> ChunkFunc;
 
 static ChunkFunc get_chunk_func(const std::string& name) {
     if(name == std::string("RIFF")) return read_riff;
@@ -96,7 +96,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         data_->read(buffer, 4 * sizeof(char));
         uint32_t size = convert_to_int(buffer, 4);
-        uint32_t offset = data_->tellg();
+        uint32_t offset = data_->tell();
 
         if(chunk_id == "RIFF") {
             // RIFF is the top-level chunk and its size is
@@ -106,7 +106,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         }
 
         auto func = get_chunk_func(chunk_id);
-        if(!func(data_.get(), sound, size)) {
+        if(!func(data_, sound, size)) {
             L_ERROR("Unsupported .wav format");
             return;
         }
@@ -114,7 +114,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         if(chunk_id == "data") {
             break;
         }
-        data_->seekg(offset + size);
+        data_->seek(offset + size);
     }
 
     auto& data = sound->data();
