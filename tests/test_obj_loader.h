@@ -41,7 +41,7 @@ public:
 
         loaders::OBJLoader loader(
             "test.obj",
-            std::make_shared<std::istringstream>(obj_file)
+            open(obj_file)
         );
 
         auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
@@ -73,7 +73,7 @@ public:
 
         loaders::OBJLoader loader(
             "test.obj",
-            std::make_shared<std::istringstream>(obj_file)
+            open(obj_file)
         );
 
         auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
@@ -104,7 +104,7 @@ public:
 
         loaders::OBJLoader loader(
             "test.obj",
-            std::make_shared<std::istringstream>(obj_file)
+            open(obj_file)
         );
 
         auto mesh = window->shared_assets->new_mesh_from_file(

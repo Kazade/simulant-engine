@@ -29,6 +29,8 @@
 #include "../vfs.h"
 #include "../utils/string.h"
 
+#include "../streams/streambuf.h"
+
 namespace smlt {
 namespace loaders {
 
@@ -47,7 +49,11 @@ public:
 
         try {
             auto stream = locator_->open_file(filename);
-            tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
+
+            StreamBuf sbuf(stream);
+            std::istream s(&sbuf);
+
+            tinyobj::LoadMtl(matMap, materials, &s, warn, err);
         } catch(AssetMissingError& e) {
             L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
         }
@@ -85,8 +91,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     SimulantMaterialReader reader(vfs.get(), filename_);
 
-    IStream stream(data_);
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &stream, &reader);
+    StreamBuf sbuf(data_);
+    std::istream stream(&sbuf);
+
+    bool ret = tinyobj::LoadObj(
+        &attrib, &shapes, &materials, &warn, &err, &stream, &reader
+    );
 
     if(!ret) {
         L_ERROR(_F("Unable to load .obj file {0}").format(filename_));

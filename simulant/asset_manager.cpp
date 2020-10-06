@@ -573,7 +573,12 @@ FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollect
 
     try {
         LoaderOptions options;
-        window->loader_for(filename)->into(font.get(), options);
+        auto loader = window->loader_for(filename);
+        if(!loader) {
+            destroy_font(font_id);
+            return FontPtr();
+        }
+        loader->into(font.get(), options);
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around

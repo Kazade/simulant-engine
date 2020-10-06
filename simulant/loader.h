@@ -69,7 +69,10 @@ public:
 
     Loader(const unicode& filename, StreamPtr data):
         filename_(filename),
-        data_(data) {}
+        data_(data) {
+
+        assert(data->ready());
+    }
 
     virtual ~Loader();
     void into(Loadable* resource, const LoaderOptions& options = LoaderOptions()) {

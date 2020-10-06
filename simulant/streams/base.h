@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 #include "../macros.h"
 
@@ -37,6 +38,25 @@ public:
         return read((uint8_t*) out, n);
     }
 
+    virtual StreamState peek(uint8_t* c) {
+        if(!ready()) {
+            return status();
+        }
+
+        read(c, 1);
+        bool was_eof = eof();
+        seek(-1, SEEK_FROM_CURRENT);
+        return (was_eof) ? STREAM_STATE_EOF : status_;
+    }
+
+    virtual StreamState write(const std::string& s) {
+        for(auto c: s) {
+            write((uint8_t*) &c, 1);
+        }
+
+        return status_;
+    }
+
     virtual StreamState write(const uint8_t* out, std::size_t n) {
         _S_UNUSED(out);
         _S_UNUSED(n);
@@ -51,7 +71,7 @@ public:
         return status_;
     }
 
-    virtual std::size_t tell() {
+    virtual std::size_t tell() const {
         return 0;
     }
 

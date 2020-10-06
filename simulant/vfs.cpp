@@ -116,19 +116,17 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
         }
     }
 #endif
-    L_ERROR(_F("Unable to find file: {0}").format(final_name));
+    L_DEBUG(_F("Unable to find file: {0}").format(final_name));
     throw AssetMissingError("Unable to find file: " + final_name);
 }
 
 
-std::shared_ptr<std::istream> VirtualFileSystem::open_file(const unicode& filename) {
+StreamPtr VirtualFileSystem::open_file(const unicode& filename) {
     unicode path = locate_file(filename);
-
-    std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode(), std::ios::in | std::ios::binary);
-    return file_in;
+    return open(filename, STREAM_MODE_READ);
 }
 
-std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& filename) {
+StreamPtr VirtualFileSystem::read_file(const unicode& filename) {
 #ifdef __ANDROID__
     //If we're on Android, don't bother trying to locate the file, just try to load it from the APK
     std::shared_ptr<std::stringstream> result = std::make_shared<std::stringstream>();
@@ -155,16 +153,12 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& f
 #else
     unicode path = locate_file(filename);
 
-    std::ifstream file_in(path.encode(), std::ios::in | std::ios::binary);
-
-    if(!file_in) {
-        L_ERROR(_F("Unable to load file: {0}").format(filename));
-        throw AssetMissingError("Unable to load file: " + filename.encode());
+    auto file_in = open(path, STREAM_MODE_READ);
+    if(file_in->ready()) {
+        std::string data;
+        read_into(file_in, data);
+        return open(data);
     }
-
-    std::shared_ptr<std::stringstream> result(new std::stringstream);
-    (*result) << file_in.rdbuf();
-    return result;
 #endif
 }
 
@@ -173,7 +167,7 @@ std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filen
 
     // Load as binary and let portable_getline do its thing
     std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
-    
+
     if(!file_in) {
         L_ERROR(_F("Unable to load file: {0}").format(filename));
         throw AssetMissingError("Unable to load file: " + filename.encode());

@@ -1238,9 +1238,11 @@ simulant/shaders/default_shaders.h
 simulant/std/optional.hpp
 simulant/streams/base.h
 simulant/streams/file_input_stream.h
-simulant/streams/istream.h
+simulant/streams/memory_stream.h
 simulant/streams/null_stream.h
+simulant/streams/stream.cpp
 simulant/streams/stream.h
+simulant/streams/streambuf.h
 simulant/testing/mock_window.h
 simulant/ui/element.cpp
 simulant/ui/element.h

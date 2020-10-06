@@ -25,6 +25,7 @@
 
 #include "generic/managed.h"
 #include "utils/unicode.h"
+#include "streams/stream.h"
 
 namespace smlt {
 class Window;
@@ -45,8 +46,8 @@ public:
     std::list<unicode>& search_path() { return resource_path_; }
 
     unicode locate_file(const unicode& filename) const;
-    std::shared_ptr<std::istream> open_file(const unicode& filename);
-    std::shared_ptr<std::stringstream> read_file(const unicode& filename);
+    StreamPtr open_file(const unicode& filename);
+    StreamPtr read_file(const unicode& filename);
     std::vector<std::string> read_file_lines(const unicode& filename);
 
     bool add_search_path(const unicode& path);

@@ -121,15 +121,21 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
     try {
         final_file = vfs->locate_file(filename);
     } catch(AssetMissingError&) {
-        L_ERROR("Couldn't get loader as file doesn't exist");
+        L_ERROR(_F("Couldn't get loader as file doesn't exist: {0}").format(filename));
         return LoaderPtr();
     }
 
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 
+    auto stream = vfs->open_file(final_file);
+    if(!stream->ready()) {
+        L_ERROR(_F("Unable to open file: {0}").format(final_file));
+        return LoaderPtr();
+    }
+
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
-            auto new_loader = loader_type->loader_for(final_file, vfs->read_file(final_file));
+            auto new_loader = loader_type->loader_for(final_file, stream);
             new_loader->set_vfs(this->vfs_.get());
 
             possible_loaders.push_back(
@@ -163,7 +169,7 @@ LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename
         if(loader_type->name() == loader_name) {
             if(loader_type->supports(final_file)) {
                 L_DEBUG(_F("Found loader {0} for file: {1}").format(loader_name, filename.encode()));
-                return loader_type->loader_for(final_file, vfs->open_file(final_file));
+                return loader_type->loader_for(final_file, vfs->read_file(final_file));
             } else {
                 throw std::logic_error(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename).encode());
             }

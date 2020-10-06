@@ -18,6 +18,10 @@ public:
     }
 
     StreamState read(uint8_t* out, std::size_t size) override {
+        if(!ready()) {
+            return status();
+        }
+
         fread((void*) out, size, 1, file_in);
 
         if(feof(file_in)) {
@@ -44,6 +48,10 @@ public:
         }
 
         return status();
+    }
+
+    std::size_t tell() const override {
+        return ftell(file_in);
     }
 
     void close() override {

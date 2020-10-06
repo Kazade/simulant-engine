@@ -5,7 +5,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-
+#include "simulant/streams/stream.h"
 #include "simulant/loaders/material_script.h"
 
 class MaterialScriptTest : public smlt::test::SimulantTestCase {
@@ -42,8 +42,7 @@ public:
 
         auto mat = window->shared_assets->material(window->shared_assets->new_material());
 
-        auto stream = std::make_shared<std::stringstream>();
-        (*stream) << text;
+        auto stream = smlt::open(text);
 
         smlt::MaterialScript script(stream, "some/path");
         script.generate(*mat);

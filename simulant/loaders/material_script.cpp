@@ -299,12 +299,17 @@ void MaterialScript::generate(Material& material) {
 
             added = window->vfs->add_search_path(parent_dir);
 
-            auto vertex_shader = window->vfs->read_file(vertex_shader_path);
-            auto fragment_shader = window->vfs->read_file(fragment_shader_path);
+            auto vertex_shader = window->vfs->open_file(vertex_shader_path);
+            auto fragment_shader = window->vfs->open_file(fragment_shader_path);
+
+            std::string vert_data, frag_data;
+
+            read_into(vertex_shader, vert_data);
+            read_into(fragment_shader, frag_data);
 
             auto program = renderer->new_or_existing_gpu_program(
-                std::string{std::istreambuf_iterator<char>(*vertex_shader), std::istreambuf_iterator<char>()},
-                std::string{std::istreambuf_iterator<char>(*fragment_shader), std::istreambuf_iterator<char>()}
+                vert_data,
+                frag_data
             );
 
             material.pass(i)->set_gpu_program(program);
