@@ -11,6 +11,11 @@ public:
     FileInputStream(const unicode& filepath) {
         file_in = fopen(filepath.encode().c_str(), "rb");
         if(file_in) {
+            register_close_func([this]() {
+                fclose(file_in);
+                file_in = nullptr;
+            });
+
             set_status(STREAM_STATE_OK);
         } else {
             set_status(STREAM_STATE_FAILED);
@@ -52,13 +57,6 @@ public:
 
     std::size_t tell() const override {
         return ftell(file_in);
-    }
-
-    void close() override {
-        if(file_in) {
-            fclose(file_in);
-        }
-        set_status(STREAM_STATE_EOF);
     }
 private:
     FILE* file_in = nullptr;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -76,6 +77,9 @@ public:
     }
 
     virtual void close() {
+        if(close_func_) {
+            close_func_();
+        }
         status_ = STREAM_STATE_EOF;
     }
 
@@ -100,8 +104,14 @@ protected:
         status_ = status;
     }
 
+    template<typename T>
+    void register_close_func(T func) {
+        close_func_ = func;
+    }
 private:
     StreamState status_ = STREAM_STATE_EOF;
+
+    std::function<void ()> close_func_;
 };
 
 typedef std::shared_ptr<Stream> StreamPtr;
