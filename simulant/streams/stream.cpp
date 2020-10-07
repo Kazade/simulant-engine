@@ -6,7 +6,7 @@ bool get_line(StreamPtr stream, std::string& line) {
     line.clear();
 
     char c = '\0';
-    while(stream->ready()) {
+    while(stream->ok()) {
         if(stream->read(&c, 1) != STREAM_STATE_OK) {
             break;
         }
@@ -46,7 +46,7 @@ std::size_t read_into(StreamPtr stream, std::string& str) {
     stream->seek(0);
 
     std::size_t count = 0;
-    while(stream->ready()) {
+    while(stream->ok()) {
         uint8_t c;
         if(stream->read(&c, 1) == STREAM_STATE_OK) {
             str += c;
@@ -57,7 +57,7 @@ std::size_t read_into(StreamPtr stream, std::string& str) {
 }
 
 std::size_t read_into(StreamPtr stream, std::vector<uint8_t>& bytes) {
-    while(stream->ready()) {
+    while(stream->ok()) {
         uint8_t c;
         if(stream->read(&c, 1) == STREAM_STATE_OK) {
             bytes.push_back(c);

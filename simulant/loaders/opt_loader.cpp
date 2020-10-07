@@ -145,41 +145,41 @@ struct ExternalTextureDataBlock {
 
 typedef int32_t Offset;
 
-void OPTLoader::process_vertex_block(std::istream& file) {
+void OPTLoader::process_vertex_block(Stream& file) {
     VertexDataBlock vertex_data_block;
     file.read((char*)&vertex_data_block, sizeof(VertexDataBlock));
     vertex_data_block.offset_to_vertices -= global_offset;
-    file.seekg(vertex_data_block.offset_to_vertices, std::ios_base::beg);
+    file.seek(vertex_data_block.offset_to_vertices);
 
     vertices.resize(vertex_data_block.vertex_count);
     file.read((char*)&vertices[0], sizeof(Vec3)* vertex_data_block.vertex_count);
     L_DEBUG(unicode("Loaded {0} vertices").format(vertex_data_block.vertex_count).encode());
 }
 
-void OPTLoader::process_texcoord_block(std::istream& file) {
+void OPTLoader::process_texcoord_block(Stream& file) {
     TextureVertexDataBlock tv_data_block;
     file.read((char*)&tv_data_block, sizeof(TextureVertexDataBlock));
     tv_data_block.offset_to_texture_vertices -= global_offset;
-    file.seekg(tv_data_block.offset_to_texture_vertices, std::ios_base::beg);
+    file.seek(tv_data_block.offset_to_texture_vertices);
 
     texture_vertices.resize(tv_data_block.texture_vertex_count);
     file.read((char*)&texture_vertices[0], sizeof(float) * tv_data_block.texture_vertex_count * 2);
     L_DEBUG(unicode("Loaded {0} texture vertices").format(tv_data_block.texture_vertex_count).encode());
 }
 
-void OPTLoader::process_normal_block(std::istream& file) {
+void OPTLoader::process_normal_block(Stream& file) {
     VertexNormalDataBlock vertex_normal_data_block;
     file.read((char*)&vertex_normal_data_block, sizeof(VertexNormalDataBlock));
     vertex_normal_data_block.offset_to_vertex_normals -= global_offset;
-    file.seekg(vertex_normal_data_block.offset_to_vertex_normals, std::ios_base::beg);
+    file.seek(vertex_normal_data_block.offset_to_vertex_normals);
 
     vertex_normals.resize(vertex_normal_data_block.vertex_normal_count);
     file.read((char*)&vertex_normals[0], sizeof(Vec3)* vertex_normal_data_block.vertex_normal_count);
     L_DEBUG(unicode("Loaded {0} vertex normals").format(vertex_normal_data_block.vertex_normal_count).encode());
 }
 
-void OPTLoader::process_reused_texture_block(std::istream& file) {
-    int32_t offset = file.tellg();
+void OPTLoader::process_reused_texture_block(Stream& file) {
+    int32_t offset = file.tell();
 
     EmbeddedTextureDataBlockHeader header_info;
     file.read((char*)&header_info, sizeof(EmbeddedTextureDataBlockHeader));
@@ -188,12 +188,12 @@ void OPTLoader::process_reused_texture_block(std::istream& file) {
     L_DEBUG(unicode("Found *reused* texture {0} - offset: {1}").format(current_texture, offset).encode());
 }
 
-void OPTLoader::process_lod_block(std::istream& file) {
+void OPTLoader::process_lod_block(Stream& file) {
     LODDataBlock lod_data_block;
     file.read((char*)&lod_data_block, sizeof(LODDataBlock));
     lod_data_block.offset_to_face_data_header_jumps -= global_offset;
     lod_data_block.offset_to_lod_distances -= global_offset;
-    file.seekg(lod_data_block.offset_to_face_data_header_jumps, std::ios_base::beg);
+    file.seek(lod_data_block.offset_to_face_data_header_jumps);
 
     std::vector<int32_t> new_offsets(lod_data_block.face_data_header_count, 0);
     file.read((char*)&new_offsets[0], sizeof(int32_t) * lod_data_block.face_data_header_count);
@@ -212,20 +212,20 @@ void OPTLoader::process_lod_block(std::istream& file) {
     }
 }
 
-void OPTLoader::process_face_block(std::istream& file) {
+void OPTLoader::process_face_block(Stream& file) {
     FaceDataBlock face_data_block;
     file.read((char*)&face_data_block, sizeof(FaceDataBlock));
     face_data_block.offset_to_face_data -= global_offset;
-    file.seekg(face_data_block.offset_to_face_data, std::ios_base::beg);
+    file.seek(face_data_block.offset_to_face_data);
 
     int32_t unknown; //Texture ID?
     file.read((char*)&unknown, sizeof(int32_t));
 
-    int32_t face_data_start = file.tellg();
+    int32_t face_data_start = file.tell();
     for(int32_t j = 0; j < face_data_block.face_count; ++j) {
         //4 indexes for vertices, edges, texcoords, normals + face normal + texture info
         int32_t stride = 64;
-        file.seekg(face_data_start + (j * stride));
+        file.seek(face_data_start + (j * stride));
 
         std::vector<int32_t> vertex_indices(4, -1);
         file.read((char*)&vertex_indices[0], sizeof(int32_t) * 4);
@@ -314,7 +314,7 @@ void OPTLoader::process_face_block(std::istream& file) {
     }
 }
 
-void OPTLoader::process_embedded_texture_block(std::istream& file) {
+void OPTLoader::process_embedded_texture_block(Stream& file) {
     EmbeddedTextureDataBlock texture_data_block;
     file.read((char*)&texture_data_block.header, sizeof(EmbeddedTextureDataBlockHeader));
     texture_data_block.header.offset_to_palette_data_offset -= global_offset;
@@ -329,7 +329,7 @@ void OPTLoader::process_embedded_texture_block(std::istream& file) {
     }
 
     //Make sure we are looking in the right place
-    file.seekg(texture_data_block.header.offset_to_palette_data_offset, std::ios_base::beg);
+    file.seek(texture_data_block.header.offset_to_palette_data_offset);
     file.read((char*)&texture_data_block.data, sizeof(EmbeddedTextureDataBlockData));
 
     texture_data_block.data.offset_to_palette_data -= global_offset;
@@ -348,10 +348,10 @@ void OPTLoader::process_embedded_texture_block(std::istream& file) {
     new_texture.bytes_per_pixel = 3;
 
     uint16_t palette_data[256];
-    file.seekg(texture_data_block.data.offset_to_palette_data);
+    file.seek(texture_data_block.data.offset_to_palette_data);
 
     // Seek past 15 shade tables to get to the actual palette
-    file.seekg(sizeof(uint16_t) * 256 * 15, std::ios_base::cur);
+    file.seek(sizeof(uint16_t) * 256 * 15, SEEK_FROM_CURRENT);
 
     // Read in the palette data
     file.read((char*)&palette_data, sizeof(uint16_t) * 256);
@@ -380,12 +380,12 @@ void OPTLoader::process_embedded_texture_block(std::istream& file) {
     current_texture = texture_name;
 }
 
-void OPTLoader::read_block(std::istream& file, Offset offset) {
+void OPTLoader::read_block(Stream& file, Offset offset) {
     uint8_t team = 2;
 
     DataBlockHeader data_block_header;
 
-    file.seekg(offset, std::ios_base::beg);
+    file.seek(offset);
     file.read((char*)&data_block_header, sizeof(DataBlockHeader));
 
     if(data_block_header.type > 0 && data_block_header.type != TEXTURE_OFFSET_BLOCK) {
@@ -420,7 +420,7 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
         OffsetDataBlock mesh_info_data_block;
         file.read((char*)&mesh_info_data_block, sizeof(OffsetDataBlock));
         mesh_info_data_block.offset_to_block_offsets -= global_offset;
-        file.seekg(mesh_info_data_block.offset_to_block_offsets, std::ios_base::beg);
+        file.seek(mesh_info_data_block.offset_to_block_offsets);
 
         //Initialize the offset array to zero, but make it the right size
         std::vector<int32_t> new_block_offsets(mesh_info_data_block.block_offset_count, 0);
@@ -448,14 +448,11 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
 }
 
 void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
+    _S_UNUSED(options);
+
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
     assert(mesh && "You passed a Resource that is not a mesh to the OPT loader");
-
-    std::ifstream file(filename_.encode().c_str(), std::ios::binary);
-    if(!file.good()) {
-        throw std::runtime_error("Couldn't load the OPT file: " + filename_.encode());
-    }
 
     VertexSpecification spec;
     spec.position_attribute = VERTEX_ATTRIBUTE_3F;
@@ -470,8 +467,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     MainJumpHeader main_jump_header;
 
     //Read the main headers
-    file.read((char*)&main_header, sizeof(MainHeader));
-    file.read((char*)&main_jump_header, sizeof(MainJumpHeader));
+    data_->read((char*)&main_header, sizeof(MainHeader));
+    data_->read((char*)&main_jump_header, sizeof(MainJumpHeader));
 
     //The global offset is 8 too large to use (weird...)
     main_header.global_offset -= 8;
@@ -482,14 +479,14 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     //All offsets need to have the global offset added
     main_jump_header.offset_to_mesh_header_offsets -= main_header.global_offset;
 
-    file.seekg(main_jump_header.offset_to_mesh_header_offsets, std::ios_base::beg);
+    data_->seek(main_jump_header.offset_to_mesh_header_offsets);
 
     //Following the jump header is a list of offsets to mesh headers
     //We read those here
     std::vector<Offset> offsets;
     for(uint16_t i = 0; i < main_jump_header.mesh_header_offset_count; ++i) {
         int32_t offset;
-        file.read((char*)&offset, sizeof(int32_t));
+        data_->read((char*)&offset, sizeof(int32_t));
 
         offsets.push_back(offset - global_offset);
     }
@@ -500,8 +497,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         texture_vertices.clear();
         current_lod = 0;
 
-        file.seekg(off, std::ios_base::beg);
-        read_block(file, off);
+        data_->seek(off);
+        read_block(*data_, off);
     }
 
     for(Texture& tex: textures) {
@@ -555,7 +552,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
             submesh.vertex_data->normal(normal.x, normal.y, normal.z);
             submesh.vertex_data->move_next();
             submesh.index_data->index(submesh.vertex_data->count()-1);
-        }        
+        }
     }
 
     for(Texture tex: textures) {

@@ -149,10 +149,9 @@ unsigned long get_free_ram() {
 
 int32_t StatsPanel::get_memory_usage_in_megabytes() {
 #ifdef __linux__
-    std::ifstream file("/proc/self/status");
+    auto file = open("/proc/self/status");
     std::string line;
-    while(std::getline(file, line)) {
-
+    while(get_line(file, line)) {
         if(unicode(line).starts_with("VmRSS:")) {
             auto parts = unicode(line).split(" ", -1, false);
             if(parts.size() == 3) {

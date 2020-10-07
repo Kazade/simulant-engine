@@ -128,7 +128,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 
     auto stream = vfs->open_file(final_file);
-    if(!stream->ready()) {
+    if(!stream->ok()) {
         L_ERROR(_F("Unable to open file: {0}").format(final_file));
         return LoaderPtr();
     }

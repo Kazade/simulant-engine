@@ -40,14 +40,14 @@ public:
     void into(Loadable& resource, const LoaderOptions& options=LoaderOptions());
 
 private:
-    void read_block(std::istream& file, Offset offset);
-    void process_vertex_block(std::istream& file);
-    void process_texcoord_block(std::istream& file);
-    void process_normal_block(std::istream& file);
-    void process_face_block(std::istream& file);
-    void process_reused_texture_block(std::istream& file);
-    void process_lod_block(std::istream& file);
-    void process_embedded_texture_block(std::istream& file);
+    void read_block(Stream& file, Offset offset);
+    void process_vertex_block(Stream& file);
+    void process_texcoord_block(Stream& file);
+    void process_normal_block(Stream& file);
+    void process_face_block(Stream& file);
+    void process_reused_texture_block(Stream& file);
+    void process_lod_block(Stream& file);
+    void process_embedded_texture_block(Stream& file);
 
     Offset global_offset;
 

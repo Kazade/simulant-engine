@@ -163,7 +163,7 @@ void FNTLoader::read_binary(Font* font, StreamPtr& data, const LoaderOptions& op
 
     std::memset(info.name, 0, 256);
 
-    while(data->ready()) {
+    while(data->ok()) {
         BlockHeader header;
         data->read((char*)&header.type, sizeof(uint8_t));
         data->read((char*)&header.size, sizeof(uint32_t));

@@ -23,6 +23,10 @@ enum SeekFrom {
 
 class Stream {
 public:
+    Stream() = default;
+    Stream(const Stream&) = delete;
+    Stream& operator=(const Stream&) = delete;
+
     virtual ~Stream() {
         close();
     }
@@ -40,7 +44,7 @@ public:
     }
 
     virtual StreamState peek(uint8_t* c) {
-        if(!ready()) {
+        if(!ok()) {
             return status();
         }
 
@@ -87,7 +91,7 @@ public:
         return status_;
     }
 
-    bool ready() const {
+    bool ok() const {
         return status_ == STREAM_STATE_OK;
     }
 
@@ -97,6 +101,10 @@ public:
 
     bool failed() const {
         return status_ == STREAM_STATE_FAILED;
+    }
+
+    operator bool() const {
+        return ok();
     }
 
 protected:

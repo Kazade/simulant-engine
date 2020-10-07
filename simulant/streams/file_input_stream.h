@@ -23,7 +23,7 @@ public:
     }
 
     StreamState read(uint8_t* out, std::size_t size) override {
-        if(!ready()) {
+        if(!ok()) {
             return status();
         }
 

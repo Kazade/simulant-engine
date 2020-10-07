@@ -18,8 +18,6 @@
 //
 
 #include <cstdint>
-#include <iostream>
-#include <sstream>
 
 #include "../logging.h"
 #include "../vfs.h"

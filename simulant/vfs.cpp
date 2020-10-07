@@ -154,7 +154,7 @@ StreamPtr VirtualFileSystem::read_file(const unicode& filename) {
     unicode path = locate_file(filename);
 
     auto file_in = open(path, STREAM_MODE_READ);
-    if(file_in->ready()) {
+    if(file_in->ok()) {
         std::string data;
         read_into(file_in, data);
         return open(data);

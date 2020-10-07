@@ -71,7 +71,7 @@ public:
         filename_(filename),
         data_(data) {
 
-        assert(data->ready());
+        assert(data->ok());
     }
 
     virtual ~Loader();
