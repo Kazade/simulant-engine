@@ -230,3 +230,4 @@ simulant/nodes/skies
 simulant/nodes/sprites
 simulant/assets/meshes
 simulant/streams
+deps/libAL/src
