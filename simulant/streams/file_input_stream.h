@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdio>
 #include "base.h"
 #include "../utils/unicode.h"
@@ -27,6 +28,8 @@ public:
             return status();
         }
 
+        assert(file_in);
+
         fread((void*) out, size, 1, file_in);
 
         if(feof(file_in)) {
@@ -39,12 +42,16 @@ public:
     }
 
     virtual StreamState seek(const std::size_t offset, SeekFrom from=SEEK_FROM_START) override {
-        fseek(
+        assert(file_in);
+
+        if(fseek(
             file_in,
             offset,
             (from == SEEK_FROM_START) ? SEEK_SET :
             (from == SEEK_FROM_CURRENT) ? SEEK_CUR : SEEK_END
-        );
+        ) != 0) {
+            return STREAM_STATE_FAILED;
+        }
 
         if(feof(file_in)) {
             set_status(STREAM_STATE_EOF);
@@ -56,6 +63,8 @@ public:
     }
 
     std::size_t tell() const override {
+        assert(file_in);
+
         return ftell(file_in);
     }
 private:
