@@ -42,7 +42,9 @@ public:
     }
 
     virtual StreamState seek(const std::size_t offset, SeekFrom from=SEEK_FROM_START) override {
-        assert(file_in);
+        if(!ok()) {
+            return status();
+        }
 
         if(fseek(
             file_in,

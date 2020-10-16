@@ -35,7 +35,12 @@ StreamPtr open(uint8_t* data, uint32_t size, StreamMode mode) {
 
 StreamPtr open(const unicode& filename, StreamMode mode) {
     if(mode == STREAM_MODE_READ) {
-        return std::make_shared<FileInputStream>(filename);
+        auto stream = std::make_shared<FileInputStream>(filename);
+        if(!stream->ok()) {
+            return nullptr;
+        } else {
+            return stream;
+        }
     } else {
         L_ERROR("Not implemented: write-streams");
         return StreamPtr();

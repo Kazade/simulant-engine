@@ -1552,3 +1552,4 @@ cmake_modules/simulant-config.cmake
 simulant/utils/noise.cpp
 simulant/utils/noise.h
 tests/test_rig.h
+tests/test_streams.h
