@@ -9,6 +9,8 @@
 #include "memory_stream.h"
 #include "null_stream.h"
 
+#define MEMORY_FILE ":memory:"
+
 namespace smlt {
 
 enum StreamMode {
@@ -21,7 +23,6 @@ StreamPtr open(uint8_t* data, uint32_t size, StreamMode mode);
 StreamPtr open(const std::string& data);
 
 std::size_t read_into(StreamPtr stream, std::vector<uint8_t>& bytes);
-
 std::size_t read_into(StreamPtr stream, std::string& str);
 
 bool get_line(StreamPtr stream, std::string& line);
