@@ -11,7 +11,7 @@ public:
     void test_pipe_memory_into_string() {
         std::string out;
 
-        auto memory = open(MEMORY_FILE);
+        auto memory = open(MEMORY_FILE, STREAM_MODE_READ_WRITE);
         memory->write("Hello World!");
 
         read_into(memory, out);

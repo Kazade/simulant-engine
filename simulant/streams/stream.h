@@ -15,7 +15,8 @@ namespace smlt {
 
 enum StreamMode {
     STREAM_MODE_READ,
-    STREAM_MODE_WRITE
+    STREAM_MODE_WRITE,
+    STREAM_MODE_READ_WRITE
 };
 
 StreamPtr open(const unicode& filename, StreamMode mode);
