@@ -20,6 +20,7 @@ public:
     void test_pipe_file_into_string() {
         std::string out;
         auto input = open("cube.obj", STREAM_MODE_READ);
+        assert_true(input);
         read_into(input, out);
     }
 };

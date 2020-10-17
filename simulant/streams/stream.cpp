@@ -50,6 +50,8 @@ StreamPtr open(const unicode& filename, StreamMode mode) {
 }
 
 std::size_t read_into(StreamPtr stream, std::string& str) {
+    assert(stream);
+
     stream->seek(0);
 
     std::size_t count = 0;
