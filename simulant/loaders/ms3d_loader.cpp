@@ -309,6 +309,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             texname = texname.substr(2);
         }
 
+        L_DEBUG(_F("MS3D: Loading texture {0}...").format(texname));
+
         auto tex = assets->new_texture_from_file(texname);
         if(tex) {
             mat->set_diffuse_map(tex);
