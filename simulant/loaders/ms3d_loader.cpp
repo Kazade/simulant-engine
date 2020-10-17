@@ -9,7 +9,6 @@
 namespace smlt {
 namespace loaders {
 
-#pragma pack(push, 1)
 struct MS3DHeader {
     char id[10];
     int32_t version;
@@ -97,14 +96,13 @@ struct MS3DVertexExtra {
     uint32_t extra; // Only if subversion is 2
 };
 
-#pragma pack(pop)
-
-
 MS3DLoader::MS3DLoader(const unicode& filename, std::shared_ptr<std::istream> data):
     Loader(filename, data) {}
 
 void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     _S_UNUSED(options);
+
+    L_DEBUG("MS3D: Beginning read..");
 
     Mesh* mesh = loadable_to<Mesh>(resource);
     assert(mesh && "Tried to load an MS3D file into a non-mesh");
@@ -117,29 +115,53 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     data_->read((char*) &header.id, sizeof(char) * 10);
     data_->read((char*) &header.version, sizeof(int32_t));
 
-    if(strncmp(header.id, "MS3D000000", 10) != 0) {
+    std::string header_id(header.id, 10);
+
+    if(header_id != "MS3D000000") {
         throw std::logic_error("Unsupported MS3D file. ID mismatch");
     }
 
-    uint16_t num_vertices;
-    uint16_t num_triangles;
-    uint16_t num_groups;
-    uint16_t num_materials;
-    uint16_t num_joints;
+    L_DEBUG("MS3D: Header OK.");
+
+    uint16_t num_vertices = 0;
+    uint16_t num_triangles = 0;
+    uint16_t num_groups = 0;
+    uint16_t num_materials = 0;
+    uint16_t num_joints = 0;
 
     int32_t comment_subversion = 0;
-    int32_t num_material_comments;
-    int32_t num_joint_comments;
-    int32_t has_model_comment;
+    int32_t num_material_comments = 0;
+    int32_t num_joint_comments = 0;
+    int32_t has_model_comment = 0;
     int32_t vertex_extra_subversion = 0;
 
     data_->read((char*) &num_vertices, sizeof(uint16_t));
+
+    L_DEBUG("MS3D: Reading vertices...");
+
     std::vector<MS3DVertex> vertices(num_vertices);
-    data_->read((char*) &vertices[0], sizeof(MS3DVertex) * num_vertices);
+    for(auto& vert: vertices) {
+        data_->read((char*) &vert.flags, sizeof(MS3DVertex::flags));
+        data_->read((char*) &vert.xyz, sizeof(MS3DVertex::xyz));
+        data_->read((char*) &vert.bone, sizeof(MS3DVertex::bone));
+        data_->read((char*) &vert.ref_count, sizeof(MS3DVertex::ref_count));
+    }
+
+    L_DEBUG("MS3D: Reading triangles...");
 
     data_->read((char*) &num_triangles, sizeof(uint16_t));
     std::vector<MS3DTriangle> triangles(num_triangles);
-    data_->read((char*) &triangles[0], sizeof(MS3DTriangle) * num_triangles);
+    for(auto& tri: triangles) {
+        data_->read((char*) &tri.flags, sizeof(MS3DTriangle::flags));
+        data_->read((char*) &tri.indices, sizeof(MS3DTriangle::indices));
+        data_->read((char*) &tri.normals, sizeof(MS3DTriangle::normals));
+        data_->read((char*) &tri.s, sizeof(MS3DTriangle::s));
+        data_->read((char*) &tri.t, sizeof(MS3DTriangle::t));
+        data_->read((char*) &tri.smoothingGroup, sizeof(MS3DTriangle::smoothingGroup));
+        data_->read((char*) &tri.groupIndex, sizeof(MS3DTriangle::groupIndex));
+    }
+
+    L_DEBUG("MS3D: Reading groups...");
 
     data_->read((char*) &num_groups, sizeof(uint16_t));
     std::vector<MS3DGroup> groups(num_groups);
@@ -154,13 +176,28 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_->read((char*) &groups[i].material_index, sizeof(char));
     }
 
+    L_DEBUG("MS3D: Reading materials...");
+
     data_->read((char*) &num_materials, sizeof(uint16_t));
     std::vector<MS3DMaterial> materials(num_materials);
-    data_->read((char*) &materials[0], sizeof(MS3DMaterial) * num_materials);
+    for(auto& mat: materials) {
+        data_->read((char*) &mat.name, sizeof(MS3DMaterial::name));
+        data_->read((char*) &mat.ambient, sizeof(MS3DMaterial::ambient));
+        data_->read((char*) &mat.diffuse, sizeof(MS3DMaterial::diffuse));
+        data_->read((char*) &mat.specular, sizeof(MS3DMaterial::specular));
+        data_->read((char*) &mat.emissive, sizeof(MS3DMaterial::emissive));
+        data_->read((char*) &mat.shininess, sizeof(MS3DMaterial::shininess));
+        data_->read((char*) &mat.transparency, sizeof(MS3DMaterial::transparency));
+        data_->read((char*) &mat.mode, sizeof(MS3DMaterial::mode));
+        data_->read((char*) &mat.texture, sizeof(MS3DMaterial::texture));
+        data_->read((char*) &mat.alphamap, sizeof(MS3DMaterial::alphamap));
+    }
 
     MS3DAnimData anim_data;
     data_->read((char*) &anim_data, sizeof(MS3DAnimData));
     data_->read((char*) &num_joints, sizeof(uint16_t));
+
+    L_DEBUG("MS3D: Reading joints...");
 
     std::vector<MS3DJoint> joints(num_joints);
     for(uint16_t i = 0; i < num_joints; ++i) {
@@ -195,6 +232,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     if(data_->eof()) {
         vertex_extra_subversion = 0;
     } else {
+        L_DEBUG("MS3D: Reading comments...");
+
         MS3DComment comment; // We do nothing with this for now
         data_->read((char*) &num_material_comments, sizeof(int32_t));
         for(int32_t i = 0; i < num_material_comments; ++i) {
@@ -253,6 +292,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     auto vdata = mesh->vertex_data.get();
 
+    L_DEBUG("MS3D: Generating mesh");
+
     for(auto& group: groups) {
         auto& material = materials[group.material_index];
         smlt::MaterialPtr mat = assets->new_material();
@@ -267,6 +308,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         if(texname[0] == '.' && texname[1] == '\\') {
             texname = texname.substr(2);
         }
+
+        L_DEBUG(_F("MS3D: Loading texture {0}...").format(texname));
 
         auto tex = assets->new_texture_from_file(texname);
         if(tex) {
