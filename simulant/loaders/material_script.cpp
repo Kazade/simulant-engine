@@ -300,7 +300,18 @@ void MaterialScript::generate(Material& material) {
             added = window->vfs->add_search_path(parent_dir);
 
             auto vertex_shader = window->vfs->open_file(vertex_shader_path);
+            if(!vertex_shader) {
+                L_ERROR("Unable to open vertex shader!!");
+            }
+
             auto fragment_shader = window->vfs->open_file(fragment_shader_path);
+            if(!fragment_shader) {
+                L_ERROR("Unable to open fragment shader!!");
+                // FIXME: Fallback to doing *something*!
+            }
+
+            assert(vertex_shader);
+            assert(fragment_shader);
 
             std::string vert_data, frag_data;
 
@@ -321,6 +332,11 @@ namespace loaders {
 
 void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions&) {
     Material* mat = loadable_to<Material>(resource);
+    if(!mat) {
+        L_ERROR("Error loading material!");
+        return;
+    }
+
     parser_->generate(*mat);
 }
 
