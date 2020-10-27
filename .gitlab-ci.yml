@@ -377,7 +377,7 @@ test:dreamcast-sh4-gcc:
     - dnf install -y lxdream
   script:
     - cd ${TARGET}/debug
-    - lxdream --audio=null -H -e tests/simulant_tests.elf | python3 tools/test_parser.py
+    - lxdream --audio=null -H tests/simulant_tests.elf | python3 tools/test_parser.py
   artifacts:
    paths:
     - ${TARGET}/debug/simulant/*.a
