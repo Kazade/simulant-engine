@@ -157,6 +157,7 @@ build:windows-x64-mingw:
    - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
    - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
    - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
+   - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
