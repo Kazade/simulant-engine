@@ -18,9 +18,6 @@
 //
 #include <string>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "./deps/tiny_obj_loader.h"
-
 #include "obj_loader.h"
 
 #include "../meshes/mesh.h"
@@ -32,252 +29,406 @@
 namespace smlt {
 namespace loaders {
 
-class SimulantMaterialReader : public tinyobj::MaterialReader {
-public:
-    SimulantMaterialReader(VirtualFileSystem* locator, const unicode& obj_filename):
-        locator_(locator),
-        obj_filename_(obj_filename) {}
+void parse_face(const std::string& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index) {
+    /*
+     *  Parses the following
+     *  1//2
+     *  1
+     *  1/1
+     *  1/1/1
+     *  and outputs to the passed references. The index will equal -1 if it wasn't in the input
+     */
 
-    bool operator()(const std::string &matId,
-        std::vector<tinyobj::material_t> *materials,
-        std::map<std::string, int> *matMap, std::string *warn,
-        std::string *err) override {
+    auto parts = split(input, "/");
+    auto slash_count = count(input, "/");
 
-        std::string filename = kfs::path::join(kfs::path::dir_name(obj_filename_.encode()), matId);
-
-        try {
-            auto stream = locator_->open_file(filename);
-            tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
-        } catch(AssetMissingError& e) {
-            L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
+    if(slash_count == 0 || ends_with(input, "//")) {
+        tex_index = -1;
+        normal_index = -1;
+        vertex_index = std::stoi(parts[0]);
+    } else if(slash_count == 1) {
+        normal_index = -1;
+        vertex_index = std::stoi(parts[0]);
+        tex_index = std::stoi(parts[1]);
+    } else if(slash_count == 2) {
+        if(contains(input, "//")) {
+            tex_index = -1;
+        } else {
+            tex_index = std::stoi(parts[1]);
         }
 
-        return true;
+        vertex_index = std::stoi(parts[0]);
+        normal_index = std::stoi(parts[parts.size() - 1]);
     }
 
-private:
-    VirtualFileSystem* locator_ = nullptr;
-    unicode obj_filename_;
-};
+    //Handle the 1-based indexing
+    if(vertex_index > -1) {
+        vertex_index -= 1;
+    }
+
+    if(tex_index > -1) {
+        tex_index -= 1;
+    }
+
+    if(normal_index > -1) {
+        normal_index -= 1;
+    }
+}
 
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
 
     L_DEBUG(_F("Loading mesh from {0}").format(filename_));
 
-    MeshLoadOptions mesh_opts;
-    auto it = options.find(MESH_LOAD_OPTIONS_KEY);
+    std::vector<Vec3> vertices;
+    std::vector<Vec2> tex_coords;
+    std::vector<Vec3> normals;
 
-    if(it != options.end()) {
-        mesh_opts = smlt::any_cast<MeshLoadOptions>(it->second);
-    }
+    std::unordered_map<std::string, smlt::MaterialPtr> materials;
+    SubMesh* sm = nullptr;
 
-    L_DEBUG("Got MeshOptions");
+    std::string current_material;
 
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
+    VertexSpecification spec;
+    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
+    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+    spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
+    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    mesh->reset(spec);
 
-    std::string warn;
-    std::string err;
+    SubMesh* default_submesh = nullptr;
 
-    L_DEBUG("About to read the obj model");
+    bool has_materials = false;
 
-    SimulantMaterialReader reader(vfs.get(), filename_);
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, data_.get(), &reader);
+    auto process_mtllib = [&](std::istream& data) {
+        std::string line;
+        while(std::getline(data, line)) {
+            line = strip(line);
+            auto parts = split(line);
+            if(line.empty() || parts.empty()) continue;
+            if(parts[0][0] == '#') continue;
 
-    if(!ret) {
-        L_ERROR(_F("Unable to load .obj file {0}").format(filename_));
-        L_ERROR(_F("Error was: {0}").format(err));
-        return;
-    }
+            // Make sure we lower-case... .obj files aren't consistent
+            std::transform(parts[0].begin(), parts[0].end(), parts[0].begin(), ::tolower);
 
-    if(!warn.empty()) {
-        L_WARN(warn);
-    }
+            if(parts[0] == "usemtl") {
+                current_material = parts[1];
+            } else if(parts[0] == "newmtl") {
+                auto material_name = parts[1];
 
-    L_DEBUG(_F("Mesh has {0} shapes and {1} materials").format(shapes.size(), materials.size()));
+                auto new_mat = mesh->asset_manager().clone_default_material();
+                assert(new_mat);
 
-    VertexSpecification spec = mesh->vertex_data->vertex_specification();
-    mesh->reset(spec);  // Make sure we're empty before we begin
+                // Clone the default material
+                materials.insert(
+                    std::make_pair(
+                        material_name,
+                        new_mat
+                    )
+                );
 
-    std::unordered_map<std::string, MaterialPtr> final_materials;
-    std::unordered_map<int32_t, SubMeshPtr> material_submeshes;
-    std::unordered_map<std::string, TexturePtr> loaded_textures;
+                current_material = material_name;
 
-    auto index_type = (attrib.vertices.size() / 3 >= std::numeric_limits<uint16_t>::max()) ?
-        INDEX_TYPE_32_BIT : INDEX_TYPE_16_BIT;
+                has_materials = true;
+            } else if(parts[0] == "ns") {
+                auto mat = materials.at(current_material);
+                assert(mat);
 
-    // First, load the materials, and create submeshes
-    uint32_t i = 0;
-    for(auto& material: materials) {
-        MaterialPtr new_mat = mesh->asset_manager().clone_default_material();
+                mat->pass(0)->set_shininess(std::stof(parts[1]));
+            } else if(parts[0] == "ka") {
+                auto mat = materials.at(current_material);
+                assert(mat);
 
-        auto alpha = (material.dissolve) ? 1.0f : 0.0f;
+                float r = std::stof(parts[1]);
+                float g = std::stof(parts[2]);
+                float b = std::stof(parts[3]);
 
-        new_mat->each([&](uint32_t, MaterialPass* pass) {
-            pass->set_diffuse(smlt::Colour(material.diffuse[0], material.diffuse[1], material.diffuse[2], alpha));
-            pass->set_ambient(smlt::Colour(material.ambient[0], material.ambient[1], material.ambient[2], alpha));
-            pass->set_specular(smlt::Colour(material.specular[0], material.specular[1], material.specular[2], alpha));
+                mat->pass(0)->set_ambient(smlt::Colour(r, g, b, 1.0));
+            } else if(parts[0] == "kd") {
+                auto mat = materials.at(current_material);
+                assert(mat);
 
-            // Shininess values "normally" are between 0 and 1000, but OpenGL expects them to
-            // be up to 128 so we scale that here
-            pass->set_shininess((material.shininess / 1000.0f) * 128);
-            pass->set_cull_mode(mesh_opts.cull_mode);
+                float r = std::stof(parts[1]);
+                float g = std::stof(parts[2]);
+                float b = std::stof(parts[3]);
 
-            if(!mesh_opts.blending_enabled) {
-                pass->set_blend_func(smlt::BLEND_NONE);
-            }
-        });
+                mat->pass(0)->set_diffuse(smlt::Colour(r, g, b, 1.0));
+            } else if(parts[0] == "ks") {
+                auto mat = materials.at(current_material);
+                assert(mat);
 
-        /* Apply the diffuse texture (if any) */
-        if(!material.diffuse_texname.empty()) {
-            auto it = loaded_textures.find(material.diffuse_texname);
-            if(it != loaded_textures.end()) {
-                new_mat->set_diffuse_map(it->second);
-            } else {
+                float r = std::stof(parts[1]);
+                float g = std::stof(parts[2]);
+                float b = std::stof(parts[3]);
+
+                mat->pass(0)->set_specular(smlt::Colour(r, g, b, 1.0));
+            } else if(parts[0] == "ni") {
+
+            } else if(parts[0] == "d") {
+                // Dissolved == Transparency... apparently
+            } else if(parts[0] == "illum") {
+
+            } else if(parts[0] == "map_kd") {
+                // The path may have spaces in, so we have to recombine everything
+                unicode texture_name = parts[1];
+                for(std::size_t i = 2; i < parts.size(); ++i) {
+                    texture_name += " " + parts[i];
+                }
+
+    #ifndef WIN32
+                // Convert windows paths (this is probably broken)
+                texture_name = texture_name.replace("\\", "/");
+    #endif
+
+                auto mat = materials.at(current_material);
+
                 std::vector<std::string> possible_locations;
 
                 // Check relative texture file first
                 possible_locations.push_back(
                     kfs::path::join(
                         kfs::path::dir_name(filename_.encode()),
-                        material.diffuse_texname
+                        texture_name.encode()
                     )
                 );
 
                 // Check potentially absolute file path
-                possible_locations.push_back(material.diffuse_texname);
+                possible_locations.push_back(texture_name.encode());
+
+                if(texture_name.contains("_64")) {
+                    std::cout << "Here" << std::endl;
+                }
 
                 bool found = false;
                 for(auto& texture_file: possible_locations) {
                     if(kfs::path::exists(texture_file)) {
-                        auto tex = mesh->asset_manager().new_texture_from_file(texture_file);
-                        new_mat->set_diffuse_map(tex);
-                        loaded_textures.insert(std::make_pair(material.diffuse_texname, tex));
+                        auto tex_id = mesh->asset_manager().new_texture_from_file(texture_file);
+                        mat->set_diffuse_map(tex_id);
                         found = true;
                         break;
                     }
                 }
 
                 if(!found) {
-                    L_WARN(_F("Unable to locate texture {0}").format(material.diffuse_texname));
+                    L_WARN(_F("Unable to locate texture {0}").format(texture_name.encode()));
                 }
             }
         }
+    };
 
-        final_materials.insert(std::make_pair(material.name, new_mat));
 
-        auto submesh = mesh->new_submesh_with_material(material.name, new_mat->id(), MESH_ARRANGEMENT_TRIANGLES, index_type);
-        material_submeshes.insert(std::make_pair(i++, submesh));
-    }
+    std::string line;
+    for(uint32_t l = 0; std::getline(*data_, line); ++l) {
+        line = strip(line);
 
-    L_DEBUG("Loaded materials for obj model");
+        auto parts = split(line); //Split on whitespace
 
-    typedef std::tuple<int, int, int> VertexKey;
+        if(line.empty() || parts.empty()) {
+            continue;
+        }
 
-    std::unordered_map<VertexKey, uint32_t> shared_vertices;
+        //Ignore comments
+        if(parts[0][0] == '#') {
+            continue;
+        }
 
-    float default_tc [] = {0.0f, 0.0f};
-    float default_n [] = {0.0f, 0.0f, 1.0f};
-
-    for(auto& shape: shapes) {
-        uint32_t offset = 0;
-        for(uint32_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f) {
-            uint8_t num_verts = shape.mesh.num_face_vertices[f];
-            assert(num_verts == 3 && "Only triangles supported");
-
-            auto mat_id = shape.mesh.material_ids[f];
-            if(mat_id == -1 && !material_submeshes.count(mat_id)) {
-                // Special case, no material!
-                material_submeshes.insert(
-                    std::make_pair(
-                        mat_id,
-                        mesh->new_submesh("__default__", MESH_ARRANGEMENT_TRIANGLES, index_type)
-                    )
-                );
+        if(parts[0] == "v") {
+            if(parts.size() != 4) {
+                throw std::runtime_error(_F("Found {0} components for vertex, expected 3").format(parts.size()));
             }
 
-            if(!material_submeshes.count(mat_id)) {
-                L_ERROR(_F("Unable to find submesh with mat id: {0}").format(mat_id));
+            float x = std::stof(parts[1]);
+            float y = std::stof(parts[2]);
+            float z = std::stof(parts[3]);
+
+            vertices.push_back(Vec3(x, y, z));
+        } else if(parts[0] == "vt") {
+            if(parts.size() < 3) {
+                throw std::runtime_error(_F("Found {0} components for texture coordinate, expected 2").format(parts.size() - 1));
             }
 
-            auto submeshptr = material_submeshes.at(mat_id);
+            float x = std::stof(parts[1]);
+            float y = std::stof(parts[2]);
 
-            for(auto i = 0; i < num_verts; ++i) {
-                auto index = shape.mesh.indices[offset + i];
-                auto key = std::make_tuple(
-                    index.vertex_index, index.normal_index, index.texcoord_index
-                );
+            tex_coords.push_back(Vec2(x, y));
+        } else if(parts[0] == "vn") {
+            if(parts.size() != 4) {
+                throw std::runtime_error(_F("Found {0} components for vertex, expected 3").format(parts.size() - 1));
+            }
 
-                /* If the material has a diffuse texture, and no texture, then ignore
-                 * if that's what's requested.
-                 * FIXME: Otherwise, just ignore the texture as per spec */
-                if(!mesh_opts.obj_include_faces_with_missing_texture_vertices &&
-                    index.texcoord_index == -1 && mat_id != -1 &&
-                    !materials[mat_id].diffuse_texname.empty()) {
-                    break;
+            float x = std::stof(parts[1]);
+            float y = std::stof(parts[2]);
+            float z = std::stof(parts[3]);
+
+            Vec3 n(x, y, z);
+            normals.push_back(n.normalized());
+        } else if(parts[0] == "f") {
+            std::string smi;
+            if(current_material.empty()) {
+                if(!default_submesh) {
+                    default_submesh = mesh->new_submesh("default");
                 }
-
-                auto it = shared_vertices.find(key);
-                if(it == shared_vertices.end()) {
-                    float* pos = &attrib.vertices[3 * index.vertex_index];
-                    float* colour = &attrib.colors[3 * index.vertex_index];
-                    float* tc = (index.texcoord_index == -1) ?
-                        &default_tc[0] : &attrib.texcoords[2 * index.texcoord_index];
-                    float* n = (index.normal_index == -1) ?
-                        &default_n[0] : &attrib.normals[3 * index.normal_index];
-
-                    mesh->vertex_data->position(pos[0], pos[1], pos[2]);
-
-                    /* Tinyobj loader loads the non-standard vertex colour extension
-                     * but defaults to white anyway so it's safe to just read them in */
-                    if(spec.has_diffuse()) {
-                        mesh->vertex_data->diffuse(
-                            smlt::Colour(colour[0], colour[1], colour[2], 1.0)
+                smi = "default";
+            } else {
+                if(materials.count(current_material)) {
+                    auto mat_id = materials.at(current_material)->id();
+                    if(mesh->has_submesh(current_material)) {
+                        smi = current_material;
+                    } else {
+                        mesh->new_submesh_with_material(
+                            current_material, mat_id, MESH_ARRANGEMENT_TRIANGLES, INDEX_TYPE_32_BIT
                         );
+                        smi = current_material;
                     }
-
-                    if(spec.has_normals()) {
-                        mesh->vertex_data->normal(n[0], n[1], n[2]);
-                    }
-
-                    if(spec.has_texcoord0()) {
-                        mesh->vertex_data->tex_coord0(tc[0], tc[1]);
-                    }
-
-                    mesh->vertex_data->move_next();
-
-                    auto idx = mesh->vertex_data->count() - 1;
-                    shared_vertices.insert(std::make_pair(key, idx));
-
-                    submeshptr->index_data->index(idx);
                 } else {
-                    submeshptr->index_data->index(it->second);
+                    L_WARN(_F("Ignoring non-existant material ({0}) while loading {1}").format(
+                        current_material,
+                        filename_
+                    ));
+                    if(sm) {
+                        smi = sm->name(); // Just stick with the current submesh, don't change it
+                    } else {
+                        if(!default_submesh) {
+                            default_submesh = mesh->new_submesh("default");
+                        }
+                        smi = "default";
+                    }
                 }
             }
+            sm = mesh->find_submesh(smi);
 
-            offset += num_verts;
-            submeshptr->index_data->done();
+            VertexData* vertex_data = sm->vertex_data.get();
+            IndexData* index_data = sm->index_data.get();
+
+            //Faces are a pain in the arse to parse
+            parts = std::vector<std::string>(parts.begin() + 1, parts.end()); //Strip off the first bit
+
+            /*
+             * This loop looks weird because it builds a triangle fan
+             * from the face indexes, as there could be more than 3. It goes
+             * (0, 2, 1), (0, 3, 2) etc.
+             */
+            uint32_t first_index = 0;
+            uint32_t i = 0;
+            for(auto& part: parts) {
+                int32_t v, tc, n;
+                parse_face(part, v, tc, n);
+
+                vertex_data->position(vertices[v]);
+
+                if(tc != -1) {
+                    vertex_data->tex_coord0(tex_coords[tc]);
+                }
+
+                if(n != -1) {
+                    vertex_data->normal(normals[n]);
+                }
+                vertex_data->diffuse(smlt::Colour::WHITE);
+                vertex_data->move_next();
+
+                if(i == 2) {
+                    first_index = vertex_data->count() - 3;
+                }
+
+                if(i >= 2) {
+                    index_data->index(first_index);
+                    index_data->index(vertex_data->count() - 2);
+                    index_data->index(vertex_data->count() - 1);
+                }
+
+                ++i;
+            }
+        } else if(parts[0] == "usemtl") {
+            current_material = parts[1];
+        } else if(parts[0] == "mtllib") {
+            /*
+             * If we find a mtllib command, we load the material file and insert its
+             * lines into this position. This makes it so it's like the materials are embedded
+             * in the current file which makes parsing the same as if they were!
+             */
+
+             // We need to re-get the filename because mtllib paths may have spaces and the existing 'parts'
+             // variable would have split it to pieces.
+             unicode filename = split(line, " ", 1).back();
+             filename = kfs::path::join(kfs::path::dir_name(filename_.encode()), filename.encode());
+
+             auto stream = vfs->open_file(filename);
+             if(stream) {
+                process_mtllib(*stream);
+             } else {
+                L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
+             }
         }
     }
 
-    L_DEBUG("Loaded shapes for obj model");
 
-    std::vector<std::string> empty;
-    for(auto submesh: mesh->each_submesh()) {
-        if(!submesh->index_data->count()) {
-            empty.push_back(submesh->name());
+    if(normals.empty()) {
+        for(auto& submesh: mesh->each_submesh()) {
+            VertexData* vertex_data = submesh->vertex_data.get();
+            IndexData* index_data = submesh->index_data.get();
+
+            // The mesh didn't have any normals, let's generate some!
+            std::unordered_map<int, smlt::Vec3> index_to_normal;
+
+            // Go through all the triangles, add the face normal to all the vertices
+            for(uint16_t i = 0; i < index_data->count(); i+=3) {
+                uint16_t idx1 = index_data->at(i);
+                uint16_t idx2 = index_data->at(i+1);
+                uint16_t idx3 = index_data->at(i+2);
+
+                const smlt::Vec3* v1 = vertex_data->position_at<Vec3>(idx1);
+                const smlt::Vec3* v2 = vertex_data->position_at<Vec3>(idx2);
+                const smlt::Vec3* v3 = vertex_data->position_at<Vec3>(idx3);
+
+                smlt::Vec3 normal = (*v2 - *v1).normalized().cross((*v3 - *v1).normalized()).normalized();
+
+                index_to_normal[idx1] += normal;
+                index_to_normal[idx2] += normal;
+                index_to_normal[idx3] += normal;
+            }
+
+            // Now set the normal on the vertex data
+            for(auto p: index_to_normal) {
+                vertex_data->move_to(p.first);
+                vertex_data->normal(p.second.normalized());
+            }
         }
     }
 
-    for(auto& name: empty) {
-        mesh->destroy_submesh(name);
-    }
+    if(!has_materials) {
+        //If the OBJ file has no materials, have a look around for textures in the same directory
 
-    L_DEBUG("Removed empty submeshes");
+        auto parts = kfs::path::split_ext(filename_.encode());
+
+        std::vector<unicode> possible_diffuse_maps = {
+            parts.first + ".jpg",
+            parts.first + "_color.jpg",
+            parts.first + "_diffuse.jpg",
+            parts.first + ".png",
+            parts.first + "_color.png",
+            parts.first + "_diffuse.png",
+            parts.first + ".dds",
+            parts.first + "_color.dds",
+            parts.first + "_diffuse.dds",
+        };
+
+        for(const unicode& p: possible_diffuse_maps) {
+            if(kfs::path::exists(p.encode())) {
+                //Create a material from it and apply it to the submesh
+                MaterialPtr mat = mesh->asset_manager().new_material_from_texture(
+                    mesh->asset_manager().new_texture_from_file(p.encode())
+                );
+
+                sm->set_material(mat);
+                break;
+            }
+        }
+    }
 
     mesh->vertex_data->done();
+    for(auto& submesh: mesh->each_submesh()) {
+        submesh->index_data->done();
+    }
 
     L_DEBUG("Mesh loaded");
 }
