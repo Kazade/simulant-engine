@@ -93,7 +93,11 @@ static void init_source(Sound* self, SourceInstance& source) {
      */
 
     StreamWrapper::ptr stream(new StreamWrapper(stb_vorbis_open_memory(&self->data()[0], self->data().size(), nullptr, nullptr)));
-    source.set_stream_func(std::bind(&queue_buffer, self->shared_from_this(), stream, std::placeholders::_1));
+
+    /* Using a weak_ptr is important, otherwise the shared_ptr will be bound to the function
+     * object even though the argument is a weak_ptr */
+    std::weak_ptr<Sound> wptr = self->shared_from_this();
+    source.set_stream_func(std::bind(&queue_buffer, wptr, stream, std::placeholders::_1));
 }
 
 

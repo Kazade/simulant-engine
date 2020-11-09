@@ -150,8 +150,10 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         // and store the smart pointer in the callback (by passing by value
         // to the lambda). This prevents the sound from being destroyed while
         // the data is being streamed
-        auto sound = wptr.lock();
-        source.set_stream_func([state, sound](AudioBufferID id) -> int32_t {
+
+        source.set_stream_func([state, wptr](AudioBufferID id) -> int32_t {
+            auto sound = wptr.lock();
+
             if(sound) {
                 auto& data = sound->data();
                 const uint32_t buffer_size = sound->buffer_size();
@@ -176,9 +178,9 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
                 );
 
                 return buffer.size();
+            } else {
+                return -1;
             }
-
-            return 0;
         });
     });
 }
