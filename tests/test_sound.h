@@ -81,6 +81,28 @@ public:
         }
     }
 
+    void test_sound_destruction_stops_play() {
+        auto sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+
+        auto sid = sound->id();
+
+        assert_true(window->shared_assets->has_sound(sid));
+        window->play_sound(sound);
+
+        assert_true(window->is_sound_playing());
+
+        window->shared_assets->destroy_sound(sound);
+        sound.reset();
+
+        window->shared_assets->run_garbage_collection();
+        while(window->playing_sound_count()) {
+            window->run_frame();
+        }
+
+        assert_false(window->shared_assets->has_sound(sid));
+        assert_false(window->is_sound_playing());
+    }
+
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;

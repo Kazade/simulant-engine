@@ -108,7 +108,7 @@ private:
 
     AudioSourceID source_;
     std::vector<AudioBufferID> buffers_;
-    SoundID sound_;
+    std::weak_ptr<Sound> sound_;
     StreamFunc stream_func_;
 
     AudioRepeat loop_stream_;
@@ -118,13 +118,16 @@ private:
     smlt::Vec3 previous_position_;
     bool first_update_ = true;
 public:
-    SourceInstance(Source& parent, SoundID sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
+    SourceInstance(Source& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~SourceInstance();
 
     void start();
     void update(float dt);
 
     bool is_playing() const;
+
+    /* Set the stream function for filling buffers. A -1 return
+     * means the sound has been destroyed */
     void set_stream_func(StreamFunc func) { stream_func_ = func; }
 
     bool is_dead() const { return is_dead_; }
@@ -136,8 +139,16 @@ public:
     Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~Source();
 
-    void play_sound(SoundID sound, AudioRepeat repeat=AUDIO_REPEAT_NONE);
-    int32_t playing_sound_count() const;
+    void play_sound(SoundID sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+
+    /* The number of sounds this source is currently playing */
+    uint8_t playing_sound_count() const;
+
+    /* The number of sounds that have finished, but aren't yet
+     * destroyed */
+    uint8_t played_sound_count() const;
+
+    bool is_sound_playing() const;
 
     void update_source(float dt);
 

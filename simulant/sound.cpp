@@ -39,7 +39,7 @@ void Sound::init_source(SourceInstance& source) {
     init_source_(source);
 }
 
-SourceInstance::SourceInstance(Source &parent, SoundID sound, AudioRepeat loop_stream, DistanceModel model):
+SourceInstance::SourceInstance(Source &parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
     parent_(parent),
     source_(0),
     buffers_{0, 0},
@@ -77,6 +77,12 @@ void SourceInstance::start() {
     //Fill up two buffers to begin with
     auto bs1 = stream_func_(buffers_[0]);
     auto bs2 = stream_func_(buffers_[1]);
+
+    if(bs1 < 0 || bs2 < 0) {
+        /* Sound was destroyed immediately */
+        is_dead_ = true;
+        return;
+    }
 
     int to_queue = (bs1 && bs2) ? 2 : (bs1 || bs2)? 1 : 0;
 
@@ -121,7 +127,14 @@ void SourceInstance::update(float dt) {
     while(processed--) {
         AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).back();
 
-        uint32_t bytes = stream_func_(buffer);
+        int32_t bytes = stream_func_(buffer);
+
+        if(bytes < 0) {
+            /* -1 indicates the sound has been deleted */
+            is_dead_ = true;
+            finished = true;
+            break;
+        }
 
         if(!finished) {
             if(!bytes) {
@@ -148,11 +161,13 @@ void SourceInstance::update(float dt) {
 
         if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
             //Restart the sound
-            auto sound = parent_.stage_->assets->sound(sound_);
-            assert(sound);
-
-            sound->init_source(*this);
-            start();
+            auto sound = sound_.lock();
+            if(sound) {
+                sound->init_source(*this);
+                start();
+            } else {
+                is_dead_ = true;
+            }
         } else {
             //Mark as dead
             is_dead_ = true;
@@ -177,11 +192,17 @@ Source::~Source() {
 
 }
 
-void Source::play_sound(SoundID sound, AudioRepeat repeat) {
-    if(!sound) {
+void Source::play_sound(SoundID sound_id, AudioRepeat repeat) {
+    if(!sound_id) {
         L_WARN("Tried to play an invalid sound");
         return;
     }
+
+    /* There's surely a better way of determining which asset manager to use here */
+    auto asset_manager = (stage_) ? stage_->assets.get() : window_->shared_assets.get();
+    auto sound = asset_manager->sound(sound_id);
+
+    assert(sound);
 
     // If this is the window, we create an ambient source
     SourceInstance::ptr new_source = SourceInstance::create(
@@ -191,15 +212,7 @@ void Source::play_sound(SoundID sound, AudioRepeat repeat) {
         (stage_) ? DISTANCE_MODEL_POSITIONAL : DISTANCE_MODEL_AMBIENT
     );
 
-    /* There's surely a better way of determining which asset manager to use here */
-    if(stage_) {
-        auto s = stage_->assets->sound(sound);
-        s->init_source(*new_source);
-    } else {
-        auto s = window_->shared_assets->sound(sound);
-        s->init_source(*new_source);
-    }
-
+    sound->init_source(*new_source);
     new_source->start();
 
     instances_.push_back(new_source);
@@ -243,14 +256,28 @@ SoundDriver *Source::_sound_driver() const {
     return (window_) ? window_->_sound_driver() : driver_;
 }
 
-int32_t Source::playing_sound_count() const {
-    int32_t i = 0;
+uint8_t Source::playing_sound_count() const {
+    uint8_t i = 0;
     for(auto instance: instances_) {
         if(instance->is_playing()) {
             i++;
         }
     }
     return i;
+}
+
+uint8_t Source::played_sound_count() const {
+    return std::count_if(
+        instances_.begin(),
+        instances_.end(),
+        [](SourceInstance::ptr ptr) -> bool {
+            return ptr->is_dead();
+        }
+    );
+}
+
+bool Source::is_sound_playing() const {
+    return playing_sound_count() > 0;
 }
 
 }
