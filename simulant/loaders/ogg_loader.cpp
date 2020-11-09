@@ -46,40 +46,36 @@ int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, Audi
     std::shared_ptr<Sound> self = sound.lock();
     if(!self) {
         // The sound was destroyed, we can't stream without a sound so just bail
-        return 0;
+        return -1;
     }
 
-    std::vector<int16_t> pcm;
-    int s = self->buffer_size();
-    pcm.resize(s);
+    auto buffer_size = self->buffer_size();
+    std::vector<int16_t> pcm(buffer_size, 0);
 
-    size_t size = 0;
-    int result = 0;
+    int shorts_required = buffer_size / 2;
 
-    while(size < self->buffer_size()) {
-        // 'result' is the total number of samples per channel
-        result = stb_vorbis_get_samples_short_interleaved(
-            stream->get(),
-            self->channels(),
-            &pcm[0] + (size / 2),  // Size is in bytes, we need shorts
-            self->buffer_size() - size
+    // 'result' is the total number of samples per channel
+    int result = stb_vorbis_get_samples_short_interleaved(
+        stream->get(),
+        self->channels(),
+        &pcm[0],
+        shorts_required
+    );
+
+    if(result > 0)  {
+        // samples-per-channel * channels * size of each sample
+        // so this is the total bytes we just read
+        int byte_size = result * self->channels() * sizeof(int16_t);
+        self->_driver()->upload_buffer_data(
+            buffer, self->format(),
+            (uint8_t*) &pcm[0], byte_size, self->sample_rate()
         );
 
-        if(result > 0)  {
-            // samples-per-channel * channels * size of each sample
-            // so this is the total bytes we just read
-            size += result * self->channels() * sizeof(int16_t);
-        } else {
-            break;
-        }
-    }
+        return byte_size;
 
-    if(size == 0) {
+    } else {
         return 0;
     }
-
-    self->_driver()->upload_buffer_data(buffer, self->format(), (uint8_t*) &pcm[0], size * sizeof(int16_t), self->sample_rate());
-    return size;
 }
 
 static void init_source(Sound* self, SourceInstance& source) {
