@@ -6,6 +6,7 @@
 #include "../generic/manual_object.h"
 #include "../math/aabb.h"
 #include "../frustum.h"
+#include "../sound.h"
 
 namespace smlt {
 
@@ -15,12 +16,13 @@ class Camera:
     public TypedDestroyableObject<Camera, Stage>,
     public ContainerNode,
     public generic::Identifiable<CameraID>,
-    public ChainNameable<Camera> {
+    public ChainNameable<Camera>,
+    public Source {
 
 public:
     using ContainerNode::_get_renderables;
 
-    Camera(Stage* stage);
+    Camera(Stage* stage, SoundDriver* sound_driver);
     virtual ~Camera();
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
