@@ -8,9 +8,10 @@
 namespace smlt {
 
 
-Camera::Camera(Stage *stage):
+Camera::Camera(Stage *stage, SoundDriver* sound_driver):
     TypedDestroyableObject<Camera, Stage>(stage),
-    ContainerNode(stage, STAGE_NODE_TYPE_CAMERA) {
+    ContainerNode(stage, STAGE_NODE_TYPE_CAMERA),
+    Source(stage, this, sound_driver){
 
     assert(stage);
 

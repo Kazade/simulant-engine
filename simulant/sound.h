@@ -99,11 +99,18 @@ enum DistanceModel {
     DISTANCE_MODEL_AMBIENT
 };
 
+typedef std::size_t SourceInstanceID;
+
 class SourceInstance:
     public RefCounted<SourceInstance> {
 
     friend class Source;
+
 private:
+    static SourceInstanceID counter_;
+
+    SourceInstanceID id_;
+
     Source& parent_;
 
     AudioSourceID source_;
@@ -121,8 +128,13 @@ public:
     SourceInstance(Source& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~SourceInstance();
 
+    SourceInstanceID id() const {
+        return id_;
+    }
+
     void start();
     void update(float dt);
+    void stop();
 
     bool is_playing() const;
 
@@ -139,7 +151,8 @@ public:
     Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~Source();
 
-    void play_sound(SoundID sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+    SourceInstanceID play_sound(SoundID sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+    bool stop_sound(SourceInstanceID sound_id);
 
     /* The number of sounds this source is currently playing */
     uint8_t playing_sound_count() const;

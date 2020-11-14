@@ -191,7 +191,7 @@ std::size_t Stage::actor_count() const {
 }
 
 CameraPtr Stage::new_camera() {
-    auto new_camera = camera_manager_->make(this);
+    auto new_camera = camera_manager_->make(this, window->_sound_driver());
     new_camera->set_parent(this);
     return new_camera;
 }

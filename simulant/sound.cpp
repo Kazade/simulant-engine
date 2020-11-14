@@ -26,6 +26,8 @@
 
 namespace smlt {
 
+SourceInstanceID SourceInstance::counter_ = 0;
+
 Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver):
     generic::Identifiable<SoundID>(id),
     Asset(asset_manager),
@@ -40,6 +42,7 @@ void Sound::init_source(SourceInstance& source) {
 }
 
 SourceInstance::SourceInstance(Source &parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
+    id_(++SourceInstance::counter_),
     parent_(parent),
     source_(0),
     buffers_{0, 0},
@@ -90,6 +93,13 @@ void SourceInstance::start() {
 
     driver->queue_buffers_to_source(source_, to_queue, buffers_);
     driver->play_source(source_);
+}
+
+void SourceInstance::stop() {
+    SoundDriver* driver = parent_._sound_driver();
+
+    driver->stop_source(source_);
+    is_dead_ = true;
 }
 
 bool SourceInstance::is_playing() const {
@@ -192,10 +202,10 @@ Source::~Source() {
 
 }
 
-void Source::play_sound(SoundID sound_id, AudioRepeat repeat) {
+SourceInstanceID Source::play_sound(SoundID sound_id, AudioRepeat repeat) {
     if(!sound_id) {
         L_WARN("Tried to play an invalid sound");
-        return;
+        return 0;
     }
 
     /* There's surely a better way of determining which asset manager to use here */
@@ -216,6 +226,19 @@ void Source::play_sound(SoundID sound_id, AudioRepeat repeat) {
     new_source->start();
 
     instances_.push_back(new_source);
+
+    return new_source->id();
+}
+
+bool Source::stop_sound(SourceInstanceID sound_id) {
+    for(auto& instance: instances_) {
+        if(instance->id() == sound_id) {
+            instance->stop();
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void Source::update_source(float dt) {
@@ -225,9 +248,9 @@ void Source::update_source(float dt) {
 
     //Remove any instances that have finished playing
     instances_.erase(
-        std::remove_if(
-            instances_.begin(),
-            instances_.end(),
+                std::remove_if(
+                    instances_.begin(),
+                    instances_.end(),
             std::bind(&SourceInstance::is_dead, std::placeholders::_1)
         ),
         instances_.end()

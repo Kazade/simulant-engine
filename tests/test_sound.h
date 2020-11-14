@@ -103,6 +103,16 @@ public:
         assert_false(window->is_sound_playing());
     }
 
+    void test_sound_stopping() {
+        auto sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto id = window->play_sound(sound);
+
+        assert_true(id); // id > 0
+        assert_true(window->is_sound_playing());
+        assert_true(window->stop_sound(id));
+        assert_false(window->is_sound_playing());
+    }
+
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;
