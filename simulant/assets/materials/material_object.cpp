@@ -213,6 +213,10 @@ float MaterialObject::point_size() const {
     return property_value(registry_->point_size_id_)->value<float>();
 }
 
+void MaterialObject::set_polygon_mode(PolygonMode mode) {
+    set_property_value(registry_->polygon_mode_id_, (int) mode);
+}
+
 PolygonMode MaterialObject::polygon_mode() const {
     return (PolygonMode) property_value(registry_->polygon_mode_id_)->value<int>();
 }
