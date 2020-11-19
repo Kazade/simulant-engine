@@ -74,9 +74,13 @@ public:
     void set_texturing_enabled(bool v);
     bool is_texturing_enabled() const;
     float point_size() const;
+
+    void set_polygon_mode(PolygonMode mode);
     PolygonMode polygon_mode() const;
+
     void set_shade_model(ShadeModel model);
     ShadeModel shade_model() const;
+
     ColourMaterial colour_material() const;
     void set_colour_material(ColourMaterial cm);
 

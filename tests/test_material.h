@@ -1,6 +1,4 @@
-
-#ifndef TEST_MATERIAL_H
-#define TEST_MATERIAL_H
+#pragma once
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
@@ -214,6 +212,13 @@ public:
         assert_true(pass->is_reflective());
         assert_true(mat->has_reflective_pass());  */
     }
-};
 
-#endif // TEST_MATERIAL_H
+    void test_polygon_mode() {
+        smlt::MaterialPtr mat = window->shared_assets->new_material();
+        mat->set_polygon_mode(smlt::POLYGON_MODE_FILL);
+        assert_equal(mat->polygon_mode(), smlt::POLYGON_MODE_FILL);
+
+        mat->set_polygon_mode(smlt::POLYGON_MODE_LINE);
+        assert_equal(mat->polygon_mode(), smlt::POLYGON_MODE_LINE);
+    }
+};
