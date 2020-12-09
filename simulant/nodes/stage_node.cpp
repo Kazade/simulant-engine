@@ -163,7 +163,10 @@ void StageNode::update_transformation_from_parent() {
         auto parent_rot = parent->absolute_rotation();
         auto parent_scale = parent->absolute_scaling();
 
-        absolute_rotation_ = parent_rot * rotation_;
+        if(rotation_locked_ != LOCK_MODE_INHERITED) {
+            absolute_rotation_ = parent_rot * rotation_;
+        }
+
         absolute_position_ = parent_pos + parent_rot * position_;
         absolute_scale_ = parent_scale * scaling_;
     }

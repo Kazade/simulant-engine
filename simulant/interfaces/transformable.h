@@ -7,6 +7,12 @@ namespace smlt {
 
 typedef sig::signal<void ()> TransformationChangedSignal;
 
+enum LockMode {
+    LOCK_MODE_NONE = 0,
+    LOCK_MODE_LOCAL,
+    LOCK_MODE_INHERITED
+};
+
 /**
  * @brief The Transformable class
  *
@@ -24,9 +30,6 @@ public:
     smlt::Vec2 position_2d() const { return Vec2(position_.x, position_.y); }
     smlt::Quaternion rotation() const { return rotation_; }
     smlt::Vec3 scale() const { return scaling_; }
-
-    void lock_rotation(bool value=true);
-    void lock_translation(bool value=true);
 
     virtual void move_to(const smlt::Vec3& pos);
     virtual void move_to(const smlt::Vec2& pos);
@@ -74,8 +77,11 @@ public:
     bool is_constrained() const;
     void remove_constraint();
 
+    void lock_rotation(LockMode lock_mode);
+    void unlock_rotation();
     bool rotation_locked() const { return rotation_locked_; }
 
+    void lock_translation(bool value=true);
 protected:
     void force_lock_transforms();
     void force_unlock_transforms();
@@ -93,7 +99,7 @@ protected:
     Quaternion rotation_;
     Vec3 scaling_ = Vec3(1, 1, 1);
 
-    bool rotation_locked_ = false;
+    LockMode rotation_locked_ = LOCK_MODE_NONE;
     bool translation_locked_ = false;
     bool transforms_force_locked_ = false;
 

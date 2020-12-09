@@ -277,6 +277,36 @@ public:
 
         assert_is_null(stage_->find_descendent_with_name("test"));
     }
+
+    void test_lock_rotation() {
+        auto a1 = stage_->new_actor();
+        auto a2 = stage_->new_actor();
+
+        a2->set_parent(a1);
+
+        a2->lock_rotation(smlt::LOCK_MODE_LOCAL);
+
+        assert_equal(a2->absolute_rotation(), smlt::Quaternion());
+        a2->rotate_y_by(smlt::Degrees(90));
+
+        // No effect
+        assert_equal(a2->absolute_rotation(), smlt::Quaternion());
+
+        a1->rotate_y_by(smlt::Degrees(90));
+
+        assert_equal(a2->absolute_rotation(), a1->rotation());
+
+        a2->lock_rotation(smlt::LOCK_MODE_INHERITED);
+
+        // Should now be 180
+        a1->rotate_y_by(smlt::Degrees(90));
+
+        // No effect
+        assert_equal(
+            a2->absolute_rotation(),
+            smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0))
+        );
+    }
 private:
     smlt::CameraPtr camera_;
     smlt::StagePtr stage_;
