@@ -2,8 +2,12 @@
 
 namespace smlt {
 
-void Transformable::lock_rotation(bool value) {
-    rotation_locked_ = value;
+void Transformable::lock_rotation(LockMode lock_mode) {
+    rotation_locked_ = lock_mode;
+}
+
+void Transformable::unlock_rotation() {
+    rotation_locked_ = LOCK_MODE_NONE;
 }
 
 void Transformable::lock_translation(bool value) {
