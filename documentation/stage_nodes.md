@@ -82,3 +82,7 @@ By default, stage nodes (excluding cameras) will be culled with a scene partitio
 node->set_cullable(false);  // Will always be renderered
 assert(!node->is_cullable());
 ```
+
+# Restricting Movement
+
+Sometimes it may be necessary to lock the rotation of an object. For example, you may want to attach a skybox to your camera, so that it moves with the camera, but you wouldn't want the skybox to rotate as the camera does. To prevent rotations on an object, you can use `lock_rotation(mode)` and `unlock_rotation()`. `lock_rotation` takes a single parameter which is whether you want to lock local rotations (`LOCK_MODE_LOCAL`), or all rotations (`LOCK_MODE_INHERITED`).
