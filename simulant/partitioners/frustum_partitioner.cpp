@@ -39,7 +39,7 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
 
         assert(node);
 
-        auto& aabb = node->aabb();
+        auto aabb = node->transformed_aabb();
         auto centre = aabb.centre() + node->absolute_position();
 
         /* Check that the node isn't being destroyed, and it's supposed to
@@ -57,12 +57,8 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
             } else if(!node->is_cullable()) {
                 /* If the culling mode is NEVER then we always return */
                 geom_out.push_back(node);
-            } else {
-                if(frustum.intersects_sphere(
-                    centre, aabb.max_dimension()
-                )) {
-                    geom_out.push_back(node);
-                }
+            } else if(frustum.intersects_aabb(aabb)) {
+                geom_out.push_back(node);
             }
         }
     }
