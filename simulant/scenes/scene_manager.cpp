@@ -96,7 +96,7 @@ void SceneManager::load_in_background(const std::string& route, bool redirect_af
         [=](){
             scene->_call_load();
             if(redirect_after) {
-                activate(route);
+                load_and_activate(route);
             }
         }
     );

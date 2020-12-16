@@ -53,7 +53,7 @@ public:
     bool has_scene(const std::string& route) const;
     SceneBasePtr resolve_scene(const std::string& route);
 
-    void activate(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
+    void load_and_activate(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
         struct ConnectionHolder {
             sig::connection conn;
         };
