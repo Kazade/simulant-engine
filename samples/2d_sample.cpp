@@ -70,7 +70,7 @@ public:
 private:
     bool init() {
         scenes->register_scene<GameScene>("main");
-        scenes->load_in_background("main", true); //Do loading in a background thread, but show immediately when done
+        scenes->preload_in_background("main", true); //Do loading in a background thread, but show immediately when done
         scenes->load_and_activate("_loading"); // Show the loading screen in the meantime
         return true;
     }

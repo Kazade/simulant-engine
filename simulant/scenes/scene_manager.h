@@ -101,8 +101,8 @@ public:
     }
 
 
-    void load(const std::string& route);
-    void load_in_background(const std::string& route, bool redirect_after=true);
+    void preload(const std::string& route);
+    void preload_in_background(const std::string& route, bool activate_once_loaded=true);
     void unload(const std::string& route);
 
     /* Unloads and destroys all scenes */

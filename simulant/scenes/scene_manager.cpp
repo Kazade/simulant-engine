@@ -84,18 +84,18 @@ SceneBase::ptr SceneManager::active_scene() const {
 }
 
 
-void SceneManager::load(const std::string& route) {
+void SceneManager::preload(const std::string& route) {
     auto scene = get_or_create_route(route);
     scene->_call_load();
 }
 
-void SceneManager::load_in_background(const std::string& route, bool redirect_after) {
+void SceneManager::preload_in_background(const std::string& route, bool activate_once_loaded) {
     auto scene = get_or_create_route(route);
 
     window_->start_coroutine(
         [=](){
             scene->_call_load();
-            if(redirect_after) {
+            if(activate_once_loaded) {
                 load_and_activate(route);
             }
         }
