@@ -47,6 +47,8 @@
 #include "../interfaces/updateable.h"
 #include "../interfaces.h"
 
+#include "../generic/any/any.h"
+
 namespace smlt {
 
 class Application;
@@ -121,7 +123,14 @@ private:
 
     friend class SceneManager;
 
+    std::vector<any> load_args;
+
 protected:
+    template<typename T>
+    T get_load_arg(int i) {
+        return any_cast<T>(load_args[i]);
+    }
+
     S_DEFINE_PROPERTY(window, &SceneBase::window_);
     S_DEFINE_PROPERTY(app, &SceneBase::app_);
     S_DEFINE_PROPERTY(input, &SceneBase::input_);

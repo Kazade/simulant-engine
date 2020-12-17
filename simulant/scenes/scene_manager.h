@@ -28,6 +28,8 @@
 #include "../generic/managed.h"
 #include "../signals/signal.h"
 
+#include "../generic/static_if.h"
+
 namespace smlt {
 
 class Application;
@@ -46,6 +48,68 @@ class SceneManager :
 
     friend class Window;
 
+    template<typename T>
+    static void unpack(std::vector<any>& output, T&& arg) {
+        output.push_back(std::forward<T>(arg));
+    }
+
+    template<typename T, typename... Args>
+    static void unpack(std::vector<any>& output, T&& t, Args&& ...args) {
+        output.push_back(std::forward<T>(t));
+        unpack(output, std::forward<Args>(args)...);
+    }
+
+    template<typename... Args>
+    static void unpack(std::vector<any>&) {}
+
+    struct ConnectionHolder {
+        sig::connection conn;
+    };
+
+    template<typename... Args>
+    static void do_activate(
+        std::weak_ptr<SceneManager> _this,
+        std::shared_ptr<ConnectionHolder> holder,
+        const std::string& route,
+        SceneChangeBehaviour behaviour,
+        Args&&... args
+    ) {
+
+        auto self = _this.lock();
+
+        /* Little bit of cleverness to check that the scene manager is still alive */
+        if(!self) {
+            L_DEBUG(_F("Not activating {0} as SceneManager was destroyed").format(route));
+            holder->conn.disconnect();
+            return;
+        }
+
+        auto new_scene = self->get_or_create_route(route);
+        if(new_scene != self->current_scene_) {
+            new_scene->load_args.clear();
+
+            unpack(new_scene->load_args, std::forward<Args>(args)...);
+            new_scene->_call_load();
+
+            auto previous = self->current_scene_;
+
+            if(previous) {
+                previous->_call_deactivate();
+            }
+
+            std::swap(self->current_scene_, new_scene);
+            self->current_scene_->_call_activate();
+
+            if(previous && behaviour == SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
+                // If requested, we unload the previous scene once the new on is active
+                self->unload(previous->name());
+            }
+        }
+
+        holder->conn.disconnect();
+        self->scenes_queued_for_activation_--;
+        assert(self->scenes_queued_for_activation_ >= 0);
+    };
 public:
     SceneManager(Window* window);
     ~SceneManager();
@@ -53,50 +117,25 @@ public:
     bool has_scene(const std::string& route) const;
     SceneBasePtr resolve_scene(const std::string& route);
 
-    void load_and_activate(const std::string& route, SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
-        struct ConnectionHolder {
-            sig::connection conn;
-        };
+    template<typename... Args>
+    void load_and_activate(
+        const std::string& route,
+        SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE,
+        Args&& ...args
+    ) {
 
         auto holder = std::make_shared<ConnectionHolder>();
         std::weak_ptr<SceneManager> _this = shared_from_this();
 
-        auto do_activate = [this, _this, holder, route, behaviour]() {
-            /* Little bit of cleverness to check that the scene manager is still alive */
-            if(!_this.lock()) {
-                L_DEBUG(_F("Not activating {0} as SceneManager was destroyed").format(route));
-                holder->conn.disconnect();
-                return;
-            }
-
-            auto new_scene = get_or_create_route(route);
-            if(new_scene != current_scene_) {
-                new_scene->_call_load();
-
-                auto previous = current_scene_;
-
-                if(previous) {
-                    previous->_call_deactivate();
-                }
-
-                std::swap(current_scene_, new_scene);
-                current_scene_->_call_activate();
-
-                if(previous && behaviour == SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
-                    // If requested, we unload the previous scene once the new on is active
-                    unload(previous->name());
-                }
-            }
-
-            holder->conn.disconnect();
-            scenes_queued_for_activation_--;
-            assert(scenes_queued_for_activation_ >= 0);
-        };
-
         /* Little bit of trickery here. We want to activate the scene after idle tasks
          * have run, but then we want to immediately disconnect. So we pass the connection
          * wrapped in a shared_ptr which has been bound to the lambda */
-        holder->conn = connect_to_post_idle(do_activate);
+        holder->conn = connect_to_post_idle(
+            std::bind(
+                SceneManager::do_activate<Args&...>,
+                shared_from_this(), holder, route, behaviour, std::forward<Args>(args)...
+            )
+        );
         scenes_queued_for_activation_++;
     }
 
