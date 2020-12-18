@@ -29,6 +29,7 @@
 #include "../signals/signal.h"
 
 #include "../generic/static_if.h"
+#include "../coroutines/helpers.h"
 
 namespace smlt {
 
@@ -86,10 +87,11 @@ class SceneManager :
 
         auto new_scene = self->get_or_create_route(route);
         if(new_scene != self->current_scene_) {
-            new_scene->load_args.clear();
-
-            unpack(new_scene->load_args, std::forward<Args>(args)...);
-            new_scene->_call_load();
+            if(!new_scene->is_loaded()) {
+                new_scene->load_args.clear();
+                unpack(new_scene->load_args, std::forward<Args>(args)...);
+                new_scene->_call_load();
+            }
 
             auto previous = self->current_scene_;
 
@@ -139,9 +141,47 @@ public:
         scenes_queued_for_activation_++;
     }
 
+    template<typename ...Args>
+    void preload(const std::string& route, Args&& ...args) {
+        auto scene = get_or_create_route(route);
 
-    void preload(const std::string& route);
-    void preload_in_background(const std::string& route, bool activate_once_loaded=true);
+        scene->load_args.clear();
+        unpack(scene->load_args, std::forward<Args>(args)...);
+
+        scene->_call_load();
+    }
+
+    template<typename ...Args>
+    void _preload_in_background(SceneBasePtr scene, const std::string& name, bool activate_once_loaded, Args&& ...args) {
+        scene->load_args.clear();
+        unpack(scene->load_args, std::forward<Args>(args)...);
+        scene->_call_load();
+
+        if(activate_once_loaded) {
+            load_and_activate(name);
+        }
+    }
+
+    template<typename ...Args>
+    void preload_in_background(
+        const std::string& route,
+        bool activate_once_loaded,
+        Args&& ...args) {
+
+        auto scene = get_or_create_route(route);
+
+        start_coroutine(
+            std::bind(
+                &SceneManager::_preload_in_background<Args&...>,
+                this,
+                scene,
+                route,
+                activate_once_loaded,
+                std::forward<Args>(args)...
+            )
+        );
+    }
+
     void unload(const std::string& route);
 
     /* Unloads and destroys all scenes */

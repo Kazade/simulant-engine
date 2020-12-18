@@ -84,23 +84,6 @@ SceneBase::ptr SceneManager::active_scene() const {
 }
 
 
-void SceneManager::preload(const std::string& route) {
-    auto scene = get_or_create_route(route);
-    scene->_call_load();
-}
-
-void SceneManager::preload_in_background(const std::string& route, bool activate_once_loaded) {
-    auto scene = get_or_create_route(route);
-
-    window_->start_coroutine(
-        [=](){
-            scene->_call_load();
-            if(activate_once_loaded) {
-                load_and_activate(route);
-            }
-        }
-    );
-}
 
 void SceneManager::unload(const std::string& route) {
     auto it = routes_.find(route);
