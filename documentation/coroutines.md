@@ -6,11 +6,11 @@ Simulant instead uses Coroutines for executing long-running tasks.
 
 # Starting a Coroutine
 
-You can run a function as a coroutine by using the `Window::start_coroutine` method.
+You can run a function as a coroutine by using the `start_coroutine` method.
 
 ```
 
-window->start_coroutine([]() { 
+start_coroutine([]() { 
     for(int i = 0; i < 1000; ++i) {
     	yield_coroutine();
     }
