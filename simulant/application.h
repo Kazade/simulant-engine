@@ -173,7 +173,13 @@ public:
     S_DEFINE_PROPERTY(scenes, &Application::scene_manager_);
     S_DEFINE_PROPERTY(args, &Application::args_);
     S_DEFINE_PROPERTY(config, &Application::config_);
+
+private:
+    friend Application* get_app();
+    static Application* global_app;
 };
+
+Application* get_app();
 
 }
 

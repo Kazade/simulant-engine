@@ -254,6 +254,9 @@ int32_t Application::run() {
 }
 
 int32_t Application::run(int argc, char* argv[]) {
+    /* Set the global app instance */
+    global_app = this;
+
     if(!args->parse_args(argc, argv)) {
         return 2;
     }
@@ -265,6 +268,13 @@ int32_t Application::run(int argc, char* argv[]) {
 
     auto ret = Application::run();
     return ret;
+}
+
+Application* Application::global_app = nullptr;
+
+/* Global access to the application */
+Application* get_app() {
+    return Application::global_app;
 }
 
 }
