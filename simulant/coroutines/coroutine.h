@@ -4,8 +4,10 @@
 #include <functional>
 
 namespace smlt {
+namespace cort {
 
-typedef uint32_t CoroutineID;
+
+typedef int32_t CoroutineID;
 
 enum COResult {
     CO_RESULT_RUNNING = 0,
@@ -19,4 +21,5 @@ COResult resume_coroutine(CoroutineID id);
 void yield_coroutine();
 bool within_coroutine();
 
+}
 }

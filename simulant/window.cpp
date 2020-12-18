@@ -759,13 +759,13 @@ void Window::on_finger_motion(
 }
 
 void Window::start_coroutine(std::function<void ()> func) {
-    coroutines_.push_back(smlt::start_coroutine(func));
+    coroutines_.push_back(cort::start_coroutine(func));
 }
 
 void Window::update_coroutines() {
     for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
-        if(resume_coroutine(*it) == CO_RESULT_FINISHED) {
-            stop_coroutine(*it);
+        if(cort::resume_coroutine(*it) == cort::CO_RESULT_FINISHED) {
+            cort::stop_coroutine(*it);
             it = coroutines_.erase(it);
         }
     }
@@ -773,7 +773,7 @@ void Window::update_coroutines() {
 
 void Window::stop_all_coroutines() {
     for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
-        stop_coroutine(*it);
+        cort::stop_coroutine(*it);
     }
 }
 

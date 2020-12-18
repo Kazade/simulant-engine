@@ -6,6 +6,7 @@
 #include "../threads/condition.h"
 
 namespace smlt {
+namespace cort {
 
 struct Context {
     CoroutineID id;
@@ -173,4 +174,5 @@ void stop_coroutine(CoroutineID id) {
     }
 }
 
+}
 }

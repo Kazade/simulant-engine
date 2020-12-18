@@ -238,7 +238,7 @@ public:
     void start_coroutine(std::function<void ()> func);
 
 private:
-    std::list<CoroutineID> coroutines_;
+    std::list<cort::CoroutineID> coroutines_;
     void update_coroutines();
     void stop_all_coroutines();
 
