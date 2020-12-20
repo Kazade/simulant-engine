@@ -90,7 +90,7 @@ void Splash::update(float dt) {
     image_->set_opacity(std::min(elapsed * FADE_SPEED, 1.0f));
 
     if(elapsed >= time_) {
-        scenes->load_and_activate(target_);
+        scenes->activate(target_);
     }
 }
 

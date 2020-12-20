@@ -46,6 +46,11 @@ Application::Application(const AppConfig &config):
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
 
+    /* Set the global app instance
+     * We do this twice, here and at the start of run(), just in case
+     * someone constructs two, but only calls run on one or something. */
+    global_app = this;
+
     /* We're in profiling mode if we've forced it via app config
      * or the environment variable is set. If it's done by compile
      * flag the AppConfig force_profiling variable would default
@@ -200,7 +205,7 @@ bool Application::_call_init() {
     // If we successfully initialized, but the user didn't specify
     // a particular scene, we just hit the root route
     if(initialized_ && !scenes->active_scene() && !scenes->scene_queued_for_activation()) {
-        scenes->load_and_activate("main");
+        scenes->activate("main");
     }
 
     return initialized_;

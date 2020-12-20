@@ -98,10 +98,10 @@ public:
         manager_->register_scene<TestScene>("main");
 
         assert_false(manager_->scene_queued_for_activation());
-        manager_->load_and_activate("main");
+        manager_->activate("main");
         assert_true(manager_->scene_queued_for_activation());
 
-        manager_->load_and_activate("main");
+        manager_->activate("main");
         assert_true(manager_->scene_queued_for_activation());
 
         window->signal_post_idle()();
@@ -109,11 +109,11 @@ public:
     }
 
     void test_activate() {
-        assert_raises(std::logic_error, std::bind(&SceneManager::load_and_activate<>, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
+        assert_raises(std::logic_error, std::bind(&SceneManager::activate<>, manager_, "main"));
 
         manager_->register_scene<TestScene>("main");
 
-        manager_->load_and_activate("main");
+        manager_->activate("main");
         window->signal_post_idle()();
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
@@ -124,7 +124,7 @@ public:
         assert_false(scr->deactivate_called);
         assert_false(scr->unload_called);
 
-        manager_->load_and_activate("main"); //activateing to the same place should do nothing
+        manager_->activate("main"); //activateing to the same place should do nothing
         window->signal_post_idle()();
 
         assert_true(scr->load_called);
@@ -135,7 +135,7 @@ public:
         manager_->register_scene<TestScene>("/test");
 
         auto initial = window->signal_post_idle().connection_count();
-        manager_->load_and_activate("/test");
+        manager_->activate("/test");
         assert_equal(window->signal_post_idle().connection_count(), initial + 1);
         window->signal_post_idle()();
 
@@ -160,7 +160,9 @@ public:
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
-        manager_->preload_in_background("main", true);
+        manager_->preload_in_background("main").then([this]() {
+            manager_->activate("main");
+        });
         window->run_frame();
         assert_true(scr->load_called);
     }
@@ -168,9 +170,8 @@ public:
     void test_preload_args() {
         manager_->register_scene<PreloadArgsScene>("main");
 
-        manager_->load_and_activate(
+        manager_->activate(
             "main",
-            smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE,
             99 // Additional argument
         );
     }

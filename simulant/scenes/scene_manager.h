@@ -38,12 +38,6 @@ class Application;
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
 typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
-
-enum SceneChangeBehaviour {
-    SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE,
-    SCENE_CHANGE_BEHAVIOUR_RETAIN_CURRENT_SCENE
-};
-
 class SceneManager :
     public RefCounted<SceneManager> {
 
@@ -72,7 +66,6 @@ class SceneManager :
         std::weak_ptr<SceneManager> _this,
         std::shared_ptr<ConnectionHolder> holder,
         const std::string& route,
-        SceneChangeBehaviour behaviour,
         Args&&... args
     ) {
 
@@ -102,7 +95,7 @@ class SceneManager :
             std::swap(self->current_scene_, new_scene);
             self->current_scene_->_call_activate();
 
-            if(previous && behaviour == SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE) {
+            if(previous && previous->unload_on_deactivate()) {
                 // If requested, we unload the previous scene once the new on is active
                 self->unload(previous->name());
             }
@@ -120,9 +113,8 @@ public:
     SceneBasePtr resolve_scene(const std::string& route);
 
     template<typename... Args>
-    void load_and_activate(
+    void activate(
         const std::string& route,
-        SceneChangeBehaviour behaviour=SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE,
         Args&& ...args
     ) {
 
@@ -135,7 +127,7 @@ public:
         holder->conn = connect_to_post_idle(
             std::bind(
                 SceneManager::do_activate<Args&...>,
-                shared_from_this(), holder, route, behaviour, std::forward<Args>(args)...
+                shared_from_this(), holder, route, std::forward<Args>(args)...
             )
         );
         scenes_queued_for_activation_++;
@@ -152,31 +144,25 @@ public:
     }
 
     template<typename ...Args>
-    void _preload_in_background(SceneBasePtr scene, const std::string& name, bool activate_once_loaded, Args&& ...args) {
+    void _preload_in_background(SceneBasePtr scene, Args&& ...args) {
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
         scene->_call_load();
-
-        if(activate_once_loaded) {
-            load_and_activate(name);
-        }
     }
 
     template<typename ...Args>
-    void preload_in_background(
+    CRPromise<void> preload_in_background(
         const std::string& route,
-        bool activate_once_loaded,
-        Args&& ...args) {
+        Args&& ...args
+    ) {
 
         auto scene = get_or_create_route(route);
 
-        start_coroutine(
+        return start_coroutine(
             std::bind(
                 &SceneManager::_preload_in_background<Args&...>,
                 this,
                 scene,
-                route,
-                activate_once_loaded,
                 std::forward<Args>(args)...
             )
         );

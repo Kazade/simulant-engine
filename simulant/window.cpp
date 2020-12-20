@@ -516,15 +516,11 @@ bool Window::run_frame() {
     run_fixed_updates();
     run_update();
 
-    idle_.execute(); //Execute idle tasks before render
-
-    // Update coroutines
-    update_coroutines();
+    update_idle_tasks_and_coroutines();
 
     // Garbage collect resources after idle, but before rendering
     asset_manager_->run_garbage_collection();
 
-    signal_post_idle_();
     StageManager::clean_up();
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
@@ -760,6 +756,12 @@ void Window::on_finger_motion(
 
 void Window::start_coroutine(std::function<void ()> func) {
     coroutines_.push_back(cort::start_coroutine(func));
+}
+
+void Window::update_idle_tasks_and_coroutines() {
+    idle_.execute();
+    update_coroutines();
+    signal_post_idle_();
 }
 
 void Window::update_coroutines() {

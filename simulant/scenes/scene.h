@@ -91,6 +91,14 @@ public:
     void set_destroy_on_unload(bool v) {
         destroy_on_unload_ = v;
     }
+
+    /* Whether or not the scene should be unloaded when it's deactivated
+     * this is the default behaviour */
+    bool unload_on_deactivate() const { return unload_on_deactivate_; }
+    void set_unload_on_deactivate(bool v) {
+        unload_on_deactivate_ = v;
+    }
+
 protected:
     virtual void load() = 0;
     virtual void unload() {}
@@ -111,6 +119,8 @@ private:
 
     bool is_loaded_ = false;
     bool is_active_ = false;
+    bool unload_on_deactivate_ = true;
+
     std::string name_;
 
     bool destroy_on_unload_ = true;

@@ -70,14 +70,20 @@ public:
 private:
     bool init() {
         scenes->register_scene<GameScene>("main");
-        scenes->preload_in_background("main", true); //Do loading in a background thread, but show immediately when done
-        scenes->load_and_activate("_loading"); // Show the loading screen in the meantime
+
+        scenes->activate("_loading"); // Show the loading screen in the meantime
+        scenes->preload_in_background("main").then([this]() {
+            scenes->activate("main");
+        }); //Do loading in a coroutine, but show immediately when done
+
         return true;
     }
 };
 
-
 int main(int argc, char* argv[]) {
+    _S_UNUSED(argc);
+    _S_UNUSED(argv);
+
     smlt::AppConfig config;
     config.title = "2D Sample";
     config.fullscreen = false;
