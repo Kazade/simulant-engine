@@ -109,7 +109,11 @@ public:
     }
 
     void test_activate() {
-        assert_raises(std::logic_error, std::bind(&SceneManager::activate<>, manager_, "main"));
+        auto cb = [this]() {
+            manager_->activate("main");
+        };
+
+        assert_raises(std::logic_error, cb);
 
         manager_->register_scene<TestScene>("main");
 
