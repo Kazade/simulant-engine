@@ -137,6 +137,10 @@ public:
     void preload(const std::string& route, Args&& ...args) {
         auto scene = get_or_create_route(route);
 
+        if(scene->is_loaded()) {
+            return;
+        }
+
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
 
@@ -145,6 +149,10 @@ public:
 
     template<typename ...Args>
     void _preload_in_background(SceneBasePtr scene, Args&& ...args) {
+        if(scene->is_loaded()) {
+            return;
+        }
+
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
         scene->_call_load();
