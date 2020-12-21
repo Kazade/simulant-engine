@@ -237,8 +237,10 @@ public:
     /* Coroutines */
     void start_coroutine(std::function<void ()> func);
 
+    void update_idle_tasks_and_coroutines();
+
 private:
-    std::list<CoroutineID> coroutines_;
+    std::list<cort::CoroutineID> coroutines_;
     void update_coroutines();
     void stop_all_coroutines();
 

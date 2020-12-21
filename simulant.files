@@ -321,6 +321,10 @@ simulant/controllers/movement/airplane.cpp
 simulant/controllers/movement/airplane.h
 simulant/controllers/movement/hover_ship.cpp
 simulant/controllers/movement/hover_ship.h
+simulant/coroutines/coroutine.cpp
+simulant/coroutines/coroutine.h
+simulant/coroutines/helpers.cpp
+simulant/coroutines/helpers.h
 simulant/debug.cpp
 simulant/debug.h
 simulant/deps/SOIL/SOIL.c

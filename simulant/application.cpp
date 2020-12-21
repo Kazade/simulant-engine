@@ -46,6 +46,11 @@ Application::Application(const AppConfig &config):
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
 
+    /* Set the global app instance
+     * We do this twice, here and at the start of run(), just in case
+     * someone constructs two, but only calls run on one or something. */
+    global_app = this;
+
     /* We're in profiling mode if we've forced it via app config
      * or the environment variable is set. If it's done by compile
      * flag the AppConfig force_profiling variable would default
@@ -193,7 +198,7 @@ bool Application::_call_init() {
     // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
     scenes->register_scene<scenes::Loading>("_loading");
-    scenes->load("_loading");
+    scenes->preload("_loading");
 
     initialized_ = init();
 
@@ -254,6 +259,9 @@ int32_t Application::run() {
 }
 
 int32_t Application::run(int argc, char* argv[]) {
+    /* Set the global app instance */
+    global_app = this;
+
     if(!args->parse_args(argc, argv)) {
         return 2;
     }
@@ -265,6 +273,13 @@ int32_t Application::run(int argc, char* argv[]) {
 
     auto ret = Application::run();
     return ret;
+}
+
+Application* Application::global_app = nullptr;
+
+/* Global access to the application */
+Application* get_app() {
+    return Application::global_app;
 }
 
 }

@@ -37,6 +37,28 @@ public:
     volatile bool deactivate_called = false;
 };
 
+class PreloadArgsScene : public Scene<PreloadArgsScene> {
+public:
+    PreloadArgsScene(Window* window):
+        Scene<PreloadArgsScene>(window) {}
+
+    void load() override {
+        int arg0 = get_load_arg<int>(0);
+        if(arg0 != 99) {
+            throw test::AssertionError("Wrong value");
+        }
+        load_called = true;
+    }
+    void unload() override { unload_called = true; }
+    void activate() override { activate_called = true; }
+    void deactivate() override { deactivate_called = true; }
+
+    volatile bool load_called = false;
+    volatile bool unload_called = false;
+    volatile bool activate_called = false;
+    volatile bool deactivate_called = false;
+};
+
 class SceneWithArgs : public Scene<SceneWithArgs> {
 public:
     // Boilerplate
@@ -87,7 +109,11 @@ public:
     }
 
     void test_activate() {
-        assert_raises(std::logic_error, std::bind(&SceneManager::activate, manager_, "main", smlt::SCENE_CHANGE_BEHAVIOUR_UNLOAD_CURRENT_SCENE));
+        auto cb = [this]() {
+            manager_->activate("main");
+        };
+
+        assert_raises(std::logic_error, cb);
 
         manager_->register_scene<TestScene>("main");
 
@@ -138,9 +164,20 @@ public:
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         assert_false(scr->load_called);
-        manager_->load_in_background("main");
+        manager_->preload_in_background("main").then([this]() {
+            manager_->activate("main");
+        });
         window->run_frame();
         assert_true(scr->load_called);
+    }
+
+    void test_preload_args() {
+        manager_->register_scene<PreloadArgsScene>("main");
+
+        manager_->activate(
+            "main",
+            99 // Additional argument
+        );
     }
 
     void test_unload() {

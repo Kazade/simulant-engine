@@ -229,3 +229,4 @@ deps/libgl/samples/depth_funcs_ortho
 simulant/nodes/skies
 simulant/nodes/sprites
 simulant/assets/meshes
+simulant/coroutines

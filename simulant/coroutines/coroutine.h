@@ -3,9 +3,13 @@
 #include <cstdint>
 #include <functional>
 
-namespace smlt {
+#include "../generic/optional.h"
 
-typedef uint32_t CoroutineID;
+namespace smlt {
+namespace cort {
+
+
+typedef int32_t CoroutineID;
 
 enum COResult {
     CO_RESULT_RUNNING = 0,
@@ -13,10 +17,13 @@ enum COResult {
     CO_RESULT_INVALID
 };
 
-CoroutineID start_coroutine(std::function<void ()> f);
+
+
+CoroutineID start_coroutine(std::function<void ()> func);
 void stop_coroutine(CoroutineID id);
 COResult resume_coroutine(CoroutineID id);
 void yield_coroutine();
 bool within_coroutine();
 
+}
 }

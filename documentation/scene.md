@@ -55,7 +55,7 @@ You can override the following methods in your Scene class:
 
 `Scenes` are managed by the `SceneManager`, which is a property of `Application`. The application `SceneManager` is accessible directly from within a scene using the `scenes` property.
 
-You can make a `Scene` current by calling `SceneManager::activate(name, behaviour)`. This will do a number of things:
+You can make a `Scene` current by calling `SceneManager::load_and_activate(name, behaviour, ...)`. This will do a number of things:
 
  - If a `Scene` is already active, it will be deactivated.
  - If the behaviour is set to `SCENE_CHANGE_BEHAVIOUR_UNLOAD` then the old `Scene` will have its `unload()` method called. 
@@ -66,12 +66,12 @@ You can make a `Scene` current by calling `SceneManager::activate(name, behaviou
 
 You have a lot of control over this process:
 
- - You can load a `Scene` ahead of time, before activating it. 
+ - You can load a `Scene` ahead of time, before activating it by using `SceneManager::preload(name, ...)`
  - You can prevent a `Scene` from being unloaded when deactivated.
  - You can prevent a `Scene` from being deleted when unloaded.
  
 This means that you can (for example) create render pipelines that remain active even
 once the `Scene` has been deactivated, and use that to implement transitions etc.
 
-
+You can also pass arbitrary arguments to Scenes on activation. You can access these arguments by using the `get_load_arg<T>(index)` function from within the Scene. When calling `load_and_activate`, or `preload` you can pass the arguments as variadic args for access. This is useful if you want to (for example) pass the level number to the game scene.
 
