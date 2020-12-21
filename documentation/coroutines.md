@@ -19,3 +19,11 @@ start_coroutine([]() {
 ```
 
 You must yield coroutines regularly to give up control to allow a game frame to run.
+
+## Promises
+
+`start_coroutine` will return a `CRPromise<T>` which allows you to check when the coroutine has run, and what its value was when it finished. If you want to block and await the resulting
+value you can use `await_promise(promise)`. If `await_promise()` is called in the main thread then *only* idle tasks and other coroutines will run while waiting, rendering will not continue.
+
+When waiting for a promise in the main thread, you're more likely to want to use `CRPromise<T>::then(callback)` which will trigger a callback when the promise completes. `then()` will also
+return a `CRPromise<T>` and so you can change `then()` statements to run a sequence of tasks.
