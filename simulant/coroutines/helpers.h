@@ -56,7 +56,7 @@ public:
 
 private:
     template<typename Func>
-    friend CRPromise<typename std::result_of<Func()>::type> start_coroutine(Func func);
+    friend CRPromise<typename std::result_of<Func()>::type> cr_async(Func func);
 
     CRPromise(typename promise_impl::PromiseState<T>::ptr state):
         state_(state) {
@@ -70,7 +70,7 @@ template<>
 class CRPromise<void> {
 private:
     template<typename Func>
-    friend CRPromise<typename std::result_of<Func()>::type> start_coroutine(Func func);
+    friend CRPromise<typename std::result_of<Func()>::type> cr_async(Func func);
 
     CRPromise(typename promise_impl::PromiseState<void>::ptr state):
         state_(state) {
@@ -96,7 +96,7 @@ void _trigger_coroutine(std::function<void ()> func);
 void _trigger_idle_updates();
 
 template<typename Func>
-CRPromise<typename std::result_of<Func()>::type> start_coroutine(Func func) {
+CRPromise<typename std::result_of<Func()>::type> cr_async(Func func) {
     typedef typename std::result_of<Func()>::type T;
 
     auto state = std::make_shared<typename promise_impl::PromiseState<T>>();
@@ -109,7 +109,7 @@ CRPromise<typename std::result_of<Func()>::type> start_coroutine(Func func) {
     return promise;
 }
 
-void yield_coroutine();
+void cr_yield();
 
 
 /* Starts another coroutine that waits until
@@ -120,26 +120,26 @@ template<typename Func>
 CRPromise<typename std::result_of<Func()>::type> CRPromise<T>::then(Func func) {
     auto cb = [this, func]() -> typename std::result_of<Func()>::type {
         while(!state_->value) {
-            yield_coroutine();
+            cr_yield();
         }
 
         return func();
     };
 
-    return start_coroutine(cb);
+    return cr_async(cb);
 }
 
 template<typename Func>
 CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func) {
     auto cb = [this, func]() -> typename std::result_of<Func()>::type {
         while(!state_->value) {
-            yield_coroutine();
+            cr_yield();
         }
 
         return func();
     };
 
-    return start_coroutine(cb);
+    return cr_async(cb);
 }
 
 /* Will wait for the promise returned by a coroutine
@@ -152,15 +152,17 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func
  * start_coroutine(...).then(...)
  */
 template<typename T>
-void await_promise(const CRPromise<T>& promise) {
+T& cr_await(const CRPromise<T>& promise) {
     while(!promise.is_ready()) {
         if(cort::within_coroutine()){
-            yield_coroutine();
+            cr_yield();
         } else {
             _trigger_idle_updates();
             thread::sleep(0);
         }
     }
+
+    return promise->value();
 }
 
 }
