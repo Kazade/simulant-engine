@@ -118,8 +118,12 @@ void cr_yield();
 template<typename T>
 template<typename Func>
 CRPromise<typename std::result_of<Func()>::type> CRPromise<T>::then(Func func) {
-    auto cb = [this, func]() -> typename std::result_of<Func()>::type {
-        while(!state_->value) {
+
+    /* Copy the smart pointer and pass to the callback */
+    auto state = state_;
+
+    auto cb = [this, func, state]() -> typename std::result_of<Func()>::type {
+        while(!state->value) {
             cr_yield();
         }
 
