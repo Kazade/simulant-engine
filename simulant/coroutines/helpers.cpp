@@ -13,7 +13,7 @@ void _trigger_coroutine(std::function<void ()> func) {
     }
 }
 
-void yield_coroutine() {
+void cr_yield() {
     cort::yield_coroutine();
 }
 
