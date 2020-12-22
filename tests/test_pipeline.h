@@ -89,6 +89,13 @@ public:
         assert_false(p->is_active());
     }
 
+    void test_changing_camera() {
+        auto p = window->compositor->render(stage, camera);
+        p = p->set_camera(stage->new_camera());
+
+        assert_not_equal(p->camera(), camera);
+    }
+
 private:
     StagePtr stage;
     CameraPtr camera;
