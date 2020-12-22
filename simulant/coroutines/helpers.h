@@ -126,7 +126,7 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<T>::then(Func func) {
         return func();
     };
 
-    return start_coroutine(cb);
+    return cr_async(cb);
 }
 
 template<typename Func>
@@ -152,7 +152,7 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func
  * start_coroutine(...).then(...)
  */
 template<typename T>
-void cr_await(const CRPromise<T>& promise) {
+T& cr_await(const CRPromise<T>& promise) {
     while(!promise.is_ready()) {
         if(cort::within_coroutine()){
             cr_yield();
@@ -161,6 +161,8 @@ void cr_await(const CRPromise<T>& promise) {
             thread::sleep(0);
         }
     }
+
+    return promise->value();
 }
 
 }
