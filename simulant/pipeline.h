@@ -73,9 +73,11 @@ public:
     std::string name() const {
         return name_;
     }
+
+    PipelinePtr set_camera(CameraID c);
+
 private:
     void set_stage(StageID s);
-    void set_camera(CameraID c) { camera_ = c; }
 
     Compositor* sequence_ = nullptr;
     int32_t priority_ = 0;

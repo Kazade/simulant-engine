@@ -52,6 +52,10 @@ DetailLevel Pipeline::detail_level_at_distance(float dist) const {
     return DETAIL_LEVEL_FARTHEST;
 }
 
+PipelinePtr Pipeline::set_camera(CameraID c) {
+    camera_ = c;
+    return this;
+}
 
 PipelinePtr Pipeline::set_priority(int32_t priority) {
     if(priority_ != priority) {
