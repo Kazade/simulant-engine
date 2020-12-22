@@ -166,7 +166,7 @@ public:
 
         auto scene = get_or_create_route(route);
 
-        return start_coroutine(
+        return cr_async(
             std::bind(
                 &SceneManager::_preload_in_background<Args&...>,
                 this,

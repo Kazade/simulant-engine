@@ -23,7 +23,7 @@ public:
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/demo1.bsp");
         stage_->new_geom_with_mesh(mesh->id());
 
-        yield_coroutine();
+        cr_yield();
 
         auto entities = mesh->data->get<smlt::Q2EntityList>("entities");
 
@@ -47,7 +47,7 @@ public:
                 camera_->move_to_absolute(pos);
             }
 
-            yield_coroutine();
+            cr_yield();
         });
 
         // Add a fly controller to the camera for user input
@@ -61,7 +61,7 @@ public:
         );
 
         stage_->new_light_as_directional();
-        yield_coroutine();
+        cr_yield();
     }
 
 private:
