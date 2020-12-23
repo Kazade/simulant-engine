@@ -38,6 +38,23 @@ public:
         window->run_frame();
     }
 
+    void test_target_reset_on_destroy() {
+        auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_sphere("sphere", stage->assets->new_material(), 10, 5, 5);
+        auto sphere = stage->new_actor_with_mesh(mesh);
+        auto camera = stage->new_camera();
+        auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
+        follow->set_target(sphere);
+
+        assert_true(follow->has_target());
+        assert_equal(follow->target(), sphere);
+
+        sphere->destroy();
+
+        assert_false(follow->has_target());
+        assert_false(follow->target());
+    }
+
     void test_half_turn() {
         auto follower = stage->new_actor();
         auto controller = follower->new_behaviour<smlt::behaviours::SmoothFollow>();

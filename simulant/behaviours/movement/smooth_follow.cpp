@@ -12,6 +12,12 @@ SmoothFollow::SmoothFollow():
 
 }
 
+SmoothFollow::~SmoothFollow() {
+    if(destroy_conn_) {
+        destroy_conn_.disconnect();
+    }
+}
+
 void SmoothFollow::late_update(float dt) {
     auto target = target_;
 
@@ -48,11 +54,31 @@ void SmoothFollow::late_update(float dt) {
 }
 
 void SmoothFollow::set_target(ActorPtr actor) {
+    if(destroy_conn_) {
+        destroy_conn_.disconnect();
+    }
+
     target_ = actor;
+
+    if(target_) {
+        destroy_conn_ = target_->signal_destroyed().connect([&]() {
+            set_target(ActorPtr());
+        });
+    }
 }
 
 void SmoothFollow::set_target(ParticleSystemPtr ps) {
+    if(destroy_conn_) {
+        destroy_conn_.disconnect();
+    }
+
     target_ = ps;
+
+    if(target_) {
+        destroy_conn_ = target_->signal_destroyed().connect([&]() {
+            set_target(ParticleSystemPtr());
+        });
+    }
 }
 
 void SmoothFollow::set_damping(float damping) {
@@ -61,6 +87,14 @@ void SmoothFollow::set_damping(float damping) {
 
 void SmoothFollow::set_rotation_damping(float damping) {
     rotation_damping_ = damping;
+}
+
+bool SmoothFollow::has_target() const {
+    return bool(target_);
+}
+
+StageNode* SmoothFollow::target() const {
+    return target_;
 }
 
 }
