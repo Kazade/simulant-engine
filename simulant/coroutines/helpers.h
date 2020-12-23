@@ -25,16 +25,23 @@ struct PromiseState<void> {
     bool value;
 };
 
-template<typename T, typename Func>
-void call_func_set_state(Func f, typename PromiseState<T>::ptr state) {
-    state->value = f();
-}
+
+template<typename Func, typename T>
+struct CallAndSetState {
+public:
+    void operator()(Func f, typename PromiseState<T>::ptr state) {
+        state->value = f();
+    }
+};
 
 template<typename Func>
-void call_func_set_state(Func f, typename PromiseState<void>::ptr state) {
-    f();
-    state->value = true;
-}
+struct CallAndSetState<Func, void> {
+public:
+    void operator()(Func f, typename PromiseState<void>::ptr state) {
+        f();
+        state->value = true;
+    }
+};
 
 }
 
@@ -46,7 +53,8 @@ public:
     }
 
     T& value() const {
-        return (state_->value);
+        assert(state_->value);
+        return (state_->value.value());
     }
 
     /* Starts another coroutine that waits until
@@ -103,7 +111,7 @@ CRPromise<typename std::result_of<Func()>::type> cr_async(Func func) {
     CRPromise<T> promise(state);
 
     _trigger_coroutine([state, func]() {
-        promise_impl::call_func_set_state(func, state);
+        promise_impl::CallAndSetState<Func, T>()(func, state);
     });
 
     return promise;
@@ -156,7 +164,7 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func
  * start_coroutine(...).then(...)
  */
 template<typename T>
-T& cr_await(const CRPromise<T>& promise) {
+T cr_await(const CRPromise<T>& promise) {
     while(!promise.is_ready()) {
         if(cort::within_coroutine()){
             cr_yield();
@@ -166,7 +174,7 @@ T& cr_await(const CRPromise<T>& promise) {
         }
     }
 
-    return promise->value();
+    return promise.value();
 }
 
 }
