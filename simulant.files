@@ -1536,4 +1536,5 @@ simulant/sound_drivers/kos_sound_driver.cpp
 cmake_modules/simulant-config.cmake
 simulant/utils/noise.cpp
 simulant/utils/noise.h
+tests/test_coroutines.h
 tests/test_rig.h
