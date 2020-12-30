@@ -270,12 +270,15 @@ bool InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
 }
 
 void InputManager::update(float dt) {
+
+    /* Reset axis states */
+    for(auto& it: axis_states_) {
+        prev_axis_states_[it.first] = it.second;
+        it.second = false;
+    }
+
     for(auto axis: axises_) {
         const auto& name = axis->name();
-
-        /* Reset axis states */
-        prev_axis_states_[name] = axis_states_[name];
-        axis_states_[name] = false;
 
         bool new_state = false;
 
@@ -295,7 +298,9 @@ void InputManager::update(float dt) {
             new_state |= _update_joystick_hat_axis(axis_ptr, dt);
         }
 
-        axis_states_[name] = new_state;
+        /* We may have already set this axis name once this frame, we only
+         * want to set to true, never reset back to false here */
+        axis_states_[name] = axis_states_[name] | new_state;
     }
 }
 

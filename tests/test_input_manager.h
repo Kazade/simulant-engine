@@ -115,6 +115,45 @@ public:
         assert_true(manager_->axis_was_released("Test"));
     }
 
+    void test_multiple_axis_pressed_works() {
+        InputAxis* axis0 = manager_->new_axis("Test");
+        axis0->set_type(AXIS_TYPE_KEYBOARD_KEY);
+        axis0->set_positive_keyboard_key(KEYBOARD_CODE_A);
+
+        InputAxis* axis1 = manager_->new_axis("Test");
+        axis1->set_type(AXIS_TYPE_KEYBOARD_KEY);
+        axis1->set_positive_keyboard_key(KEYBOARD_CODE_B);
+
+        assert_false(manager_->axis_was_pressed("Test"));
+
+        state_->_handle_key_down(0, KEYBOARD_CODE_A);
+        manager_->update(1.0f);
+
+        assert_true(manager_->axis_was_pressed("Test"));
+
+        state_->_handle_key_up(0, KEYBOARD_CODE_A);
+        manager_->update(1.0f);
+
+        assert_false(manager_->axis_was_pressed("Test"));
+
+        state_->_handle_key_down(0, KEYBOARD_CODE_B);
+        manager_->update(1.0f);
+
+        assert_true(manager_->axis_was_pressed("Test"));
+
+        state_->_handle_key_down(0, KEYBOARD_CODE_A); // Now press A as well
+        manager_->update(1.0f);
+
+        /* State was already set */
+        assert_false(manager_->axis_was_pressed("Test"));
+
+        state_->_handle_key_up(0, KEYBOARD_CODE_A);
+        state_->_handle_key_up(0, KEYBOARD_CODE_B);
+        manager_->update(1.0f);
+
+        assert_true(manager_->axis_was_released("Test"));
+    }
+
 private:
     std::shared_ptr<InputState> state_;
     std::shared_ptr<InputManager> manager_;
