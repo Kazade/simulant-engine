@@ -293,7 +293,7 @@ void InputManager::update(float dt) {
         } else if(type == AXIS_TYPE_MOUSE_AXIS) {
             _update_mouse_axis_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_AXIS) {
-            _update_joystick_axis_axis(axis_ptr, dt);
+            new_state |= _update_joystick_axis_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_HAT) {
             new_state |= _update_joystick_hat_axis(axis_ptr, dt);
         }
@@ -330,7 +330,7 @@ void InputManager::_update_mouse_axis_axis(InputAxis *axis, float dt) {
     axis->value_ = new_value;
 }
 
-void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
+bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     _S_UNUSED(dt);
 
     float new_value = 0.0f;
@@ -352,6 +352,9 @@ void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     }
 
     axis->value_ = new_value;
+
+    /* Anything in the deadzone returns 0.0f exactly */
+    return new_value != 0.0f;
 }
 
 bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
