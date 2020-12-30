@@ -90,6 +90,31 @@ public:
         assert_equal(axis->value(), 0.1f);
     }
 
+    void test_axis_pressed_released() {
+        InputAxis* axis = manager_->new_axis("Test");
+        axis->set_type(AXIS_TYPE_KEYBOARD_KEY);
+        axis->set_positive_keyboard_key(KEYBOARD_CODE_A);
+
+        assert_false(manager_->axis_was_pressed("Test"));
+        assert_false(manager_->axis_was_pressed("TestX")); // Unknown axis
+
+        state_->_handle_key_down(0, KEYBOARD_CODE_0);
+        manager_->update(1.0f);
+
+        assert_false(manager_->axis_was_pressed("Test")); // Still false
+
+        state_->_handle_key_down(0, KEYBOARD_CODE_A);
+        manager_->update(1.0f);
+
+        assert_true(manager_->axis_was_pressed("Test"));
+
+        state_->_handle_key_up(0, KEYBOARD_CODE_A);
+        manager_->update(1.0f);
+
+        assert_false(manager_->axis_was_pressed("Test"));
+        assert_true(manager_->axis_was_released("Test"));
+    }
+
 private:
     std::shared_ptr<InputState> state_;
     std::shared_ptr<InputManager> manager_;

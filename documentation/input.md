@@ -7,6 +7,11 @@ There are two classes which provide access to input devices, these are the `Inpu
 
 The Window and Scene have a property called `input`, both refer to the `InputManager` for the Window. To get the value of an axis you call the `InputManager::axis_value(name)` method. `axis_value()` returns a value between -1.0 and 1.0 (in most cases). In the case of mouse input the value will reflect the mouse-delta from the previous frame, and so will return a value in pixels that the cursor moved.
 
+## Detecting key/button Presses or Releases
+
+Quite often you'll need to discover whether a key was just pressed, or just released in the current frame. You can do this by using the `axis_was_pressed(name)` and `axis_was_released(name)` methods of the `InputManager`. Note, these methods operation on axis names, not on key codes, and will return true if any keyboard key, mouse button, or joystick button activates/deactivates the axis.
+
+
 ## Defining Axises
 
 ## Pre-defined Axises
