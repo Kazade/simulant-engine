@@ -9,6 +9,7 @@
 namespace smlt {
 
 enum AxisType {
+    AXIS_TYPE_UNSET,
     AXIS_TYPE_KEYBOARD_KEY,
     AXIS_TYPE_MOUSE_BUTTON,
     AXIS_TYPE_MOUSE_AXIS,
@@ -56,7 +57,7 @@ public:
 
     const std::string& name() const { return name_; }
 
-    void set_type(AxisType type) { type_ = type; }
+
     const AxisType& type() const { return type_; }
 
     float value(bool respect_dead_zone=true) const;
@@ -67,7 +68,7 @@ public:
 private:
     std::string name_;
 
-    AxisType type_ = AXIS_TYPE_KEYBOARD_KEY;
+    AxisType type_ = AXIS_TYPE_UNSET;
 
     KeyboardID keyboard_source_ = ALL_KEYBOARDS;
     KeyboardCode positive_key_ = KEYBOARD_CODE_NONE;
@@ -92,6 +93,8 @@ private:
 
     float value_ = 0.0f;
     float dead_zone_ = 0.001f;
+
+    void set_type(AxisType type);
 
     friend class InputManager;
 };

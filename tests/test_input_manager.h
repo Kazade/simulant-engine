@@ -58,7 +58,6 @@ public:
 
     void test_axis_value_hard() {
         InputAxis* axis = manager_->new_axis("Test");
-        axis->set_type(AXIS_TYPE_JOYSTICK_AXIS);
         axis->set_joystick_axis(JOYSTICK_AXIS_0);
         axis->set_dead_zone(0.1f);
 
@@ -75,7 +74,6 @@ public:
 
     void test_axis_dead_zone() {
         InputAxis* axis = manager_->new_axis("Test");
-        axis->set_type(AXIS_TYPE_JOYSTICK_AXIS);
         axis->set_joystick_axis(JOYSTICK_AXIS_0);
         axis->set_dead_zone(0.1f);
 
@@ -92,7 +90,6 @@ public:
 
     void test_axis_pressed_released() {
         InputAxis* axis = manager_->new_axis("Test");
-        axis->set_type(AXIS_TYPE_KEYBOARD_KEY);
         axis->set_positive_keyboard_key(KEYBOARD_CODE_A);
 
         assert_false(manager_->axis_was_pressed("Test"));
@@ -117,11 +114,9 @@ public:
 
     void test_multiple_axis_pressed_works() {
         InputAxis* axis0 = manager_->new_axis("Test");
-        axis0->set_type(AXIS_TYPE_KEYBOARD_KEY);
         axis0->set_positive_keyboard_key(KEYBOARD_CODE_A);
 
         InputAxis* axis1 = manager_->new_axis("Test");
-        axis1->set_type(AXIS_TYPE_KEYBOARD_KEY);
         axis1->set_positive_keyboard_key(KEYBOARD_CODE_B);
 
         assert_false(manager_->axis_was_pressed("Test"));
