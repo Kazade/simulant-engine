@@ -270,12 +270,15 @@ bool InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
 }
 
 void InputManager::update(float dt) {
+
+    /* Reset axis states */
+    for(auto& it: axis_states_) {
+        prev_axis_states_[it.first] = it.second;
+        it.second = false;
+    }
+
     for(auto axis: axises_) {
         const auto& name = axis->name();
-
-        /* Reset axis states */
-        prev_axis_states_[name] = axis_states_[name];
-        axis_states_[name] = false;
 
         bool new_state = false;
 
@@ -290,12 +293,14 @@ void InputManager::update(float dt) {
         } else if(type == AXIS_TYPE_MOUSE_AXIS) {
             _update_mouse_axis_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_AXIS) {
-            _update_joystick_axis_axis(axis_ptr, dt);
+            new_state |= _update_joystick_axis_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_HAT) {
             new_state |= _update_joystick_hat_axis(axis_ptr, dt);
         }
 
-        axis_states_[name] = new_state;
+        /* We may have already set this axis name once this frame, we only
+         * want to set to true, never reset back to false here */
+        axis_states_[name] = axis_states_[name] | new_state;
     }
 }
 
@@ -325,7 +330,7 @@ void InputManager::_update_mouse_axis_axis(InputAxis *axis, float dt) {
     axis->value_ = new_value;
 }
 
-void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
+bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     _S_UNUSED(dt);
 
     float new_value = 0.0f;
@@ -347,6 +352,9 @@ void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     }
 
     axis->value_ = new_value;
+
+    /* Anything in the deadzone returns 0.0f exactly */
+    return new_value != 0.0f;
 }
 
 bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {

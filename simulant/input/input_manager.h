@@ -52,7 +52,7 @@ private:
     bool _update_mouse_button_axis(InputAxis* axis, float dt);
     bool _update_joystick_button_axis(InputAxis* axis, float dt);
     void _update_mouse_axis_axis(InputAxis *axis, float dt);
-    void _update_joystick_axis_axis(InputAxis* axis, float dt);
+    bool _update_joystick_axis_axis(InputAxis* axis, float dt);
     bool _update_joystick_hat_axis(InputAxis* axis, float dt);
 };
 

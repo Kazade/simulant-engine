@@ -14,6 +14,16 @@ Quite often you'll need to discover whether a key was just pressed, or just rele
 
 ## Defining Axises
 
+To define a new axis, you should use `input->new_axis(name)`. This will initially create a non-functional axis where the `type()` of the axis will be `AXIS_TYPE_UNSET`. To make the axis work, you need to set either positive or negative buttons or keys, or a physical axis (e.g joystick axis, or mouse axis).
+
+```
+auto new_axis = input->new_axis("MyAxis");
+new_axis->set_positive_keyboard_key(KEYBOARD_CODE_A);
+new_axis->type();  // -> AXIS_TYPE_KEYBOARD_KEY
+```
+
+You can create multiple axises with the same name, but input value with the "strongest" value will apply.
+
 ## Pre-defined Axises
 
 
