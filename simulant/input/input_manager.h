@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "../generic/managed.h"
+#include "../keycodes.h"
 
 namespace smlt {
 
@@ -31,19 +32,28 @@ public:
 
     void update(float dt);
 
+    /* Returns true if the axis was just pressed this frame */
+    bool axis_was_pressed(const std::string& name) const;
+
+    /* Returns true if the axis was just released this frame */
+    bool axis_was_released(const std::string& name) const;
+
 private:
     InputState* controller_;
 
     std::vector<std::shared_ptr<InputAxis>> axises_;
 
+    std::unordered_map<std::string, bool> prev_axis_states_;
+    std::unordered_map<std::string, bool> axis_states_;
+
     float _calculate_value(InputAxis* axis) const;
 
-    void _update_keyboard_axis(InputAxis* axis, float dt);
-    void _update_mouse_button_axis(InputAxis* axis, float dt);
-    void _update_joystick_button_axis(InputAxis* axis, float dt);
+    bool _update_keyboard_axis(InputAxis* axis, float dt);
+    bool _update_mouse_button_axis(InputAxis* axis, float dt);
+    bool _update_joystick_button_axis(InputAxis* axis, float dt);
     void _update_mouse_axis_axis(InputAxis *axis, float dt);
     void _update_joystick_axis_axis(InputAxis* axis, float dt);
-    void _update_joystick_hat_axis(InputAxis* axis, float dt);
+    bool _update_joystick_hat_axis(InputAxis* axis, float dt);
 };
 
 }

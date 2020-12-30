@@ -115,7 +115,7 @@ float sgn(float v) {
     else { return -1.0f; }
 }
 
-void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
+bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     float new_value = axis->value_;
 
     auto pbtn = axis->positive_mouse_button();
@@ -162,9 +162,11 @@ void InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     }
 
     axis->value_ = new_value;
+
+    return negative_pressed || positive_pressed;
 }
 
-void InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
+bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     float new_value = axis->value_;
 
     auto pbtn = axis->positive_joystick_button();
@@ -211,9 +213,11 @@ void InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     }
 
     axis->value_ = new_value;
+
+    return negative_pressed || positive_pressed;
 }
 
-void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
+bool InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     float new_value = axis->value_;
 
     auto pkey = axis->positive_keyboard_key();
@@ -260,26 +264,38 @@ void InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     }
 
     axis->value_ = new_value;
+
+    /* Return true if either is pressed */
+    return negative_pressed || positive_pressed;
 }
 
 void InputManager::update(float dt) {
     for(auto axis: axises_) {
+        const auto& name = axis->name();
+
+        /* Reset axis states */
+        prev_axis_states_[name] = axis_states_[name];
+        axis_states_[name] = false;
+
+        bool new_state = false;
 
         auto type = axis->type();
         auto axis_ptr = axis.get();
         if(type == AXIS_TYPE_KEYBOARD_KEY) {
-            _update_keyboard_axis(axis_ptr, dt);
+            new_state |= _update_keyboard_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_MOUSE_BUTTON) {
-            _update_mouse_button_axis(axis_ptr, dt);
+            new_state |= _update_mouse_button_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_BUTTON) {
-            _update_joystick_button_axis(axis_ptr, dt);
+            new_state |= _update_joystick_button_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_MOUSE_AXIS) {
             _update_mouse_axis_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_AXIS) {
             _update_joystick_axis_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_JOYSTICK_HAT) {
-            _update_joystick_hat_axis(axis_ptr, dt);
+            new_state |= _update_joystick_hat_axis(axis_ptr, dt);
         }
+
+        axis_states_[name] = new_state;
     }
 }
 
@@ -333,7 +349,7 @@ void InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     axis->value_ = new_value;
 }
 
-void InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
+bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     float new_value = 0.0f;
 
     auto process_joystick = [this, axis](JoystickID joystick_id) {
@@ -378,13 +394,16 @@ void InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
         new_value = process_joystick(axis->joystick_source());
     }
 
+    bool ret = true;
     if(new_value == 0.0f) {
         // Neither direction pressed. Use return speed to reset to zero
         auto sign = sgn(axis->value());
         new_value = std::max(0.0f, (std::abs(axis->value()) - (axis->return_speed_ * dt))) * sign;
+        ret = false;
     }
 
     axis->value_ = new_value;
+    return ret;
 }
 
 /* Returns the axis value but rounded to -1, 0 or +1. Values in the dead zone will return 0 */
@@ -413,5 +432,24 @@ float InputManager::axis_value(const std::string& name) const {
     return f;
 }
 
+bool InputManager::axis_was_pressed(const std::string &name) const {
+    auto a = prev_axis_states_.find(name);
+    auto b = axis_states_.find(name);
+
+    bool a_active = (a != prev_axis_states_.end()) && a->second;
+    bool b_active = (b != axis_states_.end()) && b->second;
+
+    return !a_active && b_active;
+}
+
+bool InputManager::axis_was_released(const std::string& name) const {
+    auto a = prev_axis_states_.find(name);
+    auto b = axis_states_.find(name);
+
+    bool a_active = (a != prev_axis_states_.end()) && a->second;
+    bool b_active = (b != axis_states_.end()) && b->second;
+
+    return a_active && !b_active;
+}
 
 }
