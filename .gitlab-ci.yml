@@ -169,7 +169,7 @@ build:windows-x64-mingw:
 
 test:windows-x64-mingw:
   stage: test
-  image: fedora:28
+  image: $CI_REGISTRY_IMAGE:windows-x64-mingw
   needs: ["build:windows-x64-mingw"]
   variables:
     TARGET: windows-x64-mingw
