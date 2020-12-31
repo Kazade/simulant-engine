@@ -128,7 +128,28 @@ android:
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
 
-build:windows-x64-mingw:
+build:windows-x64-mingw:release:
+  stage: build
+  image: $CI_REGISTRY_IMAGE:windows-x64-mingw
+  variables:
+    MINGW_BIN_DIR: /usr/x86_64-w64-mingw32/sys-root/mingw/bin/
+    TARGET: windows-x64-mingw
+  script:
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+   - cp $MINGW_BIN_DIR/zlib1.dll simulant/
+   - cp $MINGW_BIN_DIR/SDL2.dll simulant/
+   - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
+   - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
+   - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
+   - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
+  artifacts:
+    paths:
+      - ${TARGET}/release/simulant/*.dll
+
+build:windows-x64-mingw:debug:
   stage: build
   image: $CI_REGISTRY_IMAGE:windows-x64-mingw
   variables:
@@ -146,33 +167,22 @@ build:windows-x64-mingw:
    - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
    - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
    - cp simulant/*.dll tests/
-   - cd -
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cp $MINGW_BIN_DIR/zlib1.dll simulant/
-   - cp $MINGW_BIN_DIR/SDL2.dll simulant/
-   - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
-   - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
-   - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
-   - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
       - ${TARGET}/debug/sample_data/
       - ${TARGET}/debug/tests/simulant_tests.exe
       - ${TARGET}/debug/tests/*.dll
-      - ${TARGET}/release/simulant/*.dll
 
 test:windows-x64-mingw:
   stage: test
   image: $CI_REGISTRY_IMAGE:windows-x64-mingw
-  needs: ["build:windows-x64-mingw"]
+  needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
   variables:
     TARGET: windows-x64-mingw
   dependencies:
-   - build:windows-x64-mingw
+   - build:windows-x64-mingw:debug
+   - build:windows-x64-mingw:release
   before_script:
    - dnf install -y pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
