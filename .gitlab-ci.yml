@@ -36,7 +36,7 @@ prepare:windows-x64-mingw:
   variables:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
-      FROM fedora:33\n
+      FROM fedora:32\n
       RUN dnf install -y 'dnf-command(config-manager)'\n
       RUN rpm --import https://dl.winehq.org/wine-builds/winehq.key\n
       RUN dnf config-manager --add-repo https://dl.winehq.org/wine-builds/fedora/33/winehq.repo\n
