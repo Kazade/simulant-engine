@@ -17,5 +17,6 @@ The AppConfig structure allows you to control a number of settings, in particula
  - `AppConfig::width` and `AppConfig::height` - The width and height of the window
  - `AppConfig::development::force_renderer` - Overrides the default renderer from the system default. 
  - `AppConfig::development::force_sound_driver` - Overrides the default sound driver from the system default
+ - `AppConfig::developnent::log_file` - If specified, a text file will be created at this location and logs will be output there
 
 

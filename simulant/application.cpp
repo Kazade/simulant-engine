@@ -97,6 +97,12 @@ void Application::construct_window(const AppConfig& config) {
     smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
     smlt::get_logger("/")->set_level(config_copy.log_level);
 
+    if(!config_copy.development.log_file.empty()) {
+        smlt::get_logger("/")->add_handler(
+            smlt::Handler::ptr(new smlt::FileHandler(config_copy.development.log_file))
+        );
+    }
+
     L_DEBUG("Constructing the window");
 
     /* Fallback. If fullscreen is disabled and there is no width

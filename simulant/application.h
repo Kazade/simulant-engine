@@ -100,6 +100,10 @@ struct AppConfig {
         */
         std::string force_renderer = "";
         std::string force_sound_driver = "";
+
+        /* If not empty, logging entries will be written to this
+         * file as well as stdout */
+        std::string log_file = "";
     } development;
 };
 
