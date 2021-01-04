@@ -106,6 +106,8 @@ IF(NOT DREAMCAST_BUILD)
         SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
         SET(SDL2_LIBRARIES "")
 
+        SET(ZLIB_INCLUDE_DIRS $ENV{KOS_PORTS}/include/zlib)
+        SET(ZLIB_LIBRARIES z)
     ELSE()
         FIND_PACKAGE(SDL2)  # Try cmake modules first
         IF(NOT SDL2_FOUND)
@@ -129,9 +131,8 @@ IF(NOT DREAMCAST_BUILD)
 
         FIND_PACKAGE(OpenAL REQUIRED)
         FIND_PACKAGE(OpenGL REQUIRED)
+        FIND_PACKAGE(ZLIB REQUIRED)
     ENDIF()
-
-    FIND_PACKAGE(ZLIB REQUIRED)
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)

@@ -29,7 +29,7 @@
 
 #include "TmxPolyline.h"
 
-#ifdef _arch_dreamcast
+#if defined(_arch_dreamcast) || defined(__PSP__)
 char *strdup (const char *s) {
     char *d = (char*) malloc (strlen (s) + 1);   // Allocate memory
     if (d != NULL) strcpy (d,s);         // Copy string if okay
@@ -37,28 +37,28 @@ char *strdup (const char *s) {
 }
 #endif
 
-namespace Tmx 
+namespace Tmx
 {
-	Polyline::Polyline()
-		: points()
-	{
-	}
+    Polyline::Polyline()
+        : points()
+    {
+    }
 
-	void Polyline::Parse(const TiXmlNode *polylineNode)
-	{
-		char *pointsLine = strdup(polylineNode->ToElement()->Attribute("points"));
-		
-		char *token = strtok(pointsLine, " ");
-		while (token)
-		{
-			Point point;
-			sscanf(token, "%d,%d", &point.x, &point.y);
+    void Polyline::Parse(const TiXmlNode *polylineNode)
+    {
+        char *pointsLine = strdup(polylineNode->ToElement()->Attribute("points"));
 
-			points.push_back(point);
+        char *token = strtok(pointsLine, " ");
+        while (token)
+        {
+            Point point;
+            sscanf(token, "%d,%d", &point.x, &point.y);
 
-			token = strtok(0, " ");
-		}
+            points.push_back(point);
 
-		free(pointsLine);
-	}
+            token = strtok(0, " ");
+        }
+
+        free(pointsLine);
+    }
 }

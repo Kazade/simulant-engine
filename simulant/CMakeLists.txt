@@ -16,12 +16,12 @@ LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
 # Include GL2x stuff on non-DC builds
 IF(NOT DREAMCAST_BUILD)
-    MESSAGE("-- Including GLAD in build")
-    # DC build doesn't need glad, GL1 is available directly
-    FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
-
     IF(NOT PLATFORM_PSP)
+        MESSAGE("-- Including GLAD in build")
+        # DC build doesn't need glad, GL1 is available directly
+        FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
+        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
+
         MESSAGE("-- Including GL2X in build")
         FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
         SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
@@ -49,7 +49,7 @@ IF(DREAMCAST_BUILD)
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/core.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/context.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/alut.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/math.c        
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/math.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/listener.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/platform.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/source.c
@@ -103,7 +103,7 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
-IF(DREAMCAST_BUILD)
+IF(DREAMCAST_BUILD OR PLATFORM_PSP)
 ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES})
@@ -122,7 +122,7 @@ IF(MINGW)
         SET(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
         SET(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
         TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 psapi SDL2main SDL2 OpenAL32 userenv)
-    ENDIF()  
+    ENDIF()
 ENDIF()
 
 SET_TARGET_PROPERTIES(simulant
