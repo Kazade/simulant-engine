@@ -3,6 +3,8 @@
 
 #ifdef _arch_dreamcast
     #include "kos_keycodes.h"
+#elif defined(__PSP__)
+    #include "platforms/psp/psp_keycodes.h"
 #else
     #include "sdl2_keycodes.h"
 #endif

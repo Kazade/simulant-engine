@@ -14,17 +14,18 @@ FILE(GLOB_RECURSE TO_REMOVE
 
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
-# Include GL2x stuff on non-DC, non-PSP builds
+# Include GL2x stuff on non-DC builds
 IF(NOT DREAMCAST_BUILD)
-IF(NOT PSP)
     MESSAGE("-- Including GLAD in build")
-
-    FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
     # DC build doesn't need glad, GL1 is available directly
     FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
-ENDIF()
+
+    IF(NOT PLATFORM_PSP)
+        MESSAGE("-- Including GL2X in build")
+        FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
+        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
+    ENDIF()
 ENDIF()
 
 
@@ -71,7 +72,7 @@ IF(DREAMCAST_BUILD)
         sound_drivers/al_error.cpp
         sound_drivers/null_sound_driver.cpp
     )
-ELSEIF(PSP)
+ELSEIF(PLATFORM_PSP)
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/psp/*.cpp)
 
     IF(PLATFORM)
@@ -82,9 +83,9 @@ ELSEIF(PSP)
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
-        # Use OpenAL on PSP
-        sound_drivers/openal_sound_driver.cpp
-        sound_drivers/al_error.cpp
+        # FIXME: Use OpenAL on PSP
+        # sound_drivers/openal_sound_driver.cpp
+        # sound_drivers/al_error.cpp
         sound_drivers/null_sound_driver.cpp
     )
 ELSE()

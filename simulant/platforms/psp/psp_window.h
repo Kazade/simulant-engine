@@ -19,7 +19,7 @@ public:
     PSPWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled);
 
     void set_title(const std::string&) override {} // No-op
-    void cursor_position(int32_t &mouse_x, int32_t &mouse_y) override {} // No-op
+    void cursor_position(int32_t&, int32_t&) override {} // No-op
     void show_cursor(bool) override {} // No-op
     void lock_cursor(bool) override {} // No-op
 
@@ -33,7 +33,7 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
-    void render_screen(Screen* screen, const uint8_t* data) override {}
+    void render_screen(Screen*, const uint8_t*) override {}
 };
 
 }
