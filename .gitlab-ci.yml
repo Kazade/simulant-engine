@@ -137,7 +137,7 @@ build:psp-mips-gcc:debug:
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
 
 build:psp-mips-gcc:release:
@@ -149,7 +149,7 @@ build:psp-mips-gcc:release:
   script:
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
 
 build:windows-x64-mingw:release:
@@ -301,7 +301,7 @@ build:linux-x64-gcc:
       - ${TARGET}/debug/sample_data/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
-      - ${TARGET}/release/sample_data/      
+      - ${TARGET}/release/sample_data/
       - ${TARGET}/release/tests/simulant_tests
 
 test:linux-x64-gcc-debug:
@@ -348,7 +348,7 @@ test:linux-x64-gcc-release:
   artifacts:
    reports:
       junit: ${TARGET}/release/report.xml
-      
+
 deploy:linux-x64-gcc:
   stage: deploy
   only:
