@@ -24,6 +24,9 @@
 #include "platforms/dreamcast/profiler.h"
 #include "kos_window.h"
 namespace smlt { typedef KOSWindow SysWindow; }
+#elif defined(PSP)
+#include "psp_window.h"
+namespace smlt { typedef PSPWindow SysWindow; }
 #else
 #include "sdl2_window.h"
 namespace smlt { typedef SDL2Window SysWindow; }

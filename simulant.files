@@ -1193,6 +1193,8 @@ simulant/partitioners/null_partitioner.cpp
 simulant/partitioners/null_partitioner.h
 simulant/partitioners/octree_partitioner.cpp
 simulant/partitioners/octree_partitioner.h
+simulant/platforms/psp/psp_window.cpp
+simulant/platforms/psp/psp_window.h
 simulant/procedural/mesh/capsule.cpp
 simulant/procedural/mesh/capsule.h
 simulant/procedural/mesh/circle.cpp

@@ -14,8 +14,9 @@ FILE(GLOB_RECURSE TO_REMOVE
 
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
-
+# Include GL2x stuff on non-DC, non-PSP builds
 IF(NOT DREAMCAST_BUILD)
+IF(NOT PSP)
     MESSAGE("-- Including GLAD in build")
 
     FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
@@ -23,6 +24,7 @@ IF(NOT DREAMCAST_BUILD)
     # DC build doesn't need glad, GL1 is available directly
     FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
+ENDIF()
 ENDIF()
 
 
@@ -37,7 +39,7 @@ IF(DREAMCAST_BUILD)
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.c)
 
     IF(PLATFORM)
-    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+        MESSAGE("-- Including platform specific files: ${PLATFORM}")
     ENDIF()
 
     SET(
@@ -61,9 +63,39 @@ IF(DREAMCAST_BUILD)
         ${PLATFORM}
     )
 
-    SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp sound_drivers/null_sound_driver.cpp)
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        kos_window.cpp
+        sound_drivers/openal_sound_driver.cpp
+        sound_drivers/al_error.cpp
+        sound_drivers/null_sound_driver.cpp
+    )
+ELSEIF(PSP)
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/psp/*.cpp)
+
+    IF(PLATFORM)
+        MESSAGE("-- Including platform specific files: ${PLATFORM}")
+    ENDIF()
+
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        ${PLATFORM}
+        # Use OpenAL on PSP
+        sound_drivers/openal_sound_driver.cpp
+        sound_drivers/al_error.cpp
+        sound_drivers/null_sound_driver.cpp
+    )
 ELSE()
-    SET(SIMULANT_FILES ${SIMULANT_FILES} sdl2_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp sound_drivers/null_sound_driver.cpp)
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        sdl2_window.cpp
+        sound_drivers/openal_sound_driver.cpp
+        sound_drivers/al_error.cpp
+        sound_drivers/null_sound_driver.cpp
+    )
 ENDIF()
 
 
