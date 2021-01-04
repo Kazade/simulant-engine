@@ -88,7 +88,7 @@ check:stream-usage:
   script:
     - python3 tools/find_std_stream.py simulant
 
-android:
+build:android-armeabiv7a-gcc:debug:
   stage: build
   image: kazade/android-sdk
   allow_failure: true
@@ -127,6 +127,26 @@ android:
    - cd ${CI_PROJECT_DIR}/build
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
+
+build:psp-mips-gcc:debug:
+  stage: build
+  image: sharkwouter/pspdev
+  allow_failure: true
+  script:
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+
+build:psp-mips-gcc:release:
+  stage: build
+  image: sharkwouter/pspdev
+  allow_failure: true
+  script:
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
 
 build:windows-x64-mingw:release:
   stage: build
