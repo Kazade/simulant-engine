@@ -132,8 +132,9 @@ build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
   allow_failure: true
+  variables:
+    TARGET: psp-mips-gcc
   script:
-   - cd /builds/simulant/simulant/
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
@@ -143,8 +144,9 @@ build:psp-mips-gcc:release:
   stage: build
   image: sharkwouter/pspdev
   allow_failure: true
+  variables:
+    TARGET: psp-mips-gcc
   script:
-   - cd /builds/simulant/simulant/
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
