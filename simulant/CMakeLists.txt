@@ -15,7 +15,7 @@ FILE(GLOB_RECURSE TO_REMOVE
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
 # Include GL2x stuff on non-DC builds
-IF(NOT DREAMCAST_BUILD)
+IF(NOT PLATFORM_DREAMCAST)
     IF(NOT PLATFORM_PSP)
         MESSAGE("-- Including GLAD in build")
         # DC build doesn't need glad, GL1 is available directly
@@ -29,7 +29,7 @@ IF(NOT DREAMCAST_BUILD)
 ENDIF()
 
 
-IF(DREAMCAST_BUILD)
+IF(PLATFORM_DREAMCAST)
     MESSAGE("-- Including GLdc and ALdc in build, as this is the Dreamcast")
 
     # We build in GLdc and ALdc directly (as it's all under the Simulant umbrella)
@@ -103,7 +103,7 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
-IF(DREAMCAST_BUILD OR PLATFORM_PSP)
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP)
 ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES})

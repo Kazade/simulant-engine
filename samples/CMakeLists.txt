@@ -39,7 +39,7 @@ SET(SAMPLES
 )
 
 SET(EXE_EXTENSION "")
-IF(DREAMCAST_BUILD)
+IF(PLATFORM_DREAMCAST)
     SET(EXE_EXTENSION ".elf")
 elseif(WIN32)
     SET(EXE_EXTENSION ".exe")
@@ -59,7 +59,7 @@ foreach(sample ${SAMPLES})
         add_custom_target(${EXE_FILENAME}.debug.target ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug)
     endif()
 
-    IF(DREAMCAST_BUILD)
+    IF(PLATFORM_DREAMCAST)
     IF(SIMULANT_BUILD_SAMPLE_CDI)
         SET(EXE ${sample})
         ADD_CUSTOM_TARGET(

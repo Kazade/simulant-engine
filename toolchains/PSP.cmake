@@ -44,18 +44,48 @@ set(STRIP ${PSPBIN}/psp-strip)
 # Include directories:
 include_directories(${include_directories} ${PSPDEV}/include ${PSPSDK}/include)
 
+add_definitions("-G0")
+
 # Definitions that may be needed to use some libraries:
 add_definitions("-D__PSP__")
 add_definitions("-DHAVE_OPENGL")
 
+link_directories(
+    ${PSPSDK}/lib
+    ${PSPDEV}/lib
+)
+
+set (CMAKE_VERBOSE_MAKEFILE ON)
+
 # Aggregated list of all PSP-specific libraries for convenience.
 set(PSP_LIBRARIES
-        "-lg -lc -lpspdebug -lpspctrl -lpspsdk \
-        -lpspnet -lpspnet_inet -lpspnet_apctl -lpspnet_resolver -lpspaudiolib \
-        -lpsputility -lGL \
-        -lpspvfpu -lpspdisplay -lpsphprm -lpspirkeyb \
-        -lpsprtc -lpspaudio -lpspvram  -lpspgu -lpspge -lpspuser \
-        -L${PSPSDK}/lib -L${PSPDEV}/lib"
+    stdc++
+    pthread-psp
+    GL
+    pspaudiolib
+    pspaudio
+    m
+    g
+    c
+    pspvfpu
+    pspfpu
+    pspgum
+    pspgu
+    psprtc
+    pspdebug
+    pspdisplay
+    pspge
+    pspctrl
+    pspsdk
+    c
+    pspnet
+    pspnet_inet
+    pspnet_apctl
+    pspnet_resolver
+    psputility
+    psppower
+    pspuser
+    pspkernel
 )
 
 # File defining macro outputting PSP-specific EBOOT.PBP out of passed executable target:

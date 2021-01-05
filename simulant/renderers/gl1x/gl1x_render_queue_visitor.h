@@ -2,6 +2,7 @@
 
 #include "../../material.h"
 #include "../batching/renderable.h"
+#include "../gl_renderer.h"
 
 namespace smlt {
 
@@ -56,7 +57,7 @@ private:
     bool positions_enabled_ = false;
     bool colours_enabled_ = false;
     bool normals_enabled_ = false;
-    bool textures_enabled_[MAX_TEXTURE_UNITS] = {0};
+    bool textures_enabled_[_S_GL_MAX_TEXTURE_UNITS] = {0};
 
     uint32_t default_texture_name_ = 0;
 

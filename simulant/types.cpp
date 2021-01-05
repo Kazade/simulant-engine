@@ -43,7 +43,7 @@ VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribu
 }
 
 bool VertexSpecification::has_texcoordX(uint8_t which) const {
-    assert(which < MAX_TEXTURE_UNITS);
+    assert(which < 8);
 
     return (which == 0) ? has_texcoord0() :
            (which == 1) ? has_texcoord1() :
@@ -56,7 +56,7 @@ bool VertexSpecification::has_texcoordX(uint8_t which) const {
 }
 
 VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
-    assert(which < MAX_TEXTURE_UNITS);
+    assert(which < 8);
 
     switch(which) {
     case 0: return texcoord0_attribute_;
@@ -145,7 +145,7 @@ AttributeOffset VertexSpecification::texcoord7_offset(bool check) const {
 }
 
 AttributeOffset VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
-    assert(which < MAX_TEXTURE_UNITS);
+    assert(which < 8);
 
     switch(which) {
     case 0: return texcoord0_offset(check);

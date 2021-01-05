@@ -10,6 +10,8 @@
 #ifdef _arch_dreamcast
     #include "../../../deps/libgl/include/gl.h"
     #include "../../../deps/libgl/include/glext.h"
+#elif defined(__PSP__)
+    #include <GL/gl.h>
 #else
     #include "./glad/glad/glad.h"
 #endif
@@ -159,11 +161,18 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
 #ifdef _arch_dreamcast
             if(texture->width() == texture->height()) {
 #endif
+
+#ifdef __PSP__
+                L_INFO("Not generating mipmaps as PSP doesn't support glGenerateMipmap");
+#else
+
                 L_DEBUG(_F("Generating mipmaps. W: {0}, H:{1}").format(
                     texture->width(), texture->height()
                 ));
                 GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
                 texture->_set_has_mipmaps(true);
+#endif
+
 #ifdef _arch_dreamcast
             } else {
                 L_WARN("Not generating mipmaps as texture is non-square (PVR limitation)");

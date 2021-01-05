@@ -8,6 +8,24 @@
 
 namespace smlt {
 
+#ifdef _arch_dreamcast
+// The Dreamcast only supports 2 multitexture units
+#define _S_GL_MAX_TEXTURE_UNITS 2
+#elif defined(__PSP__)
+// PSPGL doesn't support multitexturing at all (!)
+#define _S_GL_MAX_TEXTURE_UNITS 1
+#else
+#define _S_GL_MAX_TEXTURE_UNITS 8
+#endif
+
+#define _S_GL_SUPPORTS_MULTITEXTURE (_S_GL_MAX_TEXTURE_UNITS > 1)
+
+#ifdef __PSP__
+#define _S_GL_SUPPORTS_COLOR_MATERIAL 0
+#else
+#define _S_GL_SUPPORTS_COLOR_MATERIAL 1
+#endif
+
 /*
  * Shared functionality between the GL1.x and GL2.x renderers
  * I hate mixin style classes (implementation inheritance) but as

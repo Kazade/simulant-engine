@@ -20,6 +20,8 @@
 #include "gl1x_renderer.h"
 #ifdef _arch_dreamcast
     #include "../../../deps/libgl/include/gl.h"
+#elif defined(__PSP__)
+    #include <GL/gl.h>
 #else
     #include "../glad/glad/glad.h"
 #endif
@@ -54,9 +56,11 @@ batcher::RenderGroupKey GL1XRenderer::prepare_render_group(
 
 void GL1XRenderer::init_context() {
 #ifndef _arch_dreamcast
+#ifndef __PSP__
     if(!gladLoadGL()) {
         throw std::runtime_error("Unable to intialize OpenGL 1.1");
     }
+#endif
 #endif
 
     const GLubyte* GL_vendor = glGetString(GL_VENDOR);

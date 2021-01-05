@@ -21,13 +21,6 @@
 
 #include <cstdint>
 
-#ifndef _arch_dreamcast
-static const uint32_t MAX_TEXTURE_UNITS = 8;
-#else
-// The Dreamcast only supports 2 multitexture units
-static const uint32_t MAX_TEXTURE_UNITS = 2;
-#endif
-
 static const uint32_t MAX_TEXTURE_MATRICES = 8;
 static const uint32_t MAX_MATERIAL_PASSES = 4;
 static const uint32_t MAX_LIGHTS_PER_RENDERABLE = 8;

@@ -55,7 +55,7 @@ void main(void) {
 
 
 struct GL2RenderGroupImpl {
-    GLuint texture_id[MAX_TEXTURE_UNITS];
+    GLuint texture_id[_S_GL_MAX_TEXTURE_UNITS];
     GPUProgramID shader_id;
 };
 
@@ -442,7 +442,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         // type of existence check for texture properties? Is checking the texture_id right for all situations?
         // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
         auto loc = program_->locate_uniform(property_value->shader_variable(), true);
-        if(loc > -1 && (texture_unit + 1u) < MAX_TEXTURE_UNITS) {
+        if(loc > -1 && (texture_unit + 1u) < _S_GL_MAX_TEXTURE_UNITS) {
             const TextureUnit& unit = property_value->value<TextureUnit>();
 
             auto tex = unit.texture();
@@ -453,7 +453,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 
     /* Next, we wipe out any unused texture units */
-    for(uint8_t i = texture_unit; i < MAX_TEXTURE_UNITS; ++i) {
+    for(uint8_t i = texture_unit; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
         GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
         GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
     }
