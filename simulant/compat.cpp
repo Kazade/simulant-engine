@@ -20,6 +20,12 @@ std::string to_string(unsigned value) {
     return std::string(buffer, buffer + c);
 }
 
+std::string to_string(unsigned long value) {
+    char buffer[64];
+    auto c = ::sprintf(buffer, "%luld", value);
+    return std::string(buffer, buffer + c);
+}
+
 std::string to_string(long value) {
     char buffer[64];
     auto c = ::sprintf(buffer, "%ld", value);

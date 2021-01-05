@@ -17,6 +17,7 @@ namespace std {
 /* to_string stuff */
 std::string to_string(int value);
 std::string to_string(unsigned value);
+std::string to_string(unsigned long value);
 std::string to_string(long value);
 std::string to_string(float value);
 std::string to_string(double value);
