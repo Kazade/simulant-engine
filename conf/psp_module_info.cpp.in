@@ -1,0 +1,7 @@
+
+#include <pspmoduleinfo.h>
+#include <pspthreadman.h>
+
+PSP_MODULE_INFO(@PSP_TITLE@, 0, @PSP_MAJOR_VERSION@, @PSP_MINOR_VERSION@);
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_VFPU | THREAD_ATTR_USER);
+PSP_HEAP_SIZE_KB(-1024);
