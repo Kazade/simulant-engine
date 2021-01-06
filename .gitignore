@@ -4,8 +4,10 @@
 *cmake_install*
 build*
 dbuild*
+pbuild*
 tests/main.cpp
 tests/main-dc.cpp
+tests/main-psp.cpp
 *.swp
 .ycm_extra_conf.py*
 *.user
