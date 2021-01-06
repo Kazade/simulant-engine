@@ -53,7 +53,6 @@ StatsPanel::StatsPanel(Window *window):
 
 bool StatsPanel::init() {
     stage_ = window_->new_stage(smlt::PARTITIONER_NULL);
-
     ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
     pipeline_ = window_->compositor->render(
         stage_, ui_camera_

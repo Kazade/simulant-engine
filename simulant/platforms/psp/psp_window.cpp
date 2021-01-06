@@ -2,6 +2,8 @@
 #include "psp_window.h"
 #include "../../sound_drivers/null_sound_driver.h"
 
+#include "../../renderers/renderer_config.h"
+
 namespace smlt {
 
 #define SCREEN_WIDTH 480
@@ -47,6 +49,11 @@ bool PSPWindow::create_window() {
     ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
     surface_ = eglCreateWindowSurface(dpy_, config, 0, NULL);
     eglMakeCurrent(dpy_, surface_, surface_, ctx_);
+
+    renderer_ = new_renderer(this, "gl1x");
+    set_has_context(true); //Mark that we have a valid GL context
+    renderer_->init_context();
+
     return true;
 }
 
