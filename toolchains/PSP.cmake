@@ -88,6 +88,38 @@ set(PSP_LIBRARIES
     pspkernel
 )
 
+SET(
+    CMAKE_CXX_STANDARD_LIBRARIES
+    "${CMAKE_CXX_STANDARD_LIBRARIES} \
+     -lstdc++ \
+    -lpthread-psp \
+    -lGL \
+    -lpspaudiolib \
+    -lpspaudio \
+    -lm \
+    -lg \
+    -lc \
+    -lpspvfpu \
+    -lpspfpu \
+    -lpspgum \
+    -lpspgu \
+    -lpsprtc \
+    -lpspdebug \
+    -lpspdisplay \
+    -lpspge \
+    -lpspctrl \
+    -lpspsdk \
+    -lc \
+    -lpspnet \
+    -lpspnet_inet \
+    -lpspnet_apctl \
+    -lpspnet_resolver \
+    -lpsputility \
+    -lpsppower \
+    -lpspuser \
+    -lpspkernel"
+)
+
 # File defining macro outputting PSP-specific EBOOT.PBP out of passed executable target:
 include("${PSPCMAKE}/CreatePBP.cmake")
 
