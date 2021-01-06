@@ -1,5 +1,5 @@
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/gl.h"
     #include "../../../deps/libgl/include/glext.h"
 #elif defined(__PSP__)
@@ -178,7 +178,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
-#if !defined(_arch_dreamcast) && !defined(__PSP__)
+#if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {
         glPointSize(next->point_size());
     }

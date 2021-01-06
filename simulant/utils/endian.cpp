@@ -7,7 +7,7 @@
 #define SWAP_32 _byteswap_ulong
 #define SWAP_64 _byteswap_uint64
 
-#elif defined(_arch_dreamcast)
+#elif defined(__DREAMCAST__)
 #include <kos.h>
 #define SWAP_16 arch_swap16
 #define SWAP_32 arch_swap32
@@ -36,7 +36,7 @@ uint32_t swap_endian(uint32_t v) {
     return SWAP_32(v);
 }
 
-#ifndef _arch_dreamcast
+#ifndef __DREAMCAST__
 uint64_t swap_endian(uint64_t v) {
     return SWAP_64(v);
 }
@@ -50,7 +50,7 @@ int32_t swap_endian(int32_t v) {
     return SWAP_32(v);
 }
 
-#ifndef _arch_dreamcast
+#ifndef __DREAMCAST__
 int64_t swap_endian(int64_t v) {
     return SWAP_64(v);
 }
@@ -84,7 +84,7 @@ int32_t ensure_big_endian(int32_t v) {
     return ensure_big(v);
 }
 
-#ifndef _arch_dreamcast
+#ifndef __DREAMCAST__
 int64_t ensure_big_endian(int64_t v) {
     return ensure_big(v);
 }

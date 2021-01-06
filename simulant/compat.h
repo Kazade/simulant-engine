@@ -13,7 +13,7 @@
 
 namespace std {
 
-#if defined(_arch_dreamcast) || defined(__PSP__)
+#if defined(__DREAMCAST__) || defined(__PSP__)
 /* to_string stuff */
 std::string to_string(int value);
 std::string to_string(unsigned value);

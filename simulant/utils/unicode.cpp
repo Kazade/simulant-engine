@@ -301,7 +301,7 @@ static float _stof(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     // Dreamcast (GCC 4.7.3) doesn't define strtof but does define strtod
     float test = (float) strtod(inp, &p);
 #else

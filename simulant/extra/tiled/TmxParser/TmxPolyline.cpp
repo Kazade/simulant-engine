@@ -29,7 +29,7 @@
 
 #include "TmxPolyline.h"
 
-#if defined(_arch_dreamcast) || defined(__PSP__)
+#if defined(__DREAMCAST__) || defined(__PSP__)
 char *strdup (const char *s) {
     char *d = (char*) malloc (strlen (s) + 1);   // Allocate memory
     if (d != NULL) strcpy (d,s);         // Copy string if okay

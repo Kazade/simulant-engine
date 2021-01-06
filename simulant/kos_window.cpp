@@ -36,7 +36,7 @@ void KOSWindow::swap_buffers() {
 
 bool KOSWindow::create_window() {
     L_DEBUG("Initializing OpenGL");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 
@@ -46,7 +46,7 @@ bool KOSWindow::create_window() {
     }
 
     L_DEBUG("OpenGL initialized");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 
@@ -56,7 +56,7 @@ bool KOSWindow::create_window() {
     renderer_->init_context();
 
     L_DEBUG("Renderer initialized");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 

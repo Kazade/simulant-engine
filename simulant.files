@@ -604,6 +604,7 @@ simulant/loaders/ttf_loader.cpp
 simulant/loaders/ttf_loader.h
 simulant/loaders/wal_loader.cpp
 simulant/loaders/wal_loader.h
+simulant/logging.cpp
 simulant/managers/skybox_manager.cpp
 simulant/managers/skybox_manager.h
 simulant/managers/sprite_manager.cpp

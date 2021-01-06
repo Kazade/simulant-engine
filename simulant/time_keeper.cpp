@@ -1,4 +1,4 @@
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 #include <kos.h>
 #endif
 
@@ -13,7 +13,7 @@ TimeKeeper::TimeKeeper(const float fixed_step):
 }
 
 uint64_t TimeKeeper::now_in_us() {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     return timer_us_gettime64();
 #else
     auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
@@ -22,7 +22,7 @@ uint64_t TimeKeeper::now_in_us() {
 }
 
 bool TimeKeeper::init() {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     last_update_ = timer_us_gettime64();
 #else
     last_update_ = std::chrono::high_resolution_clock::now();
@@ -38,7 +38,7 @@ void TimeKeeper::update() {
     const float DELTATIME_MAX = 0.25f;
     const float ACCUMULATOR_MAX = 0.25f;
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     auto now = timer_us_gettime64();
     auto diff = now - last_update_;
     last_update_ = now;

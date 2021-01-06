@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/gl.h"
 #elif defined(__PSP__)
     #include <GL/gl.h>

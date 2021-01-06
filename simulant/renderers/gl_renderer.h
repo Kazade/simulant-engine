@@ -8,7 +8,7 @@
 
 namespace smlt {
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 // The Dreamcast only supports 2 multitexture units
 #define _S_GL_MAX_TEXTURE_UNITS 2
 #elif defined(__PSP__)

@@ -46,7 +46,7 @@ VirtualFileSystem::VirtualFileSystem(Window *window):
     resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
 #endif
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
     resource_path_.push_back("/cd");
     resource_path_.push_back("/pc");

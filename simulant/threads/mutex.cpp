@@ -33,7 +33,7 @@ Mutex::~Mutex() {
 RecursiveMutex::RecursiveMutex() {
     int err = 0;
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     /* Annoyingly pthreads on the Dreamcast are currently missing
      * recursive mutexes. Need to send a patch upstream. Fortunately pthread_mutex_t
      * is just mutex_t so we can use raw KOS functions instead */
@@ -55,7 +55,7 @@ RecursiveMutex::RecursiveMutex() {
 
 RecursiveMutex::~RecursiveMutex() {
     int err = 0;
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     err = mutex_destroy(&mutex_);
 #else
     err = pthread_mutex_destroy(&mutex_);
@@ -65,7 +65,7 @@ RecursiveMutex::~RecursiveMutex() {
 }
 
 void RecursiveMutex::lock() {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     mutex_lock(&mutex_);
 #else
     pthread_mutex_lock(&mutex_);
@@ -73,7 +73,7 @@ void RecursiveMutex::lock() {
 }
 
 void RecursiveMutex::unlock() {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     mutex_unlock(&mutex_);
 #else
     pthread_mutex_unlock(&mutex_);

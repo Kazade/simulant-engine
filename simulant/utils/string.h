@@ -15,7 +15,7 @@ std::string replace_all(const std::string& s, const std::string& search, const s
 }
 
 /* Not all supported platforms implement std::stof etc.*/
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 namespace std {
     float stof(const std::string& str);
     int32_t stoi(const std::string& str);

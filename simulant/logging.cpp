@@ -5,6 +5,8 @@
 
 #ifdef __ANDROID__
 #include <android/log.h>
+#elif defined(__PSP__)
+#include <pspdebug.h>
 #endif
 
 namespace smlt {
@@ -45,27 +47,31 @@ void FileHandler::do_write_message(Logger* logger,
     stream_.flush();
 }
 
+StdIOHandler::StdIOHandler() {
+
+}
+
 void StdIOHandler::do_write_message(Logger* logger,
-                       const DateTime& time,
+                                    const DateTime& time,
                        const std::string& level,
                        const std::string& message) {
 
     // We lock so that we don't get interleaved logging
     thread::Lock<thread::Mutex> g(lock_);
 
-        if(level == "ERROR") {
+    if(level == "ERROR") {
 #ifndef __ANDROID__
-            std::cerr << to_string(time) << " ERROR " << message << std::endl;
+        std::cerr << to_string(time) << " ERROR " << message << std::endl;
 #else
-            __android_log_write(ANDROID_LOG_ERROR, "SIMULANT", message.c_str());
+        __android_log_write(ANDROID_LOG_ERROR, "SIMULANT", message.c_str());
 #endif
-        } else {
+    } else {
 #ifndef __ANDROID__
-            std::cout << to_string(time) << " " << level << " " << message << std::endl;
+        std::cout << to_string(time) << " " << level << " " << message << std::endl;
 #else
-            __android_log_write(ANDROID_LOG_INFO, "SIMULANT", message.c_str());
+        __android_log_write(ANDROID_LOG_INFO, "SIMULANT", message.c_str());
 #endif
-        }
+    }
 }
 
 void debug(const std::string& text, const std::string& file, int32_t line) {

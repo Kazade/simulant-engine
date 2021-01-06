@@ -1,7 +1,7 @@
 
 #include "renderer_config.h"
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include "gl1x/gl1x_renderer.h"
 #elif defined(__ANDROID__)
     #include "gl2x/generic_renderer.h"
@@ -30,7 +30,7 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
 
     if(chosen.empty()) {
         /* NULL? Then return the default for the platform */
-#if defined(_arch_dreamcast) || defined(__PSP__)
+#if defined(__DREAMCAST__) || defined(__PSP__)
         return std::make_shared<GL1XRenderer>(window);
 #else
         return std::make_shared<GenericRenderer>(window);
@@ -45,7 +45,7 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         return std::make_shared<GL1XRenderer>(window);
 #endif
     } else if(chosen == "gl2x") {
-#if defined(_arch_dreamcast) || defined(PSP)
+#if defined(__DREAMCAST__) || defined(PSP)
         L_ERROR(_F("{0} is not a supported renderer").format(name));
         return NOT_SUPPORTED;
 #else

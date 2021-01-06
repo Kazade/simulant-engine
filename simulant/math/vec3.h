@@ -4,7 +4,7 @@
 #include "../utils/unicode.h"
 #include "utils.h"
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 #include <kos.h>
 #endif
 
@@ -118,7 +118,7 @@ public:
     }
 
     float length() const {
-    #ifdef _arch_dreamcast
+    #ifdef __DREAMCAST__
         float r;
         vec3f_length(x, y, z, r);
         return r;
@@ -132,7 +132,7 @@ public:
     }
 
     const Vec3 normalized() const {
-    #ifdef _arch_dreamcast
+    #ifdef __DREAMCAST__
         Vec3 ret(x, y, z);
         vec3f_normalize(ret.x, ret.y, ret.z);
         return ret;
@@ -147,7 +147,7 @@ public:
     }
 
     void normalize() {
-    #ifdef _arch_dreamcast
+    #ifdef __DREAMCAST__
         vec3f_normalize(x, y, z);
     #else
         float l = 1.0f / length();
@@ -187,7 +187,7 @@ public:
     }
 
     float dot(const Vec3& rhs) const {
-    #ifdef _arch_dreamcast
+    #ifdef __DREAMCAST__
         float r;
         vec3f_dot(x, y, z, rhs.x, rhs.y, rhs.z, r);
         return r;

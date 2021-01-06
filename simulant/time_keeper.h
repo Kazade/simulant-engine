@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include <cstdint>
 #else
     #include <chrono>
@@ -35,7 +35,7 @@ public:
     }
 
 private:
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     uint64_t last_update_;
 #else
     std::chrono::time_point<std::chrono::high_resolution_clock> last_update_;

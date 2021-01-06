@@ -6,7 +6,7 @@
 
 namespace std {
 
-#if defined(_arch_dreamcast) || defined(__PSP__)
+#if defined(__DREAMCAST__) || defined(__PSP__)
 
 std::string to_string(int value) {
     char buffer[64];

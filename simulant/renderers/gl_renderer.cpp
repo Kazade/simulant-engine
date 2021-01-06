@@ -7,7 +7,7 @@
 
 /* This file should only contain things shared between GL1 + GL2 so include
  * the gl1 headers here */
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/gl.h"
     #include "../../../deps/libgl/include/glext.h"
 #elif defined(__PSP__)
@@ -158,7 +158,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
 
         /* Generate mipmaps if we don't have them already */
         if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE && !texture->has_mipmaps()) {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
             if(texture->width() == texture->height()) {
 #endif
 
@@ -173,7 +173,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 texture->_set_has_mipmaps(true);
 #endif
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
             } else {
                 L_WARN("Not generating mipmaps as texture is non-square (PVR limitation)");
             }
