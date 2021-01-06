@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GLES/egl.h>
+
 #include "../../window.h"
 #include "../../platform.h"
 
@@ -33,6 +35,10 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
+    EGLDisplay dpy_;
+    EGLSurface surface_;
+    EGLContext ctx_;
+
     void render_screen(Screen*, const uint8_t*) override {}
 };
 

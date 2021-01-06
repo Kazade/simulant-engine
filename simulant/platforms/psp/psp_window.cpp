@@ -19,15 +19,39 @@ PSPWindow::PSPWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscr
 }
 
 void PSPWindow::swap_buffers() {
-
+    eglSwapBuffers(dpy_, surface_);
 }
 
+static const EGLint attrib_list [] = {
+    EGL_RED_SIZE, 1,
+    EGL_GREEN_SIZE, 1,
+    EGL_BLUE_SIZE, 1,
+    EGL_ALPHA_SIZE, 0,
+    EGL_DEPTH_SIZE, 0,
+    EGL_NONE
+};
+
 bool PSPWindow::create_window() {
+    dpy_ = eglGetDisplay(0);
+    eglInitialize(dpy_, NULL, NULL);
+
+    EGLConfig config;
+    EGLint num_configs;
+
+    eglChooseConfig(dpy_, attrib_list, &config, 1, &num_configs);
+
+    if(!num_configs) {
+        return false;
+    }
+
+    ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
+    surface_ = eglCreateWindowSurface(dpy_, config, 0, NULL);
+    eglMakeCurrent(dpy_, surface_, surface_, ctx_);
     return true;
 }
 
 void PSPWindow::destroy_window() {
-
+    eglTerminate(dpy_);
 }
 
 void PSPWindow::check_events() {
