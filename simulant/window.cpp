@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef __arch_dreamcast
+#ifdef ___DREAMCAST__
     #include <kos.h>
 #endif
 
@@ -251,7 +251,7 @@ bool Window::_init() {
 
     L_DEBUG("Starting initialization");
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     print_available_ram();
 #endif
 
@@ -275,7 +275,7 @@ bool Window::_init() {
         //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 
@@ -299,7 +299,7 @@ bool Window::_init() {
         register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
 
         L_INFO("Initializing the default resources");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 
@@ -314,7 +314,7 @@ bool Window::_init() {
     }
 
     L_DEBUG("Initialization finished");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 

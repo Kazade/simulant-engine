@@ -29,7 +29,7 @@
     #include <psapi.h>
 #endif
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 #include <malloc.h>
 #include <kos.h>
 
@@ -127,7 +127,7 @@ void StatsPanel::clean_up() {
     polygons_rendered_ = nullptr;
 }
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 
 void set_system_ram() {
    systemRam = 0x8d000000 - 0x8c000000;
@@ -161,7 +161,7 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
         }
     }
     return -1;
-#elif defined(_arch_dreamcast)
+#elif defined(__DREAMCAST__)
     return float(get_system_ram() - get_free_ram()) / 1024.0f / 1024.0f;
 #elif defined(__WIN32__)
     PROCESS_MEMORY_COUNTERS info;
@@ -192,7 +192,7 @@ void StatsPanel::rebuild_ram_graph() {
         return;
     }
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     float graph_max = 16.0f;
 #else
     float max_y = *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
