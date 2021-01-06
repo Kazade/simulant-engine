@@ -5,22 +5,6 @@ LINK_LIBRARIES(
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
-ADD_EXECUTABLE(sample sample.cpp)
-ADD_EXECUTABLE(2d_sample 2d_sample.cpp)
-ADD_EXECUTABLE(viewport_sample viewport_sample.cpp)
-ADD_EXECUTABLE(selection_sample selection_sample.cpp)
-ADD_EXECUTABLE(light_sample light_sample.cpp)
-ADD_EXECUTABLE(rtt_sample rtt_sample.cpp)
-ADD_EXECUTABLE(q2bsp_sample q2bsp_sample.cpp)
-ADD_EXECUTABLE(fleets_demo fleets_demo.cpp)
-ADD_EXECUTABLE(terrain_demo terrain_sample.cpp)
-ADD_EXECUTABLE(physics_demo physics_demo.cpp)
-ADD_EXECUTABLE(nehe02 nehe02.cpp)
-ADD_EXECUTABLE(nehe03 nehe03.cpp)
-ADD_EXECUTABLE(ui_demo ui_demo.cpp)
-ADD_EXECUTABLE(particles particles.cpp)
-
-
 SET(SAMPLES
     sample
     2d_sample
@@ -30,7 +14,7 @@ SET(SAMPLES
     rtt_sample
     q2bsp_sample
     fleets_demo
-    terrain_demo
+    terrain_sample
     physics_demo
     nehe02
     nehe03
@@ -45,6 +29,29 @@ ENDIF()
 
 
 foreach(sample ${SAMPLES})
+    SET(SAMPLE_SOURCES ${sample}.cpp)
+
+    IF(PLATFORM_PSP)
+        SET(PSP_TITLE "${sample}")
+        SET(PSP_MAJOR_VERSION 1)
+        SET(PSP_MINOR_VERSION 0)
+        configure_file(${CMAKE_SOURCE_DIR}/conf/psp_module_info.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/psp_module_info_${sample}.cpp)
+        set(SAMPLE_SOURCES ${SAMPLE_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/psp_module_info_${sample}.cpp)
+    endif()
+
+    ADD_EXECUTABLE(${sample} ${SAMPLE_SOURCES})
+
+    IF(PLATFORM_PSP)
+        create_pbp_file(TARGET ${sample})
+        file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp)
+        add_custom_command(
+            TARGET ${sample} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_BINARY_DIR}/EBOOT.PBP
+            ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/EBOOT.pbp
+        )
+    ENDIF()
+
     SET(EXE_FILENAME ${sample}${EXE_EXTENSION})
 
     if(SIMULANT_SEPERATE_DEBUGINFO)
