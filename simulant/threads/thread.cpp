@@ -4,6 +4,7 @@
 #ifdef __WIN32__
 #include <windows.h>
 #elif defined(__PSP__)
+#include <pspsdk.h>
 #include <pspthreadman.h>
 #else
 #include <time.h>
@@ -77,7 +78,12 @@ void yield() {
 }
 
 ThreadID this_thread_id() {
-    return (ThreadID) pthread_self();
+#ifdef __PSP__
+    return (ThreadID) sceKernelGetThreadId();
+#else
+    auto ret = pthread_self();
+    return (ThreadID) ret;
+#endif
 }
 
 }
