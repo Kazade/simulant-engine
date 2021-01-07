@@ -59,9 +59,12 @@ public:
         return GL_thread->do_check(false);
     }
 
+    thread::ThreadID thread_id() const {
+        return render_thread_id_;
+    }
+
 private:
-    GLThreadCheck(thread::ThreadID render_thread):
-        render_thread_id_(render_thread) {}
+    GLThreadCheck(thread::ThreadID render_thread);
 
     bool do_check(bool raise=true) {
 
