@@ -52,6 +52,13 @@ VirtualFileSystem::VirtualFileSystem(Window *window):
     resource_path_.push_back("/pc");
 #endif
 
+#ifdef __PSP__
+    resource_path_.push_back(".");
+    resource_path_.push_back("umd0:");
+    resource_path_.push_back("ms0:");
+    resource_path_.push_back("disc0:");
+#endif
+
 #ifdef __LINUX__
     resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
     resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
