@@ -71,7 +71,7 @@ Stage::~Stage() {
 }
 
 bool Stage::init() {
-
+    L_DEBUG(_F("Initializing stage {0}").format(id()));
     return true;
 }
 
@@ -95,6 +95,8 @@ void Stage::clean_up() {
 }
 
 ActorPtr Stage::new_actor() {
+    L_DEBUG("Creating actor");
+
     using namespace std::placeholders;
 
     auto a = actor_manager_->make(this, window->_sound_driver());
@@ -109,6 +111,8 @@ ActorPtr Stage::new_actor() {
 
     //Tell everyone about the new actor
     signal_actor_created_(a->id());
+
+    L_DEBUG(_F("Actor created: {0}").format(a->id()));
     return a;
 }
 

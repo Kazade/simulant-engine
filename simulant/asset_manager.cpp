@@ -386,6 +386,13 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
             L_INFO(_F("Loading material {0} into {1}").format(path, template_id));
             auto mat = material(template_id);
+            if(!mat) {
+                L_ERROR(_F("Tried to fetch material with template_id ({0}). But it didn't exist").format(template_id));
+                materials_loading_.erase(template_id);
+                throw std::runtime_error(_F("Error loading file: {0}").format(path));
+            }
+
+            L_DEBUG(_F("Locating loader for {0}").format(path));
             auto loader = window->loader_for(path.encode());
             if(!loader) {
                 L_ERROR(_F("Unable to find loader for {0}").format(path));
@@ -393,8 +400,10 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
                 throw std::runtime_error(_F("Unable to find loader for file: {0}").format(path));
             }
 
+            L_DEBUG("Loading...");
             loader->into(mat);
             materials_loading_.erase(template_id);
+            L_DEBUG(_F("Material {0} loaded").format(mat->id()));
         }
     }
 

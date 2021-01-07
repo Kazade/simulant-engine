@@ -129,6 +129,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
+            L_DEBUG(_F("Found possible loader: {0}").format(loader_type->name()));
             auto new_loader = loader_type->loader_for(final_file, vfs->read_file(final_file));
             new_loader->set_vfs(this->vfs_.get());
 
@@ -149,9 +150,10 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
             }
         }
 
-        throw std::logic_error(_u("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename).encode());
+        throw std::logic_error(_F("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename));
     }
 
+    L_WARN(_F("No suitable loader found for {0}").format(filename));
     return LoaderPtr();
 }
 
