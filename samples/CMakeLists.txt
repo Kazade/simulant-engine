@@ -50,6 +50,19 @@ foreach(sample ${SAMPLES})
             ${CMAKE_CURRENT_BINARY_DIR}/EBOOT.PBP
             ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/EBOOT.pbp
         )
+        add_custom_command(
+            TARGET ${sample} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+            ../../../assets
+            ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/simulant
+        )
+
+        add_custom_command(
+            TARGET ${sample} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E create_symlink
+            ../../../samples/data
+            ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/sample_data
+        )
     ENDIF()
 
     SET(EXE_FILENAME ${sample}${EXE_EXTENSION})
