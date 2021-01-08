@@ -73,13 +73,18 @@ public:
     ObjectTypePtrType make_as(Args&&... args) {
         IDType new_id(next_id()); // Unbound
 
+        L_DEBUG(_F("Creating a new object with ID: {0}").format(new_id));
         auto obj = T::create(new_id, std::forward<Args>(args)...);
+
+        L_DEBUG("Binding ID pointer");
         obj->_bind_id_pointer(obj);
 
         objects_.insert(std::make_pair(obj->id(), obj));
 
+        L_DEBUG("Calling on_make()");
         on_make(obj->id());
 
+        L_DEBUG("Created");
         return SmartPointerConverter::convert(obj);
     }
 

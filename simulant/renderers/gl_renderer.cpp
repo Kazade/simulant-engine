@@ -24,20 +24,25 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
 
     GLuint gl_tex;
 
+    L_DEBUG("Registering texture...");
+
     if(cort::within_coroutine()) {
         /* If we're in a coroutine, we need to make sure
          * we run the GL function on the idle task manager
          * and then yield. FIXME: When/if coroutines
          * aren't implemented using threads we won't
          * need to do this */
+        L_DEBUG("In a coroutine, sending glGenTextures to main thread");
         win_->idle->add_once([&gl_tex]() {
             GLCheck(glGenTextures, 1, &gl_tex);
         });
         cort::yield_coroutine();
     } else {
+        L_DEBUG("Generating a texture with GL");
         GLCheck(glGenTextures, 1, &gl_tex);
     }
 
+    L_DEBUG("Setting the GL texture ID");
     texture->_set_renderer_specific_id(gl_tex);
 }
 

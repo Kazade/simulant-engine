@@ -235,9 +235,13 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
 }
 
 void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
+    L_DEBUG("Preparing texture for FNT file");
+
     // FIXME: Support multiple pages
     auto texture_path = kfs::path::dir_name(kfs::path::abs_path(filename_.encode()));
     texture_path = kfs::path::join(texture_path, texture_file);
+
+    L_DEBUG(_F("Texture path: {0}").format(texture_file));
 
     TextureFlags flags;
 
@@ -275,11 +279,14 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
 
     // OK, it's fine to upload now
     font->texture_->set_auto_upload(true);
+    L_DEBUG("Font texture loaded");
 }
 
 void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
     const char TEXT_MARKER[4] = {'i', 'n', 'f', 'o'};
     const char BINARY_MARKER[4] = {'B', 'M', 'F', '\3'};
+
+    L_DEBUG("Loading FNT file");
 
     Font* font = loadable_to<Font>(resource);
 
@@ -287,14 +294,16 @@ void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
     data_->read(version_details, sizeof(char) * 4);
 
     if(std::memcmp(version_details, TEXT_MARKER, 4) == 0) {
+        L_DEBUG("Loading text FNT");
         read_text(font, *data_, options);
     } else if(std::memcmp(version_details, BINARY_MARKER, 4) == 0) {
+        L_DEBUG("Loading binary FNT");
         read_binary(font, *data_, options);
     } else {
         throw std::runtime_error("Unsupported .FNT file");
     }
 
-    L_DEBUG("Font loaded successfully");
+    L_DEBUG("FNT loaded successfully");
 }
 
 }

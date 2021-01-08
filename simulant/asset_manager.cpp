@@ -469,17 +469,22 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, GarbageColle
 
 TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
-    smlt::TexturePtr tex = texture(new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect));
+    L_DEBUG(_F("Loading texture from file: {0}").format(path));
+    smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect);
 
     {
+        L_DEBUG(_F("Finding loader for: {0}").format(path));
         auto loader = window->loader_for(path, LOADER_HINT_TEXTURE);
         if(!loader) {
+            L_WARN("Couldn't find loader for texture");
             return smlt::TexturePtr();
         }
 
+        L_DEBUG("Loader found, loading...");
         loader->into(tex);
 
         if(flags.flip_vertically) {
+            L_DEBUG("Flipping texture vertically");
             tex->flip_vertically();
         }
 
@@ -489,6 +494,7 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
         tex->set_auto_upload(flags.auto_upload);
     }
 
+    L_DEBUG("Texture loaded");
     return tex;
 }
 

@@ -90,7 +90,10 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     Asset(asset_manager),
     generic::Identifiable<TextureID>(id) {
 
+    L_DEBUG(_F("Creating texture {0}x{1}").format(width, height));
     resize(width, height);
+
+    L_DEBUG(_F("Setting format to: {0}").format(format));
     set_format(format);
 
     /* We intentionally don't mark data dirty here. All that would happen is
@@ -476,6 +479,7 @@ void Texture::_set_has_mipmaps(bool v) {
 
 bool Texture::init() {
     // Tell the renderer about the texture
+    L_DEBUG(_F("Registering texture with the renderer: {0}").format(renderer_));
     renderer_->register_texture(id(), this);
     return true;
 }

@@ -167,7 +167,8 @@ LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename
                 L_DEBUG(_F("Found loader {0} for file: {1}").format(loader_name, filename.encode()));
                 return loader_type->loader_for(final_file, vfs->open_file(final_file));
             } else {
-                throw std::logic_error(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename).encode());
+                L_ERROR(_F("Loader '{0}' does not support file '{1}'").format(loader_name, filename));
+                return LoaderPtr();
             }
         }
     }
