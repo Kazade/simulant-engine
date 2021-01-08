@@ -27,15 +27,23 @@ struct Context {
 static Context* CONTEXTS = nullptr;
 static CoroutineID ID_COUNTER = 0;
 
-/* GCC < 4.8 doesn't have thread_local so we use the __thread
- * extension instead */
-#ifdef __GNUC__
-#if __GNUC_MAJOR__ < 5
-    #define thread_local __thread
-#endif
-#endif
+static thread::Mutex CURRENT_CONTEXT_MUTEX;
+static std::map<thread::ThreadID, Context*> THREAD_CONTEXTS;
 
-static thread_local Context* CURRENT_CONTEXT = nullptr;
+static Context* current_context() {
+    thread::Lock<thread::Mutex> l(CURRENT_CONTEXT_MUTEX);
+    auto it = THREAD_CONTEXTS.find(thread::this_thread_id());
+    if(it == THREAD_CONTEXTS.end()) {
+        return nullptr;
+    } else {
+        return it->second;
+    }
+}
+
+static void set_current_context(Context* context) {
+    thread::Lock<thread::Mutex> l(CURRENT_CONTEXT_MUTEX);
+    THREAD_CONTEXTS.insert(std::make_pair(thread::this_thread_id(), context));
+}
 
 CoroutineID start_coroutine(std::function<void ()> f) {
     if(!CONTEXTS) {
@@ -69,7 +77,7 @@ static Context* find_coroutine(CoroutineID id) {
 }
 
 static void run_coroutine(Context* context) {
-    CURRENT_CONTEXT = context;
+    set_current_context(context);
 
     context->mutex.lock();
     context->func();
@@ -80,7 +88,7 @@ static void run_coroutine(Context* context) {
 }
 
 COResult resume_coroutine(CoroutineID id) {
-    assert(!CURRENT_CONTEXT);
+    assert(!current_context());
 
     auto routine = find_coroutine(id);
 
@@ -119,17 +127,19 @@ COResult resume_coroutine(CoroutineID id) {
 }
 
 void yield_coroutine() {
-    if(!CURRENT_CONTEXT) {
+    if(!current_context()) {
         /* Yield called from outside a coroutine
          * just return */
         return;
     }
 
-    CURRENT_CONTEXT->is_running = false;
-    CURRENT_CONTEXT->cond.notify_one();
-    while(!CURRENT_CONTEXT->is_running) {
-        CURRENT_CONTEXT->cond.wait(CURRENT_CONTEXT->mutex);
-        if(CURRENT_CONTEXT->is_terminating) {
+    auto current = current_context();
+
+    current->is_running = false;
+    current->cond.notify_one();
+    while(!current->is_running) {
+        current->cond.wait(current->mutex);
+        if(current->is_terminating) {
             /* This forces an incomplete coroutine to
              * end if stop_coroutine has been called */
             thread::Thread::exit();
@@ -138,11 +148,11 @@ void yield_coroutine() {
 }
 
 bool within_coroutine() {
-    return bool(CURRENT_CONTEXT);
+    return bool(current_context());
 }
 
 void stop_coroutine(CoroutineID id) {
-    assert(!CURRENT_CONTEXT);
+    assert(!current_context());
 
     auto routine = find_coroutine(id);
 
