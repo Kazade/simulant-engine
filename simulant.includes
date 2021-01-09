@@ -232,3 +232,4 @@ simulant/assets/meshes
 simulant/coroutines
 simulant/platforms/psp
 conf
+deps/pspgl
