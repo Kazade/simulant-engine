@@ -28,6 +28,34 @@ IF(NOT PLATFORM_DREAMCAST)
     ENDIF()
 ENDIF()
 
+IF(PLATFORM_PSP)
+    MESSAGE("-- Including pspgl in build as this is the PSP")
+    FILE(GLOB LIBGL ${CMAKE_SOURCE_DIR}/deps/pspgl/*.c)
+
+    MESSAGE(${LIBGL})
+    # These are dead files?
+    LIST(
+        REMOVE_ITEM
+        LIBGL
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/glGenLists.c
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/glIsList.c
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/glDeleteLists.c
+    )
+
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/pspgl)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBGL})
+
+    SET(PROC_FILE ${CMAKE_SOURCE_DIR}/deps/pspgl/pspgl_proctable.h)
+    add_custom_command(
+        OUTPUT ${PROC_FILE}
+        COMMAND ${CMAKE_SOURCE_DIR}/conf/extract_gl_extensions.py
+        ${PROC_FILE}
+        ${LIBGL}
+        COMMENT "Generating pspgl extension list"
+    )
+
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PROC_FILE})
+ENDIF()
 
 IF(PLATFORM_DREAMCAST)
     MESSAGE("-- Including GLdc and ALdc in build, as this is the Dreamcast")

@@ -55,8 +55,6 @@ link_directories(
     ${PSPDEV}/lib
 )
 
-set (CMAKE_VERBOSE_MAKEFILE ON)
-
 # Aggregated list of all PSP-specific libraries for convenience.
 set(PSP_LIBRARIES
     stdc++
@@ -93,7 +91,6 @@ SET(
     "${CMAKE_CXX_STANDARD_LIBRARIES} \
      -lstdc++ \
     -lpthread-psp \
-    -lGL \
     -lpspaudiolib \
     -lpspaudio \
     -lm \

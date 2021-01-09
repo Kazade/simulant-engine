@@ -19,3 +19,6 @@
 [submodule "deps/libAL"]
 	path = deps/libAL
 	url = https://gitlab.com/simulant/ALdc.git
+[submodule "deps/pspgl"]
+	path = deps/pspgl
+	url = https://github.com/Kazade/pspgl.git
