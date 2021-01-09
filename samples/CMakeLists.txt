@@ -25,6 +25,8 @@ SET(SAMPLES
 SET(EXE_EXTENSION ".elf")
 IF(WIN32)
     SET(EXE_EXTENSION ".exe")
+ELSEIF(PLATFORM_PSP)
+    SET(EXE_EXTENSION "")
 ENDIF()
 
 
@@ -48,7 +50,7 @@ foreach(sample ${SAMPLES})
             TARGET ${sample} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_CURRENT_BINARY_DIR}/EBOOT.PBP
-            ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/EBOOT.pbp
+            ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/EBOOT.PBP
         )
         add_custom_command(
             TARGET ${sample} POST_BUILD
