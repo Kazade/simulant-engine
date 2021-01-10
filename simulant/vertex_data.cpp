@@ -78,7 +78,11 @@ const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
+#ifdef __PSP__
+    VERTEX_ATTRIBUTE_4F,
+#else
     VERTEX_ATTRIBUTE_4UB, // Diffuse
+#endif
     VERTEX_ATTRIBUTE_NONE
 };
 
