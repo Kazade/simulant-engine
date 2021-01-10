@@ -23,6 +23,11 @@
 
 static const uint32_t MAX_TEXTURE_MATRICES = 8;
 static const uint32_t MAX_MATERIAL_PASSES = 4;
+
+#ifdef __PSP__
+static const uint32_t MAX_LIGHTS_PER_RENDERABLE = 4;
+#else
 static const uint32_t MAX_LIGHTS_PER_RENDERABLE = 8;
+#endif
 
 #endif // MATERIAL_CONSTANTS_H
