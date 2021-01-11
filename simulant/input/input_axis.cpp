@@ -65,12 +65,17 @@ void InputAxis::set_return_speed(float ret) {
     return_speed_ = ret;
 }
 
-float InputAxis::value(bool respect_dead_zone) const {
-    if(respect_dead_zone) {
+float InputAxis::value(DeadZoneBehaviour dead_zone_behaviour) const {
+    switch(dead_zone_behaviour) {
+    case DEAD_ZONE_BEHAVIOUR_DISABLED:
+        return value_;
+    case DEAD_ZONE_BEHAVIOUR_AXIAL:
         return std::abs(value_) >= dead_zone_ ? value_ : 0.0f;
-    }
+    case DEAD_ZONE_BEHAVIOUR_RADIAL: {
 
-    return value_;
+    } default:
+        break;
+    }
 }
 
 void InputAxis::set_type(AxisType type) {

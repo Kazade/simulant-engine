@@ -8,6 +8,16 @@
 
 namespace smlt {
 
+/*
+ * See here for more information on radial deadzones:
+ * https://www.gamasutra.com/blogs/JoshSutphin/20130416/190541/Doing_Thumbstick_Dead_Zones_Right.php
+ */
+enum DeadZoneBehaviour {
+    DEAD_ZONE_BEHAVIOUR_DISABLED,
+    DEAD_ZONE_BEHAVIOUR_AXIAL,
+    DEAD_ZONE_BEHAVIOUR_RADIAL
+};
+
 enum AxisType {
     AXIS_TYPE_UNSET,
     AXIS_TYPE_KEYBOARD_KEY,
@@ -60,7 +70,7 @@ public:
 
     const AxisType& type() const { return type_; }
 
-    float value(bool respect_dead_zone=true) const;
+    float value(DeadZoneBehaviour dead_zone_behaviour=DEAD_ZONE_BEHAVIOUR_RADIAL) const;
 
     void set_dead_zone(float v) { dead_zone_ = v; }
     float dead_zone() const { return dead_zone_; }

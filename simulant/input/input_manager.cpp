@@ -354,7 +354,7 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     axis->value_ = new_value;
 
     /* Anything in the deadzone returns 0.0f exactly */
-    return new_value != 0.0f;
+    return axis->value(DEAD_ZONE_BEHAVIOUR_RADIAL) != 0.0f;
 }
 
 bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
