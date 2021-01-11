@@ -52,6 +52,8 @@ add_definitions("-D__PSP__")
 add_definitions("-DHAVE_OPENGL")
 add_definitions("-DPSP_FW_VERSION=500")
 
+add_link_options("SHELL:-specs=${PSPSDK}/lib/prxspecs" "SHELL:-Wl,-q,-T${PSPSDK}/lib/linkfile.prx")
+
 link_directories(
     ${PSPSDK}/lib
     ${PSPDEV}/lib

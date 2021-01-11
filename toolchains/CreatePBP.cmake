@@ -78,7 +78,7 @@ macro(create_pbp_file)
             TARGET ${ARG_TARGET}
             POST_BUILD COMMAND
             "${PACK_PBP}" "EBOOT.PBP" "PARAM.SFO" "${ARG_ICON_PATH}" "NULL" "${ARG_PREVIEW_PATH}"
-            "${ARG_BACKGROUND_PATH}" "NULL" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}" "NULL"
+            "${ARG_BACKGROUND_PATH}" "NULL" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}.prx" "NULL"
             COMMENT "Calling pack-pbp"
     )
 
