@@ -44,6 +44,20 @@ ADD_TEST(simulant_suite simulant_tests)
 
 IF(PLATFORM_PSP)
     create_pbp_file(TARGET simulant_tests)
+
+    add_custom_command(
+        TARGET simulant_tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ../../assets
+        ${CMAKE_CURRENT_BINARY_DIR}/simulant
+    )
+
+    add_custom_command(
+        TARGET simulant_tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ../../samples/data
+        ${CMAKE_CURRENT_BINARY_DIR}/sample_data
+    )
 ENDIF()
 
 IF(WIN32)
