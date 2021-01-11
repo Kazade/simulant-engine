@@ -38,6 +38,7 @@ set(MKSFO ${PSPBIN}/mksfo)
 set(MKSFOEX ${PSPBIN}/mksfoex)
 set(PACK_PBP ${PSPBIN}/pack-pbp)
 set(FIXUP ${PSPBIN}/psp-fixup-imports)
+set(PRXGEN ${PSPBIN}/psp-prxgen)
 set(ENC ${PSPBIN}/PrxEncrypter)
 set(STRIP ${PSPBIN}/psp-strip)
 
@@ -49,6 +50,7 @@ add_definitions("-G0")
 # Definitions that may be needed to use some libraries:
 add_definitions("-D__PSP__")
 add_definitions("-DHAVE_OPENGL")
+add_definitions("-DPSP_FW_VERSION=500")
 
 link_directories(
     ${PSPSDK}/lib
@@ -118,7 +120,7 @@ SET(
 )
 
 # File defining macro outputting PSP-specific EBOOT.PBP out of passed executable target:
-include("${PSPCMAKE}/CreatePBP.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/CreatePBP.cmake")
 
 # Helper variable for multi-platform projects to identify current platform:
 set(PLATFORM_PSP TRUE BOOL)
