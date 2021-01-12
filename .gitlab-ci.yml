@@ -163,7 +163,7 @@ build:psp-mips-gcc:release:
 test:psp-mips-gcc:debug:
   allow_failure: true
   stage: test
-  image: sharkwouter/pspdev
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   variables:
     TARGET: psp-mips-gcc
   needs: ["build:psp-mips-gcc:debug"]

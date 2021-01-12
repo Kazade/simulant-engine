@@ -69,6 +69,7 @@ foreach(sample ${SAMPLES})
 
     SET(EXE_FILENAME ${sample}${EXE_EXTENSION})
 
+    if(NOT PLATFORM_PSP)
     if(SIMULANT_SEPERATE_DEBUGINFO)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug
@@ -77,6 +78,7 @@ foreach(sample ${SAMPLES})
             COMMENT "Separating debug info for ${EXE_FILENAME}"
         )
         add_custom_target(${EXE_FILENAME}.debug.target ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug)
+    endif()
     endif()
 
     IF(PLATFORM_DREAMCAST)
