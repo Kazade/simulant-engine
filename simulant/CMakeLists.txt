@@ -32,7 +32,6 @@ IF(PLATFORM_PSP)
     MESSAGE("-- Including pspgl in build as this is the PSP")
     FILE(GLOB LIBGL ${CMAKE_SOURCE_DIR}/deps/pspgl/*.c)
 
-    MESSAGE(${LIBGL})
     # These are dead files?
     LIST(
         REMOVE_ITEM
