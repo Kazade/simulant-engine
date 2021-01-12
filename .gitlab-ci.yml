@@ -131,7 +131,6 @@ build:android-armeabiv7a-gcc:debug:
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
-  allow_failure: true
   variables:
     TARGET: psp-mips-gcc
   script:
@@ -139,11 +138,15 @@ build:psp-mips-gcc:debug:
    - cd ${TARGET}/debug
    - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/tests/simulant_tests
 
 build:psp-mips-gcc:release:
   stage: build
   image: sharkwouter/pspdev
-  allow_failure: true
   variables:
     TARGET: psp-mips-gcc
   script:
@@ -151,6 +154,34 @@ build:psp-mips-gcc:release:
    - cd ${TARGET}/release
    - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/sample_data/
+      - ${TARGET}/release/tests/simulant_tests
+
+test:psp-mips-gcc:debug:
+  stage: test
+  image: sharkwouter/pspdev
+  variables:
+    TARGET: psp-mips-gcc
+  needs: ["build:psp-mips-gcc:debug"]
+  dependencies:
+   - build:psp-mips-gcc:debug
+  before_script:
+   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
+   - sleep 3
+   - export LIBGL_ALWAYS_SOFTWARE=1
+   - export DISPLAY=:99
+  script:
+   - cd ${TARGET}/debug
+   - export SIMULANT_SOUND_DRIVER=null
+  artifacts:
+   reports:
+      junit: ${TARGET}/debug/report.xml
+   paths:
+    - ${TARGET}/debug/simulant/
+    - ${TARGET}/release/simulant/
 
 build:windows-x64-mingw:release:
   stage: build
