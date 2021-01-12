@@ -196,7 +196,6 @@ deploy:psp-mips-gcc:
   image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
    - test:psp-mips-gcc:debug
-   - test:psp-mips-gcc:release
   variables:
    TARGET: psp-mips-gcc
   script:
