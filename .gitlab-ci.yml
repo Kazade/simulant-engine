@@ -161,6 +161,7 @@ build:psp-mips-gcc:release:
       - ${TARGET}/release/tests/simulant_tests
 
 test:psp-mips-gcc:debug:
+  allow_failure: true
   stage: test
   image: sharkwouter/pspdev
   variables:
@@ -169,6 +170,7 @@ test:psp-mips-gcc:debug:
   dependencies:
    - build:psp-mips-gcc:debug
   before_script:
+   - dnf install -y ppsspp-sdl
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
@@ -176,6 +178,7 @@ test:psp-mips-gcc:debug:
   script:
    - cd ${TARGET}/debug
    - export SIMULANT_SOUND_DRIVER=null
+   - PPSSPPSDL EBOOT.PBP
   artifacts:
    reports:
       junit: ${TARGET}/debug/report.xml
