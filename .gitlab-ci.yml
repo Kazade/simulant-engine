@@ -142,7 +142,7 @@ build:psp-mips-gcc:debug:
     paths:
       - ${TARGET}/debug/simulant/
       - ${TARGET}/debug/sample_data/
-      - ${TARGET}/debug/tests/simulant_tests
+      - ${TARGET}/debug/tests/EBOOT.PBP
 
 build:psp-mips-gcc:release:
   stage: build
@@ -158,7 +158,7 @@ build:psp-mips-gcc:release:
     paths:
       - ${TARGET}/release/simulant/
       - ${TARGET}/release/sample_data/
-      - ${TARGET}/release/tests/simulant_tests
+      - ${TARGET}/release/tests/EBOOT.PBP
 
 test:psp-mips-gcc:debug:
   allow_failure: true
@@ -178,6 +178,8 @@ test:psp-mips-gcc:debug:
   script:
    - cd ${TARGET}/debug
    - export SIMULANT_SOUND_DRIVER=null
+   - ln -s ../simulant simulant
+   - ln -s ../sample_data sample_data
    - PPSSPPSDL EBOOT.PBP
   artifacts:
    reports:
