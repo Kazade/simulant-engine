@@ -7,29 +7,36 @@
 # ICON_PATH - optional, absolute path to .png file, 144x82
 # BACKGROUND_PATH - optional, absolute path to .png file, 480x272
 # PREVIEW_PATH - optional, absolute path to .png file, 480x272
+# CREATE_PRX - optional, create a .prx file from the .elf (default: true)
 #
 cmake_minimum_required(VERSION 3.10)
 
 macro(create_pbp_file)
 
-    set(oneValueArgs TARGET TITLE ICON_PATH BACKGROUND_PATH PREVIEW_PATH)
+    set(oneValueArgs TARGET TITLE ICON_PATH BACKGROUND_PATH PREVIEW_PATH CREATE_PRX)
     cmake_parse_arguments("ARG" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # As pack-pbp takes undefined arguments in form of "NULL" string,
     # set each undefined macro variable to such value:
     foreach(arg ${oneValueArgs})
         if (NOT DEFINED ARG_${arg})
-            set(ARG_${arg} "NULL")
+            if(${arg} STREQUAL "CREATE_PRX")
+                set(ARG_CREATE_PRX TRUE)
+            else()
+                set(ARG_${arg} "NULL")
+            endif()
         endif()
     endforeach()
 
     if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-        add_custom_command(
-            TARGET ${ARG_TARGET}
-            POST_BUILD COMMAND
-            "${STRIP}" "$<TARGET_FILE:${ARG_TARGET}>"
-            COMMENT "Stripping binary"
-        )
+        if(NOT ${ARG_CREATE_PRX})
+            add_custom_command(
+                TARGET ${ARG_TARGET}
+                POST_BUILD COMMAND
+                "${STRIP}" "$<TARGET_FILE:${ARG_TARGET}>"
+                COMMENT "Stripping binary"
+            )
+        endif()
     else()
         add_custom_command(
             TARGET ${ARG_TARGET}
@@ -50,7 +57,7 @@ macro(create_pbp_file)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_FILE:${ARG_TARGET}>
             $<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact
-            COMMENT "Copying ELF to psp_arfitact directory."
+            COMMENT "Copying ELF to psp_artifact directory."
     )
 
     add_custom_command(
@@ -60,25 +67,30 @@ macro(create_pbp_file)
             COMMENT "Calling psp-fixup-imports"
     )
 
-    add_custom_command(
-            TARGET ${ARG_TARGET}
-            POST_BUILD COMMAND
-            "${PRXGEN}" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}.prx"
-            COMMENT "Calling psp-prxgen"
-    )
+    if(${ARG_CREATE_PRX})
+        set(TARGET_FILENAME "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}.prx")
+        add_custom_command(
+                TARGET ${ARG_TARGET}
+                POST_BUILD COMMAND
+                "${PRXGEN}" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}" "${TARGET_FILENAME}"
+                COMMENT "Calling psp-prxgen"
+        )
+    else()
+        set(TARGET_FILENAME "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}")
+    endif()
 
     add_custom_command(
             TARGET ${ARG_TARGET}
             POST_BUILD COMMAND
-            "${MKSFOEX}" "-d" "MEMSIZE=1" "${ARG_TITLE}" "PARAM.SFO"
+            "${MKSFOEX}" "-d" "MEMSIZE=1" "${ARG_TITLE}" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/PARAM.SFO"
             COMMENT "Calling mksfoex"
     )
 
     add_custom_command(
             TARGET ${ARG_TARGET}
             POST_BUILD COMMAND
-            "${PACK_PBP}" "EBOOT.PBP" "PARAM.SFO" "${ARG_ICON_PATH}" "NULL" "${ARG_PREVIEW_PATH}"
-            "${ARG_BACKGROUND_PATH}" "NULL" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}.prx" "NULL"
+            "${PACK_PBP}" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/EBOOT.PBP" "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/PARAM.SFO" "${ARG_ICON_PATH}" "NULL" "${ARG_PREVIEW_PATH}"
+            "${ARG_BACKGROUND_PATH}" "NULL" "${TARGET_FILENAME}" "NULL"
             COMMENT "Calling pack-pbp"
     )
 

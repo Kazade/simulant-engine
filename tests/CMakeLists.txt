@@ -43,7 +43,14 @@ ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} 
 ADD_TEST(simulant_suite simulant_tests)
 
 IF(PLATFORM_PSP)
-    create_pbp_file(TARGET simulant_tests)
+    create_pbp_file(TARGET simulant_tests TITLE "Simulant Tests")
+
+    add_custom_command(
+        TARGET simulant_tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_CURRENT_BINARY_DIR}/psp_artifact/EBOOT.PBP
+        ${CMAKE_CURRENT_BINARY_DIR}/EBOOT.PBP
+    )
 
     add_custom_command(
         TARGET simulant_tests POST_BUILD

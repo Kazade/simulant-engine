@@ -121,6 +121,13 @@ SET(
     -lpspkernel"
 )
 
+# Disable O3, and change to O2, as O3 doesn't work.
+string(REGEX REPLACE "([\\/\\-]O)3" "\\12"
+  CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+
+string(REGEX REPLACE "([\\/\\-]O)3" "\\12"
+  CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+
 # File defining macro outputting PSP-specific EBOOT.PBP out of passed executable target:
 include("${CMAKE_CURRENT_LIST_DIR}/CreatePBP.cmake")
 

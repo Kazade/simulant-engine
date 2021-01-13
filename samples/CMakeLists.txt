@@ -49,7 +49,7 @@ foreach(sample ${SAMPLES})
         add_custom_command(
             TARGET ${sample} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_BINARY_DIR}/EBOOT.PBP
+            ${CMAKE_CURRENT_BINARY_DIR}/psp_artifact/EBOOT.PBP
             ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/EBOOT.PBP
         )
         add_custom_command(
@@ -70,15 +70,15 @@ foreach(sample ${SAMPLES})
     SET(EXE_FILENAME ${sample}${EXE_EXTENSION})
 
     if(NOT PLATFORM_PSP)
-    if(SIMULANT_SEPERATE_DEBUGINFO)
-        add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug
-            COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME} ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug && ${CMAKE_OBJCOPY} -S ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}
-            DEPENDS ${sample}
-            COMMENT "Separating debug info for ${EXE_FILENAME}"
-        )
-        add_custom_target(${EXE_FILENAME}.debug.target ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug)
-    endif()
+        if(SIMULANT_SEPERATE_DEBUGINFO)
+            add_custom_command(
+                OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug
+                COMMAND ${CMAKE_OBJCOPY} --only-keep-debug ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME} ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug && ${CMAKE_OBJCOPY} -S ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}
+                DEPENDS ${sample}
+                COMMENT "Separating debug info for ${EXE_FILENAME}"
+            )
+            add_custom_target(${EXE_FILENAME}.debug.target ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${EXE_FILENAME}.debug)
+        endif()
     endif()
 
     IF(PLATFORM_DREAMCAST)
