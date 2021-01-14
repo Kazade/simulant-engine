@@ -27,10 +27,11 @@ Widget::~Widget() {
 }
 
 bool Widget::init() {
-    VertexSpecification spec;
-    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
-    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB;
+    VertexSpecification spec = VertexSpecification::DEFAULT;
+
+    /* We don't need normals or multiple texcoords */
+    spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
+    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
 
     mesh_ = stage->assets->new_mesh(spec);
     actor_ = stage->new_actor_with_mesh(mesh_);
