@@ -70,7 +70,7 @@ private:
 
     Joint* parent_ = nullptr;
 
-    char name_[32];
+    char name_[33]; // 32 + \0
 
     Quaternion rotation_;
     Quaternion absolute_rotation_;
