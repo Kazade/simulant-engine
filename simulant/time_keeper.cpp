@@ -1,5 +1,7 @@
 #ifdef __DREAMCAST__
 #include <kos.h>
+#elif defined(__PSP__)
+#include <pspthreadman.h>
 #endif
 
 #include <iostream>
