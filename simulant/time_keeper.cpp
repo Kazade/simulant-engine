@@ -15,6 +15,8 @@ TimeKeeper::TimeKeeper(const float fixed_step):
 uint64_t TimeKeeper::now_in_us() {
 #ifdef __DREAMCAST__
     return timer_us_gettime64();
+#elif defined(__PSP__)
+    return sceKernelGetSystemTimeWide();
 #else
     auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
     return std::chrono::duration_cast<std::chrono::microseconds>(now).count();
@@ -22,11 +24,7 @@ uint64_t TimeKeeper::now_in_us() {
 }
 
 bool TimeKeeper::init() {
-#ifdef __DREAMCAST__
-    last_update_ = timer_us_gettime64();
-#else
-    last_update_ = std::chrono::high_resolution_clock::now();
-#endif
+    last_update_ = now_in_us();
     return true;
 }
 
@@ -38,20 +36,11 @@ void TimeKeeper::update() {
     const float DELTATIME_MAX = 0.25f;
     const float ACCUMULATOR_MAX = 0.25f;
 
-#ifdef __DREAMCAST__
-    auto now = timer_us_gettime64();
+    auto now = now_in_us();
     auto diff = now - last_update_;
     last_update_ = now;
 
     delta_time_ = float(diff) * 0.000001f;
-#else
-    auto now = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<float> seconds = now - last_update_;
-    last_update_ = now;
-
-    // Store the frame time, and the total elapsed time
-    delta_time_ = seconds.count();
-#endif
 
     delta_time_ = std::min(DELTATIME_MAX, delta_time_);
 

@@ -35,11 +35,7 @@ public:
     }
 
 private:
-#ifdef __DREAMCAST__
     uint64_t last_update_;
-#else
-    std::chrono::time_point<std::chrono::high_resolution_clock> last_update_;
-#endif
 
     float accumulator_ = 0.0f;
     float total_time_ = 0.0f;
