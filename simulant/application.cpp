@@ -25,6 +25,7 @@
 #include "kos_window.h"
 namespace smlt { typedef KOSWindow SysWindow; }
 #elif defined(__PSP__)
+#include <pspkernel.h>
 #include "platforms/psp/psp_window.h"
 namespace smlt { typedef PSPWindow SysWindow; }
 #else
@@ -231,6 +232,11 @@ int32_t Application::run() {
     std::set_terminate([&]() {
         profiler_stop();
         profiler_clean_up();
+
+#ifdef __PSP__
+        /* Try to notify and exit cleanly on PSP */
+        sceKernelExitGame();
+#endif
     });
 
 #endif
