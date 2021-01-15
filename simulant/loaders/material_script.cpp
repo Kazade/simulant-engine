@@ -29,7 +29,7 @@
 #include "../deps/jsonic/jsonic.h"
 #include "../window.h"
 
-#ifndef _arch_dreamcast
+#if !defined(__DREAMCAST__) && !defined(__PSP__)
 #include "../renderers/gl2x/gpu_program.h"
 #endif
 

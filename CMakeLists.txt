@@ -18,7 +18,7 @@ OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 OPTION(SIMULANT_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 
-IF(DREAMCAST_BUILD)
+IF(PLATFORM_DREAMCAST)
 OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
 ELSE()
 OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" OFF)
@@ -46,10 +46,15 @@ ENDIF()
 
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s -fomit-frame-pointer -g0 -ffast-math")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s -fomit-frame-pointer -g0 -ffast-math")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
 
-IF(NOT DREAMCAST_BUILD)
+IF(NOT PLATFORM_PSP)
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+ENDIF()
+
+IF(NOT PLATFORM_DREAMCAST)
 # There's a bug in GCC 4.7.4 that causes an internal compiler error
 # on some template code if you have -Wextra enabled
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
@@ -89,7 +94,19 @@ set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
 ENDIF()
 ENDIF()
 
-IF(NOT DREAMCAST_BUILD)
+SET(USE_GLAD_FOR_OPENGL TRUE)
+
+IF(PLATFORM_DREAMCAST)
+    SET(USE_GLAD_FOR_OPENGL FALSE)
+ELSEIF(PLATFORM_PSP)
+    SET(USE_GLAD_FOR_OPENGL FALSE)
+ENDIF()
+
+IF(USE_GLAD_FOR_OPENGL)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_USE_GLAD")
+ENDIF()
+
+IF(NOT PLATFORM_DREAMCAST)
     IF(ANDROID)
         LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/sdl/build/libs/${ANDROID_ABI})
         LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/openal/build/libs/${ANDROID_ABI})
@@ -102,6 +119,12 @@ IF(NOT DREAMCAST_BUILD)
 
         FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
         FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
+    ELSEIF(PLATFORM_PSP)
+        SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
+        SET(SDL2_LIBRARIES "")
+
+        SET(ZLIB_INCLUDE_DIRS $ENV{KOS_PORTS}/include/zlib)
+        SET(ZLIB_LIBRARIES z)
     ELSE()
         FIND_PACKAGE(SDL2)  # Try cmake modules first
         IF(NOT SDL2_FOUND)
@@ -125,9 +148,8 @@ IF(NOT DREAMCAST_BUILD)
 
         FIND_PACKAGE(OpenAL REQUIRED)
         FIND_PACKAGE(OpenGL REQUIRED)
+        FIND_PACKAGE(ZLIB REQUIRED)
     ENDIF()
-
-    FIND_PACKAGE(ZLIB REQUIRED)
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
@@ -168,7 +190,6 @@ INCLUDE_DIRECTORIES(
 )
 
 LINK_LIBRARIES(${SDL2_LIBRARIES} ${SDL2_LIBRARY} ${OPENAL_LIBRARY} ${ZLIB_LIBRARIES} ${OPENGL_LIBRARIES})
-
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 LINK_LIBRARIES(rt)

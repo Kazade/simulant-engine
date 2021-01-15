@@ -20,9 +20,11 @@
 #include <stdexcept>
 #include "../logging.h"
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/gl.h"
     #include "../../../deps/libgl/include/glext.h"
+#elif defined(__PSP__)
+    #include <GL/gl.h>
 #else
     #include "../renderers/glad/glad/glad.h"
 #endif

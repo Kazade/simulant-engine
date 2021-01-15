@@ -21,8 +21,10 @@
 
 #include "types.h"
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 #include "kos_window.h"
+#elif defined(__PSP__)
+#include "platforms/psp/psp_window.h"
 #else
 #include "sdl2_window.h"
 #endif

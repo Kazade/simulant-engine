@@ -7,9 +7,11 @@
 
 /* This file should only contain things shared between GL1 + GL2 so include
  * the gl1 headers here */
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/gl.h"
     #include "../../../deps/libgl/include/glext.h"
+#elif defined(__PSP__)
+    #include <GL/gl.h>
 #else
     #include "./glad/glad/glad.h"
 #endif
@@ -22,20 +24,25 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
 
     GLuint gl_tex;
 
+    L_DEBUG("Registering texture...");
+
     if(cort::within_coroutine()) {
         /* If we're in a coroutine, we need to make sure
          * we run the GL function on the idle task manager
          * and then yield. FIXME: When/if coroutines
          * aren't implemented using threads we won't
          * need to do this */
+        L_DEBUG("In a coroutine, sending glGenTextures to main thread");
         win_->idle->add_once([&gl_tex]() {
             GLCheck(glGenTextures, 1, &gl_tex);
         });
         cort::yield_coroutine();
     } else {
+        L_DEBUG("Generating a texture with GL");
         GLCheck(glGenTextures, 1, &gl_tex);
     }
 
+    L_DEBUG("Setting the GL texture ID");
     texture->_set_renderer_specific_id(gl_tex);
 }
 
@@ -156,15 +163,22 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
 
         /* Generate mipmaps if we don't have them already */
         if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE && !texture->has_mipmaps()) {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
             if(texture->width() == texture->height()) {
 #endif
+
+#ifdef __PSP__
+                L_INFO("Not generating mipmaps as PSP doesn't support glGenerateMipmap");
+#else
+
                 L_DEBUG(_F("Generating mipmaps. W: {0}, H:{1}").format(
                     texture->width(), texture->height()
                 ));
                 GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
                 texture->_set_has_mipmaps(true);
-#ifdef _arch_dreamcast
+#endif
+
+#ifdef __DREAMCAST__
             } else {
                 L_WARN("Not generating mipmaps as texture is non-square (PVR limitation)");
             }

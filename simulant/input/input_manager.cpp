@@ -339,12 +339,15 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
         return controller_->joystick_axis_state(joystick_id, axis->joystick_axis_);
     };
 
+    JoystickID joystick_used = axis->joystick_source();
+
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
             auto this_value = process_joystick((JoystickID) i);
             if(std::abs(this_value) > std::abs(new_value)) {
                 new_value = this_value;
+                joystick_used = i;
             }
         }
     } else {
@@ -353,8 +356,19 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
 
     axis->value_ = new_value;
 
+    /* FIXME: Code some API to find the "linked_axis" for an axis and use
+     * that if there is one. This currently will only work on the first joystick */
+    auto linked_axis = controller_->linked_axis(joystick_used, axis->joystick_axis_);
+    if(linked_axis != JOYSTICK_AXIS_INVALID) {
+        axis->linked_value_ = controller_->joystick_axis_state(joystick_used, linked_axis);
+    } else {
+        axis->linked_value_ = 0;
+    }
+
     /* Anything in the deadzone returns 0.0f exactly */
-    return new_value != 0.0f;
+    /* FIXME: Radial behaviour here is unchangable, that might not be what
+     * the user wants for determining if a joystick was activated */
+    return axis->value(DEAD_ZONE_BEHAVIOUR_RADIAL) != 0.0f;
 }
 
 bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {

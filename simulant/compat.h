@@ -10,23 +10,22 @@
 #include <string>
 #include <exception>
 
-#ifndef __clang__
-// FIXME: these version checks may not be correct, I'm not sure
-// which version improved the define checking
-#if (__GNUC__ == 4 || __GNUC__ == 5 || __GNUC__ == 6 || __GNUC__ == 7)
-#ifndef _GLIBCXX_USE_C99_STDIO
 
 namespace std {
 
+#if defined(__DREAMCAST__) || defined(__PSP__)
 /* to_string stuff */
 std::string to_string(int value);
 std::string to_string(unsigned value);
+std::string to_string(unsigned long value);
 std::string to_string(long value);
 std::string to_string(float value);
 std::string to_string(double value);
+#endif
+
+#if defined(__PSP__)
+int stoi(const std::string& str);
+float stof(const std::string& str);
+#endif
 
 }
-
-#endif
-#endif
-#endif

@@ -10,6 +10,7 @@
 #include <cassert>
 #include <utility>
 #include <string>
+#include <iostream>
 
 #include "../macros.h"
 
@@ -19,17 +20,15 @@ namespace thread {
 template< class T >
 using decay_t = typename std::decay<T>::type;
 
-#ifndef __arch_dreamcast__
-// Use 64bit IDs so that pointers are safely convertible
-typedef uint64_t ThreadID;
-#else
-// On Dreamcast, we're in 32 bit land
+#if defined(__PSP__) || defined(__DREAMCAST__)
 typedef uint32_t ThreadID;
+#else
+typedef uint64_t ThreadID;
 #endif
 
 class ThreadSpawnError: public std::runtime_error {
 public:
-#ifdef _arch_dreamcast
+#if defined(__DREAMCAST__) || defined(__PSP__)
     /* No std::to_string on the DC */
     ThreadSpawnError(int code):
         std::runtime_error("Error spawning thread") {
@@ -97,7 +96,7 @@ public:
          * to an unsigned int without losing information. On the Dreamcast
          * this is a kthread_t* but pointers are 32 bit, so that's "ok".
          */
-#if !defined(_arch_dreamcast) && !defined(__APPLE__)
+#if !defined(__DREAMCAST__) && !defined(__APPLE__) && !defined(__PSP__)
         static_assert(std::is_convertible<pthread_t, ThreadID>::value, "pthread_t is not convertible");
 #endif
         return (ThreadID) thread_;

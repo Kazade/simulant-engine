@@ -27,25 +27,7 @@
 
 #include "utf8.h"
 #include "unicode.h"
-
-#ifndef __clang__
-#ifndef _GLIBCXX_USE_C99_STDIO
-
-/* GCC 4.7 doesn't define std::to_string... for some reason, so we just hack around it here */
-
-
-namespace std {
-
-static std::string to_string(uint32_t value) {
-    std::ostringstream ss;
-    ss << value;
-    return ss.str();
-}
-
-}
-
-#endif
-#endif
+#include "../compat.h"
 
 std::ostream& operator<< (std::ostream& os, const unicode& str) {
     os << str.encode();
@@ -319,7 +301,7 @@ static float _stof(const std::string& str) {
     const char* inp = str.c_str();
     char* p = nullptr;
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     // Dreamcast (GCC 4.7.3) doesn't define strtof but does define strtod
     float test = (float) strtod(inp, &p);
 #else

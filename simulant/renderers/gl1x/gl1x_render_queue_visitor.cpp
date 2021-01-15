@@ -1,7 +1,9 @@
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/gl.h"
     #include "../../../deps/libgl/include/glext.h"
+#elif defined(__PSP__)
+    #include <GL/gl.h>
 #else
     #include "../glad/glad/glad.h"
 #endif
@@ -36,7 +38,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     enable_normal_arrays(true);
     enable_texcoord_array(0, true);
 
-    for(auto i = 1u; i < MAX_TEXTURE_UNITS; ++i) {
+    for(auto i = 1u; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
         disable_texcoord_array(i, true);
     }
 
@@ -90,7 +92,14 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TextureUnit* unit) 
         return false;
     }
 
+    if(which >= _S_GL_MAX_TEXTURE_UNITS) {
+        return false;
+    }
+
+#if _S_GL_SUPPORTS_MULTITEXTURE
     GLCheck(glActiveTexture, GL_TEXTURE0 + which);
+#endif
+
     GLCheck(glBindTexture, GL_TEXTURE_2D, id);
 
     GLCheck(glMatrixMode, GL_TEXTURE);
@@ -153,19 +162,23 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     if(!prev || prev->is_texturing_enabled() != next->is_texturing_enabled()) {
         if(next->is_texturing_enabled()) {
-            for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+            for(uint32_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
+#if _S_GL_SUPPORTS_MULTITEXTURE
                 GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+#endif
                 GLCheck(glEnable, GL_TEXTURE_2D);
             }
         } else {
-            for(uint32_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+            for(uint32_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
+#if _S_GL_SUPPORTS_MULTITEXTURE
                 GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+#endif
                 GLCheck(glDisable, GL_TEXTURE_2D);
             }
         }
     }
 
-#ifndef _arch_dreamcast
+#if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {
         glPointSize(next->point_size());
     }
@@ -240,6 +253,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
+#if _S_GL_SUPPORTS_COLOR_MATERIAL
     if(!prev || prev->colour_material() != next->colour_material()) {
         if(next->colour_material() == COLOUR_MATERIAL_NONE) {
             GLCheck(glDisable, GL_COLOR_MATERIAL);
@@ -261,6 +275,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glEnable, GL_COLOR_MATERIAL);
         }
     }
+#endif
 
     if(pass_->is_texturing_enabled()) {
         uint8_t used_count = 0;
@@ -281,8 +296,10 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             used_count++;
         }
 
-        for(auto i = used_count; i < MAX_TEXTURE_UNITS; ++i) {
+        for(auto i = used_count; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
+#if _S_GL_SUPPORTS_MULTITEXTURE
             GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+#endif
             GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
         }
     }
@@ -393,20 +410,30 @@ void GL1RenderQueueVisitor::disable_normal_arrays(bool force) {
 }
 
 void GL1RenderQueueVisitor::enable_texcoord_array(uint8_t which, bool force) {
+    assert(which < _S_GL_MAX_TEXTURE_UNITS);
+
     if(!force && textures_enabled_[which]) return;
 
+#if _S_GL_SUPPORTS_MULTITEXTURE
     GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
+#endif
+
     GLCheck(glEnableClientState, GL_TEXTURE_COORD_ARRAY);
 
     textures_enabled_[which] = true;
 }
 
 void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
+    assert(which < _S_GL_MAX_TEXTURE_UNITS);
+
     if(!force && !textures_enabled_[which]) {
         return;
     }
 
+#if _S_GL_SUPPORTS_MULTITEXTURE
     GLCheck(glClientActiveTexture, GL_TEXTURE0 + which);
+#endif
+
     GLCheck(glDisableClientState, GL_TEXTURE_COORD_ARRAY);
     textures_enabled_[which] = false;
 }
@@ -531,14 +558,16 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         disable_normal_arrays();
     }
 
-    for(uint8_t i = 0; i < MAX_TEXTURE_UNITS; ++i) {
+    for(uint8_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
         bool enabled = spec.has_texcoordX(i);
 
         if(enabled) {
             enable_texcoord_array(i);
             auto offset = spec.texcoordX_offset(i, false);
 
+#if _S_GL_SUPPORTS_MULTITEXTURE
             GLCheck(glClientActiveTexture, GL_TEXTURE0 + i);
+#endif
             GLCheck(
                 glTexCoordPointer,
                 (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F) ? 2 : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3 : 4,

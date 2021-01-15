@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef __arch_dreamcast
+#ifdef ___DREAMCAST__
     #include <kos.h>
 #endif
 
@@ -129,6 +129,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
+            L_DEBUG(_F("Found possible loader: {0}").format(loader_type->name()));
             auto new_loader = loader_type->loader_for(final_file, vfs->read_file(final_file));
             new_loader->set_vfs(this->vfs_.get());
 
@@ -149,9 +150,10 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
             }
         }
 
-        throw std::logic_error(_u("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename).encode());
+        throw std::logic_error(_F("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename));
     }
 
+    L_WARN(_F("No suitable loader found for {0}").format(filename));
     return LoaderPtr();
 }
 
@@ -165,7 +167,8 @@ LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename
                 L_DEBUG(_F("Found loader {0} for file: {1}").format(loader_name, filename.encode()));
                 return loader_type->loader_for(final_file, vfs->open_file(final_file));
             } else {
-                throw std::logic_error(_u("Loader '{0}' does not support file '{1}'").format(loader_name, filename).encode());
+                L_ERROR(_F("Loader '{0}' does not support file '{1}'").format(loader_name, filename));
+                return LoaderPtr();
             }
         }
     }
@@ -251,7 +254,7 @@ bool Window::_init() {
 
     L_DEBUG("Starting initialization");
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     print_available_ram();
 #endif
 
@@ -275,7 +278,7 @@ bool Window::_init() {
         //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 
@@ -299,7 +302,7 @@ bool Window::_init() {
         register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
 
         L_INFO("Initializing the default resources");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 
@@ -314,7 +317,7 @@ bool Window::_init() {
     }
 
     L_DEBUG("Initialization finished");
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         print_available_ram();
 #endif
 

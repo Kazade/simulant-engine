@@ -14,19 +14,49 @@ FILE(GLOB_RECURSE TO_REMOVE
 
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
+# Include GL2x stuff on non-DC builds
+IF(NOT PLATFORM_DREAMCAST)
+    IF(NOT PLATFORM_PSP)
+        MESSAGE("-- Including GLAD in build")
+        # DC build doesn't need glad, GL1 is available directly
+        FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
+        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
 
-IF(NOT DREAMCAST_BUILD)
-    MESSAGE("-- Including GLAD in build")
-
-    FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
-    # DC build doesn't need glad, GL1 is available directly
-    FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
+        MESSAGE("-- Including GL2X in build")
+        FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
+        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
+    ENDIF()
 ENDIF()
 
+IF(PLATFORM_PSP)
+    MESSAGE("-- Including pspgl in build as this is the PSP")
+    FILE(GLOB LIBGL ${CMAKE_SOURCE_DIR}/deps/pspgl/*.c)
 
-IF(DREAMCAST_BUILD)
+    # These are dead files?
+    LIST(
+        REMOVE_ITEM
+        LIBGL
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/glGenLists.c
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/glIsList.c
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/glDeleteLists.c
+    )
+
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/pspgl)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBGL})
+
+    SET(PROC_FILE ${CMAKE_SOURCE_DIR}/deps/pspgl/pspgl_proctable.h)
+    add_custom_command(
+        OUTPUT ${PROC_FILE}
+        COMMAND ${CMAKE_SOURCE_DIR}/conf/extract_gl_extensions.py
+        ${PROC_FILE}
+        ${LIBGL}
+        COMMENT "Generating pspgl extension list"
+    )
+
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PROC_FILE})
+ENDIF()
+
+IF(PLATFORM_DREAMCAST)
     MESSAGE("-- Including GLdc and ALdc in build, as this is the Dreamcast")
 
     # We build in GLdc and ALdc directly (as it's all under the Simulant umbrella)
@@ -37,7 +67,7 @@ IF(DREAMCAST_BUILD)
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.c)
 
     IF(PLATFORM)
-    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+        MESSAGE("-- Including platform specific files: ${PLATFORM}")
     ENDIF()
 
     SET(
@@ -46,7 +76,7 @@ IF(DREAMCAST_BUILD)
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/core.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/context.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/alut.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/math.c        
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/math.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/listener.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/platform.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/source.c
@@ -61,16 +91,46 @@ IF(DREAMCAST_BUILD)
         ${PLATFORM}
     )
 
-    SET(SIMULANT_FILES ${SIMULANT_FILES} kos_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp sound_drivers/null_sound_driver.cpp)
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        kos_window.cpp
+        sound_drivers/openal_sound_driver.cpp
+        sound_drivers/al_error.cpp
+        sound_drivers/null_sound_driver.cpp
+    )
+ELSEIF(PLATFORM_PSP)
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/psp/*.cpp)
+
+    IF(PLATFORM)
+        MESSAGE("-- Including platform specific files: ${PLATFORM}")
+    ENDIF()
+
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        ${PLATFORM}
+        # FIXME: Use OpenAL on PSP
+        # sound_drivers/openal_sound_driver.cpp
+        # sound_drivers/al_error.cpp
+        sound_drivers/null_sound_driver.cpp
+    )
 ELSE()
-    SET(SIMULANT_FILES ${SIMULANT_FILES} sdl2_window.cpp sound_drivers/openal_sound_driver.cpp sound_drivers/al_error.cpp sound_drivers/null_sound_driver.cpp)
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        sdl2_window.cpp
+        sound_drivers/openal_sound_driver.cpp
+        sound_drivers/al_error.cpp
+        sound_drivers/null_sound_driver.cpp
+    )
 ENDIF()
 
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
-IF(DREAMCAST_BUILD)
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP)
 ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES})
@@ -89,7 +149,7 @@ IF(MINGW)
         SET(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
         SET(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
         TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 psapi SDL2main SDL2 OpenAL32 userenv)
-    ENDIF()  
+    ENDIF()
 ENDIF()
 
 SET_TARGET_PROPERTIES(simulant

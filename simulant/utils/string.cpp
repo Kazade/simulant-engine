@@ -1,6 +1,6 @@
 #include "string.h"
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 
 #include <cstdlib>
 #include <stdexcept>

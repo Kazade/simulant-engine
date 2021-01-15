@@ -39,8 +39,6 @@ public:
     virtual void update() = 0;
 
     uint32_t count() const {
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
         return objects_.size();
     }
 
@@ -61,8 +59,6 @@ public:
         // Bind the copy to the ID
         copy->_bind_id_pointer(copy);
 
-        thread::Lock<thread::RecursiveMutex> g(target_manager->objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
         target_manager->objects_.insert(std::make_pair(copy->id(), copy));
         target_manager->on_make(copy->id());
         return copy;
@@ -77,29 +73,27 @@ public:
     ObjectTypePtrType make_as(Args&&... args) {
         IDType new_id(next_id()); // Unbound
 
+        L_DEBUG(_F("Creating a new object with ID: {0}").format(new_id));
         auto obj = T::create(new_id, std::forward<Args>(args)...);
+
+        L_DEBUG("Binding ID pointer");
         obj->_bind_id_pointer(obj);
 
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
         objects_.insert(std::make_pair(obj->id(), obj));
 
+        L_DEBUG("Calling on_make()");
         on_make(obj->id());
 
+        L_DEBUG("Created");
         return SmartPointerConverter::convert(obj);
     }
 
     void destroy(IDType id) {
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
         on_destroy(id);
         objects_.erase(id);
     }
 
     void destroy_all() {
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
-
         for(auto& p: objects_) {
             on_destroy(p.first);
         }
@@ -108,8 +102,6 @@ public:
     }
 
     ObjectTypePtr get(IDType id) const {
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
         auto it = objects_.find(id);
         if(it == objects_.end()) {
             return ObjectTypePtr();
@@ -119,15 +111,10 @@ public:
     }
 
     bool contains(IDType id) const {
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
         return objects_.count(id) > 0;
     }
 
     void each(std::function<void (uint32_t, ObjectTypePtr)> callback) {
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
-
         uint32_t i = 0;
         for(auto& p: objects_) {
             auto ptr = p.second;
@@ -136,9 +123,6 @@ public:
     }
 
     void each(std::function<void (uint32_t, const ObjectTypePtr)> callback) const {
-        thread::Lock<thread::RecursiveMutex> g(objects_mutex_);
-        // DebugScopedLog("Locked", __FILE__, __LINE__);
-
         uint32_t i = 0;
         for(auto& p: objects_) {
             auto ptr = p.second;
@@ -160,8 +144,6 @@ protected:
     uint32_t next_id() {
         return IDCounter<ObjectType>::next_id();
     }
-
-    mutable thread::RecursiveMutex objects_mutex_;
 
     typedef std::shared_ptr<ObjectType> ObjectTypeInternalPtrType;
 

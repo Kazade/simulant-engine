@@ -386,6 +386,13 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
             L_INFO(_F("Loading material {0} into {1}").format(path, template_id));
             auto mat = material(template_id);
+            if(!mat) {
+                L_ERROR(_F("Tried to fetch material with template_id ({0}). But it didn't exist").format(template_id));
+                materials_loading_.erase(template_id);
+                throw std::runtime_error(_F("Error loading file: {0}").format(path));
+            }
+
+            L_DEBUG(_F("Locating loader for {0}").format(path));
             auto loader = window->loader_for(path.encode());
             if(!loader) {
                 L_ERROR(_F("Unable to find loader for {0}").format(path));
@@ -393,8 +400,10 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
                 throw std::runtime_error(_F("Unable to find loader for file: {0}").format(path));
             }
 
+            L_DEBUG("Loading...");
             loader->into(mat);
             materials_loading_.erase(template_id);
+            L_DEBUG(_F("Material {0} loaded").format(mat->id()));
         }
     }
 
@@ -460,17 +469,22 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, GarbageColle
 
 TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
-    smlt::TexturePtr tex = texture(new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect));
+    L_DEBUG(_F("Loading texture from file: {0}").format(path));
+    smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect);
 
     {
+        L_DEBUG(_F("Finding loader for: {0}").format(path));
         auto loader = window->loader_for(path, LOADER_HINT_TEXTURE);
         if(!loader) {
+            L_WARN("Couldn't find loader for texture");
             return smlt::TexturePtr();
         }
 
+        L_DEBUG("Loader found, loading...");
         loader->into(tex);
 
         if(flags.flip_vertically) {
+            L_DEBUG("Flipping texture vertically");
             tex->flip_vertically();
         }
 
@@ -480,6 +494,7 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
         tex->set_auto_upload(flags.auto_upload);
     }
 
+    L_DEBUG("Texture loaded");
     return tex;
 }
 

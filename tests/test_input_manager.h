@@ -66,7 +66,7 @@ public:
 
         assert_equal(manager_->axis_value_hard("Test"), 0);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.1f);
+        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.11f);
         manager_->update(1.0);
 
         assert_equal(manager_->axis_value_hard("Test"), 1);
@@ -85,7 +85,11 @@ public:
         state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.1f);
         manager_->update(1.0);
 
-        assert_equal(axis->value(), 0.1f);
+        assert_equal(axis->value(), 0.0f);
+
+        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 1.0f);
+        manager_->update(1.0);
+        assert_equal(axis->value(), 1.0f);
     }
 
     void test_axis_pressed_released() {

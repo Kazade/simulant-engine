@@ -20,10 +20,14 @@
 #include <chrono>
 #include <future>
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 #include "platforms/dreamcast/profiler.h"
 #include "kos_window.h"
 namespace smlt { typedef KOSWindow SysWindow; }
+#elif defined(__PSP__)
+#include <pspkernel.h>
+#include "platforms/psp/psp_window.h"
+namespace smlt { typedef PSPWindow SysWindow; }
 #else
 #include "sdl2_window.h"
 namespace smlt { typedef SDL2Window SysWindow; }
@@ -143,7 +147,7 @@ void Application::construct_window(const AppConfig& config) {
          * is greater or equal to 60FPS
          * as the DC is capped at that anyway
          */
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
         if(config_copy.target_frame_rate < 60) {
             float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
             window_->request_frame_time(frame_time);
@@ -218,7 +222,7 @@ bool Application::_call_init() {
 }
 
 int32_t Application::run() {
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     if(PROFILING) {
         profiler_init("/pc/gmon.out");
         profiler_start();
@@ -228,6 +232,11 @@ int32_t Application::run() {
     std::set_terminate([&]() {
         profiler_stop();
         profiler_clean_up();
+
+#ifdef __PSP__
+        /* Try to notify and exit cleanly on PSP */
+        sceKernelExitGame();
+#endif
     });
 
 #endif
@@ -254,7 +263,7 @@ int32_t Application::run() {
 
     window_.reset();
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     if(PROFILING) {
         profiler_stop();
         profiler_clean_up();

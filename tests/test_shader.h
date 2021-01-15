@@ -3,15 +3,17 @@
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 
-
 #ifndef _arch_dreamcast
+#ifndef PSP
 #include "simulant/renderers/gl2x/gpu_program.h"
+#endif
 #endif
 
 class ShaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_shader() {
 #ifndef _arch_dreamcast
+#ifndef PSP
         smlt::GPUProgram::ptr program = smlt::GPUProgram::create(
             smlt::GPUProgramID(1),
             window->renderer,
@@ -41,6 +43,7 @@ public:
         auto loc = program->locate_attribute("tns");
 
         assert_equal(1, loc);
+#endif
 #endif
     }
 

@@ -46,10 +46,17 @@ VirtualFileSystem::VirtualFileSystem(Window *window):
     resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
 #endif
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
     resource_path_.push_back("/cd");
     resource_path_.push_back("/pc");
+#endif
+
+#ifdef __PSP__
+    resource_path_.push_back(".");
+    resource_path_.push_back("umd0:");
+    resource_path_.push_back("ms0:");
+    resource_path_.push_back("disc0:");
 #endif
 
 #ifdef __LINUX__
@@ -79,6 +86,8 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
       cannot be found
     */
 
+    L_DEBUG(_F("Locating file: {0}").format(filename));
+
     std::string final_name = filename.replace(
         "${RENDERER}",
         window_->renderer->name()
@@ -100,10 +109,13 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
 #else
     auto abs_final_name = kfs::path::abs_path(final_name);
 
+    L_DEBUG("Checking existence...");
     if(kfs::path::exists(abs_final_name)) {
+        L_DEBUG(_F("Located file: {0}").format(abs_final_name));
         return abs_final_name;
     }
 
+    L_DEBUG("Searching resource paths...");
     for(unicode path: resource_path_) {
         auto full_path = kfs::path::norm_path(
             kfs::path::join(path.encode(), final_name)

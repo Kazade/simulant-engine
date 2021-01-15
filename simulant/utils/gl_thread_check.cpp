@@ -29,9 +29,18 @@ void GLThreadCheck::check() {
             GL_thread->do_check();
         }
     } catch(WrongThreadError& e) {
-        L_ERROR("Tried to call OpenGL dependent code from the wrong thread");
+        L_ERROR(
+            _F("Tried to call OpenGL dependent code from the wrong thread {0} vs {1}").format(
+                GL_thread->thread_id(), thread::this_thread_id()
+            )
+        );
         throw;
     }
+}
+
+GLThreadCheck::GLThreadCheck(thread::ThreadID render_thread):
+    render_thread_id_(render_thread) {
+
 }
 
 }

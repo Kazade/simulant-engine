@@ -1,7 +1,7 @@
 #include "memory.h"
 #include "../logging.h"
 
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
 #include <malloc.h>
 #include <kos.h>
 
@@ -36,7 +36,7 @@ unsigned long get_free_ram() {
 namespace smlt {
 
 void print_available_ram() {       
-#ifdef _arch_dreamcast
+#ifdef __DREAMCAST__
     if(!systemRam) {
         set_system_ram();
     }

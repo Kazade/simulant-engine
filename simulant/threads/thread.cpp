@@ -3,6 +3,9 @@
 
 #ifdef __WIN32__
 #include <windows.h>
+#elif defined(__PSP__)
+#include <pspsdk.h>
+#include <pspthreadman.h>
 #else
 #include <time.h>
 #endif
@@ -48,7 +51,14 @@ void sleep(size_t ms) {
     struct timespec tim, tim2;
     tim.tv_sec = 0;
     tim.tv_nsec = ms * 1000000;
+
+#ifdef __PSP__
+    _S_UNUSED(tim2);
+    sceKernelDelayThreadCB(1000000 * tim.tv_sec + (tim.tv_nsec / 1000));
+#else
     nanosleep(&tim , &tim2);
+#endif
+
 #endif
 }
 
@@ -59,13 +69,21 @@ void yield() {
      * sleep(0) or no-op. My money's on sleep(0).
      */
     sleep(0);
+#elif defined(__PSP__)
+    /* FIXME: For some reason the CMake check thinks pthread_yield exists? */
+    sleep(0);
 #else
     pthread_yield();
 #endif
 }
 
 ThreadID this_thread_id() {
-    return (ThreadID) pthread_self();
+#ifdef __PSP__
+    return (ThreadID) sceKernelGetThreadId();
+#else
+    auto ret = pthread_self();
+    return (ThreadID) ret;
+#endif
 }
 
 }

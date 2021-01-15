@@ -161,7 +161,11 @@ private:
 };
 
 class StdIOHandler : public Handler {
+public:
+    StdIOHandler();
+
 private:
+
     void do_write_message(Logger* logger,
                        const DateTime& time,
                        const std::string& level,

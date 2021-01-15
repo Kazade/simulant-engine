@@ -88,7 +88,7 @@ check:stream-usage:
   script:
     - python3 tools/find_std_stream.py simulant
 
-android:
+build:android-armeabiv7a-gcc:debug:
   stage: build
   image: kazade/android-sdk
   allow_failure: true
@@ -127,6 +127,92 @@ android:
    - cd ${CI_PROJECT_DIR}/build
    - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
    - make
+
+build:psp-mips-gcc:debug:
+  stage: build
+  image: sharkwouter/pspdev
+  variables:
+    TARGET: psp-mips-gcc
+  script:
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/tests/EBOOT.PBP
+
+build:psp-mips-gcc:release:
+  stage: build
+  image: sharkwouter/pspdev
+  variables:
+    TARGET: psp-mips-gcc
+  script:
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/sample_data/
+      - ${TARGET}/release/tests/EBOOT.PBP
+
+test:psp-mips-gcc:debug:
+  allow_failure: true
+  stage: test
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
+  variables:
+    TARGET: psp-mips-gcc
+  needs: ["build:psp-mips-gcc:debug"]
+  dependencies:
+   - build:psp-mips-gcc:debug
+  before_script:
+   - dnf install -y ppsspp-sdl
+   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
+   - sleep 3
+   - export LIBGL_ALWAYS_SOFTWARE=1
+   - export DISPLAY=:99
+  script:
+   - cd ${TARGET}/debug
+   - export SIMULANT_SOUND_DRIVER=null
+   - ln -s ../simulant simulant
+   - ln -s ../sample_data sample_data
+   - PPSSPPSDL EBOOT.PBP
+  artifacts:
+   reports:
+      junit: ${TARGET}/debug/report.xml
+   paths:
+    - ${TARGET}/debug/simulant/
+    - ${TARGET}/release/simulant/
+
+deploy:psp-mips-gcc:
+  stage: deploy
+  only:
+   - master
+   - tags
+  image: $CI_REGISTRY_IMAGE:deploy
+  dependencies:
+   - test:psp-mips-gcc:debug
+  variables:
+   TARGET: psp-mips-gcc
+  script:
+   - mkdir -p ./upload/${TARGET}/lib
+   - mkdir -p ./upload/${TARGET}/lib/debug
+   - mkdir -p ./upload/${TARGET}/include/simulant
+   - cp ${TARGET}/release/simulant/libsimulant.a ./upload/${TARGET}/lib/
+   - cp ${TARGET}/debug/simulant/libsimulant.a ./upload/${TARGET}/lib/debug/
+   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
+   - cd upload
+   - zip -r ${TARGET}.zip ${TARGET}/
+   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
+  artifacts:
+   paths:
+    - upload/${TARGET}.zip
 
 build:windows-x64-mingw:release:
   stage: build
@@ -277,7 +363,7 @@ build:linux-x64-gcc:
       - ${TARGET}/debug/sample_data/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
-      - ${TARGET}/release/sample_data/      
+      - ${TARGET}/release/sample_data/
       - ${TARGET}/release/tests/simulant_tests
 
 test:linux-x64-gcc-debug:
@@ -324,7 +410,7 @@ test:linux-x64-gcc-release:
   artifacts:
    reports:
       junit: ${TARGET}/release/report.xml
-      
+
 deploy:linux-x64-gcc:
   stage: deploy
   only:

@@ -1,15 +1,12 @@
 
 #include <cstdio>
+#include <cstdlib>
+
 #include "compat.h"
 
-
-#ifndef __clang__
-// FIXME: these version checks may not be correct, I'm not sure
-// which version improved the define checking
-#if (__GNUC__ == 4 || __GNUC__ == 5 || __GNUC__ == 6 || __GNUC__ == 7)
-#ifndef _GLIBCXX_USE_C99_STDIO
-
 namespace std {
+
+#if defined(__DREAMCAST__) || defined(__PSP__)
 
 std::string to_string(int value) {
     char buffer[64];
@@ -20,6 +17,12 @@ std::string to_string(int value) {
 std::string to_string(unsigned value) {
     char buffer[64];
     auto c = ::sprintf(buffer, "%u", value);
+    return std::string(buffer, buffer + c);
+}
+
+std::string to_string(unsigned long value) {
+    char buffer[64];
+    auto c = ::sprintf(buffer, "%luld", value);
     return std::string(buffer, buffer + c);
 }
 
@@ -41,10 +44,20 @@ std::string to_string(double value) {
     return std::string(buffer, buffer + c);
 }
 
+#endif
 
+#if defined(__PSP__)
+
+int stoi(const std::string& str) {
+    return atoi(str.c_str());
+}
+
+float stof(const std::string& str) {
+    return atof(str.c_str());
+}
+
+#endif
 }
 
 
-#endif
-#endif
-#endif
+
