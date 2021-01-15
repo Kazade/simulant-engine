@@ -30,21 +30,21 @@ ENDIF()
 
 IF(PLATFORM_PSP)
     MESSAGE("-- Including pspgl in build as this is the PSP")
-    FILE(GLOB LIBGL ${CMAKE_SOURCE_DIR}/deps/pspgl/*.c)
+    FILE(GLOB LIBGL ${CMAKE_SOURCE_DIR}/deps/pspgl/src/*.c)
 
     # These are dead files?
     LIST(
         REMOVE_ITEM
         LIBGL
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/glGenLists.c
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/glIsList.c
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/glDeleteLists.c
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/src/glGenLists.c
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/src/glIsList.c
+        ${CMAKE_SOURCE_DIR}/deps/pspgl/src/glDeleteLists.c
     )
 
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/pspgl)
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/pspgl/include)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBGL})
 
-    SET(PROC_FILE ${CMAKE_SOURCE_DIR}/deps/pspgl/pspgl_proctable.h)
+    SET(PROC_FILE ${CMAKE_SOURCE_DIR}/deps/pspgl/include/pspgl_proctable.h)
     add_custom_command(
         OUTPUT ${PROC_FILE}
         COMMAND ${CMAKE_SOURCE_DIR}/conf/extract_gl_extensions.py

@@ -21,4 +21,4 @@
 	url = https://gitlab.com/simulant/ALdc.git
 [submodule "deps/pspgl"]
 	path = deps/pspgl
-	url = https://github.com/Kazade/pspgl.git
+	url = https://gitlab.com/simulant/pspgl.git
