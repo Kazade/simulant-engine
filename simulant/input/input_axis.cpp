@@ -67,7 +67,7 @@ void InputAxis::set_return_speed(float ret) {
 
 float InputAxis::value(DeadZoneBehaviour dead_zone_behaviour) const {
     switch(dead_zone_behaviour) {
-    case DEAD_ZONE_BEHAVIOUR_DISABLED:
+    case DEAD_ZONE_BEHAVIOUR_NONE:
         return value_;
     default:
     case DEAD_ZONE_BEHAVIOUR_RADIAL: {

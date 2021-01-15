@@ -30,3 +30,17 @@ You can create multiple axises with the same name, but input value with the "str
 ## Axis forces
 
 `InputAxis` have a `force` variable that is used when processing inputs from digitial devices like keyboard keys, or joystick buttons. The force is the speed in units-per-second that the axis value increases until it gets to +/- 1.0. You can adjust the force of an axis with the `set_force` method. This is conceptually the opposite of `return_speed`, but only applies to digital inputs.
+
+## Axis dead zones
+
+An `InputAxis` can be given a `dead_zone` value to help handle the problem that most joysticks have a bit of jitter when they're at rest. The `dead_zone` is a value between 0.0 and 1.0. Inputs with a value less than the dead zone are ignored by default. For joystick devices with an X and Y axis, you the default behaviour is to take into account the combined input to determine whether the value falls within the dead zone. This is a "radial" dead zone as opposed to an "axial" one. You can control the dead zone behaviour when retrieving an `Axis`' value:
+
+```
+    InputAxis* axis = manager_->new_axis("Test");
+    axis->set_joystick_axis(JOYSTICK_AXIS_0);
+    axis->set_dead_zone(0.1f);
+    
+    auto radial = axis->value(/* DEAD_ZONE_BEHAVIOUR_RADIAL */); // default
+    auto axial = axis->value(DEAD_ZONE_BEHAVIOUR_AXIAL);
+    auto no_dead_zone = axis->value(DEAD_ZONE_BEHAVIOUR_NONE);
+```

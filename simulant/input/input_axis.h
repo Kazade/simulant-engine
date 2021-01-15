@@ -13,7 +13,7 @@ namespace smlt {
  * https://www.gamasutra.com/blogs/JoshSutphin/20130416/190541/Doing_Thumbstick_Dead_Zones_Right.php
  */
 enum DeadZoneBehaviour {
-    DEAD_ZONE_BEHAVIOUR_DISABLED,
+    DEAD_ZONE_BEHAVIOUR_NONE,
     DEAD_ZONE_BEHAVIOUR_AXIAL,
     DEAD_ZONE_BEHAVIOUR_RADIAL
 };
