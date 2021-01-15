@@ -81,6 +81,8 @@ public:
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
+        /* PSP uses 4f not 4ub */
+#ifndef __PSP__
         const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
@@ -92,6 +94,7 @@ public:
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
         assert_equal(bytes[3], 255);  // A
+#endif
     }
 
     void test_specification_override() {
