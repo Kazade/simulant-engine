@@ -207,5 +207,12 @@ void InputState::init_virtual_joypad() {
     ); */
 }
 
+JoystickAxis InputState::linked_axis(JoystickID id, JoystickAxis axis) {
+    _S_UNUSED(id);
+    if(axis == JOYSTICK_AXIS_X) return JOYSTICK_AXIS_Y;
+    if(axis == JOYSTICK_AXIS_Y) return JOYSTICK_AXIS_X;
+    return JOYSTICK_AXIS_INVALID;
+}
+
 
 }

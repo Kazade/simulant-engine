@@ -68,6 +68,7 @@ static const MouseID ALL_MICE = -1;
 static const JoystickID ALL_JOYSTICKS = -1;
 
 enum MouseAxis {
+    MOUSE_AXIS_INVALID = -1,
     MOUSE_AXIS_0,
     MOUSE_AXIS_1,
     MOUSE_AXIS_2,
@@ -78,6 +79,7 @@ enum MouseAxis {
 };
 
 enum JoystickAxis {
+    JOYSTICK_AXIS_INVALID = -1,
     JOYSTICK_AXIS_0,
     JOYSTICK_AXIS_1,
     JOYSTICK_AXIS_2,
@@ -188,6 +190,8 @@ public:
     std::size_t mouse_count() const { return mouse_count_; }
 
     void init_virtual_joypad();
+
+    JoystickAxis linked_axis(JoystickID id, JoystickAxis axis);
 private:
     struct KeyboardState {
         bool keys[MAX_KEYBOARD_CODES] = {0};

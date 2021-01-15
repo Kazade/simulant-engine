@@ -92,8 +92,8 @@ private:
     JoystickButton positive_joystick_button_ = JOYSTICK_BUTTON_INVALID;
     JoystickButton negative_joystick_button_ = JOYSTICK_BUTTON_INVALID;
 
-    MouseAxis mouse_axis_ = MOUSE_AXIS_0;
-    JoystickAxis joystick_axis_ = JOYSTICK_AXIS_0;
+    MouseAxis mouse_axis_ = MOUSE_AXIS_INVALID;
+    JoystickAxis joystick_axis_ = JOYSTICK_AXIS_INVALID;
 
     JoystickHatID joystick_hat_ = -1;
     JoystickHatAxis joystick_hat_axis_ = JOYSTICK_HAT_AXIS_X;
@@ -103,6 +103,12 @@ private:
 
     float value_ = 0.0f;
     float dead_zone_ = 0.001f;
+
+    /* This is used where an axis has a counterpart
+     * (e.g a joystick with X + Y). It's used when
+     * calculating radial deadzones and stores the
+     * normalized value of the other axis */
+    float linked_value_ = 0.0;
 
     void set_type(AxisType type);
 
