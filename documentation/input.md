@@ -33,7 +33,7 @@ You can create multiple axises with the same name, but input value with the "str
 
 ## Axis dead zones
 
-An `InputAxis` can be given a `dead_zone` value to help handle the problem that most joysticks have a bit of jitter when they're at rest. The `dead_zone` is a value between 0.0 and 1.0. Inputs with a value less than the dead zone are ignored by default. For joystick devices with an X and Y axis, you the default behaviour is to take into account the combined input to determine whether the value falls within the dead zone. This is a "radial" dead zone as opposed to an "axial" one. You can control the dead zone behaviour when retrieving an `Axis`' value:
+An `InputAxis` can be given a `dead_zone` value to help handle the problem that most joysticks have a bit of jitter when they're at rest. The `dead_zone` is a value between 0.0 and 1.0. Inputs with a value less than the dead zone are ignored by default. For joystick devices with an X and Y axis, the default behaviour is to take into account the combined input to determine whether the value falls within the dead zone. This is a "radial" dead zone as opposed to an "axial" one. You can control the dead zone behaviour when retrieving an `Axis`' value:
 
 ```
     InputAxis* axis = manager_->new_axis("Test");
