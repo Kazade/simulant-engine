@@ -160,15 +160,16 @@ build:psp-mips-gcc:release:
       - ${TARGET}/release/sample_data/
       - ${TARGET}/release/tests/EBOOT.PBP
 
-test:psp-mips-gcc:debug:
+test:psp-mips-gcc:
   allow_failure: true
   stage: test
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   variables:
     TARGET: psp-mips-gcc
-  needs: ["build:psp-mips-gcc:debug"]
+  needs: ["build:psp-mips-gcc:debug", "build:psp-mips-gcc:release"]
   dependencies:
    - build:psp-mips-gcc:debug
+   - build:psp-mips-gcc:release
   before_script:
    - dnf install -y ppsspp-sdl
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
@@ -185,8 +186,8 @@ test:psp-mips-gcc:debug:
    reports:
       junit: ${TARGET}/debug/report.xml
    paths:
-    - ${TARGET}/debug/simulant/
-    - ${TARGET}/release/simulant/
+    - ${TARGET}/debug/simulant/libsimulant.a
+    - ${TARGET}/release/simulant/libsimulant.a
 
 deploy:psp-mips-gcc:
   stage: deploy
@@ -195,7 +196,7 @@ deploy:psp-mips-gcc:
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
-   - test:psp-mips-gcc:debug
+   - test:psp-mips-gcc
   variables:
    TARGET: psp-mips-gcc
   script:
