@@ -151,9 +151,11 @@ IF(NOT PLATFORM_DREAMCAST)
         FIND_PACKAGE(ZLIB REQUIRED)
     ENDIF()
 
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
-    link_libraries(Threads::Threads)
+    IF(NOT PLATFORM_PSP)
+        set(THREADS_PREFER_PTHREAD_FLAG ON)
+        find_package(Threads REQUIRED)
+        link_libraries(Threads::Threads)
+    ENDIF()
 
     # Force the new C++ ABI on GCC
     MESSAGE("-- Enabling old C++11 ABI")

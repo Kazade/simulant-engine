@@ -2,7 +2,11 @@
 
 #include <stdexcept>
 
+#ifdef __PSP__
+#include <pspthreadman.h>
+#else
 #include "pthread.h"
+#endif
 
 namespace smlt {
 namespace thread {
@@ -24,20 +28,17 @@ public:
 
     Mutex(const Mutex&) = delete;
 
-    bool try_lock() {
-        return pthread_mutex_trylock(&mutex_) == 0;
-    }
-
-    void lock() {
-        pthread_mutex_lock(&mutex_);
-    }
-
-    void unlock() {
-        pthread_mutex_unlock(&mutex_);
-    }
+    bool try_lock();
+    void lock();
+    void unlock();
 
 private:
+#ifdef __PSP__
+    SceUID semaphore_;
+    uint32_t owner_ = 0;
+#else
     pthread_mutex_t mutex_;
+#endif
 };
 
 class RecursiveMutex {
@@ -52,7 +53,13 @@ public:
     void lock();
     void unlock();
 private:
+#ifdef __PSP__
+    SceUID semaphore_;
+    uint32_t owner_ = 0;
+    int32_t recursive_ = 0;
+#else
     pthread_mutex_t mutex_;
+#endif
 };
 
 template<typename M>

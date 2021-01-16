@@ -62,7 +62,6 @@ link_directories(
 # Aggregated list of all PSP-specific libraries for convenience.
 set(PSP_LIBRARIES
     stdc++
-    pthread-psp
     GL
     pspaudiolib
     pspaudio
@@ -94,7 +93,6 @@ SET(
     CMAKE_CXX_STANDARD_LIBRARIES
     "${CMAKE_CXX_STANDARD_LIBRARIES} \
      -lstdc++ \
-    -lpthread-psp \
     -lpspaudiolib \
     -lpspaudio \
     -lm \

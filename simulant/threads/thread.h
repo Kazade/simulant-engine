@@ -1,6 +1,12 @@
 #pragma once
 
+#ifndef __PSP__
 #include <pthread.h>
+#else
+#include <pspthreadman.h>
+#endif
+
+#include <string>
 #include <cstdint>
 #include <cstdlib>
 #include <stdexcept>
@@ -12,6 +18,8 @@
 #include <string>
 #include <iostream>
 
+#include "../compat.h"
+#include "../errors.h"
 #include "../macros.h"
 
 namespace smlt {
@@ -65,6 +73,7 @@ public:
 class Thread {
 public:
     Thread(const Thread&) = delete;
+    ~Thread();
 
     template<typename Func, typename... Args>
     explicit Thread(Func&& function, Args&&... args) {
@@ -74,10 +83,22 @@ public:
             )
         );
 
+#ifdef __PSP__
+        /* We use the current thread's priority for the new thread */
+        int priority = sceKernelGetThreadCurrentPriority();
+        thread_ = sceKernelCreateThread(
+            std::to_string(rand()).c_str(),
+            &Thread::thread_runner, priority, 0x10000,
+            0, NULL
+        );
+
+        sceKernelStartThread(thread_, sizeof(func), func);
+#else
         auto ret = pthread_create(&thread_, NULL, &Thread::thread_runner, func);
         if(ret) {
-            throw ThreadSpawnError(ret);
+            FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
         }
+#endif
     }
 
     template<typename Callable>
@@ -104,8 +125,16 @@ public:
 
 private:
     typedef std::function<void ()> Callable;
+
+
+
+#ifdef __PSP__
+    static int thread_runner(unsigned int, void* data);
+    int thread_ = 0;
+#else
     static void* thread_runner(void* data);
     pthread_t thread_ = 0;
+#endif
 };
 
 void yield();
