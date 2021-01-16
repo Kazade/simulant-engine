@@ -10,13 +10,37 @@
 #include <time.h>
 #endif
 
+#include "../logging.h"
 #include "thread.h"
 
 namespace smlt {
 namespace thread {
 
+Thread::~Thread() {
+#ifdef __PSP__
+    sceKernelDeleteThread(thread_);
+#endif
+}
+
 void Thread::join() {
+#ifdef __PSP__
+    SceKernelThreadInfo status;
+    status.size = sizeof(SceKernelThreadInfo);
+
+    while(true) {
+        if(sceKernelReferThreadStatus(thread_, &status) == 0) {
+            if(status.status == PSP_THREAD_STOPPED || status.status == PSP_THREAD_KILLED) {
+                break;
+            } else {
+                sleep(10);
+            }
+        } else {
+            FATAL_ERROR(ERROR_CODE_THREAD_JOIN_FAILED, "Unable to get thread status");
+        }
+    }
+#else
     pthread_join(thread_, nullptr);
+#endif
 }
 
 bool Thread::joinable() const {
@@ -24,16 +48,28 @@ bool Thread::joinable() const {
 }
 
 void Thread::detach() {
+#ifdef __PSP__
+    L_ERROR("thread detaching is not implemented on the PSP");
+#else
     pthread_detach(thread_);
+#endif
     thread_ = 0;
 }
 
 void Thread::exit() {
+#ifdef __PSP__
+    sceKernelExitThread(0);
+#else
     int status = 0;
     pthread_exit(&status);
+#endif
 }
 
+#ifdef __PSP__
+int Thread::thread_runner(unsigned int, void* data) {
+#else
 void* Thread::thread_runner(void* data) {
+#endif
     CallableWrapperBase* func = reinterpret_cast<CallableWrapperBase*>(data);
     assert(func);
     if(func) {
@@ -41,7 +77,12 @@ void* Thread::thread_runner(void* data) {
         delete func;
     }
 
+#ifdef __PSP__
+    sceKernelExitThread(0);
+    return 0;
+#else
     return nullptr;
+#endif
 }
 
 void sleep(size_t ms) {

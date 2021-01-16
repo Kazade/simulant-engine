@@ -635,6 +635,8 @@ simulant/deps/tinyxml/tinyxml.cpp
 simulant/deps/tinyxml/tinyxml.h
 simulant/deps/tinyxml/tinyxmlerror.cpp
 simulant/deps/tinyxml/tinyxmlparser.cpp
+simulant/errors.cpp
+simulant/errors.h
 simulant/event_listener.cpp
 simulant/event_listener.h
 simulant/extra.h

@@ -17,7 +17,15 @@ public:
     void notify_all();
 
 private:
+#ifdef __PSP__
+    Mutex lock_;
+    SceUID wait_sem_;
+    SceUID wait_done_;
+    int waiting_ = 0;
+    int signals_ = 0;
+#else
     pthread_cond_t cond_;
+#endif
 };
 
 
