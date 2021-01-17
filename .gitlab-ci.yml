@@ -195,6 +195,7 @@ deploy:psp-mips-gcc:
    - master
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
+  needs: ["test:psp-mips-gcc"]
   dependencies:
    - test:psp-mips-gcc
   variables:
