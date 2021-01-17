@@ -32,7 +32,6 @@
 #include "loaders/opt_loader.h"
 #include "loaders/ogg_loader.h"
 #include "loaders/obj_loader.h"
-#include "loaders/tiled_loader.h"
 #include "loaders/particle_script.h"
 #include "loaders/heightmap_loader.h"
 #include "loaders/q2bsp_loader.h"
@@ -289,7 +288,6 @@ bool Window::_init() {
         register_loader(std::make_shared<smlt::loaders::OPTLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OGGLoaderType>());
         register_loader(std::make_shared<smlt::loaders::OBJLoaderType>());
-        register_loader(std::make_shared<smlt::loaders::TiledLoaderType>());
         register_loader(std::make_shared<smlt::loaders::HeightmapLoaderType>());
         register_loader(std::make_shared<smlt::loaders::Q2BSPLoaderType>());
         register_loader(std::make_shared<smlt::loaders::WALLoaderType>());

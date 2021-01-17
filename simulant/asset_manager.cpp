@@ -233,18 +233,6 @@ MeshPtr AssetManager::new_mesh_from_file(
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_from_tmx_file(const unicode& tmx_file, const unicode& layer_name, float tile_render_size, GarbageCollectMethod garbage_collect) {
-    auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
-
-    window->loader_for(tmx_file.encode())->into(mesh, {
-        {"layer", layer_name},
-        {"render_size", tile_render_size}
-    });
-
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
-    return mesh;
-}
-
 MeshPtr AssetManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
