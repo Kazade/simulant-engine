@@ -7,7 +7,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
 SET(SAMPLES
     sample
-    2d_sample
     viewport_sample
     selection_sample
     light_sample
