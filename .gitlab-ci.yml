@@ -171,6 +171,7 @@ test:psp-mips-gcc:
    - build:psp-mips-gcc:debug
    - build:psp-mips-gcc:release
   before_script:
+   - dnf install -y wget
    - wget https://download1.rpmfusion.org/free/fedora/releases/33/Everything/x86_64/os/Packages/p/ppsspp-sdl-1.10.3-4.fc33.x86_64.rpm
    - rpm -i ppsspp-sdl-1.10.3-4.fc33.x86_64.rpm
    - rm ppsspp-sdl-1.10.3-4.fc33.x86_64.rpm
@@ -185,6 +186,7 @@ test:psp-mips-gcc:
    - ln -s ../sample_data sample_data
    - PPSSPPSDL EBOOT.PBP
   artifacts:
+   when: always
    reports:
       junit: ${TARGET}/debug/report.xml
    paths:
