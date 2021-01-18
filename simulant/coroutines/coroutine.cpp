@@ -27,6 +27,8 @@ struct Context {
 static Context* CONTEXTS = nullptr;
 static CoroutineID ID_COUNTER = 0;
 
+#ifdef __PSP__
+
 static thread::Mutex CURRENT_CONTEXT_MUTEX;
 static std::map<thread::ThreadID, Context*> THREAD_CONTEXTS;
 
@@ -42,8 +44,28 @@ static Context* current_context() {
 
 static void set_current_context(Context* context) {
     thread::Lock<thread::Mutex> l(CURRENT_CONTEXT_MUTEX);
-    THREAD_CONTEXTS.insert(std::make_pair(thread::this_thread_id(), context));
+    THREAD_CONTEXTS[thread::this_thread_id()] = context;
 }
+
+#else
+
+#ifdef __GNUC__
+#if __GNUC_MAJOR__ < 5
+    #define thread_local __thread
+#endif
+#endif
+
+static thread_local Context* CURRENT_CONTEXT = nullptr;
+
+static Context* current_context() {
+    return CURRENT_CONTEXT;
+}
+
+static void set_current_context(Context* context) {
+    CURRENT_CONTEXT = context;
+}
+
+#endif
 
 CoroutineID start_coroutine(std::function<void ()> f) {
     if(!CONTEXTS) {
