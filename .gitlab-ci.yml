@@ -186,6 +186,7 @@ test:psp-mips-gcc:
    - ln -s ../sample_data sample_data
    - PPSSPPSDL EBOOT.PBP
   artifacts:
+   when: always
    reports:
       junit: ${TARGET}/debug/report.xml
    paths:
