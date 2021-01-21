@@ -81,6 +81,16 @@ void Transformable::rotate_z_by(const smlt::Degrees& angle) {
     rotate_around(forward(), angle);
 }
 
+void Transformable::rotate_by(const smlt::Degrees& angle_x, const smlt::Degrees& angle_y, const smlt::Degrees& angle_z) {    
+    rotate_around(right(), angle_x);
+    rotate_around(up(), angle_y);
+    rotate_around(forward(), angle_z);
+}
+
+void Transformable::rotate_by(const smlt::Vec3& angles) {
+    rotate_by(Degrees(angles.x), Degrees(angles.y), Degrees(angles.z));
+}
+
 void Transformable::scale_x_by(const float scale) {
     set_scaling(Vec3(scaling_.x * scale, scaling_.y, scaling_.z));
 }
