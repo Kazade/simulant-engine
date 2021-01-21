@@ -52,6 +52,8 @@ public:
     virtual void rotate_x_by(const smlt::Degrees& angle);
     virtual void rotate_y_by(const smlt::Degrees& angle);
     virtual void rotate_z_by(const smlt::Degrees& angle);
+    virtual void rotate_by(const smlt::Degrees& angle_x, const smlt::Degrees& angle_y, const smlt::Degrees& angle_z);
+    virtual void rotate_by(const smlt::Vec3& angles);
 
     virtual void scale_x_by(const float scale);
     virtual void scale_y_by(const float scale);
