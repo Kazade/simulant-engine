@@ -111,6 +111,10 @@ bool Ray::intersects_sphere(const Vec3& center, const float radius, Vec3 *inters
  
     const Vec3 pos = start + (dir.normalized() * t0);
 
+    if(distance) {
+        *distance = t0;
+    }
+
     if(intersection) {
         *intersection = pos;
     }
@@ -118,7 +122,7 @@ bool Ray::intersects_sphere(const Vec3& center, const float radius, Vec3 *inters
     if(normal) {
         *normal = (pos - center).normalized();
     }
- 
+
     return true; 
 }
 
