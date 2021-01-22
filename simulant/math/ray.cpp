@@ -77,7 +77,7 @@ bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Ve
         }
 
         if(normal) {
-            *normal = e1.cross(e2);
+            *normal = e1.cross(e2).normalized(); //make sure the normal is in fact normalized
         }
 
         return true;
