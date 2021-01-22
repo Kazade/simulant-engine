@@ -25,6 +25,8 @@ struct Ray {
         const Vec3& v1, const Vec3& v2, const Vec3& v3,
         Vec3* intersection=nullptr, Vec3* normal=nullptr, float* distance=nullptr
     ) const;
+
+    bool intersects_sphere(const Vec3& center, const float radius, Vec3* intersection=nullptr, Vec3* normal = nullptr, float* distance=nullptr) const;
 };
 
 
