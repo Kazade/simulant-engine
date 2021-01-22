@@ -5,18 +5,18 @@ namespace smlt {
 
 bool Ray::intersects_aabb(const AABB &aabb) const {
     //http://gamedev.stackexchange.com/a/18459/15125
-    Vec3 rdir = this->dir.normalized();
-    Vec3 dirfrac(1.0f / rdir.x, 1.0f / rdir.y, 1.0f / rdir.z);
+    const Vec3 rdir = this->dir.normalized();
+    const Vec3 dirfrac(1.0f / rdir.x, 1.0f / rdir.y, 1.0f / rdir.z);
 
-    float t1 = (aabb.min().x - start.x) * dirfrac.x;
-    float t2 = (aabb.max().x - start.x) * dirfrac.x;
-    float t3 = (aabb.min().y - start.y) * dirfrac.y;
-    float t4 = (aabb.max().y - start.y) * dirfrac.y;
-    float t5 = (aabb.min().z - start.z) * dirfrac.z;
-    float t6 = (aabb.max().z - start.z) * dirfrac.z;
+    const float t1 = (aabb.min().x - start.x) * dirfrac.x;
+    const float t2 = (aabb.max().x - start.x) * dirfrac.x;
+    const float t3 = (aabb.min().y - start.y) * dirfrac.y;
+    const float t4 = (aabb.max().y - start.y) * dirfrac.y;
+    const float t5 = (aabb.min().z - start.z) * dirfrac.z;
+    const float t6 = (aabb.max().z - start.z) * dirfrac.z;
 
-    float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
-    float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
+    const float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
+    const float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
 
     // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behind us
     if(tmax < 0) {
@@ -67,7 +67,7 @@ bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Ve
     t = e2.dot(Q) * inv_det;
 
     if(t > EPSILON && t <= 1.0f) { //ray intersection
-        float dist = t * dir.length();
+        const float dist = t * dir.length();
         if(distance) {
             *distance = dist;
         }
@@ -86,5 +86,40 @@ bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Ve
     return false;
 }
 
+bool Ray::intersects_sphere(const Vec3& center, const float radius, Vec3 *intersection, Vec3 *normal, float *distance) const {
+    //based on https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
+    float t0, t1;
+    const float r2 = radius * radius;
+    const Vec3 L = center - start;
+
+    const float tca = L.dot(dir);
+    const float d2 = L.dot(L) - tca * tca;
+
+    if(d2 > r2) return false;
+
+    const float thc = sqrt(r2 - d2);
+    t0 = tca - thc;
+    t1 = tca + thc;
+
+    if (t0 > t1) 
+        std::swap(t0, t1); 
+ 
+    if (t0 < 0) { 
+        t0 = t1; // if t0 is negative, let's use t1 instead 
+        if (t0 < 0) return false; // both t0 and t1 are negative 
+    } 
+ 
+    const Vec3 pos = start + (dir.normalized() * t0);
+
+    if(intersection) {
+        *intersection = pos;
+    }
+
+    if(normal) {
+        *normal = (pos - center).normalized();
+    }
+ 
+    return true; 
+}
 
 }
