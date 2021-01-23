@@ -70,7 +70,7 @@ public:
         MeshID mesh,
         const Vec3& position=Vec3(),
         const Quaternion rotation=Quaternion(),
-        const Vec3& scale=Vec3(),
+        const Vec3& scale=Vec3(1, 1, 1),
         GeomCullerOptions culler_options=GeomCullerOptions()
     );
 
