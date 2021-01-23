@@ -34,6 +34,15 @@ public:
     static const Vec3 POSITIVE_Z;
     static const Vec3 NEGATIVE_Z;
 
+    static const Vec3 BACK;
+    static const Vec3 DOWN;
+    static const Vec3 FORWARD;
+    static const Vec3 LEFT;
+    static const Vec3 ONE; 
+    static const Vec3 RIGHT;
+    static const Vec3 UP;
+    static const Vec3 ZERO;
+
     float x;
     float y;
     float z;
