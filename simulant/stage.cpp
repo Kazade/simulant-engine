@@ -260,7 +260,7 @@ void Stage::destroy_all_cameras() {
 //=============== GEOMS =====================
 
 GeomPtr Stage::new_geom_with_mesh(MeshID mid, const GeomCullerOptions& culler_options) {
-    return new_geom_with_mesh_at_position(mid, smlt::Vec3(), smlt::Quaternion(), smlt::Vec3(), culler_options);
+    return new_geom_with_mesh_at_position(mid, smlt::Vec3(), smlt::Quaternion(), smlt::Vec3(1, 1, 1), culler_options);
 }
 
 GeomPtr Stage::geom(const GeomID gid) const {
