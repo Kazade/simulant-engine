@@ -20,13 +20,13 @@ bool GeomCuller::is_compiled() const {
     return compiled_;
 }
 
-void GeomCuller::compile(const Vec3 &pos, const Quaternion &rot) {
+void GeomCuller::compile(const Vec3 &pos, const Quaternion &rot, const Vec3& scale) {
     if(compiled_) {
         // You can only compile once!
         return;
     }
 
-    _compile(pos, rot); // Do whatever the subclass does
+    _compile(pos, rot, scale); // Do whatever the subclass does
     compiled_ = true;
 
     /* Grab references to materials before releasing the mesh */

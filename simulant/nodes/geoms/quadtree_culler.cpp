@@ -52,13 +52,13 @@ QuadtreeCuller::QuadtreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth
     index_type_ = type;
 }
 
-void QuadtreeCuller::_compile(const Vec3& pos, const Quaternion& rot) {
+void QuadtreeCuller::_compile(const Vec3& pos, const Quaternion& rot, const Vec3& scale) {
     auto data = std::make_shared<CullerTreeData>();
 
     data->vertices.reset(new VertexData(mesh_->vertex_data->vertex_specification()));
     mesh_->vertex_data->clone_into(*data->vertices);
 
-    Mat4 transform(rot, pos);
+    Mat4 transform(rot, pos, scale);
     data->vertices->transform_by(transform);
 
     AABB bounds(*data->vertices);

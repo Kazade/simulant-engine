@@ -70,6 +70,7 @@ public:
         MeshID mesh,
         const Vec3& position=Vec3(),
         const Quaternion rotation=Quaternion(),
+        const Vec3& scale=Vec3(),
         GeomCullerOptions culler_options=GeomCullerOptions()
     );
 
@@ -87,6 +88,7 @@ private:
     GeomCullerOptions culler_options_;
     Vec3 desired_transform;
     Quaternion desired_rotation;
+    Vec3 desired_scale;
 
     std::shared_ptr<GeomCuller> culler_;
 
