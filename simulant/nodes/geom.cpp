@@ -25,14 +25,15 @@
 
 namespace smlt {
 
-Geom::Geom(Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, GeomCullerOptions culler_options):
+Geom::Geom(Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, const Vec3 &scale, GeomCullerOptions culler_options):
     TypedDestroyableObject<Geom, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_GEOM),
     Source(stage, this, sound_driver),
     mesh_id_(mesh),
     culler_options_(culler_options),
     desired_transform(position),
-    desired_rotation(rotation) {
+    desired_rotation(rotation),
+    desired_scale(scale) {
 
     set_parent(stage);
 }
@@ -55,7 +56,7 @@ bool Geom::init() {
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    culler_->compile(desired_transform, desired_rotation);
+    culler_->compile(desired_transform, desired_rotation, desired_scale);
     return true;
 }
 

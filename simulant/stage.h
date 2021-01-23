@@ -125,6 +125,7 @@ public:
     GeomPtr new_geom_with_mesh_at_position(
         MeshID mid, const Vec3& position,
         const Quaternion& rotation=Quaternion(),
+        const Vec3& scale=Vec3(1, 1, 1),
         const GeomCullerOptions& culler_options=GeomCullerOptions()
     );
     GeomPtr geom(const GeomID gid) const;

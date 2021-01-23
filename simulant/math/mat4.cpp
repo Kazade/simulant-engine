@@ -28,12 +28,16 @@ Mat4::Mat4(const Quaternion &rhs) {
     m[15] = 1.0f;
 }
 
-Mat4::Mat4(const Quaternion& rot, const Vec3& trans):
+Mat4::Mat4(const Quaternion& rot, const Vec3& trans, const Vec3& scale):
     Mat4(rot) {
 
     m[12] = trans.x;
     m[13] = trans.y;
     m[14] = trans.z;
+
+    m[0] = scale.x;
+    m[5] = scale.y;
+    m[10] = scale.z;
 }
 
 

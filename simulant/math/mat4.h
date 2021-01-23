@@ -34,7 +34,7 @@ public:
     }
 
     Mat4(const Quaternion& rhs);
-    Mat4(const Quaternion& rot, const Vec3& trans);
+    Mat4(const Quaternion& rot, const Vec3& trans, const Vec3& scale);
 
     Mat4 operator*(const Mat4& rhs) const {
 

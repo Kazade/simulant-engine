@@ -17,7 +17,7 @@ public:
     AABB Quadtree_bounds() const;
 
 private:
-    void _compile(const Vec3 &pos, const Quaternion &rot) override;
+    void _compile(const Vec3 &pos, const Quaternion &rot, const Vec3 &scale) override;
     void _gather_renderables(const Frustum &frustum, batcher::RenderQueue* render_queue) override;
     void _all_renderables(batcher::RenderQueue* render_queue) override;
 

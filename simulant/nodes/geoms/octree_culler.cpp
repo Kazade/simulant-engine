@@ -52,7 +52,7 @@ OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth):
     index_type_ = type;
 }
 
-void OctreeCuller::_compile(const Vec3 &pos, const Quaternion &rot) {
+void OctreeCuller::_compile(const Vec3 &pos, const Quaternion &rot, const Vec3 &scale) {
     auto data = std::make_shared<CullerTreeData>();
 
     /* Copy the vertex data as the mesh will be released */
@@ -60,7 +60,7 @@ void OctreeCuller::_compile(const Vec3 &pos, const Quaternion &rot) {
     mesh_->vertex_data->clone_into(*data->vertices);
 
     /* Transform the vertices by the passed in transformation */
-    Mat4 transform(rot, pos);
+    Mat4 transform(rot, pos, scale);
     data->vertices->transform_by(transform);
 
     AABB bounds(*data->vertices);

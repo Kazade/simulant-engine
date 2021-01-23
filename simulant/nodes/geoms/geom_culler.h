@@ -36,7 +36,7 @@ public:
 
     bool is_compiled() const;
 
-    void compile(const Vec3& pos, const Quaternion& rot);
+    void compile(const Vec3& pos, const Quaternion& rot, const Vec3& scale);
     void renderables_visible(const Frustum& frustum, batcher::RenderQueue* render_queue);
 
     void each_renderable(EachRenderableCallback cb);
@@ -49,7 +49,7 @@ protected:
 private:
     bool compiled_ = false;
 
-    virtual void _compile(const Vec3& pos, const Quaternion& rot) = 0;
+    virtual void _compile(const Vec3& pos, const Quaternion& rot, const Vec3& scale) = 0;
     virtual void _gather_renderables(const Frustum& frustum, batcher::RenderQueue* render_queue) = 0;
     virtual void _all_renderables(batcher::RenderQueue* rendre_queue) = 0;
 

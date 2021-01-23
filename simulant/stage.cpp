@@ -260,17 +260,17 @@ void Stage::destroy_all_cameras() {
 //=============== GEOMS =====================
 
 GeomPtr Stage::new_geom_with_mesh(MeshID mid, const GeomCullerOptions& culler_options) {
-    return new_geom_with_mesh_at_position(mid, smlt::Vec3(), smlt::Quaternion(), culler_options);
+    return new_geom_with_mesh_at_position(mid, smlt::Vec3(), smlt::Quaternion(), smlt::Vec3(1, 1, 1), culler_options);
 }
 
 GeomPtr Stage::geom(const GeomID gid) const {
     return geom_manager_->get(gid);
 }
 
-GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation, const GeomCullerOptions& culler_options) {
+GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation, const Vec3& scale, const GeomCullerOptions& culler_options) {
     auto gid = geom_manager_->make(
         this, window->_sound_driver(),
-        mid, position, rotation,
+        mid, position, rotation, scale,
         culler_options
     );
     gid->set_parent(this);
