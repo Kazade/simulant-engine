@@ -313,7 +313,7 @@ bool SDL2Window::create_window() {
         L_DEBUG("Successfully loaded SDL controller mappings");
     }
 
-    int32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS;
+    int32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 
     if(renderer_->name() == "gl1x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
