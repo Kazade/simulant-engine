@@ -313,10 +313,7 @@ bool SDL2Window::create_window() {
         L_DEBUG("Successfully loaded SDL controller mappings");
     }
 
-    int32_t flags = SDL_WINDOW_OPENGL;
-    if(is_fullscreen()) {
-        flags |= SDL_WINDOW_FULLSCREEN;
-    }
+    int32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_BORDERLESS;
 
     if(renderer_->name() == "gl1x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
@@ -350,8 +347,8 @@ bool SDL2Window::create_window() {
 
     screen_ = SDL_CreateWindow(
         "",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
         width(), height(),
         flags
     );
@@ -361,42 +358,19 @@ bool SDL2Window::create_window() {
         throw std::runtime_error("FATAL: Unable to create SDL window");
     }
 
-    if(is_fullscreen()) {
-        SDL_DisplayMode requested, found;
-        requested.w = width();
-        requested.h = height();
-        requested.format = 0;
-        requested.refresh_rate = 0;
-        requested.driverdata = 0;
-
-        L_DEBUG(_F("Requesting: {0}, {1}").format(width(), height()));
-
-        SDL_GetClosestDisplayMode(0, &requested, &found);
-        if(SDL_SetWindowDisplayMode(screen_, &found) != 0) {
-            // If this fails, we log it, but continue on
-            // the dev can tell whether this succeeded by
-            // checking the window width/height is what they
-            // asked for
-            L_ERROR(std::string(SDL_GetError()));
-            L_ERROR("Failed to set display resolution!");
-
-            //Reset the width and height to whatever was actually created
-            int32_t width = 0, height = 0;
-            SDL_GetWindowSize(screen_, &width, &height);
-
-            set_width(width);
-            set_height(height);
-        } else {
-            L_DEBUG(_F("Successfully changed window resolution to: {0}, {1}").format(found.w, found.h));
-            set_width(found.w);
-            set_height(found.h);
-        }
-    }
-
     context_ = SDL_GL_CreateContext(screen_);
 
     if(!context_) {
         throw std::runtime_error("FATAL: Unable to create a GL context");
+    }
+
+    if(is_fullscreen()) {
+#ifdef __LINUX__
+        /* Linux doesn't deal with _FULLSCREEN_DESKTOP correctly */
+        SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN);
+#else
+        SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN_DESKTOP);
+#endif
     }
 
     SDL_SetEventFilter(event_filter, this);
