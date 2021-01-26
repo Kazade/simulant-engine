@@ -67,7 +67,7 @@ public:
 
     void test_vec3_rotation_to() {
         smlt::Vec3 v1(0, 1, 0);
-        smlt::Vec3 v2(0, 0, 1);
+        smlt::Vec3 v2(0, 0, -1);
         smlt::Vec3 v3(0, -1, 0);
 
         auto r1 = v1.rotation_to(v2);
