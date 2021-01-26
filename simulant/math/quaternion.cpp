@@ -29,17 +29,17 @@ Quaternion::Quaternion(const Degrees &pitch, const Degrees &yaw, const Degrees &
     const float ya = smlt::Radians(yaw).value * 0.5f;
     const float r = smlt::Radians(roll).value * 0.5f;
 
-    const float cp = std::cos(p);
-    const float sp = std::sin(p);
-    const float cy = std::cos(ya);
-    const float sy = std::sin(ya);
-    const float cr = std::cos(r);
-    const float sr = std::sin(r);
+    const float cp = std::sin(p);
+    const float sp = std::cos(p);
+    const float cy = std::sin(ya);
+    const float sy = std::cos(ya);
+    const float cr = std::sin(r);
+    const float sr = std::cos(r);
 
-    x = sp * cy * cr + cp * sy * sr;
-    y = cp * sy * cr - sp * cy * sr;
-    z = cp * cy * sr + sp * sy * cr;
-    w = cp * cy * cr - sp * sy * sr;
+    x = sp * cy * cr - cp * sy * sr;
+    y = cp * sy * cr + sp * cy * sr;
+    z = cp * cy * sr - sp * sy * cr;
+    w = cp * cy * cr + sp * sy * sr;
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
