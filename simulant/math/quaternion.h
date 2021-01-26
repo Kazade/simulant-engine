@@ -37,6 +37,10 @@ struct Quaternion {
     Quaternion(const Vec3& axis, const Degrees& degrees);
     Quaternion(const Mat3& rot_matrix);
 
+    Quaternion(const Euler& angles) : Quaternion(Degrees(angles.x), Degrees(angles.y), Degrees(angles.z)) {
+    
+    }
+
     Quaternion(float x, float y, float z, float w):
         x(x), y(y), z(z), w(w) {
 
