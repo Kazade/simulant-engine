@@ -41,8 +41,27 @@ struct Colour {
         return Colour(r * rhs, g * rhs, b * rhs, a * rhs);
     }
 
+    Colour operator*=(const float rhs) {
+        *this = *this * rhs;
+        return *this;
+    }
+
+    Colour operator-(const Colour& rhs) const {
+        return Colour(r - rhs.r, g - rhs.g, b - rhs.b, a - rhs.a);
+    }
+
+    Colour operator-=(const Colour& rhs) {
+        *this = *this - rhs;
+        return *this;
+    }
+
     Colour operator+(const Colour& rhs) const {
         return Colour(r + rhs.r, g + rhs.g, b + rhs.b, a + rhs.a);
+    }
+
+    Colour operator+=(const Colour& rhs) {
+        *this = *this + rhs;
+        return *this;
     }
 
     bool operator==(const Colour& rhs) const {
@@ -72,6 +91,9 @@ struct Colour {
 
         return false;
     }
+
+    
+    Colour lerp(const Colour& end, float t) const;
 
     std::string to_hex_string() const;
     static Colour from_hex_string(const std::string& hex_string);
@@ -218,7 +240,6 @@ struct Colour {
 };
 
 std::ostream& operator<<(std::ostream& stream, const Colour& c);
-
 }
 
 #endif // COLOUR_H

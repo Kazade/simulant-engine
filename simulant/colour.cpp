@@ -201,4 +201,12 @@ std::ostream& operator<<(std::ostream& stream, const Colour& c) {
     return stream;
 }
 
+Colour Colour::lerp(const Colour& end, float t) const {
+    t = std::min(t, 1.0f);
+    t = std::max(t, 0.0f);
+
+    return *this + ((end - *this) * t);
+}
+
+
 }
