@@ -29,6 +29,7 @@
 #include "renderers/renderer.h"
 #include "loader.h"
 #include "platform.h"
+#include "streams/file_ifstream.h"
 
 #ifdef __ANDROID__
 #include <SDL_rwops.h>
@@ -133,10 +134,13 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
 }
 
 
+
 std::shared_ptr<std::istream> VirtualFileSystem::open_file(const unicode& filename) {
     unicode path = locate_file(filename);
 
-    std::shared_ptr<std::ifstream> file_in = std::make_shared<std::ifstream>(path.encode(), std::ios::in | std::ios::binary);
+    auto buf = std::make_shared<FileStreamBuf>(path.encode(), "rb");
+    auto file_in = std::make_shared<FileIfstream>(buf);
+
     return file_in;
 }
 
@@ -165,17 +169,10 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& f
     }
     SDL_FreeRW(ops);
 #else
-    unicode path = locate_file(filename);
 
-    std::ifstream file_in(path.encode(), std::ios::in | std::ios::binary);
-
-    if(!file_in) {
-        L_ERROR(_F("Unable to load file: {0}").format(filename));
-        throw AssetMissingError("Unable to load file: " + filename.encode());
-    }
-
+    auto file_in = open_file(filename);
     std::shared_ptr<std::stringstream> result(new std::stringstream);
-    (*result) << file_in.rdbuf();
+    (*result) << file_in->rdbuf();
     return result;
 #endif
 }
@@ -185,7 +182,7 @@ std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filen
 
     // Load as binary and let portable_getline do its thing
     std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
-    
+
     if(!file_in) {
         L_ERROR(_F("Unable to load file: {0}").format(filename));
         throw AssetMissingError("Unable to load file: " + filename.encode());

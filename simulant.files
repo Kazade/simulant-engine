@@ -1614,6 +1614,8 @@ simulant/controllers/physics/collider.cpp
 simulant/controllers/physics/simulation.cpp
 simulant/controllers/physics/static_body.h
 simulant/controllers/physics/static_body.cpp
+simulant/streams/file_ifstream.cpp
+simulant/streams/file_ifstream.h
 tests/test_physics.h
 simulant/utils/mesh/triangulate.h
 simulant/utils/mesh/triangulate.cpp

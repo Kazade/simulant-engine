@@ -49,44 +49,65 @@ struct Header {
 
 #pragma pack(pop)
 
-TextureLoadResult PCXLoader::do_load(const std::vector<uint8_t> &buffer) {
+TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     TextureLoadResult result;
 
-    Header* header = (Header*)&buffer[0];
+    stream->seekg(0, std::ios::end);
+    int size = stream->tellg();
+    stream->seekg(0, std::ios::beg);
 
-    if(header->manufacturer != 0x0a) {
+    Header header;
+    stream->read((char*) &header, sizeof(Header));
+
+    if(header.manufacturer != 0x0a) {
         throw std::runtime_error("Unsupported PCX manufacturer");
     }
 
-    result.width = header->xmax - header->xmin + 1;
-    result.height = header->ymax - header->ymin + 1;
+    result.width = header.xmax - header.xmin + 1;
+    result.height = header.ymax - header.ymin + 1;
     result.channels = 3;
     result.format = TEXTURE_FORMAT_RGB888;
     result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
     result.data.resize(result.width * result.height * result.channels);
 
-    auto bitcount = header->bits_per_pixel * header->num_color_planes;
+    auto bitcount = header.bits_per_pixel * header.num_color_planes;
     if(bitcount != 8) {
         throw std::runtime_error("Unsupported PCX bitcount");
     }
 
-    uint8_t palette_marker = buffer[buffer.size() - 769];
+    stream->seekg(size - 769);
 
-    const uint8_t* palette = (palette_marker == 12) ? &buffer[buffer.size() - 768] : header->palette;
+    uint8_t palette_marker;
+    stream->read((char*) &palette_marker, sizeof(uint8_t));
+
+    const uint8_t* palette;
+
+    if(palette_marker == 12) {
+        palette = new uint8_t[768];
+        stream->seekg(size - 768);
+        stream->read((char*) &palette[0], sizeof(uint8_t) * 768);
+    } else {
+        palette = header.palette;
+    }
 
     int32_t rle_count = 0;
     int32_t rle_value = 0;
 
-    const uint8_t* image_data = &buffer[128];
+    stream->seekg(128);
+
+    uint8_t image_data;
+    stream->read((char*) &image_data, sizeof(uint8_t));
 
     for(uint32_t idx = 0; idx < (result.width * result.height * result.channels); idx += result.channels) {
+
         if(rle_count == 0) {
-            rle_value = *image_data;
-            ++image_data;
+            rle_value = image_data;
+            stream->read((char*) &image_data, sizeof(uint8_t));
+
             if((rle_value & 0xc0) == 0xc0) {
                 rle_count = rle_value & 0x3f;
-                rle_value = *image_data;
-                ++image_data;
+                rle_value = image_data;
+                stream->read((char*) &image_data, sizeof(uint8_t));
             } else {
                 rle_count = 1;
             }
@@ -99,6 +120,10 @@ TextureLoadResult PCXLoader::do_load(const std::vector<uint8_t> &buffer) {
         result.data[idx + 0] = palette[(rle_value * 3) + 0];
         result.data[idx + 1] = palette[(rle_value * 3) + 1];
         result.data[idx + 2] = palette[(rle_value * 3) + 2];
+    }
+
+    if(palette != header.palette) {
+        delete [] palette;
     }
 
     return result;

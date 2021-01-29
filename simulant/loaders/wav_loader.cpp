@@ -69,7 +69,12 @@ static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
 
     data.resize(len);
     stream->read((char*) &data[0], len);
-    sound->set_data(data);
+
+    auto ss = std::make_shared<std::stringstream>();
+    ss->write((char*) &data[0], len);
+    ss->seekg(0);
+
+    sound->set_input_stream(ss);
     return true;
 }
 
@@ -117,23 +122,29 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         data_->seekg(offset + size);
     }
 
-    auto& data = sound->data();
-    auto data_size = data.size();
     auto format = sound->format();
 
     if(format == AUDIO_DATA_FORMAT_MONO24 || format == AUDIO_DATA_FORMAT_STEREO24) {
-        // Downsample to 16 bit
+        // Downsample to 16 bit. We create a new stringstream to replace the old one.
         std::vector<uint8_t> new_data;
-        new_data.reserve((data_size / 3) * 2);
+        auto stream = sound->input_stream();
+        stream->seekg(0, std::ios_base::beg);
 
-        for(uint32_t i = 0; i < data_size; i += 3) {
-            uint8_t* sample = &data[i];
+        for(auto i = 0u; i < sound->stream_length() / 3; ++i) {
+            uint8_t sample;
+            stream->read((char*) &sample, 1); // Skip least significant
+            stream->read((char*) &sample, 1);
+            new_data.push_back(sample);
 
-            sample++; // Skip least significant
-            new_data.push_back(*(sample++));
-            new_data.push_back(*(sample++));
+            stream->read((char*) &sample, 1);
+            new_data.push_back(sample);
         }
-        sound->set_data(new_data);
+
+        auto new_ss = std::make_shared<std::stringstream>();
+        new_ss->write((char*) &new_data[0], new_data.size());
+        new_ss->seekg(0, std::ios_base::beg);
+
+        sound->set_input_stream(new_ss);
         sound->set_format((format == AUDIO_DATA_FORMAT_MONO24) ? AUDIO_DATA_FORMAT_MONO16 : AUDIO_DATA_FORMAT_STEREO16);
     }
 
@@ -155,9 +166,9 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
             auto sound = wptr.lock();
 
             if(sound) {
-                auto& data = sound->data();
+                auto& stream = sound->input_stream();
                 const uint32_t buffer_size = sound->buffer_size();
-                const uint32_t remaining_in_bytes = data.size() - state->offset;
+                const uint32_t remaining_in_bytes = sound->stream_length() - state->offset;
 
                 assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
 
@@ -165,11 +176,12 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
                 if(remaining_in_bytes == 0) {
                     return 0;
                 } else if(remaining_in_bytes < buffer_size) {
-                    buffer.assign(data.begin() + state->offset, data.end());
+                    buffer.resize(remaining_in_bytes);
+                    stream->read((char*) &buffer[0], remaining_in_bytes);
                     state->offset += buffer.size();
                 } else {
-                    auto it = data.begin() + state->offset;
-                    buffer.assign(it, it + buffer_size);
+                    buffer.resize(buffer_size);
+                    stream->read((char*) &buffer[0], buffer_size);
                     state->offset += buffer_size;
                 }
 

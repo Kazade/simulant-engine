@@ -67,12 +67,15 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
     assert(tex && "You passed a Resource that is not a texture to the texture loader");
 
-    std::vector<unsigned char> buffer(
-        (std::istreambuf_iterator<char>(*this->data_)),
-        std::istreambuf_iterator<char>()
+    assert(data_);
+
+    std::shared_ptr<FileIfstream> ifstream = std::dynamic_pointer_cast<FileIfstream>(
+        data_
     );
 
-    auto result = do_load(buffer);
+    assert(ifstream);
+
+    auto result = do_load(ifstream);
 
     /* Respect the auto_upload option if it exists*/
     bool auto_upload = true;

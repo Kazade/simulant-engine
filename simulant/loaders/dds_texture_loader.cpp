@@ -4,8 +4,8 @@
 namespace smlt {
 namespace loaders {
 
-TextureLoadResult DDSTextureLoader::do_load(const std::vector<uint8_t> &buffer) {
-    _S_UNUSED(buffer);
+TextureLoadResult DDSTextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
+    _S_UNUSED(stream);
     throw std::logic_error("Not yet implemented");
 }
 

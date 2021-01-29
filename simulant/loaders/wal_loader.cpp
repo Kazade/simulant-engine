@@ -80,21 +80,21 @@ const uint8_t PALETTE[768] = {
     87, 159, 91, 83
 };
 
-TextureLoadResult WALLoader::do_load(const std::vector<uint8_t> &buffer) {
+TextureLoadResult WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     TextureLoadResult result;
 
     // The file starts with the header, so we can just cast directly to a pointer
     // and read the memory directly
-    Header* header = (Header*)&buffer[0];
+    Header header;
+    stream->read((char*) &header, sizeof(Header));
 
-    result.width = header->width;
-    result.height = header->height;
+    result.width = header.width;
+    result.height = header.height;
     result.channels = 4;
     result.format = TEXTURE_FORMAT_RGBA8888;
     result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
 
-    uint8_t* data = (uint8_t*) &buffer[0];
-    data += header->offset[0];
+    stream->seekg(header.offset[0]);
 
     result.data.resize(result.width * result.height * 4);
 
@@ -102,7 +102,9 @@ TextureLoadResult WALLoader::do_load(const std::vector<uint8_t> &buffer) {
 
     uint32_t j = 0;
     for(uint32_t i = 0; i < result.width * result.height; ++i) {
-        auto idx = data[i] * 3;
+        uint8_t pidx;
+        stream->read((char*) &pidx, sizeof(uint8_t));
+        auto idx = pidx * 3;
         out[j++] = PALETTE[idx];
         out[j++] = PALETTE[idx+1];
         out[j++] = PALETTE[idx+2];
