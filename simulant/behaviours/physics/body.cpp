@@ -3,10 +3,11 @@
 #include "simulation.h"
 #include "collision_listener.h"
 
+#include "bounce/bounce.h"
+
 #include "../../nodes/stage_node.h"
 #include "../../nodes/actor.h"
 #include "../../time_keeper.h"
-#include "../../deps/bounce/bounce.h"
 #include "../../stage.h"
 
 namespace smlt {
@@ -151,7 +152,7 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     b3Quat q;
     to_b3vec3(offset, p);
     to_b3quat(rotation, q);
-    b3Transform tx(q, p);
+    b3Transform tx(p, q);
 
     // Apply scaling
     tx.rotation[0][0] = size.x * 0.5f;
@@ -159,7 +160,7 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     tx.rotation[2][2] = size.z * 0.5f;
 
     auto def = std::make_shared<b3BoxHull>();
-    def->Set(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f);
+    def->SetExtents(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f);
     def->SetTransform(tx);
     hulls_.push_back(def);
 
