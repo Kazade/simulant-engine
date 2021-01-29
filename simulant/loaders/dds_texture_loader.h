@@ -16,7 +16,7 @@ public:
         BaseTextureLoader(filename, data) {}
 
 private:
-    TextureLoadResult do_load(const std::vector<uint8_t> &buffer) override;
+    TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) override;
 };
 
 class DDSTextureLoaderType : public LoaderType {

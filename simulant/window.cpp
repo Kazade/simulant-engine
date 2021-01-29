@@ -129,7 +129,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
             L_DEBUG(_F("Found possible loader: {0}").format(loader_type->name()));
-            auto new_loader = loader_type->loader_for(final_file, vfs->read_file(final_file));
+            auto new_loader = loader_type->loader_for(final_file, vfs->open_file(final_file));
             new_loader->set_vfs(this->vfs_.get());
 
             possible_loaders.push_back(

@@ -34,15 +34,14 @@
 namespace smlt {
 namespace loaders {
 
-TextureLoadResult TextureLoader::do_load(const std::vector<uint8_t> &buffer) {
+TextureLoadResult TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     thread::Lock<thread::Mutex> g(lock_); // STB isn't entirely thread-safe
 
     TextureLoadResult result;
 
     int width, height, channels;
-    unsigned char* data = stbi_load_from_memory(
-        &buffer[0],
-        buffer.size(),
+    unsigned char* data = stbi_load_from_file(
+        stream->file(),
         &width,
         &height,
         &channels,

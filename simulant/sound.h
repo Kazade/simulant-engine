@@ -62,8 +62,21 @@ public:
     uint8_t channels() const { return channels_; }
     void set_channels(uint8_t ch) { channels_ = ch; }
 
-    std::vector<uint8_t>& data() { return sound_data_; }
-    void set_data(const std::vector<uint8_t>& data) { sound_data_ = data; }
+    std::shared_ptr<std::istream>& input_stream() { return sound_data_; }
+    void set_input_stream(std::shared_ptr<std::istream> stream) {
+        sound_data_ = stream;
+
+        /* Calculate the length (remaining from wherever the stream is) */
+        int pos = stream->tellg();
+        stream->seekg(0, std::ios_base::end);
+        int end = stream->tellg();
+        stream->seekg(pos, std::ios_base::beg);
+        stream_length_ = end - pos;
+    }
+
+    std::size_t stream_length() const {
+        return stream_length_;
+    }
 
     void set_source_init_function(std::function<void (SourceInstance&)> func) { init_source_ = func; }
 
@@ -74,12 +87,13 @@ private:
     std::function<void (SourceInstance&)> init_source_;
 
     SoundDriver* driver_ = nullptr;
-    std::vector<uint8_t> sound_data_;
+    std::shared_ptr<std::istream> sound_data_;
 
     uint32_t sample_rate_ = 0;
     AudioDataFormat format_;
     uint8_t channels_ = 0;
     std::size_t buffer_size_ = 0;
+    std::size_t stream_length_ = 0;
 
     friend class Source;
     friend class SourceInstance;

@@ -233,3 +233,4 @@ simulant/coroutines
 simulant/platforms/psp
 conf
 deps/pspgl
+simulant/streams

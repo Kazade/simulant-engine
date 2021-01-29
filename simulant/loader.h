@@ -29,7 +29,7 @@
 #include "deps/kfs/kfs.h"
 
 #include "loadable.h"
-
+#include "streams/file_ifstream.h"
 #include "generic/property.h"
 #include "generic/any/any.h"
 #include "types.h"
@@ -148,7 +148,7 @@ public:
 
 private:
     virtual bool format_stored_upside_down() const { return true; }
-    virtual TextureLoadResult do_load(const std::vector<uint8_t>& buffer) = 0;
+    virtual TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) = 0;
 };
 
 }

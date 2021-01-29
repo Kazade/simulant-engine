@@ -26,6 +26,8 @@
 namespace smlt {
 namespace loaders {
 
+/* FIXME: This could be smart pointer with
+ * a custom deleter */
 class StreamWrapper {
 public:
     typedef std::shared_ptr<StreamWrapper> ptr;
@@ -88,7 +90,9 @@ static void init_source(Sound* self, SourceInstance& source) {
      *  data on the Source, well, not explicitly.
      */
 
-    StreamWrapper::ptr stream(new StreamWrapper(stb_vorbis_open_memory(&self->data()[0], self->data().size(), nullptr, nullptr)));
+    auto fstream = std::dynamic_pointer_cast<FileIfstream>(self->input_stream());
+    auto stb = stb_vorbis_open_file(fstream->file(), 0, nullptr, nullptr);
+    StreamWrapper::ptr stream(new StreamWrapper(stb));
 
     /* Using a weak_ptr is important, otherwise the shared_ptr will be bound to the function
      * object even though the argument is a weak_ptr */
@@ -102,21 +106,31 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");
 
-    std::vector<uint8_t> data((std::istreambuf_iterator<char>(*this->data_)),
-                              std::istreambuf_iterator<char>());
+    auto fstream = std::dynamic_pointer_cast<FileIfstream>(
+        data_
+    );
 
-    L_DEBUG(_F("Stream size: {0}").format(data.size()));
-    StreamWrapper stream(stb_vorbis_open_memory(&data[0], data.size(),nullptr, nullptr));
+    int error = 0;
 
-    if(!stream.get()) {
+    auto stb_stream = stb_vorbis_open_file(
+        fstream->file(),
+        0,
+        &error, nullptr
+    );
+
+    if(!stb_stream) {
+        L_ERROR("Unable to load the OGG file");
         throw std::runtime_error("Unable to load the OGG file");
     }
 
-    stb_vorbis_info info = stb_vorbis_get_info(stream.get());
+    stb_vorbis_info info = stb_vorbis_get_info(stb_stream);
+
+    // Rewind
+    fstream->seekg(0);
 
     sound->set_sample_rate(info.sample_rate);
     sound->set_buffer_size(4096 * 8);
-    sound->set_data(data);
+    sound->set_input_stream(fstream);
     sound->set_channels(info.channels);
     sound->set_format((info.channels == 2) ? AUDIO_DATA_FORMAT_STEREO16 : AUDIO_DATA_FORMAT_MONO16);
     sound->set_source_init_function(std::bind(&init_source, sound, std::placeholders::_1));

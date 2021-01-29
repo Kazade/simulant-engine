@@ -35,7 +35,7 @@ public:
 
 private:
     bool format_stored_upside_down() const { return false; }
-    TextureLoadResult do_load(const std::vector<uint8_t> &buffer) override;
+    TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) override;
 };
 
 class WALLoaderType : public LoaderType {
