@@ -5,7 +5,6 @@ FILE(GLOB_RECURSE TO_REMOVE
     "platforms/*"  # Remove platform specific additions
     "renderers/glad/*"
     "renderers/gl2x/*"
-    "deps/SOIL/original/*"
     "sdl2_window.*"
     "kos_window.*"
     "sound_drivers/*"
@@ -169,11 +168,8 @@ INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING
 
 SET(DEPS
     "jsonic"
-    "kazsignal"
     "kfs"
-    "SOIL"
     "tinyxml"
-    "stb_truetype"
 )
 
 FOREACH(DEP ${DEPS})

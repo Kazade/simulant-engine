@@ -156,12 +156,12 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
 
     // Apply scaling
     b3Vec3 s;
-    s.x = size.x * 0.5f;
-    s.y = size.y * 0.5f;
-    s.z = size.z * 0.5f;
+    s.x = s.y = s.z = 1.0f;
 
-    auto def = std::make_shared<b3BoxHull>();
-    def->SetExtents(size.x * 0.5f, size.y * 0.5f, size.z * 0.5f);
+    auto def = std::make_shared<b3BoxHull>(
+        size.x * 0.5f, size.y * 0.5f, size.z * 0.5f
+    );
+
     def->Transform(tx, s);
     hulls_.push_back(def);
 
