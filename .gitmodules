@@ -6,7 +6,7 @@
 	url = https://github.com/Kazade/kfs.git
 [submodule "deps/bounce"]
 	path = deps/bounce
-	url = https://github.com/Kazade/bounce.git
+	url = https://gitlab.com/simulant/bounce.git
 [submodule "assets"]
 	path = assets
 	url = https://gitlab.com/simulant/simulant-assets.git

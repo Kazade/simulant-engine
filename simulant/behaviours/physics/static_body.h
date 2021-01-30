@@ -33,7 +33,7 @@ private:
     class b3MeshGenerator {
     private:
         std::vector<b3Vec3> vertices_;
-        std::vector<b3Triangle> triangles_;
+        std::vector<b3MeshTriangle> triangles_;
 
         std::shared_ptr<b3Mesh> mesh_;
 

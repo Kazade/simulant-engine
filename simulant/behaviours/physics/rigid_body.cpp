@@ -17,11 +17,13 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "bounce/bounce.h"
+
 #include "rigid_body.h"
 #include "simulation.h"
 #include "../../nodes/actor.h"
 #include "../../stage.h"
-#include "../../deps/bounce/bounce.h"
+
 
 // These are just to keep Bounce happy
 bool b3PushProfileScope(char const*) { return false; }
@@ -62,7 +64,13 @@ void RigidBody::set_linear_damping(const float d) {
     }
 
     b3Body* b = sim->bodies_.at(this);
-    b->SetLinearDamping(d);
+
+    b3Vec3 v;
+    v.x = d;
+    v.y = d;
+    v.z = d;
+
+    b->SetLinearDamping(v);
 }
 
 void RigidBody::set_angular_damping(const float d) {
@@ -72,7 +80,11 @@ void RigidBody::set_angular_damping(const float d) {
     }
 
     b3Body* b = sim->bodies_.at(this);
-    b->SetAngularDamping(d);
+
+    b3Vec3 v;
+    v.x = v.y = v.z = d;
+
+    b->SetAngularDamping(v);
 }
 
 void RigidBody::add_force(const Vec3 &force) {
