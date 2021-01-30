@@ -10,12 +10,17 @@ namespace smlt {
 #define SCREEN_HEIGHT 272
 #define SCREEN_DEPTH 32
 
+const PSPWindow::PSPPlatform PSPWindow::platform;
 
 PSPWindow::PSPWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled):
     Window(
         width ? std::min(width, (uint32_t) SCREEN_WIDTH) : SCREEN_WIDTH,
         height ? std::min(height, (uint32_t) SCREEN_HEIGHT) : SCREEN_HEIGHT,
-        bpp ? bpp : SCREEN_DEPTH, true, true) {
+        bpp ? bpp : SCREEN_DEPTH, true, true
+    ) {
+
+    _S_UNUSED(fullscreen);
+    _S_UNUSED(vsync_enabled);
 
     platform_.reset(new PSPPlatform);
 }

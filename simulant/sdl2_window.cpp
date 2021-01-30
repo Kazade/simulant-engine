@@ -33,6 +33,8 @@ static const std::string SDL_CONTROLLER_DB =
 
 namespace smlt {
 
+const SDL2Window::SDLPlatform SDL2Window::platform;
+
 SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync):
     Window(width, height, bpp, fullscreen, enable_vsync) {
 

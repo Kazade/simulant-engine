@@ -34,9 +34,7 @@ namespace smlt {
 
 int event_filter(void* user_data, SDL_Event* event);
 
-class SDL2Window :
-    public Window {
-
+class SDL2Window : public Window {
 
     class SDLPlatform : public Platform {
     public:
@@ -53,10 +51,30 @@ class SDL2Window :
     #error Currently unsupported platform
 #endif
         }
+
+        Resolution native_resolution() const override {
+            SDL_DisplayMode mode;
+
+            Resolution native;
+            if(SDL_GetDesktopDisplayMode(0, &mode) == -1) {
+                L_WARN("Unable to get the current desktop display mode!!");
+                L_WARN("Falling back to 1080p");
+                native.width = 1920;
+                native.height = 1080;
+                native.refresh_rate = 60;
+            } else {
+                native.width = mode.w;
+                native.height = mode.h;
+                native.refresh_rate = mode.refresh_rate;
+            }
+            return native;
+        }
     };
 
 
 public:
+    static const SDLPlatform platform;
+
     static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
         return Window::create<SDL2Window>(app, width, height, bpp, fullscreen, enable_vsync);
     }

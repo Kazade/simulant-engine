@@ -10,10 +10,22 @@ namespace smlt {
 class PSPWindow : public Window {
     class PSPPlatform : public Platform {
     public:
-        std::string name() const override { return "psp"; }
+        std::string name() const override {
+            return "psp";
+        }
+
+        Resolution native_resolution() const override {
+            Resolution native;
+            native.width = 480;
+            native.height = 272;
+            native.refresh_rate = 60; // FIXME?
+            return native;
+        }
     };
 
 public:
+    const static PSPPlatform platform;
+
     static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
         return Window::create<PSPWindow>(app, width, height, bpp, fullscreen, enable_vsync);
     }

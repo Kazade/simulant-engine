@@ -14,10 +14,22 @@ namespace smlt {
 class KOSWindow : public Window {
     class DreamcastPlatform : public Platform {
     public:
-        std::string name() const override { return "dreamcast"; }
+        std::string name() const override {
+            return "dreamcast";
+        }
+
+        Resolution native_resolution() const override {
+            Resolution native;
+            native.width = 640;
+            native.height = 480;
+            native.refresh_rate = 60;
+            return native;
+        }
     };
 
 public:
+    static const DreamcastPlatform platform;
+
     static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
         return Window::create<KOSWindow>(app, width, height, bpp, fullscreen, enable_vsync);
     }
@@ -25,7 +37,7 @@ public:
     KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled);
 
     void set_title(const std::string&) override {} // No-op
-    void cursor_position(int32_t &mouse_x, int32_t &mouse_y) override {} // No-op
+    void cursor_position(int32_t&, int32_t&) override {} // No-op
     void show_cursor(bool) override {} // No-op
     void lock_cursor(bool) override {} // No-op
 
