@@ -111,8 +111,14 @@ void Application::construct_window(const AppConfig& config) {
 
     /* Fallback. If fullscreen is disabled and there is no width
      * or height, then default to 640x480 */
-    if(config_copy.width == 0 && config_copy.height == 0) {
-        if(!config_copy.fullscreen) {
+    if(config_copy.width == 0 || config_copy.height == 0) {
+        if(config_copy.fullscreen) {
+            /* Use the native resolution */
+            Resolution native = SysWindow::platform.native_resolution();
+            config_copy.width = native.width;
+            config_copy.height = native.height;
+        } else {
+            /* Default window size is the same as DC screen size */
             config_copy.width = 640;
             config_copy.height = 480;
         }
