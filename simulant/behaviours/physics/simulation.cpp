@@ -203,7 +203,15 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
     to_b3vec3(start, s);
     to_b3vec3(start + direction, d);
 
-    bool hit = scene_->RayCastSingle(&result, s, d);
+    struct AlwaysCast : public b3RayCastFilter {
+        bool ShouldRayCast(b3Shape*) {
+            return true;
+        }
+    };
+
+    AlwaysCast filter;
+
+    bool hit = scene_->RayCastSingle(&result, &filter, s, d);
 
     float closest = std::numeric_limits<float>::max();
     Vec3 impact_point, closest_normal;
