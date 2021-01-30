@@ -212,6 +212,7 @@ build_for_android.py
 cmake_modules/FindSDL2.cmake
 cmake_modules/FindSIMULANT.cmake
 conf/psp_module_info.cpp.in
+deps/bounce/src/bounce/dynamics/world.cpp
 deps/libgl/GL/clip.c
 deps/libgl/GL/draw.c
 deps/libgl/GL/error.c
