@@ -76,11 +76,11 @@ class SDL2Window : public Window {
 public:
     static const SDLPlatform platform;
 
-    static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
-        return Window::create<SDL2Window>(app, width, height, bpp, fullscreen, enable_vsync);
+    static Window::ptr create(Application* app) {
+        return Window::create<SDL2Window>(app);
     }
 
-    SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync);
+    SDL2Window();
     virtual ~SDL2Window();
 
     void set_title(const std::string& title) override;
@@ -89,10 +89,12 @@ public:
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y) override;
 
 private:
+    bool _init_window() override;
+    bool _init_renderer(Renderer* renderer) override;
+
     SDL_Window* screen_;
     SDL_GLContext context_;
 
-    bool create_window() override;
     void destroy_window() override;
 
     void check_events() override;

@@ -109,6 +109,8 @@ void Application::construct_window(const AppConfig& config) {
 
     L_DEBUG("Constructing the window");
 
+    window_ = SysWindow::create(this);
+
     /* Fallback. If fullscreen is disabled and there is no width
      * or height, then default to 640x480 */
     if(config_copy.width == 0 || config_copy.height == 0) {
@@ -124,16 +126,13 @@ void Application::construct_window(const AppConfig& config) {
         }
     }
 
-    window_ = SysWindow::create(
-        this,
-        config_copy.width,
-        config_copy.height,
-        config_copy.bpp,
-        config_copy.fullscreen,
-        config_copy.enable_vsync
-    );
-
-    if(!window_) {
+    if(!window_->create_window(
+       config_copy.width,
+       config_copy.height,
+       config_copy.bpp,
+       config_copy.fullscreen,
+       config_copy.enable_vsync)
+    ) {
         L_ERROR("[FATAL] There was an error creating the window");
         return;
     }
@@ -170,7 +169,7 @@ void Application::construct_window(const AppConfig& config) {
 
     L_DEBUG("Search paths added successfully");
 
-    if(!window_->_init()) {
+    if(!window_->initialize_assets_and_devices()) {
         throw InstanceInitializationError("Unable to create window");
     }
 

@@ -30,11 +30,11 @@ class KOSWindow : public Window {
 public:
     static const DreamcastPlatform platform;
 
-    static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
-        return Window::create<KOSWindow>(app, width, height, bpp, fullscreen, enable_vsync);
+    static Window::ptr create(Application* app) {
+        return Window::create<KOSWindow>(app);
     }
 
-    KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled);
+    KOSWindow();
 
     void set_title(const std::string&) override {} // No-op
     void cursor_position(int32_t&, int32_t&) override {} // No-op
@@ -42,7 +42,6 @@ public:
     void lock_cursor(bool) override {} // No-op
 
     void swap_buffers() override;
-    bool create_window() override;
     void destroy_window() override;
     void check_events() override;
 
@@ -51,6 +50,9 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
+    bool _init_window() override;
+    bool _init_renderer(Renderer* renderer) override;
+
     void probe_vmus();
 
     void render_screen(Screen* screen, const uint8_t* data) override;

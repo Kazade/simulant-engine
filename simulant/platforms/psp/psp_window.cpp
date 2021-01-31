@@ -12,16 +12,7 @@ namespace smlt {
 
 const PSPWindow::PSPPlatform PSPWindow::platform;
 
-PSPWindow::PSPWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled):
-    Window(
-        width ? std::min(width, (uint32_t) SCREEN_WIDTH) : SCREEN_WIDTH,
-        height ? std::min(height, (uint32_t) SCREEN_HEIGHT) : SCREEN_HEIGHT,
-        bpp ? bpp : SCREEN_DEPTH, true, true
-    ) {
-
-    _S_UNUSED(fullscreen);
-    _S_UNUSED(vsync_enabled);
-
+PSPWindow::PSPWindow() {
     platform_.reset(new PSPPlatform);
 }
 
@@ -38,7 +29,7 @@ static const EGLint attrib_list [] = {
     EGL_NONE
 };
 
-bool PSPWindow::create_window() {
+bool PSPWindow::_init_window() {
     dpy_ = eglGetDisplay(0);
     eglInitialize(dpy_, NULL, NULL);
 
@@ -54,11 +45,13 @@ bool PSPWindow::create_window() {
     ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
     surface_ = eglCreateWindowSurface(dpy_, config, 0, NULL);
     eglMakeCurrent(dpy_, surface_, surface_, ctx_);
+    return true;
+}
 
-    renderer_ = new_renderer(this, "gl1x");
+bool PSPWindow::_init_renderer(Renderer *renderer) {
+    _S_UNUSED(renderer);
+
     set_has_context(true); //Mark that we have a valid GL context
-    renderer_->init_context();
-
     return true;
 }
 
