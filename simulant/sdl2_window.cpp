@@ -37,6 +37,19 @@ const SDL2Window::SDLPlatform SDL2Window::platform;
 
 SDL2Window::SDL2Window() {
     platform_.reset(new SDLPlatform);
+
+    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
+
+    if(SDL_Init(default_flags) != 0) {
+        L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
+        FATAL_ERROR(ERROR_CODE_SDL_INIT_FAILED, "Failed to initialize SDL");
+    }
+
+    /* Some platforms don't ship SDL compiled with haptic support, so try it, but don't
+     * die if it's not there! */
+    if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
+        L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
+    }
 }
 
 SDL2Window::~SDL2Window() {
@@ -292,19 +305,6 @@ std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver(const std::string& 
 }
 
 bool SDL2Window::_init_window() {
-    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
-
-    if(SDL_Init(default_flags) != 0) {
-        L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
-        return false;
-    }
-
-    /* Some platforms don't ship SDL compiled with haptic support, so try it, but don't
-     * die if it's not there! */
-    if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
-        L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
-    }
-
     /* Load the game controller mappings */
     auto rw_ops = SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
     if(SDL_GameControllerAddMappingsFromRW(rw_ops, 0) < 0) {
