@@ -58,6 +58,7 @@ class SDL2Window : public Window {
             Resolution native;
             if(SDL_GetDesktopDisplayMode(0, &mode) == -1) {
                 L_WARN("Unable to get the current desktop display mode!!");
+                L_WARN(_F("{0}").format(SDL_GetError()));
                 L_WARN("Falling back to 1080p");
                 native.width = 1920;
                 native.height = 1080;
