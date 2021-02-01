@@ -109,15 +109,22 @@ public:
     typedef std::shared_ptr<Window> ptr;
     static const int STEPS_PER_SECOND = 60;
 
-
     template<typename T>
-    static std::shared_ptr<Window> create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
-        std::shared_ptr<Window> window(new T(width, height, bpp, fullscreen, enable_vsync));
+    static std::shared_ptr<Window> create(Application* app) {
+        auto window = std::make_shared<T>();
         window->set_application(app);
         return window;
     }
 
     virtual ~Window();
+
+    virtual bool create_window(
+        uint16_t width,
+        uint16_t height,
+        uint8_t bpp,
+        bool fullscreen,
+        bool enable_vsync
+    );
 
     LoaderPtr loader_for(const unicode& filename, LoaderHint hint=LOADER_HINT_NONE);
     LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
@@ -204,13 +211,13 @@ public:
     void _fixed_update_thunk(float dt) override;
     void _update_thunk(float dt) override;
 
-    /* Must be called directly after Window construction, it creates the window itself. The reason this
-     * isn't done in create() or the constructor is that _init also sets up the default resources etc. and doesn't
-     * allow a window of opportunity to manipulate the Window instance before creating the window.
-     *
-     * FIXME: This is dirty and hacky and should be fixed.
-     */
-    bool _init();
+    /* Creates the window, but doesn't do any context initialisation */
+    virtual bool _init_window() = 0;
+
+    /* Initialises any renderer context */
+    virtual bool _init_renderer(Renderer* renderer) = 0;
+
+    bool initialize_assets_and_devices();
     void _clean_up();
 
     /* Audio listener stuff */
@@ -267,10 +274,9 @@ protected:
         fullscreen_ = val;
     }
 
-    virtual bool create_window() = 0;
     virtual void destroy_window() = 0;
 
-    Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync);
+    Window();
 
     void set_paused(bool value=true);
     void set_has_context(bool value=true);

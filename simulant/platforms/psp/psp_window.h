@@ -26,11 +26,11 @@ class PSPWindow : public Window {
 public:
     const static PSPPlatform platform;
 
-    static Window::ptr create(Application* app, int width, int height, int bpp, bool fullscreen, bool enable_vsync) {
-        return Window::create<PSPWindow>(app, width, height, bpp, fullscreen, enable_vsync);
+    static Window::ptr create(Application* app) {
+        return Window::create<PSPWindow>(app);
     }
 
-    PSPWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled);
+    PSPWindow();
 
     void set_title(const std::string&) override {} // No-op
     void cursor_position(int32_t&, int32_t&) override {} // No-op
@@ -38,7 +38,6 @@ public:
     void lock_cursor(bool) override {} // No-op
 
     void swap_buffers() override;
-    bool create_window() override;
     void destroy_window() override;
     void check_events() override;
 
@@ -52,6 +51,9 @@ private:
     EGLContext ctx_;
 
     void render_screen(Screen*, const uint8_t*) override {}
+
+    bool _init_window() override;
+    bool _init_renderer(Renderer *renderer);
 };
 
 }

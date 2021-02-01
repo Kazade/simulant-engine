@@ -35,10 +35,21 @@ namespace smlt {
 
 const SDL2Window::SDLPlatform SDL2Window::platform;
 
-SDL2Window::SDL2Window(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool enable_vsync):
-    Window(width, height, bpp, fullscreen, enable_vsync) {
-
+SDL2Window::SDL2Window() {
     platform_.reset(new SDLPlatform);
+
+    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
+
+    if(SDL_Init(default_flags) != 0) {
+        L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
+        FATAL_ERROR(ERROR_CODE_SDL_INIT_FAILED, "Failed to initialize SDL");
+    }
+
+    /* Some platforms don't ship SDL compiled with haptic support, so try it, but don't
+     * die if it's not there! */
+    if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
+        L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
+    }
 }
 
 SDL2Window::~SDL2Window() {
@@ -293,20 +304,7 @@ std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver(const std::string& 
     }
 }
 
-bool SDL2Window::create_window() {
-    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
-
-    if(SDL_Init(default_flags) != 0) {
-        L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
-        return false;
-    }
-
-    /* Some platforms don't ship SDL compiled with haptic support, so try it, but don't
-     * die if it's not there! */
-    if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
-        L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
-    }
-
+bool SDL2Window::_init_window() {
     /* Load the game controller mappings */
     auto rw_ops = SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
     if(SDL_GameControllerAddMappingsFromRW(rw_ops, 0) < 0) {
@@ -317,53 +315,17 @@ bool SDL2Window::create_window() {
 
     int32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 
-    if(renderer_->name() == "gl1x") {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-    } else {
-#ifdef __ANDROID__
-        /* FIXME: Add a GLES2 renderer */
-        SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-#else
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-#endif
-    }
-
     screen_ = SDL_CreateWindow(
         "",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        width(), height(),
+        this->width(), this->height(),
         flags
     );
 
     if(!screen_) {
         L_ERROR(std::string(SDL_GetError()));
         throw std::runtime_error("FATAL: Unable to create SDL window");
-    }
-
-    context_ = SDL_GL_CreateContext(screen_);
-
-    if(!context_) {
-        throw std::runtime_error("FATAL: Unable to create a GL context");
     }
 
     if(is_fullscreen()) {
@@ -376,11 +338,6 @@ bool SDL2Window::create_window() {
     }
 
     SDL_SetEventFilter(event_filter, this);
-    set_has_context(true); //Mark that we have a valid GL context
-
-    renderer_->init_context();
-
-    SDL_GL_SetSwapInterval((vsync_enabled()) ? 1 : 0);
 
 #ifndef NDEBUG
     //DEBUG mode
@@ -396,6 +353,41 @@ bool SDL2Window::create_window() {
             L_DEBUG(SDL_GameControllerName(controller));
         }
     }
+
+    return true;
+}
+
+bool SDL2Window::_init_renderer(Renderer* renderer) {
+    if(renderer->name() == "gl1x") {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+    } else {
+#ifdef __ANDROID__
+        /* FIXME: Add a GLES2 renderer */
+        SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+
+    context_ = SDL_GL_CreateContext(screen_);
+
+    if(!context_) {
+        return false;
+    }
+
+    set_has_context(true); //Mark that we have a valid GL context
+    SDL_GL_SetSwapInterval((vsync_enabled()) ? 1 : 0);
 
     return true;
 }

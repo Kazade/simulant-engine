@@ -87,7 +87,7 @@ static unsigned char simulant_icon_vmu_bits[] = {
 
 namespace smlt {
 
-Window::Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, bool enable_vsync):
+Window::Window():
     Source(this),
     StageManager(this),
     asset_manager_(new AssetManager(this)),
@@ -102,16 +102,34 @@ Window::Window(uint16_t width, uint16_t height, uint16_t bpp, bool fullscreen, b
     frame_time_in_milliseconds_(0),
     time_keeper_(TimeKeeper::create(1.0 / Window::STEPS_PER_SECOND)) {
 
+
+}
+
+Window::~Window() {
+
+}
+
+bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fullscreen, bool enable_vsync) {
     set_width(width);
     set_height(height);
     set_bpp(bpp);
     set_fullscreen(fullscreen);
     set_vsync_enabled(enable_vsync);
 
-}
+    GLThreadCheck::init();
 
-Window::~Window() {
+    _init_window();
 
+    renderer_ = new_renderer(
+        this,
+        application_->config_.development.force_renderer
+    );
+
+    _init_renderer(renderer_.get());
+
+    renderer_->init_context();
+
+    return true;
 }
 
 LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
@@ -248,9 +266,7 @@ bool Window::has_explicit_audio_listener() const {
     return audio_listener_ != nullptr;
 }
 
-bool Window::_init() {
-    GLThreadCheck::init();
-
+bool Window::initialize_assets_and_devices() {
     L_DEBUG("Starting initialization");
 
 #ifdef __DREAMCAST__
@@ -261,14 +277,10 @@ bool Window::_init() {
     sound_driver_ = create_sound_driver(application_->config_.development.force_sound_driver);
     sound_driver_->startup();
 
-    renderer_ = new_renderer(this, application_->config_.development.force_renderer);
-
-    bool result = create_window();
-
     // Initialize the render_sequence once we have a renderer
     compositor_ = std::make_shared<Compositor>(this);
 
-    if(result && !initialized_) {
+    if(!initialized_) {
         /* Swap buffers immediately after creation, this makes sure that
          * on platforms like the Dreamcast we definitely clear to black before
          * spending time loading anything */
@@ -327,7 +339,7 @@ bool Window::_init() {
         });
     });
 
-    return result;
+    return true;
 }
 
 void Window::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {

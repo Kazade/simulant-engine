@@ -22,12 +22,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 
 const KOSWindow::DreamcastPlatform KOSWindow::platform;
 
-KOSWindow::KOSWindow(uint32_t width, uint32_t height, uint32_t bpp, bool fullscreen, bool vsync_enabled):
-    Window(
-        width ? std::min(width, (uint32_t) SCREEN_WIDTH) : SCREEN_WIDTH,
-        height ? std::min(height, (uint32_t) SCREEN_HEIGHT) : SCREEN_HEIGHT,
-        bpp ? bpp : SCREEN_DEPTH, true, true) {
-
+KOSWindow::KOSWindow() {
     platform_.reset(new DreamcastPlatform);
 }
 
@@ -36,7 +31,7 @@ void KOSWindow::swap_buffers() {
     glKosSwapBuffers();
 }
 
-bool KOSWindow::create_window() {
+bool KOSWindow::_init_window() {
     L_DEBUG("Initializing OpenGL");
 #ifdef __DREAMCAST__
         print_available_ram();
@@ -52,16 +47,16 @@ bool KOSWindow::create_window() {
         print_available_ram();
 #endif
 
-    renderer_ = new_renderer(this, "gl1x");
+    return true;
+}
 
+bool KOSWindow::_init_renderer(Renderer* renderer) {
     set_has_context(true); //Mark that we have a valid GL context
-    renderer_->init_context();
 
     L_DEBUG("Renderer initialized");
 #ifdef __DREAMCAST__
         print_available_ram();
 #endif
-
     return true;
 }
 
