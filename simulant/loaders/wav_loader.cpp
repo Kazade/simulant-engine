@@ -1,6 +1,7 @@
 #include <map>
 #include "wav_loader.h"
 #include "../sound.h"
+#include "../streams/stream_view.h"
 
 namespace smlt {
 namespace loaders {
@@ -162,11 +163,17 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         // to the lambda). This prevents the sound from being destroyed while
         // the data is being streamed
 
-        source.set_stream_func([state, wptr](AudioBufferID id) -> int32_t {
+        auto sound = wptr.lock();
+        if(!sound) {
+            return;
+        }
+
+        auto stream = std::make_shared<StreamView>(sound->input_stream());
+
+        source.set_stream_func([state, wptr, stream](AudioBufferID id) -> int32_t {
             auto sound = wptr.lock();
 
             if(sound) {
-                auto& stream = sound->input_stream();
                 const uint32_t buffer_size = sound->buffer_size();
                 const uint32_t remaining_in_bytes = sound->stream_length() - state->offset;
 
