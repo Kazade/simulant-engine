@@ -116,6 +116,8 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
     set_fullscreen(fullscreen);
     set_vsync_enabled(enable_vsync);
 
+    GLThreadCheck::init();
+
     _init_window();
 
     renderer_ = new_renderer(
@@ -265,8 +267,6 @@ bool Window::has_explicit_audio_listener() const {
 }
 
 bool Window::initialize_assets_and_devices() {
-    GLThreadCheck::init();
-
     L_DEBUG("Starting initialization");
 
 #ifdef __DREAMCAST__
