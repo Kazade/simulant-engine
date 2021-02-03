@@ -146,7 +146,6 @@ void SourceInstance::update(float dt) {
 
         if(bytes <= 0) {
             /* -1 indicates the sound has been deleted */
-            is_dead_ = true;
             finished = true;
             break;
         }
@@ -179,7 +178,9 @@ void SourceInstance::update(float dt) {
             if(sound) {
                 sound->init_source(*this);
                 start();
+                is_dead_ = false;
             } else {
+                L_WARN("Sound unexpectedly vanished while looping");
                 is_dead_ = true;
             }
         } else {
