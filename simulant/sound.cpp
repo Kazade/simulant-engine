@@ -134,12 +134,17 @@ void SourceInstance::update(float dt) {
 
     bool finished = false;
 
+    /* We lock through the entire update, mainly so that if a sound finishes
+     * but it's looping, we don't lose the sound before we reinitialise the
+     * source instance */
+    auto sound = sound_.lock();
+
     while(processed--) {
         AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).back();
 
         int32_t bytes = stream_func_(buffer);
 
-        if(bytes < 0) {
+        if(bytes <= 0) {
             /* -1 indicates the sound has been deleted */
             is_dead_ = true;
             finished = true;
@@ -171,7 +176,6 @@ void SourceInstance::update(float dt) {
 
         if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
             //Restart the sound
-            auto sound = sound_.lock();
             if(sound) {
                 sound->init_source(*this);
                 start();

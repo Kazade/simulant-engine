@@ -66,12 +66,10 @@ public:
     void set_input_stream(std::shared_ptr<std::istream> stream) {
         sound_data_ = stream;
 
-        /* Calculate the length (remaining from wherever the stream is) */
-        int pos = stream->tellg();
         stream->seekg(0, std::ios_base::end);
         int end = stream->tellg();
-        stream->seekg(pos, std::ios_base::beg);
-        stream_length_ = end - pos;
+        stream->seekg(0, std::ios_base::beg);
+        stream_length_ = end;
     }
 
     std::size_t stream_length() const {
