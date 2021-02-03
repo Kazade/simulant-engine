@@ -50,7 +50,7 @@ public:
     }
 
     void test_2d_sound_output() {
-        smlt::SoundID sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
 
         assert_false(window->playing_sound_count());
 
@@ -64,7 +64,7 @@ public:
     }
 
     void test_3d_sound_output() {
-        smlt::SoundID sound = stage_->assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = stage_->assets->new_sound_from_file("test_sound.ogg");
 
         auto actor = stage_->new_actor();
         actor->move_to(10, 0, 0);

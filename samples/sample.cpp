@@ -59,7 +59,7 @@ private:
     CameraPtr camera_;
     StagePtr stage_;
 
-    SoundID sound_;
+    SoundPtr sound_;
 };
 
 class Sample: public smlt::Application {

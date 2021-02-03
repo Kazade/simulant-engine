@@ -207,15 +207,11 @@ Source::~Source() {
 
 }
 
-SourceInstanceID Source::play_sound(SoundID sound_id, AudioRepeat repeat) {
-    if(!sound_id) {
+SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat) {
+    if(!sound) {
         L_WARN("Tried to play an invalid sound");
         return 0;
     }
-
-    /* There's surely a better way of determining which asset manager to use here */
-    auto asset_manager = (stage_) ? stage_->assets.get() : window_->shared_assets.get();
-    auto sound = asset_manager->sound(sound_id);
 
     assert(sound);
 

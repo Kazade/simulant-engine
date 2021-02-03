@@ -163,7 +163,7 @@ public:
     Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~Source();
 
-    SourceInstanceID play_sound(SoundID sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+    SourceInstanceID play_sound(SoundPtr sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
     bool stop_sound(SourceInstanceID sound_id);
 
     /* The number of sounds this source is currently playing */
