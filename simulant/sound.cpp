@@ -134,14 +134,18 @@ void SourceInstance::update(float dt) {
 
     bool finished = false;
 
+    /* We lock through the entire update, mainly so that if a sound finishes
+     * but it's looping, we don't lose the sound before we reinitialise the
+     * source instance */
+    auto sound = sound_.lock();
+
     while(processed--) {
         AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).back();
 
         int32_t bytes = stream_func_(buffer);
 
-        if(bytes < 0) {
+        if(bytes <= 0) {
             /* -1 indicates the sound has been deleted */
-            is_dead_ = true;
             finished = true;
             break;
         }
@@ -171,11 +175,12 @@ void SourceInstance::update(float dt) {
 
         if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
             //Restart the sound
-            auto sound = sound_.lock();
             if(sound) {
                 sound->init_source(*this);
                 start();
+                is_dead_ = false;
             } else {
+                L_WARN("Sound unexpectedly vanished while looping");
                 is_dead_ = true;
             }
         } else {
@@ -202,15 +207,11 @@ Source::~Source() {
 
 }
 
-SourceInstanceID Source::play_sound(SoundID sound_id, AudioRepeat repeat) {
-    if(!sound_id) {
+SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat) {
+    if(!sound) {
         L_WARN("Tried to play an invalid sound");
         return 0;
     }
-
-    /* There's surely a better way of determining which asset manager to use here */
-    auto asset_manager = (stage_) ? stage_->assets.get() : window_->shared_assets.get();
-    auto sound = asset_manager->sound(sound_id);
 
     assert(sound);
 

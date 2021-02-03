@@ -43,7 +43,7 @@ private:
     ui::Image* text_ = nullptr;
     ui::Image* image_ = nullptr;
 
-    smlt::SoundID sound_;
+    SoundPtr sound_;
 
     IdleConnectionID connection_;
 };

@@ -66,12 +66,10 @@ public:
     void set_input_stream(std::shared_ptr<std::istream> stream) {
         sound_data_ = stream;
 
-        /* Calculate the length (remaining from wherever the stream is) */
-        int pos = stream->tellg();
         stream->seekg(0, std::ios_base::end);
         int end = stream->tellg();
-        stream->seekg(pos, std::ios_base::beg);
-        stream_length_ = end - pos;
+        stream->seekg(0, std::ios_base::beg);
+        stream_length_ = end;
     }
 
     std::size_t stream_length() const {
@@ -165,7 +163,7 @@ public:
     Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~Source();
 
-    SourceInstanceID play_sound(SoundID sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+    SourceInstanceID play_sound(SoundPtr sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
     bool stop_sound(SourceInstanceID sound_id);
 
     /* The number of sounds this source is currently playing */

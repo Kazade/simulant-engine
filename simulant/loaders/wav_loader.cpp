@@ -1,6 +1,7 @@
 #include <map>
 #include "wav_loader.h"
 #include "../sound.h"
+#include "../streams/stream_view.h"
 
 namespace smlt {
 namespace loaders {
@@ -70,8 +71,26 @@ static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
     data.resize(len);
     stream->read((char*) &data[0], len);
 
+    auto format = sound->format();
+
+    if(format == AUDIO_DATA_FORMAT_MONO24 || format == AUDIO_DATA_FORMAT_STEREO24) {
+        // Downsample to 16 bit
+        std::vector<uint8_t> new_data;
+
+        uint8_t* sample = &data[0];
+
+        for(auto i = 0u; i < data.size(); i += 3) {
+            ++sample; // Skip least significant
+            new_data.push_back(*(sample++));
+            new_data.push_back(*(sample++));
+        }
+
+        std::swap(data, new_data);
+        sound->set_format((format == AUDIO_DATA_FORMAT_MONO24) ? AUDIO_DATA_FORMAT_MONO16 : AUDIO_DATA_FORMAT_STEREO16);
+    }
+
     auto ss = std::make_shared<std::stringstream>();
-    ss->write((char*) &data[0], len);
+    ss->write((char*) &data[0], data.size());
     ss->seekg(0);
 
     sound->set_input_stream(ss);
@@ -122,37 +141,15 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         data_->seekg(offset + size);
     }
 
-    auto format = sound->format();
-
-    if(format == AUDIO_DATA_FORMAT_MONO24 || format == AUDIO_DATA_FORMAT_STEREO24) {
-        // Downsample to 16 bit. We create a new stringstream to replace the old one.
-        std::vector<uint8_t> new_data;
-        auto stream = sound->input_stream();
-        stream->seekg(0, std::ios_base::beg);
-
-        for(auto i = 0u; i < sound->stream_length() / 3; ++i) {
-            uint8_t sample;
-            stream->read((char*) &sample, 1); // Skip least significant
-            stream->read((char*) &sample, 1);
-            new_data.push_back(sample);
-
-            stream->read((char*) &sample, 1);
-            new_data.push_back(sample);
-        }
-
-        auto new_ss = std::make_shared<std::stringstream>();
-        new_ss->write((char*) &new_data[0], new_data.size());
-        new_ss->seekg(0, std::ios_base::beg);
-
-        sound->set_input_stream(new_ss);
-        sound->set_format((format == AUDIO_DATA_FORMAT_MONO24) ? AUDIO_DATA_FORMAT_MONO16 : AUDIO_DATA_FORMAT_STEREO16);
-    }
-
     std::weak_ptr<Sound> wptr = sound->shared_from_this();
 
     sound->set_source_init_function([wptr](SourceInstance& source) {
         struct SourcePlayState {
             int offset = 0;
+
+            // This is set in init_source, and released
+            // when the sound stops playing
+            std::shared_ptr<Sound> sound_ptr;
         };
 
         auto state = std::make_shared<SourcePlayState>();
@@ -162,28 +159,40 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         // to the lambda). This prevents the sound from being destroyed while
         // the data is being streamed
 
-        source.set_stream_func([state, wptr](AudioBufferID id) -> int32_t {
-            auto sound = wptr.lock();
+        state->sound_ptr = wptr.lock();
+        if(!state->sound_ptr) {
+            L_WARN("Sound was destroyed before playing");
+            return;
+        }
+
+        auto stream = std::make_shared<StreamView>(state->sound_ptr->input_stream());
+
+        L_DEBUG(_F("Initialized stream_func for source instance {0}").format(&source));
+
+        source.set_stream_func([state, stream](AudioBufferID id) -> int32_t {
+            auto sound = state->sound_ptr;
 
             if(sound) {
-                auto& stream = sound->input_stream();
                 const uint32_t buffer_size = sound->buffer_size();
                 const uint32_t remaining_in_bytes = sound->stream_length() - state->offset;
 
                 assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
 
                 std::vector<uint8_t> buffer;
+                stream->seekg(state->offset, std::ios_base::beg);
+
                 if(remaining_in_bytes == 0) {
+                    state->sound_ptr.reset();  // Release the handle
                     return 0;
                 } else if(remaining_in_bytes < buffer_size) {
                     buffer.resize(remaining_in_bytes);
                     stream->read((char*) &buffer[0], remaining_in_bytes);
-                    state->offset += buffer.size();
                 } else {
                     buffer.resize(buffer_size);
                     stream->read((char*) &buffer[0], buffer_size);
-                    state->offset += buffer_size;
                 }
+
+                state->offset += buffer.size();
 
                 sound->_driver()->upload_buffer_data(
                     id, sound->format(), &buffer[0], buffer.size(), sound->sample_rate()
@@ -191,6 +200,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
 
                 return buffer.size();
             } else {
+                L_WARN("Sound was destroyed while playing, stopping playback");
                 return -1;
             }
         });
