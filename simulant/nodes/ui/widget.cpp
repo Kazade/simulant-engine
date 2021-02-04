@@ -12,18 +12,21 @@ namespace ui {
 Widget::Widget(UIManager *owner, UIConfig *defaults):
     TypedDestroyableObject<Widget, UIManager>(owner),
     ContainerNode(owner->stage(), STAGE_NODE_TYPE_OTHER),
-    owner_(owner) {
+    owner_(owner),
+    pimpl_(new WidgetImpl()) {
 
 }
 
 Widget::~Widget() {
-    if(focus_next_ && focus_next_->focus_previous_ == this) {
-        focus_next_->focus_previous_ = nullptr;
+    if(pimpl_->focus_next_ && pimpl_->focus_next_->pimpl_->focus_previous_ == this) {
+        pimpl_->focus_next_->pimpl_->focus_previous_ = nullptr;
     }
 
-    if(focus_previous_ && focus_previous_->focus_next_ == this) {
-        focus_previous_->focus_next_ = nullptr;
+    if(pimpl_->focus_previous_ && pimpl_->focus_previous_->pimpl_->focus_next_ == this) {
+        pimpl_->focus_previous_->pimpl_->focus_next_ = nullptr;
     }
+
+    delete pimpl_;
 }
 
 bool Widget::init() {
@@ -82,28 +85,28 @@ void Widget::set_font(FontID font_id) {
     }
 
     font_ = stage->assets->font(font_id);
-    line_height_ = ::round(float(font_->size()) * 1.1f);
+    pimpl_->line_height_ = ::round(float(font_->size()) * 1.1f);
 
     on_size_changed();
 }
 
 void Widget::resize(int32_t width, int32_t height) {
-    if(requested_width_ == width && requested_height_ == height) {
+    if(pimpl_->requested_width_ == width && pimpl_->requested_height_ == height) {
         return;
     }
 
     if(width == -1 && height > -1) {
-        resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
+        pimpl_->resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     } else if(width == -1 && height == -1) {
-        resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+        pimpl_->resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     } else if(width > -1 && height == -1) {
-        resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+        pimpl_->resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
     } else {
-        resize_mode_ = RESIZE_MODE_FIXED;
+        pimpl_->resize_mode_ = RESIZE_MODE_FIXED;
     }
 
-    requested_width_ = width;
-    requested_height_ = height;
+    pimpl_->requested_width_ = width;
+    pimpl_->requested_height_ = height;
     on_size_changed();
 }
 
@@ -114,7 +117,7 @@ void Widget::render_text() {
     };
 
     if(text().empty()) {
-        content_height_ = content_width_ = 0;
+        pimpl_->content_height_ = pimpl_->content_width_ = 0;
         return;
     }
 
@@ -132,7 +135,7 @@ void Widget::render_text() {
     vertices.reserve(text().length() * 4);
 
     float left_bound = 0;
-    auto right_bound = requested_width_;
+    auto right_bound = pimpl_->requested_width_;
     float left = left_bound;
     uint32_t line_start = 0;
     float line_length = 0;
@@ -237,7 +240,7 @@ void Widget::render_text() {
         }
 
         // Increase for the next line
-        top += line_height_;
+        top += pimpl_->line_height_;
     }
 
     // Now we have to shift the entire thing up to vertically center!
@@ -270,7 +273,7 @@ void Widget::render_text() {
 
         vdata->position(v.xyz);
         vdata->tex_coord0(v.uv);
-        vdata->diffuse(text_colour_);
+        vdata->diffuse(pimpl_->text_colour_);
         vdata->move_next();
 
         idata->index(idx++);
@@ -279,8 +282,8 @@ void Widget::render_text() {
     vdata->done();
     idata->done();
 
-    content_width_ = max_x - min_x;
-    content_height_ = max_y - min_y;
+    pimpl_->content_width_ = max_x - min_x;
+    pimpl_->content_height_ = max_y - min_y;
 }
 
 void Widget::clear_mesh() {
@@ -388,49 +391,49 @@ void Widget::rebuild() {
 
     // FIXME: Clipping + other modes
     if(resize_mode() == RESIZE_MODE_FIXED) {
-        content_width_ = requested_width_;
-        content_height_ = requested_height_;
-    } else if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        content_height_ = std::max(requested_height_, content_height_);
-        content_width_ = requested_width_;
-    } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
-        content_width_ = std::max(requested_width_, content_width_);
-        content_height_ = requested_height_;
+        pimpl_->content_width_ = pimpl_->requested_width_;
+        pimpl_->content_height_ = pimpl_->requested_height_;
+    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
+        pimpl_->content_height_ = std::max(pimpl_->requested_height_, pimpl_->content_height_);
+        pimpl_->content_width_ = pimpl_->requested_width_;
+    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
+        pimpl_->content_width_ = std::max(pimpl_->requested_width_, pimpl_->content_width_);
+        pimpl_->content_height_ = pimpl_->requested_height_;
     }
 
-    auto background_bounds = calculate_background_size(content_width_, content_height_);
-    auto foreground_bounds = calculate_foreground_size(content_width_, content_height_);
+    auto background_bounds = calculate_background_size(pimpl_->content_width_, pimpl_->content_height_);
+    auto foreground_bounds = calculate_foreground_size(pimpl_->content_width_, pimpl_->content_height_);
 
     auto border_bounds = background_bounds;
-    border_bounds.min -= smlt::Vec2(border_width_, border_width_);
-    border_bounds.max += smlt::Vec2(border_width_, border_width_);
+    border_bounds.min -= smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
+    border_bounds.max += smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
 
-    auto colour = border_colour_;
-    colour.a *= opacity_;
+    auto colour = pimpl_->border_colour_;
+    colour.a *= pimpl_->opacity_;
     new_rectangle("border", border_bounds, colour);
 
-    colour = background_colour_;
-    colour.a *= opacity_;
+    colour = pimpl_->background_colour_;
+    colour.a *= pimpl_->opacity_;
     auto bg = new_rectangle("background", background_bounds, colour);
     if(has_background_image()) {
-        bg->material()->pass(0)->set_diffuse_map(background_image_);
-        apply_image_rect(bg, background_image_, background_image_rect_);
+        bg->material()->pass(0)->set_diffuse_map(pimpl_->background_image_);
+        apply_image_rect(bg, pimpl_->background_image_, pimpl_->background_image_rect_);
     }
 
-    colour = foreground_colour_;
-    colour.a *= opacity_;
+    colour = pimpl_->foreground_colour_;
+    colour.a *= pimpl_->opacity_;
     auto fg = new_rectangle("foreground", foreground_bounds, colour);
     if(has_foreground_image()) {
-        fg->material()->pass(0)->set_diffuse_map(foreground_image_);
-        apply_image_rect(fg, foreground_image_, foreground_image_rect_);
+        fg->material()->pass(0)->set_diffuse_map(pimpl_->foreground_image_);
+        apply_image_rect(fg, pimpl_->foreground_image_, pimpl_->foreground_image_rect_);
     }
 
     /* Apply anchoring */
     auto width = mesh_->aabb().width();
     auto height = mesh_->aabb().height();
 
-    float xoff = -((anchor_point_.x * width) - (width / 2.0f));
-    float yoff = -((anchor_point_.y * height) - (height / 2.0f));
+    float xoff = -((pimpl_->anchor_point_.x * width) - (width / 2.0f));
+    float yoff = -((pimpl_->anchor_point_.y * height) - (height / 2.0f));
     auto& vdata = mesh_->vertex_data;
     for(auto i = 0u; i < vdata->count(); ++i) {
         auto p = *vdata->position_at<smlt::Vec3>(i);
@@ -441,7 +444,7 @@ void Widget::rebuild() {
     }
     vdata->done();
 
-    anchor_point_dirty_ = false;
+    pimpl_->anchor_point_dirty_ = false;
 }
 
 Widget::WidgetBounds Widget::calculate_background_size(float content_width, float content_height) const {
@@ -450,8 +453,8 @@ Widget::WidgetBounds Widget::calculate_background_size(float content_width, floa
     auto hh = content_height / 2.0f;
 
     WidgetBounds bounds;
-    bounds.min = smlt::Vec2(-(hw + padding_.left), -(hh + padding_.bottom));
-    bounds.max = smlt::Vec2(hw + padding_.right, hh + padding_.top);
+    bounds.min = smlt::Vec2(-(hw + pimpl_->padding_.left), -(hh + pimpl_->padding_.bottom));
+    bounds.max = smlt::Vec2(hw + pimpl_->padding_.right, hh + pimpl_->padding_.top);
     return bounds;
 }
 
@@ -460,29 +463,29 @@ Widget::WidgetBounds Widget::calculate_foreground_size(float content_width, floa
 }
 
 void Widget::set_border_width(float x) {
-    if(border_width_ == x) {
+    if(pimpl_->border_width_ == x) {
         return;
     }
 
-    border_width_ = x;
+    pimpl_->border_width_ = x;
     rebuild();
 }
 
 void Widget::set_border_colour(const Colour &colour) {
-    if(border_colour_ == colour) {
+    if(pimpl_->border_colour_ == colour) {
         return;
     }
 
-    border_colour_ = colour;
+    pimpl_->border_colour_ = colour;
     rebuild();
 }
 
 void Widget::set_text(const unicode &text) {
-    if(text_ == text) {
+    if(pimpl_->text_ == text) {
         return;
     }
 
-    text_ = text;
+    pimpl_->text_ = text;
     on_size_changed();
 }
 
@@ -491,7 +494,7 @@ void Widget::on_size_changed() {
 }
 
 void Widget::set_property(const std::string &name, float value) {
-    properties_[name] = value;
+    pimpl_->properties_[name] = value;
 }
 
 const AABB &Widget::aabb() const {
@@ -499,11 +502,11 @@ const AABB &Widget::aabb() const {
 }
 
 void Widget::set_background_image(TexturePtr texture) {
-    if(background_image_ == texture) {
+    if(pimpl_->background_image_ == texture) {
         return;
     }
 
-    background_image_ = texture;
+    pimpl_->background_image_ = texture;
 
     // Triggers a rebuild
     set_background_image_source_rect(
@@ -513,22 +516,22 @@ void Widget::set_background_image(TexturePtr texture) {
 }
 
 void Widget::set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
-    if(background_image_rect_.bottom_left == bottom_left && background_image_rect_.size == size) {
+    if(pimpl_->background_image_rect_.bottom_left == bottom_left && pimpl_->background_image_rect_.size == size) {
         // Nothing to do
         return;
     }
 
-    background_image_rect_.bottom_left = bottom_left;
-    background_image_rect_.size = size;
+    pimpl_->background_image_rect_.bottom_left = bottom_left;
+    pimpl_->background_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_foreground_image(TexturePtr texture) {
-    if(foreground_image_ == texture) {
+    if(pimpl_->foreground_image_ == texture) {
         return;
     }
 
-    foreground_image_ = texture;
+    pimpl_->foreground_image_ = texture;
 
     // Triggers a rebuild
     set_foreground_image_source_rect(
@@ -538,77 +541,113 @@ void Widget::set_foreground_image(TexturePtr texture) {
 }
 
 void Widget::set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
-    if(foreground_image_rect_.bottom_left == bottom_left && foreground_image_rect_.size == size) {
+    if(pimpl_->foreground_image_rect_.bottom_left == bottom_left && pimpl_->foreground_image_rect_.size == size) {
         // Nothing to do
         return;
     }
 
-    foreground_image_rect_.bottom_left = bottom_left;
-    foreground_image_rect_.size = size;
+    pimpl_->foreground_image_rect_.bottom_left = bottom_left;
+    pimpl_->foreground_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_background_colour(const Colour& colour) {
-    if(background_colour_ == colour) {
+    if(pimpl_->background_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    background_colour_ = colour;
+    pimpl_->background_colour_ = colour;
     rebuild();
 }
 
 void Widget::set_foreground_colour(const Colour& colour) {
-    if(foreground_colour_ == colour) {
+    if(pimpl_->foreground_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    foreground_colour_ = colour;
+    pimpl_->foreground_colour_ = colour;
     rebuild();
 }
 
 void Widget::set_text_colour(const Colour &colour) {
-    if(text_colour_ == colour) {
+    if(pimpl_->text_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    text_colour_ = colour;
+    pimpl_->text_colour_ = colour;
     rebuild();
 }
 
+float Widget::requested_width() const {
+    return pimpl_->requested_width_;
+}
+
+float Widget::requested_height() const {
+    return pimpl_->requested_height_;
+}
+
+float Widget::content_width() const {
+    return pimpl_->content_width_; // Content area
+}
+
+float Widget::content_height() const {
+    return pimpl_->content_height_;
+}
+
+float Widget::outer_width() const {
+    return content_width() + (pimpl_->border_width_ * 2);
+}
+
+float Widget::outer_height() const {
+    return content_height() + (pimpl_->border_width_ * 2);
+}
+
 void Widget::set_resize_mode(ResizeMode resize_mode) {
-    resize_mode_ = resize_mode;
+    pimpl_->resize_mode_ = resize_mode;
     on_size_changed();
 }
 
+ResizeMode Widget::resize_mode() const {
+    return pimpl_->resize_mode_;
+}
+
+bool Widget::has_background_image() const {
+    return bool(pimpl_->background_image_);
+}
+
+bool Widget::has_foreground_image() const {
+    return bool(pimpl_->foreground_image_);
+}
+
 void Widget::set_padding(float left, float right, float bottom, float top) {
-    padding_.left = left;
-    padding_.right = right;
-    padding_.bottom = bottom;
-    padding_.top = top;
+    pimpl_->padding_.left = left;
+    pimpl_->padding_.right = right;
+    pimpl_->padding_.bottom = bottom;
+    pimpl_->padding_.top = top;
     rebuild();
 }
 
 bool Widget::is_pressed_by_finger(uint32_t finger_id) {
-    return fingers_down_.find(finger_id) != fingers_down_.end();
+    return pimpl_->fingers_down_.find(finger_id) != pimpl_->fingers_down_.end();
 }
 
 void Widget::force_release() {
-    auto fingers_down = fingers_down_; // Copy, fingerup will delete from fingers_down_
+    auto fingers_down = pimpl_->fingers_down_; // Copy, fingerup will delete from fingers_down_
     for(auto& finger_id: fingers_down) {
         fingerup(finger_id);
     }
 }
 
 Vec2 Widget::anchor_point() const {
-    return anchor_point_;
+    return pimpl_->anchor_point_;
 }
 
 void Widget::set_opacity(RangeValue<0, 1> alpha) {
-    if(opacity_ != alpha) {
-        opacity_ = alpha;
+    if(pimpl_->opacity_ != alpha) {
+        pimpl_->opacity_ = alpha;
         rebuild();
     }
 }
@@ -622,15 +661,15 @@ void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPrior
 }
 
 void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
-    if(anchor_point_.x != (float) x || anchor_point_.y != (float) y) {
-        anchor_point_ = smlt::Vec2(x, y);
-        anchor_point_dirty_ = true;
+    if(pimpl_->anchor_point_.x != (float) x || pimpl_->anchor_point_.y != (float) y) {
+        pimpl_->anchor_point_ = smlt::Vec2(x, y);
+        pimpl_->anchor_point_dirty_ = true;
     }
 }
 
 void Widget::fingerdown(uint32_t finger_id) {
     // If we added, and it was the first finger down
-    if(fingers_down_.insert(finger_id).second && fingers_down_.size() == 1) {
+    if(pimpl_->fingers_down_.insert(finger_id).second && pimpl_->fingers_down_.size() == 1) {
         // Emit the widget pressed signal
         signal_pressed_();
     }
@@ -638,7 +677,7 @@ void Widget::fingerdown(uint32_t finger_id) {
 
 void Widget::fingerup(uint32_t finger_id) {
     // If we just released the last finger, emit a widget released signal
-    if(fingers_down_.erase(finger_id) && fingers_down_.empty()) {
+    if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
         signal_released_();
         signal_clicked_();
     }
@@ -654,40 +693,40 @@ void Widget::fingermove(uint32_t finger_id) {
 
 void Widget::fingerleave(uint32_t finger_id) {
     // Same as fingerup, but we don't fire the click signal
-    if(fingers_down_.erase(finger_id) && fingers_down_.empty()) {
+    if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
         signal_released_();
     }
 }
 
 bool Widget::is_focused() const {
-    return is_focused_;
+    return pimpl_->is_focused_;
 }
 
 void Widget::set_focus_previous(WidgetPtr previous_widget) {
-    focus_previous_ = previous_widget;
-    if(focus_previous_) {
-        focus_previous_->focus_next_ = this;
+    pimpl_->focus_previous_ = previous_widget;
+    if(pimpl_->focus_previous_) {
+        pimpl_->focus_previous_->pimpl_->focus_next_ = this;
     }
 }
 
 void Widget::set_focus_next(WidgetPtr next_widget) {
-    focus_next_ = next_widget;
-    if(focus_next_) {
-        focus_next_->focus_previous_ = this;
+    pimpl_->focus_next_ = next_widget;
+    if(pimpl_->focus_next_) {
+        pimpl_->focus_next_->pimpl_->focus_previous_ = this;
     }
 }
 
 void Widget::focus() {
     auto focused = focused_in_chain_or_this();
     if(focused == this) {
-        if(!is_focused_) {
-            is_focused_ = true;
+        if(!pimpl_->is_focused_) {
+            pimpl_->is_focused_ = true;
             signal_focused_();
         }
         return;
     } else {
         focused->blur();
-        is_focused_ = true;
+        pimpl_->is_focused_ = true;
         signal_focused_();
     }
 }
@@ -697,7 +736,7 @@ WidgetPtr Widget::focused_in_chain() {
 
     // If we got back this element, but this element isn't focused
     // then return null
-    if(ret == this && !is_focused_) {
+    if(ret == this && !pimpl_->is_focused_) {
         return nullptr;
     }
 
@@ -705,20 +744,20 @@ WidgetPtr Widget::focused_in_chain() {
 }
 
 WidgetPtr Widget::focused_in_chain_or_this() {
-    auto next = focus_next_;
+    auto next = pimpl_->focus_next_;
     while(next && next != this) {
         if(next->is_focused()) {
             return next;
         }
-        next = next->focus_next_;
+        next = next->pimpl_->focus_next_;
     }
 
-    auto previous = focus_previous_;
+    auto previous = pimpl_->focus_previous_;
     while(previous && previous != this) {
         if(previous->is_focused()) {
             return previous;
         }
-        previous = previous->focus_previous_;
+        previous = previous->pimpl_->focus_previous_;
     }
 
     return this;
@@ -729,7 +768,7 @@ void Widget::on_transformation_change_attempted() {
     // (rather than if it happens)
     // because the anchor point may change and someone might
     // call move_to with the same position
-    if(anchor_point_dirty_) {
+    if(pimpl_->anchor_point_dirty_) {
         // Reconstruct which will clear the dirty flag
         rebuild();
     }
@@ -751,8 +790,8 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
     // If something is focused
     if(focused) {
         // Focus the next in the chain, otherwise focus the first in the chain
-        if(focused->focus_next_) {
-            to_focus = focused->focus_next_;
+        if(focused->pimpl_->focus_next_) {
+            to_focus = focused->pimpl_->focus_next_;
         } else {
             to_focus = first_in_focus_chain();
         }
@@ -774,7 +813,7 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
     }
 
     if(to_focus) {
-        to_focus->is_focused_ = true;
+        to_focus->pimpl_->is_focused_ = true;
         to_focus->signal_focused_();
     }
 }
@@ -795,8 +834,8 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
     // If something is focused
     if(focused) {
         // Focus the previous in the chain, otherwise focus the last in the chain
-        if(focused->focus_previous_) {
-            to_focus = focused->focus_previous_;
+        if(focused->pimpl_->focus_previous_) {
+            to_focus = focused->pimpl_->focus_previous_;
         } else {
             to_focus = last_in_focus_chain();
         }
@@ -818,15 +857,15 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
     }
 
     if(to_focus) {
-        to_focus->is_focused_ = true;
+        to_focus->pimpl_->is_focused_ = true;
         to_focus->signal_focused_();
     }
 }
 
 WidgetPtr Widget::first_in_focus_chain() {
     auto search = this;
-    while(search->focus_previous_) {
-        search = search->focus_previous_;
+    while(search->pimpl_->focus_previous_) {
+        search = search->pimpl_->focus_previous_;
     }
 
     return search;
@@ -834,15 +873,15 @@ WidgetPtr Widget::first_in_focus_chain() {
 
 WidgetPtr Widget::last_in_focus_chain() {
     auto search = this;
-    while(search->focus_next_) {
-        search = search->focus_next_;
+    while(search->pimpl_->focus_next_) {
+        search = search->pimpl_->focus_next_;
     }
 
     return search;
 }
 
 void Widget::blur() {
-    is_focused_ = false;
+    pimpl_->is_focused_ = false;
     signal_blurred_();
 }
 

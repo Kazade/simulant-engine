@@ -35,6 +35,8 @@ public:
         } else {
             cursor_ = stream_size_ - pos;
         }
+
+        return *this;
     }
 
     StreamView& read(char* s, std::streamsize n) {
@@ -45,6 +47,7 @@ public:
         cursor_ += n;
 
         stream_->seekg(g);  // pop
+        return *this;
     }
 
 private:

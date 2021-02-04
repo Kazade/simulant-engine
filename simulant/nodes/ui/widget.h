@@ -19,6 +19,65 @@ typedef sig::signal<void ()> WidgetClickedSignal; // Triggered on fingerup only
 typedef sig::signal<void ()> WidgetFocusedSignal;
 typedef sig::signal<void ()> WidgetBlurredSignal;
 
+struct ImageRect {
+    Vec2 bottom_left;
+    Vec2 size;
+};
+
+struct WidgetImpl {
+    int32_t requested_width_ = 0;
+    int32_t requested_height_ = 0;
+
+    int32_t content_width_ = 0;
+    int32_t content_height_ = 0;
+
+    UInt4 padding_ = {0, 0, 0, 0};
+
+    float border_width_ = 1.0f;
+    Colour border_colour_ = Colour::BLACK;
+
+    unicode text_;
+    OverflowType overflow_;
+    ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+
+    TexturePtr background_image_;
+    ImageRect background_image_rect_;
+
+    TexturePtr foreground_image_;
+    ImageRect foreground_image_rect_;
+
+    Colour background_colour_ = Colour::WHITE;
+    Colour foreground_colour_ = Colour::NONE; //Transparent
+    Colour text_colour_ = Colour::BLACK;
+    float line_height_ = 16;
+
+    bool is_focused_ = false;
+    WidgetPtr focus_next_ = nullptr;
+    WidgetPtr focus_previous_ = nullptr;
+
+    float opacity_ = 1.0f;
+
+    float background_depth_bias_ = 0.0001f;
+    float foreground_depth_bias_ = 0.0002f;
+    float text_depth_bias_ = 0.0004f;
+
+    std::unordered_map<std::string, smlt::any> properties_;
+
+    /*
+     * We regularly need to rebuild the text submesh. Wiping out vertex data
+     * is cumbersome and slow, so instead we wipe the submesh indexes and add
+     * them here, then used these indexes as necessary when rebuilding
+     */
+    std::set<uint16_t> available_indexes_;
+
+    /* A normalized vector representing the relative
+     * anchor position for movement (0, 0 == bottom left) */
+    smlt::Vec2 anchor_point_;
+    bool anchor_point_dirty_;
+
+    std::set<uint32_t> fingers_down_;
+};
+
 class Widget:
     public TypedDestroyableObject<Widget, UIManager>,
     public ContainerNode,
@@ -68,10 +127,11 @@ public:
     void set_padding(float left, float right, float bottom, float top);
     virtual void set_resize_mode(ResizeMode resize_mode);
 
-    ResizeMode resize_mode() const { return resize_mode_; }
+    ResizeMode resize_mode() const;
 
-    bool has_background_image() const { return bool(background_image_); }
-    bool has_foreground_image() const { return bool(foreground_image_); }
+    bool has_background_image() const;
+
+    bool has_foreground_image() const;
 
     /** Set the background image, pass TextureID() to clear */
     void set_background_image(TexturePtr texture);
@@ -90,14 +150,15 @@ public:
 
     void set_text_colour(const Colour& colour);
 
-    float requested_width() const { return requested_width_; }
-    float requested_height() const { return requested_height_; }
+    float requested_width() const;
+    float requested_height() const;
 
-    float content_width() const { return content_width_; } // Content area
-    float content_height() const { return content_height_; }
+    float content_width() const;
 
-    float outer_width() const { return content_width() + (border_width_ * 2); }
-    float outer_height() const { return content_height() + (border_width_ * 2); }
+    float content_height() const;
+
+    float outer_width() const;
+    float outer_height() const;
 
     /*
     bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
@@ -106,20 +167,24 @@ public:
     */
 
     void set_property(const std::string& name, float value);
-    bool has_property(const std::string& name) const { return bool(properties_.count(name)); }
+    bool has_property(const std::string& name) const {
+        return bool(pimpl_->properties_.count(name));
+    }
 
     template<typename T>
     smlt::optional<T> property(const std::string& name) const {
-        if(!properties_.count(name)) {
+        if(!pimpl_->properties_.count(name)) {
             return smlt::optional<T>();
         }
 
-        return smlt::optional<T>(smlt::any_cast<T>(properties_.at(name)));
+        return smlt::optional<T>(smlt::any_cast<T>(pimpl_->properties_.at(name)));
     }
 
-    const AABB& aabb() const;
+    const AABB& aabb() const override;
 
-    const unicode& text() const { return text_; }
+    const unicode& text() const {
+        return pimpl_->text_;
+    }
 
     // Probably shouldn't use these directly (designed for UIManager)
     void fingerdown(uint32_t finger_id);
@@ -152,46 +217,9 @@ private:
     FontPtr font_ = nullptr;
     MaterialPtr material_ = nullptr;
 
-    int32_t requested_width_ = 0;
-    int32_t requested_height_ = 0;
-
-    int32_t content_width_ = 0;
-    int32_t content_height_ = 0;
-
-    UInt4 padding_ = {0, 0, 0, 0};
-
-    float border_width_ = 1.0f;
-    Colour border_colour_ = Colour::BLACK;
-
-    unicode text_;
-    OverflowType overflow_;
-    ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
-
-    struct ImageRect {
-        Vec2 bottom_left;
-        Vec2 size;
-    };
-
-    TexturePtr background_image_;
-    ImageRect background_image_rect_;
-
-    TexturePtr foreground_image_;
-    ImageRect foreground_image_rect_;
-
-    Colour background_colour_ = Colour::WHITE;
-    Colour foreground_colour_ = Colour::NONE; //Transparent
-    Colour text_colour_ = Colour::BLACK;
-    float line_height_ = 16;
-
-    std::unordered_map<std::string, smlt::any> properties_;
+    WidgetImpl* pimpl_ = nullptr;
 
     virtual void on_size_changed();
-
-    bool is_focused_ = false;
-    WidgetPtr focus_next_ = nullptr;
-    WidgetPtr focus_previous_ = nullptr;
-
-    float opacity_ = 1.0f;
 
 protected:
     struct WidgetBounds {
@@ -213,29 +241,11 @@ protected:
 
     MeshPtr mesh() { return mesh_; }
 
-    float background_depth_bias_ = 0.0001f;
-    float foreground_depth_bias_ = 0.0002f;
-    float text_depth_bias_ = 0.0004f;
-
     void render_text();
-
-    std::set<uint32_t> fingers_down_;
 
     WidgetPtr focused_in_chain_or_this();
 
-    /*
-     * We regularly need to rebuild the text submesh. Wiping out vertex data
-     * is cumbersome and slow, so instead we wipe the submesh indexes and add
-     * them here, then used these indexes as necessary when rebuilding
-     */
-    std::set<uint16_t> available_indexes_;
-
-    /* A normalized vector representing the relative
-     * anchor position for movement (0, 0 == bottom left) */
-    smlt::Vec2 anchor_point_;
-    bool anchor_point_dirty_;
-
-    void on_transformation_change_attempted();
+    void on_transformation_change_attempted() override;
 
     void rebuild();
 };
