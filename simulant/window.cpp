@@ -90,7 +90,7 @@ namespace smlt {
 Window::Window():
     Source(this),
     StageManager(this),
-    asset_manager_(new AssetManager(this)),
+    asset_manager_(new SharedAssetManager(this)),
     initialized_(false),
     width_(-1),
     height_(-1),
@@ -679,7 +679,7 @@ void Window::reset() {
 
     L_DEBUG("Reinitializing the base manager");
 
-    asset_manager_.reset(new AssetManager(this));
+    asset_manager_ = SharedAssetManager::create(this);
     assert(asset_manager_);
     asset_manager_->init();
 

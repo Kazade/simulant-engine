@@ -304,7 +304,7 @@ private:
 
     bool can_attach_sound_by_id() const { return false; }
 
-    std::shared_ptr<AssetManager> asset_manager_;
+    std::shared_ptr<SharedAssetManager> asset_manager_;
 
     bool initialized_;
 

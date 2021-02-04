@@ -45,6 +45,7 @@ public:
         cursor_ += n;
 
         stream_->seekg(g);  // pop
+        return *this;
     }
 
 private:

@@ -35,7 +35,7 @@ namespace smlt {
 #define HEADING_FONT "simulant/fonts/orbitron/orbitron-regular-48.fnt"
 #define BODY_FONT "simulant/fonts/orbitron/orbitron-regular-18.fnt"
 
-AssetManager::AssetManager(Window* window, AssetManager *parent):
+AssetManager::AssetManager(Window* window, AssetManager* parent):
     WindowHolder(window),
     parent_(parent) {
 
@@ -61,15 +61,6 @@ AssetManager::~AssetManager() {
     }
 }
 
-bool AssetManager::init() {
-    L_DEBUG(_F("Initalizing default materials, textures, and fonts (AssetManager: {0})").format(this));
-    set_default_material_filename(Material::BuiltIns::DEFAULT);
-    set_default_font_filename(DEFAULT_FONT_STYLE_BODY, BODY_FONT);
-    set_default_font_filename(DEFAULT_FONT_STYLE_HEADING, HEADING_FONT);
-    L_DEBUG("Finished initializing defaults");
-    return true;
-}
-
 void AssetManager::update(float dt) {
     material_manager_.each([dt](uint32_t, MaterialPtr mat) {
         mat->update(dt);
@@ -80,26 +71,48 @@ void AssetManager::update(float dt) {
     });
 }
 
-void AssetManager::set_default_material_filename(const unicode& filename) {
+void SharedAssetManager::set_default_material_filename(const unicode& filename) {
     default_material_filename_ = filename;
     default_material_.reset();
 }
 
-unicode AssetManager::default_material_filename() const {
+unicode SharedAssetManager::default_material_filename() const {
     return default_material_filename_;
 }
 
 MaterialPtr AssetManager::default_material() const {
+    if(!is_base_manager()) {
+        return base_manager()->default_material();
+    }
+
+    /* Shouldn't happen */
+    assert(0);
+    return nullptr;
+}
+
+
+bool SharedAssetManager::init() {
+    L_DEBUG(_F("Initalizing default materials, textures, and fonts (AssetManager: {0})").format(this));
+    set_default_material_filename(Material::BuiltIns::DEFAULT);
+    set_default_font_filename(DEFAULT_FONT_STYLE_BODY, BODY_FONT);
+    set_default_font_filename(DEFAULT_FONT_STYLE_HEADING, HEADING_FONT);
+    L_DEBUG("Finished initializing defaults");
+    return true;
+}
+
+MaterialPtr SharedAssetManager::default_material() const {
+    assert(is_base_manager());
+
     if(!default_material_) {
-        default_material_ = const_cast<AssetManager*>(this)->new_material_from_file(
-            default_material_filename_
-        );
+        default_material_ = const_cast<SharedAssetManager*>(this)->new_material_from_file(
+                    default_material_filename_
+                    );
     }
 
     return default_material_;
 }
 
-void AssetManager::set_default_font_filename(DefaultFontStyle style, const unicode& filename) {
+void SharedAssetManager::set_default_font_filename(DefaultFontStyle style, const unicode& filename) {
     if(style == DEFAULT_FONT_STYLE_BODY) {
         default_body_font_filename_ = filename;
         default_body_font_.reset();
@@ -109,7 +122,7 @@ void AssetManager::set_default_font_filename(DefaultFontStyle style, const unico
     }
 }
 
-unicode AssetManager::default_font_filename(DefaultFontStyle style) const {
+unicode SharedAssetManager::default_font_filename(DefaultFontStyle style) const {
     if(style == DEFAULT_FONT_STYLE_BODY) {
         return default_body_font_filename_;
     } else {
@@ -117,10 +130,12 @@ unicode AssetManager::default_font_filename(DefaultFontStyle style) const {
     }
 }
 
-FontPtr AssetManager::default_font(DefaultFontStyle style) const {
+FontPtr SharedAssetManager::default_font(DefaultFontStyle style) const {
+    assert(is_base_manager());
+
     if(style == DEFAULT_FONT_STYLE_BODY) {
         if(!default_body_font_) {
-            default_body_font_ = const_cast<AssetManager*>(this)->new_font_from_file(
+            default_body_font_ = const_cast<SharedAssetManager*>(this)->new_font_from_file(
                 default_body_font_filename_
             );
         }
@@ -128,13 +143,18 @@ FontPtr AssetManager::default_font(DefaultFontStyle style) const {
         return default_body_font_;
     } else {
         if(!default_heading_font_) {
-            default_heading_font_ = const_cast<AssetManager*>(this)->new_font_from_file(
+            default_heading_font_ = const_cast<SharedAssetManager*>(this)->new_font_from_file(
                 default_heading_font_filename_
             );
         }
 
         return default_heading_font_;
     }
+}
+
+FontPtr AssetManager::default_font(DefaultFontStyle style) const {
+    assert(!is_base_manager());
+    return base_manager()->default_font(style);
 }
 
 void AssetManager::run_garbage_collection() {
@@ -149,6 +169,10 @@ void AssetManager::run_garbage_collection() {
     sound_manager_.update();
     font_manager_.update();
     particle_script_manager_.update();
+}
+
+bool AssetManager::is_base_manager() const {
+    return !parent_;
 }
 
 
@@ -565,6 +589,21 @@ MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollec
 
 MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
     return clone_material(base_manager()->default_material(), garbage_collect);
+}
+
+AssetManager* AssetManager::base_manager() const {
+    AssetManager* ret = const_cast<AssetManager*>(this);
+    assert(ret && "Unexpectedly failed to cast");
+
+    if(!parent_) {
+        return ret;
+    }
+
+    // Constness applies to the resource manager itself, not the returned base manager
+    while(ret->parent_) {
+        ret = ret->parent_;
+    }
+    return ret;
 }
 
 // ========== FONTS ======================

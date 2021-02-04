@@ -92,14 +92,11 @@ for klass, name in (
 */
 
 class AssetManager:
-    public virtual WindowHolder,
-    public RefCounted<AssetManager> {
+    public virtual WindowHolder {
 
 public:
     AssetManager(Window* window, AssetManager* parent=nullptr);
     virtual ~AssetManager();
-
-    bool init();
 
     // Generated API
 
@@ -188,50 +185,24 @@ public:
     MeshPtr new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec2>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<smlt::Vec3>& vertices, MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MeshPtr new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-
-
     MaterialPtr new_material_from_texture(TextureID texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     void update(float dt);
 
-    void set_default_material_filename(const unicode& filename);
-    unicode default_material_filename() const;
-    MaterialPtr default_material() const;
-    void set_default_font_filename(DefaultFontStyle style, const unicode& filename);
-    unicode default_font_filename(DefaultFontStyle style) const;
-    FontPtr default_font(DefaultFontStyle style) const;
+    virtual FontPtr default_font(DefaultFontStyle style) const;
+    virtual MaterialPtr default_material() const;
 
     MaterialPtr clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     MaterialPtr clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    AssetManager* base_manager() const {
-        AssetManager* ret = const_cast<AssetManager*>(this);
-        assert(ret && "Unexpectedly failed to cast");
-
-        if(!parent_) {
-            return ret;
-        }
-
-        // Constness applies to the resource manager itself, not the returned base manager
-        while(ret->parent_) {
-            ret = ret->parent_;
-        }
-        return ret;
-    }
+    AssetManager* base_manager() const;
 
     void run_garbage_collection();
 
+    bool is_base_manager() const;
+
 private:
     AssetManager* parent_ = nullptr;
-
-    mutable MaterialPtr default_material_;
-    unicode default_material_filename_;
-
-    mutable FontPtr default_body_font_;
-    unicode default_body_font_filename_;
-
-    mutable FontPtr default_heading_font_;
-    unicode default_heading_font_filename_;
 
     TextureManager texture_manager_;
     MaterialManager material_manager_;
@@ -278,6 +249,53 @@ private:
 
     friend class Asset;
 };
+
+class LocalAssetManager:
+    public AssetManager,
+    public RefCounted<LocalAssetManager> {
+
+public:
+    LocalAssetManager(Window* window, AssetManager* parent=nullptr):
+        WindowHolder(window),
+        AssetManager(window, parent) {}
+
+    bool init() { return true; }
+    void clean_up() {}
+
+};
+
+class SharedAssetManager:
+    public AssetManager,
+    public RefCounted<SharedAssetManager> {
+public:
+    SharedAssetManager(Window* window):
+        WindowHolder(window),
+        AssetManager(window) {}
+
+    bool init();
+
+    void cleanup() {}
+
+    virtual FontPtr default_font(DefaultFontStyle style) const;
+    virtual MaterialPtr default_material() const;
+
+    void set_default_material_filename(const unicode& filename);
+    unicode default_material_filename() const;
+
+    void set_default_font_filename(DefaultFontStyle style, const unicode& filename);
+    unicode default_font_filename(DefaultFontStyle style) const;
+
+private:
+    mutable MaterialPtr default_material_;
+    unicode default_material_filename_;
+
+    mutable FontPtr default_body_font_;
+    unicode default_body_font_filename_;
+
+    mutable FontPtr default_heading_font_;
+    unicode default_heading_font_filename_;
+};
+
 
 #undef ASSET_METHOD_DEFINITIONS
 
