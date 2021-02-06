@@ -1,0 +1,7 @@
+newmtl Ray
+Kd 1 0.8151248 0.6462264
+Ka 1 0.8151248 0.6462264
+Ks 1 1 1
+map_Kd Glow.jpg
+illum 2
+
