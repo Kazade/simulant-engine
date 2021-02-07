@@ -2,7 +2,7 @@
 
 namespace smlt {
 
-Vec3 BezierCurve::calc_bezier_point(const float t) const {
+Vec3 BezierCurve::calc_bezier_point(const RangeValue<0, 1> t) const {
 
     Vec3 bezierPoint_;
     Quaternion bezierRotation_;

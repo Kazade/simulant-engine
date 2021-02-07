@@ -24,7 +24,7 @@ BezierCurve(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3):
 
 // Returns the position and rotation of a point on the curve at a given time.
 // Please note that 't' will be clamped between 0 and 1.
-Vec3 calc_bezier_point(const float t) const;
+Vec3 calc_bezier_point(const RangeValue<0, 1> t) const;
 
 private:
 std::vector<Vec3> bezierPoints_;
