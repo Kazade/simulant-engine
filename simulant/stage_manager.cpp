@@ -35,7 +35,7 @@ namespace smlt {
 
 StageManager::StageManager(Window* window):
     window_(window),
-    pool_(16),
+    pool_(4),
     node_pool_(get_app()->config->general.stage_node_pool_size),
     manager_(&pool_) {
 
