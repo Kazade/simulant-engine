@@ -70,7 +70,7 @@ public:
         fairyPath_ = new BezierCurve(p0, p1, p2, p3);
 
         // Fairy
-        fairy_actor_->move_to_absolute(fairyPath_->get_bezier_point(0));
+        fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(0));
     }
 
 
@@ -100,7 +100,7 @@ void update(float dt) override {
         Vec3 prevFairyPos = fairy_actor_->absolute_position();
 
         // Move the fairy across the path to the new position
-        fairy_actor_->move_to_absolute(fairyPath_->get_bezier_point(fairyPathTime_));
+        fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(fairyPathTime_));
 
         // Make sure the fairy moves at a constant speed
         lastFairyPathStepSize = fairy_actor_->absolute_position().sqr_distance(fairy_actor_->absolute_position(), prevFairyPos);

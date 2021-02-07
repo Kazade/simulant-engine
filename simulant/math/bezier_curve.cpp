@@ -2,13 +2,10 @@
 
 namespace smlt {
 
-Vec3 BezierCurve::get_bezier_point(const float t) const {
+Vec3 BezierCurve::calc_bezier_point(const float t) const {
 
     Vec3 bezierPoint_;
     Quaternion bezierRotation_;
-
-    if(initialized_ == false)
-        return Vec3();
 
     // Optimized implementation of the deCasteljau algorithm
     const float x = 1.0f - t;
@@ -23,7 +20,6 @@ Vec3 BezierCurve::get_bezier_point(const float t) const {
                     (t3) * bezierPoints_[3];
 
     return bezierPoint_;
-
 }
 
 }

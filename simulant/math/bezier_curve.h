@@ -10,11 +10,6 @@ namespace smlt {
 struct BezierCurve {
 
 // Creates a degree-three bezier curve (cubic)
-BezierCurve(): BezierCurve(Vec3(), Vec3::FORWARD, Vec3::FORWARD + Vec3::DOWN, Vec3::DOWN) {
-
-}
-
-// Creates a degree-three bezier curve (cubic)
 BezierCurve(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3):
     p0_(p0),
     p1_(p1),
@@ -25,17 +20,13 @@ BezierCurve(const Vec3& p0, const Vec3& p1, const Vec3& p2, const Vec3& p3):
         bezierPoints_.push_back(p1_);
         bezierPoints_.push_back(p2_);
         bezierPoints_.push_back(p3_);
-        initialized_ = true;
     }
 
 // Returns the position and rotation of a point on the curve at a given time.
 // Please note that 't' will be clamped between 0 and 1.
-Vec3 get_bezier_point(const float t) const;
-
-bool is_initialized() const { return initialized_; }
+Vec3 calc_bezier_point(const float t) const;
 
 private:
-bool initialized_ = false;
 std::vector<Vec3> bezierPoints_;
 
 Vec3 p0_, p1_, p2_, p3_;
