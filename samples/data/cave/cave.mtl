@@ -1,0 +1,27 @@
+newmtl Rock023_2K_Color
+Kd 1 1 1
+Ka 0.125 0.25 0.25
+Ks 0 0 0
+map_Kd Rock023_Color_mod.jpg
+illum 2
+
+newmtl Ground003_2K_Color
+Kd 0.2830189 0.2830189 0.2830189
+Ka 0.125 0.125 0.125
+Ks 0 0 0
+map_Kd Ground003_2K_Color_mod.jpg
+illum 2
+
+newmtl OldTree
+Kd 0.2488522 0.2641509 0.1986415
+Ka 0 0 0
+Ks 0 0 0
+map_Kd OldBark.jpg
+illum 2
+
+newmtl Sword_Color
+Kd 0.7311321 0.9166302 1
+Ka 0.125 0.125 0.125
+Ks 0 0 0
+map_Kd Sword_Color.jpg
+illum 2
