@@ -48,7 +48,7 @@ Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_siz
     ContainerNode(this, STAGE_NODE_TYPE_STAGE),
     node_pool_(new StageNodePool(pool_size)),
     ui_(new ui::UIManager(this, node_pool_)),
-    asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
+    asset_manager_(LocalAssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
     geom_manager_(new GeomManager(node_pool_)),
     sky_manager_(new SkyManager(parent, this, node_pool_)),

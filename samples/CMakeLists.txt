@@ -19,6 +19,7 @@ SET(SAMPLES
     nehe03
     ui_demo
     particles
+    cave_demo
 )
 
 SET(EXE_EXTENSION ".elf")
