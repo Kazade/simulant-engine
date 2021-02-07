@@ -23,6 +23,32 @@ public:
         stage_->destroy();
     }
 
+    void test_only_renders_correct_stage() {
+        auto camera = stage_->new_camera();
+        camera->move_to(784, 58, -775);
+
+        auto stage2 = window->new_stage();
+
+        auto a1 = stage_->new_actor_with_mesh(box_);
+        auto a2 = stage2->new_actor_with_mesh(box_);
+
+        a1->move_to(791, 58, -810);
+        a2->move_to(791, 58, -810);
+
+        std::vector<LightID> lights;
+        std::vector<StageNode*> nodes;
+        FrustumPartitioner partitioner(stage_);
+
+        partitioner.lights_and_geometry_visible_from(
+            camera, lights, nodes
+        );
+
+        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
+        assert_true(std::find(nodes.begin(), nodes.end(), a2) == nodes.end());
+
+        stage2->destroy();
+    }
+
     void test_visibility() {
         auto camera = stage_->new_camera();
         camera->move_to(784, 58, -775);

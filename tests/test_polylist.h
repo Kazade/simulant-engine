@@ -65,7 +65,7 @@ public:
         list.create<C>();
         list.create<C>();
 
-        assert_equal(list.capacity(), 3);
+        assert_equal(list.capacity(), 3u);
         auto it = list.find(p1.second);
         for(; it != list.end();) {
             it = list.erase(it);
@@ -73,7 +73,7 @@ public:
 
         /* No capacity now */
         list.shrink_to_fit();
-        assert_equal(list.capacity(), 0);
+        assert_equal(list.capacity(), 0u);
     }
 
     void test_iterating_with_empty_chunks() {
