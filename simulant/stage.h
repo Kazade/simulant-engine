@@ -93,7 +93,12 @@ class Stage:
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
 public:
-    Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_size);
+    Stage(
+        Window *parent,
+        StageNodePool* node_pool,
+        AvailablePartitioner partitioner
+    );
+
     virtual ~Stage();
 
     ActorPtr new_actor();

@@ -34,6 +34,12 @@ class StageNode;
 typedef sig::signal<void (StageID)> StageAddedSignal;
 typedef sig::signal<void (StageID)> StageRemovedSignal;
 
+typedef Polylist<
+    StageNode,
+    Actor, Camera, Geom, Light, ParticleSystem, Sprite,
+    ui::Button, ui::Image, ui::Label, ui::ProgressBar,
+    Skybox
+> StageNodePool;
 
 class StageManager:
     public virtual Updateable {
@@ -64,7 +70,7 @@ public:
 
     StageManager(Window* window);
 
-    StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM, uint32_t pool_size=0);
+    StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM);
     StagePtr stage(StageID s);
     StagePtr destroy_stage(StageID s);
     std::size_t stage_count() const;
@@ -90,6 +96,8 @@ protected:
     typedef Polylist<StageNode, Stage> StagePool;
 
     StagePool pool_;
+    StageNodePool node_pool_;
+
     StageNodeManager<StagePool, StageID, Stage> manager_;
 };
 

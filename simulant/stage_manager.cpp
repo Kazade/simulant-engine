@@ -35,15 +35,14 @@ namespace smlt {
 
 StageManager::StageManager(Window* window):
     window_(window),
-    pool_(16),
+    pool_(4),
+    node_pool_(get_app()->config->general.stage_node_pool_size),
     manager_(&pool_) {
 
 }
 
-StagePtr StageManager::new_stage(AvailablePartitioner partitioner, uint32_t pool_size) {
-    pool_size = (pool_size) ? pool_size:
-        window_->application->config->general.stage_node_pool_size;
-    auto ret = manager_.make(window_, partitioner, pool_size);
+StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
+    auto ret = manager_.make(window_, &node_pool_, partitioner);
     signal_stage_added_(ret->id());
     return ret;
 }
