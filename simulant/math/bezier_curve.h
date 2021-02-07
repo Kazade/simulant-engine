@@ -4,6 +4,7 @@
 #include <array>
 #include "vec3.h"
 #include "quaternion.h"
+#include "../generic/range_value.h"
 
 namespace smlt {
 
