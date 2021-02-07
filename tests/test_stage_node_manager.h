@@ -56,39 +56,39 @@ public:
     void test_actors_are_freed() {
         auto stage = window->new_stage();
 
-        auto count = stage->node_pool->size();
+        auto count = stage->actor_count();
 
         auto actor = stage->new_actor();
         assert_equal(actor->node_type(), STAGE_NODE_TYPE_ACTOR);
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->actor_count(), count + 1);
 
         stage->destroy_actor(actor);
 
         // Should be the same, the original actor is still lingering
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->actor_count(), count + 1);
 
         window->run_frame();
 
         // Back to where we were
-        assert_equal(stage->node_pool->size(), count);
+        assert_equal(stage->actor_count(), count);
     }
 
     void test_lights_are_freed() {
         auto stage = window->new_stage();
 
-        auto count = stage->node_pool->size();
+        auto count = stage->light_count();
 
         auto light = stage->new_light_as_directional();
         assert_equal(light->node_type(), STAGE_NODE_TYPE_LIGHT);
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->light_count(), count + 1);
 
         stage->destroy_light(light);
 
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->light_count(), count + 1);
 
         window->run_frame();
 
-        assert_equal(stage->node_pool->size(), count);
+        assert_equal(stage->light_count(), count);
     }
 
     void test_particle_systems_are_freed() {
@@ -98,20 +98,20 @@ public:
             ParticleScript::BuiltIns::FIRE
         );
 
-        auto count = stage->node_pool->size();
+        auto count = stage->particle_system_count();
 
         auto particle_system = stage->new_particle_system(script);
         assert_equal(particle_system->node_type(), STAGE_NODE_TYPE_PARTICLE_SYSTEM);
 
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->particle_system_count(), count + 1);
 
         stage->destroy_particle_system(particle_system);
 
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->particle_system_count(), count + 1);
 
         window->run_frame();
 
-        assert_equal(stage->node_pool->size(), count);
+        assert_equal(stage->particle_system_count(), count);
     }
 
     void test_geoms_are_freed() {
@@ -119,38 +119,38 @@ public:
 
         auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
-        auto count = stage->node_pool->size();
+        auto count = stage->geom_count();
 
         auto geom = stage->new_geom_with_mesh(mesh);
 
         assert_equal(geom->node_type(), STAGE_NODE_TYPE_GEOM);
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->geom_count(), count + 1);
 
         stage->destroy_geom(geom);
 
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->geom_count(), count + 1);
 
         window->run_frame();
 
-        assert_equal(stage->node_pool->size(), count);
+        assert_equal(stage->geom_count(), count);
     }
 
     void test_cameras_are_freed() {
         auto stage = window->new_stage();
 
-        auto count = stage->node_pool->size();
+        auto count = stage->camera_count();
 
         auto camera = stage->new_camera();
         assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);
 
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->camera_count(), count + 1);
         stage->destroy_camera(camera);
 
-        assert_equal(stage->node_pool->size(), count + 1);
+        assert_equal(stage->camera_count(), count + 1);
 
         window->run_frame();
 
-        assert_equal(stage->node_pool->size(), count);
+        assert_equal(stage->camera_count(), count);
     }
 
     void test_pipelines_are_freed() {
@@ -196,20 +196,20 @@ public:
     void test_sprites_are_freed() {
         auto stage = window->new_stage();
 
-        auto count = stage->node_pool->size();
+        auto count = stage->sprites->sprite_count();
 
         auto sprite = stage->sprites->new_sprite();
         assert_equal(sprite->node_type(), STAGE_NODE_TYPE_OTHER);
 
-        assert_true(stage->node_pool->size() >= count + 1);
+        assert_true(stage->sprites->sprite_count() >= count + 1);
 
         stage->sprites->destroy_sprite(sprite);
 
-        assert_true(stage->node_pool->size() >= count + 1);
+        assert_true(stage->sprites->sprite_count() >= count + 1);
 
         window->run_frame();
 
-        assert_equal(stage->node_pool->size(), count);
+        assert_equal(stage->sprites->sprite_count(), count);
     }
 };
 

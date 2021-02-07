@@ -75,8 +75,8 @@ void StageManager::fixed_update(float dt) {
 
         stage->fixed_update(dt);
 
-        for(auto& node: *stage->node_pool) {
-            node->fixed_update(dt);
+        for(auto& node: stage->each_descendent()) {
+            node.fixed_update(dt);
         }
     }
 }
@@ -89,8 +89,8 @@ void StageManager::late_update(float dt) {
 
         stage->late_update(dt);
 
-        for(auto& node: *stage->node_pool) {
-            node->late_update(dt);
+        for(auto& node: stage->each_descendent()) {
+            node.late_update(dt);
         }
     }
 }
@@ -104,8 +104,8 @@ void StageManager::update(float dt) {
 
         stage->update(dt);
 
-        for(auto& node: *stage->node_pool) {
-            node->update(dt);
+        for(auto& node: stage->each_descendent()) {
+            node.update(dt);
         }
     }
 }

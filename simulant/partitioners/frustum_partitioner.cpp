@@ -34,19 +34,15 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
 
     auto frustum = stage->camera(camera_id)->frustum();
 
-    for(auto it = stage->node_pool->begin(); it != stage->node_pool->end(); ++it) {
-        auto node = (*it);
-
-        assert(node);
-
-        auto aabb = node->transformed_aabb();
-        auto centre = aabb.centre() + node->absolute_position();
+    for(auto& node: stage->each_descendent()) {
+        auto aabb = node.transformed_aabb();
+        auto centre = aabb.centre() + node.absolute_position();
 
         /* Check that the node isn't being destroyed, and it's supposed to
          * be visible (otherwise we could end up doing work for nothing) */
-        if(!node->is_marked_for_destruction() && node->is_visible()) {
-            if(node->node_type() == STAGE_NODE_TYPE_LIGHT) {
-                auto light = dynamic_cast<Light*>(node);
+        if(!node.is_marked_for_destruction() && node.is_visible()) {
+            if(node.node_type() == STAGE_NODE_TYPE_LIGHT) {
+                auto light = dynamic_cast<Light*>(&node);
                 assert(light);
 
                 if(!light->is_cullable() ||
@@ -54,11 +50,11 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
                 ) {
                     lights_out.push_back(light->id());
                 }
-            } else if(!node->is_cullable()) {
+            } else if(!node.is_cullable()) {
                 /* If the culling mode is NEVER then we always return */
-                geom_out.push_back(node);
+                geom_out.push_back(&node);
             } else if(frustum.intersects_aabb(aabb)) {
-                geom_out.push_back(node);
+                geom_out.push_back(&node);
             }
         }
     }

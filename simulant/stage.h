@@ -270,7 +270,6 @@ public:
     Property<decltype(&Stage::sky_manager_)> skies = {this, &Stage::sky_manager_};
     Property<decltype(&Stage::sprite_manager_)> sprites = {this, &Stage::sprite_manager_};
     Property<decltype(&Stage::fog_)> fog = {this, &Stage::fog_};
-    Property<decltype(&Stage::node_pool_)> node_pool = {this, &Stage::node_pool_};
 };
 
 }
