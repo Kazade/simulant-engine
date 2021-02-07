@@ -120,7 +120,7 @@ public:
     void _expand_verts(uint16_t frame) {
         /* Decompresses a single frame of MD2 data into the frame cache */
 
-        static const Mat4 ROT_X = Mat4::as_rotation_x(Degrees(-90.0f));
+        static const Mat4 ROT_X = Mat4::as_rotation_x(Degrees(90.0f));
         static const Mat4 ROT_Y = Mat4::as_rotation_y(Degrees(90.0f));
         static const Mat4 VERTEX_ROTATION = ROT_Y * ROT_X;
 
