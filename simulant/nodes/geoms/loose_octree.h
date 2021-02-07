@@ -82,9 +82,12 @@ public:
         /* Calculate the cell index to insert the sphere */
         auto half_width = root_width_ * 0.5f;
 
-        assert(centre.x <= bounds_.max().x && centre.x >= bounds_.min().x);
-        assert(centre.y <= bounds_.max().y && centre.y >= bounds_.min().y);
-        assert(centre.z <= bounds_.max().z && centre.z >= bounds_.min().z);
+#ifndef NDEBUG
+        const float E = 0.001f;
+#endif
+        assert(almost_lequal(centre.x, bounds_.max().x, E) && almost_gequal(centre.x, bounds_.min().x, E));
+        assert(almost_lequal(centre.y, bounds_.max().y, E) && almost_gequal(centre.y, bounds_.min().y, E));
+        assert(almost_lequal(centre.z, bounds_.max().z, E) && almost_gequal(centre.z, bounds_.min().z, E));
 
         auto x = (GridCoord) ((centre.x + half_width - centre_.x) / level_and_node_width.second);
         auto y = (GridCoord) ((centre.y + half_width - centre_.y) / level_and_node_width.second);

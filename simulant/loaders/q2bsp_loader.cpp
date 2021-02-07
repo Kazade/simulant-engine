@@ -301,7 +301,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     auto& file = *this->data_;
 
     //Needed because the Quake 2 coord system is weird
-    Mat4 rotation_x = Mat4::as_rotation_x(Degrees(-90));
+    Mat4 rotation_x = Mat4::as_rotation_x(Degrees(90));
     Mat4 rotation_y = Mat4::as_rotation_y(Degrees(90.0f));
     Mat4 rotation = rotation_y * rotation_x;
 
