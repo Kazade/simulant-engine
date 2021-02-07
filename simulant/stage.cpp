@@ -66,15 +66,20 @@ Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_siz
 }
 
 Stage::~Stage() {
+    // Composite things first
+    sprite_manager_.reset();
+    sky_manager_.reset();
+    ui_.reset();
+
+    // Then core objects
+    geom_manager_.reset();
     camera_manager_.reset();
     light_manager_.reset();
     particle_system_manager_.reset();
     actor_manager_.reset();
-    sprite_manager_.reset();
-    sky_manager_.reset();
-    geom_manager_.reset();
+
+    // Finally assets
     asset_manager_.reset();
-    ui_.reset();
     delete node_pool_;
 }
 
