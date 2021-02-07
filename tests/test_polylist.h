@@ -58,6 +58,24 @@ public:
         assert_true(list.empty());
     }
 
+    void test_erase_pops_chunk() {
+        List list(1);
+
+        auto p1 = list.create<C>();
+        list.create<C>();
+        list.create<C>();
+
+        assert_equal(list.capacity(), 3);
+        auto it = list.find(p1.second);
+        for(; it != list.end();) {
+            it = list.erase(it);
+        }
+
+        /* No capacity now */
+        list.shrink_to_fit();
+        assert_equal(list.capacity(), 0);
+    }
+
     void test_iterating_with_empty_chunks() {
         List list(1);
 
@@ -118,6 +136,8 @@ public:
         }
 
         assert_equal(list.capacity(), 64u);
+        list.shrink_to_fit();
+        assert_equal(list.capacity(), 0u);
     }
 
     void test_reserve() {

@@ -201,7 +201,7 @@ public:
     }
 
 private:
-    std::shared_ptr<StageNodePool> node_pool_;
+    StageNodePool* node_pool_ = nullptr;
 
     AABB aabb_;
 

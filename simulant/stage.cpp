@@ -46,17 +46,17 @@ Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_siz
     WindowHolder(parent),
     TypedDestroyableObject<Stage, Window>(parent),
     ContainerNode(this, STAGE_NODE_TYPE_STAGE),
-    node_pool_(std::make_shared<StageNodePool>(pool_size)),
-    ui_(new ui::UIManager(this, node_pool_.get())),
+    node_pool_(new StageNodePool(pool_size)),
+    ui_(new ui::UIManager(this, node_pool_)),
     asset_manager_(AssetManager::create(parent, parent->shared_assets.get())),
     fog_(new FogSettings()),
-    geom_manager_(new GeomManager(node_pool_.get())),
-    sky_manager_(new SkyManager(parent, this, node_pool_.get())),
-    sprite_manager_(new SpriteManager(parent, this, node_pool_.get())),
-    actor_manager_(new ActorManager(node_pool_.get())),
-    particle_system_manager_(new ParticleSystemManager(node_pool_.get())),
-    light_manager_(new LightManager(node_pool_.get())),
-    camera_manager_(new CameraManager(node_pool_.get())) {
+    geom_manager_(new GeomManager(node_pool_)),
+    sky_manager_(new SkyManager(parent, this, node_pool_)),
+    sprite_manager_(new SpriteManager(parent, this, node_pool_)),
+    actor_manager_(new ActorManager(node_pool_)),
+    particle_system_manager_(new ParticleSystemManager(node_pool_)),
+    light_manager_(new LightManager(node_pool_)),
+    camera_manager_(new CameraManager(node_pool_)) {
 
     set_partitioner(partitioner);
 
@@ -66,8 +66,16 @@ Stage::Stage(Window *parent, AvailablePartitioner partitioner, uint32_t pool_siz
 }
 
 Stage::~Stage() {
+    camera_manager_.reset();
+    light_manager_.reset();
+    particle_system_manager_.reset();
+    actor_manager_.reset();
     sprite_manager_.reset();
     sky_manager_.reset();
+    geom_manager_.reset();
+    asset_manager_.reset();
+    ui_.reset();
+    delete node_pool_;
 }
 
 bool Stage::init() {
@@ -433,6 +441,9 @@ void Stage::update(float dt) {
     if(debug_) {
         debug_->update(dt);
     }
+
+    /* Regularly trim the node pool size */
+    node_pool_->shrink_to_fit();
 }
 
 Debug* Stage::enable_debug(bool v) {
