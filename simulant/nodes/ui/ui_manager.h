@@ -28,7 +28,7 @@ typedef Polylist<
     StageNode,
     Actor, Camera, Geom, Light, ParticleSystem, Sprite,
     ui::Button, ui::Image, ui::Label, ui::ProgressBar,
-    Skybox, Sprite
+    Skybox
 > StageNodePool;
 
 namespace ui {

@@ -152,9 +152,7 @@ public:
     Polylist(std::size_t chunk_size):
         chunk_size(chunk_size) {
 
-        if(chunk_size == 0) {
-            throw std::logic_error("Invalid pool size");
-        }
+        assert(chunk_size > 0);
     }
 
     ~Polylist() {
@@ -213,7 +211,9 @@ public:
 
         assert(meta->entry);
 
-        auto& chunk = chunks_[meta->chunk];
+
+        auto chunk_idx = meta->chunk;
+        auto& chunk = chunks_[chunk_idx];
 
         assert(meta->next);
         assert(meta->prev);
@@ -280,8 +280,15 @@ public:
 
         assert(size_ > 0);
         size_--;
-
+        chunk->used_count--;
         return next;
+    }
+
+    void shrink_to_fit() {
+        /* Release the last chunk if it's empty */
+        while(chunks_.size() && !chunks_.back()->used_count) {
+            pop_chunk();
+        }
     }
 
     void reserve(std::size_t amount) {
@@ -356,6 +363,7 @@ private:
     } __attribute__((aligned(8))) EntryWithMeta;
 
     struct Chunk {
+        uint32_t used_count = 0;
         EntryWithMeta* data = nullptr;
 
         EntryMeta* free_list_head_ = nullptr;
@@ -494,6 +502,7 @@ private:
             (chunk->free_list_head_ && chunk->free_list_tail_)
         );
 
+        ++chunk->used_count;
         ++size_;
     }
 
