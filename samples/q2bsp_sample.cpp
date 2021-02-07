@@ -33,7 +33,7 @@ public:
                 std::vector<unicode> coords = _u(position).split(" ");
 
                 //Needed because the Quake 2 coord system is weird
-                Mat4 rotation_x = Mat4::as_rotation_x(Degrees(-90));
+                Mat4 rotation_x = Mat4::as_rotation_x(Degrees(90));
                 Mat4 rotation_y = Mat4::as_rotation_y(Degrees(90.0f));
                 Mat4 rotation = rotation_y * rotation_x;
 
@@ -57,7 +57,7 @@ public:
             Degrees(45.0),
             float(window->width()) / float(window->height()),
             1.0,
-            1000.0
+            1500.0
         );
 
         stage_->new_light_as_directional();
@@ -79,10 +79,7 @@ public:
 private:
     bool init() {
         scenes->register_scene<GameScene>("main");
-        scenes->preload_in_background("main").then([this]() {
-            scenes->activate("main");
-        }); //Do loading in a background thread, but show immediately when done
-        scenes->activate("_loading"); // Show the loading screen in the meantime
+        scenes->activate("main");
         return true;
     }
 };
