@@ -22,6 +22,7 @@
 
 #include "../logging.h"
 #include "../sound.h"
+#include "../generic/raii.h"
 
 namespace smlt {
 namespace loaders {
@@ -102,6 +103,8 @@ static void init_source(Sound* self, SourceInstance& source) {
 
 
 void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
+    _S_UNUSED(options);
+
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");
@@ -124,6 +127,12 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     }
 
     stb_vorbis_info info = stb_vorbis_get_info(stb_stream);
+
+    raii::Finally finally([&]() {
+        stb_vorbis_close(stb_stream);
+    });
+
+    _S_UNUSED(finally);
 
     // Rewind
     fstream->seekg(0);
