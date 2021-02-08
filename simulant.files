@@ -120,7 +120,6 @@ simulant/platforms/dreamcast/profiler.c
 simulant/platforms/dreamcast/profiler.h
 simulant/renderers/gl2x/vbo_manager.cpp
 simulant/renderers/gl2x/vbo_manager.h
-simulant/signals/ring_buffer.h
 simulant/signals/signal.h
 simulant/stage_manager.cpp
 simulant/stage_manager.h
