@@ -164,7 +164,7 @@ public:
     }
 
     ~ProtoSignal() {
-        Link* it = links_;
+        Link* it = head_;
         while(it) {
             auto next = it->next;
             delete it;
@@ -175,12 +175,14 @@ public:
     Connection connect(const callback& func) {
         size_t id = increment_counter();
 
+        auto conn = std::make_shared<ConnectionImpl>(this, id);
+
         Link new_link;
         new_link.func = func;
-        new_link.conn_impl = std::make_shared<ConnectionImpl>(this, id);
+        new_link.conn_impl = conn;
 
-        if(push_link(std::move(new_link))) {
-            return Connection(new_link.conn_impl);
+        if(push_link(new_link)) {
+            return Connection(conn);
         } else {
             L_WARN("Error adding connection to signal!");
             return Connection();
@@ -188,15 +190,16 @@ public:
     }
 
     void operator()(Args... args) {
-        Link* it = links_;
+        Link* it = head_;
         while(it) {
-            it->func(std::forward<Args>(args)...);
+            assert(it->func);
+            it->func(args...);
             it = it->next;
         }
     }
 
     bool connection_exists(const ConnectionImpl& conn) const  {
-        Link* it = links_;
+        Link* it = head_;
         while(it) {
             if(it->conn_impl.get() == &conn) {
                 return true;
@@ -210,37 +213,32 @@ public:
     bool disconnect(const ConnectionImpl& conn_impl) {
         bool removed = false;
 
-        if(!links_) {
-            return false;
-        }
+        Link* it = head_;
+        Link* prev = nullptr;
 
-        Link* it = links_;
-        while(it->next) {
-            if(it->next->conn_impl.get() == &conn_impl) {
-                auto to_del = it->next;
-                it->next = it->next->next;
-                delete to_del;
-                decrement_counter();
-                removed = true;
+        while(it) {
+            if(it->conn_impl.get() == &conn_impl) {
+                if(prev) {
+                    prev->next = it->next;
+                } else {
+                    head_ = it->next;
+                }
+
+                if(tail_)
+
+                delete it;
+                connection_count_--;
             }
 
             it = it->next;
         }
 
-        /* Check the root */
-        if(links_->conn_impl.get() == &conn_impl) {
-            auto to_del = links_;
-            links_ = links_->next;
-            delete to_del;
-            decrement_counter();
-            removed = true;
-        }
 
         return removed;
     }
 
     std::size_t connection_count() const {
-        return connection_counter_;
+        return connection_count_;
     }
 
 private:
@@ -250,23 +248,24 @@ private:
         Link* next = nullptr;
     };
 
-    Link* links_ = nullptr;
+    Link* head_ = nullptr;
+    Link* tail_ = nullptr;
+
+    uint32_t connection_count_ = 0;
+
     thread::Atomic<size_t> connection_counter_ = {0};
 
-    bool push_link(Link&& link) {
-        Link* dest = nullptr;
-        if(!links_) {
-            links_ = new Link();
-            dest = links_;
+    bool push_link(const Link& link) {
+        if(!head_) {
+            head_ = tail_ = new Link();
+            *head_ = link;
         } else {
-            dest = links_;
-            while(dest->next) {
-                dest = dest->next;
-            }
+            tail_->next = new Link();
+            tail_ = tail_->next;
+            *tail_ = link;
         }
 
-        *dest = std::move(link);
-        increment_counter();
+        connection_count_++;
 
         return true;
     }
