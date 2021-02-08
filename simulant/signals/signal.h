@@ -163,13 +163,24 @@ public:
         connection_counter_ = 0;
     }
 
+    ~ProtoSignal() {
+        Link* it = links_;
+        while(it) {
+            auto next = it->next;
+            delete it;
+            it = next;
+        }
+    }
+
     Connection connect(const callback& func) {
         size_t id = increment_counter();
-        auto conn_impl = std::make_shared<ConnectionImpl>(this, id);
 
-        Link new_link{func, conn_impl};
+        Link new_link;
+        new_link.func = func;
+        new_link.conn_impl = std::make_shared<ConnectionImpl>(this, id);
+
         if(push_link(std::move(new_link))) {
-            return Connection(conn_impl);
+            return Connection(new_link.conn_impl);
         } else {
             L_WARN("Error adding connection to signal!");
             return Connection();
@@ -177,18 +188,21 @@ public:
     }
 
     void operator()(Args... args) {
-        for(auto& link: links_) {
-            if(link.func) {
-                link.func(args...);
-            }
+        Link* it = links_;
+        while(it) {
+            it->func(std::forward<Args>(args)...);
+            it = it->next;
         }
     }
 
     bool connection_exists(const ConnectionImpl& conn) const  {
-        for(auto link: links_) {
-            if(link.func && link.conn_impl.get() == &conn) {
+        Link* it = links_;
+        while(it) {
+            if(it->conn_impl.get() == &conn) {
                 return true;
             }
+
+            it = it->next;
         }
         return false;
     }
@@ -206,6 +220,7 @@ public:
                 auto to_del = it->next;
                 it->next = it->next->next;
                 delete to_del;
+                decrement_counter();
                 removed = true;
             }
 
@@ -214,23 +229,11 @@ public:
 
         /* Check the root */
         if(links_->conn_impl.get() == &conn_impl) {
-
-        }
-
-
-        if(links_->conn_impl.get() == &conn_impl) {
-            auto t
+            auto to_del = links_;
             links_ = links_->next;
-
-        }
-
-        for(auto& link: links_) {
-            if(link.func && link.conn_impl.get() == &conn_impl) {
-                link.func = callback();
-                link.conn_impl.reset();
-                removed = true;
-                decrement_counter();
-            }
+            delete to_del;
+            decrement_counter();
+            removed = true;
         }
 
         return removed;
@@ -244,7 +247,6 @@ private:
     struct Link {
         callback func;
         std::shared_ptr<ConnectionImpl> conn_impl;
-
         Link* next = nullptr;
     };
 
