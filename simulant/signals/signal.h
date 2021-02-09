@@ -162,10 +162,6 @@ public:
     typedef R result;
     typedef std::function<R (Args...)> callback;
 
-    ProtoSignal() {
-        connection_counter_ = 0;
-    }
-
     ~ProtoSignal() {
         Link* it = head_;
         while(it) {
@@ -176,7 +172,8 @@ public:
     }
 
     Connection connect(const callback& func) {
-        size_t id = increment_counter();
+        static size_t id_counter = 0;
+        size_t id = ++id_counter;
         Link new_link;
         new_link.func = func;
         new_link.conn_impl = std::make_shared<ConnectionImpl>(this, id, marker_);
@@ -300,8 +297,6 @@ private:
      * then any connections pointing to it will fail to get a lock */
     std::shared_ptr<int> marker_ = std::make_shared<int>(1);
 
-    thread::Atomic<size_t> connection_counter_ = {0};
-
     bool push_link(const Link& link) {
         if(!head_) {
             assert(!tail_);
@@ -317,16 +312,6 @@ private:
         connection_count_++;
 
         return true;
-    }
-
-    inline size_t increment_counter() {
-        connection_counter_++;
-        return connection_counter_;
-    }
-
-    inline size_t decrement_counter() {
-        connection_counter_--;
-        return connection_counter_;
     }
 };
 
