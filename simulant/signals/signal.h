@@ -4,8 +4,8 @@
 #include <memory>
 #include <algorithm>
 
+#include "../logging.h"
 #include "../threads/atomic.h"
-#include "ring_buffer.h"
 
 #define DEFINE_SIGNAL(prototype, name) \
     public: \
@@ -31,13 +31,15 @@ class Connection;
 
 class ConnectionImpl {
 public:
-    ConnectionImpl(Disconnector* parent, size_t id):
+    ConnectionImpl(Disconnector* parent, size_t id, std::weak_ptr<int> marker):
         id_(id),
-        parent_(parent) {}
+        parent_(parent),
+        marker_(marker) {}
 
     ConnectionImpl(const ConnectionImpl& rhs):
         id_(rhs.id_),
-        parent_(rhs.parent_) {}
+        parent_(rhs.parent_),
+        marker_(rhs.marker_) {}
 
     bool operator!=(const ConnectionImpl& rhs) const { return !(*this == rhs); }
     bool operator==(const ConnectionImpl& rhs) const { return this->id_ == rhs.id_; }
@@ -56,6 +58,7 @@ public:
 private:
     size_t id_;
     Disconnector* parent_;
+    std::weak_ptr<int> marker_;
     friend class Connection;
 };
 
@@ -71,12 +74,12 @@ public:
 
     bool disconnect() {
         auto p = impl_.lock();
-        return p && p->parent_->disconnect(*p);
+        return p && p->marker_.lock() && p->parent_->disconnect(*p);
     }
 
     bool is_connected() const {
         auto p = impl_.lock();
-        return p && p->parent_->connection_exists(*p);
+        return p && p->marker_.lock() && p->parent_->connection_exists(*p);
     }
 
     operator bool() const {
@@ -159,68 +162,156 @@ public:
     typedef R result;
     typedef std::function<R (Args...)> callback;
 
-    ProtoSignal() {
-        connection_counter_ = 0;
+    ~ProtoSignal() {
+        Link* it = head_;
+        while(it) {
+            auto next = it->next;
+            delete it;
+            it = next;
+        }
     }
 
     Connection connect(const callback& func) {
-        size_t id = increment_counter();
-        auto conn_impl = std::make_shared<ConnectionImpl>(this, id);
-        links_.push_back({func, conn_impl});
-        return Connection(conn_impl);
+        static size_t id_counter = 0;
+        size_t id = ++id_counter;
+        Link new_link;
+        new_link.func = func;
+        new_link.conn_impl = std::make_shared<ConnectionImpl>(this, id, marker_);
+
+        if(push_link(new_link)) {
+            return Connection(new_link.conn_impl);
+        } else {
+            L_WARN("Error adding connection to signal!");
+            return Connection();
+        }
     }
 
     void operator()(Args... args) {
-        for(auto& link: links_) {
-            link.func(args...);
+        Link* it = head_;
+
+        ++iterating_;
+        while(it) {
+            if(!it->is_dead) {
+                assert(it->func);
+                it->func(args...);
+            }
+
+            it = it->next;
         }
+        --iterating_;
+
+        shrink_to_fit();
     }
 
     bool connection_exists(const ConnectionImpl& conn) const  {
-        for(auto link: links_) {
-            if(*link.conn_impl == conn) {
+        Link* it = head_;
+        ++iterating_;
+        while(it) {
+            if((!it->is_dead) && it->conn_impl.get() == &conn) {
                 return true;
             }
+
+            it = it->next;
         }
+        --iterating_;
         return false;
     }
 
-    bool disconnect(const ConnectionImpl& conn_impl) {
-        auto size = links_.size();
-
-        for(auto it = links_.begin(); it != links_.end();) {
-            if((*it).conn_impl.get() == &conn_impl) {
-                it = links_.erase(it);
-            } else {
-                ++it;
-            }
+    void shrink_to_fit() {
+        if(iterating_ > 0) {
+            return;
         }
 
-        return size != links_.size();
+        Link* it = head_;
+        Link* prev = nullptr;
+        while(it) {
+            auto next = it->next;
+            if(it->is_dead) {
+                if(prev) {
+                    prev->next = next;
+                } else {
+                    assert(!prev);
+                    head_ = next;
+                }
+
+                if(it == tail_) {
+                    tail_ = prev;
+                }
+
+                delete it;
+            } else {
+                prev = it;
+            }
+
+            it = next;
+        }
+    }
+
+    bool disconnect(const ConnectionImpl& conn_impl) {
+        bool removed = false;
+
+        Link* it = head_;
+
+        ++iterating_;
+        while(it) {
+            auto next = it->next;
+            if((!it->is_dead) && it->conn_impl.get() == &conn_impl) {
+                it->is_dead = true;
+
+                connection_count_--;
+                removed = true;
+            }
+
+            it = next;
+        }
+        --iterating_;
+
+        shrink_to_fit();
+
+        return removed;
     }
 
     std::size_t connection_count() const {
-        return links_.size();
+        return connection_count_;
     }
 
 private:
-    thread::Atomic<size_t> connection_counter_ = {0};
-
     struct Link {
         callback func;
         std::shared_ptr<ConnectionImpl> conn_impl;
+        Link* next = nullptr;
+        bool is_dead = false;
     };
 
-    threadsafe::ring_buffer<Link> links_;
+    Link* head_ = nullptr;
+    Link* tail_ = nullptr;
 
-    inline size_t increment_counter() {
-        connection_counter_++;
-        return connection_counter_;
-    }
+    /* Keeps track of whether or not we're currently iterating
+     * the links. This protects us deleting a thing during an iteration */
+    mutable uint8_t iterating_ = 0;
 
-    inline size_t decrement_counter() {
-        connection_counter_--;
-        return connection_counter_;
+    uint32_t connection_count_ = 0;
+
+    /* This marker is passed as a weak_ptr to all connections. It's
+     * used to track whether this signal has been destroyed. If so
+     * then any connections pointing to it will fail to get a lock */
+    std::shared_ptr<int> marker_ = std::make_shared<int>(1);
+
+    bool push_link(const Link& link) {
+        if(!head_) {
+            assert(!tail_);
+            head_ = tail_ = new Link();
+            *head_ = link;
+        } else {
+            assert(tail_);
+            tail_->next = new Link();
+            tail_ = tail_->next;
+            *tail_ = link;
+        }
+
+        connection_count_++;
+
+        return true;
     }
 };
 
