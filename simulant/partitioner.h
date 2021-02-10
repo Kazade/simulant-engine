@@ -48,6 +48,7 @@ struct StagedWrite {
     AABB new_bounds;
 };
 
+#define MAX_STAGED_WRITES 256
 
 class Partitioner:
     public RefCounted<Partitioner> {
@@ -98,6 +99,11 @@ protected:
         }
 
         value.bits |= (1 << op.operation);
+
+        /* Apply staged writes immediately to prevent the size spiralling */
+        if(staged_writes_.size() >= MAX_STAGED_WRITES) {
+            _apply_writes();
+        }
     }
 
 private:
