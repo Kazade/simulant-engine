@@ -57,6 +57,7 @@ bool StatsPanel::init() {
     pipeline_ = window_->compositor->render(
         stage_, ui_camera_
     )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    pipeline_->set_name("stats_pipeline");
     pipeline_->deactivate();
 
     auto overlay = stage_;
