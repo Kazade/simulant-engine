@@ -4,6 +4,7 @@
 #include "simulant/test.h"
 
 #include "simulant/assets/materials/material_property.inl.h"
+#include "simulant/assets/materials/fast_variant.h"
 
 class MaterialTest : public smlt::test::SimulantTestCase {
 public:
