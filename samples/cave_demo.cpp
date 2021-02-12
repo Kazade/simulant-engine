@@ -75,7 +75,7 @@ public:
 
 
 
-void update(float dt) override {
+void fixed_update(float dt) override {
 
         // Move the camera between two points
         camera_->move_to(camera_->position() + Vec3::LEFT * cameraSpeed_ * dt);
@@ -129,7 +129,7 @@ void update(float dt) override {
         float cameraSpeed_ = 0.35f;
         BezierCurve* fairyPath_ = nullptr;
         float fairyPathTime_ = 0;
-        const float fairyPathSpeed_ = 0.035f;
+        const float fairyPathSpeed_ = 0.75f;
 
         float fairyPathSpeedFactor_ = fairyPathSpeed_ / 10;
         const float fairyPathStepSize_ = (fairyPathSpeed_ / 60) * (fairyPathSpeed_ / 60);
