@@ -58,4 +58,12 @@ FileStreamBuf::int_type FileStreamBuf::pbackfail(FileStreamBuf::int_type c) {
     return traits_type::to_int_type(c);
 }
 
+FileStreamBuf::int_type FileStreamBuf::sbumpc() {
+    return uflow();
+}
+
+FileStreamBuf::int_type FileStreamBuf::sgetc() {
+    return underflow();
+}
+
 }

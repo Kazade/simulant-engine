@@ -1441,6 +1441,8 @@ simulant/sprite.h
 simulant/stage.cpp
 simulant/stage.h
 simulant/streams/stream_view.h
+simulant/streams/utils.cpp
+simulant/streams/utils.h
 simulant/texture.cpp
 simulant/texture.h
 simulant/types.cpp

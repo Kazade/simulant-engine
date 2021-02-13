@@ -39,6 +39,9 @@ public:
 
     int_type pbackfail(int_type c = EOF) override;
 
+    int_type sbumpc();
+    int_type sgetc();
+
     FILE* file() const {
         return filein_;
     }
