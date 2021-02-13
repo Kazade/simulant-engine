@@ -329,12 +329,7 @@ bool SDL2Window::_init_window() {
     }
 
     if(is_fullscreen()) {
-#ifdef __LINUX__
-        /* Linux doesn't deal with _FULLSCREEN_DESKTOP correctly */
-        SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN);
-#else
         SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN_DESKTOP);
-#endif
     }
 
     SDL_SetEventFilter(event_filter, this);
