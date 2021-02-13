@@ -329,12 +329,7 @@ bool SDL2Window::_init_window() {
     }
 
     if(is_fullscreen()) {
-#ifdef __LINUX__
-        /* Linux doesn't deal with _FULLSCREEN_DESKTOP correctly */
-        SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN);
-#else
         SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN_DESKTOP);
-#endif
     }
 
     SDL_SetEventFilter(event_filter, this);
@@ -361,7 +356,6 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
     if(renderer->name() == "gl1x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     } else {
 #ifdef __ANDROID__
         /* FIXME: Add a GLES2 renderer */
