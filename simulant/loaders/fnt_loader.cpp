@@ -5,7 +5,6 @@
 #include "../asset_manager.h"
 #include "../utils/string.h"
 #include "../macros.h"
-#include "../streams/utils.h"
 
 namespace smlt {
 namespace loaders {
@@ -128,7 +127,7 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
     std::string line;
     Options line_settings;
 
-    while(readline(data, line)) {
+    while(std::getline(data, line)) {
         std::string type;
         parse_line(line, type, line_settings);
 

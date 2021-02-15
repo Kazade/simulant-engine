@@ -81,4 +81,7 @@
 #include "loaders/q2bsp_loader.h"
 #include "coroutines/helpers.h"
 
+#include "streams/file_ifstream.h"
+#include "streams/stream_view.h"
+
 #endif
