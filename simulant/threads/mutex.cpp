@@ -38,6 +38,11 @@ Mutex::Mutex() {
         0, 1, 1, 0
     );
     owner_ = 0; /* No owner */
+
+#elif defined(__DREAMCAST__)
+    if(mutex_init(&mutex_, MUTEX_TYPE_NORMAL) != 0) {
+        FATAL_ERROR(ERROR_CODE_MUTEX_INIT_FAILED, "Failed to create mutex");
+    }
 #else
     if(pthread_mutex_init(&mutex_, NULL) != 0) {
         FATAL_ERROR(ERROR_CODE_MUTEX_INIT_FAILED, "Failed to create mutex");
@@ -49,6 +54,10 @@ Mutex::~Mutex() {
 
 #ifdef __PSP__
     sceKernelDeleteSema(semaphore_);
+#elif defined(__DREAMCAST__)
+    int err = mutex_destroy(&mutex_);
+    _S_UNUSED(err);
+    assert(!err);
 #else
 #ifndef NDEBUG
     /* This checks to make sure that the mutex
@@ -75,6 +84,8 @@ bool Mutex::try_lock() {
         return false;
     }
     return true;
+#elif defined(__DREAMCAST__)
+    return mutex_trylock(&mutex_) == 0;
 #else
     return pthread_mutex_trylock(&mutex_) == 0;
 #endif
@@ -85,6 +96,8 @@ void Mutex::lock() {
     auto tid = this_thread_id();
     await_semaphore(semaphore_);
     owner_ = tid;
+#elif defined(__DREAMCAST__)
+    mutex_lock(&mutex_);
 #else
     pthread_mutex_lock(&mutex_);
 #endif
@@ -98,6 +111,8 @@ void Mutex::unlock() {
 
     owner_ = 0;
     post_semaphore(semaphore_);
+#elif defined(__DREAMCAST__)
+    mutex_unlock(&mutex_);
 #else
     pthread_mutex_unlock(&mutex_);
 #endif
@@ -116,10 +131,6 @@ RecursiveMutex::RecursiveMutex() {
     recursive_ = 0;
 
 #elif defined(__DREAMCAST__)
-    /* Annoyingly pthreads on the Dreamcast are currently missing
-     * recursive mutexes. Need to send a patch upstream. Fortunately pthread_mutex_t
-     * is just mutex_t so we can use raw KOS functions instead */
-
     err = mutex_init(&mutex_, MUTEX_TYPE_RECURSIVE);
 #else
     pthread_mutexattr_t attr;

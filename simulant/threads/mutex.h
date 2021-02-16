@@ -4,6 +4,9 @@
 
 #ifdef __PSP__
 #include <pspthreadman.h>
+#elif defined(__DREAMCAST__)
+#include <kos/thread.h>
+#include <kos/mutex.h>
 #else
 #include "pthread.h"
 #endif
@@ -36,6 +39,8 @@ private:
 #ifdef __PSP__
     SceUID semaphore_;
     uint32_t owner_ = 0;
+#elif defined(__DREAMCAST__)
+    mutex_t mutex_;
 #else
     pthread_mutex_t mutex_;
 #endif
@@ -57,6 +62,8 @@ private:
     SceUID semaphore_;
     uint32_t owner_ = 0;
     int32_t recursive_ = 0;
+#elif defined(__DREAMCAST__)
+    mutex_t mutex_;
 #else
     pthread_mutex_t mutex_;
 #endif

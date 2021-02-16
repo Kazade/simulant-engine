@@ -16,6 +16,8 @@ Condition::Condition() {
         std::to_string((int) rand()).c_str(),
         0, 0, 1, 0
     );
+#elif defined(__DREAMCAST__)
+    cond_init(&cond_);
 #else
     pthread_cond_init(&cond_, NULL);
 #endif
@@ -25,6 +27,8 @@ Condition::~Condition() {
 #ifdef __PSP__
     sceKernelDeleteSema(wait_sem_);
     sceKernelDeleteSema(wait_done_);
+#elif defined(__DREAMCAST__)
+    cond_destroy(&cond_);
 #else
     pthread_cond_destroy(&cond_);
 #endif
@@ -52,6 +56,8 @@ void Condition::wait(Mutex& mutex) {
     }
 
     mutex.lock();
+#elif defined(__DREAMCAST__)
+    cond_wait(&cond_, &mutex.mutex_);
 #else
     assert(!mutex.try_lock());  /* Mutex should've been locked by this thread */
     pthread_cond_wait(&cond_, &mutex.mutex_); /* FIXME: I've heard that this can wake early? */
@@ -69,6 +75,8 @@ void Condition::notify_one() {
     } else {
         lock_.unlock();
     }
+#elif defined(__DREAMCAST__)
+    cond_signal(&cond_);
 #else
     pthread_cond_signal(&cond_);
 #endif
@@ -91,6 +99,8 @@ void Condition::notify_all() {
     } else {
         lock_.unlock();
     }
+#elif defined(__DREAMCAST__)
+    cond_broadcast(&cond_);
 #else
     pthread_cond_broadcast(&cond_);
 #endif
