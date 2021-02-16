@@ -67,35 +67,69 @@ struct Char {
 };
 #pragma pack()
 
+typedef std::unordered_map<std::string, std::string> Options;
+
+static void parse_line(const std::string& line, std::string& line_type, Options& result) {
+    std::string key;
+    std::string value;
+
+    std::string* target = &key;
+    bool in_quotes = false;
+
+    result.clear();
+    for(auto& c: line) {
+        switch(c) {
+            case '"': {
+                in_quotes = !in_quotes;
+                (*target) += c;
+            } break;
+            case ' ':
+            case '\r':
+            case '\n':
+            case '\t': {
+                /* Only treat these as separators
+                 * if we're not in quotes */
+                if(!in_quotes) {
+                    if(!key.empty()) {
+                        result[key] = value;
+
+                        if(value.empty()) {
+                            // Assume first token
+                            line_type = key;
+                        }
+                    }
+
+                    key.clear();
+                    value.clear();
+                    target = &key;
+                }
+            } break;
+            case '=':
+                target = &value;
+            break;
+            default: {
+                (*target) += c;
+            }
+        }
+    }
+
+    if(!key.empty()) {
+        result[key] = value;
+    }
+}
 
 void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &options) {
     _S_UNUSED(options);
-
-    typedef std::unordered_map<std::string, std::string> Options;
-
-    auto parse_line = [](const std::string& line, std::string& line_type) -> Options {
-        Options result;
-        auto parts = split(line, " ");
-        line_type = strip(parts[0]);
-
-        for(auto i = 1u; i < parts.size(); ++i) {
-            auto part = strip(parts[i]);
-            auto lhs_rhs = split(part, "=");
-            if(lhs_rhs.size() == 2) {
-                result[strip(lhs_rhs[0])] = strip(lhs_rhs[1]);
-            }
-        }
-
-        return result;
-    };
 
     data.seekg(0, std::ios::beg);
 
     std::string page;
     std::string line;
+    Options line_settings;
+
     while(std::getline(data, line)) {
         std::string type;
-        auto line_settings = parse_line(line, type);
+        parse_line(line, type, line_settings);
 
         if(type == "info") {
             font->font_size_ = std::stoi(line_settings["size"]);
