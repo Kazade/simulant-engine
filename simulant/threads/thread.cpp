@@ -19,6 +19,8 @@ namespace thread {
 Thread::~Thread() {
 #ifdef __PSP__
     sceKernelDeleteThread(thread_);
+#elif defined(__DREAMCAST__)
+    thd_destroy(thread_);
 #endif
 }
 
@@ -38,6 +40,8 @@ void Thread::join() {
             FATAL_ERROR(ERROR_CODE_THREAD_JOIN_FAILED, "Unable to get thread status");
         }
     }
+#elif defined(__DREAMCAST__)
+    thd_join(thread_, nullptr);
 #else
     pthread_join(thread_, nullptr);
 #endif
@@ -50,6 +54,8 @@ bool Thread::joinable() const {
 void Thread::detach() {
 #ifdef __PSP__
     L_ERROR("thread detaching is not implemented on the PSP");
+#elif defined(__DREAMCAST__)
+    thd_detach(thread_);
 #else
     pthread_detach(thread_);
 #endif
@@ -59,6 +65,9 @@ void Thread::detach() {
 void Thread::exit() {
 #ifdef __PSP__
     sceKernelExitThread(0);
+#elif defined(__DREAMCAST__)
+    int status = 0;
+    thd_exit(&status);
 #else
     int status = 0;
     pthread_exit(&status);
@@ -121,6 +130,8 @@ void yield() {
 ThreadID this_thread_id() {
 #ifdef __PSP__
     return (ThreadID) sceKernelGetThreadId();
+#elif defined(__DREAMCAST__)
+    return (ThreadID) thd_get_current();
 #else
     auto ret = pthread_self();
     return (ThreadID) ret;

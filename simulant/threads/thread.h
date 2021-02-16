@@ -1,9 +1,11 @@
 #pragma once
 
-#ifndef __PSP__
-#include <pthread.h>
-#else
+#ifdef __PSP__
 #include <pspthreadman.h>
+#elif defined(__DREAMAST__)
+#include <kos/thread.h>
+#else
+#include <pthread.h>
 #endif
 
 #include <string>
@@ -33,23 +35,6 @@ typedef uint32_t ThreadID;
 #else
 typedef uint64_t ThreadID;
 #endif
-
-class ThreadSpawnError: public std::runtime_error {
-public:
-#if defined(__DREAMCAST__) || defined(__PSP__)
-    /* No std::to_string on the DC */
-    ThreadSpawnError(int code):
-        std::runtime_error("Error spawning thread") {
-
-        _S_UNUSED(code);
-    }
-#else
-    ThreadSpawnError(int code):
-        std::runtime_error("Error spawning thread: " + std::to_string(code)) {
-    }
-#endif
-};
-
 
 class CallableWrapperBase {
 public:
@@ -93,6 +78,11 @@ public:
         );
 
         sceKernelStartThread(thread_, sizeof(func), func);
+#elif defined(__DREAMCAST__)
+        thread_ = thd_create(0, &Thread::thread_runner, func);
+        if(!thread_) {
+            FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
+        }
 #else
         auto ret = pthread_create(&thread_, NULL, &Thread::thread_runner, func);
         if(ret) {
@@ -126,11 +116,12 @@ public:
 private:
     typedef std::function<void ()> Callable;
 
-
-
 #ifdef __PSP__
     static int thread_runner(unsigned int, void* data);
     int thread_ = 0;
+#elif defined(__DREAMCAST__)
+    static void* thread_runner(void* data);
+    kthread_t* thread_ = nullptr;
 #else
     static void* thread_runner(void* data);
     pthread_t thread_ = 0;
