@@ -23,6 +23,8 @@ private:
     SceUID wait_done_;
     int waiting_ = 0;
     int signals_ = 0;
+#elif defined(__DREAMCAST__)
+    condvar_t cond_;
 #else
     pthread_cond_t cond_;
 #endif
