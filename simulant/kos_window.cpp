@@ -11,7 +11,6 @@
 #include "sound_drivers/null_sound_driver.h"
 
 #include "renderers/renderer_config.h"
-#include "utils/memory.h"
 
 static unsigned long systemRam = 0x00000000;
 static unsigned long elfOffset = 0x00000000;
@@ -44,9 +43,6 @@ void KOSWindow::swap_buffers() {
 
 bool KOSWindow::_init_window() {
     L_DEBUG("Initializing OpenGL");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
 
     static bool gl_initialized = false;
     if(!gl_initialized++) {
@@ -54,10 +50,6 @@ bool KOSWindow::_init_window() {
     }
 
     L_DEBUG("OpenGL initialized");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
-
     return true;
 }
 
@@ -65,9 +57,7 @@ bool KOSWindow::_init_renderer(Renderer* renderer) {
     set_has_context(true); //Mark that we have a valid GL context
 
     L_DEBUG("Renderer initialized");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
+
     return true;
 }
 
@@ -390,7 +380,8 @@ uint64_t KOSWindow::DreamcastPlatform::total_ram_in_bytes() const {
     return systemRam;
 }
 
-int64_t KOSWindow::DreamcastPlatform::process_ram_usage_in_bytes() const {
+uint64_t KOSWindow::DreamcastPlatform::process_ram_usage_in_bytes(uint32_t process_id) const {
+    _S_UNUSED(process_id);
     return used_ram_in_bytes();
 }
 

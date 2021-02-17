@@ -268,10 +268,6 @@ bool Window::has_explicit_audio_listener() const {
 bool Window::initialize_assets_and_devices() {
     L_DEBUG("Starting initialization");
 
-#ifdef __DREAMCAST__
-    print_available_ram();
-#endif
-
     // Initialize the sound driver (here rather than constructor as it relies on subclass type)
     sound_driver_ = create_sound_driver(application_->config_.development.force_sound_driver);
     sound_driver_->startup();
@@ -288,9 +284,6 @@ bool Window::initialize_assets_and_devices() {
         //watcher_ = Watcher::create(*this);
 
         L_INFO("Registering loaders");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
 
         //Register the default resource loaders
         register_loader(std::make_shared<smlt::loaders::TextureLoaderType>());
@@ -311,9 +304,6 @@ bool Window::initialize_assets_and_devices() {
         register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
 
         L_INFO("Initializing the default resources");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
 
         shared_assets->init();
 
@@ -326,9 +316,6 @@ bool Window::initialize_assets_and_devices() {
     }
 
     L_DEBUG("Initialization finished");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
 
     idle->add_once([this]() {
         each_screen([](std::string, Screen* screen) {

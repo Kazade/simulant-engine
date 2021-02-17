@@ -216,3 +216,4 @@ simulant/platforms/psp
 conf
 deps/pspgl
 simulant/streams
+deps/libAL/src

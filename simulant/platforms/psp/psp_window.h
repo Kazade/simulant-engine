@@ -22,16 +22,20 @@ class PSPWindow : public Window {
             return native;
         }
 
-        int64_t available_ram_in_bytes() const override {
-            return -1;
+        uint64_t available_ram_in_bytes() const override {
+            return MEMORY_VALUE_UNAVAILABLE;
         }
 
-        int64_t total_ram_in_bytes() const override {
-            return -1;
+        uint64_t total_ram_in_bytes() const override {
+            return MEMORY_VALUE_UNAVAILABLE;
         }
 
-        int64_t available_vram_in_bytes() const override {
-            return -1;
+        uint64_t available_vram_in_bytes() const override {
+            return MEMORY_VALUE_UNAVAILABLE;
+        }
+
+        uint64_t process_ram_usage_in_bytes(uint32_t) const override {
+            return MEMORY_VALUE_UNAVAILABLE;
         }
     };
 

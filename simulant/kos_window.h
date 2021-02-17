@@ -26,14 +26,14 @@ class KOSWindow : public Window {
             return native;
         }
 
-        int64_t available_ram_in_bytes() const override;
-        int64_t total_ram_in_bytes() const override;
+        uint64_t available_ram_in_bytes() const override;
+        uint64_t total_ram_in_bytes() const override;
 
-        int64_t available_vram_in_bytes() const override {
+        uint64_t available_vram_in_bytes() const override {
             return -1;
         }
 
-        int64_t process_ram_usage_in_bytes() const override;
+        uint64_t process_ram_usage_in_bytes(uint32_t process_id) const override;
     };
 
 public:

@@ -24,6 +24,7 @@
 #include "../compositor.h"
 #include "../nodes/ui/label.h"
 #include "../platform.h"
+#include "../application.h"
 
 #if defined(__WIN32__)
     #include <windows.h>
@@ -71,6 +72,10 @@ bool StatsPanel::init() {
     ram_usage_->move_to(hw, vheight);
     vheight -= diff;
 
+    vram_usage_ = overlay->ui->new_widget_as_label("VRAM Used: 0", label_width);
+    vram_usage_->move_to(hw, vheight);
+    vheight -= diff;
+
     actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0", label_width);
     actors_rendered_->move_to(hw, vheight);
     vheight -= diff;
@@ -114,13 +119,17 @@ void StatsPanel::clean_up() {
     polygons_rendered_ = nullptr;
 }
 
-int32_t StatsPanel::get_memory_usage_in_megabytes() {
-    auto bytes = window_->platform->used_ram_in_bytes();
-    if(bytes == -1) {
+static float bytes_to_megabytes(uint64_t bytes) {
+    float m = 1.0f / 1024.0f;
+    if(bytes == MEMORY_VALUE_UNAVAILABLE) {
         return 0;
     }
 
-    return float(bytes) / 1024.0f / 1024.0f;
+    return float(bytes) * m * m;
+}
+
+int32_t StatsPanel::get_memory_usage_in_megabytes() {
+    return bytes_to_megabytes(get_app()->ram_usage_in_bytes());
 }
 
 #define RAM_SAMPLES 25
@@ -246,6 +255,8 @@ void StatsPanel::update() {
 
     if(first_update_ || last_update_ >= 1.0f) {
         auto mem_usage = get_memory_usage_in_megabytes();
+        auto tot_mem = bytes_to_megabytes(window_->platform->total_ram_in_bytes());
+        auto vram_usage = bytes_to_megabytes(window_->platform->available_vram_in_bytes());
         auto actors_rendered = window_->stats->subactors_rendered();
 
         free_ram_history_.push_back(mem_usage);
@@ -257,7 +268,8 @@ void StatsPanel::update() {
 
         fps_->set_text(_u("FPS: {0}").format(window_->stats->frames_per_second()));
         frame_time_->set_text(_F("Frame Time: {0}ms").format(window_->stats->frame_time()));
-        ram_usage_->set_text(_u("RAM Used: {0} MB").format(mem_usage));
+        ram_usage_->set_text(_u("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
+        vram_usage_->set_text(_u("VRAM Free: {0} MB").format(vram_usage));
         actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
         polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
 

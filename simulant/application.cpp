@@ -312,6 +312,12 @@ int32_t Application::process_id() const {
 #endif
 }
 
+int64_t Application::ram_usage_in_bytes() const {
+    return window_->platform->process_ram_usage_in_bytes(
+        process_id()
+    );
+}
+
 Application* Application::global_app = nullptr;
 
 /* Global access to the application */
