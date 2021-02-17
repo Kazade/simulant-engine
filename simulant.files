@@ -1010,8 +1010,6 @@ simulant/utils/hash/md5.cpp
 simulant/utils/hash/md5.h
 simulant/utils/hash/md5_public_domain.cpp
 simulant/utils/hash/md5_public_domain.h
-simulant/utils/memory.cpp
-simulant/utils/memory.h
 simulant/utils/noise.cpp
 simulant/utils/noise.h
 simulant/utils/rect_pack.cpp

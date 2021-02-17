@@ -21,7 +21,7 @@
 #include "utils/unicode.h"
 #include "input/input_state.h"
 #include "sdl2_window.h"
-
+#include "application.h"
 #include "sound_drivers/openal_sound_driver.h"
 #include "sound_drivers/null_sound_driver.h"
 
@@ -516,6 +516,44 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
     }
 
     SDL_UpdateWindowSurface(window);
+}
+
+int64_t SDL2Window::SDLPlatform::available_ram_in_bytes() const {
+#ifdef __LINUX__
+    auto lines = get_app()->window->vfs->read_file_lines("/proc/meminfo");
+    for(auto& line: lines) {
+        if(line.find("MemFree:") != std::string::npos) {
+            auto prefix = line.substr(0, line.find_last_of(" "));
+            auto suffix = prefix.substr(prefix.find_last_of(" ") + 1);
+            return std::stol(suffix) * 1024;
+        }
+    }
+
+#elif defined(__WIN32__)
+
+#endif
+    return -1;
+}
+
+int64_t SDL2Window::SDLPlatform::total_ram_in_bytes() const {
+#ifdef __LINUX__
+    auto lines = get_app()->window->vfs->read_file_lines("/proc/meminfo");
+    for(auto& line: lines) {
+        if(line.find("MemTotal:") != std::string::npos) {
+            auto prefix = line.substr(0, line.find_last_of(" "));
+            auto suffix = prefix.substr(prefix.find_last_of(" ") + 1);
+            return std::stol(suffix) * 1024;
+        }
+    }
+#elif defined(__WIN32__)
+
+#endif
+    return -1;
+}
+
+int64_t SDL2Window::SDLPlatform::process_ram_usage_in_bytes() const {
+
+    return -1;
 }
 
 }

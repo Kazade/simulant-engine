@@ -23,26 +23,13 @@
 #include "../nodes/ui/ui_manager.h"
 #include "../compositor.h"
 #include "../nodes/ui/label.h"
+#include "../platform.h"
 
 #if defined(__WIN32__)
     #include <windows.h>
     #include <psapi.h>
 #endif
 
-#ifdef __DREAMCAST__
-#include <malloc.h>
-#include <kos.h>
-
-static unsigned long systemRam = 0x00000000;
-static unsigned long elfOffset = 0x00000000;
-static unsigned long stackSize = 0x00000000;
-
-extern unsigned long end;
-extern unsigned long start;
-
-#define _end end
-#define _start start
-#endif
 
 namespace smlt {
 
@@ -127,49 +114,13 @@ void StatsPanel::clean_up() {
     polygons_rendered_ = nullptr;
 }
 
-#ifdef __DREAMCAST__
-
-void set_system_ram() {
-   systemRam = 0x8d000000 - 0x8c000000;
-   elfOffset = 0x8c000000;
-
-   stackSize = (long)&_end - (long)&_start + ((long)&_start - elfOffset);
-}
-
-unsigned long get_system_ram() {
-   return systemRam;
-}
-
-unsigned long get_free_ram() {
-    struct mallinfo mi = mallinfo();
-    return systemRam - (mi.usmblks + stackSize);
-}
-
-#endif
-
 int32_t StatsPanel::get_memory_usage_in_megabytes() {
-#ifdef __linux__
-    std::ifstream file("/proc/self/status");
-    std::string line;
-    while(std::getline(file, line)) {
-
-        if(unicode(line).starts_with("VmRSS:")) {
-            auto parts = unicode(line).split(" ", -1, false);
-            if(parts.size() == 3) {
-                return float(parts[1].to_int()) / 1024.0f;
-            }
-        }
+    auto bytes = window_->platform->used_ram_in_bytes();
+    if(bytes == -1) {
+        return 0;
     }
-    return -1;
-#elif defined(__DREAMCAST__)
-    return float(get_system_ram() - get_free_ram()) / 1024.0f / 1024.0f;
-#elif defined(__WIN32__)
-    PROCESS_MEMORY_COUNTERS info;
-    GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
-    return static_cast<float>(info.WorkingSetSize) / 1024.0f / 1024.0f;
-#else
-    return -1;
-#endif
+
+    return float(bytes) / 1024.0f / 1024.0f;
 }
 
 #define RAM_SAMPLES 25
@@ -198,6 +149,11 @@ void StatsPanel::rebuild_ram_graph() {
     float max_y = *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
     float graph_max = round(max_y, 8.0f);
 #endif
+
+    if(almost_equal(graph_max, 0.0f)) {
+        // Prevent divide by zero
+        return;
+    }
 
     auto submesh = ram_graph_mesh_->new_submesh_with_material("ram-usage", graph_material_, MESH_ARRANGEMENT_QUADS);
     auto& vdata = ram_graph_mesh_->vertex_data;

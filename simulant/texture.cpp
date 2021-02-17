@@ -23,7 +23,6 @@
 
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
-#include "utils/memory.h"
 
 #include "logging.h"
 

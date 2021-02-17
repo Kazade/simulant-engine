@@ -23,7 +23,6 @@
 #include "../asset_manager.h"
 #include "../vfs.h"
 #include "../time_keeper.h"
-#include "../utils/memory.h"
 
 namespace smlt {
 namespace loaders{
@@ -373,11 +372,8 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     }
 
     L_DEBUG("Loaded MD2 data, converting to mesh");
-    print_available_ram();
 
     mesh->enable_animation(MESH_ANIMATION_TYPE_VERTEX_MORPH, header.num_frames, frame_data);
-
-    print_available_ram();
 
     // This is necessary due to the difference in coordinate system
     submesh->reverse_winding();
