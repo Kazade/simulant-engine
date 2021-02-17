@@ -33,9 +33,7 @@ class KOSWindow : public Window {
             return -1;
         }
 
-        int64_t process_ram_usage_in_bytes() const override {
-            return used_ram_in_bytes();
-        }
+        int64_t process_ram_usage_in_bytes() const override;
     };
 
 public:

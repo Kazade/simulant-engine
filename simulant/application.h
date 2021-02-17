@@ -123,13 +123,7 @@ public:
 
     /* Returns the process ID for the application, or
      * -1 if it's unavailable or unsupported */
-    int32_t process_id() const {
-#ifdef __LINUX__
-        return getpid();
-#else
-        return -1;
-#endif
-    }
+    int32_t process_id() const;
 protected:
     StagePtr stage(StageID stage=StageID());
 
