@@ -21,6 +21,7 @@
 #include <unistd.h>
 #elif defined(__WIN32__)
 #include <psapi.h>
+#include <sysinfoapi.h>
 #endif
 
 #include "logging.h"
