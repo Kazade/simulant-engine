@@ -19,6 +19,8 @@
 
 #ifdef __linux__
 #include <unistd.h>
+#elif defined(__WIN32__)
+#include <psapi.h>
 #endif
 
 #include "logging.h"
@@ -551,7 +553,10 @@ uint64_t SDL2Window::SDLPlatform::total_ram_in_bytes() const {
         }
     }
 #elif defined(__WIN32__)
-
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+    return memInfo.ullTotalPhys;
 #endif
     return MEMORY_VALUE_UNAVAILABLE;
 }
@@ -567,6 +572,10 @@ uint64_t SDL2Window::SDLPlatform::process_ram_usage_in_bytes(uint32_t process_id
 
     long page_size = sysconf(_SC_PAGESIZE); // in case x86-64 is configured to use 2MB pages
     return resident * page_size;
+#elif defined(__WIN32__)
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    return pmc.PrivateUsage;
 #else
     _S_UNUSED(process_id);
     return MEMORY_VALUE_UNAVAILABLE;
