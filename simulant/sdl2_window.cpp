@@ -534,9 +534,11 @@ uint64_t SDL2Window::SDLPlatform::available_ram_in_bytes() const {
             return std::stol(suffix) * 1024;
         }
     }
-
 #elif defined(__WIN32__)
-
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+    return memInfo.ullAvailPhys;
 #endif
     return MEMORY_VALUE_UNAVAILABLE;
 }
