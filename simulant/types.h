@@ -508,8 +508,8 @@ typedef UniqueID<GPUProgramPtr> GPUProgramID;
 typedef UniqueID<ui::WidgetPtr> WidgetID;
 
 #ifdef __WIN32__
-#include <windows.h>
-typedef HANDLE ProcessID;
+typedef unsigned long DWORD;
+typedef DWORD ProcessID;
 #else
 typedef uint32_t ProcessID;
 #endif

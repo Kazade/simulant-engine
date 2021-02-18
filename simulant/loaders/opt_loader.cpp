@@ -448,6 +448,8 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
 }
 
 void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
+    _S_UNUSED(options);
+
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
     assert(mesh && "You passed a Resource that is not a mesh to the OPT loader");
@@ -555,7 +557,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
             submesh.vertex_data->normal(normal.x, normal.y, normal.z);
             submesh.vertex_data->move_next();
             submesh.index_data->index(submesh.vertex_data->count()-1);
-        }        
+        }
     }
 
     for(Texture tex: textures) {
