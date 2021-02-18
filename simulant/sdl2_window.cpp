@@ -20,6 +20,7 @@
 #ifdef __linux__
 #include <unistd.h>
 #elif defined(__WIN32__)
+#include <windows.h>
 #include <psapi.h>
 #include <sysinfoapi.h>
 #endif
