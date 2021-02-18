@@ -507,6 +507,13 @@ typedef UniqueID<SkyboxPtr> SkyID;
 typedef UniqueID<GPUProgramPtr> GPUProgramID;
 typedef UniqueID<ui::WidgetPtr> WidgetID;
 
+#ifdef __WIN32__
+typedef unsigned long DWORD;
+typedef DWORD ProcessID;
+#else
+typedef uint32_t ProcessID;
+#endif
+
 // Attributes should be aligned at 4 byte boundaries
 // according to this
 // https://developer.apple.com/library/content/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/TechniquesforWorkingwithVertexData/TechniquesforWorkingwithVertexData.html

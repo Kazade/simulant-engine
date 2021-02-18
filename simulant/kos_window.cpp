@@ -1,3 +1,4 @@
+#include <malloc.h>
 #include <memory>
 #include <vector>
 #include "../deps/libgl/include/gl.h"
@@ -10,7 +11,16 @@
 #include "sound_drivers/null_sound_driver.h"
 
 #include "renderers/renderer_config.h"
-#include "utils/memory.h"
+
+static unsigned long systemRam = 0x00000000;
+static unsigned long elfOffset = 0x00000000;
+static unsigned long stackSize = 0x00000000;
+
+extern unsigned long end;
+extern unsigned long start;
+
+#define _end end
+#define _start start
 
 namespace smlt {
 
@@ -33,9 +43,6 @@ void KOSWindow::swap_buffers() {
 
 bool KOSWindow::_init_window() {
     L_DEBUG("Initializing OpenGL");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
 
     static bool gl_initialized = false;
     if(!gl_initialized++) {
@@ -43,10 +50,6 @@ bool KOSWindow::_init_window() {
     }
 
     L_DEBUG("OpenGL initialized");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
-
     return true;
 }
 
@@ -54,9 +57,7 @@ bool KOSWindow::_init_renderer(Renderer* renderer) {
     set_has_context(true); //Mark that we have a valid GL context
 
     L_DEBUG("Renderer initialized");
-#ifdef __DREAMCAST__
-        print_available_ram();
-#endif
+
     return true;
 }
 
@@ -357,6 +358,31 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data) {
     if(device) {
         vmu_draw_lcd(device, (void*) data);
     }
+}
+
+static void set_system_ram() {
+   systemRam = 0x8d000000 - 0x8c000000;
+   elfOffset = 0x8c000000;
+
+   stackSize = (long)&_end - (long)&_start + ((long)&_start - elfOffset);
+}
+
+uint64_t KOSWindow::DreamcastPlatform::available_ram_in_bytes() const {
+    if(!systemRam) {
+        set_system_ram();
+    }
+
+    struct mallinfo mi = mallinfo();
+    return systemRam - (mi.usmblks + stackSize);
+}
+
+uint64_t KOSWindow::DreamcastPlatform::total_ram_in_bytes() const {
+    return systemRam;
+}
+
+uint64_t KOSWindow::DreamcastPlatform::process_ram_usage_in_bytes(uint32_t process_id) const {
+    _S_UNUSED(process_id);
+    return used_ram_in_bytes();
 }
 
 }

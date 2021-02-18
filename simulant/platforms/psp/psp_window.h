@@ -21,6 +21,22 @@ class PSPWindow : public Window {
             native.refresh_rate = 60; // FIXME?
             return native;
         }
+
+        uint64_t available_ram_in_bytes() const override {
+            return MEMORY_VALUE_UNAVAILABLE;
+        }
+
+        uint64_t total_ram_in_bytes() const override {
+            return MEMORY_VALUE_UNAVAILABLE;
+        }
+
+        uint64_t available_vram_in_bytes() const override {
+            return MEMORY_VALUE_UNAVAILABLE;
+        }
+
+        uint64_t process_ram_usage_in_bytes(ProcessID) const override {
+            return MEMORY_VALUE_UNAVAILABLE;
+        }
     };
 
 public:

@@ -23,26 +23,14 @@
 #include "../nodes/ui/ui_manager.h"
 #include "../compositor.h"
 #include "../nodes/ui/label.h"
+#include "../platform.h"
+#include "../application.h"
 
 #if defined(__WIN32__)
     #include <windows.h>
     #include <psapi.h>
 #endif
 
-#ifdef __DREAMCAST__
-#include <malloc.h>
-#include <kos.h>
-
-static unsigned long systemRam = 0x00000000;
-static unsigned long elfOffset = 0x00000000;
-static unsigned long stackSize = 0x00000000;
-
-extern unsigned long end;
-extern unsigned long start;
-
-#define _end end
-#define _start start
-#endif
 
 namespace smlt {
 
@@ -82,6 +70,10 @@ bool StatsPanel::init() {
 
     ram_usage_ = overlay->ui->new_widget_as_label("RAM Used: 0", label_width);
     ram_usage_->move_to(hw, vheight);
+    vheight -= diff;
+
+    vram_usage_ = overlay->ui->new_widget_as_label("VRAM Used: 0", label_width);
+    vram_usage_->move_to(hw, vheight);
     vheight -= diff;
 
     actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0", label_width);
@@ -127,49 +119,17 @@ void StatsPanel::clean_up() {
     polygons_rendered_ = nullptr;
 }
 
-#ifdef __DREAMCAST__
+static float bytes_to_megabytes(uint64_t bytes) {
+    float m = 1.0f / 1024.0f;
+    if(bytes == MEMORY_VALUE_UNAVAILABLE) {
+        return 0;
+    }
 
-void set_system_ram() {
-   systemRam = 0x8d000000 - 0x8c000000;
-   elfOffset = 0x8c000000;
-
-   stackSize = (long)&_end - (long)&_start + ((long)&_start - elfOffset);
+    return float(bytes) * m * m;
 }
-
-unsigned long get_system_ram() {
-   return systemRam;
-}
-
-unsigned long get_free_ram() {
-    struct mallinfo mi = mallinfo();
-    return systemRam - (mi.usmblks + stackSize);
-}
-
-#endif
 
 int32_t StatsPanel::get_memory_usage_in_megabytes() {
-#ifdef __linux__
-    std::ifstream file("/proc/self/status");
-    std::string line;
-    while(std::getline(file, line)) {
-
-        if(unicode(line).starts_with("VmRSS:")) {
-            auto parts = unicode(line).split(" ", -1, false);
-            if(parts.size() == 3) {
-                return float(parts[1].to_int()) / 1024.0f;
-            }
-        }
-    }
-    return -1;
-#elif defined(__DREAMCAST__)
-    return float(get_system_ram() - get_free_ram()) / 1024.0f / 1024.0f;
-#elif defined(__WIN32__)
-    PROCESS_MEMORY_COUNTERS info;
-    GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
-    return static_cast<float>(info.WorkingSetSize) / 1024.0f / 1024.0f;
-#else
-    return -1;
-#endif
+    return bytes_to_megabytes(get_app()->ram_usage_in_bytes());
 }
 
 #define RAM_SAMPLES 25
@@ -198,6 +158,11 @@ void StatsPanel::rebuild_ram_graph() {
     float max_y = *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
     float graph_max = round(max_y, 8.0f);
 #endif
+
+    if(almost_equal(graph_max, 0.0f)) {
+        // Prevent divide by zero
+        return;
+    }
 
     auto submesh = ram_graph_mesh_->new_submesh_with_material("ram-usage", graph_material_, MESH_ARRANGEMENT_QUADS);
     auto& vdata = ram_graph_mesh_->vertex_data;
@@ -290,6 +255,8 @@ void StatsPanel::update() {
 
     if(first_update_ || last_update_ >= 1.0f) {
         auto mem_usage = get_memory_usage_in_megabytes();
+        auto tot_mem = bytes_to_megabytes(window_->platform->total_ram_in_bytes());
+        auto vram_usage = bytes_to_megabytes(window_->platform->available_vram_in_bytes());
         auto actors_rendered = window_->stats->subactors_rendered();
 
         free_ram_history_.push_back(mem_usage);
@@ -301,7 +268,8 @@ void StatsPanel::update() {
 
         fps_->set_text(_u("FPS: {0}").format(window_->stats->frames_per_second()));
         frame_time_->set_text(_F("Frame Time: {0}ms").format(window_->stats->frame_time()));
-        ram_usage_->set_text(_u("RAM Used: {0} MB").format(mem_usage));
+        ram_usage_->set_text(_u("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
+        vram_usage_->set_text(_u("VRAM Free: {0} MB").format(vram_usage));
         actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
         polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
 
