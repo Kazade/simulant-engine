@@ -33,6 +33,13 @@ namespace smlt { typedef PSPWindow SysWindow; }
 namespace smlt { typedef SDL2Window SysWindow; }
 #endif
 
+#ifdef __LINUX__
+#include <sys/types.h>
+#include <unistd.h>
+#elif defined(__WIN32__)
+#include <processthreadsapi.h>
+#endif
+
 #include "application.h"
 #include "scenes/loading.h"
 #include "input/input_state.h"
@@ -293,6 +300,22 @@ int32_t Application::run(int argc, char* argv[]) {
 
     auto ret = Application::run();
     return ret;
+}
+
+ProcessID Application::process_id() const {
+#ifdef __LINUX__
+    return getpid();
+#elif defined(__WIN32__)
+    return GetCurrentProcessId();
+#else
+    return -1;
+#endif
+}
+
+int64_t Application::ram_usage_in_bytes() const {
+    return window_->platform->process_ram_usage_in_bytes(
+        process_id()
+    );
 }
 
 Application* Application::global_app = nullptr;

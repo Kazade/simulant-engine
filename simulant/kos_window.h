@@ -25,6 +25,15 @@ class KOSWindow : public Window {
             native.refresh_rate = 60;
             return native;
         }
+
+        uint64_t available_ram_in_bytes() const override;
+        uint64_t total_ram_in_bytes() const override;
+
+        uint64_t available_vram_in_bytes() const override {
+            return -1;
+        }
+
+        uint64_t process_ram_usage_in_bytes(ProcessID process_id) const override;
     };
 
 public:

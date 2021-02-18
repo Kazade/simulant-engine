@@ -121,6 +121,14 @@ public:
 
     bool initialized() const { return initialized_; }
 
+    /* Returns the process ID for the application, or
+     * -1 if it's unavailable or unsupported */
+    ProcessID process_id() const;
+
+    /* Returns an approximation of the ram usage of
+     * the current process. Returns -1 if an error occurs
+     * or not supported on the platform */
+    int64_t ram_usage_in_bytes() const;
 protected:
     StagePtr stage(StageID stage=StageID());
 
