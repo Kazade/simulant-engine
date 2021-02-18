@@ -302,7 +302,7 @@ int32_t Application::run(int argc, char* argv[]) {
     return ret;
 }
 
-int32_t Application::process_id() const {
+ProcessID Application::process_id() const {
 #ifdef __LINUX__
     return getpid();
 #elif defined(__WIN32__)

@@ -23,6 +23,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include <sysinfoapi.h>
+#include <processthreadsapi.h>
 #endif
 
 #include "logging.h"
@@ -565,7 +566,7 @@ uint64_t SDL2Window::SDLPlatform::total_ram_in_bytes() const {
     return MEMORY_VALUE_UNAVAILABLE;
 }
 
-uint64_t SDL2Window::SDLPlatform::process_ram_usage_in_bytes(uint32_t process_id) const {
+uint64_t SDL2Window::SDLPlatform::process_ram_usage_in_bytes(ProcessID process_id) const {
 #ifdef __linux__
     _S_UNUSED(process_id);
 
@@ -578,7 +579,8 @@ uint64_t SDL2Window::SDLPlatform::process_ram_usage_in_bytes(uint32_t process_id
     return resident * page_size;
 #elif defined(__WIN32__)
     PROCESS_MEMORY_COUNTERS_EX pmc;
-    GetProcessMemoryInfo(get_app()->process_id(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    // FIXME: Use OpenProcess(process_id)
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
     return pmc.PrivateUsage;
 #else
     _S_UNUSED(process_id);

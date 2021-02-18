@@ -77,7 +77,7 @@ class SDL2Window : public Window {
             return MEMORY_VALUE_UNAVAILABLE;
         }
 
-        uint64_t process_ram_usage_in_bytes(uint32_t process_id) const override;
+        uint64_t process_ram_usage_in_bytes(ProcessID process_id) const override;
     };
 
 

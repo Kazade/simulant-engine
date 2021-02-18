@@ -123,7 +123,7 @@ public:
 
     /* Returns the process ID for the application, or
      * -1 if it's unavailable or unsupported */
-    int32_t process_id() const;
+    ProcessID process_id() const;
 
     /* Returns an approximation of the ram usage of
      * the current process. Returns -1 if an error occurs

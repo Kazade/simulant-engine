@@ -34,7 +34,7 @@ class PSPWindow : public Window {
             return MEMORY_VALUE_UNAVAILABLE;
         }
 
-        uint64_t process_ram_usage_in_bytes(uint32_t) const override {
+        uint64_t process_ram_usage_in_bytes(ProcessID) const override {
             return MEMORY_VALUE_UNAVAILABLE;
         }
     };

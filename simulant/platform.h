@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include "types.h"
 
 namespace smlt {
 
@@ -46,7 +47,7 @@ public:
     /* An approximation of the amount of ram used by the specified process
      * in bytes. MEMORY_VALUE_UNAVAILABLE will be returned if unsupported on the platform. For
      * Dreamcast this will be the same as used_ram_in_bytes. */
-    virtual uint64_t process_ram_usage_in_bytes(uint32_t process_id) const = 0;
+    virtual uint64_t process_ram_usage_in_bytes(ProcessID process_id) const = 0;
 
     /*
      * Return the number of bytes of video ram available.
