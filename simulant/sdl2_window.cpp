@@ -578,7 +578,7 @@ uint64_t SDL2Window::SDLPlatform::process_ram_usage_in_bytes(uint32_t process_id
     return resident * page_size;
 #elif defined(__WIN32__)
     PROCESS_MEMORY_COUNTERS_EX pmc;
-    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    GetProcessMemoryInfo(get_app()->process_id(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
     return pmc.PrivateUsage;
 #else
     _S_UNUSED(process_id);
