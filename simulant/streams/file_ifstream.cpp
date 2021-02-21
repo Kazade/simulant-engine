@@ -1,8 +1,9 @@
 #include "file_ifstream.h"
+#include "../logging.h"
 
 namespace smlt {
 
-static uint32_t FileStreamBuf::open_file_counter = 0;
+uint32_t FileStreamBuf::open_file_counter = 0;
 
 FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
     ++open_file_counter;
