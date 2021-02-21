@@ -15,7 +15,7 @@ class FileStreamBuf : public std::streambuf {
      * mainly so that we can access the underlying FILE* for C
      * APIs (e.g. stb_vorbis) */
 
-    const static int BUFFER_SIZE = 4096;
+    static const int BUFFER_SIZE = 4096;
 
     /* This is used to log a warning when we start having quite
      * a lot of files open. Some platforms (Dreamcast) are limited
