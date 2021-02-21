@@ -133,8 +133,6 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
     throw AssetMissingError("Unable to find file: " + final_name);
 }
 
-
-
 std::shared_ptr<std::istream> VirtualFileSystem::open_file(const unicode& filename) {
     unicode path = locate_file(filename);
 

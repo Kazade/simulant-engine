@@ -17,15 +17,15 @@ class FileStreamBuf : public std::streambuf {
 
     const static int BUFFER_SIZE = 4096;
 
-public:
-    FileStreamBuf(const std::string& name, const std::string& mode) {
-        filein_ = fopen(name.c_str(), mode.c_str());
-        assert(filein_);
-    }
+    /* This is used to log a warning when we start having quite
+     * a lot of files open. Some platforms (Dreamcast) are limited
+     * in how many open files there can be... */
 
-    ~FileStreamBuf() {
-        fclose(filein_);
-    }
+    static const uint32_t FILE_OPEN_WARN_COUNT = 6;
+    static uint32_t open_file_counter;
+public:
+    FileStreamBuf(const std::string& name, const std::string& mode);
+    ~FileStreamBuf();
 
     int_type underflow() override;
 

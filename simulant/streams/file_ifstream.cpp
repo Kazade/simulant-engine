@@ -2,6 +2,25 @@
 
 namespace smlt {
 
+static uint32_t FileStreamBuf::open_file_counter = 0;
+
+FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
+    ++open_file_counter;
+    filein_ = fopen(name.c_str(), mode.c_str());
+    assert(filein_);
+
+    if(open_file_counter == FILE_OPEN_WARN_COUNT) {
+        L_WARN(
+            _F("{0} files are concurrently open, this may cause issues on some platforms").format(open_file_counter)
+        );
+    }
+}
+
+FileStreamBuf::~FileStreamBuf() {
+    fclose(filein_);
+    --open_file_counter;
+}
+
 FileStreamBuf::int_type FileStreamBuf::underflow() {
     last_read_pos_ = ftell(filein_);
     auto bytes = fread(buffer_, sizeof(char), BUFFER_SIZE, filein_);
