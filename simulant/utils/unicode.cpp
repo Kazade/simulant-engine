@@ -168,13 +168,13 @@ unicode unicode::lower() const {
 }
 
 unicode unicode::lpad(int32_t indent) {
-    auto to_pad = std::max(0, (int32_t) (indent - length()));
+    auto to_pad = std::max((int32_t) 0, (int32_t) (indent - length()));
     std::string prefix(to_pad, ' ');
     return _F("{0}{1}").format(prefix, this->encode());
 }
 
 unicode unicode::rpad(int32_t count) {
-    auto to_pad = std::max(0, (int32_t) (count - length()));
+    auto to_pad = std::max((int32_t) 0, (int32_t) (count - length()));
     std::string prefix(to_pad, ' ');
     return _F("{0}{1}").format(this->encode(), prefix);
 }

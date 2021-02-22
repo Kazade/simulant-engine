@@ -4,6 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include "../compat.h"
+
 namespace smlt {
 
 class Formatter {

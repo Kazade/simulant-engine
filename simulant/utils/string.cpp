@@ -1,42 +1,5 @@
 #include "string.h"
 
-#ifdef __DREAMCAST__
-
-#include <cstdlib>
-#include <stdexcept>
-#include <climits>
-
-namespace std {
-float stof(const std::string& str) {
-    const char* inp = str.c_str();
-    char* p = nullptr;
-
-    // Dreamcast (GCC 4.7.3) doesn't define strtof but does define strtod
-    float test = (float) strtod(inp, &p);
-
-    if(p == inp) {
-        throw std::invalid_argument("Couldn't convert from a string to a float");
-    }
-
-    return (float) test;
-}
-
-int32_t stoi(const std::string& str) {
-    const char* inp = str.c_str();
-    char* p = nullptr;
-
-    auto test = strtol(inp, &p, 10);
-
-    if(p == inp || test == LONG_MIN || test == LONG_MAX) {
-        throw std::invalid_argument("Couldn't convert from a string to an integer");
-    }
-
-    return (int32_t) test;
-}
-
-}
-#endif
-
 namespace smlt {
 
 bool ends_with(const std::string& s, const std::string& what) {
