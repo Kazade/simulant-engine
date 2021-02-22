@@ -28,6 +28,7 @@
 #include "utf8.h"
 #include "unicode.h"
 #include "../compat.h"
+#include "formatter.h"
 
 std::ostream& operator<< (std::ostream& os, const unicode& str) {
     os << str.encode();
@@ -167,17 +168,16 @@ unicode unicode::lower() const {
 }
 
 unicode unicode::lpad(int32_t indent) {
-    std::string prefix(indent, ' ');
-
-    return _u("{0}{1}").format(prefix, *this);
+    auto to_pad = std::max((int32_t) 0, (int32_t) (indent - length()));
+    std::string prefix(to_pad, ' ');
+    return _F("{0}{1}").format(prefix, this->encode());
 }
 
 unicode unicode::rpad(int32_t count) {
-    std::string suffix(count, ' ');
-
-    return _u("{0}{1}").format(*this, suffix);
+    auto to_pad = std::max((int32_t) 0, (int32_t) (count - length()));
+    std::string prefix(to_pad, ' ');
+    return _F("{0}{1}").format(this->encode(), prefix);
 }
-
 
 std::vector<unicode> unicode::split(const unicode &delimiter, int32_t count, bool keep_empty) const {
     std::vector<unicode> result;
@@ -411,58 +411,6 @@ unicode unicode::strip() const {
     return result.lstrip().rstrip();
 }
 
-unicode unicode::_do_format(uint32_t counter, const std::string& value) {
-    unicode search = "{" + std::to_string(counter);
-
-    ustring replacement(value.begin(), value.end());
-    unicode result = *this;
-
-    auto start_pos = 0;
-    while(true) {
-        auto pos = result.string_.find(search.string_, start_pos);
-        if(pos == ustring::npos) {
-            break;
-        }
-
-        auto end = result.string_.find(u"}", pos);
-        if(end == ustring::npos) {
-            break;
-        }
-
-        ustring contents = ustring(
-            result.string_.begin() + pos + search.length(),
-            result.string_.begin() + end
-        );
-
-        auto colon_idx = contents.find(':');
-        if(colon_idx != ustring::npos) {
-            // OK, so we have some kind of formatting parameter here... let's deal with floats only
-            auto formatter = ustring(contents.begin() + colon_idx + 1, contents.end());
-            if(formatter[formatter.size() - 1] == 'f') {
-                if(formatter[0] == '.') {
-                    auto precision_string = ustring(formatter.begin() + 1, formatter.end() - 1);
-                    auto precision = _stoi(unicode(precision_string.c_str()).encode());
-                    auto float_val = _stof(value);
-
-                    std::stringstream ss;
-                    ss << std::fixed << std::setprecision(precision) << float_val;
-                    replacement = unicode(ss.str()).string_;
-                }
-            }
-        }
-
-        result.string_.replace(
-            result.string_.begin() + pos,
-            result.string_.begin() + end + 1,
-            replacement
-        );
-
-        start_pos = pos + replacement.length();
-    }
-    return result;
-}
-
-
 unicode humanize(int i) {
     switch(i) {
         case 0: return "zero";
@@ -476,6 +424,6 @@ unicode humanize(int i) {
         case 8: return "eight";
         case 9: return "nine";
     default:
-        return unicode("{0}").format(i);
+        return _F("{0}").format(i);
     }
 }

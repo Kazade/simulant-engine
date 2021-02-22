@@ -42,7 +42,7 @@ bool Widget::init() {
 
     material_ = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
     if(!material_) {
-        L_ERROR("[CRITICAL] Unable to load the material for widgets!");
+        S_ERROR("[CRITICAL] Unable to load the material for widgets!");
         return false;
     }
     material_->set_blend_func(BLEND_ALPHA);
@@ -52,7 +52,7 @@ bool Widget::init() {
     // Assign the default font as default
     auto font = stage->assets->default_font(DEFAULT_FONT_STYLE_BODY);
     if(!font) {
-        L_ERROR("[CRITICAL] Unable to load the font for widgets!");
+        S_ERROR("[CRITICAL] Unable to load the font for widgets!");
         return false;
     }
 

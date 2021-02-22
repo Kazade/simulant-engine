@@ -42,26 +42,26 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, jsonic::Nod
         std::string spec = manipulator["curve"].get<jsonic::String>();
         auto first_brace = spec.find('(');
         if(first_brace == std::string::npos || spec.at(spec.size() - 1) != ')') {
-            L_WARN(_F("Invalid curve specification {0}. Ignoring.").format(spec));
+            S_WARN("Invalid curve specification {0}. Ignoring.", spec);
         } else {
             auto kind = spec.substr(0, first_brace);
             auto args = spec.substr(first_brace + 1, spec.size() - 1);
             if(kind == "linear") {
                 auto parts = unicode(args).split(",");
                 if(parts.size() > 1) {
-                    L_WARN("Too many arguments to linear curve");
+                    S_WARN("Too many arguments to linear curve");
                 }
 
                 m->set_linear_curve(parts[0].to_float());
             } else if(kind == "bell") {
                 auto parts = unicode(args).split(",");
                 if(parts.size() != 2) {
-                    L_WARN("Wrong number of arguments to bell curve");
+                    S_WARN("Wrong number of arguments to bell curve");
                 } else {
                     m->set_bell_curve(parts[0].to_float(), parts[1].to_float());
                 }
             } else {
-                L_WARN(_F("Unknown curve type {0}. Ignoring.").format(kind));
+                S_WARN("Unknown curve type {0}. Ignoring.", kind);
             }
         }
     }
@@ -87,7 +87,7 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, jso
                 parts[3].to_float()
             );
         } else {
-            L_WARN("Invalid number of colour components to colour fader");
+            S_WARN("Invalid number of colour components to colour fader");
             return smlt::Colour::WHITE;
         }
     };
@@ -179,8 +179,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                             vfs->remove_search_path(dirname);
                         }
                     } else {
-                        L_ERROR(
-                            _F("Unhandled material property type {0}, please report.").format(type)
+                        S_ERROR(
+                            "Unhandled material property type {0}, please report.", type
                         );
                     }
                 }
@@ -189,7 +189,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
     }
 
     if(js.has_key("emitters")) {
-        L_DEBUG("Loading emitters");
+        S_DEBUG("Loading emitters");
 
         jsonic::Node& emitters = js["emitters"];
         for(uint32_t i = 0; i < emitters.length(); ++i) {
@@ -198,7 +198,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             Emitter new_emitter;
             if(emitter.has_key("type")) {
                 auto emitter_type = emitter["type"].get<jsonic::String>();
-                L_DEBUG(_F("Emitter {0} has type {1}").format(i, emitter_type));
+                S_DEBUG("Emitter {0} has type {1}", i, emitter_type);
                 new_emitter.type = (emitter_type == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX;
             }
 

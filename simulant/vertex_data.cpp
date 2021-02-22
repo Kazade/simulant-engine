@@ -525,7 +525,7 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
         }
         break;
         default:
-            L_WARN("Ignoring unsupported vertex position type");
+            S_WARN("Ignoring unsupported vertex position type");
     }
 
     //FIXME: Interpolate normals here

@@ -14,14 +14,14 @@ bool OpenALSoundDriver::startup() {
     if(!dev) {
         // If we couldn't open the default device for some reason,
         // disable all sound functions
-        L_ERROR("Unable to initialize sound device");
+        S_ERROR("Unable to initialize sound device");
         return false;
     }
 
     ctx = alcCreateContext(dev, NULL);
 
     if(!ctx) {
-        L_ERROR("Unable to create sound context");
+        S_ERROR("Unable to create sound context");
         return false;
     }
 

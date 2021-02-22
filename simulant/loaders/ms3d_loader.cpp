@@ -102,7 +102,7 @@ MS3DLoader::MS3DLoader(const unicode& filename, std::shared_ptr<std::istream> da
 void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     _S_UNUSED(options);
 
-    L_DEBUG("MS3D: Beginning read..");
+    S_DEBUG("MS3D: Beginning read..");
 
     Mesh* mesh = loadable_to<Mesh>(resource);
     assert(mesh && "Tried to load an MS3D file into a non-mesh");
@@ -121,7 +121,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         throw std::logic_error("Unsupported MS3D file. ID mismatch");
     }
 
-    L_DEBUG("MS3D: Header OK.");
+    S_DEBUG("MS3D: Header OK.");
 
     uint16_t num_vertices = 0;
     uint16_t num_triangles = 0;
@@ -137,7 +137,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     data_->read((char*) &num_vertices, sizeof(uint16_t));
 
-    L_DEBUG("MS3D: Reading vertices...");
+    S_DEBUG("MS3D: Reading vertices...");
 
     std::vector<MS3DVertex> vertices(num_vertices);
     for(auto& vert: vertices) {
@@ -147,7 +147,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_->read((char*) &vert.ref_count, sizeof(MS3DVertex::ref_count));
     }
 
-    L_DEBUG("MS3D: Reading triangles...");
+    S_DEBUG("MS3D: Reading triangles...");
 
     data_->read((char*) &num_triangles, sizeof(uint16_t));
     std::vector<MS3DTriangle> triangles(num_triangles);
@@ -161,7 +161,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_->read((char*) &tri.groupIndex, sizeof(MS3DTriangle::groupIndex));
     }
 
-    L_DEBUG("MS3D: Reading groups...");
+    S_DEBUG("MS3D: Reading groups...");
 
     data_->read((char*) &num_groups, sizeof(uint16_t));
     std::vector<MS3DGroup> groups(num_groups);
@@ -176,7 +176,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_->read((char*) &groups[i].material_index, sizeof(char));
     }
 
-    L_DEBUG("MS3D: Reading materials...");
+    S_DEBUG("MS3D: Reading materials...");
 
     data_->read((char*) &num_materials, sizeof(uint16_t));
     std::vector<MS3DMaterial> materials(num_materials);
@@ -197,7 +197,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     data_->read((char*) &anim_data, sizeof(MS3DAnimData));
     data_->read((char*) &num_joints, sizeof(uint16_t));
 
-    L_DEBUG("MS3D: Reading joints...");
+    S_DEBUG("MS3D: Reading joints...");
 
     std::vector<MS3DJoint> joints(num_joints);
     for(uint16_t i = 0; i < num_joints; ++i) {
@@ -232,7 +232,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     if(data_->eof()) {
         vertex_extra_subversion = 0;
     } else {
-        L_DEBUG("MS3D: Reading comments...");
+        S_DEBUG("MS3D: Reading comments...");
 
         MS3DComment comment; // We do nothing with this for now
         data_->read((char*) &num_material_comments, sizeof(int32_t));
@@ -292,7 +292,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     auto vdata = mesh->vertex_data.get();
 
-    L_DEBUG("MS3D: Generating mesh");
+    S_DEBUG("MS3D: Generating mesh");
 
     for(auto& group: groups) {
         auto& material = materials[group.material_index];
@@ -309,7 +309,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             texname = texname.substr(2);
         }
 
-        L_DEBUG(_F("MS3D: Loading texture {0}...").format(texname));
+        S_DEBUG("MS3D: Loading texture {0}...", texname);
 
         auto tex = assets->new_texture_from_file(texname);
         if(tex) {
@@ -400,7 +400,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         joint_out->move_to(joint_in->position);
         joint_out->rotate_to(to_quaternion(joint_in->rotation));
 
-        L_DEBUG(_F("Loaded joint {0}").format(joint_in->name));
+        S_DEBUG("Loaded joint {0}", joint_in->name);
 
         /* If we have a parent */
         if(joint_in->parent_name[0] != '\0') {
@@ -440,7 +440,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                     if(!last_rot_frame) {
                         /* We have to assume that this is the first frame, although
                          * this shouldn't happen, so let's log a warning */
-                        L_WARN(
+                        S_WARN(
                             "First frame time was unexpectedly > 0, floating point issue?"
                         );
                         state.rotation = to_quaternion(source_joint.rotation_key_frames[0].rotation);
@@ -471,7 +471,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                     if(!last_pos_frame) {
                         /* We have to assume that this is the first frame, although
                          * this shouldn't happen, so let's log a warning */
-                        L_WARN(
+                        S_WARN(
                             "First frame time was unexpectedly > 0, floating point issue?"
                         );
                         state.translation = source_joint.position_key_frames[0].position;

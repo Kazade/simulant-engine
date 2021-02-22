@@ -73,7 +73,7 @@ SourceInstance::~SourceInstance() {
 
 void SourceInstance::start() {
     if(!stream_func_) {
-        L_WARN("Not playing sound as no stream func was set");
+        S_WARN("Not playing sound as no stream func was set");
         return;
     }
 
@@ -180,7 +180,7 @@ void SourceInstance::update(float dt) {
                 start();
                 is_dead_ = false;
             } else {
-                L_WARN("Sound unexpectedly vanished while looping");
+                S_WARN("Sound unexpectedly vanished while looping");
                 is_dead_ = true;
             }
         } else {
@@ -209,7 +209,7 @@ Source::~Source() {
 
 SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat) {
     if(!sound) {
-        L_WARN("Tried to play an invalid sound");
+        S_WARN("Tried to play an invalid sound");
         return 0;
     }
 

@@ -201,7 +201,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     auto camera = pipeline_stage->camera();
 
     if(!stage || !camera) {
-        L_DEBUG("Stage or camera has been destroyed, disabling pipeline");
+        S_DEBUG("Stage or camera has been destroyed, disabling pipeline");
         pipeline_stage->deactivate();
         return;
     }

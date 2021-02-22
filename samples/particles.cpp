@@ -30,7 +30,7 @@ public:
 
         /*auto fly = camera_->new_behaviour<smlt::behaviours::Fly>(window);
         fly->set_speed(10.0f); */
-        L_DEBUG("Scene loaded");
+        S_DEBUG("Scene loaded");
     }
 
     void activate() override {

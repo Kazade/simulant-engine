@@ -1069,7 +1069,6 @@ samples/seek_sample.cpp
 tests/test_object.h
 tests/test_vector.h
 tests/test_curve.h
-tests/test_kazbase.h
 cmake_modules/FindTinyXML.cmake
 tests/test_generic_tree.h
 samples/data/rocket_trail.kglp
@@ -1615,6 +1614,7 @@ simulant/controllers/physics/static_body.h
 simulant/controllers/physics/static_body.cpp
 simulant/streams/file_ifstream.cpp
 simulant/streams/file_ifstream.h
+simulant/utils/formatter.h
 tests/test_physics.h
 simulant/utils/mesh/triangulate.h
 simulant/utils/mesh/triangulate.cpp

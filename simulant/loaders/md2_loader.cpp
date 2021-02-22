@@ -230,7 +230,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     SubMesh* submesh = mesh->new_submesh("default", MESH_ARRANGEMENT_TRIANGLES);
 
-    L_DEBUG(_F("Loading MD2 model: {0}").format(filename_));
+    S_DEBUG("Loading MD2 model: {0}", filename_);
 
     MD2Header header;
 
@@ -289,13 +289,13 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
             tex_id = asset_manager->new_texture_from_file(vfs->locate_file(texture_path));
             found = true;
         } catch(AssetMissingError&) {
-            L_DEBUG("MD2 skin not found at: " + texture_path);
+            S_DEBUG("MD2 skin not found at: {0}", texture_path);
             continue;
         }
     }
 
     if(!found) {
-        L_WARN("Unable to locate MD2 skin: " + skin_name);
+        S_WARN("Unable to locate MD2 skin: {0}", skin_name);
     }
 
     auto material = asset_manager->clone_default_material();
@@ -371,7 +371,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         ++current_frame;
     }
 
-    L_DEBUG("Loaded MD2 data, converting to mesh");
+    S_DEBUG("Loaded MD2 data, converting to mesh");
 
     mesh->enable_animation(MESH_ANIMATION_TYPE_VERTEX_MORPH, header.num_frames, frame_data);
 
@@ -425,7 +425,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->add_animation("death_3", 190, 197, 7.0);
     mesh->add_animation("death_4", 198, 198, 5.0);
 
-    L_DEBUG("Done loading MD2");
+    S_DEBUG("Done loading MD2");
 }
 
 

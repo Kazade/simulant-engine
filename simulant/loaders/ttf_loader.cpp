@@ -59,7 +59,7 @@ namespace loaders {
             (stbtt_bakedchar*) &font->char_data_[0]
         );
 
-        L_DEBUG("F: Converting font texture from 8bit -> 32bit");
+        S_DEBUG("F: Converting font texture from 8bit -> 32bit");
 
         // Convert from 8bpp to 32bpp
         texture->convert(
@@ -67,7 +67,7 @@ namespace loaders {
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
 
-        L_DEBUG("F: Finished conversion");
+        S_DEBUG("F: Finished conversion");
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_diffuse_map(font->texture_);
@@ -76,7 +76,7 @@ namespace loaders {
         font->material_->set_depth_test_enabled(false);
         font->material_->set_cull_mode(CULL_MODE_NONE);
 
-        L_DEBUG("Font loaded successfully");
+        S_DEBUG("Font loaded successfully");
     }
 }
 }

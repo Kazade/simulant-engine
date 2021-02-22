@@ -83,7 +83,7 @@ Stage::~Stage() {
 }
 
 bool Stage::init() {
-    L_DEBUG(_F("Initializing stage {0}").format(id()));
+    S_DEBUG("Initializing stage {0}", id());
     return true;
 }
 
@@ -103,11 +103,11 @@ void Stage::clean_up() {
     camera_manager_->clear();
     geom_manager_->clear();
 
-    L_DEBUG(_F("Stage {0} destroyed").format(id()));
+    S_DEBUG("Stage {0} destroyed", id());
 }
 
 ActorPtr Stage::new_actor() {
-    L_DEBUG("Creating actor");
+    S_DEBUG("Creating actor");
 
     using namespace std::placeholders;
 
@@ -124,7 +124,7 @@ ActorPtr Stage::new_actor() {
     //Tell everyone about the new actor
     signal_actor_created_(a->id());
 
-    L_DEBUG(_F("Actor created: {0}").format(a->id()));
+    S_DEBUG("Actor created: {0}", a->id());
     return a;
 }
 

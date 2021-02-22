@@ -72,7 +72,7 @@ void check_and_log_error(const char *function_name) {
 #endif
         }
 
-        L_ERROR(_F("An OpenGL error occurred: {0} - {1}").format(function_name, error_string));
+        S_ERROR("An OpenGL error occurred: {0} - {1}", function_name, error_string);
 
         throw std::runtime_error(_F("GL ERROR: {0}").format(error_string));
     }

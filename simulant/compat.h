@@ -21,9 +21,7 @@ std::string to_string(unsigned long value);
 std::string to_string(long value);
 std::string to_string(float value);
 std::string to_string(double value);
-#endif
 
-#if defined(__PSP__)
 int stoi(const std::string& str);
 float stof(const std::string& str);
 #endif

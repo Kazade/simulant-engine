@@ -92,7 +92,7 @@ void InputAxis::set_type(AxisType type) {
     if(type_ != AXIS_TYPE_UNSET && type != type_) {
         /* We changed from some type to another, this is an unusual
          * behaviour and likely an error, so log a warning */
-        L_WARN("Changed axis type for existing axis. This is probably a mistake.");
+        S_WARN("Changed axis type for existing axis. This is probably a mistake.");
     }
 
     type_ = type;

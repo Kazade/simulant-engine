@@ -40,24 +40,24 @@ AssetManager::AssetManager(Window* window, AssetManager* parent):
     parent_(parent) {
 
     if(parent_) {
-        L_DEBUG(_F("Registering new resource manager: {0}").format(this));
+        S_DEBUG("Registering new resource manager: {0}", this);
         base_manager()->register_child(this);
     } else {
-        L_DEBUG(_F("Created base manager: {0}").format(this));
+        S_DEBUG("Created base manager: {0}", this);
     }
 }
 
 AssetManager::~AssetManager() {
     if(parent_) {
-        L_DEBUG(_F("Unregistering resource manager: {0}").format(this));
+        S_DEBUG("Unregistering resource manager: {0}", this);
         base_manager()->unregister_child(this);
         parent_ = nullptr;
     } else {
         if(!children_.empty()) {
-            L_WARN("Destroyed base manager while children remain");
+            S_WARN("Destroyed base manager while children remain");
         }
 
-        L_DEBUG(_F("Destroyed base manager: {0}").format(this));
+        S_DEBUG("Destroyed base manager: {0}", this);
     }
 }
 
@@ -92,11 +92,11 @@ MaterialPtr AssetManager::default_material() const {
 
 
 bool SharedAssetManager::init() {
-    L_DEBUG(_F("Initalizing default materials, textures, and fonts (AssetManager: {0})").format(this));
+    S_DEBUG("Initalizing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
     set_default_font_filename(DEFAULT_FONT_STYLE_BODY, BODY_FONT);
     set_default_font_filename(DEFAULT_FONT_STYLE_HEADING, HEADING_FONT);
-    L_DEBUG("Finished initializing defaults");
+    S_DEBUG("Finished initializing defaults");
     return true;
 }
 
@@ -396,26 +396,26 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
             window->idle->execute();
         } else if(load_material) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
-            L_INFO(_F("Loading material {0} into {1}").format(path, template_id));
+            S_INFO("Loading material {0} into {1}", path, template_id);
             auto mat = material(template_id);
             if(!mat) {
-                L_ERROR(_F("Tried to fetch material with template_id ({0}). But it didn't exist").format(template_id));
+                S_ERROR("Tried to fetch material with template_id ({0}). But it didn't exist", template_id);
                 materials_loading_.erase(template_id);
                 throw std::runtime_error(_F("Error loading file: {0}").format(path));
             }
 
-            L_DEBUG(_F("Locating loader for {0}").format(path));
+            S_DEBUG("Locating loader for {0}", path);
             auto loader = window->loader_for(path.encode());
             if(!loader) {
-                L_ERROR(_F("Unable to find loader for {0}").format(path));
+                S_ERROR("Unable to find loader for {0}", path);
                 materials_loading_.erase(template_id);
                 throw std::runtime_error(_F("Unable to find loader for file: {0}").format(path));
             }
 
-            L_DEBUG("Loading...");
+            S_DEBUG("Loading...");
             loader->into(mat);
             materials_loading_.erase(template_id);
-            L_DEBUG(_F("Material {0} loaded").format(mat->id()));
+            S_DEBUG("Material {0} loaded", mat->id());
         }
     }
 
@@ -435,7 +435,7 @@ MaterialPtr AssetManager::new_material_from_file(const unicode& path, GarbageCol
 
     auto new_mat_id = new_mat->id();
 
-    L_DEBUG(_F("Cloned material {0} into {1}").format(template_id, new_mat_id));
+    S_DEBUG("Cloned material {0} into {1}", template_id, new_mat_id);
 
     material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect);
     return new_mat;
@@ -481,22 +481,22 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, GarbageColle
 
 TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
-    L_DEBUG(_F("Loading texture from file: {0}").format(path));
+    S_DEBUG("Loading texture from file: {0}", path);
     smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect);
 
     {
-        L_DEBUG(_F("Finding loader for: {0}").format(path));
+        S_DEBUG("Finding loader for: {0}", path);
         auto loader = window->loader_for(path, LOADER_HINT_TEXTURE);
         if(!loader) {
-            L_WARN("Couldn't find loader for texture");
+            S_WARN("Couldn't find loader for texture");
             return smlt::TexturePtr();
         }
 
-        L_DEBUG("Loader found, loading...");
+        S_DEBUG("Loader found, loading...");
         loader->into(tex);
 
         if(flags.flip_vertically) {
-            L_DEBUG("Flipping texture vertically");
+            S_DEBUG("Flipping texture vertically");
             tex->flip_vertically();
         }
 
@@ -506,7 +506,7 @@ TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags
         tex->set_auto_upload(flags.auto_upload);
     }
 
-    L_DEBUG("Texture loaded");
+    S_DEBUG("Texture loaded");
     return tex;
 }
 
@@ -544,7 +544,7 @@ SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMe
     if(loader) {
         loader->into(snd);
     } else {
-        L_ERROR(_F("Unsupported file type: ").format(path));
+        S_ERROR("Unsupported file type: ", path);
     }
 
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);

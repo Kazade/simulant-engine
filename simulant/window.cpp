@@ -137,7 +137,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
     try {
         final_file = vfs->locate_file(filename);
     } catch(AssetMissingError&) {
-        L_ERROR("Couldn't get loader as file doesn't exist");
+        S_ERROR("Couldn't get loader as file doesn't exist");
         return LoaderPtr();
     }
 
@@ -145,7 +145,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->supports(final_file)) {
-            L_DEBUG(_F("Found possible loader: {0}").format(loader_type->name()));
+            S_DEBUG("Found possible loader: {0}", loader_type->name());
             auto new_loader = loader_type->loader_for(final_file, vfs->open_file(final_file));
             new_loader->set_vfs(this->vfs_.get());
 
@@ -169,7 +169,7 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
         throw std::logic_error(_F("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename));
     }
 
-    L_WARN(_F("No suitable loader found for {0}").format(filename));
+    S_WARN("No suitable loader found for {0}", filename);
     return LoaderPtr();
 }
 
@@ -180,16 +180,16 @@ LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             if(loader_type->supports(final_file)) {
-                L_DEBUG(_F("Found loader {0} for file: {1}").format(loader_name, filename.encode()));
+                S_DEBUG("Found loader {0} for file: {1}", loader_name, filename.encode());
                 return loader_type->loader_for(final_file, vfs->open_file(final_file));
             } else {
-                L_ERROR(_F("Loader '{0}' does not support file '{1}'").format(loader_name, filename));
+                S_ERROR("Loader '{0}' does not support file '{1}'", loader_name, filename);
                 return LoaderPtr();
             }
         }
     }
 
-    L_ERROR(_F("Unable to find loader for: {0}").format(filename.encode()));
+    S_ERROR("Unable to find loader for: {0}", filename.encode());
     return LoaderPtr();
 }
 
@@ -266,7 +266,7 @@ bool Window::has_explicit_audio_listener() const {
 }
 
 bool Window::initialize_assets_and_devices() {
-    L_DEBUG("Starting initialization");
+    S_DEBUG("Starting initialization");
 
     // Initialize the sound driver (here rather than constructor as it relies on subclass type)
     sound_driver_ = create_sound_driver(application_->config_.development.force_sound_driver);
@@ -283,7 +283,7 @@ bool Window::initialize_assets_and_devices() {
 
         //watcher_ = Watcher::create(*this);
 
-        L_INFO("Registering loaders");
+        S_INFO("Registering loaders");
 
         //Register the default resource loaders
         register_loader(std::make_shared<smlt::loaders::TextureLoaderType>());
@@ -303,7 +303,7 @@ bool Window::initialize_assets_and_devices() {
         register_loader(std::make_shared<smlt::loaders::WAVLoaderType>());
         register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
 
-        L_INFO("Initializing the default resources");
+        S_INFO("Initializing the default resources");
 
         shared_assets->init();
 
@@ -315,7 +315,7 @@ bool Window::initialize_assets_and_devices() {
         initialized_ = true;
     }
 
-    L_DEBUG("Initialization finished");
+    S_DEBUG("Initialization finished");
 
     idle->add_once([this]() {
         each_screen([](std::string, Screen* screen) {
@@ -452,7 +452,7 @@ void Window::await_frame_time() {
 
 Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t height, ScreenFormat format, uint16_t refresh_rate) {
     if(screens_.count(name)) {
-        L_WARN("Tried to add duplicate Screen");
+        S_WARN("Tried to add duplicate Screen");
         return screens_.at(name).get();
     }
 
@@ -589,9 +589,9 @@ void Window::set_paused(bool value) {
     if(value == is_paused_) return;
 
     if(value) {
-        L_INFO("Pausing application");
+        S_INFO("Pausing application");
     } else {
-        L_INFO("Unpausing application");
+        S_INFO("Unpausing application");
     }
 
     is_paused_ = value;
@@ -641,7 +641,7 @@ void Window::disable_virtual_joypad() {
  * window to its original state.
  */
 void Window::reset() {
-    L_DEBUG("Resetting Window state");
+    S_DEBUG("Resetting Window state");
 
     idle->execute(); //Execute any idle tasks before we go deleting things
 
@@ -659,20 +659,20 @@ void Window::reset() {
     StageManager::destroy_all_stages();
     StageManager::clean_up();
 
-    L_DEBUG("Resetting the base manager");
+    S_DEBUG("Resetting the base manager");
     /* Destroy and recreate the base resource manager */
     asset_manager_.reset();
 
-    L_DEBUG("Reinitializing the base manager");
+    S_DEBUG("Reinitializing the base manager");
 
     asset_manager_ = SharedAssetManager::create(this);
     assert(asset_manager_);
     asset_manager_->init();
 
-    L_DEBUG("Recreating defaults");
+    S_DEBUG("Recreating defaults");
     create_defaults();
 
-    L_DEBUG("Recreating panels");
+    S_DEBUG("Recreating panels");
     register_panel(1, StatsPanel::create(this));
     register_panel(2, PartitionerPanel::create(this));
 }
@@ -703,7 +703,7 @@ Screen *Window::screen(const std::string &name) const {
         return it->second.get();
     }
 
-    L_INFO(_F("Unable to find screen with name {0}").format(name));
+    S_INFO("Unable to find screen with name {0}", name);
     return nullptr;
 }
 

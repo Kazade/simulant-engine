@@ -13,7 +13,7 @@ AdjacencyInfo::AdjacencyInfo(Mesh* mesh):
 }
 
 void AdjacencyInfo::rebuild() {
-    L_DEBUG("Generating adjacency info");
+    S_DEBUG("Generating adjacency info");
 
     auto to_tuple = [](const Vec3& v) {
         return std::make_tuple(v.x, v.y, v.z);
@@ -32,7 +32,7 @@ void AdjacencyInfo::rebuild() {
 
     // FIXME: handle other types
     if(mesh_->vertex_data->vertex_specification().position_attribute != VERTEX_ATTRIBUTE_3F) {
-        L_WARN("Adjacency info currently only supported on 3D vertices");
+        S_WARN("Adjacency info currently only supported on 3D vertices");
         return;
     }
 

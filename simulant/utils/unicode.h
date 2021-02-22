@@ -104,41 +104,6 @@ public:
     unicode join(const std::vector<unicode>& parts) const;
     unicode join(const std::vector<std::string>& parts) const;
 
-    struct Counter {
-        Counter(uint32_t c): c(c) {}
-        uint32_t c;
-    };
-
-    template<typename T>
-    unicode format(T value) {
-        std::stringstream ss;
-        ss << value;
-        return _do_format(0, ss.str());
-    }
-
-    template<typename T>
-    unicode format(Counter count, T value) {
-        std::stringstream ss;
-        ss << value;
-        return _do_format(count.c, ss.str());
-    }
-
-    template<typename T, typename... Args>
-    unicode format(T value, const Args&... args) {
-        std::stringstream ss;
-        ss << value;
-        return _do_format(0, ss.str()).format(Counter(1), args...);
-    }
-
-    template<typename T, typename... Args>
-    unicode format(Counter count, T value, const Args&... args) {
-        std::stringstream ss;
-        ss << value;
-        return _do_format(count.c, ss.str()).format(Counter(count.c + 1), args...);
-    }
-
-    unicode _do_format(uint32_t counter, const std::string& value);
-
     bool operator==(const unicode& rhs) const {
         return string_ == rhs.string_;
     }

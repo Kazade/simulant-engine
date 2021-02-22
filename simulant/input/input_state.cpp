@@ -162,9 +162,9 @@ void InputState::update(float dt) {
 
 void InputState::_update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info) {
     if(device_info.size() > joystick_count_) {
-        L_INFO(_F("{0} controllers connected").format(device_info.size() - joystick_count_));
+        S_INFO("{0} controllers connected", device_info.size() - joystick_count_);
     } else if(device_info.size() < joystick_count_) {
-        L_INFO(_F("{0} controllers removed").format(joystick_count_ - device_info.size()));
+        S_INFO("{0} controllers removed", joystick_count_ - device_info.size());
     }
 
     joystick_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);

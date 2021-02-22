@@ -73,7 +73,7 @@ class SceneManager :
 
         /* Little bit of cleverness to check that the scene manager is still alive */
         if(!self) {
-            L_DEBUG(_F("Not activating {0} as SceneManager was destroyed").format(route));
+            S_DEBUG("Not activating {0} as SceneManager was destroyed", route);
             holder->conn.disconnect();
             return;
         }

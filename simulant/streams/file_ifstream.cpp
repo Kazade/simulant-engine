@@ -11,8 +11,9 @@ FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
     assert(filein_);
 
     if(open_file_counter == FILE_OPEN_WARN_COUNT) {
-        L_WARN(
-            _F("{0} files are concurrently open, this may cause issues on some platforms").format(open_file_counter)
+        S_WARN(
+            "{0} files are concurrently open, this may cause issues on some platforms",
+            open_file_counter
         );
     }
 }

@@ -1,3 +1,4 @@
+
 #include <malloc.h>
 #include <memory>
 #include <vector>
@@ -42,21 +43,21 @@ void KOSWindow::swap_buffers() {
 }
 
 bool KOSWindow::_init_window() {
-    L_DEBUG("Initializing OpenGL");
+    S_DEBUG("Initializing OpenGL");
 
     static bool gl_initialized = false;
     if(!gl_initialized++) {
         glKosInit();
     }
 
-    L_DEBUG("OpenGL initialized");
+    S_DEBUG("OpenGL initialized");
     return true;
 }
 
 bool KOSWindow::_init_renderer(Renderer* renderer) {
     set_has_context(true); //Mark that we have a valid GL context
 
-    L_DEBUG("Renderer initialized");
+    S_DEBUG("Renderer initialized");
 
     return true;
 }
@@ -293,13 +294,13 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver(const std::string& f
         (from_config.empty()) ? "openal" : from_config;
 
     if(selected == "null") {
-        L_DEBUG("Null sound driver activated");
+        S_DEBUG("Null sound driver activated");
         return std::make_shared<NullSoundDriver>(this);
     } else {
         if(selected != "openal") {
-            L_WARN(_F("Unknown sound driver ({0}) falling back to OpenAL").format(selected));
+            S_WARN("Unknown sound driver ({0}) falling back to OpenAL", selected);
         }
-        L_DEBUG("OpenAL sound driver activated");
+        S_DEBUG("OpenAL sound driver activated");
         return std::make_shared<OpenALSoundDriver>(this);
     }
 }
@@ -348,7 +349,7 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data) {
     auto it = vmu_lookup_.find(screen->name());
 
     if(it == vmu_lookup_.end()) {
-        L_WARN("Tried to render to VMU that has been removed");
+        S_WARN("Tried to render to VMU that has been removed");
         return;
     }
 

@@ -73,18 +73,18 @@ public:
     ObjectTypePtrType make_as(Args&&... args) {
         IDType new_id(next_id()); // Unbound
 
-        L_DEBUG(_F("Creating a new object with ID: {0}").format(new_id));
+        S_DEBUG("Creating a new object with ID: {0}", new_id);
         auto obj = T::create(new_id, std::forward<Args>(args)...);
 
-        L_DEBUG("Binding ID pointer");
+        S_DEBUG("Binding ID pointer");
         obj->_bind_id_pointer(obj);
 
         objects_.insert(std::make_pair(obj->id(), obj));
 
-        L_DEBUG("Calling on_make()");
+        S_DEBUG("Calling on_make()");
         on_make(obj->id());
 
-        L_DEBUG("Created");
+        S_DEBUG("Created");
         return SmartPointerConverter::convert(obj);
     }
 
@@ -268,9 +268,7 @@ private:
     }
 
     void on_destroy(IDType id) override {
-        L_DEBUG(
-            _F("Garbage collecting {0}").format(id)
-        );
+        S_DEBUG("Garbage collecting {0}", id);
 
         object_metas_.erase(id);
     }

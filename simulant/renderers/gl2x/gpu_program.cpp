@@ -56,9 +56,10 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
             if(program) {
                 program->activate();
             } else {
-                L_WARN(_F("Program {0} vanished while locating uniforms for program {1}").format(
+                S_WARN(
+                    "Program {0} vanished while locating uniforms for program {1}",
                     current, id()
-                ));
+                );
             }
         }
     });
@@ -68,7 +69,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
     }
 
     if(!is_complete()) {
-        L_ERROR("Attempted to modify a uniform without making the program complete");
+        S_ERROR("Attempted to modify a uniform without making the program complete");
         throw std::logic_error("Attempted to access uniform on a GPU program that is not complete");
     }
 
@@ -79,7 +80,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
 
     if(location < 0) {
         if(!fail_silently) {
-            L_ERROR(_u("Couldn't find uniform {0}. Has it been optimized into non-existence?").format(name).encode());
+            S_ERROR("Couldn't find uniform {0}. Has it been optimized into non-existence?", name);
         }
     }
 
@@ -213,7 +214,7 @@ GLint GPUProgram::locate_attribute(const std::string &attribute, bool fail_silen
     GLint location = _GLCheck<GLint>(__func__, glGetAttribLocation, program_object_, attribute.c_str());
     if(location < 0) {
         if(!fail_silently) {
-            L_ERROR(_F("Unable to find attribute with name {0}").format(attribute));
+            S_ERROR("Unable to find attribute with name {0}", attribute);
         }
     }
 
@@ -258,7 +259,7 @@ void GPUProgram::prepare_program() {
 
     program_object_ = _GLCheck<GLuint>(__func__, glCreateProgram);
 
-    L_DEBUG(_F("Created program {0}").format(program_object_));
+    S_DEBUG("Created program {0}", program_object_);
 }
 
 bool GPUProgram::init() {
@@ -266,8 +267,8 @@ bool GPUProgram::init() {
 }
 
 void GPUProgram::clean_up()  {
-    if(GLThreadCheck::is_current() && program_object_) {        
-        L_DEBUG(_F("Destroying GPU program: {0}").format(program_object_));
+    if(GLThreadCheck::is_current() && program_object_) {
+        S_DEBUG("Destroying GPU program: {0}", program_object_);
 
         for(auto obj: this->shaders_) {
             if(obj.second.object) {
@@ -336,7 +337,7 @@ void GPUProgram::compile(ShaderType type) {
         GLCheck(glGetShaderiv, info.object, GL_INFO_LOG_LENGTH, &length);
 
         if(length < 0) {
-            L_ERROR("Unable to get the info log for the errornous shader, are you calling from the right thread?");
+            S_ERROR("Unable to get the info log for the errornous shader, are you calling from the right thread?");
             throw std::runtime_error("CRITICAL: Unable to get GLSL log");
         }
 
@@ -346,14 +347,14 @@ void GPUProgram::compile(ShaderType type) {
         GLCheck(glGetShaderInfoLog, info.object, length, (GLsizei*)NULL, &log[0]);
         std::string error_log(log.begin(), log.end());
 
-        L_ERROR(error_log);
+        S_ERROR(error_log);
         throw std::runtime_error("Unable to compile shader, check the error log for details");
     }
 
     prepare_program(); //Make sure we have a program object before attaching the shader
 
     GLCheck(glAttachShader, program_object_, info.object);
-    info.is_compiled = true;    
+    info.is_compiled = true;
 }
 
 void GPUProgram::build() {
@@ -434,12 +435,12 @@ void GPUProgram::link(bool force) {
         GLCheck(glGetProgramInfoLog, program_object_, length, (GLsizei*)NULL, &log[0]);
 
         std::string error_log(log.begin(), log.end());
-        L_ERROR(error_log);
+        S_ERROR(error_log);
 
         throw std::runtime_error("Couldn't link the GPU program. See error log for details.");
     }
 
-    L_DEBUG(_F("Linked program {0}").format(program_object_));
+    S_DEBUG("Linked program {0}", program_object_);
 
     // Rebuild the uniform information for debugging
     rebuild_uniform_info();

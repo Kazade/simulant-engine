@@ -12,6 +12,7 @@
 #include <iomanip>
 
 #include "utils/string.h"
+#include "utils/formatter.h"
 #include "threads/mutex.h"
 #include "threads/thread.h"
 
@@ -25,118 +26,6 @@ enum LogLevel {
     LOG_LEVEL_WARN = 2,
     LOG_LEVEL_INFO = 3,
     LOG_LEVEL_DEBUG = 4
-};
-
-
-class Formatter {
-private:
-
-    struct Counter {
-        Counter(int32_t val=0): val(val) {}
-        int32_t val;
-    };
-
-public:
-    Formatter(const std::string& format_string):
-        str_(format_string) {
-
-    }
-
-    template<typename T>
-    std::string format(T&& arg) {
-        return do_format(Counter(), std::forward<T>(arg));
-    }
-
-    std::string format(int8_t&& arg) {
-        return do_format(Counter(), (int16_t) arg);
-    }
-
-    template<typename... Args>
-    std::string format(Args&& ... args) {
-        return do_format(Counter(), std::forward<Args>(args)...);
-    }
-
-private:
-    std::string str_;
-
-    struct TokenFound {
-        std::string group;
-        std::string index;
-        std::string remainder;
-    };
-
-    std::vector<TokenFound> scan(int c, const std::string& s) {
-        std::vector<TokenFound> result;
-        auto cs = std::to_string(c);
-        auto text = "{" + cs;
-        auto it = s.find(text);
-        while(it != std::string::npos) {
-            auto end = s.find("}", it);
-            if(end == std::string::npos) {
-                break;
-            }
-
-            TokenFound found;
-            found.index = cs;
-            found.group = s.substr(it, (end - it) + 1);
-
-            auto sep = s.find(":", it);
-            if(sep != std::string::npos) {
-                found.remainder = s.substr(sep + 1, end + 1);
-            }
-
-            result.push_back(found);
-
-            it = s.find(text, it + found.group.size());
-        }
-        return result;
-    }
-
-    /* Specialize so that an integer isn't treated like an ascii character..
-     * (Why isn't int8_t its own type instead of `signed char` ??!)*/
-    std::string do_format(Counter count, int8_t&& val) {
-        int16_t c = val;
-        return do_format(count, std::move(c));
-    }
-
-    template<typename T>
-    std::string do_format(Counter count, T&& val) {
-        std::string to_replace = "{" + std::to_string(count.val) + "}";
-
-        std::stringstream ss;
-
-        std::string result = str_;
-        auto found = scan(count.val, result);
-
-        for(auto& tok: found) {
-            if(!tok.remainder.empty()) {
-                // Something else is going on!
-                if(tok.remainder[0] == '.') {
-                    // Precision (e.g. {0:.2})
-
-                    auto p = std::stoi(tok.remainder.substr(1));
-                    ss << std::setprecision(p) << val;
-                }
-            } else {
-                ss << val;
-            }
-
-            std::string replacement = ss.str();
-
-            result = replace_all(
-                result, tok.group, replacement
-            );
-        }
-
-        return result;
-    }
-
-    template<typename T, typename... Args>
-    std::string do_format(Counter count, T&& val, Args&&... args) {
-        return Formatter(
-            do_format(count, std::forward<T>(val))
-        ).do_format(Counter(count.val + 1), std::forward<Args>(args)...);
-    }
 };
 
 class Logger;
@@ -299,32 +188,18 @@ private:
 
 }
 
-typedef smlt::Formatter _F;
+#define S_DEBUG(str, ...) \
+    smlt::debug(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define L_DEBUG(txt) \
-    smlt::debug((txt), __FILE__, __LINE__)
+#define S_INFO(str, ...) \
+    smlt::info(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define L_INFO(txt) \
-    smlt::info((txt), __FILE__, __LINE__)
+#define S_WARN(str, ...) \
+    smlt::warn(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define L_WARN(txt) \
-    smlt::warn((txt), __FILE__, __LINE__)
+#define S_ERROR(str, ...) \
+    smlt::error(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define L_WARN_ONCE(txt) \
-    smlt::warn_once((txt), __FILE__, __LINE__)
-
-#define L_ERROR(txt) \
-    smlt::error((txt), __FILE__, __LINE__)
-
-#define L_DEBUG_N(name, txt) \
-    smlt::get_logger((name))->debug((txt), __FILE__, __LINE__)
-
-#define L_INFO_N(name, txt) \
-    smlt::get_logger((name))->info((txt), __FILE__, __LINE__)
-
-#define L_WARN_N(name, txt) \
-    smlt::get_logger((name))->warn((txt), __FILE__, __LINE__)
-
-#define L_ERROR_N(name, txt) \
-    smlt::get_logger((name))->error((txt), __FILE__, __LINE__)
+#define S_WARN_ONCE(str, ...) \
+    smlt::warn_once(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 

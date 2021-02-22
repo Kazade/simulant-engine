@@ -240,10 +240,10 @@ void StatsPanel::rebuild_ram_graph() {
         last_sample_it = this_sample_it;
     }
 
-    low_mem_->set_text(_u("{0}M").format(lowest_mem));
+    low_mem_->set_text(_F("{0}M").format(lowest_mem));
     low_mem_->move_to(lowest_x, lowest_y + 10);
 
-    high_mem_->set_text(_u("{0}M").format(highest_mem));
+    high_mem_->set_text(_F("{0}M").format(highest_mem));
     high_mem_->move_to(highest_x, highest_y + 10);
 
     vdata->done();
@@ -266,12 +266,12 @@ void StatsPanel::update() {
 
         rebuild_ram_graph();
 
-        fps_->set_text(_u("FPS: {0}").format(window_->stats->frames_per_second()));
+        fps_->set_text(_F("FPS: {0}").format(window_->stats->frames_per_second()));
         frame_time_->set_text(_F("Frame Time: {0}ms").format(window_->stats->frame_time()));
-        ram_usage_->set_text(_u("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
-        vram_usage_->set_text(_u("VRAM Free: {0} MB").format(vram_usage));
-        actors_rendered_->set_text(_u("Renderables Visible: {0}").format(actors_rendered));
-        polygons_rendered_->set_text(_u("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
+        ram_usage_->set_text(_F("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
+        vram_usage_->set_text(_F("VRAM Free: {0} MB").format(vram_usage));
+        actors_rendered_->set_text(_F("Renderables Visible: {0}").format(actors_rendered));
+        polygons_rendered_->set_text(_F("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
 
         last_update_ = 0.0f;
         first_update_ = false;
@@ -299,12 +299,12 @@ void StatsPanel::update() {
 
 void StatsPanel::do_activate() {
     pipeline_->activate();
-    L_DEBUG("Activating stats panel");
+    S_DEBUG("Activating stats panel");
 }
 
 void StatsPanel::do_deactivate() {
     pipeline_->deactivate();
-    L_DEBUG("Deactivating stats panel");
+    S_DEBUG("Deactivating stats panel");
 }
 
 }

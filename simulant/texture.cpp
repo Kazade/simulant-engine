@@ -65,7 +65,7 @@ static uint8_t channels_for_format(TextureFormat format) {
         return 4;
     }
 
-    L_ERROR("Invalid TextureFormat!");
+    S_ERROR("Invalid TextureFormat!");
     return 4;
 }
 
@@ -89,10 +89,10 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     Asset(asset_manager),
     generic::Identifiable<TextureID>(id) {
 
-    L_DEBUG(_F("Creating texture {0}x{1}").format(width, height));
+    S_DEBUG("Creating texture {0}x{1}", width, height);
     resize(width, height);
 
-    L_DEBUG(_F("Setting format to: {0}").format(format));
+    S_DEBUG("Setting format to: {0}", format);
     set_format(format);
 
     /* We intentionally don't mark data dirty here. All that would happen is
@@ -478,7 +478,7 @@ void Texture::_set_has_mipmaps(bool v) {
 
 bool Texture::init() {
     // Tell the renderer about the texture
-    L_DEBUG(_F("Registering texture with the renderer: {0}").format(renderer_));
+    S_DEBUG("Registering texture with the renderer: {0}", renderer_);
     renderer_->register_texture(id(), this);
     return true;
 }

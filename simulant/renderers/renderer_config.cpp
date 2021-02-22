@@ -1,4 +1,5 @@
 
+
 #include "renderer_config.h"
 
 #ifdef __DREAMCAST__
@@ -39,14 +40,14 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
 
     if(chosen == "gl1x") {
 #ifdef __ANDROID__
-        L_ERROR(_F("{0} is not a supported renderer").format(name));
+        S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else
         return std::make_shared<GL1XRenderer>(window);
 #endif
     } else if(chosen == "gl2x") {
 #if defined(__DREAMCAST__) || defined(PSP)
-        L_ERROR(_F("{0} is not a supported renderer").format(name));
+        S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else
         return std::make_shared<GenericRenderer>(window);

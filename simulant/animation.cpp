@@ -85,13 +85,13 @@ void KeyFrameAnimationState::play_first_animation() {
 void KeyFrameAnimationState::play_animation(const std::string& name) {
     auto animatable = animatable_;
     if(!animatable) {
-        L_WARN("Animatable has been destroyed, not animating");
+        S_WARN("Animatable has been destroyed, not animating");
         current_animation_ = next_animation_ = nullptr;
     }
 
     auto anim = animatable->animation(name);
     if(!anim) {
-        L_WARN("No such animation: " + name);
+        S_WARN("No such animation: {0}", name);
         return;
     }
 
@@ -117,14 +117,14 @@ void KeyFrameAnimationState::play_animation(const std::string& name) {
 void KeyFrameAnimationState::queue_next_animation(const std::string& name) {
     auto animatable = animatable_;
     if(!animatable) {
-        L_WARN("Animatable has been destroyed, not animating");
+        S_WARN("Animatable has been destroyed, not animating");
         current_animation_ = next_animation_ = nullptr;
         return;
     }
 
     auto anim = animatable->animation(name);
     if(!anim) {
-        L_WARN("No such animation: " + name);
+        S_WARN("No such animation: " + name);
         return;
     }
 

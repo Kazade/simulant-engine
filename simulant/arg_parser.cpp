@@ -14,7 +14,7 @@ void ArgParser::define_arg(const std::string& name, ArgType type, const std::str
     }
 
     if(name[0] != '-' || name[1] != '-') {
-        L_ERROR("Args must begin with a double hyphen (e.g. --name)");
+        S_ERROR("Args must begin with a double hyphen (e.g. --name)");
         return;
     }
 
@@ -71,7 +71,7 @@ bool ArgParser::parse_args(int argc, char* argv[]) {
 
             auto it = defined_args_.find(current_var);
             if(it == defined_args_.end()) {
-                L_ERROR("Unrecognized option: " + param);
+                S_ERROR("Unrecognized option: {0}", param);
                 return false;
             }
 
@@ -101,10 +101,10 @@ bool ArgParser::parse_args(int argc, char* argv[]) {
 
         if(info.count == ARG_COUNT_ONE && args_.count(info.var_name)) {
             // Too many args
-            L_ERROR("Received more than one value for: " + current_var);
+            S_ERROR("Received more than one value for: {0}", current_var);
         } else if(info.count == ARG_COUNT_ZERO_OR_ONE && args_.count(info.var_name) == 1) {
             // Too many args
-            L_ERROR("Received more than one value for: " + current_var);
+            S_ERROR("Received more than one value for: {0}", current_var);
         }
 
         if(info.type == ARG_TYPE_BOOLEAN) {

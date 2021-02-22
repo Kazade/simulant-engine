@@ -44,10 +44,6 @@ std::string to_string(double value) {
     return std::string(buffer, buffer + c);
 }
 
-#endif
-
-#if defined(__PSP__)
-
 int stoi(const std::string& str) {
     return atoi(str.c_str());
 }

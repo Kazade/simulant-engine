@@ -80,7 +80,7 @@ Application::Application(const AppConfig &config):
     try {
         construct_window(config);
     } catch(std::runtime_error&) {
-        L_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
+        S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
         exit(1);
     }
 }
@@ -114,7 +114,7 @@ void Application::construct_window(const AppConfig& config) {
         );
     }
 
-    L_DEBUG("Constructing the window");
+    S_DEBUG("Constructing the window");
 
     window_ = SysWindow::create(this);
 
@@ -140,7 +140,7 @@ void Application::construct_window(const AppConfig& config) {
        config_copy.fullscreen,
        config_copy.enable_vsync)
     ) {
-        L_ERROR("[FATAL] There was an error creating the window");
+        S_ERROR("[FATAL] There was an error creating the window");
         return;
     }
 
@@ -174,7 +174,7 @@ void Application::construct_window(const AppConfig& config) {
         window_->vfs->add_search_path(search_path);
     }
 
-    L_DEBUG("Search paths added successfully");
+    S_DEBUG("Search paths added successfully");
 
     if(!window_->initialize_assets_and_devices()) {
         throw InstanceInitializationError("Unable to create window");
@@ -213,7 +213,7 @@ StagePtr Application::stage(StageID stage) {
 }
 
 bool Application::_call_init() {
-    L_DEBUG("Initializing the application");
+    S_DEBUG("Initializing the application");
 
     scene_manager_.reset(new SceneManager(window_.get()));
 
@@ -254,7 +254,7 @@ int32_t Application::run() {
 #endif
 
     if(!_call_init()) {
-        L_ERROR("Error while initializing, terminating application");
+        S_ERROR("Error while initializing, terminating application");
         return 1;
     }
 
