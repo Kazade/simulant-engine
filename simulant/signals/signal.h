@@ -181,7 +181,7 @@ public:
         if(push_link(new_link)) {
             return Connection(new_link.conn_impl);
         } else {
-            L_WARN("Error adding connection to signal!");
+            S_WARN("Error adding connection to signal!");
             return Connection();
         }
     }

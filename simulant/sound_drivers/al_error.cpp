@@ -52,7 +52,7 @@ void al_check_and_log_error() {
             break;
         }
 
-        L_ERROR(_F("An OpenAL error occurred: {0}").format(error));
+        S_ERROR("An OpenAL error occurred: {0}", error);
         throw std::runtime_error(_F("AL ERROR: {0}").format(error_string));
     }
 }

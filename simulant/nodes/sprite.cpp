@@ -212,7 +212,7 @@ void Sprite::set_render_dimensions(float width, float height) {
         //Determine aspect ratio to calculate height
         height = width / (float(frame_width_) / float(frame_height_));
     } else if(width < 0 && height < 0) {
-        L_ERROR("You must specify a positive value for width or height, or both");
+        S_ERROR("You must specify a positive value for width or height, or both");
         width = std::max(width, 0.0f);
         height = std::max(height, 0.0f);
     }

@@ -122,7 +122,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     );
 
     if(!stb_stream) {
-        L_ERROR("Unable to load the OGG file");
+        S_ERROR("Unable to load the OGG file");
         throw std::runtime_error("Unable to load the OGG file");
     }
 

@@ -70,7 +70,7 @@ void PSPWindow::initialize_input_controller(InputState &controller) {
 std::shared_ptr<SoundDriver> PSPWindow::create_sound_driver(const std::string& from_config) {
     _S_UNUSED(from_config);
 
-    L_DEBUG("Null sound driver activated");
+    S_DEBUG("Null sound driver activated");
     return std::make_shared<NullSoundDriver>(this);
 }
 

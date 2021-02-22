@@ -33,7 +33,7 @@ public:
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
 
-        L_DEBUG("Scene loaded");
+        S_DEBUG("Scene loaded");
     }
 
 private:

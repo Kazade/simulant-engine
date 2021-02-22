@@ -13,7 +13,7 @@ void Screen::render(const uint8_t *data, ScreenFormat format) {
     static thread::Future<void> fut;
 
     if(format != this->format()) {
-        L_WARN("Not uploading screen image due to format mismatch. Conversion not yet supported");
+        S_WARN("Not uploading screen image due to format mismatch. Conversion not yet supported");
         return;
     }
 
@@ -58,7 +58,7 @@ uint32_t Screen::data_size() const {
     if(format_ == SCREEN_FORMAT_G1) {
         return (width() * height()) / 8;
     } else {
-        L_ERROR("Unknown format");
+        S_ERROR("Unknown format");
         return 1;
     }
 }

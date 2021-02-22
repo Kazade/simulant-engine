@@ -93,7 +93,7 @@ protected:
     T* loadable_to(Loadable& loadable) {
         T* thing = dynamic_cast<T*>(&loadable);
         if(!thing) {
-            L_WARN("Attempted to cast resource to invalid type");
+            S_WARN("Attempted to cast resource to invalid type");
             return nullptr;
         }
 

@@ -50,14 +50,14 @@ SDL2Window::SDL2Window() {
     auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
 
     if(SDL_Init(default_flags) != 0) {
-        L_ERROR(_F("Unable to initialize SDL {0}").format(SDL_GetError()));
+        S_ERROR("Unable to initialize SDL {0}", SDL_GetError());
         FATAL_ERROR(ERROR_CODE_SDL_INIT_FAILED, "Failed to initialize SDL");
     }
 
     /* Some platforms don't ship SDL compiled with haptic support, so try it, but don't
      * die if it's not there! */
     if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
-        L_WARN(_F("Unable to initialize force-feedback. Errors was {0}.").format(SDL_GetError()));
+        S_WARN("Unable to initialize force-feedback. Errors was {0}.", SDL_GetError());
     }
 }
 
@@ -65,7 +65,7 @@ SDL2Window::~SDL2Window() {
     try {
         _clean_up();
     } catch(...) {
-        L_ERROR("There was a problem shutting down the Window. Ignoring.");
+        S_ERROR("There was a problem shutting down the Window. Ignoring.");
     }
 }
 
@@ -100,10 +100,10 @@ int event_filter(void* user_data, SDL_Event* event) {
         case SDL_APP_WILLENTERBACKGROUND: {
             std::string sdl_err = SDL_GetError();
             if(!sdl_err.empty()) {
-                L_ERROR(_F("Something went wrong with SDL: {0}").format(sdl_err));
+                S_ERROR("Something went wrong with SDL: {0}", sdl_err);
             }
 
-            L_INFO("Application is entering the background, disabling rendering");
+            S_INFO("Application is entering the background, disabling rendering");
 
 
             _this->set_paused(true);
@@ -116,10 +116,10 @@ int event_filter(void* user_data, SDL_Event* event) {
         case SDL_APP_DIDENTERFOREGROUND: {
             std::string sdl_err = SDL_GetError();
             if(!sdl_err.empty()) {
-                L_ERROR("Something went wrong with SDL: " + sdl_err);
+                S_ERROR("Something went wrong with SDL: " + sdl_err);
             }
 
-            L_INFO("Application is entering the foreground, enabling rendering");
+            S_INFO("Application is entering the foreground, enabling rendering");
             {
                 //See Window::context_lock_ for details
                 thread::Lock<thread::Mutex> context_lock(_this->context_lock());
@@ -279,7 +279,7 @@ void SDL2Window::check_events() {
                 }
             } break;
             default:
-                L_WARN_ONCE(_F("Unhandled event {0}").format(event.type));
+                S_WARN_ONCE("Unhandled event {0}", event.type);
                 break;
         }
     }
@@ -302,13 +302,13 @@ std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver(const std::string& 
         (from_config.empty()) ? "openal" : from_config;
 
     if(selected == "null") {
-        L_DEBUG("Null sound driver activated");
+        S_DEBUG("Null sound driver activated");
         return std::make_shared<NullSoundDriver>(this);
     } else {
         if(selected != "openal") {
-            L_WARN(_F("Unknown sound driver ({0}) falling back to OpenAL").format(selected));
+            S_WARN("Unknown sound driver ({0}) falling back to OpenAL", selected);
         }
-        L_DEBUG("OpenAL sound driver activated");
+        S_DEBUG("OpenAL sound driver activated");
         return std::make_shared<OpenALSoundDriver>(this);
     }
 }
@@ -317,9 +317,9 @@ bool SDL2Window::_init_window() {
     /* Load the game controller mappings */
     auto rw_ops = SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
     if(SDL_GameControllerAddMappingsFromRW(rw_ops, 0) < 0) {
-        L_WARN("Unable to load controller mappings!");
+        S_WARN("Unable to load controller mappings!");
     } else {
-        L_DEBUG("Successfully loaded SDL controller mappings");
+        S_DEBUG("Successfully loaded SDL controller mappings");
     }
 
     int32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
@@ -333,7 +333,7 @@ bool SDL2Window::_init_window() {
     );
 
     if(!screen_) {
-        L_ERROR(std::string(SDL_GetError()));
+        S_ERROR(std::string(SDL_GetError()));
         throw std::runtime_error("FATAL: Unable to create SDL window");
     }
 
@@ -350,11 +350,11 @@ bool SDL2Window::_init_window() {
     SDL_ShowCursor(0);
 #endif
 
-    L_DEBUG(unicode("{0} joysicks found").format(SDL_NumJoysticks()).encode());
+    S_DEBUG("{0} joysicks found", SDL_NumJoysticks());
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
         if(SDL_IsGameController(i)) {
             SDL_GameController* controller = SDL_GameControllerOpen(i);
-            L_DEBUG(SDL_GameControllerName(controller));
+            S_DEBUG(SDL_GameControllerName(controller));
         }
     }
 
@@ -520,7 +520,7 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
             }
         }
     } else {
-        L_ERROR("Unsupported screen format");
+        S_ERROR("Unsupported screen format");
         return;
     }
 

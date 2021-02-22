@@ -99,7 +99,7 @@ void VirtualGamepad::_prepare_deletion() {
 }
 
 void VirtualGamepad::clean_up() {
-    L_DEBUG("Destroying virtual gamepad");
+    S_DEBUG("Destroying virtual gamepad");
 
     // make sure we delete the buttons before we delete the gamepad
     // This will fire any release signals

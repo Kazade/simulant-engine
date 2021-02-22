@@ -11,7 +11,7 @@
 
 #include <cstdlib>
 #include <string>
-#include "utils/unicode.h"
+#include "utils/formatter.h"
 
 namespace smlt {
 
@@ -36,7 +36,7 @@ void log_critical_error(const std::string& msg);
 
 #define FATAL_ERROR(code, msg) \
     do { \
-        _errors::log_critical_error(_u("FATAL ERROR ({0}): {1}").format((int)code, msg).encode()); \
-        _errors::log_critical_error(_u(">>> {0}:{1}").format(__FILE__, __LINE__).encode()); \
+        _errors::log_critical_error(_F("FATAL ERROR ({0}): {1}").format((int)code, msg)); \
+        _errors::log_critical_error(_F(">>> {0}:{1}").format(__FILE__, __LINE__)); \
         ::exit((int) code); \
     } while(0)

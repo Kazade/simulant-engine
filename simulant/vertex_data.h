@@ -179,7 +179,7 @@ public:
             } else if(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F) {
                 position(pos);
             } else {
-                L_ERROR("Attempted to transform unsupported position attribute type");
+                S_ERROR("Attempted to transform unsupported position attribute type");
             }
         }
     }

@@ -87,7 +87,7 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
       cannot be found
     */
 
-    L_DEBUG(_F("Locating file: {0}").format(filename));
+    S_DEBUG("Locating file: {0}", filename);
 
     std::string final_name = filename.replace(
         "${RENDERER}",
@@ -110,26 +110,26 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
 #else
     auto abs_final_name = kfs::path::abs_path(final_name);
 
-    L_DEBUG("Checking existence...");
+    S_DEBUG("Checking existence...");
     if(kfs::path::exists(abs_final_name)) {
-        L_DEBUG(_F("Located file: {0}").format(abs_final_name));
+        S_DEBUG("Located file: {0}", abs_final_name);
         return abs_final_name;
     }
 
-    L_DEBUG("Searching resource paths...");
+    S_DEBUG("Searching resource paths...");
     for(unicode path: resource_path_) {
         auto full_path = kfs::path::norm_path(
             kfs::path::join(path.encode(), final_name)
         );
 
-        L_DEBUG(_F("Trying path: {0}").format(full_path));
+        S_DEBUG("Trying path: {0}", full_path);
         if(kfs::path::exists(full_path)) {
-            L_DEBUG(_F("Found: {0}").format(full_path));
+            S_DEBUG("Found: {0}", full_path);
             return full_path;
         }
     }
 #endif
-    L_ERROR(_F("Unable to find file: {0}").format(final_name));
+    S_ERROR("Unable to find file: {0}", final_name);
     throw AssetMissingError("Unable to find file: " + final_name);
 }
 
@@ -162,7 +162,7 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& f
         (*result) << str;
         return result;
     } else {
-        L_ERROR("There was an error loading the specified file");
+        S_ERROR("There was an error loading the specified file");
         throw AssetMissingError("Unable to load file: " + filename.encode());
     }
     SDL_FreeRW(ops);
@@ -182,7 +182,7 @@ std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filen
     std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
 
     if(!file_in) {
-        L_ERROR(_F("Unable to load file: {0}").format(filename));
+        S_ERROR("Unable to load file: {0}", filename);
         throw AssetMissingError("Unable to load file: " + filename.encode());
     }
 

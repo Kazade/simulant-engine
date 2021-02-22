@@ -16,7 +16,7 @@ BlendType blend_type_from_name(const std::string &v) {
     } else if(v == "one_one_minus_alpha") {
         return BLEND_ONE_ONE_MINUS_ALPHA;
     } else {
-        L_WARN(_F("Unrecognised blend value {0}").format(v));
+        S_WARN("Unrecognised blend value {0}", v);
         return BLEND_NONE;
     }
 }

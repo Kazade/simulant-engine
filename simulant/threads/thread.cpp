@@ -53,7 +53,7 @@ bool Thread::joinable() const {
 
 void Thread::detach() {
 #ifdef __PSP__
-    L_ERROR("thread detaching is not implemented on the PSP");
+    S_ERROR("thread detaching is not implemented on the PSP");
 #elif defined(__DREAMCAST__)
     thd_detach(thread_);
 #else

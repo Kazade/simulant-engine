@@ -46,7 +46,7 @@ Bone* Joint::link_to(Joint* other) {
     }
 
     if(other->parent()) {
-        L_ERROR("Attempted to change the parent of a joint");
+        S_ERROR("Attempted to change the parent of a joint");
         return nullptr;
     }
 

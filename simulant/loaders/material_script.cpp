@@ -96,7 +96,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
             auto property = holder.registry()->property(prop_id);
 
             if(!property) {
-                L_ERROR(_F("Unrecognized property: {0}").format(key));
+                S_ERROR("Unrecognized property: {0}", key);
                 continue;
             }
 
@@ -104,21 +104,21 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
 
             if(property_type == MATERIAL_PROPERTY_TYPE_BOOL) {
                 if(!value.is_bool()) {
-                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
                 holder.set_property_value(prop_id, (bool) value.get<jsonic::Boolean>());
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
                 if(!value.is_string()) {
-                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
                 auto parts = unicode(value.get<jsonic::String>()).split(" ");
 
                 if(parts.size() != 3) {
-                    L_ERROR(_F("Invalid value for property: {0}").format(key));
+                    S_ERROR(_F("Invalid value for property: {0}").format(key));
                     continue;
                 }
 
@@ -129,14 +129,14 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 holder.set_property_value(prop_id, Vec3(x, y, z));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC4) {
                 if(!value.is_string()) {
-                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
                 auto parts = unicode(value.get<jsonic::String>()).split(" ");
 
                 if(parts.size() != 4) {
-                    L_ERROR(_F("Invalid value for property: {0}").format(key));
+                    S_ERROR("Invalid value for property: {0}", key);
                     continue;
                 }
 
@@ -148,7 +148,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 holder.set_property_value(prop_id, Vec4(x, y, z, w));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
                 if(!value.is_string()) {
-                    L_ERROR(_F("Invalid property value for: {0}").format(key));
+                    S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
@@ -167,7 +167,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                         } else if(v == "front_face") {
                             holder.set_shade_model(SHADE_MODEL_FLAT);
                         } else {
-                            L_WARN(_F("Unrecognised shade model value {0}").format(v));
+                            S_WARN("Unrecognised shade model value {0}", v);
                         }
                     } else if(key == CULL_MODE_PROPERTY) {
                         std::string v = value.get<jsonic::String>();
@@ -180,7 +180,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                         } else if(v == "none") {
                             holder.set_cull_mode(CULL_MODE_NONE);
                         } else {
-                            L_WARN(_F("Unrecognised cull value {0}").format(v));
+                            S_WARN("Unrecognised cull value {0}", v);
                         }
                     } else {
                         holder.set_property_value(prop_id, (int) value.get<jsonic::Number>());
@@ -191,7 +191,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 auto tex = mat.asset_manager().new_texture_from_file(path);
                 holder.set_property_value(prop_id, tex);
             } else {
-                L_ERROR("Unhandled property type");
+                S_ERROR("Unhandled property type");
             }
         }
     }
@@ -214,7 +214,7 @@ void MaterialScript::generate(Material& material) {
         } else if(kind == "vec4") {
             return MATERIAL_PROPERTY_TYPE_VEC4;
         } else {
-            L_ERROR(_F("Unrecognised property type: {0}").format(kind));
+            S_ERROR("Unrecognised property type: {0}", kind);
             return MATERIAL_PROPERTY_TYPE_FLOAT;
         }
     };
@@ -253,7 +253,7 @@ void MaterialScript::generate(Material& material) {
                     define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(material, prop);
                 } break;
             default:
-                L_ERROR(_F("Unhandled property type: {0}").format(kind));
+                S_ERROR("Unhandled property type: {0}", kind);
             }
         }
     }
@@ -276,7 +276,7 @@ void MaterialScript::generate(Material& material) {
         } else if(iteration == "once_per_light") {
             material.pass(i)->set_iteration_type(ITERATION_TYPE_ONCE_PER_LIGHT);
         } else {
-            L_ERROR(_F("Unsupported iteration type: {0}").format(iteration));
+            S_ERROR("Unsupported iteration type: {0}", iteration);
         }
 
         read_property_values(material, *material.pass(i), pass);

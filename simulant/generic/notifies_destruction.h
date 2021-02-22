@@ -16,7 +16,7 @@ public:
         try {
             signal_destruction_((T*) this);
         } catch(...) {
-            L_WARN(_F("Exception while signaling destruction of object {0} at {1}").format(
+            S_WARN(_F("Exception while signaling destruction of object {0} at {1}").format(
                 typeid(T).name(), this
             ));
         }

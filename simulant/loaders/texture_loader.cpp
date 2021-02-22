@@ -50,7 +50,7 @@ TextureLoadResult TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     if((width & -width) != width || (height & -height) != height || width < 8 || height < 8) {
         // FIXME: Add SIMULANT_COMPAT_WARNINGS=1 and only do this then
-        L_WARN("[COMPAT] Using a non power-of-two texture will break compatibility with some platforms (e.g. Dreamcast)");
+        S_WARN("[COMPAT] Using a non power-of-two texture will break compatibility with some platforms (e.g. Dreamcast)");
     }
 
     if(data) {

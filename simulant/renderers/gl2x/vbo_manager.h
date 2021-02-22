@@ -95,7 +95,7 @@ public:
         try {
             if(gl_id_) glDeleteBuffers(1, &gl_id_);
         } catch(...) {
-            L_WARN("Exception while deleting GL VBO");
+            S_WARN("Exception while deleting GL VBO");
         }
     }
 

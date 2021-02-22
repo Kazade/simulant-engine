@@ -131,7 +131,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         auto func = get_chunk_func(chunk_id);
         if(!func(data_.get(), sound, size)) {
-            L_ERROR("Unsupported .wav format");
+            S_ERROR("Unsupported .wav format");
             return;
         }
 
@@ -161,13 +161,13 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         state->sound_ptr = wptr.lock();
         if(!state->sound_ptr) {
-            L_WARN("Sound was destroyed before playing");
+            S_WARN("Sound was destroyed before playing");
             return;
         }
 
         auto stream = std::make_shared<StreamView>(state->sound_ptr->input_stream());
 
-        L_DEBUG(_F("Initialized stream_func for source instance {0}").format(&source));
+        S_DEBUG("Initialized stream_func for source instance {0}", &source);
 
         source.set_stream_func([state, stream](AudioBufferID id) -> int32_t {
             auto sound = state->sound_ptr;
@@ -200,7 +200,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
 
                 return buffer.size();
             } else {
-                L_WARN("Sound was destroyed while playing, stopping playback");
+                S_WARN("Sound was destroyed while playing, stopping playback");
                 return -1;
             }
         });

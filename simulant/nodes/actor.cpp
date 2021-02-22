@@ -93,7 +93,7 @@ bool Actor::has_multiple_meshes() const {
 void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     /* Do nothing if we don't have a base mesh. You need at least a base mesh at all times */
     if(detail_level != DETAIL_LEVEL_NEAREST && !has_any_mesh()) {
-        L_ERROR(
+        S_ERROR(
             "Attempted to set a mesh detail level before setting DETAIL_LEVEL_NEAREST"
         );
         return;
@@ -114,7 +114,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
 
     if(!mesh) {
         if(detail_level == DETAIL_LEVEL_NEAREST && has_multiple_meshes()) {
-            L_ERROR(
+            S_ERROR(
                 "Attempted to clear the mesh at DETAIL_LEVEL_NEAREST while there were multiple meshes"
             );
             return;
@@ -131,7 +131,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     auto meshptr = stage->assets->mesh(mesh);
 
     if(!meshptr) {
-        L_ERROR(_F("Unable to locate mesh with the ID: {0}").format(mesh));
+        S_ERROR("Unable to locate mesh with the ID: {0}", mesh);
         return;
     }
 

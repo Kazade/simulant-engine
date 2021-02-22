@@ -37,7 +37,7 @@ void Image::set_source_rect(const Vec2 &bottom_left, const Vec2 &size) {
 }
 
 void Image::set_resize_mode(ResizeMode resize_mode) {
-    L_WARN("Warning, tried to change the resize mode of an Image widget");
+    S_WARN("Warning, tried to change the resize mode of an Image widget");
 }
 
 }

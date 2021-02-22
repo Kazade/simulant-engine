@@ -3,6 +3,7 @@
 #include <cmath>
 #include "../utils/unicode.h"
 #include "utils.h"
+#include "../utils/formatter.h"
 
 #ifdef __DREAMCAST__
 #include <kos.h>
@@ -38,7 +39,7 @@ public:
     static const Vec3 DOWN;
     static const Vec3 FORWARD;
     static const Vec3 LEFT;
-    static const Vec3 ONE; 
+    static const Vec3 ONE;
     static const Vec3 RIGHT;
     static const Vec3 UP;
     static const Vec3 ZERO;
@@ -256,7 +257,7 @@ public:
     friend std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 
     unicode to_string() const {
-        return _u("({0},{1},{2})").format(x, y, z);
+        return _F("({0},{1},{2})").format(x, y, z);
     }
 
     Vec3 perpendicular() const;

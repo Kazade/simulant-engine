@@ -197,13 +197,13 @@ private:
         static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
 
         if(!behaviour) {
-            L_WARN("Tried to add a null behaviour to the controllable");
+            S_WARN("Tried to add a null behaviour to the controllable");
             return;
         }
 
         {
             if(behaviour_names_.count(behaviour->name())) {
-                L_WARN(_F("Tried to add a duplicate behaviour: {0}").format((std::string)behaviour->name()));
+                S_WARN("Tried to add a duplicate behaviour: {0}", (std::string)behaviour->name());
                 return;
             }
 

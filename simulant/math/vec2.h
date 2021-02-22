@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "../utils/unicode.h"
+#include "../utils/formatter.h"
 
 namespace smlt {
 
@@ -98,7 +99,7 @@ struct Vec2 {
     }
 
     unicode to_string() const {
-        return _u("({0},{1})").format(x, y);
+        return _F("({0},{1})").format(x, y);
     }
 
     Vec3 xyz(float z = 0.0f) const;

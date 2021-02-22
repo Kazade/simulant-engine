@@ -49,7 +49,7 @@ public:
             auto stream = locator_->open_file(filename);
             tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
         } catch(AssetMissingError& e) {
-            L_DEBUG(_F("mtllib {0} not found. Skipping.").format(filename));
+            S_DEBUG("mtllib {0} not found. Skipping.", filename);
         }
 
         return true;
@@ -63,7 +63,7 @@ private:
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
 
-    L_DEBUG(_F("Loading mesh from {0}").format(filename_));
+    S_DEBUG("Loading mesh from {0}", filename_);
 
     MeshLoadOptions mesh_opts;
     auto it = options.find(MESH_LOAD_OPTIONS_KEY);
@@ -72,7 +72,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         mesh_opts = smlt::any_cast<MeshLoadOptions>(it->second);
     }
 
-    L_DEBUG("Got MeshOptions");
+    S_DEBUG("Got MeshOptions");
 
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -81,22 +81,22 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::string warn;
     std::string err;
 
-    L_DEBUG("About to read the obj model");
+    S_DEBUG("About to read the obj model");
 
     SimulantMaterialReader reader(vfs.get(), filename_);
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, data_.get(), &reader);
 
     if(!ret) {
-        L_ERROR(_F("Unable to load .obj file {0}").format(filename_));
-        L_ERROR(_F("Error was: {0}").format(err));
+        S_ERROR("Unable to load .obj file {0}", filename_);
+        S_ERROR("Error was: {0}", err);
         return;
     }
 
     if(!warn.empty()) {
-        L_WARN(warn);
+        S_WARN(warn);
     }
 
-    L_DEBUG(_F("Mesh has {0} shapes and {1} materials").format(shapes.size(), materials.size()));
+    S_DEBUG("Mesh has {0} shapes and {1} materials", shapes.size(), materials.size());
 
     VertexSpecification spec = mesh->vertex_data->vertex_specification();
     mesh->reset(spec);  // Make sure we're empty before we begin
@@ -161,18 +161,20 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 }
 
                 if(!found) {
-                    L_WARN(_F("Unable to locate texture {0}").format(material.diffuse_texname));
+                    S_WARN("Unable to locate texture {0}", material.diffuse_texname);
                 }
             }
         }
 
         final_materials.insert(std::make_pair(material.name, new_mat));
 
-        auto submesh = mesh->new_submesh_with_material(material.name, new_mat->id(), MESH_ARRANGEMENT_TRIANGLES, index_type);
+        auto submesh = mesh->new_submesh_with_material(
+            material.name, new_mat->id(), MESH_ARRANGEMENT_TRIANGLES, index_type
+        );
         material_submeshes.insert(std::make_pair(i++, submesh));
     }
 
-    L_DEBUG("Loaded materials for obj model");
+    S_DEBUG("Loaded materials for obj model");
 
     typedef std::tuple<int, int, int> VertexKey;
 
@@ -199,7 +201,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             }
 
             if(!material_submeshes.count(mat_id)) {
-                L_ERROR(_F("Unable to find submesh with mat id: {0}").format(mat_id));
+                S_ERROR("Unable to find submesh with mat id: {0}", mat_id);
             }
 
             auto submeshptr = material_submeshes.at(mat_id);
@@ -262,7 +264,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
     }
 
-    L_DEBUG("Loaded shapes for obj model");
+    S_DEBUG("Loaded shapes for obj model");
 
     std::vector<std::string> empty;
     for(auto submesh: mesh->each_submesh()) {
@@ -275,11 +277,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         mesh->destroy_submesh(name);
     }
 
-    L_DEBUG("Removed empty submeshes");
+    S_DEBUG("Removed empty submeshes");
 
     mesh->vertex_data->done();
 
-    L_DEBUG("Mesh loaded");
+    S_DEBUG("Mesh loaded");
 }
 
 }

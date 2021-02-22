@@ -57,9 +57,9 @@ class SDL2Window : public Window {
 
             Resolution native;
             if(SDL_GetDesktopDisplayMode(0, &mode) == -1) {
-                L_WARN("Unable to get the current desktop display mode!!");
-                L_WARN(_F("{0}").format(SDL_GetError()));
-                L_WARN("Falling back to 1080p");
+                S_WARN("Unable to get the current desktop display mode!!");
+                S_WARN("{0}", SDL_GetError());
+                S_WARN("Falling back to 1080p");
                 native.width = 1920;
                 native.height = 1080;
                 native.refresh_rate = 60;
@@ -79,7 +79,6 @@ class SDL2Window : public Window {
 
         uint64_t process_ram_usage_in_bytes(ProcessID process_id) const override;
     };
-
 
 public:
     static const SDLPlatform platform;

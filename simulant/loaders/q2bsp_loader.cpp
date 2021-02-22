@@ -109,7 +109,7 @@ unicode locate_texture(VirtualFileSystem& locator, const unicode& filename) {
         }
     }
 
-    L_ERROR(_F("Unable to find texture: {0}").format(filename));
+    S_ERROR("Unable to find texture: {0}", filename);
 
     return Texture::BuiltIns::CHECKERBOARD;
 }
@@ -175,7 +175,7 @@ void Q2BSPLoader::generate_materials(
             mat->set_light_map(lightmap_texture);
         }
 
-        materials.push_back(mat->id());       
+        materials.push_back(mat->id());
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
 }
@@ -253,7 +253,7 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
             if(!rect.was_packed) {
                 if(!logged) {
-                    L_ERROR("Ran out of space packing lightmaps!");
+                    S_ERROR("Ran out of space packing lightmaps!");
                     logged = true;
                 }
 
@@ -352,7 +352,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    std::vector<MaterialID> materials;    
+    std::vector<MaterialID> materials;
     std::vector<Q2::TexDimension> dimensions;
 
     auto lightmap_texture = assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
@@ -503,7 +503,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         uv_limits.push_back(uv_limit);
     }
 
-    L_WARN("About to pack lightmaps");
+    S_WARN("About to pack lightmaps");
 
     auto lightmaps = extract_lightmaps(lightmap_data, faces, uv_limits);
     auto locations = pack_lightmaps(lightmaps, lightmap_texture);
@@ -531,7 +531,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     lightmap_texture->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
 
-    L_WARN("Finished loading Quake 2 BSP");
+    S_WARN("Finished loading Quake 2 BSP");
 
     mesh->vertex_data->done();
 

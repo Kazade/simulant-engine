@@ -153,7 +153,7 @@ void OPTLoader::process_vertex_block(std::istream& file) {
 
     vertices.resize(vertex_data_block.vertex_count);
     file.read((char*)&vertices[0], sizeof(Vec3)* vertex_data_block.vertex_count);
-    L_DEBUG(unicode("Loaded {0} vertices").format(vertex_data_block.vertex_count).encode());
+    S_DEBUG("Loaded {0} vertices", vertex_data_block.vertex_count);
 }
 
 void OPTLoader::process_texcoord_block(std::istream& file) {
@@ -164,7 +164,7 @@ void OPTLoader::process_texcoord_block(std::istream& file) {
 
     texture_vertices.resize(tv_data_block.texture_vertex_count);
     file.read((char*)&texture_vertices[0], sizeof(float) * tv_data_block.texture_vertex_count * 2);
-    L_DEBUG(unicode("Loaded {0} texture vertices").format(tv_data_block.texture_vertex_count).encode());
+    S_DEBUG("Loaded {0} texture vertices", tv_data_block.texture_vertex_count);
 }
 
 void OPTLoader::process_normal_block(std::istream& file) {
@@ -175,7 +175,7 @@ void OPTLoader::process_normal_block(std::istream& file) {
 
     vertex_normals.resize(vertex_normal_data_block.vertex_normal_count);
     file.read((char*)&vertex_normals[0], sizeof(Vec3)* vertex_normal_data_block.vertex_normal_count);
-    L_DEBUG(unicode("Loaded {0} vertex normals").format(vertex_normal_data_block.vertex_normal_count).encode());
+    S_DEBUG("Loaded {0} vertex normals", vertex_normal_data_block.vertex_normal_count);
 }
 
 void OPTLoader::process_reused_texture_block(std::istream& file) {
@@ -185,7 +185,7 @@ void OPTLoader::process_reused_texture_block(std::istream& file) {
     file.read((char*)&header_info, sizeof(EmbeddedTextureDataBlockHeader));
     current_texture = std::string(header_info.texture_name, header_info.texture_name + 8);
 
-    L_DEBUG(unicode("Found *reused* texture {0} - offset: {1}").format(current_texture, offset).encode());
+    S_DEBUG("Found *reused* texture {0} - offset: {1}", current_texture, offset);
 }
 
 void OPTLoader::process_lod_block(std::istream& file) {
@@ -339,7 +339,7 @@ void OPTLoader::process_embedded_texture_block(std::istream& file) {
     file.read((char*)&image_data[0], sizeof(uint8_t) * texture_data_block.data.data_size);
 
     std::string texture_name = std::string(texture_data_block.header.texture_name, texture_data_block.header.texture_name + 8);
-    L_DEBUG(unicode("Found texture with ID {0} and name '{1}'").format(texture_data_block.header.texture_id, texture_name).encode());
+    S_DEBUG("Found texture with ID {0} and name '{1}'", texture_data_block.header.texture_id, texture_name);
 
     Texture new_texture;
     new_texture.name = texture_name;
@@ -389,7 +389,7 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
     file.read((char*)&data_block_header, sizeof(DataBlockHeader));
 
     if(data_block_header.type > 0 && data_block_header.type != TEXTURE_OFFSET_BLOCK) {
-        L_DEBUG(unicode("Processing data block: {0}").format(data_block_header.type).encode());
+        S_DEBUG("Processing data block: {0}", data_block_header.type);
         switch(data_block_header.type) {
             case DataBlockTypes::VERTEX:
             process_vertex_block(file);
@@ -413,10 +413,10 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
             process_embedded_texture_block(file);
             break;
             default:
-                L_WARN(unicode("Unhandled block type: {0}").format(data_block_header.type).encode());
+                S_WARN("Unhandled block type: {0}", data_block_header.type);
         }
     } else {
-        L_DEBUG(unicode("Processing jump block: {0}").format(data_block_header.type).encode());
+        S_DEBUG("Processing jump block: {0}", data_block_header.type);
         OffsetDataBlock mesh_info_data_block;
         file.read((char*)&mesh_info_data_block, sizeof(OffsetDataBlock));
         mesh_info_data_block.offset_to_block_offsets -= global_offset;
@@ -437,7 +437,7 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
             //Add any new block offsets to the end of the block_offsets list that we are iterating
             for(int32_t block_offset: new_block_offsets) {
                 if(block_offset == 0) {
-                    L_DEBUG("Skipping NULL offset");
+                    S_DEBUG("Skipping NULL offset");
                     continue; //Ignore null offsets
                 }
                 int32_t final = block_offset - global_offset;
@@ -479,7 +479,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     main_header.global_offset -= 8;
     global_offset = main_header.global_offset;
 
-    L_DEBUG(unicode("Global offset is {0}").format(main_header.global_offset).encode());
+    S_DEBUG("Global offset is {0}", main_header.global_offset);
 
     //All offsets need to have the global offset added
     main_jump_header.offset_to_mesh_header_offsets -= main_header.global_offset;
@@ -528,8 +528,10 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     //Now let's build everything!
     for(Triangle tri: triangles[0]) {
         if(!texture_submesh.count(tri.texture_name)) {
-            L_ERROR(unicode("Some part of this file wasn't loaded, as we have found a reused texture {0} without loading the actual texture. Some of the model will be missing").
-                    format(tri.texture_name).encode());
+            S_ERROR(
+                "Some part of this file wasn't loaded, as we have found a reused texture {0} without loading the actual texture. Some of the model will be missing",
+                tri.texture_name
+            );
             continue;
         }
         SubMesh& submesh = *texture_submesh[tri.texture_name];

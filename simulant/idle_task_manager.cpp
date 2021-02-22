@@ -139,7 +139,7 @@ void IdleTaskManager::execute() {
         for(auto pair: signals_copy) {
             bool result = pair.second();
             if(!result) {
-                L_DEBUG("Idle task returned false. Removing.");
+                S_DEBUG("Idle task returned false. Removing.");
                 to_erase.push_back(pair.first);
             }
         }
