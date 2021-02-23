@@ -65,22 +65,23 @@ public:
     /* This function is called just before drawing the renderable, it can be
      * used to upload any data to VRAM if necessary */
     virtual void prepare_to_render(const Renderable* renderable) = 0;
+
 public:
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }
-
-    void register_texture(TextureID tex_id, Texture *texture);
-    void unregister_texture(TextureID texture_id, Texture* texture);
 
     /*
      * Returns true if the texture has been allocated, false otherwise.
      */
     bool is_texture_registered(TextureID texture_id) const;
-
     void pre_render();
+    void prepare_texture(Texture *texture);
 
 private:
-    void prepare_texture(Texture *texture);
+    friend class Texture;
+
+    void register_texture(TextureID tex_id, Texture *texture);
+    void unregister_texture(TextureID texture_id, Texture* texture);
 
     Window* window_ = nullptr;
 
