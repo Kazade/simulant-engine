@@ -1,3 +1,4 @@
+
 //
 //   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
 //
@@ -19,6 +20,7 @@
 
 #include <chrono>
 #include <future>
+#include <cstdlib>
 
 #ifdef __DREAMCAST__
 #include "platforms/dreamcast/profiler.h"
@@ -47,6 +49,28 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
 #define SIMULANT_DEBUG_KEY "SIMULANT_DEBUG"
+
+extern "C" {
+
+void *__stack_chk_guard = (void *)0x69420A55;
+
+__attribute__((weak,noreturn)) void __stack_chk_fail(void) {
+
+#ifdef __DREAMCAST__
+    /* Reset video mode, clear screen */
+    vid_set_mode(DM_640x480, PM_RGB565);
+    vid_empty();
+
+    unsigned int pr = arch_get_ret_addr();
+    fprintf(stderr, "Stack overflow detected! (%x)", pr);
+#else
+    fprintf(stderr, "Stack overflow detected!");
+#endif
+    abort();
+}
+
+}
+
 
 namespace smlt {
 
