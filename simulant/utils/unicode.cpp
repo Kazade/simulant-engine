@@ -280,63 +280,12 @@ unicode unicode::slice(void* null, int32_t end) const {
     return slice((int32_t)0, end);
 }
 
-
-/*
- ANDROID SUCKS... can't use std::stoi and friends
-*/
-static int32_t _stoi(const std::string& str) {
-    const char* inp = str.c_str();
-    char* p = nullptr;
-
-    auto test = strtol(inp, &p, 10);
-
-    if(p == inp || test == LONG_MIN || test == LONG_MAX) {
-        throw std::invalid_argument("Couldn't convert from a string to an integer");
-    }
-
-    return (int32_t) test;
-}
-
-static float _stof(const std::string& str) {
-    const char* inp = str.c_str();
-    char* p = nullptr;
-
-#ifdef __DREAMCAST__
-    // Dreamcast (GCC 4.7.3) doesn't define strtof but does define strtod
-    float test = (float) strtod(inp, &p);
-#else
-    auto test = strtof(inp, &p);
-#endif
-    if(p == inp) {
-        throw std::invalid_argument("Couldn't convert from a string to a float");
-    }
-
-    return (float) test;
-}
-
-static double _stod(const std::string& str) {
-    const char* inp = str.c_str();
-    char* p = nullptr;
-
-    auto test = strtod(inp, &p);
-
-    if(p == inp) {
-        throw std::invalid_argument("Couldn't convert from a string to a double");
-    }
-
-    return (double) test;
-}
-
 int32_t unicode::to_int() const {
-    return _stoi(encode());
+    return smlt::stoi(encode());
 }
 
 float unicode::to_float() const {
-    return _stof(encode());
-}
-
-double unicode::to_double() const {
-    return _stod(encode());
+    return smlt::stof(encode());
 }
 
 bool unicode::to_boolean() const {

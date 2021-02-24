@@ -180,7 +180,6 @@ public:
     //Conversion functions
     int32_t to_int() const;
     float to_float() const;
-    double to_double() const;
     bool to_boolean() const;
     ustring to_ustring() const { return string_; }
 private:

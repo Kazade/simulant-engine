@@ -534,7 +534,7 @@ uint64_t SDL2Window::SDLPlatform::available_ram_in_bytes() const {
         if(line.find("MemFree:") != std::string::npos) {
             auto prefix = line.substr(0, line.find_last_of(" "));
             auto suffix = prefix.substr(prefix.find_last_of(" ") + 1);
-            return std::stol(suffix) * 1024;
+            return smlt::stol(suffix) * 1024;
         }
     }
 #elif defined(__WIN32__)

@@ -49,8 +49,8 @@ VirtualFileSystem::VirtualFileSystem(Window *window):
 
 #ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
-    resource_path_.push_back("/cd");
     resource_path_.push_back("/pc");
+    resource_path_.push_back("/cd");
 #endif
 
 #ifdef __PSP__

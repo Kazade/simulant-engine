@@ -132,9 +132,9 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
         parse_line(line, type, line_settings);
 
         if(type == "info") {
-            font->font_size_ = std::stoi(line_settings["size"]);
+            font->font_size_ = smlt::stoi(line_settings["size"]);
         } else if(type == "common") {
-            font->line_gap_ = std::stoi(line_settings["lineHeight"]);
+            font->line_gap_ = smlt::stoi(line_settings["lineHeight"]);
         } else if(type == "page") {
             if(page.empty()) {
                 page = line_settings["file"];
@@ -145,17 +145,17 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
         } else if(type == "chars") {
 
         } else if(type == "char") {
-            auto id = std::stoi(line_settings["id"]) - 32;
+            auto id = smlt::stoi(line_settings["id"]) - 32;
             if(id >= 0) {
                 CharInfo c;
-                c.x0 = std::stof(line_settings["x"]);
-                c.x1 = c.x0 + std::stoi(line_settings["width"]);
-                c.y0 = std::stof(line_settings["y"]);
-                c.y1 = c.y0 + std::stoi(line_settings["height"]);
+                c.x0 = smlt::stof(line_settings["x"]);
+                c.x1 = c.x0 + smlt::stoi(line_settings["width"]);
+                c.y0 = smlt::stof(line_settings["y"]);
+                c.y1 = c.y0 + smlt::stoi(line_settings["height"]);
 
-                c.xoff = std::stoi(line_settings["xoffset"]);
-                c.yoff = std::stoi(line_settings["yoffset"]);
-                c.xadvance = std::stoi(line_settings["xadvance"]);
+                c.xoff = smlt::stoi(line_settings["xoffset"]);
+                c.yoff = smlt::stoi(line_settings["yoffset"]);
+                c.xadvance = smlt::stoi(line_settings["xadvance"]);
 
                 // Make sure we can contain this character and
                 // assign to the right place

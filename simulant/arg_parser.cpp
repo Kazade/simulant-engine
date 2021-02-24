@@ -113,11 +113,11 @@ bool ArgParser::parse_args(int argc, char* argv[]) {
                              ));
         } else if(info.type == ARG_TYPE_FLOAT) {
             args_.insert(std::make_pair(
-                             info.var_name, std::stof(param)
+                             info.var_name, smlt::stof(param)
                              ));
         } else if(info.type == ARG_TYPE_INTEGER) {
             args_.insert(std::make_pair(
-                             info.var_name, std::stoi(param)
+                             info.var_name, smlt::stoi(param)
                              ));
         } else {
             args_.insert(std::make_pair(info.var_name, param));

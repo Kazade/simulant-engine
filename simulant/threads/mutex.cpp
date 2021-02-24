@@ -34,7 +34,7 @@ Mutex::Mutex() {
 #ifdef __PSP__
     /* Create a semaphore with an initial and max value of 1 */
     semaphore_ = sceKernelCreateSema(
-        std::to_string((int) rand()).c_str(),
+        smlt::to_string((int) rand()).c_str(),
         0, 1, 1, 0
     );
     owner_ = 0; /* No owner */
@@ -124,7 +124,7 @@ RecursiveMutex::RecursiveMutex() {
 #ifdef __PSP__
     /* Create a semaphore with an initial and max value of 1 */
     semaphore_ = sceKernelCreateSema(
-        std::to_string((int) rand()).c_str(),
+        smlt::to_string((int) rand()).c_str(),
         0, 1, 1, 0
     );
     owner_ = 0; /* No owner */

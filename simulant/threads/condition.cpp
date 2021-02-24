@@ -1,6 +1,7 @@
 #include <cassert>
 #include "condition.h"
 #include "../compat.h"
+#include "../macros.h"
 
 namespace smlt {
 namespace thread {
@@ -8,12 +9,12 @@ namespace thread {
 Condition::Condition() {
 #ifdef __PSP__
     wait_sem_ = sceKernelCreateSema(
-        std::to_string((int) rand()).c_str(),
+        smlt::to_string((int) rand()).c_str(),
         0, 0, 1, 0
     );
 
     wait_done_= sceKernelCreateSema(
-        std::to_string((int) rand()).c_str(),
+        smlt::to_string((int) rand()).c_str(),
         0, 0, 1, 0
     );
 #elif defined(__DREAMCAST__)
@@ -57,7 +58,9 @@ void Condition::wait(Mutex& mutex) {
 
     mutex.lock();
 #elif defined(__DREAMCAST__)
-    cond_wait(&cond_, &mutex.mutex_);
+    int err = cond_wait(&cond_, &mutex.mutex_);
+    _S_UNUSED(err);
+    assert(!err);
 #else
     assert(!mutex.try_lock());  /* Mutex should've been locked by this thread */
     pthread_cond_wait(&cond_, &mutex.mutex_); /* FIXME: I've heard that this can wake early? */
@@ -76,7 +79,9 @@ void Condition::notify_one() {
         lock_.unlock();
     }
 #elif defined(__DREAMCAST__)
-    cond_signal(&cond_);
+    int err = cond_signal(&cond_);
+    _S_UNUSED(err);
+    assert(!err);
 #else
     pthread_cond_signal(&cond_);
 #endif
@@ -100,7 +105,9 @@ void Condition::notify_all() {
         lock_.unlock();
     }
 #elif defined(__DREAMCAST__)
-    cond_broadcast(&cond_);
+    int err = cond_broadcast(&cond_);
+    _S_UNUSED(err);
+    assert(!err);
 #else
     pthread_cond_broadcast(&cond_);
 #endif
