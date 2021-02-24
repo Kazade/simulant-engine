@@ -72,7 +72,7 @@ public:
         /* We use the current thread's priority for the new thread */
         int priority = sceKernelGetThreadCurrentPriority();
         thread_ = sceKernelCreateThread(
-            std::to_string(rand()).c_str(),
+            smlt::to_string(rand()).c_str(),
             &Thread::thread_runner, priority, 0x10000,
             0, NULL
         );

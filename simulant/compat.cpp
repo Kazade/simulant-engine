@@ -4,9 +4,7 @@
 
 #include "compat.h"
 
-namespace std {
-
-#if defined(__DREAMCAST__) || defined(__PSP__)
+namespace smlt {
 
 std::string to_string(int value) {
     char buffer[64];
@@ -52,7 +50,10 @@ float stof(const std::string& str) {
     return atof(str.c_str());
 }
 
-#endif
+long stol(const std::string& str) {
+    return atol(str.c_str());
+}
+
 }
 
 

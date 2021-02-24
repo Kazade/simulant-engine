@@ -284,14 +284,14 @@ void StatsPanel::update() {
         this->window_->each_stage([&](uint32_t i, Stage* stage) {
             auto stage_row = stages.append_row();
             stage_row.append_row().append_label(
-                (stage->name().empty()) ? "Stage " + std::to_string(i) : stage->name().encode()
+                (stage->name().empty()) ? "Stage " + smlt::to_string(i) : stage->name().encode()
             );
             stage_row.append_row().append_label(
-                "   Actors: " + std::to_string(stage->actor_count())
+                "   Actors: " + smlt::to_string(stage->actor_count())
             );
 
             stage_row.append_row().append_label(
-                "   Particle Systems: " + std::to_string(stage->particle_system_count())
+                "   Particle Systems: " + smlt::to_string(stage->particle_system_count())
             );
         }); */
     }

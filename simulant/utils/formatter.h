@@ -76,11 +76,11 @@ private:
                 if(str[k] == '}') {
                     /* This was a placeholder within the size limit and
                      * with valid characters */
-                    if(std::stoi(id) == c) {
+                    if(smlt::stoi(id) == c) {
                         /* OK we're dealing with this one */
 
                         if(format.size() > 1 && format[0] == '.') {
-                            auto prec = std::stoi(format.substr(1));
+                            auto prec = smlt::stoi(format.substr(1));
                             ss << std::setprecision(prec) << v;
                         } else {
                             ss << v;
