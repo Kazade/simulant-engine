@@ -191,6 +191,15 @@ public:
     /* Clear the data buffer */
     void free();
 
+    /* Returns true if the data array isn't empty */
+    bool has_data() const;
+
+    /*
+     * Flushes texture data / properties to the renderer immediately. This
+     * will free ram if the free data mode is set to TEXTURE_FREE_DATA_AFTER_UPLOAD
+     */
+    void flush();
+
     typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
 
     /* Apply a mutation function to the current texture data */

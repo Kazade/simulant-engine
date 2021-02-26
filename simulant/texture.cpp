@@ -329,6 +329,21 @@ void Texture::free() {
      * the RAM */
 }
 
+bool Texture::has_data() const {
+    return !data_.empty();
+}
+
+void Texture::flush() {
+    if(cort::within_coroutine()) {
+        renderer_->window_->idle->add_once([this]() {
+            renderer_->prepare_texture(this);
+        });
+        cr_yield();
+    } else {
+        renderer_->prepare_texture(this);
+    }
+}
+
 void Texture::mutate_data(Texture::MutationFunc func) {
     func(&data_[0], width_, height_, format_);
 

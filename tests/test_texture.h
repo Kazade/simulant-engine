@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "simulant/simulant.h"
@@ -10,6 +11,19 @@ using namespace smlt;
 
 class TextureTests : public smlt::test::SimulantTestCase {
 public:
+    void test_flush() {
+        auto tex = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_R8);
+
+        std::vector<uint8_t> data(8 * 8, 255);
+        tex->set_data(data);
+
+        assert_true(tex->has_data());
+        tex->flush();
+        window->idle->execute();
+
+        assert_false(tex->has_data());
+    }
+
     void test_transaction_api() {
         TexturePtr tex = window->shared_assets->new_texture(0, 0);
 
@@ -30,7 +44,7 @@ public:
         data[0] = 255;
         data[1] = 128;
         data[2] = 0;
-        data[3] = 255;        
+        data[3] = 255;
 
         assert_equal(4u, data.size());
 
