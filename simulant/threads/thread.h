@@ -79,7 +79,12 @@ public:
 
         sceKernelStartThread(thread_, sizeof(func), func);
 #elif defined(__DREAMCAST__)
-        thread_ = thd_create(0, &Thread::thread_runner, func);
+
+        /* The default stack size is 32k, which is a bit low for us */
+        kthread_attr_t attr = {0};
+        attr.stack_size = 64 * 1024;
+
+        thread_ = thd_create_ex(&attr, &Thread::thread_runner, func);
         if(!thread_) {
             FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
         }

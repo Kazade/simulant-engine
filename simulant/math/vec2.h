@@ -98,10 +98,6 @@ struct Vec2 {
         return x * rhs.x + y * rhs.y;
     }
 
-    unicode to_string() const {
-        return _F("({0},{1})").format(x, y);
-    }
-
     Vec3 xyz(float z = 0.0f) const;
 
     Vec4 xyzw(float z=0.0f, float w=1.0f) const;

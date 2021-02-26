@@ -13,6 +13,10 @@
 
 namespace smlt {
 
+class Vec2;
+class Vec3;
+class Vec4;
+
 /* to_string stuff */
 std::string to_string(int value);
 std::string to_string(unsigned value);
@@ -20,6 +24,10 @@ std::string to_string(unsigned long value);
 std::string to_string(long value);
 std::string to_string(float value);
 std::string to_string(double value);
+
+std::string to_string(const Vec2& v);
+std::string to_string(const Vec3& v);
+std::string to_string(const Vec4& v);
 
 int stoi(const std::string& str);
 float stof(const std::string& str);

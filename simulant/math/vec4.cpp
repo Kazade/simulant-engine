@@ -1,11 +1,12 @@
 #include "vec4.h"
 #include "vec3.h"
 #include "vec2.h"
+#include "../compat.h"
 
 namespace smlt {
 
 std::ostream& operator<<(std::ostream& stream, const Vec4& vec) {
-    stream << "(" << vec.x << "," << vec.y << "," << vec.z << "," << vec.w << ")";
+    stream << to_string(vec);
     return stream;
 }
 

@@ -3,42 +3,55 @@
 #include <cstdlib>
 
 #include "compat.h"
+#include "types.h"
 
 namespace smlt {
 
+const static int32_t _BUFFER_SIZE = 64;
+static char buffer[_BUFFER_SIZE] = {0};
+
 std::string to_string(int value) {
-    char buffer[64];
     auto c = ::sprintf(buffer, "%d", value);
     return std::string(buffer, buffer + c);
 }
 
 std::string to_string(unsigned value) {
-    char buffer[64];
     auto c = ::sprintf(buffer, "%u", value);
     return std::string(buffer, buffer + c);
 }
 
 std::string to_string(unsigned long value) {
-    char buffer[64];
     auto c = ::sprintf(buffer, "%luld", value);
     return std::string(buffer, buffer + c);
 }
 
 std::string to_string(long value) {
-    char buffer[64];
     auto c = ::sprintf(buffer, "%ld", value);
     return std::string(buffer, buffer + c);
 }
 
 std::string to_string(float value) {
-    char buffer[64];
     auto c = ::sprintf(buffer, "%f", (double) value);
     return std::string(buffer, buffer + c);
 }
 
 std::string to_string(double value) {
-    char buffer[64];
     auto c = ::sprintf(buffer, "%f", value);
+    return std::string(buffer, buffer + c);
+}
+
+std::string to_string(const Vec2& v) {
+    auto c = ::sprintf(buffer, "(%f, %f)", (double) v.x, (double) v.y);
+    return std::string(buffer, buffer + c);
+}
+
+std::string to_string(const Vec3& v) {
+    auto c = ::sprintf(buffer, "(%f, %f, %f)", (double) v.x, (double) v.y, (double) v.z);
+    return std::string(buffer, buffer + c);
+}
+
+std::string to_string(const Vec4& v) {
+    auto c = ::sprintf(buffer, "(%f, %f, %f, %f)", (double) v.x, (double) v.y, (double) v.z, (double) v.w);
     return std::string(buffer, buffer + c);
 }
 

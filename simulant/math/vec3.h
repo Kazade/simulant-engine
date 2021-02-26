@@ -256,10 +256,6 @@ public:
 
     friend std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 
-    unicode to_string() const {
-        return _F("({0},{1},{2})").format(x, y, z);
-    }
-
     Vec3 perpendicular() const;
     Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
 
