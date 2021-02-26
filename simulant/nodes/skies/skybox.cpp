@@ -77,6 +77,8 @@ void Skybox::generate(
         flags.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;
 
         auto set_texture = [](SubMesh* sm, TexturePtr tex) {
+            /* Force a flush. Skyboxes are usually big textures */
+            tex->flush();
             sm->material()->set_diffuse_map(tex);
         };
 
