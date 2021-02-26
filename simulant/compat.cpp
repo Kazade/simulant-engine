@@ -41,20 +41,19 @@ std::string to_string(double value) {
 }
 
 std::string to_string(const Vec2& v) {
-    auto c = ::sprintf(buffer, "(%f, %f)", v.x, v.y);
+    auto c = ::sprintf(buffer, "(%f, %f)", (double) v.x, (double) v.y);
     return std::string(buffer, buffer + c);
 }
 
 std::string to_string(const Vec3& v) {
-    auto c = ::sprintf(buffer, "(%f, %f, %f)", v.x, v.y, v.z);
+    auto c = ::sprintf(buffer, "(%f, %f, %f)", (double) v.x, (double) v.y, (double) v.z);
     return std::string(buffer, buffer + c);
 }
 
 std::string to_string(const Vec4& v) {
-    auto c = ::sprintf(buffer, "(%f, %f, %f, %f)", v.x, v.y, v.z, v.w);
+    auto c = ::sprintf(buffer, "(%f, %f, %f, %f)", (double) v.x, (double) v.y, (double) v.z, (double) v.w);
     return std::string(buffer, buffer + c);
 }
-
 
 int stoi(const std::string& str) {
     return atoi(str.c_str());
