@@ -477,13 +477,12 @@ test:dreamcast-sh4-gcc:
   dependencies:
     - build:dreamcast-sh4-gcc
   before_script:
-    - dnf install -y wget && dnf clean all
-    - wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-    - rpm -i rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-    - dnf install -y lxdream
+    - dnf install -y wget unzip && dnf clean all
+    - wget https://gitlab.com/simulant/community/lxdream-nitro/-/jobs/artifacts/master/download?job=linux-x64:build
+    - unzip artifacts.zip
   script:
     - cd ${TARGET}/debug
-    - lxdream --audio=null -H tests/simulant_tests.elf | python3 ../../tools/test_parser.py
+    - ./lxdream-nitro --unsafe -C . --audio=null -H tests/simulant_tests.elf
   artifacts:
    paths:
     - ${TARGET}/debug/simulant/*.a
