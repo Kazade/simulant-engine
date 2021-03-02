@@ -748,6 +748,8 @@ simulant/material.h
 simulant/material_constants.h
 simulant/materials/attribute_manager.cpp
 simulant/materials/attribute_manager.h
+simulant/materials/baseline_material.h
+simulant/materials/material_property_overrider.h
 simulant/materials/uniform_manager.cpp
 simulant/materials/uniform_manager.h
 simulant/math/aabb.cpp
