@@ -33,8 +33,6 @@
 #include "assets/materials/material_property_registry.h"
 
 
-class MaterialTest;
-
 namespace smlt {
 
 

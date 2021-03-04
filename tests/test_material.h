@@ -3,8 +3,14 @@
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 
+#include "simulant/assets/materials/core/core_material.h"
+#include "simulant/assets/materials/core/material_property_overrider.h"
 #include "simulant/assets/materials/material_property.inl.h"
 #include "simulant/assets/materials/fast_variant.h"
+
+namespace {
+
+using namespace smlt;
 
 class MaterialTest : public smlt::test::SimulantTestCase {
 public:
@@ -223,3 +229,48 @@ public:
         assert_equal(mat->polygon_mode(), smlt::POLYGON_MODE_LINE);
     }
 };
+
+
+class MaterialCoreTest : public smlt::test::SimulantTestCase {
+public:
+    void test_is_core_property() {
+        assert_true(is_core_property(DIFFUSE_PROPERTY));
+        assert_true(is_core_property(AMBIENT_PROPERTY));
+        assert_true(is_core_property(SPECULAR_PROPERTY));
+        assert_true(is_core_property(SHININESS_PROPERTY));
+
+        assert_false(is_core_property("my_property"));
+    }
+
+    void test_core_material_property_value() {
+        float f = -1.0f;
+        assert_true(core_material_property_value(SHININESS_PROPERTY, &f));
+        assert_equal(f, 0.0f);
+
+        assert_false(core_material_property_value("bananas", &f));
+        assert_false(core_material_property_value("s_diffuse", &f));
+    }
+
+    void test_overriders() {
+        MaterialPropertyOverrider o1;
+        MaterialPropertyOverrider o2(&o1);
+
+        float f = -1.0f;
+        assert_true(o2.fetch_property_value(SHININESS_PROPERTY, &f));
+        assert_equal(f, core_material().shininess);
+
+        o1.override_property_value(SHININESS_PROPERTY, 1.5f);
+        assert_true(o2.fetch_property_value(SHININESS_PROPERTY, &f));
+        assert_equal(f, 1.5f);
+
+        o2.override_property_value(SHININESS_PROPERTY, 2.5f);
+        assert_true(o2.fetch_property_value(SHININESS_PROPERTY, &f));
+        assert_equal(f, 2.5f);
+
+        o2.clear_override(SHININESS_PROPERTY);
+        assert_true(o2.fetch_property_value(SHININESS_PROPERTY, &f));
+        assert_equal(f, 1.5f);
+    }
+};
+
+}

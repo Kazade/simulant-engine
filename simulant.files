@@ -444,6 +444,10 @@ simulant/animation.cpp
 simulant/animation.h
 simulant/application.cpp
 simulant/application.h
+simulant/assets/materials/core/core_material.cpp
+simulant/assets/materials/core/core_material.h
+simulant/assets/materials/core/material_property_overrider.cpp
+simulant/assets/materials/core/material_property_overrider.h
 simulant/assets/meshes/rig.cpp
 simulant/assets/meshes/rig.h
 simulant/backgrounds/background_manager.cpp
@@ -748,7 +752,8 @@ simulant/material.h
 simulant/material_constants.h
 simulant/materials/attribute_manager.cpp
 simulant/materials/attribute_manager.h
-simulant/materials/baseline_material.h
+simulant/materials/core_material.h
+simulant/materials/material_property_overrider.cpp
 simulant/materials/material_property_overrider.h
 simulant/materials/uniform_manager.cpp
 simulant/materials/uniform_manager.h

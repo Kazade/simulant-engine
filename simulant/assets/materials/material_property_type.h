@@ -3,8 +3,6 @@
 #include "../../types.h"
 #include "constants.h"
 
-class MaterialTest;
-
 namespace smlt {
 
 enum MaterialPropertyType {
