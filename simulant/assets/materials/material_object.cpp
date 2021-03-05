@@ -1,139 +1,79 @@
 
-
-#include "material_property_registry.h"
 #include "constants.h"
 #include "material_object.h"
 
 namespace smlt {
 
 
-MaterialObject::MaterialObject(MaterialPropertyRegistry* registry):
-    registry_(registry) {
+MaterialObject::MaterialObject(MaterialObject* parent):
+    MaterialPropertyOverrider(parent) {
 
-    if(registry == this) {
-        object_id_ = 0;
-    } else if(registry) {
-        registry->register_object(this);
-    }
 }
 
 MaterialObject::~MaterialObject() {
-    if(registry_ && registry_ != this) {
-        registry_->unregister_object(this);
-    }
-}
 
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const bool &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const int &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const float &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const Vec3 &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const Vec4 &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const Mat3 &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const TextureUnit &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID &id, const Vec2 &value) {
-    registry_->properties_[id - 1].set_value(this, value);
-}
-
-void MaterialObject::set_property_value(const MaterialPropertyID& id, const TexturePtr& texture) {
-    TextureUnit unit(texture);
-    set_property_value(id, unit);
-}
-
-const MaterialPropertyValue* MaterialObject::property_value(MaterialPropertyID id) const {
-    const auto& property = registry_->properties_[id - 1];
-    return property.value(this);
-}
-
-MaterialPropertyValue* MaterialObject::property_value(MaterialPropertyID id) {
-    auto& property = registry_->properties_[id - 1];
-    return property.value(this);
-}
-
-const MaterialPropertyValue* MaterialObject::property_value(const std::string& name) const {
-    return property_value(registry_->find_property_id(name));
 }
 
 void MaterialObject::set_specular(const Colour &colour) {
-    set_property_value(registry_->material_specular_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
+    override_property_value(SPECULAR_PROPERTY, (const Vec4&) colour);
 }
 
 void MaterialObject::set_ambient(const Colour &colour) {
-    set_property_value(registry_->material_ambient_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
+    override_property_value(AMBIENT_PROPERTY, (const Vec4&) colour);
 }
 
 void MaterialObject::set_emission(const Colour& colour) {
-    set_property_value(registry_->material_emission_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
+    override_property_value(EMISSION_PROPERTY, (const Vec4&) colour);
 }
 
 void MaterialObject::set_diffuse(const Colour &colour) {
-    set_property_value(registry_->material_diffuse_id_, Vec4(colour.r, colour.g, colour.b, colour.a));
+    override_property_value(DIFFUSE_PROPERTY, (const Vec4&) colour);
 }
 
 void MaterialObject::set_shininess(float shininess) {
     // OpenGL expects shininess to range between 0 and 128 otherwise it throws
     // an invalid_value error
-    set_property_value(registry_->material_shininess_id_, clamp(shininess, 0, 128));
+    override_property_value(SHININESS_PROPERTY, clamp(shininess, 0, 128));
 }
 
 void MaterialObject::set_diffuse_map(TexturePtr texture) {
-    set_property_value(registry_->diffuse_map_id_, texture);
+    override_property_value(DIFFUSE_MAP_PROPERTY, texture);
 }
 
 void MaterialObject::set_light_map(TexturePtr texture) {
-    set_property_value(registry_->light_map_id_, texture);
+    override_property_value(LIGHT_MAP_PROPERTY, texture);
 }
 
 const TextureUnit* MaterialObject::diffuse_map() const {
-    return &property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 const TextureUnit* MaterialObject::light_map() const {
-    return &property_value(registry_->light_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 const TextureUnit* MaterialObject::normal_map() const {
-    return &property_value(registry_->normal_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 const TextureUnit* MaterialObject::specular_map() const {
-    return &property_value(registry_->specular_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 TextureUnit* MaterialObject::diffuse_map() {
-    return &property_value(registry_->diffuse_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 TextureUnit* MaterialObject::light_map() {
-    return &property_value(registry_->light_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 TextureUnit* MaterialObject::normal_map() {
-    return &property_value(registry_->normal_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 TextureUnit* MaterialObject::specular_map() {
-    return &property_value(registry_->specular_map_id_)->value<TextureUnit>();
+    return nullptr;
 }
 
 const Colour& MaterialObject::specular() const {
@@ -210,7 +150,9 @@ bool MaterialObject::is_texturing_enabled() const {
 }
 
 float MaterialObject::point_size() const {
-    return property_value(registry_->point_size_id_)->value<float>();
+    float f;
+    fetch_property_value(POINT_SIZE_PROPERTY, &f);
+    return f;
 }
 
 void MaterialObject::set_polygon_mode(PolygonMode mode) {

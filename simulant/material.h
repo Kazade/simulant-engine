@@ -30,7 +30,6 @@
 #include "interfaces/updateable.h"
 
 #include "assets/materials/material_object.h"
-#include "assets/materials/material_property_registry.h"
 
 
 namespace smlt {
@@ -102,7 +101,7 @@ class Material:
     public generic::Identifiable<MaterialID>,
     public RefCounted<Material>,
     public Updateable,
-    public MaterialPropertyRegistry,
+    public MaterialObject,
     public ChainNameable<Material> {
 
 public:

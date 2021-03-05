@@ -2,19 +2,18 @@
 
 #include "../../types.h"
 #include "constants.h"
+#include "core/material_property_overrider.h"
 
 namespace smlt {
 
 class MaterialPropertyRegistry;
 class MaterialPropertyValue;
 
-class MaterialObject {
+class MaterialObject : public MaterialPropertyOverrider {
 public:
     friend class Material;
-    friend struct MaterialProperty;
-    friend class MaterialPropertyRegistry;
 
-    MaterialObject(MaterialPropertyRegistry* registry);
+    MaterialObject(MaterialObject* parent);
     MaterialObject(const MaterialObject&) = delete;
     MaterialObject& operator=(MaterialObject&) = delete;
 
@@ -84,13 +83,9 @@ public:
     ColourMaterial colour_material() const;
     void set_colour_material(ColourMaterial cm);
 
-    const MaterialPropertyRegistry* registry() const;
-
-    int8_t object_id() const { return object_id_; }
 private:
 
-    MaterialPropertyRegistry* registry_ = nullptr;
-    int8_t object_id_ = -1;
+    MaterialObject* parent_ = nullptr;
 };
 
 }
