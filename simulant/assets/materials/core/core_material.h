@@ -4,7 +4,7 @@
 
 namespace smlt {
 
-typedef uint32_t EnumType;
+typedef int32_t EnumType;
 
 struct CoreMaterial {
     const Colour diffuse = Colour(1, 1, 1, 1);
@@ -21,16 +21,22 @@ struct CoreMaterial {
     const bool lighting_enabled = true;
     const bool texturing_enabled = true;
 
-    const TextureUnit diffuse_map;
-    const TextureUnit specular_map;
-    const TextureUnit light_map;
-    const TextureUnit normal_map;
+    const TexturePtr diffuse_map;
+    const TexturePtr specular_map;
+    const TexturePtr light_map;
+    const TexturePtr normal_map;
+
+    const Mat4 diffuse_map_matrix;
+    const Mat4 specular_map_matrix;
+    const Mat4 light_map_matrix;
+    const Mat4 normal_map_matrix;
 
     const EnumType blend_func = (EnumType) BLEND_NONE;
     const EnumType polygon_mode = (EnumType) POLYGON_MODE_FILL;
     const EnumType shade_model = (EnumType) SHADE_MODEL_SMOOTH;
     const EnumType colour_material = (EnumType) COLOUR_MATERIAL_NONE;
     const EnumType cull_mode = (EnumType) CULL_MODE_NONE;
+    const EnumType depth_func = (EnumType) DEPTH_FUNC_LEQUAL;
 };
 
 const CoreMaterial& core_material();
@@ -43,14 +49,15 @@ unsigned constexpr const_hash(char const *input) {
 
 bool is_core_property(const char* name);
 
-bool core_material_property_value(const char* name, Colour* out);
-bool core_material_property_value(const char* name, float* out);
-bool core_material_property_value(const char* name, int32_t*);
-bool core_material_property_value(const char* name, bool* out);
-bool core_material_property_value(const char* name, Vec2* out);
-bool core_material_property_value(const char* name, Vec3* out);
-bool core_material_property_value(const char* name, Vec4* out);
-bool core_material_property_value(const char* name, Mat3* out);
-bool core_material_property_value(const char* name, Mat4* out);
+bool core_material_property_value(const char* name, const Colour*& out);
+bool core_material_property_value(const char* name, const float *&out);
+bool core_material_property_value(const char* name, const int32_t*&);
+bool core_material_property_value(const char* name, const bool*& out);
+bool core_material_property_value(const char* name, const Vec2*& out);
+bool core_material_property_value(const char* name, const Vec3*& out);
+bool core_material_property_value(const char* name, const Vec4*& out);
+bool core_material_property_value(const char* name, const Mat3*& out);
+bool core_material_property_value(const char* name, const Mat4*& out);
+bool core_material_property_value(const char* name, const TexturePtr*& out);
 
 }

@@ -21,7 +21,8 @@ enum MaterialPropertyType {
     MATERIAL_PROPERTY_TYPE_VEC3,
     MATERIAL_PROPERTY_TYPE_VEC4,
     MATERIAL_PROPERTY_TYPE_MAT3,
-    MATERIAL_PROPERTY_TYPE_MAT4
+    MATERIAL_PROPERTY_TYPE_MAT4,
+    MATERIAL_PROPERTY_TYPE_TEXTURE
 };
 
 class MaterialPropertyOverrider {
@@ -37,16 +38,17 @@ public:
     void override_property_value(const char* name, const Vec2& value);
     void override_property_value(const char* name, const Mat3& value);
     void override_property_value(const char* name, const Mat4& value);
+    void override_property_value(const char* name, const TexturePtr& value);
 
-    bool fetch_property_value(const char* name, bool* out);
-    bool fetch_property_value(const char* name, float* out);
-    bool fetch_property_value(const char* name, int32_t* out);
-    bool fetch_property_value(const char* name, Colour* out);
-    bool fetch_property_value(const char* name, Vec2* out);
-    bool fetch_property_value(const char* name, Vec3* out);
-    bool fetch_property_value(const char* name, Vec4* out);
-    bool fetch_property_value(const char* name, Mat3* out);
-    bool fetch_property_value(const char* name, Mat4* out);
+    bool fetch_property_value(const char* name, const bool*& out) const;
+    bool fetch_property_value(const char* name, const float*& out) const;
+    bool fetch_property_value(const char* name, const int32_t *&out) const;
+    bool fetch_property_value(const char* name, const Colour*& out) const;
+    bool fetch_property_value(const char* name, const Vec2*& out) const;
+    bool fetch_property_value(const char* name, const Vec3*& out) const;
+    bool fetch_property_value(const char* name, const Vec4*& out) const;
+    bool fetch_property_value(const char* name, const Mat3*& out) const;
+    bool fetch_property_value(const char* name, const Mat4*& out) const;
 
     bool clear_override(const char* name) {
         return clear_override(const_hash(name));
@@ -68,7 +70,7 @@ private:
     std::unordered_map<unsigned, Vec4> vec4_properties_;
     std::unordered_map<unsigned, Mat3> mat3_properties_;
     std::unordered_map<unsigned, Mat4> mat4_properties_;
-
+    std::unordered_map<unsigned, TexturePtr> texture_properties_;
 };
 
 }

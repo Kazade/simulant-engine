@@ -13,9 +13,10 @@ class MaterialObject : public MaterialPropertyOverrider {
 public:
     friend class Material;
 
+    MaterialObject():
+        parent_(nullptr) {}
+
     MaterialObject(MaterialObject* parent);
-    MaterialObject(const MaterialObject&) = delete;
-    MaterialObject& operator=(MaterialObject&) = delete;
 
     virtual ~MaterialObject();
 
@@ -83,8 +84,11 @@ public:
     ColourMaterial colour_material() const;
     void set_colour_material(ColourMaterial cm);
 
-private:
+    const MaterialObject* parent_material_object() const {
+        return parent_;
+    }
 
+private:
     MaterialObject* parent_ = nullptr;
 };
 

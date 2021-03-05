@@ -46,6 +46,9 @@ class MaterialPass:
 public:
     friend class Material;
 
+    MaterialPass():
+        MaterialObject(nullptr) {}
+
     MaterialPass(Material* material);
 
     void set_iteration_type(IterationType iteration) {
@@ -70,23 +73,9 @@ public:
         return max_iterations_;
     }
 
-    const Material* material() const {
-        return material_;
-    }
+    const Material* material() const;
 
 private:
-    /* This shouldn't exist, but it exists so that the passes_
-     * array can be instantiated */
-    friend class ::std::array<MaterialPass, MAX_MATERIAL_PASSES>;
-    MaterialPass():
-        MaterialObject(nullptr) {}
-
-    /* This isn't an assigment operator because copying the
-     * material pointer would be an error */
-    void copy_from(const MaterialPass& rhs, Material* new_parent);
-
-    Material* material_ = nullptr;
-
     IterationType iteration_type_ = ITERATION_TYPE_ONCE;
     uint8_t max_iterations_ = 1;
 
@@ -119,16 +108,16 @@ public:
     virtual ~Material();
 
 // ---------- Passes ------------------------
-    void set_pass_count(uint8_t pass_count);
+    bool set_pass_count(uint8_t pass_count);
 
     uint8_t pass_count() const {
-        return pass_count_;
+        return passes_.size();
     }
 
     MaterialPass* pass(uint8_t pass);
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
-        for(auto i = 0; i != pass_count_; ++i) {
+        for(std::size_t i = 0; i != passes_.size(); ++i) {
             callback(i, &passes_[i]);
         }
     }
@@ -136,9 +125,7 @@ public:
     void update(float dt);
 
 private:
-    thread::Mutex pass_mutex_;
-    uint8_t pass_count_ = 0;
-    std::array<MaterialPass, MAX_MATERIAL_PASSES> passes_;
+    std::vector<MaterialPass> passes_;
 
 protected:
     /* Assignment operator and copy constructor must be private
@@ -151,12 +138,22 @@ protected:
         _object_manager_impl::ToSharedPtr<smlt::Material>
     >;
 
-    Material(const Material& rhs);
-    Material& operator=(const Material& rhs);
+    Material(const Material& rhs) = delete;
 
-    MaterialPtr new_clone() {
-        return std::shared_ptr<Material>(new Material(*this));
+    Material& operator=(const Material& rhs) {
+        passes_.clear();
+
+        /* Must set the parent to this material */
+        for(std::size_t i = 0; i < passes_.size(); ++i) {
+            MaterialPass pass;
+            pass = rhs.passes_[i];
+            passes_.push_back(std::move(pass));
+        }
+
+        return *this;
     }
+
+    MaterialPtr new_clone();
 };
 
 

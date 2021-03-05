@@ -58,15 +58,22 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_MAT4;
 }
 
+void MaterialPropertyOverrider::override_property_value(const char* name, const TexturePtr& value) {
+    auto hsh = const_hash(name);
+    clear_override(hsh);
+    texture_properties_[hsh] = value;
+    all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_TEXTURE;
+}
+
 template<typename T>
-bool fetcher(MaterialPropertyOverrider* parent, std::unordered_map<unsigned, T>& lookup, const char* name, T* out) {
+bool fetcher(MaterialPropertyOverrider* parent, const std::unordered_map<unsigned, T>& lookup, const char* name, const T*& out) {
     if(parent) {
         return fetcher(nullptr, lookup, name, out);
     }
 
     auto it = lookup.find(const_hash(name));
     if(it != lookup.end()) {
-        *out = it->second;
+        out = &it->second;
         return true;
     } else if(is_core_property(name)) { // FIXME: calc hash once
         return core_material_property_value(name, out);
@@ -75,40 +82,40 @@ bool fetcher(MaterialPropertyOverrider* parent, std::unordered_map<unsigned, T>&
     }
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, bool* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const bool*& out) const {
     return fetcher(parent_, bool_properties_, name, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, float* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const float*& out) const {
     return fetcher(parent_, float_properties_, name, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, int32_t* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const int32_t*& out) const {
     return fetcher(parent_, int_properties_, name, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, Colour* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Colour*& out) const {
     /* FIXME? Risky cast from Colour -> Vec4.. should be OK? */
-    return fetcher(parent_, vec4_properties_, name, (Vec4*) out);
+    return fetcher(parent_, vec4_properties_, name, (const Vec4*&) out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, Vec2* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Vec2*& out) const {
     return fetcher(parent_, vec2_properties_, name, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, Vec3* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Vec3*& out) const {
     return fetcher(parent_, vec3_properties_, name, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, Vec4* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Vec4*& out) const {
     return fetcher(parent_, vec4_properties_, name, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, Mat3* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Mat3*& out) const {
     return fetcher(parent_, mat3_properties_, name, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, Mat4* out) {
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Mat4*& out) const {
     return fetcher(parent_, mat4_properties_, name, out);
 }
 
@@ -140,6 +147,9 @@ bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
             break;
             case MATERIAL_PROPERTY_TYPE_MAT4:
                 mat4_properties_.erase(hsh);
+            break;
+            case MATERIAL_PROPERTY_TYPE_TEXTURE:
+                texture_properties_.erase(hsh);
             break;
             default:
             return false;

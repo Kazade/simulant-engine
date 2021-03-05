@@ -8,15 +8,6 @@ namespace smlt {
 
 typedef int16_t MaterialPropertyID;
 
-enum BlendType {
-    BLEND_NONE,
-    BLEND_ADD,
-    BLEND_MODULATE,
-    BLEND_COLOUR,
-    BLEND_ALPHA,
-    BLEND_ONE_ONE_MINUS_ALPHA
-};
-
 /* Value type, if the type is texture */
 struct TextureUnit {
     TextureUnit() = default;

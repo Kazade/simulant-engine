@@ -78,109 +78,164 @@ TextureUnit* MaterialObject::specular_map() {
 
 const Colour& MaterialObject::specular() const {
     // FIXME: Naughty cast from Vec4& -> Colour&
-    return (const Colour&) property_value(registry_->material_specular_id_)->value<Vec4>();
+    const Colour* ptr = nullptr;
+    bool ok = fetch_property_value(SPECULAR_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 const Colour& MaterialObject::ambient() const {
-    return (const Colour&) property_value(registry_->material_ambient_id_)->value<Vec4>();
+    const Colour* ptr = nullptr;
+    bool ok = fetch_property_value(AMBIENT_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 const Colour& MaterialObject::emission() const {
-    return (const Colour&) property_value(registry_->material_emission_id_)->value<Vec4>();
+    const Colour* ptr = nullptr;
+    bool ok = fetch_property_value(EMISSION_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 const Colour& MaterialObject::diffuse() const {
-    return (const Colour&) property_value(registry_->material_diffuse_id_)->value<Vec4>();
+    const Colour* ptr = nullptr;
+    bool ok = fetch_property_value(DIFFUSE_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 float MaterialObject::shininess() const {
-    return property_value(registry_->material_shininess_id_)->value<float>();
+    const float* ptr = nullptr;
+    bool ok = fetch_property_value(SHININESS_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 bool MaterialObject::is_blending_enabled() const {
-    return (BlendType) property_value(registry_->blend_func_id_)->value<int>() == BLEND_NONE;
+    return blend_func() != BLEND_NONE;
 }
 
 void MaterialObject::set_blend_func(BlendType b) {
-    set_property_value(registry_->blend_func_id_, (int) b);
+    override_property_value(BLEND_FUNC_PROPERTY, (const EnumType&) b);
 }
 
 BlendType MaterialObject::blend_func() const {
-    return (BlendType) property_value(registry_->blend_func_id_)->value<int>();
+    const BlendType* ptr = nullptr;
+    bool ok = fetch_property_value(BLEND_FUNC_PROPERTY, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_depth_write_enabled(bool v) {
-    set_property_value(registry_->depth_write_enabled_id_, v);
+    override_property_value(DEPTH_WRITE_ENABLED_PROPERTY, v);
 }
 
 bool MaterialObject::is_depth_write_enabled() const {
-    return property_value(registry_->depth_write_enabled_id_)->value<bool>();
+    const bool* ptr = nullptr;
+    bool ok = fetch_property_value(DEPTH_WRITE_ENABLED_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_cull_mode(CullMode mode) {
-    set_property_value(registry_->cull_mode_id_, (int) mode);
+    override_property_value(CULL_MODE_PROPERTY, (const EnumType&) mode);
 }
 
 CullMode MaterialObject::cull_mode() const {
-    return (CullMode) property_value(registry_->cull_mode_id_)->value<int>();
+    const CullMode* ptr = nullptr;
+    bool ok = fetch_property_value(CULL_MODE_PROPERTY, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_depth_test_enabled(bool v) {
-    set_property_value(registry_->depth_test_enabled_id_, v);
+    override_property_value(DEPTH_TEST_ENABLED_PROPERTY, v);
 }
 
 bool MaterialObject::is_depth_test_enabled() const {
-    return property_value(registry_->depth_test_enabled_id_)->value<bool>();
+    const bool* ptr = nullptr;
+    bool ok = fetch_property_value(DEPTH_TEST_ENABLED_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_lighting_enabled(bool v) {
-    set_property_value(registry_->lighting_enabled_id_, v);
+    override_property_value(LIGHTING_ENABLED_PROPERTY, v);
 }
 
 bool MaterialObject::is_lighting_enabled() const {
-    return property_value(registry_->lighting_enabled_id_)->value<bool>();
+    const bool* ptr = nullptr;
+    bool ok = fetch_property_value(LIGHTING_ENABLED_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_texturing_enabled(bool v) {
-    set_property_value(registry_->texturing_enabled_id_, v);
+    override_property_value(TEXTURING_ENABLED_PROPERTY, v);
 }
 
 bool MaterialObject::is_texturing_enabled() const {
-    return property_value(registry_->texturing_enabled_id_)->value<bool>();
+    const bool* ptr = nullptr;
+    bool ok = fetch_property_value(TEXTURING_ENABLED_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 float MaterialObject::point_size() const {
-    float f;
-    fetch_property_value(POINT_SIZE_PROPERTY, &f);
-    return f;
+    const float* ptr = nullptr;
+    bool ok = fetch_property_value(POINT_SIZE_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_polygon_mode(PolygonMode mode) {
-    set_property_value(registry_->polygon_mode_id_, (int) mode);
+    override_property_value(POLYGON_MODE_PROPERTY, (const EnumType&) mode);
 }
 
 PolygonMode MaterialObject::polygon_mode() const {
-    return (PolygonMode) property_value(registry_->polygon_mode_id_)->value<int>();
+    const PolygonMode* ptr = nullptr;
+    bool ok = fetch_property_value(POLYGON_MODE_PROPERTY, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_shade_model(ShadeModel model) {
-    set_property_value(registry_->shade_model_id_, (int) model);
+    override_property_value(SHADE_MODEL_PROPERTY, (const EnumType&) model);
 }
 
 ShadeModel MaterialObject::shade_model() const {
-    return (ShadeModel) property_value(registry_->shade_model_id_)->value<int>();
+    const ShadeModel* ptr = nullptr;
+    bool ok = fetch_property_value(SHADE_MODEL_PROPERTY, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 ColourMaterial MaterialObject::colour_material() const {
-    return (ColourMaterial) property_value(registry_->colour_material_id_)->value<int>();
+    const ColourMaterial* ptr = nullptr;
+    bool ok = fetch_property_value(COLOUR_MATERIAL_PROPERTY, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 void MaterialObject::set_colour_material(ColourMaterial cm) {
-    set_property_value(registry_->colour_material_id_, (int) cm);
+    override_property_value(COLOUR_MATERIAL_PROPERTY, (const EnumType&) cm);
 }
 
-const MaterialPropertyRegistry* MaterialObject::registry() const {
-    return registry_;
-}
 
 }
