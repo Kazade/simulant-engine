@@ -84,8 +84,7 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
     _S_UNUSED(next);
 }
 
-_S_FORCE_INLINE bool bind_texture(const GLubyte which, const TextureUnit* unit) {
-    auto tex = unit->texture();
+_S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex, const Mat4& mat) {
     auto id = (tex) ? tex->_renderer_specific_id() : 0;
 
     if(!id) {
@@ -103,7 +102,7 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TextureUnit* unit) 
     GLCheck(glBindTexture, GL_TEXTURE_2D, id);
 
     GLCheck(glMatrixMode, GL_TEXTURE);
-    GLCheck(glLoadMatrixf, unit->texture_matrix().data());
+    GLCheck(glLoadMatrixf, mat.data());
 
     return true;
 }
@@ -280,19 +279,19 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     if(pass_->is_texturing_enabled()) {
         uint8_t used_count = 0;
 
-        if(bind_texture(used_count, pass_->diffuse_map())) {
+        if(bind_texture(used_count, pass_->diffuse_map(), pass_->diffuse_map_matrix())) {
             used_count++;
         }
 
-        if(bind_texture(used_count, pass_->light_map())) {
+        if(bind_texture(used_count, pass_->light_map(), pass_->light_map_matrix())) {
             used_count++;
         }
 
-        if(bind_texture(used_count, pass_->normal_map())) {
+        if(bind_texture(used_count, pass_->normal_map(), pass_->normal_map_matrix())) {
             used_count++;
         }
 
-        if(bind_texture(used_count, pass_->specular_map())) {
+        if(bind_texture(used_count, pass_->specular_map(), pass_->specular_map_matrix())) {
             used_count++;
         }
 

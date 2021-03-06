@@ -135,6 +135,17 @@ private:
     void on_texture_unregister(TextureID tex_id, Texture* texture) override {
         GLRenderer::on_texture_unregister(tex_id, texture);
     }
+
+    void on_material_prepare(Material* material) override {
+        /* We make sure the material has the built-in lighting properties etc. */
+        material->override_property_value(LIGHT_POSITION_PROPERTY, Vec4());
+        material->override_property_value(LIGHT_AMBIENT_PROPERTY, Colour());
+        material->override_property_value(LIGHT_DIFFUSE_PROPERTY, Colour());
+        material->override_property_value(LIGHT_SPECULAR_PROPERTY, Colour());
+        material->override_property_value(LIGHT_CONSTANT_ATTENUATION_PROPERTY, 0.0f);
+        material->override_property_value(LIGHT_LINEAR_ATTENUATION_PROPERTY, 0.0f);
+        material->override_property_value(LIGHT_QUADRATIC_ATTENUATION_PROPERTY, 0.0f);
+    }
 };
 
 }

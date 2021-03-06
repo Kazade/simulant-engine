@@ -184,25 +184,30 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case const_hash(EMISSION_PROPERTY):
         case const_hash(SPECULAR_PROPERTY):
             *type = MATERIAL_PROPERTY_TYPE_VEC4;
+        break;
         case const_hash(SHININESS_PROPERTY):
         case const_hash(POINT_SIZE_PROPERTY):
             *type = MATERIAL_PROPERTY_TYPE_FLOAT;
+        break;
         case const_hash(DEPTH_WRITE_ENABLED_PROPERTY):
         case const_hash(DEPTH_TEST_ENABLED_PROPERTY):
         case const_hash(LIGHTING_ENABLED_PROPERTY):
         case const_hash(TEXTURING_ENABLED_PROPERTY):
             *type = MATERIAL_PROPERTY_TYPE_BOOL;
+        break;
         case const_hash(DIFFUSE_MAP_PROPERTY):
         case const_hash(SPECULAR_MAP_PROPERTY):
         case const_hash(LIGHT_MAP_PROPERTY):
         case const_hash(NORMAL_MAP_PROPERTY):
             *type = MATERIAL_PROPERTY_TYPE_TEXTURE;
+        break;
         case const_hash(BLEND_FUNC_PROPERTY):
         case const_hash(POLYGON_MODE_PROPERTY):
         case const_hash(SHADE_MODEL_PROPERTY):
         case const_hash(COLOUR_MATERIAL_PROPERTY):
         case const_hash(CULL_MODE_PROPERTY):
             *type = MATERIAL_PROPERTY_TYPE_INT;
+        break;
         default:
             return false;
     }

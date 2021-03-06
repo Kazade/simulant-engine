@@ -45,9 +45,14 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
 
 Material::Material(MaterialID id, AssetManager* asset_manager):
     Asset(asset_manager),
-    generic::Identifiable<MaterialID>(id) {
+    generic::Identifiable<MaterialID>(id),
+    renderer_(asset_manager->window->renderer) {
 
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
+
+    /* Some renderers will need to register additional properties etc.
+     * on the material. So this is called on material construction */
+    renderer_->prepare_material(this);
 }
 
 Material::~Material() {
@@ -77,6 +82,22 @@ void Material::update(float dt) {
     _S_UNUSED(dt);
 }
 
+Material &Material::operator=(const Material &rhs) {
+    passes_.clear();
+
+    /* Must set the parent to this material */
+    for(std::size_t i = 0; i < passes_.size(); ++i) {
+        MaterialPass pass;
+        pass = rhs.passes_[i];
+        passes_.push_back(std::move(pass));
+    }
+
+    /* Make sure this material is prepped */
+    renderer_->prepare_material(this);
+
+    return *this;
+}
+
 MaterialPtr Material::new_clone() {
     auto mat = asset_manager().new_material();
     *mat = *this;
@@ -102,11 +123,5 @@ const Material *MaterialPass::material() const {
     return dynamic_cast<const Material*>(parent_material_object());
 }
 
-void MaterialPass::copy_from(const MaterialPass &rhs, Material *new_parent) {
-    parent_ = new_parent;
-    iteration_type_ = rhs.iteration_type_;
-    max_iterations_ = rhs.max_iterations_;
-    program_ = rhs.program_;
-}
 
 }

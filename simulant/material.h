@@ -34,6 +34,7 @@
 
 namespace smlt {
 
+class Renderer;
 
 enum IterationType {
     ITERATION_TYPE_ONCE,
@@ -125,6 +126,7 @@ public:
     void update(float dt);
 
 private:
+    Renderer* renderer_ = nullptr;
     std::vector<MaterialPass> passes_;
 
 protected:
@@ -140,18 +142,7 @@ protected:
 
     Material(const Material& rhs) = delete;
 
-    Material& operator=(const Material& rhs) {
-        passes_.clear();
-
-        /* Must set the parent to this material */
-        for(std::size_t i = 0; i < passes_.size(); ++i) {
-            MaterialPass pass;
-            pass = rhs.passes_[i];
-            passes_.push_back(std::move(pass));
-        }
-
-        return *this;
-    }
+    Material& operator=(const Material& rhs);
 
     MaterialPtr new_clone();
 };

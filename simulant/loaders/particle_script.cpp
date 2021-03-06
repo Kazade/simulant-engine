@@ -161,16 +161,17 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                         mat->override_property_value(property_name.c_str(), (js[key].get<jsonic::Number>()));
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
                         if(property_name == BLEND_FUNC_PROPERTY) {
-                            mat->MaterialObject::set_property_value(property_id, (int) blend_type_from_name(js[key].get<jsonic::String>()));
+                            mat->set_blend_func(blend_type_from_name(js[key].get<jsonic::String>().c_str()));
                         } else {
-                            mat->MaterialObject::set_property_value(property_id, (int) js[key].get<jsonic::Number>());
+                            // FIXME: There are a load of missing enums here!
+                            mat->override_property_value(property_name.c_str(), (int) js[key].get<jsonic::Number>());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
                         auto tex = ps->asset_manager().new_texture_from_file(js[key].get<jsonic::String>());
-                        mat->set_property_value(property_id, tex);
+                        mat->override_property_value(property_name.c_str(), tex);
                         if(remove) {
                             // Remove the path if necessary
                             vfs->remove_search_path(dirname);

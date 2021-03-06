@@ -93,22 +93,14 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
 }
 
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light) {
-    auto pos_property = pass->property_value(LIGHT_POSITION_PROPERTY);
-    auto amb_property = pass->property_value(LIGHT_AMBIENT_PROPERTY);
-    auto diff_property = pass->property_value(LIGHT_DIFFUSE_PROPERTY);
-    auto spec_property = pass->property_value(LIGHT_SPECULAR_PROPERTY);
-    auto ca_property = pass->property_value(LIGHT_CONSTANT_ATTENUATION_PROPERTY);
-    auto la_property = pass->property_value(LIGHT_LINEAR_ATTENUATION_PROPERTY);
-    auto qa_property = pass->property_value(LIGHT_QUADRATIC_ATTENUATION_PROPERTY);
-
-    auto pos_loc = program->locate_uniform(pos_property->shader_variable(), true);
+    auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
     if(pos_loc > -1) {
         auto pos = (light) ? light->absolute_position() : Vec3();
         auto vec = (light) ? Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
         program->set_uniform_vec4(pos_loc, vec);
     }
 
-    auto amb_loc = program->locate_uniform(amb_property->shader_variable(), true);
+    auto amb_loc = program->locate_uniform(LIGHT_AMBIENT_PROPERTY, true);
     if(amb_loc > -1) {
         program->set_uniform_colour(
             amb_loc,
@@ -116,31 +108,31 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
         );
     }
 
-    auto diff_loc = program->locate_uniform(diff_property->shader_variable(), true);
+    auto diff_loc = program->locate_uniform(LIGHT_DIFFUSE_PROPERTY, true);
     if(diff_loc > -1) {
         auto diffuse = (light) ? light->diffuse() : smlt::Colour::NONE;
         program->set_uniform_colour(diff_loc, diffuse);
     }
 
-    auto spec_loc = program->locate_uniform(spec_property->shader_variable(), true);
+    auto spec_loc = program->locate_uniform(LIGHT_SPECULAR_PROPERTY, true);
     if(spec_loc > -1) {
         auto specular = (light) ? light->specular() : smlt::Colour::NONE;
         program->set_uniform_colour(spec_loc, specular);
     }
 
-    auto ca_loc = program->locate_uniform(ca_property->shader_variable(), true);
+    auto ca_loc = program->locate_uniform(LIGHT_CONSTANT_ATTENUATION_PROPERTY, true);
     if(ca_loc > -1) {
         auto att = (light) ? light->constant_attenuation() : 0;
         program->set_uniform_float(ca_loc, att);
     }
 
-    auto la_loc = program->locate_uniform(la_property->shader_variable(), true);
+    auto la_loc = program->locate_uniform(LIGHT_LINEAR_ATTENUATION_PROPERTY, true);
     if(la_loc > -1) {
         auto att = (light) ? light->linear_attenuation() : 0;
         program->set_uniform_float(la_loc, att);
     }
 
-    auto qa_loc = program->locate_uniform(qa_property->shader_variable(), true);
+    auto qa_loc = program->locate_uniform(LIGHT_QUADRATIC_ATTENUATION_PROPERTY, true);
     if(qa_loc > -1) {
         auto att = (light) ? light->quadratic_attenuation() : 0;
         program->set_uniform_float(qa_loc, att);
@@ -149,60 +141,51 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
 
 void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram* program) {
     auto mat = pass->material();
-    auto amb_property = pass->property_value(mat->material_ambient_id_);
-    auto diff_property = pass->property_value(mat->material_diffuse_id_);
-    auto spec_property = pass->property_value(mat->material_specular_id_);
-    auto shin_property = pass->property_value(mat->material_shininess_id_);
-    auto ps_property = pass->property_value(mat->point_size_id_);
 
-    auto amb_loc = program->locate_uniform(amb_property->shader_variable(), true);
+    auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY, true);
     if(amb_loc > -1) {
-        auto varname = amb_property->shader_variable();
-        program->set_uniform_colour(varname, pass->ambient());
+        program->set_uniform_colour(AMBIENT_PROPERTY, pass->ambient());
     }
 
-    auto diff_loc = program->locate_uniform(diff_property->shader_variable(), true);
+    auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY, true);
     if(diff_loc > -1) {
-        auto varname = diff_property->shader_variable();
-        program->set_uniform_colour(varname, pass->diffuse());
+        program->set_uniform_colour(DIFFUSE_PROPERTY, pass->diffuse());
     }
 
-    auto spec_loc = program->locate_uniform(spec_property->shader_variable(), true);
+    auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY, true);
     if(spec_loc > -1) {
-        auto varname = spec_property->shader_variable();
-        program->set_uniform_colour(varname, pass->specular());
+        program->set_uniform_colour(SPECULAR_PROPERTY, pass->specular());
     }
 
-    auto shin_loc = program->locate_uniform(shin_property->shader_variable(), true);
+    auto shin_loc = program->locate_uniform(SHININESS_PROPERTY, true);
     if(shin_loc > -1) {
-        auto varname = shin_property->shader_variable();
-        program->set_uniform_float(varname, pass->shininess());
+        program->set_uniform_float(SHININESS_PROPERTY, pass->shininess());
     }
 
-    auto ps_loc = program->locate_uniform(ps_property->shader_variable(), true);
+    auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY, true);
     if(ps_loc > -1) {
-        auto varname = ps_property->shader_variable();
-        program->set_uniform_float(varname, pass->point_size());
+        program->set_uniform_float(POINT_SIZE_PROPERTY, pass->point_size());
     }
 
     /* Each texture property has a counterpart matrix, this passes those down if they exist */
-    auto texture_props = pass->registry()->texture_properties();
+    auto texture_props = mat->property_names_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE);
     uint8_t texture_unit = 0;
     for(auto& tex_prop: texture_props) {
-        auto prop = pass->property_value(tex_prop->id);
-
-        auto tloc = program->locate_uniform(prop->shader_variable(), true);
+        auto tloc = program->locate_uniform(tex_prop, true);
         if(tloc > -1) {
             // This texture is being used
             program->set_uniform_int(tloc, texture_unit++);
         }
 
-        auto shader_name = prop->shader_variable();
+        auto shader_name = tex_prop;
         shader_name += "_matrix";
 
         auto loc = program->locate_uniform(shader_name, true);
         if(loc > -1) {
-            program->set_uniform_mat4x4(loc, prop->value<TextureUnit>().texture_matrix());
+            const Mat4* mat;
+            if(pass->fetch_property_value(shader_name, mat)) {
+                program->set_uniform_mat4x4(loc, *mat);
+            }
         }
     }
 }
@@ -432,8 +415,11 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     /* First we bind any used texture properties to their associated variables */
     uint8_t texture_unit = 0;
-    for(auto& defined_property: pass_->material()->texture_properties()) {
-        auto property_value = pass_->property_value(defined_property->id);
+    for(auto& defined_property: pass_->property_names_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE)) {
+        const TexturePtr* tex_prop;
+        pass_->fetch_property_value(defined_property, tex_prop);
+
+        const TexturePtr tex = *tex_prop;
 
         // Do we use this texture property? Then bind the texture appropriately
         // FIXME: Is this right? The GL1 renderer uses the existence of a texture_id
@@ -441,11 +427,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         // and also whether there's a texture ID. The question is, should the material have some other
         // type of existence check for texture properties? Is checking the texture_id right for all situations?
         // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
-        auto loc = program_->locate_uniform(property_value->shader_variable(), true);
+        auto loc = program_->locate_uniform(defined_property, true);
         if(loc > -1 && (texture_unit + 1u) < _S_GL_MAX_TEXTURE_UNITS) {
-            const TextureUnit& unit = property_value->value<TextureUnit>();
-
-            auto tex = unit.texture();
             GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
             GLCheck(glBindTexture, GL_TEXTURE_2D, (tex) ? tex->_renderer_specific_id() : 0);
             texture_unit++;
@@ -525,8 +508,6 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glShadeModel, GL_FLAT);
         }
     }
-
-
 
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);

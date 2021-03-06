@@ -46,5 +46,10 @@ void Renderer::prepare_texture(Texture* tex) {
     on_texture_prepare(tex);
 }
 
+void Renderer::prepare_material(Material* material) {
+    assert(material);
+    on_material_prepare(material);
+}
+
 
 }
