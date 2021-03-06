@@ -17,24 +17,7 @@ public:
         parent_(nullptr) {}
 
     MaterialObject(MaterialObject* parent);
-
     virtual ~MaterialObject();
-
-    void set_property_value(const MaterialPropertyID& id, const bool& value);
-    void set_property_value(const MaterialPropertyID& id, const int& value);
-    void set_property_value(const MaterialPropertyID& id, const float& value);
-    void set_property_value(const MaterialPropertyID& id, const Vec2& value);
-    void set_property_value(const MaterialPropertyID& id, const Vec3& value);
-    void set_property_value(const MaterialPropertyID& id, const Vec4& value);
-    void set_property_value(const MaterialPropertyID& id, const Mat3& value);
-    void set_property_value(const MaterialPropertyID& id, const TextureUnit& value);
-    void set_property_value(const MaterialPropertyID& id, const TexturePtr& texture);
-
-    const MaterialPropertyValue* property_value(MaterialPropertyID id) const;
-    MaterialPropertyValue* property_value(MaterialPropertyID id);
-
-    /* FIXME: Remove, this is slow */
-    const MaterialPropertyValue* property_value(const std::string& name) const;
 
     /* Built-in properties */
     void set_specular(const Colour& colour);
@@ -45,15 +28,20 @@ public:
     void set_diffuse_map(TexturePtr texture);
     void set_light_map(TexturePtr texture);
 
-    const TextureUnit* diffuse_map() const;
-    const TextureUnit* light_map() const;
-    const TextureUnit* normal_map() const;
-    const TextureUnit* specular_map() const;
+    const Mat4& diffuse_map_matrix() const;
+    const Mat4& light_map_matrix() const;
+    const Mat4& normal_map_matrix() const;
+    const Mat4& specular_map_matrix() const;
 
-    TextureUnit* diffuse_map();
-    TextureUnit* light_map();
-    TextureUnit* normal_map();
-    TextureUnit* specular_map();
+    void set_diffuse_map_matrix(const Mat4& mat);
+    void set_light_map_matrix(const Mat4& mat);
+    void set_normal_map_matrix(const Mat4& mat);
+    void set_specular_map_matrix(const Mat4& mat);
+
+    const TexturePtr& diffuse_map() const;
+    const TexturePtr& light_map() const;
+    const TexturePtr& normal_map() const;
+    const TexturePtr& specular_map() const;
 
     const Colour& specular() const;
     const Colour& ambient() const;

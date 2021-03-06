@@ -1,8 +1,14 @@
 #include "material_property_overrider.h"
+#include "../../../logging.h"
 
 namespace smlt {
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const bool& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     bool_properties_[hsh] = value;
@@ -10,6 +16,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const float& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     float_properties_[hsh] = value;
@@ -17,6 +28,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const int32_t& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     int_properties_[hsh] = value;
@@ -24,6 +40,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Vec4& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     vec4_properties_[hsh] = value;
@@ -31,6 +52,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Vec3& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     vec3_properties_[hsh] = value;
@@ -38,6 +64,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Vec2& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     vec2_properties_[hsh] = value;
@@ -45,6 +76,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Mat3& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     mat3_properties_[hsh] = value;
@@ -52,6 +88,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Mat4& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     mat4_properties_[hsh] = value;
@@ -59,6 +100,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const TexturePtr& value) {
+    if(!check_existance(name)) {
+        S_WARN("Ignoring unknown property override for {0}", name);
+        return;
+    }
+
     auto hsh = const_hash(name);
     clear_override(hsh);
     texture_properties_[hsh] = value;
@@ -119,6 +165,18 @@ bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Mat
     return fetcher(parent_, mat4_properties_, name, out);
 }
 
+bool MaterialPropertyOverrider::check_existance(const char* property_name) const {
+    if(is_core_property(property_name)) {
+        return true;
+    }
+
+    if(parent_) {
+        return parent_->check_existance(property_name);
+    } else {
+        return all_overrides_.count(const_hash(property_name)) > 0;
+    }
+}
+
 bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
     auto it = all_overrides_.find(hsh);
     if(it != all_overrides_.end()) {
@@ -159,5 +217,26 @@ bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
     }
 
     return false;
+}
+
+bool MaterialPropertyOverrider::property_type(const char* property_name, MaterialPropertyType* type) const {
+    auto hsh = const_hash(property_name);
+
+    if(parent_) {
+        return parent_->property_type(property_name, type);
+    }
+
+    if(is_core_property(hsh)) {
+        return core_property_type(hsh, type);
+    } else {
+        auto it = all_overrides_.find(hsh);
+        if(it != all_overrides_.end()) {
+            *type = it->second;
+        } else {
+            return false;
+        }
+    }
+
+    return true;
 }
 }

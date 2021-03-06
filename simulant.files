@@ -436,6 +436,7 @@ simulant/animation.cpp
 simulant/animation.h
 simulant/application.cpp
 simulant/application.h
+simulant/assets/materials/constants.cpp
 simulant/assets/materials/core/core_material.cpp
 simulant/assets/materials/core/core_material.h
 simulant/assets/materials/core/material_property_overrider.cpp

@@ -44,36 +44,36 @@ void MaterialObject::set_light_map(TexturePtr texture) {
     override_property_value(LIGHT_MAP_PROPERTY, texture);
 }
 
-const TextureUnit* MaterialObject::diffuse_map() const {
-    return nullptr;
+const TexturePtr& MaterialObject::diffuse_map() const {
+    const TexturePtr* ptr = nullptr;
+    bool ok = fetch_property_value(DIFFUSE_MAP_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
-const TextureUnit* MaterialObject::light_map() const {
-    return nullptr;
+const TexturePtr& MaterialObject::light_map() const {
+    const TexturePtr* ptr = nullptr;
+    bool ok = fetch_property_value(LIGHT_MAP_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
-const TextureUnit* MaterialObject::normal_map() const {
-    return nullptr;
+const TexturePtr& MaterialObject::normal_map() const {
+    const TexturePtr* ptr = nullptr;
+    bool ok = fetch_property_value(NORMAL_MAP_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
-const TextureUnit* MaterialObject::specular_map() const {
-    return nullptr;
-}
-
-TextureUnit* MaterialObject::diffuse_map() {
-    return nullptr;
-}
-
-TextureUnit* MaterialObject::light_map() {
-    return nullptr;
-}
-
-TextureUnit* MaterialObject::normal_map() {
-    return nullptr;
-}
-
-TextureUnit* MaterialObject::specular_map() {
-    return nullptr;
+const TexturePtr& MaterialObject::specular_map() const {
+    const TexturePtr* ptr = nullptr;
+    bool ok = fetch_property_value(SPECULAR_MAP_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
 }
 
 const Colour& MaterialObject::specular() const {

@@ -13,17 +13,6 @@ namespace smlt {
  * 2. Adding additional property values (e.g. shader uniforms)
  */
 
-enum MaterialPropertyType {
-    MATERIAL_PROPERTY_TYPE_BOOL,
-    MATERIAL_PROPERTY_TYPE_INT,
-    MATERIAL_PROPERTY_TYPE_FLOAT,
-    MATERIAL_PROPERTY_TYPE_VEC2,
-    MATERIAL_PROPERTY_TYPE_VEC3,
-    MATERIAL_PROPERTY_TYPE_VEC4,
-    MATERIAL_PROPERTY_TYPE_MAT3,
-    MATERIAL_PROPERTY_TYPE_MAT4,
-    MATERIAL_PROPERTY_TYPE_TEXTURE
-};
 
 class MaterialPropertyOverrider {
 public:
@@ -49,14 +38,19 @@ public:
     bool fetch_property_value(const char* name, const Vec4*& out) const;
     bool fetch_property_value(const char* name, const Mat3*& out) const;
     bool fetch_property_value(const char* name, const Mat4*& out) const;
+    bool fetch_property_value(const char* name, const TexturePtr*& out) const;
 
     bool clear_override(const char* name) {
         return clear_override(const_hash(name));
     }
 
-private:
-    bool clear_override(const unsigned hsh);
+    bool property_type(const char* property_name, MaterialPropertyType* type) const;
 
+private:
+    /* If we have a parent, then we can't override unless the property has
+     * been defined on the parent - or it's a core property */
+    bool check_existance(const char* property_name) const;
+    bool clear_override(const unsigned hsh);
 
     MaterialPropertyOverrider* parent_ = nullptr;
 

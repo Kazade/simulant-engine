@@ -41,74 +41,37 @@ MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode
 
 }
 
-template<MaterialPropertyType MT>
+template<MaterialPropertyType MT, typename T>
 static void define_property(Material& material, jsonic::Node& prop) {
     std::string name = prop["name"].get<jsonic::String>(); // FIXME: Sanitize!
-
-    typedef typename TypeForMaterialType<MT>::type T;
 
     if(!prop["default"].is_none()) {
         auto def = (T) jsonic::auto_cast<T>(prop["default"]);
 
-        material.register_property(
-            MT,
-            name,
-            def
-        );
+        material.override_property_value(name, def);
     } else {
-        material.register_property(
-            MT,
-            name,
-            T()
-        );
+        material.override_property_value(name, T());
     }
 }
 
-template<>
-void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(Material& material, jsonic::Node& prop) {
-    using namespace jsonic;
-    std::string name = prop["name"].get<String>(); // FIXME: Sanitize!
-
-    if(prop.has_key("default") && !prop["default"].is_none()) {
-        std::string def = prop["default"].get<String>();
-
-        auto texture = material.asset_manager().new_texture_from_file(def);
-        material.register_property(
-            MATERIAL_PROPERTY_TYPE_TEXTURE,
-            name,
-            TextureUnit(texture)
-        );
-    } else {
-        material.register_property(
-            MATERIAL_PROPERTY_TYPE_TEXTURE,
-            name,
-            TextureUnit()
-        );
-    }
-}
 
 void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& json) {
     if(json.has_key("property_values")) {
         for(auto& key: json["property_values"].keys()) {
             auto& value = json["property_values"][key];
 
-            auto prop_id = holder.registry()->find_property_id(key);
-            auto property = holder.registry()->property(prop_id);
-
-            if(!property) {
+            MaterialPropertyType property_type;
+            if(!mat.property_type(key.c_str(), &property_type)) {
                 S_ERROR("Unrecognized property: {0}", key);
                 continue;
             }
-
-            auto property_type = property->type;
-
             if(property_type == MATERIAL_PROPERTY_TYPE_BOOL) {
                 if(!value.is_bool()) {
                     S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
-                holder.set_property_value(prop_id, (bool) value.get<jsonic::Boolean>());
+                holder.override_property_value(key.c_str(), (bool) value.get<jsonic::Boolean>());
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
                 if(!value.is_string()) {
                     S_ERROR("Invalid property value for: {0}", key);
@@ -126,7 +89,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 float y = parts[1].to_float();
                 float z = parts[2].to_float();
 
-                holder.set_property_value(prop_id, Vec3(x, y, z));
+                holder.override_property_value(key.c_str(), Vec3(x, y, z));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC4) {
                 if(!value.is_string()) {
                     S_ERROR("Invalid property value for: {0}", key);
@@ -145,7 +108,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 float z = parts[2].to_float();
                 float w = parts[3].to_float();
 
-                holder.set_property_value(prop_id, Vec4(x, y, z, w));
+                holder.override_property_value(key.c_str(), Vec4(x, y, z, w));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
                 if(!value.is_string()) {
                     S_ERROR("Invalid property value for: {0}", key);
@@ -153,43 +116,27 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 }
 
                 if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                    holder.set_property_value(prop_id, value.get<jsonic::Number>());
+                    holder.override_property_value(key.c_str(), value.get<jsonic::Number>());
                 } else {
                     /* Special cases for enums - need a better way to handle this */
                     if(key == BLEND_FUNC_PROPERTY) {
                         std::string v = value.get<jsonic::String>();
-                        BlendType type = blend_type_from_name(v);
-                        holder.set_property_value(prop_id, (int) type);
+                        BlendType type = blend_type_from_name(v.c_str());
+                        holder.set_blend_func(type);
                     } else if(key == SHADE_MODEL_PROPERTY) {
                         std::string v = value.get<jsonic::String>();
-                        if(v == "smooth") {
-                            holder.set_shade_model(SHADE_MODEL_SMOOTH);
-                        } else if(v == "front_face") {
-                            holder.set_shade_model(SHADE_MODEL_FLAT);
-                        } else {
-                            S_WARN("Unrecognised shade model value {0}", v);
-                        }
+                        holder.set_shade_model(shade_model_from_name(v.c_str()));
                     } else if(key == CULL_MODE_PROPERTY) {
                         std::string v = value.get<jsonic::String>();
-                        if(v == "back_face") {
-                            holder.set_cull_mode(CULL_MODE_BACK_FACE);
-                        } else if(v == "front_face") {
-                            holder.set_cull_mode(CULL_MODE_FRONT_FACE);
-                        } else if(v == "front_and_back_face") {
-                            holder.set_cull_mode(CULL_MODE_FRONT_AND_BACK_FACE);
-                        } else if(v == "none") {
-                            holder.set_cull_mode(CULL_MODE_NONE);
-                        } else {
-                            S_WARN("Unrecognised cull value {0}", v);
-                        }
+                        holder.set_cull_mode(cull_mode_from_name(v.c_str()));
                     } else {
-                        holder.set_property_value(prop_id, (int) value.get<jsonic::Number>());
+                        holder.override_property_value(key.c_str(), (int) value.get<jsonic::Number>());
                     }
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value.get<jsonic::String>();
                 auto tex = mat.asset_manager().new_texture_from_file(path);
-                holder.set_property_value(prop_id, tex);
+                holder.override_property_value(key.c_str(), tex);
             } else {
                 S_ERROR("Unhandled property type");
             }
@@ -241,16 +188,16 @@ void MaterialScript::generate(Material& material) {
 
             switch(prop_type) {
                 case MATERIAL_PROPERTY_TYPE_BOOL: {
-                    define_property<MATERIAL_PROPERTY_TYPE_BOOL>(material, prop);
+                    define_property<MATERIAL_PROPERTY_TYPE_BOOL, bool>(material, prop);
                 } break;
                 case MATERIAL_PROPERTY_TYPE_INT: {
-                    define_property<MATERIAL_PROPERTY_TYPE_INT>(material, prop);
+                    define_property<MATERIAL_PROPERTY_TYPE_INT, int32_t>(material, prop);
                 } break;
                 case MATERIAL_PROPERTY_TYPE_FLOAT: {
-                    define_property<MATERIAL_PROPERTY_TYPE_FLOAT>(material, prop);
+                    define_property<MATERIAL_PROPERTY_TYPE_FLOAT, float>(material, prop);
                 } break;
                 case MATERIAL_PROPERTY_TYPE_TEXTURE: {
-                    define_property<MATERIAL_PROPERTY_TYPE_TEXTURE>(material, prop);
+                    define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(material, prop);
                 } break;
             default:
                 S_ERROR("Unhandled property type: {0}", kind);

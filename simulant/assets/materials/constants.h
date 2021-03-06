@@ -6,41 +6,56 @@
 
 namespace smlt {
 
-typedef int16_t MaterialPropertyID;
-
-/* Value type, if the type is texture */
-struct TextureUnit {
-    TextureUnit() = default;
-    TextureUnit(const TextureUnit& rhs):
-        texture_matrix_(rhs.texture_matrix_),
-        texture_(rhs.texture_),
-        texture_id_(rhs.texture_id_) {}
-
-    TextureUnit(const TexturePtr& texture);
-
-    Mat4& texture_matrix() {
-        return *texture_matrix_;
-    }
-
-    const Mat4& texture_matrix() const {
-        return *texture_matrix_;
-    }
-
-    void scroll_x(float amount);
-    void scroll_y(float amount);
-
-    const TextureID& texture_id() const;
-    const TexturePtr texture() const {return texture_;}
-
-private:
-    TextureUnit& operator=(const TextureUnit&) = delete;
-
-    std::shared_ptr<Mat4> texture_matrix_ = std::make_shared<Mat4>();
-
-    /* Set when assigned as a material property to maintain a refcount */
-    std::shared_ptr<Texture> texture_;
-    TextureID texture_id_;
+enum PolygonMode {
+    POLYGON_MODE_FILL,
+    POLYGON_MODE_LINE,
+    POLYGON_MODE_POINT
 };
+
+enum ShadeModel {
+    SHADE_MODEL_SMOOTH,
+    SHADE_MODEL_FLAT
+};
+
+enum ColourMaterial {
+    COLOUR_MATERIAL_NONE,
+    COLOUR_MATERIAL_AMBIENT,
+    COLOUR_MATERIAL_DIFFUSE,
+    COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE
+};
+
+enum CullMode {
+    CULL_MODE_NONE,
+    CULL_MODE_BACK_FACE,
+    CULL_MODE_FRONT_FACE,
+    CULL_MODE_FRONT_AND_BACK_FACE
+};
+
+enum BlendType {
+    BLEND_NONE,
+    BLEND_ADD,
+    BLEND_MODULATE,
+    BLEND_COLOUR,
+    BLEND_ALPHA,
+    BLEND_ONE_ONE_MINUS_ALPHA
+};
+
+enum DepthFunc {
+    DEPTH_FUNC_NEVER,
+    DEPTH_FUNC_LESS,
+    DEPTH_FUNC_LEQUAL,
+    DEPTH_FUNC_EQUAL,
+    DEPTH_FUNC_GEQUAL,
+    DEPTH_FUNC_GREATER,
+    DEPTH_FUNC_ALWAYS
+};
+
+PolygonMode polygon_mode_from_name(const char* name);
+ShadeModel shade_model_from_name(const char* name);
+ColourMaterial colour_material_from_name(const char* name);
+CullMode cull_mode_from_name(const char* name);
+BlendType blend_type_from_name(const char* name);
+DepthFunc depth_func_from_name(const char* name);
 
 constexpr const char* const DIFFUSE_PROPERTY = "s_material_diffuse";
 constexpr const char* const AMBIENT_PROPERTY = "s_material_ambient";

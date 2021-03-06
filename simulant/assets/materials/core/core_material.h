@@ -5,6 +5,19 @@
 namespace smlt {
 
 typedef int32_t EnumType;
+typedef uint32_t MaterialPropertyNameHash;
+
+enum MaterialPropertyType {
+    MATERIAL_PROPERTY_TYPE_BOOL,
+    MATERIAL_PROPERTY_TYPE_INT,
+    MATERIAL_PROPERTY_TYPE_FLOAT,
+    MATERIAL_PROPERTY_TYPE_VEC2,
+    MATERIAL_PROPERTY_TYPE_VEC3,
+    MATERIAL_PROPERTY_TYPE_VEC4,
+    MATERIAL_PROPERTY_TYPE_MAT3,
+    MATERIAL_PROPERTY_TYPE_MAT4,
+    MATERIAL_PROPERTY_TYPE_TEXTURE
+};
 
 struct CoreMaterial {
     const Colour diffuse = Colour(1, 1, 1, 1);
@@ -48,6 +61,10 @@ unsigned constexpr const_hash(char const *input) {
 }
 
 bool is_core_property(const char* name);
+bool is_core_property(MaterialPropertyNameHash hsh);
+
+bool core_property_type(const char* name, MaterialPropertyType* type);
+bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type);
 
 bool core_material_property_value(const char* name, const Colour*& out);
 bool core_material_property_value(const char* name, const float *&out);

@@ -153,15 +153,12 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             if(key.substr(0, MATERIAL_PROPERTY_PREFIX.length()) == MATERIAL_PROPERTY_PREFIX) {
                 auto property_name = key.substr(MATERIAL_PROPERTY_PREFIX.length());
 
-                auto property_id = mat->find_property_id(property_name);
-                auto property = mat->property(property_id);
-
-                if(property) {
-                    auto type = property->type;
+                MaterialPropertyType type;
+                if(mat->property_type(property_name.c_str(), &type)) {
                     if(type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                        mat->MaterialObject::set_property_value(property_id, (bool) js[key].get<jsonic::Boolean>());
+                        mat->override_property_value(property_name.c_str(), (bool) js[key].get<jsonic::Boolean>());
                     } else if(type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                        mat->MaterialObject::set_property_value(property_id, js[key].get<jsonic::Number>());
+                        mat->override_property_value(property_name.c_str(), (js[key].get<jsonic::Number>()));
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
                         if(property_name == BLEND_FUNC_PROPERTY) {
                             mat->MaterialObject::set_property_value(property_id, (int) blend_type_from_name(js[key].get<jsonic::String>()));
@@ -183,6 +180,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                             "Unhandled material property type {0}, please report.", type
                         );
                     }
+                } else {
+                    S_ERROR("Unrecognised material property: {0}", property_name);
                 }
             }
         }
