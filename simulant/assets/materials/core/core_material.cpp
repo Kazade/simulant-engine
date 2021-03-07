@@ -202,6 +202,10 @@ bool is_core_property(MaterialPropertyNameHash hsh) {
         case const_hash(SPECULAR_MAP_PROPERTY):
         case const_hash(LIGHT_MAP_PROPERTY):
         case const_hash(NORMAL_MAP_PROPERTY):
+        case const_hash(DIFFUSE_MAP_MATRIX_PROPERTY):
+        case const_hash(SPECULAR_MAP_MATRIX_PROPERTY):
+        case const_hash(LIGHT_MAP_MATRIX_PROPERTY):
+        case const_hash(NORMAL_MAP_MATRIX_PROPERTY):
         case const_hash(BLEND_FUNC_PROPERTY):
         case const_hash(POLYGON_MODE_PROPERTY):
         case const_hash(SHADE_MODEL_PROPERTY):
@@ -245,6 +249,12 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case const_hash(LIGHT_MAP_PROPERTY):
         case const_hash(NORMAL_MAP_PROPERTY):
             *type = MATERIAL_PROPERTY_TYPE_TEXTURE;
+        break;
+        case const_hash(DIFFUSE_MAP_MATRIX_PROPERTY):
+        case const_hash(SPECULAR_MAP_MATRIX_PROPERTY):
+        case const_hash(LIGHT_MAP_MATRIX_PROPERTY):
+        case const_hash(NORMAL_MAP_MATRIX_PROPERTY):
+            *type = MATERIAL_PROPERTY_TYPE_MAT4;
         break;
         case const_hash(BLEND_FUNC_PROPERTY):
         case const_hash(POLYGON_MODE_PROPERTY):

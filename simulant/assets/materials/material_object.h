@@ -14,7 +14,7 @@ public:
     friend class Material;
 
     MaterialObject():
-        parent_(nullptr) {}
+        MaterialPropertyOverrider(nullptr) {}
 
     MaterialObject(MaterialObject* parent);
     virtual ~MaterialObject();
@@ -73,11 +73,9 @@ public:
     void set_colour_material(ColourMaterial cm);
 
     const MaterialObject* parent_material_object() const {
-        return parent_;
+        return dynamic_cast<const MaterialObject*>(this->parent_);
     }
 
-private:
-    MaterialObject* parent_ = nullptr;
 };
 
 }

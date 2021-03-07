@@ -161,10 +161,7 @@ public:
 
         assert_equal(mat->diffuse_map(), texture);
 
-        /* This takes some explanation. Basically the texture unit is copied
-         * across all entries when set. There is 1 pass, plus 1 material so the
-         * use count goes up by 2, not 1 */
-        assert_equal(texture.use_count(), 4);
+        assert_equal(texture.use_count(), 3);
     }
 
     // FIXME: Restore this

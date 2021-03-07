@@ -67,6 +67,10 @@ bool Material::set_pass_count(uint8_t pass_count) {
     }
 
     passes_.resize(pass_count);
+    for(auto& p: passes_) {
+        p.parent_ = this;
+    }
+
     return true;
 }
 
@@ -85,12 +89,16 @@ void Material::update(float dt) {
 }
 
 Material &Material::operator=(const Material &rhs) {
+    MaterialObject::operator=(rhs);
+
+    renderer_ = rhs.renderer_;
     passes_.clear();
 
     /* Must set the parent to this material */
-    for(std::size_t i = 0; i < passes_.size(); ++i) {
+    for(std::size_t i = 0; i < rhs.passes_.size(); ++i) {
         MaterialPass pass;
         pass = rhs.passes_[i];
+        pass.parent_ = this;
         passes_.push_back(std::move(pass));
     }
 
