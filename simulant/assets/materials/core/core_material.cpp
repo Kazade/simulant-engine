@@ -2,8 +2,7 @@
 
 namespace smlt {
 
-bool core_material_property_value(const char* name, const Colour *&out) {
-    auto hsh = const_hash(name);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Colour *&out) {
     switch(hsh) {
         case const_hash(DIFFUSE_PROPERTY):
             out = &core_material().diffuse;
@@ -24,8 +23,12 @@ bool core_material_property_value(const char* name, const Colour *&out) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const bool*& out) {
+bool core_material_property_value(const char* name, const Colour *&out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const bool*& out) {
     switch(hsh) {
         case const_hash(DEPTH_TEST_ENABLED_PROPERTY):
             out = &core_material().depth_test_enabled;
@@ -46,8 +49,12 @@ bool core_material_property_value(const char* name, const bool*& out) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const float*& out) {
+bool core_material_property_value(const char* name, const bool*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const float*& out) {
     switch(hsh) {
         case const_hash(SHININESS_PROPERTY):
             out = &core_material().shininess;
@@ -62,8 +69,12 @@ bool core_material_property_value(const char* name, const float*& out) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const int32_t*& out) {
+bool core_material_property_value(const char* name, const float*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const int32_t*& out) {
     switch(hsh) {
         case const_hash(BLEND_FUNC_PROPERTY):
             out = &core_material().blend_func;
@@ -90,8 +101,12 @@ bool core_material_property_value(const char* name, const int32_t*& out) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const Vec2*&) {
+bool core_material_property_value(const char* name, const int32_t*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Vec2*&) {
     switch(hsh) {
         default:
         return false;
@@ -100,8 +115,12 @@ bool core_material_property_value(const char* name, const Vec2*&) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const Vec3*&) {
+bool core_material_property_value(const char* name, const Vec2*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Vec3*&) {
     switch(hsh) {
         default:
         return false;
@@ -110,8 +129,12 @@ bool core_material_property_value(const char* name, const Vec3*&) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const Vec4*& out) {
+bool core_material_property_value(const char* name, const Vec3*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) {
     switch(hsh) {
         case const_hash(DIFFUSE_PROPERTY):
             out = (Vec4*) &core_material().diffuse;
@@ -132,8 +155,12 @@ bool core_material_property_value(const char* name, const Vec4*& out) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const Mat3*&) {
+bool core_material_property_value(const char* name, const Vec4*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Mat3*&) {
     switch(hsh) {
         default:
         return false;
@@ -142,8 +169,12 @@ bool core_material_property_value(const char* name, const Mat3*&) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const Mat4*& out) {
+bool core_material_property_value(const char* name, const Mat3*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) {
     switch(hsh) {
         case const_hash(DIFFUSE_MAP_MATRIX_PROPERTY):
             out = &core_material().diffuse_map_matrix;
@@ -164,8 +195,12 @@ bool core_material_property_value(const char* name, const Mat4*& out) {
     return true;
 }
 
-bool core_material_property_value(const char* name, const TexturePtr*& out) {
+bool core_material_property_value(const char* name, const Mat4*& out) {
     auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) {
     switch(hsh) {
         case const_hash(DIFFUSE_MAP_PROPERTY):
             out = &core_material().diffuse_map;
@@ -186,7 +221,12 @@ bool core_material_property_value(const char* name, const TexturePtr*& out) {
     return true;
 }
 
-bool is_core_property(MaterialPropertyNameHash hsh) {
+bool core_material_property_value(const char* name, const TexturePtr*& out) {
+    auto hsh = const_hash(name);
+    return core_material_property_value(hsh, out);
+}
+
+bool is_core_property(const MaterialPropertyNameHash hsh) {
     switch(hsh) {
         case const_hash(DIFFUSE_PROPERTY):
         case const_hash(AMBIENT_PROPERTY):

@@ -66,20 +66,39 @@ typedef std::vector<std::pair<std::string, MaterialPropertyType>> PropertyList;
 const PropertyList core_properties();
 
 bool is_core_property(const char* name);
-bool is_core_property(MaterialPropertyNameHash hsh);
+bool is_core_property(const MaterialPropertyNameHash hsh);
 
 bool core_property_type(const char* name, MaterialPropertyType* type);
 bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type);
 
 bool core_material_property_value(const char* name, const Colour*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Colour*& out);
+
 bool core_material_property_value(const char* name, const float *&out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const float*& out);
+
 bool core_material_property_value(const char* name, const int32_t*&);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const int32_t*& out);
+
 bool core_material_property_value(const char* name, const bool*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const bool*& out);
+
 bool core_material_property_value(const char* name, const Vec2*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Vec2*& out);
+
 bool core_material_property_value(const char* name, const Vec3*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Vec3*& out);
+
 bool core_material_property_value(const char* name, const Vec4*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Vec4*& out);
+
 bool core_material_property_value(const char* name, const Mat3*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Mat3*& out);
+
 bool core_material_property_value(const char* name, const Mat4*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Mat4*& out);
+
 bool core_material_property_value(const char* name, const TexturePtr*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out);
 
 }

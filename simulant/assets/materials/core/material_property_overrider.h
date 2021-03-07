@@ -1,6 +1,6 @@
 #pragma once
 
-#include <unordered_map>
+#include "../../../generic/tsl/hopscotch_map.h"
 #include <list>
 #include <string>
 
@@ -80,16 +80,16 @@ protected:
 
     const MaterialPropertyOverrider* parent_ = nullptr;
 
-    std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
-    std::unordered_map<MaterialPropertyNameHash, int> int_properties_;
-    std::unordered_map<MaterialPropertyNameHash, float> float_properties_;
-    std::unordered_map<MaterialPropertyNameHash, bool> bool_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Vec2> vec2_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Vec3> vec3_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Vec4> vec4_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Mat3> mat3_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Mat4> mat4_properties_;
-    std::unordered_map<MaterialPropertyNameHash, TexturePtr> texture_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, int> int_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, float> float_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, bool> bool_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, Vec2> vec2_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, Vec3> vec3_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, Vec4> vec4_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, Mat3> mat3_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, Mat4> mat4_properties_;
+    tsl::hopscotch_map<MaterialPropertyNameHash, TexturePtr> texture_properties_;
 };
 
 }
