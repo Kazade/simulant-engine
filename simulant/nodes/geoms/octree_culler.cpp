@@ -7,7 +7,7 @@
 #include "../../meshes/mesh.h"
 #include "../geom.h"
 #include "../../renderers/renderer.h"
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../../stage.h"
 
 namespace smlt {

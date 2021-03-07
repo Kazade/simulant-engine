@@ -19,7 +19,7 @@
 #ifndef WARP_H
 #define WARP_H
 
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../behaviour.h"
 #include "../../generic/managed.h"
 

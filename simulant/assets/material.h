@@ -22,15 +22,15 @@
 
 #include <unordered_map>
 
-#include "asset.h"
-#include "generic/identifiable.h"
-#include "generic/managed.h"
-#include "types.h"
-#include "loadable.h"
-#include "interfaces/updateable.h"
+#include "../asset.h"
+#include "../generic/identifiable.h"
+#include "../generic/managed.h"
+#include "../types.h"
+#include "../loadable.h"
+#include "../interfaces/updateable.h"
 
-#include "assets/materials/material_object.h"
-#include "assets/materials/constants.h"
+#include "materials/material_object.h"
+#include "materials/constants.h"
 
 namespace smlt {
 

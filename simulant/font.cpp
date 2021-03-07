@@ -1,6 +1,6 @@
 #include "font.h"
 #include "texture.h"
-#include "material.h"
+#include "assets/material.h"
 #include "macros.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION  // force following include to generate implementation

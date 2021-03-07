@@ -24,7 +24,7 @@
 #include <cstdint>
 #include "../renderer.h"
 #include "../gl_renderer.h"
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../batching/render_queue.h"
 
 namespace smlt {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "../../material.h"
+#include "../../assets/material.h"
 
 namespace smlt {
 namespace utils {

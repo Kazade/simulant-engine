@@ -23,7 +23,6 @@
 
 #include "types.h"
 #include "texture.h"
-#include "material.h"
 
 namespace smlt {
 

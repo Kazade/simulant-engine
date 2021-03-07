@@ -26,7 +26,7 @@
 #include "../window.h"
 #include "../asset_manager.h"
 #include "../loader.h"
-#include "../material.h"
+#include "../assets/material.h"
 #include "../renderers/renderer.h"
 #include "private.h"
 

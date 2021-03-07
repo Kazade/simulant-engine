@@ -20,7 +20,7 @@
 #include "../deps/jsonic/jsonic.h"
 
 #include "particle_script.h"
-#include "../material.h"
+#include "../assets/material.h"
 #include "../stage.h"
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"

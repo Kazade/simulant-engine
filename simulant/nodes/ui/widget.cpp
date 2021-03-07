@@ -4,7 +4,7 @@
 #include "ui_manager.h"
 #include "../actor.h"
 #include "../../stage.h"
-#include "../../material.h"
+#include "../../assets/material.h"
 
 namespace smlt {
 namespace ui {

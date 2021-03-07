@@ -21,12 +21,12 @@
 #include <cassert>
 #include <map>
 
-#include "window.h"
-#include "material.h"
-#include "asset_manager.h"
-#include "renderers/renderer.h"
-#include "renderers/gl2x/gpu_program.h"
+#include "../window.h"
+#include "../asset_manager.h"
+#include "../renderers/renderer.h"
+#include "../renderers/gl2x/gpu_program.h"
 
+#include "material.h"
 
 namespace smlt {
 

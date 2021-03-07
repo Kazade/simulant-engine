@@ -27,7 +27,7 @@
 #endif
 
 #include "../../utils/gl_error.h"
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../../material_constants.h"
 #include "../../texture.h"
 #include "gl1x_render_queue_visitor.h"

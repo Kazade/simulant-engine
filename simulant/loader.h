@@ -34,7 +34,7 @@
 #include "generic/any/any.h"
 #include "types.h"
 
-#include "material.h"
+#include "assets/material.h"
 #include "texture.h"
 
 namespace smlt {

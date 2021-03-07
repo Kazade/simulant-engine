@@ -20,7 +20,7 @@
 #include "material_script.h"
 #include "../logging.h"
 #include "../types.h"
-#include "../material.h"
+#include "../assets/material.h"
 #include "../shortcuts.h"
 #include "../asset_manager.h"
 #include "../utils/gl_thread_check.h"

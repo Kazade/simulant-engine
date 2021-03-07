@@ -27,7 +27,7 @@
 #include "loader.h"
 #include "texture.h"
 #include "meshes/mesh.h"
-#include "material.h"
+#include "assets/material.h"
 #include "sound.h"
 #include "font.h"
 #include "assets/particle_script.h"

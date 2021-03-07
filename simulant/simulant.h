@@ -32,7 +32,7 @@
 #include "stage.h"
 #include "viewport.h"
 #include "frustum.h"
-#include "material.h"
+#include "assets/material.h"
 #include "nodes/actor.h"
 #include "nodes/geom.h"
 

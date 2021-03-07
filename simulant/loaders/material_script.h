@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "../generic/managed.h"
-#include "../material.h"
+#include "../assets/material.h"
 #include "../types.h"
 #include "../loader.h"
 
