@@ -43,6 +43,8 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
 };
 
+std::unordered_map<MaterialPropertyNameHash, Material::PropertyName> Material::hashes_to_names_;
+
 Material::Material(MaterialID id, AssetManager* asset_manager):
     Asset(asset_manager),
     generic::Identifiable<MaterialID>(id),

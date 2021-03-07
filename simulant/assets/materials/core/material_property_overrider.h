@@ -60,43 +60,25 @@ public:
 
     bool property_type(const char* property_name, MaterialPropertyType* type) const;
 
-    std::vector<std::string> property_names_by_type(MaterialPropertyType type) const {
-        if(parent_) {
-            return parent_->property_names_by_type(type);
-        }
-
-        std::vector<std::string> names;
-        for(auto& p: all_overrides_) {
-            if(p.second == type) {
-                names.push_back(HASHES_TO_NAMES.at(p.first));
-            }
-        }
-
-        for(auto& p: core_properties()) {
-            if(p.second == type) {
-                names.push_back(p.first);
-            }
-        }
-
-        return names;
-    }
-
-    static const std::string& hash_to_name(MaterialPropertyNameHash hsh) {
-        return HASHES_TO_NAMES.at(hsh);
-    }
-
 protected:
+    virtual void on_override(
+        MaterialPropertyNameHash hsh,
+        const char* name,
+        MaterialPropertyType type
+    ) {
+        _S_UNUSED(hsh);
+        _S_UNUSED(name);
+        _S_UNUSED(type);
+    }
+
+    virtual void on_clear_override(MaterialPropertyNameHash hsh) { _S_UNUSED(hsh); }
+
     /* If we have a parent, then we can't override unless the property has
      * been defined on the parent - or it's a core property */
     bool check_existance(const char* property_name) const;
     bool clear_override(const unsigned hsh);
 
     const MaterialPropertyOverrider* parent_ = nullptr;
-
-    /* We sometimes need to reverse the hashing. Storing a map on every material when
-     * the majority of the names will be the same is wasteful. Instead, we store a persistent
-     * reverse lookup from hash -> name across all Materials and passes. */
-    static std::unordered_map<MaterialPropertyNameHash, std::string> HASHES_TO_NAMES;
 
     std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
     std::unordered_map<MaterialPropertyNameHash, int> int_properties_;

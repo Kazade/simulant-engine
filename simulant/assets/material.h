@@ -126,12 +126,94 @@ public:
     void update(float dt);
 
     const std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType>& custom_properties() const {
-        return all_overrides_;
+        return custom_properties_;
+    }
+
+    const std::vector<MaterialPropertyNameHash>& texture_properties() const {
+        return texture_properties_;
+    }
+
+    /* Return the string name of a property, given its name hash */
+    bool property_name(MaterialPropertyNameHash hsh, std::string& name) const {
+        auto it = hashes_to_names_.find(hsh);
+        if(it != hashes_to_names_.end()) {
+            name = it->second.name;
+            return true;
+        } else {
+            return false;
+        }
     }
 
 private:
     Renderer* renderer_ = nullptr;
     std::vector<MaterialPass> passes_;
+
+    struct PropertyName {
+        std::string name;
+        uint8_t ref_count = 0;
+    };
+
+    static std::unordered_map<
+        MaterialPropertyNameHash,
+        PropertyName
+    > hashes_to_names_;
+
+    /* Push a name onto the hash lookup */
+    static PropertyName* push_name(const char* name, MaterialPropertyNameHash hsh) {
+        auto it = hashes_to_names_.find(hsh);
+        if(it != hashes_to_names_.end()) {
+            it->second.ref_count++;
+            return &it->second;
+        } else {
+            PropertyName pn;
+            pn.name = name;
+            pn.ref_count = 1;
+            hashes_to_names_[hsh] = pn;
+            return &hashes_to_names_[hsh];
+        }
+    }
+
+    /* Reduce the refcount of hsh. Returns true if this was the
+     * last hsh entry */
+    static bool pop_name(MaterialPropertyNameHash hsh) {
+        auto it = hashes_to_names_.find(hsh);
+        if(it != hashes_to_names_.end()) {
+            it->second.ref_count--;
+            if(!it->second.ref_count) {
+                hashes_to_names_.erase(it);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    std::vector<MaterialPropertyNameHash> texture_properties_;
+
+    std::unordered_map<
+        MaterialPropertyNameHash,
+        MaterialPropertyType
+    > custom_properties_;
+
+    virtual void on_override(
+        MaterialPropertyNameHash hsh,
+        const char *name,
+        MaterialPropertyType type) override {
+
+        push_name(name, hsh);
+
+        if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
+            texture_properties_.push_back(hsh);
+        }
+
+        if(!is_core_property(hsh)) {
+            custom_properties_[hsh] = type;
+        }
+    }
+
+    virtual void on_clear_override(MaterialPropertyNameHash hsh) {
+        pop_name(hsh);
+    }
 
 protected:
     /* Assignment operator and copy constructor must be private

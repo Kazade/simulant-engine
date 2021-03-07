@@ -168,16 +168,19 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
     }
 
     /* Each texture property has a counterpart matrix, this passes those down if they exist */
-    auto texture_props = mat->property_names_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE);
+    const auto& texture_props = mat->texture_properties();
     uint8_t texture_unit = 0;
+    std::string name;
     for(auto& tex_prop: texture_props) {
-        auto tloc = program->locate_uniform(tex_prop, true);
+        mat->property_name(tex_prop, name);
+
+        auto tloc = program->locate_uniform(name, true);
         if(tloc > -1) {
             // This texture is being used
             program->set_uniform_int(tloc, texture_unit++);
         }
 
-        auto shader_name = tex_prop;
+        auto shader_name = name;
         shader_name += "_matrix";
 
         auto loc = program->locate_uniform(shader_name, true);
@@ -415,10 +418,16 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     /* First we bind any used texture properties to their associated variables */
     uint8_t texture_unit = 0;
-    for(auto& defined_property: pass_->property_names_by_type(MATERIAL_PROPERTY_TYPE_TEXTURE)) {
-        const TexturePtr* tex_prop;
-        pass_->fetch_property_value(defined_property, tex_prop);
+    std::string name;
 
+    const Material* mat = pass_->material();
+    for(auto& defined_property: mat->texture_properties()) {
+        if(!mat->property_name(defined_property, name)) {
+            continue;
+        }
+
+        const TexturePtr* tex_prop;
+        pass_->fetch_property_value(name, tex_prop);
         const TexturePtr tex = *tex_prop;
 
         // Do we use this texture property? Then bind the texture appropriately
@@ -427,7 +436,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         // and also whether there's a texture ID. The question is, should the material have some other
         // type of existence check for texture properties? Is checking the texture_id right for all situations?
         // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
-        auto loc = program_->locate_uniform(defined_property, true);
+        auto loc = program_->locate_uniform(name, true);
         if(loc > -1 && (texture_unit + 1u) < _S_GL_MAX_TEXTURE_UNITS) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
             GLCheck(glBindTexture, GL_TEXTURE_2D, (tex) ? tex->_renderer_specific_id() : 0);
@@ -512,8 +521,10 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
 
-    for(auto prop: next->material()->custom_properties()) {
-        auto name = Material::hash_to_name(prop.first);
+    for(auto prop: mat->custom_properties()) {
+        if(!mat->property_name(prop.first, name)) {
+            continue;
+        }
 
         switch(prop.second) {
         case MATERIAL_PROPERTY_TYPE_INT:
