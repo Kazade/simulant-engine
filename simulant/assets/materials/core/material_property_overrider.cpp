@@ -3,6 +3,8 @@
 
 namespace smlt {
 
+std::unordered_map<MaterialPropertyNameHash, std::string> MaterialPropertyOverrider::HASHES_TO_NAMES;
+
 void MaterialPropertyOverrider::override_property_value(const char* name, const bool& value) {
     if(!check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
@@ -130,7 +132,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 template<typename T>
-bool fetcher(MaterialPropertyOverrider* parent, const std::unordered_map<unsigned, T>& lookup, const char* name, const T*& out) {
+bool fetcher(const MaterialPropertyOverrider* parent, const std::unordered_map<unsigned, T>& lookup, const char* name, const T*& out) {
     if(parent) {
         return fetcher(nullptr, lookup, name, out);
     }
@@ -181,6 +183,10 @@ bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Mat
 
 bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Mat4*& out) const {
     return fetcher(parent_, mat4_properties_, name, out);
+}
+
+bool MaterialPropertyOverrider::fetch_property_value(const char* name, const TexturePtr*& out) const {
+    return fetcher(parent_, texture_properties_, name, out);
 }
 
 bool MaterialPropertyOverrider::check_existance(const char* property_name) const {

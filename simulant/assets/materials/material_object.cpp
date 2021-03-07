@@ -44,6 +44,22 @@ void MaterialObject::set_light_map(TexturePtr texture) {
     override_property_value(LIGHT_MAP_PROPERTY, texture);
 }
 
+void MaterialObject::set_diffuse_map_matrix(const Mat4& mat) {
+    override_property_value(DIFFUSE_MAP_MATRIX_PROPERTY, mat);
+}
+
+void MaterialObject::set_light_map_matrix(const Mat4& mat) {
+    override_property_value(LIGHT_MAP_MATRIX_PROPERTY, mat);
+}
+
+void MaterialObject::set_normal_map_matrix(const Mat4& mat) {
+    override_property_value(NORMAL_MAP_MATRIX_PROPERTY, mat);
+}
+
+void MaterialObject::set_specular_map_matrix(const Mat4& mat) {
+    override_property_value(SPECULAR_MAP_MATRIX_PROPERTY, mat);
+}
+
 const TexturePtr& MaterialObject::diffuse_map() const {
     const TexturePtr* ptr = nullptr;
     bool ok = fetch_property_value(DIFFUSE_MAP_PROPERTY, ptr);
@@ -75,6 +91,39 @@ const TexturePtr& MaterialObject::specular_map() const {
     _S_UNUSED(ok);
     return *ptr;
 }
+
+const Mat4& MaterialObject::diffuse_map_matrix() const {
+    const Mat4* ptr = nullptr;
+    bool ok = fetch_property_value(DIFFUSE_MAP_MATRIX_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+const Mat4& MaterialObject::light_map_matrix() const {
+    const Mat4* ptr = nullptr;
+    bool ok = fetch_property_value(LIGHT_MAP_MATRIX_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+const Mat4& MaterialObject::normal_map_matrix() const {
+    const Mat4* ptr = nullptr;
+    bool ok = fetch_property_value(NORMAL_MAP_MATRIX_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+const Mat4& MaterialObject::specular_map_matrix() const {
+    const Mat4* ptr = nullptr;
+    bool ok = fetch_property_value(SPECULAR_MAP_MATRIX_PROPERTY, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
 
 const Colour& MaterialObject::specular() const {
     // FIXME: Naughty cast from Vec4& -> Colour&

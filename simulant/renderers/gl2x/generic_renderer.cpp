@@ -513,20 +513,24 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     renderer_->set_material_uniforms(next, program_);
 
     for(auto prop: next->material()->custom_properties()) {
-        auto property_value = next->property_value(prop->id);
+        auto name = Material::hash_to_name(prop.first);
 
-        switch(prop->type) {
+        switch(prop.second) {
         case MATERIAL_PROPERTY_TYPE_INT:
-            program_->set_uniform_int(prop->name, property_value->value<int>(), /* fail_silently= */true);
+            const int* i;
+            pass_->fetch_property_value(name.c_str(), i);
+            program_->set_uniform_int(name, *i, /* fail_silently= */true);
         break;
         case MATERIAL_PROPERTY_TYPE_FLOAT:
-            program_->set_uniform_float(prop->name, property_value->value<float>(), /* fail_silently= */true);
+            const float* f;
+            pass_->fetch_property_value(name.c_str(), f);
+            program_->set_uniform_float(name, *f, /* fail_silently= */true);
         break;
         case MATERIAL_PROPERTY_TYPE_TEXTURE:
             // Ignore, we handle textures separately
         break;
         default:
-            throw std::runtime_error("UNIMPLEMENTED property type");
+            S_ERROR("UNIMPLEMENTED property type: {0}", prop.second);
         }
     }
 
@@ -534,6 +538,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 }
 
 void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera) {
+    _S_UNUSED(pass);
+
     //Calculate the modelview-projection matrix
     const Mat4 model = renderable->final_transformation;
     const Mat4& view = camera->view_matrix();
@@ -542,45 +548,39 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
     Mat4 modelview = view * model;
     Mat4 modelview_projection = projection * modelview;
 
-    auto v_prop = pass->property_value(VIEW_MATRIX_PROPERTY);
-    auto mvp_prop = pass->property_value(MODELVIEW_PROJECTION_MATRIX_PROPERTY);
-    auto mv_prop = pass->property_value(MODELVIEW_MATRIX_PROPERTY);
-    auto p_prop = pass->property_value(PROJECTION_MATRIX_PROPERTY);
-    auto itmv_prop = pass->property_value(INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY);
-
-    auto v_loc = program->locate_uniform(v_prop->shader_variable(), true);
+    auto v_loc = program->locate_uniform(VIEW_MATRIX_PROPERTY, true);
     if(v_loc > -1) {
         program->set_uniform_mat4x4(
-            v_prop->shader_variable(),
+            VIEW_MATRIX_PROPERTY,
             view
         );
     }
 
-    auto mvp_loc = program->locate_uniform(mvp_prop->shader_variable(), true);
+    auto mvp_loc = program->locate_uniform(MODELVIEW_PROJECTION_MATRIX_PROPERTY, true);
     if(mvp_loc > -1) {
         program->set_uniform_mat4x4(
-            mvp_prop->shader_variable(),
+            MODELVIEW_PROJECTION_MATRIX_PROPERTY,
             modelview_projection
         );
     }
 
-    auto mv_loc = program->locate_uniform(mv_prop->shader_variable(), true);
+    auto mv_loc = program->locate_uniform(MODELVIEW_MATRIX_PROPERTY, true);
     if(mv_loc > -1) {
         program->set_uniform_mat4x4(
-            mv_prop->shader_variable(),
+            MODELVIEW_MATRIX_PROPERTY,
             modelview
         );
     }
 
-    auto p_loc = program->locate_uniform(p_prop->shader_variable(), true);
+    auto p_loc = program->locate_uniform(PROJECTION_MATRIX_PROPERTY, true);
     if(p_loc > -1) {
         program->set_uniform_mat4x4(
-            p_prop->shader_variable(),
+            PROJECTION_MATRIX_PROPERTY,
             projection
         );
     }
 
-    auto itmv_loc = program->locate_uniform(itmv_prop->shader_variable(), true);
+    auto itmv_loc = program->locate_uniform(INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY, true);
     if(itmv_loc > -1) {
         // PERF: Recalculating every frame will be costly!
         Mat3 inverse_transpose_modelview(modelview);
@@ -588,7 +588,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass, GPUProgr
         inverse_transpose_modelview.transpose();
 
         program->set_uniform_mat3x3(
-            itmv_prop->shader_variable(),
+            INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY,
             inverse_transpose_modelview
         );
     }

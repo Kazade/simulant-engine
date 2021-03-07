@@ -29,19 +29,19 @@ public:
 
         // Materials + Textures
         for(auto submesh : cave_mesh_id_.fetch()->each_submesh())
-            submesh->material()->diffuse_map()->texture()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
+            submesh->material()->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         auto ray_mat = godray_mesh_id_.fetch()->first_submesh()->material();
         ray_mat->set_blend_func(BlendType::BLEND_ADD);
         ray_mat->set_lighting_enabled(false);
         ray_mat->pass(0)->set_depth_test_enabled(false);
-	    ray_mat->pass(0)->set_depth_write_enabled(false);
-        ray_mat->diffuse_map()->texture()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
+        ray_mat->pass(0)->set_depth_write_enabled(false);
+        ray_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         auto fairy_mat = fairy_mesh_id_.fetch()->first_submesh()->material();
         fairy_mat->pass(0)->set_blend_func(BlendType::BLEND_ADD);
         fairy_mat->pass(0)->set_lighting_enabled(false);
-        fairy_mat->diffuse_map()->texture()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
+        fairy_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
         cave_geom_ = stage_->new_geom_with_mesh(cave_mesh_id_);
@@ -60,7 +60,7 @@ public:
         auto fairy_light = stage_->new_light_as_point(Vec3(), Colour(0.5f, 0.85f, 1, 1) * 10);
         fairy_light->set_attenuation(5, 0.01f, 0.25f, 0.75f);
         fairy_light->set_parent(fairy_actor_);
-    
+
         // BezierPath
         Vec3 p0 = Vec3(-9.96f, 0.8f, 5.2f);
         Vec3 p1 = Vec3(-7.779675f, -1, -18.46234f);
@@ -84,8 +84,8 @@ void fixed_update(float dt) override {
 
         // Always look at the fairy
         camera_->look_at(fairy_actor_->position());
-  
-        // Also make sure the fairy is always at the camera (billboard)      
+
+        // Also make sure the fairy is always at the camera (billboard)
         Vec3 dir = (camera_->position() - fairy_actor_->position()).normalized();
         Quaternion rot = smlt::Vec3::NEGATIVE_Z.rotation_to(dir);
 
@@ -110,7 +110,7 @@ void fixed_update(float dt) override {
         }  else {
             fairyPathSpeedFactor_ *= 0.9f;
         }
-        
+
         fairyPathTime_ += fairyPathSpeedFactor_ * dt;
     }
 

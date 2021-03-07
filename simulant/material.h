@@ -125,6 +125,10 @@ public:
 
     void update(float dt);
 
+    const std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType>& custom_properties() const {
+        return all_overrides_;
+    }
+
 private:
     Renderer* renderer_ = nullptr;
     std::vector<MaterialPass> passes_;

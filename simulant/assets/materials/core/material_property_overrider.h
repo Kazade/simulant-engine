@@ -18,8 +18,9 @@ namespace smlt {
 
 class MaterialPropertyOverrider {
 public:
-    MaterialPropertyOverrider();
-    MaterialPropertyOverrider(const MaterialPropertyOverrider* parent);
+    MaterialPropertyOverrider() = default;
+    MaterialPropertyOverrider(const MaterialPropertyOverrider* parent):
+        parent_(parent) {}
 
     void override_property_value(const char* name, const bool& value);
     void override_property_value(const char* name, const float& value);
@@ -80,13 +81,17 @@ public:
         return names;
     }
 
-private:
+    static const std::string& hash_to_name(MaterialPropertyNameHash hsh) {
+        return HASHES_TO_NAMES.at(hsh);
+    }
+
+protected:
     /* If we have a parent, then we can't override unless the property has
      * been defined on the parent - or it's a core property */
     bool check_existance(const char* property_name) const;
     bool clear_override(const unsigned hsh);
 
-    MaterialPropertyOverrider* parent_ = nullptr;
+    const MaterialPropertyOverrider* parent_ = nullptr;
 
     /* We sometimes need to reverse the hashing. Storing a map on every material when
      * the majority of the names will be the same is wasteful. Instead, we store a persistent

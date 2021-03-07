@@ -54,6 +54,20 @@ static void define_property(Material& material, jsonic::Node& prop) {
     }
 }
 
+template<>
+void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& material, jsonic::Node& prop) {
+    using namespace jsonic;
+    std::string name = prop["name"].get<String>(); // FIXME: Sanitize!
+
+    if(prop.has_key("default") && !prop["default"].is_none()) {
+        std::string def = prop["default"].get<String>();
+
+        auto texture = material.asset_manager().new_texture_from_file(def);
+        material.override_property_value(name, texture);
+    } else {
+        material.override_property_value(name, TexturePtr());
+    }
+}
 
 void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& json) {
     if(json.has_key("property_values")) {
