@@ -4,7 +4,7 @@
 namespace smlt {
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const bool& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -18,7 +18,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const float& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -32,7 +32,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const int32_t& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -46,7 +46,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Vec4& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -60,7 +60,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Vec3& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -74,7 +74,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Vec2& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -88,7 +88,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Mat3& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -102,7 +102,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const Mat4& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -116,7 +116,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 void MaterialPropertyOverrider::override_property_value(const char* name, const TexturePtr& value) {
-    if(!check_existance(name)) {
+    if(parent_ && !parent_->check_existance(name)) {
         S_WARN("Ignoring unknown property override for {0}", name);
         return;
     }
@@ -130,7 +130,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
 }
 
 template<typename T, typename Map>
-bool fetcher(const MaterialPropertyOverrider* _this, const MaterialPropertyOverrider* parent, Map map, MaterialPropertyNameHash hsh, const T*& out) {
+bool fetcher(const MaterialPropertyOverrider* const __restrict__ _this, const MaterialPropertyOverrider* const __restrict__ parent, const Map& map, MaterialPropertyNameHash hsh, const T*& out) {
     auto& lookup = _this->*map;
     auto it = lookup.find(hsh);
     if(it != lookup.end()) {
@@ -145,67 +145,57 @@ bool fetcher(const MaterialPropertyOverrider* _this, const MaterialPropertyOverr
     }
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const bool*& out) const {
-    auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const bool*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::bool_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const float*& out) const {
-    auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const float*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::float_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const int32_t*& out) const {
-    const auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const int32_t*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::int_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Colour*& out) const {
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Colour*& out) const {
     /* FIXME? Risky cast from Colour -> Vec4.. should be OK? */
-    const auto hsh = const_hash(name);
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec4_properties_, hsh, (const Vec4*&) out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Vec2*& out) const {
-    const auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Vec2*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec2_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Vec3*& out) const {
-    const auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Vec3*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec3_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Vec4*& out) const {
-    const auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec4_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Mat3*& out) const {
-    const auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Mat3*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::mat3_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const Mat4*& out) const {
-    const auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::mat4_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const char* name, const TexturePtr*& out) const {
-    const auto hsh = const_hash(name);
+bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::texture_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::check_existance(const char* property_name) const {
-    if(is_core_property(property_name)) {
+bool MaterialPropertyOverrider::check_existance(const MaterialPropertyNameHash hsh) const {
+    if(is_core_property(hsh)) {
         return true;
     }
 
-    if(parent_) {
-        return parent_->check_existance(property_name);
-    } else {
-        return all_overrides_.count(const_hash(property_name)) > 0;
-    }
+    return all_overrides_.count(hsh) > 0;
+}
+
+bool MaterialPropertyOverrider::check_existance(const char* property_name) const {
+    return check_existance(const_hash(property_name));
 }
 
 bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {

@@ -106,7 +106,7 @@ public:
     void prepare_to_render(const Renderable* renderable) override;
 private:
     GPUProgramManager program_manager_;
-    GPUProgramID default_gpu_program_id_;
+    GPUProgramID default_gpu_program_id_ = 0;
 
     std::shared_ptr<VBOManager> buffer_manager_;
 
@@ -134,17 +134,6 @@ private:
 
     void on_texture_unregister(TextureID tex_id, Texture* texture) override {
         GLRenderer::on_texture_unregister(tex_id, texture);
-    }
-
-    void on_material_prepare(Material* material) override {
-        /* We make sure the material has the built-in lighting properties etc. */
-        material->override_property_value(LIGHT_POSITION_PROPERTY, Vec4());
-        material->override_property_value(LIGHT_AMBIENT_PROPERTY, Colour());
-        material->override_property_value(LIGHT_DIFFUSE_PROPERTY, Colour());
-        material->override_property_value(LIGHT_SPECULAR_PROPERTY, Colour());
-        material->override_property_value(LIGHT_CONSTANT_ATTENUATION_PROPERTY, 0.0f);
-        material->override_property_value(LIGHT_LINEAR_ATTENUATION_PROPERTY, 0.0f);
-        material->override_property_value(LIGHT_QUADRATIC_ATTENUATION_PROPERTY, 0.0f);
     }
 };
 

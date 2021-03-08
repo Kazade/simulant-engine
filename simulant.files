@@ -423,6 +423,7 @@ documentation/widgets.md
 documentation/window.md
 samples/CMakeLists.txt
 samples/CMakeLists.txt
+samples/cave_demo.cpp
 samples/nehe01.cpp
 samples/nehe02.cpp
 samples/nehe03.cpp

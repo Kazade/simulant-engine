@@ -47,8 +47,7 @@ class MaterialPass:
 public:
     friend class Material;
 
-    MaterialPass():
-        MaterialObject(nullptr) {}
+    MaterialPass();
 
     MaterialPass(Material* material);
 
@@ -123,7 +122,7 @@ public:
         }
     }
 
-    void update(float dt);
+    void update(float dt) override;
 
     const std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType>& custom_properties() const {
         return custom_properties_;

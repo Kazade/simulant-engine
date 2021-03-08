@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../generic/tsl/hopscotch_map.h"
+#include <unordered_map>
 #include <list>
 #include <string>
 
@@ -25,6 +25,9 @@ public:
     void override_property_value(const char* name, const bool& value);
     void override_property_value(const char* name, const float& value);
     void override_property_value(const char* name, const int32_t& value);
+    void override_property_value(const char* name, const Colour& value) {
+        override_property_value(name, (const Vec4&) value);
+    }
     void override_property_value(const char* name, const Vec4& value);
     void override_property_value(const char* name, const Vec3& value);
     void override_property_value(const char* name, const Vec2& value);
@@ -32,16 +35,19 @@ public:
     void override_property_value(const char* name, const Mat4& value);
     void override_property_value(const char* name, const TexturePtr& value);
 
-    bool fetch_property_value(const char* name, const bool*& out) const;
-    bool fetch_property_value(const char* name, const float*& out) const;
-    bool fetch_property_value(const char* name, const int32_t *&out) const;
-    bool fetch_property_value(const char* name, const Colour*& out) const;
-    bool fetch_property_value(const char* name, const Vec2*& out) const;
-    bool fetch_property_value(const char* name, const Vec3*& out) const;
-    bool fetch_property_value(const char* name, const Vec4*& out) const;
-    bool fetch_property_value(const char* name, const Mat3*& out) const;
-    bool fetch_property_value(const char* name, const Mat4*& out) const;
-    bool fetch_property_value(const char* name, const TexturePtr*& out) const;
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const bool*& out) const;
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const float*& out) const;
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const int32_t *&out) const;
+
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Colour*& out) const;
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Vec2*& out) const;
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Vec3*& out) const;
+
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) const;
+
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Mat3*& out) const;
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) const;
+    bool fetch_property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) const;
 
     /* Helpers for std::string */
     template<typename T>
@@ -52,6 +58,12 @@ public:
     template<typename T>
     bool fetch_property_value(const std::string& str, const T*& out) const {
         return fetch_property_value(str.c_str(), out);
+    }
+
+    template<typename T>
+    bool fetch_property_value(const char* name, const T*& out) const {
+        auto hsh = const_hash(name);
+        return fetch_property_value(hsh, out);
     }
 
     bool clear_override(const char* name) {
@@ -75,21 +87,22 @@ protected:
 
     /* If we have a parent, then we can't override unless the property has
      * been defined on the parent - or it's a core property */
+    bool check_existance(const MaterialPropertyNameHash hsh) const;
     bool check_existance(const char* property_name) const;
     bool clear_override(const unsigned hsh);
 
     const MaterialPropertyOverrider* parent_ = nullptr;
 
-    tsl::hopscotch_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, int> int_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, float> float_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, bool> bool_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, Vec2> vec2_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, Vec3> vec3_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, Vec4> vec4_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, Mat3> mat3_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, Mat4> mat4_properties_;
-    tsl::hopscotch_map<MaterialPropertyNameHash, TexturePtr> texture_properties_;
+    std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
+    std::unordered_map<MaterialPropertyNameHash, int> int_properties_;
+    std::unordered_map<MaterialPropertyNameHash, float> float_properties_;
+    std::unordered_map<MaterialPropertyNameHash, bool> bool_properties_;
+    std::unordered_map<MaterialPropertyNameHash, Vec2> vec2_properties_;
+    std::unordered_map<MaterialPropertyNameHash, Vec3> vec3_properties_;
+    std::unordered_map<MaterialPropertyNameHash, Vec4> vec4_properties_;
+    std::unordered_map<MaterialPropertyNameHash, Mat3> mat3_properties_;
+    std::unordered_map<MaterialPropertyNameHash, Mat4> mat4_properties_;
+    std::unordered_map<MaterialPropertyNameHash, TexturePtr> texture_properties_;
 };
 
 }

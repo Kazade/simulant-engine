@@ -77,6 +77,11 @@ constexpr const char* const TEXTURING_ENABLED_PROPERTY = "s_texturing_enabled";
 constexpr const char* const POINT_SIZE_PROPERTY = "s_point_size";
 constexpr const char* const POLYGON_MODE_PROPERTY = "s_polygon_mode";
 constexpr const char* const COLOUR_MATERIAL_PROPERTY = "s_colour_material";
+constexpr const char* const DIFFUSE_MAP_MATRIX_PROPERTY = "s_diffuse_map_matrix";
+constexpr const char* const LIGHT_MAP_MATRIX_PROPERTY = "s_light_map_matrix";
+constexpr const char* const NORMAL_MAP_MATRIX_PROPERTY = "s_normal_map_matrix";
+constexpr const char* const SPECULAR_MAP_MATRIX_PROPERTY = "s_specular_map_matrix";
+
 constexpr const char* const LIGHT_POSITION_PROPERTY = "s_light_position";
 constexpr const char* const LIGHT_AMBIENT_PROPERTY = "s_light_ambient";
 constexpr const char* const LIGHT_DIFFUSE_PROPERTY = "s_light_diffuse";
@@ -84,16 +89,11 @@ constexpr const char* const LIGHT_SPECULAR_PROPERTY = "s_light_specular";
 constexpr const char* const LIGHT_CONSTANT_ATTENUATION_PROPERTY = "s_light_constant_attenuation";
 constexpr const char* const LIGHT_LINEAR_ATTENUATION_PROPERTY = "s_light_linear_attenuation";
 constexpr const char* const LIGHT_QUADRATIC_ATTENUATION_PROPERTY = "s_light_quadratic_attenuation";
-
 constexpr const char* const VIEW_MATRIX_PROPERTY = "s_view";
 constexpr const char* const MODELVIEW_PROJECTION_MATRIX_PROPERTY = "s_modelview_projection";
 constexpr const char* const PROJECTION_MATRIX_PROPERTY = "s_projection";
 constexpr const char* const MODELVIEW_MATRIX_PROPERTY = "s_modelview";
 constexpr const char* const INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY = "s_inverse_transpose_modelview";
 
-constexpr const char* const DIFFUSE_MAP_MATRIX_PROPERTY = "s_diffuse_map_matrix";
-constexpr const char* const LIGHT_MAP_MATRIX_PROPERTY = "s_light_map_matrix";
-constexpr const char* const NORMAL_MAP_MATRIX_PROPERTY = "s_normal_map_matrix";
-constexpr const char* const SPECULAR_MAP_MATRIX_PROPERTY = "s_specular_map_matrix";
 
 }

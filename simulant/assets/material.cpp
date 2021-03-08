@@ -66,10 +66,7 @@ bool Material::set_pass_count(uint8_t pass_count) {
         return false;
     }
 
-    passes_.resize(pass_count);
-    for(auto& p: passes_) {
-        p.parent_ = this;
-    }
+    passes_.resize(pass_count, MaterialPass(this));
 
     return true;
 }
@@ -114,6 +111,9 @@ MaterialPtr Material::new_clone() {
     return mat;
 }
 
+
+MaterialPass::MaterialPass():
+    MaterialObject(nullptr) {}
 
 MaterialPass::MaterialPass(Material *material):
     MaterialObject(material) {
