@@ -4,7 +4,11 @@
 #include <fstream>
 #include <memory>
 
+#include "../simulant/streams/file_ifstream.h"
+
 namespace {
+
+using namespace smlt;
 
 class FileIfstreamTests : public smlt::test::SimulantTestCase {
 public:
