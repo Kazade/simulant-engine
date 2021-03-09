@@ -93,6 +93,8 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
 }
 
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light) {
+    _S_UNUSED(pass);
+
     auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
     if(pos_loc > -1) {
         auto pos = (light) ? light->absolute_position() : Vec3();
@@ -142,29 +144,29 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
 void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram* program) {
     auto mat = pass->material();
 
-    auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY, true);
+    auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY_NAME, true);
     if(amb_loc > -1) {
-        program->set_uniform_colour(AMBIENT_PROPERTY, pass->ambient());
+        program->set_uniform_colour(AMBIENT_PROPERTY_NAME, pass->ambient());
     }
 
-    auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY, true);
+    auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY_NAME, true);
     if(diff_loc > -1) {
-        program->set_uniform_colour(DIFFUSE_PROPERTY, pass->diffuse());
+        program->set_uniform_colour(DIFFUSE_PROPERTY_NAME, pass->diffuse());
     }
 
-    auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY, true);
+    auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
     if(spec_loc > -1) {
-        program->set_uniform_colour(SPECULAR_PROPERTY, pass->specular());
+        program->set_uniform_colour(SPECULAR_PROPERTY_NAME, pass->specular());
     }
 
-    auto shin_loc = program->locate_uniform(SHININESS_PROPERTY, true);
+    auto shin_loc = program->locate_uniform(SHININESS_PROPERTY_NAME, true);
     if(shin_loc > -1) {
-        program->set_uniform_float(SHININESS_PROPERTY, pass->shininess());
+        program->set_uniform_float(SHININESS_PROPERTY_NAME, pass->shininess());
     }
 
-    auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY, true);
+    auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY_NAME, true);
     if(ps_loc > -1) {
-        program->set_uniform_float(POINT_SIZE_PROPERTY, pass->point_size());
+        program->set_uniform_float(POINT_SIZE_PROPERTY_NAME, pass->point_size());
     }
 
     /* Each texture property has a counterpart matrix, this passes those down if they exist */

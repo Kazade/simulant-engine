@@ -13,34 +13,34 @@ unsigned constexpr const_hash(char const *input) {
         5381;
 }
 
-constexpr const MaterialPropertyNameHash DIFFUSE_PROPERTY_HASH = const_hash(DIFFUSE_PROPERTY);
-constexpr const MaterialPropertyNameHash AMBIENT_PROPERTY_HASH = const_hash(AMBIENT_PROPERTY);
-constexpr const MaterialPropertyNameHash SPECULAR_PROPERTY_HASH = const_hash(SPECULAR_PROPERTY);
-constexpr const MaterialPropertyNameHash EMISSION_PROPERTY_HASH = const_hash(EMISSION_PROPERTY);
-constexpr const MaterialPropertyNameHash SHININESS_PROPERTY_HASH = const_hash(SHININESS_PROPERTY);
-constexpr const MaterialPropertyNameHash POINT_SIZE_PROPERTY_HASH = const_hash(POINT_SIZE_PROPERTY);
+constexpr const MaterialPropertyNameHash DIFFUSE_PROPERTY_HASH = const_hash(DIFFUSE_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash AMBIENT_PROPERTY_HASH = const_hash(AMBIENT_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash SPECULAR_PROPERTY_HASH = const_hash(SPECULAR_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash EMISSION_PROPERTY_HASH = const_hash(EMISSION_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash SHININESS_PROPERTY_HASH = const_hash(SHININESS_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash POINT_SIZE_PROPERTY_HASH = const_hash(POINT_SIZE_PROPERTY_NAME);
 
-constexpr const MaterialPropertyNameHash DEPTH_WRITE_ENABLED_PROPERTY_HASH = const_hash(DEPTH_WRITE_ENABLED_PROPERTY);
-constexpr const MaterialPropertyNameHash DEPTH_TEST_ENABLED_PROPERTY_HASH = const_hash(DEPTH_TEST_ENABLED_PROPERTY);
-constexpr const MaterialPropertyNameHash LIGHTING_ENABLED_PROPERTY_HASH = const_hash(LIGHTING_ENABLED_PROPERTY);
-constexpr const MaterialPropertyNameHash TEXTURING_ENABLED_PROPERTY_HASH = const_hash(TEXTURING_ENABLED_PROPERTY);
+constexpr const MaterialPropertyNameHash DEPTH_WRITE_ENABLED_PROPERTY_HASH = const_hash(DEPTH_WRITE_ENABLED_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash DEPTH_TEST_ENABLED_PROPERTY_HASH = const_hash(DEPTH_TEST_ENABLED_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash LIGHTING_ENABLED_PROPERTY_HASH = const_hash(LIGHTING_ENABLED_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash TEXTURING_ENABLED_PROPERTY_HASH = const_hash(TEXTURING_ENABLED_PROPERTY_NAME);
 
-constexpr const MaterialPropertyNameHash DIFFUSE_MAP_PROPERTY_HASH = const_hash(DIFFUSE_MAP_PROPERTY);
-constexpr const MaterialPropertyNameHash LIGHT_MAP_PROPERTY_HASH = const_hash(LIGHT_MAP_PROPERTY);
-constexpr const MaterialPropertyNameHash NORMAL_MAP_PROPERTY_HASH = const_hash(NORMAL_MAP_PROPERTY);
-constexpr const MaterialPropertyNameHash SPECULAR_MAP_PROPERTY_HASH = const_hash(SPECULAR_MAP_PROPERTY);
+constexpr const MaterialPropertyNameHash DIFFUSE_MAP_PROPERTY_HASH = const_hash(DIFFUSE_MAP_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash LIGHT_MAP_PROPERTY_HASH = const_hash(LIGHT_MAP_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash NORMAL_MAP_PROPERTY_HASH = const_hash(NORMAL_MAP_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash SPECULAR_MAP_PROPERTY_HASH = const_hash(SPECULAR_MAP_PROPERTY_NAME);
 
-constexpr const MaterialPropertyNameHash DIFFUSE_MAP_MATRIX_PROPERTY_HASH = const_hash(DIFFUSE_MAP_MATRIX_PROPERTY);
-constexpr const MaterialPropertyNameHash LIGHT_MAP_MATRIX_PROPERTY_HASH = const_hash(LIGHT_MAP_MATRIX_PROPERTY);
-constexpr const MaterialPropertyNameHash NORMAL_MAP_MATRIX_PROPERTY_HASH = const_hash(NORMAL_MAP_MATRIX_PROPERTY);
-constexpr const MaterialPropertyNameHash SPECULAR_MAP_MATRIX_PROPERTY_HASH = const_hash(SPECULAR_MAP_MATRIX_PROPERTY);
+constexpr const MaterialPropertyNameHash DIFFUSE_MAP_MATRIX_PROPERTY_HASH = const_hash(DIFFUSE_MAP_MATRIX_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash LIGHT_MAP_MATRIX_PROPERTY_HASH = const_hash(LIGHT_MAP_MATRIX_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash NORMAL_MAP_MATRIX_PROPERTY_HASH = const_hash(NORMAL_MAP_MATRIX_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash SPECULAR_MAP_MATRIX_PROPERTY_HASH = const_hash(SPECULAR_MAP_MATRIX_PROPERTY_NAME);
 
-constexpr const MaterialPropertyNameHash BLEND_FUNC_PROPERTY_HASH = const_hash(BLEND_FUNC_PROPERTY);
-constexpr const MaterialPropertyNameHash POLYGON_MODE_PROPERTY_HASH = const_hash(POLYGON_MODE_PROPERTY);
-constexpr const MaterialPropertyNameHash SHADE_MODEL_PROPERTY_HASH = const_hash(SHADE_MODEL_PROPERTY);
-constexpr const MaterialPropertyNameHash COLOUR_MATERIAL_PROPERTY_HASH = const_hash(COLOUR_MATERIAL_PROPERTY);
-constexpr const MaterialPropertyNameHash CULL_MODE_PROPERTY_HASH = const_hash(CULL_MODE_PROPERTY);
-constexpr const MaterialPropertyNameHash DEPTH_FUNC_PROPERTY_HASH = const_hash(DEPTH_FUNC_PROPERTY);
+constexpr const MaterialPropertyNameHash BLEND_FUNC_PROPERTY_HASH = const_hash(BLEND_FUNC_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash POLYGON_MODE_PROPERTY_HASH = const_hash(POLYGON_MODE_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash SHADE_MODEL_PROPERTY_HASH = const_hash(SHADE_MODEL_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash COLOUR_MATERIAL_PROPERTY_HASH = const_hash(COLOUR_MATERIAL_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash CULL_MODE_PROPERTY_HASH = const_hash(CULL_MODE_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash DEPTH_FUNC_PROPERTY_HASH = const_hash(DEPTH_FUNC_PROPERTY_NAME);
 
 
 enum MaterialPropertyType {

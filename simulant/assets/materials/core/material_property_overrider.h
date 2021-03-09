@@ -25,9 +25,7 @@ public:
     void override_property_value(const char* name, const bool& value);
     void override_property_value(const char* name, const float& value);
     void override_property_value(const char* name, const int32_t& value);
-    void override_property_value(const char* name, const Colour& value) {
-        override_property_value(name, (const Vec4&) value);
-    }
+    void override_property_value(const char* name, const Colour& value);
     void override_property_value(const char* name, const Vec4& value);
     void override_property_value(const char* name, const Vec3& value);
     void override_property_value(const char* name, const Vec2& value);
