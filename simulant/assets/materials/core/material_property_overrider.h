@@ -22,16 +22,16 @@ public:
     MaterialPropertyOverrider(const MaterialPropertyOverrider* parent):
         parent_(parent) {}
 
-    void override_property_value(const char* name, const bool& value);
-    void override_property_value(const char* name, const float& value);
-    void override_property_value(const char* name, const int32_t& value);
-    void override_property_value(const char* name, const Colour& value);
-    void override_property_value(const char* name, const Vec4& value);
-    void override_property_value(const char* name, const Vec3& value);
-    void override_property_value(const char* name, const Vec2& value);
-    void override_property_value(const char* name, const Mat3& value);
-    void override_property_value(const char* name, const Mat4& value);
-    void override_property_value(const char* name, const TexturePtr& value);
+    void set_property_value(const char* name, const bool& value);
+    void set_property_value(const char* name, const float& value);
+    void set_property_value(const char* name, const int32_t& value);
+    void set_property_value(const char* name, const Colour& value);
+    void set_property_value(const char* name, const Vec4& value);
+    void set_property_value(const char* name, const Vec3& value);
+    void set_property_value(const char* name, const Vec2& value);
+    void set_property_value(const char* name, const Mat3& value);
+    void set_property_value(const char* name, const Mat4& value);
+    void set_property_value(const char* name, const TexturePtr& value);
 
     bool fetch_property_value(const MaterialPropertyNameHash hsh, const bool*& out) const;
     bool fetch_property_value(const MaterialPropertyNameHash hsh, const float*& out) const;
@@ -49,8 +49,8 @@ public:
 
     /* Helpers for std::string */
     template<typename T>
-    void override_property_value(const std::string& str, const T& v) {
-        override_property_value(str.c_str(), v);
+    void set_property_value(const std::string& str, const T& v) {
+        set_property_value(str.c_str(), v);
     }
 
     template<typename T>

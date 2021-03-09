@@ -156,22 +156,22 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 MaterialPropertyType type;
                 if(mat->property_type(property_name.c_str(), &type)) {
                     if(type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                        mat->override_property_value(property_name.c_str(), (bool) js[key].get<jsonic::Boolean>());
+                        mat->set_property_value(property_name.c_str(), (bool) js[key].get<jsonic::Boolean>());
                     } else if(type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                        mat->override_property_value(property_name.c_str(), (js[key].get<jsonic::Number>()));
+                        mat->set_property_value(property_name.c_str(), (js[key].get<jsonic::Number>()));
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
                         if(property_name == BLEND_FUNC_PROPERTY_NAME) {
                             mat->set_blend_func(blend_type_from_name(js[key].get<jsonic::String>().c_str()));
                         } else {
                             // FIXME: There are a load of missing enums here!
-                            mat->override_property_value(property_name.c_str(), (int32_t) js[key].get<jsonic::Number>());
+                            mat->set_property_value(property_name.c_str(), (int32_t) js[key].get<jsonic::Number>());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
                         auto tex = ps->asset_manager().new_texture_from_file(js[key].get<jsonic::String>());
-                        mat->override_property_value(property_name.c_str(), tex);
+                        mat->set_property_value(property_name.c_str(), tex);
                         if(remove) {
                             // Remove the path if necessary
                             vfs->remove_search_path(dirname);

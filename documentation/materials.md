@@ -16,7 +16,7 @@ The type of the property can be one of the following:
  - `Vec4`
  - `Mat3`
  - `Mat4`
- - `TextureUnit`
+ - `TexturePtr`
 
 Once a property is defined on the `Material`, you can set its value at either the `Material` level or the `MaterialPass` level. A `Material` can have a number of passes and a submesh will be rendered once-per-material-pass. It's useful to be able to control which property values apply per-rendering of the submesh.
 
@@ -51,6 +51,10 @@ Here is a list of all the available built-in properties:
  - `s_light_map`
  - `s_normal_map`
  - `s_specular_map`
+ - `s_diffuse_map_matrix`
+ - `s_light_map_matrix`
+ - `s_normal_map_matrix`
+ - `s_specular_map_matrix`
  - `s_blend_func`
  - `s_cull_mode`
  - `s_colour_material`
@@ -61,36 +65,23 @@ Here is a list of all the available built-in properties:
  - `s_lighting_enabled`
  - `s_texturing_enabled`
  - `s_point_size`
- - `s_light_position` *
- - `s_light_ambient` *
- - `s_light_diffuse` *
- - `s_light_specular` *
- - `s_light_constant_attenuation` *
- - `s_light_linear_attenuation` *
- - `s_light_quadratic_attenuation` *
- - `s_modelview` *
- - `s_modelview_projection` *
- - `s_projection` *
- - `s_view` *
- - `s_inverse_transpose_modelview_projection` *
 
-Note that the properties marked with an asterisk automatically have their values set by the renderer, they exist as properties so that they are accessible as variables in shaders.
 
 ## Defining and Setting Custom Properties
 
-Defining custom properties is straightforward:
+Defining custom properties is straightforward. You must define properties at the Material level first, then later you can override them at the MaterialPass level.
 
 ```
 auto material = stage->assets->new_material();
-material->define_property(MATERIAL_PROPERTY_TYPE_INT, "my_property", 999);
+material->set_property_value("my_property", 999);
 ```
 
 This would define an integer property with a default value of 999. Be aware that property names must be valid GLSL shader names. 
 
-To set a value for this property, you can use the `set_property_value` method:
+To set a different value for this property, you can use the `set_property_value` method again:
 
 ```
-material->set_property_value<int>("my_property", 5);
+material->set_property_value("my_property", 5);
 ```
 
 ## Loading Materials from File

@@ -19,7 +19,7 @@ static inline bool valid_name(const char* name) {
     return true;
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const bool& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const bool& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;
@@ -38,7 +38,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_BOOL);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const float& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const float& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;
@@ -57,7 +57,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_FLOAT);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const int32_t& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const int32_t& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;
@@ -76,11 +76,11 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_INT);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const Colour& value) {
-    override_property_value(name, (const Vec4&) value);
+void MaterialPropertyOverrider::set_property_value(const char* name, const Colour& value) {
+    set_property_value(name, (const Vec4&) value);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const Vec4& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const Vec4& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;
@@ -99,7 +99,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_VEC4);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const Vec3& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const Vec3& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;
@@ -118,7 +118,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_VEC3);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const Vec2& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const Vec2& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;
@@ -137,7 +137,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_VEC2);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const Mat3& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const Mat3& value) {
     if(!valid_name(name)) { S_WARN("Ignoring invalid property name: {0}", name); return; }
 
     if(parent_ && !parent_->check_existance(name)) {
@@ -153,7 +153,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_MAT3);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const Mat4& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const Mat4& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;
@@ -172,7 +172,7 @@ void MaterialPropertyOverrider::override_property_value(const char* name, const 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_MAT4);
 }
 
-void MaterialPropertyOverrider::override_property_value(const char* name, const TexturePtr& value) {
+void MaterialPropertyOverrider::set_property_value(const char* name, const TexturePtr& value) {
     if(!valid_name(name)) {
         S_WARN("Ignoring invalid property name: {0}", name);
         return;

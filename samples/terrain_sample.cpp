@@ -96,7 +96,7 @@ public:
             terrain_mesh->vertex_data
         );
 
-        terrain_material->pass(0)->override_property_value(
+        terrain_material->pass(0)->set_property_value(
             "textures[4]",
             terrain_splatmap
         );

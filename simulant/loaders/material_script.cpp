@@ -48,9 +48,9 @@ static void define_property(Material& material, jsonic::Node& prop) {
     if(!prop["default"].is_none()) {
         auto def = (T) jsonic::auto_cast<T>(prop["default"]);
 
-        material.override_property_value(name, def);
+        material.set_property_value(name, def);
     } else {
-        material.override_property_value(name, T());
+        material.set_property_value(name, T());
     }
 }
 
@@ -63,9 +63,9 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& mater
         std::string def = prop["default"].get<String>();
 
         auto texture = material.asset_manager().new_texture_from_file(def);
-        material.override_property_value(name, texture);
+        material.set_property_value(name, texture);
     } else {
-        material.override_property_value(name, TexturePtr());
+        material.set_property_value(name, TexturePtr());
     }
 }
 
@@ -85,7 +85,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                     continue;
                 }
 
-                holder.override_property_value(key.c_str(), (bool) value.get<jsonic::Boolean>());
+                holder.set_property_value(key.c_str(), (bool) value.get<jsonic::Boolean>());
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
                 if(!value.is_string()) {
                     S_ERROR("Invalid property value for: {0}", key);
@@ -103,7 +103,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 float y = parts[1].to_float();
                 float z = parts[2].to_float();
 
-                holder.override_property_value(key.c_str(), Vec3(x, y, z));
+                holder.set_property_value(key.c_str(), Vec3(x, y, z));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC4) {
                 if(!value.is_string()) {
                     S_ERROR("Invalid property value for: {0}", key);
@@ -122,7 +122,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 float z = parts[2].to_float();
                 float w = parts[3].to_float();
 
-                holder.override_property_value(key.c_str(), Vec4(x, y, z, w));
+                holder.set_property_value(key.c_str(), Vec4(x, y, z, w));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
                 if(!value.is_string()) {
                     S_ERROR("Invalid property value for: {0}", key);
@@ -130,7 +130,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 }
 
                 if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                    holder.override_property_value(key.c_str(), value.get<jsonic::Number>());
+                    holder.set_property_value(key.c_str(), value.get<jsonic::Number>());
                 } else {
                     /* Special cases for enums - need a better way to handle this */
                     if(key == BLEND_FUNC_PROPERTY_NAME) {
@@ -144,13 +144,13 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                         std::string v = value.get<jsonic::String>();
                         holder.set_cull_mode(cull_mode_from_name(v.c_str()));
                     } else {
-                        holder.override_property_value(key.c_str(), (int32_t) value.get<jsonic::Number>());
+                        holder.set_property_value(key.c_str(), (int32_t) value.get<jsonic::Number>());
                     }
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value.get<jsonic::String>();
                 auto tex = mat.asset_manager().new_texture_from_file(path);
-                holder.override_property_value(key.c_str(), tex);
+                holder.set_property_value(key.c_str(), tex);
             } else {
                 S_ERROR("Unhandled property type");
             }
