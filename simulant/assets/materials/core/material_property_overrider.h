@@ -94,7 +94,7 @@ protected:
     const MaterialPropertyOverrider* parent_ = nullptr;
 
     std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
-    std::unordered_map<MaterialPropertyNameHash, int> int_properties_;
+    std::unordered_map<MaterialPropertyNameHash, int32_t> int_properties_;
     std::unordered_map<MaterialPropertyNameHash, float> float_properties_;
     std::unordered_map<MaterialPropertyNameHash, bool> bool_properties_;
     std::unordered_map<MaterialPropertyNameHash, Vec2> vec2_properties_;

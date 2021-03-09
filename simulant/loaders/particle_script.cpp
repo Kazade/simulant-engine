@@ -164,7 +164,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                             mat->set_blend_func(blend_type_from_name(js[key].get<jsonic::String>().c_str()));
                         } else {
                             // FIXME: There are a load of missing enums here!
-                            mat->override_property_value(property_name.c_str(), (int) js[key].get<jsonic::Number>());
+                            mat->override_property_value(property_name.c_str(), (int32_t) js[key].get<jsonic::Number>());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());

@@ -144,7 +144,7 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                         std::string v = value.get<jsonic::String>();
                         holder.set_cull_mode(cull_mode_from_name(v.c_str()));
                     } else {
-                        holder.override_property_value(key.c_str(), (int) value.get<jsonic::Number>());
+                        holder.override_property_value(key.c_str(), (int32_t) value.get<jsonic::Number>());
                     }
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
