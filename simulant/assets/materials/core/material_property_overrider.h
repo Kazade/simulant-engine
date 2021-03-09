@@ -60,12 +60,12 @@ public:
 
     template<typename T>
     bool property_value(const char* name, const T*& out) const {
-        auto hsh = const_hash(name);
+        auto hsh = material_property_hash(name);
         return property_value(hsh, out);
     }
 
     bool clear_override(const char* name) {
-        return clear_override(const_hash(name));
+        return clear_override(material_property_hash(name));
     }
 
     bool property_type(const char* property_name, MaterialPropertyType* type) const;

@@ -30,7 +30,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const bool&
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     bool_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_BOOL;
@@ -49,7 +49,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const float
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     float_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_FLOAT;
@@ -68,7 +68,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const int32
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     int_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_INT;
@@ -91,7 +91,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Vec4&
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     vec4_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_VEC4;
@@ -110,7 +110,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Vec3&
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     vec3_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_VEC3;
@@ -129,7 +129,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Vec2&
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     vec2_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_VEC2;
@@ -145,7 +145,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Mat3&
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     mat3_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_MAT3;
@@ -164,7 +164,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Mat4&
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     mat4_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_MAT4;
@@ -183,7 +183,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Textu
         return;
     }
 
-    auto hsh = const_hash(name);
+    auto hsh = material_property_hash(name);
     clear_override(hsh);
     texture_properties_[hsh] = value;
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_TEXTURE;
@@ -257,7 +257,7 @@ bool MaterialPropertyOverrider::check_existance(const MaterialPropertyNameHash h
 }
 
 bool MaterialPropertyOverrider::check_existance(const char* property_name) const {
-    return check_existance(const_hash(property_name));
+    return check_existance(material_property_hash(property_name));
 }
 
 bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
@@ -304,7 +304,7 @@ bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
 }
 
 bool MaterialPropertyOverrider::property_type(const char* property_name, MaterialPropertyType* type) const {
-    auto hsh = const_hash(property_name);
+    auto hsh = material_property_hash(property_name);
 
     if(parent_) {
         return parent_->property_type(property_name, type);
