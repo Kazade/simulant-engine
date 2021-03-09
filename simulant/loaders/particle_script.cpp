@@ -20,7 +20,7 @@
 #include "../deps/jsonic/jsonic.h"
 
 #include "particle_script.h"
-#include "../material.h"
+#include "../assets/material.h"
 #include "../stage.h"
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"
@@ -153,27 +153,25 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             if(key.substr(0, MATERIAL_PROPERTY_PREFIX.length()) == MATERIAL_PROPERTY_PREFIX) {
                 auto property_name = key.substr(MATERIAL_PROPERTY_PREFIX.length());
 
-                auto property_id = mat->find_property_id(property_name);
-                auto property = mat->property(property_id);
-
-                if(property) {
-                    auto type = property->type;
+                MaterialPropertyType type;
+                if(mat->property_type(property_name.c_str(), &type)) {
                     if(type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                        mat->MaterialObject::set_property_value(property_id, (bool) js[key].get<jsonic::Boolean>());
+                        mat->set_property_value(property_name.c_str(), (bool) js[key].get<jsonic::Boolean>());
                     } else if(type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                        mat->MaterialObject::set_property_value(property_id, js[key].get<jsonic::Number>());
+                        mat->set_property_value(property_name.c_str(), (js[key].get<jsonic::Number>()));
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
-                        if(property_name == BLEND_FUNC_PROPERTY) {
-                            mat->MaterialObject::set_property_value(property_id, (int) blend_type_from_name(js[key].get<jsonic::String>()));
+                        if(property_name == BLEND_FUNC_PROPERTY_NAME) {
+                            mat->set_blend_func(blend_type_from_name(js[key].get<jsonic::String>().c_str()));
                         } else {
-                            mat->MaterialObject::set_property_value(property_id, (int) js[key].get<jsonic::Number>());
+                            // FIXME: There are a load of missing enums here!
+                            mat->set_property_value(property_name.c_str(), (int32_t) js[key].get<jsonic::Number>());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.encode());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
                         auto tex = ps->asset_manager().new_texture_from_file(js[key].get<jsonic::String>());
-                        mat->set_property_value(property_id, tex);
+                        mat->set_property_value(property_name.c_str(), tex);
                         if(remove) {
                             // Remove the path if necessary
                             vfs->remove_search_path(dirname);
@@ -183,6 +181,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                             "Unhandled material property type {0}, please report.", type
                         );
                     }
+                } else {
+                    S_ERROR("Unrecognised material property: {0}", property_name);
                 }
             }
         }

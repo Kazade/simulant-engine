@@ -25,8 +25,13 @@ INCLUDE_DIRECTORIES(
     $ENV{KOS_BASE}/../kos-ports/include
 )
 
+IF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+LINK_DIRECTORIES($ENV{KOS_BASE}/lib/dreamcast/debug)
+ELSE()
+LINK_DIRECTORIES($ENV{KOS_BASE}/lib/dreamcast)
+ENDIF()
+
 LINK_DIRECTORIES(
-    $ENV{KOS_BASE}/lib/dreamcast
     $ENV{KOS_BASE}/addons/lib/dreamcast
     $ENV{KOS_PORTS}/lib
 )
@@ -51,4 +56,3 @@ endif()
 
 SET(CMAKE_ASM_FLAGS "")
 SET(CMAKE_ASM_FLAGS_RELEASE "")
-

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../batching/renderable.h"
 #include "../gl_renderer.h"
 

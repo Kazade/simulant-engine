@@ -19,7 +19,7 @@
 
 
 #include "../../stage.h"
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../../nodes/actor.h"
 #include "../../nodes/particle_system.h"
 #include "../../nodes/geom.h"

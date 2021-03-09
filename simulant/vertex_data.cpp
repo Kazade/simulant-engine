@@ -201,7 +201,9 @@ const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const {
 template<>
 const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const {
     assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F);
-    return ((Vec3*) &data_[idx * stride_]);
+    const uint8_t* v = &data_[0];
+    v += (idx * stride_);
+    return (const Vec3*) v;
 }
 
 template<>
