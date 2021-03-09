@@ -19,7 +19,7 @@
 #ifndef FLOWING_H
 #define FLOWING_H
 
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../behaviour.h"
 #include "../../generic/managed.h"
 

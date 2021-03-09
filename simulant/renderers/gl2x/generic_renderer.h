@@ -24,7 +24,7 @@
 #include <cstdint>
 #include "../renderer.h"
 #include "../gl_renderer.h"
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../batching/render_queue.h"
 
 namespace smlt {
@@ -106,7 +106,7 @@ public:
     void prepare_to_render(const Renderable* renderable) override;
 private:
     GPUProgramManager program_manager_;
-    GPUProgramID default_gpu_program_id_;
+    GPUProgramID default_gpu_program_id_ = 0;
 
     std::shared_ptr<VBOManager> buffer_manager_;
 

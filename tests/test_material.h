@@ -3,8 +3,12 @@
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 
-#include "simulant/assets/materials/material_property.inl.h"
-#include "simulant/assets/materials/fast_variant.h"
+#include "simulant/assets/materials/core/core_material.h"
+#include "simulant/assets/materials/core/material_property_overrider.h"
+
+namespace {
+
+using namespace smlt;
 
 class MaterialTest : public smlt::test::SimulantTestCase {
 public:
@@ -18,33 +22,6 @@ public:
         this->assert_true(smlt::Colour::WHITE == mat->pass(0)->ambient()); //this->assert_true the default pass sets white as the default
         this->assert_true(smlt::Colour::BLACK == mat->pass(0)->specular()); //this->assert_true the default pass sets black as the default
         this->assert_equal(0.0f, mat->pass(0)->shininess());
-    }
-
-    void test_material_variant() {
-        /* Make sure that destructors are called correctly */
-
-        smlt::MaterialVariant* variant = nullptr;
-
-        smlt::TextureUnit unit(window->shared_assets->new_texture(8, 8));
-        auto initial_count = unit.texture_.use_count();
-
-        // Assign 1
-        variant = new smlt::MaterialVariant();
-        variant->set(unit);
-
-        assert_equal(unit.texture_.use_count(), initial_count + 1);
-
-        auto variant2 = *variant;
-
-        assert_equal(unit.texture_.use_count(), initial_count + 2);
-
-        variant->set(1);
-
-        assert_equal(unit.texture_.use_count(), initial_count + 1);
-
-        delete variant;
-
-        assert_equal(unit.texture_.use_count(), initial_count + 1);
     }
 
     void test_material_applies_to_mesh() {
@@ -78,24 +55,19 @@ public:
 
         // Materials have a single pass by default, rightly or wrongly...
         assert_equal(mat1->pass_count(), 1);
-        assert_equal(mat1->registered_material_object_count(), 2u);
 
         mat1->set_pass_count(2);
         assert_equal(mat1->pass_count(), 2);
-        assert_equal(mat1->registered_material_object_count(), 3u);
 
         mat1->set_pass_count(1);
         assert_equal(mat1->pass_count(), 1);
-        assert_equal(mat1->registered_material_object_count(), 2u);
 
         mat1->set_pass_count(2);
         assert_equal(mat1->pass_count(), 2);
-        assert_equal(mat1->registered_material_object_count(), 3u);
 
         auto mat2 = window->shared_assets->clone_material(mat1);
 
         assert_equal(mat2->pass_count(), 2);
-        assert_equal(mat2->registered_material_object_count(), 3u);
     }
 
     void test_material_copies() {
@@ -112,22 +84,22 @@ public:
 
         assert_not_equal(mat1->id(), mat2->id());
 
-        assert_equal(mat1->diffuse_map()->texture_id(), tex1->id());
+        assert_equal(mat1->diffuse_map(), tex1);
         assert_equal(mat1->diffuse(), smlt::Colour::RED);
         assert_equal(mat1->pass_count(), 2);
         assert_equal(mat1->pass(0)->diffuse(), smlt::Colour::BLUE);
         assert_equal(mat1->pass(1)->diffuse(), smlt::Colour::RED);
-        assert_equal(mat1->pass(0)->diffuse_map()->texture_id(), tex1->id());
+        assert_equal(mat1->pass(0)->diffuse_map(), tex1);
 
         // Make sure the passes were copied
         assert_not_equal(mat1->pass(0), mat2->pass(0));
 
-        assert_equal(mat2->diffuse_map()->texture_id(), tex1->id());
+        assert_equal(mat2->diffuse_map(), tex1);
         assert_equal(mat2->diffuse(), smlt::Colour::RED);
         assert_equal(mat2->pass_count(), 2);
         assert_equal(mat2->pass(0)->diffuse(), smlt::Colour::BLUE);
         assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::RED);
-        assert_equal(mat2->pass(0)->diffuse_map()->texture_id(), tex1->id());
+        assert_equal(mat2->pass(0)->diffuse_map(), tex1);
 
         mat2->set_diffuse(smlt::Colour::GREEN);
         assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::GREEN);
@@ -143,19 +115,21 @@ public:
         auto pass1 = mat->pass(0);
         auto pass2 = mat->pass(1);
 
-        assert_equal(pass1->diffuse_map()->texture_id(), tex);
-        assert_equal(pass2->diffuse_map()->texture_id(), tex);
+        assert_equal(pass1->diffuse_map(), tex);
+        assert_equal(pass2->diffuse_map(), tex);
 
         auto tex2 = window->shared_assets->new_texture(8, 8);
 
         pass1->set_diffuse_map(tex2);
 
-        assert_equal(pass1->diffuse_map()->texture_id(), tex2);
-        assert_equal(pass2->diffuse_map()->texture_id(), tex);
+        assert_equal(pass1->diffuse_map(), tex2);
+        assert_equal(pass2->diffuse_map(), tex);
 
         /* Now to test scrolling */
-        pass1->diffuse_map()->scroll_x(0.5f);
-        assert_equal(pass1->diffuse_map()->texture_matrix()[12], 0.5f);
+        auto dm = pass1->diffuse_map_matrix();
+        dm[12] = 0.5f;
+        pass1->set_diffuse_map_matrix(dm);
+        assert_equal(pass1->diffuse_map_matrix()[12], 0.5f);
     }
 
     void test_shininess_is_clamped() {
@@ -185,12 +159,9 @@ public:
 
         mat->set_diffuse_map(texture);
 
-        assert_equal(mat->diffuse_map()->texture_id(), texture->id());
+        assert_equal(mat->diffuse_map(), texture);
 
-        /* This takes some explanation. Basically the texture unit is copied
-         * across all entries when set. There is 1 pass, plus 1 material so the
-         * use count goes up by 2, not 1 */
-        assert_equal(texture.use_count(), 4);
+        assert_equal(texture.use_count(), 3);
     }
 
     // FIXME: Restore this
@@ -223,3 +194,48 @@ public:
         assert_equal(mat->polygon_mode(), smlt::POLYGON_MODE_LINE);
     }
 };
+
+
+class MaterialCoreTest : public smlt::test::SimulantTestCase {
+public:
+    void test_is_core_property() {
+        assert_true(is_core_property(DIFFUSE_PROPERTY_NAME));
+        assert_true(is_core_property(AMBIENT_PROPERTY_NAME));
+        assert_true(is_core_property(SPECULAR_PROPERTY_NAME));
+        assert_true(is_core_property(SHININESS_PROPERTY_NAME));
+
+        assert_false(is_core_property("my_property"));
+    }
+
+    void test_core_material_property_value() {
+        const float* f;
+        assert_true(core_material_property_value(SHININESS_PROPERTY_NAME, f));
+        assert_equal(*f, 0.0f);
+
+        assert_false(core_material_property_value("bananas", f));
+        assert_false(core_material_property_value("s_diffuse", f));
+    }
+
+    void test_overriders() {
+        MaterialPropertyOverrider o1;
+        MaterialPropertyOverrider o2(&o1);
+
+        const float* f;
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
+        assert_equal(*f, core_material().shininess);
+
+        o1.set_property_value(SHININESS_PROPERTY_NAME, 1.5f);
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
+        assert_equal(*f, 1.5f);
+
+        o2.set_property_value(SHININESS_PROPERTY_NAME, 2.5f);
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
+        assert_equal(*f, 2.5f);
+
+        o2.clear_override(SHININESS_PROPERTY_NAME);
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
+        assert_equal(*f, 1.5f);
+    }
+};
+
+}

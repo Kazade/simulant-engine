@@ -76,6 +76,7 @@ public:
     bool is_texture_registered(TextureID texture_id) const;
     void pre_render();
     void prepare_texture(Texture *texture);
+    void prepare_material(Material* material);
 
 private:
     friend class Texture;
@@ -123,6 +124,13 @@ private:
      */
     virtual void on_texture_prepare(Texture* texture) {
         _S_UNUSED(texture);
+    }
+
+    /* Called when a Material is created, or when it is changed via
+     * an assignment. FIXME: This seems like we'd miss occasions where
+     * we should call this. Might be better being called on first update? */
+    virtual void on_material_prepare(Material* material) {
+        _S_UNUSED(material);
     }
 
     mutable thread::Mutex texture_registry_mutex_;

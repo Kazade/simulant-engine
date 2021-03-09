@@ -10,7 +10,7 @@
     #include "../glad/glad/glad.h"
 #endif
 
-#include "../../material.h"
+#include "../../assets/material.h"
 #include "../gl_renderer.h"
 
 namespace smlt {
