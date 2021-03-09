@@ -221,19 +221,19 @@ public:
         MaterialPropertyOverrider o2(&o1);
 
         const float* f;
-        assert_true(o2.fetch_property_value(SHININESS_PROPERTY_NAME, f));
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
         assert_equal(*f, core_material().shininess);
 
         o1.set_property_value(SHININESS_PROPERTY_NAME, 1.5f);
-        assert_true(o2.fetch_property_value(SHININESS_PROPERTY_NAME, f));
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
         assert_equal(*f, 1.5f);
 
         o2.set_property_value(SHININESS_PROPERTY_NAME, 2.5f);
-        assert_true(o2.fetch_property_value(SHININESS_PROPERTY_NAME, f));
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
         assert_equal(*f, 2.5f);
 
         o2.clear_override(SHININESS_PROPERTY_NAME);
-        assert_true(o2.fetch_property_value(SHININESS_PROPERTY_NAME, f));
+        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
         assert_equal(*f, 1.5f);
     }
 };

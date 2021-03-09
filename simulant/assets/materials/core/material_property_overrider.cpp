@@ -207,44 +207,44 @@ bool fetcher(const MaterialPropertyOverrider* const __restrict__ _this, const Ma
     }
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const bool*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const bool*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::bool_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const float*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const float*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::float_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const int32_t*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const int32_t*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::int_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Colour*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const Colour*& out) const {
     /* FIXME? Risky cast from Colour -> Vec4.. should be OK? */
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec4_properties_, hsh, (const Vec4*&) out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Vec2*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const Vec2*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec2_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Vec3*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const Vec3*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec3_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::vec4_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Mat3*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const Mat3*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::mat3_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::mat4_properties_, hsh, out);
 }
 
-bool MaterialPropertyOverrider::fetch_property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) const {
+bool MaterialPropertyOverrider::property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) const {
     return fetcher(this, parent_, &MaterialPropertyOverrider::texture_properties_, hsh, out);
 }
 

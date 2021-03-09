@@ -33,19 +33,19 @@ public:
     void set_property_value(const char* name, const Mat4& value);
     void set_property_value(const char* name, const TexturePtr& value);
 
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const bool*& out) const;
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const float*& out) const;
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const int32_t *&out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const bool*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const float*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const int32_t *&out) const;
 
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Colour*& out) const;
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Vec2*& out) const;
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Vec3*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const Colour*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const Vec2*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const Vec3*& out) const;
 
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) const;
 
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Mat3*& out) const;
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) const;
-    bool fetch_property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const Mat3*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) const;
+    bool property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) const;
 
     /* Helpers for std::string */
     template<typename T>
@@ -54,14 +54,14 @@ public:
     }
 
     template<typename T>
-    bool fetch_property_value(const std::string& str, const T*& out) const {
-        return fetch_property_value(str.c_str(), out);
+    bool property_value(const std::string& str, const T*& out) const {
+        return property_value(str.c_str(), out);
     }
 
     template<typename T>
-    bool fetch_property_value(const char* name, const T*& out) const {
+    bool property_value(const char* name, const T*& out) const {
         auto hsh = const_hash(name);
-        return fetch_property_value(hsh, out);
+        return property_value(hsh, out);
     }
 
     bool clear_override(const char* name) {

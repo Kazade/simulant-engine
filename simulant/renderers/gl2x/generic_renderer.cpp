@@ -188,7 +188,7 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
         auto loc = program->locate_uniform(shader_name, true);
         if(loc > -1) {
             const Mat4* mat;
-            if(pass->fetch_property_value(shader_name, mat)) {
+            if(pass->property_value(shader_name, mat)) {
                 program->set_uniform_mat4x4(loc, *mat);
             }
         }
@@ -429,7 +429,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
 
         const TexturePtr* tex_prop;
-        pass_->fetch_property_value(name, tex_prop);
+        pass_->property_value(name, tex_prop);
         const TexturePtr tex = *tex_prop;
 
         // Do we use this texture property? Then bind the texture appropriately
@@ -531,12 +531,12 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         switch(prop.second) {
         case MATERIAL_PROPERTY_TYPE_INT:
             const int* i;
-            pass_->fetch_property_value(name.c_str(), i);
+            pass_->property_value(name.c_str(), i);
             program_->set_uniform_int(name, *i, /* fail_silently= */true);
         break;
         case MATERIAL_PROPERTY_TYPE_FLOAT:
             const float* f;
-            pass_->fetch_property_value(name.c_str(), f);
+            pass_->property_value(name.c_str(), f);
             program_->set_uniform_float(name, *f, /* fail_silently= */true);
         break;
         case MATERIAL_PROPERTY_TYPE_TEXTURE:

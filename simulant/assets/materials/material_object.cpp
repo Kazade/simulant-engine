@@ -62,7 +62,7 @@ void MaterialObject::set_specular_map_matrix(const Mat4& mat) {
 
 const TexturePtr& MaterialObject::diffuse_map() const {
     const TexturePtr* ptr = nullptr;
-    bool ok = fetch_property_value(DIFFUSE_MAP_PROPERTY_HASH, ptr);
+    bool ok = property_value(DIFFUSE_MAP_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -70,7 +70,7 @@ const TexturePtr& MaterialObject::diffuse_map() const {
 
 const TexturePtr& MaterialObject::light_map() const {
     const TexturePtr* ptr = nullptr;
-    bool ok = fetch_property_value(LIGHT_MAP_PROPERTY_HASH, ptr);
+    bool ok = property_value(LIGHT_MAP_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -78,7 +78,7 @@ const TexturePtr& MaterialObject::light_map() const {
 
 const TexturePtr& MaterialObject::normal_map() const {
     const TexturePtr* ptr = nullptr;
-    bool ok = fetch_property_value(NORMAL_MAP_PROPERTY_HASH, ptr);
+    bool ok = property_value(NORMAL_MAP_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -86,7 +86,7 @@ const TexturePtr& MaterialObject::normal_map() const {
 
 const TexturePtr& MaterialObject::specular_map() const {
     const TexturePtr* ptr = nullptr;
-    bool ok = fetch_property_value(SPECULAR_MAP_PROPERTY_HASH, ptr);
+    bool ok = property_value(SPECULAR_MAP_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -94,7 +94,7 @@ const TexturePtr& MaterialObject::specular_map() const {
 
 const Mat4& MaterialObject::diffuse_map_matrix() const {
     const Mat4* ptr = nullptr;
-    bool ok = fetch_property_value(DIFFUSE_MAP_MATRIX_PROPERTY_HASH, ptr);
+    bool ok = property_value(DIFFUSE_MAP_MATRIX_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -102,7 +102,7 @@ const Mat4& MaterialObject::diffuse_map_matrix() const {
 
 const Mat4& MaterialObject::light_map_matrix() const {
     const Mat4* ptr = nullptr;
-    bool ok = fetch_property_value(LIGHT_MAP_MATRIX_PROPERTY_HASH, ptr);
+    bool ok = property_value(LIGHT_MAP_MATRIX_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -110,7 +110,7 @@ const Mat4& MaterialObject::light_map_matrix() const {
 
 const Mat4& MaterialObject::normal_map_matrix() const {
     const Mat4* ptr = nullptr;
-    bool ok = fetch_property_value(NORMAL_MAP_MATRIX_PROPERTY_HASH, ptr);
+    bool ok = property_value(NORMAL_MAP_MATRIX_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -118,7 +118,7 @@ const Mat4& MaterialObject::normal_map_matrix() const {
 
 const Mat4& MaterialObject::specular_map_matrix() const {
     const Mat4* ptr = nullptr;
-    bool ok = fetch_property_value(SPECULAR_MAP_MATRIX_PROPERTY_HASH, ptr);
+    bool ok = property_value(SPECULAR_MAP_MATRIX_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -128,7 +128,7 @@ const Mat4& MaterialObject::specular_map_matrix() const {
 const Colour& MaterialObject::specular() const {
     // FIXME: Naughty cast from Vec4& -> Colour&
     const Colour* ptr = nullptr;
-    bool ok = fetch_property_value(SPECULAR_PROPERTY_HASH, ptr);
+    bool ok = property_value(SPECULAR_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -136,7 +136,7 @@ const Colour& MaterialObject::specular() const {
 
 const Colour& MaterialObject::ambient() const {
     const Colour* ptr = nullptr;
-    bool ok = fetch_property_value(AMBIENT_PROPERTY_HASH, ptr);
+    bool ok = property_value(AMBIENT_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -144,7 +144,7 @@ const Colour& MaterialObject::ambient() const {
 
 const Colour& MaterialObject::emission() const {
     const Colour* ptr = nullptr;
-    bool ok = fetch_property_value(EMISSION_PROPERTY_HASH, ptr);
+    bool ok = property_value(EMISSION_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -152,7 +152,7 @@ const Colour& MaterialObject::emission() const {
 
 const Colour& MaterialObject::diffuse() const {
     const Colour* ptr = nullptr;
-    bool ok = fetch_property_value(DIFFUSE_PROPERTY_HASH, ptr);
+    bool ok = property_value(DIFFUSE_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -160,7 +160,7 @@ const Colour& MaterialObject::diffuse() const {
 
 float MaterialObject::shininess() const {
     const float* ptr = nullptr;
-    bool ok = fetch_property_value(SHININESS_PROPERTY_HASH, ptr);
+    bool ok = property_value(SHININESS_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -176,7 +176,7 @@ void MaterialObject::set_blend_func(BlendType b) {
 
 BlendType MaterialObject::blend_func() const {
     const BlendType* ptr = nullptr;
-    bool ok = fetch_property_value(BLEND_FUNC_PROPERTY_HASH, (const EnumType*&) ptr);
+    bool ok = property_value(BLEND_FUNC_PROPERTY_HASH, (const EnumType*&) ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -188,7 +188,7 @@ void MaterialObject::set_depth_write_enabled(bool v) {
 
 bool MaterialObject::is_depth_write_enabled() const {
     const bool* ptr = nullptr;
-    bool ok = fetch_property_value(DEPTH_WRITE_ENABLED_PROPERTY_HASH, ptr);
+    bool ok = property_value(DEPTH_WRITE_ENABLED_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -200,7 +200,7 @@ void MaterialObject::set_cull_mode(CullMode mode) {
 
 CullMode MaterialObject::cull_mode() const {
     const CullMode* ptr = nullptr;
-    bool ok = fetch_property_value(CULL_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
+    bool ok = property_value(CULL_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -212,7 +212,7 @@ void MaterialObject::set_depth_test_enabled(bool v) {
 
 bool MaterialObject::is_depth_test_enabled() const {
     const bool* ptr = nullptr;
-    bool ok = fetch_property_value(DEPTH_TEST_ENABLED_PROPERTY_HASH, ptr);
+    bool ok = property_value(DEPTH_TEST_ENABLED_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -224,7 +224,7 @@ void MaterialObject::set_lighting_enabled(bool v) {
 
 bool MaterialObject::is_lighting_enabled() const {
     const bool* ptr = nullptr;
-    bool ok = fetch_property_value(LIGHTING_ENABLED_PROPERTY_HASH, ptr);
+    bool ok = property_value(LIGHTING_ENABLED_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -236,7 +236,7 @@ void MaterialObject::set_texturing_enabled(bool v) {
 
 bool MaterialObject::is_texturing_enabled() const {
     const bool* ptr = nullptr;
-    bool ok = fetch_property_value(TEXTURING_ENABLED_PROPERTY_HASH, ptr);
+    bool ok = property_value(TEXTURING_ENABLED_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -244,7 +244,7 @@ bool MaterialObject::is_texturing_enabled() const {
 
 float MaterialObject::point_size() const {
     const float* ptr = nullptr;
-    bool ok = fetch_property_value(POINT_SIZE_PROPERTY_NAME, ptr);
+    bool ok = property_value(POINT_SIZE_PROPERTY_NAME, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -256,7 +256,7 @@ void MaterialObject::set_polygon_mode(PolygonMode mode) {
 
 PolygonMode MaterialObject::polygon_mode() const {
     const PolygonMode* ptr = nullptr;
-    bool ok = fetch_property_value(POLYGON_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
+    bool ok = property_value(POLYGON_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -268,7 +268,7 @@ void MaterialObject::set_shade_model(ShadeModel model) {
 
 ShadeModel MaterialObject::shade_model() const {
     const ShadeModel* ptr = nullptr;
-    bool ok = fetch_property_value(SHADE_MODEL_PROPERTY_HASH, (const EnumType*&) ptr);
+    bool ok = property_value(SHADE_MODEL_PROPERTY_HASH, (const EnumType*&) ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -276,7 +276,7 @@ ShadeModel MaterialObject::shade_model() const {
 
 ColourMaterial MaterialObject::colour_material() const {
     const ColourMaterial* ptr = nullptr;
-    bool ok = fetch_property_value(COLOUR_MATERIAL_PROPERTY_HASH, (const EnumType*&) ptr);
+    bool ok = property_value(COLOUR_MATERIAL_PROPERTY_HASH, (const EnumType*&) ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
