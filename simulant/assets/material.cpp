@@ -110,13 +110,14 @@ Material &Material::operator=(const Material &rhs) {
     /* Update refcounts for those names being transferred
      * from the rhs */
     std::string name;
-    for(auto& prop: custom_properties()) {
+    for(auto& prop: rhs.custom_properties()) {
         property_name(prop.first, name);
         push_name(name.c_str(), prop.first);
     }
 
     renderer_ = rhs.renderer_;
     texture_properties_ = rhs.texture_properties_;
+    custom_properties_ = rhs.custom_properties_;
     passes_.clear();
 
     /* Must set the parent to this material */
