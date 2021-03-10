@@ -49,18 +49,9 @@ public:
         }
 
         auto source = get(id);
-        auto copy = source->new_clone();
+        auto copy = target_manager->make(&source->asset_manager());
+        *copy = *source;
 
-        IDType new_id(target_manager->next_id()); // Unbound
-
-        // Force the new ID on the copy
-        copy->_overwrite_id(new_id);
-
-        // Bind the copy to the ID
-        copy->_bind_id_pointer(copy);
-
-        target_manager->objects_.insert(std::make_pair(copy->id(), copy));
-        target_manager->on_make(copy->id());
         return copy;
     }
 

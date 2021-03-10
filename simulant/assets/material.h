@@ -222,7 +222,7 @@ private:
         }
     }
 
-    virtual void on_clear_override(MaterialPropertyNameHash hsh) {
+    virtual void on_clear_override(MaterialPropertyNameHash hsh) override {
         pop_name(hsh);
     }
 
@@ -240,8 +240,6 @@ protected:
     Material(const Material& rhs) = delete;
 
     Material& operator=(const Material& rhs);
-
-    MaterialPtr new_clone();
 };
 
 

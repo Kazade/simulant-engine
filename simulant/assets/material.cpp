@@ -73,6 +73,10 @@ Material::~Material() {
     pop_name(DIFFUSE_MAP_PROPERTY_HASH);
     pop_name(SPECULAR_MAP_PROPERTY_HASH);
     pop_name(NORMAL_MAP_PROPERTY_HASH);
+
+    for(auto& prop: custom_properties()) {
+        pop_name(prop.first);
+    }
 }
 
 bool Material::set_pass_count(uint8_t pass_count) {
@@ -133,13 +137,6 @@ Material &Material::operator=(const Material &rhs) {
 
     return *this;
 }
-
-MaterialPtr Material::new_clone() {
-    auto mat = asset_manager().new_material();
-    *mat = *this;
-    return mat;
-}
-
 
 MaterialPass::MaterialPass():
     MaterialObject(nullptr) {}
