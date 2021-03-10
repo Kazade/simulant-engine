@@ -157,7 +157,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 LightPtr next = nullptr;
 
                 // Pass down the light if necessary, otherwise just pass nullptr
-                if(!renderable->light_count) {
+                if(i < renderable->light_count) {
                     next = lights[i];
                 } else {
                     next = nullptr;

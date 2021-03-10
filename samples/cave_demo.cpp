@@ -23,30 +23,30 @@ public:
         camera_->rotate_global_y_by(Degrees(180 - 90));
 
         // Meshes
-        cave_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj");
-        godray_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj");
-        fairy_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj");
+        cave_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj");
+        godray_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj");
+        fairy_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj");
 
         // Materials + Textures
-        for(auto submesh : cave_mesh_id_.fetch()->each_submesh())
+        for(auto submesh : cave_mesh_->each_submesh())
             submesh->material()->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
-        auto ray_mat = godray_mesh_id_.fetch()->first_submesh()->material();
+        auto ray_mat = godray_mesh_->first_submesh()->material();
         ray_mat->set_blend_func(BlendType::BLEND_ADD);
         ray_mat->set_lighting_enabled(false);
         ray_mat->pass(0)->set_depth_test_enabled(false);
         ray_mat->pass(0)->set_depth_write_enabled(false);
         ray_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
-        auto fairy_mat = fairy_mesh_id_.fetch()->first_submesh()->material();
+        auto fairy_mat = fairy_mesh_->first_submesh()->material();
         fairy_mat->pass(0)->set_blend_func(BlendType::BLEND_ADD);
         fairy_mat->pass(0)->set_lighting_enabled(false);
         fairy_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
-        cave_geom_ = stage_->new_geom_with_mesh(cave_mesh_id_);
-        fairy_actor_ = stage_->new_actor_with_mesh(fairy_mesh_id_);
-        godray_geom_ = stage_->new_geom_with_mesh(godray_mesh_id_);
+        cave_geom_ = stage_->new_geom_with_mesh(cave_mesh_);
+        fairy_actor_ = stage_->new_actor_with_mesh(fairy_mesh_);
+        godray_geom_ = stage_->new_geom_with_mesh(godray_mesh_);
         fairy_actor_->set_render_priority(10);
 
         // Lights
@@ -118,9 +118,9 @@ void fixed_update(float dt) override {
         StagePtr stage_;
         CameraPtr camera_;
 
-        MeshID cave_mesh_id_;
-        MeshID godray_mesh_id_;
-        MeshID fairy_mesh_id_;
+        MeshPtr cave_mesh_;
+        MeshPtr godray_mesh_;
+        MeshPtr fairy_mesh_;
 
         GeomPtr cave_geom_;
         GeomPtr godray_geom_;
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
 
     AppConfig config;
     config.title = "Cave Demo";
-    config.fullscreen = true;
+    config.fullscreen = false;
     config.width = 640;
     config.height = 480;
     CaveDemo app(config);

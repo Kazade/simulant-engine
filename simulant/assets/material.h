@@ -21,6 +21,7 @@
 
 
 #include <unordered_map>
+#include <set>
 
 #include "../asset.h"
 #include "../generic/identifiable.h"
@@ -128,7 +129,7 @@ public:
         return custom_properties_;
     }
 
-    const std::vector<MaterialPropertyNameHash>& texture_properties() const {
+    const std::set<MaterialPropertyNameHash>& texture_properties() const {
         return texture_properties_;
     }
 
@@ -156,6 +157,17 @@ private:
         MaterialPropertyNameHash,
         PropertyName
     > hashes_to_names_;
+
+    static uint32_t _name_refcount(const char* name) {
+        auto hsh = material_property_hash(name);
+
+        auto it = hashes_to_names_.find(hsh);
+        if(it != hashes_to_names_.end()) {
+            return it->second.ref_count;
+        } else {
+            return 0;
+        }
+    }
 
     /* Push a name onto the hash lookup */
     static PropertyName* push_name(const char* name, MaterialPropertyNameHash hsh) {
@@ -187,7 +199,7 @@ private:
         return false;
     }
 
-    std::vector<MaterialPropertyNameHash> texture_properties_;
+    std::set<MaterialPropertyNameHash> texture_properties_;
 
     std::unordered_map<
         MaterialPropertyNameHash,
@@ -202,7 +214,7 @@ private:
         push_name(name, hsh);
 
         if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
-            texture_properties_.push_back(hsh);
+            texture_properties_.insert(hsh);
         }
 
         if(!is_core_property(hsh)) {
