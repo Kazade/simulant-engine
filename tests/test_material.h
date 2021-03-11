@@ -200,7 +200,7 @@ public:
     void test_property_name_refcounting() {
         auto c0 = 0u;
         auto mat = window->shared_assets->new_material();
-        mat->set_property_value("test", 1);
+        mat->set_property_value("test", (int32_t) 1);
 
         auto c1 = Material::_name_refcount("test");
 
