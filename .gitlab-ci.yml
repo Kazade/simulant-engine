@@ -1,3 +1,13 @@
+include:
+  - template: Dependency-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Code-Quality.gitlab-ci.yml
+
+code_quality:
+  artifacts:
+    paths: [gl-code-quality-report.json]
+
 stages:
  - prepare
  - check
@@ -7,6 +17,7 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  SAST_EXCLUDED_PATHS: spec, test, tests, tmp, simulant/deps
 
 prepare:linux-x64-gcc:
   stage: prepare
