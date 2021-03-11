@@ -23,7 +23,7 @@ constexpr const MaterialPropertyNameHash POINT_SIZE_PROPERTY_HASH = material_pro
 constexpr const MaterialPropertyNameHash DEPTH_WRITE_ENABLED_PROPERTY_HASH = material_property_hash(DEPTH_WRITE_ENABLED_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash DEPTH_TEST_ENABLED_PROPERTY_HASH = material_property_hash(DEPTH_TEST_ENABLED_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash LIGHTING_ENABLED_PROPERTY_HASH = material_property_hash(LIGHTING_ENABLED_PROPERTY_NAME);
-constexpr const MaterialPropertyNameHash TEXTURING_ENABLED_PROPERTY_HASH = material_property_hash(TEXTURING_ENABLED_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash TEXTURES_ENABLED_PROPERTY_HASH = material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME);
 
 constexpr const MaterialPropertyNameHash DIFFUSE_MAP_PROPERTY_HASH = material_property_hash(DIFFUSE_MAP_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash LIGHT_MAP_PROPERTY_HASH = material_property_hash(LIGHT_MAP_PROPERTY_NAME);
@@ -68,12 +68,12 @@ struct CoreMaterial {
     const bool depth_test_enabled = true;
 
     const bool lighting_enabled = true;
-    const bool texturing_enabled = true;
+    const int textures_enabled = 15; /* Enable first 4 texture units */
 
     TexturePtr diffuse_map;
-    TexturePtr specular_map;
     TexturePtr light_map;
     TexturePtr normal_map;
+    TexturePtr specular_map;
 
     const Mat4 diffuse_map_matrix;
     const Mat4 specular_map_matrix;

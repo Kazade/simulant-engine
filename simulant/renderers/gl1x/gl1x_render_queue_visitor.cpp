@@ -159,23 +159,37 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
-    if(!prev || prev->is_texturing_enabled() != next->is_texturing_enabled()) {
-        if(next->is_texturing_enabled()) {
-            for(uint32_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
+    auto enabled = next->textures_enabled();
+
+    for(uint32_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
 #if _S_GL_SUPPORTS_MULTITEXTURE
-                GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+        GLCheck(glActiveTexture, GL_TEXTURE0 + i);
 #endif
-                GLCheck(glEnable, GL_TEXTURE_2D);
-            }
+        if(enabled & (1 << i)) {
+            GLCheck(glEnable, GL_TEXTURE_2D);
         } else {
-            for(uint32_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
-#if _S_GL_SUPPORTS_MULTITEXTURE
-                GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-#endif
-                GLCheck(glDisable, GL_TEXTURE_2D);
-            }
+            GLCheck(glDisable, GL_TEXTURE_2D);
+            continue;
+        }
+
+        switch(i) {
+            case 0:
+                bind_texture(0, next->diffuse_map(), next->diffuse_map_matrix());
+            break;
+            case 1:
+                bind_texture(1, next->light_map(), next->light_map_matrix());
+            break;
+            case 2:
+                bind_texture(2, next->normal_map(), next->normal_map_matrix());
+            break;
+            case 3:
+                bind_texture(3, next->specular_map(), next->specular_map_matrix());
+            break;
+            default:
+                break;
         }
     }
+
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {
@@ -275,33 +289,6 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 #endif
-
-    if(pass_->is_texturing_enabled()) {
-        uint8_t used_count = 0;
-
-        if(bind_texture(used_count, pass_->diffuse_map(), pass_->diffuse_map_matrix())) {
-            used_count++;
-        }
-
-        if(bind_texture(used_count, pass_->light_map(), pass_->light_map_matrix())) {
-            used_count++;
-        }
-
-        if(bind_texture(used_count, pass_->normal_map(), pass_->normal_map_matrix())) {
-            used_count++;
-        }
-
-        if(bind_texture(used_count, pass_->specular_map(), pass_->specular_map_matrix())) {
-            used_count++;
-        }
-
-        for(auto i = used_count; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
-#if _S_GL_SUPPORTS_MULTITEXTURE
-            GLCheck(glActiveTexture, GL_TEXTURE0 + i);
-#endif
-            GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
-        }
-    }
 }
 
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {

@@ -316,7 +316,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             mat->set_diffuse_map(tex);
         }
 
-        mat->set_texturing_enabled(true);
+        mat->set_textures_enabled(1);
         mat->set_lighting_enabled(true);
 
         auto sm = mesh->new_submesh_with_material(material.name, mat);

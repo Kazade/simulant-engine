@@ -124,25 +124,22 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
 
                 holder.set_property_value(key.c_str(), Vec4(x, y, z, w));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
-                if(!value.is_string()) {
-                    S_ERROR("Invalid property value for: {0}", key);
-                    continue;
-                }
-
                 if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
                     holder.set_property_value(key.c_str(), value.get<jsonic::Number>());
                 } else {
-                    /* Special cases for enums - need a better way to handle this */
-                    if(key == BLEND_FUNC_PROPERTY_NAME) {
-                        std::string v = value.get<jsonic::String>();
-                        BlendType type = blend_type_from_name(v.c_str());
-                        holder.set_blend_func(type);
-                    } else if(key == SHADE_MODEL_PROPERTY_NAME) {
-                        std::string v = value.get<jsonic::String>();
-                        holder.set_shade_model(shade_model_from_name(v.c_str()));
-                    } else if(key == CULL_MODE_PROPERTY_NAME) {
-                        std::string v = value.get<jsonic::String>();
-                        holder.set_cull_mode(cull_mode_from_name(v.c_str()));
+                    if(value.is_string()) {
+                        /* Special cases for enums - need a better way to handle this */
+                        if(key == BLEND_FUNC_PROPERTY_NAME) {
+                            std::string v = value.get<jsonic::String>();
+                            BlendType type = blend_type_from_name(v.c_str());
+                            holder.set_blend_func(type);
+                        } else if(key == SHADE_MODEL_PROPERTY_NAME) {
+                            std::string v = value.get<jsonic::String>();
+                            holder.set_shade_model(shade_model_from_name(v.c_str()));
+                        } else if(key == CULL_MODE_PROPERTY_NAME) {
+                            std::string v = value.get<jsonic::String>();
+                            holder.set_cull_mode(cull_mode_from_name(v.c_str()));
+                        }
                     } else {
                         holder.set_property_value(key.c_str(), (int32_t) value.get<jsonic::Number>());
                     }

@@ -63,7 +63,7 @@ Here is a list of all the available built-in properties:
  - `s_shade_model`
  - `s_polygon_mode`
  - `s_lighting_enabled`
- - `s_texturing_enabled`
+ - `s_textures_enabled`
  - `s_point_size`
 
 

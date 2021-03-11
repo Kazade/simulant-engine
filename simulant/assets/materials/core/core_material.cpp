@@ -39,9 +39,6 @@ bool core_material_property_value(const MaterialPropertyNameHash hsh, const bool
         case material_property_hash(LIGHTING_ENABLED_PROPERTY_NAME):
             out = &core_material().lighting_enabled;
         break;
-        case material_property_hash(TEXTURING_ENABLED_PROPERTY_NAME):
-            out = &core_material().texturing_enabled;
-        break;
         default:
         return false;
     }
@@ -93,6 +90,9 @@ bool core_material_property_value(const MaterialPropertyNameHash hsh, const int3
         break;
         case material_property_hash(CULL_MODE_PROPERTY_NAME):
             out = &core_material().cull_mode;
+        break;
+        case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
+            out = &core_material().textures_enabled;
         break;
         default:
         return false;
@@ -237,7 +237,7 @@ bool is_core_property(const MaterialPropertyNameHash hsh) {
         case material_property_hash(DEPTH_WRITE_ENABLED_PROPERTY_NAME):
         case material_property_hash(DEPTH_TEST_ENABLED_PROPERTY_NAME):
         case material_property_hash(LIGHTING_ENABLED_PROPERTY_NAME):
-        case material_property_hash(TEXTURING_ENABLED_PROPERTY_NAME):
+        case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
         case material_property_hash(DIFFUSE_MAP_PROPERTY_NAME):
         case material_property_hash(SPECULAR_MAP_PROPERTY_NAME):
         case material_property_hash(LIGHT_MAP_PROPERTY_NAME):
@@ -281,7 +281,6 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(DEPTH_WRITE_ENABLED_PROPERTY_NAME):
         case material_property_hash(DEPTH_TEST_ENABLED_PROPERTY_NAME):
         case material_property_hash(LIGHTING_ENABLED_PROPERTY_NAME):
-        case material_property_hash(TEXTURING_ENABLED_PROPERTY_NAME):
             *type = MATERIAL_PROPERTY_TYPE_BOOL;
         break;
         case material_property_hash(DIFFUSE_MAP_PROPERTY_NAME):
@@ -301,6 +300,7 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(SHADE_MODEL_PROPERTY_NAME):
         case material_property_hash(COLOUR_MATERIAL_PROPERTY_NAME):
         case material_property_hash(CULL_MODE_PROPERTY_NAME):
+        case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
             *type = MATERIAL_PROPERTY_TYPE_INT;
         break;
         default:
