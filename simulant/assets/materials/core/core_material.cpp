@@ -315,9 +315,18 @@ bool core_property_type(const char* name, MaterialPropertyType* type) {
 }
 
 
+static CoreMaterial* CORE_MATERIAL = nullptr;
+
+void init_core_material(const CoreMaterial& base) {
+    if(CORE_MATERIAL) {
+        return;
+    }
+
+    CORE_MATERIAL = new CoreMaterial(base);
+}
+
 const CoreMaterial& core_material() {
-    static const CoreMaterial mat;
-    return mat;
+    return *CORE_MATERIAL;
 }
 
 const PropertyList core_properties() {

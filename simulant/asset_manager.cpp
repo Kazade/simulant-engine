@@ -91,11 +91,51 @@ MaterialPtr AssetManager::default_material() const {
 }
 
 
+static TexturePtr create_texture_with_colour(AssetManager* manager, const Colour& c) {
+    auto tex = manager->new_texture(8, 8, TEXTURE_FORMAT_RGB888, GARBAGE_COLLECT_NEVER);
+
+    const uint8_t r = (uint8_t) (c.r * 255.0f);
+    const uint8_t g = (uint8_t) (c.g * 255.0f);
+    const uint8_t b = (uint8_t) (c.b * 255.0f);
+
+    std::vector<uint8_t> bytes;
+    bytes.reserve(64 * 3);
+    for(std::size_t i = 0; i < 64; ++i) {
+        bytes.push_back(r);
+        bytes.push_back(g);
+        bytes.push_back(b);
+    }
+
+    tex->set_data(bytes);
+    return tex;
+}
+
+
 bool SharedAssetManager::init() {
     S_DEBUG("Initalizing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
     set_default_font_filename(DEFAULT_FONT_STYLE_BODY, BODY_FONT);
     set_default_font_filename(DEFAULT_FONT_STYLE_HEADING, HEADING_FONT);
+
+    white_tex_ = create_texture_with_colour(this, smlt::Colour::WHITE);
+    white_tex_->set_name("s_white_texture");
+
+    black_tex_ = create_texture_with_colour(this, smlt::Colour::BLACK);
+    black_tex_->set_name("s_black_texture");
+
+    z_tex_ = create_texture_with_colour(this, smlt::Colour::from_hex_string("#8080FF"));
+    z_tex_->set_name("s_znormal_texture");
+
+    /* Update the core material */
+    CoreMaterial mat;
+
+    mat.diffuse_map = white_tex_;
+    mat.light_map = white_tex_;
+    mat.specular_map = black_tex_;
+    mat.normal_map = z_tex_;
+
+    init_core_material(mat);
+
     S_DEBUG("Finished initializing defaults");
     return true;
 }
@@ -105,8 +145,8 @@ MaterialPtr SharedAssetManager::default_material() const {
 
     if(!default_material_) {
         default_material_ = const_cast<SharedAssetManager*>(this)->new_material_from_file(
-                    default_material_filename_
-                    );
+            default_material_filename_
+        );
     }
 
     return default_material_;

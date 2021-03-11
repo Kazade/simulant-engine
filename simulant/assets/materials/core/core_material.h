@@ -70,10 +70,10 @@ struct CoreMaterial {
     const bool lighting_enabled = true;
     const bool texturing_enabled = true;
 
-    const TexturePtr diffuse_map;
-    const TexturePtr specular_map;
-    const TexturePtr light_map;
-    const TexturePtr normal_map;
+    TexturePtr diffuse_map;
+    TexturePtr specular_map;
+    TexturePtr light_map;
+    TexturePtr normal_map;
 
     const Mat4 diffuse_map_matrix;
     const Mat4 specular_map_matrix;
@@ -88,6 +88,7 @@ struct CoreMaterial {
     const EnumType depth_func = (EnumType) DEPTH_FUNC_LEQUAL;
 };
 
+void init_core_material(const CoreMaterial& base);
 const CoreMaterial& core_material();
 
 typedef std::vector<std::pair<std::string, MaterialPropertyType>> PropertyList;

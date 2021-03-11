@@ -294,6 +294,14 @@ private:
 
     mutable FontPtr default_heading_font_;
     unicode default_heading_font_filename_;
+
+    /*
+     * Default textures for materials, these are all
+     * 8x8 textures in white, black, and 0.5,0.5,1 (for normal maps)
+     */
+    TexturePtr white_tex_;
+    TexturePtr black_tex_;
+    TexturePtr z_tex_;
 };
 
 
