@@ -17,6 +17,7 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  SAST_EXCLUDED_PATHS: spec, test, tests, tmp, simulant/deps
 
 prepare:linux-x64-gcc:
   stage: prepare
