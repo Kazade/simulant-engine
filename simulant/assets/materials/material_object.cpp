@@ -230,13 +230,13 @@ bool MaterialObject::is_lighting_enabled() const {
     return *ptr;
 }
 
-void MaterialObject::set_texturing_enabled(bool v) {
-    set_property_value(TEXTURING_ENABLED_PROPERTY_NAME, v);
+void MaterialObject::set_textures_enabled(int32_t v) {
+    set_property_value(TEXTURES_ENABLED_PROPERTY_NAME, v);
 }
 
-bool MaterialObject::is_texturing_enabled() const {
-    const bool* ptr = nullptr;
-    bool ok = property_value(TEXTURING_ENABLED_PROPERTY_HASH, ptr);
+int32_t MaterialObject::textures_enabled() const {
+    const int32_t* ptr = nullptr;
+    bool ok = property_value(TEXTURES_ENABLED_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
