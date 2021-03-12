@@ -15,7 +15,7 @@ public:
         pipeline->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
         link_pipeline(pipeline);
 
-        pipeline->viewport->set_colour(smlt::Colour::SKY_BLUE);
+        pipeline->viewport->set_colour(smlt::Colour::BLUE);
 
         camera_->set_perspective_projection(
             Degrees(45.0),

@@ -1284,6 +1284,7 @@ simulant/loki/typelist_macros.h
 simulant/managers/skybox_manager.cpp
 simulant/managers/skybox_manager.h
 simulant/managers/window_holder.h
+simulant/nodes/ui/ui_config.cpp
 simulant/panels/panel.h
 simulant/panels/partitioner_panel.cpp
 simulant/panels/partitioner_panel.h
