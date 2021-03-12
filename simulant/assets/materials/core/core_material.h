@@ -93,7 +93,7 @@ const CoreMaterial& core_material();
 
 typedef std::vector<std::pair<std::string, MaterialPropertyType>> PropertyList;
 
-const PropertyList core_properties();
+const PropertyList &core_properties();
 
 bool is_core_property(const char* name);
 bool is_core_property(const MaterialPropertyNameHash hsh);

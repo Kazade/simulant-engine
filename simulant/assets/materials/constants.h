@@ -57,29 +57,29 @@ CullMode cull_mode_from_name(const char* name);
 BlendType blend_type_from_name(const char* name);
 DepthFunc depth_func_from_name(const char* name);
 
-constexpr const char* const DIFFUSE_PROPERTY_NAME = "s_material_diffuse";
-constexpr const char* const AMBIENT_PROPERTY_NAME = "s_material_ambient";
-constexpr const char* const EMISSION_PROPERTY_NAME = "s_material_emission";
-constexpr const char* const SPECULAR_PROPERTY_NAME = "s_material_specular";
-constexpr const char* const SHININESS_PROPERTY_NAME = "s_material_shininess";
-constexpr const char* const DIFFUSE_MAP_PROPERTY_NAME = "s_diffuse_map";
-constexpr const char* const LIGHT_MAP_PROPERTY_NAME = "s_light_map";
-constexpr const char* const NORMAL_MAP_PROPERTY_NAME = "s_normal_map";
-constexpr const char* const SPECULAR_MAP_PROPERTY_NAME = "s_specular_map";
-constexpr const char* const DEPTH_WRITE_ENABLED_PROPERTY_NAME = "s_depth_write_enabled";
-constexpr const char* const DEPTH_TEST_ENABLED_PROPERTY_NAME = "s_depth_test_enabled";
-constexpr const char* const DEPTH_FUNC_PROPERTY_NAME = "s_depth_func";
-constexpr const char* const BLEND_FUNC_PROPERTY_NAME = "s_blend_func";
-constexpr const char* const CULL_MODE_PROPERTY_NAME = "s_cull_mode";
-constexpr const char* const SHADE_MODEL_PROPERTY_NAME = "s_shade_model";
-constexpr const char* const LIGHTING_ENABLED_PROPERTY_NAME = "s_lighting_enabled";
-constexpr const char* const TEXTURES_ENABLED_PROPERTY_NAME = "s_textures_enabled";
-constexpr const char* const POINT_SIZE_PROPERTY_NAME = "s_point_size";
-constexpr const char* const POLYGON_MODE_PROPERTY_NAME = "s_polygon_mode";
-constexpr const char* const COLOUR_MATERIAL_PROPERTY_NAME = "s_colour_material";
-constexpr const char* const DIFFUSE_MAP_MATRIX_PROPERTY_NAME = "s_diffuse_map_matrix";
-constexpr const char* const LIGHT_MAP_MATRIX_PROPERTY_NAME = "s_light_map_matrix";
-constexpr const char* const NORMAL_MAP_MATRIX_PROPERTY_NAME = "s_normal_map_matrix";
-constexpr const char* const SPECULAR_MAP_MATRIX_PROPERTY_NAME = "s_specular_map_matrix";
+#define DIFFUSE_PROPERTY_NAME "s_material_diffuse"
+#define AMBIENT_PROPERTY_NAME "s_material_ambient"
+#define EMISSION_PROPERTY_NAME "s_material_emission"
+#define SPECULAR_PROPERTY_NAME "s_material_specular"
+#define SHININESS_PROPERTY_NAME "s_material_shininess"
+#define DIFFUSE_MAP_PROPERTY_NAME "s_diffuse_map"
+#define LIGHT_MAP_PROPERTY_NAME "s_light_map"
+#define NORMAL_MAP_PROPERTY_NAME "s_normal_map"
+#define SPECULAR_MAP_PROPERTY_NAME "s_specular_map"
+#define DEPTH_WRITE_ENABLED_PROPERTY_NAME "s_depth_write_enabled"
+#define DEPTH_TEST_ENABLED_PROPERTY_NAME "s_depth_test_enabled"
+#define DEPTH_FUNC_PROPERTY_NAME "s_depth_func"
+#define BLEND_FUNC_PROPERTY_NAME "s_blend_func"
+#define CULL_MODE_PROPERTY_NAME "s_cull_mode"
+#define SHADE_MODEL_PROPERTY_NAME "s_shade_model"
+#define LIGHTING_ENABLED_PROPERTY_NAME "s_lighting_enabled"
+#define TEXTURES_ENABLED_PROPERTY_NAME "s_textures_enabled"
+#define POINT_SIZE_PROPERTY_NAME "s_point_size"
+#define POLYGON_MODE_PROPERTY_NAME "s_polygon_mode"
+#define COLOUR_MATERIAL_PROPERTY_NAME "s_colour_material"
+#define DIFFUSE_MAP_MATRIX_PROPERTY_NAME "s_diffuse_map_matrix"
+#define LIGHT_MAP_MATRIX_PROPERTY_NAME "s_light_map_matrix"
+#define NORMAL_MAP_MATRIX_PROPERTY_NAME "s_normal_map_matrix"
+#define SPECULAR_MAP_MATRIX_PROPERTY_NAME "s_specular_map_matrix"
 
 }
