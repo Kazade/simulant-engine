@@ -329,7 +329,7 @@ const CoreMaterial& core_material() {
     return *CORE_MATERIAL;
 }
 
-const PropertyList core_properties() {
+const PropertyList& core_properties() {
     static const PropertyList core_properties = {
         {DIFFUSE_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_VEC4},
         {AMBIENT_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_VEC4},

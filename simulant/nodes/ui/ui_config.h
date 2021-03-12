@@ -42,7 +42,12 @@ struct UIDim {
     float height = 0.0;
 };
 
+
 struct UIConfig {
+    static const Colour ALICE_BLUE;
+    static const Colour LIGHT_GREY;
+    static const Colour DODGER_BLUE;
+
     uint32_t font_size_ = 16;
     uint32_t line_height_ = 18;
 
@@ -54,8 +59,8 @@ struct UIConfig {
     ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
     uint32_t scrollbar_width_ = 16;
-    Colour scrollbar_background_colour_ = Colour::LIGHT_GREY;
-    Colour scrollbar_foreground_colour_ = Colour::ALICE_BLUE;
+    Colour scrollbar_background_colour_ = LIGHT_GREY;
+    Colour scrollbar_foreground_colour_ = ALICE_BLUE;
 
     uint32_t button_height_ = 36;
     uint32_t button_width_ = 0; // Fit content
@@ -64,10 +69,10 @@ struct UIConfig {
     Colour label_background_colour_ = Colour::NONE;
     Colour label_foreground_colour_ = Colour::NONE;
     Colour label_border_colour_ = Colour::NONE;
-    Colour label_text_colour_ = Colour::DODGER_BLUE;
+    Colour label_text_colour_ = DODGER_BLUE;
 
     UInt4 button_padding_ = { 30, 30, 20, 20 };
-    Colour button_background_colour_ = Colour::DODGER_BLUE;
+    Colour button_background_colour_ = DODGER_BLUE;
     Colour button_foreground_colour_ = Colour::NONE;
     Colour button_text_colour_ = Colour::WHITE;
     Colour button_border_colour_ = Colour::NONE;
@@ -75,9 +80,9 @@ struct UIConfig {
     uint32_t button_border_width_ = 0;
     uint32_t button_border_radius_ = 3;
 
-    Colour progress_bar_foreground_colour_ = Colour::DODGER_BLUE;
+    Colour progress_bar_foreground_colour_ = DODGER_BLUE;
     Colour progress_bar_background_colour_ = Colour::WHITE;
-    Colour progress_bar_border_colour_ = Colour::DODGER_BLUE;
+    Colour progress_bar_border_colour_ = DODGER_BLUE;
     float progress_bar_border_width_ = 1;
     uint32_t progress_bar_width_ = 100;
     uint32_t progress_bar_height_ = 16;

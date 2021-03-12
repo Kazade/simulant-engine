@@ -139,7 +139,7 @@ static unsigned int round(unsigned int value, unsigned int multiple){
 }
 
 void StatsPanel::rebuild_ram_graph() {
-    smlt::Colour colour = smlt::Colour::SKY_BLUE;
+    smlt::Colour colour = smlt::Colour::BLUE;
     colour.a = 0.35;
 
     float width = window_->width();

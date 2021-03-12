@@ -18,7 +18,7 @@ public:
         );
         link_pipeline(pipeline_);
 
-        pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
+        pipeline_->viewport->set_colour(smlt::Colour::BLUE);
 
         camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0

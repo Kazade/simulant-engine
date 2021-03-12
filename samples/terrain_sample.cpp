@@ -61,7 +61,7 @@ public:
         )->set_clear_flags(
             smlt::BUFFER_CLEAR_ALL
         );
-        pipeline_->viewport->set_colour(smlt::Colour::SKY_BLUE);
+        pipeline_->viewport->set_colour(smlt::Colour::BLUE);
 
         link_pipeline(pipeline_);
 
