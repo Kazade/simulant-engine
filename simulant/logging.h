@@ -188,6 +188,8 @@ private:
 
 }
 
+#ifndef NDEBUG
+
 #define S_DEBUG(str, ...) \
     smlt::debug(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
@@ -203,3 +205,21 @@ private:
 #define S_WARN_ONCE(str, ...) \
     smlt::warn_once(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
+#else
+
+#define S_DEBUG(str, ...) \
+    smlt::debug(_F(str).format(__VA_ARGS__))
+
+#define S_INFO(str, ...) \
+    smlt::info(_F(str).format(__VA_ARGS__))
+
+#define S_WARN(str, ...) \
+    smlt::warn(_F(str).format(__VA_ARGS__))
+
+#define S_ERROR(str, ...) \
+    smlt::error(_F(str).format(__VA_ARGS__))
+
+#define S_WARN_ONCE(str, ...) \
+    smlt::warn_once(_F(str).format(__VA_ARGS__))
+
+#endif
