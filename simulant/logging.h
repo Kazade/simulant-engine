@@ -151,7 +151,7 @@ private:
         s << thread::this_thread_id() << ": ";
 
         if(line > -1) {
-            s << text << " (" << file << ":" << Formatter("{0}").format(line) << ")";
+            s << text << " (" << file << ":" << line << ")";
         } else {
             s << text;
         }
