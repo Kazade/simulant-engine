@@ -17,6 +17,12 @@ namespace smlt {
 namespace thread {
 
 Thread::~Thread() {
+    S_DEBUG("Thread destructor called");
+
+    if(!thread_) {
+        return;
+    }
+
 #ifdef __PSP__
     sceKernelDeleteThread(thread_);
 #elif defined(__DREAMCAST__)
@@ -25,6 +31,10 @@ Thread::~Thread() {
 }
 
 void Thread::join() {
+    assert(thread_);
+
+    S_DEBUG("Joining thread {0}", this_thread_id());
+
 #ifdef __PSP__
     SceKernelThreadInfo status;
     status.size = sizeof(SceKernelThreadInfo);
@@ -45,6 +55,8 @@ void Thread::join() {
 #else
     pthread_join(thread_, nullptr);
 #endif
+
+    thread_ = 0;
 }
 
 bool Thread::joinable() const {
@@ -63,6 +75,8 @@ void Thread::detach() {
 }
 
 void Thread::exit() {
+    S_DEBUG("Exiting thread {0}", this_thread_id());
+
 #ifdef __PSP__
     sceKernelExitThread(0);
 #elif defined(__DREAMCAST__)
@@ -72,6 +86,8 @@ void Thread::exit() {
     int status = 0;
     pthread_exit(&status);
 #endif
+
+    S_DEBUG("Thread exited");
 }
 
 #ifdef __PSP__

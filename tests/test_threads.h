@@ -12,6 +12,13 @@ using namespace smlt::thread;
 
 class ThreadTests : public smlt::test::SimulantTestCase {
 public:
+    void test_join_wipes_thread_id() {
+        thread::Thread thread([]() {});
+        assert_not_equal(thread.id(), 0u);
+        thread.join();
+        assert_equal(thread.id(), 0u);
+    }
+
     void test_async() {
         auto func_argless = []() -> int {
             return 1;
