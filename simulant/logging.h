@@ -149,7 +149,13 @@ private:
 
         std::stringstream s;
         s << thread::this_thread_id() << ": ";
-        s << text << " (" << file << ":" << Formatter("{0}").format(line) << ")";
+
+        if(line > -1) {
+            s << text << " (" << file << ":" << Formatter("{0}").format(line) << ")";
+        } else {
+            s << text;
+        }
+
         for(uint32_t i = 0; i < handlers_.size(); ++i) {
             handlers_[i]->write_message(this, std::chrono::system_clock::now(), level, s.str());
         }
