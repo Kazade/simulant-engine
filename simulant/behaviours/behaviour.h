@@ -151,7 +151,7 @@ public:
     template<typename T>
     T* new_behaviour() {
         static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
-        static_assert(std::is_base_of<RefCounted<T>, T>::value, "Behaviours must derive Managed<T>");
+        static_assert(std::is_base_of<RefCounted<T>, T>::value, "Behaviours must derive RefCounted<T>");
         std::shared_ptr<T> ret = T::create();
         add_behaviour<T>(ret);
         return ret.get();
@@ -160,7 +160,7 @@ public:
     template<typename T, typename ...Params>
     T* new_behaviour(Params&&... params) {
         static_assert(std::is_base_of<Behaviour, T>::value, "Behaviours must derive smlt::Behaviour");
-        static_assert(std::is_base_of<RefCounted<T>, T>::value, "Behaviours must derive Managed<T>");
+        static_assert(std::is_base_of<RefCounted<T>, T>::value, "Behaviours must derive RefCounted<T>");
         std::shared_ptr<T> ret = T::create(std::forward<Params>(params)...);
         add_behaviour<T>(ret);
         return ret.get();
