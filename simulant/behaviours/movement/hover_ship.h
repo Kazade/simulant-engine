@@ -18,7 +18,7 @@ class HoverShip:
 public:
     HoverShip(Window* window);
 
-    const std::string name() const {
+    const char* name() const {
         return "Hover Ship";
     }
 

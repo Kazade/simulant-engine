@@ -96,7 +96,7 @@ public:
         return Vec3::POSITIVE_Y * rot;
     }
 
-    const std::string name() const { return "Rigid Body"; }
+    const char* name() const { return "Rigid Body"; }
 
     bool is_awake() const;
 private:

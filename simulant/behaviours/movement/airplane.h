@@ -17,7 +17,7 @@ public:
 
     void fixed_update(float step);
 
-    const std::string name() const { return "Airplane"; }
+    const char* name() const { return "Airplane"; }
 
 private:
     void on_behaviour_added(Organism *controllable);

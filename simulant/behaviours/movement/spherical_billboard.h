@@ -32,7 +32,7 @@ public:
         }
     }
 
-    const std::string name() const override {
+    const char* name() const override {
         return "spherical_billboard";
     }
 private:

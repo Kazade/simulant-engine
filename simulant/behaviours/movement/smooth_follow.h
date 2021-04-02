@@ -18,7 +18,7 @@ public:
     SmoothFollow();
     ~SmoothFollow();
 
-    const std::string name() const override {
+    const char* name() const override {
         return "Smooth Follow";
     }
 

@@ -44,7 +44,7 @@ public:
         }
     }
 
-    const std::string name() const override {
+    const char* name() const override {
         return "cylindrical_billboard";
     }
 private:

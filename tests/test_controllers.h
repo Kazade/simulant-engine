@@ -20,7 +20,7 @@ public:
 
     uint32_t call_count = 0;
 
-    const std::string name() const { return "test behaviour"; }
+    const char* name() const { return "test behaviour"; }
 };
 
 
