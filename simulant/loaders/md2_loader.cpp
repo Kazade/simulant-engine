@@ -237,7 +237,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     data_->read((char*) &header, sizeof(MD2Header));
 
     if(header.ident != MAGIC_NUMBER_ID || header.version != 8) {
-        throw std::logic_error("Unsupported MD2 file: " + this->filename_.encode());
+        throw std::logic_error("Unsupported MD2 file: " + this->filename_.str());
     }
 
     data_->seekg(header.offset_frames, std::ios_base::beg);
@@ -278,7 +278,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     skin_name = kfs::path::norm_path(skin->name);
 
     std::vector<std::string> possible_paths = {
-        kfs::path::join(kfs::path::dir_name(filename_.encode()), kfs::path::split(skin_name).second),
+        kfs::path::join(kfs::path::dir_name(filename_.str()), kfs::path::split(skin_name).second),
         skin_name
     };
 

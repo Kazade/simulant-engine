@@ -34,7 +34,7 @@ namespace loaders {
 
 class SimulantMaterialReader : public tinyobj::MaterialReader {
 public:
-    SimulantMaterialReader(VirtualFileSystem* locator, const unicode& obj_filename):
+    SimulantMaterialReader(VirtualFileSystem* locator, const Path& obj_filename):
         locator_(locator),
         obj_filename_(obj_filename) {}
 
@@ -43,7 +43,7 @@ public:
         std::map<std::string, int> *matMap, std::string *warn,
         std::string *err) override {
 
-        std::string filename = kfs::path::join(kfs::path::dir_name(obj_filename_.encode()), matId);
+        std::string filename = kfs::path::join(kfs::path::dir_name(obj_filename_.str()), matId);
 
         try {
             auto stream = locator_->open_file(filename);
@@ -57,7 +57,7 @@ public:
 
 private:
     VirtualFileSystem* locator_ = nullptr;
-    unicode obj_filename_;
+    Path obj_filename_;
 };
 
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
@@ -141,7 +141,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 // Check relative texture file first
                 possible_locations.push_back(
                     kfs::path::join(
-                        kfs::path::dir_name(filename_.encode()),
+                        kfs::path::dir_name(filename_.str()),
                         material.diffuse_texname
                     )
                 );

@@ -277,16 +277,20 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
     return result;
 }
 
-MeshPtr AssetManager::new_mesh_from_file(
-    const unicode& path,
+MeshPtr AssetManager::new_mesh_from_file(const Path& path,
     const VertexSpecification& desired_specification,
     const MeshLoadOptions& options,
     GarbageCollectMethod garbage_collect) {
 
     //Load the material
     auto mesh = new_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
-    auto loader = window->loader_for(path.encode());
+    auto loader = window->loader_for(path);
     assert(loader && "Unable to locate a loader for the specified mesh file");
+
+    if(!loader) {
+        S_ERROR("No mesh loader found for path: {0}", path.str());
+        return MeshPtr();
+    }
 
     LoaderOptions loader_options;
     loader_options[MESH_LOAD_OPTIONS_KEY] = options;
@@ -297,7 +301,7 @@ MeshPtr AssetManager::new_mesh_from_file(
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     window->loader_for("heightmap_loader", image_file)->into(mesh, {

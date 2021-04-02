@@ -25,45 +25,9 @@
 
 #include "generic/managed.h"
 #include "utils/unicode.h"
+#include "path.h"
 
 namespace smlt {
-
-
-class Path {
-public:
-    Path() = default;
-
-    Path(const char* path):
-        path_(path) {}
-
-    Path(const std::string& path):
-        path_(path) {}
-
-    std::string str() const {
-        return path_;
-    }
-
-private:
-    std::string path_;
-};
-
-}
-
-namespace std {
-
-template<>
-struct hash<smlt::Path> {
-    std::size_t operator()(const smlt::Path& k) const {
-        return hash<std::string>()(k.str());
-    }
-};
-
-}
-
-
-
-namespace smlt {
-
 
 class Window;
 
@@ -83,16 +47,16 @@ public:
     std::list<Path>& search_path() { return resource_path_; }
 
     Path locate_file(const Path& filename) const;
-    std::shared_ptr<std::istream> open_file(const unicode& filename);
-    std::shared_ptr<std::stringstream> read_file(const unicode& filename);
-    std::vector<std::string> read_file_lines(const unicode& filename);
+    std::shared_ptr<std::istream> open_file(const Path& filename);
+    std::shared_ptr<std::stringstream> read_file(const Path& filename);
+    std::vector<std::string> read_file_lines(const Path& filename);
 
-    bool add_search_path(const unicode& path);
-    void remove_search_path(const unicode& path);
+    bool add_search_path(const Path& path);
+    void remove_search_path(const Path& path);
 
 private:
-    unicode find_executable_directory();
-    unicode find_working_directory();
+    Path find_executable_directory();
+    Path find_working_directory();
 
     std::list<Path> resource_path_;
 

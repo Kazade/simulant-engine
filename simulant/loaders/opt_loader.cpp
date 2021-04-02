@@ -454,9 +454,9 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
     assert(mesh && "You passed a Resource that is not a mesh to the OPT loader");
 
-    std::ifstream file(filename_.encode().c_str(), std::ios::binary);
+    std::ifstream file(filename_.str(), std::ios::binary);
     if(!file.good()) {
-        throw std::runtime_error("Couldn't load the OPT file: " + filename_.encode());
+        throw std::runtime_error("Couldn't load the OPT file: " + filename_.str());
     }
 
     VertexSpecification spec;

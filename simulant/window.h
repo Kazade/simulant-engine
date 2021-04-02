@@ -127,8 +127,8 @@ public:
     );
 
     LoaderPtr loader_for(const Path &filename, LoaderHint hint=LOADER_HINT_NONE);
-    LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
-    LoaderTypePtr loader_type(const unicode& loader_name) const;
+    LoaderPtr loader_for(const std::string& loader_name, const Path& filename);
+    LoaderTypePtr loader_type(const std::string& loader_name) const;
 
     void register_loader(LoaderTypePtr loader_type);
 

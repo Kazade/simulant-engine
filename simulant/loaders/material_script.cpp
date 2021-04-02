@@ -35,7 +35,7 @@
 
 namespace smlt {
 
-MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const unicode& filename):
+MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const Path& filename):
     filename_(filename),
     data_(*data.get()) {
 
@@ -244,7 +244,7 @@ void MaterialScript::generate(Material& material) {
             std::string vertex_shader_path = pass["vertex_shader"].get<jsonic::String>();
             std::string fragment_shader_path = pass["fragment_shader"].get<jsonic::String>();
 
-            auto parent_dir = unicode(kfs::path::dir_name(filename_.encode()));
+            auto parent_dir = Path(kfs::path::dir_name(filename_.str()));
 
             bool added = false;
 

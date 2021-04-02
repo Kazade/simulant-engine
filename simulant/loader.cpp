@@ -85,7 +85,7 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if (result.data.empty()) {
         S_ERROR(_F("Unable to load texture with name: {0}").format(filename_));
-        throw std::runtime_error("Couldn't load the file: " + filename_.encode());
+        throw std::runtime_error("Couldn't load the file: " + filename_.str());
     } else {
         tex->set_source(filename_);
         tex->set_format(result.format, result.texel_type);

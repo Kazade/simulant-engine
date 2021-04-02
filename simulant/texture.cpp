@@ -316,7 +316,7 @@ void Texture::flip_vertically() {
     mutate_data(&do_flip_vertically);
 }
 
-void Texture::set_source(const unicode& source) {
+void Texture::set_source(const Path& source) {
     source_ = source;
 }
 
@@ -384,12 +384,12 @@ void Texture::set_data(const uint8_t* data) {
     data_.assign(data, data + (width() * height() * bytes_per_pixel()));
 }
 
-void Texture::save_to_file(const unicode& filename) {
+void Texture::save_to_file(const Path& filename) {
     _S_UNUSED(filename);
     assert(0 && "Not Implemented");
 }
 
-unicode Texture::source() const {
+Path Texture::source() const {
     return source_;
 }
 

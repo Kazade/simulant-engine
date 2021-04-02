@@ -31,7 +31,7 @@
 #include "sound.h"
 #include "font.h"
 #include "assets/particle_script.h"
-#include "vfs.h"
+#include "path.h"
 
 namespace smlt {
 
@@ -72,7 +72,7 @@ enum DefaultFontStyle {
  *
  * TEMPLATE="""
     // %(klass)s API
-    %(klass)sPtr new_%(name)s_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    %(klass)sPtr new_%(name)s_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_%(name)s(%(klass)sID id);
     %(klass)sPtr %(name)s(%(klass)sID id);
     const %(klass)sPtr %(name)s (%(klass)sID id) const;
@@ -166,14 +166,14 @@ public:
     MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MeshPtr new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr new_mesh_from_file(const unicode& path, const VertexSpecification& desired_specification=VertexSpecification::DEFAULT, const MeshLoadOptions& options=MeshLoadOptions(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr new_mesh_from_file(const Path& path, const VertexSpecification& desired_specification=VertexSpecification::DEFAULT, const MeshLoadOptions& options=MeshLoadOptions(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     /*
      * Given a submesh, this creates a new mesh with just that single submesh
      */
     MeshPtr new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    MeshPtr new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
+    MeshPtr new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
 

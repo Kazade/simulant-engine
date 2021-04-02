@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "../stage_node.h"
 #include "../../generic/identifiable.h"
-#include "../../vfs.h"
+#include "../../path.h"
 
 namespace smlt {
 

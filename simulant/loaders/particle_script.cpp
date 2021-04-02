@@ -167,7 +167,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                             mat->set_property_value(property_name.c_str(), (int32_t) js[key].get<jsonic::Number>());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
-                        auto dirname = kfs::path::dir_name(filename_.encode());
+                        auto dirname = kfs::path::dir_name(filename_.str());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
                         auto tex = ps->asset_manager().new_texture_from_file(js[key].get<jsonic::String>());

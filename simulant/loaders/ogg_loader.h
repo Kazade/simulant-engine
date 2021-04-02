@@ -29,7 +29,7 @@ namespace loaders {
 
 class OGGLoader : public Loader {
 public:
-    OGGLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    OGGLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions &options=LoaderOptions());
@@ -38,13 +38,13 @@ public:
 
 class OGGLoaderType : public LoaderType {
 public:
-    unicode name() { return "ogg"; }
-    bool supports(const unicode& filename) const {
+    const char* name() { return "ogg"; }
+    bool supports(const Path& filename) const {
         //FIXME: check magic
-        return filename.lower().contains(".ogg");
+        return filename.ext() == ".ogg";
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
+    Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const {
         return Loader::ptr(new OGGLoader(filename, data));
     }
 };

@@ -78,7 +78,7 @@ TextureLoadResult TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     } else {
         throw std::runtime_error(
             _F("Unable to load texture {0}. Reason was {1}").format(
-                filename_.encode(),
+                filename_,
                 stbi_failure_reason()
             )
         );
