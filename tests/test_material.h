@@ -132,6 +132,20 @@ public:
         assert_equal(pass1->diffuse_map_matrix()[12], 0.5f);
     }
 
+    void test_textures_enabled() {
+        auto mat = window->shared_assets->new_material();
+
+        // By default, all units are enabled
+        assert_equal(
+            mat->textures_enabled(),
+            DIFFUSE_MAP_ENABLED | LIGHT_MAP_ENABLED | SPECULAR_MAP_ENABLED | NORMAL_MAP_ENABLED
+        );
+
+        mat->set_textures_enabled(DIFFUSE_MAP_ENABLED | LIGHT_MAP_ENABLED);
+
+        assert_equal(mat->textures_enabled(), DIFFUSE_MAP_ENABLED | LIGHT_MAP_ENABLED);
+    }
+
     void test_shininess_is_clamped() {
         /* OpenGL requires that the specular exponent is between
          * 0 and 128, this checks that we clamp the value outside that

@@ -68,7 +68,7 @@ struct CoreMaterial {
     const bool depth_test_enabled = true;
 
     const bool lighting_enabled = true;
-    const int32_t textures_enabled = 15; /* Enable first 4 texture units */
+    const int32_t textures_enabled = DIFFUSE_MAP_ENABLED | LIGHT_MAP_ENABLED | SPECULAR_MAP_ENABLED | NORMAL_MAP_ENABLED; /* Enable first 4 texture units */
 
     TexturePtr diffuse_map;
     TexturePtr light_map;
