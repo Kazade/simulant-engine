@@ -81,7 +81,7 @@ void VirtualFileSystem::remove_search_path(const unicode& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-unicode VirtualFileSystem::locate_file(const unicode &filename) const {
+Path VirtualFileSystem::locate_file(const Path &filename) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -89,13 +89,14 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
 
     S_DEBUG("Locating file: {0}", filename);
 
-    std::string final_name = filename.replace(
+    // FIXME: Don't use unicode!
+    Path final_name(unicode(filename.str()).replace(
         "${RENDERER}",
         window_->renderer->name()
     ).replace(
         "${PLATFORM}",
         window_->platform->name()
-    ).encode();
+    ).encode());
 
     final_name = kfs::path::norm_path(final_name);
 
@@ -108,7 +109,7 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
         return filename;
     }
 #else
-    auto abs_final_name = kfs::path::abs_path(final_name);
+    Path abs_final_name(kfs::path::abs_path(final_name.str()));
 
     S_DEBUG("Checking existence...");
     if(kfs::path::exists(abs_final_name)) {
@@ -117,9 +118,9 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
     }
 
     S_DEBUG("Searching resource paths...");
-    for(unicode path: resource_path_) {
+    for(const Path& path: resource_path_) {
         auto full_path = kfs::path::norm_path(
-            kfs::path::join(path.encode(), final_name)
+            kfs::path::join(path.str(), final_name)
         );
 
         S_DEBUG("Trying path: {0}", full_path);

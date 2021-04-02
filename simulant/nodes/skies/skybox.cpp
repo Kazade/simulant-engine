@@ -33,12 +33,12 @@ const AABB &Skybox::aabb() const {
 }
 
 void Skybox::generate(
-        const unicode& up,
-        const unicode& down,
-        const unicode& left,
-    const unicode& right,
-    const unicode& front,
-    const unicode& back
+        const Path& up,
+        const Path& down,
+        const Path& left,
+    const Path& right,
+    const Path& front,
+    const Path& back
 ) {
     auto stage = manager_->stage.get();
 

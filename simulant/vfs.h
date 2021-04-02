@@ -27,6 +27,44 @@
 #include "utils/unicode.h"
 
 namespace smlt {
+
+
+class Path {
+public:
+    Path() = default;
+
+    Path(const char* path):
+        path_(path) {}
+
+    Path(const std::string& path):
+        path_(path) {}
+
+    std::string str() const {
+        return path_;
+    }
+
+private:
+    std::string path_;
+};
+
+}
+
+namespace std {
+
+template<>
+struct hash<smlt::Path> {
+    std::size_t operator()(const smlt::Path& k) const {
+        return hash<std::string>()(k.str());
+    }
+};
+
+}
+
+
+
+namespace smlt {
+
+
 class Window;
 
 class AssetMissingError : public std::runtime_error {
@@ -42,9 +80,9 @@ class VirtualFileSystem :
 public:
     VirtualFileSystem(Window* window);
 
-    std::list<unicode>& search_path() { return resource_path_; }
+    std::list<Path>& search_path() { return resource_path_; }
 
-    unicode locate_file(const unicode& filename) const;
+    Path locate_file(const Path& filename) const;
     std::shared_ptr<std::istream> open_file(const unicode& filename);
     std::shared_ptr<std::stringstream> read_file(const unicode& filename);
     std::vector<std::string> read_file_lines(const unicode& filename);
@@ -56,7 +94,7 @@ private:
     unicode find_executable_directory();
     unicode find_working_directory();
 
-    std::list<unicode> resource_path_;
+    std::list<Path> resource_path_;
 
     Window* window_;
 };

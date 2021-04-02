@@ -31,6 +31,7 @@
 #include "sound.h"
 #include "font.h"
 #include "assets/particle_script.h"
+#include "vfs.h"
 
 namespace smlt {
 
@@ -101,7 +102,7 @@ public:
     // Generated API
 
     /* ParticleScript API */
-    ParticleScriptPtr new_particle_script_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    ParticleScriptPtr new_particle_script_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_particle_script(ParticleScriptID id);
     ParticleScriptPtr particle_script(ParticleScriptID id);
     const ParticleScriptPtr particle_script (ParticleScriptID id) const;
@@ -110,7 +111,7 @@ public:
     ParticleScriptPtr find_particle_script(const std::string& name);
 
     /* Texture API */
-    TexturePtr new_texture_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_texture(TextureID id);
     TexturePtr texture(TextureID id);
     const TexturePtr texture (TextureID id) const;
@@ -129,7 +130,7 @@ public:
 
 
     /* Material API */
-    MaterialPtr new_material_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr new_material_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_material(const MaterialID& id);
     MaterialPtr material(const MaterialID& id);
     const MaterialPtr material (const MaterialID& id) const;
@@ -139,7 +140,7 @@ public:
 
 
     /* Sound API */
-    SoundPtr new_sound_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_sound(SoundID id);
     SoundPtr sound(SoundID id);
     const SoundPtr sound (SoundID id) const;
@@ -149,8 +150,8 @@ public:
 
 
     /* Font API */
-    FontPtr new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr new_font_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr new_font_from_ttf(const Path& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(FontID id);
     FontPtr font(FontID id);
     const FontPtr font (FontID id) const;
@@ -160,7 +161,7 @@ public:
 
     // Customisations
     TexturePtr new_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TexturePtr new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture_from_file(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
@@ -212,10 +213,10 @@ private:
     ParticleScriptManager particle_script_manager_;
 
     thread::Mutex template_material_lock_;
-    std::unordered_map<unicode, MaterialID> template_materials_;
+    std::unordered_map<Path, MaterialID> template_materials_;
     std::set<MaterialID> materials_loading_;
 
-    MaterialPtr get_template_material(const unicode& path);
+    MaterialPtr get_template_material(const Path &path);
 
     std::set<AssetManager*> children_;
     void register_child(AssetManager* child) {
@@ -279,21 +280,21 @@ public:
     virtual FontPtr default_font(DefaultFontStyle style) const;
     virtual MaterialPtr default_material() const;
 
-    void set_default_material_filename(const unicode& filename);
-    unicode default_material_filename() const;
+    void set_default_material_filename(const Path &filename);
+    Path default_material_filename() const;
 
-    void set_default_font_filename(DefaultFontStyle style, const unicode& filename);
-    unicode default_font_filename(DefaultFontStyle style) const;
+    void set_default_font_filename(DefaultFontStyle style, const Path &filename);
+    Path default_font_filename(DefaultFontStyle style) const;
 
 private:
     mutable MaterialPtr default_material_;
-    unicode default_material_filename_;
+    Path default_material_filename_;
 
     mutable FontPtr default_body_font_;
-    unicode default_body_font_filename_;
+    Path default_body_font_filename_;
 
     mutable FontPtr default_heading_font_;
-    unicode default_heading_font_filename_;
+    Path default_heading_font_filename_;
 
     /*
      * Default textures for materials, these are all

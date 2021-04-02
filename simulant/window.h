@@ -126,7 +126,7 @@ public:
         bool enable_vsync
     );
 
-    LoaderPtr loader_for(const unicode& filename, LoaderHint hint=LOADER_HINT_NONE);
+    LoaderPtr loader_for(const Path &filename, LoaderHint hint=LOADER_HINT_NONE);
     LoaderPtr loader_for(const unicode& loader_name, const unicode& filename);
     LoaderTypePtr loader_type(const unicode& loader_name) const;
 

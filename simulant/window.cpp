@@ -131,9 +131,9 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
     return true;
 }
 
-LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
+LoaderPtr Window::loader_for(const Path &filename, LoaderHint hint) {
 
-    unicode final_file;
+    Path final_file;
     try {
         final_file = vfs->locate_file(filename);
     } catch(AssetMissingError&) {

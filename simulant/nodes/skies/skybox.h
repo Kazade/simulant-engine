@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include "../stage_node.h"
 #include "../../generic/identifiable.h"
+#include "../../vfs.h"
 
 namespace smlt {
 
@@ -47,12 +48,12 @@ public:
     float size() const { return width_; }
 
     void generate(
-        const unicode& up,
-        const unicode& down,
-        const unicode& left,
-        const unicode& right,
-        const unicode& front,
-        const unicode& back
+        const Path& up,
+        const Path& down,
+        const Path& left,
+        const Path& right,
+        const Path& front,
+        const Path& back
     );
 
     void destroy() override;
