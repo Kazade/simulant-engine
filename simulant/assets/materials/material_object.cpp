@@ -230,7 +230,7 @@ bool MaterialObject::is_lighting_enabled() const {
     return *ptr;
 }
 
-void MaterialObject::set_textures_enabled(int32_t v) {
+void MaterialObject::set_textures_enabled(EnabledTextureMask v) {
     set_property_value(TEXTURES_ENABLED_PROPERTY_NAME, v);
 }
 

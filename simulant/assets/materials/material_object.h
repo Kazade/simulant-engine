@@ -9,6 +9,15 @@ namespace smlt {
 class MaterialPropertyRegistry;
 class MaterialPropertyValue;
 
+enum EnabledTexture {
+    DIFFUSE_MAP_ENABLED = 1,
+    LIGHT_MAP_ENABLED = 2,
+    NORMAL_MAP_ENABLED = 4,
+    SPECULAR_MAP_ENABLED = 8
+};
+
+typedef int32_t EnabledTextureMask;
+
 class MaterialObject : public MaterialPropertyOverrider {
 public:
     friend class Material;
@@ -59,7 +68,7 @@ public:
     bool is_depth_test_enabled() const;
     void set_lighting_enabled(bool v);
     bool is_lighting_enabled() const;
-    void set_textures_enabled(int32_t v);
+    void set_textures_enabled(EnabledTextureMask v);
     int32_t textures_enabled() const;
     float point_size() const;
 
