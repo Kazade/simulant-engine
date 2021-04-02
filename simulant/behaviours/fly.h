@@ -36,7 +36,7 @@ public:
         window_(window) {
     }
 
-    const std::string name() const override { return "Fly by Keyboard"; }
+    const char* name() const override { return "Fly by Keyboard"; }
 
     void set_speed(float v) { speed_ = v; }
 private:

@@ -36,7 +36,7 @@ public:
 
     }
 
-    const std::string name() const override { return "Flowing Material"; }
+    const char* name() const override { return "Flowing Material"; }
 private:
     void update(float dt) override;
     float time_ = 0.0f;

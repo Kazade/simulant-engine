@@ -37,7 +37,7 @@ public:
 
     }
 
-    const std::string name() const override { return "Warped Material"; }
+    const char* name() const override { return "Warped Material"; }
 
 private:
     void update(float dt) override;

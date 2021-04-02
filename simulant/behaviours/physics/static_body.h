@@ -19,7 +19,7 @@ public:
     using impl::Body::init;
     using impl::Body::clean_up;
 
-    const std::string name() const { return "Static Body"; }
+    const char* name() const { return "Static Body"; }
 
     void add_mesh_collider(
         const MeshID& mesh,
