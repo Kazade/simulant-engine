@@ -27,6 +27,7 @@
 #include "../assets/material.h"
 #include "../types.h"
 #include "../loader.h"
+#include "../path.h"
 
 namespace smlt {
 
@@ -39,11 +40,11 @@ public:
 class MaterialScript :
     public RefCounted<MaterialScript> {
 public:
-    MaterialScript(std::shared_ptr<std::istream> data, const unicode &filename);
+    MaterialScript(std::shared_ptr<std::istream> data, const smlt::Path& filename);
     void generate(Material& material);
 
 private:
-    unicode filename_;
+    Path filename_;
     std::istream& data_;
 };
 
@@ -54,7 +55,7 @@ class MaterialScriptLoader:
     public Loader {
 
 public:
-    MaterialScriptLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    MaterialScriptLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {
         parser_ = MaterialScript::create(data, filename);
     }
@@ -67,12 +68,13 @@ private:
 
 class MaterialScriptLoaderType : public LoaderType {
 public:
-    unicode name() { return "material"; }
-    bool supports(const unicode& filename) const {
-        return filename.lower().contains(".smat");
+    const char* name() { return "material"; }
+    bool supports(const Path& filename) const {
+        auto e = filename.ext();
+        return e == ".smat";
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
+    Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const {
         return Loader::ptr(new MaterialScriptLoader(filename, data));
     }
 };

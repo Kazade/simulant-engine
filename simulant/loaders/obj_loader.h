@@ -26,7 +26,7 @@ namespace loaders {
 
 class OBJLoader : public Loader {
 public:
-    OBJLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    OBJLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -42,12 +42,12 @@ public:
 
     virtual ~OBJLoaderType() {}
 
-    unicode name() override { return "obj"; }
-    bool supports(const unicode& filename) const override {
-        return filename.lower().contains(".obj");
+    const char* name() override { return "obj"; }
+    bool supports(const Path& filename) const override {
+        return filename.ext() == ".obj";
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new OBJLoader(filename, data));
     }
 };

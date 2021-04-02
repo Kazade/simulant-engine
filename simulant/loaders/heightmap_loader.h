@@ -79,7 +79,7 @@ namespace loaders {
 
 class HeightmapLoader : public Loader {
 public:
-    HeightmapLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    HeightmapLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     /* Hack! This exists for the ability to generate a heightmap from an already
@@ -104,12 +104,13 @@ public:
 
     virtual ~HeightmapLoaderType() {}
 
-    unicode name() override { return "heightmap_loader"; }
-    bool supports(const unicode& filename) const override {
-        return filename.lower().ends_with(".tga") || filename.lower().ends_with(".png");
+    const char* name() override { return "heightmap_loader"; }
+
+    bool supports(const Path& filename) const override {
+        return filename.ext() == ".tga" || filename.ext() == ".png";
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new HeightmapLoader(filename, data));
     }
 };

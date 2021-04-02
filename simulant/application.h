@@ -34,6 +34,7 @@
 #include "scenes/scene_manager.h"
 #include "screen.h"
 #include "logging.h"
+#include "path.h"
 
 namespace smlt {
 
@@ -60,7 +61,7 @@ struct AppConfig {
     bool enable_vsync = false;
 
     // Additional paths for asset loading
-    std::vector<unicode> search_paths;
+    std::vector<Path> search_paths;
 
     // Program arguments
     std::vector<unicode> arguments;

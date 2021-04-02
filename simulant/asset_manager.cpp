@@ -71,12 +71,12 @@ void AssetManager::update(float dt) {
     });
 }
 
-void SharedAssetManager::set_default_material_filename(const unicode& filename) {
+void SharedAssetManager::set_default_material_filename(const Path& filename) {
     default_material_filename_ = filename;
     default_material_.reset();
 }
 
-unicode SharedAssetManager::default_material_filename() const {
+Path SharedAssetManager::default_material_filename() const {
     return default_material_filename_;
 }
 
@@ -152,7 +152,7 @@ MaterialPtr SharedAssetManager::default_material() const {
     return default_material_;
 }
 
-void SharedAssetManager::set_default_font_filename(DefaultFontStyle style, const unicode& filename) {
+void SharedAssetManager::set_default_font_filename(DefaultFontStyle style, const Path& filename) {
     if(style == DEFAULT_FONT_STYLE_BODY) {
         default_body_font_filename_ = filename;
         default_body_font_.reset();
@@ -162,7 +162,7 @@ void SharedAssetManager::set_default_font_filename(DefaultFontStyle style, const
     }
 }
 
-unicode SharedAssetManager::default_font_filename(DefaultFontStyle style) const {
+Path SharedAssetManager::default_font_filename(DefaultFontStyle style) const {
     if(style == DEFAULT_FONT_STYLE_BODY) {
         return default_body_font_filename_;
     } else {
@@ -277,16 +277,20 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
     return result;
 }
 
-MeshPtr AssetManager::new_mesh_from_file(
-    const unicode& path,
+MeshPtr AssetManager::new_mesh_from_file(const Path& path,
     const VertexSpecification& desired_specification,
     const MeshLoadOptions& options,
     GarbageCollectMethod garbage_collect) {
 
     //Load the material
     auto mesh = new_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
-    auto loader = window->loader_for(path.encode());
+    auto loader = window->loader_for(path);
     assert(loader && "Unable to locate a loader for the specified mesh file");
+
+    if(!loader) {
+        S_ERROR("No mesh loader found for path: {0}", path.str());
+        return MeshPtr();
+    }
 
     LoaderOptions loader_options;
     loader_options[MESH_LOAD_OPTIONS_KEY] = options;
@@ -297,7 +301,7 @@ MeshPtr AssetManager::new_mesh_from_file(
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_from_heightmap(const unicode& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     window->loader_for("heightmap_loader", image_file)->into(mesh, {
@@ -393,7 +397,7 @@ void AssetManager::destroy_material(const MaterialID& m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
-MaterialPtr AssetManager::get_template_material(const unicode& path) {
+MaterialPtr AssetManager::get_template_material(const Path& path) {
     /*
      * We keep a cache of the materials we've loaded from file, this massively improves performance
      * and allows sharing of the GPU program during rendering
@@ -445,7 +449,7 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
             }
 
             S_DEBUG("Locating loader for {0}", path);
-            auto loader = window->loader_for(path.encode());
+            auto loader = window->loader_for(path);
             if(!loader) {
                 S_ERROR("Unable to find loader for {0}", path);
                 materials_loading_.erase(template_id);
@@ -462,7 +466,7 @@ MaterialPtr AssetManager::get_template_material(const unicode& path) {
     return template_id.fetch();
 }
 
-MaterialPtr AssetManager::new_material_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
 
     MaterialID template_id = get_template_material(path);
 
@@ -515,11 +519,11 @@ TexturePtr AssetManager::new_texture(uint16_t width, uint16_t height, TextureFor
     NEW_X(Texture, texture, texture_manager_, width, height, format);
 }
 
-TexturePtr AssetManager::new_texture_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::new_texture_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
     return new_texture_from_file(path, TextureFlags(), garbage_collect);
 }
 
-TexturePtr AssetManager::new_texture_from_file(const unicode& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     S_DEBUG("Loading texture from file: {0}", path);
     smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect);
@@ -574,12 +578,12 @@ std::size_t AssetManager::texture_count() const {
     return texture_manager_.count();
 }
 
-SoundPtr AssetManager::new_sound_from_file(const unicode& path, GarbageCollectMethod garbage_collect) {
+SoundPtr AssetManager::new_sound_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
     //Load the sound
     auto snd = sound_manager_.make(this, window->_sound_driver());
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 
-    auto loader = window->loader_for(path.encode());
+    auto loader = window->loader_for(path);
 
     if(loader) {
         loader->into(snd);
@@ -648,7 +652,7 @@ AssetManager* AssetManager::base_manager() const {
 
 // ========== FONTS ======================
 
-FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
@@ -666,7 +670,7 @@ FontPtr AssetManager::new_font_from_file(const unicode& filename, GarbageCollect
     return font;
 }
 
-FontPtr AssetManager::new_font_from_ttf(const unicode& filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_from_ttf(const Path &filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
 
@@ -712,7 +716,7 @@ bool AssetManager::has_font(FontID f) const {
     return font_manager_.contains(f);
 }
 
-ParticleScriptPtr AssetManager::new_particle_script_from_file(const unicode& filename, GarbageCollectMethod garbage_collect) {
+ParticleScriptPtr AssetManager::new_particle_script_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
     auto ps = particle_script_manager_.make(this);
     auto ps_id = ps->id();
     particle_script_manager_.set_garbage_collection_method(ps_id, garbage_collect);

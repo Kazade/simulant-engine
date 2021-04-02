@@ -66,8 +66,8 @@ VirtualFileSystem::VirtualFileSystem(Window *window):
 #endif
 }
 
-bool VirtualFileSystem::add_search_path(const unicode& path) {
-    unicode new_path(kfs::path::abs_path(path.encode()));
+bool VirtualFileSystem::add_search_path(const Path& path) {
+    Path new_path(kfs::path::abs_path(path.str()));
 
     if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
         return false;
@@ -77,11 +77,11 @@ bool VirtualFileSystem::add_search_path(const unicode& path) {
     return true;
 }
 
-void VirtualFileSystem::remove_search_path(const unicode& path) {
+void VirtualFileSystem::remove_search_path(const Path& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-unicode VirtualFileSystem::locate_file(const unicode &filename) const {
+Path VirtualFileSystem::locate_file(const Path &filename) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -89,15 +89,16 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
 
     S_DEBUG("Locating file: {0}", filename);
 
-    std::string final_name = filename.replace(
+    // FIXME: Don't use unicode!
+    Path final_name(unicode(filename.str()).replace(
         "${RENDERER}",
         window_->renderer->name()
     ).replace(
         "${PLATFORM}",
         window_->platform->name()
-    ).encode();
+    ).encode());
 
-    final_name = kfs::path::norm_path(final_name);
+    final_name = kfs::path::norm_path(final_name.str());
 
 #ifdef __ANDROID__
     //On Android we use SDL_RWops which reads from the APK
@@ -108,18 +109,18 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
         return filename;
     }
 #else
-    auto abs_final_name = kfs::path::abs_path(final_name);
+    Path abs_final_name(kfs::path::abs_path(final_name.str()));
 
     S_DEBUG("Checking existence...");
-    if(kfs::path::exists(abs_final_name)) {
+    if(kfs::path::exists(abs_final_name.str())) {
         S_DEBUG("Located file: {0}", abs_final_name);
         return abs_final_name;
     }
 
     S_DEBUG("Searching resource paths...");
-    for(unicode path: resource_path_) {
+    for(const Path& path: resource_path_) {
         auto full_path = kfs::path::norm_path(
-            kfs::path::join(path.encode(), final_name)
+            kfs::path::join(path.str(), final_name.str())
         );
 
         S_DEBUG("Trying path: {0}", full_path);
@@ -130,19 +131,19 @@ unicode VirtualFileSystem::locate_file(const unicode &filename) const {
     }
 #endif
     S_ERROR("Unable to find file: {0}", final_name);
-    throw AssetMissingError("Unable to find file: " + final_name);
+    throw AssetMissingError("Unable to find file: " + final_name.str());
 }
 
-std::shared_ptr<std::istream> VirtualFileSystem::open_file(const unicode& filename) {
-    unicode path = locate_file(filename);
+std::shared_ptr<std::istream> VirtualFileSystem::open_file(const Path& filename) {
+    Path path = locate_file(filename);
 
-    auto buf = std::make_shared<FileStreamBuf>(path.encode(), "rb");
+    auto buf = std::make_shared<FileStreamBuf>(path.str(), "rb");
     auto file_in = std::make_shared<FileIfstream>(buf);
 
     return file_in;
 }
 
-std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& filename) {
+std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& filename) {
 #ifdef __ANDROID__
     //If we're on Android, don't bother trying to locate the file, just try to load it from the APK
     std::shared_ptr<std::stringstream> result = std::make_shared<std::stringstream>();
@@ -175,15 +176,15 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const unicode& f
 #endif
 }
 
-std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filename) {
-    unicode path = locate_file(filename);
+std::vector<std::string> VirtualFileSystem::read_file_lines(const Path &filename) {
+    Path path = locate_file(filename);
 
     // Load as binary and let portable_getline do its thing
-    std::ifstream file_in(path.encode().c_str(), std::ios::in | std::ios::binary);
+    std::ifstream file_in(path.str(), std::ios::in | std::ios::binary);
 
     if(!file_in) {
         S_ERROR("Unable to load file: {0}", filename);
-        throw AssetMissingError("Unable to load file: " + filename.encode());
+        throw AssetMissingError("Unable to load file: " + filename.str());
     }
 
     std::vector<std::string> results;
@@ -194,11 +195,11 @@ std::vector<std::string> VirtualFileSystem::read_file_lines(const unicode &filen
     return results;
 }
 
-unicode VirtualFileSystem::find_executable_directory() {
+Path VirtualFileSystem::find_executable_directory() {
     return kfs::exe_dirname();
 }
 
-unicode VirtualFileSystem::find_working_directory() {
+Path VirtualFileSystem::find_working_directory() {
     return kfs::get_cwd();
 }
 

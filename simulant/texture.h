@@ -31,6 +31,7 @@
 #include "asset.h"
 #include "interfaces.h"
 #include "interfaces/updateable.h"
+#include "path.h"
 
 namespace smlt {
 
@@ -160,7 +161,7 @@ public:
      */
     void flip_vertically();
 
-    void set_source(const unicode& source);
+    void set_source(const smlt::Path& source);
 
     /* Texture filtering and wrapping */
     void set_texture_filter(TextureFilter filter);
@@ -230,9 +231,9 @@ public:
      * Save a texture to the specified file. Will only work for
      * uncompressed Textures
      */
-    void save_to_file(const unicode& filename);
+    void save_to_file(const Path& filename);
 
-    unicode source() const;
+    Path source() const;
     TextureFilter texture_filter() const;
     TextureWrap wrap_u() const;
     TextureWrap wrap_v() const;
@@ -273,7 +274,7 @@ private:
     TextureTexelType texel_type_ = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
     TextureFormat format_ = TEXTURE_FORMAT_RGBA8888;
 
-    unicode source_;
+    Path source_;
 
     bool auto_upload_ = true; /* If true, the texture is uploaded by the renderer asap */
     bool data_dirty_ = true;

@@ -9,7 +9,7 @@ namespace loaders {
 
 class WAVLoader : public Loader {
 public:
-    WAVLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    WAVLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions &options=LoaderOptions());
@@ -18,13 +18,13 @@ public:
 
 class WAVLoaderType : public LoaderType {
 public:
-    unicode name() { return "wav"; }
-    bool supports(const unicode& filename) const {
+    const char* name() { return "wav"; }
+    bool supports(const Path& filename) const {
         //FIXME: check magic
-        return filename.lower().contains(".wav");
+        return filename.ext() == ".wav";
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const {
+    Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const {
         return Loader::ptr(new WAVLoader(filename, data));
     }
 };

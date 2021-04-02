@@ -96,7 +96,7 @@ struct MS3DVertexExtra {
     uint32_t extra; // Only if subversion is 2
 };
 
-MS3DLoader::MS3DLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+MS3DLoader::MS3DLoader(const Path& filename, std::shared_ptr<std::istream> data):
     Loader(filename, data) {}
 
 void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
@@ -287,7 +287,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         triangles.size() * 3  /* Vertex count */
     );
 
-    auto dir = kfs::path::dir_name(filename_.encode());
+    auto dir = kfs::path::dir_name(filename_.str());
     bool remove_path = assets->window->vfs->add_search_path(dir);
 
     auto vdata = mesh->vertex_data.get();

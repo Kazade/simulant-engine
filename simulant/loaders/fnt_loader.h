@@ -7,7 +7,7 @@ namespace loaders {
 
 class FNTLoader : public Loader {
 public:
-    FNTLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    FNTLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
@@ -21,12 +21,12 @@ private:
 
 class FNTLoaderType : public LoaderType {
 public:
-    unicode name() override { return "fnt_font"; }
-    bool supports(const unicode& filename) const override {
-        return filename.lower().ends_with(".fnt");
+    const char* name() override { return "fnt_font"; }
+    bool supports(const Path& filename) const override {
+        return filename.ext() == ".fnt";
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new FNTLoader(filename, data));
     }
 };

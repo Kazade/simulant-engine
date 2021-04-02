@@ -45,14 +45,14 @@ public:
     SkyManager(const SkyManager& rhs) = delete;
     SkyManager& operator=(const SkyManager&) = delete;
 
-    SkyboxPtr new_skybox_from_folder(const unicode& folder);
+    SkyboxPtr new_skybox_from_folder(const Path& folder);
     SkyboxPtr new_skybox_from_files(
-        const unicode& up,
-        const unicode& down,
-        const unicode& left,
-        const unicode& right,
-        const unicode& front,
-        const unicode& back
+        const Path& up,
+        const Path& down,
+        const Path& left,
+        const Path& right,
+        const Path& front,
+        const Path& back
     );
 
     SkyboxPtr skybox(SkyID skybox_id);
