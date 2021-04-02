@@ -30,11 +30,11 @@ namespace loaders {
 
 class WALLoader : public BaseTextureLoader {
 public:
-    WALLoader(const unicode& filename, std::shared_ptr<std::istream> data):
+    WALLoader(const Path& filename, std::shared_ptr<std::istream> data):
         BaseTextureLoader(filename, data) {}
 
 private:
-    bool format_stored_upside_down() const { return false; }
+    bool format_stored_upside_down() const override { return false; }
     TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) override;
 };
 
@@ -47,12 +47,12 @@ public:
 
     virtual ~WALLoaderType() {}
 
-    unicode name() override { return "wal_texture"; }
-    bool supports(const unicode& filename) const override {
-        return filename.lower().contains(".wal");
+    const char* name() override { return "wal_texture"; }
+    bool supports(const Path& filename) const override {
+        return filename.ext() == ".wal";
     }
 
-    Loader::ptr loader_for(const unicode& filename, std::shared_ptr<std::istream> data) const override {
+    Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const override {
         return Loader::ptr(new WALLoader(filename, data));
     }
 };

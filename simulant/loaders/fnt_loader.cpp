@@ -272,7 +272,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     S_DEBUG("Preparing texture for FNT file");
 
     // FIXME: Support multiple pages
-    auto texture_path = kfs::path::dir_name(kfs::path::abs_path(filename_.encode()));
+    auto texture_path = kfs::path::dir_name(kfs::path::abs_path(filename_.str()));
     texture_path = kfs::path::join(texture_path, texture_file);
 
     S_DEBUG("Texture path: {0}", texture_file);

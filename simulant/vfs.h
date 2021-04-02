@@ -25,8 +25,10 @@
 
 #include "generic/managed.h"
 #include "utils/unicode.h"
+#include "path.h"
 
 namespace smlt {
+
 class Window;
 
 class AssetMissingError : public std::runtime_error {
@@ -42,21 +44,21 @@ class VirtualFileSystem :
 public:
     VirtualFileSystem(Window* window);
 
-    std::list<unicode>& search_path() { return resource_path_; }
+    std::list<Path>& search_path() { return resource_path_; }
 
-    unicode locate_file(const unicode& filename) const;
-    std::shared_ptr<std::istream> open_file(const unicode& filename);
-    std::shared_ptr<std::stringstream> read_file(const unicode& filename);
-    std::vector<std::string> read_file_lines(const unicode& filename);
+    Path locate_file(const Path& filename) const;
+    std::shared_ptr<std::istream> open_file(const Path& filename);
+    std::shared_ptr<std::stringstream> read_file(const Path& filename);
+    std::vector<std::string> read_file_lines(const Path& filename);
 
-    bool add_search_path(const unicode& path);
-    void remove_search_path(const unicode& path);
+    bool add_search_path(const Path& path);
+    void remove_search_path(const Path& path);
 
 private:
-    unicode find_executable_directory();
-    unicode find_working_directory();
+    Path find_executable_directory();
+    Path find_working_directory();
 
-    std::list<unicode> resource_path_;
+    std::list<Path> resource_path_;
 
     Window* window_;
 };

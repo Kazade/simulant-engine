@@ -131,9 +131,9 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
     return true;
 }
 
-LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
+LoaderPtr Window::loader_for(const Path &filename, LoaderHint hint) {
 
-    unicode final_file;
+    Path final_file;
     try {
         final_file = vfs->locate_file(filename);
     } catch(AssetMissingError&) {
@@ -174,13 +174,13 @@ LoaderPtr Window::loader_for(const unicode &filename, LoaderHint hint) {
 }
 
 
-LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename) {
-    unicode final_file = vfs->locate_file(filename);
+LoaderPtr Window::loader_for(const std::string& loader_name, const Path& filename) {
+    Path final_file = vfs->locate_file(filename);
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             if(loader_type->supports(final_file)) {
-                S_DEBUG("Found loader {0} for file: {1}", loader_name, filename.encode());
+                S_DEBUG("Found loader {0} for file: {1}", loader_name, filename.str());
                 return loader_type->loader_for(final_file, vfs->open_file(final_file));
             } else {
                 S_ERROR("Loader '{0}' does not support file '{1}'", loader_name, filename);
@@ -189,11 +189,11 @@ LoaderPtr Window::loader_for(const unicode& loader_name, const unicode &filename
         }
     }
 
-    S_ERROR("Unable to find loader for: {0}", filename.encode());
+    S_ERROR("Unable to find loader for: {0}", filename.str());
     return LoaderPtr();
 }
 
-LoaderTypePtr Window::loader_type(const unicode& loader_name) const {
+LoaderTypePtr Window::loader_type(const std::string& loader_name) const {
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             return loader_type;

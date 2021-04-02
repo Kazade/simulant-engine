@@ -44,12 +44,12 @@ SkyManager::SkyManager(Window* window, Stage* stage, StageNodePool* pool):
  * in their names. If duplicates are found, or if images are not found, then this function raises
  * SkyboxImageNotFoundError or SkyboxImageDuplicateError respectively
  */
-SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
+SkyboxPtr SkyManager::new_skybox_from_folder(const Path& folder) {
     std::map<SkyboxFace, std::string> files;
 
     auto path = window->vfs->locate_file(folder);
 
-    for(auto& file: kfs::path::list_dir(path.encode())) {
+    for(auto& file: kfs::path::list_dir(path.str())) {
         SkyboxFace face;
 
         // Case-insensitive detection
@@ -72,7 +72,7 @@ SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
             continue;
         }
 
-        auto full_path = kfs::path::join(folder.encode(), file);
+        auto full_path = kfs::path::join(folder.str(), file);
 
         // Make sure this is a supported texture file
         if(!window->loader_type("texture")->supports(full_path)) {
@@ -117,12 +117,12 @@ SkyboxPtr SkyManager::new_skybox_from_folder(const unicode& folder) {
  * SkyboxImageNotFoundError
  */
 SkyboxPtr SkyManager::new_skybox_from_files(
-    const unicode& up,
-    const unicode& down,
-    const unicode& left,
-    const unicode& right,
-    const unicode& front,
-    const unicode& back) {
+    const Path& up,
+    const Path& down,
+    const Path& left,
+    const Path& right,
+    const Path& front,
+    const Path& back) {
 
     assert(stage_);
 

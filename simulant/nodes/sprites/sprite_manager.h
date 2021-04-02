@@ -3,6 +3,7 @@
 #include "../sprite.h"
 #include "../../managers/window_holder.h"
 #include "../stage_node_manager.h"
+#include "../../path.h"
 
 namespace smlt {
 
@@ -24,8 +25,7 @@ public:
     virtual ~SpriteManager();
 
     SpritePtr new_sprite();
-    SpritePtr new_sprite_from_file(
-        const unicode& filename,
+    SpritePtr new_sprite_from_file(const smlt::Path& filename,
         uint32_t frame_width, uint32_t frame_height,
         const SpritesheetAttrs &attrs=SpritesheetAttrs()
     );
