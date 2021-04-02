@@ -50,6 +50,15 @@ enum DepthFunc {
     DEPTH_FUNC_ALWAYS
 };
 
+enum EnabledTexture {
+    DIFFUSE_MAP_ENABLED = 1,
+    LIGHT_MAP_ENABLED = 2,
+    NORMAL_MAP_ENABLED = 4,
+    SPECULAR_MAP_ENABLED = 8
+};
+
+typedef int32_t EnabledTextureMask;
+
 PolygonMode polygon_mode_from_name(const char* name);
 ShadeModel shade_model_from_name(const char* name);
 ColourMaterial colour_material_from_name(const char* name);

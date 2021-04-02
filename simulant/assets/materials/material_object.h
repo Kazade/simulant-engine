@@ -59,7 +59,7 @@ public:
     bool is_depth_test_enabled() const;
     void set_lighting_enabled(bool v);
     bool is_lighting_enabled() const;
-    void set_textures_enabled(int32_t v);
+    void set_textures_enabled(EnabledTextureMask v);
     int32_t textures_enabled() const;
     float point_size() const;
 
