@@ -50,6 +50,13 @@ enum DepthFunc {
     DEPTH_FUNC_ALWAYS
 };
 
+enum FogMode {
+    FOG_MODE_NONE,
+    FOG_MODE_LINEAR,
+    FOG_MODE_EXP,
+    FOG_MODE_EXP2
+};
+
 enum EnabledTexture {
     DIFFUSE_MAP_ENABLED = 1,
     LIGHT_MAP_ENABLED = 2,
@@ -90,5 +97,11 @@ DepthFunc depth_func_from_name(const char* name);
 #define LIGHT_MAP_MATRIX_PROPERTY_NAME "s_light_map_matrix"
 #define NORMAL_MAP_MATRIX_PROPERTY_NAME "s_normal_map_matrix"
 #define SPECULAR_MAP_MATRIX_PROPERTY_NAME "s_specular_map_matrix"
+
+#define FOG_MODE_PROPERTY_NAME "s_fog_mode"
+#define FOG_DENSITY_PROPERTY_NAME "s_fog_density"
+#define FOG_START_PROPERTY_NAME "s_fog_start"
+#define FOG_END_PROPERTY_NAME "s_fog_end"
+#define FOG_COLOUR_PROPERTY_NAME "s_fog_colour"
 
 }

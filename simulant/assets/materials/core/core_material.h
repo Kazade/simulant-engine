@@ -42,6 +42,12 @@ constexpr const MaterialPropertyNameHash COLOUR_MATERIAL_PROPERTY_HASH = materia
 constexpr const MaterialPropertyNameHash CULL_MODE_PROPERTY_HASH = material_property_hash(CULL_MODE_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash DEPTH_FUNC_PROPERTY_HASH = material_property_hash(DEPTH_FUNC_PROPERTY_NAME);
 
+constexpr const MaterialPropertyNameHash FOG_MODE_PROPERTY_HASH = material_property_hash(FOG_MODE_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash FOG_DENSITY_PROPERTY_HASH = material_property_hash(FOG_DENSITY_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash FOG_START_PROPERTY_HASH = material_property_hash(FOG_START_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash FOG_END_PROPERTY_HASH = material_property_hash(FOG_END_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash FOG_COLOUR_PROPERTY_HASH = material_property_hash(FOG_COLOUR_PROPERTY_NAME);
+
 
 enum MaterialPropertyType {
     MATERIAL_PROPERTY_TYPE_BOOL,
@@ -86,6 +92,12 @@ struct CoreMaterial {
     const EnumType colour_material = (EnumType) COLOUR_MATERIAL_NONE;
     const EnumType cull_mode = (EnumType) CULL_MODE_NONE;
     const EnumType depth_func = (EnumType) DEPTH_FUNC_LEQUAL;
+
+    const EnumType fog_mode = (EnumType) FOG_MODE_NONE;
+    const float fog_density = 1.0f;
+    const float fog_start = 100.0f;
+    const float fog_end = 1000.0f;
+    const Colour fog_colour = smlt::Colour::WHITE;
 };
 
 void init_core_material(const CoreMaterial& base);
