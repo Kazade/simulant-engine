@@ -49,7 +49,6 @@ Stage::Stage(Window *parent, StageNodePool *node_pool, AvailablePartitioner part
     node_pool_(node_pool),
     ui_(new ui::UIManager(this, node_pool_)),
     asset_manager_(LocalAssetManager::create(parent, parent->shared_assets.get())),
-    fog_(new FogSettings()),
     geom_manager_(new GeomManager(node_pool_)),
     sky_manager_(new SkyManager(parent, this, node_pool_)),
     sprite_manager_(new SpriteManager(parent, this, node_pool_)),

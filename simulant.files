@@ -641,8 +641,6 @@ simulant/errors.h
 simulant/event_listener.cpp
 simulant/event_listener.h
 simulant/extra.h
-simulant/fog_settings.cpp
-simulant/fog_settings.h
 simulant/font.cpp
 simulant/font.h
 simulant/framebuffer.h

@@ -39,7 +39,6 @@
 #include "nodes/light.h"
 #include "types.h"
 #include "asset_manager.h"
-#include "fog_settings.h"
 
 #include "macros.h"
 
@@ -239,7 +238,6 @@ private:
     std::shared_ptr<AssetManager> asset_manager_;
     smlt::Colour ambient_light_ = smlt::Colour(0.3, 0.3, 0.3, 1.0);
 
-    std::unique_ptr<FogSettings> fog_;
     std::unique_ptr<GeomManager> geom_manager_;
     std::unique_ptr<SkyManager> sky_manager_;
     std::unique_ptr<SpriteManager> sprite_manager_;
@@ -269,7 +267,6 @@ public:
     Property<decltype(&Stage::ui_)> ui = {this, &Stage::ui_};
     Property<decltype(&Stage::sky_manager_)> skies = {this, &Stage::sky_manager_};
     Property<decltype(&Stage::sprite_manager_)> sprites = {this, &Stage::sprite_manager_};
-    Property<decltype(&Stage::fog_)> fog = {this, &Stage::fog_};
 };
 
 }

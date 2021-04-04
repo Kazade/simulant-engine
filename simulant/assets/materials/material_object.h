@@ -43,6 +43,18 @@ public:
     const TexturePtr& normal_map() const;
     const TexturePtr& specular_map() const;
 
+    void set_fog_density(float density);
+    void set_fog_start(float start);
+    void set_fog_end(float end);
+    void set_fog_mode(FogMode mode);
+    void set_fog_colour(const Colour& colour);
+
+    float fog_density() const;
+    float fog_start() const;
+    float fog_end() const;
+    FogMode fog_mode() const;
+    const Colour& fog_colour() const;
+
     const Colour& specular() const;
     const Colour& ambient() const;
     const Colour& emission() const;

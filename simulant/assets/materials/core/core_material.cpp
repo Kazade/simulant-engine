@@ -251,6 +251,11 @@ bool is_core_property(const MaterialPropertyNameHash hsh) {
         case material_property_hash(SHADE_MODEL_PROPERTY_NAME):
         case material_property_hash(COLOUR_MATERIAL_PROPERTY_NAME):
         case material_property_hash(CULL_MODE_PROPERTY_NAME):
+        case FOG_COLOUR_PROPERTY_HASH:
+        case FOG_DENSITY_PROPERTY_HASH:
+        case FOG_START_PROPERTY_HASH:
+        case FOG_END_PROPERTY_HASH:
+        case FOG_MODE_PROPERTY_HASH:
         return true;
         default:
         return false;
@@ -272,10 +277,14 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(AMBIENT_PROPERTY_NAME):
         case material_property_hash(EMISSION_PROPERTY_NAME):
         case material_property_hash(SPECULAR_PROPERTY_NAME):
+        case FOG_COLOUR_PROPERTY_HASH:
             *type = MATERIAL_PROPERTY_TYPE_VEC4;
         break;
         case material_property_hash(SHININESS_PROPERTY_NAME):
         case material_property_hash(POINT_SIZE_PROPERTY_NAME):
+        case FOG_DENSITY_PROPERTY_HASH:
+        case FOG_START_PROPERTY_HASH:
+        case FOG_END_PROPERTY_HASH:
             *type = MATERIAL_PROPERTY_TYPE_FLOAT;
         break;
         case material_property_hash(DEPTH_WRITE_ENABLED_PROPERTY_NAME):
@@ -301,6 +310,7 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(COLOUR_MATERIAL_PROPERTY_NAME):
         case material_property_hash(CULL_MODE_PROPERTY_NAME):
         case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
+        case FOG_MODE_PROPERTY_HASH:
             *type = MATERIAL_PROPERTY_TYPE_INT;
         break;
         default:
@@ -358,6 +368,12 @@ const PropertyList& core_properties() {
         {COLOUR_MATERIAL_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {CULL_MODE_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {DEPTH_FUNC_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
+
+        {FOG_MODE_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
+        {FOG_START_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},
+        {FOG_END_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},
+        {FOG_DENSITY_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},
+        {FOG_COLOUR_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_VEC4},
     };
 
     return core_properties;

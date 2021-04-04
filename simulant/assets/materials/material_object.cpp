@@ -166,6 +166,67 @@ float MaterialObject::shininess() const {
     return *ptr;
 }
 
+void MaterialObject::set_fog_density(float density) {
+    set_property_value(FOG_DENSITY_PROPERTY_NAME, density);
+}
+
+void MaterialObject::set_fog_start(float start) {
+    set_property_value(FOG_START_PROPERTY_NAME, start);
+}
+
+void MaterialObject::set_fog_end(float end) {
+    set_property_value(FOG_END_PROPERTY_NAME, end);
+}
+
+void MaterialObject::set_fog_mode(FogMode mode) {
+    set_property_value(FOG_MODE_PROPERTY_NAME, (const EnumType&) mode);
+}
+
+void MaterialObject::set_fog_colour(const Colour& colour) {
+    set_property_value(FOG_COLOUR_PROPERTY_NAME, colour);
+}
+
+float MaterialObject::fog_density() const {
+    const float* ptr = nullptr;
+    bool ok = property_value(FOG_DENSITY_PROPERTY_HASH, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+float MaterialObject::fog_start() const {
+    const float* ptr = nullptr;
+    bool ok = property_value(FOG_START_PROPERTY_HASH, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+float MaterialObject::fog_end() const {
+    const float* ptr = nullptr;
+    bool ok = property_value(FOG_END_PROPERTY_HASH, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+FogMode MaterialObject::fog_mode() const {
+    const FogMode* ptr = nullptr;
+    bool ok = property_value(FOG_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+const Colour& MaterialObject::fog_colour() const {
+    const Colour* ptr = nullptr;
+    bool ok = property_value(FOG_COLOUR_PROPERTY_HASH, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+
 bool MaterialObject::is_blending_enabled() const {
     return blend_func() != BLEND_NONE;
 }
