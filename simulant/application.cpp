@@ -35,7 +35,7 @@ namespace smlt { typedef PSPWindow SysWindow; }
 namespace smlt { typedef SDL2Window SysWindow; }
 #endif
 
-#ifdef __LINUX__
+#ifdef __linux__
 #include <sys/types.h>
 #include <unistd.h>
 #elif defined(__WIN32__)
@@ -45,6 +45,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "application.h"
 #include "scenes/loading.h"
 #include "input/input_state.h"
+#include "platform.h"
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
@@ -147,7 +148,7 @@ void Application::construct_window(const AppConfig& config) {
     if(config_copy.width == 0 || config_copy.height == 0) {
         if(config_copy.fullscreen) {
             /* Use the native resolution */
-            Resolution native = SysWindow::platform.native_resolution();
+            Resolution native = get_platform()->native_resolution();
             config_copy.width = native.width;
             config_copy.height = native.height;
         } else {
@@ -327,7 +328,7 @@ int32_t Application::run(int argc, char* argv[]) {
 }
 
 ProcessID Application::process_id() const {
-#ifdef __LINUX__
+#ifdef __linux__
     return getpid();
 #elif defined(__WIN32__)
     return GetCurrentProcessId();
@@ -337,7 +338,7 @@ ProcessID Application::process_id() const {
 }
 
 int64_t Application::ram_usage_in_bytes() const {
-    return window_->platform->process_ram_usage_in_bytes(
+    return get_platform()->process_ram_usage_in_bytes(
         process_id()
     );
 }

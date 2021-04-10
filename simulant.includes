@@ -218,6 +218,10 @@ deps/pspgl
 simulant/streams
 deps/libAL/src
 simulant/assets/materials/core
+simulant/platforms/linux
+simulant/platforms/windows
+simulant/platforms/osx
+simulant/platforms/android
 deps/libgl/GL/yalloc
 deps/libgl/GL/platforms
 deps/libgl/GL/platforms/software

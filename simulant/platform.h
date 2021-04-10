@@ -57,6 +57,9 @@ public:
     virtual uint64_t available_vram_in_bytes() const = 0;
 };
 
+/* Returns the current platform */
+Platform* get_platform();
+
 }
 
 

@@ -60,7 +60,7 @@ VirtualFileSystem::VirtualFileSystem(Window *window):
     resource_path_.push_back("disc0:");
 #endif
 
-#ifdef __LINUX__
+#ifdef __linux__
     resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
     resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
 #endif
@@ -95,7 +95,7 @@ Path VirtualFileSystem::locate_file(const Path &filename) const {
         window_->renderer->name()
     ).replace(
         "${PLATFORM}",
-        window_->platform->name()
+        get_platform()->name()
     ).encode());
 
     final_name = kfs::path::norm_path(final_name.str());
