@@ -59,10 +59,16 @@ ENDIF()
 IF(PLATFORM_DREAMCAST)
     MESSAGE("-- Including GLdc and ALdc in build, as this is the Dreamcast")
 
+    set(GLDC_VERSION "gldc-version-simulant-builtin")
+    configure_file(${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c.in ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c)
+
     # We build in GLdc and ALdc directly (as it's all under the Simulant umbrella)
     FILE(GLOB_RECURSE LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/*.c)
     FILE(GLOB_RECURSE LIBGL_SAMPLES ${CMAKE_SOURCE_DIR}/deps/libgl/samples/*.c)
     LIST(REMOVE_ITEM LIBGL ${LIBGL_SAMPLES})
+
+    # Remove the software renderer from GLdc
+    LIST(REMOVE_ITEM LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/GL/platforms/software.c)
 
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.c)
 

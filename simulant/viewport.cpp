@@ -21,7 +21,7 @@
 #include "utils/gl_error.h"
 
 #ifdef __DREAMCAST__
-    #include "../deps/libgl/include/gl.h"
+    #include "../deps/libgl/include/GL/gl.h"
 #elif defined(__PSP__)
     #include <GL/gl.h>
 #else

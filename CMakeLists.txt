@@ -178,6 +178,9 @@ ELSE()
 
     SET(THREADS_PREFER_PTHREAD_FLAG OFF)
 
+    # On Dreamcast we want the kospvr backend for GLdc
+    add_definitions(-DBACKEND_KOSPVR)
+
     FILE(GENERATE OUTPUT ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.h CONTENT "#pragma once\n#define GLDC_VERSION \"1.1-custom\"\n")
 ENDIF()
 
