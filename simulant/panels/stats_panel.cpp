@@ -255,8 +255,8 @@ void StatsPanel::update() {
 
     if(first_update_ || last_update_ >= 1.0f) {
         auto mem_usage = get_memory_usage_in_megabytes();
-        auto tot_mem = bytes_to_megabytes(window_->platform->total_ram_in_bytes());
-        auto vram_usage = bytes_to_megabytes(window_->platform->available_vram_in_bytes());
+        auto tot_mem = bytes_to_megabytes(get_platform()->total_ram_in_bytes());
+        auto vram_usage = bytes_to_megabytes(get_platform()->available_vram_in_bytes());
         auto actors_rendered = window_->stats->subactors_rendered();
 
         free_ram_history_.push_back(mem_usage);

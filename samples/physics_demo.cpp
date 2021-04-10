@@ -27,7 +27,7 @@ public:
         camera_->move_to(0, 10, 50);
 
         // Create a nice skybox (not on DC, the image is too big)
-        if(window->platform->name() != "dreamcast") {
+        if(get_platform()->name() != "dreamcast") {
             stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
         }
 

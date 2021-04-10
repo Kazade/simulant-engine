@@ -10,12 +10,6 @@ namespace smlt {
 #define SCREEN_HEIGHT 272
 #define SCREEN_DEPTH 32
 
-const PSPWindow::PSPPlatform PSPWindow::platform;
-
-PSPWindow::PSPWindow() {
-    platform_.reset(new PSPPlatform);
-}
-
 void PSPWindow::swap_buffers() {
     eglSwapBuffers(dpy_, surface_);
 }

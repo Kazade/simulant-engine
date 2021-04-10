@@ -42,11 +42,7 @@ static const std::string SDL_CONTROLLER_DB =
 
 namespace smlt {
 
-const SDL2Window::SDLPlatform SDL2Window::platform;
-
 SDL2Window::SDL2Window() {
-    platform_.reset(new SDLPlatform);
-
     auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
 
     if(SDL_Init(default_flags) != 0) {
@@ -527,65 +523,5 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
     SDL_UpdateWindowSurface(window);
 }
 
-uint64_t SDL2Window::SDLPlatform::available_ram_in_bytes() const {
-#ifdef __linux__
-    auto lines = get_app()->window->vfs->read_file_lines("/proc/meminfo");
-    for(auto& line: lines) {
-        if(line.find("MemFree:") != std::string::npos) {
-            auto prefix = line.substr(0, line.find_last_of(" "));
-            auto suffix = prefix.substr(prefix.find_last_of(" ") + 1);
-            return smlt::stol(suffix) * 1024;
-        }
-    }
-#elif defined(__WIN32__)
-    MEMORYSTATUSEX memInfo;
-    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
-    GlobalMemoryStatusEx(&memInfo);
-    return memInfo.ullAvailPhys;
-#endif
-    return MEMORY_VALUE_UNAVAILABLE;
-}
-
-uint64_t SDL2Window::SDLPlatform::total_ram_in_bytes() const {
-#ifdef __linux__
-    auto lines = get_app()->window->vfs->read_file_lines("/proc/meminfo");
-    for(auto& line: lines) {
-        if(line.find("MemTotal:") != std::string::npos) {
-            auto prefix = line.substr(0, line.find_last_of(" "));
-            auto suffix = prefix.substr(prefix.find_last_of(" ") + 1);
-            uint64_t kb = std::stol(suffix);
-            return kb * 1024;
-        }
-    }
-#elif defined(__WIN32__)
-    MEMORYSTATUSEX memInfo;
-    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
-    GlobalMemoryStatusEx(&memInfo);
-    return memInfo.ullTotalPhys;
-#endif
-    return MEMORY_VALUE_UNAVAILABLE;
-}
-
-uint64_t SDL2Window::SDLPlatform::process_ram_usage_in_bytes(ProcessID process_id) const {
-#ifdef __linux__
-    _S_UNUSED(process_id);
-
-    int tSize = 0, resident = 0, share = 0;
-    std::ifstream buffer("/proc/self/statm");
-    buffer >> tSize >> resident >> share;
-    buffer.close();
-
-    long page_size = sysconf(_SC_PAGESIZE); // in case x86-64 is configured to use 2MB pages
-    return resident * page_size;
-#elif defined(__WIN32__)
-    PROCESS_MEMORY_COUNTERS_EX pmc;
-    // FIXME: Use OpenProcess(process_id)
-    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
-    return pmc.PrivateUsage;
-#else
-    _S_UNUSED(process_id);
-    return MEMORY_VALUE_UNAVAILABLE;
-#endif
-}
 
 }

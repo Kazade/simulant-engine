@@ -28,60 +28,13 @@
 #include "sdl2_keycodes.h"
 #include "generic/managed.h"
 #include "window.h"
-#include "platform.h"
 
 namespace smlt {
 
 int event_filter(void* user_data, SDL_Event* event);
 
 class SDL2Window : public Window {
-
-    class SDLPlatform : public Platform {
-    public:
-        std::string name() const override {
-#if defined(__LINUX__)
-            return "linux";
-#elif defined(__APPLE__)
-            return "darwin";
-#elif defined(__ANDROID__)
-            return "android";
-#elif defined(__WIN32__)
-            return "windows";
-#else
-    #error Currently unsupported platform
-#endif
-        }
-
-        Resolution native_resolution() const override {
-            SDL_DisplayMode mode;
-
-            Resolution native;
-            if(SDL_GetDesktopDisplayMode(0, &mode) == -1) {
-                S_WARN("Unable to get the current desktop display mode!!");
-                S_WARN("{0}", SDL_GetError());
-                S_WARN("Falling back to 1080p");
-                native.width = 1920;
-                native.height = 1080;
-                native.refresh_rate = 60;
-            } else {
-                native.width = mode.w;
-                native.height = mode.h;
-                native.refresh_rate = mode.refresh_rate;
-            }
-            return native;
-        }
-
-        uint64_t available_ram_in_bytes() const override;
-        uint64_t total_ram_in_bytes() const override;
-        uint64_t available_vram_in_bytes() const override {
-            return MEMORY_VALUE_UNAVAILABLE;
-        }
-
-        uint64_t process_ram_usage_in_bytes(ProcessID process_id) const override;
-    };
-
 public:
-    static const SDLPlatform platform;
 
     static Window::ptr create(Application* app) {
         return Window::create<SDL2Window>(app);

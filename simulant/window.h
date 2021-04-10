@@ -83,8 +83,6 @@ typedef sig::signal<void ()> ShutdownSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
 
-class Platform;
-
 class Window :
     public Source,
     public StageManager,
@@ -386,8 +384,6 @@ private:
     StageNode* audio_listener_ = nullptr;
 protected:
     InputState* _input_state() const { return input_state_.get(); }
-
-    std::shared_ptr<Platform> platform_;
 public:
     //Read only properties
     S_DEFINE_PROPERTY(shared_assets, &Window::asset_manager_);
@@ -401,7 +397,6 @@ public:
     S_DEFINE_PROPERTY(input, &Window::input_manager_);
     S_DEFINE_PROPERTY(input_state, &Window::input_state_);
     S_DEFINE_PROPERTY(stats, &Window::stats_);
-    S_DEFINE_PROPERTY(platform, &Window::platform_);
     S_DEFINE_PROPERTY(compositor, &Window::compositor_);
 
     SoundDriver* _sound_driver() const { return sound_driver_.get(); }

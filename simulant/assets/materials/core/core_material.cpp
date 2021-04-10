@@ -94,6 +94,9 @@ bool core_material_property_value(const MaterialPropertyNameHash hsh, const int3
         case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
             out = &core_material().textures_enabled;
         break;
+        case material_property_hash(FOG_MODE_PROPERTY_NAME):
+            out = &core_material().fog_mode;
+        break;
         default:
         return false;
     }
