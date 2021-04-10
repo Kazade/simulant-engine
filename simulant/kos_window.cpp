@@ -2,8 +2,8 @@
 #include <malloc.h>
 #include <memory>
 #include <vector>
-#include "../deps/libgl/include/gl.h"
-#include "../deps/libgl/include/glkos.h"
+#include "../deps/libgl/include/GL/gl.h"
+#include "../deps/libgl/include/GL/glkos.h"
 
 #include "input/input_state.h"
 #include "kos_window.h"

@@ -47,5 +47,5 @@ FROM fedora:30
 COPY --from=Build /opt/toolchains /opt/toolchains
 COPY --from=Build /etc/bash.bashrc /etc/bash.bashrc
 COPY --from=Build /root/.bashrc /root/.bashrc
-RUN dnf install -y cmake make libpng genisoimage findutils git
+RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config
 

@@ -25,19 +25,21 @@ INCLUDE_DIRECTORIES(
     $ENV{KOS_BASE}/../kos-ports/include
 )
 
-IF(CMAKE_BUILD_TYPE MATCHES DEBUG)
-LINK_DIRECTORIES($ENV{KOS_BASE}/lib/dreamcast/debug)
-ELSE()
-LINK_DIRECTORIES($ENV{KOS_BASE}/lib/dreamcast)
-ENDIF()
-
 LINK_DIRECTORIES(
     $ENV{KOS_BASE}/addons/lib/dreamcast
     $ENV{KOS_PORTS}/lib
 )
 
-add_link_options(LINKER:--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group)
-link_libraries(stdc++ kallisti gcc c kallisti m)
+IF(${CMAKE_BUILD_TYPE} MATCHES Debug)
+LINK_DIRECTORIES($ENV{KOS_BASE}/lib/dreamcast/debug)
+ELSE()
+LINK_DIRECTORIES($ENV{KOS_BASE}/lib/dreamcast)
+ENDIF()
+
+
+add_link_options(-L$ENV{KOS_BASE}/lib/dreamcast)
+link_libraries(-Wl,--start-group -lstdc++ -lkallisti -lc -lgcc -Wl,--end-group m)
+LINK_LIBRARIES(c gcc kallisti stdc++)
 
 SET(CMAKE_EXECUTABLE_SUFFIX ".elf")
 SET(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")

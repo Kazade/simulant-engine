@@ -19,7 +19,7 @@
 
 #include "gl1x_renderer.h"
 #ifdef __DREAMCAST__
-    #include "../../../deps/libgl/include/gl.h"
+    #include "../../../deps/libgl/include/GL/gl.h"
 #elif defined(__PSP__)
     #include <GL/gl.h>
 #else
