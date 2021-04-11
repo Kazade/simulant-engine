@@ -19,6 +19,16 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   SAST_EXCLUDED_PATHS: spec, test, tests, tmp, simulant/deps
 
+prepare:documentation:
+  stage: prepare
+  image: fedora:33
+  script:
+   - export VERSION=`git describe --abbrev=4 --always --tags | cut -d - -f 1-2`
+   - dnf install -y doxygen python3
+   - python3 tools/gendocs.py VERSION /tmp/reference
+  artifacts:
+   - /tmp/reference/* 
+
 prepare:linux-x64-gcc:
   stage: prepare
   image: docker:latest
