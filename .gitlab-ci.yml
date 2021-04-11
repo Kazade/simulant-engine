@@ -23,10 +23,9 @@ pages:
   stage: prepare
   image: fedora:33
   script:
-   - export VERSION=`git describe --abbrev=4 --always --tags | cut -d - -f 1-2`
    - dnf install -y doxygen python3 git
-   - python3 tools/gendocs.py `pwd` $VERSION `pwd`
-   - mv $VERSION/html public
+   - python3 tools/gendocs.py `pwd` `git describe --abbrev=4 --always --tags | cut -d - -f 1-2` `pwd`
+   - mv `git describe --abbrev=4 --always --tags | cut -d - -f 1-2`/html public
   artifacts:
    paths:
     - public 
