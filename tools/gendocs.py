@@ -17,6 +17,8 @@ HTML_STYLESHEET        = {stylesheet}
 """
 
 if __name__ == '__main__':
+    print(sys.argv)
+
     path = sys.argv[1]
     version = sys.argv[2]
     output = sys.argv[3]
