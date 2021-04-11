@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     with open("/tmp/Doxyfile", "wt") as f:
         f.write(DOXYFILE_TEMPLATE.format(
-            version="12.06",
+            version=version,
             logo_file=os.path.join(path, "tools/simulant-icon-55.png"),
             root_dir=os.path.join(path, "simulant"),
             output_dir=os.path.join(output, version),

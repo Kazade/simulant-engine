@@ -28,7 +28,9 @@ pages:
    - mv `git describe --abbrev=4 --always --tags | cut -d - -f 1-2`/html public
   artifacts:
    paths:
-    - public 
+    - public
+  only:
+    - master 
 
 prepare:linux-x64-gcc:
   stage: prepare
