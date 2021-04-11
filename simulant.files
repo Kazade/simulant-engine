@@ -70,7 +70,6 @@ simulant/coroutines.cpp
 simulant/coroutines.h
 simulant/generic/containers/contiguous_map.h
 simulant/generic/containers/polylist.h
-simulant/generic/cow_vector.h
 simulant/generic/manual_object.cpp
 simulant/generic/manual_object.h
 simulant/generic/notifies_destruction.h
@@ -130,7 +129,6 @@ simulant/vfs.cpp
 simulant/vfs.h
 tests/test_behaviours.h
 tests/test_contiguous_map.h
-tests/test_cow_vector.h
 tests/test_frustum_partitioner.h
 tests/test_heightmap.h
 tests/test_loose_quadtree.h
@@ -684,7 +682,6 @@ simulant/generic/managed.h
 simulant/generic/manual_manager.h
 simulant/generic/optional.h
 simulant/generic/property.h
-simulant/generic/relation.h
 simulant/generic/static_if.h
 simulant/generic/threading/shared_mutex.h
 simulant/generic/unique_id.h
