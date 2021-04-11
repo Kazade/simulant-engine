@@ -19,6 +19,19 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   SAST_EXCLUDED_PATHS: spec, test, tests, tmp, simulant/deps
 
+pages:
+  stage: prepare
+  image: fedora:33
+  script:
+   - dnf install -y doxygen python3 git
+   - python3 tools/gendocs.py `pwd` `git describe --abbrev=4 --always --tags | cut -d - -f 1-2` `pwd`
+   - mv `git describe --abbrev=4 --always --tags | cut -d - -f 1-2`/html public
+  artifacts:
+   paths:
+    - public
+  only:
+    - master 
+
 prepare:linux-x64-gcc:
   stage: prepare
   image: docker:latest

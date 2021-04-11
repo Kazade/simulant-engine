@@ -25,7 +25,6 @@
 #include <vector>
 #include "generic/identifiable.h"
 #include "generic/managed.h"
-#include "generic/cow_vector.h"
 #include "loadable.h"
 #include "types.h"
 #include "asset.h"
@@ -137,25 +136,25 @@ public:
     TextureFormat format() const;
     void set_format(TextureFormat format, TextureTexelType texel_type=TEXTURE_TEXEL_TYPE_UNSPECIFIED);
 
-    /* Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
+    /** Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
     void convert(
         TextureFormat new_format,
         const TextureChannelSet& channels=Texture::DEFAULT_SOURCE_CHANNELS
     );
 
-    /*
+    /**
      * Change the width and height, but manually set the data buffer size,
      * mainly used for compressed textures
      */
     void resize(uint16_t width, uint16_t height, uint32_t data_size);
 
-    /*
+    /**
      * Change the width and height, automatically resizing the data buffer
      * depending on the bytes_per_pixel of the texel_type
      */
     void resize(uint16_t width, uint16_t height);
 
-    /*
+    /**
      * Flip the data buffer vertically. This will have no effect if the
      * data buffer has been wiped after upload
      */
@@ -163,21 +162,21 @@ public:
 
     void set_source(const smlt::Path& source);
 
-    /* Texture filtering and wrapping */
+    /** Texture filtering and wrapping */
     void set_texture_filter(TextureFilter filter);
 
-    /* If set to TEXTURE_FREE_DATA_AFTER_UPLOAD then the data attribute will be
+    /** If set to TEXTURE_FREE_DATA_AFTER_UPLOAD then the data attribute will be
      * wiped after the renderer has uploaded to the GPU.
      */
     void set_free_data_mode(TextureFreeData mode);
 
-    /* Set the texture wrap modes, either together or per-dimension */
+    /** Set the texture wrap modes, either together or per-dimension */
     void set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w);
     void set_texture_wrap_u(TextureWrap wrap_u);
     void set_texture_wrap_v(TextureWrap wrap_v);
     void set_texture_wrap_w(TextureWrap wrap_w);
 
-    /* If enabled (default) the texture will be uploaded to the GPU
+    /** If enabled (default) the texture will be uploaded to the GPU
      * by the renderer. You can disable this if you need just a way
      * to load images from disk for other purposes (e.g. heightmaps)
      */
@@ -189,13 +188,13 @@ public:
     void set_data(const uint8_t* data);
     void set_data(const Texture::Data& data);
 
-    /* Clear the data buffer */
+    /** Clear the data buffer */
     void free();
 
-    /* Returns true if the data array isn't empty */
+    /** Returns true if the data array isn't empty */
     bool has_data() const;
 
-    /*
+    /**
      * Flushes texture data / properties to the renderer immediately. This
      * will free ram if the free data mode is set to TEXTURE_FREE_DATA_AFTER_UPLOAD
      */
@@ -203,7 +202,7 @@ public:
 
     typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
 
-    /* Apply a mutation function to the current texture data */
+    /** Apply a mutation function to the current texture data */
     void mutate_data(MutationFunc func);
 
     TextureTexelType texel_type() const;
@@ -211,23 +210,23 @@ public:
     uint16_t height() const override;
     Vec2 dimensions() const { return Vec2(width(), height()); }
 
-    /*
+    /**
      * Returns true if this Texture uses a compressed format
      */
     bool is_compressed() const;
 
-    /* Returns the data size of each texel in bytes */
+    /** Returns the data size of each texel in bytes */
     std::size_t bytes_per_pixel() const;
 
-    /* Returns the data size of each texel in bits */
+    /** Returns the data size of each texel in bits */
     std::size_t bits_per_pixel() const;
 
-    /*
+    /**
      * Returns the number of channels that this texture has
      */
     uint8_t channels() const;
 
-    /*
+    /**
      * Save a texture to the specified file. Will only work for
      * uncompressed Textures
      */
@@ -241,28 +240,27 @@ public:
     MipmapGenerate mipmap_generation() const;
     TextureFreeData free_data_mode() const;
 
-    /* These are overridden to notify the renderer of texture changes */
+    /** These are overridden to notify the renderer of texture changes */
     bool init() override;
     void clean_up() override;
     void update(float dt) override;
     bool has_mipmaps() const;
     bool auto_upload() const;
 
-
-    /* This is for storing the GL (or whatever) texture ID */
+    /** This is for storing the GL (or whatever) texture ID */
     void _set_renderer_specific_id(const uint32_t id);
     uint32_t _renderer_specific_id() const;
 
-    /* INTERNAL: Clears the params dirty flag */
+    /** INTERNAL: Clears the params dirty flag */
     void _set_params_clean();
 
-    /* INTERNAL: returns true if the data needs re-uploading */
+    /** INTERNAL: returns true if the data needs re-uploading */
     bool _data_dirty() const;
 
-    /* INTERNAL: clears the dirty data flag */
+    /** INTERNAL: clears the dirty data flag */
     void _set_data_clean();
 
-    /* INTERNAL: returns true if the filters are dirty */
+    /** INTERNAL: returns true if the filters are dirty */
     bool _params_dirty() const;
     void _set_has_mipmaps(bool v);
 private:
