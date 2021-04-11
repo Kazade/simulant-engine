@@ -23,7 +23,7 @@ pages:
   stage: prepare
   image: fedora:33
   script:
-   - dnf install -y doxygen python3
+   - dnf install -y doxygen python3 git
    - python3 tools/gendocs.py . `git describe --abbrev=4 --always --tags | cut -d - -f 1-2` /tmp/reference
    - mv /tmp/reference/$VERSION public
   artifacts:
