@@ -25,7 +25,7 @@ prepare:documentation:
   script:
    - export VERSION=`git describe --abbrev=4 --always --tags | cut -d - -f 1-2`
    - dnf install -y doxygen python3
-   - python3 tools/gendocs.py VERSION /tmp/reference
+   - python3 tools/gendocs.py $VERSION /tmp/reference
   artifacts:
    paths:
     - /tmp/reference/* 
