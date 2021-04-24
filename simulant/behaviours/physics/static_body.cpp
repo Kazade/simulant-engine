@@ -71,9 +71,15 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
         mesh_cache.insert(std::make_pair(mesh_id, bmesh));
     }
 
-    b3MeshShape shape;
     // Grab the b3Mesh from the generator
-    shape.m_mesh = mesh_cache.at(mesh_id)->get_mesh();
+    b3Mesh* genMesh = mesh_cache.at(mesh_id)->get_mesh();
+
+    // Build mesh AABB tree and mesh adjacency
+    genMesh->BuildTree();
+    genMesh->BuildAdjacency();
+
+    b3MeshShape shape;
+    shape.m_mesh = genMesh;
 
     b3ShapeDef sdef;
     sdef.shape = &shape;
