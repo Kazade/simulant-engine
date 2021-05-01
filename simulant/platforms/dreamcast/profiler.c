@@ -1,4 +1,3 @@
-
 #include <stdbool.h>
 #include <assert.h>
 #include <stdint.h>
@@ -35,7 +34,7 @@ static Arc ARCS[BUCKET_SIZE];
 /* Hashing function for two uint32_ts */
 #define HASH_PAIR(x, y) ((x * 0x1f1f1f1f) ^ y)
 
-#define BUFFER_SIZE (1024 * 1024 * 8)  // 8K buffer
+#define BUFFER_SIZE (1024 * 8)  // 8K buffer
 
 const static size_t MAX_ARC_COUNT = BUFFER_SIZE / sizeof(Arc);
 static size_t ARC_COUNT = 0;
@@ -75,7 +74,7 @@ static void record_thread(uint32_t PC, uint32_t PR) {
             }
         }
 
-        ++s->count;
+        s->count++;
     } else {
         /* Initialize this sample */
         s->count = 1;
@@ -242,7 +241,7 @@ static bool write_samples(const char* path) {
 
     /* Write arcs */
     Arc* root = ARCS;
-    for(int i = 0; i < BUCKET_SIZE; ++i) {        
+    for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
             GmonArc arc;
             arc.from_pc = root->pr;
@@ -285,7 +284,9 @@ static bool write_samples(const char* path) {
     root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
+            printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
             bins[(root->pc - lowest_address) / bin_size]++;
+            printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
 
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
