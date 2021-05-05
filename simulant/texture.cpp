@@ -43,46 +43,29 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_ALPHA
 }};
 
-static uint8_t channels_for_format(TextureFormat format) {
+std::size_t texture_format_channels(TextureFormat format) {
     switch(format) {
-    case TEXTURE_FORMAT_R8:
+    case TEXTURE_FORMAT_R_1UB_8:
         return 1;
-    case TEXTURE_FORMAT_RGB888:
-    case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ:
-    case TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ_TWID:
-    case TEXTURE_FORMAT_RGB_S3TC_DXT1_EXT:
+    case TEXTURE_FORMAT_RGB_1US_565:
+    case TEXTURE_FORMAT_RGB_1US_565_TWID:
+    case TEXTURE_FORMAT_RGB_3UB_888:
+    case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         return 3;
-    case TEXTURE_FORMAT_RGBA8888:
-    case TEXTURE_FORMAT_RGBA4444:
-    case TEXTURE_FORMAT_RGBA5551:
-    case TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ:
-    case TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ_TWID:
-    case TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ:
-    case TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ_TWID:
-    case TEXTURE_FORMAT_RGBA_S3TC_DXT1_EXT:
-    case TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT:
-    case TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT:
+    case TEXTURE_FORMAT_RGBA_4UB_8888:
+    case TEXTURE_FORMAT_RGBA_1US_4444:
+    case TEXTURE_FORMAT_ARGB_1US_4444:
+    case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+    case TEXTURE_FORMAT_RGBA_1US_5551:
+    case TEXTURE_FORMAT_ARGB_1US_1555:
+    case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
         return 4;
-    }
-
-    S_ERROR("Invalid TextureFormat!");
-    return 4;
-}
-
-static std::size_t bits_per_texel(TextureFormat format, TextureTexelType type) {
-    switch(type) {
-        case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
-    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
-        // Packed into a short
-        return sizeof(unsigned short) * 8;
     default:
-        // byte per channel
-        return sizeof(unsigned char) * channels_for_format(format) * 8;
+        S_ERROR("Invalid TextureFormat!");
+        return 0;
     }
-}
-
-static std::size_t bytes_per_texel(TextureFormat format, TextureTexelType type) {
-    return bits_per_texel(format, type) / 8;
 }
 
 Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
@@ -101,10 +84,6 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     renderer_ = asset_manager->window->renderer;
 }
 
-TextureTexelType Texture::texel_type() const {
-    return texel_type_;
-}
-
 TextureFormat Texture::format() const {
     return format_;
 }
@@ -117,22 +96,28 @@ uint16_t Texture::height() const {
     return height_;
 }
 
-void Texture::set_format(TextureFormat format, TextureTexelType texel_type) {
+std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint16_t height) {
+    switch(fmt) {
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+            /* 2048 byte codebook, 8bpp per 2x2 */
+            return 2048 + ((width / 2) * (height / 2));
+        default:
+            break;
+    }
+
+    return texture_format_stride(fmt) * width * height;
+}
+
+void Texture::set_format(TextureFormat format) {
     if(format_ == format) {
         return;
     }
 
     format_ = format;
 
-    // Default the texel type to what is probably required
-    texel_type_ = (
-        (texel_type == TEXTURE_TEXEL_TYPE_UNSPECIFIED) ?
-        texel_type_from_texture_format(format) : texel_type
-    );
-
-    data_.resize(
-        width_ * height_ * bytes_per_texel(format_, texel_type_)
-    );
+    data_.resize(required_data_size(format, width_, height_));
     data_.shrink_to_fit();
 
     data_dirty_ = true;
@@ -156,14 +141,10 @@ void Texture::resize(uint16_t width, uint16_t height) {
         return;
     }
 
-    if(is_compressed()) {
-        throw std::logic_error("Unable to resize a compressed texture with width and height");
-    }
-
     width_ = width;
     height_ = height;
 
-    data_.resize(width * height * bytes_per_texel(format_, texel_type_));
+    data_.resize(required_data_size(format_, width, height));
     data_.shrink_to_fit();
 
     data_dirty_ = true;
@@ -244,13 +225,13 @@ typedef void (*ExplodeFunc)(const uint8_t*, const TextureChannelSet&, float&, fl
 typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
 static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
-    {TEXTURE_FORMAT_R8, explode_r8},
-    {TEXTURE_FORMAT_RGBA8888, explode_rgba8888}
+    {TEXTURE_FORMAT_R_1UB_8, explode_r8},
+    {TEXTURE_FORMAT_RGBA_4UB_8888, explode_rgba8888}
 };
 
 static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
-    {TEXTURE_FORMAT_RGBA4444, compress_rgba4444},
-    {TEXTURE_FORMAT_RGBA8888, compress_rgba8888}
+    {TEXTURE_FORMAT_RGBA_1US_4444, compress_rgba4444},
+    {TEXTURE_FORMAT_RGBA_4UB_8888, compress_rgba8888}
 };
 
 void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
@@ -292,7 +273,7 @@ static void do_flip_vertically(uint8_t* data, uint16_t width, uint16_t height, T
      */
     auto w = (uint32_t) width;
     auto h = (uint32_t) height;
-    auto c = (uint32_t) channels_for_format(format);
+    auto c = (uint32_t) texture_format_channels(format);
 
     auto row_size = w * c;
 
@@ -353,35 +334,25 @@ void Texture::mutate_data(Texture::MutationFunc func) {
 
 bool Texture::is_compressed() const {
     switch(format_) {
-    case TEXTURE_FORMAT_R8:
-    case TEXTURE_FORMAT_RGB888:
-    case TEXTURE_FORMAT_RGBA8888:
-    case TEXTURE_FORMAT_RGBA4444:
-    case TEXTURE_FORMAT_RGBA5551:
-        return false;
-    default:
+    case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
         return true;
+    default:
+        return false;
     }
 }
 
-std::size_t Texture::bytes_per_pixel() const {
-    return bytes_per_texel(format(), texel_type());
-}
-
-std::size_t Texture::bits_per_pixel() const {
-    return bits_per_texel(format(), texel_type());
-}
-
 uint8_t Texture::channels() const {
-    return channels_for_format(format_);
+    return texture_format_channels(format_);
 }
 
 const Texture::Data &Texture::data() const {
     return data_;
 }
 
-void Texture::set_data(const uint8_t* data) {
-    data_.assign(data, data + (width() * height() * bytes_per_pixel()));
+void Texture::set_data(const uint8_t* data, std::size_t size) {
+    data_.assign(data, data + size);
 }
 
 void Texture::save_to_file(const Path& filename) {
@@ -523,34 +494,22 @@ uint32_t Texture::_renderer_specific_id() const {
     return renderer_id_;
 }
 
-uint8_t texture_format_stride(TextureFormat format) {
+std::size_t texture_format_stride(TextureFormat format) {
     switch(format) {
-        case TEXTURE_FORMAT_R8: return 1;
-        case TEXTURE_FORMAT_RGBA4444:
-    case TEXTURE_FORMAT_RGBA5551: return 2;
-    case TEXTURE_FORMAT_RGB888: return 3;
-    case TEXTURE_FORMAT_RGBA8888: return 4;
+        case TEXTURE_FORMAT_R_1UB_8: return 1;
+        case TEXTURE_FORMAT_RGB_1US_565:
+        case TEXTURE_FORMAT_RGB_1US_565_TWID:
+        case TEXTURE_FORMAT_RGBA_1US_4444:
+        case TEXTURE_FORMAT_ARGB_1US_4444:
+        case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_1555:
+        case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+        case TEXTURE_FORMAT_RGBA_1US_5551: return 2;
+        case TEXTURE_FORMAT_RGB_3UB_888: return 3;
+        case TEXTURE_FORMAT_RGBA_4UB_8888: return 4;
     default:
         assert(0 && "Not implemented");
         return 0;
-    }
-}
-
-TextureTexelType texel_type_from_texture_format(TextureFormat format) {
-    /* Given a texture format definition, return the texel type for it */
-
-    switch(format) {
-    case TEXTURE_FORMAT_R8:
-    case TEXTURE_FORMAT_RGB888:
-    case TEXTURE_FORMAT_RGBA8888:
-        return TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
-    case TEXTURE_FORMAT_RGBA4444:
-        return TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4;
-    case TEXTURE_FORMAT_RGBA5551:
-        return TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1;
-    default:
-        assert(0 && "Not implemented");
-        return TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
     }
 }
 

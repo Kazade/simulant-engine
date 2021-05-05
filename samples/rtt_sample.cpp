@@ -29,7 +29,7 @@ public:
         rect_ = rect_stage_->new_actor_with_mesh(rect_mesh);
         rect_->move_to_absolute(0, 0, -4);
 
-        auto rtt = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
+        auto rtt = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, smlt::GARBAGE_COLLECT_NEVER);
         mat = rect_mesh->first_submesh()->material();
         mat->set_diffuse_map(rtt);
 

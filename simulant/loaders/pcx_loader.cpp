@@ -66,8 +66,7 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     result.width = header.xmax - header.xmin + 1;
     result.height = header.ymax - header.ymin + 1;
     result.channels = 3;
-    result.format = TEXTURE_FORMAT_RGB888;
-    result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
+    result.format = TEXTURE_FORMAT_RGB_3UB_888;
     result.data.resize(result.width * result.height * result.channels);
 
     auto bitcount = header.bits_per_pixel * header.num_color_planes;

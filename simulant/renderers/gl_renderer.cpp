@@ -64,15 +64,19 @@ void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
 
 }
 
-uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
+uint32_t GLRenderer::convert_format(TextureFormat format) {
     switch(format) {
-        case TEXTURE_FORMAT_R8:
+        case TEXTURE_FORMAT_R_1UB_8:
             return GL_RED;
-        case TEXTURE_FORMAT_RGB888:
+        case TEXTURE_FORMAT_RGB_3UB_888:
+        case TEXTURE_FORMAT_RGB_1US_565:
             return GL_RGB;
-        case TEXTURE_FORMAT_RGBA4444:
-        case TEXTURE_FORMAT_RGBA5551:
-        case TEXTURE_FORMAT_RGBA8888:
+        case TEXTURE_FORMAT_ARGB_1US_4444:
+        case TEXTURE_FORMAT_ARGB_1US_1555:
+            return GL_BGRA;
+        case TEXTURE_FORMAT_RGBA_1US_4444:
+        case TEXTURE_FORMAT_RGBA_1US_5551:
+        case TEXTURE_FORMAT_RGBA_4UB_8888:
             return GL_RGBA;
         default:
             assert(0 && "Not implemented");
@@ -80,37 +84,32 @@ uint32_t GLRenderer::convert_texture_format(TextureFormat format) {
     }
 }
 
-uint32_t GLRenderer::convert_texel_type(TextureTexelType type) {
-    switch(type) {
-    case TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE:
+uint32_t GLRenderer::convert_type(TextureFormat format) {
+    switch(format) {
+    case TEXTURE_FORMAT_R_1UB_8:
+    case TEXTURE_FORMAT_RGB_3UB_888:
+    case TEXTURE_FORMAT_RGBA_4UB_8888:
         return GL_UNSIGNED_BYTE;
-    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4:
+    case TEXTURE_FORMAT_RGB_1US_565:
+        return GL_UNSIGNED_SHORT_5_6_5;
+    case TEXTURE_FORMAT_RGBA_1US_4444:
         return GL_UNSIGNED_SHORT_4_4_4_4;
-    case TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1:
+    case TEXTURE_FORMAT_RGBA_1US_5551:
         return GL_UNSIGNED_SHORT_5_5_5_1;
+    case TEXTURE_FORMAT_ARGB_1US_1555:
+        return GL_UNSIGNED_SHORT_1_5_5_5_REV;
+    case TEXTURE_FORMAT_ARGB_1US_4444:
+        return GL_UNSIGNED_SHORT_4_4_4_4_REV;
     default:
         assert(0 && "Not implemented");
         return 0;
     }
 }
 
-GLint texture_format_to_internal_format(TextureFormat format) {
-    /*
-     * In OpenGL 1.x, this would be the number of channels (1, 2, 3 or 4)
-     * In 2.x this was a number of channels *or* a symbolic constant
-     * In 3+ this must be a symbolic constant
-     *
-     * So for now, for compatibility we just return the number
-     */
-
-    switch(format) {
-        case TEXTURE_FORMAT_R8:
-            return GL_RED;
-        case TEXTURE_FORMAT_RGB888:
-            return GL_RGB;
-        default:
-            return GL_RGBA;
-    }
+static constexpr GLenum texture_format_to_internal_format(TextureFormat format) {
+    return (format == TEXTURE_FORMAT_R_1UB_8) ? GL_RED :
+           (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
+            GL_RGBA;
 }
 
 void GLRenderer::on_texture_prepare(Texture *texture) {
@@ -128,9 +127,10 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
     if(texture->_data_dirty() && texture->auto_upload()) {
         // Upload
 
-        auto format = convert_texture_format(texture->format());
-        auto internal_format = texture_format_to_internal_format(texture->format());
-        auto type = convert_texel_type(texture->texel_type());
+        auto f = texture->format();
+        auto format = convert_format(f);
+        auto internal_format = texture_format_to_internal_format(f);
+        auto type = convert_type(f);
 
         if(format > 0 && type > 0) {
             if(texture->is_compressed()) {

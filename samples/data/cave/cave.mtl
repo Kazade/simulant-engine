@@ -9,7 +9,7 @@ newmtl Ground003_2K_Color
 Kd 0.2830189 0.2830189 0.2830189
 Ka 0.125 0.125 0.125
 Ks 0 0 0
-map_Kd Ground003_2K_Color_mod.jpg
+map_Kd Ground003_2K_Color_mod.dtex
 illum 2
 
 newmtl OldTree

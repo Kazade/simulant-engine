@@ -55,8 +55,8 @@ protected:
     void on_texture_unregister(TextureID tex_id, Texture* texture);
     void on_texture_prepare(Texture* texture);
 
-    uint32_t convert_texture_format(TextureFormat format);
-    uint32_t convert_texel_type(TextureTexelType type);
+    uint32_t convert_format(TextureFormat format);
+    uint32_t convert_type(TextureFormat format);
 
     thread::Mutex texture_object_mutex_;
     std::unordered_map<TextureID, uint32_t> texture_objects_;

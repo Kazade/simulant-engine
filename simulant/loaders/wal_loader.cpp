@@ -91,8 +91,7 @@ TextureLoadResult WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     result.width = header.width;
     result.height = header.height;
     result.channels = 4;
-    result.format = TEXTURE_FORMAT_RGBA8888;
-    result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
+    result.format = TEXTURE_FORMAT_RGBA_4UB_8888;
 
     stream->seekg(header.offset[0]);
 

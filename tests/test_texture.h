@@ -12,7 +12,10 @@ using namespace smlt;
 class TextureTests : public smlt::test::SimulantTestCase {
 public:
     void test_flush() {
-        auto tex = window->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_R8);
+        auto tex = window->shared_assets->new_texture(
+            8, 8,
+            TEXTURE_FORMAT_R_1UB_8
+        );
 
         std::vector<uint8_t> data(8 * 8, 255);
         tex->set_data(data);
@@ -38,7 +41,7 @@ public:
     }
 
     void test_conversion_from_r8_to_rgba4444() {
-        auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R8);
+        auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R_1UB_8);
 
         auto data = tex->data();
         data[0] = 255;
@@ -52,7 +55,7 @@ public:
 
         // Should convert each pixel to: {1, 0, 0, v}
         tex->convert(
-            TEXTURE_FORMAT_RGBA4444,
+            TEXTURE_FORMAT_RGBA_1US_4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ZERO, TEXTURE_CHANNEL_GREEN, TEXTURE_CHANNEL_RED}}
         );
 

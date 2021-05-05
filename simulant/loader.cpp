@@ -88,7 +88,7 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         throw std::runtime_error("Couldn't load the file: " + filename_.str());
     } else {
         tex->set_source(filename_);
-        tex->set_format(result.format, result.texel_type);
+        tex->set_format(result.format);
         tex->resize(result.width, result.height);
         tex->set_data(result.data);
         tex->set_auto_upload(auto_upload);

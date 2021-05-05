@@ -160,7 +160,7 @@ public:
     FontPtr find_font(const std::string& alias);
 
     // Customisations
-    TexturePtr new_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr new_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     TexturePtr new_texture_from_file(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);

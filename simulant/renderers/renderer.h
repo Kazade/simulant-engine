@@ -26,6 +26,8 @@
 #include "../types.h"
 #include "../threads/shared_mutex.h"
 #include "../macros.h"
+#include "../texture.h"
+
 #include "batching/renderable.h"
 #include "batching/render_queue.h"
 
@@ -66,7 +68,33 @@ public:
      * used to upload any data to VRAM if necessary */
     virtual void prepare_to_render(const Renderable* renderable) = 0;
 
+
+    /** Returns true if the GPU can support the texture format
+     *  without any kind of conversion */
+    bool natively_supports_texture_format(TextureFormat fmt) {
+        return texture_format_is_native(fmt);
+    }
+
+    /** Returns true if the renderer can convert the specified format
+     * to make it usable, or if it natively supports the format */
+    bool supports_texture_format(TextureFormat fmt) {
+        if(natively_supports_texture_format(fmt)) {
+            return true;
+        }
+
+        return texture_format_is_usable(fmt);
+    }
+
 public:
+    /** To be overridden by subclasses. Default supported textures
+     *  are those that are supported by glTexImage2D without any
+     *  extensions */
+    virtual bool texture_format_is_native(TextureFormat fmt);
+
+    /** To be overridden by subclasses to specify texture formats that
+     * can be handled by the renderer */
+    virtual bool texture_format_is_usable(TextureFormat fmt);
+
     // Render support flags
     virtual bool supports_gpu_programs() const { return false; }
 
@@ -83,6 +111,8 @@ private:
 
     void register_texture(TextureID tex_id, Texture *texture);
     void unregister_texture(TextureID texture_id, Texture* texture);
+
+    bool convert_if_necessary(Texture* tex);
 
     Window* window_ = nullptr;
 
