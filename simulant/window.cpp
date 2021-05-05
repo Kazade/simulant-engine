@@ -43,6 +43,7 @@
 #include "loaders/dds_texture_loader.h"
 #include "loaders/wav_loader.h"
 #include "loaders/ms3d_loader.h"
+#include "loaders/dtex_loader.h"
 
 #include "nodes/camera.h"
 
@@ -302,6 +303,7 @@ bool Window::initialize_assets_and_devices() {
         register_loader(std::make_shared<smlt::loaders::DDSTextureLoaderType>());
         register_loader(std::make_shared<smlt::loaders::WAVLoaderType>());
         register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
+        register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
 
         S_INFO("Initializing the default resources");
 

@@ -27,7 +27,7 @@ public:
         HeightmapSpecification spec;
         spec.spacing = 75;
 
-        auto tex = stage->assets->new_texture(64, 64, TEXTURE_FORMAT_R8);
+        auto tex = stage->assets->new_texture(64, 64, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
         tex->set_data(heightmap_data);
         auto mesh = stage->assets->new_mesh_from_heightmap(tex, spec);
@@ -51,9 +51,9 @@ public:
 
         auto stage = window->new_stage();
 
-        auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R8);
+        auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
-        tex->set_data(heightmap_data);
+        tex->set_data(heightmap_data, sizeof(heightmap_data));
         auto mesh = stage->assets->new_mesh_from_heightmap(tex, spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
@@ -102,9 +102,9 @@ public:
 
         auto stage = window->new_stage();
 
-        auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R8);
+        auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
-        tex->set_data(heightmap_data);
+        tex->set_data(heightmap_data, sizeof(heightmap_data));
         auto mesh = stage->assets->new_mesh_from_heightmap(tex, spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");

@@ -238,7 +238,7 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     // Finally generate the texture!
     output_texture->resize(LIGHTMAP_DIMENSION, LIGHTMAP_DIMENSION);
-    output_texture->set_format(TEXTURE_FORMAT_RGBA8888);
+    output_texture->set_format(TEXTURE_FORMAT_RGBA_4UB_8888);
 
     std::vector<LightmapLocation> locations(lightmaps.size());
 
@@ -355,7 +355,11 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<MaterialID> materials;
     std::vector<Q2::TexDimension> dimensions;
 
-    auto lightmap_texture = assets->new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, smlt::GARBAGE_COLLECT_NEVER);
+    auto lightmap_texture = assets->new_texture(
+        8, 8,
+        TEXTURE_FORMAT_RGBA_4UB_8888,
+        smlt::GARBAGE_COLLECT_NEVER
+    );
 
     generate_materials(assets, textures, materials, dimensions, lightmap_texture);
 

@@ -326,7 +326,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(!tex) {
         // Load the texture using the texture loader
-        tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R8);
+        tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
         TextureLoader loader(this->filename_, this->data_);
         loader.into(*tex, {{"auto_upload", false}});
         tex->flip_vertically();
@@ -359,7 +359,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     std::vector<float> heights(total);
     auto& tex_data = tex->data();
-    auto stride = tex->bytes_per_pixel();
+    auto stride = texture_format_stride(tex->format());
     float m = 1.0f / 256.0f;
     for(int32_t i = 0; i < total; i++) {
         heights[i] = float(tex_data[i * stride]) * m;

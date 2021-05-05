@@ -58,20 +58,19 @@ TextureLoadResult TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
         result.height = (uint32_t) height;
         result.channels = (uint32_t) channels;
         result.data.assign(data, data + (width * height * channels));
-        result.texel_type = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
 
         switch(channels) {
         case 1:
-            result.format = TEXTURE_FORMAT_R8;
+            result.format = TEXTURE_FORMAT_R_1UB_8;
         break;
         case 2:
             throw std::runtime_error("2-channel textures are not supported");
         break;
         case 3:
-            result.format = TEXTURE_FORMAT_RGB888;
+            result.format = TEXTURE_FORMAT_RGB_3UB_888;
         break;
         default:
-            result.format = TEXTURE_FORMAT_RGBA8888;
+            result.format = TEXTURE_FORMAT_RGBA_4UB_8888;
         }
 
         stbi_image_free(data);

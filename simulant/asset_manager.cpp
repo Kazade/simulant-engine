@@ -92,7 +92,7 @@ MaterialPtr AssetManager::default_material() const {
 
 
 static TexturePtr create_texture_with_colour(AssetManager* manager, const Colour& c) {
-    auto tex = manager->new_texture(8, 8, TEXTURE_FORMAT_RGB888, GARBAGE_COLLECT_NEVER);
+    auto tex = manager->new_texture(8, 8, TEXTURE_FORMAT_RGB_3UB_888, GARBAGE_COLLECT_NEVER);
 
     const uint8_t r = (uint8_t) (c.r * 255.0f);
     const uint8_t g = (uint8_t) (c.g * 255.0f);
@@ -526,7 +526,7 @@ TexturePtr AssetManager::new_texture_from_file(const Path& path, GarbageCollectM
 TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     S_DEBUG("Loading texture from file: {0}", path);
-    smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA8888, garbage_collect);
+    smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, garbage_collect);
 
     {
         S_DEBUG("Finding loader for: {0}", path);

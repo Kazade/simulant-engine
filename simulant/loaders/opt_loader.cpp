@@ -511,7 +511,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
         texture_name_to_id[tex.name] = mesh->asset_manager().new_texture(
             tex.width, tex.height,
-            (tex.bytes_per_pixel == 3) ? TEXTURE_FORMAT_RGB888 : TEXTURE_FORMAT_RGBA8888
+            (tex.bytes_per_pixel == 3) ? TEXTURE_FORMAT_RGB_3UB_888 : TEXTURE_FORMAT_RGBA_4UB_8888
         );
 
         auto new_tex = mesh->asset_manager().texture(texture_name_to_id[tex.name]);

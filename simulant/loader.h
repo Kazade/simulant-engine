@@ -134,7 +134,6 @@ struct TextureLoadResult {
     uint16_t width;
     uint16_t height;
     uint8_t channels;
-    TextureTexelType texel_type;
     TextureFormat format;
     std::vector<uint8_t> data;
 };

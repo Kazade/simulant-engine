@@ -720,6 +720,8 @@ simulant/loaders/dds_texture_loader.cpp
 simulant/loaders/dds_texture_loader.cpp
 simulant/loaders/dds_texture_loader.h
 simulant/loaders/dds_texture_loader.h
+simulant/loaders/dtex_loader.cpp
+simulant/loaders/dtex_loader.h
 simulant/loaders/fnt_loader.cpp
 simulant/loaders/fnt_loader.h
 simulant/loaders/heightmap_loader.cpp
@@ -1650,6 +1652,7 @@ simulant/utils/mesh/triangulate.h
 simulant/utils/mesh/triangulate.cpp
 simulant/controllers/physics/collision_listener.h
 tests/test_file_ifstream.h
+tests/test_loader_dtex.h
 tests/test_skybox.h
 toolchains/Dreamcast.cmake
 simulant/kos_window.h

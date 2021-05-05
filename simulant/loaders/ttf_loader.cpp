@@ -36,7 +36,11 @@ namespace loaders {
         font->line_gap_ = float(line_gap) * font->scale_;
 
         // Generate a new texture for rendering the font to
-        auto texture = font->texture_ = font->asset_manager().new_texture(TEXTURE_WIDTH, TEXTURE_HEIGHT, TEXTURE_FORMAT_RGBA8888);
+        auto texture = font->texture_ = font->asset_manager().new_texture(
+            TEXTURE_WIDTH,
+            TEXTURE_HEIGHT,
+            TEXTURE_FORMAT_RGBA_4UB_8888
+        );
 
         if(charset != CHARACTER_SET_LATIN) {
             throw std::runtime_error("Unsupported character set - please submit a patch!");
@@ -47,7 +51,7 @@ namespace loaders {
 
         font->char_data_.resize(char_count);
 
-        // Dreamcast needs 32bpp, so we bake the font bitmap here
+        // Dreamcast needs 16bpp, so we bake the font bitmap here
         // temporarily and then generate a RGBA texture from it
 
         std::vector<uint8_t> tmp_buffer(TEXTURE_WIDTH * TEXTURE_HEIGHT);
@@ -59,11 +63,11 @@ namespace loaders {
             (stbtt_bakedchar*) &font->char_data_[0]
         );
 
-        S_DEBUG("F: Converting font texture from 8bit -> 32bit");
+        S_DEBUG("F: Converting font texture from 32bit -> 16bit");
 
-        // Convert from 8bpp to 32bpp
+        // Convert from 32bpp to 16bpp
         texture->convert(
-            TEXTURE_FORMAT_RGBA4444,
+            TEXTURE_FORMAT_RGBA_1US_4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
 

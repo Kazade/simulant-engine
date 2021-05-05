@@ -56,42 +56,43 @@ enum TextureFilter {
  * Simulant intentionally only supports a handful of formats for portability.
  *
  * This list isn't fixed though, if you need more, just file an issue.
+ *
+ * Format is:
+ *
+ * {ORDER}_{COUNT}{TYPE}_{LAYOUT}_{COMPRESSION}_{TWIDDLED}
+ *
+ * Where TYPE is UB (unsigned byte), US (unsigned short)
+ * or UI (unsigned int)
+ *
+ * In some compressed formats the count+type don't make sense
+ * in which case they are omitted.
  */
 enum TextureFormat {
     // Standard formats
-    TEXTURE_FORMAT_R8,
-    TEXTURE_FORMAT_RGB888,
-    TEXTURE_FORMAT_RGBA8888,
+    TEXTURE_FORMAT_R_1UB_8,
+    TEXTURE_FORMAT_RGB_3UB_888,
+    TEXTURE_FORMAT_RGBA_4UB_8888,
 
     // Packed short formats
-    TEXTURE_FORMAT_RGBA4444,
-    TEXTURE_FORMAT_RGBA5551,
+    TEXTURE_FORMAT_RGB_1US_565,
+    TEXTURE_FORMAT_RGBA_1US_4444,
+    TEXTURE_FORMAT_RGBA_1US_5551,
+    TEXTURE_FORMAT_ARGB_1US_1555,
+    TEXTURE_FORMAT_ARGB_1US_4444,
+    TEXTURE_FORMAT_RGB_1US_565_TWID,
+    TEXTURE_FORMAT_ARGB_1US_4444_TWID,
+    TEXTURE_FORMAT_ARGB_1US_1555_TWID,
 
     // Dreamcast PVR VQ compressed
-    TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ,
-    TEXTURE_FORMAT_UNSIGNED_SHORT_5_6_5_VQ_TWID,
-    TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ,
-    TEXTURE_FORMAT_UNSIGNED_SHORT_4_4_4_4_VQ_TWID,
-    TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ,
-    TEXTURE_FORMAT_UNSIGNED_SHORT_1_5_5_5_VQ_TWID,
+    TEXTURE_FORMAT_RGB_1US_565_VQ_TWID,
+    TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID,
+    TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID,
 
-    // S3TC
-    TEXTURE_FORMAT_RGB_S3TC_DXT1_EXT,
-    TEXTURE_FORMAT_RGBA_S3TC_DXT1_EXT,
-    TEXTURE_FORMAT_RGBA_S3TC_DXT3_EXT,
-    TEXTURE_FORMAT_RGBA_S3TC_DXT5_EXT,
+    TEXTURE_FORMAT_INVALID
 };
 
-uint8_t texture_format_stride(TextureFormat format);
-
-enum TextureTexelType {
-    TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE,
-    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_4_4_4_4,
-    TEXTURE_TEXEL_TYPE_UNSIGNED_SHORT_5_5_5_1,
-    TEXTURE_TEXEL_TYPE_UNSPECIFIED = 1000
-};
-
-TextureTexelType texel_type_from_texture_format(TextureFormat format);
+std::size_t texture_format_stride(TextureFormat format);
+std::size_t texture_format_channels(TextureFormat format);
 
 enum TextureFreeData {
     TEXTURE_FREE_DATA_NEVER,
@@ -131,10 +132,10 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA8888);
+    Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
 
     TextureFormat format() const;
-    void set_format(TextureFormat format, TextureTexelType texel_type=TEXTURE_TEXEL_TYPE_UNSPECIFIED);
+    void set_format(TextureFormat format);
 
     /** Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
     void convert(
@@ -185,7 +186,13 @@ public:
 
     const Texture::Data& data() const;
 
-    void set_data(const uint8_t* data);
+    /** The required size that data() should be to hold a texture in this format with these dimensions.
+      * For non-compressed formats this is usually the width * height * stride. For compressed formats
+      * this can vary, and will include any space for things like codebooks.
+    */
+    static std::size_t required_data_size(TextureFormat fmt, uint16_t width, uint16_t height);
+
+    void set_data(const uint8_t* data, std::size_t size);
     void set_data(const Texture::Data& data);
 
     /** Clear the data buffer */
@@ -205,7 +212,6 @@ public:
     /** Apply a mutation function to the current texture data */
     void mutate_data(MutationFunc func);
 
-    TextureTexelType texel_type() const;
     uint16_t width() const override;
     uint16_t height() const override;
     Vec2 dimensions() const { return Vec2(width(), height()); }
@@ -214,12 +220,6 @@ public:
      * Returns true if this Texture uses a compressed format
      */
     bool is_compressed() const;
-
-    /** Returns the data size of each texel in bytes */
-    std::size_t bytes_per_pixel() const;
-
-    /** Returns the data size of each texel in bits */
-    std::size_t bits_per_pixel() const;
 
     /**
      * Returns the number of channels that this texture has
@@ -269,8 +269,7 @@ private:
     uint16_t width_ = 0;
     uint16_t height_ = 0;
 
-    TextureTexelType texel_type_ = TEXTURE_TEXEL_TYPE_UNSIGNED_BYTE;
-    TextureFormat format_ = TEXTURE_FORMAT_RGBA8888;
+    TextureFormat format_ = TEXTURE_FORMAT_RGBA_4UB_8888;
 
     Path source_;
 
