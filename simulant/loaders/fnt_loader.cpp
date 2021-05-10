@@ -307,7 +307,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
          * getting bogged down with VQ compression or paletted textures
          */
         font->texture_->convert(
-            TEXTURE_FORMAT_RGBA_4UB_8888,
+            TEXTURE_FORMAT_RGBA_1US_4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
     }

@@ -100,10 +100,10 @@ public:
 private:
     bool init() {
         scenes->register_scene<GameScene>("main");
+        scenes->activate("_loading"); // Show the loading screen in the meantime
         scenes->preload_in_background("main").then([this]() {
             scenes->activate("main");
         }); //Do loading in a background thread, but show immediately when done
-        scenes->activate("_loading"); // Show the loading screen in the meantime
         return true;
     }
 };

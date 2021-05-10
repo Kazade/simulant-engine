@@ -30,8 +30,9 @@ bool KOSWindow::_init_window() {
     S_DEBUG("Initializing OpenGL");
 
     static bool gl_initialized = false;
-    if(!gl_initialized++) {
+    if(!gl_initialized) {
         glKosInit();
+        gl_initialized = true;
     }
 
     S_DEBUG("OpenGL initialized");

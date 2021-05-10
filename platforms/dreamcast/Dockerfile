@@ -16,7 +16,7 @@ RUN sed -i 's/# makejobs=-jn/makejobs=-j5/' /opt/toolchains/dc/kos/utils/dc-chai
 RUN sed -i 's/c,c++,objc,obj-c++/c,c++/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile
 
 # Build the toolchain
-RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp config.mk.stable.sample config.mk && sh ./download.sh && sh ./unpack.sh && make
+RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp config.mk.testing.sample config.mk && sh ./download.sh && sh ./unpack.sh && make
 
 # Copy the sample config
 RUN cp /opt/toolchains/dc/kos/doc/environ.sh.sample /opt/toolchains/dc/kos/environ.sh
