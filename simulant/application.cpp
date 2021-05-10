@@ -258,25 +258,31 @@ bool Application::_call_init() {
     return initialized_;
 }
 
+static void on_terminate() {
+#ifdef __DREAMCAST__
+    if(PROFILING) {
+        profiler_stop();
+        profiler_clean_up();
+    }
+#endif
+
+#ifdef __PSP__
+    /* Try to notify and exit cleanly on PSP */
+    sceKernelExitGame();
+#endif
+}
+
 int32_t Application::run() {
 #ifdef __DREAMCAST__
     if(PROFILING) {
         profiler_init("/pc/gmon.out");
         profiler_start();
     }
+#endif
+
 
     /* Try to write samples even if bad things happen */
-    std::set_terminate([&]() {
-        profiler_stop();
-        profiler_clean_up();
-
-#ifdef __PSP__
-        /* Try to notify and exit cleanly on PSP */
-        sceKernelExitGame();
-#endif
-    });
-
-#endif
+    std::set_terminate(on_terminate);
 
     if(!_call_init()) {
         S_ERROR("Error while initializing, terminating application");

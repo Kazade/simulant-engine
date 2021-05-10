@@ -27,7 +27,7 @@ ENDIF()
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdouble-promotion")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdouble-promotion -faligned-new")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall")
 SET(CMAKE_ASM_FLAGS "")
 
@@ -106,6 +106,12 @@ IF(USE_GLAD_FOR_OPENGL)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_USE_GLAD")
 ENDIF()
 
+
+# Force the new C++ ABI on GCC
+MESSAGE("-- Enabling old C++11 ABI")
+ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
+
+
 IF(NOT PLATFORM_DREAMCAST)
     IF(ANDROID)
         LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/sdl/build/libs/${ANDROID_ABI})
@@ -156,10 +162,6 @@ IF(NOT PLATFORM_DREAMCAST)
         find_package(Threads REQUIRED)
         link_libraries(Threads::Threads)
     ENDIF()
-
-    # Force the new C++ ABI on GCC
-    MESSAGE("-- Enabling old C++11 ABI")
-    ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
 ELSE()
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast.")
 

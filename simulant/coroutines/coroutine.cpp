@@ -1,4 +1,4 @@
-#include <map>
+#include <unordered_map>
 #include <utility>
 #include "coroutine.h"
 #include "../threads/thread.h"
@@ -27,10 +27,10 @@ struct Context {
 static Context* CONTEXTS = nullptr;
 static CoroutineID ID_COUNTER = 0;
 
-#ifdef __PSP__
+#if defined(__PSP__) || defined(__DREAMCAST__)
 
 static thread::Mutex CURRENT_CONTEXT_MUTEX;
-static std::map<thread::ThreadID, Context*> THREAD_CONTEXTS;
+static std::unordered_map<thread::ThreadID, Context*> THREAD_CONTEXTS;
 
 static Context* current_context() {
     thread::Lock<thread::Mutex> l(CURRENT_CONTEXT_MUTEX);
@@ -48,12 +48,6 @@ static void set_current_context(Context* context) {
 }
 
 #else
-
-#ifdef __GNUC__
-#if __GNUC_MAJOR__ < 5
-    #define thread_local __thread
-#endif
-#endif
 
 static thread_local Context* CURRENT_CONTEXT = nullptr;
 

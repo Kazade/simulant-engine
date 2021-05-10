@@ -143,8 +143,10 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<T>::then(Func func) {
 
 template<typename Func>
 CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func) {
-    auto cb = [this, func]() -> typename std::result_of<Func()>::type {
-        while(!state_->value) {
+    auto state = state_;
+
+    auto cb = [this, func, state]() -> typename std::result_of<Func()>::type {
+        while(!state->value) {
             cr_yield();
         }
 
