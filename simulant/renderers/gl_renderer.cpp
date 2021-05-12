@@ -162,7 +162,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         }
 
         /* Generate mipmaps if we don't have them already */
-        if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE && !texture->has_mipmaps()) {
+        if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE && !texture->has_mipmaps() && !texture->is_compressed()) {
 #ifdef __DREAMCAST__
             if(texture->width() == texture->height()) {
 #endif
