@@ -766,10 +766,12 @@ void Window::update_idle_tasks_and_coroutines() {
 }
 
 void Window::update_coroutines() {
-    for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
+    for(auto it = coroutines_.begin(); it != coroutines_.end();) {
         if(cort::resume_coroutine(*it) == cort::CO_RESULT_FINISHED) {
             cort::stop_coroutine(*it);
             it = coroutines_.erase(it);
+        } else {
+            ++it;
         }
     }
 }
