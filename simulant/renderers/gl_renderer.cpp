@@ -10,6 +10,7 @@
 #ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/GL/gl.h"
     #include "../../../deps/libgl/include/GL/glext.h"
+    #include "../../../deps/libgl/include/GL/glkos.h"
 #elif defined(__PSP__)
     #include <GL/gl.h>
 #else
@@ -78,6 +79,14 @@ uint32_t GLRenderer::convert_format(TextureFormat format) {
         case TEXTURE_FORMAT_RGBA_1US_5551:
         case TEXTURE_FORMAT_RGBA_4UB_8888:
             return GL_RGBA;
+#ifdef __DREAMCAST__
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+            return GL_COMPRESSED_ARGB_1555_VQ_TWID_KOS;
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
+            return GL_COMPRESSED_ARGB_4444_VQ_TWID_KOS;
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+            return GL_COMPRESSED_RGB_565_VQ_TWID_KOS;
+#endif
         default:
             assert(0 && "Not implemented");
             return GL_RGBA;
@@ -100,6 +109,13 @@ uint32_t GLRenderer::convert_type(TextureFormat format) {
         return GL_UNSIGNED_SHORT_1_5_5_5_REV;
     case TEXTURE_FORMAT_ARGB_1US_4444:
         return GL_UNSIGNED_SHORT_4_4_4_4_REV;
+#ifdef __DREAMCAST__
+    case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
+    case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+        /* Not used for anything, but return something sensible */
+        return GL_UNSIGNED_SHORT;
+#endif
     default:
         assert(0 && "Not implemented");
         return 0;
