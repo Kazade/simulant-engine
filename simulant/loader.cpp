@@ -92,6 +92,7 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         tex->resize(result.width, result.height);
         tex->set_data(result.data);
         tex->set_auto_upload(auto_upload);
+
         if(format_stored_upside_down()) {
             tex->flip_vertically();
         }
