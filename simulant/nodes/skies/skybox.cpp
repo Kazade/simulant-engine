@@ -33,12 +33,13 @@ const AABB &Skybox::aabb() const {
 }
 
 void Skybox::generate(
-        const Path& up,
-        const Path& down,
-        const Path& left,
+    const Path& up,
+    const Path& down,
+    const Path& left,
     const Path& right,
     const Path& front,
-    const Path& back
+    const Path& back,
+    const TextureFlags& flags
 ) {
     auto stage = manager_->stage.get();
 
@@ -73,8 +74,8 @@ void Skybox::generate(
         auto back_path = manager_->window->vfs->locate_file(back);
         auto front_path = manager_->window->vfs->locate_file(front);
 
-        TextureFlags flags;
-        flags.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;
+        TextureFlags tf = flags;
+        tf.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;
 
         auto set_texture = [](SubMesh* sm, TexturePtr tex) {
             /* Force a flush. Skyboxes are usually big textures */
@@ -82,12 +83,12 @@ void Skybox::generate(
             sm->material()->set_diffuse_map(tex);
         };
 
-        set_texture(mesh->find_submesh("top"), stage->assets->new_texture_from_file(up_path, flags));
-        set_texture(mesh->find_submesh("bottom"), stage->assets->new_texture_from_file(down_path, flags));
-        set_texture(mesh->find_submesh("left"), stage->assets->new_texture_from_file(left_path, flags));
-        set_texture(mesh->find_submesh("right"), stage->assets->new_texture_from_file(right_path, flags));
-        set_texture(mesh->find_submesh("front"), stage->assets->new_texture_from_file(front_path, flags));
-        set_texture(mesh->find_submesh("back"), stage->assets->new_texture_from_file(back_path, flags));
+        set_texture(mesh->find_submesh("top"), stage->assets->new_texture_from_file(up_path, tf));
+        set_texture(mesh->find_submesh("bottom"), stage->assets->new_texture_from_file(down_path, tf));
+        set_texture(mesh->find_submesh("left"), stage->assets->new_texture_from_file(left_path, tf));
+        set_texture(mesh->find_submesh("right"), stage->assets->new_texture_from_file(right_path, tf));
+        set_texture(mesh->find_submesh("front"), stage->assets->new_texture_from_file(front_path, tf));
+        set_texture(mesh->find_submesh("back"), stage->assets->new_texture_from_file(back_path, tf));
     }
 
     actor_->set_mesh(mesh_id_);

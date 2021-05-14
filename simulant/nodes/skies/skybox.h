@@ -4,6 +4,7 @@
 #include "../stage_node.h"
 #include "../../generic/identifiable.h"
 #include "../../path.h"
+#include "../../asset_manager.h"
 
 namespace smlt {
 
@@ -53,7 +54,8 @@ public:
         const Path& left,
         const Path& right,
         const Path& front,
-        const Path& back
+        const Path& back,
+        const TextureFlags& flags
     );
 
     void destroy() override;

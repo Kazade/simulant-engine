@@ -44,7 +44,7 @@ SkyManager::SkyManager(Window* window, Stage* stage, StageNodePool* pool):
  * in their names. If duplicates are found, or if images are not found, then this function raises
  * SkyboxImageNotFoundError or SkyboxImageDuplicateError respectively
  */
-SkyboxPtr SkyManager::new_skybox_from_folder(const Path& folder) {
+SkyboxPtr SkyManager::new_skybox_from_folder(const Path& folder, const TextureFlags& flags) {
     std::map<SkyboxFace, std::string> files;
 
     auto path = window->vfs->locate_file(folder);
@@ -99,7 +99,8 @@ SkyboxPtr SkyManager::new_skybox_from_folder(const Path& folder) {
         files.at(SKYBOX_FACE_LEFT),
         files.at(SKYBOX_FACE_RIGHT),
         files.at(SKYBOX_FACE_FRONT),
-        files.at(SKYBOX_FACE_BACK)
+        files.at(SKYBOX_FACE_BACK),
+        flags
     );
 }
 
@@ -122,13 +123,14 @@ SkyboxPtr SkyManager::new_skybox_from_files(
     const Path& left,
     const Path& right,
     const Path& front,
-    const Path& back) {
+    const Path& back,
+    const TextureFlags& flags) {
 
     assert(stage_);
 
     auto sb = sky_manager_->make(this);
     sb->generate(
-        up, down, left, right, front, back
+        up, down, left, right, front, back, flags
     );
 
     return sb;
