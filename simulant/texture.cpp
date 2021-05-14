@@ -43,6 +43,17 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_ALPHA
 }};
 
+bool texture_format_contains_mipmaps(TextureFormat format) {
+    switch(format) {
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+            return true;
+        default:
+            return false;
+    }
+}
+
 std::size_t texture_format_channels(TextureFormat format) {
     switch(format) {
     case TEXTURE_FORMAT_R_1UB_8:
@@ -479,7 +490,7 @@ void Texture::update(float dt) {
 }
 
 bool Texture::has_mipmaps() const {
-    return has_mipmaps_;
+    return texture_format_contains_mipmaps(format_) || has_mipmaps_;
 }
 
 bool Texture::auto_upload() const {

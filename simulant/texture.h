@@ -88,11 +88,20 @@ enum TextureFormat {
     TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID,
     TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID,
 
+    // PVR VQ Compressed but with mipmap data included
+    TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP,
+    TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP,
+    TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP,
+
     TEXTURE_FORMAT_INVALID
 };
 
 std::size_t texture_format_stride(TextureFormat format);
 std::size_t texture_format_channels(TextureFormat format);
+
+/** Returns true if the data in this format contains mipmap
+ * data following the main texture data */
+bool texture_format_contains_mipmaps(TextureFormat format);
 
 enum TextureFreeData {
     TEXTURE_FREE_DATA_NEVER,
@@ -244,7 +253,11 @@ public:
     bool init() override;
     void clean_up() override;
     void update(float dt) override;
+
+    /** Returns true if the format contains mipmap data, or mipmaps
+     * have been generated during texture upload */
     bool has_mipmaps() const;
+
     bool auto_upload() const;
 
     /** This is for storing the GL (or whatever) texture ID */
