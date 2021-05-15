@@ -44,8 +44,6 @@ private:
     ui::Image* image_ = nullptr;
 
     SoundPtr sound_;
-
-    IdleConnectionID connection_;
 };
 
 }

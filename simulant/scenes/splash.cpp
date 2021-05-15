@@ -17,23 +17,28 @@
 #define SIMULANT_LOGO_256 "simulant/textures/simulant-icon-256.png"
 #define SIMULANT_LOGO_512 "simulant/textures/simulant-icon.png"
 
+#define SIMULANT_SOUND "simulant/sounds/simulant.wav"
+
 namespace smlt {
 namespace scenes {
 
 void Splash::load() {
+    TextureFlags flags;
+    flags.mipmap = smlt::MIPMAP_GENERATE_NONE;
+
     //Create a stage
     stage_ = window->new_stage();
 
     auto text_file = (window->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
     auto logo_file = (window->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
 
-    auto text_texture = stage_->assets->new_texture_from_file(text_file);
+    auto text_texture = stage_->assets->new_texture_from_file(text_file, flags);
     text_ = stage_->ui->new_widget_as_image(text_texture);
 
-    auto texture = stage_->assets->new_texture_from_file(logo_file);
+    auto texture = stage_->assets->new_texture_from_file(logo_file, flags);
     image_ = stage_->ui->new_widget_as_image(texture);
 
-    sound_ = window->shared_assets->new_sound_from_file("simulant/sounds/simulant.wav", smlt::GARBAGE_COLLECT_NEVER);
+    sound_ = stage_->assets->new_sound_from_file(SIMULANT_SOUND, smlt::GARBAGE_COLLECT_NEVER);
 
     image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);
@@ -59,7 +64,6 @@ void Splash::unload() {
     //Clean up
     pipeline_->destroy();
     window->destroy_stage(stage_->id());
-    window->shared_assets->destroy_sound(sound_);
 }
 
 void Splash::activate() {
@@ -69,7 +73,7 @@ void Splash::activate() {
 
 void Splash::deactivate() {
     //Deactivate the Splash pipeline
-    window->idle->remove(connection_);
+
 }
 
 void Splash::update(float dt) {
