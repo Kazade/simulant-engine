@@ -84,7 +84,6 @@ typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
 
 class Window :
-    public Source,
     public StageManager,
     public Loadable,
     public RenderTarget,

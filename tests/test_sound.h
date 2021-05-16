@@ -52,13 +52,15 @@ public:
     void test_2d_sound_output() {
         smlt::SoundPtr sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
 
-        assert_false(window->playing_sound_count());
+        auto actor = stage_->new_actor();
 
-        window->play_sound(sound);
+        assert_false(actor->playing_sound_count());
 
-        assert_true(window->playing_sound_count());
+        actor->play_sound(sound);
 
-        while(window->playing_sound_count()) {
+        assert_true(actor->playing_sound_count());
+
+        while(actor->playing_sound_count()) {
             window->run_frame();
         }
     }
@@ -76,7 +78,7 @@ public:
         assert_true(actor->playing_sound_count());
 
         // Finish playing the sound
-        while(window->playing_sound_count()) {
+        while(actor->playing_sound_count()) {
             window->run_frame();
         }
     }
@@ -86,31 +88,34 @@ public:
 
         auto sid = sound->id();
 
-        assert_true(window->shared_assets->has_sound(sid));
-        window->play_sound(sound);
+        auto a = stage_->new_actor();
 
-        assert_true(window->is_sound_playing());
+        assert_true(window->shared_assets->has_sound(sid));
+        a->play_sound(sound);
+
+        assert_true(a->is_sound_playing());
 
         window->shared_assets->destroy_sound(sound);
         sound.reset();
 
         window->shared_assets->run_garbage_collection();
-        while(window->playing_sound_count()) {
+        while(a->playing_sound_count()) {
             window->run_frame();
         }
 
         assert_false(window->shared_assets->has_sound(sid));
-        assert_false(window->is_sound_playing());
+        assert_false(a->is_sound_playing());
     }
 
     void test_sound_stopping() {
         auto sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
-        auto id = window->play_sound(sound);
+        auto a = stage_->new_actor();
+        auto id = a->play_sound(sound);
 
         assert_true(id); // id > 0
-        assert_true(window->is_sound_playing());
-        assert_true(window->stop_sound(id));
-        assert_false(window->is_sound_playing());
+        assert_true(a->is_sound_playing());
+        assert_true(a->stop_sound(id));
+        assert_false(a->is_sound_playing());
     }
 
 private:
