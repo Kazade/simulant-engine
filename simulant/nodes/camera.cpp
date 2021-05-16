@@ -22,6 +22,11 @@ Camera::~Camera() {
 
 }
 
+void Camera::update(float dt) {
+    StageNode::update(dt);
+    update_source(dt);
+}
+
 void Camera::update_transformation_from_parent() {
     StageNode::update_transformation_from_parent();
     transform_ = absolute_transformation();

@@ -38,6 +38,8 @@ public:
         StageNode::clean_up();
     }
 
+    void update(float dt) override;
+
     // Converts an OpenGL unit to window space
     smlt::optional<Vec3> project_point(const RenderTarget& target, const Viewport& viewport, const Vec3& point) const;
 
