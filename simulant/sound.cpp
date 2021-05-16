@@ -207,7 +207,7 @@ Source::~Source() {
 
 }
 
-SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat) {
+SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
     if(!sound) {
         S_WARN("Tried to play an invalid sound");
         return 0;
@@ -215,12 +215,16 @@ SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat) {
 
     assert(sound);
 
+    if(model == DISTANCE_MODEL_DEFAULT) {
+        model = (stage_) ? DISTANCE_MODEL_POSITIONAL : DISTANCE_MODEL_AMBIENT;
+    }
+
     // If this is the window, we create an ambient source
     SourceInstance::ptr new_source = SourceInstance::create(
         *this,
         sound,
         repeat,
-        (stage_) ? DISTANCE_MODEL_POSITIONAL : DISTANCE_MODEL_AMBIENT
+        model
     );
 
     sound->init_source(*new_source);

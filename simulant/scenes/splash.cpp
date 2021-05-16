@@ -68,7 +68,11 @@ void Splash::unload() {
 
 void Splash::activate() {
     start_time_ = window->time_keeper->now_in_us();
-    window->play_sound(sound_);
+    camera_->play_sound(
+        sound_,
+        AUDIO_REPEAT_NONE,
+        DISTANCE_MODEL_AMBIENT
+    );
 }
 
 void Splash::deactivate() {
