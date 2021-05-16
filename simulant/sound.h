@@ -108,7 +108,8 @@ enum AudioRepeat {
 
 enum DistanceModel {
     DISTANCE_MODEL_POSITIONAL,
-    DISTANCE_MODEL_AMBIENT
+    DISTANCE_MODEL_AMBIENT,
+    DISTANCE_MODEL_DEFAULT = DISTANCE_MODEL_POSITIONAL
 };
 
 typedef std::size_t SourceInstanceID;
@@ -163,7 +164,11 @@ public:
     Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~Source();
 
-    SourceInstanceID play_sound(SoundPtr sound_id, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+    SourceInstanceID play_sound(
+        SoundPtr sound_id,
+        AudioRepeat repeat=AUDIO_REPEAT_NONE,
+        DistanceModel model=DISTANCE_MODEL_DEFAULT
+    );
     bool stop_sound(SourceInstanceID sound_id);
 
     /* The number of sounds this source is currently playing */

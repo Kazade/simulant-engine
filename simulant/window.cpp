@@ -88,7 +88,6 @@ static unsigned char simulant_icon_vmu_bits[] = {
 namespace smlt {
 
 Window::Window():
-    Source(this),
     StageManager(this),
     asset_manager_(new SharedAssetManager(this)),
     initialized_(false),
@@ -509,7 +508,6 @@ bool Window::run_frame() {
         );
     }
 
-    Source::update_source(dt); //Update any playing sounds
     input_state_->update(dt); // Update input devices
     input_manager_->update(dt); // Now update any manager stuff based on the new input state
     shared_assets->update(dt); // Update animated assets

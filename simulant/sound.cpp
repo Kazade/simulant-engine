@@ -207,7 +207,7 @@ Source::~Source() {
 
 }
 
-SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat) {
+SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
     if(!sound) {
         S_WARN("Tried to play an invalid sound");
         return 0;
@@ -220,7 +220,7 @@ SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat) {
         *this,
         sound,
         repeat,
-        (stage_) ? DISTANCE_MODEL_POSITIONAL : DISTANCE_MODEL_AMBIENT
+        model
     );
 
     sound->init_source(*new_source);
