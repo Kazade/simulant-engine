@@ -215,10 +215,6 @@ SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat, Distance
 
     assert(sound);
 
-    if(model == DISTANCE_MODEL_DEFAULT) {
-        model = (stage_) ? DISTANCE_MODEL_POSITIONAL : DISTANCE_MODEL_AMBIENT;
-    }
-
     // If this is the window, we create an ambient source
     SourceInstance::ptr new_source = SourceInstance::create(
         *this,

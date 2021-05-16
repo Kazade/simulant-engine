@@ -107,9 +107,9 @@ enum AudioRepeat {
 };
 
 enum DistanceModel {
-    DISTANCE_MODEL_DEFAULT,
     DISTANCE_MODEL_POSITIONAL,
-    DISTANCE_MODEL_AMBIENT
+    DISTANCE_MODEL_AMBIENT,
+    DISTANCE_MODEL_DEFAULT = DISTANCE_MODEL_POSITIONAL
 };
 
 typedef std::size_t SourceInstanceID;
