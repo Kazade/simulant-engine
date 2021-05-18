@@ -1,3 +1,5 @@
+#include <GL/glkos.h>
+
 #include "platform.h"
 
 static unsigned long systemRam = 0x00000000;
@@ -30,6 +32,12 @@ uint64_t DreamcastPlatform::available_ram_in_bytes() const {
 
 uint64_t DreamcastPlatform::total_ram_in_bytes() const {
     return systemRam;
+}
+
+uint64_t DreamcastPlatform::available_vram_in_bytes() const {
+    int value;
+    glGetIntegerv(GL_FREE_TEXTURE_MEMORY_KOS, &value);
+    return (uint64_t) value;
 }
 
 uint64_t DreamcastPlatform::process_ram_usage_in_bytes(uint32_t process_id) const {
