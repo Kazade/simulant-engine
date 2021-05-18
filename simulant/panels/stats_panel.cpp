@@ -84,6 +84,10 @@ bool StatsPanel::init() {
     polygons_rendered_->move_to(hw, vheight);
     vheight -= diff;
 
+    stage_node_pool_size_ = overlay->ui->new_widget_as_label("", label_width);
+    stage_node_pool_size_->move_to(hw, vheight);
+    vheight -= diff;
+
     graph_material_ = stage_->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
@@ -272,6 +276,7 @@ void StatsPanel::update() {
         vram_usage_->set_text(_F("VRAM Free: {0} MB").format(vram_usage));
         actors_rendered_->set_text(_F("Renderables Visible: {0}").format(actors_rendered));
         polygons_rendered_->set_text(_F("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
+        stage_node_pool_size_->set_text(_F("Node pool size: {0}kb").format(window_->stage_node_pool_capacity_in_bytes() / 1024));
 
         last_update_ = 0.0f;
         first_update_ = false;

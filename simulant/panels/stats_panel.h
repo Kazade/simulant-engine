@@ -57,6 +57,7 @@ private:
     ui::WidgetPtr vram_usage_;
     ui::WidgetPtr actors_rendered_;
     ui::WidgetPtr polygons_rendered_;
+    ui::WidgetPtr stage_node_pool_size_;
 
     MaterialPtr graph_material_;
     MeshPtr ram_graph_mesh_;

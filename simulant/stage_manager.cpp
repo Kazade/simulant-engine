@@ -134,6 +134,14 @@ void StageManager::destroy_object_immediately(Stage* object) {
     manager_.destroy_immediately(object->id());
 }
 
+uint32_t StageManager::stage_node_pool_capacity() const {
+    return node_pool_.capacity();
+}
+
+uint32_t StageManager::stage_node_pool_capacity_in_bytes() const {
+    return stage_node_pool_capacity() * node_pool_.entry_size;
+}
+
 // ============= END STAGES ===========
 
 }

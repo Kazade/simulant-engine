@@ -87,6 +87,9 @@ public:
     /* Implementation for TypedDestroyableObject (INTERNAL) */
     void destroy_object(Stage* object);
     void destroy_object_immediately(Stage* object);
+
+    uint32_t stage_node_pool_capacity() const;
+    uint32_t stage_node_pool_capacity_in_bytes() const;
 private:
     Window* window_ = nullptr;
 
