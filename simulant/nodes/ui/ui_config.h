@@ -7,10 +7,24 @@ namespace smlt {
 namespace ui {
 
 struct UInt4 {
-    uint32_t left;
-    uint32_t right;
-    uint32_t bottom;
-    uint32_t top;
+    uint16_t left;
+    uint16_t right;
+    uint16_t bottom;
+    uint16_t top;
+};
+
+struct UICoord {
+    UICoord():
+        x(0), y(0) {}
+
+    UICoord(uint16_t x, uint16_t y):
+        x(x), y(y) {}
+
+    bool operator==(const UICoord& rhs) const {
+        return x == rhs.x && y == rhs.y;
+    }
+
+    uint16_t x, y;
 };
 
 enum OverflowType {
@@ -48,8 +62,8 @@ struct UIConfig {
     static const Colour LIGHT_GREY;
     static const Colour DODGER_BLUE;
 
-    uint32_t font_size_ = 16;
-    uint32_t line_height_ = 18;
+    uint16_t font_size_ = 16;
+    uint16_t line_height_ = 18;
 
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
@@ -58,34 +72,34 @@ struct UIConfig {
     ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
-    uint32_t scrollbar_width_ = 16;
+    uint8_t scrollbar_width_ = 16;
     Colour scrollbar_background_colour_ = LIGHT_GREY;
     Colour scrollbar_foreground_colour_ = ALICE_BLUE;
 
-    uint32_t button_height_ = 36;
-    uint32_t button_width_ = 0; // Fit content
+    uint16_t button_height_ = 36;
+    uint16_t button_width_ = 0; // Fit content
 
     UInt4 label_padding_ = { 5, 5, 5, 5 };
-    Colour label_background_colour_ = Colour::NONE;
-    Colour label_foreground_colour_ = Colour::NONE;
-    Colour label_border_colour_ = Colour::NONE;
-    Colour label_text_colour_ = DODGER_BLUE;
+    PackedColour4444 label_background_colour_ = Colour::NONE;
+    PackedColour4444 label_foreground_colour_ = Colour::NONE;
+    PackedColour4444 label_border_colour_ = Colour::NONE;
+    PackedColour4444 label_text_colour_ = DODGER_BLUE;
 
     UInt4 button_padding_ = { 30, 30, 20, 20 };
-    Colour button_background_colour_ = DODGER_BLUE;
-    Colour button_foreground_colour_ = Colour::NONE;
-    Colour button_text_colour_ = Colour::WHITE;
-    Colour button_border_colour_ = Colour::NONE;
+    PackedColour4444 button_background_colour_ = DODGER_BLUE;
+    PackedColour4444 button_foreground_colour_ = Colour::NONE;
+    PackedColour4444 button_text_colour_ = Colour::WHITE;
+    PackedColour4444 button_border_colour_ = Colour::NONE;
 
-    uint32_t button_border_width_ = 0;
-    uint32_t button_border_radius_ = 3;
+    uint16_t button_border_width_ = 0;
+    uint16_t button_border_radius_ = 3;
 
-    Colour progress_bar_foreground_colour_ = DODGER_BLUE;
-    Colour progress_bar_background_colour_ = Colour::WHITE;
-    Colour progress_bar_border_colour_ = DODGER_BLUE;
+    PackedColour4444 progress_bar_foreground_colour_ = DODGER_BLUE;
+    PackedColour4444 progress_bar_background_colour_ = Colour::WHITE;
+    PackedColour4444 progress_bar_border_colour_ = DODGER_BLUE;
     float progress_bar_border_width_ = 1;
-    uint32_t progress_bar_width_ = 100;
-    uint32_t progress_bar_height_ = 16;
+    uint16_t progress_bar_width_ = 100;
+    uint16_t progress_bar_height_ = 16;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;

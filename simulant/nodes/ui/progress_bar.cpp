@@ -95,15 +95,15 @@ void ProgressBar::set_pulse_step(float value) {
 void ProgressBar::set_range(float min, float max) {
     assert(min < max);
 
-    set_property("min", min);
-    set_property("max", max);
+    min_ = min;
+    max_ = max;
     needs_refresh_ = true;
 }
 
 void ProgressBar::set_value(float value) {
     if(value != this->value()) {
         needs_refresh_ = true;
-        set_property("value", value);
+        value_ = value;
     }
 }
 
@@ -113,21 +113,15 @@ void ProgressBar::set_fraction(float fraction) {
 }
 
 float ProgressBar::value() const {
-    auto valuep = property<float>("value");
-    float value = valuep.has_value() ? valuep.value() : 0;
-    return value;
+    return value_;
 }
 
 float ProgressBar::min() const {
-    auto minp = property<float>("min");
-    float min = minp.has_value() ? minp.value() : 0;
-    return min;
+    return min_;
 }
 
 float ProgressBar::max() const {
-    auto maxp = property<float>("max");
-    float max = maxp.has_value() ? maxp.value() : 0;
-    return max;
+    return max_;
 }
 
 void ProgressBar::update(float dt) {

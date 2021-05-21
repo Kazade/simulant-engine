@@ -80,5 +80,72 @@ Colour Colour::lerp(const Colour& end, float t) const {
     return *this + ((end - *this) * t);
 }
 
+PackedColour4444::PackedColour4444():
+    colour_(~0) {}
+
+PackedColour4444::PackedColour4444(const Colour& c):
+    colour_(
+        (uint32_t(15.0f * c.a) << 12) |
+        (uint32_t(15.0f * c.r) << 8) |
+        (uint32_t(15.0f * c.g) << 4) |
+        (uint32_t(15.0f * c.b) << 0)
+    ) {
+
+}
+
+PackedColour4444& PackedColour4444::operator=(const Colour& rhs) {
+    colour_ = (
+        (uint32_t(15.0f * rhs.a) << 12) |
+        (uint32_t(15.0f * rhs.r) << 8) |
+        (uint32_t(15.0f * rhs.g) << 4) |
+        (uint32_t(15.0f * rhs.b) << 0)
+    );
+
+    return *this;
+}
+
+bool PackedColour4444::operator==(const PackedColour4444& rhs) const {
+    return colour_ == rhs.colour_;
+}
+
+void PackedColour4444::set_alpha(NormalizedFloat a) {
+    colour_ |= uint32_t(a * 15.0f) << 12;
+}
+
+uint8_t PackedColour4444::r8() const {
+    /* Unsure if multiplying by 17 is correct, but
+     * 15 * 17 == 255, and 15 is the largest value
+     * we can store for a channel so it seems right.. */
+    return ((colour_ & 0x0F00) >> 8) * 17;
+}
+
+uint8_t PackedColour4444::g8() const {
+    return ((colour_ & 0x00F0) >> 4) * 17;
+}
+
+uint8_t PackedColour4444::b8() const {
+    return ((colour_ & 0x000F)) * 17;
+}
+
+uint8_t PackedColour4444::a8() const {
+    return ((colour_ & 0xF000) >> 12) * 17;
+}
+
+float PackedColour4444::rf() const {
+    float r = r8();
+    return r / 255.0f;
+}
+
+float PackedColour4444::gf() const {
+    return float(g8()) / 255.0f;
+}
+
+float PackedColour4444::bf() const {
+    return float(b8()) / 255.0f;
+}
+
+float PackedColour4444::af() const {
+    return float(a8()) / 255.0f;
+}
 
 }
