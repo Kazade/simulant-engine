@@ -141,7 +141,7 @@ public:
         auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
         auto image = stage_->ui->new_widget_as_image(texture);
 
-        image->set_source_rect(smlt::Vec2(0, 0), smlt::Vec2(128, 128));
+        image->set_source_rect(smlt::ui::UICoord(0, 0), smlt::ui::UICoord(128, 128));
 
         assert_equal(image->width(), 128);
         assert_equal(image->height(), 128);

@@ -20,21 +20,21 @@ typedef sig::signal<void ()> WidgetFocusedSignal;
 typedef sig::signal<void ()> WidgetBlurredSignal;
 
 struct ImageRect {
-    Vec2 bottom_left;
-    Vec2 size;
+    UICoord bottom_left;
+    UICoord size;
 };
 
 struct WidgetImpl {
-    int32_t requested_width_ = 0;
-    int32_t requested_height_ = 0;
+    int16_t requested_width_ = 0;
+    int16_t requested_height_ = 0;
 
-    int32_t content_width_ = 0;
-    int32_t content_height_ = 0;
+    int16_t content_width_ = 0;
+    int16_t content_height_ = 0;
 
     UInt4 padding_ = {0, 0, 0, 0};
 
     float border_width_ = 1.0f;
-    Colour border_colour_ = Colour::BLACK;
+    PackedColour4444 border_colour_ = Colour::BLACK;
 
     unicode text_;
     OverflowType overflow_;
@@ -46,20 +46,16 @@ struct WidgetImpl {
     TexturePtr foreground_image_;
     ImageRect foreground_image_rect_;
 
-    Colour background_colour_ = Colour::WHITE;
-    Colour foreground_colour_ = Colour::NONE; //Transparent
-    Colour text_colour_ = Colour::BLACK;
-    float line_height_ = 16;
+    PackedColour4444 background_colour_ = Colour::WHITE;
+    PackedColour4444 foreground_colour_ = Colour::NONE; //Transparent
+    PackedColour4444 text_colour_ = Colour::BLACK;
+    uint16_t line_height_ = 16;
 
     bool is_focused_ = false;
     WidgetPtr focus_next_ = nullptr;
     WidgetPtr focus_previous_ = nullptr;
 
     float opacity_ = 1.0f;
-
-    float background_depth_bias_ = 0.0001f;
-    float foreground_depth_bias_ = 0.0002f;
-    float text_depth_bias_ = 0.0004f;
 
     std::unordered_map<std::string, smlt::any> properties_;
 
@@ -75,7 +71,7 @@ struct WidgetImpl {
     smlt::Vec2 anchor_point_;
     bool anchor_point_dirty_;
 
-    std::set<uint32_t> fingers_down_;
+    std::set<uint8_t> fingers_down_;
 };
 
 class Widget:
@@ -123,8 +119,8 @@ public:
     void set_border_width(float x);
     void set_border_colour(const Colour& colour);
     void set_overflow(OverflowType type);
-    void set_padding(float x);
-    void set_padding(float left, float right, float bottom, float top);
+    void set_padding(uint16_t x);
+    void set_padding(uint16_t left, uint16_t right, uint16_t bottom, uint16_t top);
     virtual void set_resize_mode(ResizeMode resize_mode);
 
     ResizeMode resize_mode() const;
@@ -137,7 +133,7 @@ public:
     void set_background_image(TexturePtr texture);
 
     /** Set the background to a region of its image. Coordinates are in texels */
-    void set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size);
+    void set_background_image_source_rect(const UICoord& bottom_left, const UICoord& size);
 
     void set_background_colour(const Colour& colour);
     void set_foreground_colour(const Colour& colour);
@@ -146,19 +142,19 @@ public:
     void set_foreground_image(TexturePtr texture);
 
     /** Set the foreground to a region of its image. Coordinates are in texels */
-    void set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size);
+    void set_foreground_image_source_rect(const UICoord& bottom_left, const UICoord& size);
 
     void set_text_colour(const Colour& colour);
 
-    float requested_width() const;
-    float requested_height() const;
+    uint16_t requested_width() const;
+    uint16_t requested_height() const;
 
-    float content_width() const;
+    uint16_t content_width() const;
 
-    float content_height() const;
+    uint16_t content_height() const;
 
-    float outer_width() const;
-    float outer_height() const;
+    uint16_t outer_width() const;
+    uint16_t outer_height() const;
 
     /*
     bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
@@ -187,12 +183,12 @@ public:
     }
 
     // Probably shouldn't use these directly (designed for UIManager)
-    void fingerdown(uint32_t finger_id);
-    void fingerup(uint32_t finger_id);
-    void fingerenter(uint32_t finger_id);
-    void fingermove(uint32_t finger_id);
-    void fingerleave(uint32_t finger_id);
-    bool is_pressed_by_finger(uint32_t finger_id);
+    void fingerdown(uint8_t finger_id);
+    void fingerup(uint8_t finger_id);
+    void fingerenter(uint8_t finger_id);
+    void fingermove(uint8_t finger_id);
+    void fingerleave(uint8_t finger_id);
+    bool is_pressed_by_finger(uint8_t finger_id);
 
     /* Releases all presses forcibly, firing signals */
     void force_release();

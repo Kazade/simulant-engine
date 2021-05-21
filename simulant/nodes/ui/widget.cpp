@@ -409,11 +409,12 @@ void Widget::rebuild() {
     border_bounds.max += smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
 
     auto colour = pimpl_->border_colour_;
-    colour.a *= pimpl_->opacity_;
+    colour.set_alpha(colour.af() * pimpl_->opacity_);
     new_rectangle("border", border_bounds, colour);
 
     colour = pimpl_->background_colour_;
-    colour.a *= pimpl_->opacity_;
+    colour.set_alpha(colour.af() * pimpl_->opacity_);
+
     auto bg = new_rectangle("background", background_bounds, colour);
     if(has_background_image()) {
         bg->material()->pass(0)->set_diffuse_map(pimpl_->background_image_);
@@ -421,7 +422,7 @@ void Widget::rebuild() {
     }
 
     colour = pimpl_->foreground_colour_;
-    colour.a *= pimpl_->opacity_;
+    colour.set_alpha(colour.af() * pimpl_->opacity_);
     auto fg = new_rectangle("foreground", foreground_bounds, colour);
     if(has_foreground_image()) {
         fg->material()->pass(0)->set_diffuse_map(pimpl_->foreground_image_);
@@ -472,7 +473,7 @@ void Widget::set_border_width(float x) {
 }
 
 void Widget::set_border_colour(const Colour &colour) {
-    if(pimpl_->border_colour_ == colour) {
+    if(pimpl_->border_colour_ == PackedColour4444(colour)) {
         return;
     }
 
@@ -508,14 +509,15 @@ void Widget::set_background_image(TexturePtr texture) {
 
     pimpl_->background_image_ = texture;
 
+    auto dim = texture->dimensions();
     // Triggers a rebuild
     set_background_image_source_rect(
-        Vec2(),
-        texture->dimensions()
+        UICoord(),
+        UICoord(dim.x, dim.y)
     );
 }
 
-void Widget::set_background_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+void Widget::set_background_image_source_rect(const UICoord& bottom_left, const UICoord& size) {
     if(pimpl_->background_image_rect_.bottom_left == bottom_left && pimpl_->background_image_rect_.size == size) {
         // Nothing to do
         return;
@@ -533,14 +535,16 @@ void Widget::set_foreground_image(TexturePtr texture) {
 
     pimpl_->foreground_image_ = texture;
 
+    auto dim = texture->dimensions();
+
     // Triggers a rebuild
     set_foreground_image_source_rect(
-        Vec2(),
-        texture->dimensions()
+        UICoord(),
+        UICoord(dim.x, dim.y)
     );
 }
 
-void Widget::set_foreground_image_source_rect(const Vec2& bottom_left, const Vec2& size) {
+void Widget::set_foreground_image_source_rect(const UICoord& bottom_left, const UICoord& size) {
     if(pimpl_->foreground_image_rect_.bottom_left == bottom_left && pimpl_->foreground_image_rect_.size == size) {
         // Nothing to do
         return;
@@ -581,27 +585,27 @@ void Widget::set_text_colour(const Colour &colour) {
     rebuild();
 }
 
-float Widget::requested_width() const {
+uint16_t Widget::requested_width() const {
     return pimpl_->requested_width_;
 }
 
-float Widget::requested_height() const {
+uint16_t Widget::requested_height() const {
     return pimpl_->requested_height_;
 }
 
-float Widget::content_width() const {
+uint16_t Widget::content_width() const {
     return pimpl_->content_width_; // Content area
 }
 
-float Widget::content_height() const {
+uint16_t Widget::content_height() const {
     return pimpl_->content_height_;
 }
 
-float Widget::outer_width() const {
+uint16_t Widget::outer_width() const {
     return content_width() + (pimpl_->border_width_ * 2);
 }
 
-float Widget::outer_height() const {
+uint16_t Widget::outer_height() const {
     return content_height() + (pimpl_->border_width_ * 2);
 }
 
@@ -622,7 +626,7 @@ bool Widget::has_foreground_image() const {
     return bool(pimpl_->foreground_image_);
 }
 
-void Widget::set_padding(float left, float right, float bottom, float top) {
+void Widget::set_padding(uint16_t left, uint16_t right, uint16_t bottom, uint16_t top) {
     pimpl_->padding_.left = left;
     pimpl_->padding_.right = right;
     pimpl_->padding_.bottom = bottom;
@@ -630,7 +634,7 @@ void Widget::set_padding(float left, float right, float bottom, float top) {
     rebuild();
 }
 
-bool Widget::is_pressed_by_finger(uint32_t finger_id) {
+bool Widget::is_pressed_by_finger(uint8_t finger_id) {
     return pimpl_->fingers_down_.find(finger_id) != pimpl_->fingers_down_.end();
 }
 
@@ -667,7 +671,7 @@ void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
     }
 }
 
-void Widget::fingerdown(uint32_t finger_id) {
+void Widget::fingerdown(uint8_t finger_id) {
     // If we added, and it was the first finger down
     if(pimpl_->fingers_down_.insert(finger_id).second && pimpl_->fingers_down_.size() == 1) {
         // Emit the widget pressed signal
@@ -675,7 +679,7 @@ void Widget::fingerdown(uint32_t finger_id) {
     }
 }
 
-void Widget::fingerup(uint32_t finger_id) {
+void Widget::fingerup(uint8_t finger_id) {
     // If we just released the last finger, emit a widget released signal
     if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
         signal_released_();
@@ -683,15 +687,15 @@ void Widget::fingerup(uint32_t finger_id) {
     }
 }
 
-void Widget::fingerenter(uint32_t finger_id) {
+void Widget::fingerenter(uint8_t finger_id) {
     fingerdown(finger_id); // Same behaviour
 }
 
-void Widget::fingermove(uint32_t finger_id) {
+void Widget::fingermove(uint8_t finger_id) {
     //FIXME: fire signal
 }
 
-void Widget::fingerleave(uint32_t finger_id) {
+void Widget::fingerleave(uint8_t finger_id) {
     // Same as fingerup, but we don't fire the click signal
     if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
         signal_released_();
