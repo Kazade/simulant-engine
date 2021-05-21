@@ -1,8 +1,11 @@
 #pragma once
 
+#include <cstdint>
+#include <cassert>
+
 namespace smlt {
 
-/*
+/**
  * Lots of methods have arguments which must be clamped to a range.
  * Using a 'float' or 'int' doesn't convey that via the API, and it
  * means every method must do its own clamping. This template class
@@ -58,5 +61,8 @@ private:
 
     T value_ = (T) min;
 };
+
+typedef RangeValue<0, 1> NormalizedFloat;
+typedef RangeValue<0, 255, uint8_t> ByteValue;
 
 }

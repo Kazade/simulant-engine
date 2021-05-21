@@ -22,6 +22,8 @@
 #include <cstdint>
 #include <string>
 
+#include "generic/range_value.h"
+
 namespace smlt {
 
 struct Colour {
@@ -110,6 +112,51 @@ struct Colour {
     static const Colour NONE;
 
 };
+
+/* 16bit packed colour in ARGB4444 format. This is useful for minimising
+ * ram usage when colour fidelity isn't important. */
+class PackedColour4444 {
+public:
+    PackedColour4444();
+    PackedColour4444(const Colour& c);
+
+    PackedColour4444& operator=(const PackedColour4444&) = default;
+    PackedColour4444& operator=(const Colour& rhs);
+
+    bool operator==(const PackedColour4444& rhs) const;
+
+    operator Colour() {
+        Colour c(rf(), gf(), bf(), af());
+        return c;
+    }
+
+    void set_alpha(NormalizedFloat a);
+
+    uint8_t r8() const;
+    uint8_t g8() const;
+    uint8_t b8() const;
+    uint8_t a8() const;
+
+    /** Returns the red channel as a value
+     * between 0.0f and 1.0f */
+    float rf() const;
+
+    /** Returns the green channel as a value
+     * between 0.0f and 1.0f */
+    float gf() const;
+
+    /** Returns the blue channel as a value
+     * between 0.0f and 1.0f */
+    float bf() const;
+
+    /** Returns the alpha channel as a value
+     * between 0.0f and 1.0f */
+    float af() const;
+
+private:
+    uint16_t colour_;
+};
+
 
 std::ostream& operator<<(std::ostream& stream, const Colour& c);
 }
