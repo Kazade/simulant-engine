@@ -57,8 +57,6 @@ struct WidgetImpl {
 
     float opacity_ = 1.0f;
 
-    std::unordered_map<std::string, smlt::any> properties_;
-
     /*
      * We regularly need to rebuild the text submesh. Wiping out vertex data
      * is cumbersome and slow, so instead we wipe the submesh indexes and add
@@ -162,19 +160,6 @@ public:
     bool is_hovered() const; // Widget dependent, returns false if widget has no concept of 'hovered'
     */
 
-    void set_property(const std::string& name, float value);
-    bool has_property(const std::string& name) const {
-        return bool(pimpl_->properties_.count(name));
-    }
-
-    template<typename T>
-    smlt::optional<T> property(const std::string& name) const {
-        if(!pimpl_->properties_.count(name)) {
-            return smlt::optional<T>();
-        }
-
-        return smlt::optional<T>(smlt::any_cast<T>(pimpl_->properties_.at(name)));
-    }
 
     const AABB& aabb() const override;
 

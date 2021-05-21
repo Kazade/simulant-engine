@@ -38,6 +38,10 @@ public:
 private:
     ProgressBarMode mode_ = PROGRESS_BAR_MODE_FRACTION;
 
+    float value_ = 0.0f;
+    float min_ = 0.0f;
+    float max_ = 100.0f;
+
     float pulse_position_ = 0.0f;
     float pulse_step_ = 300.0f;
     float pulse_fraction_ = 0.33f;

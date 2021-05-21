@@ -494,10 +494,6 @@ void Widget::on_size_changed() {
     rebuild();
 }
 
-void Widget::set_property(const std::string &name, float value) {
-    pimpl_->properties_[name] = value;
-}
-
 const AABB &Widget::aabb() const {
     return actor_->aabb();
 }

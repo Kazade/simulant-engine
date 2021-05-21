@@ -91,9 +91,9 @@ Widget* UIManager::widget(WidgetID widget_id) {
 
 ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
     auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_));
-    pg->set_property("min", min);
-    pg->set_property("max", max);
-    pg->set_property("value", value);
+
+    pg->set_range(min, max);
+    pg->set_value(value);
 
     stage_->add_child(pg);
 
