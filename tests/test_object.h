@@ -283,8 +283,6 @@ public:
         auto a2 = stage_->new_actor();
 
         a1->move_to(-50, 0, 0);
-
-        a2->set_parent(a1);
         a2->link_position(a1);
 
         // Should've synced position immediately
