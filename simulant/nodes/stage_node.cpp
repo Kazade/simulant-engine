@@ -19,6 +19,28 @@ StageNodeType StageNode::node_type() const {
     return node_type_;
 }
 
+void StageNode::link_position(StageNode *other) {
+    if(linked_position_node_) {
+        linked_position_node_destroyed_.disconnect();
+        linked_position_node_ = nullptr;
+    }
+
+    if(other) {
+        assert(other);
+
+        linked_position_node_ = other;
+        linked_position_node_destroyed_ = other->signal_destroyed().connect([this]{
+            linked_position_node_ = nullptr;
+            linked_position_node_destroyed_.disconnect();
+        });
+
+        assert(linked_position_node_);
+
+        // Initialize the position to whatever we linked to
+        move_to_absolute(linked_position_node_->absolute_position());
+    }
+}
+
 void StageNode::clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
 
@@ -118,13 +140,15 @@ void StageNode::destroy_after(const Seconds& seconds) {
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
-    if(!parent_is_stage()) {
+    if(parent_is_stage()) {
+        move_to(position);
+    } else {
+        assert(parent_stage_node_);
+
         // The stage itself is immovable so, we only bother with this if this isn't he stage
         // could also use if(!parent()->is_root())
         Vec3 ppos = parent_stage_node_->absolute_position();
         move_to(position - ppos);
-    } else {
-        move_to(position);
     }
 }
 
@@ -163,10 +187,7 @@ void StageNode::update_transformation_from_parent() {
         auto parent_rot = parent->absolute_rotation();
         auto parent_scale = parent->absolute_scaling();
 
-        if(rotation_locked_ != LOCK_MODE_INHERITED) {
-            absolute_rotation_ = parent_rot * rotation_;
-        }
-
+        absolute_rotation_ = parent_rot * rotation_;
         absolute_position_ = parent_pos + parent_rot * position_;
         absolute_scale_ = parent_scale * scaling_;
     }
@@ -250,6 +271,10 @@ void StageNode::update(float dt) {
 
 void StageNode::late_update(float dt) {
     late_update_behaviours(dt);
+
+    if(linked_position_node_) {
+        move_to_absolute(linked_position_node_->absolute_position());
+    }
 }
 
 void StageNode::fixed_update(float step) {

@@ -143,10 +143,10 @@ static void decompress_16bpp(const uint8_t* src, uint8_t* dst, uint32_t w, uint3
         uint32_t j = get_untwiddled_index(hw, h / 2, i);
         j = ((j % hw) * 2) + (((j / hw) * 2) * w);
 
-        output[j] = t0;
-        output[j + 1] = t2;
-        output[j + w] = t1;
-        output[j + w + 1] = t3;
+        output[j] = t3;
+        output[j + 1] = t1;
+        output[j + w] = t2;
+        output[j + w + 1] = t0;
     }
 }
 

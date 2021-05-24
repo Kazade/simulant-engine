@@ -38,7 +38,7 @@ class Skybox :
     public ChainNameable<Skybox> {
 
 public:
-    constexpr static float DEFAULT_SIZE = 1024.0f;
+    constexpr static float DEFAULT_SIZE = 128.0f;
 
     Skybox(SkyManager* manager);
 

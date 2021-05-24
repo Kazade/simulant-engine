@@ -162,6 +162,12 @@ public:
 
     StageNodeType node_type() const;
 
+    /** Link the position of this `StageNode` to another
+     * stage node. This is effectively the same behaviour
+     * as calling set_absolute_position(other->absolute_position())
+     * in late_update() */
+    void link_position(StageNode* other);
+
     /* Without a parent, these are the same as move_to/rotate_to. With a parent
      * this applies a relative position / rotation to the parent position / rotation
      * so the node appears where you want */
@@ -245,6 +251,9 @@ private:
     StageNodeType node_type_ = STAGE_NODE_TYPE_ACTOR;
 
     generic::DataCarrier data_;
+
+    StageNode* linked_position_node_ = nullptr;
+    sig::connection linked_position_node_destroyed_;
 
     bool is_visible_ = true;
     bool self_and_parents_visible_ = true;
