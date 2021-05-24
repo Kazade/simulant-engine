@@ -56,8 +56,7 @@ public:
     AudioDataFormat format() { return format_; }
     void set_format(AudioDataFormat format) { format_ = format; }
 
-    std::size_t buffer_size() const { return buffer_size_; }
-    void set_buffer_size(std::size_t size) { buffer_size_ = size; }
+    std::size_t buffer_size() const;
 
     uint8_t channels() const { return channels_; }
     void set_channels(uint8_t ch) { channels_ = ch; }
@@ -90,7 +89,6 @@ private:
     uint32_t sample_rate_ = 0;
     AudioDataFormat format_;
     uint8_t channels_ = 0;
-    std::size_t buffer_size_ = 0;
     std::size_t stream_length_ = 0;
 
     friend class Source;

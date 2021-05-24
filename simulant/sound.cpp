@@ -35,6 +35,20 @@ Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver)
 
 }
 
+std::size_t Sound::buffer_size() const {
+    /* We try to determine the optimum buffer size depending on the
+     * frequency, number of channels and format. Testing shows that you need
+     * at least 0.5 seconds of data to minimize the risk of being unable
+     * to queue data in time. Always returns a power of two amount. */
+    const float DURATION = 0.5f;
+
+    const std::size_t bytes_per_sample = audio_data_format_byte_size(format_);
+    const std::size_t data_size_per_second = bytes_per_sample * sample_rate_;
+    const std::size_t required_size = data_size_per_second * DURATION;
+
+    return next_power_of_two(required_size);
+}
+
 void Sound::init_source(SourceInstance& source) {
     if(!init_source_) return; // Nothing to do
 

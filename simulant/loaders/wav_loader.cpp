@@ -55,7 +55,6 @@ static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
     }
 
     sound->set_sample_rate(freq);
-    sound->set_buffer_size(4096 * 8);
     sound->set_channels(channels);
     sound->set_format(format);
     return true;
