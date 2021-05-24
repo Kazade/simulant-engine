@@ -2,21 +2,7 @@
 
 namespace smlt {
 
-void Transformable::lock_rotation(LockMode lock_mode) {
-    rotation_locked_ = lock_mode;
-}
-
-void Transformable::unlock_rotation() {
-    rotation_locked_ = LOCK_MODE_NONE;
-}
-
-void Transformable::lock_translation(bool value) {
-    translation_locked_ = value;
-}
-
 void Transformable::move_to(const smlt::Vec3& pos) {
-    if(translation_locked_) return;
-
     set_position(pos);
 }
 
@@ -33,8 +19,6 @@ void Transformable::move_to(float x, float y) {
 }
 
 void Transformable::move_by(const smlt::Vec3& pos) {
-    if(translation_locked_) return;
-
     set_position(
         Vec3(
             position_.x + pos.x,
@@ -118,8 +102,6 @@ void Transformable::scale_to(const float x, const float y, const float z) {
 }
 
 void Transformable::rotate_around(const smlt::Vec3& axis, const smlt::Degrees& degrees) {
-    if(rotation_locked_) return;
-
     set_rotation(Quaternion(axis, degrees) * rotation_);
 }
 
@@ -220,8 +202,6 @@ void Transformable::set_position(const Vec3 &p) {
 
 void Transformable::set_rotation(const Quaternion& q) {
     assert(!std::isnan(q.x) && !std::isnan(q.y) && !std::isnan(q.z) && !std::isnan(q.w));
-
-    if(rotation_locked_) return;
 
     if(!q.equals(rotation_)) {
         rotation_ = q;

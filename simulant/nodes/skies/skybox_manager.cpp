@@ -129,6 +129,7 @@ SkyboxPtr SkyManager::new_skybox_from_files(
     assert(stage_);
 
     auto sb = sky_manager_->make(this);
+    sb->set_parent(stage_);
     sb->generate(
         up, down, left, right, front, back, flags
     );

@@ -7,11 +7,6 @@ namespace smlt {
 
 typedef sig::signal<void ()> TransformationChangedSignal;
 
-enum LockMode {
-    LOCK_MODE_NONE = 0,
-    LOCK_MODE_LOCAL,
-    LOCK_MODE_INHERITED
-};
 
 /**
  * @brief The Transformable class
@@ -79,14 +74,7 @@ public:
     bool is_constrained() const;
     void remove_constraint();
 
-    void lock_rotation(LockMode lock_mode);
-    void unlock_rotation();
-    bool rotation_locked() const { return rotation_locked_; }
-
-    void lock_translation(bool value=true);
 protected:
-    void force_lock_transforms();
-    void force_unlock_transforms();
     void set_position(const Vec3& p);
     void set_rotation(const Quaternion& q);
     void set_scaling(const Vec3& s);
@@ -100,10 +88,6 @@ protected:
     Vec3 position_;
     Quaternion rotation_;
     Vec3 scaling_ = Vec3(1, 1, 1);
-
-    LockMode rotation_locked_ = LOCK_MODE_NONE;
-    bool translation_locked_ = false;
-    bool transforms_force_locked_ = false;
 
     std::unique_ptr<AABB> constraint_;
 };

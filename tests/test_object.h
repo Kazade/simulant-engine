@@ -278,34 +278,27 @@ public:
         assert_is_null(stage_->find_descendent_with_name("test"));
     }
 
-    void test_lock_rotation() {
+    void test_link_position() {
         auto a1 = stage_->new_actor();
         auto a2 = stage_->new_actor();
 
+        a1->move_to(-50, 0, 0);
+
         a2->set_parent(a1);
+        a2->link_position(a1);
 
-        a2->lock_rotation(smlt::LOCK_MODE_LOCAL);
+        // Should've synced position immediately
+        assert_equal(a2->absolute_position(), smlt::Vec3(-50, 0, 0));
 
-        assert_equal(a2->absolute_rotation(), smlt::Quaternion());
-        a2->rotate_y_by(smlt::Degrees(90));
+        a2->move_to(100, 0, 0);
+        a1->move_to(50, 0, 0);
 
-        // No effect
-        assert_equal(a2->absolute_rotation(), smlt::Quaternion());
+        assert_equal(a1->absolute_position(), smlt::Vec3(50, 0, 0));
+        assert_equal(a2->absolute_position(), smlt::Vec3(100, 0, 0));
 
-        a1->rotate_y_by(smlt::Degrees(90));
-
-        assert_equal(a2->absolute_rotation(), a1->rotation());
-
-        a2->lock_rotation(smlt::LOCK_MODE_INHERITED);
-
-        // Should now be 180
-        a1->rotate_y_by(smlt::Degrees(90));
-
-        // No effect
-        assert_equal(
-            a2->absolute_rotation(),
-            smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0))
-        );
+        /* Should sync the position from a1 */
+        a2->late_update(0);
+        assert_equal(a2->absolute_position(), smlt::Vec3(50, 0, 0));
     }
 private:
     smlt::CameraPtr camera_;

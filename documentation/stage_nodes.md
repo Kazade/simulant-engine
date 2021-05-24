@@ -83,6 +83,18 @@ node->set_cullable(false);  // Will always be renderered
 assert(!node->is_cullable());
 ```
 
-# Restricting Movement
+# Linking StageNode Positions
 
-Sometimes it may be necessary to lock the rotation of an object. For example, you may want to attach a skybox to your camera, so that it moves with the camera, but you wouldn't want the skybox to rotate as the camera does. To prevent rotations on an object, you can use `lock_rotation(mode)` and `unlock_rotation()`. `lock_rotation` takes a single parameter which is whether you want to lock local rotations (`LOCK_MODE_LOCAL`), or all rotations (`LOCK_MODE_INHERITED`).
+Sometimes it's useful for a stage node to be "attached" to another node, without forming a parent child relationship. An example would be a Skybox, which should always stay surrounding the camera, but shouldn't follow the camera's rotation - and also doesn't conceptually make sense to be a child of the camera. For this reason `StageNode::link_position(node)` exists. The following code would make `actor` synchronise its position with `camera`.
+
+```
+auto actor = stage->new_actor();
+auto camera = stage->new_camera();
+
+actor->link_position(camera);
+```
+
+ > Note: the linked node will update its position at the end of `late_update` phase, therefore its possible that the position will not match what you would expect during `update`, `fixed_update`, or `late_update` but the position 
+ will synchronise before rendering.
+
+
