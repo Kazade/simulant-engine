@@ -37,7 +37,7 @@ class ParticleSystem :
     public TypedDestroyableObject<ParticleSystem, Stage>,
     public StageNode,
     public generic::Identifiable<ParticleSystemID>,
-    public Source,
+    public AudioSource,
     public Loadable,
     public HasMutableRenderPriority,
     public ChainNameable<ParticleSystem>  {

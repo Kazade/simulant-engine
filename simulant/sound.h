@@ -37,7 +37,7 @@
 namespace smlt {
 
 class StageNode;
-class Source;
+class AudioSource;
 class PlayingSound;
 
 class Sound :
@@ -94,13 +94,13 @@ private:
     uint8_t channels_ = 0;
     std::size_t stream_length_ = 0;
 
-    friend class Source;
+    friend class AudioSource;
     friend class PlayingSound;
 };
 
 typedef std::function<int32_t (AudioBufferID)> StreamFunc;
 
-class Source;
+class AudioSource;
 
 enum AudioRepeat {
     AUDIO_REPEAT_NONE,
@@ -118,14 +118,14 @@ typedef std::size_t PlayingSoundID;
 class PlayingSound:
     public RefCounted<PlayingSound> {
 
-    friend class Source;
+    friend class AudioSource;
 
 private:
     static PlayingSoundID counter_;
 
     PlayingSoundID id_;
 
-    Source& parent_;
+    AudioSource& parent_;
 
     AudioSourceID source_;
     std::vector<AudioBufferID> buffers_;
@@ -139,7 +139,7 @@ private:
     smlt::Vec3 previous_position_;
     bool first_update_ = true;
 public:
-    PlayingSound(Source& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
+    PlayingSound(AudioSource& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~PlayingSound();
 
     PlayingSoundID id() const {
@@ -159,11 +159,11 @@ public:
     bool is_dead() const { return is_dead_; }
 };
 
-class Source {
+class AudioSource {
 public:
-    Source(Window* window);
-    Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
-    virtual ~Source();
+    AudioSource(Window* window);
+    AudioSource(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
+    virtual ~AudioSource();
 
     PlayingSoundID play_sound(
         SoundPtr sound_id,

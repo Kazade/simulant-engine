@@ -32,14 +32,14 @@ namespace smlt {
 Actor::Actor(Stage* stage, SoundDriver* sound_driver):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    Source(stage, this, sound_driver) {
+    AudioSource(stage, this, sound_driver) {
 
 }
 
 Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    Source(stage, this, sound_driver) {
+    AudioSource(stage, this, sound_driver) {
 
     set_mesh(mesh);
 }

@@ -59,7 +59,7 @@ class Geom :
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<GeomID>,
-    public Source,
+    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Geom>  {
 

@@ -45,7 +45,7 @@ class Sprite :
     public ContainerNode,
     public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
-    public Source,
+    public AudioSource,
     public ChainNameable<Sprite> {
 
 public:

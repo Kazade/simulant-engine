@@ -30,7 +30,7 @@ using namespace smlt;
 
 Sprite::Sprite(SpriteManager *manager, SoundDriver* sound_driver):
     ContainerNode(manager->stage.get(), STAGE_NODE_TYPE_OTHER),
-    Source(manager->stage, this, sound_driver),
+    AudioSource(manager->stage, this, sound_driver),
     manager_(manager) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
