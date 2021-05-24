@@ -11,13 +11,11 @@ Supported sound formats are .wav and .ogg.
 
 ## Playing Sounds
 
-`Sounds` are played through `Sources`. All `StageNodes` are a sound `Source`, as is the `Window` itself. You can play a sounds
-by using the `play_sound(id, repeat)` method on the `Source`. In the case of the `Window` the `id` must be the ID of a sound
-loaded by the `shared_assets` manager, in the case of `StageNodes` the sound must be either in the associated `Stage` asset manager
-or `shared_assets`.
+`Sounds` are played through `AudioSources`. All `StageNodes` are an`AudioSource`. You can play a sound
+by using the `play_sound(id, repeat, distance_model)` method on the `AudioSource`. 
 
-Playing a sound from a `StageNode` will use positional audio to make it seem like the sound is coming from the location of the node. Sounds played
-through the `Window` will not have any positional effect - this makes the `Window` perfect for playing a level soundtrack for example.
+Playing a sound from a `StageNode` will use positional audio to make it seem like the sound is coming from the location of the node. If you want
+the sound to sound like ambient audio (e.g. a soundtrack) use the `DISTANCE_MODEL_AMBIENT` distance model.
 
 The `repeat` argument of `play_sound` can be one of the following:
 
