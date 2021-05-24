@@ -38,7 +38,7 @@ namespace smlt {
 
 class StageNode;
 class Source;
-class SourceInstance;
+class PlayingSound;
 
 class Sound :
     public RefCounted<Sound>,
@@ -75,13 +75,13 @@ public:
         return stream_length_;
     }
 
-    void set_source_init_function(std::function<void (SourceInstance&)> func) { init_source_ = func; }
+    void set_playing_sound_init_function(std::function<void (PlayingSound&)> func) { init_playing_sound_ = func; }
 
     SoundDriver* _driver() const { return driver_; }
 private:
-    void init_source(SourceInstance& source);
+    void init_source(PlayingSound& source);
 
-    std::function<void (SourceInstance&)> init_source_;
+    std::function<void (PlayingSound&)> init_playing_sound_;
 
     SoundDriver* driver_ = nullptr;
     std::shared_ptr<std::istream> sound_data_;
@@ -92,7 +92,7 @@ private:
     std::size_t stream_length_ = 0;
 
     friend class Source;
-    friend class SourceInstance;
+    friend class PlayingSound;
 };
 
 typedef std::function<int32_t (AudioBufferID)> StreamFunc;
@@ -110,17 +110,17 @@ enum DistanceModel {
     DISTANCE_MODEL_DEFAULT = DISTANCE_MODEL_POSITIONAL
 };
 
-typedef std::size_t SourceInstanceID;
+typedef std::size_t PlayingSoundID;
 
-class SourceInstance:
-    public RefCounted<SourceInstance> {
+class PlayingSound:
+    public RefCounted<PlayingSound> {
 
     friend class Source;
 
 private:
-    static SourceInstanceID counter_;
+    static PlayingSoundID counter_;
 
-    SourceInstanceID id_;
+    PlayingSoundID id_;
 
     Source& parent_;
 
@@ -136,10 +136,10 @@ private:
     smlt::Vec3 previous_position_;
     bool first_update_ = true;
 public:
-    SourceInstance(Source& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
-    virtual ~SourceInstance();
+    PlayingSound(Source& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
+    virtual ~PlayingSound();
 
-    SourceInstanceID id() const {
+    PlayingSoundID id() const {
         return id_;
     }
 
@@ -162,12 +162,12 @@ public:
     Source(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~Source();
 
-    SourceInstanceID play_sound(
+    PlayingSoundID play_sound(
         SoundPtr sound_id,
         AudioRepeat repeat=AUDIO_REPEAT_NONE,
         DistanceModel model=DISTANCE_MODEL_DEFAULT
     );
-    bool stop_sound(SourceInstanceID sound_id);
+    bool stop_sound(PlayingSoundID sound_id);
 
     /* The number of sounds this source is currently playing */
     uint8_t playing_sound_count() const;
@@ -194,11 +194,11 @@ private:
     SoundDriver* driver_ = nullptr;
     StageNode* node_ = nullptr;
 
-    std::list<SourceInstance::ptr> instances_;
+    std::list<PlayingSound::ptr> instances_;
     sig::signal<void ()> signal_stream_finished_;
 
     friend class Sound;
-    friend class SourceInstance;
+    friend class PlayingSound;
 };
 
 }

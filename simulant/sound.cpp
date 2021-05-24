@@ -26,7 +26,7 @@
 
 namespace smlt {
 
-SourceInstanceID SourceInstance::counter_ = 0;
+PlayingSoundID PlayingSound::counter_ = 0;
 
 Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver):
     generic::Identifiable<SoundID>(id),
@@ -58,14 +58,14 @@ std::size_t Sound::buffer_size() const {
     return ret;
 }
 
-void Sound::init_source(SourceInstance& source) {
-    if(!init_source_) return; // Nothing to do
+void Sound::init_source(PlayingSound& source) {
+    if(!init_playing_sound_) return; // Nothing to do
 
-    init_source_(source);
+    init_playing_sound_(source);
 }
 
-SourceInstance::SourceInstance(Source &parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
-    id_(++SourceInstance::counter_),
+PlayingSound::PlayingSound(Source &parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
+    id_(++PlayingSound::counter_),
     parent_(parent),
     source_(0),
     buffers_{0, 0},
@@ -84,7 +84,7 @@ SourceInstance::SourceInstance(Source &parent, std::weak_ptr<Sound> sound, Audio
     }
 }
 
-SourceInstance::~SourceInstance() {
+PlayingSound::~PlayingSound() {
     SoundDriver* driver = parent_._sound_driver();
 
     if(driver) {
@@ -94,7 +94,7 @@ SourceInstance::~SourceInstance() {
     }
 }
 
-void SourceInstance::start() {
+void PlayingSound::start() {
     if(!stream_func_) {
         S_WARN("Not playing sound as no stream func was set");
         return;
@@ -118,19 +118,19 @@ void SourceInstance::start() {
     driver->play_source(source_);
 }
 
-void SourceInstance::stop() {
+void PlayingSound::stop() {
     SoundDriver* driver = parent_._sound_driver();
 
     driver->stop_source(source_);
     is_dead_ = true;
 }
 
-bool SourceInstance::is_playing() const {
+bool PlayingSound::is_playing() const {
     SoundDriver* driver = parent_._sound_driver();
     return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
 }
 
-void SourceInstance::update(float dt) {
+void PlayingSound::update(float dt) {
     SoundDriver* driver = parent_._sound_driver();
 
     // Update the position of the source if this is attached to a stagenode
@@ -230,7 +230,7 @@ Source::~Source() {
 
 }
 
-SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
+PlayingSoundID Source::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
     if(!sound) {
         S_WARN("Tried to play an invalid sound");
         return 0;
@@ -239,7 +239,7 @@ SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat, Distance
     assert(sound);
 
     // If this is the window, we create an ambient source
-    SourceInstance::ptr new_source = SourceInstance::create(
+    PlayingSound::ptr new_source = PlayingSound::create(
         *this,
         sound,
         repeat,
@@ -254,7 +254,7 @@ SourceInstanceID Source::play_sound(SoundPtr sound, AudioRepeat repeat, Distance
     return new_source->id();
 }
 
-bool Source::stop_sound(SourceInstanceID sound_id) {
+bool Source::stop_sound(PlayingSoundID sound_id) {
     for(auto& instance: instances_) {
         if(instance->id() == sound_id) {
             instance->stop();
@@ -275,7 +275,7 @@ void Source::update_source(float dt) {
                 std::remove_if(
                     instances_.begin(),
                     instances_.end(),
-            std::bind(&SourceInstance::is_dead, std::placeholders::_1)
+            std::bind(&PlayingSound::is_dead, std::placeholders::_1)
         ),
         instances_.end()
     );
@@ -317,7 +317,7 @@ uint8_t Source::played_sound_count() const {
     return std::count_if(
         instances_.begin(),
         instances_.end(),
-        [](SourceInstance::ptr ptr) -> bool {
+        [](PlayingSound::ptr ptr) -> bool {
             return ptr->is_dead();
         }
     );
