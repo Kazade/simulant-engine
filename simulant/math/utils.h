@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <limits>
+#include <cstdint>
 
 namespace smlt {
 
@@ -32,5 +33,7 @@ template<typename T>
 bool almost_gequal(const T& lhs, const T& rhs, const T& epsilon) {
     return lhs >= (rhs - epsilon);
 }
+
+uint32_t next_power_of_two(uint32_t x);
 
 }

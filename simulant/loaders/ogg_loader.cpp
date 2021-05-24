@@ -138,7 +138,6 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     fstream->seekg(0);
 
     sound->set_sample_rate(info.sample_rate);
-    sound->set_buffer_size(4096 * 8);
     sound->set_input_stream(fstream);
     sound->set_channels(info.channels);
     sound->set_format((info.channels == 2) ? AUDIO_DATA_FORMAT_STEREO16 : AUDIO_DATA_FORMAT_MONO16);
