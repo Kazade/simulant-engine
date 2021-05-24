@@ -75,7 +75,10 @@ public:
         return stream_length_;
     }
 
-    void set_playing_sound_init_function(std::function<void (PlayingSound&)> func) { init_playing_sound_ = func; }
+    template<typename Func>
+    void set_playing_sound_init_function(Func&& func) {
+        init_playing_sound_ = func;
+    }
 
     SoundDriver* _driver() const { return driver_; }
 private:
