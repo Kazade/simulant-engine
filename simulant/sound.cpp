@@ -46,7 +46,16 @@ std::size_t Sound::buffer_size() const {
     const std::size_t data_size_per_second = bytes_per_sample * sample_rate_;
     const std::size_t required_size = data_size_per_second * DURATION;
 
-    return next_power_of_two(required_size);
+    std::size_t ret = next_power_of_two(required_size);
+
+#ifdef __DREAMCAST__
+    /* The Dreamcast sound chip only allows 65534 samples and ALdc
+     * will truncate if it's larger so this just prevents us missing
+     * a sample */
+    ret = std::min(ret, (std::size_t) 65534);
+#endif
+
+    return ret;
 }
 
 void Sound::init_source(SourceInstance& source) {
