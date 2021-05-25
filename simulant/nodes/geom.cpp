@@ -28,7 +28,7 @@ namespace smlt {
 Geom::Geom(Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, const Vec3 &scale, GeomCullerOptions culler_options):
     TypedDestroyableObject<Geom, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_GEOM),
-    Source(stage, this, sound_driver),
+    AudioSource(stage, this, sound_driver),
     mesh_id_(mesh),
     culler_options_(culler_options),
     desired_transform(position),

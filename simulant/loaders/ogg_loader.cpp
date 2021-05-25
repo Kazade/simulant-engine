@@ -81,7 +81,7 @@ int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, Audi
     }
 }
 
-static void init_source(Sound* self, SourceInstance& source) {
+static void init_source(Sound* self, PlayingSound& source) {
     /*
      *  This is either smart or crazy and I haven't worked out which yet...
      *
@@ -141,7 +141,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     sound->set_input_stream(fstream);
     sound->set_channels(info.channels);
     sound->set_format((info.channels == 2) ? AUDIO_DATA_FORMAT_STEREO16 : AUDIO_DATA_FORMAT_MONO16);
-    sound->set_source_init_function(std::bind(&init_source, sound, std::placeholders::_1));
+    sound->set_playing_sound_init_function(std::bind(&init_source, sound, std::placeholders::_1));
 }
 
 

@@ -17,7 +17,7 @@ class Camera:
     public ContainerNode,
     public generic::Identifiable<CameraID>,
     public ChainNameable<Camera>,
-    public Source {
+    public AudioSource {
 
 public:
     using ContainerNode::_get_renderables;

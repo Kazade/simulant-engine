@@ -44,7 +44,7 @@ class Actor :
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<ActorID>,
-    public Source,
+    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Actor> {
 
