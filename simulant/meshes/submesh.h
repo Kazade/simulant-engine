@@ -12,9 +12,7 @@ class IndexData;
 class Mesh;
 class Renderer;
 
-class SubMeshInterface:
-        public virtual Boundable {
-
+class SubMeshInterface {
 private:
     virtual VertexData* get_vertex_data() const = 0;
     virtual IndexData* get_index_data() const = 0;
@@ -64,12 +62,7 @@ public:
 
     MeshArrangement arrangement() const { return arrangement_; }
 
-    const AABB& aabb() const {
-        return bounds_;
-    }
-
     void reverse_winding();
-    void _recalc_bounds();
 
     void generate_texture_coordinates_cube(uint32_t texture=0);
 
@@ -118,10 +111,7 @@ private:
 
     IndexData* index_data_ = nullptr;
 
-    AABB bounds_;
-
-    sig::connection vrecalc_;
-    sig::connection irecalc_;
+    void _recalc_bounds(AABB& bounds);
 
     MaterialChangedCallback signal_material_changed_;
 

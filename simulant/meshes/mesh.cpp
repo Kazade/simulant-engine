@@ -65,7 +65,7 @@ void Mesh::reset(VertexDataPtr vertex_data) {
 
     vertex_data_ = vertex_data;
     done_connection_ = vertex_data_->signal_update_complete().connect(
-        std::bind(&Mesh::on_vertex_data_done, this)
+        std::bind(&Mesh::vertex_data_updated, this)
     );
 
     delete skeleton_;
@@ -85,7 +85,7 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 
     vertex_data_ = std::make_shared<VertexData>(vertex_specification);
     done_connection_ = vertex_data_->signal_update_complete().connect(
-        std::bind(&Mesh::on_vertex_data_done, this)
+        std::bind(&Mesh::vertex_data_updated, this)
     );
 
     delete skeleton_;
@@ -135,7 +135,7 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
     signal_animation_enabled_(this, animation_type_, animation_frames_);
 }
 
-void Mesh::rebuild_aabb() const {
+void Mesh::rebuild_aabb() {
     AABB& result = aabb_;
 
     if(!this->submesh_count()) {
@@ -149,9 +149,12 @@ void Mesh::rebuild_aabb() const {
     result.set_min(smlt::Vec3(max, max, max));
     result.set_max(smlt::Vec3(min, min, min));
 
-    for(auto mesh: submeshes_) {
-        auto sm_min = mesh->aabb().min();
-        auto sm_max = mesh->aabb().max();
+    for(auto sm: submeshes_) {
+        AABB bounds;
+        sm->_recalc_bounds(bounds);
+
+        auto sm_min = bounds.min();
+        auto sm_max = bounds.max();
 
         if(sm_min.x < result.min().x) result.set_min_x(sm_min.x);
         if(sm_min.y < result.min().y) result.set_min_y(sm_min.y);
@@ -161,19 +164,21 @@ void Mesh::rebuild_aabb() const {
         if(sm_max.y > result.max().y) result.set_max_y(sm_max.y);
         if(sm_max.z > result.max().z) result.set_max_z(sm_max.z);
     }
-
-    aabb_dirty_ = false;
 }
 
-void Mesh::on_vertex_data_done() {
-    aabb_dirty_ = true;
+void Mesh::vertex_data_updated() {
+    /* Rebuild the entire AABB */
+    rebuild_aabb();
+}
+
+void Mesh::submesh_index_data_updated(SubMesh* sm) {
+    /* FIXME: Perhaps maintain individual AABBs and only update
+     * the required one for perf */
+    _S_UNUSED(sm);
+    rebuild_aabb();
 }
 
 const AABB &Mesh::aabb() const {
-    if(aabb_dirty_) {
-        rebuild_aabb();
-    }
-
     return aabb_;
 }
 
@@ -194,12 +199,9 @@ SubMesh* Mesh::new_submesh_with_material(
 
     signal_submesh_created_(id(), new_submesh.get());
 
-    // Mark the AABB as dirty so it will be rebuilt on next access
-    aabb_dirty_ = true;
-
-    new_submesh->index_data_->signal_update_complete().connect([this]() {
-        aabb_dirty_ = true;
-    });
+    new_submesh->index_data_->signal_update_complete().connect(
+        std::bind(&Mesh::submesh_index_data_updated, this, new_submesh.get())
+    );
 
     return new_submesh.get();
 }
@@ -627,7 +629,6 @@ void Mesh::destroy_submesh(const std::string& name) {
         auto submesh = (*it);
         submeshes_.erase(it);
         signal_submesh_destroyed_(id(), submesh.get());
-        aabb_dirty_ = true;
     }
 }
 

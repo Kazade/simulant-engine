@@ -287,15 +287,15 @@ private:
     SubMeshDestroyedCallback signal_submesh_destroyed_;
     SubMeshMaterialChangedCallback signal_submesh_material_changed_;
 
-    void rebuild_aabb() const;
-    mutable AABB aabb_;
-    mutable bool aabb_dirty_ = true;
+    void rebuild_aabb();
+    AABB aabb_;
 
     /* Automatically maintain adjacency info for submeshes or not */
     bool maintain_adjacency_info_ = true;
     std::unique_ptr<AdjacencyInfo> adjacency_;
 
-    void on_vertex_data_done();
+    void vertex_data_updated();
+    void submesh_index_data_updated(SubMesh* sm);
     sig::connection done_connection_;
 
 public:

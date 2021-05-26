@@ -67,7 +67,9 @@ public:
         Vec3 expected_min(-1.0, -1.0, 0.0);
         Vec3 expected_max( 1.0, -1.0, 0.0);
 
-        auto box = sm->aabb();
+        AABB box;
+        sm->_recalc_bounds(box);
+
         assert_true(box.min() == expected_min);
         assert_true(box.max() == expected_max);
 
