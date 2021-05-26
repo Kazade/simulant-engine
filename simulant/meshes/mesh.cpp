@@ -35,6 +35,16 @@
 namespace smlt {
 
 
+Mesh::Mesh(
+    MeshID id,
+    AssetManager* asset_manager,
+    VertexDataPtr vertex_data):
+    Asset(asset_manager),
+    generic::Identifiable<MeshID>(id) {
+
+    reset(vertex_data);
+}
+
 Mesh::Mesh(MeshID id,
     AssetManager *asset_manager,
     VertexSpecification vertex_specification):
@@ -42,11 +52,26 @@ Mesh::Mesh(MeshID id,
         generic::Identifiable<MeshID>(id) {
 
     reset(vertex_specification);
+}
+
+void Mesh::reset(VertexDataPtr vertex_data) {
+    adjacency_.reset();
+    submeshes_.clear();
+
+    animation_type_ = MESH_ANIMATION_TYPE_NONE;
+    animation_frames_ = 0;
+
+    vertex_data_ = vertex_data;
 
     vertex_data_->signal_update_complete().connect([this]() {
         // Mark the AABB as dirty so it will be rebuilt on next access
         aabb_dirty_ = true;
     });
+
+    delete skeleton_;
+    skeleton_ = nullptr;
+
+    rebuild_aabb();
 }
 
 void Mesh::reset(VertexSpecification vertex_specification) {
@@ -60,6 +85,8 @@ void Mesh::reset(VertexSpecification vertex_specification) {
 
     delete skeleton_;
     skeleton_ = nullptr;
+
+    rebuild_aabb();
 }
 
 bool Mesh::add_skeleton(uint32_t num_joints) {
@@ -81,13 +108,6 @@ Mesh::~Mesh() {
     vertex_data_.reset();
 
     delete skeleton_;
-}
-
-void Mesh::clear() {
-    //Delete the submeshes and clear the shared data
-    submeshes_.clear();
-    vertex_data->clear();
-    rebuild_aabb();
 }
 
 void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data) {

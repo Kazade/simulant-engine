@@ -96,7 +96,7 @@ SubMesh *rectangle(
         bool clear, smlt::MaterialID material) {
 
     if(clear) {
-        mesh->clear();
+        mesh->reset(mesh->vertex_data->vertex_specification());
     }
 
     uint16_t offset = mesh->vertex_data->count();
@@ -160,8 +160,9 @@ SubMesh* rectangle_outline(
         float width, float height,
         float x_offset, float y_offset, float z_offset,
         bool clear, smlt::MaterialID material) {
+
     if(clear) {
-        mesh->clear();
+        mesh->reset(mesh->vertex_data->vertex_specification());
     }
 
     uint16_t offset = mesh->vertex_data->count();
