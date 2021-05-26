@@ -116,6 +116,10 @@ private:
     MaterialChangedCallback signal_material_changed_;
 
     bool contributes_to_edge_list_ = true;
+
+    /* This is updated and maintained by Mesh, it only lives here so
+     * there's a fast lookup for each submesh */
+    AABB bounds_;
 };
 
 }

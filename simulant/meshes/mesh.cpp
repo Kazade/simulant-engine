@@ -150,11 +150,8 @@ void Mesh::rebuild_aabb() {
     result.set_max(smlt::Vec3(min, min, min));
 
     for(auto sm: submeshes_) {
-        AABB bounds;
-        sm->_recalc_bounds(bounds);
-
-        auto sm_min = bounds.min();
-        auto sm_max = bounds.max();
+        auto sm_min = sm->bounds_.min();
+        auto sm_max = sm->bounds_.max();
 
         if(sm_min.x < result.min().x) result.set_min_x(sm_min.x);
         if(sm_min.y < result.min().y) result.set_min_y(sm_min.y);
@@ -168,13 +165,17 @@ void Mesh::rebuild_aabb() {
 
 void Mesh::vertex_data_updated() {
     /* Rebuild the entire AABB */
+    for(auto& sm: submeshes_) {
+        sm->_recalc_bounds(sm->bounds_);
+    }
     rebuild_aabb();
 }
 
 void Mesh::submesh_index_data_updated(SubMesh* sm) {
-    /* FIXME: Perhaps maintain individual AABBs and only update
-     * the required one for perf */
-    _S_UNUSED(sm);
+    /* Recalculate the bounds on the submesh, we store
+     * this on the submesh itself so we can have a fast lookup
+     * in rebuild_aabb() */
+    sm->_recalc_bounds(sm->bounds_);
     rebuild_aabb();
 }
 
