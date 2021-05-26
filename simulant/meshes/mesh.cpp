@@ -61,12 +61,12 @@ void Mesh::reset(VertexDataPtr vertex_data) {
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
 
-    vertex_data_ = vertex_data;
+    done_connection_.disconnect();
 
-    vertex_data_->signal_update_complete().connect([this]() {
-        // Mark the AABB as dirty so it will be rebuilt on next access
-        aabb_dirty_ = true;
-    });
+    vertex_data_ = vertex_data;
+    done_connection_ = vertex_data_->signal_update_complete().connect(
+        std::bind(&Mesh::on_vertex_data_done, this)
+    );
 
     delete skeleton_;
     skeleton_ = nullptr;
@@ -81,7 +81,12 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
 
+    done_connection_.disconnect();
+
     vertex_data_ = std::make_shared<VertexData>(vertex_specification);
+    done_connection_ = vertex_data_->signal_update_complete().connect(
+        std::bind(&Mesh::on_vertex_data_done, this)
+    );
 
     delete skeleton_;
     skeleton_ = nullptr;
@@ -158,6 +163,10 @@ void Mesh::rebuild_aabb() const {
     }
 
     aabb_dirty_ = false;
+}
+
+void Mesh::on_vertex_data_done() {
+    aabb_dirty_ = true;
 }
 
 const AABB &Mesh::aabb() const {

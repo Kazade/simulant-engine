@@ -295,6 +295,9 @@ private:
     bool maintain_adjacency_info_ = true;
     std::unique_ptr<AdjacencyInfo> adjacency_;
 
+    void on_vertex_data_done();
+    sig::connection done_connection_;
+
 public:
     /* Returns a nullptr if there is no adjacecy info */
     S_DEFINE_PROPERTY(adjacency_info, &Mesh::adjacency_);
