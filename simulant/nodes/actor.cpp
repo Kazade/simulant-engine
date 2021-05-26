@@ -50,35 +50,6 @@ Actor::~Actor() {
     submesh_destroyed_connection_.disconnect();
 }
 
-VertexSpecification SubActor::vertex_specification() const {
-    auto* vertex_data = get_vertex_data();
-    if(vertex_data) {
-        return vertex_data->vertex_specification();
-    }
-
-    return VertexSpecification();
-}
-
-VertexData* SubActor::vertex_data() const {
-    if(parent_.has_animated_mesh()) {
-        return parent_.interpolated_vertex_data_.get();
-    }
-
-    return submesh_->vertex_data.get();
-}
-
-IndexData* SubActor::index_data() const {
-    return submesh_->index_data.get();
-}
-
-std::size_t SubActor::index_element_count() const {
-    return submesh_->index_data->count();
-}
-
-IndexType SubActor::index_type() const {
-    return submesh_->index_data->index_type();
-}
-
 bool Actor::has_multiple_meshes() const {
     /* Returns true if there are any meshes beyond DETAIL_LEVEL_NEAREST */
 
@@ -241,45 +212,6 @@ MeshID Actor::mesh_id(DetailLevel detail_level) const {
     return (mesh) ? mesh->id() : MeshID(0);
 }
 
-SubActor::SubActor(const Actor &parent, std::shared_ptr<SubMesh> submesh):
-    parent_(parent),
-    submesh_(submesh) {
-
-    material_ = submesh->material();
-}
-
-SubActor::~SubActor() {
-
-}
-
-const MaterialID SubActor::material_id() const {
-    if(material_override_) {
-        return material_override_->id();
-    }
-
-    /* Return the submeshes material */
-    return material_->id();
-}
-
-void SubActor::override_material_id(MaterialID material) {
-    if(material == material_override_->id()) {
-        return;
-    }
-
-    if(material) {
-        //Store the pointer to maintain the ref-count
-        material_override_ = parent_.stage->assets->material(material);
-    } else {
-        // If we passed a zero material ID, then remove the
-        // material pointer
-        material_override_.reset();
-    }
-}
-
-void SubActor::remove_material_id_override() {
-    override_material_id(MaterialID());
-}
-
 MeshPtr Actor::best_mesh(DetailLevel detail_level) const {
     return find_mesh(detail_level);
 }
@@ -299,22 +231,6 @@ bool Actor::has_any_mesh() const {
 bool Actor::has_mesh(DetailLevel detail_level) const {
     /* Returns True if the Actor has a mesh at this detail level */
     return bool(meshes_[detail_level]);
-}
-
-SubMesh* SubActor::submesh() {
-    if(!submesh_) {
-        throw std::logic_error("Submesh was not initialized");
-    }
-
-    return submesh_.get();
-}
-
-const SubMesh *SubActor::submesh() const {
-    if(!submesh_) {
-        throw std::logic_error("Submesh was not initialized");
-    }
-
-    return submesh_.get();
 }
 
 void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
@@ -374,25 +290,6 @@ void Actor::recalc_effective_meshes() {
             }
         }
     }
-}
-
-
-VertexData* SubActor::get_vertex_data() const {
-    auto sm = submesh();
-    assert(sm);
-
-    auto ret = sm->vertex_data.get();
-    assert(ret);
-    return ret;
-}
-
-IndexData* SubActor::get_index_data() const {
-    auto sm = submesh();
-    assert(sm);
-
-    auto ret = sm->index_data.get();
-    assert(ret);
-    return ret;
 }
 
 }

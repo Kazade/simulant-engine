@@ -236,6 +236,10 @@ MeshPtr AssetManager::new_mesh(VertexSpecification vertex_specification, Garbage
     NEW_X(Mesh, mesh, mesh_manager_, vertex_specification);
 }
 
+MeshPtr AssetManager::new_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect) {
+    NEW_X(Mesh, mesh, mesh_manager_, vertex_data);
+}
+
 MeshPtr AssetManager::mesh(MeshID id) {
     GET_X(Mesh, mesh, mesh_manager_);
 }

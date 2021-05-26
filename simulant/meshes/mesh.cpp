@@ -35,6 +35,16 @@
 namespace smlt {
 
 
+Mesh::Mesh(
+    MeshID id,
+    AssetManager* asset_manager,
+    VertexDataPtr vertex_data):
+    Asset(asset_manager),
+    generic::Identifiable<MeshID>(id) {
+
+    reset(vertex_data);
+}
+
 Mesh::Mesh(MeshID id,
     AssetManager *asset_manager,
     VertexSpecification vertex_specification):
@@ -42,11 +52,26 @@ Mesh::Mesh(MeshID id,
         generic::Identifiable<MeshID>(id) {
 
     reset(vertex_specification);
+}
 
-    vertex_data_->signal_update_complete().connect([this]() {
-        // Mark the AABB as dirty so it will be rebuilt on next access
-        aabb_dirty_ = true;
-    });
+void Mesh::reset(VertexDataPtr vertex_data) {
+    adjacency_.reset();
+    submeshes_.clear();
+
+    animation_type_ = MESH_ANIMATION_TYPE_NONE;
+    animation_frames_ = 0;
+
+    done_connection_.disconnect();
+
+    vertex_data_ = vertex_data;
+    done_connection_ = vertex_data_->signal_update_complete().connect(
+        std::bind(&Mesh::vertex_data_updated, this)
+    );
+
+    delete skeleton_;
+    skeleton_ = nullptr;
+
+    rebuild_aabb();
 }
 
 void Mesh::reset(VertexSpecification vertex_specification) {
@@ -56,10 +81,17 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     animation_type_ = MESH_ANIMATION_TYPE_NONE;
     animation_frames_ = 0;
 
+    done_connection_.disconnect();
+
     vertex_data_ = std::make_shared<VertexData>(vertex_specification);
+    done_connection_ = vertex_data_->signal_update_complete().connect(
+        std::bind(&Mesh::vertex_data_updated, this)
+    );
 
     delete skeleton_;
     skeleton_ = nullptr;
+
+    rebuild_aabb();
 }
 
 bool Mesh::add_skeleton(uint32_t num_joints) {
@@ -83,13 +115,6 @@ Mesh::~Mesh() {
     delete skeleton_;
 }
 
-void Mesh::clear() {
-    //Delete the submeshes and clear the shared data
-    submeshes_.clear();
-    vertex_data->clear();
-    rebuild_aabb();
-}
-
 void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data) {
     if(animation_type_ != MESH_ANIMATION_TYPE_NONE) {
         throw std::logic_error("Tried to re-enable animations on an animated mesh");
@@ -110,7 +135,7 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
     signal_animation_enabled_(this, animation_type_, animation_frames_);
 }
 
-void Mesh::rebuild_aabb() const {
+void Mesh::rebuild_aabb() {
     AABB& result = aabb_;
 
     if(!this->submesh_count()) {
@@ -124,9 +149,9 @@ void Mesh::rebuild_aabb() const {
     result.set_min(smlt::Vec3(max, max, max));
     result.set_max(smlt::Vec3(min, min, min));
 
-    for(auto mesh: submeshes_) {
-        auto sm_min = mesh->aabb().min();
-        auto sm_max = mesh->aabb().max();
+    for(auto sm: submeshes_) {
+        auto sm_min = sm->bounds_.min();
+        auto sm_max = sm->bounds_.max();
 
         if(sm_min.x < result.min().x) result.set_min_x(sm_min.x);
         if(sm_min.y < result.min().y) result.set_min_y(sm_min.y);
@@ -136,15 +161,25 @@ void Mesh::rebuild_aabb() const {
         if(sm_max.y > result.max().y) result.set_max_y(sm_max.y);
         if(sm_max.z > result.max().z) result.set_max_z(sm_max.z);
     }
+}
 
-    aabb_dirty_ = false;
+void Mesh::vertex_data_updated() {
+    /* Rebuild the entire AABB */
+    for(auto& sm: submeshes_) {
+        sm->_recalc_bounds(sm->bounds_);
+    }
+    rebuild_aabb();
+}
+
+void Mesh::submesh_index_data_updated(SubMesh* sm) {
+    /* Recalculate the bounds on the submesh, we store
+     * this on the submesh itself so we can have a fast lookup
+     * in rebuild_aabb() */
+    sm->_recalc_bounds(sm->bounds_);
+    rebuild_aabb();
 }
 
 const AABB &Mesh::aabb() const {
-    if(aabb_dirty_) {
-        rebuild_aabb();
-    }
-
     return aabb_;
 }
 
@@ -165,12 +200,9 @@ SubMesh* Mesh::new_submesh_with_material(
 
     signal_submesh_created_(id(), new_submesh.get());
 
-    // Mark the AABB as dirty so it will be rebuilt on next access
-    aabb_dirty_ = true;
-
-    new_submesh->index_data_->signal_update_complete().connect([this]() {
-        aabb_dirty_ = true;
-    });
+    new_submesh->index_data_->signal_update_complete().connect(
+        std::bind(&Mesh::submesh_index_data_updated, this, new_submesh.get())
+    );
 
     return new_submesh.get();
 }
@@ -598,7 +630,6 @@ void Mesh::destroy_submesh(const std::string& name) {
         auto submesh = (*it);
         submeshes_.erase(it);
         signal_submesh_destroyed_(id(), submesh.get());
-        aabb_dirty_ = true;
     }
 }
 

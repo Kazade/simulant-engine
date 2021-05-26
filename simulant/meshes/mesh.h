@@ -134,13 +134,32 @@ class Mesh :
     DEFINE_SIGNAL(SignalAnimationEnabled, signal_animation_enabled);
 
 public:
-    Mesh(MeshID id,
-         AssetManager* asset_manager,
-         VertexSpecification vertex_specification
+    /**
+     *  Construct a mesh using a shared VertexData instance.
+     *
+     *  This is useful for having different resolutions of mesh (e.g.
+     *  same vertex data, different indices)
+     */
+    Mesh(
+        MeshID id,
+        AssetManager* asset_manager,
+        VertexDataPtr vertex_data
+    );
+
+    /**
+     *  Construct a mesh using a VertexSpecification.
+     *
+     *  This creates a unique VertexData instance for this mesh.
+     */
+    Mesh(
+        MeshID id,
+        AssetManager* asset_manager,
+        VertexSpecification vertex_specification
     );
 
     virtual ~Mesh();
 
+    void reset(VertexDataPtr vertex_data);
     void reset(VertexSpecification vertex_specification);
 
     /* Add a skeleton to this mesh, returns False if
@@ -215,7 +234,6 @@ public:
     SubMeshPtr first_submesh() const;
 
     void destroy_submesh(const std::string& name);
-    void clear();
 
     void set_material(MaterialPtr material); ///< Apply material to all submeshes
     void set_diffuse(const smlt::Colour& colour); ///< Override vertex colour on all vertices
@@ -258,7 +276,7 @@ private:
 
     Skeleton* skeleton_ = nullptr;
 
-    std::shared_ptr<VertexData> vertex_data_;
+    VertexDataPtr vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
     uint32_t animation_frames_ = 0;
     FrameUnpackerPtr animated_frame_data_;
@@ -269,13 +287,16 @@ private:
     SubMeshDestroyedCallback signal_submesh_destroyed_;
     SubMeshMaterialChangedCallback signal_submesh_material_changed_;
 
-    void rebuild_aabb() const;
-    mutable AABB aabb_;
-    mutable bool aabb_dirty_ = true;
+    void rebuild_aabb();
+    AABB aabb_;
 
     /* Automatically maintain adjacency info for submeshes or not */
     bool maintain_adjacency_info_ = true;
     std::unique_ptr<AdjacencyInfo> adjacency_;
+
+    void vertex_data_updated();
+    void submesh_index_data_updated(SubMesh* sm);
+    sig::connection done_connection_;
 
 public:
     /* Returns a nullptr if there is no adjacecy info */

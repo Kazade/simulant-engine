@@ -36,7 +36,6 @@
 namespace smlt {
 
 class KeyFrameAnimationState;
-class SubActor;
 class Rig;
 
 class Actor :
@@ -128,8 +127,6 @@ private:
     sig::connection submesh_created_connection_;
     sig::connection submesh_destroyed_connection_;
 
-    friend class SubActor;
-
     void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp);
 
     /* Only available if the base mesh has a skeleton */
@@ -140,65 +137,8 @@ private:
 public:
     S_DEFINE_PROPERTY(animation_state, &Actor::animation_state_);
     S_DEFINE_PROPERTY(rig, &Actor::rig_);
-
 };
 
-class SubActor :
-    public SubMeshInterface,
-    public virtual BoundableEntity,
-    public RefCounted<SubActor> {
-
-public:
-    const MaterialID material_id() const;
-
-    void override_material_id(MaterialID material);
-    void remove_material_id_override();
-
-    MeshArrangement arrangement() const { return submesh()->arrangement(); }
-
-    RenderPriority render_priority() const { return parent_.render_priority(); }
-    Mat4 final_transformation() const { return parent_.absolute_transformation(); }
-    bool is_visible() const { return parent_.is_visible(); }
-
-    /* BoundableAndTransformable interface implementation */
-
-    const AABB transformed_aabb() const {
-        auto corners = aabb().corners();
-        auto transform = parent_.absolute_transformation();
-
-        for(auto& corner: corners) {
-            corner = corner.transformed_by(transform);
-        }
-
-        return AABB(corners.data(), corners.size());
-    }
-
-    const AABB& aabb() const {
-        return submesh()->aabb();
-    }
-
-    SubActor(const Actor& parent, std::shared_ptr<SubMesh> submesh);
-    virtual ~SubActor();
-
-    SubMesh* submesh();
-    const SubMesh* submesh() const;
-
-    VertexSpecification vertex_specification() const;
-    VertexData* vertex_data() const;
-    IndexData* index_data() const;
-    std::size_t index_element_count() const;
-    IndexType index_type() const;
-
-private:
-    VertexData* get_vertex_data() const;
-    IndexData* get_index_data() const;
-
-    const Actor& parent_;
-    std::shared_ptr<SubMesh> submesh_;
-
-    MaterialPtr material_;
-    MaterialPtr material_override_;
-};
 
 }
 

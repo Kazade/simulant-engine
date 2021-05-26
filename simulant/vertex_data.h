@@ -233,6 +233,8 @@ private:
     friend class VertexDataTest;
 };
 
+typedef std::shared_ptr<VertexData> VertexDataPtr;
+
 template<>
 const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const;
 

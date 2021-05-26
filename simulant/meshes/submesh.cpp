@@ -26,8 +26,6 @@ SubMesh::SubMesh(Mesh* parent, const std::string& name,
 
     set_material(material);
 
-    vrecalc_ = vertex_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
-    irecalc_ = index_data->signal_update_complete().connect(std::bind(&SubMesh::_recalc_bounds, this));
 }
 
 VertexData *SubMesh::get_vertex_data() const {
@@ -67,15 +65,14 @@ void SubMesh::reverse_winding() {
  * @brief SubMesh::recalc_bounds
  *
  * Recalculate the bounds of the submesh. This involves interating over all of the
- * vertices that make up the submesh and so is potentially quite slow. This happens automatically
- * when index_data->done() is called.
+ * vertices that make up the submesh and so is potentially quite slow.
  */
-void SubMesh::_recalc_bounds() {
+void SubMesh::_recalc_bounds(AABB& bounds) {
     float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
     float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
 
     if(!index_data_->count()) {
-        bounds_ = AABB();
+        bounds = AABB();
         return;
     }
 
@@ -125,8 +122,8 @@ void SubMesh::_recalc_bounds() {
         }
     }
 
-    bounds_.set_min(Vec3(minx, miny, minz));
-    bounds_.set_max(Vec3(maxx, maxy, maxz));
+    bounds.set_min(Vec3(minx, miny, minz));
+    bounds.set_max(Vec3(maxx, maxy, maxz));
 }
 
 void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {
@@ -182,6 +179,9 @@ void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> c
  * might be added.
  */
 void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
+    AABB bounds;
+    _recalc_bounds(bounds);
+
     auto& vd = vertex_data;
 
     vd->move_to_start();
@@ -211,7 +211,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         // Create a plane at the origin with the opposite direction
         Plane plane(-dir.x, -dir.y, -dir.z, 0.0f);
 
-        smlt::Vec3 v1 = *vd->position_at<Vec3>(i) - bounds_.min();
+        smlt::Vec3 v1 = *vd->position_at<Vec3>(i) - bounds.min();
 
         // Project the vertex position onto the plane
         smlt::Vec3 final = plane.project(v1);
@@ -219,9 +219,9 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         //Scale the final position on the plane by the size of the box
         // and subtract the lower corner so that everything is relative to 0,0,0
         // and scaled between 0 and 1
-        final.x /= bounds_.width();
-        final.y /= bounds_.height();
-        final.z /= bounds_.depth();
+        final.x /= bounds.width();
+        final.y /= bounds.height();
+        final.z /= bounds.depth();
 
         // Finally, offset the uv coordinate to the right 'square' of the cubic texture
         if(x) {
@@ -270,9 +270,6 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 }
 
 SubMesh::~SubMesh() {
-    vrecalc_.disconnect();
-    irecalc_.disconnect();
-
     delete index_data_;
     index_data_ = nullptr;
 }

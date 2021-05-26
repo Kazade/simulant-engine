@@ -149,7 +149,9 @@ void StatsPanel::rebuild_ram_graph() {
     float width = window_->width();
     float height = window_->height() * 0.4f;
 
-    ram_graph_mesh_->clear();
+    ram_graph_mesh_->reset(
+        ram_graph_mesh_->vertex_data->vertex_specification()
+    );
 
     if(free_ram_history_.size() < 2) {
         // Can't make a graph with a single sample point
