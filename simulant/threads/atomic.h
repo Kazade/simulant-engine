@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mutex.h"
+#include "../logging.h"
 
 namespace smlt{
 namespace thread {

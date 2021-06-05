@@ -49,6 +49,7 @@ public:
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
+#ifndef __PSP__
         const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
         assert_equal(bytes[0], 0);  // B
         assert_equal(bytes[1], 0);  // G
@@ -60,6 +61,7 @@ public:
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 0);  // R
         assert_equal(bytes[3], 255);  // A
+#endif
     }
 
     void test_vertex_colours_default_white() {

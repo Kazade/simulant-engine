@@ -17,6 +17,11 @@ typedef smlt::PSPPlatform ThisPlatform;
 #include "platforms/windows/platform.h"
 typedef smlt::WindowsPlatform ThisPlatform;
 
+#elif defined(__ANDROID__)
+
+#include "platforms/android/platform.h"
+typedef smlt::AndroidPlatform ThisPlatform;
+
 #elif defined(__linux__)
 
 #include "platforms/linux/platform.h"
@@ -26,11 +31,6 @@ typedef smlt::LinuxPlatform ThisPlatform;
 
 #include "platforms/osx/platform.h"
 typedef smlt::OSXPlatform ThisPlatform;
-
-#elif defined(__ANDROID__)
-
-#include "platforms/android/platform.h"
-typedef smlt::AndroidPlatform ThisPlatform;
 
 #else
 #error Unrecognised platform

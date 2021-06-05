@@ -47,7 +47,7 @@ Viewport::Viewport(ViewportType type, const Colour& colour):
     height_(0),
     type_(type),
     colour_(colour) {
-    
+
 }
 
 Viewport::Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour &colour):
@@ -93,7 +93,7 @@ void Viewport::apply(const RenderTarget& target) {
         calculate_ratios_from_viewport(type_, x_, y_, width_, height_);
     }
 
-	GLCheck(glDisable, GL_SCISSOR_TEST);
+    GLCheck(glDisable, GL_SCISSOR_TEST);
 
     double x = x_ * target.width();
     double y = y_ * target.height();

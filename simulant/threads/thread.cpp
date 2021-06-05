@@ -50,6 +50,8 @@ void Thread::join() {
             FATAL_ERROR(ERROR_CODE_THREAD_JOIN_FAILED, "Unable to get thread status");
         }
     }
+
+    psp_thread_state_.reset();
 #elif defined(__DREAMCAST__)
     thd_join(thread_, nullptr);
 #else
@@ -65,7 +67,7 @@ bool Thread::joinable() const {
 
 void Thread::detach() {
 #ifdef __PSP__
-    S_ERROR("thread detaching is not implemented on the PSP");
+    psp_thread_state_->detached = true;
 #elif defined(__DREAMCAST__)
     thd_detach(thread_);
 #else
@@ -92,10 +94,14 @@ void Thread::exit() {
 
 #ifdef __PSP__
 int Thread::thread_runner(unsigned int, void* data) {
+    std::shared_ptr<PSPThreadState> state = *((std::shared_ptr<PSPThreadState>*)(data));
+    CallableWrapperBase* func = state->func;
+
 #else
 void* Thread::thread_runner(void* data) {
-#endif
     CallableWrapperBase* func = reinterpret_cast<CallableWrapperBase*>(data);
+#endif
+
     assert(func);
     if(func) {
         func->call();
@@ -103,7 +109,11 @@ void* Thread::thread_runner(void* data) {
     }
 
 #ifdef __PSP__
-    sceKernelExitThread(0);
+    if(state->detached) {
+        sceKernelExitDeleteThread(0);
+    } else {
+        sceKernelExitThread(0);
+    }
     return 0;
 #else
     return nullptr;
