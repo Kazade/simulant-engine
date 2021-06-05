@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 
 import os
 import sys
@@ -6,9 +6,14 @@ import subprocess
 import shutil
 import multiprocessing
 
-from StringIO import StringIO
+from io import BytesIO
 from zipfile import ZipFile
-from urllib import urlopen
+
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
+
 
 CWD = os.getcwd()
 OUTPUT_DIRECTORY = os.path.join(CWD, ".android")
@@ -60,7 +65,7 @@ if __name__ == "__main__":
                 library["precompile"]()
             continue
         else:
-            print "Downloading %s" % library["name"]
+            print("Downloading %s" % library["name"])
 
         if "repo" in library:
             subprocess.check_call([
@@ -68,7 +73,7 @@ if __name__ == "__main__":
             ])
         elif "zip" in library:
             url = urlopen(library["zip"])
-            zipfile = ZipFile(StringIO(url.read()))
+            zipfile = ZipFile(BytesIO(url.read()))
 
             folder_name = zipfile.namelist()[0].rstrip("/")
             zipfile.extractall(path=os.path.dirname(library_output_dir))
@@ -81,4 +86,3 @@ if __name__ == "__main__":
 
         if "precompile" in library:
             library["precompile"]()
-

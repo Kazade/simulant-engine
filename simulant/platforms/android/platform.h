@@ -6,28 +6,9 @@ namespace smlt {
 
 class AndroidPlatform : public Platform {
 public:
-    std::string name() const override {
-        return "android";
-    }
+    std::string name() const override;
 
-    Resolution native_resolution() const override {
-        SDL_DisplayMode mode;
-
-        Resolution native;
-        if(SDL_GetDesktopDisplayMode(0, &mode) == -1) {
-            S_WARN("Unable to get the current desktop display mode!!");
-            S_WARN("{0}", SDL_GetError());
-            S_WARN("Falling back to 1080p");
-            native.width = 1920;
-            native.height = 1080;
-            native.refresh_rate = 60;
-        } else {
-            native.width = mode.w;
-            native.height = mode.h;
-            native.refresh_rate = mode.refresh_rate;
-        }
-        return native;
-    }
+    Resolution native_resolution() const override;
 
     uint64_t available_ram_in_bytes() const override {
         return MEMORY_VALUE_UNAVAILABLE;

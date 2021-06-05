@@ -18,24 +18,16 @@ namespace thread {
 
 #ifdef __PSP__
 
-static int await_semaphore(SceUID sem) {
-    /* I'm hoping this decrements 1! */
-    sceKernelWaitSema(sem, 1, NULL);
-    return 0;
-}
+static uint32_t SEMAPHORE_COUNTER = 0;
 
-static int post_semaphore(SceUID sem) {
-    sceKernelSignalSema(sem, 1);
-    return 0;
-}
 #endif
 
 Mutex::Mutex() {
 #ifdef __PSP__
-    /* Create a semaphore with an initial and max value of 1 */
+    /* Create a semaphore with an initial value of 1 */
     semaphore_ = sceKernelCreateSema(
-        smlt::to_string((int) rand()).c_str(),
-        0, 1, 1, 0
+        smlt::to_string(++SEMAPHORE_COUNTER).c_str(),
+        0, 1, 255, NULL
     );
     owner_ = 0; /* No owner */
 
@@ -54,6 +46,7 @@ Mutex::~Mutex() {
 
 #ifdef __PSP__
     sceKernelDeleteSema(semaphore_);
+    semaphore_ = 0;
 #elif defined(__DREAMCAST__)
     int err = mutex_destroy(&mutex_);
     _S_UNUSED(err);
@@ -94,7 +87,9 @@ bool Mutex::try_lock() {
 void Mutex::lock() {
 #ifdef __PSP__
     auto tid = this_thread_id();
-    await_semaphore(semaphore_);
+    auto ret = sceKernelWaitSema(semaphore_, 1, NULL);
+    assert(ret >= 0);
+    _S_UNUSED(ret);
     owner_ = tid;
 #elif defined(__DREAMCAST__)
     mutex_lock(&mutex_);
@@ -110,7 +105,9 @@ void Mutex::unlock() {
     }
 
     owner_ = 0;
-    post_semaphore(semaphore_);
+    auto ret = sceKernelSignalSema(semaphore_, 1);
+    assert(ret >= 0);
+    _S_UNUSED(ret);
 #elif defined(__DREAMCAST__)
     mutex_unlock(&mutex_);
 #else
@@ -124,8 +121,8 @@ RecursiveMutex::RecursiveMutex() {
 #ifdef __PSP__
     /* Create a semaphore with an initial and max value of 1 */
     semaphore_ = sceKernelCreateSema(
-        smlt::to_string((int) rand()).c_str(),
-        0, 1, 1, 0
+        smlt::to_string(++SEMAPHORE_COUNTER).c_str(),
+        0, 1, 255, NULL
     );
     owner_ = 0; /* No owner */
     recursive_ = 0;
@@ -168,7 +165,9 @@ void RecursiveMutex::lock() {
     if(owner_ == tid) {
         ++recursive_;
     } else {
-        await_semaphore(semaphore_);
+        auto ret = sceKernelWaitSema(semaphore_, 1, NULL);
+        assert(ret >= 0);
+        _S_UNUSED(ret);
         owner_ = tid;
         recursive_ = 0;
     }
@@ -189,7 +188,9 @@ void RecursiveMutex::unlock() {
         recursive_--;
     } else {
         owner_ = 0;
-        post_semaphore(semaphore_);
+        auto ret = sceKernelSignalSema(semaphore_, 1);
+        assert(ret >= 0);
+        _S_UNUSED(ret);
     }
 #elif defined(__DREAMCAST__)
     mutex_unlock(&mutex_);

@@ -39,6 +39,10 @@ IF(PLATFORM_PSP)
     set(TEST_SOURCES ${TEST_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/psp_module_info.cpp)
 endif()
 
+IF(ANDROID_API)
+    set(TEST_SOURCES ${TEST_SOURCES} ${CMAKE_SOURCE_DIR}/platforms/android/SDL_android_main.c)
+ENDIF()
+
 ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_SOURCE_DIR}/${TEST_MAIN_FILENAME})
 ADD_TEST(simulant_suite simulant_tests)
 

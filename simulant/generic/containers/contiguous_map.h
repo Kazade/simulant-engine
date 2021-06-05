@@ -296,6 +296,10 @@ public:
         return nodes_.size();
     }
 
+    void reserve(std::size_t size) {
+        nodes_.reserve(size);
+    }
+
     bool empty() const {
         return nodes_.empty();
     }

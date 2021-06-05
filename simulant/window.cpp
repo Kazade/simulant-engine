@@ -644,7 +644,6 @@ void Window::reset() {
     S_DEBUG("Resetting Window state");
 
     idle->execute(); //Execute any idle tasks before we go deleting things
-
     disable_virtual_joypad();
 
     auto panels = panels_;
@@ -661,6 +660,7 @@ void Window::reset() {
 
     S_DEBUG("Resetting the base manager");
     /* Destroy and recreate the base resource manager */
+    asset_manager_->run_garbage_collection();
     asset_manager_.reset();
 
     S_DEBUG("Reinitializing the base manager");

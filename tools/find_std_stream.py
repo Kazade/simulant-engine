@@ -54,5 +54,7 @@ if __name__ == '__main__':
     else:
         print("No usages of std streams found")
 
-    sys.exit(recurse.count)
+    with open("metrics.txt", "w") as f:
+        f.write("stream_usage %s" % recurse.count)
 
+    sys.exit(recurse.count)

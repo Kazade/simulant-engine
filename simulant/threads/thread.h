@@ -56,6 +56,23 @@ public:
 };
 
 class Thread {
+#ifdef __PSP__
+    /* PSP doesn't natively support detached threads
+     * so we pass some additional state to keep track
+     * of whether a thread is joinable or not. If it's
+     * not then we need to destroy the thread as/when
+     * it completes */
+
+    struct PSPThreadState {
+        CallableWrapperBase* func = nullptr;
+        bool detached = false;
+        int id = 0;
+    };
+
+    std::shared_ptr<PSPThreadState> psp_thread_state_;
+
+#endif
+
 public:
     Thread(const Thread&) = delete;
     ~Thread();
@@ -76,8 +93,14 @@ public:
             &Thread::thread_runner, priority, 0x10000,
             0, NULL
         );
+        psp_thread_state_ = std::make_shared<PSPThreadState>();
+        psp_thread_state_->func = func;
+        psp_thread_state_->detached = false;
+        psp_thread_state_->id = thread_;
 
-        sceKernelStartThread(thread_, sizeof(func), func);
+        assert(thread_);
+
+        sceKernelStartThread(thread_, sizeof(psp_thread_state_), &psp_thread_state_);
 #elif defined(__DREAMCAST__)
 
         /* The default stack size is 32k, which is a bit low for us */

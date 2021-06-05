@@ -36,6 +36,14 @@ bool PSPWindow::_init_window() {
         return false;
     }
 
+    EGLint width, height;
+
+    eglGetConfigAttrib(dpy_, config, EGL_WIDTH, &width);
+    eglGetConfigAttrib(dpy_, config, EGL_HEIGHT, &height);
+
+    set_width(width);
+    set_height(height);
+
     ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
     surface_ = eglCreateWindowSurface(dpy_, config, 0, NULL);
     eglMakeCurrent(dpy_, surface_, surface_, ctx_);

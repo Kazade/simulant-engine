@@ -5,6 +5,7 @@
 #include <type_traits>
 #include "thread.h"
 #include "mutex.h"
+#include "../logging.h"
 
 namespace smlt {
 namespace thread {
@@ -78,7 +79,7 @@ public:
                     return FutureStatus::ready;
                 }
             }
-            sleep(0);
+            thread::yield();
         }
 
         Lock<Mutex> lock(state_->lock_);
@@ -244,7 +245,8 @@ Future<result_of_t<Function(Args...)>> async(Function&& f, Args&&... args) {
         std::forward<Function>(f), std::forward<Args>(args)...
     ).detach();
 
-    return Future<ResultType>(state);
+    Future<ResultType> ret(state);
+    return ret;
 }
 
 }

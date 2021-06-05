@@ -102,7 +102,7 @@ Path VirtualFileSystem::locate_file(const Path &filename) const {
 
 #ifdef __ANDROID__
     //On Android we use SDL_RWops which reads from the APK
-    SDL_RWops* ops = SDL_RWFromFile(final_name.c_str(), "rb");
+    SDL_RWops* ops = SDL_RWFromFile(final_name.str().c_str(), "rb");
     if(ops) {
         //If we could open the file, return the filename
         SDL_RWclose(ops);
@@ -147,7 +147,7 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& file
 #ifdef __ANDROID__
     //If we're on Android, don't bother trying to locate the file, just try to load it from the APK
     std::shared_ptr<std::stringstream> result = std::make_shared<std::stringstream>();
-    SDL_RWops* ops = SDL_RWFromFile(filename.encode().c_str(), "r");
+    SDL_RWops* ops = SDL_RWFromFile(filename.str().c_str(), "r");
     if(ops) {
         //If we could open the file, return the filename
         SDL_RWseek(ops, 0, SEEK_END);
@@ -164,7 +164,7 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& file
         return result;
     } else {
         S_ERROR("There was an error loading the specified file");
-        throw AssetMissingError("Unable to load file: " + filename.encode());
+        throw AssetMissingError("Unable to load file: " + filename.str());
     }
     SDL_FreeRW(ops);
 #else

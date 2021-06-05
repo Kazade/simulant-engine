@@ -3,7 +3,7 @@
 	url = https://Kazade@gitlab.com/Kazade/jsonic.git
 [submodule "deps/kfs"]
 	path = deps/kfs
-	url = https://github.com/Kazade/kfs.git
+	url = https://gitlab.com/simulant/kfs.git
 [submodule "deps/bounce"]
 	path = deps/bounce
 	url = https://gitlab.com/simulant/bounce.git
