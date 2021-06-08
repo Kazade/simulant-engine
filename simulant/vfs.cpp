@@ -31,10 +31,6 @@
 #include "platform.h"
 #include "streams/file_ifstream.h"
 
-#ifdef __ANDROID__
-#include <SDL_rwops.h>
-#endif
-
 namespace smlt {
 
 VirtualFileSystem::VirtualFileSystem(Window *window):
@@ -100,15 +96,6 @@ Path VirtualFileSystem::locate_file(const Path &filename) const {
 
     final_name = kfs::path::norm_path(final_name.str());
 
-#ifdef __ANDROID__
-    //On Android we use SDL_RWops which reads from the APK
-    SDL_RWops* ops = SDL_RWFromFile(final_name.str().c_str(), "rb");
-    if(ops) {
-        //If we could open the file, return the filename
-        SDL_RWclose(ops);
-        return filename;
-    }
-#else
     Path abs_final_name(kfs::path::abs_path(final_name.str()));
 
     S_DEBUG("Checking existence...");
@@ -129,7 +116,7 @@ Path VirtualFileSystem::locate_file(const Path &filename) const {
             return full_path;
         }
     }
-#endif
+
     S_ERROR("Unable to find file: {0}", final_name);
     throw AssetMissingError("Unable to find file: " + final_name.str());
 }
@@ -144,36 +131,10 @@ std::shared_ptr<std::istream> VirtualFileSystem::open_file(const Path& filename)
 }
 
 std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& filename) {
-#ifdef __ANDROID__
-    //If we're on Android, don't bother trying to locate the file, just try to load it from the APK
-    std::shared_ptr<std::stringstream> result = std::make_shared<std::stringstream>();
-    SDL_RWops* ops = SDL_RWFromFile(filename.str().c_str(), "r");
-    if(ops) {
-        //If we could open the file, return the filename
-        SDL_RWseek(ops, 0, SEEK_END);
-        int length = SDL_RWtell(ops);
-        SDL_RWseek(ops, 0, SEEK_SET);
-
-        std::vector<unsigned char> data(length); //Make room for all the data
-        SDL_RWread(ops, &data[0], sizeof(unsigned char), length);
-        SDL_FreeRW(ops);
-
-        std::string str(data.begin(), data.end());
-        //Populate the stringstream
-        (*result) << str;
-        return result;
-    } else {
-        S_ERROR("There was an error loading the specified file");
-        throw AssetMissingError("Unable to load file: " + filename.str());
-    }
-    SDL_FreeRW(ops);
-#else
-
     auto file_in = open_file(filename);
     std::shared_ptr<std::stringstream> result(new std::stringstream);
     (*result) << file_in->rdbuf();
     return result;
-#endif
 }
 
 std::vector<std::string> VirtualFileSystem::read_file_lines(const Path &filename) {

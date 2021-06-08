@@ -1,19 +1,17 @@
 #pragma once
 
-#include <GLES/egl.h>
-
+#include <EGL/egl.h>
 #include "../../window.h"
-#include "../../platform.h"
 
 namespace smlt {
 
-class PSPWindow : public Window {
+class AndroidWindow : public Window {
 public:
     static Window::ptr create(Application* app) {
-        return Window::create<PSPWindow>(app);
+        return Window::create<AndroidWindow>(app);
     }
 
-    PSPWindow() = default;
+    AndroidWindow();
 
     void set_title(const std::string&) override {} // No-op
     void cursor_position(int32_t&, int32_t&) override {} // No-op

@@ -13,9 +13,9 @@
 
 namespace smlt {
 
-class Vec2;
-class Vec3;
-class Vec4;
+struct Vec2;
+struct Vec3;
+struct Vec4;
 
 /* to_string stuff */
 std::string to_string(int value);

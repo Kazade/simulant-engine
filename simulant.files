@@ -1314,6 +1314,9 @@ simulant/partitioners/octree_partitioner.h
 simulant/path.cpp
 simulant/path.h
 simulant/platform.cpp
+simulant/platforms/android/android_keycodes.h
+simulant/platforms/android/android_window.cpp
+simulant/platforms/android/android_window.h
 simulant/platforms/android/platform.cpp
 simulant/platforms/android/platform.h
 simulant/platforms/dreamcast/platform.cpp

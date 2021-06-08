@@ -121,17 +121,31 @@ ELSEIF(PLATFORM_PSP)
         # sound_drivers/al_error.cpp
         sound_drivers/null_sound_driver.cpp
     )
-ELSE()
-
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/linux/*.cpp)
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/android/*.cpp)
-ELSEIF(WIN32)
-    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/windows/*.cpp)
-ELSEIF(APPLE)
-    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/osx/*.cpp)
-ENDIF()
+
+    IF(PLATFORM)
+        MESSAGE("-- Including platform specific files: ${PLATFORM}")
+    ENDIF()
+
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        ${PLATFORM}
+        # FIXME: Use OpenAL on PSP
+        # sound_drivers/openal_sound_driver.cpp
+        # sound_drivers/al_error.cpp
+        sound_drivers/null_sound_driver.cpp
+    )
+ELSE()
+
+    IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/linux/*.cpp)
+    ELSEIF(WIN32)
+        FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/windows/*.cpp)
+    ELSEIF(APPLE)
+        FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/osx/*.cpp)
+    ENDIF()
 
     IF(PLATFORM)
         MESSAGE("-- Including platform specific files: ${PLATFORM}")

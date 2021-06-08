@@ -358,7 +358,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 float weight_scalar = 1.0f / float(range);
 
                 for(uint8_t k = 0; k < 4; ++k) {
-                    char bone = bones[k];
+                    int8_t bone = bones[k];
                     if(bone > -1) {
                         frame_data->link_vertex_to_joint(
                             vdata->count() - 1, bone, float(weights[k]) * weight_scalar
