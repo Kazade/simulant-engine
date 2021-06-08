@@ -137,44 +137,8 @@ check:stream-usage:
 build:android-armeabiv7a-gcc:debug:
   stage: build
   image: kazade/android-sdk
-  allow_failure: true
-  variables:
-   APPLICATIONMK: >-
-     APP_PLATFORM := android-23\n
-     APP_ABI := armeabi-v7a\n
-  before_script:
-   - apt-get update -y
-   - apt-get install -y file
-   - echo ${PATH}
   script:
-   - mkdir ${CI_PROJECT_DIR}/build
-
-   # Download SDL and OpenAL-soft
-   - python ./platforms/android/prepare.py
-
-   # Build SDL
-   - mkdir -p .android/sdl/build/jni
-   - cd .android/sdl/build/jni
-   - ln -s ../../Android.mk
-   - ln -s ../../src
-   - ln -s ../../include
-   - echo -e $APPLICATIONMK > Application.mk
-   - ndk-build
-
-   - cd ${CI_PROJECT_DIR}
-
-   # Now OpenAL
-   - mkdir -p .android/openal/build/jni
-   - cd .android/openal/build/jni
-   - ln -s ../../Android.mk
-   - ln -s ../../OpenAL
-   - echo -e $APPLICATIONMK > Application.mk
-   - ndk-build
-
-   # Finally Simulant
-   - cd ${CI_PROJECT_DIR}/build
-   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
-   - make
+   - gradle build
 
 build:psp-mips-gcc:debug:
   stage: build
