@@ -16,14 +16,14 @@ android {
      
 	externalNativeBuild {
 		cmake {
-			path "../CMakeLists.txt"
+			path "../../CMakeLists.txt"
 		}
 	}
 	
 	sourceSets {
     	main {
-    	    manifest.srcFile '../platforms/android/AndroidManifest.xml'
-    	    res.srcDirs = ['../platforms/android/res']
+    	    manifest.srcFile '../../platforms/android/AndroidManifest.xml'
+    	    res.srcDirs = ['../../platforms/android/res']
         }
     }
 }
