@@ -138,6 +138,7 @@ build:android-armeabiv7a-gcc:debug:
   stage: build
   image: kazade/android-sdk
   script:
+   - cd gradle
    - gradle build
 
 build:psp-mips-gcc:debug:
