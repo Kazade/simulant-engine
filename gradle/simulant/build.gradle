@@ -8,8 +8,8 @@ android {
         targetSdkVersion 28
         externalNativeBuild {
             cmake {
-                arguments '-DANDROID_STL=c++_static'       
-                targets 'simulant'         
+                targets 'simulant'
+                arguments "-DANDROID_STL=c++_shared"
             }
         }
     }
