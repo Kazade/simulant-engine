@@ -137,10 +137,16 @@ check:stream-usage:
 build:android-armeabiv7a-gcc:debug:
   stage: build
   image: kazade/android-sdk
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
    - cd gradle
    - gradle build
-
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+    
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
