@@ -18,7 +18,15 @@ android {
 			abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
 	    }
 	}
-	 
+	
+	buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+        }
+    }
+	
 	externalNativeBuild {
 		cmake {
 			path "../../CMakeLists.txt"
