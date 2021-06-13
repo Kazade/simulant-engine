@@ -3,17 +3,22 @@ apply plugin: 'com.android.library'
 android {
 	compileSdkVersion 29
 
-    defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 28
-        externalNativeBuild {
-            cmake {
-                targets 'simulant'
-                arguments "-DANDROID_STL=c++_shared"
-            }
-        }
-    }
-     
+	defaultConfig {
+	    minSdkVersion 14
+	    targetSdkVersion 28
+	    externalNativeBuild {
+	        cmake {
+	            targets 'simulant'
+	            arguments "-DANDROID_STL=c++_shared"
+	        }
+	    }
+	    
+	    ndk {
+			abiFilters = []
+			abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
+	    }
+	}
+	 
 	externalNativeBuild {
 		cmake {
 			path "../../CMakeLists.txt"
@@ -21,12 +26,13 @@ android {
 	}
 	
 	sourceSets {
-    	main {
-    	    manifest.srcFile '../../platforms/android/AndroidManifest.xml'
-    	    res.srcDirs = ['../../platforms/android/res']
-        }
-    }
+		main {
+		    manifest.srcFile '../../platforms/android/AndroidManifest.xml'
+		    res.srcDirs = ['../../platforms/android/res']
+	    }
+	}
 }
+
 
 dependencies {
    	implementation fileTree(dir: 'libs', include: ['*.jar'])

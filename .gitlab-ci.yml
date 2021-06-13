@@ -134,19 +134,66 @@ check:stream-usage:
     reports:
       metrics: metrics.txt
 
-build:android-armeabiv7a-gcc:debug:
+build:android-armeabiv7a-clang:debug:
   stage: build
   image: kazade/android-sdk
+  variables:
+    ABI: armeabiv7a
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
    - cd gradle
-   - gradle build
+   - gradle build -PABI_FILTERS=${ABI}
   cache:
     paths:
       - .gradle/wrapper
       - .gradle/caches
     
+build:android-x86-clang:debug:
+  stage: build
+  image: kazade/android-sdk
+  variables:
+    ABI: x86
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+   - cd gradle
+   - gradle build -PABI_FILTERS=${ABI}
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+    
+build:android-armeabiv7a-clang:release:
+  stage: build
+  image: kazade/android-sdk
+  variables:
+    ABI: armeabiv7a
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+   - cd gradle
+   - gradle buildRelease -PABI_FILTERS=${ABI}
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+    
+build:android-x86-clang:release:
+  stage: build
+  image: kazade/android-sdk
+  variables:
+    ABI: x86
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+   - cd gradle
+   - gradle buildRelease -PABI_FILTERS=${ABI}
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+      
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
