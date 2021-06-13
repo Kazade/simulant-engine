@@ -138,7 +138,7 @@ build:android-armeabiv7a-clang:debug:
   stage: build
   image: kazade/android-sdk
   variables:
-    ABI: armeabiv7a
+    ABI: armeabi-v7a
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
@@ -168,7 +168,7 @@ build:android-armeabiv7a-clang:release:
   stage: build
   image: kazade/android-sdk
   variables:
-    ABI: armeabiv7a
+    ABI: armeabi-v7a
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
