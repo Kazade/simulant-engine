@@ -134,7 +134,7 @@ check:stream-usage:
     reports:
       metrics: metrics.txt
 
-build:android-armeabiv7a-clang:debug:
+build:android-armeabiv7a-clang:
   stage: build
   image: kazade/android-sdk
   variables:
@@ -149,7 +149,7 @@ build:android-armeabiv7a-clang:debug:
       - .gradle/wrapper
       - .gradle/caches
     
-build:android-x86-clang:debug:
+build:android-x86-clang:
   stage: build
   image: kazade/android-sdk
   variables:
@@ -163,37 +163,7 @@ build:android-x86-clang:debug:
     paths:
       - .gradle/wrapper
       - .gradle/caches
-    
-build:android-armeabiv7a-clang:release:
-  stage: build
-  image: kazade/android-sdk
-  variables:
-    ABI: armeabi-v7a
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-  script:
-   - cd gradle
-   - gradle buildRelease -PABI_FILTERS=${ABI}
-  cache:
-    paths:
-      - .gradle/wrapper
-      - .gradle/caches
-    
-build:android-x86-clang:release:
-  stage: build
-  image: kazade/android-sdk
-  variables:
-    ABI: x86
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-  script:
-   - cd gradle
-   - gradle buildRelease -PABI_FILTERS=${ABI}
-  cache:
-    paths:
-      - .gradle/wrapper
-      - .gradle/caches
-      
+
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
