@@ -148,9 +148,12 @@ build:android-armeabiv7a-clang:
    - cd ..
    - mkdir -p ${TARGET}/debug/simulant
    - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/debug/simulant
+   - mkdir -p ${TARGET}/debug/tests
+   - cp gradle/tests/build/outputs/apk/debug/* ${TARGET}/debug/tests
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/tests/
   cache:
     paths:
       - .gradle/wrapper
@@ -170,9 +173,12 @@ build:android-x86-clang:
    - cd ..
    - mkdir -p ${TARGET}/debug/simulant
    - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/debug/simulant
+   - mkdir -p ${TARGET}/debug/tests
+   - cp gradle/tests/build/outputs/apk/debug/* ${TARGET}/debug/tests   
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/tests/
   cache:
     paths:
       - .gradle/wrapper
