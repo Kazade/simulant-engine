@@ -139,14 +139,18 @@ build:android-armeabiv7a-clang:
   image: kazade/android-sdk
   variables:
     ABI: armeabi-v7a
+    TARGET: android-armeabiv7a-clang
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
    - cd gradle
    - gradle build -PABI_FILTERS=${ABI}
+   - cd ..
+   - mkdir -p ${TARGET}/debug/simulant
+   - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/debug/simulant
   artifacts:
     paths:
-      - gradle/build
+      - ${TARGET}/debug/simulant/
   cache:
     paths:
       - .gradle/wrapper
@@ -157,14 +161,18 @@ build:android-x86-clang:
   image: kazade/android-sdk
   variables:
     ABI: x86
+    TARGET: android-x86-clang
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
    - cd gradle
    - gradle build -PABI_FILTERS=${ABI}
+   - cd ..
+   - mkdir -p ${TARGET}/debug/simulant
+   - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/debug/simulant
   artifacts:
     paths:
-      - gradle/build
+      - ${TARGET}/debug/simulant/
   cache:
     paths:
       - .gradle/wrapper
