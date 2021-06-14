@@ -144,6 +144,9 @@ build:android-armeabiv7a-clang:
   script:
    - cd gradle
    - gradle build -PABI_FILTERS=${ABI}
+  artifacts:
+    paths:
+      - gradle/build
   cache:
     paths:
       - .gradle/wrapper
@@ -159,6 +162,9 @@ build:android-x86-clang:
   script:
    - cd gradle
    - gradle build -PABI_FILTERS=${ABI}
+  artifacts:
+    paths:
+      - gradle/build
   cache:
     paths:
       - .gradle/wrapper
