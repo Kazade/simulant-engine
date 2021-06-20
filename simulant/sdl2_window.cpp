@@ -441,13 +441,10 @@ void SDL2Window::destroy_window() {
     }
     open_controllers_.clear();
 
-    SDL_GL_DeleteContext(context_);
-    context_ = nullptr;
-
-    SDL_DestroyWindow(screen_);
-    screen_ = nullptr;
-
     SDL_Quit();
+
+    context_ = nullptr;
+    screen_ = nullptr;
 }
 
 void SDL2Window::swap_buffers() {
