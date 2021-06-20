@@ -2,6 +2,7 @@
 #include "../random.h"
 
 #include "vec3.h"
+#include "aabb.h"
 
 namespace smlt {
 
@@ -146,5 +147,14 @@ smlt::Vec3 operator-(const smlt::Vec3& vec) {
     return smlt::Vec3(-vec.x, -vec.y, -vec.z);
 }
 
+float Vec3::distance_to(const AABB& aabb) const {
+    Vec3 centre = aabb.centre();
+
+    float dx = std::max(std::abs(x - centre.x) - (aabb.width() * 0.5f), 0.0f);
+    float dy = std::max(std::abs(y - centre.y) - (aabb.height() * 0.5f), 0.0f);
+    float dz = std::max(std::abs(z - centre.z) - (aabb.depth() * 0.5f), 0.0f);
+
+    return std::sqrt(dx * dx + dy * dy + dz * dz);
+}
 
 }
