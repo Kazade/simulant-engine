@@ -228,7 +228,7 @@ test:psp-mips-gcc:
   before_script:
    - dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
    - dnf install -y dpkg ppsspp-sdl pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy mesa-dri-drivers
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
+   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export DISPLAY=:99
@@ -333,7 +333,7 @@ test:windows-x64-mingw:
    - build:windows-x64-mingw:release
   before_script:
    - dnf install -y pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
+   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export SIMULANT_SOUND_DRIVER=null
@@ -462,7 +462,7 @@ test:linux-x64-gcc-debug:
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
+   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export DISPLAY=:99
@@ -486,7 +486,7 @@ test:linux-x64-gcc-release:
   variables:
    TARGET: linux-x64-gcc
   before_script:
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 640x480x24 -ac +extension RANDR +extension GLX +render
+   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export DISPLAY=:99
