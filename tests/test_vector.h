@@ -82,6 +82,20 @@ public:
         ));
     }
 
+    void test_vec3_distance_to_aabb() {
+        smlt::AABB aabb(smlt::Vec3(), 10.0f);
+
+        smlt::Vec3 v0(-11.0f, 0.0f, 0.0f);
+        smlt::Vec3 v1(-2, 0.0f, 0.0f);
+        smlt::Vec3 v2(0.0f, 0.0f, 0.0f);
+        smlt::Vec3 v3(100.0f, 100.0f, 100.0f);
+
+        assert_close(v0.distance_to(aabb), 6.0f, 0.0001f);
+        assert_close(v1.distance_to(aabb), 0.0f, 0.0001f);
+        assert_close(v2.distance_to(aabb), 0.0f, 0.0001f);
+        assert_close(v3.distance_to(aabb), 164.544826f, 0.0001f);
+    }
+
     void test_vec3_constructor() {
         smlt::Vec3 v(smlt::Vec2(1, 2), 3);
         assert_equal(v.x, 1);

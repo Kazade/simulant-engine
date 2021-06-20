@@ -297,8 +297,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
             }
         );
 
-        /* FIXME: Store squared distances to avoid sqrt */
-        float distance_to_camera = (camera->absolute_position() - node->absolute_position()).length();
+        float distance_to_camera = camera->absolute_position().distance_to(node->transformed_aabb());
 
         /* Find the ideal detail level at this distance from the camera */
         auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);

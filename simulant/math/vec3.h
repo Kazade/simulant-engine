@@ -18,6 +18,7 @@ struct Degrees;
 struct Mat3;
 struct Mat4;
 struct Vec4;
+class AABB;
 
 struct Vec3 {
 private:
@@ -222,6 +223,8 @@ public:
 
         return *this;
     }
+
+    float distance_to(const AABB& aabb) const;
 
     template<typename Container>
     static Vec3 find_average(const Container& vectors) {
