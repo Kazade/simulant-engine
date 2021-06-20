@@ -455,7 +455,7 @@ test:linux-x64-gcc-debug:
    TARGET: linux-x64-gcc
   before_script:
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
-   - sleep 3
+   - sleep 2
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export DISPLAY=:99
   script:
@@ -479,7 +479,7 @@ test:linux-x64-gcc-release:
    TARGET: linux-x64-gcc
   before_script:
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
-   - sleep 3
+   - sleep 2
    - export LIBGL_ALWAYS_SOFTWARE=1
    - export DISPLAY=:99
   script:
