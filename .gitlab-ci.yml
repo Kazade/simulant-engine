@@ -40,7 +40,7 @@ prepare:linux-x64-gcc:
   variables:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
-      FROM fedora:28\n
+      FROM fedora:32\n
       RUN dnf update -y && dnf clean all\n
       RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
   before_script:  # Put the variable into a Dockerfile
@@ -371,7 +371,7 @@ deploy:windows-x64-mingw:
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
   stage: build
-  image: fedora:28
+  image: fedora:32
   variables:
    TARGET: linux-x64-clang
   before_script:
