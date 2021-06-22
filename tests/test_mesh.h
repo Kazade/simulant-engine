@@ -282,7 +282,7 @@ public:
         mesh->new_submesh_as_box("cubic", stage_->assets->new_material(), 10.0f, 10.0f, 10.0f);
         stage_->assets->mesh(mesh)->first_submesh()->generate_texture_coordinates_cube();
 
-        auto& vd = *stage_->assets->mesh(mesh)->first_submesh()->vertex_data.get();
+        auto& vd = *stage_->assets->mesh(mesh)->vertex_data.get();
 
         // Neg Z
         assert_equal(smlt::Vec2((1.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(0));

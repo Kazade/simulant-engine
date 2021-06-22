@@ -435,15 +435,17 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         // The mesh don't have any normals, let's generate some!
         std::unordered_map<int, smlt::Vec3> index_to_normal;
 
+        auto vdata = mesh->vertex_data.get();
+
         // Go through all the triangles, add the face normal to all the vertices
         for(uint32_t i = 0; i < sm->index_data->count(); i+=3) {
             Index idx1 = sm->index_data->at(i);
             Index idx2 = sm->index_data->at(i+1);
             Index idx3 = sm->index_data->at(i+2);
 
-            auto v1 = sm->vertex_data->position_at<Vec3>(idx1);
-            auto v2 = sm->vertex_data->position_at<Vec3>(idx2);
-            auto v3 = sm->vertex_data->position_at<Vec3>(idx3);
+            auto v1 = vdata->position_at<Vec3>(idx1);
+            auto v2 = vdata->position_at<Vec3>(idx2);
+            auto v3 = vdata->position_at<Vec3>(idx3);
 
             smlt::Vec3 normal = (*v2 - *v1).normalized().cross((*v3 - *v1).normalized()).normalized();
 

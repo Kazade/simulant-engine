@@ -435,5 +435,6 @@ private:
     uint32_t max_index_ = 0;
 };
 
+typedef std::shared_ptr<IndexData> IndexDataPtr;
 
 }

@@ -12,21 +12,6 @@ class IndexData;
 class Mesh;
 class Renderer;
 
-class SubMeshInterface {
-private:
-    virtual VertexData* get_vertex_data() const = 0;
-    virtual IndexData* get_index_data() const = 0;
-
-public:
-    virtual ~SubMeshInterface();
-
-    virtual MaterialPtr material() const = 0;
-    virtual MeshArrangement arrangement() const = 0;
-
-    S_DEFINE_PROPERTY(vertex_data, &SubMeshInterface::get_vertex_data);
-    S_DEFINE_PROPERTY(index_data, &SubMeshInterface::get_index_data);
-};
-
 enum MaterialSlot {
     MATERIAL_SLOT0,
     MATERIAL_SLOT1,
@@ -39,8 +24,7 @@ enum MaterialSlot {
     MATERIAL_SLOT_MAX
 };
 
-class SubMesh :
-    public SubMeshInterface,
+class SubMesh:
     public RefCounted<SubMesh>,
     public Nameable {
 
@@ -48,11 +32,11 @@ public:
     SubMesh(Mesh* parent,
         const std::string& name,
         MaterialPtr material,
-        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES,
-        IndexType index_type = INDEX_TYPE_16_BIT
+        std::shared_ptr<IndexData>& index_data,
+        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
     );
 
-    virtual ~SubMesh();
+    virtual ~SubMesh() = default;
 
     void set_material(MaterialPtr material);
     void set_material_at_slot(MaterialSlot var, MaterialPtr material);
@@ -65,9 +49,6 @@ public:
     void reverse_winding();
 
     void generate_texture_coordinates_cube(uint32_t texture=0);
-
-    VertexData* get_vertex_data() const;
-    IndexData* get_index_data() const;
 
     /* Goes through the indexes in this submesh and changes the diffuse colour of the vertices
      * they point to */
@@ -109,7 +90,7 @@ private:
 
     MeshArrangement arrangement_;
 
-    IndexData* index_data_ = nullptr;
+    std::shared_ptr<IndexData> index_data_;
 
     void _recalc_bounds(AABB& bounds);
 
@@ -120,6 +101,10 @@ private:
     /* This is updated and maintained by Mesh, it only lives here so
      * there's a fast lookup for each submesh */
     AABB bounds_;
+
+public:
+    S_DEFINE_PROPERTY(mesh, &SubMesh::parent_);
+    S_DEFINE_PROPERTY(index_data, &SubMesh::index_data_);
 };
 
 }

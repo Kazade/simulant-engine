@@ -37,45 +37,45 @@ SubMesh* new_rectangle_submesh(
     );
 
     auto offset = mesh->vertex_data->count();
-    submesh->vertex_data->move_to_end();
+    mesh->vertex_data->move_to_end();
 
     //Build some shared vertex data
-    submesh->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    submesh->vertex_data->tex_coord0(0.0, 0.0f);
-    submesh->vertex_data->tex_coord1(0.0, 0.0f);
-    submesh->vertex_data->tex_coord2(0.0, 0.0f);
-    submesh->vertex_data->tex_coord3(0.0, 0.0f);
-    submesh->vertex_data->normal(0, 0, 1);
-    submesh->vertex_data->move_next();
+    mesh->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->tex_coord0(0.0, 0.0f);
+    mesh->vertex_data->tex_coord1(0.0, 0.0f);
+    mesh->vertex_data->tex_coord2(0.0, 0.0f);
+    mesh->vertex_data->tex_coord3(0.0, 0.0f);
+    mesh->vertex_data->normal(0, 0, 1);
+    mesh->vertex_data->move_next();
 
-    submesh->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    submesh->vertex_data->tex_coord0(1.0, 0.0f);
-    submesh->vertex_data->tex_coord1(1.0, 0.0f);
-    submesh->vertex_data->tex_coord2(1.0, 0.0f);
-    submesh->vertex_data->tex_coord3(1.0, 0.0f);
-    submesh->vertex_data->normal(0, 0, 1);
-    submesh->vertex_data->move_next();
+    mesh->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->tex_coord0(1.0, 0.0f);
+    mesh->vertex_data->tex_coord1(1.0, 0.0f);
+    mesh->vertex_data->tex_coord2(1.0, 0.0f);
+    mesh->vertex_data->tex_coord3(1.0, 0.0f);
+    mesh->vertex_data->normal(0, 0, 1);
+    mesh->vertex_data->move_next();
 
-    submesh->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    submesh->vertex_data->tex_coord0(1.0, 1.0f);
-    submesh->vertex_data->tex_coord1(1.0, 1.0f);
-    submesh->vertex_data->tex_coord2(1.0, 1.0f);
-    submesh->vertex_data->tex_coord3(1.0, 1.0f);
-    submesh->vertex_data->normal(0, 0, 1);
-    submesh->vertex_data->move_next();
+    mesh->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
+    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->tex_coord0(1.0, 1.0f);
+    mesh->vertex_data->tex_coord1(1.0, 1.0f);
+    mesh->vertex_data->tex_coord2(1.0, 1.0f);
+    mesh->vertex_data->tex_coord3(1.0, 1.0f);
+    mesh->vertex_data->normal(0, 0, 1);
+    mesh->vertex_data->move_next();
 
-    submesh->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    submesh->vertex_data->tex_coord0(0.0, 1.0f);
-    submesh->vertex_data->tex_coord1(0.0, 1.0f);
-    submesh->vertex_data->tex_coord2(0.0, 1.0f);
-    submesh->vertex_data->tex_coord3(0.0, 1.0f);
-    submesh->vertex_data->normal(0, 0, 1);
-    submesh->vertex_data->move_next();
-    submesh->vertex_data->done();
+    mesh->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
+    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->tex_coord0(0.0, 1.0f);
+    mesh->vertex_data->tex_coord1(0.0, 1.0f);
+    mesh->vertex_data->tex_coord2(0.0, 1.0f);
+    mesh->vertex_data->tex_coord3(0.0, 1.0f);
+    mesh->vertex_data->normal(0, 0, 1);
+    mesh->vertex_data->move_next();
+    mesh->vertex_data->done();
 
     submesh->index_data->index(offset + 0);
     submesh->index_data->index(offset + 1);
@@ -191,7 +191,7 @@ SubMesh* rectangle_outline(
     mesh->vertex_data->tex_coord1(0.0, 1.0f);
     mesh->vertex_data->move_next();
     mesh->vertex_data->done();
-    
+
     if(!material) {
         material = mesh->asset_manager().clone_default_material();
     }
