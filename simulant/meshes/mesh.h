@@ -176,10 +176,23 @@ public:
         IndexType=INDEX_TYPE_16_BIT
     );
 
+    SubMeshPtr new_submesh_with_material(
+        const std::string& name,
+        MaterialID material,
+        IndexDataPtr index_data,
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
+    );
+
     SubMeshPtr new_submesh(
         const std::string& name,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
         IndexType=INDEX_TYPE_16_BIT
+    );
+
+    SubMeshPtr new_submesh(
+        const std::string& name,
+        IndexDataPtr index_data,
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
     );
 
     SubMeshPtr new_submesh_as_capsule(

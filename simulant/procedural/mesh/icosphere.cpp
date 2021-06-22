@@ -1,4 +1,5 @@
 #include "../../math/vec3.h"
+#include "../../meshes/mesh.h"
 #include "../../meshes/submesh.h"
 #include "../../vertex_data.h"
 
@@ -138,8 +139,8 @@ public:
         }
 
 
-        auto& vdata = submesh->vertex_data;
-        auto start = submesh->vertex_data->count();
+        auto vdata = submesh->mesh->vertex_data.get();
+        auto start = vdata->count();
 
         auto& spec = vdata->vertex_specification();
 

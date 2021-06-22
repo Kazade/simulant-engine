@@ -10,33 +10,22 @@
 
 namespace smlt {
 
-SubMesh::SubMesh(Mesh* parent, const std::string& name,
-        MaterialPtr material, MeshArrangement arrangement, IndexType index_type):
+SubMesh::SubMesh(
+    Mesh* parent, const std::string& name,
+    MaterialPtr material, std::shared_ptr<IndexData>& index_data, MeshArrangement arrangement):
     parent_(parent),
-    arrangement_(arrangement) {
+    arrangement_(arrangement),
+    index_data_(index_data) {
 
     set_name(name);
 
-    index_data_ = new IndexData(index_type);
-
-    if(!material) {
-        //Set the material to the default one (store the pointer to increment the ref-count)
-        material = parent_->asset_manager().clone_default_material();
-    }
-
+    assert(material);
     set_material(material);
-
-}
-
-VertexData *SubMesh::get_vertex_data() const {
-    return parent_->vertex_data.get();
-}
-
-IndexData* SubMesh::get_index_data() const {
-    return index_data_;
 }
 
 void SubMesh::set_diffuse(const smlt::Colour& colour) {
+    auto vertex_data = parent_->vertex_data.get();
+
     for(auto i: *index_data) {
         vertex_data->move_to(i);
         vertex_data->diffuse(colour);
@@ -77,7 +66,7 @@ void SubMesh::_recalc_bounds(AABB& bounds) {
     }
 
     // Store a raw-pointer for performance
-    VertexData* vdata = vertex_data.get();
+    VertexData* vdata = parent_->vertex_data.get();
 
     if(vdata->empty()) {
         /* MD2 frames don't necessarily have vertex data until they
@@ -182,7 +171,7 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
     AABB bounds;
     _recalc_bounds(bounds);
 
-    auto& vd = vertex_data;
+    auto vd = parent_->vertex_data.get();
 
     vd->move_to_start();
     for(uint16_t i = 0; i < vd->count(); ++i) {
@@ -269,11 +258,6 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
 }
 
-SubMesh::~SubMesh() {
-    delete index_data_;
-    index_data_ = nullptr;
-}
-
 void SubMesh::set_material(MaterialPtr material) {
     set_material_at_slot(MATERIAL_SLOT0, material);
 }
@@ -316,10 +300,5 @@ MaterialPtr SubMesh::material_at_slot(MaterialSlot var, bool fallback) const {
         return ret;
     }
 }
-
-SubMeshInterface::~SubMeshInterface() {
-
-}
-
 
 }
