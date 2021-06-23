@@ -17,10 +17,20 @@ SubMesh::SubMesh(
     arrangement_(arrangement),
     index_data_(index_data) {
 
+    assert(index_data_);
+
+    parent_update_connection_ = index_data_->signal_update_complete().connect(
+        std::bind(&Mesh::submesh_index_data_updated, parent_, this)
+    );
+
     set_name(name);
 
     assert(material);
     set_material(material);
+}
+
+SubMesh::~SubMesh() {
+    parent_update_connection_.disconnect();
 }
 
 void SubMesh::set_diffuse(const smlt::Colour& colour) {

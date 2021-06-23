@@ -214,10 +214,6 @@ SubMesh* Mesh::new_submesh_with_material(
 
     signal_submesh_created_(id(), new_submesh.get());
 
-    new_submesh->index_data_->signal_update_complete().connect(
-        std::bind(&Mesh::submesh_index_data_updated, this, new_submesh.get())
-    );
-
     return new_submesh.get();
 }
 

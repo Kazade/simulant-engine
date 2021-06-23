@@ -36,7 +36,7 @@ public:
         MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
     );
 
-    virtual ~SubMesh() = default;
+    virtual ~SubMesh();
 
     void set_material(MaterialPtr material);
     void set_material_at_slot(MaterialSlot var, MaterialPtr material);
@@ -85,6 +85,8 @@ private:
     sig::connection material_change_connection_;
 
     Mesh* parent_;
+    sig::connection parent_update_connection_;
+
 
     std::array<MaterialPtr, MATERIAL_SLOT_MAX> materials_;
 
