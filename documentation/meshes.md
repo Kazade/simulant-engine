@@ -10,6 +10,9 @@ For various applications it's necessary to know which polygon edges are shared w
 
 `Meshes` are made up of `Submeshes`. Conceptually, each `Submesh` has its own material as well as the indices that make up the submesh (these are indices into the Mesh-level vertex data).
 
+When creating a submesh you can optionally pass in an `IndexDataPtr` or you can just pass the `IndexType` and an `IndexData` instance will be created for you. It's sometimes useful to share index data across submeshes
+for memory reasons. 
+
 ### Material Slots
 
 It's quite common to allow for the same mesh to be rendered with different materials, although duplicating the mesh is an option, doing so is not very memory efficient. 
