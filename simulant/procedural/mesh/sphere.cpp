@@ -59,6 +59,8 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
     const float radius = diameter / 2.0f;
 
+    auto vdata = submesh->mesh->vertex_data.get();
+
     for(int32_t current_stack = 1; current_stack < stacks - 1; ++current_stack) {
         for(int32_t current_slice = 0; current_slice < slices; ++current_slice) {
             theta = float(current_stack) / (stacks - 1) * PI;
@@ -74,33 +76,33 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
             generate_uv(pos, u, v);
 
-            submesh->vertex_data->position(pos);
-            submesh->vertex_data->tex_coord0(u, v);
-            submesh->vertex_data->normal(n);
-            submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-            submesh->vertex_data->move_next();
+            vdata->position(pos);
+            vdata->tex_coord0(u, v);
+            vdata->normal(n);
+            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->move_next();
         }
     }
     pos = Vec3(0, 1 * radius, 0);
     n = pos.normalized();
     generate_uv(pos, u, v);
 
-    submesh->vertex_data->position(pos);
-    submesh->vertex_data->tex_coord0(u, v);
-    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    submesh->vertex_data->move_next();
+    vdata->position(pos);
+    vdata->tex_coord0(u, v);
+    vdata->diffuse(smlt::Colour::WHITE);
+    vdata->move_next();
 
     pos = Vec3(0, -1 * radius, 0);
     n = pos.normalized();
 
     generate_uv(pos, u, v);
 
-    submesh->vertex_data->position(pos);
-    submesh->vertex_data->tex_coord0(u, v);
-    submesh->vertex_data->diffuse(smlt::Colour::WHITE);
-    submesh->vertex_data->move_next();
+    vdata->position(pos);
+    vdata->tex_coord0(u, v);
+    vdata->diffuse(smlt::Colour::WHITE);
+    vdata->move_next();
 
-    submesh->vertex_data->done();
+    vdata->done();
 
     for(int32_t current_stack = 0; current_stack < stacks - 3; current_stack++) {
         for(int32_t current_slice = 0; current_slice < slices - 1; current_slice++) {

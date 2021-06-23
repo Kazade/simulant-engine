@@ -188,6 +188,18 @@ SubMesh* Mesh::new_submesh_with_material(
     MaterialID material,
     MeshArrangement arrangement, IndexType index_type) {
 
+    return new_submesh_with_material(
+        name, material,
+        std::make_shared<IndexData>(index_type), arrangement
+    );
+}
+
+SubMesh* Mesh::new_submesh_with_material(
+    const std::string& name,
+    MaterialID material,
+    IndexDataPtr index_data,
+    MeshArrangement arrangement) {
+
     if(has_submesh(name)) {
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
@@ -195,14 +207,12 @@ SubMesh* Mesh::new_submesh_with_material(
     auto mat = asset_manager().material(material);
     assert(mat);
 
-    auto new_submesh = SubMesh::create(this, name, mat, arrangement, index_type);
+    auto new_submesh = SubMesh::create(
+        this, name, mat, index_data, arrangement
+    );
     submeshes_.push_back(new_submesh);
 
     signal_submesh_created_(id(), new_submesh.get());
-
-    new_submesh->index_data_->signal_update_complete().connect(
-        std::bind(&Mesh::submesh_index_data_updated, this, new_submesh.get())
-    );
 
     return new_submesh.get();
 }
@@ -216,6 +226,19 @@ SubMesh* Mesh::new_submesh(
         asset_manager().clone_default_material(),
         arrangement,
         index_type
+    );
+}
+
+SubMesh* Mesh::new_submesh(
+    const std::string& name,
+    IndexDataPtr index_data,
+    MeshArrangement arrangement) {
+
+    return new_submesh_with_material(
+        name,
+        asset_manager().clone_default_material(),
+        index_data,
+        arrangement
     );
 }
 
@@ -238,7 +261,7 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
 
     float radius = diameter * 0.5f;
 
-    auto& vdata = submesh->vertex_data;
+    auto& vdata = vertex_data;
     auto& idata = submesh->index_data;
 
     float delta_ring_angle = ((PI / 2.0f) / ring_count);
@@ -404,7 +427,7 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
         MESH_ARRANGEMENT_TRIANGLES
     );
 
-    auto vd = sm->vertex_data.get();
+    auto vd = vertex_data.get();
     auto id = sm->index_data.get();
 
     float ox = offset.x;
@@ -575,39 +598,39 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
     float y_offset = offset.y;
     float z_offset = offset.z;
 
-    auto idx_offset = sm->vertex_data->count();
+    auto idx_offset = vertex_data->count();
 
-    auto spec = sm->vertex_data->vertex_specification();
-    sm->vertex_data->move_to_end();
+    auto spec = vertex_data->vertex_specification();
+    vertex_data->move_to_end();
 
     //Build some shared vertex data
-    sm->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 0.0f);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 0.0f);
-    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
-    sm->vertex_data->move_next();
+    vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 0.0f);
+    if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 0.0f);
+    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    vertex_data->move_next();
 
-    sm->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 0.0f);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 0.0f);
-    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
-    sm->vertex_data->move_next();
+    vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 0.0f);
+    if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 0.0f);
+    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    vertex_data->move_next();
 
-    sm->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(1.0, 1.0f);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(1.0, 1.0f);
-    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
-    sm->vertex_data->move_next();
+    vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
+    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 1.0f);
+    if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 1.0f);
+    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    vertex_data->move_next();
 
-    sm->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse())   sm->vertex_data->diffuse(smlt::Colour::WHITE);
-    if(spec.has_texcoord0()) sm->vertex_data->tex_coord0(0.0, 1.0f);
-    if(spec.has_texcoord1()) sm->vertex_data->tex_coord1(0.0, 1.0f);
-    if(spec.has_normals())   sm->vertex_data->normal(0, 0, 1);
-    sm->vertex_data->done();
+    vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
+    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 1.0f);
+    if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 1.0f);
+    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    vertex_data->done();
 
     sm->index_data->index(idx_offset + 0);
     sm->index_data->index(idx_offset + 1);

@@ -364,7 +364,7 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
         (rect.bottom_left.y + rect.size.y) / dim.y
     );
 
-    auto vertices = submesh->vertex_data.get();
+    auto vertices = mesh_->vertex_data.get();
     auto indices = submesh->index_data.get();
 
     auto first_idx = indices->at(0);

@@ -249,10 +249,14 @@ const MeshPtr AssetManager::mesh(MeshID id) const {
 }
 
 MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
-    VertexSpecification spec = submesh->vertex_data->vertex_specification();
-    auto result = new_mesh(spec, garbage_collect);
+    auto source_vdata = submesh->mesh->vertex_data.get();
 
-    SubMesh* target = result->new_submesh_with_material(
+    VertexSpecification spec = source_vdata->vertex_specification();
+
+    auto mesh = new_mesh(spec, garbage_collect);
+    auto target_vdata = mesh->vertex_data.get();
+
+    SubMesh* target = mesh->new_submesh_with_material(
         submesh->name(),
         submesh->material(),
         submesh->arrangement()
@@ -266,8 +270,8 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
         if(old_to_new.count(old_index)) {
             target->index_data->index(old_to_new[old_index]);
         } else {
-            auto j = submesh->vertex_data->copy_vertex_to_another(
-                *target->vertex_data.get(), submesh->index_data->at(i)
+            auto j = source_vdata->copy_vertex_to_another(
+                *target_vdata, submesh->index_data->at(i)
             );
 
             old_to_new[old_index] = j;
@@ -275,10 +279,10 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
         }
     }
 
-    target->vertex_data->done();
+    target_vdata->done();
     target->index_data->done();
 
-    return result;
+    return mesh;
 }
 
 MeshPtr AssetManager::new_mesh_from_file(const Path& path,

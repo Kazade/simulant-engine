@@ -142,6 +142,24 @@ public:
         assert_equal(actor->best_mesh(DETAIL_LEVEL_FARTHEST), m2);
     }
 
+    void test_index_data_done() {
+        /* Check that index_data->done() fires signals without crashing */
+        auto index_data = std::make_shared<IndexData>(INDEX_TYPE_16_BIT);
+
+        auto m1 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        m1->vertex_data->position(0, 0, 0);
+        m1->vertex_data->done();
+
+        m1->new_submesh("sm1", index_data);
+        m1->new_submesh("sm2", index_data);
+        m1->new_submesh("sm3");
+
+        m1->destroy_submesh("sm2");
+
+        index_data->index(0);
+        index_data->done(); // Should fire and not crash!
+    }
+
     void test_mesh_normalization() {
         /*
          *  The normalize function scales the mesh so that it has a diameter of 1
@@ -282,7 +300,7 @@ public:
         mesh->new_submesh_as_box("cubic", stage_->assets->new_material(), 10.0f, 10.0f, 10.0f);
         stage_->assets->mesh(mesh)->first_submesh()->generate_texture_coordinates_cube();
 
-        auto& vd = *stage_->assets->mesh(mesh)->first_submesh()->vertex_data.get();
+        auto& vd = *stage_->assets->mesh(mesh)->vertex_data.get();
 
         // Neg Z
         assert_equal(smlt::Vec2((1.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(0));

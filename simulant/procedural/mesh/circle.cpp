@@ -34,7 +34,7 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
 
     auto offset = mesh.vertex_data->count();
 
-    auto& vdata = submesh->vertex_data;
+    auto& vdata = mesh.vertex_data;
     auto& idata = submesh->index_data;
 
     vdata->move_to_end();
@@ -77,7 +77,7 @@ SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, f
 
     auto offset = mesh.vertex_data->count();
 
-    auto& vdata = submesh->vertex_data;
+    auto& vdata = mesh.vertex_data;
     auto& idata = submesh->index_data;
 
     vdata->move_to_end();
