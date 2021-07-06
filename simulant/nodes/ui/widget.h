@@ -184,7 +184,9 @@ public:
     void set_opacity(RangeValue<0, 1> alpha);
 
 public:
-    MaterialPtr material() const { return material_; }
+    MaterialPtr border_material() const { return materials_[0]; }
+    MaterialPtr background_material() const { return materials_[1]; }
+    MaterialPtr foreground_material() const { return materials_[2]; }
 
 private:
     void on_render_priority_changed(
@@ -196,7 +198,8 @@ private:
     ActorPtr actor_ = nullptr;
     MeshPtr mesh_ = nullptr;
     FontPtr font_ = nullptr;
-    MaterialPtr material_ = nullptr;
+
+    MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
     WidgetImpl* pimpl_ = nullptr;
 

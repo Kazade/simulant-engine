@@ -40,14 +40,16 @@ bool Widget::init() {
     actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
 
-    material_ = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-    if(!material_) {
-        S_ERROR("[CRITICAL] Unable to load the material for widgets!");
-        return false;
+    for(auto& material: materials_) {
+        material = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+        if(!material) {
+            S_ERROR("[CRITICAL] Unable to load the material for widgets!");
+            return false;
+        }
+        material->set_blend_func(BLEND_ALPHA);
+        material->set_depth_test_enabled(false);
+        material->set_cull_mode(CULL_MODE_NONE);
     }
-    material_->set_blend_func(BLEND_ALPHA);
-    material_->set_depth_test_enabled(false);
-    material_->set_cull_mode(CULL_MODE_NONE);
 
     // Assign the default font as default
     auto font = stage->assets->default_font(DEFAULT_FONT_STYLE_BODY);
@@ -59,9 +61,9 @@ bool Widget::init() {
     set_font(font);
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh_with_material("border", material_, MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("background", material_, MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("foreground", material_, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("border", materials_[0], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("background", materials_[1], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("foreground", materials_[2], MESH_ARRANGEMENT_QUADS);
     mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
 
     rebuild();
@@ -417,7 +419,7 @@ void Widget::rebuild() {
 
     auto bg = new_rectangle("background", background_bounds, colour);
     if(has_background_image()) {
-        bg->material()->pass(0)->set_diffuse_map(pimpl_->background_image_);
+        bg->material()->set_diffuse_map(pimpl_->background_image_);
         apply_image_rect(bg, pimpl_->background_image_, pimpl_->background_image_rect_);
     }
 
@@ -425,7 +427,7 @@ void Widget::rebuild() {
     colour.set_alpha(colour.af() * pimpl_->opacity_);
     auto fg = new_rectangle("foreground", foreground_bounds, colour);
     if(has_foreground_image()) {
-        fg->material()->pass(0)->set_diffuse_map(pimpl_->foreground_image_);
+        fg->material()->set_diffuse_map(pimpl_->foreground_image_);
         apply_image_rect(fg, pimpl_->foreground_image_, pimpl_->foreground_image_rect_);
     }
 
