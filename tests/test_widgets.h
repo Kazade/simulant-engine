@@ -20,6 +20,19 @@ public:
         SimulantTestCase::tear_down();
     }
 
+    void test_foreground_and_background_images_differ() {
+        auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
+
+        auto t1 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+        auto t2 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+
+        button->set_foreground_image(t1);
+        button->set_background_image(t2);
+
+        assert_equal(button->foreground_material()->diffuse_map(), t1);
+        assert_equal(button->background_material()->diffuse_map(), t2);
+    }
+
     void test_render_priority() {
         auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
         assert_equal(button->render_priority(), RENDER_PRIORITY_MAIN);
