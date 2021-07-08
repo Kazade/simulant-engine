@@ -124,6 +124,11 @@ public:
     PackedColour4444& operator=(const Colour& rhs);
 
     bool operator==(const PackedColour4444& rhs) const;
+    bool operator==(const Colour& rhs) const;
+
+    bool operator!=(const Colour& rhs) const {
+        return !(*this == rhs);
+    }
 
     operator Colour() {
         Colour c(rf(), gf(), bf(), af());

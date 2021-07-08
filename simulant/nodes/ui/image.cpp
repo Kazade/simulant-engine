@@ -12,9 +12,12 @@ Image::Image(UIManager* owner, UIConfig* config):
     /* By default, images don't have a border */
     set_border_width(0);
     set_border_colour(smlt::Colour::NONE);
-    set_foreground_colour(smlt::Colour::WHITE);
+    set_foreground_colour(smlt::Colour::NONE);
 
-    Widget::set_resize_mode(RESIZE_MODE_FIXED);
+    if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
+        // Rebuild if the resize mode didn't change
+        rebuild();
+    }
 }
 
 void Image::clear_layers() {
@@ -38,9 +41,10 @@ void Image::set_source_rect(const UICoord &bottom_left, const UICoord& size) {
     resize(size.x, size.y);
 }
 
-void Image::set_resize_mode(ResizeMode resize_mode) {
+bool Image::set_resize_mode(ResizeMode resize_mode) {
     _S_UNUSED(resize_mode);
     S_WARN("Warning, tried to change the resize mode of an Image widget");
+    return false;
 }
 
 }
