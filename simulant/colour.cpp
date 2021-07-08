@@ -108,6 +108,10 @@ bool PackedColour4444::operator==(const PackedColour4444& rhs) const {
     return colour_ == rhs.colour_;
 }
 
+bool PackedColour4444::operator==(const Colour& rhs) const {
+    return colour_ == PackedColour4444(rhs).colour_;
+}
+
 void PackedColour4444::set_alpha(NormalizedFloat a) {
     colour_ |= uint32_t(a * 15.0f) << 12;
 }
