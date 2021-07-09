@@ -30,7 +30,7 @@ public:
     /* Selects the source region of the texture to display in the image */
     void set_source_rect(const UICoord& bottom_left, const UICoord& size);
 
-    void set_resize_mode(ResizeMode resize_mode) override;
+    bool set_resize_mode(ResizeMode resize_mode) override;
 };
 
 }

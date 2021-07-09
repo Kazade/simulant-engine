@@ -11,6 +11,12 @@
 namespace smlt {
 namespace ui {
 
+enum WidgetLayerIndex {
+    WIDGET_LAYER_INDEX_BORDER,
+    WIDGET_LAYER_INDEX_BACKGROUND,
+    WIDGET_LAYER_INDEX_FOREGROUND
+};
+
 class UIManager;
 
 typedef sig::signal<void ()> WidgetPressedSignal;
@@ -25,6 +31,12 @@ struct ImageRect {
 };
 
 struct WidgetImpl {
+    /* There are 4 layers: Border, background, foreground and text and
+     * by default all are enabled. Setting any of the colours of these
+     * layers to Colour::NONE will deactivate drawing of the layer
+     * for performance reasons. We track that here */
+    uint8_t active_layers_ = ~0;
+
     int16_t requested_width_ = 0;
     int16_t requested_height_ = 0;
 
@@ -119,7 +131,7 @@ public:
     void set_overflow(OverflowType type);
     void set_padding(uint16_t x);
     void set_padding(uint16_t left, uint16_t right, uint16_t bottom, uint16_t top);
-    virtual void set_resize_mode(ResizeMode resize_mode);
+    virtual bool set_resize_mode(ResizeMode resize_mode);
 
     ResizeMode resize_mode() const;
 
@@ -204,6 +216,16 @@ private:
     WidgetImpl* pimpl_ = nullptr;
 
     virtual void on_size_changed();
+
+    /* Only called on construction, it just makes sure that
+     * active_layers_ is in sync with whatever the default layer
+     * colours are. If we change a layer colour we manually alter
+     * the active_layers_ flag from that point on */
+    void _recalc_active_layers();
+
+    bool border_active() const;
+    bool background_active() const;
+    bool foreground_active() const;
 
 protected:
     struct WidgetBounds {

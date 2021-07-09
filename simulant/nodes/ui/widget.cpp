@@ -15,6 +15,7 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
     owner_(owner),
     pimpl_(new WidgetImpl()) {
 
+    _recalc_active_layers();
 }
 
 Widget::~Widget() {
@@ -61,9 +62,9 @@ bool Widget::init() {
     set_font(font);
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh_with_material("border", materials_[0], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("background", materials_[1], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("foreground", materials_[2], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("border", materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("background", materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("foreground", materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
     mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
 
     rebuild();
@@ -410,25 +411,37 @@ void Widget::rebuild() {
     border_bounds.min -= smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
     border_bounds.max += smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
 
-    auto colour = pimpl_->border_colour_;
-    colour.set_alpha(colour.af() * pimpl_->opacity_);
-    new_rectangle("border", border_bounds, colour);
-
-    colour = pimpl_->background_colour_;
-    colour.set_alpha(colour.af() * pimpl_->opacity_);
-
-    auto bg = new_rectangle("background", background_bounds, colour);
-    if(has_background_image()) {
-        bg->material()->set_diffuse_map(pimpl_->background_image_);
-        apply_image_rect(bg, pimpl_->background_image_, pimpl_->background_image_rect_);
+    if(border_active()) {
+        auto colour = pimpl_->border_colour_;
+        colour.set_alpha(colour.af() * pimpl_->opacity_);
+        new_rectangle("border", border_bounds, colour);
     }
 
-    colour = pimpl_->foreground_colour_;
-    colour.set_alpha(colour.af() * pimpl_->opacity_);
-    auto fg = new_rectangle("foreground", foreground_bounds, colour);
+    if(has_background_image()) {
+        materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(pimpl_->background_image_);
+    }
+
+    if(background_active()) {
+        auto colour = pimpl_->background_colour_;
+        colour.set_alpha(colour.af() * pimpl_->opacity_);
+
+        auto bg = new_rectangle("background", background_bounds, colour);
+        if(has_background_image()) {
+            apply_image_rect(bg, pimpl_->background_image_, pimpl_->background_image_rect_);
+        }
+    }
+
     if(has_foreground_image()) {
-        fg->material()->set_diffuse_map(pimpl_->foreground_image_);
-        apply_image_rect(fg, pimpl_->foreground_image_, pimpl_->foreground_image_rect_);
+        materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(pimpl_->foreground_image_);
+    }
+
+    if(foreground_active()) {
+        auto colour = pimpl_->foreground_colour_;
+        colour.set_alpha(colour.af() * pimpl_->opacity_);
+        auto fg = new_rectangle("foreground", foreground_bounds, colour);
+        if(has_foreground_image()) {
+            apply_image_rect(fg, pimpl_->foreground_image_, pimpl_->foreground_image_rect_);
+        }
     }
 
     /* Apply anchoring */
@@ -480,6 +493,7 @@ void Widget::set_border_colour(const Colour &colour) {
     }
 
     pimpl_->border_colour_ = colour;
+    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER;
     rebuild();
 }
 
@@ -494,6 +508,27 @@ void Widget::set_text(const unicode &text) {
 
 void Widget::on_size_changed() {
     rebuild();
+}
+
+bool Widget::border_active() const {
+    return pimpl_->active_layers_ & 0x1;
+}
+
+bool Widget::background_active() const {
+    return pimpl_->active_layers_ & 0x2;
+}
+
+bool Widget::foreground_active() const {
+    return pimpl_->active_layers_ & 0x4;
+}
+
+void Widget::_recalc_active_layers() {
+    pimpl_->active_layers_ = (
+        (pimpl_->border_colour_ != Colour::NONE) << 0 |
+        (pimpl_->background_colour_ != Colour::NONE) << 1 |
+        (pimpl_->foreground_colour_ != Colour::NONE) << 2 |
+        (pimpl_->text_colour_ != Colour::NONE) << 3
+    );
 }
 
 const AABB &Widget::aabb() const {
@@ -560,6 +595,7 @@ void Widget::set_background_colour(const Colour& colour) {
     }
 
     pimpl_->background_colour_ = colour;
+    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND;
     rebuild();
 }
 
@@ -569,7 +605,9 @@ void Widget::set_foreground_colour(const Colour& colour) {
         return;
     }
 
-    pimpl_->foreground_colour_ = colour;
+    pimpl_->foreground_colour_ = colour;    
+    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND;
+
     rebuild();
 }
 
@@ -607,9 +645,14 @@ uint16_t Widget::outer_height() const {
     return content_height() + (pimpl_->border_width_ * 2);
 }
 
-void Widget::set_resize_mode(ResizeMode resize_mode) {
+bool Widget::set_resize_mode(ResizeMode resize_mode) {
+    if(resize_mode == pimpl_->resize_mode_) {
+        return false;
+    }
+
     pimpl_->resize_mode_ = resize_mode;
     on_size_changed();
+    return true;
 }
 
 ResizeMode Widget::resize_mode() const {
