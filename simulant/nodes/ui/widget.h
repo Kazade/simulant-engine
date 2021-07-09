@@ -11,10 +11,10 @@
 namespace smlt {
 namespace ui {
 
-enum MaterialIndex {
-    BORDER_INDEX,
-    BACKGROUND_INDEX,
-    FOREGROUND_INDEX
+enum WidgetLayerIndex {
+    WIDGET_LAYER_INDEX_BORDER,
+    WIDGET_LAYER_INDEX_BACKGROUND,
+    WIDGET_LAYER_INDEX_FOREGROUND
 };
 
 class UIManager;
