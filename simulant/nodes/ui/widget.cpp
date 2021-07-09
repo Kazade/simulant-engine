@@ -62,9 +62,9 @@ bool Widget::init() {
     set_font(font);
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh_with_material("border", materials_[BORDER_INDEX], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("background", materials_[BACKGROUND_INDEX], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("foreground", materials_[FOREGROUND_INDEX], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("border", materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("background", materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("foreground", materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
     mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
 
     rebuild();
@@ -418,7 +418,7 @@ void Widget::rebuild() {
     }
 
     if(has_background_image()) {
-        materials_[BACKGROUND_INDEX]->set_diffuse_map(pimpl_->background_image_);
+        materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(pimpl_->background_image_);
     }
 
     if(background_active()) {
@@ -432,7 +432,7 @@ void Widget::rebuild() {
     }
 
     if(has_foreground_image()) {
-        materials_[FOREGROUND_INDEX]->set_diffuse_map(pimpl_->foreground_image_);
+        materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(pimpl_->foreground_image_);
     }
 
     if(foreground_active()) {
@@ -493,7 +493,7 @@ void Widget::set_border_colour(const Colour &colour) {
     }
 
     pimpl_->border_colour_ = colour;
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << BORDER_INDEX;
+    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER;
     rebuild();
 }
 
@@ -595,7 +595,7 @@ void Widget::set_background_colour(const Colour& colour) {
     }
 
     pimpl_->background_colour_ = colour;
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << BACKGROUND_INDEX;
+    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND;
     rebuild();
 }
 
@@ -606,7 +606,7 @@ void Widget::set_foreground_colour(const Colour& colour) {
     }
 
     pimpl_->foreground_colour_ = colour;    
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << FOREGROUND_INDEX;
+    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND;
 
     rebuild();
 }
