@@ -170,6 +170,11 @@ struct MeshLoadOptions {
      * force disabled. This is useful on the Dreamcast where having blending enabled
      * is costly */
     bool blending_enabled = true;
+
+    /* If non-empty, attempt to load textures with this file extension instead
+     * of the one provided by the mesh. Should be the extension excluding the leading
+     * dot. (e.g. "dtex") */
+    std::string override_texture_extension = "";
 };
 
 #define MESH_LOAD_OPTIONS_KEY "mesh_options"
