@@ -2,6 +2,16 @@
 
 Meshes are the visible representation of everything you see in a scene (with the exception of particle systems). Meshes are essentially made up of a set of vertex data, and then multiple submeshes which store index data into the vertex set.
 
+## Loading Meshes
+
+The most common way to create a mesh is to load it from a supported file format. You can do this by calling `load_mesh_from_file(...)` on an `AssetManager`. You can optionally customise the loading of the file in a number of ways. Firstly you can provide a `VertexSpecification` for the loaded mesh to use, which allows you to customise the format of the vertex attributes.
+
+Secondly, you can pass a `MeshLoadOptions` instance which provides a mechanism to specify additional options:
+
+ - `cull_mode`- this sets the default face culling mode for all materials created while loading the mesh
+ - `blending_enabled` - this defaults to true, but if set to false then all materials loaded will have blending forcibly disabled
+ - `override_texture_extension` - This is useful if your mesh format specifies paths to textures, but you want to load a different format at runtime (e.g. a compressed texture)
+
 ## Mesh::adjacency_info
 
 For various applications it's necessary to know which polygon edges are shared with other polygons, specifically this is used when calculating shadow volumes for stencil shadowing. By default all meshes maintain adjacency info unless disabled with `Mesh::set_maintain_adjacency(false)`.
@@ -73,3 +83,4 @@ This struct provides information about how the heightmap was generated, for exam
 
  - `TerrainData::height_at_xz(float x, float z)` - Returns the Y coordinate at the position specified. Returns an `optional<float>` which will be "falsey" if the coordinate was outside the terrain
  - `TerrainData::triangle_at_xz(float x, float z)` - Returns the 3 indexes of the triangle at the given coordinate. Returns an optional<TerrainTriangle> which will be "falsey" if the coordinate was outside the terrain
+ 
