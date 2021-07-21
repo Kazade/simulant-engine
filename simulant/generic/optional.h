@@ -91,8 +91,8 @@ public:
     }
 
 private:
-    bool has_value_ = false;
     uint8_t data_[sizeof(T)] __attribute__((aligned(8)));
+    bool has_value_ = false;
 
     T* value_ptr() const {
         return (has_value()) ? (T*) (data_) : nullptr;
@@ -113,7 +113,7 @@ private:
             reset();
         }
 
-        *(reinterpret_cast<T*>(data_)) = std::move(value);
+        new (data_) T(std::move(value));
         has_value_ = true;
     }
 

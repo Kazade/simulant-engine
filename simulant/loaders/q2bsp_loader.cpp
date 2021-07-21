@@ -102,10 +102,9 @@ void parse_actors(const std::string& actor_string, Q2EntityList& actors) {
 static Path locate_texture(VirtualFileSystem& locator, const Path& filename) {
     std::vector<std::string> extensions = { ".wal", ".jpg", ".tga", ".jpeg", ".png" };
     for(auto& ext: extensions) {
-        try {
-            return locator.locate_file(filename.str() + ext);
-        } catch(std::runtime_error&) {
-            continue;
+        auto p = locator.locate_file(filename.replace_ext(ext));
+        if(p.has_value()) {
+            return p.value();
         }
     }
 

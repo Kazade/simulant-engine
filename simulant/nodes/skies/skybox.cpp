@@ -83,12 +83,12 @@ void Skybox::generate(
             sm->material()->set_diffuse_map(tex);
         };
 
-        set_texture(mesh->find_submesh("top"), stage->assets->new_texture_from_file(up_path, tf));
-        set_texture(mesh->find_submesh("bottom"), stage->assets->new_texture_from_file(down_path, tf));
-        set_texture(mesh->find_submesh("left"), stage->assets->new_texture_from_file(left_path, tf));
-        set_texture(mesh->find_submesh("right"), stage->assets->new_texture_from_file(right_path, tf));
-        set_texture(mesh->find_submesh("front"), stage->assets->new_texture_from_file(front_path, tf));
-        set_texture(mesh->find_submesh("back"), stage->assets->new_texture_from_file(back_path, tf));
+        set_texture(mesh->find_submesh("top"), stage->assets->new_texture_from_file(up_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("bottom"), stage->assets->new_texture_from_file(down_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("left"), stage->assets->new_texture_from_file(left_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("right"), stage->assets->new_texture_from_file(right_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("front"), stage->assets->new_texture_from_file(front_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("back"), stage->assets->new_texture_from_file(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
     }
 
     actor_->set_mesh(mesh_id_);

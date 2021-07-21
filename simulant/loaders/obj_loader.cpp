@@ -45,11 +45,11 @@ public:
 
         std::string filename = kfs::path::join(kfs::path::dir_name(obj_filename_.str()), matId);
 
-        try {
-            auto stream = locator_->open_file(filename);
-            tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
-        } catch(AssetMissingError& e) {
+        auto stream = locator_->open_file(filename);
+        if(!stream) {
             S_DEBUG("mtllib {0} not found. Skipping.", filename);
+        } else {
+            tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
         }
 
         return true;

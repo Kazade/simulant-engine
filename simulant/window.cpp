@@ -133,13 +133,13 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
 
 LoaderPtr Window::loader_for(const Path &filename, LoaderHint hint) {
 
-    Path final_file;
-    try {
-        final_file = vfs->locate_file(filename);
-    } catch(AssetMissingError&) {
+    auto p = vfs->locate_file(filename);
+    if(!p.has_value()) {
         S_ERROR("Couldn't get loader as file doesn't exist");
         return LoaderPtr();
     }
+
+    Path final_file = p.value();
 
     std::vector<std::pair<LoaderTypePtr, LoaderPtr>> possible_loaders;
 
@@ -175,7 +175,13 @@ LoaderPtr Window::loader_for(const Path &filename, LoaderHint hint) {
 
 
 LoaderPtr Window::loader_for(const std::string& loader_name, const Path& filename) {
-    Path final_file = vfs->locate_file(filename);
+    auto p = vfs->locate_file(filename);
+    if(!p.has_value()) {
+        S_ERROR("Couldn't load file ({0}) as it doesn't exist", filename.str());
+        return LoaderPtr();
+    }
+
+    Path final_file = p.value();
 
     for(LoaderTypePtr loader_type: loaders_) {
         if(loader_type->name() == loader_name) {

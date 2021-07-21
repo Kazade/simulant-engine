@@ -81,7 +81,7 @@ void VirtualFileSystem::remove_search_path(const Path& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-Path VirtualFileSystem::locate_file(const Path &filename) const {
+optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -126,17 +126,22 @@ Path VirtualFileSystem::locate_file(const Path &filename) const {
         S_DEBUG("Trying path: {0}", full_path);
         if(kfs::path::exists(full_path)) {
             S_DEBUG("Found: {0}", full_path);
-            return full_path;
+            return optional<Path>(full_path);
         }
     }
 #endif
     S_ERROR("Unable to find file: {0}", final_name);
-    throw AssetMissingError("Unable to find file: " + final_name.str());
+    return optional<Path>();
 }
 
 std::shared_ptr<std::istream> VirtualFileSystem::open_file(const Path& filename) {
-    Path path = locate_file(filename);
+    auto p = locate_file(filename);
 
+    if(!p.has_value()) {
+        return std::shared_ptr<std::istream>();
+    }
+
+    auto path = p.value();
     auto buf = std::make_shared<FileStreamBuf>(path.str(), "rb");
     auto file_in = std::make_shared<FileIfstream>(buf);
 
@@ -177,14 +182,21 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& file
 }
 
 std::vector<std::string> VirtualFileSystem::read_file_lines(const Path &filename) {
-    Path path = locate_file(filename);
+    auto p = locate_file(filename);
+
+    if(!p) {
+        // FIXME: Should this be optional<>?
+        return std::vector<std::string>();
+    }
+
+    auto path = p.value();
 
     // Load as binary and let portable_getline do its thing
     std::ifstream file_in(path.str(), std::ios::in | std::ios::binary);
 
     if(!file_in) {
         S_ERROR("Unable to load file: {0}", filename);
-        throw AssetMissingError("Unable to load file: " + filename.str());
+        return std::vector<std::string>();
     }
 
     std::vector<std::string> results;
