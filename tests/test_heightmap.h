@@ -17,6 +17,8 @@ public:
 
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").x_size, tex->width());
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").z_size, tex->height());
+
+        stage->destroy();
     }
 
     void test_height_at_xz_big() {
@@ -37,6 +39,8 @@ public:
         assert_equal(data.z_size, 64u);
 
         assert_true(data.height_at_xz(695.243286, -3.61446357));
+
+        stage->destroy();
     }
 
     void test_height_at_xz() {
@@ -88,6 +92,8 @@ public:
             data.height_at_xz(Vec2((3 * spec.spacing) - hw, 0)).value(),
             normalized_height(0.0f), 0.001f
         );
+
+        stage->destroy();
     }
 
     void test_triangle_at_xz() {
@@ -126,6 +132,8 @@ public:
         assert_equal(tri.index[0], 4u);
         assert_equal(tri.index[1], 5u);
         assert_equal(tri.index[2], 1u);
+
+        stage->destroy();
     }
 };
 
