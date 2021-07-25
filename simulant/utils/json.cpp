@@ -13,7 +13,7 @@ bool check_remainder(_json_impl::IStreamPtr stream, const std::string& rest) {
     }
 
     return true;
-};
+}
 
 static std::streampos seek_closing(
         _json_impl::IStreamPtr stream,
@@ -23,10 +23,24 @@ static std::streampos seek_closing(
 
     std::size_t counter = 1;
     int ccount = 0;
-    while(stream->good()) {
-        auto c = stream->get();
 
-        if(c == ',') {
+    /* Increments each time we hit a [ or {, decrements
+     * each time we hit a ] or }. If > 0, then we're in a nested
+     * block */
+    int nest_counter = 0;
+
+    while(stream->good()) {
+        char c = stream->get();
+
+        /* Track nested blocks */
+        if(c == '{' || c == '[') {
+            ++nest_counter;
+        } else if(c == '}' || c == ']') {
+            --nest_counter;
+        }
+
+        /* Count commas if we're not nested */
+        if(!nest_counter && c == ',') {
             ccount++;
         }
 
@@ -46,34 +60,44 @@ static std::streampos seek_closing(
 
     // FIXME: optional<>
     return stream->tellg();
-};
+}
 
 static std::streampos seek_next_of(_json_impl::IStreamPtr stream, const std::string& chars) {
     while(stream->good()) {
         auto c = stream->get();
         if(chars.find(c) != std::string::npos) {
+            stream->putback(c);
             return stream->tellg();
         }
     }
 
     // FIXME: optional<>
     return stream->tellg();
-};
+}
 
 static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std::string& chars) {
     while(stream->good()) {
-        auto c = stream->get();
+        char c = stream->get();
         if(chars.find(c) == std::string::npos) {
+            stream->putback(c);
             return stream->tellg();
         }
     }
 
     // FIXME optional<>
     return stream->tellg();
-};
+}
+
+static std::streampos skip_whitespace(_json_impl::IStreamPtr stream) {
+    const std::string& WHITESPACE = "\t\n\r ";
+    return seek_next_not_of(stream, WHITESPACE);
+}
 
 std::string JSONNode::read_value_from_stream() const {
-    auto len = end_ - start_;
+    /* Start and end are inclusive. So if the value was a
+     * single character then end-start would == 0.
+     * So we need to add 1 to the length. */
+    auto len = (end_ - start_) + 1;
     stream_->seekg(start_);
     char buffer[len + 1];
     stream_->read(buffer, len);
@@ -93,23 +117,71 @@ bool JSONNode::is_value_type() const {
     return type_ != JSON_ARRAY && type_ != JSON_OBJECT;
 }
 
+optional<int64_t> JSONNode::to_int() const {
+    if(type_ != JSON_NUMBER) {
+        return optional<int64_t>();
+    }
+
+    std::string value = read_value_from_stream();
+    int64_t ret;
+    std::stringstream ss;
+
+    ss << value;
+    ss >> ret;
+
+    return optional<int64_t>(ret);
+}
+
+optional<float> JSONNode::to_float() const {
+    if(type_ != JSON_NUMBER) {
+        return optional<float>();
+    }
+
+    std::string value = read_value_from_stream();
+    float ret;
+    std::stringstream ss;
+
+    ss << value;
+    ss >> ret;
+
+    return optional<float>(ret);
+}
+
+optional<bool> JSONNode::to_bool() const {
+    switch(type_) {
+    case JSON_FALSE:
+    case JSON_NULL:
+        return optional<bool>(false);
+    case JSON_TRUE:
+        return optional<bool>(true);
+    default:
+        return optional<bool>();
+    }
+}
+
 void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std::streampos pos) {
     stream->seekg(pos);
+
+    skip_whitespace(stream);
+
+    auto start = stream_->tellg();
     char c = stream->get();
 
     std::streampos end;
     int size = 0;
 
     switch(c) {
-        case '{': {
-            node.type_ = JSON_OBJECT;
+    case '{': {
+        node.type_ = JSON_OBJECT;
             end = seek_closing(stream, '{', '}', &size);
             ++size;
             node.size_ = size;
         } break;
         case '[':
             node.type_ = JSON_ARRAY;
-            end = seek_closing(stream, '[', ']');
+            end = seek_closing(stream, '[', ']', &size);
+            ++size;
+            node.size_ = size;
         break;
         case '"':
             node.type_ = JSON_STRING;
@@ -138,9 +210,14 @@ void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std
         break;
         default:
             // Number
-            end = seek_next_of(stream, ",\n\t ");
+            node.type_ = JSON_NUMBER;
+            end = seek_next_of(stream, ",\r\n\t ]}");
             end = int(end) - 1;
     }
+
+    node.start_ = start;
+    node.end_ = end;
+    node.stream_ = stream;
 }
 
 void JSONIterator::set_invalid(const std::string& message) {
@@ -154,10 +231,13 @@ JSONIterator JSONIterator::operator[](const std::size_t i) {
     }
 
     stream_->seekg(current_node_->start());
+    stream_->get(); // Skip the opening '['
 
     std::size_t entry = 0;
     while(stream_->tellg() != current_node_->end()) {
-        auto start = seek_next_not_of(stream_, " \t\n\r");
+        skip_whitespace(stream_);
+
+        auto start = stream_->tellg();
 
         /* Look for commas, or the end of the array */
         auto end = seek_next_of(stream_, ",]");
@@ -165,6 +245,12 @@ JSONIterator JSONIterator::operator[](const std::size_t i) {
         if(entry == i) {
             return JSONIterator(stream_, start);
         } else {
+            auto c = stream_->get();
+            if(c == ']') {
+                /* End of the array */
+                /* FIXME: Nesting! */
+                break;
+            }
             ++entry;
         }
     }
@@ -178,18 +264,22 @@ JSONIterator JSONIterator::operator[](const std::string& key) {
     }
 
     /* Search for the key */
-    stream_->seekg(current_node_->start());
+    stream_->seekg(current_node_->start(), std::ios::beg);
+    stream_->get(); // Skip the opening '{'
 
     while(stream_->tellg() != current_node_->end()) {
         /* Find the opening quote */
-        auto start = seek_next_not_of(stream_, "\t\n ");
-        auto c = stream_->get();
+        skip_whitespace(stream_);
+        char c = stream_->get();
 
         if(c != '"') {
             auto it = JSONIterator();
             it.set_invalid("Unexpected character: " + std::string(c, 1));
             return it;
         }
+
+        /* Letter after the quote */
+        auto start = stream_->tellg();
 
         /* Find the closing quote */
         auto end = seek_next_of(stream_, "\"");
@@ -203,7 +293,10 @@ JSONIterator JSONIterator::operator[](const std::string& key) {
         if(key == buffer) {
             /* Point the node at the value */
             seek_next_of(stream_, ":");
-            auto new_start = seek_next_not_of(stream_, "\t\n \r");
+            stream_->ignore(); /* Discard the colon */
+
+            skip_whitespace(stream_);
+            auto new_start = stream_->tellg();
             auto it = JSONIterator(stream_, new_start);
             return it;
         }

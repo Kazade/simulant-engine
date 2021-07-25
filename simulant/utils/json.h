@@ -72,36 +72,14 @@ public:
     }
 
     /* Returns the value as an integer if the type is NUMBER */
-    optional<int64_t> to_int() const {
-        if(type_ != JSON_NUMBER) {
-            return optional<int64_t>();
-        }
-
-        return optional<int64_t>(std::stoi(read_value_from_stream()));
-    }
+    optional<int64_t> to_int() const;
 
     /* Returns the value as a float if the type is NUMBER */
-    optional<float> to_float() const {
-        if(type_ != JSON_NUMBER) {
-            return optional<float>();
-        }
-
-        return optional<float>(std::stof(read_value_from_stream()));
-    }
+    optional<float> to_float() const;
 
     /* Returns the value as a bool if the type is TRUE, FALSE, or NULL.
      * NULL always returns false. */
-    optional<bool> to_bool() const {
-        switch(type_) {
-            case JSON_FALSE:
-            case JSON_NULL:
-                return optional<bool>(false);
-            case JSON_TRUE:
-                return optional<bool>(true);
-            default:
-                return optional<bool>();
-        }
-    }
+    optional<bool> to_bool() const;
 
 private:
     friend class JSONIterator;

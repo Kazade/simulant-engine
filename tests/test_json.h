@@ -27,7 +27,7 @@ public:
         auto it = json_parse(data);
 
         assert_equal(it->type(), JSON_OBJECT);
-        assert_equal(it->size(), 1u);
+        assert_equal(it->size(), 2u);
 
         auto array = it["array"];
 
@@ -36,6 +36,13 @@ public:
 
         auto value = array[0];
         assert_equal(value->type(), JSON_NUMBER);
+        assert_equal(value->to_int().value_or(0), 1);
+
+        value = array[1];
+        assert_equal(value->type(), JSON_NUMBER);
+        assert_equal(value->to_int().value_or(0), 2);
+
+        assert_false(array[5].is_valid());
 
         auto obj = it["object"];
 
@@ -51,6 +58,46 @@ public:
         assert_equal(one->to_str(), "1");
     }
 
+    void test_nested_accesses() {
+        std::string data = R"(
+{
+    "object": {
+        "array": [1, 2, 3]
+    }
+}
+)";
+
+        auto json = json_parse(data);
+        assert_equal(
+            json["object"]["array"][0]->to_int().value_or(0),
+            1
+        );
+    }
+
+    void test_nested_arrays() {
+        std::string data = R"(
+{
+    "array": [[1, 2, 3], "cheese"]
+}
+)";
+
+        auto json = json_parse(data);
+
+        assert_equal(
+            json["array"][0][0]->to_int().value_or(0),
+            1
+        );
+
+        assert_equal(
+            json["array"][0][1]->to_int().value_or(0),
+            2
+        );
+
+        assert_equal(
+            json["array"][1][0]->to_str(),
+            "cheese"
+        );
+    }
 };
 
 }
