@@ -56,6 +56,8 @@ public:
         assert_equal(one->to_int().value_or(0), 1);
         assert_equal(one->to_float().value_or(0.0f), 1.0f);
         assert_equal(one->to_str(), "1");
+
+        assert_equal(obj["five"]->type(), JSON_NULL);
     }
 
     void test_nested_accesses() {
@@ -94,9 +96,61 @@ public:
         );
 
         assert_equal(
-            json["array"][1][0]->to_str(),
+            json["array"][1]->to_str(),
             "cheese"
         );
+    }
+
+    void test_nested_objects() {
+        std::string data = R"(
+{
+    "object": {
+        "a": {
+            "b": 1,
+            "c": "AAA",
+            "d": {
+                "e": 2
+            }
+        }
+    }
+}
+)";
+
+        auto json = json_parse(data);
+
+        assert_equal(json["object"]["a"]["b"]->to_int().value(), 1);
+        assert_equal(json["object"]["a"]["d"]["e"]->to_int().value(), 2);
+    }
+
+    void test_mixed_arrays_objects() {
+        std::string data = R"(
+{
+    "object": [{
+        "b": 1,
+        "c": ["AAA", {"f": 3}],
+        "d": {
+            "e": 2
+        }
+    }]
+}
+)";
+
+        auto json = json_parse(data);
+
+        assert_equal(json["object"][0]["c"][1]["f"]->to_int().value(), 3);
+    }
+
+    void test_stuff_in_strings() {
+        std::string data = R"(
+{
+    "{my_thing}": {
+        ",[]": 1
+    }
+}
+)";
+
+        auto json = json_parse(data);
+        assert_equal(json["{my_thing}"][",[]"]->to_int().value(), 1);
     }
 };
 

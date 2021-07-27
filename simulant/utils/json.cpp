@@ -28,9 +28,19 @@ static std::streampos seek_closing(
      * each time we hit a ] or }. If > 0, then we're in a nested
      * block */
     int nest_counter = 0;
+    bool in_quotes = false;
 
     while(stream->good()) {
         char c = stream->get();
+
+        if(c == '"' && closing != '"') {
+            in_quotes = !in_quotes;
+        }
+
+        /* We don't match stuff inside quotemarks */
+        if(in_quotes) {
+            continue;
+        }
 
         /* Track nested blocks */
         if(c == '{' || c == '[') {
@@ -186,6 +196,8 @@ void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std
         case '"':
             node.type_ = JSON_STRING;
             end = seek_closing(stream, '"', '"');
+            start = int(start) + 1;
+            end = int(end) - 2;
         break;
         case 't':
             if(check_remainder(stream, "rue")) {
@@ -234,23 +246,49 @@ JSONIterator JSONIterator::operator[](const std::size_t i) {
     stream_->get(); // Skip the opening '['
 
     std::size_t entry = 0;
+    int nest_counter = 0;
     while(stream_->tellg() != current_node_->end()) {
         skip_whitespace(stream_);
 
         auto start = stream_->tellg();
 
-        /* Look for commas, or the end of the array */
-        auto end = seek_next_of(stream_, ",]");
+        /* Find the end of this element, skipping commas
+         * inside arrays or objects */
+
+        nest_counter = 0;
+        bool done = false;
+        while(stream_->tellg() != current_node_->end()) {
+            char c = stream_->get();
+            if(c == '[' || c == '{') {
+                nest_counter++;
+            } else if(c == ']' || c == '}') {
+                nest_counter--;
+            }
+
+            /* We hit the closing ']' so break */
+            if(nest_counter < 0) {
+                done = true;
+                stream_->putback(c);
+                break;
+            }
+
+            if(!nest_counter) {
+                if(c == ',') {
+                    stream_->putback(c);
+                    break;
+                }
+            }
+        }
 
         if(entry == i) {
             return JSONIterator(stream_, start);
         } else {
-            auto c = stream_->get();
-            if(c == ']') {
+            if(done) {
                 /* End of the array */
-                /* FIXME: Nesting! */
                 break;
             }
+            char skip = stream_->get();
+            assert(skip == ',');
             ++entry;
         }
     }
