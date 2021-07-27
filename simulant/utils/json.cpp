@@ -169,6 +169,10 @@ optional<bool> JSONNode::to_bool() const {
     }
 }
 
+bool JSONNode::is_null() const {
+    return type_ == JSON_NULL;
+}
+
 void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std::streampos pos) {
     stream->seekg(pos);
 
@@ -237,7 +241,7 @@ void JSONIterator::set_invalid(const std::string& message) {
     S_ERROR(message);
 }
 
-JSONIterator JSONIterator::operator[](const std::size_t i) {
+JSONIterator JSONIterator::operator[](const std::size_t i) const {
     if(!is_valid() || current_node_->type() != JSON_ARRAY) {
         return JSONIterator();
     }
@@ -296,7 +300,11 @@ JSONIterator JSONIterator::operator[](const std::size_t i) {
     return JSONIterator();
 }
 
-JSONIterator JSONIterator::operator[](const std::string& key) {
+bool JSONIterator::has_key(const std::string &key) const {
+    return (*this)[key].is_valid();
+}
+
+JSONIterator JSONIterator::operator[](const std::string& key) const {
     if(!is_valid() || current_node_->type() != JSON_OBJECT) {
         return JSONIterator();
     }
@@ -347,6 +355,10 @@ JSONIterator json_parse(const std::string& data) {
     auto ss = std::make_shared<std::stringstream>();
     (*ss) << data;
     return JSONIterator(ss, 0);
+}
+
+JSONIterator json_read(std::shared_ptr<std::istream> &stream) {
+    return JSONIterator(stream, 0);
 }
 
 

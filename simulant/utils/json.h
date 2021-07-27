@@ -81,6 +81,8 @@ public:
      * NULL always returns false. */
     optional<bool> to_bool() const;
 
+    bool is_null() const;
+
 private:
     friend class JSONIterator;
     mutable _json_impl::IStreamPtr stream_;
@@ -93,6 +95,7 @@ private:
 class JSONIterator {
     friend JSONIterator json_parse(const std::string&);
     friend JSONIterator json_load(const Path&);
+    friend JSONIterator json_read(std::shared_ptr<std::istream>&);
 
 private:
     JSONIterator() = default;  /* Invalid or end */
@@ -125,11 +128,38 @@ public:
         return current_node_.get();
     }
 
-    JSONIterator operator[](const std::string& key);
-    JSONIterator operator[](const std::size_t i);
+    JSONIterator operator[](const std::string& key) const;
+    JSONIterator operator[](const std::size_t i) const;
+
+    bool has_key(const std::string& key) const;
 };
+
+template<typename T>
+optional<T> json_auto_cast(JSONIterator it);
+
+template<>
+optional<int64_t> json_auto_cast(JSONIterator it) {
+    return it->to_int();
+}
+
+template<>
+optional<float> json_auto_cast(JSONIterator it) {
+    return it->to_float();
+}
+
+template<>
+optional<bool> json_auto_cast(JSONIterator it) {
+    return it->to_bool();
+}
+
+template<>
+optional<std::string> json_auto_cast(JSONIterator it) {
+    return optional<std::string>(it->to_str());
+}
+
 
 JSONIterator json_load(const Path& path);
 JSONIterator json_parse(const std::string& data);
+JSONIterator json_read(std::shared_ptr<std::istream>& stream);
 
 }
