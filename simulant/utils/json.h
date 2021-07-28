@@ -3,6 +3,7 @@
 #include <memory>
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 #include "../generic/optional.h"
 #include "../path.h"
@@ -45,9 +46,36 @@ public:
      * of child items. Value types return 0 */
     std::size_t size() const;
 
+    /* Returns true if this is an object, that contains the
+     * provided key */
+    bool has_key(const std::string& key) const;
+
+    /* Returns the keys found in the object, if this
+     * node is an object */
+    std::vector<std::string> keys() const;
+
     /* Returns true if the type is a NUMBER, STRING, TRUE, FALSE, or NULL */
     bool is_value_type() const;
 
+    bool is_bool() const {
+        return type_ == JSON_FALSE || type_ == JSON_TRUE;
+    }
+
+    bool is_str() const {
+        return type_ == JSON_STRING;
+    }
+
+    bool is_number() const {
+        return type_ == JSON_NUMBER;
+    }
+
+    bool is_array() const {
+        return type_ == JSON_ARRAY;
+    }
+
+    bool is_object() const {
+        return type_ == JSON_OBJECT;
+    }
     /* Convert the value to a string, this is well-defined for all value types
      * and will return the following:
      *
@@ -90,6 +118,12 @@ private:
     std::streampos end_ = 0;
     std::size_t size_ = 0;
     JSONNodeType type_ = JSON_OBJECT;
+
+    /* Internal function. If this is an object type,
+     * will read from start to end and call cb() with
+     * each key found */
+    template<typename Func>
+    void read_keys(Func&& cb) const;
 };
 
 class JSONIterator {
@@ -130,33 +164,35 @@ public:
 
     JSONIterator operator[](const std::string& key) const;
     JSONIterator operator[](const std::size_t i) const;
-
-    bool has_key(const std::string& key) const;
 };
 
 template<typename T>
 optional<T> json_auto_cast(JSONIterator it);
 
 template<>
-optional<int64_t> json_auto_cast(JSONIterator it) {
+inline optional<int64_t> json_auto_cast<int64_t>(JSONIterator it) {
     return it->to_int();
 }
 
 template<>
-optional<float> json_auto_cast(JSONIterator it) {
+inline optional<int> json_auto_cast<int>(JSONIterator it) {
+    return optional<int>(it->to_int().value());
+}
+
+template<>
+inline optional<float> json_auto_cast<float>(JSONIterator it) {
     return it->to_float();
 }
 
 template<>
-optional<bool> json_auto_cast(JSONIterator it) {
+inline optional<bool> json_auto_cast<bool>(JSONIterator it) {
     return it->to_bool();
 }
 
 template<>
-optional<std::string> json_auto_cast(JSONIterator it) {
+inline optional<std::string> json_auto_cast<std::string>(JSONIterator it) {
     return optional<std::string>(it->to_str());
 }
-
 
 JSONIterator json_load(const Path& path);
 JSONIterator json_parse(const std::string& data);

@@ -34,10 +34,10 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, JSONIterato
     auto m = std::make_shared<SizeManipulator>(ps);
     ps->add_manipulator(m);
 
-    if(manipulator.has_key("rate")) {
+    if(manipulator->has_key("rate")) {
         /* Just a rate, then it's a linear curve */
         m->set_linear_curve(manipulator["rate"]->to_int().value());
-    } else if(manipulator.has_key("curve")) {
+    } else if(manipulator->has_key("curve")) {
         /* Parse the curve */
         std::string spec = manipulator["curve"]->to_str();
         auto first_brace = spec.find('(');
@@ -117,23 +117,23 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
 
     ps->set_name(js["name"]->to_str());
 
-    if(js.has_key("quota")) {
+    if(js->has_key("quota")) {
         ps->set_quota(js["quota"]->to_int().value_or(0));
     }
 
-    if(js.has_key("particle_width")) {
+    if(js->has_key("particle_width")) {
         ps->set_particle_width(js["particle_width"]->to_float().value_or(0.0f));
     }
 
-    if(js.has_key("particle_height")) {
+    if(js->has_key("particle_height")) {
         ps->set_particle_height(js["particle_height"]->to_float().value_or(0.0f));
     }
 
-    if(js.has_key("cull_each")) {
+    if(js->has_key("cull_each")) {
         ps->set_cull_each(js["cull_each"]->to_bool().value_or(false));
     }
 
-    if(js.has_key("material")) {
+    if(js->has_key("material")) {
         std::string material = js["material"]->to_str();
 
         if(Material::BUILT_IN_NAMES.count(material)) {
@@ -145,7 +145,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
 
         /* Apply any specified material properties */
         const std::string MATERIAL_PROPERTY_PREFIX = "material.";
-        for(std::string& key: js.keys()) {
+        for(std::string& key: js->keys()) {
             if(key.substr(0, MATERIAL_PROPERTY_PREFIX.length()) == MATERIAL_PROPERTY_PREFIX) {
                 auto property_name = key.substr(MATERIAL_PROPERTY_PREFIX.length());
 
@@ -184,7 +184,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
         }
     }
 
-    if(js.has_key("emitters")) {
+    if(js->has_key("emitters")) {
         S_DEBUG("Loading emitters");
 
         auto emitters = js["emitters"];
@@ -192,13 +192,13 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             auto emitter = emitters[i];
 
             Emitter new_emitter;
-            if(emitter.has_key("type")) {
+            if(emitter->has_key("type")) {
                 auto emitter_type = emitter["type"]->to_str();
                 S_DEBUG("Emitter {0} has type {1}", i, emitter_type);
                 new_emitter.type = (emitter_type == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX;
             }
 
-            if(emitter.has_key("direction")) {
+            if(emitter->has_key("direction")) {
                 auto parts = unicode(emitter["direction"]->to_str()).split(" ");
                 //FIXME: check length
                 new_emitter.direction = smlt::Vec3(
@@ -208,38 +208,38 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 );
             }
 
-            if(emitter.has_key("velocity")) {
+            if(emitter->has_key("velocity")) {
                 float x = emitter["velocity"]->to_float().value();
                 new_emitter.velocity_range = std::make_pair(x, x);
             }
 
-            if(emitter.has_key("width")) {
+            if(emitter->has_key("width")) {
                 new_emitter.dimensions.x = emitter["width"]->to_float().value();
             }
 
-            if(emitter.has_key("height")) {
+            if(emitter->has_key("height")) {
                 new_emitter.dimensions.y = emitter["height"]->to_float().value();
             }
 
-            if(emitter.has_key("depth")) {
+            if(emitter->has_key("depth")) {
                 new_emitter.dimensions.z = emitter["depth"]->to_float().value();
             }
 
-            if(emitter.has_key("ttl")) {
+            if(emitter->has_key("ttl")) {
                 float x = emitter["ttl"]->to_float().value();
                 new_emitter.ttl_range = std::make_pair(x, x);
             } else {
-                if(emitter.has_key("ttl_min") && emitter.has_key("ttl_max")) {
+                if(emitter->has_key("ttl_min") && emitter->has_key("ttl_max")) {
                     new_emitter.ttl_range = std::make_pair(
                         emitter["ttl_min"]->to_float().value(),
                         emitter["ttl_max"]->to_float().value()
                     );
-                } else if(emitter.has_key("ttl_min")) {
+                } else if(emitter->has_key("ttl_min")) {
                     new_emitter.ttl_range = std::make_pair(
                         emitter["ttl_min"]->to_float().value(),
                         new_emitter.ttl_range.second
                     );
-                } else if(emitter.has_key("ttl_max")) {
+                } else if(emitter->has_key("ttl_max")) {
                     new_emitter.ttl_range = std::make_pair(
                         new_emitter.ttl_range.first,
                         emitter["ttl_max"]->to_float().value()
@@ -247,35 +247,35 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 }
             }
 
-            if(emitter.has_key("duration")) {
+            if(emitter->has_key("duration")) {
                 float x = emitter["duration"]->to_float().value();
                 new_emitter.duration_range = std::make_pair(x, x);
             }
 
-            if(emitter.has_key("repeat_delay")) {
+            if(emitter->has_key("repeat_delay")) {
                 float x = emitter["repeat_delay"]->to_float().value();
                 new_emitter.repeat_delay_range = std::make_pair(x, x);
             }
 
-            if(emitter.has_key("angle")) {
+            if(emitter->has_key("angle")) {
                 new_emitter.angle = Degrees(emitter["angle"]->to_float().value());
             }
 
-            if(emitter.has_key("colour")) {
+            if(emitter->has_key("colour")) {
                 auto parts = unicode(emitter["colour"]->to_str()).split(" ");
                 new_emitter.colour = smlt::Colour(
                     parts.at(0).to_float(), parts.at(1).to_float(), parts.at(2).to_float(), parts.at(3).to_float()
                 );
             }
 
-            if(emitter.has_key("emission_rate")) {
+            if(emitter->has_key("emission_rate")) {
                 new_emitter.emission_rate = emitter["emission_rate"]->to_float().value();
             }
 
             ps->push_emitter(new_emitter);
         }
 
-        if(js.has_key("manipulators")) {
+        if(js->has_key("manipulators")) {
             auto manipulators = js["manipulators"];
             for(uint32_t i = 0; i < manipulators->size(); ++i) {
                 auto manipulator = manipulators[i];

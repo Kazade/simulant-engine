@@ -45,7 +45,7 @@ public:
 
 private:
     Path filename_;
-    std::istream& data_;
+    std::shared_ptr<std::istream> data_;
 };
 
 namespace loaders {

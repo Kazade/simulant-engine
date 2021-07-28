@@ -32,7 +32,7 @@ public:
         auto array = it["array"];
 
         assert_equal(array->type(), JSON_ARRAY);
-        assert_equal(array->size(), 4);
+        assert_equal(array->size(), 4u);
 
         auto value = array[0];
         assert_equal(value->type(), JSON_NUMBER);

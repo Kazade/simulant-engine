@@ -5,7 +5,7 @@
 
 namespace smlt {
 
-bool check_remainder(_json_impl::IStreamPtr stream, const std::string& rest) {
+static bool check_remainder(_json_impl::IStreamPtr stream, const std::string& rest) {
     for(auto& l: rest) {
         if(stream->get() != l) {
             return false;
@@ -103,6 +103,62 @@ static std::streampos skip_whitespace(_json_impl::IStreamPtr stream) {
     return seek_next_not_of(stream, WHITESPACE);
 }
 
+template<typename Func>
+void JSONNode::read_keys(Func&& cb) const {
+    if(type_ != JSON_OBJECT) {
+        return;
+    }
+
+    stream_->seekg(start());
+    stream_->ignore();
+
+    int nested_counter = 0;
+    std::string key_buffer;
+    bool in_quotes = false;
+
+    while(stream_->tellg() != end()) {
+        skip_whitespace(stream_);
+
+        char c = stream_->get();
+        if(c == '{' || c == '[') {
+            nested_counter++;
+        } else if(c == '}' || c == ']') {
+            nested_counter--;
+        }
+
+        auto was_in_quotes = in_quotes;
+        if(c == '"') {
+            in_quotes = !in_quotes;
+        } else if(in_quotes) {
+            key_buffer += c;
+        }
+
+        if(!was_in_quotes && !in_quotes) {
+            /* We were inside a string key, but now we're not
+             * so let's scan to the start of the next string key */
+            if(cb(key_buffer)) {
+                /* Stop early if the callback returns true */
+                return;
+            }
+
+            key_buffer = "";
+
+            /* Find the next comma */
+            while(stream_->tellg() != end()) {
+                c = stream_->get();
+
+                if(c == '"') {
+                    in_quotes = !in_quotes;
+                }
+
+                if(!in_quotes && c == ',') {
+                    break;
+                }
+            }
+        }
+    }
+}
+
 std::string JSONNode::read_value_from_stream() const {
     /* Start and end are inclusive. So if the value was a
      * single character then end-start would == 0.
@@ -121,6 +177,35 @@ JSONNodeType JSONNode::type() const {
 
 std::size_t JSONNode::size() const {
     return size_;
+}
+
+bool JSONNode::has_key(const std::string &key) const {
+    bool found = false;
+    auto cb = [&key, &found](const std::string& item) -> bool {
+        if(key == item) {
+            found = true;
+            return true;
+        }
+
+        return false;
+    };
+
+    read_keys(cb);
+
+    return found;
+}
+
+std::vector<std::string> JSONNode::keys() const {
+    std::vector<std::string> ret;
+
+    auto cb = [&ret](const std::string& item) -> bool {
+        ret.push_back(item);
+        return false;
+    };
+
+    read_keys(cb);
+
+    return ret;
 }
 
 bool JSONNode::is_value_type() const {
@@ -298,10 +383,6 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
     }
 
     return JSONIterator();
-}
-
-bool JSONIterator::has_key(const std::string &key) const {
-    return (*this)[key].is_valid();
 }
 
 JSONIterator JSONIterator::operator[](const std::string& key) const {
