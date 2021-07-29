@@ -152,6 +152,80 @@ public:
         auto json = json_parse(data);
         assert_equal(json["{my_thing}"][",[]"]->to_int().value(), 1);
     }
+
+    void test_object_keys() {
+        std::string data = R"(
+{
+    "object": [{
+        "b": 1,
+        "c": ["AAA", {"f": 3}],
+        "d": {
+            "e": 2
+        }
+    }]
+}
+)";
+
+        auto json = json_parse(data);
+
+        auto root = json->keys();
+
+        assert_true(root == std::vector<std::string>{"object"});
+        auto keys = json["object"][0]->keys();
+        assert_true(keys == std::vector<std::string>({"b", "c", "d"}));
+    }
+
+    void test_simple_material() {
+        const std::string data = R"(
+     {
+         "property_values": {
+             "s_lighting_enabled": true,
+             "s_textures_enabled": 1,
+             "s_blend_func": "alpha"
+         }
+         "passes": [{}]
+     }
+)";
+
+        auto json = json_parse(data);
+        assert_true(json->has_key("passes"));
+        assert_equal(json["passes"]->size(), 1);
+        assert_equal(json["passes"][0]->size(), 0);
+    }
+    void test_complex_material() {
+        const std::string data = R"(
+{
+    "custom_properties": [
+        {
+            "name": "texture_map",
+            "type": "texture",
+            "default": null
+        },
+        {
+            "name": "enable_texturing",
+            "type": "bool",
+            "default": true
+        },
+    ],
+
+    "property_values": {
+        "texture_map": "simulant-icon.png",
+        "s_material_diffuse": "1 0 1 0",
+        "s_material_ambient": "1 1 1 1"
+    },
+
+    "passes": [
+        {
+            "iteration": "once"
+        }
+    ]
+}
+        )";
+
+        auto json = json_parse(data);
+        assert_equal(json["custom_properties"]->size(), 2);
+        assert_equal(json["passes"]->size(), 1);
+    }
 };
 
 }

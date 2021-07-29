@@ -190,6 +190,8 @@ void MaterialScript::generate(Material& material) {
         for(uint32_t i = 0u; i < custom_props->size(); ++i) {
             auto prop = custom_props[i];
 
+            assert(prop->has_key("type"));
+
             std::string kind = prop["type"]->to_str();
             auto prop_type = lookup_material_property_type(kind);
 

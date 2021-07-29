@@ -5,6 +5,8 @@
 
 namespace smlt {
 
+const std::string WHITESPACE = "\t\n\r ";
+
 static bool check_remainder(_json_impl::IStreamPtr stream, const std::string& rest) {
     for(auto& l: rest) {
         if(stream->get() != l) {
@@ -13,6 +15,23 @@ static bool check_remainder(_json_impl::IStreamPtr stream, const std::string& re
     }
 
     return true;
+}
+
+static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std::string& chars) {
+    while(stream->good()) {
+        char c = stream->get();
+        if(chars.find(c) == std::string::npos) {
+            stream->putback(c);
+            return stream->tellg();
+        }
+    }
+
+    // FIXME optional<>
+    return stream->tellg();
+}
+
+static std::streampos skip_whitespace(_json_impl::IStreamPtr stream) {
+    return seek_next_not_of(stream, WHITESPACE);
 }
 
 static std::streampos seek_closing(
@@ -51,7 +70,18 @@ static std::streampos seek_closing(
 
         /* Count commas if we're not nested */
         if(!nest_counter && c == ',') {
-            ccount++;
+            skip_whitespace(stream);
+            char chk = stream->get();
+            if(chk == ']' || chk == '}') {
+                /* Don't count trailing commas */
+                S_WARN(
+                    "Trailing comma in JSON file at position {0}",
+                    int(stream->tellg()) - 1
+                );
+            } else {
+                ccount++;
+            }
+            stream->putback(chk);
         }
 
         if(c == closing) {
@@ -85,24 +115,6 @@ static std::streampos seek_next_of(_json_impl::IStreamPtr stream, const std::str
     return stream->tellg();
 }
 
-static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std::string& chars) {
-    while(stream->good()) {
-        char c = stream->get();
-        if(chars.find(c) == std::string::npos) {
-            stream->putback(c);
-            return stream->tellg();
-        }
-    }
-
-    // FIXME optional<>
-    return stream->tellg();
-}
-
-static std::streampos skip_whitespace(_json_impl::IStreamPtr stream) {
-    const std::string& WHITESPACE = "\t\n\r ";
-    return seek_next_not_of(stream, WHITESPACE);
-}
-
 template<typename Func>
 void JSONNode::read_keys(Func&& cb) const {
     if(type_ != JSON_OBJECT) {
@@ -120,16 +132,25 @@ void JSONNode::read_keys(Func&& cb) const {
         skip_whitespace(stream_);
 
         char c = stream_->get();
-        if(c == '{' || c == '[') {
-            nested_counter++;
-        } else if(c == '}' || c == ']') {
-            nested_counter--;
-        }
-
         auto was_in_quotes = in_quotes;
         if(c == '"') {
             in_quotes = !in_quotes;
-        } else if(in_quotes) {
+            continue;
+        }
+
+        if(!in_quotes) {
+            if(c == '{' || c == '[') {
+                nested_counter++;
+            } else if(c == '}' || c == ']') {
+                nested_counter--;
+            }
+        }
+
+        if(nested_counter) {
+            continue;
+        }
+
+        if(in_quotes) {
             key_buffer += c;
         }
 
@@ -149,6 +170,22 @@ void JSONNode::read_keys(Func&& cb) const {
 
                 if(c == '"') {
                     in_quotes = !in_quotes;
+                }
+
+                if(!in_quotes) {
+                    if(c == '{' || c == '[') {
+                        nested_counter++;
+                    } else if(c == '}' || c == ']') {
+                        nested_counter--;
+                    }
+                }
+
+                if(nested_counter) {
+                    continue;
+                }
+
+                if(nested_counter < 0) {
+                    break;
                 }
 
                 if(!in_quotes && c == ',') {
