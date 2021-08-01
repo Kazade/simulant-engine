@@ -182,7 +182,7 @@ public:
              "s_lighting_enabled": true,
              "s_textures_enabled": 1,
              "s_blend_func": "alpha"
-         }
+         },
          "passes": [{}]
      }
 )";
