@@ -69,7 +69,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& mater
     }
 }
 
-void read_property_values(Material& mat, MaterialObject& holder, JSONIterator json) {
+void read_property_values(Material& mat, MaterialObject& holder, JSONIterator& json) {
     if(json->has_key("property_values")) {
         for(auto& key: json["property_values"]->keys()) {
             auto value = json["property_values"][key];
@@ -221,6 +221,8 @@ void MaterialScript::generate(Material& material) {
     /* Feels dirty... */
     Window* window = material.asset_manager().window;
     Renderer* renderer = window->renderer;
+
+    assert(json->has_key("passes"));
 
     for(uint32_t i = 0u; i < json["passes"]->size(); ++i) {
         auto pass = json["passes"][i];
