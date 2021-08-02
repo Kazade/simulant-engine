@@ -25,6 +25,7 @@ FileStreamBuf::~FileStreamBuf() {
 
 FileStreamBuf::int_type FileStreamBuf::underflow() {
     last_read_pos_ = ftell(filein_);
+    assert(!ferror(filein_));
     auto bytes = fread(buffer_, sizeof(char), BUFFER_SIZE, filein_);
     setg(buffer_, buffer_, buffer_ + bytes);
 
@@ -84,6 +85,28 @@ std::streampos FileStreamBuf::seekoff(std::streamoff off, std::ios_base::seekdir
     setg(buffer_, buffer_, buffer_);
 
     return pos_type(off_type(ftell(filein_)));
+}
+
+FileStreamBuf::int_type FileStreamBuf::pbackfail(FileStreamBuf::int_type c) {
+    /* This is called in the event that someone calls unget() or whatever, and there's
+     * no buffer space left to put back. */
+
+    /* Move back one char and re-read */
+    fseek(filein_, last_read_pos_ - 1, SEEK_SET);
+    auto bytes = fread(buffer_, sizeof(char), BUFFER_SIZE, filein_);
+
+    /* Update the buffer */
+    setg(buffer_, buffer_, buffer_ + bytes);
+
+    /* Update the last read position */
+    last_read_pos_--;
+
+    /* Finally, if we weren't putting back EOF, then but that into the buffer */
+    if(c != EOF) {
+        *gptr() = c;
+    }
+
+    return traits_type::to_int_type(*gptr());
 }
 
 }

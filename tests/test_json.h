@@ -7,7 +7,7 @@ namespace {
 
 using namespace smlt;
 
-class JSONTests : public test::SimulantTestCase {
+class JSONTests : public test::TestCase {
 public:
 
     void test_basic_usage() {
@@ -189,6 +189,9 @@ public:
 
         auto json = json_parse(data);
         assert_true(json->has_key("passes"));
+        assert_true(json->has_key("property_values"));
+        assert_true(json["property_values"]->is_object());
+        assert_equal(json["property_values"]->keys().size(), 3);
         assert_equal(json["passes"]->size(), 1);
         assert_equal(json["passes"][0]->size(), 0);
     }
@@ -225,6 +228,30 @@ public:
         auto json = json_parse(data);
         assert_equal(json["custom_properties"]->size(), 2);
         assert_equal(json["passes"]->size(), 1);
+    }
+
+    void test_texture_only_material() {
+        const std::string data = R"(
+{
+    "passes": [{
+        "property_values": {
+            "s_lighting_enabled": false,
+            "s_textures_enabled": 1
+        }
+    }]
+}
+
+)";
+
+        auto json = json_parse(data);
+
+        assert_true(json.is_valid());
+
+        assert_true(json->has_key("passes"));
+        assert_equal(json["passes"]->size(), 1);
+
+        assert_true(json["passes"][0]->has_key("property_values"));
+        assert_equal(json["passes"][0]["property_values"]->size(), 2);
     }
 };
 

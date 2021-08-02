@@ -69,7 +69,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& mater
     }
 }
 
-void read_property_values(Material& mat, MaterialObject& holder, JSONIterator& json) {
+static void read_property_values(Material& mat, MaterialObject& holder, JSONIterator json) {
     if(json->has_key("property_values")) {
         for(auto& key: json["property_values"]->keys()) {
             auto value = json["property_values"][key];

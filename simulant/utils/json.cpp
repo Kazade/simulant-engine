@@ -14,7 +14,7 @@ static void unget(_json_impl::IStreamPtr stream) {
      *
      * This calls unget then clears it all */
 
-    stream->unget();
+    stream->seekg(-1, std::ios::cur);
     stream->clear();
 }
 
@@ -59,91 +59,6 @@ static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std:
 
 static std::streampos skip_whitespace(_json_impl::IStreamPtr stream) {
     return seek_next_not_of(stream, WHITESPACE);
-}
-
-static std::streampos seek_closing(
-        _json_impl::IStreamPtr stream,
-        const char opening,
-        const char closing,
-        int* comma_count=NULL,
-        bool* empty=NULL) {
-
-    std::size_t counter = 1;
-    int ccount = 0;
-
-    /* Increments each time we hit a [ or {, decrements
-     * each time we hit a ] or }. If > 0, then we're in a nested
-     * block */
-    int nest_counter = 0;
-    bool in_quotes = false;
-
-    if(empty) {
-        *empty = true;
-    }
-
-    while(stream->good()) {
-        char c = stream->get();
-        assert(stream->good());
-
-        if(c == '"' && closing != '"') {
-            in_quotes = !in_quotes;
-        }
-
-        /* We don't match stuff inside quotemarks */
-        if(in_quotes) {
-            continue;
-        }
-
-        /* Track nested blocks */
-        if(c == '{' || c == '[') {
-            ++nest_counter;
-        } else if(c == '}' || c == ']') {
-            --nest_counter;
-        }
-
-        /* If we hit a character that's not whitespace then we aren't empty */
-        if(!nest_counter && c != closing && WHITESPACE.find(c) == std::string::npos) {
-            if(empty) {
-                *empty = false;
-            }
-        }
-
-        /* Count commas if we're not nested */
-        if(!nest_counter && c == ',') {
-            skip_whitespace(stream);
-            assert(stream->good());
-
-            char chk = stream->get();
-            if(chk == ']' || chk == '}') {
-                /* Don't count trailing commas */
-                S_WARN(
-                    "Trailing comma in JSON file at position {0}",
-                    int(stream->tellg()) - 1
-                );
-            } else {
-                ccount++;
-            }
-            unget(stream);
-            assert(stream->good());
-        }
-
-        if(c == closing) {
-            --counter;
-            if(counter == 0) {
-                unget(stream);
-                break;
-            }
-        } else if(c == opening) {
-            ++counter;
-        }
-    }
-
-    if(comma_count) {
-        *comma_count = ccount;
-    }
-
-    // FIXME: optional<>
-    return stream->tellg();
 }
 
 static std::streampos seek_next_of(_json_impl::IStreamPtr stream, const std::string& chars) {
@@ -198,7 +113,7 @@ void JSONNode::read_keys(Func&& cb) const {
         return;
     }
 
-    stream_->seekg(start_);
+    stream_->seekg(start_, std::ios::beg);
     stream_->clear();
 
     auto c = stream_->get();
@@ -339,6 +254,39 @@ bool JSONNode::is_null() const {
     return type_ == JSON_NULL;
 }
 
+static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
+    std::size_t count = 0;
+
+    while(stream->good()) {
+        skip_whitespace(stream);
+        char c = find_comma_or("]", stream);
+        if(c == ',') {
+            stream->ignore();
+            ++count;
+        } else {
+            /* We just do this final check to make sure we didn't double
+             * count things... */
+            auto end = stream->tellg();
+            do {
+                unget(stream);
+                unget(stream);
+                c = stream->get(); // Moves forward one, so we move back twice each loop
+            } while(WHITESPACE.find(c) != std::string::npos);
+
+            stream->seekg(end, std::ios::beg);
+
+            if(c == ',') {
+                S_WARN("Found trailing comma in JSON array");
+                return count;
+            } else {
+                return count + 1;
+            }
+        }
+    }
+
+    return optional<std::size_t>();
+}
+
 /* Parse an object node and return its size if the parse is successful */
 static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
     std::size_t count = 0;
@@ -381,8 +329,6 @@ void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std
     char c = stream->get();
 
     std::streampos end;
-    int size = 0;
-    bool empty = false;
 
     switch(c) {
         case '{': {
@@ -394,14 +340,15 @@ void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std
                 end = stream_->tellg();
             }
         } break;
-        case '[':
+        case '[': {
             node.type_ = JSON_ARRAY;
-            end = seek_closing(stream, '[', ']', &size, &empty);
-            if(!empty) {
-                ++size;
+            auto v = parse_array(stream);
+            assert(v);
+            if(v) {
+                node.size_ = v.value_or(0);
+                end = stream_->tellg();
             }
-            node.size_ = size;
-        break;
+        } break;
         case '"':
             node.type_ = JSON_STRING;
             read_string(stream);
@@ -478,7 +425,7 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
         bool done = false;
         while(stream_->tellg() != current_node_->end()) {
             assert(stream_->good());
-            char c = stream_->get();
+            c = stream_->get();
             assert(stream_->good());
 
             if(c == '[' || c == '{') {
@@ -547,11 +494,20 @@ JSONIterator JSONIterator::operator[](const std::string& key) const {
             S_WARN("Unexpected character '{0}'. Expected ':'", colon);
             return JSONIterator();
         }
-        skip_whitespace(stream_);
-        return JSONIterator(stream_, stream_->tellg());
+
+        return JSONIterator(stream_, skip_whitespace(stream_));
     }
 
     return JSONIterator();
+}
+
+JSONIterator json_load(const Path& path) {
+    std::shared_ptr<std::istream> filein = std::make_shared<std::ifstream>(path.str());
+    if(!*filein) {
+        return JSONIterator();
+    }
+
+    return json_read(filein);
 }
 
 JSONIterator json_parse(const std::string& data) {
