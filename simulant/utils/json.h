@@ -170,13 +170,13 @@ template<typename T>
 optional<T> json_auto_cast(JSONIterator it);
 
 template<>
-inline optional<int64_t> json_auto_cast<int64_t>(JSONIterator it) {
-    return it->to_int();
+inline optional<int> json_auto_cast<int>(JSONIterator it) {
+    return optional<int>(it->to_int().value());
 }
 
 template<>
-inline optional<int> json_auto_cast<int>(JSONIterator it) {
-    return optional<int>(it->to_int().value());
+inline optional<long> json_auto_cast<long>(JSONIterator it) {
+    return optional<long>(it->to_int().value());
 }
 
 template<>

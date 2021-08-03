@@ -47,7 +47,7 @@ public:
         auto obj = it["object"];
 
         assert_equal(obj->type(), JSON_OBJECT);
-        assert_equal(obj->size(), 5);
+        assert_equal(obj->size(), 5u);
 
         auto one = obj["one"];
 
@@ -191,9 +191,9 @@ public:
         assert_true(json->has_key("passes"));
         assert_true(json->has_key("property_values"));
         assert_true(json["property_values"]->is_object());
-        assert_equal(json["property_values"]->keys().size(), 3);
-        assert_equal(json["passes"]->size(), 1);
-        assert_equal(json["passes"][0]->size(), 0);
+        assert_equal(json["property_values"]->keys().size(), 3u);
+        assert_equal(json["passes"]->size(), 1u);
+        assert_equal(json["passes"][0]->size(), 0u);
     }
     void test_complex_material() {
         const std::string data = R"(
@@ -226,8 +226,8 @@ public:
         )";
 
         auto json = json_parse(data);
-        assert_equal(json["custom_properties"]->size(), 2);
-        assert_equal(json["passes"]->size(), 1);
+        assert_equal(json["custom_properties"]->size(), 2u);
+        assert_equal(json["passes"]->size(), 1u);
     }
 
     void test_texture_only_material() {
@@ -248,10 +248,10 @@ public:
         assert_true(json.is_valid());
 
         assert_true(json->has_key("passes"));
-        assert_equal(json["passes"]->size(), 1);
+        assert_equal(json["passes"]->size(), 1u);
 
         assert_true(json["passes"][0]->has_key("property_values"));
-        assert_equal(json["passes"][0]["property_values"]->size(), 2);
+        assert_equal(json["passes"][0]["property_values"]->size(), 2u);
     }
 };
 

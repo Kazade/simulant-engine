@@ -56,8 +56,6 @@ static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std:
 
         if(chars.find(c) == std::string::npos) {
             unget(stream);
-            char c = stream->peek();
-            assert(stream->good());
             return stream->tellg();
         }
     }
@@ -484,6 +482,8 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
             }
             char skip = stream_->get();
             assert(skip == ',');
+            _S_UNUSED(skip);
+
             ++entry;
         }
     }
