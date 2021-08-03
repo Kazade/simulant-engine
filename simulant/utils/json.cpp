@@ -385,21 +385,21 @@ void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std
             if(check_remainder(stream, "rue")) {
                 node.type_ = JSON_TRUE;
             } else {
-                set_invalid("Error at pos: " + std::to_string(pos));
+                set_invalid("Error at pos: " + smlt::to_string(pos));
             }
         break;
         case 'f':
             if(check_remainder(stream, "alse")) {
                 node.type_ = JSON_FALSE;
             } else {
-                set_invalid("Error at pos: " + std::to_string(pos));
+                set_invalid("Error at pos: " + smlt::to_string(pos));
             }
         break;
         case 'n':
             if(check_remainder(stream, "ull")) {
                 node.type_ = JSON_NULL;
             } else {
-                set_invalid("Error at pos: " + std::to_string(pos));
+                set_invalid("Error at pos: " + smlt::to_string(pos));
             }
         break;
         default:
