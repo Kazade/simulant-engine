@@ -14,7 +14,9 @@ static void unget(_json_impl::IStreamPtr stream) {
      *
      * This calls unget then clears it all */
 
-    stream->seekg(-1, std::ios::cur);
+    stream->unget();
+    assert(!stream->eof());
+
     stream->clear();
 }
 
@@ -46,8 +48,15 @@ static bool check_remainder(_json_impl::IStreamPtr stream, const std::string& re
 static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std::string& chars) {
     while(stream->good()) {
         char c = stream->get();
+
+        /* We need to go back twice if we hit the end of the stream */
+        if(!stream->good()) {
+            unget(stream);
+        }
+
         if(chars.find(c) == std::string::npos) {
             unget(stream);
+            char c = stream->peek();
             assert(stream->good());
             return stream->tellg();
         }
@@ -66,6 +75,7 @@ static std::streampos seek_next_of(_json_impl::IStreamPtr stream, const std::str
         auto c = stream->get();
         if(chars.find(c) != std::string::npos) {
             unget(stream);
+            assert(stream->good());
             return stream->tellg();
         }
     }
@@ -113,8 +123,10 @@ void JSONNode::read_keys(Func&& cb) const {
         return;
     }
 
-    stream_->seekg(start_, std::ios::beg);
-    stream_->clear();
+    stream_->seekg(start_);
+    assert(!stream_->eof());
+
+    stream_->clear();  /* Clear any failed bit set by an EOF */
 
     auto c = stream_->get();
 
@@ -127,8 +139,8 @@ void JSONNode::read_keys(Func&& cb) const {
     while(stream_->good()) {
         skip_whitespace(stream_);
         assert(stream_->good());
+        assert(!stream_->eof());
         char c = stream_->get();
-
         if(c == '"') {
             std::string key = read_string(stream_);
             if(cb(key)) {
@@ -145,9 +157,15 @@ void JSONNode::read_keys(Func&& cb) const {
             c = find_comma_or("}", stream_);
             stream_->get(); /* Ignore the comma or } */
 
-            if(c == '\0' || c == '}') {
+            if(c == '}') {
                 return;
             }
+        } else if(c == '}') {
+            /* Empty case */
+            return;
+        } else {
+            S_WARN("Unexpected character: {0}", c);
+            return;
         }
     }
 
@@ -264,6 +282,8 @@ static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
             stream->ignore();
             ++count;
         } else {
+            assert(c == ']');
+
             /* We just do this final check to make sure we didn't double
              * count things... */
             auto end = stream->tellg();
@@ -311,8 +331,14 @@ static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
             } else if(c == '}'){
                 return optional<std::size_t>(count);
             }
+            assert(c == ',');
+            stream->ignore();  /* Skip past the comma */
         } else if(c == '}') {
+            stream->unget();
             return optional<std::size_t>(count);
+        } else {
+            S_WARN("Unexpected character: {0} when parsing object", c);
+            return optional<std::size_t>();
         }
     }
 
@@ -338,7 +364,7 @@ void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std
             if(v) {
                 node.size_ = v.value_or(0);
                 end = stream_->tellg();
-            }
+            }            
         } break;
         case '[': {
             node.type_ = JSON_ARRAY;

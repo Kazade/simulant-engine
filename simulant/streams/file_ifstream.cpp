@@ -16,6 +16,7 @@ FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
             open_file_counter
         );
     }
+    setg(buffer_, buffer_, buffer_);
 }
 
 FileStreamBuf::~FileStreamBuf() {
@@ -24,14 +25,16 @@ FileStreamBuf::~FileStreamBuf() {
 }
 
 FileStreamBuf::int_type FileStreamBuf::underflow() {
+    auto old_read_pos = last_read_pos_;
     last_read_pos_ = ftell(filein_);
     assert(!ferror(filein_));
     auto bytes = fread(buffer_, sizeof(char), BUFFER_SIZE, filein_);
-    setg(buffer_, buffer_, buffer_ + bytes);
 
     if(!bytes) {
+        last_read_pos_ = old_read_pos;
         return traits_type::eof();
     } else {
+        setg(buffer_, buffer_, buffer_ + bytes);
         return traits_type::to_int_type(*gptr());
     }
 }
@@ -64,7 +67,20 @@ std::streampos FileStreamBuf::seekoff(std::streamoff off, std::ios_base::seekdir
             return pos_type(off_type(current_pos));
         }
 
-        off = current_pos + off;
+        auto abs_pos = current_pos + off;
+
+        if(abs_pos < last_read_pos_ || gptr() + off >= egptr()) {
+            fseek(filein_, abs_pos, std::ios::beg);
+            setg(buffer_, buffer_, buffer_);
+            underflow();
+            return pos_type(off_type(last_read_pos_));
+        } else {
+            /* We're still within the buffer, so nothing to do
+             * except manipulate the gptr() */
+            setg(buffer_, gptr() + off, egptr());
+            return pos_type(off_type(abs_pos));
+        }
+
     } else if(way == std::ios_base::end && off == 0) {
         /* Optimisation: seeking to the end, don't do a read, just fseek there and return the
          * result of ftell */
