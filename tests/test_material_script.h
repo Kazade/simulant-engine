@@ -23,7 +23,7 @@ public:
             "name": "enable_texturing",
             "type": "bool",
             "default": true
-        },
+        }
     ],
 
     "property_values": {

@@ -44,7 +44,7 @@ MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const Path& f
 
 template<MaterialPropertyType MT, typename T>
 static void define_property(Material& material, JSONIterator prop) {
-    std::string name = prop["name"]->to_str(); // FIXME: Sanitize!
+    std::string name = prop["name"]->to_str().value(); // FIXME: Sanitize!
 
     if(!prop["default"]->is_null()) {
         auto def = (T) json_auto_cast<T>(prop["default"]).value();
@@ -57,10 +57,10 @@ static void define_property(Material& material, JSONIterator prop) {
 
 template<>
 void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& material, JSONIterator prop) {
-    std::string name = prop["name"]->to_str(); // FIXME: Sanitize!
+    std::string name = prop["name"]->to_str().value(); // FIXME: Sanitize!
 
     if(prop->has_key("default") && !prop["default"]->is_null()) {
-        std::string def = prop["default"]->to_str();
+        std::string def = prop["default"]->to_str().value();
 
         auto texture = material.asset_manager().new_texture_from_file(def);
         material.set_property_value(name, texture);
@@ -92,7 +92,7 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
                     continue;
                 }
 
-                auto parts = unicode(value->to_str()).split(" ");
+                auto parts = unicode(value->to_str().value()).split(" ");
 
                 if(parts.size() != 3) {
                     S_ERROR(_F("Invalid value for property: {0}").format(key));
@@ -110,7 +110,7 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
                     continue;
                 }
 
-                auto parts = unicode(value->to_str()).split(" ");
+                auto parts = unicode(value->to_str().value()).split(" ");
 
                 if(parts.size() != 4) {
                     S_ERROR("Invalid value for property: {0}", key);
@@ -130,14 +130,14 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
                     if(value->is_str()) {
                         /* Special cases for enums - need a better way to handle this */
                         if(key == BLEND_FUNC_PROPERTY_NAME) {
-                            std::string v = value->to_str();
+                            std::string v = value->to_str().value();
                             BlendType type = blend_type_from_name(v.c_str());
                             holder.set_blend_func(type);
                         } else if(key == SHADE_MODEL_PROPERTY_NAME) {
-                            std::string v = value->to_str();
+                            std::string v = value->to_str().value();
                             holder.set_shade_model(shade_model_from_name(v.c_str()));
                         } else if(key == CULL_MODE_PROPERTY_NAME) {
-                            std::string v = value->to_str();
+                            std::string v = value->to_str().value();
                             holder.set_cull_mode(cull_mode_from_name(v.c_str()));
                         }
                     } else {
@@ -145,7 +145,7 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
                     }
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
-                std::string path = value->to_str();
+                std::string path = value->to_str().value();
                 auto tex = mat.asset_manager().new_texture_from_file(path);
                 holder.set_property_value(key.c_str(), tex);
             } else {
@@ -187,12 +187,12 @@ void MaterialScript::generate(Material& material) {
     if(json->has_key("custom_properties")) {
         auto custom_props = json["custom_properties"];
 
-        for(uint32_t i = 0u; i < custom_props->size(); ++i) {
-            auto prop = custom_props[i];
+        for(auto& node: custom_props) {
+            auto prop = node.to_iterator();
 
             assert(prop->has_key("type"));
 
-            std::string kind = prop["type"]->to_str();
+            std::string kind = prop["type"]->to_str().value();
             auto prop_type = lookup_material_property_type(kind);
 
             switch(prop_type) {
@@ -227,7 +227,7 @@ void MaterialScript::generate(Material& material) {
     for(uint32_t i = 0u; i < json["passes"]->size(); ++i) {
         auto pass = json["passes"][i];
 
-        std::string iteration = (pass->has_key("iteration")) ? pass["iteration"]->to_str() : "once";
+        std::string iteration = (pass->has_key("iteration")) ? pass["iteration"]->to_str().value() : "once";
 
         if(iteration == "once") {
             material.pass(i)->set_iteration_type(ITERATION_TYPE_ONCE);
@@ -241,8 +241,8 @@ void MaterialScript::generate(Material& material) {
 
         /* If we support gpu programs, then load any shaders */
         if(renderer->supports_gpu_programs() && pass->has_key("vertex_shader") && pass->has_key("fragment_shader")) {
-            std::string vertex_shader_path = pass["vertex_shader"]->to_str();
-            std::string fragment_shader_path = pass["fragment_shader"]->to_str();
+            std::string vertex_shader_path = pass["vertex_shader"]->to_str().value();
+            std::string fragment_shader_path = pass["fragment_shader"]->to_str().value();
 
             auto parent_dir = Path(kfs::path::dir_name(filename_.str()));
 
