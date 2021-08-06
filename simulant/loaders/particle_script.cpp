@@ -39,7 +39,7 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, JSONIterato
         m->set_linear_curve(manipulator["rate"]->to_int().value());
     } else if(manipulator->has_key("curve")) {
         /* Parse the curve */
-        std::string spec = manipulator["curve"]->to_str();
+        std::string spec = manipulator["curve"]->to_str().value();
         auto first_brace = spec.find('(');
         if(first_brace == std::string::npos || spec.at(spec.size() - 1) != ')') {
             S_WARN("Invalid curve specification {0}. Ignoring.", spec);
@@ -96,7 +96,7 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSO
 
     auto colour_array = js["colours"];
     for(auto i = 0u; i < colour_array->size(); ++i) {
-        std::string colour = colour_array[(uint32_t) i]->to_str();
+        std::string colour = colour_array[(uint32_t) i]->to_str().value();
         colours.push_back(parse_colour(colour));
     }
 
@@ -115,7 +115,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
 
     auto js = json_read(this->data_);
 
-    ps->set_name(js["name"]->to_str());
+    ps->set_name(js["name"]->to_str().value());
 
     if(js->has_key("quota")) {
         ps->set_quota(js["quota"]->to_int().value_or(0));
@@ -134,7 +134,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
     }
 
     if(js->has_key("material")) {
-        std::string material = js["material"]->to_str();
+        std::string material = js["material"]->to_str().value();
 
         if(Material::BUILT_IN_NAMES.count(material)) {
             material = Material::BUILT_IN_NAMES.at(material);
@@ -157,7 +157,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                         mat->set_property_value(property_name.c_str(), (js[key]->to_float().value()));
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
                         if(property_name == BLEND_FUNC_PROPERTY_NAME) {
-                            mat->set_blend_func(blend_type_from_name(js[key]->to_str().c_str()));
+                            mat->set_blend_func(blend_type_from_name(js[key]->to_str().value().c_str()));
                         } else {
                             // FIXME: There are a load of missing enums here!
                             mat->set_property_value(property_name.c_str(), (int32_t) js[key]->to_int().value());
@@ -166,7 +166,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                         auto dirname = kfs::path::dir_name(filename_.str());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
-                        auto tex = ps->asset_manager().new_texture_from_file(js[key]->to_str());
+                        auto tex = ps->asset_manager().new_texture_from_file(js[key]->to_str().value());
                         mat->set_property_value(property_name.c_str(), tex);
                         if(remove) {
                             // Remove the path if necessary
@@ -193,13 +193,13 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
 
             Emitter new_emitter;
             if(emitter->has_key("type")) {
-                auto emitter_type = emitter["type"]->to_str();
+                auto emitter_type = emitter["type"]->to_str().value_or("point");
                 S_DEBUG("Emitter {0} has type {1}", i, emitter_type);
                 new_emitter.type = (emitter_type == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX;
             }
 
             if(emitter->has_key("direction")) {
-                auto parts = unicode(emitter["direction"]->to_str()).split(" ");
+                auto parts = unicode(emitter["direction"]->to_str().value_or("0 1 0")).split(" ");
                 //FIXME: check length
                 new_emitter.direction = smlt::Vec3(
                     parts.at(0).to_float(),
@@ -262,7 +262,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             }
 
             if(emitter->has_key("colour")) {
-                auto parts = unicode(emitter["colour"]->to_str()).split(" ");
+                auto parts = unicode(emitter["colour"]->to_str().value_or("0 0 0 0")).split(" ");
                 new_emitter.colour = smlt::Colour(
                     parts.at(0).to_float(), parts.at(1).to_float(), parts.at(2).to_float(), parts.at(3).to_float()
                 );
@@ -280,9 +280,9 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             for(uint32_t i = 0; i < manipulators->size(); ++i) {
                 auto manipulator = manipulators[i];
 
-                if(manipulator["type"]->to_str() == "size") {
+                if(manipulator["type"]->to_str().value() == "size") {
                     spawn_size_manipulator(ps, manipulator);
-                } else if(manipulator["type"]->to_str() == "colour_fader") {
+                } else if(manipulator["type"]->to_str().value() == "colour_fader") {
                     spawn_colour_fader_manipulator(ps, manipulator);
                 }
             }

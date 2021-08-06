@@ -64,3 +64,22 @@ i.has_value();  // false, null is not convertible to int
 >>> *Caution! Each JSONIterator instance will retain an reference-count on the underlying stream! Make sure you don't persist JSONIterators longer than necessary.
 
 
+## Iterating Arrays
+
+`JSONIterator` has additional functionality when the iterator points to an array
+item. Such iterators will return true if you call the `is_array_iterator()` method.
+
+Array iterators allow pre-incrementing (e.g. `++it`), and when a `JSONIterator` points
+to an array node, then `begin()` and `end()` produce iterators suitable for a range-for
+loop. A range-for loop will return `JSONNode` elements. If you require getting back
+an iterator for further nested accesses then you can call the `to_iterator()` method
+on the node.
+
+```
+for(auto& item: json["array"]) {
+    item;  // JSONNode object
+    auto it = item.to_iterator();  // Get an iterator to the node
+    auto sub_item = it["sub_item"];  // etc.
+}
+```
+

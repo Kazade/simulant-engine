@@ -24,6 +24,8 @@ namespace _json_impl {
     typedef std::shared_ptr<std::istream> IStreamPtr;
 }
 
+class JSONIterator;
+
 class JSONNode {
 private:
     std::string read_value_from_stream() const;
@@ -76,6 +78,9 @@ public:
     bool is_object() const {
         return type_ == JSON_OBJECT;
     }
+
+    bool is_null() const;
+
     /* Convert the value to a string, this is well-defined for all value types
      * and will return the following:
      *
@@ -85,17 +90,17 @@ public:
      *  - FALSE - returns "false"
      *  - NULL - returns "null"
      */
-    std::string to_str() const {
+    optional<std::string> to_str() const {
         switch(type_) {
-            case JSON_OBJECT: return "{}";
-            case JSON_ARRAY: return "[]";
-            case JSON_STRING: return read_value_from_stream();
-            case JSON_NUMBER: return read_value_from_stream();
-            case JSON_TRUE: return "true";
-            case JSON_FALSE: return "false";
-            case JSON_NULL: return "null";
+            case JSON_OBJECT: return optional<std::string>();
+            case JSON_ARRAY: return optional<std::string>();
+            case JSON_STRING: return optional<std::string>(read_value_from_stream());
+            case JSON_NUMBER: return optional<std::string>(read_value_from_stream());
+            case JSON_TRUE: return optional<std::string>("true");
+            case JSON_FALSE: return optional<std::string>("false");
+            case JSON_NULL: return optional<std::string>("null");
             default:
-                return "";
+                return optional<std::string>();
         }
     }
 
@@ -109,7 +114,8 @@ public:
      * NULL always returns false. */
     optional<bool> to_bool() const;
 
-    bool is_null() const;
+    /* Returns an iterator pointing to this node */
+    JSONIterator to_iterator() const;
 
 private:
     friend class JSONIterator;
@@ -129,19 +135,24 @@ private:
 class JSONIterator {
     friend JSONIterator json_parse(const std::string&);
     friend JSONIterator json_load(const Path&);
-    friend JSONIterator json_read(std::shared_ptr<std::istream>&);
+    friend JSONIterator json_read(std::shared_ptr<std::istream>);
 
+    friend class JSONNode;
 private:
     JSONIterator() = default;  /* Invalid or end */
 
-    JSONIterator(_json_impl::IStreamPtr stream, std::streampos pos):
-        stream_(stream) {
+    JSONIterator(_json_impl::IStreamPtr stream, std::streampos pos, bool is_array_item=false):
+        stream_(stream),
+        is_array_iterator_(is_array_item) {
+
         current_node_ = std::make_shared<JSONNode>();
         parse_node(*current_node_, stream, pos);
     }
 
 
-    _json_impl::IStreamPtr stream_;
+    /* mutable as we need to manipulate inside const contexts */
+    mutable _json_impl::IStreamPtr stream_;
+    bool is_array_iterator_ = false;
 
     std::shared_ptr<JSONNode> current_node_;
 
@@ -151,7 +162,7 @@ private:
 public:
     typedef JSONNode value_type;
     typedef JSONNode* pointer;
-    typedef JSONNode& reference;
+    typedef JSONNode reference;
     typedef std::input_iterator_tag iterator_category;
 
     bool is_valid() const {
@@ -162,8 +173,41 @@ public:
         return current_node_.get();
     }
 
+    JSONNode& operator*() const {
+        return *current_node_.get();
+    }
+
     JSONIterator operator[](const std::string& key) const;
     JSONIterator operator[](const std::size_t i) const;
+
+    /* Range-loop iteration, only for array items */
+    explicit operator bool() const {
+        return is_valid();
+    }
+
+    JSONIterator begin() const;
+
+    JSONIterator end() const {
+        return JSONIterator();
+    }
+
+    JSONIterator& operator++();
+    bool operator==(const JSONIterator& rhs) const {
+        if(!current_node_ && !rhs.current_node_) {
+            return true;
+        }
+
+        return ((stream_.get() == rhs.stream_.get()) &&
+                (current_node_->start() == rhs.current_node_->start()));
+    }
+
+    bool operator!=(const JSONIterator& rhs) const {
+        return !((*this) == rhs);
+    }
+
+    bool is_array_iterator() const {
+        return is_array_iterator_;
+    }
 };
 
 template<typename T>
@@ -196,6 +240,6 @@ inline optional<std::string> json_auto_cast<std::string>(JSONIterator it) {
 
 JSONIterator json_load(const Path& path);
 JSONIterator json_parse(const std::string& data);
-JSONIterator json_read(std::shared_ptr<std::istream>& stream);
+JSONIterator json_read(std::shared_ptr<std::istream> stream);
 
 }

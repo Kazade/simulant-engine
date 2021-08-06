@@ -55,7 +55,7 @@ public:
         assert_true(one->is_value_type());
         assert_equal(one->to_int().value_or(0), 1);
         assert_equal(one->to_float().value_or(0.0f), 1.0f);
-        assert_equal(one->to_str(), "1");
+        assert_equal(one->to_str().value(), "1");
 
         assert_equal(obj["five"]->type(), JSON_NULL);
     }
@@ -96,7 +96,7 @@ public:
         );
 
         assert_equal(
-            json["array"][1]->to_str(),
+            json["array"][1]->to_str().value(),
             "cheese"
         );
     }
@@ -252,6 +252,38 @@ public:
 
         assert_true(json["passes"][0]->has_key("property_values"));
         assert_equal(json["passes"][0]["property_values"]->size(), 2u);
+    }
+
+    void test_array_range_iteration() {
+        const std::string data = R"(
+{
+    "array": [1, 2, {"three":3}]
+}
+
+)";
+        auto json = json_parse(data);
+        auto it = json["array"][0];
+
+        assert_true(it.is_array_iterator());
+
+        ++it;
+
+        assert_equal(it->to_int().value_or(0), 2);
+
+        ++it;
+
+        assert_true(it->is_object());
+
+        ++it;
+
+        assert_false(it);
+
+        std::size_t counter = 0;
+        for(auto _: json["array"]) {
+            counter++;
+        }
+
+        assert_equal(counter, json["array"]->size());
     }
 };
 

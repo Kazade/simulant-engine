@@ -7,7 +7,7 @@ namespace smlt {
 
 const std::string WHITESPACE = "\t\n\r ";
 
-static void unget(_json_impl::IStreamPtr stream) {
+static void unget(_json_impl::IStreamPtr& stream) {
     /* Frustratingly, if you hit the end of the stream
      * and then "unget()", it only clears the eof bit, and
      * not the fail bit. So then everything fails...
@@ -20,7 +20,7 @@ static void unget(_json_impl::IStreamPtr stream) {
     stream->clear();
 }
 
-static std::string read_string(_json_impl::IStreamPtr stream) {
+static std::string read_string(_json_impl::IStreamPtr& stream) {
     std::string buffer;
     while(stream->good()) {
         char c = stream->get();
@@ -35,7 +35,7 @@ static std::string read_string(_json_impl::IStreamPtr stream) {
     return "";
 }
 
-static bool check_remainder(_json_impl::IStreamPtr stream, const std::string& rest) {
+static bool check_remainder(_json_impl::IStreamPtr& stream, const std::string& rest) {
     for(auto& l: rest) {
         if(stream->get() != l) {
             return false;
@@ -45,7 +45,7 @@ static bool check_remainder(_json_impl::IStreamPtr stream, const std::string& re
     return true;
 }
 
-static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std::string& chars) {
+static std::streampos seek_next_not_of(_json_impl::IStreamPtr& stream, const std::string& chars) {
     while(stream->good()) {
         char c = stream->get();
 
@@ -64,11 +64,11 @@ static std::streampos seek_next_not_of(_json_impl::IStreamPtr stream, const std:
     return stream->tellg();
 }
 
-static std::streampos skip_whitespace(_json_impl::IStreamPtr stream) {
+static std::streampos skip_whitespace(_json_impl::IStreamPtr& stream) {
     return seek_next_not_of(stream, WHITESPACE);
 }
 
-static std::streampos seek_next_of(_json_impl::IStreamPtr stream, const std::string& chars) {
+static std::streampos seek_next_of(_json_impl::IStreamPtr& stream, const std::string& chars) {
     while(stream->good()) {
         auto c = stream->get();
         if(chars.find(c) != std::string::npos) {
@@ -264,6 +264,13 @@ optional<bool> JSONNode::to_bool() const {
     default:
         return optional<bool>();
     }
+}
+
+JSONIterator JSONNode::to_iterator() const {
+    auto it = JSONIterator();
+    it.current_node_ = std::make_shared<JSONNode>(*this);
+    it.stream_ = stream_;
+    return it;
 }
 
 bool JSONNode::is_null() const {
@@ -474,7 +481,7 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
         }
 
         if(entry == i) {
-            return JSONIterator(stream_, start);
+            return JSONIterator(stream_, start, /*is_array_item=*/ true);
         } else {
             if(done) {
                 /* End of the array */
@@ -489,6 +496,43 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
     }
 
     return JSONIterator();
+}
+
+JSONIterator JSONIterator::begin() const {
+    if(!current_node_) {
+        return JSONIterator();
+    }
+
+    if(!current_node_->is_array()) {
+        return JSONIterator();
+    }
+
+    return (*this)[0];
+}
+
+JSONIterator &JSONIterator::operator++() {
+    if(!current_node_ || !is_array_iterator()) {
+        return *this;
+    }
+
+    /* Move to the end of the node */
+    stream_->seekg(current_node_->end());
+
+    /* Find the comma following the item end */
+    auto c = find_comma_or("]", stream_);
+    if(c == ']') {
+        /* Hit the end of the array, this iterator is
+         * done with */
+        current_node_.reset();
+        return *this;
+    }
+
+    skip_whitespace(stream_);
+
+    /* Now set this to the next element in the array */
+    (*this) = JSONIterator(stream_, int(stream_->tellg()) + 1);
+    is_array_iterator_ = true;
+    return *this;
 }
 
 JSONIterator JSONIterator::operator[](const std::string& key) const {
@@ -542,7 +586,7 @@ JSONIterator json_parse(const std::string& data) {
     return JSONIterator(ss, 0);
 }
 
-JSONIterator json_read(std::shared_ptr<std::istream> &stream) {
+JSONIterator json_read(std::shared_ptr<std::istream> stream) {
     return JSONIterator(stream, 0);
 }
 
