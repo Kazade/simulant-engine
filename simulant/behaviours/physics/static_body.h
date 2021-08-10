@@ -34,7 +34,6 @@ private:
     private:
         std::vector<b3Vec3> vertices_;
         std::vector<b3MeshTriangle> triangles_;
-
         std::shared_ptr<b3Mesh> mesh_;
 
     public:
@@ -47,15 +46,13 @@ private:
             }
         }
 
-        template<typename InputIterator>
-        void insert_triangles(InputIterator first, InputIterator last) {
-            for(auto it = first; it != last; ++it) {
-                append_triangle((*it));
-            }
-        }
+        void insert_triangles(
+            const std::vector<utils::Triangle>::iterator first,
+            const std::vector<utils::Triangle>::iterator last
+        );
 
         void append_vertex(const Vec3& v);
-        void append_triangle(const utils::Triangle& tri);
+
         b3Mesh* get_mesh() const { return mesh_.get(); }
     };
 
