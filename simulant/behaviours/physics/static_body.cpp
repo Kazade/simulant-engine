@@ -32,8 +32,8 @@ void StaticBody::b3MeshGenerator::insert_triangles(
         utils::Triangle& tri = (*it);
 
         btri.v1 = tri.idx[0];
-        btri.v2 = tri.idx[0];
-        btri.v3 = tri.idx[0];
+        btri.v2 = tri.idx[1];
+        btri.v3 = tri.idx[2];
 
         triangles_.push_back(btri);
         mesh_->triangles = &triangles_[0];
