@@ -20,6 +20,14 @@ public:
         SimulantTestCase::tear_down();
     }
 
+    void test_set_text_with_newline() {
+        auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
+        auto label2 = stage_->ui->new_widget_as_label("This is");
+
+        assert_equal(label->content_width(), label2->content_width());
+        assert_true(label->height() > label2->height());
+    }
+
     void test_foreground_and_background_images_differ() {
         auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
 
