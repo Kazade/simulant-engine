@@ -51,7 +51,7 @@ public:
 
     Frustum& frustum() { return frustum_; }
 
-    void set_perspective_projection(const Degrees &fov, double aspect, double near=1.0, double far=1000.0f);
+    void set_perspective_projection(const Degrees &fov, double aspect, double near=1.0, double far=1000.0);
     void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
     double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
 
