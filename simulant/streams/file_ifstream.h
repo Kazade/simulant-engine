@@ -38,6 +38,8 @@ public:
         std::ios_base::seekdir way,
         std::ios_base::openmode which = std::ios_base::in | std::ios_base::out) override;
 
+    int_type pbackfail(int_type c = EOF) override;
+
     FILE* file() const {
         return filein_;
     }

@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 
+#include "generic/optional.h"
 #include "generic/managed.h"
 #include "utils/unicode.h"
 #include "path.h"
@@ -46,7 +47,7 @@ public:
 
     std::list<Path>& search_path() { return resource_path_; }
 
-    Path locate_file(const Path& filename) const;
+    optional<Path> locate_file(const Path& filename) const;
     std::shared_ptr<std::istream> open_file(const Path& filename);
     std::shared_ptr<std::stringstream> read_file(const Path& filename);
     std::vector<std::string> read_file_lines(const Path& filename);

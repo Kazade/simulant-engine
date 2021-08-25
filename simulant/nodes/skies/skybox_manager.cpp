@@ -49,7 +49,11 @@ SkyboxPtr SkyManager::new_skybox_from_folder(const Path& folder, const TextureFl
 
     auto path = window->vfs->locate_file(folder);
 
-    for(auto& file: kfs::path::list_dir(path.str())) {
+    if(!path.has_value()) {
+        return SkyboxPtr();
+    }
+
+    for(auto& file: kfs::path::list_dir(path.value().str())) {
         SkyboxFace face;
 
         // Case-insensitive detection

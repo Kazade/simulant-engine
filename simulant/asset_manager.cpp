@@ -310,11 +310,18 @@ MeshPtr AssetManager::new_mesh_from_file(const Path& path,
 }
 
 MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+    auto loader = window->loader_for("heightmap_loader", image_file);
+
+    if(!loader) {
+        return nullptr;
+    }
+
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
-    window->loader_for("heightmap_loader", image_file)->into(mesh, {
+    loader->into(mesh, {
         { "spec", spec},
     });
+
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
     return mesh;

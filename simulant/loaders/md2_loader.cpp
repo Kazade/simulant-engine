@@ -285,12 +285,13 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     smlt::TextureID tex_id;
     bool found = false;
     for(auto& texture_path: possible_paths) {
-        try {
-            tex_id = asset_manager->new_texture_from_file(vfs->locate_file(texture_path));
+        auto p = vfs->locate_file(texture_path);
+        if(p.has_value()) {
+            tex_id = asset_manager->new_texture_from_file(p.value());
             found = true;
-        } catch(AssetMissingError&) {
+            break;
+        } else {
             S_DEBUG("MD2 skin not found at: {0}", texture_path);
-            continue;
         }
     }
 

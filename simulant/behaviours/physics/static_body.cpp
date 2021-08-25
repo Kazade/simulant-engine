@@ -23,6 +23,26 @@ StaticBody::b3MeshGenerator::b3MeshGenerator():
 
 }
 
+void StaticBody::b3MeshGenerator::insert_triangles(
+    const std::vector<utils::Triangle>::iterator first,
+    const std::vector<utils::Triangle>::iterator last) {
+    b3MeshTriangle btri;
+
+    for(auto it = first; it != last; ++it) {
+        utils::Triangle& tri = (*it);
+
+        btri.v1 = tri.idx[0];
+        btri.v2 = tri.idx[1];
+        btri.v3 = tri.idx[2];
+
+        triangles_.push_back(btri);
+        mesh_->triangles = &triangles_[0];
+        mesh_->triangleCount = triangles_.size();
+    }
+
+    mesh_->BuildTree(); // Rebuild the tree
+}
+
 void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
     b3Vec3 bv;
     to_b3vec3(v, bv);
@@ -30,18 +50,6 @@ void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
 
     mesh_->vertices = &vertices_[0];
     mesh_->vertexCount = vertices_.size();
-}
-
-void StaticBody::b3MeshGenerator::append_triangle(const utils::Triangle& src) {
-    b3MeshTriangle tri;
-    tri.v1 = src.idx[0];
-    tri.v2 = src.idx[1];
-    tri.v3 = src.idx[2];
-
-    triangles_.push_back(tri);
-    mesh_->triangles = &triangles_[0];
-    mesh_->triangleCount = triangles_.size();
-    mesh_->BuildTree(); // Rebuild the tree
 }
 
 void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {

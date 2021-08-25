@@ -45,11 +45,11 @@ public:
 
         std::string filename = kfs::path::join(kfs::path::dir_name(obj_filename_.str()), matId);
 
-        try {
-            auto stream = locator_->open_file(filename);
-            tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
-        } catch(AssetMissingError& e) {
+        auto stream = locator_->open_file(filename);
+        if(!stream) {
             S_DEBUG("mtllib {0} not found. Skipping.", filename);
+        } else {
+            tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
         }
 
         return true;
@@ -138,30 +138,37 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             } else {
                 std::vector<std::string> possible_locations;
 
+                Path texname = material.diffuse_texname;
+                if(!mesh_opts.override_texture_extension.empty()) {
+                    texname = texname.replace_ext(
+                        mesh_opts.override_texture_extension
+                    );
+                }
+
                 // Check relative texture file first
                 possible_locations.push_back(
                     kfs::path::join(
                         kfs::path::dir_name(filename_.str()),
-                        material.diffuse_texname
+                        texname.str()
                     )
                 );
 
                 // Check potentially absolute file path
-                possible_locations.push_back(material.diffuse_texname);
+                possible_locations.push_back(texname.str());
 
                 bool found = false;
                 for(auto& texture_file: possible_locations) {
                     if(kfs::path::exists(texture_file)) {
                         auto tex = mesh->asset_manager().new_texture_from_file(texture_file);
                         new_mat->set_diffuse_map(tex);
-                        loaded_textures.insert(std::make_pair(material.diffuse_texname, tex));
+                        loaded_textures.insert(std::make_pair(texname.str(), tex));
                         found = true;
                         break;
                     }
                 }
 
                 if(!found) {
-                    S_WARN("Unable to locate texture {0}", material.diffuse_texname);
+                    S_WARN("Unable to locate texture {0}", texname);
                 }
             }
         }

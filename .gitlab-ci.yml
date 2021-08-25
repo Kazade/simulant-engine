@@ -592,6 +592,7 @@ test:dreamcast-sh4-gcc:
     - cd ${TARGET}/debug
     - lxdream-nitro --audio=null -H -b -u -C `pwd` -e tests/simulant_tests.elf
   artifacts:
+   when: always
    paths:
     - ${TARGET}/debug/simulant/*.a
     - ${TARGET}/release/simulant/*.a

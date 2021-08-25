@@ -32,8 +32,14 @@ public:
     void set_follow_height(float height) { height_ = height; }
     void set_damping(float damping);
     void set_rotation_damping(float damping);
+
+    /* When set to false, the node will stay focused
+     * on the target, but movement will stop */
+    void set_following_enabled(bool v);
 private:
     StageNode* target_ = nullptr;
+
+    bool following_enabled_ = true;
 
     float distance_ = 10.0;
     float height_ = 10.0;

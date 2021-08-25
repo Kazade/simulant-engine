@@ -20,6 +20,20 @@ public:
 
     std::string ext() const;
 
+    /* Returns a new Path object, with the extension replaced. If there is no
+     * extension this will effectively append the extension to the path. */
+    Path replace_ext(const std::string& new_ext) const {
+        std::string prefix = path_.substr(0, path_.find_last_of("."));
+
+        auto ext = new_ext;
+
+        if(!ext.empty() && ext[0] == '.') {
+            ext = ext.substr(1, std::string::npos);
+        }
+
+        return Path(prefix + "." + ext);
+    }
+
     bool operator==(const Path& p) const;
 
 private:

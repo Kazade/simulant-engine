@@ -26,8 +26,9 @@
 #include "../utils/gl_thread_check.h"
 #include "../renderers/renderer.h"
 #include "../generic/raii.h"
-#include "../deps/jsonic/jsonic.h"
 #include "../window.h"
+
+#include "../utils/json.h"
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
 #include "../renderers/gl2x/gpu_program.h"
@@ -37,16 +38,16 @@ namespace smlt {
 
 MaterialScript::MaterialScript(std::shared_ptr<std::istream> data, const Path& filename):
     filename_(filename),
-    data_(*data.get()) {
+    data_(data) {
 
 }
 
 template<MaterialPropertyType MT, typename T>
-static void define_property(Material& material, jsonic::Node& prop) {
-    std::string name = prop["name"].get<jsonic::String>(); // FIXME: Sanitize!
+static void define_property(Material& material, JSONIterator prop) {
+    std::string name = prop["name"]->to_str().value(); // FIXME: Sanitize!
 
-    if(!prop["default"].is_none()) {
-        auto def = (T) jsonic::auto_cast<T>(prop["default"]);
+    if(!prop["default"]->is_null()) {
+        auto def = (T) json_auto_cast<T>(prop["default"]).value();
 
         material.set_property_value(name, def);
     } else {
@@ -55,12 +56,11 @@ static void define_property(Material& material, jsonic::Node& prop) {
 }
 
 template<>
-void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& material, jsonic::Node& prop) {
-    using namespace jsonic;
-    std::string name = prop["name"].get<String>(); // FIXME: Sanitize!
+void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& material, JSONIterator prop) {
+    std::string name = prop["name"]->to_str().value(); // FIXME: Sanitize!
 
-    if(prop.has_key("default") && !prop["default"].is_none()) {
-        std::string def = prop["default"].get<String>();
+    if(prop->has_key("default") && !prop["default"]->is_null()) {
+        std::string def = prop["default"]->to_str().value();
 
         auto texture = material.asset_manager().new_texture_from_file(def);
         material.set_property_value(name, texture);
@@ -69,10 +69,10 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& mater
     }
 }
 
-void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& json) {
-    if(json.has_key("property_values")) {
-        for(auto& key: json["property_values"].keys()) {
-            auto& value = json["property_values"][key];
+static void read_property_values(Material& mat, MaterialObject& holder, JSONIterator json) {
+    if(json->has_key("property_values")) {
+        for(auto& key: json["property_values"]->keys()) {
+            auto value = json["property_values"][key];
 
             MaterialPropertyType property_type;
             if(!mat.property_type(key.c_str(), &property_type)) {
@@ -80,19 +80,19 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 continue;
             }
             if(property_type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                if(!value.is_bool()) {
+                if(!value->is_bool()) {
                     S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
-                holder.set_property_value(key.c_str(), (bool) value.get<jsonic::Boolean>());
+                holder.set_property_value(key.c_str(), value->to_bool().value());
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC3) {
-                if(!value.is_string()) {
+                if(!value->is_str()) {
                     S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
-                auto parts = unicode(value.get<jsonic::String>()).split(" ");
+                auto parts = unicode(value->to_str().value()).split(" ");
 
                 if(parts.size() != 3) {
                     S_ERROR(_F("Invalid value for property: {0}").format(key));
@@ -105,12 +105,12 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
 
                 holder.set_property_value(key.c_str(), Vec3(x, y, z));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_VEC4) {
-                if(!value.is_string()) {
+                if(!value->is_str()) {
                     S_ERROR("Invalid property value for: {0}", key);
                     continue;
                 }
 
-                auto parts = unicode(value.get<jsonic::String>()).split(" ");
+                auto parts = unicode(value->to_str().value()).split(" ");
 
                 if(parts.size() != 4) {
                     S_ERROR("Invalid value for property: {0}", key);
@@ -125,27 +125,27 @@ void read_property_values(Material& mat, MaterialObject& holder, jsonic::Node& j
                 holder.set_property_value(key.c_str(), Vec4(x, y, z, w));
             } else if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT || property_type == MATERIAL_PROPERTY_TYPE_INT) {
                 if(property_type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                    holder.set_property_value(key.c_str(), value.get<jsonic::Number>());
+                    holder.set_property_value(key.c_str(), value->to_float().value());
                 } else {
-                    if(value.is_string()) {
+                    if(value->is_str()) {
                         /* Special cases for enums - need a better way to handle this */
                         if(key == BLEND_FUNC_PROPERTY_NAME) {
-                            std::string v = value.get<jsonic::String>();
+                            std::string v = value->to_str().value();
                             BlendType type = blend_type_from_name(v.c_str());
                             holder.set_blend_func(type);
                         } else if(key == SHADE_MODEL_PROPERTY_NAME) {
-                            std::string v = value.get<jsonic::String>();
+                            std::string v = value->to_str().value();
                             holder.set_shade_model(shade_model_from_name(v.c_str()));
                         } else if(key == CULL_MODE_PROPERTY_NAME) {
-                            std::string v = value.get<jsonic::String>();
+                            std::string v = value->to_str().value();
                             holder.set_cull_mode(cull_mode_from_name(v.c_str()));
                         }
                     } else {
-                        holder.set_property_value(key.c_str(), (int32_t) value.get<jsonic::Number>());
+                        holder.set_property_value(key.c_str(), (int32_t) value->to_int().value());
                     }
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
-                std::string path = value.get<jsonic::String>();
+                std::string path = value->to_str().value();
                 auto tex = mat.asset_manager().new_texture_from_file(path);
                 holder.set_property_value(key.c_str(), tex);
             } else {
@@ -177,24 +177,22 @@ void MaterialScript::generate(Material& material) {
         }
     };
 
-    jsonic::Node json;
-    jsonic::loads(
-        std::string{std::istreambuf_iterator<char>(data_), std::istreambuf_iterator<char>()},
-        json
-    );
+    auto json = json_read(data_);
 
-    if(!json.has_key("passes")) {
+    if(!json->has_key("passes")) {
         throw std::runtime_error("Material is missing the passes key");
     }
 
     /* Load any custom properties */
-    if(json.has_key("custom_properties")) {
-        jsonic::Node& custom_props = json["custom_properties"];
+    if(json->has_key("custom_properties")) {
+        auto custom_props = json["custom_properties"];
 
-        for(uint32_t i = 0u; i < custom_props.length(); ++i) {
-            jsonic::Node& prop = custom_props[i];
+        for(auto& node: custom_props) {
+            auto prop = node.to_iterator();
 
-            std::string kind = prop["type"].get<jsonic::String>();
+            assert(prop->has_key("type"));
+
+            std::string kind = prop["type"]->to_str().value();
             auto prop_type = lookup_material_property_type(kind);
 
             switch(prop_type) {
@@ -218,16 +216,18 @@ void MaterialScript::generate(Material& material) {
 
     read_property_values(material, material, json);
 
-    material.set_pass_count(json["passes"].length());
+    material.set_pass_count(json["passes"]->size());
 
     /* Feels dirty... */
     Window* window = material.asset_manager().window;
     Renderer* renderer = window->renderer;
 
-    for(uint32_t i = 0u; i < json["passes"].length(); ++i) {
-        jsonic::Node& pass = json["passes"][i];
+    assert(json->has_key("passes"));
 
-        std::string iteration = (pass.has_key("iteration")) ? pass["iteration"].get<jsonic::String>() : "once";
+    for(uint32_t i = 0u; i < json["passes"]->size(); ++i) {
+        auto pass = json["passes"][i];
+
+        std::string iteration = (pass->has_key("iteration")) ? pass["iteration"]->to_str().value() : "once";
 
         if(iteration == "once") {
             material.pass(i)->set_iteration_type(ITERATION_TYPE_ONCE);
@@ -240,9 +240,9 @@ void MaterialScript::generate(Material& material) {
         read_property_values(material, *material.pass(i), pass);
 
         /* If we support gpu programs, then load any shaders */
-        if(renderer->supports_gpu_programs() && pass.has_key("vertex_shader") && pass.has_key("fragment_shader")) {
-            std::string vertex_shader_path = pass["vertex_shader"].get<jsonic::String>();
-            std::string fragment_shader_path = pass["fragment_shader"].get<jsonic::String>();
+        if(renderer->supports_gpu_programs() && pass->has_key("vertex_shader") && pass->has_key("fragment_shader")) {
+            std::string vertex_shader_path = pass["vertex_shader"]->to_str().value();
+            std::string fragment_shader_path = pass["fragment_shader"]->to_str().value();
 
             auto parent_dir = Path(kfs::path::dir_name(filename_.str()));
 

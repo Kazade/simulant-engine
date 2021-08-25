@@ -17,8 +17,6 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../deps/jsonic/jsonic.h"
-
 #include "particle_script.h"
 #include "../assets/material.h"
 #include "../stage.h"
@@ -27,19 +25,21 @@
 #include "../assets/particles/colour_fader.h"
 #include "../vfs.h"
 
+#include "../utils/json.h"
+
 namespace smlt {
 namespace loaders {
 
-static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, jsonic::Node& manipulator) {
+static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, JSONIterator& manipulator) {
     auto m = std::make_shared<SizeManipulator>(ps);
     ps->add_manipulator(m);
 
-    if(manipulator.has_key("rate")) {
+    if(manipulator->has_key("rate")) {
         /* Just a rate, then it's a linear curve */
-        m->set_linear_curve(manipulator["rate"].get<jsonic::Number>());
-    } else if(manipulator.has_key("curve")) {
+        m->set_linear_curve(manipulator["rate"]->to_int().value());
+    } else if(manipulator->has_key("curve")) {
         /* Parse the curve */
-        std::string spec = manipulator["curve"].get<jsonic::String>();
+        std::string spec = manipulator["curve"]->to_str().value();
         auto first_brace = spec.find('(');
         if(first_brace == std::string::npos || spec.at(spec.size() - 1) != ')') {
             S_WARN("Invalid curve specification {0}. Ignoring.", spec);
@@ -69,7 +69,7 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, jsonic::Nod
     return m.get();
 }
 
-static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, jsonic::Node& js) {
+static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
     auto parse_colour = [](const std::string& colour) -> smlt::Colour {
         auto parts = unicode(colour).split(" ");
         if(parts.size() == 3) {
@@ -94,13 +94,13 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, jso
 
     std::vector<smlt::Colour> colours;
 
-    jsonic::Node& colour_array = js["colours"];
-    for(auto i = 0u; i < colour_array.length(); ++i) {
-        std::string colour = colour_array[(uint32_t) i].get<jsonic::String>();
+    auto colour_array = js["colours"];
+    for(auto i = 0u; i < colour_array->size(); ++i) {
+        std::string colour = colour_array[(uint32_t) i]->to_str().value();
         colours.push_back(parse_colour(colour));
     }
 
-    bool interpolate = js["interpolate"].get<jsonic::Boolean>();
+    bool interpolate = js["interpolate"]->to_bool().value_or(true);
 
     auto m = std::make_shared<ColourFader>(ps, colours, interpolate);
     ps->add_manipulator(m);
@@ -112,33 +112,29 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
     _S_UNUSED(options);
 
     ParticleScript* ps = loadable_to<ParticleScript>(resource);
-    jsonic::Node js;
 
-    jsonic::loads(
-        std::string((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>()),
-        js
-    );
+    auto js = json_read(this->data_);
 
-    ps->set_name((js.has_key("name")) ? js["name"].get<jsonic::String>(): "");
+    ps->set_name(js["name"]->to_str().value());
 
-    if(js.has_key("quota")) {
-        ps->set_quota(js["quota"].get<jsonic::Number>());
+    if(js->has_key("quota")) {
+        ps->set_quota(js["quota"]->to_int().value_or(0));
     }
 
-    if(js.has_key("particle_width")) {
-        ps->set_particle_width(js["particle_width"].get<jsonic::Number>());
+    if(js->has_key("particle_width")) {
+        ps->set_particle_width(js["particle_width"]->to_float().value_or(0.0f));
     }
 
-    if(js.has_key("particle_height")) {
-        ps->set_particle_height(js["particle_height"].get<jsonic::Number>());
+    if(js->has_key("particle_height")) {
+        ps->set_particle_height(js["particle_height"]->to_float().value_or(0.0f));
     }
 
-    if(js.has_key("cull_each")) {
-        ps->set_cull_each(js["cull_each"].get<jsonic::Boolean>());
+    if(js->has_key("cull_each")) {
+        ps->set_cull_each(js["cull_each"]->to_bool().value_or(false));
     }
 
-    if(js.has_key("material")) {
-        std::string material = js["material"].get<jsonic::String>();
+    if(js->has_key("material")) {
+        std::string material = js["material"]->to_str().value();
 
         if(Material::BUILT_IN_NAMES.count(material)) {
             material = Material::BUILT_IN_NAMES.at(material);
@@ -149,28 +145,28 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
 
         /* Apply any specified material properties */
         const std::string MATERIAL_PROPERTY_PREFIX = "material.";
-        for(std::string& key: js.keys()) {
+        for(std::string& key: js->keys()) {
             if(key.substr(0, MATERIAL_PROPERTY_PREFIX.length()) == MATERIAL_PROPERTY_PREFIX) {
                 auto property_name = key.substr(MATERIAL_PROPERTY_PREFIX.length());
 
                 MaterialPropertyType type;
                 if(mat->property_type(property_name.c_str(), &type)) {
                     if(type == MATERIAL_PROPERTY_TYPE_BOOL) {
-                        mat->set_property_value(property_name.c_str(), (bool) js[key].get<jsonic::Boolean>());
+                        mat->set_property_value(property_name.c_str(), (bool) js[key]->to_bool().value());
                     } else if(type == MATERIAL_PROPERTY_TYPE_FLOAT) {
-                        mat->set_property_value(property_name.c_str(), (js[key].get<jsonic::Number>()));
+                        mat->set_property_value(property_name.c_str(), (js[key]->to_float().value()));
                     } else if(type == MATERIAL_PROPERTY_TYPE_INT) {
                         if(property_name == BLEND_FUNC_PROPERTY_NAME) {
-                            mat->set_blend_func(blend_type_from_name(js[key].get<jsonic::String>().c_str()));
+                            mat->set_blend_func(blend_type_from_name(js[key]->to_str().value().c_str()));
                         } else {
                             // FIXME: There are a load of missing enums here!
-                            mat->set_property_value(property_name.c_str(), (int32_t) js[key].get<jsonic::Number>());
+                            mat->set_property_value(property_name.c_str(), (int32_t) js[key]->to_int().value());
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.str());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
-                        auto tex = ps->asset_manager().new_texture_from_file(js[key].get<jsonic::String>());
+                        auto tex = ps->asset_manager().new_texture_from_file(js[key]->to_str().value());
                         mat->set_property_value(property_name.c_str(), tex);
                         if(remove) {
                             // Remove the path if necessary
@@ -188,22 +184,22 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
         }
     }
 
-    if(js.has_key("emitters")) {
+    if(js->has_key("emitters")) {
         S_DEBUG("Loading emitters");
 
-        jsonic::Node& emitters = js["emitters"];
-        for(uint32_t i = 0; i < emitters.length(); ++i) {
-            jsonic::Node& emitter = emitters[i];
+        auto emitters = js["emitters"];
+        for(uint32_t i = 0; i < emitters->size(); ++i) {
+            auto emitter = emitters[i];
 
             Emitter new_emitter;
-            if(emitter.has_key("type")) {
-                auto emitter_type = emitter["type"].get<jsonic::String>();
+            if(emitter->has_key("type")) {
+                auto emitter_type = emitter["type"]->to_str().value_or("point");
                 S_DEBUG("Emitter {0} has type {1}", i, emitter_type);
                 new_emitter.type = (emitter_type == "point") ? PARTICLE_EMITTER_POINT : PARTICLE_EMITTER_BOX;
             }
 
-            if(emitter.has_key("direction")) {
-                auto parts = unicode(emitter["direction"].get<jsonic::String>()).split(" ");
+            if(emitter->has_key("direction")) {
+                auto parts = unicode(emitter["direction"]->to_str().value_or("0 1 0")).split(" ");
                 //FIXME: check length
                 new_emitter.direction = smlt::Vec3(
                     parts.at(0).to_float(),
@@ -212,81 +208,81 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 );
             }
 
-            if(emitter.has_key("velocity")) {
-                float x = emitter["velocity"].get<jsonic::Number>();
+            if(emitter->has_key("velocity")) {
+                float x = emitter["velocity"]->to_float().value();
                 new_emitter.velocity_range = std::make_pair(x, x);
             }
 
-            if(emitter.has_key("width")) {
-                new_emitter.dimensions.x = emitter["width"].get<jsonic::Number>();
+            if(emitter->has_key("width")) {
+                new_emitter.dimensions.x = emitter["width"]->to_float().value();
             }
 
-            if(emitter.has_key("height")) {
-                new_emitter.dimensions.y = emitter["height"].get<jsonic::Number>();
+            if(emitter->has_key("height")) {
+                new_emitter.dimensions.y = emitter["height"]->to_float().value();
             }
 
-            if(emitter.has_key("depth")) {
-                new_emitter.dimensions.z = emitter["depth"].get<jsonic::Number>();
+            if(emitter->has_key("depth")) {
+                new_emitter.dimensions.z = emitter["depth"]->to_float().value();
             }
 
-            if(emitter.has_key("ttl")) {
-                float x = emitter["ttl"].get<jsonic::Number>();
+            if(emitter->has_key("ttl")) {
+                float x = emitter["ttl"]->to_float().value();
                 new_emitter.ttl_range = std::make_pair(x, x);
             } else {
-                if(emitter.has_key("ttl_min") && emitter.has_key("ttl_max")) {
+                if(emitter->has_key("ttl_min") && emitter->has_key("ttl_max")) {
                     new_emitter.ttl_range = std::make_pair(
-                        emitter["ttl_min"].get<jsonic::Number>(),
-                        emitter["ttl_max"].get<jsonic::Number>()
+                        emitter["ttl_min"]->to_float().value(),
+                        emitter["ttl_max"]->to_float().value()
                     );
-                } else if(emitter.has_key("ttl_min")) {
+                } else if(emitter->has_key("ttl_min")) {
                     new_emitter.ttl_range = std::make_pair(
-                        emitter["ttl_min"].get<jsonic::Number>(),
+                        emitter["ttl_min"]->to_float().value(),
                         new_emitter.ttl_range.second
                     );
-                } else if(emitter.has_key("ttl_max")) {
+                } else if(emitter->has_key("ttl_max")) {
                     new_emitter.ttl_range = std::make_pair(
                         new_emitter.ttl_range.first,
-                        emitter["ttl_max"].get<jsonic::Number>()
+                        emitter["ttl_max"]->to_float().value()
                     );
                 }
             }
 
-            if(emitter.has_key("duration")) {
-                float x = emitter["duration"].get<jsonic::Number>();
+            if(emitter->has_key("duration")) {
+                float x = emitter["duration"]->to_float().value();
                 new_emitter.duration_range = std::make_pair(x, x);
             }
 
-            if(emitter.has_key("repeat_delay")) {
-                float x = emitter["repeat_delay"].get<jsonic::Number>();
+            if(emitter->has_key("repeat_delay")) {
+                float x = emitter["repeat_delay"]->to_float().value();
                 new_emitter.repeat_delay_range = std::make_pair(x, x);
             }
 
-            if(emitter.has_key("angle")) {
-                new_emitter.angle = Degrees(emitter["angle"].get<jsonic::Number>());
+            if(emitter->has_key("angle")) {
+                new_emitter.angle = Degrees(emitter["angle"]->to_float().value());
             }
 
-            if(emitter.has_key("colour")) {
-                auto parts = unicode(emitter["colour"].get<jsonic::String>()).split(" ");
+            if(emitter->has_key("colour")) {
+                auto parts = unicode(emitter["colour"]->to_str().value_or("0 0 0 0")).split(" ");
                 new_emitter.colour = smlt::Colour(
                     parts.at(0).to_float(), parts.at(1).to_float(), parts.at(2).to_float(), parts.at(3).to_float()
                 );
             }
 
-            if(emitter.has_key("emission_rate")) {
-                new_emitter.emission_rate = emitter["emission_rate"].get<jsonic::Number>();
+            if(emitter->has_key("emission_rate")) {
+                new_emitter.emission_rate = emitter["emission_rate"]->to_float().value();
             }
 
             ps->push_emitter(new_emitter);
         }
 
-        if(js.has_key("manipulators")) {
-            jsonic::Node& manipulators = js["manipulators"];
-            for(uint32_t i = 0; i < manipulators.length(); ++i) {
-                auto& manipulator = manipulators[i];
+        if(js->has_key("manipulators")) {
+            auto manipulators = js["manipulators"];
+            for(uint32_t i = 0; i < manipulators->size(); ++i) {
+                auto manipulator = manipulators[i];
 
-                if(manipulator["type"].get<jsonic::String>() == "size") {
+                if(manipulator["type"]->to_str().value() == "size") {
                     spawn_size_manipulator(ps, manipulator);
-                } else if(manipulator["type"].get<jsonic::String>() == "colour_fader") {
+                } else if(manipulator["type"]->to_str().value() == "colour_fader") {
                     spawn_colour_fader_manipulator(ps, manipulator);
                 }
             }
