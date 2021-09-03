@@ -72,6 +72,10 @@ public:
     void update_light(LightID light_id, const AABB& bounds);
     void remove_light(LightID light_id);
 
+    void add_mesh_instancer(MeshInstancerID mesh_instancer_id);
+    void update_mesh_instancer(MeshInstancerID mesh_instancer_id, const AABB& bounds);
+    void remove_mesh_instancer(MeshInstancerID mesh_instancer_id);
+
     void _apply_writes();
 
     virtual void lights_and_geometry_visible_from(

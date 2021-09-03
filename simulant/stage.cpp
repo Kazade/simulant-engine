@@ -436,6 +436,9 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
 
     signal_particle_system_created().connect(std::bind(&Partitioner::add_particle_system, partitioner_.get(), std::placeholders::_1));
     signal_particle_system_destroyed().connect(std::bind(&Partitioner::remove_particle_system, partitioner_.get(), std::placeholders::_1));
+
+    signal_mesh_instancer_created().connect(std::bind(&Partitioner::add_mesh_instancer, partitioner_.get(), std::placeholders::_1));
+    signal_mesh_instancer_destroyed().connect(std::bind(&Partitioner::remove_mesh_instancer, partitioner_.get(), std::placeholders::_1));
 }
 
 void Stage::update(float dt) {
@@ -494,6 +497,13 @@ void Stage::destroy_object(ParticleSystem* object) {
     }
 }
 
+void Stage::destroy_object(MeshInstancer* object) {
+    auto id = object->id();
+    if(mesh_instancer_manager_->destroy(id)) {
+        signal_mesh_instancer_destroyed_(id);
+    }
+}
+
 void Stage::destroy_object_immediately(Actor* object) {
     // Only send the signal if we didn't already
     auto id = object->id();
@@ -530,6 +540,13 @@ void Stage::destroy_object_immediately(ParticleSystem* object) {
     }
 }
 
+void Stage::destroy_object_immediately(MeshInstancer *object) {
+    auto id = object->id();
+    if(mesh_instancer_manager_->destroy_immediately(id)) {
+        signal_mesh_instancer_destroyed_(id);
+    }
+}
+
 void Stage::on_actor_created(ActorID actor_id) {
     _S_UNUSED(actor_id);
 }
@@ -544,6 +561,7 @@ void Stage::clean_up_dead_objects() {
     geom_manager_->clean_up();
     particle_system_manager_->clean_up();
     camera_manager_->clean_up();
+    mesh_instancer_manager_->clean_up();
 }
 
 }

@@ -58,6 +58,7 @@ typedef StageNodeManager<StageNodePool, GeomID, Geom> GeomManager;
 typedef StageNodeManager<StageNodePool, LightID, Light> LightManager;
 typedef StageNodeManager<StageNodePool, ParticleSystemID, ParticleSystem> ParticleSystemManager;
 typedef StageNodeManager<StageNodePool, CameraID, Camera> CameraManager;
+typedef StageNodeManager<StageNodePool, MeshInstancerID, MeshInstancer> MeshInstancerManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
@@ -74,6 +75,8 @@ typedef sig::signal<void (CameraID)> CameraDestroyedSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePreRenderSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
 
+typedef sig::signal<void (MeshInstancerID)> MeshInstancerCreatedSignal;
+typedef sig::signal<void (MeshInstancerID)> MeshInstancerDestroyedSignal;
 
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
@@ -84,6 +87,9 @@ class Stage:
     public Loadable,
     public virtual WindowHolder,
     public ChainNameable<Stage> {
+
+    DEFINE_SIGNAL(MeshInstancerCreatedSignal, signal_mesh_instancer_created);
+    DEFINE_SIGNAL(MeshInstancerDestroyedSignal, signal_mesh_instancer_destroyed);
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
     DEFINE_SIGNAL(ParticleSystemDestroyedSignal, signal_particle_system_destroyed);
@@ -193,12 +199,14 @@ public:
     void destroy_object(Camera* object);
     void destroy_object(Geom* object);
     void destroy_object(ParticleSystem* object);
+    void destroy_object(MeshInstancer* object);
 
     void destroy_object_immediately(Actor* object);
     void destroy_object_immediately(Light* object);
     void destroy_object_immediately(Camera* object);
     void destroy_object_immediately(Geom* object);
     void destroy_object_immediately(ParticleSystem* object);
+    void destroy_object_immediately(MeshInstancer* object);
 
     bool is_part_of_active_pipeline() const {
         return active_pipeline_count_ > 0;
@@ -241,7 +249,7 @@ private:
     std::unique_ptr<GeomManager> geom_manager_;
     std::unique_ptr<SkyManager> sky_manager_;
     std::unique_ptr<SpriteManager> sprite_manager_;
-
+    std::unique_ptr<MeshInstancerManager> mesh_instancer_manager_;
     std::unique_ptr<ActorManager> actor_manager_;
     std::unique_ptr<ParticleSystemManager> particle_system_manager_;
     std::unique_ptr<LightManager> light_manager_;

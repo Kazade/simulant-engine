@@ -89,6 +89,28 @@ void Partitioner::remove_light(LightID obj) {
     stage_write(obj, write);
 }
 
+void Partitioner::add_mesh_instancer(MeshInstancerID obj) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_ADD;
+    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+    stage_write(obj, write);
+}
+
+void Partitioner::update_mesh_instancer(MeshInstancerID mesh_instancer_id, const AABB &bounds) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_UPDATE;
+    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+    write.new_bounds = bounds;
+    stage_write(mesh_instancer_id, write);
+}
+
+void Partitioner::remove_mesh_instancer(MeshInstancerID obj) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_REMOVE;
+    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+    stage_write(obj, write);
+}
+
 void Partitioner::_apply_writes() {
     for(auto& p: staged_writes_) {
         bool remove_first = p.second.bits & (1 << WRITE_OPERATION_MAX);

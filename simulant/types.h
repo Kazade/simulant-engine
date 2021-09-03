@@ -407,6 +407,9 @@ typedef default_init_ptr<Actor> ActorPtr;
 class Geom;
 typedef default_init_ptr<Geom> GeomPtr;
 
+class MeshInstancer;
+typedef default_init_ptr<MeshInstancer> MeshInstancerPtr;
+
 class ParticleSystem;
 typedef default_init_ptr<ParticleSystem> ParticleSystemPtr;
 
@@ -474,6 +477,7 @@ typedef UniqueID<LightPtr> LightID;
 typedef UniqueID<StagePtr> StageID;
 typedef UniqueID<ActorPtr> ActorID;
 typedef UniqueID<GeomPtr> GeomID;
+typedef UniqueID<MeshInstancer> MeshInstancerID;
 typedef UniqueID<SoundPtr> SoundID;
 typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;
