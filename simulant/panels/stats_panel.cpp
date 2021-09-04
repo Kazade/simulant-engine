@@ -138,10 +138,6 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
 
 #define RAM_SAMPLES 25
 
-static unsigned int round(unsigned int value, unsigned int multiple){
-    return ((value-1u) & ~(multiple-1u)) + multiple;
-}
-
 void StatsPanel::rebuild_ram_graph() {
     smlt::Colour colour = smlt::Colour::BLUE;
     colour.a = 0.35;

@@ -28,7 +28,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_1555);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
         uint16_t texel = *((uint16_t*) &tex->data()[0]);
         assert_equal(texel, 0xFC1F);
 #else
@@ -51,7 +51,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
         uint16_t texel = *((uint16_t*) &tex->data()[0]);
         assert_equal(texel, 0xFF0F);
 #else
@@ -74,7 +74,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_RGB_1US_565);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
         uint16_t texel = *((uint16_t*) &tex->data()[0]);
         assert_equal(texel, 0xF81F);
 #else
@@ -97,7 +97,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_1555);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
 #else
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_1555_TWID);
 #endif
@@ -120,7 +120,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
 #else
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444_TWID);
 #endif
@@ -144,7 +144,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_RGB_1US_565);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
 #else
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_RGB_1US_565_TWID);
 #endif

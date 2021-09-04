@@ -50,8 +50,8 @@ std::size_t Sound::buffer_size() const {
 
 #ifdef __DREAMCAST__
     /* The Dreamcast sound chip only allows 65534 samples and ALdc
-     * will truncate if it's larger so this just prevents us missing
-     * a sample */
+     * will truncate if it's larger so this prevents us triggering
+     * an OpenAL error */
     ret = std::min(ret, (std::size_t) 65534);
 #endif
 

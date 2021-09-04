@@ -234,7 +234,7 @@ bool Renderer::convert_if_necessary(Texture* tex) {
     bool untwiddle = format_in_list(fmt, can_untwiddle);
 
     if(untwiddle) {
-        std::vector<uint8_t> tmp(tex->data().size());
+        std::vector<uint8_t> tmp(tex->data_size());
 
         untwiddle_16bpp(&tex->data()[0], &tmp[0], tex->width(), tex->height());
         fmt = untwiddle_format(fmt);
