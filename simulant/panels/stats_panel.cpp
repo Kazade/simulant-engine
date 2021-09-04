@@ -136,6 +136,12 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
     return bytes_to_megabytes(get_app()->ram_usage_in_bytes());
 }
 
+#ifndef __DREAMCAST__
+static unsigned int round(unsigned int value, unsigned int multiple){
+    return ((value-1u) & ~(multiple-1u)) + multiple;
+}
+#endif
+
 #define RAM_SAMPLES 25
 
 void StatsPanel::rebuild_ram_graph() {
