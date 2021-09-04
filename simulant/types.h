@@ -477,7 +477,7 @@ typedef UniqueID<LightPtr> LightID;
 typedef UniqueID<StagePtr> StageID;
 typedef UniqueID<ActorPtr> ActorID;
 typedef UniqueID<GeomPtr> GeomID;
-typedef UniqueID<MeshInstancer> MeshInstancerID;
+typedef UniqueID<MeshInstancerPtr> MeshInstancerID;
 typedef UniqueID<SoundPtr> SoundID;
 typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;

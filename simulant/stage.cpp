@@ -20,19 +20,22 @@
 #include "stage.h"
 #include "window.h"
 #include "partitioner.h"
+#include "debug.h"
+#include "viewport.h"
+
 #include "nodes/actor.h"
 #include "nodes/light.h"
 #include "nodes/camera.h"
-#include "debug.h"
-#include "viewport.h"
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
 #include "nodes/geom.h"
 #include "nodes/camera.h"
+#include "nodes/mesh_instancer.h"
 
 #include "nodes/ui/ui_manager.h"
 
 #include "loader.h"
+
 #include "partitioners/null_partitioner.h"
 #include "partitioners/spatial_hash.h"
 #include "partitioners/frustum_partitioner.h"

@@ -27,9 +27,8 @@
 #include "generic/data_carrier.h"
 #include "threads/atomic.h"
 
-#include "nodes/stage_node_manager.h"
-
 #include "managers/window_holder.h"
+
 #include "nodes/skies/skybox_manager.h"
 #include "nodes/sprites/sprite_manager.h"
 #include "nodes/actor.h"
@@ -37,6 +36,9 @@
 #include "nodes/particle_system.h"
 #include "nodes/stage_node.h"
 #include "nodes/light.h"
+#include "nodes/mesh_instancer.h"
+#include "nodes/stage_node_manager.h"
+
 #include "types.h"
 #include "asset_manager.h"
 

@@ -1,9 +1,14 @@
 #pragma once
 
+#include <unordered_map>
+
+#include "../generic/identifiable.h"
+
 #include "stage_node.h"
 #include "../interfaces.h"
 #include "../sound.h"
 #include "../generic/manual_object.h"
+#include "../generic/containers/contiguous_map.h"
 
 namespace smlt {
 
@@ -30,7 +35,7 @@ typedef std::size_t MeshInstanceID;
  * Spawning animated meshes is currently unsupported.
  */
 class MeshInstancer:
-    public TypedDestroyableObject<Actor, Stage>,
+    public TypedDestroyableObject<MeshInstancer, Stage>,
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<MeshInstancerID>,
@@ -43,7 +48,6 @@ public:
     virtual ~MeshInstancer();
 
     const AABB& aabb() const override;
-
     void set_mesh(MeshPtr mesh);
     MeshPtr mesh() const;
 
@@ -79,6 +83,24 @@ public:
      */
     bool hide_mesh_instance(MeshInstanceID mid);
 
+private:
+    MeshPtr mesh_;
+
+    /* The axis-aligned box containing all mesh instances */
+    AABB aabb_;
+
+    void recalc_aabb();
+
+    struct MeshInstance {
+        uint32_t id = 0;
+        bool visible = true;
+        Mat4 transformation;
+    };
+
+    static uint32_t id_counter_;
+
+    /* FIXME: Convert to ContiguousMap when it has erase... */
+    std::unordered_map<uint32_t, MeshInstance> instances_;
 };
 
 

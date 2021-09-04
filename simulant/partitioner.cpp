@@ -4,6 +4,7 @@
 #include "nodes/particle_system.h"
 #include "nodes/geom.h"
 #include "nodes/light.h"
+#include "nodes/mesh_instancer.h"
 
 namespace smlt {
 
