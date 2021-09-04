@@ -142,6 +142,8 @@ public:
     typedef std::vector<uint8_t> Data;
 
     Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
+    ~Texture();
+
 
     TextureFormat format() const;
     void set_format(TextureFormat format);
@@ -193,7 +195,15 @@ public:
     void set_auto_upload(bool v=true);
     void set_mipmap_generation(MipmapGenerate type);
 
-    const Texture::Data& data() const;
+    /** Return a copy of the internal data array */
+    std::vector<uint8_t> data_copy() const;
+
+    const uint8_t* data() const;
+
+    /** Returns the size of the currently allocated data
+     *  buffer, this will be zero if the data only
+     *  exists in vram */
+    uint32_t data_size() const;
 
     /** The required size that data() should be to hold a texture in this format with these dimensions.
       * For non-compressed formats this is usually the width * height * stride. For compressed formats
@@ -202,7 +212,7 @@ public:
     static std::size_t required_data_size(TextureFormat fmt, uint16_t width, uint16_t height);
 
     void set_data(const uint8_t* data, std::size_t size);
-    void set_data(const Texture::Data& data);
+    void set_data(const std::vector<uint8_t>& data);
 
     /** Clear the data buffer */
     void free();
@@ -287,8 +297,12 @@ private:
     Path source_;
 
     bool auto_upload_ = true; /* If true, the texture is uploaded by the renderer asap */
+
+    void resize_data(uint32_t byte_size);
+
     bool data_dirty_ = true;
-    Texture::Data data_;
+    uint8_t* data_ = nullptr;
+    uint32_t data_size_ = 0;
     TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
 
     MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;

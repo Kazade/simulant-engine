@@ -358,7 +358,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     int32_t total = width * height;
 
     std::vector<float> heights(total);
-    auto& tex_data = tex->data();
+    auto tex_data = tex->data();
     auto stride = texture_format_stride(tex->format());
     float m = 1.0f / 256.0f;
     for(int32_t i = 0; i < total; i++) {

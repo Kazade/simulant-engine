@@ -95,6 +95,10 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     renderer_ = asset_manager->window->renderer;
 }
 
+Texture::~Texture() {
+    free();
+}
+
 TextureFormat Texture::format() const {
     return format_;
 }
@@ -128,23 +132,18 @@ void Texture::set_format(TextureFormat format) {
 
     format_ = format;
 
-    data_.resize(required_data_size(format, width_, height_));
-    data_.shrink_to_fit();
-
-    data_dirty_ = true;
+    auto byte_size = required_data_size(format, width_, height_);
+    resize_data(byte_size);
 }
 
 void Texture::resize(uint16_t width, uint16_t height, uint32_t data_size) {
-    if(width_ == width && height_ == height && data_.size() == data_size) {
+    if(width_ == width && height_ == height && data_size_ == data_size) {
         return;
     }
 
     width_ = width;
     height_ = height;
-    data_.resize(data_size);
-    data_.shrink_to_fit();
-
-    data_dirty_ = true;
+    resize_data(data_size);
 }
 
 void Texture::resize(uint16_t width, uint16_t height) {
@@ -155,10 +154,8 @@ void Texture::resize(uint16_t width, uint16_t height) {
     width_ = width;
     height_ = height;
 
-    data_.resize(required_data_size(format_, width, height));
-    data_.shrink_to_fit();
-
-    data_dirty_ = true;
+    auto data_size = required_data_size(format_, width, height);
+    resize_data(data_size);
 }
 
 static void explode_r8(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
@@ -246,7 +243,9 @@ static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
 };
 
 void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
-    auto original_data = data();
+    std::vector<uint8_t> original_data(data_size());
+    std::copy(data_, data_ + data_size(), original_data.begin());
+
     auto original_format = format();
 
     set_format(new_format);
@@ -313,16 +312,17 @@ void Texture::set_source(const Path& source) {
 }
 
 void Texture::free() {
-    data_.clear();
-    data_.shrink_to_fit();
-
     /* We don't mark data dirty here, we don't want
      * anything to be updated in GL, we're just freeing
      * the RAM */
+
+    delete [] data_;
+    data_ = nullptr;
+    data_size_ = 0;
 }
 
 bool Texture::has_data() const {
-    return !data_.empty();
+    return bool(data_);
 }
 
 void Texture::flush() {
@@ -358,12 +358,17 @@ uint8_t Texture::channels() const {
     return texture_format_channels(format_);
 }
 
-const Texture::Data &Texture::data() const {
+const uint8_t *Texture::data() const {
     return data_;
 }
 
+uint32_t Texture::data_size() const {
+    return data_size_;
+}
+
 void Texture::set_data(const uint8_t* data, std::size_t size) {
-    data_.assign(data, data + size);
+    resize_data(size);
+    std::copy(data, data + size, data_);
 }
 
 void Texture::save_to_file(const Path& filename) {
@@ -464,13 +469,37 @@ void Texture::set_mipmap_generation(MipmapGenerate type) {
     params_dirty_ = true;
 }
 
-void Texture::set_data(const Texture::Data& d) {
-    data_ = d;
-    data_dirty_ = true;
+std::vector<uint8_t> Texture::data_copy() const {
+    std::vector<uint8_t> result(data_size());
+    std::copy(data_, data_ + data_size_, result.begin());
+    return result;
+}
+
+void Texture::set_data(const std::vector<uint8_t> &d) {
+    resize_data(d.size()); // Marks data_dirty_ == true
+    std::copy(d.begin(), d.end(), data_);
 }
 
 void Texture::_set_has_mipmaps(bool v) {
     has_mipmaps_ = v;
+}
+
+void Texture::resize_data(uint32_t byte_size) {
+    if(byte_size == data_size_) {
+        return;
+    }
+
+    // FIXME: Do we bother if byte_size is lower, and
+    // close to data_size_? Optimisation to avoid realloc?
+
+    if(data_) {
+        delete [] data_;
+        data_ = nullptr;
+    }
+
+    data_ = new uint8_t[byte_size];
+    data_size_ = byte_size;
+    data_dirty_ = true;
 }
 
 bool Texture::init() {

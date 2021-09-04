@@ -164,7 +164,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                     0,
                     format,
                     texture->width(), texture->height(), 0,
-                    texture->data().size(),
+                    texture->data_size(),
                     &texture->data()[0]
                 );
             } else {

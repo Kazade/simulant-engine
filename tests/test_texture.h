@@ -43,7 +43,7 @@ public:
     void test_conversion_from_r8_to_rgba4444() {
         auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R_1UB_8);
 
-        auto data = tex->data();
+        auto data = tex->data_copy();
         data[0] = 255;
         data[1] = 128;
         data[2] = 0;
@@ -59,7 +59,7 @@ public:
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ZERO, TEXTURE_CHANNEL_GREEN, TEXTURE_CHANNEL_RED}}
         );
 
-        assert_equal(8u, tex->data().size());
+        assert_equal(8u, tex->data_size());
 
         auto expected1 = 0b1111000000001111;
         uint16_t* first_pixel = (uint16_t*) &tex->data()[0];
