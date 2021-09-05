@@ -681,7 +681,7 @@ private:
 };
 
 
-template<typename K, typename V, typename Compare=std::less<K>>
+template<typename K, typename V, typename Compare=ThreeWayCompare<K>>
 class ContiguousMap {
 public:
     typedef typename ContiguousMultiMap<K, V, Compare>::iterator iterator;
