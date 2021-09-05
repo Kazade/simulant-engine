@@ -323,7 +323,12 @@ public:
     }
 
     Base* operator[](id i) {
-        return object_from_id(i)->meta.entry;
+        auto obj = object_from_id(i);
+        if(obj) {
+            return obj->meta.entry;
+        } else {
+            return nullptr;
+        }
     }
 
     const Base* operator[](id i) const {
@@ -528,6 +533,10 @@ private:
     }
 
     EntryWithMeta* object_from_id(id i) const {
+        if(i == 0) {
+            return nullptr;
+        }
+
         std::size_t idx = i - 1;
         std::size_t chunk_id = (idx / chunk_size);
         std::size_t index = (idx % chunk_size);
