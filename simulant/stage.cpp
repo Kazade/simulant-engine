@@ -55,6 +55,7 @@ Stage::Stage(Window *parent, StageNodePool *node_pool, AvailablePartitioner part
     geom_manager_(new GeomManager(node_pool_)),
     sky_manager_(new SkyManager(parent, this, node_pool_)),
     sprite_manager_(new SpriteManager(parent, this, node_pool_)),
+    mesh_instancer_manager_(new MeshInstancerManager(node_pool_)),
     actor_manager_(new ActorManager(node_pool_)),
     particle_system_manager_(new ParticleSystemManager(node_pool_)),
     light_manager_(new LightManager(node_pool_)),
@@ -206,6 +207,52 @@ void Stage::destroy_actor(ActorID e) {
 
 std::size_t Stage::actor_count() const {
     return actor_manager_->size();
+}
+
+
+MeshInstancerPtr Stage::new_mesh_instancer(MeshID mid) {
+    auto mesh = asset_manager_->mesh(mid);
+    if(!mesh) {
+        return MeshInstancerPtr();
+    }
+
+    auto instance = mesh_instancer_manager_->make(
+        this, window->_sound_driver(), mesh
+    );
+
+    instance->set_parent(this);
+
+    auto id = instance->id();
+
+    instance->signal_bounds_updated().connect([this, id](const AABB& new_bounds) {
+        this->partitioner->update_mesh_instancer(id, new_bounds);
+    });
+
+    signal_mesh_instancer_created_(id);
+
+    return instance;
+}
+
+bool Stage::destroy_mesh_instancer(MeshInstancerID mid) {
+    auto instance = mesh_instancer(mid);
+    if(instance) {
+        instance->destroy();
+        return true;
+    }
+
+    return false;
+}
+
+MeshInstancerPtr Stage::mesh_instancer(MeshInstancerID mid) {
+    return mesh_instancer_manager_->get(mid);
+}
+
+std::size_t Stage::mesh_instancer_count() const {
+    return mesh_instancer_manager_->size();
+}
+
+bool Stage::has_mesh_instancer(MeshInstancerID mid) const {
+    return mesh_instancer_manager_->contains(mid);
 }
 
 CameraPtr Stage::new_camera() {

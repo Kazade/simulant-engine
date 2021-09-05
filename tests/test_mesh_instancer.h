@@ -11,7 +11,7 @@ public:
         smlt::test::SimulantTestCase::set_up();
 
         stage_ = window->new_stage();
-        mesh_ = stage_->assets->new_mesh_as_teapot();
+        mesh_ = stage_->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
     void test_mesh_instancer_creation() {
@@ -48,7 +48,7 @@ public:
 
         instancer->set_name("instancer");
 
-        auto found = stage_->find_mesh_instancer("instancer");
+        auto found = stage_->find_descendent_with_name("instancer");
         assert_true(found);
         assert_equal(found, instancer);
     }
@@ -57,7 +57,7 @@ public:
         auto instancer = stage_->new_mesh_instancer(mesh_);
         assert_true(instancer->aabb().has_zero_area());
 
-        instancer->create_instance(smlt::Vec3());
+        instancer->new_mesh_instance(smlt::Vec3());
 
         assert_false(instancer->aabb().has_zero_area());
 

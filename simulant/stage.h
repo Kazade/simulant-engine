@@ -123,6 +123,41 @@ public:
     void destroy_actor(ActorID e);
     std::size_t actor_count() const;
 
+    /**
+     * @brief Creates a new MeshInstancer from a mesh
+     * and returns it
+     * @param mid The ID of the mesh this instancer will be able to spawn
+     * @return a pointer to the new mesh instancer, or a null pointer on failure
+     */
+    MeshInstancerPtr new_mesh_instancer(MeshID mid);
+
+    /**
+     * @brief Destroys a MeshInstancer by its ID.
+     * @param The ID of the MeshInstancer to destroy.
+     * @return true on success, false if the MeshInstancerID was invalid.
+     */
+    bool destroy_mesh_instancer(MeshInstancerID mid);
+
+    /**
+     * @brief Returns the MeshInstancerPtr associated with the ID
+     * @param mid - the id of the MeshInstancer to retrieve
+     * @return a valid MeshInstancerPtr if the ID was valid, or null
+     */
+    MeshInstancerPtr mesh_instancer(MeshInstancerID mid);
+
+    /**
+     * @brief Returns the number of MeshInstancers in the stage
+     * @return the number of MeshInstancers in the stage
+     */
+    std::size_t mesh_instancer_count() const;
+
+    /**
+     * @brief Checks to see if this MeshInstancer exists
+     * @param mid
+     * @return true if it exists, false otherwise
+     */
+    bool has_mesh_instancer(MeshInstancerID mid) const;
+
     CameraPtr new_camera();
     CameraPtr new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
     CameraPtr new_camera_for_ui();
