@@ -189,6 +189,20 @@ public:
 
         return corners_;
     }
+
+    void encapsulate(const AABB& other);
+
+    bool operator==(const AABB& rhs) const {
+        return min().equals(rhs.min()) && max().equals(rhs.max());
+    }
+
+    bool operator!=(const AABB& rhs) const {
+        return !(*this == rhs);
+    }
+
+    friend std::ostream& operator<<(std::ostream& stream, const AABB& aabb);
 };
+
+std::ostream& operator<<(std::ostream& stream, const AABB& aabb);
 
 }
