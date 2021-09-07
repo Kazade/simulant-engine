@@ -94,12 +94,15 @@ private:
     /* The axis-aligned box containing all mesh instances */
     AABB aabb_;
 
-    void recalc_aabb();
+    void recalc_aabb();    
+
+    void on_transformation_changed();
 
     struct MeshInstance {
         uint32_t id = 0;
         bool is_visible = true;
         Mat4 transformation;
+        Mat4 abs_transformation;
         AABB aabb;
 
         /* Recalc the aabb from the transformation */

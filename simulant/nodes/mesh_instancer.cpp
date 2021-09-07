@@ -42,6 +42,7 @@ MeshInstanceID MeshInstancer::new_mesh_instance(const Vec3 &position, const Quat
     MeshInstance i;
     i.id = ++MeshInstancer::id_counter_;
     i.transformation = Mat4::from_pos_rot_scale(position, rotation, Vec3(1));
+    i.abs_transformation = absolute_transformation() * i.transformation;
     i.recalc_aabb(mesh_);
 
     instances_.insert(std::make_pair(i.id, i));
@@ -96,10 +97,23 @@ void MeshInstancer::recalc_aabb() {
     std::swap(aabb_, new_aabb);
 }
 
+void MeshInstancer::on_transformation_changed() {
+    StageNode::on_transformation_changed();
+
+    /* When the transformation changes, we need
+         * to update all instances */
+
+    for(auto& instance: instances_) {
+        instance.second.abs_transformation = (
+            absolute_transformation() * instance.second.transformation
+        );
+    }
+}
+
 void MeshInstancer::_get_renderables(
-    batcher::RenderQueue* render_queue,
-    const CameraPtr camera,
-    const DetailLevel detail_level) {
+        batcher::RenderQueue* render_queue,
+        const CameraPtr camera,
+        const DetailLevel detail_level) {
 
     /* No instances or mesh, no renderables */
     if(instances_.empty() || !mesh_) {
@@ -122,7 +136,7 @@ void MeshInstancer::_get_renderables(
         new_renderable.material = submesh->material_at_slot(MATERIAL_SLOT0, true).get();
 
         for(auto& mesh_instance: instances_) {
-            new_renderable.final_transformation = mesh_instance.second.transformation;
+            new_renderable.final_transformation = mesh_instance.second.abs_transformation;
             new_renderable.is_visible = mesh_instance.second.is_visible;
             new_renderable.centre = mesh_instance.second.aabb.centre();
             render_queue->insert_renderable(std::move(new_renderable));
