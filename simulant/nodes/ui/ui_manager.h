@@ -26,7 +26,7 @@ class StageNodeManager;
 
 typedef Polylist<
     StageNode,
-    Actor, Camera, Geom, Light, ParticleSystem, Sprite,
+    Actor, MeshInstancer, Camera, Geom, Light, ParticleSystem, Sprite,
     ui::Button, ui::Image, ui::Label, ui::ProgressBar,
     Skybox
 > StageNodePool;

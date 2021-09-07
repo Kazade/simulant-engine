@@ -681,9 +681,12 @@ private:
 };
 
 
-template<typename K, typename V, typename Compare=std::less<K>>
+template<typename K, typename V, typename Compare=ThreeWayCompare<K>>
 class ContiguousMap {
 public:
+    typedef typename ContiguousMultiMap<K, V, Compare>::iterator iterator;
+    typedef typename ContiguousMultiMap<K, V, Compare>::const_iterator const_iterator;
+
     ContiguousMap() = default;
     ContiguousMap(std::size_t reserve):
         map_(reserve) {}
@@ -731,8 +734,32 @@ public:
     void clear() {
         map_.clear();
     }
+
+    iterator find(const K& key) {
+        return map_.find(key);
+    }
+
+    const_iterator find(const K &key) const {
+        return map_.find(key);
+    }
+
+    iterator begin() {
+        return map_.begin();
+    }
+
+    iterator end() {
+        return map_.end();
+    }
+
+    const_iterator begin() const {
+        return map_.begin();
+    }
+
+    const_iterator end() const {
+        return map_.end();
+    }
 private:
-    ContiguousMultiMap<K, V> map_;
+    ContiguousMultiMap<K, V, Compare> map_;
 };
 
 

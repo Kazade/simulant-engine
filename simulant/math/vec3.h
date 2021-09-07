@@ -55,6 +55,12 @@ public:
         z(0.0f) {
     }
 
+    Vec3(float xyz):
+        x(xyz), y(xyz), z(xyz) {}
+
+    Vec3(float x, float y):
+        x(x), y(y), z(0) {}
+
     Vec3(float x, float y, float z):
         x(x), y(y), z(z) {
     }

@@ -4,6 +4,7 @@
 #include "nodes/particle_system.h"
 #include "nodes/geom.h"
 #include "nodes/light.h"
+#include "nodes/mesh_instancer.h"
 
 namespace smlt {
 
@@ -86,6 +87,28 @@ void Partitioner::remove_light(LightID obj) {
     StagedWrite write;
     write.operation = WRITE_OPERATION_REMOVE;
     write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
+    stage_write(obj, write);
+}
+
+void Partitioner::add_mesh_instancer(MeshInstancerID obj) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_ADD;
+    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+    stage_write(obj, write);
+}
+
+void Partitioner::update_mesh_instancer(MeshInstancerID mesh_instancer_id, const AABB &bounds) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_UPDATE;
+    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+    write.new_bounds = bounds;
+    stage_write(mesh_instancer_id, write);
+}
+
+void Partitioner::remove_mesh_instancer(MeshInstancerID obj) {
+    StagedWrite write;
+    write.operation = WRITE_OPERATION_REMOVE;
+    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
     stage_write(obj, write);
 }
 

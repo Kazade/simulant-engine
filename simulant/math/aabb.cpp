@@ -111,4 +111,19 @@ bool AABB::intersects_sphere(const smlt::Vec3& center, float diameter) const {
     return (ex < radius) && (ey < radius) && (ez < radius) && (ex * ex + ey * ey + ez * ez < radius * radius);
 }
 
+void AABB::encapsulate(const AABB &other) {
+    if(other.min_.x < min_.x) min_.x = other.min_.x;
+    if(other.min_.y < min_.y) min_.y = other.min_.y;
+    if(other.min_.z < min_.z) min_.z = other.min_.z;
+
+    if(other.max_.x > max_.x) max_.x = other.max_.x;
+    if(other.max_.y > max_.y) max_.y = other.max_.y;
+    if(other.max_.z > max_.z) max_.z = other.max_.z;
+}
+
+std::ostream& operator<<(std::ostream& stream, const AABB& aabb) {
+    stream << "AABB(" << aabb.min() << ", " << aabb.max() << ")";
+    return stream;
+}
+
 }

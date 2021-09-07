@@ -27,9 +27,8 @@
 #include "generic/data_carrier.h"
 #include "threads/atomic.h"
 
-#include "nodes/stage_node_manager.h"
-
 #include "managers/window_holder.h"
+
 #include "nodes/skies/skybox_manager.h"
 #include "nodes/sprites/sprite_manager.h"
 #include "nodes/actor.h"
@@ -37,6 +36,9 @@
 #include "nodes/particle_system.h"
 #include "nodes/stage_node.h"
 #include "nodes/light.h"
+#include "nodes/mesh_instancer.h"
+#include "nodes/stage_node_manager.h"
+
 #include "types.h"
 #include "asset_manager.h"
 
@@ -58,6 +60,7 @@ typedef StageNodeManager<StageNodePool, GeomID, Geom> GeomManager;
 typedef StageNodeManager<StageNodePool, LightID, Light> LightManager;
 typedef StageNodeManager<StageNodePool, ParticleSystemID, ParticleSystem> ParticleSystemManager;
 typedef StageNodeManager<StageNodePool, CameraID, Camera> CameraManager;
+typedef StageNodeManager<StageNodePool, MeshInstancerID, MeshInstancer> MeshInstancerManager;
 
 typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
 typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
@@ -74,6 +77,8 @@ typedef sig::signal<void (CameraID)> CameraDestroyedSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePreRenderSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
 
+typedef sig::signal<void (MeshInstancerID)> MeshInstancerCreatedSignal;
+typedef sig::signal<void (MeshInstancerID)> MeshInstancerDestroyedSignal;
 
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
@@ -84,6 +89,9 @@ class Stage:
     public Loadable,
     public virtual WindowHolder,
     public ChainNameable<Stage> {
+
+    DEFINE_SIGNAL(MeshInstancerCreatedSignal, signal_mesh_instancer_created);
+    DEFINE_SIGNAL(MeshInstancerDestroyedSignal, signal_mesh_instancer_destroyed);
 
     DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
     DEFINE_SIGNAL(ParticleSystemDestroyedSignal, signal_particle_system_destroyed);
@@ -114,6 +122,41 @@ public:
     bool has_actor(ActorID e) const;
     void destroy_actor(ActorID e);
     std::size_t actor_count() const;
+
+    /**
+     * @brief Creates a new MeshInstancer from a mesh
+     * and returns it
+     * @param mid The ID of the mesh this instancer will be able to spawn
+     * @return a pointer to the new mesh instancer, or a null pointer on failure
+     */
+    MeshInstancerPtr new_mesh_instancer(MeshID mid);
+
+    /**
+     * @brief Destroys a MeshInstancer by its ID.
+     * @param The ID of the MeshInstancer to destroy.
+     * @return true on success, false if the MeshInstancerID was invalid.
+     */
+    bool destroy_mesh_instancer(MeshInstancerID mid);
+
+    /**
+     * @brief Returns the MeshInstancerPtr associated with the ID
+     * @param mid - the id of the MeshInstancer to retrieve
+     * @return a valid MeshInstancerPtr if the ID was valid, or null
+     */
+    MeshInstancerPtr mesh_instancer(MeshInstancerID mid);
+
+    /**
+     * @brief Returns the number of MeshInstancers in the stage
+     * @return the number of MeshInstancers in the stage
+     */
+    std::size_t mesh_instancer_count() const;
+
+    /**
+     * @brief Checks to see if this MeshInstancer exists
+     * @param mid
+     * @return true if it exists, false otherwise
+     */
+    bool has_mesh_instancer(MeshInstancerID mid) const;
 
     CameraPtr new_camera();
     CameraPtr new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
@@ -193,12 +236,14 @@ public:
     void destroy_object(Camera* object);
     void destroy_object(Geom* object);
     void destroy_object(ParticleSystem* object);
+    void destroy_object(MeshInstancer* object);
 
     void destroy_object_immediately(Actor* object);
     void destroy_object_immediately(Light* object);
     void destroy_object_immediately(Camera* object);
     void destroy_object_immediately(Geom* object);
     void destroy_object_immediately(ParticleSystem* object);
+    void destroy_object_immediately(MeshInstancer* object);
 
     bool is_part_of_active_pipeline() const {
         return active_pipeline_count_ > 0;
@@ -241,7 +286,7 @@ private:
     std::unique_ptr<GeomManager> geom_manager_;
     std::unique_ptr<SkyManager> sky_manager_;
     std::unique_ptr<SpriteManager> sprite_manager_;
-
+    std::unique_ptr<MeshInstancerManager> mesh_instancer_manager_;
     std::unique_ptr<ActorManager> actor_manager_;
     std::unique_ptr<ParticleSystemManager> particle_system_manager_;
     std::unique_ptr<LightManager> light_manager_;
