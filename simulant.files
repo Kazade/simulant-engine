@@ -1298,6 +1298,8 @@ simulant/loki/typelist_macros.h
 simulant/managers/skybox_manager.cpp
 simulant/managers/skybox_manager.h
 simulant/managers/window_holder.h
+simulant/nodes/mesh_instancer.cpp
+simulant/nodes/mesh_instancer.h
 simulant/nodes/ui/ui_config.cpp
 simulant/panels/panel.h
 simulant/panels/partitioner_panel.cpp
@@ -1651,6 +1653,7 @@ simulant/controllers/physics/static_body.cpp
 simulant/streams/file_ifstream.cpp
 simulant/streams/file_ifstream.h
 simulant/utils/formatter.h
+tests/test_mesh_instancer.h
 tests/test_path.h
 tests/test_physics.h
 simulant/utils/mesh/triangulate.h

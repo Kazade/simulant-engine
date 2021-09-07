@@ -20,19 +20,22 @@
 #include "stage.h"
 #include "window.h"
 #include "partitioner.h"
+#include "debug.h"
+#include "viewport.h"
+
 #include "nodes/actor.h"
 #include "nodes/light.h"
 #include "nodes/camera.h"
-#include "debug.h"
-#include "viewport.h"
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
 #include "nodes/geom.h"
 #include "nodes/camera.h"
+#include "nodes/mesh_instancer.h"
 
 #include "nodes/ui/ui_manager.h"
 
 #include "loader.h"
+
 #include "partitioners/null_partitioner.h"
 #include "partitioners/spatial_hash.h"
 #include "partitioners/frustum_partitioner.h"
@@ -52,6 +55,7 @@ Stage::Stage(Window *parent, StageNodePool *node_pool, AvailablePartitioner part
     geom_manager_(new GeomManager(node_pool_)),
     sky_manager_(new SkyManager(parent, this, node_pool_)),
     sprite_manager_(new SpriteManager(parent, this, node_pool_)),
+    mesh_instancer_manager_(new MeshInstancerManager(node_pool_)),
     actor_manager_(new ActorManager(node_pool_)),
     particle_system_manager_(new ParticleSystemManager(node_pool_)),
     light_manager_(new LightManager(node_pool_)),
@@ -203,6 +207,49 @@ void Stage::destroy_actor(ActorID e) {
 
 std::size_t Stage::actor_count() const {
     return actor_manager_->size();
+}
+
+
+MeshInstancerPtr Stage::new_mesh_instancer(MeshID mid) {
+    auto mesh = asset_manager_->mesh(mid);
+
+    auto instance = mesh_instancer_manager_->make(
+        this, window->_sound_driver(), mesh
+    );
+
+    instance->set_parent(this);
+
+    auto id = instance->id();
+
+    instance->signal_bounds_updated().connect([this, id](const AABB& new_bounds) {
+        this->partitioner->update_mesh_instancer(id, new_bounds);
+    });
+
+    signal_mesh_instancer_created_(id);
+
+    return instance;
+}
+
+bool Stage::destroy_mesh_instancer(MeshInstancerID mid) {
+    auto instance = mesh_instancer(mid);
+    if(instance) {
+        instance->destroy();
+        return true;
+    }
+
+    return false;
+}
+
+MeshInstancerPtr Stage::mesh_instancer(MeshInstancerID mid) {
+    return mesh_instancer_manager_->get(mid);
+}
+
+std::size_t Stage::mesh_instancer_count() const {
+    return mesh_instancer_manager_->size();
+}
+
+bool Stage::has_mesh_instancer(MeshInstancerID mid) const {
+    return mesh_instancer_manager_->contains(mid);
 }
 
 CameraPtr Stage::new_camera() {
@@ -436,6 +483,9 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
 
     signal_particle_system_created().connect(std::bind(&Partitioner::add_particle_system, partitioner_.get(), std::placeholders::_1));
     signal_particle_system_destroyed().connect(std::bind(&Partitioner::remove_particle_system, partitioner_.get(), std::placeholders::_1));
+
+    signal_mesh_instancer_created().connect(std::bind(&Partitioner::add_mesh_instancer, partitioner_.get(), std::placeholders::_1));
+    signal_mesh_instancer_destroyed().connect(std::bind(&Partitioner::remove_mesh_instancer, partitioner_.get(), std::placeholders::_1));
 }
 
 void Stage::update(float dt) {
@@ -494,6 +544,13 @@ void Stage::destroy_object(ParticleSystem* object) {
     }
 }
 
+void Stage::destroy_object(MeshInstancer* object) {
+    auto id = object->id();
+    if(mesh_instancer_manager_->destroy(id)) {
+        signal_mesh_instancer_destroyed_(id);
+    }
+}
+
 void Stage::destroy_object_immediately(Actor* object) {
     // Only send the signal if we didn't already
     auto id = object->id();
@@ -530,6 +587,13 @@ void Stage::destroy_object_immediately(ParticleSystem* object) {
     }
 }
 
+void Stage::destroy_object_immediately(MeshInstancer *object) {
+    auto id = object->id();
+    if(mesh_instancer_manager_->destroy_immediately(id)) {
+        signal_mesh_instancer_destroyed_(id);
+    }
+}
+
 void Stage::on_actor_created(ActorID actor_id) {
     _S_UNUSED(actor_id);
 }
@@ -544,6 +608,7 @@ void Stage::clean_up_dead_objects() {
     geom_manager_->clean_up();
     particle_system_manager_->clean_up();
     camera_manager_->clean_up();
+    mesh_instancer_manager_->clean_up();
 }
 
 }

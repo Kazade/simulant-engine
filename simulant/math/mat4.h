@@ -73,6 +73,7 @@ public:
     static Mat4 as_rotation_z(const Degrees& angle);
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
     static Mat4 as_scaling(float s);
+    static Mat4 from_pos_rot_scale(const Vec3& pos, const Quaternion& rot, const Vec3& scale);
 
     inline const float& operator[](const uint32_t index) const {
         return m[index];
