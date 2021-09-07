@@ -81,7 +81,7 @@ public:
         instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
 
         /* Nothing there yet! */
-        assert_equal(queue.renderable_count(), 0);
+        assert_equal(queue.renderable_count(), 0u);
 
         instancer->new_mesh_instance(smlt::Vec3());
         instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
@@ -105,7 +105,7 @@ public:
         instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
 
         /* Nothing there yet! */
-        assert_equal(queue.renderable_count(), 0);
+        assert_equal(queue.renderable_count(), 0u);
 
         auto iid = instancer->new_mesh_instance(smlt::Vec3());
         instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
@@ -118,7 +118,7 @@ public:
         instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
 
         /* Not returned */
-        assert_equal(queue.renderable_count(), 0);
+        assert_equal(queue.renderable_count(), 0u);
     }
 
     void test_set_mesh_changes_aabb() {
@@ -146,7 +146,7 @@ public:
         queue.reset(stage_, window->renderer.get(), camera);
 
         instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
-        assert_equal(queue.renderable_count(), 0);
+        assert_equal(queue.renderable_count(), 0u);
     }
 
     void test_mesh_instance_id_different() {
@@ -162,6 +162,23 @@ public:
         assert_not_equal(iid1, iid2);
         assert_not_equal(iid1, iid3);
         assert_not_equal(iid2, iid3);
+    }
+
+    void test_transform_is_relative() {
+        auto instancer = stage_->new_mesh_instancer(mesh_);
+        instancer->new_mesh_instance(Vec3());
+        assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(0, 0, 0));
+
+        instancer->move_to(10, 0, 0);
+        assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(10, 0, 0));
+
+        auto camera = stage_->new_camera();
+        batcher::RenderQueue queue;
+        queue.reset(stage_, window->renderer.get(), camera);
+
+        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+
+        assert_close(queue.renderable(0)->final_transformation[12], 10.0f, 0.0001f);
     }
 
 private:

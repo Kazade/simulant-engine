@@ -46,6 +46,9 @@ void NullPartitioner::lights_and_geometry_visible_from(
         } else if(key.first == typeid(ParticleSystem)) {
             auto ps = stage->particle_system(make_unique_id_from_key<ParticleSystemID>(key));
             geom_out.push_back(ps);
+        } else if(key.first == typeid(MeshInstancer)) {
+            auto mi = stage->mesh_instancer(make_unique_id_from_key<MeshInstancerID>(key));
+            geom_out.push_back(mi);
         } else {
             assert(0 && "Not implemented");
         }
