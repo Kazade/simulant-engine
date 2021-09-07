@@ -101,6 +101,9 @@ private:
         bool is_visible = true;
         Mat4 transformation;
         AABB aabb;
+
+        /* Recalc the aabb from the transformation */
+        void recalc_aabb(MeshPtr mesh);
     };
 
     static uint32_t id_counter_;

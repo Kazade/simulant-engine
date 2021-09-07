@@ -212,9 +212,6 @@ std::size_t Stage::actor_count() const {
 
 MeshInstancerPtr Stage::new_mesh_instancer(MeshID mid) {
     auto mesh = asset_manager_->mesh(mid);
-    if(!mesh) {
-        return MeshInstancerPtr();
-    }
 
     auto instance = mesh_instancer_manager_->make(
         this, window->_sound_driver(), mesh

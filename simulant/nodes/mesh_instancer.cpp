@@ -24,6 +24,13 @@ const AABB &MeshInstancer::aabb() const {
 
 void MeshInstancer::set_mesh(MeshPtr mesh) {
     mesh_ = mesh;
+
+    /* Recalc the local AABBs for the new mesh */
+    for(auto& i: instances_) {
+        i.second.recalc_aabb(mesh_);
+    }
+
+    /* recalc as a whole */
     recalc_aabb();
 }
 
@@ -34,17 +41,9 @@ MeshPtr MeshInstancer::mesh() const {
 MeshInstanceID MeshInstancer::new_mesh_instance(const Vec3 &position, const Quaternion &rotation) {
     MeshInstance i;
     i.id = ++MeshInstancer::id_counter_;
-    i.transformation = Mat4::from_pos_rot_scale(position, rotation, Vec3());
+    i.transformation = Mat4::from_pos_rot_scale(position, rotation, Vec3(1));
+    i.recalc_aabb(mesh_);
 
-    /* Calculate the AABB for this instance for performance later */
-    auto corners = mesh_->aabb().corners();
-    auto transform = i.transformation;
-
-    for(auto& corner: corners) {
-        corner = corner.transformed_by(transform);
-    }
-
-    i.aabb = AABB(corners.data(), corners.size());
     instances_.insert(std::make_pair(i.id, i));
 
     /* Recalculate the aabb for the instancer as a whole */
@@ -87,8 +86,11 @@ bool MeshInstancer::hide_mesh_instance(MeshInstanceID mid) {
 
 void MeshInstancer::recalc_aabb() {
     AABB new_aabb;
-    for(auto& mi_pair: instances_) {
-        new_aabb.encapsulate(mi_pair.second.aabb);
+
+    if(mesh_) {
+        for(auto& mi_pair: instances_) {
+            new_aabb.encapsulate(mi_pair.second.aabb);
+        }
     }
 
     std::swap(aabb_, new_aabb);
@@ -98,6 +100,11 @@ void MeshInstancer::_get_renderables(
     batcher::RenderQueue* render_queue,
     const CameraPtr camera,
     const DetailLevel detail_level) {
+
+    /* No instances or mesh, no renderables */
+    if(instances_.empty() || !mesh_) {
+        return;
+    }
 
     _S_UNUSED(camera);
     _S_UNUSED(detail_level);  // FIXME: Support detail levels like actors?
@@ -121,6 +128,23 @@ void MeshInstancer::_get_renderables(
             render_queue->insert_renderable(std::move(new_renderable));
         }
     }
+}
+
+void MeshInstancer::MeshInstance::recalc_aabb(smlt::MeshPtr mesh) {    
+    /* Calculate the AABB for this instance for performance later */
+    if(!mesh) {
+        aabb = AABB();
+        return;
+    }
+
+    auto corners = mesh->aabb().corners();
+    auto transform = transformation;
+
+    for(auto& corner: corners) {
+        corner = corner.transformed_by(transform);
+    }
+
+    aabb = AABB(corners.data(), corners.size());
 }
 
 }
