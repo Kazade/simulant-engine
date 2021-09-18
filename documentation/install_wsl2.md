@@ -3,7 +3,7 @@
 
 Installing Simulant within a WSL2 environment allows you to use Simulant as if you're running on Linux. 
 
->>> Note that, as far as Simulant commands are concerned, the native platform is Linux, and not Windows. If you want to run your application natively on Windows you'll need to explicitly specify 'windows' as the platform when running the `simulant` tool.
+> Note that, as far as Simulant commands are concerned, the native platform is Linux, and not Windows. If you want to run your application natively on Windows you'll need to explicitly specify 'windows' as the platform when running the `simulant` tool.
 
 # Prerequisites
 
@@ -68,7 +68,7 @@ Getting started is easy:
 ```
 $ simulant start myprojectname
 $ cd myprojectname
-$ simulant run --rebuild
+$ simulant run windows --rebuild
 ```
 
 That's it!
