@@ -7,7 +7,7 @@
 
 ## First Steps
 
- - Installation: [Fedora](install_fedora.md) | [Ubuntu / Linux Mint](install_ubuntu.md)
+ - Installation: [Fedora](install_fedora.md) | [Ubuntu / Linux Mint](install_ubuntu.md) | [Windows - WSL2](install_wsl2.md)
  - Tutorial: [1. Basic Application](tutorial_1.md)
  - Platforms: [Platform Notes](platform_notes.md)
  - Licensing: [FAQ](license.md)
