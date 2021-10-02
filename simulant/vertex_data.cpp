@@ -63,13 +63,7 @@ _S_FORCE_INLINE Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
 
 const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
     VERTEX_ATTRIBUTE_3F,  // Position
-#ifdef __DREAMCAST__
-    /* We enable this only on the Dreamcast as Mesa3D suffers a bug
-     * on Linux. But it's on the DC that this matters anyway */
-    VERTEX_ATTRIBUTE_PACKED_VEC4_1I, // Normal
-#else
     VERTEX_ATTRIBUTE_3F,
-#endif
     VERTEX_ATTRIBUTE_2F, // UV
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,

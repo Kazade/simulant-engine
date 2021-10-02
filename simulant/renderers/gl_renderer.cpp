@@ -213,6 +213,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 );
                 GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
                 texture->_set_has_mipmaps(true);
+                S_DEBUG("Mipmaps generated");
 #endif
 
 #ifdef __DREAMCAST__

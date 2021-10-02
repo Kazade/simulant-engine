@@ -1,6 +1,7 @@
 #include <SDL.h>
 
 #include <unistd.h>
+#include <sys/sysinfo.h>
 
 #include "platform.h"
 #include "../../application.h"
@@ -28,27 +29,21 @@ Resolution LinuxPlatform::native_resolution() const {
 }
 
 uint64_t LinuxPlatform::available_ram_in_bytes() const {
-    auto lines = get_app()->window->vfs->read_file_lines("/proc/meminfo");
-    for(auto& line: lines) {
-        if(line.find("MemFree:") != std::string::npos) {
-            auto prefix = line.substr(0, line.find_last_of(" "));
-            auto suffix = prefix.substr(prefix.find_last_of(" ") + 1);
-            return smlt::stol(suffix) * 1024;
-        }
+    struct sysinfo info;
+
+    if(sysinfo(&info) == 0) {
+        return info.freeram * info.mem_unit;
     }
 
     return MEMORY_VALUE_UNAVAILABLE;
 }
 
 uint64_t LinuxPlatform::total_ram_in_bytes() const {
-    auto lines = get_app()->window->vfs->read_file_lines("/proc/meminfo");
-    for(auto& line: lines) {
-        if(line.find("MemTotal:") != std::string::npos) {
-            auto prefix = line.substr(0, line.find_last_of(" "));
-            auto suffix = prefix.substr(prefix.find_last_of(" ") + 1);
-            uint64_t kb = std::stol(suffix);
-            return kb * 1024;
-        }
+
+    struct sysinfo info;
+
+    if(sysinfo(&info) == 0) {
+        return info.totalram * info.mem_unit;
     }
 
     return MEMORY_VALUE_UNAVAILABLE;
