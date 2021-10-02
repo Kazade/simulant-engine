@@ -102,13 +102,13 @@ public:
     void info(const std::string& text, const std::string& file="None", int32_t line=-1) {
         if(level_ < LOG_LEVEL_INFO) return;
 
-        write_message("INFO", text, file, line);
+        write_message("INFO", "\x1b[36m" + text + "\x1b[0m", file, line);
     }
 
     void warn(const std::string& text, const std::string& file="None", int32_t line=-1) {
         if(level_ < LOG_LEVEL_WARN) return;
 
-        write_message("WARN", text, file, line);
+        write_message("WARN", "\x1b[33m" + text + "\x1b[0m", file, line);
     }
 
     void warn_once(const std::string& text, const std::string& file="None", int32_t line=-1) {
@@ -136,7 +136,7 @@ public:
     void error(const std::string& text, const std::string& file="None", int32_t line=-1) {
         if(level_ < LOG_LEVEL_ERROR) return;
 
-        write_message("ERROR", text, file, line);
+        write_message("ERROR", "\x1b[31m" + text + "\x1b[0m", file, line);
     }
 
     void set_level(LogLevel level) {
