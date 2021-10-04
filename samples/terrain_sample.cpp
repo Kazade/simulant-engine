@@ -149,8 +149,14 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Terrain Demo";
     config.fullscreen = false;
-    config.width = 640 * 2;
-    config.height = 480 * 2;
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
+    config.width = 1280;
+    config.height = 960;
+#endif
 
     TerrainDemo app(config);
     return app.run();

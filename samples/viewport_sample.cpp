@@ -51,8 +51,14 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Viewport Sample";
     config.fullscreen = false;
+    
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
     config.width = 1280;
     config.height = 960;
+#endif
 
     ViewportSample app(config);
     return app.run();

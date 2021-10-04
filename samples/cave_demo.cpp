@@ -157,8 +157,15 @@ int main(int argc, char* argv[]) {
     AppConfig config;
     config.title = "Cave Demo";
     config.fullscreen = false;
-    config.width = 640 * 2;
-    config.height = 480 * 2;
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
+    config.width = 1280;
+    config.height = 960;
+#endif
+
     CaveDemo app(config);
     return app.run();
 }
