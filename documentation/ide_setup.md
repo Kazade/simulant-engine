@@ -1,6 +1,6 @@
 # IDE Setup
 
-Code completion and navigation are a must for large projects. Since Simulant provides its entire suite of includes and libraries, there is minimal configuration needed to setup your development environment. After generating a new project with `simulant start <your project name>` you should be able to build your project successfully. In order for your local tools to be able to look up Simulant types and methods, only three lines in the `CMakeLists.txt` file at the root of your project needs to be changed. Update the following lines to match the configuration below:
+Code completion and navigation are a must for large projects. Since Simulant provides its entire suite of includes and libraries, there is minimal configuration needed to setup your development environment. After generating a new project with `simulant start <your project name>` you should be able to build your project successfully. In order for your local tools to be able to look up Simulant types and methods, three lines in the `CMakeLists.txt` file at the root of your project need to be changed. Update the following lines to match the configuration below:
 
 ```cmake
 SET(SIMULANT_INCLUDE_FOLDER "<absolute path to project>/libraries/linux-x64-gcc/include" CACHE STRING "Specify the path to the Simulant includes")
