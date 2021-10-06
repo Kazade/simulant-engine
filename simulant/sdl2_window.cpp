@@ -43,7 +43,7 @@ static const std::string SDL_CONTROLLER_DB =
 namespace smlt {
 
 SDL2Window::SDL2Window() {
-    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC;
+    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC | ~SDL_INIT_SENSOR;
 
     if(SDL_Init(default_flags) != 0) {
         S_ERROR("Unable to initialize SDL {0}", SDL_GetError());
@@ -54,6 +54,11 @@ SDL2Window::SDL2Window() {
      * die if it's not there! */
     if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
         S_WARN("Unable to initialize force-feedback. Errors was {0}.", SDL_GetError());
+    }
+
+    /* SDL_INIT_SENSOR doesn't always work under some platforms (e.g. Wine) */
+    if(SDL_InitSubSystem(SDL_INIT_SENSOR) != 0) {
+        S_WARN("Unable to initialize sensor system. Errors was {0}.", SDL_GetError());
     }
 }
 
