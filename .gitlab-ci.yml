@@ -102,7 +102,7 @@ prepare:deploy:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM fedora:34\n
-      RUN dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync\n
+      RUN dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync zip\n
       RUN pip install gsutil\n
   before_script:  # Put the variable into a Dockerfile
      - echo -e $DOCKERFILE > Dockerfile
