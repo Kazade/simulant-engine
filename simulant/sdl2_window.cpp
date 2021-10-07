@@ -43,7 +43,7 @@ static const std::string SDL_CONTROLLER_DB =
 namespace smlt {
 
 SDL2Window::SDL2Window() {
-    auto default_flags = SDL_INIT_EVERYTHING | ~SDL_INIT_HAPTIC | ~SDL_INIT_SENSOR;
+    auto default_flags = SDL_INIT_EVERYTHING & (~SDL_INIT_HAPTIC) & (~SDL_INIT_SENSOR);
 
     if(SDL_Init(default_flags) != 0) {
         S_ERROR("Unable to initialize SDL {0}", SDL_GetError());
