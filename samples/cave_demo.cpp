@@ -73,9 +73,15 @@ public:
         fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(0));
     }
 
+    void update(float dt) override {
+        _S_UNUSED(dt);
 
+        if(input->axis_value_hard("Start") == 1) {
+            window->stop_running();
+        }
+    }
 
-void fixed_update(float dt) override {
+    void fixed_update(float dt) override {
 
         // Move the camera between two points
         camera_->move_to(camera_->position() + Vec3::LEFT * cameraSpeed_ * dt);
@@ -114,26 +120,26 @@ void fixed_update(float dt) override {
         fairyPathTime_ += fairyPathSpeedFactor_ * dt;
     }
 
-        private:
-        StagePtr stage_;
-        CameraPtr camera_;
+private:
+    StagePtr stage_;
+    CameraPtr camera_;
 
-        MeshPtr cave_mesh_;
-        MeshPtr godray_mesh_;
-        MeshPtr fairy_mesh_;
+    MeshPtr cave_mesh_;
+    MeshPtr godray_mesh_;
+    MeshPtr fairy_mesh_;
 
-        GeomPtr cave_geom_;
-        GeomPtr godray_geom_;
-        ActorPtr fairy_actor_;
+    GeomPtr cave_geom_;
+    GeomPtr godray_geom_;
+    ActorPtr fairy_actor_;
 
-        float cameraSpeed_ = 0.35f;
-        BezierCurve* fairyPath_ = nullptr;
-        float fairyPathTime_ = 0;
-        const float fairyPathSpeed_ = 0.75f;
+    float cameraSpeed_ = 0.35f;
+    BezierCurve* fairyPath_ = nullptr;
+    float fairyPathTime_ = 0;
+    const float fairyPathSpeed_ = 0.75f;
 
-        float fairyPathSpeedFactor_ = fairyPathSpeed_ / 10;
-        const float fairyPathStepSize_ = (fairyPathSpeed_ / 60) * (fairyPathSpeed_ / 60);
-        float lastFairyPathStepSize;
+    float fairyPathSpeedFactor_ = fairyPathSpeed_ / 10;
+    const float fairyPathStepSize_ = (fairyPathSpeed_ / 60) * (fairyPathSpeed_ / 60);
+    float lastFairyPathStepSize;
 };
 
 
