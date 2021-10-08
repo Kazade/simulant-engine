@@ -28,9 +28,10 @@ namespace ui {
 
 using namespace std::placeholders;
 
-UIManager::UIManager(Stage *stage, StageNodePool *pool):
+UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
     stage_(stage),
-    window_(stage->window.get()){
+    window_(stage->window.get()),
+    config_(config) {
 
     manager_.reset(new WidgetManager(pool));
 
@@ -215,6 +216,73 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     };
 
     return result;
+}
+
+FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, const FontWeight& weight) {
+    const std::string px_as_string = smlt::to_string(size.value);
+
+    const std::string weight_string =
+        (weight == FONT_WEIGHT_NORMAL) ? "Regular" :
+        (weight == FONT_WEIGHT_BOLD) ? "Bold" : "Light";
+
+    /* We search for standard variations of the filename depending on the family,
+     * weight and size */
+    std::string potentials [] = {
+        family + ".ttf",
+        family + "-" + weight_string + ".ttf",
+        family + "-" + weight_string + "-" + px_as_string + ".fnt",
+
+        /* Fall back if the bold/light version is not there */
+        family + "-" + "Regular.ttf",
+        family + "-Regular-" + px_as_string + ".fnt"
+    };
+
+    std::string alias = family + "-" + px_as_string;
+
+    /* See if the font is already loaded, first look at the stage
+     * level, but fallback to the window level (in case it was pre-loaded
+     * globally) */
+    auto fnt = stage_->assets->find_font(alias);
+
+    if(!fnt) {
+        fnt = window_->shared_assets->find_font(alias);
+    }
+
+    /* We already loaded it, all is well! */
+    if(fnt) {
+        return fnt;
+    }
+
+    smlt::optional<Path> loc;
+    for(auto& filename: potentials) {
+        loc = window_->vfs->locate_file(filename);
+        if(loc) {
+            break;
+        }
+
+        /* Try a font directory prefix */
+        loc = window_->vfs->locate_file(kfs::path::join("fonts", filename));
+        if(loc) {
+            break;
+        }
+
+        /* Finally try a family name dir within fonts */
+        loc = window_->vfs->locate_file(
+            kfs::path::join(kfs::path::join("fonts", family), filename)
+        );
+
+        if(loc) {
+            break;
+        }
+    }
+
+    if(!loc) {
+        S_WARN("Unable to locate font file with family {0} and size {1}", family, size.value);
+        return FontPtr(); /* Fail */
+    }
+
+    S_DEBUG("Loaded font with family {0} and size {1} from {2}", family, size.value, loc.value().str());
+    return stage_->assets->new_font_from_file(loc.value());
 }
 
 }

@@ -63,11 +63,6 @@ struct TextureFlags {
     bool auto_upload = true; // Should the texture be uploaded automatically?
 };
 
-enum DefaultFontStyle {
-    DEFAULT_FONT_STYLE_HEADING,
-    DEFAULT_FONT_STYLE_BODY
-};
-
 /* Majority of the API definitions have been generated using this Python code:
  *
  * TEMPLATE="""
@@ -191,7 +186,6 @@ public:
 
     void update(float dt);
 
-    virtual FontPtr default_font(DefaultFontStyle style) const;
     virtual MaterialPtr default_material() const;
 
     MaterialPtr clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -278,14 +272,10 @@ public:
 
     void cleanup() {}
 
-    virtual FontPtr default_font(DefaultFontStyle style) const;
     virtual MaterialPtr default_material() const;
 
     void set_default_material_filename(const Path &filename);
     Path default_material_filename() const;
-
-    void set_default_font_filename(DefaultFontStyle style, const Path &filename);
-    Path default_font_filename(DefaultFontStyle style) const;
 
 private:
     mutable MaterialPtr default_material_;

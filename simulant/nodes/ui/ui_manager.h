@@ -53,8 +53,10 @@ struct UIEvent {
 class UIManager:
     public EventListener {
 
+    friend class Widget;
+
 public:
-    UIManager(Stage* stage, StageNodePool* pool);
+    UIManager(Stage* stage, StageNodePool* pool, UIConfig config=UIConfig());
     virtual ~UIManager();
 
     Button* new_widget_as_button(const unicode& text, float width=.0f, float height=.0f);
@@ -72,6 +74,9 @@ public:
     void destroy_object(Widget* object);
     void destroy_object_immediately(Widget* object);
 
+    const UIConfig* config() const {
+        return &config_;
+    }
 private:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
@@ -93,6 +98,8 @@ private:
 
     sig::connection frame_finished_connection_;
     sig::connection pre_render_connection_;
+
+    FontPtr load_or_get_font(const std::string& family, const Px& size, const FontWeight &weight);
 };
 
 }

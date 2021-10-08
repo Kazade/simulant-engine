@@ -15,6 +15,8 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
     owner_(owner),
     pimpl_(new WidgetImpl()) {
 
+    set_font(owner->load_or_get_font(defaults->font_family, defaults->font_size_, FONT_WEIGHT_NORMAL));
+
     _recalc_active_layers();
 }
 
@@ -52,15 +54,6 @@ bool Widget::init() {
         material->set_cull_mode(CULL_MODE_NONE);
     }
 
-    // Assign the default font as default
-    auto font = stage->assets->default_font(DEFAULT_FONT_STYLE_BODY);
-    if(!font) {
-        S_ERROR("[CRITICAL] Unable to load the font for widgets!");
-        return false;
-    }
-
-    set_font(font);
-
     /* Now we must create the submeshes in the order we want them rendered */
     mesh_->new_submesh_with_material("border", materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
     mesh_->new_submesh_with_material("background", materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
@@ -82,12 +75,27 @@ void Widget::clean_up() {
     StageNode::clean_up();
 }
 
-void Widget::set_font(FontID font_id) {
-    if(font_ && font_->id() == font_id) {
+void Widget::set_font(const std::string& family, Rem size, FontWeight weight) {
+    Px final = owner_->config()->font_size_ * size;
+    set_font(family, final, weight);
+}
+
+void Widget::set_font(const std::string& family, Px size, FontWeight weight) {
+    set_font(owner_->load_or_get_font(family, size, weight));
+}
+
+/* Internal only! */
+void Widget::set_font(FontPtr font) {
+    if(font_ && font_->id() == font->id()) {
         return;
     }
 
-    font_ = stage->assets->font(font_id);
+    font_ = font;
+
+    if(!font_) {
+        return;
+    }
+
     pimpl_->line_height_ = ::round(float(font_->size()) * 1.1f);
 
     on_size_changed();
@@ -119,7 +127,7 @@ void Widget::render_text() {
         smlt::Vec2 uv;
     };
 
-    if(text().empty()) {
+    if(!font_ || text().empty()) {
         pimpl_->content_height_ = pimpl_->content_width_ = 0;
         return;
     }
@@ -734,6 +742,7 @@ void Widget::fingerenter(uint8_t finger_id) {
 
 void Widget::fingermove(uint8_t finger_id) {
     //FIXME: fire signal
+
 }
 
 void Widget::fingerleave(uint8_t finger_id) {

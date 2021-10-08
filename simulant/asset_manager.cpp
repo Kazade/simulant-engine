@@ -114,8 +114,6 @@ static TexturePtr create_texture_with_colour(AssetManager* manager, const Colour
 bool SharedAssetManager::init() {
     S_DEBUG("Initalizing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
-    set_default_font_filename(DEFAULT_FONT_STYLE_BODY, BODY_FONT);
-    set_default_font_filename(DEFAULT_FONT_STYLE_HEADING, HEADING_FONT);
 
     white_tex_ = create_texture_with_colour(this, smlt::Colour::WHITE);
     white_tex_->set_name("s_white_texture");
@@ -150,51 +148,6 @@ MaterialPtr SharedAssetManager::default_material() const {
     }
 
     return default_material_;
-}
-
-void SharedAssetManager::set_default_font_filename(DefaultFontStyle style, const Path& filename) {
-    if(style == DEFAULT_FONT_STYLE_BODY) {
-        default_body_font_filename_ = filename;
-        default_body_font_.reset();
-    } else {
-        default_heading_font_filename_ = filename;
-        default_heading_font_.reset();
-    }
-}
-
-Path SharedAssetManager::default_font_filename(DefaultFontStyle style) const {
-    if(style == DEFAULT_FONT_STYLE_BODY) {
-        return default_body_font_filename_;
-    } else {
-        return default_heading_font_filename_;
-    }
-}
-
-FontPtr SharedAssetManager::default_font(DefaultFontStyle style) const {
-    assert(is_base_manager());
-
-    if(style == DEFAULT_FONT_STYLE_BODY) {
-        if(!default_body_font_) {
-            default_body_font_ = const_cast<SharedAssetManager*>(this)->new_font_from_file(
-                default_body_font_filename_
-            );
-        }
-
-        return default_body_font_;
-    } else {
-        if(!default_heading_font_) {
-            default_heading_font_ = const_cast<SharedAssetManager*>(this)->new_font_from_file(
-                default_heading_font_filename_
-            );
-        }
-
-        return default_heading_font_;
-    }
-}
-
-FontPtr AssetManager::default_font(DefaultFontStyle style) const {
-    assert(!is_base_manager());
-    return base_manager()->default_font(style);
 }
 
 void AssetManager::run_garbage_collection() {

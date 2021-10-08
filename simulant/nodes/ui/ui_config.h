@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "../../colour.h"
+#include "../../font.h"
 
 namespace smlt {
 namespace ui {
@@ -56,13 +57,57 @@ struct UIDim {
     float height = 0.0;
 };
 
+struct Rem;
+
+/* Absolute pixel value */
+struct Px {
+    uint16_t value = 0;
+
+    Px() = default;
+    Px(const int& rhs):
+        value(rhs) {}
+
+    Px& operator=(const int& rhs) {
+        value = rhs;
+        return *this;
+    }
+
+    Px operator*(const Rem& rhs) const;
+};
+
+/* Relative to the "root" size */
+struct Rem {
+    float value = 1.0f;
+
+    Rem() = default;
+    Rem(float r):
+        value(r) {}
+};
+
+/* 100th of the viewport width */
+struct Vw {
+    float value;
+};
+
+/* 100th of the viewport height */
+struct Vh {
+    float value;
+};
+
+enum FontWeight {
+    FONT_WEIGHT_LIGHT,
+    FONT_WEIGHT_NORMAL,
+    FONT_WEIGHT_BOLD
+};
 
 struct UIConfig {
     static const Colour ALICE_BLUE;
     static const Colour LIGHT_GREY;
     static const Colour DODGER_BLUE;
 
-    uint16_t font_size_ = 16;
+    std::string font_family = Font::DEFAULT_FAMILY;
+    Px font_size_ = Font::DEFAULT_SIZE;
+
     uint16_t line_height_ = 18;
 
     Colour foreground_colour_ = Colour::BLACK;

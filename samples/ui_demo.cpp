@@ -55,10 +55,9 @@ public:
 
         y -= pg2_->height() + spacing;
 
-        auto ttf_font = stage_->assets->new_font_from_ttf("simulant/fonts/orbitron/Orbitron-Bold.ttf", 32);
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
-        big_label->set_font(ttf_font);
+        big_label->set_font("Orbitron", 32);
         big_label->set_anchor_point(0, 1);
         big_label->move_to(x, y);
 

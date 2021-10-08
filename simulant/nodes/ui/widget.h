@@ -106,7 +106,9 @@ public:
     virtual void clean_up() override;
 
     void resize(int32_t width, int32_t height);
-    void set_font(FontID font_id);
+
+    void set_font(const std::string& family, Rem size, FontWeight weight=FONT_WEIGHT_NORMAL);
+    void set_font(const std::string& family, Px size, FontWeight weight=FONT_WEIGHT_NORMAL);
 
     /* Allow creating a double-linked list of widgets for focusing. There is no
      * global focused widget but there is only one focused widget in a chain
@@ -254,6 +256,8 @@ protected:
     void on_transformation_change_attempted() override;
 
     void rebuild();
+    void set_font(FontPtr font_id);
+
 };
 
 }
