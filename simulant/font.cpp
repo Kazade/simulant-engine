@@ -12,6 +12,8 @@
 
 namespace smlt {
 
+const char* Font::DEFAULT_FAMILY = "Orbitron";
+
 Font::Font(FontID id, AssetManager *asset_manager):
     Asset(asset_manager),
     generic::Identifiable<FontID>(id) {

@@ -33,6 +33,9 @@ class Font:
     public ChainNameable<Font> {
 
 public:
+    static const char* DEFAULT_FAMILY;
+    static const uint16_t DEFAULT_SIZE = 16;
+
     Font(FontID id, AssetManager* asset_manager);
 
     bool init() override;
