@@ -25,6 +25,16 @@ struct CharInfo{
    float xoff, yoff, xadvance; // Offsets and advance
 };
 
+enum FontWeight {
+    FONT_WEIGHT_LIGHT,
+    FONT_WEIGHT_NORMAL,
+    FONT_WEIGHT_BOLD
+};
+
+constexpr const char* font_weight_name(FontWeight weight) {
+    return (weight == FONT_WEIGHT_NORMAL) ? "Regular": (weight == FONT_WEIGHT_BOLD) ? "Bold" : "Light";
+}
+
 class Font:
     public RefCounted<Font>,
     public Asset,
@@ -34,7 +44,11 @@ class Font:
 
 public:
     static const char* DEFAULT_FAMILY;
-    static const uint16_t DEFAULT_SIZE = 16;
+    static const uint16_t DEFAULT_SIZE;
+
+    static std::string generate_name(const std::string& family, const uint16_t& size, FontWeight weight) {
+        return family + "-" + font_weight_name(weight) + "-" + smlt::to_string(size);
+    }
 
     Font(FontID id, AssetManager* asset_manager);
 
@@ -60,7 +74,7 @@ private:
     uint16_t page_width(char ch);
     uint16_t page_height(char ch);
 
-    uint32_t font_size_ = 0;
+    uint16_t font_size_ = 0;
     float ascent_ = 0;
     float descent_ = 0;
     float line_gap_ = 0;

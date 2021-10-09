@@ -55,11 +55,17 @@ public:
 
         y -= pg2_->height() + spacing;
 
+
+        auto added = window->vfs->add_search_path("simulant/fonts/orbitron");
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font("Orbitron", 32);
         big_label->set_anchor_point(0, 1);
         big_label->move_to(x, y);
+
+        if(added) {
+            window->vfs->remove_search_path("simulant/fonts/orbitron");
+        }
 
         auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
         auto icon = stage_->ui->new_widget_as_image(simulant_logo);

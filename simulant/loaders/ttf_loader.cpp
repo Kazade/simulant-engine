@@ -12,7 +12,7 @@ namespace loaders {
         Font* font = loadable_to<Font>(resource);
 
         CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
-        uint32_t font_size = smlt::any_cast<uint32_t>(options.at("size"));
+        uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
 
         font->info_.reset(new stbtt_fontinfo());
         font->font_size_ = font_size;

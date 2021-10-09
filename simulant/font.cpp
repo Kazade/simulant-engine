@@ -13,6 +13,7 @@
 namespace smlt {
 
 const char* Font::DEFAULT_FAMILY = "Orbitron";
+const uint16_t Font::DEFAULT_SIZE = 16;
 
 Font::Font(FontID id, AssetManager *asset_manager):
     Asset(asset_manager),

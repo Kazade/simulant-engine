@@ -620,36 +620,17 @@ AssetManager* AssetManager::base_manager() const {
 
 // ========== FONTS ======================
 
-FontPtr AssetManager::new_font_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_from_file(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
     try {
         LoaderOptions options;
+        options["size"] = flags.size;
+        options["weight"] = flags.weight;
+        options["charset"] = flags.charset;
         window->loader_for(filename)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_font(font_id);
-        throw;
-    }
-
-    return font;
-}
-
-FontPtr AssetManager::new_font_from_ttf(const Path &filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
-    auto font = font_manager_.make(this);
-    auto font_id = font->id();
-
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
-
-    try {
-        LoaderOptions options;
-        options["size"] = font_size;
-        options["charset"] = charset;
-        window->loader_for(filename)->into(font.get(), options);
-
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around

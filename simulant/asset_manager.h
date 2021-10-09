@@ -63,6 +63,12 @@ struct TextureFlags {
     bool auto_upload = true; // Should the texture be uploaded automatically?
 };
 
+struct FontFlags {
+    uint16_t size = Font::DEFAULT_SIZE;
+    FontWeight weight = FONT_WEIGHT_NORMAL;
+    CharacterSet charset = CHARACTER_SET_LATIN;
+};
+
 /* Majority of the API definitions have been generated using this Python code:
  *
  * TEMPLATE="""
@@ -145,8 +151,7 @@ public:
 
 
     /* Font API */
-    FontPtr new_font_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_from_ttf(const Path& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr new_font_from_file(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(FontID id);
     FontPtr font(FontID id);
     const FontPtr font (FontID id) const;

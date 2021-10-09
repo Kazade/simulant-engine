@@ -53,8 +53,8 @@ bool VirtualGamepad::init() {
         button1->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
         button2->set_background_colour(smlt::Colour(0, 0, 0, 0.2));
 
-        button1->set_font(Font::DEFAULT_FAMILY, ui::Rem(1.5f), ui::FONT_WEIGHT_BOLD);
-        button2->set_font(Font::DEFAULT_FAMILY, ui::Rem(1.5f), ui::FONT_WEIGHT_BOLD);
+        button1->set_font(Font::DEFAULT_FAMILY, ui::Rem(1.5f), FONT_WEIGHT_BOLD);
+        button2->set_font(Font::DEFAULT_FAMILY, ui::Rem(1.5f), FONT_WEIGHT_BOLD);
 
         button1->move_to(window_.coordinate_from_normalized(0.10f, 0.10f * window_.aspect_ratio()));
         button2->move_to(window_.coordinate_from_normalized(0.90f, 0.10f * window_.aspect_ratio()));

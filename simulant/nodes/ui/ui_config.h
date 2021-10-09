@@ -80,7 +80,7 @@ struct Rem {
     float value = 1.0f;
 
     Rem() = default;
-    Rem(float r):
+    explicit Rem(float r):
         value(r) {}
 };
 
@@ -92,12 +92,6 @@ struct Vw {
 /* 100th of the viewport height */
 struct Vh {
     float value;
-};
-
-enum FontWeight {
-    FONT_WEIGHT_LIGHT,
-    FONT_WEIGHT_NORMAL,
-    FONT_WEIGHT_BOLD
 };
 
 struct UIConfig {

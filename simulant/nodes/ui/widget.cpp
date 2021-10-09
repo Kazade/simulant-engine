@@ -86,7 +86,7 @@ void Widget::set_font(const std::string& family, Px size, FontWeight weight) {
 
 /* Internal only! */
 void Widget::set_font(FontPtr font) {
-    if(font_ && font_->id() == font->id()) {
+    if(font_ && font && font_->id() == font->id()) {
         return;
     }
 

@@ -221,9 +221,7 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, const FontWeight& weight) {
     const std::string px_as_string = smlt::to_string(size.value);
 
-    const std::string weight_string =
-        (weight == FONT_WEIGHT_NORMAL) ? "Regular" :
-        (weight == FONT_WEIGHT_BOLD) ? "Bold" : "Light";
+    const std::string weight_string = font_weight_name(weight);
 
     /* We search for standard variations of the filename depending on the family,
      * weight and size */
@@ -237,7 +235,7 @@ FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, c
         family + "-Regular-" + px_as_string + ".fnt"
     };
 
-    std::string alias = family + "-" + px_as_string;
+    std::string alias = Font::generate_name(family, size.value, weight);
 
     /* See if the font is already loaded, first look at the stage
      * level, but fallback to the window level (in case it was pre-loaded
@@ -281,8 +279,14 @@ FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, c
         return FontPtr(); /* Fail */
     }
 
+    FontFlags flags;
+    flags.size = size.value;
+    flags.weight = weight;
+
     S_DEBUG("Loaded font with family {0} and size {1} from {2}", family, size.value, loc.value().str());
-    return stage_->assets->new_font_from_file(loc.value());
+    fnt = stage_->assets->new_font_from_file(loc.value(), flags);
+    fnt->set_name(alias);
+    return fnt;
 }
 
 }

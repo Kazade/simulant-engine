@@ -209,6 +209,18 @@ LoaderTypePtr Window::loader_type(const std::string& loader_name) const {
 }
 
 void Window::create_defaults() {
+    /* Preload whatever the default font is */
+    auto fnt = shared_assets->new_font_from_file(
+        "simulant/fonts/orbitron/Orbitron-Regular.ttf"
+    );
+
+    if(!fnt) {
+        FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
+    }
+
+    std::string alias = Font::generate_name("Orbitron", Font::DEFAULT_SIZE, FONT_WEIGHT_NORMAL);
+    fnt->set_name(alias);
+
     loading_ = scenes::Loading::create(this);
 
     //This needs to happen after SDL or whatever is initialized
