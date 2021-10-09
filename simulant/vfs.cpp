@@ -64,6 +64,16 @@ VirtualFileSystem::VirtualFileSystem(Window *window):
     resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
     resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
 #endif
+
+    /* In any standard project there are assets in the 'assets' directory.
+     * So we add that in here as a standard location in all
+     * root paths */
+    auto copy = resource_path_;
+    for(auto& path: copy) {
+        resource_path_.push_back(
+            kfs::path::join(path.str(), "assets")
+        );
+    }
 }
 
 bool VirtualFileSystem::add_search_path(const Path& path) {
