@@ -119,7 +119,40 @@ enum TextureChannel {
     TEXTURE_CHANNEL_ONE
 };
 
+
+class TextureToolbox {
+    friend class Texture;
+
+    TextureToolbox(uint8_t* data, uint16_t w, uint16_t h, TextureFormat f):
+        data_(data),
+        width_(w),
+        height_(h),
+        format_(f) {}
+
+public:
+    /** Sets the specified pixel to the passed colour.
+     *
+     *  @return true, if the coordinate was within the bounds of the
+     *  image and the pixel was successfully changed, false otherwise. */
+    bool set_pixel(uint16_t x, uint16_t y, const smlt::Colour& c);
+
+    /** Gets the colour at the specified pixel.
+     *
+     *  @return Returns a false-y optional<T> if the coordinate was
+     *  outside the bounds of the image, otherwise returns the colour
+     *  of the pixel */
+    smlt::optional<Colour> pixel_at(uint16_t x, uint16_t y);
+
+private:
+    uint8_t* data_ = nullptr;
+    uint16_t width_ = 0;
+    uint16_t height_ = 0;
+    TextureFormat format_ = TEXTURE_FORMAT_INVALID;
+};
+
+
 typedef std::array<TextureChannel, 4> TextureChannelSet;
+typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat, TextureToolbox&)> TextureMutationFunc;
 
 class Texture :
     public Asset,
@@ -131,6 +164,8 @@ class Texture :
     public ChainNameable<Texture> {
 
 public:
+    typedef TextureMutationFunc MutationFunc;
+
     static const TextureChannelSet DEFAULT_SOURCE_CHANNELS;
 
     struct BuiltIns {
@@ -225,8 +260,6 @@ public:
      * will free ram if the free data mode is set to TEXTURE_FREE_DATA_AFTER_UPLOAD
      */
     void flush();
-
-    typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
 
     /** Apply a mutation function to the current texture data */
     void mutate_data(MutationFunc func);

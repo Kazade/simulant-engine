@@ -250,7 +250,7 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
 
     set_format(new_format);
 
-    mutate_data([=](uint8_t* data, uint16_t, uint16_t, TextureFormat nf) {
+    mutate_data([=](uint8_t* data, uint16_t, uint16_t, TextureFormat nf, TextureToolbox&) {
         _S_UNUSED(nf);
         assert(nf == new_format); // Make sure the new format was applied
 
@@ -277,7 +277,7 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
 }
 
 
-static void do_flip_vertically(uint8_t* data, uint16_t width, uint16_t height, TextureFormat format) {
+static void do_flip_vertically(uint8_t* data, uint16_t width, uint16_t height, TextureFormat format, TextureToolbox&) {
     /**
      *  Flips the texture data vertically
      */
@@ -337,7 +337,8 @@ void Texture::flush() {
 }
 
 void Texture::mutate_data(Texture::MutationFunc func) {
-    func(&data_[0], width_, height_, format_);
+    TextureToolbox toolbox(&data_[0], width_, height_, format_);
+    func(&data_[0], width_, height_, format_, toolbox);
 
     /* A mutation by definition updates the data */
     data_dirty_ = true;

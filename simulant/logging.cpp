@@ -56,6 +56,8 @@ void StdIOHandler::do_write_message(Logger* logger,
                        const std::string& level,
                        const std::string& message) {
 
+    _S_UNUSED(logger);
+
     // We lock so that we don't get interleaved logging
     thread::Lock<thread::Mutex> g(lock_);
 

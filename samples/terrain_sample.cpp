@@ -10,7 +10,7 @@ inline T clamp(T x, T a = 0, T b = 1) {
 
 void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& vertices) {
     texture->resize(width, length);
-    texture->mutate_data([&](uint8_t* data, uint16_t, uint16_t, TextureFormat) {
+    texture->mutate_data([&](uint8_t* data, uint16_t, uint16_t, TextureFormat, TextureToolbox&) {
         for(uint32_t i = 0; i < vertices.count(); ++i) {
             auto n = vertices.normal_at<Vec3>(i);
 

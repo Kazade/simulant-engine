@@ -241,7 +241,7 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
 
     std::vector<LightmapLocation> locations(lightmaps.size());
 
-    output_texture->mutate_data([&](uint8_t* data, uint16_t width, uint16_t height, TextureFormat format) {
+    output_texture->mutate_data([&](uint8_t* data, uint16_t width, uint16_t height, TextureFormat format, TextureToolbox&) {
         _S_UNUSED(width);
         _S_UNUSED(height);
         _S_UNUSED(format);
