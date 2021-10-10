@@ -62,7 +62,7 @@ float Font::character_width(char32_t ch) {
     }
 
     auto *b = &char_data_.at(ch - 32);
-    return b->x1 - b->x0;
+    return std::abs(b->x1 - b->x0);
 }
 
 float Font::character_height(char32_t ch) {
@@ -71,7 +71,7 @@ float Font::character_height(char32_t ch) {
     }
 
     auto *b = &char_data_.at(ch - 32);
-    return b->y1 - b->y0;
+    return std::abs(b->y1 - b->y0);
 }
 
 float Font::character_advance(char32_t ch, char32_t next) {
