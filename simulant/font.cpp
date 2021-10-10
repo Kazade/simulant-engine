@@ -18,12 +18,12 @@ Font::Font(FontID id, AssetManager *asset_manager):
 
 }
 
-TextureID Font::texture_id() const {
-    return texture_->id();
+TexturePtr Font::texture() const {
+    return texture_;
 }
 
-MaterialID Font::material_id() const {
-    return material_->id();
+MaterialPtr Font::material() const {
+    return material_;
 }
 
 bool Font::init() {

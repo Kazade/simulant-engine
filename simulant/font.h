@@ -52,8 +52,8 @@ public:
     bool init() override;
 
     bool is_valid() const { return bool(info_) && texture_; }
-    TextureID texture_id() const;
-    MaterialID material_id() const;
+    TexturePtr texture() const;
+    MaterialPtr material() const;
 
     std::pair<Vec2, Vec2> texture_coordinates_for_character(char32_t c);
     float character_width(char32_t ch);
