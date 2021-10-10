@@ -5,6 +5,8 @@
 #include "../actor.h"
 #include "../../stage.h"
 #include "../../assets/material.h"
+#include "../../window.h"
+#include "../../application.h"
 
 namespace smlt {
 namespace ui {
@@ -15,7 +17,13 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
     owner_(owner),
     pimpl_(new WidgetImpl()) {
 
-    set_font(owner->load_or_get_font(defaults->font_family, defaults->font_size_, FONT_WEIGHT_NORMAL));
+    std::string family = (defaults->font_family_.empty()) ?
+        owner->window_->application->config->ui.font_family : defaults->font_family_;
+
+    Px size = (defaults->font_size_ == Px(0)) ?
+        owner->window_->application->config->ui.font_size : defaults->font_size_;
+
+    set_font(owner->load_or_get_font(family, size, FONT_WEIGHT_NORMAL));
 
     _recalc_active_layers();
 }
@@ -613,7 +621,7 @@ void Widget::set_foreground_colour(const Colour& colour) {
         return;
     }
 
-    pimpl_->foreground_colour_ = colour;    
+    pimpl_->foreground_colour_ = colour;
     pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND;
 
     rebuild();

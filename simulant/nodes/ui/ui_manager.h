@@ -11,6 +11,9 @@
 
 namespace smlt {
 
+class VirtualFileSystem;
+class SharedAssetManager;
+
 namespace ui {
 
 class Widget;
@@ -99,7 +102,16 @@ private:
     sig::connection frame_finished_connection_;
     sig::connection pre_render_connection_;
 
-    FontPtr load_or_get_font(const std::string& family, const Px& size, const FontWeight &weight);
+    FontPtr load_or_get_font(
+        const std::string& family, const Px& size, const FontWeight &weight
+    );
+
+private:
+    friend class ::smlt::Window;
+    static FontPtr _load_or_get_font(VirtualFileSystem* vfs,
+        AssetManager* assets, AssetManager* shared_assets,
+        const std::string& family, const Px& size, const FontWeight &weight
+    );
 };
 
 }

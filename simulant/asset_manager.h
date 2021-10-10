@@ -64,7 +64,7 @@ struct TextureFlags {
 };
 
 struct FontFlags {
-    uint16_t size = Font::DEFAULT_SIZE;
+    uint16_t size = 16;
     FontWeight weight = FONT_WEIGHT_NORMAL;
     CharacterSet charset = CHARACTER_SET_LATIN;
 };

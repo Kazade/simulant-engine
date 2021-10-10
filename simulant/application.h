@@ -75,6 +75,22 @@ struct AppConfig {
         uint32_t stage_node_pool_size = 64;
     } general;
 
+    struct UI {
+        /** If specified, these directories are added to the path
+         * temporarily while loading the default font */
+        std::vector<Path> font_directories = {
+            "simulant/fonts/orbitron",
+            "assets/simulant/fonts/orbitron"
+        };
+
+        /** The font-family that is used by default for widgets */
+        std::string font_family = "Orbitron";
+
+        /** The root font size, all Rem measurements are based on this
+          * unless overridden in a UIConfig */
+        uint16_t font_size = 16;
+    } ui;
+
     struct Desktop {
         bool enable_virtual_screen = false;
         ScreenFormat virtual_screen_format = SCREEN_FORMAT_G1;

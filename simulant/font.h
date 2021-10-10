@@ -43,9 +43,6 @@ class Font:
     public ChainNameable<Font> {
 
 public:
-    static const char* DEFAULT_FAMILY;
-    static const uint16_t DEFAULT_SIZE;
-
     static std::string generate_name(const std::string& family, const uint16_t& size, FontWeight weight) {
         return family + "-" + font_weight_name(weight) + "-" + smlt::to_string(size);
     }

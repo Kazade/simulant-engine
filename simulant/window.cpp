@@ -46,6 +46,7 @@
 #include "loaders/dtex_loader.h"
 
 #include "nodes/camera.h"
+#include "nodes/ui/ui_manager.h"
 
 #include "renderers/renderer_config.h"
 #include "sound.h"
@@ -209,16 +210,47 @@ LoaderTypePtr Window::loader_type(const std::string& loader_name) const {
 }
 
 void Window::create_defaults() {
-    /* Preload whatever the default font is */
-    auto fnt = shared_assets->new_font_from_file(
-        "simulant/fonts/orbitron/Orbitron-Regular.ttf"
-    );
+    FontPtr fnt;
+
+    auto& ui = application_->config->ui;
+
+    if(ui.font_directories.empty()) {
+        /* No font directories specified - just try to load */
+        fnt = ui::UIManager::_load_or_get_font(
+            vfs_.get(),
+            shared_assets,
+            nullptr,
+            ui.font_family,
+            ui.font_size,
+            FONT_WEIGHT_NORMAL
+        );
+    } else {
+        for(auto& dir: ui.font_directories) {
+            auto pushed = vfs->add_search_path(dir);
+            fnt = ui::UIManager::_load_or_get_font(
+                vfs_.get(),
+                shared_assets,
+                nullptr,
+                ui.font_family,
+                ui.font_size,
+                FONT_WEIGHT_NORMAL
+            );
+
+            if(pushed) {
+                vfs->remove_search_path(dir);
+            }
+
+            if(fnt) {
+                break;
+            }
+        }
+    }
 
     if(!fnt) {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }
 
-    std::string alias = Font::generate_name("Orbitron", Font::DEFAULT_SIZE, FONT_WEIGHT_NORMAL);
+    std::string alias = Font::generate_name(ui.font_family, ui.font_size, FONT_WEIGHT_NORMAL);
     fnt->set_name(alias);
 
     loading_ = scenes::Loading::create(this);

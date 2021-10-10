@@ -22,6 +22,7 @@
 #include "../../window.h"
 #include "../stage_node_manager.h"
 #include "../../viewport.h"
+#include "../../application.h"
 
 namespace smlt {
 namespace ui {
@@ -218,9 +219,31 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     return result;
 }
 
-FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, const FontWeight& weight) {
-    const std::string px_as_string = smlt::to_string(size.value);
+FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight) {
+    return _load_or_get_font(
+        window_->vfs, stage_->assets, window_->shared_assets.get(),
+        family, size, weight
+    );
+}
 
+FontPtr UIManager::_load_or_get_font(
+        VirtualFileSystem* vfs, AssetManager* assets, AssetManager* shared_assets,
+        const std::string &familyc, const Px &sizec, const FontWeight& weight) {
+
+
+    /* Apply defaults if that's what was asked */
+
+    std::string family = familyc;
+    if(family == DEFAULT_FONT_FAMILY) {
+        family = get_app()->config->ui.font_family;
+    }
+
+    Px size = sizec;
+    if(size == DEFAULT_FONT_SIZE) {
+        size = get_app()->config->ui.font_size;
+    }
+
+    const std::string px_as_string = smlt::to_string(size.value);
     const std::string weight_string = font_weight_name(weight);
 
     /* We search for standard variations of the filename depending on the family,
@@ -240,10 +263,13 @@ FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, c
     /* See if the font is already loaded, first look at the stage
      * level, but fallback to the window level (in case it was pre-loaded
      * globally) */
-    auto fnt = stage_->assets->find_font(alias);
+    FontPtr fnt;
+    if(assets) {
+        fnt = assets->find_font(alias);
+    }
 
-    if(!fnt) {
-        fnt = window_->shared_assets->find_font(alias);
+    if(!fnt && shared_assets) {
+        fnt = shared_assets->find_font(alias);
     }
 
     /* We already loaded it, all is well! */
@@ -253,19 +279,19 @@ FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, c
 
     smlt::optional<Path> loc;
     for(auto& filename: potentials) {
-        loc = window_->vfs->locate_file(filename);
+        loc = vfs->locate_file(filename);
         if(loc) {
             break;
         }
 
         /* Try a font directory prefix */
-        loc = window_->vfs->locate_file(kfs::path::join("fonts", filename));
+        loc = vfs->locate_file(kfs::path::join("fonts", filename));
         if(loc) {
             break;
         }
 
         /* Finally try a family name dir within fonts */
-        loc = window_->vfs->locate_file(
+        loc = vfs->locate_file(
             kfs::path::join(kfs::path::join("fonts", family), filename)
         );
 
@@ -284,7 +310,7 @@ FontPtr UIManager::load_or_get_font(const std::string &family, const Px &size, c
     flags.weight = weight;
 
     S_DEBUG("Loaded font with family {0} and size {1} from {2}", family, size.value, loc.value().str());
-    fnt = stage_->assets->new_font_from_file(loc.value(), flags);
+    fnt = assets->new_font_from_file(loc.value(), flags);
     fnt->set_name(alias);
     return fnt;
 }

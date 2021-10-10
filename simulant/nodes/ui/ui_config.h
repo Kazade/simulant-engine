@@ -61,11 +61,15 @@ struct Rem;
 
 /* Absolute pixel value */
 struct Px {
-    uint16_t value = 0;
+    int16_t value = 0;
 
     Px() = default;
     Px(const int& rhs):
         value(rhs) {}
+
+    bool operator==(const Px& rhs) const {
+        return value == rhs.value;
+    }
 
     Px& operator=(const int& rhs) {
         value = rhs;
@@ -94,15 +98,19 @@ struct Vh {
     float value;
 };
 
+
+extern const char* DEFAULT_FONT_FAMILY;
+extern const Px DEFAULT_FONT_SIZE;
+
 struct UIConfig {
     static const Colour ALICE_BLUE;
     static const Colour LIGHT_GREY;
     static const Colour DODGER_BLUE;
 
-    std::string font_family = Font::DEFAULT_FAMILY;
-    Px font_size_ = Font::DEFAULT_SIZE;
+    std::string font_family_ = "";  /* Use default */
+    Px font_size_ = 0; /* Use default */
 
-    uint16_t line_height_ = 18;
+    Px line_height_ = 18;
 
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
