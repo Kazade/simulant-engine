@@ -39,8 +39,10 @@ namespace loaders {
         auto texture = font->texture_ = font->asset_manager().new_texture(
             TEXTURE_WIDTH,
             TEXTURE_HEIGHT,
-            TEXTURE_FORMAT_RGBA_4UB_8888
+            TEXTURE_FORMAT_R_1UB_8
         );
+
+        texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
         if(charset != CHARACTER_SET_LATIN) {
             throw std::runtime_error("Unsupported character set - please submit a patch!");
@@ -62,6 +64,8 @@ namespace loaders {
             first_char, char_count,
             (stbtt_bakedchar*) &font->char_data_[0]
         );
+
+        texture->set_data(out_buffer, tmp_buffer.size());
 
         S_DEBUG("F: Converting font texture from 32bit -> 16bit");
 
