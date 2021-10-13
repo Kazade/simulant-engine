@@ -319,7 +319,16 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         mat->set_textures_enabled(DIFFUSE_MAP_ENABLED);
         mat->set_lighting_enabled(true);
 
-        auto sm = mesh->new_submesh_with_material(material.name, mat);
+        SubMeshPtr sm;
+
+        /* If groups have the same material we just reuse the same submesh */
+        if(mesh->has_submesh(material.name)) {
+            sm = mesh->find_submesh(material.name);
+        } else {
+            /* Otherwise we create a new one for this material */
+            sm = mesh->new_submesh_with_material(material.name, mat);
+        }
+
         auto idata = sm->index_data.get();
 
         for(auto idx: group.triangle_indices) {
