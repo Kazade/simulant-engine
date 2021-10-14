@@ -144,8 +144,7 @@ void KeyFrameAnimationState::update(float dt) {
     if(!diff) {
         interp_ = 0.0f;
     } else {
-        float divider = current_animation_duration_ / float(diff);
-        interp_ += dt / divider;
+        interp_ += current_animation_duration_ * dt;
 
         if(interp_ >= 1.0f) {
             interp_ = 0.0f;
