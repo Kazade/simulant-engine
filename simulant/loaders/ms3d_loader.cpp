@@ -130,6 +130,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     uint16_t num_joints = 0;
 
     int32_t comment_subversion = 0;
+    int32_t num_group_comments = 0;
     int32_t num_material_comments = 0;
     int32_t num_joint_comments = 0;
     int32_t has_model_comment = 0;
@@ -225,6 +226,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     std::vector<MS3DVertexExtra> vertex_extras;
 
+    printf("Comment subversion: %x\n", (int) data_->tellg());
     /* Try to read the comment subversion, we might then trip over the
      * end of the file if this is a V0 file */
     data_->read((char*) &comment_subversion, sizeof(int32_t));
@@ -235,6 +237,16 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         S_DEBUG("MS3D: Reading comments...");
 
         MS3DComment comment; // We do nothing with this for now
+
+        data_->read((char*) &num_group_comments, sizeof(int32_t));
+        for(int32_t i = 0; i < num_group_comments; ++i) {
+            data_->read((char*) &comment.index, sizeof(comment.index));
+            data_->read((char*) &comment.comment_length, sizeof(comment.comment_length));
+            comment.comment.resize(comment.comment_length);
+            data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
+        }
+
+        printf("Material comment: %x\n", (int) data_->tellg());
         data_->read((char*) &num_material_comments, sizeof(int32_t));
         for(int32_t i = 0; i < num_material_comments; ++i) {
             data_->read((char*) &comment.index, sizeof(comment.index));
