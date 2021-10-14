@@ -47,7 +47,7 @@ public:
 
     std::list<Path>& search_path() { return resource_path_; }
 
-    optional<Path> locate_file(const Path& filename) const;
+    optional<Path> locate_file(const Path& filename, bool fail_silently=false) const;
     std::shared_ptr<std::istream> open_file(const Path& filename);
     std::shared_ptr<std::stringstream> read_file(const Path& filename);
     std::vector<std::string> read_file_lines(const Path& filename);

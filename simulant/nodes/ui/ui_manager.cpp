@@ -279,20 +279,21 @@ FontPtr UIManager::_load_or_get_font(
 
     smlt::optional<Path> loc;
     for(auto& filename: potentials) {
-        loc = vfs->locate_file(filename);
+        loc = vfs->locate_file(filename, /*fail_silently=*/true);
         if(loc) {
             break;
         }
 
         /* Try a font directory prefix */
-        loc = vfs->locate_file(kfs::path::join("fonts", filename));
+        loc = vfs->locate_file(kfs::path::join("fonts", filename), /*fail_silently=*/true);
         if(loc) {
             break;
         }
 
         /* Finally try a family name dir within fonts */
         loc = vfs->locate_file(
-            kfs::path::join(kfs::path::join("fonts", family), filename)
+            kfs::path::join(kfs::path::join("fonts", family), filename),
+            /*fail_silently=*/true
         );
 
         if(loc) {

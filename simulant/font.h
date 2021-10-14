@@ -59,9 +59,9 @@ public:
     float character_width(char32_t ch);
     float character_height(char32_t ch);
     float character_advance(char32_t ch, char32_t next);
-    std::pair<float, float> character_offset(char32_t ch);
+    std::pair<int16_t, int16_t> character_offset(char32_t ch);
 
-    uint32_t size() const { return font_size_; }
+    uint16_t size() const { return font_size_; }
 
     float ascent() const;
     float descent() const;

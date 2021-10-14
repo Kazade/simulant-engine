@@ -85,7 +85,7 @@ float Font::character_advance(char32_t ch, char32_t next) {
     return b->xadvance;
 }
 
-std::pair<float, float> Font::character_offset(char32_t ch) {
+std::pair<int16_t, int16_t> Font::character_offset(char32_t ch) {
     if(ch < 32) {
         return std::make_pair(0, 0);
     }
@@ -93,8 +93,8 @@ std::pair<float, float> Font::character_offset(char32_t ch) {
     auto *b = &char_data_.at(ch - 32);
 
     return std::make_pair(
-        b->xoff,
-        -b->yoff
+        (int16_t) b->xoff,
+        (int16_t) -b->yoff
     );
 }
 

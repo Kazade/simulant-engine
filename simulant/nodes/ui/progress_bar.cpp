@@ -26,8 +26,8 @@ void ProgressBar::set_pulse_fraction(float value) {
 }
 
 void ProgressBar::refresh_pulse(float dt) {
-    pulse_width_ = this->content_width() * pulse_fraction_;
-    float pulse_range = (this->content_width() - pulse_width_);
+    pulse_width_ = this->content_width().value * pulse_fraction_;
+    float pulse_range = (this->content_width().value - pulse_width_);
     float pulse_max = pulse_range / 2.0f;
     float pulse_min = -pulse_range / 2.0f;
 
@@ -72,8 +72,8 @@ void ProgressBar::refresh_bar(float dt) {
     }
 }
 
-Widget::WidgetBounds ProgressBar::calculate_foreground_size(float content_width, float content_height) const {
-    WidgetBounds result = Widget::calculate_foreground_size(content_width, content_height);
+Widget::WidgetBounds ProgressBar::calculate_foreground_size() const {
+    WidgetBounds result = Widget::calculate_foreground_size();
     if(mode_ == PROGRESS_BAR_MODE_PULSE) {
         result.min.x = pulse_position_ - (pulse_width_ / 2);
         result.max.x = pulse_position_ + (pulse_width_ / 2);
@@ -88,8 +88,8 @@ void ProgressBar::pulse() {
     needs_refresh_ = true;
 }
 
-void ProgressBar::set_pulse_step(float value) {
-    pulse_step_ = std::fabs(value);
+void ProgressBar::set_pulse_step(Px value) {
+    pulse_step_ = std::abs(value.value);
 }
 
 void ProgressBar::set_range(float min, float max) {

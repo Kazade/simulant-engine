@@ -91,7 +91,7 @@ void VirtualFileSystem::remove_search_path(const Path& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
+optional<Path> VirtualFileSystem::locate_file(const Path &filename, bool fail_silently) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -140,7 +140,9 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
         }
     }
 #endif
-    S_ERROR("Unable to find file: {0}", final_name);
+    if(!fail_silently) {
+        S_WARN("Unable to find file: {0}", final_name);
+    }
     return optional<Path>();
 }
 

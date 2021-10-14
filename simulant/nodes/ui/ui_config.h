@@ -67,8 +67,36 @@ struct Px {
     Px(const int& rhs):
         value(rhs) {}
 
+    bool operator>=(const Px& rhs) const {
+        return value >= rhs.value;
+    }
+
+    bool operator<(const Px& rhs) const {
+        return value < rhs.value;
+    }
+
+    bool operator>(const int rhs) const {
+        return value > rhs;
+    }
+
+    bool operator==(const int16_t rhs) const {
+        return value == rhs;
+    }
+
     bool operator==(const Px& rhs) const {
         return value == rhs.value;
+    }
+
+    bool operator!=(const Px& rhs) const {
+        return !((*this) == rhs);
+    }
+
+    Px operator+(const Px& rhs) const {
+        return Px(value + rhs.value);
+    }
+
+    Px operator-(const Px& rhs) const {
+        return Px(value - rhs.value);
     }
 
     Px& operator=(const int& rhs) {
@@ -78,6 +106,18 @@ struct Px {
 
     Px operator*(const Rem& rhs) const;
 };
+
+inline std::ostream& operator<<(std::ostream& stream, const Px& value) {
+    return (stream << value.value);
+}
+
+inline bool operator==(const int16_t& lhs, const Px& rhs) {
+    return lhs == rhs.value;
+}
+
+inline bool operator!=(const int16_t& lhs, const Px& rhs) {
+    return lhs != rhs.value;
+}
 
 /* Relative to the "root" size */
 struct Rem {
@@ -110,7 +150,7 @@ struct UIConfig {
     std::string font_family_ = "";  /* Use default */
     Px font_size_ = 0; /* Use default */
 
-    Px line_height_ = 18;
+    Rem line_height_ = Rem(1.2f);
 
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
@@ -146,7 +186,7 @@ struct UIConfig {
     PackedColour4444 progress_bar_border_colour_ = DODGER_BLUE;
     float progress_bar_border_width_ = 1;
     uint16_t progress_bar_width_ = 100;
-    uint16_t progress_bar_height_ = 16;
+    Rem progress_bar_height_ = Rem(1.2f);
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;

@@ -15,7 +15,7 @@ public:
         auto pipeline = compositor->render(
             stage_, camera_
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
-        pipeline->viewport->set_colour(smlt::Colour::BLACK);
+        pipeline->viewport->set_colour(smlt::Colour::GREY);
 
         link_pipeline(pipeline);
 
@@ -73,6 +73,21 @@ public:
         icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
 
         //stage_->ui->transform_input_with_camera(camera_);
+
+        auto fixed_width = stage_->ui->new_widget_as_label("This is some text with a fixed width.\n See it works!");
+        fixed_width->resize(200, -1);
+        fixed_width->move_to(100, 200);
+        fixed_width->set_background_colour(smlt::Colour::PURPLE);
+
+        auto fixed_height = stage_->ui->new_widget_as_label("This is some text with a fixed height.\n See it works!");
+        fixed_height->resize(-1, 200);
+        fixed_height->move_to(300, 200);
+        fixed_height->set_background_colour(smlt::Colour::PURPLE);
+
+        auto fit_content = stage_->ui->new_widget_as_label("This widget fits its text content. See it works!");
+        fit_content->resize(-1, -1);
+        fit_content->move_to(700, 200);
+        fit_content->set_background_colour(smlt::Colour::PURPLE);
     }
 
     void update(float dt) {
@@ -124,6 +139,8 @@ int main(int argc, char* argv[]) {
     config.title = "UI Demo";
     config.fullscreen = false;
     
+    config.ui.font_size = 18;
+
 #ifdef __DREAMCAST__
     config.width = 640;
     config.height = 480;

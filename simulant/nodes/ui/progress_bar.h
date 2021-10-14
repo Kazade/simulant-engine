@@ -21,7 +21,7 @@ public:
     virtual ~ProgressBar();
 
     void pulse();
-    void set_pulse_step(float value);
+    void set_pulse_step(Px value);
     void set_pulse_fraction(float value);
 
     void set_fraction(float fraction);
@@ -55,7 +55,7 @@ private:
     void refresh_fraction();
     void refresh_bar(float dt);
 
-    WidgetBounds calculate_foreground_size(float content_width, float content_height) const override;
+    WidgetBounds calculate_foreground_size() const override;
 };
 
 }

@@ -17,6 +17,11 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
     owner_(owner),
     pimpl_(new WidgetImpl()) {
 
+    pimpl_->line_height_ = defaults->line_height_;
+
+    set_foreground_colour(defaults->foreground_colour_);
+    set_background_colour(defaults->background_colour_);
+
     std::string family = (defaults->font_family_.empty()) ?
         owner->window_->application->config->ui.font_family : defaults->font_family_;
 
@@ -104,12 +109,27 @@ void Widget::set_font(FontPtr font) {
         return;
     }
 
-    pimpl_->line_height_ = ::round(float(font_->size()) * 1.1f);
-
     on_size_changed();
 }
 
-void Widget::resize(int32_t width, int32_t height) {
+void Widget::resize(Rem width, Px height) {
+    Px w = Px(font_->size()) * width;
+    resize(w, height);
+}
+
+void Widget::resize(Px width, Rem height) {
+    Px h = Px(font_->size()) * height;
+    resize(width, h);
+}
+
+void Widget::resize(Rem width, Rem height) {
+    Px w = Px(font_->size()) * width;
+    Px h = Px(font_->size()) * height;
+
+    resize(w, h);
+}
+
+void Widget::resize(Px width, Px height) {
     if(pimpl_->requested_width_ == width && pimpl_->requested_height_ == height) {
         return;
     }
@@ -153,20 +173,31 @@ void Widget::render_text() {
     /* We know how many vertices we'll need (roughly) */
     vertices.reserve(text().length() * 4);
 
-    float left_bound = 0;
-    auto right_bound = pimpl_->requested_width_;
-    float left = left_bound;
+    Px left_bound = 0;
+
+    /* We don't have a right bound if the widget is supposed to fit the content
+     * or if we have a fixed height, but unfixed width. Otherwise the right bound is
+     * the requested width */
+    Px right_bound = (
+        pimpl_->resize_mode_ == RESIZE_MODE_FIT_CONTENT ||
+        pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT
+    ) ? std::numeric_limits<int>::max() : pimpl_->requested_width_;
+
+    Px left = left_bound;
     uint32_t line_start = 0;
     float line_length = 0;
     uint32_t line_char_count = 0;
 
-
     /* Generate lines of text */
-    for(uint32_t i = 0; i < text().length(); ++i) {
-        unicode::value_type ch = text()[i];
-        float ch_width = font_->character_width(ch);
-        float ch_height = font_->character_height(ch);
-        float ch_advance = (i == text().length() - 1) ? 0 : font_->character_advance(ch, text()[i + 1]);
+    auto text_ptr = &text()[0];
+    auto text_length = text().length();
+    auto font_size = font_->size();
+
+    for(uint32_t i = 0; i < text_length; ++i) {
+        unicode::value_type ch = text_ptr[i];
+        Px ch_width = font_->character_width(ch);
+        Px ch_height = font_->character_height(ch);
+        float ch_advance = (i == text_length - 1) ? 0 : font_->character_advance(ch, text_ptr[i + 1]);
 
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
@@ -205,10 +236,10 @@ void Widget::render_text() {
         // Characters are created with their top-line at 0, we then
         // properly manipulate the position when we process the lines later
         auto off = font_->character_offset(ch);
-        corners[0].xyz = smlt::Vec3(left + off.first, off.second - ch_height, 0);
-        corners[1].xyz = smlt::Vec3(right + off.first, off.second - ch_height, 0);
-        corners[2].xyz = smlt::Vec3(right + off.first, off.second, 0);
-        corners[3].xyz = smlt::Vec3(left + off.first, off.second, 0);
+        corners[0].xyz = smlt::Vec3((left + off.first).value, off.second - ch_height.value - font_size, 0);
+        corners[1].xyz = smlt::Vec3((right + off.first).value, off.second - ch_height.value - font_size, 0);
+        corners[2].xyz = smlt::Vec3((right + off.first).value, off.second - font_size, 0);
+        corners[3].xyz = smlt::Vec3((left + off.first).value, off.second - font_size, 0);
 
         auto min_max = font_->texture_coordinates_for_character(ch);
         corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
@@ -231,12 +262,19 @@ void Widget::render_text() {
         left = next_left;
     }
 
+    auto line_height = Px(font_->size()) * pimpl_->line_height_;
+    auto line_height_shift = (line_height.value - font_->size()) * 0.5f;
+
     /* Now apply line heights */
     float top = 0;
     uint32_t j = 0;
     for(auto range: line_ranges) {
+        top += line_height_shift;
+
+        uint16_t shift = std::round(top);
+
         Vertex* ch = &vertices.at(range.first);
-        float hw = line_lengths[j++] * 0.5f;
+        uint16_t hw = line_lengths[j++] * 0.5f;
         for(auto i = 0u; i < range.second; ++i) {
             Vertex* bl = ch;
             Vertex* br = ch + 1;
@@ -244,10 +282,10 @@ void Widget::render_text() {
             Vertex* tl = ch + 3;
 
             // Shift the vertex downwards
-            bl->xyz.y -= top;
-            br->xyz.y -= top;
-            tr->xyz.y -= top;
-            tl->xyz.y -= top;
+            bl->xyz.y -= shift;
+            br->xyz.y -= shift;
+            tr->xyz.y -= shift;
+            tl->xyz.y -= shift;
 
             // Center each line
             bl->xyz.x -= hw;
@@ -259,12 +297,7 @@ void Widget::render_text() {
         }
 
         // Increase for the next line
-        top += pimpl_->line_height_;
-    }
-
-    // Now we have to shift the entire thing up to vertically center!
-    for(Vertex& v: vertices) {
-        v.xyz.y += int(top / 2.0f);
+        top += font_->size() + line_height_shift;
     }
 
     auto sm = mesh_->find_submesh("text");
@@ -274,6 +307,24 @@ void Widget::render_text() {
     float min_y = std::numeric_limits<float>::max();
     float max_x = std::numeric_limits<float>::lowest();
     float max_y = std::numeric_limits<float>::lowest();
+
+    for(auto& v: vertices) {
+        min_x = std::min(min_x, v.xyz.x);
+        max_x = std::max(max_x, v.xyz.x);
+        min_y = std::min(min_y, v.xyz.y);
+        max_y = std::max(max_y, v.xyz.y);
+    }
+
+    pimpl_->content_width_ = max_x - min_x;
+    pimpl_->content_height_ = line_height.value * line_ranges.size();
+
+    auto abs_min_x = std::abs(min_x);
+    auto abs_max_x = std::abs(max_x);
+    auto abs_min_y = std::abs(min_y) - line_height_shift;
+    auto abs_max_y = std::abs(max_y) + line_height_shift;
+
+    auto global_x_shift = (abs_min_x - abs_max_x) / 2;
+    auto global_y_shift = (abs_min_y - abs_max_y) / 2;
 
     auto vdata = mesh_->vertex_data.get();
     auto idata = sm->index_data.get();
@@ -285,12 +336,7 @@ void Widget::render_text() {
 
     auto idx = 0;
     for(auto& v: vertices) {
-        min_x = std::min(min_x, v.xyz.x);
-        max_x = std::max(max_x, v.xyz.x);
-        min_y = std::min(min_y, v.xyz.y);
-        max_y = std::max(max_y, v.xyz.y);
-
-        vdata->position(v.xyz);
+        vdata->position(v.xyz + Vec3(global_x_shift, global_y_shift, 0));
         vdata->tex_coord0(v.uv);
         vdata->diffuse(pimpl_->text_colour_);
         vdata->move_next();
@@ -301,8 +347,6 @@ void Widget::render_text() {
     vdata->done();
     idata->done();
 
-    pimpl_->content_width_ = max_x - min_x;
-    pimpl_->content_height_ = max_y - min_y;
 }
 
 void Widget::clear_mesh() {
@@ -408,20 +452,8 @@ void Widget::rebuild() {
 
     render_text();
 
-    // FIXME: Clipping + other modes
-    if(resize_mode() == RESIZE_MODE_FIXED) {
-        pimpl_->content_width_ = pimpl_->requested_width_;
-        pimpl_->content_height_ = pimpl_->requested_height_;
-    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        pimpl_->content_height_ = std::max(pimpl_->requested_height_, pimpl_->content_height_);
-        pimpl_->content_width_ = pimpl_->requested_width_;
-    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
-        pimpl_->content_width_ = std::max(pimpl_->requested_width_, pimpl_->content_width_);
-        pimpl_->content_height_ = pimpl_->requested_height_;
-    }
-
-    auto background_bounds = calculate_background_size(pimpl_->content_width_, pimpl_->content_height_);
-    auto foreground_bounds = calculate_foreground_size(pimpl_->content_width_, pimpl_->content_height_);
+    auto background_bounds = calculate_background_size();
+    auto foreground_bounds = calculate_foreground_size();
 
     auto border_bounds = background_bounds;
     border_bounds.min -= smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
@@ -479,19 +511,36 @@ void Widget::rebuild() {
     pimpl_->anchor_point_dirty_ = false;
 }
 
-Widget::WidgetBounds Widget::calculate_background_size(float content_width, float content_height) const {
-    /* By default, we just return the content_width + padding */
-    auto hw = content_width / 2.0f;
-    auto hh = content_height / 2.0f;
+Widget::WidgetBounds Widget::calculate_background_size() const {
+    Px box_width, box_height;
+
+    // FIXME: Clipping + other modes
+    if(resize_mode() == RESIZE_MODE_FIXED) {
+        box_width = pimpl_->padding_.left + pimpl_->requested_width_.value + pimpl_->padding_.right;
+        box_height = pimpl_->padding_.top + pimpl_->requested_height_.value + pimpl_->padding_.bottom;
+    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
+        box_width = pimpl_->padding_.left + pimpl_->requested_width_.value + pimpl_->padding_.right;
+        box_height = std::max(pimpl_->requested_height_, pimpl_->content_height_) + pimpl_->padding_.top + pimpl_->padding_.bottom;
+    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
+        box_width = std::max(pimpl_->requested_width_, pimpl_->content_width_) + pimpl_->padding_.left + pimpl_->padding_.right;
+        box_height = pimpl_->padding_.top + pimpl_->requested_height_.value + pimpl_->padding_.bottom;
+    } else {
+        /* Fit content */
+        box_width = std::max(pimpl_->requested_width_, pimpl_->content_width_) + pimpl_->padding_.left + pimpl_->padding_.right;
+        box_height = std::max(pimpl_->requested_height_, pimpl_->content_height_) + pimpl_->padding_.top + pimpl_->padding_.bottom;
+    }
+
+    auto hw = std::ceil(float(box_width.value) * 0.5f);
+    auto hh = std::ceil(float(box_height.value) * 0.5f);
 
     WidgetBounds bounds;
-    bounds.min = smlt::Vec2(-(hw + pimpl_->padding_.left), -(hh + pimpl_->padding_.bottom));
-    bounds.max = smlt::Vec2(hw + pimpl_->padding_.right, hh + pimpl_->padding_.top);
+    bounds.min = smlt::Vec2(-hw, -hh);
+    bounds.max = smlt::Vec2(hw, hh);
     return bounds;
 }
 
-Widget::WidgetBounds Widget::calculate_foreground_size(float content_width, float content_height) const {
-    return calculate_background_size(content_width, content_height);
+Widget::WidgetBounds Widget::calculate_foreground_size() const {
+    return calculate_background_size();
 }
 
 void Widget::set_border_width(float x) {
@@ -637,27 +686,27 @@ void Widget::set_text_colour(const Colour &colour) {
     rebuild();
 }
 
-uint16_t Widget::requested_width() const {
+Px Widget::requested_width() const {
     return pimpl_->requested_width_;
 }
 
-uint16_t Widget::requested_height() const {
+Px Widget::requested_height() const {
     return pimpl_->requested_height_;
 }
 
-uint16_t Widget::content_width() const {
+Px Widget::content_width() const {
     return pimpl_->content_width_; // Content area
 }
 
-uint16_t Widget::content_height() const {
+Px Widget::content_height() const {
     return pimpl_->content_height_;
 }
 
-uint16_t Widget::outer_width() const {
+Px Widget::outer_width() const {
     return content_width() + (pimpl_->border_width_ * 2);
 }
 
-uint16_t Widget::outer_height() const {
+Px Widget::outer_height() const {
     return content_height() + (pimpl_->border_width_ * 2);
 }
 
