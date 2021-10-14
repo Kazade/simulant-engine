@@ -324,6 +324,16 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         S_DEBUG("MS3D: Loading texture {0}...", texname);
 
         auto tex = assets->new_texture_from_file(texname);
+
+        if(!tex) {
+            /* Sometimes MS3D files use absolute paths which is no good
+             * so if the texture isn't found, fallback to looking in the
+             * current directory */
+            std::replace(texname.begin(), texname.end(), '\\', kfs::SEP[0]);
+            Path filename = kfs::path::split(texname).second;
+            tex = assets->new_texture_from_file(filename);
+        }
+
         if(tex) {
             mat->set_diffuse_map(tex);
         }
