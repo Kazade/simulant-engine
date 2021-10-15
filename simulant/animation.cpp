@@ -144,7 +144,7 @@ void KeyFrameAnimationState::update(float dt) {
     if(!diff) {
         interp_ = 0.0f;
     } else {
-        interp_ += current_animation_duration_ * dt;
+        interp_ += (diff / current_animation_duration_) * dt;
 
         if(interp_ >= 1.0f) {
             interp_ = 0.0f;
@@ -155,7 +155,7 @@ void KeyFrameAnimationState::update(float dt) {
             if(next_frame_ > current_animation_->frames.second) {
                 if(next_animation_) {
                     current_animation_ = next_animation_;
-                    current_animation_duration_ = current_animation_->duration;
+                    current_animation_duration_ = next_animation_->duration;
                     next_animation_ = nullptr;
                 }
                 next_frame_ = current_animation_->frames.first;

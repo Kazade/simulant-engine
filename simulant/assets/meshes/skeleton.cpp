@@ -157,6 +157,7 @@ void SkeletalFrameUnpacker::unpack_frame(
      * actual vertex by manipulating its position to take into account the current
      * joint position vs the original joint position for each joint that has a
      * weighting */
+    vdata->move_to_start();
     for(std::size_t i = 0; i < vertices_.size(); ++i) {
         Vec3 p = *vdata->position_at<Vec3>(i);
         Vec3 n = *vdata->normal_at<Vec3>(i);
@@ -178,9 +179,9 @@ void SkeletalFrameUnpacker::unpack_frame(
             }
         }
 
-        out->move_to(i);
         out->position(po);
         out->normal(no.normalized());
+        out->move_next();
     }
 
     out->done();

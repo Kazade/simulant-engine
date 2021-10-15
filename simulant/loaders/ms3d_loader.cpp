@@ -96,6 +96,32 @@ struct MS3DVertexExtra {
     uint32_t extra; // Only if subversion is 2
 };
 
+
+/** Given an array of keyframes (rotation or position) this finds the previous and next
+ *  keyframes for the given frame time */
+template<typename T>
+static std::pair<T*, T*> find_next_previous(T* array, std::size_t count, float frame_time) {
+    if(!count) {
+        return std::make_pair(nullptr, nullptr);
+    }
+
+    T* it = array;
+    for(std::size_t i = 0; i < count; ++i, ++it) {
+        /* If this is true it means we went past the frame time so we need
+         * the previous frame and this frame */
+        if(it->time > frame_time) {
+            if(i > 0) {
+                return std::make_pair(it - 1, it);
+            } else {
+                return std::make_pair(array, array);
+            }
+        }
+    }
+
+    /* We went past the end, so just return the last frame for both */
+    return std::make_pair(it, it);
+}
+
 MS3DLoader::MS3DLoader(const Path& filename, std::shared_ptr<std::istream> data):
     Loader(filename, data) {}
 
@@ -213,20 +239,17 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         joints[i].rotation_key_frames.resize(joints[i].num_rotation_key_frames);
         joints[i].position_key_frames.resize(joints[i].num_position_key_frames);
 
-        data_->read(
-            (char*) &joints[i].rotation_key_frames[0],
-            sizeof(MS3DRotationKeyFrame) * joints[i].num_rotation_key_frames
-        );
+        for(uint16_t j = 0; j < joints[i].num_rotation_key_frames; ++j) {
+            data_->read((char*) &joints[i].rotation_key_frames[j], sizeof(MS3DRotationKeyFrame));
+        }
 
-        data_->read(
-            (char*) &joints[i].position_key_frames[0],
-            sizeof(MS3DPositionKeyFrame) * joints[i].num_position_key_frames
-        );
+        for(uint16_t j = 0; j < joints[i].num_position_key_frames; ++j) {
+            data_->read((char*) &joints[i].position_key_frames[j], sizeof(MS3DPositionKeyFrame));
+        }
     }
 
     std::vector<MS3DVertexExtra> vertex_extras;
 
-    printf("Comment subversion: %x\n", (int) data_->tellg());
     /* Try to read the comment subversion, we might then trip over the
      * end of the file if this is a V0 file */
     data_->read((char*) &comment_subversion, sizeof(int32_t));
@@ -246,7 +269,6 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             data_->read((char*) &comment.comment[0], sizeof(char) * comment.comment_length);
         }
 
-        printf("Material comment: %x\n", (int) data_->tellg());
         data_->read((char*) &num_material_comments, sizeof(int32_t));
         for(int32_t i = 0; i < num_material_comments; ++i) {
             data_->read((char*) &comment.index, sizeof(comment.index));
@@ -278,7 +300,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             MS3DVertexExtra& extra = vertex_extras[i];
             data_->read((char*) extra.bone_ids, sizeof(uint8_t) * 3);
             data_->read((char*) extra.weights, sizeof(uint8_t) * 3);
-            if(vertex_extra_subversion == 2) {
+            if(vertex_extra_subversion >= 2) {
                 data_->read((char*) &extra.extra, sizeof(extra.extra));
             }
         }
@@ -454,82 +476,41 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         for(std::size_t j = 0; j < joints.size(); ++j) {
             JointState state;
 
-            // FIXME: set state
             /* MS3D joints store key frames at the time in seconds
              * what we want to do is work out which keyframe is active
-             * at the time of this frame */
+             * at the time of this frame and interpolate to our frame time*/
 
             auto& source_joint = joints[j];
 
-            /* Note: assumes keyframes are stored in order of time... */
-            /* FIXME: Duplication of logic makes me sad. Maybe we can templatise this */
-            MS3DRotationKeyFrame* last_rot_frame = nullptr;
-            bool rot_frame_found = false;
-            for(auto& kf: source_joint.rotation_key_frames) {
-                if(kf.time > frame_time) {
-                    /* OK, this frame is too late, choose the last one */
-                    if(!last_rot_frame) {
-                        /* We have to assume that this is the first frame, although
-                         * this shouldn't happen, so let's log a warning */
-                        S_WARN(
-                            "First frame time was unexpectedly > 0, floating point issue?"
-                        );
-                        state.rotation = to_quaternion(source_joint.rotation_key_frames[0].rotation);
-                    } else {
-                        state.rotation = to_quaternion(last_rot_frame->rotation);
-                    }
-
-                    rot_frame_found = true;
-                    break;
-                }
-
-                last_rot_frame = &kf;
-            }
-
-            if(!rot_frame_found) {
-                if(source_joint.rotation_key_frames.empty()) {
-                    state.rotation = Quaternion();
-                } else {
-                    state.rotation = to_quaternion(source_joint.rotation_key_frames.back().rotation);
-                }
-            }
-
-            MS3DPositionKeyFrame* last_pos_frame = nullptr;
-            bool pos_frame_found = false;
-            for(auto& kf: source_joint.position_key_frames) {
-                if(kf.time > frame_time) {
-                    /* OK, this frame is too late, choose the last one */
-                    if(!last_pos_frame) {
-                        /* We have to assume that this is the first frame, although
-                         * this shouldn't happen, so let's log a warning */
-                        S_WARN(
-                            "First frame time was unexpectedly > 0, floating point issue?"
-                        );
-                        state.translation = source_joint.position_key_frames[0].position;
-                    } else {
-                        state.translation = last_pos_frame->position;
-                    }
-
-                    pos_frame_found = true;
-                    break;
-                }
-
-                last_pos_frame = &kf;
-            }
-
-            if(!pos_frame_found) {
-                // If we didn't find anything, set it to the last position
-                // or if there are no keyframes just set to the joint position
-                if(source_joint.position_key_frames.empty()) {
-                    state.translation = Vec3();
-                } else {
-                    state.translation = source_joint.position_key_frames.back().position;
-                }
-            }
-
-            frame_data->set_joint_state_at_frame(
-                i, j, state
+            auto rot_frames = find_next_previous(
+                &source_joint.rotation_key_frames[0],
+                source_joint.rotation_key_frames.size(),
+                frame_time
             );
+
+            auto pos_frames = find_next_previous(
+                &source_joint.position_key_frames[0],
+                source_joint.position_key_frames.size(),
+                frame_time
+            );
+
+            if(rot_frames.first && pos_frames.first) {
+                float divider = (rot_frames.first->time == rot_frames.second->time) ? 1.0f : (rot_frames.second->time - rot_frames.first->time);
+                float t = (frame_time - rot_frames.first->time) / divider;
+                float t2 = t * t;
+                float t3 = t2 * t;
+
+                auto& r0 = rot_frames.first->rotation;
+                auto& r1 = rot_frames.second->rotation;
+                auto& p0 = pos_frames.first->position;
+                auto& p1 = pos_frames.second->position;
+
+                // Ease-in-out interpolation: 2 * powf(s, 3.0f) * (v1 - v2) + 3 * powf(s, 2.0f) * (v2 - v1) + v1;
+                state.translation = 2.0f * t3 * (p0 - p1) + 3.0f * t2 * (p1 - p0) + p0;
+                state.rotation = to_quaternion(r0).slerp(to_quaternion(r1), t);
+            }
+
+            frame_data->set_joint_state_at_frame(i, j, state);
         }
     }
 
