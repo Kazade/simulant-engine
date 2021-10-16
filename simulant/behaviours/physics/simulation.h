@@ -21,6 +21,7 @@ namespace behaviours {
 
 namespace impl {
     class Body;
+    class DynamicBody;
     class ContactListener;
 }
 
@@ -45,8 +46,11 @@ public:
     bool body_exists(const impl::Body* body) const { return bodies_.count(body); }
 private:
     friend class impl::Body;
+    friend class impl::DynamicBody;
+
     friend class RigidBody;
     friend class StaticBody;
+    friend class KinematicBody;
 
     TimeKeeper* time_keeper_ = nullptr;
 

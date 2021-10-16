@@ -118,6 +118,7 @@ protected:
 
 private:
     virtual bool is_dynamic() const { return true; }
+    virtual bool is_kinematic() const { return false; }
 
     sig::connection simulation_stepped_connection_;
     std::vector<std::shared_ptr<b3Hull>> hulls_;

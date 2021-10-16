@@ -57,6 +57,14 @@ public:
         SimulantTestCase::tear_down();
     }
 
+    void test_create_kinematic_body() {
+        auto actor1 = stage->new_actor();
+
+        auto body = actor1->new_behaviour<behaviours::KinematicBody>(physics.get());
+        assert_true(body->is_kinematic());
+        assert_true(body->is_dynamic());
+    }
+
     void test_box_collider_addition() {
         auto actor1 = stage->new_actor();
 
