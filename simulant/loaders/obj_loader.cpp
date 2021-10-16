@@ -18,9 +18,6 @@
 //
 #include <string>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "./deps/tiny_obj_loader.h"
-
 #include "obj_loader.h"
 
 #include "../meshes/mesh.h"
@@ -28,39 +25,378 @@
 #include "../shortcuts.h"
 #include "../vfs.h"
 #include "../utils/string.h"
+#include "../application.h"
+#include "../window.h"
 
 namespace smlt {
 namespace loaders {
 
-class SimulantMaterialReader : public tinyobj::MaterialReader {
-public:
-    SimulantMaterialReader(VirtualFileSystem* locator, const Path& obj_filename):
-        locator_(locator),
-        obj_filename_(obj_filename) {}
+struct LoadInfo {
+    Mesh* target_mesh = nullptr;
+    AssetManager* assets = nullptr;
+    Material* current_material = nullptr;
+    VertexData* vdata = nullptr;
+    VertexSpecification vspec;
+    CullMode cull_mode = CULL_MODE_BACK_FACE;
 
-    bool operator()(const std::string &matId,
-        std::vector<tinyobj::material_t> *materials,
-        std::map<std::string, int> *matMap, std::string *warn,
-        std::string *err) override {
+    std::istream* stream;
+    Path folder;
 
-        std::string filename = kfs::path::join(kfs::path::dir_name(obj_filename_.str()), matId);
+    uint32_t line_offset = 0;
+    uint32_t arg_offset = 0;
+};
 
-        auto stream = locator_->open_file(filename);
-        if(!stream) {
-            S_DEBUG("mtllib {0} not found. Skipping.", filename);
-        } else {
-            tinyobj::LoadMtl(matMap, materials, stream.get(), warn, err);
+typedef std::function<bool (LoadInfo*, std::string, std::string)> CommandHandler;
+
+typedef std::map<std::string, CommandHandler> CommandList;
+
+static void run_parser(LoadInfo& info, const CommandList& commands) {
+    auto& data_ = info.stream;
+
+    std::string command;
+
+    while(!data_->eof()) {
+        auto c = data_->get();
+        if(c == ' ' && !strip(command).empty()) {
+            command = strip(command);
+
+            /* Skip whitespace between the command
+             * and the arguments */
+            while(data_->peek() == ' ' || data_->peek() == '\t') {
+                c = data_->get();
+            }
+
+            /* Store the offset to the first character
+             * in the arglist */
+            info.arg_offset = data_->tellg();
+
+            std::string args;
+            while(data_->good() && c != '\n') {
+                c = data_->get();
+                args += c;
+            }
+
+            args = strip(args);
+
+            if(!commands.at(command)(&info, command, args)) {
+                S_ERROR("Error passing command '{0}' with args: {1}", command, args);
+                return;
+            }
+
+            command.clear();
+
+            /* Set the line offset for the next line */
+            info.line_offset = data_->tellg();
+            info.line_offset++;
+
+        } else if(c != ' ') {
+            command += c;
         }
+    }
+}
 
+static bool null(LoadInfo*, std::string, std::string) {
+    return true;
+}
+
+static bool newmtl(LoadInfo* info, std::string, std::string args) {
+    if(info->target_mesh->has_submesh(args)) {
+        info->current_material = info->target_mesh->find_submesh(args)->material().get();
+    } else {
+        auto sm = info->target_mesh->new_submesh(args);
+        info->current_material = sm->material().get();
+        info->current_material->set_name(args);
+        info->current_material->set_cull_mode(info->cull_mode);
+    }
+
+    return true;
+}
+
+static bool map_Kd(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto tex = info->assets->new_texture_from_file(args);
+    mat->set_diffuse_map(tex);
+    return true;
+}
+
+static bool Ka(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto parts = split(args);
+
+    float r = smlt::stof(parts[0]);
+    float g = smlt::stof(parts[1]);
+    float b = smlt::stof(parts[2]);
+
+    mat->set_ambient(smlt::Colour(r, g, b, 1.0f));
+
+    return true;
+}
+
+static bool Kd(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto parts = split(args);
+
+    float r = smlt::stof(parts[0]);
+    float g = smlt::stof(parts[1]);
+    float b = smlt::stof(parts[2]);
+
+    mat->set_diffuse(smlt::Colour(r, g, b, 1.0f));
+
+    return true;
+}
+
+static bool Ks(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto parts = split(args);
+
+    float r = smlt::stof(parts[0]);
+    float g = smlt::stof(parts[1]);
+    float b = smlt::stof(parts[2]);
+
+    mat->set_specular(smlt::Colour(r, g, b, 1.0f));
+    return true;
+}
+
+static bool Ns(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    float s = smlt::stof(args);
+
+    mat->set_shininess(128.0f * (0.001f * s));
+    return true;
+}
+
+static bool d(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    float d = smlt::stof(args);
+
+    auto c = mat->ambient();
+    c.a = d;
+    mat->set_ambient(c);
+
+    c = mat->diffuse();
+    c.a = d;
+    mat->set_diffuse(c);
+
+    c = mat->specular();
+    c.a = d;
+    mat->set_specular(c);
+    return true;
+}
+
+static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
+    const std::map<std::string, CommandHandler> commands = {
+        {"newmtl", newmtl},
+        {"Ka", Ka},
+        {"Kd", Kd},
+        {"Ks", Ks},
+        {"Ns", Ns},
+        {"Ni", null},
+        {"d", d},
+        {"illum", null},
+        {"map_Kd", map_Kd},
+        {"#", null},
+    };
+
+    auto stash = info->stream;
+
+    auto& vfs = get_app()->window->vfs;
+
+    auto added = vfs->add_search_path(info->folder);
+
+    auto mtl_stream = vfs->open_file(args);
+
+    info->stream = mtl_stream.get();
+
+    run_parser(*info, commands);
+
+    if(added) {
+        vfs->remove_search_path(info->folder);
+    }
+
+    info->stream = stash;
+
+    return true;
+}
+
+static bool apply_material(LoadInfo* info, std::string, std::string args) {
+    auto mat_name = strip(args);
+
+    auto mat = info->assets->find_material(mat_name);
+
+    if(!mat) {
+        mat = info->assets->new_material();
+        mat->set_name(mat_name);
+
+        /* Create the submesh for the material */
+        auto sm = info->target_mesh->new_submesh_with_material(mat_name, mat);
+        sm->set_name(mat_name);
+    }
+
+    info->current_material = mat.get();
+
+    return true;
+}
+
+/*
+ * Loading .obj files, while keeping memory usage low is very
+ * tricky. Face corners are composed of separate positions, texcoords,
+ * and normals. Combined those create the final vertex.
+ *
+ * The problem is, how do you generate those vertices without loading
+ * all the data up front, and then duplicating it?
+ *
+ * The approach here is to store file offsets to the data, rather than the
+ * actual data. This means that you save 2/3rds the memory usage but
+ * incur a perf cost (moving around the file, and parsing the lines)
+ */
+
+static std::vector<uint32_t>* VERTEX_OFFSETS = nullptr;
+static std::vector<uint32_t>* TEXCOORD_OFFSETS = nullptr;
+static std::vector<uint32_t>* NORMAL_OFFSETS = nullptr;
+
+static bool load_vertex(LoadInfo* info, std::string, std::string) {
+    VERTEX_OFFSETS->push_back(info->arg_offset);
+    return true;
+}
+
+static bool load_texcoord(LoadInfo* info, std::string, std::string) {
+    if(!info->vspec.has_texcoord0()) {
         return true;
     }
 
-private:
-    VirtualFileSystem* locator_ = nullptr;
-    Path obj_filename_;
-};
+    TEXCOORD_OFFSETS->push_back(info->arg_offset);
+    return true;
+}
+
+static bool load_normal(LoadInfo* info, std::string, std::string) {
+    if(!info->vspec.has_normals()) {
+        return true;
+    }
+
+    NORMAL_OFFSETS->push_back(info->arg_offset);
+    return true;
+}
+
+static uint8_t parse_floats(std::istream* stream, float* out, uint8_t count) {
+    uint8_t current = 0;
+
+    std::string args;
+    auto c = stream->get();
+    while(c != '\n') {
+        if(c == ' ' || c == '\t') {
+            out[current++] = smlt::stof(args);
+            if(current == count) {
+                return true;
+            }
+
+            args.clear();
+        } else {
+            args += c;
+        }
+
+        c = stream->get();
+    }
+
+    assert(!args.empty());
+    out[current++] = smlt::stof(args);
+
+    return current;
+}
+
+static bool load_face(LoadInfo* info, std::string, std::string args) {
+    float xyzrgb[6] = {0, 0, 0, 1, 1, 1};
+
+    smlt::SubMeshPtr submesh;
+    if(info->current_material) {
+        submesh = info->target_mesh->find_submesh(info->current_material->name());
+    } else {
+        if(info->target_mesh->has_submesh("__default__")) {
+            submesh = info->target_mesh->find_submesh("__default__");
+        } else {
+            submesh = info->target_mesh->new_submesh("__default__");
+        }
+    }
+
+    auto corners = split(args);
+
+    auto stream_pos = info->stream->tellg();
+
+    for(auto& corner: corners) {
+        int32_t vindex = -1, tindex = -1, nindex = -1;
+        auto parts = split(corner, "/");
+        if(corner.find("//") != std::string::npos) {
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+            nindex = (parts[1].empty()) ? -1 : smlt::stoi(parts[1]);
+        } else if(parts.size() == 2) {
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+            tindex = (parts[1].empty()) ? -1 : smlt::stoi(parts[1]);
+        } else if(parts.size() == 1) {
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+        } else {
+            assert(parts.size() == 3);
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+            tindex = (parts[1].empty()) ? -1 : smlt::stoi(parts[1]);
+            nindex = (parts[2].empty()) ? -1 : smlt::stoi(parts[2]);
+        }
+
+        if(vindex == -1) {
+            return false;
+        } else {
+            info->stream->seekg(VERTEX_OFFSETS->at(vindex - 1));
+            parse_floats(info->stream, xyzrgb, 6);
+            info->vdata->position(xyzrgb[0], xyzrgb[1], xyzrgb[2]);
+        }
+
+        if(tindex != -1 && info->vspec.has_texcoord0()) {
+            info->stream->seekg(TEXCOORD_OFFSETS->at(tindex - 1));
+            parse_floats(info->stream, xyzrgb, 2);
+            info->vdata->tex_coord0(xyzrgb[0], xyzrgb[1]);
+        }
+
+        if(nindex != -1 && info->vspec.has_normals()) {
+            info->stream->seekg(NORMAL_OFFSETS->at(nindex - 1));
+            parse_floats(info->stream, xyzrgb, 3);
+            info->vdata->normal(xyzrgb[0], xyzrgb[1], xyzrgb[2]);
+        }
+
+        if(info->vspec.has_diffuse()) {
+            info->vdata->diffuse(smlt::Colour(xyzrgb[3], xyzrgb[4], xyzrgb[5], 1.0f));
+        }
+
+        info->vdata->move_next();
+        submesh->index_data->index(info->vdata->count() - 1);
+    }
+
+    // Restore position
+    info->stream->seekg(stream_pos);
+    return true;
+}
+
 
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
+    std::vector<uint32_t> _vertex_offsets, _texcoord_offsets, _normal_offsets;
+    VERTEX_OFFSETS = &_vertex_offsets;
+    TEXCOORD_OFFSETS = &_texcoord_offsets;
+    NORMAL_OFFSETS = &_normal_offsets;
+
     Mesh* mesh = loadable_to<Mesh>(resource);
 
     S_DEBUG("Loading mesh from {0}", filename_);
@@ -73,222 +409,37 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     }
 
     S_DEBUG("Got MeshOptions");
-
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-
-    std::string warn;
-    std::string err;
-
     S_DEBUG("About to read the obj model");
 
-    SimulantMaterialReader reader(vfs.get(), filename_);
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, data_.get(), &reader);
+    auto spec = mesh->vertex_data->vertex_specification();
+    mesh->reset(spec);  /* Clear the mesh */
 
-    if(!ret) {
-        S_ERROR("Unable to load .obj file {0}", filename_);
-        S_ERROR("Error was: {0}", err);
-        return;
-    }
+    auto vdata = mesh->vertex_data.get();
 
-    if(!warn.empty()) {
-        S_WARN(warn);
-    }
+    const std::map<std::string, CommandHandler> commands = {
+        {"mtllib", load_material_lib},
+        {"usemtl", apply_material},
+        {"v", load_vertex},
+        {"vt", load_texcoord},
+        {"vn", load_normal},
+        {"#", null},
+        {"g", null},
+        {"f", load_face},
+        {"o", null},
+        {"s", null}
+    };
 
-    S_DEBUG("Mesh has {0} shapes and {1} materials", shapes.size(), materials.size());
+    LoadInfo info;
+    info.target_mesh = mesh;
+    info.vdata = vdata;
+    info.vspec = spec;
+    info.assets = &mesh->asset_manager();
+    info.stream = data_.get();
+    info.cull_mode = mesh_opts.cull_mode;
 
-    VertexSpecification spec = mesh->vertex_data->vertex_specification();
-    mesh->reset(spec);  // Make sure we're empty before we begin
+    info.folder = kfs::path::dir_name(filename_.str());
 
-    std::unordered_map<std::string, MaterialPtr> final_materials;
-    std::unordered_map<int32_t, SubMeshPtr> material_submeshes;
-    std::unordered_map<std::string, TexturePtr> loaded_textures;
-
-    auto index_type = (attrib.vertices.size() / 3 >= std::numeric_limits<uint16_t>::max()) ?
-        INDEX_TYPE_32_BIT : INDEX_TYPE_16_BIT;
-
-    // First, load the materials, and create submeshes
-    uint32_t i = 0;
-    for(auto& material: materials) {
-        MaterialPtr new_mat = mesh->asset_manager().clone_default_material();
-
-        auto alpha = (material.dissolve) ? 1.0f : 0.0f;
-
-        new_mat->each([&](uint32_t, MaterialPass* pass) {
-            pass->set_diffuse(smlt::Colour(material.diffuse[0], material.diffuse[1], material.diffuse[2], alpha));
-            pass->set_ambient(smlt::Colour(material.ambient[0], material.ambient[1], material.ambient[2], alpha));
-            pass->set_specular(smlt::Colour(material.specular[0], material.specular[1], material.specular[2], alpha));
-
-            // Shininess values "normally" are between 0 and 1000, but OpenGL expects them to
-            // be up to 128 so we scale that here
-            pass->set_shininess((material.shininess / 1000.0f) * 128);
-            pass->set_cull_mode(mesh_opts.cull_mode);
-
-            if(!mesh_opts.blending_enabled) {
-                pass->set_blend_func(smlt::BLEND_NONE);
-            }
-        });
-
-        /* Apply the diffuse texture (if any) */
-        if(!material.diffuse_texname.empty()) {
-            auto it = loaded_textures.find(material.diffuse_texname);
-            if(it != loaded_textures.end()) {
-                new_mat->set_diffuse_map(it->second);
-            } else {
-                std::vector<std::string> possible_locations;
-
-                Path texname = material.diffuse_texname;
-                if(!mesh_opts.override_texture_extension.empty()) {
-                    texname = texname.replace_ext(
-                        mesh_opts.override_texture_extension
-                    );
-                }
-
-                // Check relative texture file first
-                possible_locations.push_back(
-                    kfs::path::join(
-                        kfs::path::dir_name(filename_.str()),
-                        texname.str()
-                    )
-                );
-
-                // Check potentially absolute file path
-                possible_locations.push_back(texname.str());
-
-                bool found = false;
-                for(auto& texture_file: possible_locations) {
-                    if(kfs::path::exists(texture_file)) {
-                        auto tex = mesh->asset_manager().new_texture_from_file(texture_file);
-                        new_mat->set_diffuse_map(tex);
-                        loaded_textures.insert(std::make_pair(texname.str(), tex));
-                        found = true;
-                        break;
-                    }
-                }
-
-                if(!found) {
-                    S_WARN("Unable to locate texture {0}", texname);
-                }
-            }
-        }
-
-        final_materials.insert(std::make_pair(material.name, new_mat));
-
-        auto submesh = mesh->new_submesh_with_material(
-            material.name, new_mat->id(), MESH_ARRANGEMENT_TRIANGLES, index_type
-        );
-        material_submeshes.insert(std::make_pair(i++, submesh));
-    }
-
-    S_DEBUG("Loaded materials for obj model");
-
-    typedef std::tuple<int, int, int> VertexKey;
-
-    std::unordered_map<VertexKey, uint32_t> shared_vertices;
-
-    float default_tc [] = {0.0f, 0.0f};
-    float default_n [] = {0.0f, 0.0f, 1.0f};
-
-    for(auto& shape: shapes) {
-        uint32_t offset = 0;
-        for(uint32_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f) {
-            uint8_t num_verts = shape.mesh.num_face_vertices[f];
-            assert(num_verts == 3 && "Only triangles supported");
-
-            auto mat_id = shape.mesh.material_ids[f];
-            if(mat_id == -1 && !material_submeshes.count(mat_id)) {
-                // Special case, no material!
-                material_submeshes.insert(
-                    std::make_pair(
-                        mat_id,
-                        mesh->new_submesh("__default__", MESH_ARRANGEMENT_TRIANGLES, index_type)
-                    )
-                );
-            }
-
-            if(!material_submeshes.count(mat_id)) {
-                S_ERROR("Unable to find submesh with mat id: {0}", mat_id);
-            }
-
-            auto submeshptr = material_submeshes.at(mat_id);
-
-            for(auto i = 0; i < num_verts; ++i) {
-                auto index = shape.mesh.indices[offset + i];
-                auto key = std::make_tuple(
-                    index.vertex_index, index.normal_index, index.texcoord_index
-                );
-
-                /* If the material has a diffuse texture, and no texture, then ignore
-                 * if that's what's requested.
-                 * FIXME: Otherwise, just ignore the texture as per spec */
-                if(!mesh_opts.obj_include_faces_with_missing_texture_vertices &&
-                    index.texcoord_index == -1 && mat_id != -1 &&
-                    !materials[mat_id].diffuse_texname.empty()) {
-                    break;
-                }
-
-                auto it = shared_vertices.find(key);
-                if(it == shared_vertices.end()) {
-                    float* pos = &attrib.vertices[3 * index.vertex_index];
-                    float* colour = &attrib.colors[3 * index.vertex_index];
-                    float* tc = (index.texcoord_index == -1) ?
-                        &default_tc[0] : &attrib.texcoords[2 * index.texcoord_index];
-                    float* n = (index.normal_index == -1) ?
-                        &default_n[0] : &attrib.normals[3 * index.normal_index];
-
-                    mesh->vertex_data->position(pos[0], pos[1], pos[2]);
-
-                    /* Tinyobj loader loads the non-standard vertex colour extension
-                     * but defaults to white anyway so it's safe to just read them in */
-                    if(spec.has_diffuse()) {
-                        mesh->vertex_data->diffuse(
-                            smlt::Colour(colour[0], colour[1], colour[2], 1.0)
-                        );
-                    }
-
-                    if(spec.has_normals()) {
-                        mesh->vertex_data->normal(n[0], n[1], n[2]);
-                    }
-
-                    if(spec.has_texcoord0()) {
-                        mesh->vertex_data->tex_coord0(tc[0], tc[1]);
-                    }
-
-                    mesh->vertex_data->move_next();
-
-                    auto idx = mesh->vertex_data->count() - 1;
-                    shared_vertices.insert(std::make_pair(key, idx));
-
-                    submeshptr->index_data->index(idx);
-                } else {
-                    submeshptr->index_data->index(it->second);
-                }
-            }
-
-            offset += num_verts;
-            submeshptr->index_data->done();
-        }
-    }
-
-    S_DEBUG("Loaded shapes for obj model");
-
-    std::vector<std::string> empty;
-    for(auto submesh: mesh->each_submesh()) {
-        if(!submesh->index_data->count()) {
-            empty.push_back(submesh->name());
-        }
-    }
-
-    for(auto& name: empty) {
-        mesh->destroy_submesh(name);
-    }
-
-    S_DEBUG("Removed empty submeshes");
-
-    mesh->vertex_data->done();
-
-    S_DEBUG("Mesh loaded");
+    run_parser(info, commands);
 }
 
 }
