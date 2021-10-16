@@ -155,7 +155,7 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool apply_material(LoadInfo* info, std::string command, std::string args) {
+static bool apply_material(LoadInfo* info, std::string, std::string args) {
     auto mat_name = strip(args);
 
     auto mat = info->assets->find_material(mat_name);
@@ -165,8 +165,11 @@ static bool apply_material(LoadInfo* info, std::string command, std::string args
         mat->set_name(mat_name);
 
         /* Create the submesh for the material */
-        info->target_mesh->new_submesh_with_material(mat_name, mat);
+        auto sm = info->target_mesh->new_submesh_with_material(mat_name, mat);
+        sm->set_name(mat_name);
     }
+
+    info->current_material = mat.get();
 
     return true;
 }
@@ -238,7 +241,7 @@ static bool parse_floats(std::istream* stream, float* out, uint8_t count) {
 }
 
 static bool load_face(LoadInfo* info, std::string, std::string args) {
-    float xyz[3];
+    float xyz[3] = {0};
 
     smlt::SubMeshPtr submesh;
     if(info->current_material) {
@@ -322,14 +325,6 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     const std::map<std::string, CommandHandler> commands = {
         {"mtllib", load_material_lib},
         {"usemtl", apply_material},
-        {"Ka", null},
-        {"Kd", null},
-        {"Ks", null},
-        {"Ns", null},
-        {"Ni", null},
-        {"d", null},
-        {"illum", null},
-        {"mapKd", null},
         {"v", load_vertex},
         {"vt", load_texcoord},
         {"vn", load_normal},
