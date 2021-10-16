@@ -37,6 +37,7 @@ struct LoadInfo {
     Material* current_material = nullptr;
     VertexData* vdata = nullptr;
     VertexSpecification vspec;
+    CullMode cull_mode = CULL_MODE_BACK_FACE;
 
     std::istream* stream;
     Path folder;
@@ -105,6 +106,7 @@ static bool newmtl(LoadInfo* info, std::string, std::string args) {
         auto sm = info->target_mesh->new_submesh(args);
         info->current_material = sm->material().get();
         info->current_material->set_name(args);
+        info->current_material->set_cull_mode(info->cull_mode);
     }
 
     return true;
@@ -293,7 +295,7 @@ static bool load_normal(LoadInfo* info, std::string, std::string) {
     return true;
 }
 
-static bool parse_floats(std::istream* stream, float* out, uint8_t count) {
+static uint8_t parse_floats(std::istream* stream, float* out, uint8_t count) {
     uint8_t current = 0;
 
     std::string args;
@@ -316,11 +318,11 @@ static bool parse_floats(std::istream* stream, float* out, uint8_t count) {
     assert(!args.empty());
     out[current++] = smlt::stof(args);
 
-    return true;
+    return current;
 }
 
 static bool load_face(LoadInfo* info, std::string, std::string args) {
-    float xyz[3] = {0};
+    float xyzrgb[6] = {0, 0, 0, 1, 1, 1};
 
     smlt::SubMeshPtr submesh;
     if(info->current_material) {
@@ -338,32 +340,45 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
     auto stream_pos = info->stream->tellg();
 
     for(auto& corner: corners) {
+        int32_t vindex = -1, tindex = -1, nindex = -1;
         auto parts = split(corner, "/");
-
-        assert(parts.size() == 3);
-
-        int32_t vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
-        int32_t tindex = (parts[1].empty()) ? -1 : smlt::stoi(parts[1]);
-        int32_t nindex = (parts[2].empty()) ? -1 : smlt::stoi(parts[2]);
+        if(corner.find("//") != std::string::npos) {
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+            nindex = (parts[1].empty()) ? -1 : smlt::stoi(parts[1]);
+        } else if(parts.size() == 2) {
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+            tindex = (parts[1].empty()) ? -1 : smlt::stoi(parts[1]);
+        } else if(parts.size() == 1) {
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+        } else {
+            assert(parts.size() == 3);
+            vindex = (parts[0].empty()) ? -1 : smlt::stoi(parts[0]);
+            tindex = (parts[1].empty()) ? -1 : smlt::stoi(parts[1]);
+            nindex = (parts[2].empty()) ? -1 : smlt::stoi(parts[2]);
+        }
 
         if(vindex == -1) {
             return false;
         } else {
             info->stream->seekg(VERTEX_OFFSETS->at(vindex - 1));
-            parse_floats(info->stream, xyz, 3);
-            info->vdata->position(xyz[0], xyz[1], xyz[2]);
+            parse_floats(info->stream, xyzrgb, 6);
+            info->vdata->position(xyzrgb[0], xyzrgb[1], xyzrgb[2]);
         }
 
         if(tindex != -1 && info->vspec.has_texcoord0()) {
             info->stream->seekg(TEXCOORD_OFFSETS->at(tindex - 1));
-            parse_floats(info->stream, xyz, 2);
-            info->vdata->tex_coord0(xyz[0], xyz[1]);
+            parse_floats(info->stream, xyzrgb, 2);
+            info->vdata->tex_coord0(xyzrgb[0], xyzrgb[1]);
         }
 
         if(nindex != -1 && info->vspec.has_normals()) {
             info->stream->seekg(NORMAL_OFFSETS->at(nindex - 1));
-            parse_floats(info->stream, xyz, 3);
-            info->vdata->normal(xyz[0], xyz[1], xyz[2]);
+            parse_floats(info->stream, xyzrgb, 3);
+            info->vdata->normal(xyzrgb[0], xyzrgb[1], xyzrgb[2]);
+        }
+
+        if(info->vspec.has_diffuse()) {
+            info->vdata->diffuse(smlt::Colour(xyzrgb[3], xyzrgb[4], xyzrgb[5], 1.0f));
         }
 
         info->vdata->move_next();
@@ -409,7 +424,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         {"vn", load_normal},
         {"#", null},
         {"g", null},
-        {"f", load_face}
+        {"f", load_face},
+        {"o", null},
+        {"s", null}
     };
 
     LoadInfo info;
@@ -418,6 +435,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     info.vspec = spec;
     info.assets = &mesh->asset_manager();
     info.stream = data_.get();
+    info.cull_mode = mesh_opts.cull_mode;
 
     info.folder = kfs::path::dir_name(filename_.str());
 
