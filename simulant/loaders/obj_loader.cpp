@@ -120,15 +120,94 @@ static bool map_Kd(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
+static bool Ka(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto parts = split(args);
+
+    float r = smlt::stof(parts[0]);
+    float g = smlt::stof(parts[1]);
+    float b = smlt::stof(parts[2]);
+
+    mat->set_ambient(smlt::Colour(r, g, b, 1.0f));
+
+    return true;
+}
+
+static bool Kd(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto parts = split(args);
+
+    float r = smlt::stof(parts[0]);
+    float g = smlt::stof(parts[1]);
+    float b = smlt::stof(parts[2]);
+
+    mat->set_diffuse(smlt::Colour(r, g, b, 1.0f));
+
+    return true;
+}
+
+static bool Ks(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto parts = split(args);
+
+    float r = smlt::stof(parts[0]);
+    float g = smlt::stof(parts[1]);
+    float b = smlt::stof(parts[2]);
+
+    mat->set_specular(smlt::Colour(r, g, b, 1.0f));
+    return true;
+}
+
+static bool Ns(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    float s = smlt::stof(args);
+
+    mat->set_shininess(128.0f * (0.001f * s));
+    return true;
+}
+
+static bool d(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    float d = smlt::stof(args);
+
+    auto c = mat->ambient();
+    c.a = d;
+    mat->set_ambient(c);
+
+    c = mat->diffuse();
+    c.a = d;
+    mat->set_diffuse(c);
+
+    c = mat->specular();
+    c.a = d;
+    mat->set_specular(c);
+    return true;
+}
+
 static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
     const std::map<std::string, CommandHandler> commands = {
         {"newmtl", newmtl},
-        {"Ka", null},
-        {"Kd", null},
-        {"Ks", null},
-        {"Ns", null},
+        {"Ka", Ka},
+        {"Kd", Kd},
+        {"Ks", Ks},
+        {"Ns", Ns},
         {"Ni", null},
-        {"d", null},
+        {"d", d},
         {"illum", null},
         {"map_Kd", map_Kd},
         {"#", null},
