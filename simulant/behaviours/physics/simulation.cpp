@@ -239,8 +239,15 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
     bool is_dynamic = body->is_dynamic();
     bool is_kinematic = body->is_kinematic();
 
-    def.type = (is_dynamic) ? b3BodyType::e_dynamicBody : (is_kinematic) ? b3BodyType::e_kinematicBody : b3BodyType::e_staticBody;
+    if(is_kinematic) {
+        def.type = b3BodyType::e_kinematicBody;
+    } else if(is_dynamic) {
+        def.type = b3BodyType::e_dynamicBody;
+    } else {
+        def.type = b3BodyType::e_staticBody;
+    }
 
+    /* Kinematic bodies are dynamic bodies */
     b3Vec3 v;
     v.x = (is_dynamic) ? 1.0f : 0.0f;
     v.y = (is_dynamic) ? 1.0f : 0.0f;
