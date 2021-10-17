@@ -4,7 +4,7 @@ namespace smlt {
 namespace behaviours {
 
 KinematicBody::KinematicBody(RigidBodySimulation* simulation):
-    Body(simulation) {
+    DynamicBody(simulation) {
 
 }
 

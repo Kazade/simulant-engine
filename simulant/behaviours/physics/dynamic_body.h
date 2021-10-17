@@ -25,6 +25,9 @@ public:
 
     void set_linear_damping(const float d);
     void set_angular_damping(const float d);
+    void set_angular_damping(const Vec3& v);
+
+    void set_angular_sleep_tolerance(float x);
 
     Vec3 linear_velocity() const;
     Vec3 linear_velocity_at(const Vec3& position) const;

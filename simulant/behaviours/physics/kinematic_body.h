@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "body.h"
+#include "dynamic_body.h"
 #include "simulation.h"
 
 namespace smlt {
 namespace behaviours {
 
 class KinematicBody:
-    public impl::Body,
+    public impl::DynamicBody,
     public RefCounted<KinematicBody> {
 
 public:

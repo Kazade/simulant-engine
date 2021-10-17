@@ -38,6 +38,10 @@ void DynamicBody::set_linear_damping(const float d) {
 }
 
 void DynamicBody::set_angular_damping(const float d) {
+    set_angular_damping(Vec3(d, d, d));
+}
+
+void DynamicBody::set_angular_damping(const Vec3& vec) {
     auto sim = simulation_.lock();
     if(!sim) {
         return;
@@ -46,9 +50,18 @@ void DynamicBody::set_angular_damping(const float d) {
     b3Body* b = sim->bodies_.at(this);
 
     b3Vec3 v;
-    v.x = v.y = v.z = d;
-
+    to_b3vec3(vec, v);
     b->SetAngularDamping(v);
+}
+
+void DynamicBody::set_angular_sleep_tolerance(float x) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+    b->SetAngularSleepTolerance(x);
 }
 
 void DynamicBody::add_force(const Vec3 &force) {
