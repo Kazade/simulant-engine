@@ -100,10 +100,12 @@ static bool null(LoadInfo*, std::string, std::string) {
 }
 
 static bool newmtl(LoadInfo* info, std::string, std::string args) {
-    if(info->target_mesh->has_submesh(args)) {
-        info->current_material = info->target_mesh->find_submesh(args)->material().get();
+    auto mat_name = strip(args);
+
+    if(info->target_mesh->has_submesh(mat_name)) {
+        info->current_material = info->target_mesh->find_submesh(mat_name)->material().get();
     } else {
-        auto sm = info->target_mesh->new_submesh(args);
+        auto sm = info->target_mesh->new_submesh(mat_name);
         info->current_material = sm->material().get();
         info->current_material->set_name(args);
         info->current_material->set_cull_mode(info->cull_mode);
@@ -201,6 +203,11 @@ static bool d(LoadInfo* info, std::string, std::string args) {
         info->target_mesh->find_submesh("__default__")->material().get();
 
     float d = smlt::stof(args);
+    if(almost_equal(d, 1.0f)) {
+        mat->set_blend_func(smlt::BLEND_NONE);
+    } else {
+        mat->set_blend_func(smlt::BLEND_ALPHA);
+    }
 
     auto c = mat->ambient();
     c.a = d;
@@ -259,20 +266,15 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
 static bool apply_material(LoadInfo* info, std::string, std::string args) {
     auto mat_name = strip(args);
 
-    auto mat = info->assets->find_material(mat_name);
+    auto sm = info->target_mesh->find_submesh(mat_name);
 
-    if(!mat) {
-        mat = info->assets->new_material();
-        mat->set_name(mat_name);
-
-        /* Create the submesh for the material */
-        auto sm = info->target_mesh->new_submesh_with_material(mat_name, mat);
-        sm->set_name(mat_name);
+    if(sm) {
+        info->current_material = sm->material().get();
+        return true;
     }
 
-    info->current_material = mat.get();
-
-    return true;
+    S_ERROR("Couldn't find submesh for material: {0}", mat_name);
+    return false;
 }
 
 /*
@@ -460,6 +462,11 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     info.folder = kfs::path::dir_name(filename_.str());
 
     run_parser(info, commands);
+
+    vdata->done();
+    for(auto& sm: mesh->each_submesh()) {
+        sm->index_data->done();
+    }
 }
 
 }
