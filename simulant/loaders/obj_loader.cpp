@@ -169,6 +169,21 @@ static bool Ks(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
+static bool Ke(LoadInfo* info, std::string, std::string args) {
+    Material* mat = (info->current_material) ?
+        info->current_material :
+        info->target_mesh->find_submesh("__default__")->material().get();
+
+    auto parts = split(args);
+
+    float r = smlt::stof(parts[0]);
+    float g = smlt::stof(parts[1]);
+    float b = smlt::stof(parts[2]);
+
+    mat->set_emission(smlt::Colour(r, g, b, 1.0f));
+    return true;
+}
+
 static bool Ns(LoadInfo* info, std::string, std::string args) {
     Material* mat = (info->current_material) ?
         info->current_material :
@@ -198,6 +213,10 @@ static bool d(LoadInfo* info, std::string, std::string args) {
     c = mat->specular();
     c.a = d;
     mat->set_specular(c);
+
+    c = mat->emission();
+    c.a = d;
+    mat->set_emission(c);
     return true;
 }
 
@@ -207,6 +226,7 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
         {"Ka", Ka},
         {"Kd", Kd},
         {"Ks", Ks},
+        {"Ke", Ke},
         {"Ns", Ns},
         {"Ni", null},
         {"d", d},
