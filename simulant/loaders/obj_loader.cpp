@@ -451,13 +451,13 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
 
 
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
-    std::vector<HalfVec3> _vertex_offsets, _colour_offsets, _normal_offsets;
-    std::vector<HalfVec2> _texcoord_offsets;
+    std::vector<HalfVec3> _vertices, _colours, _normals;
+    std::vector<HalfVec2> _texcoords;
 
-    VERTICES = &_vertex_offsets;
-    TEXCOORDS = &_texcoord_offsets;
-    NORMALS = &_normal_offsets;
-    COLOURS = &_colour_offsets;
+    VERTICES = &_vertices;
+    TEXCOORDS = &_texcoords;
+    NORMALS = &_normals;
+    COLOURS = &_colours;
 
     Mesh* mesh = loadable_to<Mesh>(resource);
 
