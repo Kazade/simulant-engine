@@ -37,7 +37,9 @@ struct LoadInfo {
     Material* current_material = nullptr;
     VertexData* vdata = nullptr;
     VertexSpecification vspec;
+
     CullMode cull_mode = CULL_MODE_BACK_FACE;
+    std::string overridden_tex_format = "";
 
     std::istream* stream;
     Path folder;
@@ -119,7 +121,21 @@ static bool map_Kd(LoadInfo* info, std::string, std::string args) {
         info->current_material :
         info->target_mesh->find_submesh("__default__")->material().get();
 
+    /* Handle replacing the texture extension if that was desired */
+    if(!info->overridden_tex_format.empty()) {
+        auto ext = info->overridden_tex_format;
+        if(ext[0] != '.') {
+            ext = "." + ext;
+        }
+
+        args = kfs::path::split_ext(args).first + ext;
+    }
+
     auto tex = info->assets->new_texture_from_file(args);
+
+    /* Force upload to VRAM and free the RAM */
+    tex->flush();
+
     mat->set_diffuse_map(tex);
     return true;
 }
@@ -458,6 +474,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     info.assets = &mesh->asset_manager();
     info.stream = data_.get();
     info.cull_mode = mesh_opts.cull_mode;
+    info.overridden_tex_format = mesh_opts.override_texture_extension;
 
     info.folder = kfs::path::dir_name(filename_.str());
 
