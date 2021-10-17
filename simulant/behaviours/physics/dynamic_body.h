@@ -34,6 +34,7 @@ public:
     void set_linear_velocity(const Vec3& vel);
 
     Vec3 angular_velocity() const;
+    void set_angular_velocity(const Vec3& vel);
 
     Vec3 position() const;
     Quaternion rotation() const;

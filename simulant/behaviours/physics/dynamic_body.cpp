@@ -20,6 +20,18 @@ void DynamicBody::set_linear_velocity(const Vec3& vel) {
     b->SetLinearVelocity(v);
 }
 
+void DynamicBody::set_angular_velocity(const Vec3& vel) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+
+    b3Vec3 v;
+    to_b3vec3(vel, v);
+    b->SetAngularVelocity(v);
+}
 
 void DynamicBody::set_linear_damping(const float d) {
     auto sim = simulation_.lock();
