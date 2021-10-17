@@ -86,6 +86,13 @@ public:
         const Vec3& offset=Vec3()
     );
 
+    void add_capsule_collider(
+        const Vec3& v1,
+        const Vec3& v2,
+        const float diameter,
+        const PhysicsMaterial& properties
+    );
+
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 

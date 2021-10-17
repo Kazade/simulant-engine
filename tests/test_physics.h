@@ -93,6 +93,24 @@ public:
         assert_close(1.5f, distance, 0.0001f);
     }
 
+    void test_capsule_collider_addition() {
+        auto actor1 = stage->new_actor();
+
+        auto body = actor1->new_behaviour<behaviours::RigidBody>(physics.get());
+        body->add_capsule_collider(
+            Vec3(0, -1, 0),
+            Vec3(0, 1, 0),
+            2.0,
+            behaviours::PhysicsMaterial::WOOD
+        );
+
+        float distance = 0;
+        auto hit = physics->intersect_ray(Vec3(-2, 0, 0), Vec3(2, 0, 0), &distance);
+
+        assert_true(hit.second);
+        assert_close(distance, 1.0f, 0.0001f);
+    }
+
     void test_sphere_collider_addition() {
         auto actor1 = stage->new_actor();
 
@@ -155,9 +173,9 @@ public:
 
         physics->fixed_update(1.0f / 60.0f);
         assert_false(enter_called);
-        assert_true(leave_called);        
+        assert_true(leave_called);
 
-        // Move back, should now call        
+        // Move back, should now call
         body2->move_to(Vec3(0, 0, 0));
         body2->set_linear_velocity(Vec3(0, 0, 0));
 

@@ -197,6 +197,26 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
     store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
 }
 
+void Body::add_capsule_collider(const Vec3& v1, const Vec3& v2, const float diameter, const PhysicsMaterial& properties) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3CapsuleShape capsule;
+    to_b3vec3(v1, capsule.m_vertex1);
+    to_b3vec3(v2, capsule.m_vertex2);
+    capsule.m_radius = diameter * 0.5f;
+
+    b3ShapeDef sdef;
+    sdef.shape = &capsule;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+}
+
 void Body::register_collision_listener(CollisionListener *listener) {
     listeners_.insert(listener);
     listener->watching_.insert(this);
