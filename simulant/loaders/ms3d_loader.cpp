@@ -5,6 +5,7 @@
 #include "../vfs.h"
 #include "../window.h"
 #include "../assets/meshes/skeleton.h"
+#include "../platform.h"
 
 namespace smlt {
 namespace loaders {
@@ -95,7 +96,6 @@ struct MS3DVertexExtra {
     uint8_t weights[3];
     uint32_t extra; // Only if subversion is 2
 };
-
 
 /** Given an array of keyframes (rotation or position) this finds the previous and next
  *  keyframes for the given frame time */
@@ -328,6 +328,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     S_DEBUG("MS3D: Generating mesh");
 
+    std::map<std::string, TexturePtr> loaded_textures;
+
     for(auto& group: groups) {
         auto& material = materials[group.material_index];
         smlt::MaterialPtr mat = assets->new_material();
@@ -345,7 +347,9 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         S_DEBUG("MS3D: Loading texture {0}...", texname);
 
-        auto tex = assets->new_texture_from_file(texname);
+        auto tex = (loaded_textures.count(texname)) ?
+            loaded_textures[texname] :
+            assets->new_texture_from_file(texname);
 
         if(!tex) {
             /* Sometimes MS3D files use absolute paths which is no good
@@ -357,6 +361,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         if(tex) {
+            loaded_textures[texname] = tex;
             mat->set_diffuse_map(tex);
         }
 
