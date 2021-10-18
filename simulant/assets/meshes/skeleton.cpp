@@ -165,10 +165,10 @@ void SkeletalFrameUnpacker::unpack_frame(
 
         Vec3 po, no;
         for(auto k = 0; k < MAX_JOINTS_PER_VERTEX; ++k) {
-            auto j = sv.joints[k];
+            const auto j = sv.joints[k];
             if(j > -1) {
-                auto q = rig->joint(j)->absolute_rotation_;
-                auto d = rig->joint(j)->absolute_translation_;
+                const auto q = rig->joint(j)->absolute_rotation_;
+                const auto d = rig->joint(j)->absolute_translation_;
 
                 auto joint = skeleton->joint(j);
 

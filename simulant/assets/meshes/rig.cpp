@@ -23,6 +23,8 @@ Rig::Rig(const Skeleton* skeleton):
             joints_[i].parent_ = &joints_[parent_lookup.at(p)];
         }
     }
+
+    absolute_transformations_dirty_ = true;
 }
 
 std::size_t Rig::joint_count() const {
@@ -30,6 +32,10 @@ std::size_t Rig::joint_count() const {
 }
 
 void Rig::recalc_absolute_transformations() {
+    if(!absolute_transformations_dirty_) {
+        return;
+    }
+
     for(std::size_t i = 0; i < joint_count(); ++i) {
         RigJoint* joint = &joints_[i];
         RigJoint* parent = joint->parent();
@@ -50,6 +56,8 @@ void Rig::recalc_absolute_transformations() {
             );
         }
     }
+
+    absolute_transformations_dirty_ = false;
 }
 
 RigJoint* Rig::joint(std::size_t index) {
@@ -67,11 +75,21 @@ RigJoint* Rig::find_joint(const std::string &name) {
 }
 
 void RigJoint::rotate_to(const Quaternion& rotation) {
+    if(rotation_ == rotation) {
+        return;
+    }
+
     rotation_ = rotation;
+    rig_->absolute_transformations_dirty_ = true;
 }
 
 void RigJoint::move_to(const Vec3& translation) {
+    if(translation_ == translation) {
+        return;
+    }
+
     translation_ = translation;
+    rig_->absolute_transformations_dirty_ = true;
 }
 
 std::string RigJoint::name() const {
