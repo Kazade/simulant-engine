@@ -28,6 +28,8 @@
 #include "../application.h"
 #include "../window.h"
 
+#include "../utils/packed_types.h"
+
 namespace smlt {
 namespace loaders {
 
@@ -37,7 +39,9 @@ struct LoadInfo {
     Material* current_material = nullptr;
     VertexData* vdata = nullptr;
     VertexSpecification vspec;
+
     CullMode cull_mode = CULL_MODE_BACK_FACE;
+    std::string overridden_tex_format = "";
 
     std::istream* stream;
     Path folder;
@@ -119,7 +123,21 @@ static bool map_Kd(LoadInfo* info, std::string, std::string args) {
         info->current_material :
         info->target_mesh->find_submesh("__default__")->material().get();
 
+    /* Handle replacing the texture extension if that was desired */
+    if(!info->overridden_tex_format.empty()) {
+        auto ext = info->overridden_tex_format;
+        if(ext[0] != '.') {
+            ext = "." + ext;
+        }
+
+        args = kfs::path::split_ext(args).first + ext;
+    }
+
     auto tex = info->assets->new_texture_from_file(args);
+
+    /* Force upload to VRAM and free the RAM */
+    tex->flush();
+
     mat->set_diffuse_map(tex);
     return true;
 }
@@ -290,38 +308,17 @@ static bool apply_material(LoadInfo* info, std::string, std::string args) {
  * incur a perf cost (moving around the file, and parsing the lines)
  */
 
-static std::vector<uint32_t>* VERTEX_OFFSETS = nullptr;
-static std::vector<uint32_t>* TEXCOORD_OFFSETS = nullptr;
-static std::vector<uint32_t>* NORMAL_OFFSETS = nullptr;
+static std::vector<HalfVec3>* VERTICES = nullptr;
+static std::vector<HalfVec3>* COLOURS = nullptr;
+static std::vector<HalfVec2>* TEXCOORDS = nullptr;
+static std::vector<HalfVec3>* NORMALS = nullptr;
 
-static bool load_vertex(LoadInfo* info, std::string, std::string) {
-    VERTEX_OFFSETS->push_back(info->arg_offset);
-    return true;
-}
-
-static bool load_texcoord(LoadInfo* info, std::string, std::string) {
-    if(!info->vspec.has_texcoord0()) {
-        return true;
-    }
-
-    TEXCOORD_OFFSETS->push_back(info->arg_offset);
-    return true;
-}
-
-static bool load_normal(LoadInfo* info, std::string, std::string) {
-    if(!info->vspec.has_normals()) {
-        return true;
-    }
-
-    NORMAL_OFFSETS->push_back(info->arg_offset);
-    return true;
-}
-
-static uint8_t parse_floats(std::istream* stream, float* out, uint8_t count) {
+static uint8_t parse_floats(std::string stream, float* out, uint8_t count) {
+    uint8_t i = 0;
     uint8_t current = 0;
 
     std::string args;
-    auto c = stream->get();
+    auto c = stream[i++];
     while(c != '\n') {
         if(c == ' ' || c == '\t') {
             out[current++] = smlt::stof(args);
@@ -334,7 +331,11 @@ static uint8_t parse_floats(std::istream* stream, float* out, uint8_t count) {
             args += c;
         }
 
-        c = stream->get();
+        if(i == stream.size()) {
+            break;
+        }
+
+        c = stream[i++];
     }
 
     assert(!args.empty());
@@ -343,9 +344,41 @@ static uint8_t parse_floats(std::istream* stream, float* out, uint8_t count) {
     return current;
 }
 
-static bool load_face(LoadInfo* info, std::string, std::string args) {
+static bool load_vertex(LoadInfo*, std::string, std::string args) {
     float xyzrgb[6] = {0, 0, 0, 1, 1, 1};
 
+    parse_floats(args, xyzrgb, 6);
+    VERTICES->push_back(HalfVec3(xyzrgb[0], xyzrgb[1], xyzrgb[2]));
+    COLOURS->push_back(HalfVec3(xyzrgb[3], xyzrgb[4], xyzrgb[5]));
+    return true;
+}
+
+static bool load_texcoord(LoadInfo* info, std::string, std::string args) {
+    if(!info->vspec.has_texcoord0()) {
+        return true;
+    }
+
+    float uv[2] = {0, 0};
+
+    parse_floats(args, uv, 2);
+    TEXCOORDS->push_back(HalfVec2(uv[0], uv[1]));
+    return true;
+}
+
+static bool load_normal(LoadInfo* info, std::string, std::string args) {
+    if(!info->vspec.has_normals()) {
+        return true;
+    }
+
+    float nxyz[3] = {0, 0, 0};
+
+    parse_floats(args, nxyz, 3);
+    NORMALS->push_back(HalfVec3(nxyz[0], nxyz[1], nxyz[2]));
+    return true;
+}
+
+
+static bool load_face(LoadInfo* info, std::string, std::string args) {
     smlt::SubMeshPtr submesh;
     if(info->current_material) {
         submesh = info->target_mesh->find_submesh(info->current_material->name());
@@ -379,28 +412,32 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
             nindex = (parts[2].empty()) ? -1 : smlt::stoi(parts[2]);
         }
 
+        smlt::Colour diffuse = smlt::Colour::WHITE;
         if(vindex == -1) {
             return false;
         } else {
-            info->stream->seekg(VERTEX_OFFSETS->at(vindex - 1));
-            parse_floats(info->stream, xyzrgb, 6);
-            info->vdata->position(xyzrgb[0], xyzrgb[1], xyzrgb[2]);
+            Vec3 p = VERTICES->at(vindex - 1);
+            Vec3 c = COLOURS->at(vindex - 1);
+
+            diffuse.r = c.x;
+            diffuse.g = c.y;
+            diffuse.b = c.z;
+
+            info->vdata->position(p);
         }
 
         if(tindex != -1 && info->vspec.has_texcoord0()) {
-            info->stream->seekg(TEXCOORD_OFFSETS->at(tindex - 1));
-            parse_floats(info->stream, xyzrgb, 2);
-            info->vdata->tex_coord0(xyzrgb[0], xyzrgb[1]);
+            Vec2 t = TEXCOORDS->at(vindex - 1);
+            info->vdata->tex_coord0(t);
         }
 
         if(nindex != -1 && info->vspec.has_normals()) {
-            info->stream->seekg(NORMAL_OFFSETS->at(nindex - 1));
-            parse_floats(info->stream, xyzrgb, 3);
-            info->vdata->normal(xyzrgb[0], xyzrgb[1], xyzrgb[2]);
+            Vec3 n = NORMALS->at(nindex - 1);
+            info->vdata->normal(n);
         }
 
         if(info->vspec.has_diffuse()) {
-            info->vdata->diffuse(smlt::Colour(xyzrgb[3], xyzrgb[4], xyzrgb[5], 1.0f));
+            info->vdata->diffuse(diffuse);
         }
 
         info->vdata->move_next();
@@ -414,10 +451,13 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
 
 
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
-    std::vector<uint32_t> _vertex_offsets, _texcoord_offsets, _normal_offsets;
-    VERTEX_OFFSETS = &_vertex_offsets;
-    TEXCOORD_OFFSETS = &_texcoord_offsets;
-    NORMAL_OFFSETS = &_normal_offsets;
+    std::vector<HalfVec3> _vertices, _colours, _normals;
+    std::vector<HalfVec2> _texcoords;
+
+    VERTICES = &_vertices;
+    TEXCOORDS = &_texcoords;
+    NORMALS = &_normals;
+    COLOURS = &_colours;
 
     Mesh* mesh = loadable_to<Mesh>(resource);
 
@@ -458,6 +498,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     info.assets = &mesh->asset_manager();
     info.stream = data_.get();
     info.cull_mode = mesh_opts.cull_mode;
+    info.overridden_tex_format = mesh_opts.override_texture_extension;
 
     info.folder = kfs::path::dir_name(filename_.str());
 
