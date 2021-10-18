@@ -17,6 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include <string>
+#include <map>
 
 #include "obj_loader.h"
 
@@ -45,9 +46,6 @@ struct LoadInfo {
 
     std::istream* stream;
     Path folder;
-
-    uint32_t line_offset = 0;
-    uint32_t arg_offset = 0;
 };
 
 typedef std::function<bool (LoadInfo*, std::string, std::string)> CommandHandler;
@@ -59,20 +57,24 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
 
     std::string command;
 
+    // Only used for debug logging
+    std::string last_command;
+
     while(!data_->eof()) {
         auto c = data_->get();
         if(c == ' ' && !strip(command).empty()) {
             command = strip(command);
+
+            if(command != last_command) {
+                S_DEBUG("OBJ: Found new block: {0}", command);
+                last_command = command;
+            }
 
             /* Skip whitespace between the command
              * and the arguments */
             while(data_->peek() == ' ' || data_->peek() == '\t') {
                 c = data_->get();
             }
-
-            /* Store the offset to the first character
-             * in the arglist */
-            info.arg_offset = data_->tellg();
 
             std::string args;
             while(data_->good() && c != '\n') {
@@ -88,11 +90,6 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
             }
 
             command.clear();
-
-            /* Set the line offset for the next line */
-            info.line_offset = data_->tellg();
-            info.line_offset++;
-
         } else if(c != ' ') {
             command += c;
         }
@@ -295,51 +292,37 @@ static bool apply_material(LoadInfo* info, std::string, std::string args) {
     return false;
 }
 
-/*
- * Loading .obj files, while keeping memory usage low is very
- * tricky. Face corners are composed of separate positions, texcoords,
- * and normals. Combined those create the final vertex.
- *
- * The problem is, how do you generate those vertices without loading
- * all the data up front, and then duplicating it?
- *
- * The approach here is to store file offsets to the data, rather than the
- * actual data. This means that you save 2/3rds the memory usage but
- * incur a perf cost (moving around the file, and parsing the lines)
- */
-
 static std::vector<HalfVec3>* VERTICES = nullptr;
 static std::vector<HalfVec3>* COLOURS = nullptr;
 static std::vector<HalfVec2>* TEXCOORDS = nullptr;
 static std::vector<HalfVec3>* NORMALS = nullptr;
 
 static uint8_t parse_floats(std::string stream, float* out, uint8_t count) {
-    uint8_t i = 0;
     uint8_t current = 0;
 
-    std::string args;
-    auto c = stream[i++];
-    while(c != '\n') {
+    char buffer[32];
+    uint8_t buffer_c = 0;
+
+    for(auto& c: stream) {
         if(c == ' ' || c == '\t') {
-            out[current++] = smlt::stof(args);
+            assert(buffer_c < 32 - 1);
+            buffer[buffer_c++] = '\0';
+            out[current++] = atof(buffer);
             if(current == count) {
                 return true;
             }
 
-            args.clear();
+            buffer_c = 0;
         } else {
-            args += c;
+            assert(buffer_c < 32 - 1);
+            buffer[buffer_c++] = c;
         }
-
-        if(i == stream.size()) {
-            break;
-        }
-
-        c = stream[i++];
     }
 
-    assert(!args.empty());
-    out[current++] = smlt::stof(args);
+    assert(buffer_c > 0);
+    assert(buffer_c < 32 - 1);
+    buffer[buffer_c++] = '\0';
+    out[current++] = atof(buffer);
 
     return current;
 }
@@ -392,8 +375,6 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
 
     auto corners = split(args);
 
-    auto stream_pos = info->stream->tellg();
-
     for(auto& corner: corners) {
         int32_t vindex = -1, tindex = -1, nindex = -1;
         auto parts = split(corner, "/");
@@ -444,8 +425,6 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
         submesh->index_data->index(info->vdata->count() - 1);
     }
 
-    // Restore position
-    info->stream->seekg(stream_pos);
     return true;
 }
 
