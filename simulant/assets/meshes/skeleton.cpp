@@ -8,17 +8,19 @@
 namespace smlt {
 
 void Joint::rotate_to(const Quaternion& q) {
-    bool recalc = rotation_ != q;
-    rotation_ = q;
-    if(recalc) {
+    if(q == rotation_) {
+        return;
+    } else {
+        rotation_ = q;
         recalc_absolute_transformation();
     }
 }
 
 void Joint::move_to(const Vec3& v) {
-    bool recalc = translation_ != v;
-    translation_ = v;
-    if(recalc) {
+    if(v == translation_) {
+        return;
+    } else {
+        translation_ = v;
         recalc_absolute_transformation();
     }
 }
