@@ -110,7 +110,7 @@ void SkeletalFrameUnpacker::prepare_unpack(uint32_t current_frame, uint32_t next
     /* Update the rig with the interpolated frame state */
     const auto jcount = rig->joint_count();
     for(std::size_t j = 0; j < jcount; ++j) {
-        auto rjoint = rig->joint(j);
+        auto rjoint = &rig->joints_[j];
 
         const JointState& state0 = joint_state_at_frame(current_frame, j);
         const JointState& state1 = joint_state_at_frame(next_frame, j);
@@ -190,7 +190,7 @@ void SkeletalFrameUnpacker::unpack_frame(
         for(auto k = 0; k < MAX_JOINTS_PER_VERTEX; ++k) {
             const auto j = sv.joints[k];
             if(j > -1) {
-                auto rjoint = rig->joint(j);
+                auto rjoint = &rig->joints_[j];
                 const auto& q = rjoint->absolute_rotation_;
                 const auto& d = rjoint->absolute_translation_;
 
