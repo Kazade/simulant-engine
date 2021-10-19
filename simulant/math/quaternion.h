@@ -6,6 +6,10 @@
 #include "utils.h"
 #include "vec3.h"
 
+#ifdef __DREAMCAST__
+#include "../utils/sh4_math.h"
+#endif
+
 namespace smlt {
 
 struct Vec3;
@@ -76,8 +80,12 @@ struct Quaternion {
         return Quaternion(-x, -y, -z, w);
     }
 
-    float dot(const Quaternion& rhs) const {
+    float dot(const Quaternion& rhs) const __attribute__((always_inline)) {
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
+#else
         return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
+#endif
     }
 
     void inverse() {
