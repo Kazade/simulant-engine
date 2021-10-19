@@ -177,10 +177,16 @@ public:
     ) override;
 
     void set_joint_state_at_frame(std::size_t frame, std::size_t joint, JointState state) {
+        assert(frame < skeleton_frames_.size());
+        assert(joint < skeleton_frames_[frame].joints.size());
+
         skeleton_frames_[frame].joints[joint] = state;
     }
 
     const JointState& joint_state_at_frame(std::size_t frame, std::size_t joint) const {
+        assert(frame < skeleton_frames_.size());
+        assert(joint < skeleton_frames_[frame].joints.size());
+
         return skeleton_frames_[frame].joints[joint];
     }
 
