@@ -214,10 +214,14 @@ public:
     }
 
     Vec3 cross(const Vec3& rhs) const {
+        const float a = -(z * rhs.y);
+        const float b = -(x * rhs.z);
+        const float c = -(y * rhs.x);
+
         return Vec3(
-            (y * rhs.z) - (z * rhs.y),
-            (z * rhs.x) - (x * rhs.z),
-            (x * rhs.y) - (y * rhs.x)
+            std::fmaf(y, rhs.z, a),
+            std::fmaf(z, rhs.x, b),
+            std::fmaf(x, rhs.y, c)
         );
     }
 
