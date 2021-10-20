@@ -41,6 +41,7 @@
 #include "math/aabb.h"
 #include "math/plane.h"
 #include "math/ray.h"
+#include "math/operators.h"
 
 #include "generic/object_manager.h"
 #include "generic/unique_id.h"

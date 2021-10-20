@@ -60,6 +60,7 @@ private:
     friend class RigJoint;
     friend class SkeletalFrameUnpacker;
 
+    bool absolute_transformations_dirty_ = true;
     void recalc_absolute_transformations();
 
     heap_array<RigJoint> joints_;
