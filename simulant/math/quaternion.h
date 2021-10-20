@@ -6,6 +6,10 @@
 #include "utils.h"
 #include "vec3.h"
 
+#ifdef __DREAMCAST__
+#include "../utils/sh4_math.h"
+#endif
+
 namespace smlt {
 
 struct Vec3;
@@ -51,7 +55,11 @@ struct Quaternion {
     AxisAngle to_axis_angle() const;
 
     float length_squared() const {
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, z, w);
+#else
         return (x * x + y * y + z * z) + (w * w);
+#endif
     }
 
     float length() const {
@@ -59,7 +67,11 @@ struct Quaternion {
     }
 
     void normalize() {
+#ifdef __DREAMCAST__
+        float l = MATH_fsrra(length_squared());
+#else
         float l = 1.0f / length();
+#endif
         x *= l;
         y *= l;
         z *= l;
@@ -76,8 +88,12 @@ struct Quaternion {
         return Quaternion(-x, -y, -z, w);
     }
 
-    float dot(const Quaternion& rhs) const {
+    float dot(const Quaternion& rhs) const __attribute__((always_inline)) {
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
+#else
         return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
+#endif
     }
 
     void inverse() {
@@ -162,16 +178,67 @@ struct Quaternion {
         return Radians(std::acos(w) * 2.0f);
     }
 
-    Vec3 operator*(const Vec3& v) const;
-
     Quaternion operator-() const {
         return Quaternion(
             -x, -y, -z, -w
         );
     }
 
-    Quaternion nlerp(const Quaternion& rhs, float t) const;
-    Quaternion slerp(const Quaternion& rhs, float t) const;
+    Quaternion nlerp(const Quaternion& rhs, float t) const {
+        auto z = rhs;
+        auto theta = this->dot(rhs);
+
+        if(theta < 0.0f) {
+            z = -rhs;
+        }
+
+        // Linear interpolation (result normalized)
+        return Quaternion(
+            lerp(this->x, z.x, t),
+            lerp(this->y, z.y, t),
+            lerp(this->z, z.z, t),
+            lerp(this->w, z.w, t)
+        ).normalized();
+    }
+
+    Quaternion slerp(const Quaternion& rhs, float t) const {
+        auto z = rhs;
+
+        auto cos_theta = this->dot(rhs);
+
+        // negate to avoid interpolation taking long way around
+        if (cos_theta < 0.0f) {
+            z = -rhs;
+            cos_theta = -cos_theta;
+        }
+
+        const constexpr float DOT_THRESHOLD = 0.9995f;
+
+        // Lerp to avoid side effect of sin(angle) becoming a zero denominator
+        if(cos_theta > DOT_THRESHOLD) {
+            // Linear interpolation
+            return Quaternion(
+                lerp(this->x, z.x, t),
+                lerp(this->y, z.y, t),
+                lerp(this->z, z.z, t),
+                lerp(this->w, z.w, t)
+            ).normalized();
+        } else {
+            auto theta_0 = std::acos(cos_theta);
+            auto theta = theta_0 * t;
+            auto sin_theta = std::sin(theta);
+            auto sin_theta_0 = std::sin(theta_0);
+
+#ifdef __DREAMCAST__
+            auto s1 = MATH_Fast_Divide(sin_theta, sin_theta_0);
+#else
+            auto s1 = sin_theta / sin_theta_0;
+#endif
+            auto s0 = std::cos(theta) - cos_theta * s1;
+
+            return ((*this) * s0) + (z * s1);
+        }
+    }
 
     const Degrees pitch() const {
         return Radians(std::atan2(-2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));

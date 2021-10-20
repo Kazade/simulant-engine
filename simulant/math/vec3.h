@@ -95,12 +95,6 @@ public:
         return result;
     }
 
-    Vec3 operator*(const Quaternion& rhs) const;
-    Vec3& operator*=(const Quaternion& rhs) {
-        *this = *this * rhs;
-        return *this;
-    }
-
     Vec3& operator*=(float rhs) {
         *this = *this * rhs;
         return *this;
@@ -175,7 +169,16 @@ public:
     #endif
     }
 
-    Vec3 lerp(const Vec3& end, float t) const;
+    Vec3 lerp(const Vec3& end, float t) const {
+        t = std::min(t, 1.0f);
+        t = std::max(t, 0.0f);
+
+        return Vec3(
+            fmaf((end.x - x), t, x),
+            fmaf((end.y - y), t, y),
+            fmaf((end.z - z), t, z)
+        );
+    }
 
     Vec3 rotated_by(const Quaternion& q) const;
 
@@ -214,10 +217,14 @@ public:
     }
 
     Vec3 cross(const Vec3& rhs) const {
+        const float a = -(z * rhs.y);
+        const float b = -(x * rhs.z);
+        const float c = -(y * rhs.x);
+
         return Vec3(
-            (y * rhs.z) - (z * rhs.y),
-            (z * rhs.x) - (x * rhs.z),
-            (x * rhs.y) - (y * rhs.x)
+            ::fmaf(y, rhs.z, a),
+            ::fmaf(z, rhs.x, b),
+            ::fmaf(x, rhs.y, c)
         );
     }
 
