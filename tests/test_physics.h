@@ -98,9 +98,8 @@ public:
 
         auto body = actor1->new_behaviour<behaviours::RigidBody>(physics.get());
         body->add_capsule_collider(
-            Vec3(0, -1, 0),
-            Vec3(0, 1, 0),
-            2.0,
+            2.0f,
+            2.0f,
             behaviours::PhysicsMaterial::WOOD
         );
 

@@ -81,6 +81,20 @@ void Body::rotate_to(const Quaternion& rotation) {
     stage_node->rotate_to_absolute(rotation);
 }
 
+Quaternion Body::rotation() const {
+    auto p = body_->GetOrientation();
+    Quaternion r;
+    to_quat(p, r);
+    return r;
+}
+
+Vec3 Body::position() const {
+    auto p = body_->GetPosition();
+    Vec3 r;
+    to_vec3(p, r);
+    return r;
+}
+
 void Body::update(float dt) {
     const bool INTERPOLATION_ENABLED = true;
 
@@ -197,15 +211,19 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
     store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
 }
 
-void Body::add_capsule_collider(const Vec3& v1, const Vec3& v2, const float diameter, const PhysicsMaterial& properties) {
+void Body::add_capsule_collider(float height, const float diameter, const PhysicsMaterial& properties) {
     auto sim = simulation_.lock();
     if(!sim) {
         return;
     }
 
+    float off = (height - (diameter * 0.5f)) * 0.5f;
+    b3Vec3 v1(0.0f, off, 0.0f);
+    b3Vec3 v2(0.0f, -off, 0.0f);
+
     b3CapsuleShape capsule;
-    to_b3vec3(v1, capsule.m_vertex1);
-    to_b3vec3(v2, capsule.m_vertex2);
+    capsule.m_vertex1 = v1;
+    capsule.m_vertex2 = v2;
     capsule.m_radius = diameter * 0.5f;
 
     b3ShapeDef sdef;

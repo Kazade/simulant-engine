@@ -87,8 +87,7 @@ public:
     );
 
     void add_capsule_collider(
-        const Vec3& v1,
-        const Vec3& v2,
+        float height,
         const float diameter,
         const PhysicsMaterial& properties
     );
@@ -103,6 +102,9 @@ public:
             return nullptr;
         }
     }
+
+    Quaternion rotation() const;
+    Vec3 position() const;
 
 protected:
     friend class smlt::behaviours::RigidBodySimulation;
