@@ -138,8 +138,10 @@ void SkeletalFrameUnpacker::unpack_frame(
     /* Make sure everything is up-to-date */
     rig->recalc_absolute_transformations();
 
-    /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
-    mesh_->vertex_data->clone_into(*out);
+    if(out->count() == 0) {
+        /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
+        mesh_->vertex_data->clone_into(*out);
+    }
 
     auto skeleton = mesh_->skeleton.get();
 
@@ -194,7 +196,7 @@ void SkeletalFrameUnpacker::unpack_frame(
                 const auto& q = rjoint->absolute_rotation_;
                 const auto& d = rjoint->absolute_translation_;
 
-                auto joint = skeleton->joint(j);
+                auto joint = &skeleton->joints_[j];
 
                 /* FIXME: Optimise! Using matrices may be fewer instructions */
                 Quaternion rot = q * joint->absolute_rotation().inversed();

@@ -65,6 +65,8 @@ public:
     }
 
 private:
+    friend class Rig;
+
     Skeleton* skeleton_ = nullptr;
     std::size_t id_ = 0;  // 0 == root
 
@@ -127,6 +129,8 @@ public:
     }
 
 private:
+    friend class SkeletalFrameUnpacker;
+
     Mesh* mesh_ = nullptr;
     std::vector<Joint> joints_;
 

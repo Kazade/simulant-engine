@@ -36,23 +36,23 @@ void Rig::recalc_absolute_transformations() {
         return;
     }
 
-    for(std::size_t i = 0; i < joint_count(); ++i) {
+    for(std::size_t i = 0; i < joints_.size(); ++i) {
         RigJoint* joint = &joints_[i];
-        RigJoint* parent = joint->parent();
+        const RigJoint* parent = joint->parent_;
         const Joint* skj = joint->skeleton_joint_;
 
         if(!parent) {
-            joint->absolute_rotation_ = skj->rotation() * joint->rotation_;
-            joint->absolute_translation_ = skj->translation() + joint->translation_;
+            joint->absolute_rotation_ = skj->rotation_ * joint->rotation_;
+            joint->absolute_translation_ = skj->translation_ + joint->translation_;
         } else {
             auto& parent_rot = parent->absolute_rotation_;
             joint->absolute_rotation_ = (
-                parent_rot * skj->rotation() * joint->rotation_
+                parent_rot * skj->rotation_ * joint->rotation_
             );
 
             joint->absolute_translation_ = (
                 parent->absolute_translation_ +
-                parent_rot * (skj->translation() + joint->translation_)
+                parent_rot * (skj->translation_ + joint->translation_)
             );
         }
     }
