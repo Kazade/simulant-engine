@@ -55,7 +55,11 @@ struct Quaternion {
     AxisAngle to_axis_angle() const;
 
     float length_squared() const {
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, z, w);
+#else
         return (x * x + y * y + z * z) + (w * w);
+#endif
     }
 
     float length() const {
@@ -63,7 +67,11 @@ struct Quaternion {
     }
 
     void normalize() {
+#ifdef __DREAMCAST__
+        float l = MATH_fsrra(length_squared());
+#else
         float l = 1.0f / length();
+#endif
         x *= l;
         y *= l;
         z *= l;
