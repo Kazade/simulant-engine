@@ -30,8 +30,8 @@ public:
 
         assert_equal(0, smlt::lerp(a, b, 0.5f));
         assert_equal(50.0f, smlt::lerp(b, a, 0.75f));
-        assert_equal(120.0f, smlt::lerp(b, a, 1.1f));
-        assert_equal(-120.0f, smlt::lerp(a, b, 1.1f));
+        assert_close(120.0f, smlt::lerp(b, a, 1.1f), 0.0001f);
+        assert_close(-120.0f, smlt::lerp(a, b, 1.1f), 0.0001f);
     }
 };
 
