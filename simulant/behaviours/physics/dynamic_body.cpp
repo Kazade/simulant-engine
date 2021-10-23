@@ -7,6 +7,16 @@ namespace smlt {
 namespace behaviours {
 namespace impl {
 
+void DynamicBody::lock_rotation(bool x, bool y, bool z) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+    return b->SetFixedRotation(x, y, z);
+}
+
 void DynamicBody::set_linear_velocity(const Vec3& vel) {
     auto sim = simulation_.lock();
     if(!sim) {

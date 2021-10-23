@@ -55,6 +55,8 @@ public:
     }
 
     bool is_awake() const;
+
+    void lock_rotation(bool x, bool y, bool z);
 };
 
 
