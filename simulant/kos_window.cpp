@@ -112,9 +112,18 @@ void KOSWindow::check_events() {
     };
 
     static std::array<uint8_t, 256> previous_key_state = {}; // value-initialize to zero
-    static std::array<int32_t, MAX_CONTROLLERS> previous_joyx = {{0, 0, 0, 0}};
-    static std::array<int32_t, MAX_CONTROLLERS> previous_joyy = {{0, 0, 0, 0}};
-
+    
+    struct ControllerState {
+        int8_t joyx = 0;
+        int8_t joyy = 0;
+        int8_t joyx2 = 0;
+        int8_t joyy2 = 0;
+        uint8_t ltrig = 0;
+        uint8_t rtrig = 0;
+    };
+    
+    static std::array<ControllerState, MAX_CONTROLLERS> previous;
+    
     // Rescan for devices in case a controller has been added or removed
     initialize_input_controller(*this->_input_state());
 
@@ -128,30 +137,32 @@ void KOSWindow::check_events() {
                 auto prev_state = previous_controller_button_state[i];
                 auto joyx_state = state->joyx;
                 auto joyy_state = state->joyy;
-
-                // # Deal with the first joystick axis
-                if(joyx_state != previous_joyx[i]) {
-                    // joy values on the DC are -128 to 127, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
-
-                    float v = float(joyx_state) / 127.0f;
-                    if(v < -1.0f) v  = -1.0f; // This is possible at full range to the left (due to the imbalance of -128 to 127)
-
-                    input_state->_handle_joystick_axis_motion(i, JOYSTICK_AXIS_X, v);
-                    previous_joyx[i] = joyx_state;
-                }
-
-                if(joyy_state != previous_joyy[i]) {
-                    // joy values on the DC are -128 to +127, we scale up to the full integer range (which is then scaled to between -1.0 and 1.0)
-                    float v = float(joyy_state) / 127.0f;
-                    if(v < -1.0f) v  = -1.0f;
-
-                    // We multiply by -1.0 as the Y-axis is reversed compared to what we expect
-                    input_state->_handle_joystick_axis_motion(i, JOYSTICK_AXIS_Y, v * -1.0f);
-                    previous_joyy[i] = joyy_state;
-                }
-
-                // FIXME: Add support for the second joystick (really not urgent... there's no hardware for it really...)
-
+                auto joyx2_state = state->joy2x;
+                auto joyy2_state = state->joy2y;
+                auto ltrig_state = state->ltrig;
+                auto rtrig_state = state->rtrig;
+                
+                auto handle_joystick_axis = [this](int prev, int current, int controller, smlt::JoystickAxis target, float range=127.0f) -> int16_t {
+                    if(prev == current) {
+	                    return current;
+                    }
+                    
+                    float v = float(current) / range;
+                    
+                    // This is possible at full range to the left (due to the imbalance of -128 to 127)
+                    if(v < -1.0f) v = -1.0f;
+                    
+                    input_state->_handle_joystick_axis_motion(controller, target, v);
+                    return current;
+                };
+			    
+                previous[i].joyx = handle_joystick_axis(previous[i].joyx, joyx_state, i, JOYSTICK_AXIS_X);
+                previous[i].joyy = handle_joystick_axis(previous[i].joyy, joyy_state, i, JOYSTICK_AXIS_Y);
+                previous[i].joyx2 = handle_joystick_axis(previous[i].joyx2, joyx2_state, i, JOYSTICK_AXIS_2);
+                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, i, JOYSTICK_AXIS_3);				
+                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, i, JOYSTICK_AXIS_4, 255.0f);	
+                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, i, JOYSTICK_AXIS_5, 255.0f);					
+            
                 // Check the current button state against the previous one
                 // and update the input controller appropriately
                 for(auto button: CONTROLLER_BUTTONS) {
