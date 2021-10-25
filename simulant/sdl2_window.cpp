@@ -178,12 +178,6 @@ void SDL2Window::check_events() {
 
             case SDL_JOYAXISMOTION: {
                 auto value = float(event.jaxis.value);
-
-                if(event.jaxis.axis == SDL_CONTROLLER_AXIS_LEFTY || event.jaxis.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
-                    /* For reasons that I can't figure out, up is negative in SDL joystick axis' */
-                    value = -value;
-                }
-
                 input_state->_handle_joystick_axis_motion(
                     event.jaxis.which,
                     SDL_axis_to_simulant_axis(event.jaxis.axis),
