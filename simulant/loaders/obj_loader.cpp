@@ -408,7 +408,7 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
         }
 
         if(tindex != -1 && info->vspec.has_texcoord0()) {
-            Vec2 t = TEXCOORDS->at(vindex - 1);
+            Vec2 t = TEXCOORDS->at(tindex - 1);
             info->vdata->tex_coord0(t);
         }
 
