@@ -27,6 +27,14 @@ namespace impl {
 
 typedef sig::signal<void ()> SimulationPreStepSignal;
 
+struct RayCastResult {
+    impl::Body* other_body = nullptr;
+
+    float distance = std::numeric_limits<float>::infinity();
+    smlt::Vec3 normal;
+    smlt::Vec3 impact_point;
+};
+
 class RigidBodySimulation:
     public RefCounted<RigidBodySimulation> {
 
@@ -39,7 +47,11 @@ public:
 
     void fixed_update(float step);
 
-    std::pair<Vec3, bool> intersect_ray(const Vec3& start, const Vec3& direction, float* distance=nullptr, Vec3 *normal=nullptr);
+    smlt::optional<RayCastResult> ray_cast(
+        const Vec3& start,
+        const Vec3& direction,
+        float max_distance=std::numeric_limits<float>::max()
+    );
 
     void set_gravity(const Vec3& gravity);
 
@@ -61,6 +73,9 @@ private:
     // in the simulation
     b3Body *acquire_body(impl::Body* body);
     void release_body(impl::Body *body);
+
+    /* Returns the Simulant body for a b3Body */
+    impl::Body* get_associated_body(b3Body* b);
 
     std::unordered_map<const impl::Body*, b3Body*> bodies_;
 

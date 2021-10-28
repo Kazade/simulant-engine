@@ -109,12 +109,16 @@ void RaycastVehicle::fixed_update(float dt) {
 
     for(auto& ray: rays) {
         Intersection intersection;
-        auto ret = sim->intersect_ray(ray.start, ray.dir, &intersection.dist, &intersection.normal);
+        auto ret = sim->ray_cast(
+            ray.start, ray.dir.normalized(), ray.dir.length()
+        );
 
         // If we intersected
-        if(ret.second) {
+        if(ret) {
             // Store the intersection information
-            intersection.point = ret.first;
+            intersection.point = ret.value().impact_point;
+            intersection.dist = ret.value().distance;
+            intersection.normal = ret.value().normal;
             intersection.penetration = Vec3(ray.dir).length() - intersection.dist;
             intersection.ray_dir = Vec3(ray.dir);
             intersection.ray_start = Vec3(ray.start);

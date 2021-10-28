@@ -72,25 +72,26 @@ public:
 
         body->add_box_collider(Vec3(2, 2, 1), behaviours::PhysicsMaterial::WOOD);
 
-        float distance = 0;
-        auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0, -2, 0), &distance);
+        auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0, -1, 0), 2);
 
-        assert_true(hit.second);
+        float distance = hit->distance;
+
+        assert_true(hit);
         assert_close(distance, 1.0f, 0.0001f);
 
         // Check that the box doesn't extend to 3 on the X-axis
-        hit = physics->intersect_ray(Vec3(3, 2, 0), Vec3(0, -2, 0), &distance);
-        assert_false(hit.second);
+        hit = physics->ray_cast(Vec3(3, 2, 0), Vec3(0, -1, 0), 2);
+        assert_false(hit);
 
         // But it does extend to 0.9 on the X-axis
-        hit = physics->intersect_ray(Vec3(0.9, 2, 0), Vec3(0, -2, 0), &distance);
-        assert_true(hit.second);
+        hit = physics->ray_cast(Vec3(0.9, 2, 0), Vec3(0, -1, 0), 2);
+        assert_true(hit);
 
         // Check that the local offset is respected
         body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD, Vec3(5, 0, 0));
-        hit = physics->intersect_ray(Vec3(5.0, 2, 0), Vec3(0, -2, 0), &distance);
-        assert_true(hit.second);
-        assert_close(1.5f, distance, 0.0001f);
+        hit = physics->ray_cast(Vec3(5.0, 2, 0), Vec3(0, -1, 0), 2);
+        assert_true(hit);
+        assert_close(1.5f, hit->distance, 0.0001f);
     }
 
     void test_capsule_collider_addition() {
@@ -103,11 +104,9 @@ public:
             behaviours::PhysicsMaterial::WOOD
         );
 
-        float distance = 0;
-        auto hit = physics->intersect_ray(Vec3(-2, 0, 0), Vec3(2, 0, 0), &distance);
-
-        assert_true(hit.second);
-        assert_close(distance, 1.0f, 0.0001f);
+        auto hit = physics->ray_cast(Vec3(-2, 0, 0), Vec3(1, 0, 0), 2);
+        assert_true(hit);
+        assert_close(hit->distance, 1.0f, 0.0001f);
     }
 
     void test_sphere_collider_addition() {
@@ -116,11 +115,10 @@ public:
         auto body = actor1->new_behaviour<behaviours::RigidBody>(physics.get());
         body->add_sphere_collider(2.0, behaviours::PhysicsMaterial::WOOD);
 
-        float distance = 0;
-        auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0, -2, 0), &distance);
+        auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0, -1, 0), 2);
 
-        assert_true(hit.second);
-        assert_close(distance, 1.0f, 0.0001f);
+        assert_true(hit);
+        assert_close(hit->distance, 1.0f, 0.0001f);
     }
 
     void test_mesh_collider_addition() {
@@ -130,11 +128,10 @@ public:
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
         body->add_mesh_collider(mesh, behaviours::PhysicsMaterial::WOOD);
 
-        float distance = 0;
-        auto hit = physics->intersect_ray(Vec3(0, 2, 0), Vec3(0.0, -2, 0), &distance);
+        auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0.0, -1, 0), 2);
 
-        assert_true(hit.second);
-        assert_close(distance, 1.5f, 0.0001f);
+        assert_true(hit);
+        assert_close(hit->distance, 1.5f, 0.0001f);
     }
 
     void test_collision_listener_enter() {

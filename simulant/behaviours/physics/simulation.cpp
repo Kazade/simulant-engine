@@ -196,12 +196,12 @@ void RigidBodySimulation::fixed_update(float step) {
     scene_->Step(step, velocity_iterations, position_iterations);
 }
 
-std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance, Vec3* normal) {
+smlt::optional<RayCastResult> RigidBodySimulation::ray_cast(const Vec3& start, const Vec3& direction, float max_distance) {
     b3RayCastSingleOutput result;
     b3Vec3 s, d;
 
     to_b3vec3(start, s);
-    to_b3vec3(start + direction, d);
+    to_b3vec3(start + (direction * max_distance), d);
 
     struct AlwaysCast : public b3RayCastFilter {
         bool ShouldRayCast(b3Shape*) {
@@ -214,23 +214,18 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
     bool hit = scene_->RayCastSingle(&result, &filter, s, d);
 
     float closest = std::numeric_limits<float>::max();
-    Vec3 impact_point, closest_normal;
 
     if(hit) {
-        to_vec3(result.point, impact_point);
-        closest = (impact_point - start).length();
-        to_vec3(result.normal, closest_normal);
-
-        if(distance) {
-            *distance = closest;
-        }
-
-        if(normal) {
-            *normal = closest_normal;
-        }
+        RayCastResult ret;
+        ret.other_body = get_associated_body(result.shape->GetBody());
+        to_vec3(result.point, ret.impact_point);
+        closest = (ret.impact_point - start).length();
+        to_vec3(result.normal, ret.normal);
+        ret.distance = closest;
+        return smlt::optional<RayCastResult>(ret);
     }
 
-    return std::make_pair(impact_point, hit);
+    return smlt::optional<RayCastResult>();
 }
 
 b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
@@ -254,7 +249,7 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
     v.z = (is_dynamic) ? 1.0f : 0.0f;
 
     def.gravityScale = v;
-    def.userData = this;
+    def.userData = body;
 
     // If the body is attached to a stage node then set up the initial rotation
     // and position from that.
@@ -272,6 +267,10 @@ void RigidBodySimulation::release_body(impl::Body *body) {
     auto bbody = bodies_.at(body);
     scene_->DestroyBody(bbody);
     bodies_.erase(body);
+}
+
+impl::Body *RigidBodySimulation::get_associated_body(b3Body *b) {
+    return (impl::Body*) b->GetUserData();
 }
 
 std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {
