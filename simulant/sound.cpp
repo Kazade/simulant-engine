@@ -255,10 +255,13 @@ PlayingSoundID AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dista
 }
 
 bool AudioSource::stop_sound(PlayingSoundID sound_id) {
-    for(auto& instance: instances_) {
-        if(instance->id() == sound_id) {
-            instance->stop();
+    for(auto it = instances_.begin(); it != instances_.end();) {
+        if((*it)->id() == sound_id) {
+            (*it)->stop();
+            it = instances_.erase(it);
             return true;
+        } else {
+            ++it;
         }
     }
 
@@ -266,19 +269,19 @@ bool AudioSource::stop_sound(PlayingSoundID sound_id) {
 }
 
 void AudioSource::update_source(float dt) {
-    for(auto instance: instances_) {
-        instance->update(dt);
-    }
-
     //Remove any instances that have finished playing
     instances_.erase(
-                std::remove_if(
-                    instances_.begin(),
-                    instances_.end(),
+        std::remove_if(
+            instances_.begin(),
+            instances_.end(),
             std::bind(&PlayingSound::is_dead, std::placeholders::_1)
         ),
         instances_.end()
     );
+
+    for(auto instance: instances_) {
+        instance->update(dt);
+    }
 }
 
 void AudioSource::set_pitch(RangeValue<0, 1> pitch) {
