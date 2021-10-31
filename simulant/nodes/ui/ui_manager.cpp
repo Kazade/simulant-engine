@@ -50,6 +50,7 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool):
 
 UIManager::~UIManager() {
     manager_->clear();
+
     manager_.reset();
 
     pre_render_connection_.disconnect();

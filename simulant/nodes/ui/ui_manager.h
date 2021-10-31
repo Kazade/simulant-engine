@@ -73,6 +73,8 @@ public:
     void destroy_object_immediately(Widget* object);
 
 private:
+    friend class ::smlt::Stage;
+
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
 

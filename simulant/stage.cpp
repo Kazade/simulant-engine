@@ -603,12 +603,17 @@ void Stage::on_actor_destroyed(ActorID actor_id) {
 }
 
 void Stage::clean_up_dead_objects() {
+    // We need to tell the UI manager to
+    // clean itself up, as it's not updateable
+    // and so can't easily do it itself.
+    ui_->manager_->clean_up();
+
     actor_manager_->clean_up();
     light_manager_->clean_up();
     geom_manager_->clean_up();
     particle_system_manager_->clean_up();
     camera_manager_->clean_up();
-    mesh_instancer_manager_->clean_up();
+    mesh_instancer_manager_->clean_up();    
 }
 
 }
