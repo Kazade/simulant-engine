@@ -460,7 +460,10 @@ private:
     }
 };
 
-class SimulantTestCase : public TestCase {
+class SimulantTestCase:
+    public TestCase,
+    public StageManager {
+
 private:
     void set_app_and_window(std::shared_ptr<Application>* app, Window** window) {
         static std::shared_ptr<Application> application;
@@ -494,8 +497,8 @@ protected:
 public:
     virtual void set_up() {
         TestCase::set_up();
-
         set_app_and_window(&application, &window);
+        destroy_all_stages();
     }
 };
 

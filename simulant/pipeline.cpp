@@ -6,7 +6,7 @@
 namespace smlt {
 
 Pipeline::Pipeline(Compositor* render_sequence,
-    const std::string &name, StageID stage_id, CameraID camera_id):
+    const std::string &name, StagePtr stage, CameraPtr camera):
         TypedDestroyableObject<Pipeline, Compositor>(render_sequence),
         sequence_(render_sequence),
         priority_(0),
@@ -17,8 +17,8 @@ Pipeline::Pipeline(Compositor* render_sequence,
     }
 
     set_name(name);
-    set_stage(stage_id);
-    set_camera(camera_id);
+    set_stage(stage);
+    set_camera(camera);
 
     /* Set sane defaults for detail ranges */
     detail_level_end_distances_[DETAIL_LEVEL_NEAREST] = 25.0f;
@@ -52,7 +52,7 @@ DetailLevel Pipeline::detail_level_at_distance(float dist) const {
     return DETAIL_LEVEL_FARTHEST;
 }
 
-PipelinePtr Pipeline::set_camera(CameraID c) {
+PipelinePtr Pipeline::set_camera(CameraPtr c) {
     camera_ = c;
     return this;
 }
@@ -77,7 +77,7 @@ CameraPtr Pipeline::camera() const {
 }
 
 StagePtr Pipeline::stage() const {
-    return sequence_->window->stage(stage_);
+    return stage_;
 }
 
 TexturePtr Pipeline::target() const {
@@ -98,10 +98,7 @@ void Pipeline::deactivate() {
     is_active_ = false;
 
     if(stage_) {
-        auto s = sequence_->window->stage(stage_);
-        if(s) {
-            s->active_pipeline_count_--;
-        }
+        stage_->active_pipeline_count_++;
     }
 }
 
@@ -111,26 +108,19 @@ void Pipeline::activate() {
     is_active_ = true;
 
     if(stage_) {
-        auto s = sequence_->window->stage(stage_);
-        if(s) {
-            s->active_pipeline_count_++;
-        }
+        stage_->active_pipeline_count_++;
     }
 }
 
-void Pipeline::set_stage(StageID s) {
+void Pipeline::set_stage(StagePtr stage) {
     if(stage_ && is_active()) {
-        StagePtr s = sequence_->window->stage(stage_);
-        s->active_pipeline_count_--;
+        stage_->active_pipeline_count_--;
     }
 
-    stage_ = s;
+    stage_ = stage;
 
     if(stage_&& is_active()) {
-        StagePtr s = sequence_->window->stage(stage_);
-        if(s) {
-            s->active_pipeline_count_++;
-        }
+        stage_->active_pipeline_count_++;
     }
 }
 

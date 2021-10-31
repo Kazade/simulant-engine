@@ -30,6 +30,7 @@
 #include "loader.h"
 #include "platform.h"
 #include "streams/file_ifstream.h"
+#include "application.h"
 
 #ifdef __ANDROID__
 #include <SDL_rwops.h>
@@ -37,8 +38,7 @@
 
 namespace smlt {
 
-VirtualFileSystem::VirtualFileSystem(Window *window):
-    window_(window) {
+VirtualFileSystem::VirtualFileSystem() {
 
     resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
 
@@ -92,7 +92,7 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
     // FIXME: Don't use unicode!
     Path final_name(unicode(filename.str()).replace(
         "${RENDERER}",
-        window_->renderer->name()
+        get_app()->window->renderer->name()
     ).replace(
         "${PLATFORM}",
         get_platform()->name()

@@ -17,6 +17,7 @@
 #include "../../nodes/light.h"
 #include "../../utils/gl_error.h"
 #include "../../window.h"
+#include "../../application.h"
 
 namespace smlt {
 
@@ -583,7 +584,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         (const void*) index_data
     );
 
-    renderer_->window->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+    get_app()->stats->increment_polygons_rendered(renderable->arrangement, element_count);
 }
 
 }

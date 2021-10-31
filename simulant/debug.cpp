@@ -24,13 +24,15 @@
 #include "random.h"
 #include "window.h"
 #include "macros.h"
+#include "application.h"
+#include "time_keeper.h"
 
 namespace smlt {
 
 Debug::Debug(Stage &stage):
     stage_(stage) {
 
-    frame_finished_connection_ = stage_.window->signal_frame_finished().connect(
+    frame_finished_connection_ = get_app()->signal_frame_finished().connect(
         std::bind(&Debug::frame_finished, this)
     );
 }
@@ -55,7 +57,7 @@ Debug::~Debug() {
 }
 
 void Debug::frame_finished() {
-    auto dt = stage_.window->time_keeper->delta_time();
+    auto dt = get_app()->time_keeper->delta_time();
 
     for(auto it = elements_.begin(); it != elements_.end(); ++it) {
         auto& element = (*it);

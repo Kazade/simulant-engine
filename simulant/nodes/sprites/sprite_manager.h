@@ -3,6 +3,7 @@
 #include "../sprite.h"
 #include "../../managers/window_holder.h"
 #include "../stage_node_manager.h"
+#include "../stage_node_pool.h"
 #include "../../path.h"
 
 namespace smlt {
@@ -12,8 +13,7 @@ typedef StageNodeManager<StageNodePool, SpriteID, Sprite> TemplatedSpriteManager
 typedef sig::signal<void (SpriteID)> SpriteCreatedSignal;
 typedef sig::signal<void (SpriteID)> SpriteDestroyedSignal;
 
-class SpriteManager :
-    public virtual WindowHolder {
+class SpriteManager {
 
     DEFINE_SIGNAL(SpriteCreatedSignal, signal_sprite_created);
     DEFINE_SIGNAL(SpriteDestroyedSignal, signal_sprite_destroyed);
@@ -21,7 +21,7 @@ class SpriteManager :
     friend class Sprite;
 
 public:
-    SpriteManager(Window* window, Stage* stage, StageNodePool *pool);
+    SpriteManager(Stage* stage, StageNodePool *pool);
     virtual ~SpriteManager();
 
     SpritePtr new_sprite();

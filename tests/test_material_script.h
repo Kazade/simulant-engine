@@ -40,7 +40,7 @@ public:
 }
         )";
 
-        auto mat = window->shared_assets->material(window->shared_assets->new_material());
+        auto mat = application->shared_assets->material(application->shared_assets->new_material());
 
         auto stream = std::make_shared<std::stringstream>();
         (*stream) << text;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene.h"
+#include "../application.h"
 #include "../behaviours/physics/simulation.h"
 
 namespace smlt {
@@ -23,7 +24,7 @@ protected:
 
 private:
     void pre_load() override {
-        physics_.reset(new smlt::behaviours::RigidBodySimulation(this->window->time_keeper));
+        physics_.reset(new smlt::behaviours::RigidBodySimulation(get_app()->time_keeper));
     }
 
     void post_unload() override {

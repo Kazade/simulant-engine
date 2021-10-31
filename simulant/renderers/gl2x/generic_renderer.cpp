@@ -31,6 +31,9 @@
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 #include "../../window.h"
+#include "../../coroutines/coroutine.h"
+#include "../../application.h"
+#include "../../idle_task_manager.h"
 
 namespace smlt {
 
@@ -358,7 +361,7 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
 
     /* Build the GPU program on the main thread */
     if(cort::within_coroutine()) {
-        window->idle->add_once([&]() {
+        window->application->idle->add_once([&]() {
             program->build();
         });
 
@@ -696,7 +699,7 @@ void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buf
     auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
 
     GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(offset));
-    window->stats->increment_polygons_rendered(arrangement, element_count);
+    get_app()->stats->increment_polygons_rendered(arrangement, element_count);
 }
 
 void GenericRenderer::init_context() {

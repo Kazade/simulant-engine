@@ -20,6 +20,8 @@
 #include "scene_manager.h"
 #include "scene.h"
 #include "../window.h"
+#include "../application.h"
+#include "../idle_task_manager.h"
 
 namespace smlt {
 
@@ -38,7 +40,7 @@ void SceneManager::destroy_all() {
         route.second->_call_unload();
 
         auto name = route.first;
-        window_->idle->add_once([this, name]() {
+        get_app()->idle->add_once([this, name]() {
             auto it = routes_.find(name);
             if(it != routes_.end()) {
                 routes_.erase(it);
@@ -96,7 +98,7 @@ void SceneManager::unload(const std::string& route) {
              * from unload can happen before we destroy the scene
              */
 
-            window_->idle->add_once([this, route, scene]() {
+            get_app()->idle->add_once([this, route, scene]() {
                 auto it = routes_.find(route);
                 if(it != routes_.end() && it->second == scene) {
                     routes_.erase(it);
@@ -136,7 +138,7 @@ bool SceneManager::scene_queued_for_activation() const {
 }
 
 sig::Connection SceneManager::connect_to_post_idle(std::function<void ()> func) {
-    return window_->signal_post_idle().connect(func);
+    return get_app()->signal_post_idle().connect(func);
 }
 
 }

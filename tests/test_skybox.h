@@ -10,7 +10,7 @@ using namespace smlt;
 class SkyboxTest : public smlt::test::SimulantTestCase {
 public:
     void test_skybox_from_folder() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
 
         auto sky = stage->skies->new_skybox_from_folder("skyboxes/TropicalSunnyDay");
 

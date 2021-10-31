@@ -24,8 +24,9 @@
 #include "interfaces.h"
 #include "interfaces/updateable.h"
 #include "types.h"
+#include "managers/window_holder.h"
 
-#include "stage.h"
+#include "nodes/stage_node_pool.h"
 
 namespace smlt {
 
@@ -34,12 +35,8 @@ class StageNode;
 typedef sig::signal<void (StageID)> StageAddedSignal;
 typedef sig::signal<void (StageID)> StageRemovedSignal;
 
-typedef Polylist<
-    StageNode,
-    Actor, MeshInstancer, Camera, Geom, Light, ParticleSystem, Sprite,
-    ui::Button, ui::Image, ui::Label, ui::ProgressBar,
-    Skybox
-> StageNodePool;
+template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
+class StageNodeManager;
 
 class StageManager:
     public virtual Updateable {
@@ -51,13 +48,8 @@ public:
     struct IteratorPair {
         friend class StageManager;
 
-        std::list<Stage*>::iterator begin() {
-            return owner_->manager_.begin();
-        }
-
-        std::list<Stage*>::iterator end() {
-            return owner_->manager_.end();
-        }
+        std::list<Stage*>::iterator begin();
+        std::list<Stage*>::iterator end();
 
     private:
         IteratorPair(StageManager* owner):
@@ -68,7 +60,8 @@ public:
 
     friend struct IteratorPair;
 
-    StageManager(Window* window);
+    StageManager();
+    virtual ~StageManager();
 
     StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM);
     StagePtr stage(StageID s);
@@ -88,20 +81,14 @@ public:
     void destroy_object(Stage* object);
     void destroy_object_immediately(Stage* object);
 
-    uint32_t stage_node_pool_capacity() const;
-    uint32_t stage_node_pool_capacity_in_bytes() const;
-private:
-    Window* window_ = nullptr;
-
 protected:
     void clean_up();
 
     typedef Polylist<StageNode, Stage> StagePool;
+    typedef StageNodeManager<StagePool, StageID, Stage> StageList;
 
-    StagePool pool_;
-    StageNodePool node_pool_;
-
-    StageNodeManager<StagePool, StageID, Stage> manager_;
+    StagePool* pool_ = nullptr;
+    StageList* manager_ = nullptr;
 };
 
 }

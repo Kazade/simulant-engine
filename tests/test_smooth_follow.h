@@ -13,14 +13,14 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = window->new_stage();
+        stage = new_stage();
         actor = stage->new_actor();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
 
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 
     void test_origin_bug() {
@@ -35,7 +35,7 @@ public:
         follow->set_follow_distance(15.f);
         follow->set_follow_height(10.f);
 
-        window->run_frame();
+        application->run_frame();
     }
 
     void test_target_reset_on_destroy() {

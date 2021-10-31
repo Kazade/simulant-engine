@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include "vertex_data.h"
 #include "window.h"
+#include "time_keeper.h"
 #include "utils/gl_thread_check.h"
 
 namespace smlt {

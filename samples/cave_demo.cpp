@@ -8,12 +8,13 @@ public:
     GameScene(smlt::Window* window):
         smlt::Scene<GameScene>(window) {}
 
-        void load() {
-            stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+    void load() override {
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
             camera_ = stage_->new_camera();
             auto pipeline = compositor->render(
             stage_, camera_
         );
+
         link_pipeline(pipeline);
 
         pipeline->viewport->set_colour(smlt::Colour::BLACK);
@@ -23,9 +24,9 @@ public:
         camera_->rotate_global_y_by(Degrees(180 - 90));
 
         // Meshes
-        cave_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj");
-        godray_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj");
-        fairy_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj");
+        cave_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj");
+        godray_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj");
+        fairy_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj");
 
         // Materials + Textures
         for(auto submesh : cave_mesh_->each_submesh())
@@ -77,7 +78,7 @@ public:
         _S_UNUSED(dt);
 
         if(input->axis_value_hard("Start") == 1) {
-            window->stop_running();
+            app->stop_running();
         }
     }
 

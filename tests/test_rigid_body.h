@@ -7,19 +7,19 @@
 class RigidBodyTest : public smlt::test::SimulantTestCase {
 public:
     void test_adding_to_stage_node_inherits_location() {
-        smlt::StagePtr stage = window->new_stage();
+        smlt::StagePtr stage = new_stage();
         smlt::ActorPtr actor = stage->new_actor();
 
         actor->move_to(10, 0, 0);
         actor->rotate_x_by(smlt::Degrees(90));
 
-        auto simulation = smlt::behaviours::RigidBodySimulation::create(window->time_keeper);
+        auto simulation = smlt::behaviours::RigidBodySimulation::create(application->time_keeper);
         auto controller = actor->new_behaviour<smlt::behaviours::RigidBody>(simulation.get());
 
         assert_equal(controller->position().x, 10.0f);
         assert_equal(controller->position().y, 0.0f);
         assert_equal(controller->position().z, 0.0f);
 
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 };

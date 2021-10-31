@@ -26,6 +26,7 @@
 namespace smlt {
 
 SceneBase::SceneBase(Window *window):
+    StageManager(),
     window_(window),
     input_(window->input.get()),
     app_(window->application),
@@ -36,6 +37,23 @@ SceneBase::SceneBase(Window *window):
 SceneBase::~SceneBase() {
 
 }
+
+void SceneBase::_update_thunk(float dt) {
+    if(!window->has_focus()) {
+        // if paused, send deltatime as 0.0.
+        // it's still accessible through window->time_keeper if the user needs it
+        dt = 0.0;
+    }
+
+    StageManager::_update_thunk(dt);
+}
+
+void SceneBase::_fixed_update_thunk(float dt) {
+    if(!window->has_focus()) return;
+
+    StageManager::_fixed_update_thunk(dt);
+}
+
 
 void SceneBase::_call_load() {
     if(is_loaded_) {
@@ -58,6 +76,10 @@ void SceneBase::_call_unload() {
     is_loaded_ = false;
     unload();
     post_unload();
+
+    /* Make sure all stages have been destroyed */
+    destroy_all_stages();
+    StageManager::clean_up();
 }
 
 void SceneBase::_call_activate() {

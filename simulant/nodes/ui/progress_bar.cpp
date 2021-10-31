@@ -1,4 +1,4 @@
-
+#include "ui_manager.h"
 #include "progress_bar.h"
 #include "../../stage.h"
 #include "../../window.h"

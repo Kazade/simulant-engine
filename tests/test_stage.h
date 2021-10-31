@@ -13,7 +13,7 @@ class StageTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_actor_destruction() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
         auto destroyed_count = 0;
 
         std::set<ActorID> destroyed_ids;
@@ -29,7 +29,7 @@ public:
         auto a2id = a2->id();
         a2->destroy();
 
-        window->run_frame();
+        application->run_frame();
 
         assert_false(a1->child_count()); // No children now
         assert_equal(destroyed_count, 2); // Should've destroyed 2
@@ -40,7 +40,7 @@ public:
     }
 
     void test_camera_destruction() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
         auto destroyed_count = 0;
 
         std::set<CameraID> destroyed_ids;
@@ -59,7 +59,7 @@ public:
         auto a2id = a2->id();
         a2->destroy();
 
-        window->run_frame();
+        application->run_frame();
 
         assert_false(a1->child_count()); // No children now
         assert_equal(destroyed_count, 2); // Should've destroyed 2
@@ -68,7 +68,7 @@ public:
     }
 
     void test_particle_system_destruction() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
         auto destroyed_count = 0;
 
         std::set<ParticleSystemID> destroyed_ids;
@@ -89,7 +89,7 @@ public:
         auto a2id = a2->id();
         a2->destroy();
 
-        window->run_frame();
+        application->run_frame();
 
         assert_false(a1->child_count()); // No children now
         assert_equal(destroyed_count, 2); // Should've destroyed 2
@@ -98,7 +98,7 @@ public:
     }
 
     void test_stage_node_clean_up_signals() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
 
         auto actor = stage->new_actor();
 
@@ -118,19 +118,19 @@ public:
         assert_true(destroyed);
         assert_false(cleaned_up);
 
-        window->run_frame();
+        application->run_frame();
 
         assert_true(destroyed);
         assert_true(cleaned_up);
     }
 
     void test_iteration_types() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
 
         for(auto& node: stage->each_child()) {
             node.destroy();
         }
-        window->run_frame();
+        application->run_frame();
 
         /*
             stage-> o

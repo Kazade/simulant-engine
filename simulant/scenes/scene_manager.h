@@ -41,7 +41,7 @@ typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 class SceneManager :
     public RefCounted<SceneManager> {
 
-    friend class Window;
+    friend class Application;
 
     template<typename T>
     static void unpack(std::vector<any>& output, T&& arg) {

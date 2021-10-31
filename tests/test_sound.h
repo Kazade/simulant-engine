@@ -16,13 +16,13 @@ public:
 
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->destroy_stage(stage_->id());
+        destroy_stage(stage_->id());
     }
 
     void test_audio_listener() {
@@ -43,14 +43,14 @@ public:
         assert_true(window->has_explicit_audio_listener());
 
         stage_->destroy_actor(actor);
-        window->run_frame(); // actually destroy
+        application->run_frame(); // actually destroy
 
         assert_equal(window->audio_listener(), camera_);
         assert_false(window->has_explicit_audio_listener());
     }
 
     void test_2d_sound_output() {
-        smlt::SoundPtr sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
 
         auto actor = stage_->new_actor();
 
@@ -61,7 +61,7 @@ public:
         assert_true(actor->playing_sound_count());
 
         while(actor->playing_sound_count()) {
-            window->run_frame();
+            application->run_frame();
         }
     }
 
@@ -79,36 +79,36 @@ public:
 
         // Finish playing the sound
         while(actor->playing_sound_count()) {
-            window->run_frame();
+            application->run_frame();
         }
     }
 
     void test_sound_destruction_stops_play() {
-        auto sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
 
         auto sid = sound->id();
 
         auto a = stage_->new_actor();
 
-        assert_true(window->shared_assets->has_sound(sid));
+        assert_true(application->shared_assets->has_sound(sid));
         a->play_sound(sound);
 
         assert_true(a->is_sound_playing());
 
-        window->shared_assets->destroy_sound(sound);
+        application->shared_assets->destroy_sound(sound);
         sound.reset();
 
-        window->shared_assets->run_garbage_collection();
+        application->shared_assets->run_garbage_collection();
         while(a->playing_sound_count()) {
-            window->run_frame();
+            application->run_frame();
         }
 
-        assert_false(window->shared_assets->has_sound(sid));
+        assert_false(application->shared_assets->has_sound(sid));
         assert_false(a->is_sound_playing());
     }
 
     void test_sound_stopping() {
-        auto sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
         auto a = stage_->new_actor();
         auto id = a->play_sound(sound);
 

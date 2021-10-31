@@ -48,21 +48,15 @@ public:
     Compositor(Window* window);
     virtual ~Compositor();
 
-    PipelinePtr new_pipeline(
-        const std::string& name,
-        StageID stage,
-        CameraID camera,
+    PipelinePtr new_pipeline(const std::string& name,
+        StagePtr stage,
+        CameraPtr camera,
         const Viewport& viewport=Viewport(),
         TextureID target=TextureID(),
         int32_t priority=0
     );
 
     PipelinePtr render(StagePtr stage, CameraPtr camera);
-    PipelinePtr render(StageID stage_id, CameraID camera_id) {
-        static int32_t counter = 0;
-        std::string name = _F("{0}").format(counter++);
-        return new_pipeline(name, stage_id, camera_id);
-    }
 
     std::list<PipelinePtr>::iterator begin() {
         return ordered_pipelines_.begin();

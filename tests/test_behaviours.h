@@ -14,7 +14,7 @@ class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
         auto actor = stage->new_actor();
         auto camera = stage->new_camera();
 
@@ -25,19 +25,19 @@ public:
 
         camera->move_to(0, 0, 100);
 
-        window->run_frame();
+        application->run_frame();
         assert_equal(actor->forward(), Vec3(0, 0, 1));
 
         camera->move_to(0, 100, 0);
 
-        window->run_frame();
+        application->run_frame();
 
         // Default to negative Z
         assert_equal(actor->forward(), Vec3(0, 0, -1));
 
         camera->move_to(100, 0, 0);
 
-        window->run_frame();
+        application->run_frame();
         assert_equal(actor->forward(), Vec3(1, 0, 0));
     }
 };
@@ -46,7 +46,7 @@ class SphericalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto stage = window->new_stage();
+        auto stage = new_stage();
         auto actor = stage->new_actor();
         auto camera = stage->new_camera();
 
@@ -57,17 +57,17 @@ public:
 
         camera->move_to(0, 0, 100);
 
-        window->run_frame();
+        application->run_frame();
         assert_equal(actor->forward(), Vec3(0, 0, 1));
 
         camera->move_to(0, 100, 0);
 
-        window->run_frame();
+        application->run_frame();
         assert_equal(actor->forward(), Vec3(0, 1, 0));
 
         camera->move_to(100, 0, 0);
 
-        window->run_frame();
+        application->run_frame();
         assert_equal(actor->forward(), Vec3(1, 0, 0));
     }
 };

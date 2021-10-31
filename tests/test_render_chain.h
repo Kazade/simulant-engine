@@ -13,9 +13,9 @@ class RenderChainTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_usage() {
         Viewport view;
-        auto stage = window->new_stage();
+        auto stage = new_stage();
         auto cam = stage->new_camera();
-        TextureID tex = window->shared_assets->new_texture(256, 256);
+        TextureID tex = application->shared_assets->new_texture(256, 256);
 
         PipelinePtr pipeline1 = window->compositor->render(stage, cam);
         PipelinePtr pipeline2 = window->compositor->render(stage, cam)->set_target(tex);
@@ -48,7 +48,7 @@ public:
 
         auto pid2 = pipeline2->name();
         window->compositor->destroy_pipeline(pid2);
-        window->run_frame();
+        application->run_frame();
 
         assert_false(window->compositor->has_pipeline(pid2));
 

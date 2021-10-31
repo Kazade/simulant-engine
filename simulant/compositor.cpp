@@ -29,6 +29,7 @@
 #include "window.h"
 #include "partitioner.h"
 #include "loader.h"
+#include "application.h"
 
 namespace smlt {
 
@@ -49,8 +50,9 @@ Compositor::~Compositor() {
 }
 
 PipelinePtr Compositor::render(StagePtr stage, CameraPtr camera) {
-    // This is a common enough requirement to provide a nice shortcut
-    return render(stage->id(), camera->id());
+    static int32_t counter = 0;
+    std::string name = _F("{0}").format(counter++);
+    return new_pipeline(name, stage, camera);
 }
 
 PipelinePtr Compositor::find_pipeline(const std::string &name) {
@@ -132,7 +134,7 @@ void Compositor::sort_pipelines() {
 }
 
 PipelinePtr Compositor::new_pipeline(
-    const std::string& name, StageID stage, CameraID camera,
+    const std::string& name, StagePtr stage, CameraPtr camera,
     const Viewport& viewport, TextureID target, int32_t priority) {
 
     auto pipeline = Pipeline::create(
@@ -172,7 +174,7 @@ void Compositor::run() {
         run_pipeline(pipeline, actors_rendered);
     }
 
-    window->stats->set_subactors_rendered(actors_rendered);
+    get_app()->stats->set_subactors_rendered(actors_rendered);
 }
 
 

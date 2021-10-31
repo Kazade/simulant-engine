@@ -55,7 +55,7 @@ public:
             }
         };
 
-        StagePtr stage = window->new_stage();
+        StagePtr stage = new_stage();
         ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
@@ -78,14 +78,14 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
-        StagePtr stage = window->new_stage();
+        StagePtr stage = new_stage();
         ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
         partitioner.add_actor(actor->id());
         partitioner._apply_writes();
 
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 
     void test_remove_actor_stages_write() {
@@ -94,14 +94,14 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
-        StagePtr stage = window->new_stage();
+        StagePtr stage = new_stage();
         ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
         partitioner.remove_actor(actor->id());
         partitioner._apply_writes();
 
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 
     void test_add_light_stages_write() {
@@ -110,14 +110,14 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
-        StagePtr stage = window->new_stage();
+        StagePtr stage = new_stage();
         auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
         partitioner.add_light(light->id());
         partitioner._apply_writes();
 
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 
     void test_remove_light_stages_write() {
@@ -126,14 +126,14 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
-        StagePtr stage = window->new_stage();
+        StagePtr stage = new_stage();
         auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
         partitioner.remove_light(light->id());
         partitioner._apply_writes();
 
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 
     void test_add_particle_system_stages_write() {
@@ -142,7 +142,7 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
-        StagePtr stage = window->new_stage();
+        StagePtr stage = new_stage();
         auto ps = stage->new_particle_system(
             stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
         );
@@ -151,7 +151,7 @@ public:
         partitioner.add_particle_system(ps->id());
         partitioner._apply_writes();
 
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 
     void test_remove_particle_system_stages_write() {
@@ -160,7 +160,7 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
-        StagePtr stage = window->new_stage();
+        StagePtr stage = new_stage();
         auto ps = stage->new_particle_system(
             stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
         );
@@ -168,7 +168,7 @@ public:
         MockPartitioner partitioner(stage, test);
         partitioner.remove_particle_system(ps->id());
         partitioner._apply_writes();
-        window->destroy_stage(stage->id());
+        destroy_stage(stage->id());
     }
 };
 

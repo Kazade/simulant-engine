@@ -17,19 +17,19 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../../window.h"
+#include "../../application.h"
 #include "../../loader.h"
 #include "../../stage.h"
 #include "../actor.h"
 #include "../../meshes/mesh.h"
 #include "../../procedural/constants.h"
+#include "../../vfs.h"
 
 #include "skybox_manager.h"
 
 namespace smlt {
 
-SkyManager::SkyManager(Window* window, Stage* stage, StageNodePool* pool):
-    WindowHolder(window),
+SkyManager::SkyManager(Stage* stage, StageNodePool* pool):
     stage_(stage),
     sky_manager_(new TemplatedSkyboxManager(pool)) {
 
@@ -47,7 +47,7 @@ SkyManager::SkyManager(Window* window, Stage* stage, StageNodePool* pool):
 SkyboxPtr SkyManager::new_skybox_from_folder(const Path& folder, const TextureFlags& flags) {
     std::map<SkyboxFace, std::string> files;
 
-    auto path = window->vfs->locate_file(folder);
+    auto path = get_app()->vfs->locate_file(folder);
 
     if(!path.has_value()) {
         return SkyboxPtr();
@@ -79,7 +79,7 @@ SkyboxPtr SkyManager::new_skybox_from_folder(const Path& folder, const TextureFl
         auto full_path = kfs::path::join(folder.str(), file);
 
         // Make sure this is a supported texture file
-        if(!window->loader_type("texture")->supports(full_path)) {
+        if(!get_app()->loader_type("texture")->supports(full_path)) {
             continue;
         }
 

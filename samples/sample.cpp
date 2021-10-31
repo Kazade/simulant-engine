@@ -9,7 +9,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_FRUSTUM);
+        stage_ = new_stage(smlt::PARTITIONER_FRUSTUM);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         pipeline->set_clear_flags(smlt::BUFFER_CLEAR_ALL);

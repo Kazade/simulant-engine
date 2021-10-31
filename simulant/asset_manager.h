@@ -92,11 +92,9 @@ for klass, name in (
     print(TEMPLATE % {"klass": klass, "name": name})
 */
 
-class AssetManager:
-    public virtual WindowHolder {
-
+class AssetManager {
 public:
-    AssetManager(Window* window, AssetManager* parent=nullptr);
+    AssetManager(AssetManager* parent=nullptr);
     virtual ~AssetManager();
 
     // Generated API
@@ -257,9 +255,8 @@ class LocalAssetManager:
     public RefCounted<LocalAssetManager> {
 
 public:
-    LocalAssetManager(Window* window, AssetManager* parent=nullptr):
-        WindowHolder(window),
-        AssetManager(window, parent) {}
+    LocalAssetManager(AssetManager* parent=nullptr):
+        AssetManager(parent) {}
 
     bool init() { return true; }
     void clean_up() {}
@@ -270,9 +267,7 @@ class SharedAssetManager:
     public AssetManager,
     public RefCounted<SharedAssetManager> {
 public:
-    SharedAssetManager(Window* window):
-        WindowHolder(window),
-        AssetManager(window) {}
+    SharedAssetManager() = default;
 
     bool init();
 

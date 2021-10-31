@@ -1,3 +1,4 @@
+#include "ui_manager.h"
 #include "label.h"
 
 namespace smlt {

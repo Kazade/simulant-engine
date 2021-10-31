@@ -24,7 +24,6 @@
 #include "input_state.h"
 
 #include "../window.h"
-#include "../virtual_gamepad.h"
 
 namespace smlt {
 
@@ -154,10 +153,6 @@ void InputState::pre_update(float dt) {
 
 void InputState::update(float dt) {
     _S_UNUSED(dt);
-    /*
-    if(virtual_joypad_) {
-        virtual_joypad_->_update(dt);
-    }*/
 }
 
 void InputState::_update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info) {
@@ -173,38 +168,6 @@ void InputState::_update_joystick_devices(const std::vector<JoystickDeviceInfo>&
         joysticks_[i].axis_count = device_info[i].axis_count;
         joysticks_[i].hat_count = device_info[i].hat_count;
     }
-}
-
-void InputState::init_virtual_joypad() {
-    /*
-    if(!virtual_joypad_) {
-        virtual_joypad_ = std::make_shared<Joypad>();
-    }
-
-    auto& vpad = window_.virtual_joypad;
-
-    for(auto conn: virtual_joypad_connections_) {
-        conn.disconnect();
-    }
-    virtual_joypad_connections_.clear();
-
-    virtual_joypad_connections_.push_back(
-        vpad->signal_button_down().connect([=](int btn) {
-            joypad(joypads_.size())._handle_button_down_event(btn);
-        })
-    );
-
-    virtual_joypad_connections_.push_back(
-        vpad->signal_button_up().connect([=](int btn) {
-            joypad(joypads_.size())._handle_button_up_event(btn);
-        })
-    );
-
-    virtual_joypad_connections_.push_back(
-        vpad->signal_hat_changed().connect([=](HatPosition pos) {
-            joypad(joypads_.size())._handle_hat_changed_event(0, pos);
-        })
-    ); */
 }
 
 JoystickAxis InputState::linked_axis(JoystickID id, JoystickAxis axis) {
