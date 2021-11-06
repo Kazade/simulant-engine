@@ -88,7 +88,8 @@ class Stage:
     public ContainerNode,
     public generic::Identifiable<StageID>,
     public Loadable,
-    public ChainNameable<Stage> {
+    public ChainNameable<Stage>,
+    public RefCounted<Stage> {
 
     DEFINE_SIGNAL(MeshInstancerCreatedSignal, signal_mesh_instancer_created);
     DEFINE_SIGNAL(MeshInstancerDestroyedSignal, signal_mesh_instancer_destroyed);

@@ -73,6 +73,8 @@ Stage::Stage(StageManager *parent, StageNodePool *node_pool, AvailablePartitione
 }
 
 Stage::~Stage() {
+    clean_up_signal_.disconnect();
+
     // Composite things first
     sprite_manager_.reset();
     sky_manager_.reset();

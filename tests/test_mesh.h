@@ -14,14 +14,14 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = new_stage();
+        stage_ = scene->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
         stage_->destroy_camera(camera_->id());
-        destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {

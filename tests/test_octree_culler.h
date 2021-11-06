@@ -13,7 +13,7 @@ using namespace smlt;
 class OctreeCullerTests : public smlt::test::SimulantTestCase {
 public:
     void test_octree_bounds() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         // Guarantee 2 renderables by using different materials
         auto mat1 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
@@ -36,7 +36,7 @@ public:
     }
 
     void test_basic_visibility() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto camera = stage->new_camera(); // Looking down -Z
 
         // Guarantee 2 renderables by using different materials

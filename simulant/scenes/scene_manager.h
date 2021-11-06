@@ -38,10 +38,14 @@ class Application;
 typedef std::shared_ptr<SceneBase> SceneBasePtr;
 typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
+typedef sig::signal<void (std::string, SceneBase*)> SceneActivatedSignal;
+
 class SceneManager :
     public RefCounted<SceneManager> {
 
     friend class Application;
+
+    DEFINE_SIGNAL(SceneActivatedSignal, signal_scene_activated);
 
     template<typename T>
     static void unpack(std::vector<any>& output, T&& arg) {
@@ -99,6 +103,8 @@ class SceneManager :
                 // If requested, we unload the previous scene once the new on is active
                 self->unload(previous->name());
             }
+
+            self->signal_scene_activated_(route, new_scene.get());
         }
 
         holder->conn.disconnect();

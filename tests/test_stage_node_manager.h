@@ -54,7 +54,7 @@ public:
     }
 
     void test_actors_are_freed() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->actor_count();
 
@@ -74,7 +74,7 @@ public:
     }
 
     void test_lights_are_freed() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->light_count();
 
@@ -92,7 +92,7 @@ public:
     }
 
     void test_particle_systems_are_freed() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto script = stage->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
@@ -115,7 +115,7 @@ public:
     }
 
     void test_geoms_are_freed() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
@@ -136,7 +136,7 @@ public:
     }
 
     void test_cameras_are_freed() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->camera_count();
 
@@ -154,7 +154,7 @@ public:
     }
 
     void test_pipelines_are_freed() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto pipeline = window->compositor->render(stage, stage->new_camera());
 
         auto name = pipeline->name();
@@ -166,19 +166,19 @@ public:
     }
 
     void test_stages_are_freed() {
-        auto count = application->stage_node_pool->size();
+        auto count = scene->stage_count();
 
-        auto stage = new_stage()->id();
+        auto stage = scene->new_stage()->id();
 
-        assert_equal(application->stage_node_pool->size(), count + 1);
+        assert_equal(scene->stage_count(), count + 1);
 
-        destroy_stage(stage);
+        scene->destroy_stage(stage);
 
-        assert_equal(application->stage_node_pool->size(), count + 1);
+        assert_equal(scene->stage_count(), count + 1);
 
         application->run_frame();
 
-        assert_equal(application->stage_node_pool->size(), count);
+        assert_equal(scene->stage_count(), count);
     }
 
     void test_backgrounds_are_freed() {
@@ -194,7 +194,7 @@ public:
     }
 
     void test_sprites_are_freed() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->sprites->sprite_count();
 

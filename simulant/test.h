@@ -448,6 +448,14 @@ private:
 };
 
 
+class TestScene : public smlt::Scene<TestScene> {
+public:
+    TestScene(Window* window):
+        smlt::Scene<TestScene>(window) {}
+
+    void load() override {}
+};
+
 class TestApp: public smlt::Application {
 public:
     TestApp(const AppConfig& config):
@@ -456,16 +464,14 @@ public:
 
 private:
     bool init() {
+        scenes->register_scene<TestScene>("main");
         return true;
     }
 };
 
-class SimulantTestCase:
-    public TestCase,
-    public StageManager {
-
+class SimulantTestCase: public TestCase {
 private:
-    void set_app_and_window(std::shared_ptr<Application>* app, Window** window) {
+    void set_app_and_window(std::shared_ptr<Application>* app, Window** window, SceneBase** scene) {
         static std::shared_ptr<Application> application;
 
         if(!application) {
@@ -482,23 +488,27 @@ private:
             config.search_paths.push_back("/cd/sample_data");
 
             application.reset(new TestApp(config));
+            application->run_frame();
         } else {
+            application->scenes->unload("main");
             application->window->reset();
+            application->scenes->activate("main");
         }
 
         *app = application;
         *window = (*app)->window;
+        *scene = (*app)->scenes->active_scene().get();
     }
 
 protected:
     Window* window;
+    SceneBase* scene;
     std::shared_ptr<Application> application;
 
 public:
     virtual void set_up() {
         TestCase::set_up();
-        set_app_and_window(&application, &window);
-        destroy_all_stages();
+        set_app_and_window(&application, &window, &scene);
     }
 };
 

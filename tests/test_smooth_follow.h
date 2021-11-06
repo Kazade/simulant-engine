@@ -13,14 +13,14 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = new_stage();
+        stage = scene->new_stage();
         actor = stage->new_actor();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
 
-        destroy_stage(stage->id());
+        scene->destroy_stage(stage->id());
     }
 
     void test_origin_bug() {

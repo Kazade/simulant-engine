@@ -13,7 +13,7 @@ public:
     void set_up() override {
         test::SimulantTestCase::set_up();
 
-        stage_ = new_stage();
+        stage_ = scene->new_stage();
         box_ = application->shared_assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
@@ -27,7 +27,7 @@ public:
         auto camera = stage_->new_camera();
         camera->move_to(784, 58, -775);
 
-        auto stage2 = new_stage();
+        auto stage2 = scene->new_stage();
 
         auto a1 = stage_->new_actor_with_mesh(box_);
         auto a2 = stage2->new_actor_with_mesh(box_);
@@ -71,7 +71,7 @@ public:
     }
 
     void test_nodes_returned_if_never_culled() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto camera = stage->new_camera();
         auto a1 = stage->new_actor_with_mesh(box_);
 

@@ -194,6 +194,9 @@ public:
     void set_has_focus(bool v=true) {
         has_focus_ = v;
     }
+
+    /** Recreates the debugging panels (e.g stats) */
+    void create_panels();
 protected:
     std::shared_ptr<Renderer> renderer_;
 

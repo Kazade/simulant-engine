@@ -5,9 +5,12 @@
 
 namespace smlt {
 
+static uint32_t PIPELINE_COUNTER = 0;
+
 Pipeline::Pipeline(Compositor* render_sequence,
     const std::string &name, StagePtr stage, CameraPtr camera):
         TypedDestroyableObject<Pipeline, Compositor>(render_sequence),
+        id_(++PIPELINE_COUNTER),
         sequence_(render_sequence),
         priority_(0),
         is_active_(false) {
@@ -98,7 +101,7 @@ void Pipeline::deactivate() {
     is_active_ = false;
 
     if(stage_) {
-        stage_->active_pipeline_count_++;
+        stage_->active_pipeline_count_--;
     }
 }
 

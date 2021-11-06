@@ -1,6 +1,7 @@
 #pragma once
 
 #include <simulant/test.h>
+#include <simulant/simulant.h>
 
 namespace {
 
@@ -12,7 +13,7 @@ public:
     void set_up() {
         smlt::test::SimulantTestCase::set_up();
 
-        stage_ = new_stage();
+        stage_ = scene->new_stage();
         mesh_ = stage_->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 

@@ -14,13 +14,13 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = new_stage();
+        stage_ = scene->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
     }
 
     void test_move_to_origin() {

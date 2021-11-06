@@ -13,7 +13,7 @@ class StageTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_actor_destruction() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
         std::set<ActorID> destroyed_ids;
@@ -40,7 +40,7 @@ public:
     }
 
     void test_camera_destruction() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
         std::set<CameraID> destroyed_ids;
@@ -68,7 +68,7 @@ public:
     }
 
     void test_particle_system_destruction() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
         std::set<ParticleSystemID> destroyed_ids;
@@ -98,7 +98,7 @@ public:
     }
 
     void test_stage_node_clean_up_signals() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto actor = stage->new_actor();
 
@@ -125,7 +125,7 @@ public:
     }
 
     void test_iteration_types() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         for(auto& node: stage->each_child()) {
             node.destroy();

@@ -77,6 +77,8 @@ public:
     PipelinePtr set_camera(CameraPtr c);
 
 private:
+    uint32_t id_ = 0;
+
     void set_stage(StagePtr s);
 
     Compositor* sequence_ = nullptr;

@@ -134,17 +134,6 @@ Application::Application(const AppConfig &config):
         config_.target_frame_rate = 0;
     }
 
-    try {
-        construct_window(config);
-    } catch(std::runtime_error&) {
-        S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
-        exit(1);
-    }
-
-    /* We can't do this in the initialiser as we need a valid
-     * window before doing things like creating textures */
-    asset_manager_ = SharedAssetManager::create();
-
     S_INFO("Registering loaders");
 
     //Register the default resource loaders
@@ -165,6 +154,17 @@ Application::Application(const AppConfig &config):
     register_loader(std::make_shared<smlt::loaders::WAVLoaderType>());
     register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
+
+    try {
+        construct_window(config);
+    } catch(std::runtime_error&) {
+        S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
+        exit(1);
+    }
+
+    /* We can't do this in the initialiser as we need a valid
+     * window before doing things like creating textures */
+    asset_manager_ = SharedAssetManager::create();
 }
 
 Application::~Application() {
@@ -295,6 +295,12 @@ bool Application::_call_init() {
 
     scene_manager_.reset(new SceneManager(window_.get()));
 
+    scene_manager_->signal_scene_activated().connect([this](std::string, SceneBase*) {
+        /* We create the panels here because they need an active scene */
+        /* FIXME: Should be controllable via config */
+        window_->create_panels();
+    });
+
     // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
     scenes->register_scene<scenes::Loading>("_loading");
@@ -390,14 +396,20 @@ bool Application::run_frame() {
 
     await_frame_time(); /* Frame limiter */
 
-    signal_frame_started_();
-
     float dt = 0.0f;
-    if(!first_frame) {
+
+    if(first_frame) {
+        if(!_call_init()) {
+            S_ERROR("Error while initializing, terminating application");
+            return false;
+        }
+    } else {
         // Update timers
         time_keeper_->update();
         dt = time_keeper_->delta_time();
     }
+
+    signal_frame_started_();
 
     window_->input_state->pre_update(dt);
     window_->check_events(); // Check for any window events
@@ -482,11 +494,6 @@ int32_t Application::run() {
 
     /* Try to write samples even if bad things happen */
     std::set_terminate(on_terminate);
-
-    if(!_call_init()) {
-        S_ERROR("Error while initializing, terminating application");
-        return 1;
-    }
 
     while(run_frame()) {}
 

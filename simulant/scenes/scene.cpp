@@ -78,8 +78,8 @@ void SceneBase::_call_unload() {
     post_unload();
 
     /* Make sure all stages have been destroyed */
-    destroy_all_stages();
-    StageManager::clean_up();
+    destroy_all_stages();       
+    clean_destroyed_stages();
 }
 
 void SceneBase::_call_activate() {

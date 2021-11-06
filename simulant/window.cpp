@@ -172,9 +172,6 @@ bool Window::initialize_assets_and_devices() {
 
         create_defaults();
 
-        register_panel(1, StatsPanel::create(this));
-        register_panel(2, PartitionerPanel::create(this));
-
         initialized_ = true;
     }
 
@@ -274,6 +271,18 @@ void Window::set_has_context(bool value) {
     has_context_ = value;
 }
 
+void Window::create_panels() {
+    auto panels = panels_;
+    for(auto p: panels) {
+        unregister_panel(p.first);
+    }
+    panels.clear();
+
+    S_DEBUG("Recreating panels");
+    register_panel(1, StatsPanel::create(this));
+    register_panel(2, PartitionerPanel::create(this));
+}
+
 /**
  * @brief Window::reset
  *
@@ -285,21 +294,13 @@ void Window::reset() {
 
     application->idle->execute(); //Execute any idle tasks before we go deleting things
 
-    auto panels = panels_;
-    for(auto p: panels) {
-        unregister_panel(p.first);
-    }
-    panels.clear();
-
     compositor_->destroy_all_pipelines();
     compositor_->clean_up();
 
     S_DEBUG("Recreating defaults");
     create_defaults();
 
-    S_DEBUG("Recreating panels");
-    register_panel(1, StatsPanel::create(this));
-    register_panel(2, PartitionerPanel::create(this));
+    create_panels();
 }
 
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {

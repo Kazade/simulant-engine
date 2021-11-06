@@ -11,7 +11,7 @@ class RigTests : public test::SimulantTestCase {
 public:
     void set_up() {
         test::SimulantTestCase::set_up();
-        stage_ = new_stage();
+        stage_ = scene->new_stage();
     }
 
     void tear_down() {

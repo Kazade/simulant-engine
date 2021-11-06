@@ -13,14 +13,14 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = new_stage();
+        stage = scene->new_stage();
         camera = stage->new_camera();
 
         pipeline = window->compositor->render(stage, camera);
     }
 
     void tear_down() {
-        destroy_stage(stage->id());
+        scene->destroy_stage(stage->id());
         pipeline->destroy();
     }
 

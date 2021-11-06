@@ -47,10 +47,16 @@ bool StatsPanel::init() {
 
     ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
     pipeline_ = window_->compositor->render(
-        stage_, ui_camera_
+        stage_.get(), ui_camera_
     )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     pipeline_->set_name("stats_pipeline");
     pipeline_->deactivate();
+
+    /* If the pipeline is destroyed, make sure
+     * we don't keep a reference around */
+    pipeline_->signal_destroyed().connect([&]() {
+        pipeline_ = nullptr;
+    });
 
     auto overlay = stage_;
 

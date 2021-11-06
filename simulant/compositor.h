@@ -34,13 +34,6 @@
 
 namespace smlt {
 
-struct RenderOptions {
-    bool wireframe_enabled;
-    bool texture_enabled;
-    bool backface_culling_enabled;
-    uint8_t point_size;
-};
-
 class Compositor:
     public RefCounted<Compositor> {
 
@@ -77,12 +70,10 @@ public:
     void set_renderer(Renderer *renderer);
 
     void run();
-    void clean_up();
+    void clean_destroyed_pipelines();
 
     sig::signal<void (Pipeline&)>& signal_pipeline_started() { return signal_pipeline_started_; }
     sig::signal<void (Pipeline&)>& signal_pipeline_finished() { return signal_pipeline_finished_; }
-
-    RenderOptions render_options;
 
     void destroy_object(PipelinePtr pipeline) {
         destroy_pipeline(pipeline->name());

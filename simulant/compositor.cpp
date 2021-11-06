@@ -37,11 +37,6 @@ Compositor::Compositor(Window *window):
     window_(window),
     renderer_(window->renderer.get()) {
 
-    //Set up the default render options
-    render_options.wireframe_enabled = false;
-    render_options.texture_enabled = true;
-    render_options.backface_culling_enabled = true;
-    render_options.point_size = 1;
 }
 
 Compositor::~Compositor() {
@@ -82,6 +77,7 @@ bool Compositor::destroy_pipeline(const std::string& name) {
      * anyway on the next render, this just makes sure that the stage for example
      * doesn't think it's part of an active pipeline until then */
     pip->deactivate();
+    pip->destroy();
 
     return true;
 }
@@ -89,6 +85,7 @@ bool Compositor::destroy_pipeline(const std::string& name) {
 void Compositor::destroy_pipeline_immediately(const std::string& name) {
     auto pip = find_pipeline(name);
     pip->deactivate();
+    pip->destroy();
 
     queued_for_destruction_.erase(pip);
     ordered_pipelines_.remove(pip);
@@ -98,14 +95,21 @@ void Compositor::destroy_pipeline_immediately(const std::string& name) {
     });
 }
 
-void Compositor::clean_up() {
+void Compositor::clean_destroyed_pipelines() {
     for(auto pip: queued_for_destruction_) {
         pip->deactivate();
-        ordered_pipelines_.remove(pip);
 
-        auto name = pip->name();
-        pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
-            return pip->name() == name;
+#ifndef NDEBUG
+        auto c = ordered_pipelines_.size();
+#endif
+        ordered_pipelines_.remove(pip);
+#ifndef NDEBUG
+        assert(ordered_pipelines_.size() < c);
+#endif
+
+        auto id = pip->id_;
+        pool_.remove_if([id](const Pipeline::ptr& pip) -> bool {
+            return pip->id_ == id;
         });
     }
     queued_for_destruction_.clear();
@@ -137,6 +141,11 @@ PipelinePtr Compositor::new_pipeline(
     const std::string& name, StagePtr stage, CameraPtr camera,
     const Viewport& viewport, TextureID target, int32_t priority) {
 
+    if(has_pipeline(name)) {
+        S_WARN("Tried to create a duplicate pipeline");
+        return PipelinePtr();
+    }
+
     auto pipeline = Pipeline::create(
         this, name, stage, camera
     );
@@ -162,7 +171,7 @@ void Compositor::set_renderer(Renderer* renderer) {
 }
 
 void Compositor::run() {
-    clean_up();  /* Clean up any destroyed pipelines before rendering */
+    clean_destroyed_pipelines();  /* Clean up any destroyed pipelines before rendering */
 
     targets_rendered_this_frame_.clear();
 

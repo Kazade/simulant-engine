@@ -82,7 +82,7 @@ public:
     void destroy_object_immediately(Stage* object);
 
 protected:
-    void clean_up();
+    void clean_destroyed_stages();
 
     typedef Polylist<StageNode, Stage> StagePool;
     typedef StageNodeManager<StagePool, StageID, Stage> StageList;

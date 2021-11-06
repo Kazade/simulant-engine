@@ -14,7 +14,7 @@ class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto actor = stage->new_actor();
         auto camera = stage->new_camera();
 
@@ -46,7 +46,7 @@ class SphericalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto actor = stage->new_actor();
         auto camera = stage->new_camera();
 

@@ -9,7 +9,8 @@ namespace smlt {
 
 bool Panel::init() {
     auto node_pool = get_app()->stage_node_pool.get();
-    stage_ = std::make_shared<Stage>(nullptr, node_pool, smlt::PARTITIONER_NULL);
+    stage_ = Stage::create(nullptr, node_pool, smlt::PARTITIONER_NULL);
+
     return true;
 }
 

@@ -117,7 +117,7 @@ void StageManager::update(float dt) {
     }
 }
 
-void StageManager::clean_up() {
+void StageManager::clean_destroyed_stages() {
     manager_->clean_up();
 }
 

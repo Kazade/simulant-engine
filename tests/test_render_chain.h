@@ -13,7 +13,7 @@ class RenderChainTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_usage() {
         Viewport view;
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
         auto cam = stage->new_camera();
         TextureID tex = application->shared_assets->new_texture(256, 256);
 

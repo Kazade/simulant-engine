@@ -11,7 +11,7 @@ using namespace smlt;
 class MeshSilhouetteTests : public smlt::test::SimulantTestCase {
 public:
     void test_directional_silhouette_generation() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
@@ -24,7 +24,7 @@ public:
     }
 
     void test_point_silhouette_generation() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
@@ -37,7 +37,7 @@ public:
     }
 
     void test_out_of_range_generates_none() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);

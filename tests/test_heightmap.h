@@ -10,7 +10,7 @@ using namespace smlt;
 class HeightmapTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         /* Invalid path should return NULL */
         auto test1 = stage->assets->new_mesh_from_heightmap("junk_path", HeightmapSpecification());
@@ -27,7 +27,7 @@ public:
     }
 
     void test_height_at_xz_big() {
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         std::vector<uint8_t> heightmap_data(64 * 64, 0);
 
@@ -58,7 +58,7 @@ public:
 
         HeightmapSpecification spec;
 
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
@@ -111,7 +111,7 @@ public:
 
         HeightmapSpecification spec;
 
-        auto stage = new_stage();
+        auto stage = scene->new_stage();
 
         auto tex = stage->assets->new_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);

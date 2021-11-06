@@ -48,11 +48,10 @@ public:
 
         physics = behaviours::RigidBodySimulation::create(application->time_keeper);
         physics->set_gravity(Vec3());
-        stage = new_stage();
+        stage = scene->new_stage();
     }
 
     void tear_down() {
-        destroy_all_stages();
         physics.reset();
         SimulantTestCase::tear_down();
     }

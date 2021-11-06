@@ -34,6 +34,8 @@ public:
     TypedDestroyableObject(Owner* owner):
         owner_(owner) {}
 
+    virtual ~TypedDestroyableObject() {}
+
     void destroy() override {
         signal_destroyed()();
         owner_->destroy_object((T*) this);
