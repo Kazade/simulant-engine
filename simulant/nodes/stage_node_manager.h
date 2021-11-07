@@ -83,7 +83,12 @@ public:
     bool destroy(const IDType& id) {
         auto it = pool_->find(id.value());
         if(it != pool_->end()) {
-            get(id)->is_marked_for_destruction_ = true;
+            /* Ensure we fire the destroyed signal */
+            if(!(*it)->destroyed_) {
+                (*it)->signal_destroyed()();
+                (*it)->destroyed_ = true;
+            }
+
             queued_for_destruction_.insert(id);
             return true;
         } else {
@@ -104,6 +109,13 @@ public:
         auto it = pool_->find(id.value());
         if(it != pool_->end()) {
             StageNode* node = *it;
+
+            /* Ensure we fire the destroyed signal */
+            if(!(*it)->destroyed_) {
+                (*it)->signal_destroyed()();
+                (*it)->destroyed_ = true;
+            }
+
             T* a = dynamic_cast<T*>(node);
             assert((node && a) || (!node && !a));
 
@@ -132,15 +144,6 @@ public:
             }
         }
         queued_for_destruction_.clear();
-    }
-
-    bool is_marked_for_destruction(const IDType& id) const {
-        auto obj = get(id);
-        if(obj) {
-            return obj->is_marked_for_destruction_;
-        }
-
-        return false;
     }
 
     std::size_t size() const {

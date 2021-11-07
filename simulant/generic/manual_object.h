@@ -13,7 +13,8 @@ class DestroyableObject {
     template<typename PolyType, typename IDType, typename T, typename ...SubTypes>
     friend class StageNodeManager;
 
-    bool is_marked_for_destruction_ = false;
+protected:
+    bool destroyed_ = false;
 
 public:
     virtual ~DestroyableObject() {}
@@ -21,8 +22,8 @@ public:
     virtual void destroy() = 0;
     virtual void destroy_immediately() = 0;
 
-    bool is_marked_for_destruction() const {
-        return is_marked_for_destruction_;
+    bool is_destroyed() const {
+        return destroyed_;
     }
 };
 
@@ -31,19 +32,31 @@ class Stage;
 template<typename T, typename Owner>
 class TypedDestroyableObject : public virtual DestroyableObject {
 public:
+    friend Owner;
+
     TypedDestroyableObject(Owner* owner):
         owner_(owner) {}
 
-    virtual ~TypedDestroyableObject() {}
+    virtual ~TypedDestroyableObject() {
+        if(!destroyed_) {
+            signal_destroyed()();
+        }
+    }
 
     void destroy() override {
-        signal_destroyed()();
-        owner_->destroy_object((T*) this);
+        if(!destroyed_) {
+            signal_destroyed()();
+            destroyed_ = true;
+            owner_->destroy_object((T*) this);
+        }
     }
 
     void destroy_immediately() override {
-        signal_destroyed()();
-        owner_->destroy_object_immediately((T*) this);
+        if(!destroyed_) {
+            signal_destroyed()();
+            destroyed_ = true;
+            owner_->destroy_object_immediately((T*) this);
+        }
     }
 
 private:
