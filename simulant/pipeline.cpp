@@ -56,7 +56,14 @@ DetailLevel Pipeline::detail_level_at_distance(float dist) const {
 }
 
 PipelinePtr Pipeline::set_camera(CameraPtr c) {
+    camera_destroy_.disconnect();
     camera_ = c;
+    if(camera_) {
+        camera_destroy_ = camera_->signal_destroyed().connect([&]() {
+            camera_ = nullptr;
+            camera_destroy_.disconnect();
+        });
+    }
     return this;
 }
 
@@ -76,7 +83,7 @@ Pipeline::~Pipeline() {
 }
 
 CameraPtr Pipeline::camera() const {
-    return stage()->camera(camera_);
+    return camera_;
 }
 
 StagePtr Pipeline::stage() const {
@@ -120,10 +127,19 @@ void Pipeline::set_stage(StagePtr stage) {
         stage_->active_pipeline_count_--;
     }
 
+    stage_destroy_.disconnect();
+
     stage_ = stage;
 
-    if(stage_&& is_active()) {
-        stage_->active_pipeline_count_++;
+    if(stage_) {
+        stage_destroy_ = stage->signal_destroyed().connect([&]() {
+            stage_ = nullptr;
+            stage_destroy_.disconnect();
+        });
+
+        if(is_active()) {
+            stage_->active_pipeline_count_++;
+        }
     }
 }
 
