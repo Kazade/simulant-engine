@@ -22,6 +22,7 @@
 #include "../stage.h"
 #include "../window.h"
 #include "../pipeline.h"
+#include "../application.h"
 
 namespace smlt {
 
@@ -31,7 +32,6 @@ SceneBase::SceneBase(Window *window):
     input_(window->input.get()),
     app_(window->application),
     compositor_(window->compositor) {
-
 }
 
 SceneBase::~SceneBase() {

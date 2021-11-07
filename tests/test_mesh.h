@@ -105,6 +105,8 @@ public:
     }
 
     void test_mesh_garbage_collection() {
+        assert_false(stage_->is_destroyed());
+
         auto initial = stage_->assets->mesh_count();
 
         auto mesh1 = generate_test_mesh(stage_);
@@ -114,10 +116,12 @@ public:
         actor->set_mesh(mesh2);
 
         stage_->assets->run_garbage_collection();
+        assert_false(stage_->is_destroyed());
 
         assert_equal(stage_->assets->mesh_count(), initial + 1);
 
         stage_->destroy_actor(actor->id());
+        assert_false(stage_->is_destroyed());
 
         application->run_frame();
 

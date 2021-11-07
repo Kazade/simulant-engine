@@ -35,7 +35,6 @@ public:
         manager.destroy(obj->id());
 
         assert_is_not_null(manager.get(obj->id()));
-        assert_true(manager.is_marked_for_destruction(obj->id()));
         assert_equal(manager.size(), 1u); // Still there
         assert_true(manager.contains(obj->id()));
 
@@ -44,7 +43,6 @@ public:
         manager.clean_up();
 
         assert_is_null(manager.get(id));
-        assert_false(manager.is_marked_for_destruction(id));
         assert_equal(manager.size(), 0u); // Gone
         assert_false(manager.contains(id));
     }
@@ -168,14 +166,14 @@ public:
     void test_stages_are_freed() {
         auto count = scene->stage_count();
 
-        auto stage = scene->new_stage()->id();
+        auto stage = scene->new_stage();
 
         assert_equal(scene->stage_count(), count + 1);
 
         scene->destroy_stage(stage);
 
+        assert_true(stage->is_destroyed());
         assert_equal(scene->stage_count(), count + 1);
-
         application->run_frame();
 
         assert_equal(scene->stage_count(), count);

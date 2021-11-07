@@ -41,6 +41,8 @@ class StageNodeManager;
 class StageManager:
     public virtual Updateable {
 
+    friend class Application;  // So we can call clean_destroyed_stages regularly
+
     DEFINE_SIGNAL(StageAddedSignal, signal_stage_added);
     DEFINE_SIGNAL(StageRemovedSignal, signal_stage_removed);
 

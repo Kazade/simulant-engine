@@ -204,18 +204,18 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
      */
     uint64_t frame_id = generate_frame_id();
 
+    if(!pipeline_stage->is_complete()) {
+        return;
+    }
+
     if(!pipeline_stage->is_active()) {
+        S_DEBUG("Stage or camera has been destroyed, disabling pipeline");
+        pipeline_stage->deactivate();
         return;
     }
 
     auto stage = pipeline_stage->stage();
     auto camera = pipeline_stage->camera();
-
-    if(!stage || !camera) {
-        S_DEBUG("Stage or camera has been destroyed, disabling pipeline");
-        pipeline_stage->deactivate();
-        return;
-    }
 
     RenderTarget& target = *window_; //FIXME: Should be window or texture
 

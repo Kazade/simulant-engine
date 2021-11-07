@@ -90,7 +90,7 @@ SceneBase::ptr SceneManager::active_scene() const {
 void SceneManager::unload(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
-        auto scene = it->second;
+        std::shared_ptr<SceneBase> scene = it->second;
         scene->_call_unload();
         if(scene->destroy_on_unload()) {
             /* Destroy the scene once it's been unloaded but do
@@ -98,11 +98,10 @@ void SceneManager::unload(const std::string& route) {
              * from unload can happen before we destroy the scene
              */
 
-            get_app()->idle->add_once([this, route, scene]() {
-                auto it = routes_.find(route);
-                if(it != routes_.end() && it->second == scene) {
-                    routes_.erase(it);
-                }
+            routes_.erase(routes_.find(route));
+
+            get_app()->idle->add_once([scene]() {
+                _S_UNUSED(scene);
             });
         }
     }

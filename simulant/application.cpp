@@ -578,6 +578,12 @@ void Application::update_idle_tasks_and_coroutines() {
     idle_->execute();
     update_coroutines();
     signal_post_idle_();
+
+    // House keeping
+    auto s = scenes->active_scene();
+    if(s) {
+        s->clean_destroyed_stages();
+    }
 }
 
 void Application::update_coroutines() {
