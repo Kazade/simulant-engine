@@ -41,6 +41,8 @@ public:
     std::size_t sprite_count() const;
     void destroy_all();
 
+    void destroy_object(Sprite* skybox);
+    void destroy_object_immediately(Sprite* skybox);
 private:
     Stage* stage_ = nullptr;
     sig::connection clean_up_conn_;

@@ -32,7 +32,8 @@ public:
 
 class SkyManager;
 
-class Skybox :
+class Skybox:
+    public TypedDestroyableObject<Skybox, SkyManager>,
     public generic::Identifiable<SkyID>,
     public ContainerNode,
     public ChainNameable<Skybox> {

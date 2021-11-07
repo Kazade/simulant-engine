@@ -74,4 +74,14 @@ std::size_t SpriteManager::sprite_count() const {
     return sprite_manager_->size();
 }
 
+void SpriteManager::destroy_object(Sprite* sprite) {
+    auto id = sprite->id();
+    sprite_manager_->destroy(id);
+}
+
+void SpriteManager::destroy_object_immediately(Sprite* sprite) {
+    auto id = sprite->id();
+    sprite_manager_->destroy_immediately(id);
+}
+
 }

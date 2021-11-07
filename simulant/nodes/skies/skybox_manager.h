@@ -64,6 +64,9 @@ public:
     void destroy_skybox(SkyID skybox_id);
 
     Property<Stage* SkyManager::*> stage = { this, &SkyManager::stage_ };
+
+    void destroy_object(Skybox* skybox);
+    void destroy_object_immediately(Skybox* skybox);
 private:
     Stage* stage_ = nullptr;
 

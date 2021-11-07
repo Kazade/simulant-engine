@@ -10,6 +10,7 @@
 namespace smlt {
 
 Skybox::Skybox(SkyManager* manager):
+    TypedDestroyableObject<Skybox, SkyManager>(manager),
     ContainerNode(&(Stage&)manager->stage, STAGE_NODE_TYPE_OTHER),
     manager_(manager) {
 

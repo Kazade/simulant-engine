@@ -149,4 +149,14 @@ void SkyManager::destroy_skybox(SkyID skybox_id) {
     sky_manager_->destroy(skybox_id);
 }
 
+void SkyManager::destroy_object(Skybox* skybox) {
+    auto id = skybox->id();
+    sky_manager_->destroy(id);
+}
+
+void SkyManager::destroy_object_immediately(Skybox* skybox) {
+    auto id = skybox->id();
+    sky_manager_->destroy_immediately(id);
+}
+
 }
