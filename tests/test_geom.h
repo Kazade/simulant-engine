@@ -1,5 +1,6 @@
 #pragma once
 
+#include <simulant/simulant.h>
 #include <simulant/test.h>
 #include "../simulant/nodes/geom.h"
 
