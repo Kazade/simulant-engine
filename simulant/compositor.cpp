@@ -204,11 +204,11 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
      */
     uint64_t frame_id = generate_frame_id();
 
-    if(!pipeline_stage->is_complete()) {
+    if(!pipeline_stage->is_active()) {
         return;
     }
 
-    if(!pipeline_stage->is_active()) {
+    if(!pipeline_stage->is_complete()) {
         S_DEBUG("Stage or camera has been destroyed, disabling pipeline");
         pipeline_stage->deactivate();
         return;
