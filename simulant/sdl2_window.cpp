@@ -96,7 +96,7 @@ int event_filter(void* user_data, SDL_Event* event) {
 
     switch(event->type) {
         case SDL_APP_TERMINATING:
-            _this->stop_running();
+            get_app()->stop_running();
         break;
         case SDL_APP_WILLENTERBACKGROUND: {
             std::string sdl_err = SDL_GetError();
@@ -107,7 +107,7 @@ int event_filter(void* user_data, SDL_Event* event) {
             S_INFO("Application is entering the background, disabling rendering");
 
 
-            _this->set_paused(true);
+            _this->set_has_focus(false);
             {
                 //See Window::context_lock_ for details
                 thread::Lock<thread::Mutex> context_lock(_this->context_lock());
@@ -127,7 +127,7 @@ int event_filter(void* user_data, SDL_Event* event) {
                 _this->set_has_context(true);
             }
             //FIXME: Reload textures and shaders
-            _this->set_paused(false);
+            _this->set_has_focus(true);
         } break;
         default:
             break;
@@ -173,7 +173,7 @@ void SDL2Window::check_events() {
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
             case SDL_QUIT:
-                stop_running();
+                get_app()->stop_running();
                 break;
 
             case SDL_JOYAXISMOTION: {
@@ -263,11 +263,11 @@ void SDL2Window::check_events() {
                  * see a maximize without a restore */
                 switch(event.window.event) {
                     case SDL_WINDOWEVENT_MINIMIZED:
-                        set_paused(true);
+                        set_has_focus(false);
                     break;
                     case SDL_WINDOWEVENT_RESTORED:
                     case SDL_WINDOWEVENT_MAXIMIZED:
-                        set_paused(false);
+                        set_has_focus(true);
                     break;
                     default:
                         break;

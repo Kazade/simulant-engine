@@ -1,4 +1,4 @@
-
+#include "ui_manager.h"
 #include "button.h"
 
 namespace smlt {

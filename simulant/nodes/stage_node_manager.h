@@ -13,6 +13,8 @@
 #include "ui/label.h"
 #include "ui/progress_bar.h"
 
+#define STAGE_NODE_MANAGER_DEBUG 0
+
 namespace smlt {
 
 
@@ -67,7 +69,9 @@ public:
     T* get(const IDType& id) const {
         StageNode* node = (*pool_)[id.value()];
         T* result = dynamic_cast<T*>(node);
+#if STAGE_NODE_MANAGER_DEBUG
         assert((node && result) || (!node && !result));
+#endif
         return result;
     }
 
@@ -79,7 +83,12 @@ public:
     bool destroy(const IDType& id) {
         auto it = pool_->find(id.value());
         if(it != pool_->end()) {
-            get(id)->is_marked_for_destruction_ = true;
+            /* Ensure we fire the destroyed signal */
+            if(!(*it)->destroyed_) {
+                (*it)->signal_destroyed()();
+                (*it)->destroyed_ = true;
+            }
+
             queued_for_destruction_.insert(id);
             return true;
         } else {
@@ -100,6 +109,13 @@ public:
         auto it = pool_->find(id.value());
         if(it != pool_->end()) {
             StageNode* node = *it;
+
+            /* Ensure we fire the destroyed signal */
+            if(!(*it)->destroyed_) {
+                (*it)->signal_destroyed()();
+                (*it)->destroyed_ = true;
+            }
+
             T* a = dynamic_cast<T*>(node);
             assert((node && a) || (!node && !a));
 
@@ -128,15 +144,6 @@ public:
             }
         }
         queued_for_destruction_.clear();
-    }
-
-    bool is_marked_for_destruction(const IDType& id) const {
-        auto obj = get(id);
-        if(obj) {
-            return obj->is_marked_for_destruction_;
-        }
-
-        return false;
     }
 
     std::size_t size() const {

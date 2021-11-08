@@ -22,6 +22,7 @@
 #include "../../window.h"
 #include "../stage_node_manager.h"
 #include "../../viewport.h"
+#include "../../application.h"
 
 namespace smlt {
 namespace ui {
@@ -29,12 +30,12 @@ namespace ui {
 using namespace std::placeholders;
 
 UIManager::UIManager(Stage *stage, StageNodePool *pool):
-    stage_(stage),
-    window_(stage->window.get()){
+    stage_(stage) {
 
     manager_.reset(new WidgetManager(pool));
 
-    window_->register_event_listener(this);
+    auto window = get_app()->window.get();
+    window->register_event_listener(this);
 
     /* Each time the stage is rendered with a camera and viewport, we need to process any queued events
      * so that (for example) we can interact with the same widget rendered to different viewports */
@@ -43,7 +44,7 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool):
     });
 
     /* We clear queued events at the end of each frame */
-    frame_finished_connection_ = window_->signal_frame_finished().connect([this]() {
+    frame_finished_connection_ = get_app()->signal_frame_finished().connect([this]() {
         this->clear_event_queue();
     });
 }
@@ -55,7 +56,12 @@ UIManager::~UIManager() {
 
     pre_render_connection_.disconnect();
     frame_finished_connection_.disconnect();
-    window_->unregister_event_listener(this);
+
+    auto window = get_app()->window.get();
+
+    if(window) {
+        window->unregister_event_listener(this);
+    }
 }
 
 Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {
@@ -199,12 +205,14 @@ void UIManager::clear_event_queue() {
 WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
     WidgetPtr result = nullptr;
 
+    auto window = get_app()->window.get();
+
     for(auto widget: *manager_) {
         auto aabb = widget->transformed_aabb();
         std::vector<Vec3> ss_points;
 
         for(auto& corner: aabb.corners()) {
-            ss_points.push_back(camera->project_point(*window_, viewport, corner).value());
+            ss_points.push_back(camera->project_point(*window, viewport, corner).value());
         }
 
         AABB ss_aabb(&ss_points[0], ss_points.size());

@@ -43,6 +43,7 @@
 #include "asset_manager.h"
 
 #include "macros.h"
+#include "stage_manager.h"
 
 namespace smlt {
 
@@ -83,12 +84,12 @@ typedef sig::signal<void (MeshInstancerID)> MeshInstancerDestroyedSignal;
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
 class Stage:
-    public TypedDestroyableObject<Stage, Window>,
+    public TypedDestroyableObject<Stage, StageManager>,
     public ContainerNode,
     public generic::Identifiable<StageID>,
     public Loadable,
-    public virtual WindowHolder,
-    public ChainNameable<Stage> {
+    public ChainNameable<Stage>,
+    public RefCounted<Stage> {
 
     DEFINE_SIGNAL(MeshInstancerCreatedSignal, signal_mesh_instancer_created);
     DEFINE_SIGNAL(MeshInstancerDestroyedSignal, signal_mesh_instancer_destroyed);
@@ -101,7 +102,7 @@ class Stage:
 
 public:
     Stage(
-        Window *parent,
+        StageManager *parent,
         StageNodePool* node_pool,
         AvailablePartitioner partitioner
     );

@@ -23,6 +23,7 @@
 #include "sound.h"
 #include "sound_driver.h"
 #include "nodes/stage_node.h"
+#include "application.h"
 
 namespace smlt {
 
@@ -72,7 +73,6 @@ PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, Audi
     sound_(sound),
     loop_stream_(loop_stream),
     is_dead_(false) {
-
 
     SoundDriver* driver = parent_._sound_driver();
 
@@ -303,7 +303,7 @@ void AudioSource::set_gain(RangeValue<0, 1> gain) {
 }
 
 SoundDriver *AudioSource::_sound_driver() const {
-    return (window_) ? window_->_sound_driver() : driver_;
+    return get_app()->sound_driver.get();
 }
 
 uint8_t AudioSource::playing_sound_count() const {

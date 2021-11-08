@@ -22,6 +22,7 @@
 #include "partitioner.h"
 #include "debug.h"
 #include "viewport.h"
+#include "application.h"
 
 #include "nodes/actor.h"
 #include "nodes/light.h"
@@ -45,16 +46,19 @@ namespace smlt {
 // Apparently this is the colour of a high noon sun (colour temp 5400 - 255, 255, 251)
 const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
-Stage::Stage(Window *parent, StageNodePool *node_pool, AvailablePartitioner partitioner):
-    WindowHolder(parent),
-    TypedDestroyableObject<Stage, Window>(parent),
+static inline SoundDriver* sound_driver() {
+    return get_app()->sound_driver.get();
+}
+
+Stage::Stage(StageManager *parent, StageNodePool *node_pool, AvailablePartitioner partitioner):
+    TypedDestroyableObject<Stage, StageManager>(parent),
     ContainerNode(this, STAGE_NODE_TYPE_STAGE),
     node_pool_(node_pool),
     ui_(new ui::UIManager(this, node_pool_)),
-    asset_manager_(LocalAssetManager::create(parent, parent->shared_assets.get())),
+    asset_manager_(LocalAssetManager::create(get_app()->shared_assets.get())),
     geom_manager_(new GeomManager(node_pool_)),
-    sky_manager_(new SkyManager(parent, this, node_pool_)),
-    sprite_manager_(new SpriteManager(parent, this, node_pool_)),
+    sky_manager_(new SkyManager(this, node_pool_)),
+    sprite_manager_(new SpriteManager(this, node_pool_)),
     mesh_instancer_manager_(new MeshInstancerManager(node_pool_)),
     actor_manager_(new ActorManager(node_pool_)),
     particle_system_manager_(new ParticleSystemManager(node_pool_)),
@@ -63,12 +67,14 @@ Stage::Stage(Window *parent, StageNodePool *node_pool, AvailablePartitioner part
 
     set_partitioner(partitioner);
 
-    clean_up_signal_ = parent->signal_post_idle().connect(
+    clean_up_signal_ = get_app()->signal_post_idle().connect(
         std::bind(&Stage::clean_up_dead_objects, this)
     );
 }
 
 Stage::~Stage() {
+    clean_up_signal_.disconnect();
+
     // Composite things first
     sprite_manager_.reset();
     sky_manager_.reset();
@@ -114,7 +120,7 @@ ActorPtr Stage::new_actor() {
 
     using namespace std::placeholders;
 
-    auto a = actor_manager_->make(this, window->_sound_driver());
+    auto a = actor_manager_->make(this, get_app()->sound_driver);
 
     a->set_parent(this);
 
@@ -140,7 +146,7 @@ ActorPtr Stage::new_actor_with_name(const std::string& name) {
 ActorPtr Stage::new_actor_with_mesh(MeshID mid) {
     using namespace std::placeholders;
 
-    auto a = actor_manager_->make(this, window->_sound_driver());
+    auto a = actor_manager_->make(this, sound_driver());
     a->set_parent(this);
 
     auto id = a->id();
@@ -214,7 +220,7 @@ MeshInstancerPtr Stage::new_mesh_instancer(MeshID mid) {
     auto mesh = asset_manager_->mesh(mid);
 
     auto instance = mesh_instancer_manager_->make(
-        this, window->_sound_driver(), mesh
+        this, sound_driver(), mesh
     );
 
     instance->set_parent(this);
@@ -253,7 +259,7 @@ bool Stage::has_mesh_instancer(MeshInstancerID mid) const {
 }
 
 CameraPtr Stage::new_camera() {
-    auto new_camera = camera_manager_->make(this, window->_sound_driver());
+    auto new_camera = camera_manager_->make(this, sound_driver());
     new_camera->set_parent(this);
     return new_camera;
 }
@@ -266,11 +272,11 @@ CameraPtr Stage::new_camera_with_orthographic_projection(double left, double rig
     auto new_cam = new_camera();
 
     if(!left && !right) {
-        right = window->width();
+        right = get_app()->window->width();
     }
 
     if(!bottom && !top) {
-        top = window->height();
+        top = get_app()->window->height();
     }
 
     new_cam->set_orthographic_projection(left, right, bottom, top, near, far);
@@ -289,7 +295,10 @@ CameraPtr Stage::new_camera_for_viewport(const Viewport& vp) {
 }
 
 CameraPtr Stage::new_camera_for_ui() {
-    return new_camera_with_orthographic_projection(0, window->width(), 0, window->height(), -1, 1);
+    return new_camera_with_orthographic_projection(
+        0, get_app()->window->width(),
+        0, get_app()->window->height(), -1, 1
+    );
 }
 
 CameraPtr Stage::camera(CameraID c) {
@@ -327,7 +336,7 @@ GeomPtr Stage::geom(const GeomID gid) const {
 
 GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation, const Vec3& scale, const GeomCullerOptions& culler_options) {
     auto gid = geom_manager_->make(
-        this, window->_sound_driver(),
+        this, sound_driver(),
         mid, position, rotation, scale,
         culler_options
     );
@@ -358,7 +367,7 @@ std::size_t Stage::geom_count() const {
 ParticleSystemPtr Stage::new_particle_system(ParticleScriptID particle_script) {
     auto p = particle_system_manager_->make(
         this,
-        window->_sound_driver(),
+        sound_driver(),
         assets->particle_script(particle_script)
     );
 

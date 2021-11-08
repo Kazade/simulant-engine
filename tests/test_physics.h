@@ -46,13 +46,12 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        physics = behaviours::RigidBodySimulation::create(window->time_keeper);
+        physics = behaviours::RigidBodySimulation::create(application->time_keeper);
         physics->set_gravity(Vec3());
-        stage = window->new_stage();
+        stage = scene->new_stage();
     }
 
     void tear_down() {
-        window->destroy_all_stages();
         physics.reset();
         SimulantTestCase::tear_down();
     }
@@ -206,7 +205,7 @@ public:
         actor2->destroy();
 
         // Run cleanup
-        window->run_frame();
+        application->run_frame();
 
         assert_true(leave_called);
 
@@ -232,19 +231,19 @@ public:
         assert_false(stay_count);
 
         physics->fixed_update(1.0f / 60.0f);
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stay_count, 1u);
 
         physics->fixed_update(1.0f / 60.0f);
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stay_count, 2u);
 
         actor2->destroy();
 
         physics->fixed_update(1.0f / 60.0f);
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stay_count, 1u);
 

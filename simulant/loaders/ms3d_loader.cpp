@@ -6,6 +6,7 @@
 #include "../window.h"
 #include "../assets/meshes/skeleton.h"
 #include "../platform.h"
+#include "../application.h"
 
 namespace smlt {
 namespace loaders {
@@ -322,7 +323,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     );
 
     auto dir = kfs::path::dir_name(filename_.str());
-    bool remove_path = assets->window->vfs->add_search_path(dir);
+    bool remove_path = get_app()->vfs->add_search_path(dir);
 
     auto vdata = mesh->vertex_data.get();
 
@@ -434,7 +435,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     vdata->done();
 
     if(remove_path) {
-        assets->window->vfs->remove_search_path(dir);
+        get_app()->vfs->remove_search_path(dir);
     }
 
     auto to_quaternion = [](const Vec3& angles) -> Quaternion {

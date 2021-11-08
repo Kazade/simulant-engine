@@ -9,7 +9,7 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage();
+        stage_ = new_stage();
         camera_ = stage_->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
 
         auto pipeline = compositor->render(

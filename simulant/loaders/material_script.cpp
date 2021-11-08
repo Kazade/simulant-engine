@@ -27,7 +27,8 @@
 #include "../renderers/renderer.h"
 #include "../generic/raii.h"
 #include "../window.h"
-
+#include "../application.h"
+#include "../vfs.h"
 #include "../utils/json.h"
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
@@ -218,9 +219,7 @@ void MaterialScript::generate(Material& material) {
 
     material.set_pass_count(json["passes"]->size());
 
-    /* Feels dirty... */
-    Window* window = material.asset_manager().window;
-    Renderer* renderer = window->renderer;
+    Renderer* renderer = get_app()->window->renderer;
 
     assert(json->has_key("passes"));
 
@@ -251,14 +250,14 @@ void MaterialScript::generate(Material& material) {
             // Make sure we always remove the search path we add (if it didn't exist before)
             raii::Finally then([&]() {
                 if(added) {
-                    window->vfs->remove_search_path(parent_dir);
+                    get_app()->vfs->remove_search_path(parent_dir);
                 }
             });
 
-            added = window->vfs->add_search_path(parent_dir);
+            added = get_app()->vfs->add_search_path(parent_dir);
 
-            auto vertex_shader = window->vfs->read_file(vertex_shader_path);
-            auto fragment_shader = window->vfs->read_file(fragment_shader_path);
+            auto vertex_shader = get_app()->vfs->read_file(vertex_shader_path);
+            auto fragment_shader = get_app()->vfs->read_file(fragment_shader_path);
 
             auto program = renderer->new_or_existing_gpu_program(
                 std::string{std::istreambuf_iterator<char>(*vertex_shader), std::istreambuf_iterator<char>()},

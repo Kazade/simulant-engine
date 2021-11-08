@@ -1,6 +1,8 @@
 #include "../stage.h"
 #include "camera.h"
 #include "../window.h"
+#include "../application.h"
+#include "../idle_task_manager.h"
 
 namespace smlt {
 
@@ -134,7 +136,7 @@ void StageNode::set_parent(TreeNode* node) {
 }
 
 void StageNode::destroy_after(const Seconds& seconds) {
-    stage_->window->idle->add_timeout_once(
+    get_app()->idle->add_timeout_once(
         seconds, std::bind(&StageNode::destroy, this)
     );
 }

@@ -26,7 +26,7 @@
 
 #include "threads/mutex.h"
 #include "threads/condition.h"
-
+#include "generic/managed.h"
 #include "types.h"
 
 namespace smlt {
@@ -58,9 +58,11 @@ private:
     float value_;
 };
 
-class IdleTaskManager {
+class IdleTaskManager:
+    public RefCounted<IdleTaskManager> {
+
 public:
-    IdleTaskManager(Window& window);
+    IdleTaskManager() = default;
 
     IdleConnectionID add(std::function<bool ()> callback);
     IdleConnectionID add_once(std::function<void ()> callback);
@@ -78,8 +80,6 @@ public:
 private:
     typedef std::map<IdleConnectionID, std::function<bool ()> > SignalMap;
     typedef std::map<IdleConnectionID, std::function<void ()> > SignalOnceMap;
-
-    Window& window_;
 
     SignalMap signals_;
     SignalOnceMap signals_once_;

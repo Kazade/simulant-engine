@@ -56,8 +56,9 @@
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
 #include "nodes/camera.h"
-#include "virtual_gamepad.h"
 #include "platform.h"
+#include "idle_task_manager.h"
+#include "vfs.h"
 
 #include "assets/meshes/skeleton.h"
 #include "assets/meshes/rig.h"

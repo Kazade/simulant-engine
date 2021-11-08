@@ -21,7 +21,7 @@ public:
         smlt::test::SimulantTestCase::set_up();
 
         vbo_manager_ = VBOManager::create();
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
 
         mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh_->new_submesh_as_cube("cube", stage_->assets->new_material(), 1.0f);

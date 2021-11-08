@@ -259,7 +259,7 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
 
     auto stash = info->stream;
 
-    auto& vfs = get_app()->window->vfs;
+    auto& vfs = get_app()->vfs;
 
     auto added = vfs->add_search_path(info->folder);
 

@@ -191,8 +191,6 @@ public:
     std::size_t keyboard_count() const { return keyboard_count_; }
     std::size_t mouse_count() const { return mouse_count_; }
 
-    void init_virtual_joypad();
-
     JoystickAxis linked_axis(JoystickID id, JoystickAxis axis);
 private:
     struct KeyboardState {

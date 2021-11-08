@@ -11,7 +11,7 @@ using namespace smlt;
 class ParticleSystemTests : public test::SimulantTestCase {
 public:
     void test_emitter_duration() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
         ParticleScriptPtr script = stage->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );

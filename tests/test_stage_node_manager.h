@@ -35,7 +35,6 @@ public:
         manager.destroy(obj->id());
 
         assert_is_not_null(manager.get(obj->id()));
-        assert_true(manager.is_marked_for_destruction(obj->id()));
         assert_equal(manager.size(), 1u); // Still there
         assert_true(manager.contains(obj->id()));
 
@@ -44,7 +43,6 @@ public:
         manager.clean_up();
 
         assert_is_null(manager.get(id));
-        assert_false(manager.is_marked_for_destruction(id));
         assert_equal(manager.size(), 0u); // Gone
         assert_false(manager.contains(id));
     }
@@ -54,7 +52,7 @@ public:
     }
 
     void test_actors_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->actor_count();
 
@@ -67,14 +65,14 @@ public:
         // Should be the same, the original actor is still lingering
         assert_equal(stage->actor_count(), count + 1);
 
-        window->run_frame();
+        application->run_frame();
 
         // Back to where we were
         assert_equal(stage->actor_count(), count);
     }
 
     void test_lights_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->light_count();
 
@@ -86,13 +84,13 @@ public:
 
         assert_equal(stage->light_count(), count + 1);
 
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stage->light_count(), count);
     }
 
     void test_particle_systems_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         auto script = stage->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
@@ -109,13 +107,13 @@ public:
 
         assert_equal(stage->particle_system_count(), count + 1);
 
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stage->particle_system_count(), count);
     }
 
     void test_geoms_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
@@ -130,13 +128,13 @@ public:
 
         assert_equal(stage->geom_count(), count + 1);
 
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stage->geom_count(), count);
     }
 
     void test_cameras_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->camera_count();
 
@@ -148,37 +146,37 @@ public:
 
         assert_equal(stage->camera_count(), count + 1);
 
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stage->camera_count(), count);
     }
 
     void test_pipelines_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
         auto pipeline = window->compositor->render(stage, stage->new_camera());
 
         auto name = pipeline->name();
         pipeline->destroy();
         assert_true(window->compositor->has_pipeline(name));
 
-        window->run_frame();
+        application->run_frame();
         assert_false(window->compositor->has_pipeline(name));
     }
 
     void test_stages_are_freed() {
-        auto count = window->pool_.size();
+        auto count = scene->stage_count();
 
-        auto stage = window->new_stage()->id();
+        auto stage = scene->new_stage();
 
-        assert_equal(window->pool_.size(), count + 1);
+        assert_equal(scene->stage_count(), count + 1);
 
-        window->destroy_stage(stage);
+        scene->destroy_stage(stage);
 
-        assert_equal(window->pool_.size(), count + 1);
+        assert_true(stage->is_destroyed());
+        assert_equal(scene->stage_count(), count + 1);
+        application->run_frame();
 
-        window->run_frame();
-
-        assert_equal(window->pool_.size(), count);
+        assert_equal(scene->stage_count(), count);
     }
 
     void test_backgrounds_are_freed() {
@@ -194,7 +192,7 @@ public:
     }
 
     void test_sprites_are_freed() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         auto count = stage->sprites->sprite_count();
 
@@ -207,7 +205,7 @@ public:
 
         assert_true(stage->sprites->sprite_count() >= count + 1);
 
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stage->sprites->sprite_count(), count);
     }

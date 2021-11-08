@@ -8,8 +8,12 @@
 #include "ui_config.h"
 #include "../../generic/containers/polylist.h"
 #include "../stage_node.h"
+#include "../stage_node_pool.h"
 
 namespace smlt {
+
+template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
+class StageNodeManager;
 
 namespace ui {
 
@@ -19,21 +23,7 @@ class Label;
 class ProgressBar;
 class Image;
 
-}
-
-template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
-class StageNodeManager;
-
-typedef Polylist<
-    StageNode,
-    Actor, MeshInstancer, Camera, Geom, Light, ParticleSystem, Sprite,
-    ui::Button, ui::Image, ui::Label, ui::ProgressBar,
-    Skybox
-> StageNodePool;
-
-namespace ui {
-
-typedef StageNodeManager<StageNodePool, WidgetID, Widget, Button, Label, ProgressBar, Image> WidgetManager;
+typedef ::smlt::StageNodeManager<::smlt::StageNodePool, WidgetID, Widget, Button, Label, ProgressBar, Image> WidgetManager;
 
 enum UIEventType {
     UI_EVENT_TYPE_TOUCH
@@ -76,7 +66,6 @@ private:
     friend class ::smlt::Stage;
 
     Stage* stage_ = nullptr;
-    Window* window_ = nullptr;
 
     std::shared_ptr<WidgetManager> manager_;
     UIConfig config_;

@@ -43,7 +43,7 @@ public:
         auto done = std::make_shared<bool>(false);
 
         // While we're loading, continually pulse the progress bar to show that stuff is happening
-        window->idle->add([this, loading, done]() {
+        app->idle->add([this, loading, done]() {
             if(!scenes->has_scene("_loading")) {
                 return false;
             }
@@ -54,7 +54,7 @@ public:
             return !(*done);
         });
 
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         pipeline_ = compositor->render(
             stage_, camera_
@@ -66,7 +66,7 @@ public:
         link_pipeline(pipeline_);
 
         camera_->set_perspective_projection(
-            Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
+            Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0f
         );
 
         auto cam = camera_;

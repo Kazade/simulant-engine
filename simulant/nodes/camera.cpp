@@ -4,6 +4,7 @@
 #include "../stage.h"
 #include "../window.h"
 #include "../viewport.h"
+#include "../application.h"
 
 namespace smlt {
 
@@ -15,7 +16,7 @@ Camera::Camera(Stage *stage, SoundDriver* sound_driver):
 
     assert(stage);
 
-    set_perspective_projection(smlt::Degrees(45.0f), stage->window->aspect_ratio());
+    set_perspective_projection(smlt::Degrees(45.0f), get_app()->window->aspect_ratio());
 }
 
 Camera::~Camera() {

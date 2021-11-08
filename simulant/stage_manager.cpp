@@ -18,8 +18,10 @@
 //
 
 
+#define DEFINE_STAGENODEPOOL
+#include "nodes/stage_node_pool.h"
+
 #include "stage_manager.h"
-#include "window.h"
 #include "application.h"
 #include "stage.h"
 #include "nodes/camera.h"
@@ -33,22 +35,27 @@ namespace smlt {
 
 //=========== START STAGES ==================
 
-StageManager::StageManager(Window* window):
-    window_(window),
-    pool_(4),
-    node_pool_(get_app()->config->general.stage_node_pool_size),
-    manager_(&pool_) {
+StageManager::StageManager():
+    pool_(new StagePool(4)),
+    manager_(new StageList(pool_)) {
 
 }
 
+StageManager::~StageManager() {
+    delete manager_;
+    delete pool_;
+}
+
 StagePtr StageManager::new_stage(AvailablePartitioner partitioner) {
-    auto ret = manager_.make(window_, &node_pool_, partitioner);
+    auto pool = get_app()->stage_node_pool.get();
+
+    auto ret = manager_->make(this, pool, partitioner);
     signal_stage_added_(ret->id());
     return ret;
 }
 
 std::size_t StageManager::stage_count() const {
-    return pool_.size();
+    return pool_->size();
 }
 
 /**
@@ -57,18 +64,18 @@ std::size_t StageManager::stage_count() const {
  */
 
 StagePtr StageManager::stage(StageID s) {
-    return manager_.get(s.value());
+    return manager_->get(s.value());
 }
 
 StagePtr StageManager::destroy_stage(StageID s) {
-    manager_.destroy(s.value());
+    manager_->destroy(s.value());
     signal_stage_removed_(s);
     return nullptr;
 }
 
 void StageManager::fixed_update(float dt) {
     /* safe_each locks the entire loop */
-    for(auto stage: manager_) {
+    for(auto stage: *manager_) {
         if(!stage->is_part_of_active_pipeline()) {
             continue;
         }
@@ -82,7 +89,7 @@ void StageManager::fixed_update(float dt) {
 }
 
 void StageManager::late_update(float dt) {
-    for(auto stage: manager_) {
+    for(auto stage: *manager_) {
         if(!stage->is_part_of_active_pipeline()) {
             continue;
         }
@@ -97,7 +104,7 @@ void StageManager::late_update(float dt) {
 
 void StageManager::update(float dt) {
     //Update the stages
-    for(auto stage: manager_) {
+    for(auto stage: *manager_) {
         if(!stage->is_part_of_active_pipeline()) {
             continue;
         }
@@ -110,16 +117,16 @@ void StageManager::update(float dt) {
     }
 }
 
-void StageManager::clean_up() {
-    manager_.clean_up();
+void StageManager::clean_destroyed_stages() {
+    manager_->clean_up();
 }
 
 bool StageManager::has_stage(StageID stage_id) const {
-    return manager_.contains(stage_id);
+    return manager_->contains(stage_id);
 }
 
 void StageManager::destroy_all_stages() {
-    manager_.destroy_all();
+    manager_->destroy_all();
 }
 
 StageManager::IteratorPair StageManager::each_stage() {
@@ -127,19 +134,19 @@ StageManager::IteratorPair StageManager::each_stage() {
 }
 
 void StageManager::destroy_object(Stage* object) {
-    manager_.destroy(object->id());
+    manager_->destroy(object->id());
 }
 
 void StageManager::destroy_object_immediately(Stage* object) {
-    manager_.destroy_immediately(object->id());
+    manager_->destroy_immediately(object->id());
 }
 
-uint32_t StageManager::stage_node_pool_capacity() const {
-    return node_pool_.capacity();
+std::list<Stage*>::iterator StageManager::IteratorPair::begin() {
+    return owner_->manager_->begin();
 }
 
-uint32_t StageManager::stage_node_pool_capacity_in_bytes() const {
-    return stage_node_pool_capacity() * node_pool_.entry_size;
+std::list<Stage*>::iterator StageManager::IteratorPair::end() {
+    return owner_->manager_->end();
 }
 
 // ============= END STAGES ===========

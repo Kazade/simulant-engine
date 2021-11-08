@@ -33,7 +33,7 @@ namespace scenes {
 
 void Loading::load() {
     //Create a stage
-    stage_ = window->new_stage();
+    stage_ = new_stage();
 
     progress_bar_ = stage_->ui->new_widget_as_progress_bar();
     progress_bar_->resize(window->width() * 0.5f, 8);
@@ -61,7 +61,7 @@ void Loading::load() {
 void Loading::unload() {
     //Clean up
     pipeline_->deactivate();
-    window->destroy_stage(stage_->id());
+    destroy_stage(stage_->id());
 }
 
 void Loading::activate() {

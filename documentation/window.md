@@ -1,16 +1,6 @@
 # The Window
 
-The Window is the root of all things. The Window class controls access to Stages, the Compositor, and asset loading.
-
-## Signals
-
-The following signals are available for the Window class:
-
- - signal<void ()> signal_frame_started();
- - signal<void ()> signal_frame_finished();
- - signal<void ()> signal_pre_swap();
- - signal<void (double)> signal_step();
- - signal<void ()> signal_shutdown();
+The Window class controls access to the Compositor, and Input manager.
 
 ## Platform Information
 

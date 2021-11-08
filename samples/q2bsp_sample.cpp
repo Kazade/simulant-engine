@@ -10,7 +10,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_FRUSTUM);
+        stage_ = new_stage(smlt::PARTITIONER_FRUSTUM);
         camera_ = stage_->new_camera();
         pipeline_ = compositor->render(stage_, camera_);
 
@@ -18,7 +18,7 @@ public:
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
         link_pipeline(pipeline_);
 
-        window->vfs->add_search_path("sample_data/quake2/textures");
+        app->vfs->add_search_path("sample_data/quake2/textures");
 
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/demo1.bsp");
         stage_->new_geom_with_mesh(mesh->id());

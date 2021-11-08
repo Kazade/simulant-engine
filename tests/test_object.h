@@ -14,13 +14,13 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
     }
 
     void test_move_to_origin() {
@@ -32,7 +32,7 @@ public:
 
         auto actor = stage_->new_actor_with_mesh(mesh);
         actor->move_to(0, 0, 0);
-        window->run_frame();
+        application->run_frame();
     }
 
     void test_move_forward_by() {
@@ -270,9 +270,9 @@ public:
         a1->destroy_after(smlt::Seconds(0.1));
         assert_is_not_null(stage_->find_descendent_with_name("test"));
 
-        auto t = window->time_keeper->now_in_us();
-        while((window->time_keeper->now_in_us() - t) < 150000) {
-            window->run_frame();
+        auto t = application->time_keeper->now_in_us();
+        while((application->time_keeper->now_in_us() - t) < 150000) {
+            application->run_frame();
         }
 
         assert_is_null(stage_->find_descendent_with_name("test"));
