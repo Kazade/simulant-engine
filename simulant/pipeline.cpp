@@ -80,6 +80,9 @@ PipelinePtr Pipeline::set_priority(int32_t priority) {
 
 Pipeline::~Pipeline() {
     deactivate();
+
+    camera_destroy_.disconnect();
+    stage_destroy_.disconnect();
 }
 
 CameraPtr Pipeline::camera() const {
