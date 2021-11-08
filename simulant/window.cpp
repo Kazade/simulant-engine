@@ -272,15 +272,19 @@ void Window::set_has_context(bool value) {
 }
 
 void Window::create_panels() {
+    destroy_panels();
+
+    S_DEBUG("Recreating panels");
+    register_panel(1, StatsPanel::create(this));
+    register_panel(2, PartitionerPanel::create(this));
+}
+
+void Window::destroy_panels() {
     auto panels = panels_;
     for(auto p: panels) {
         unregister_panel(p.first);
     }
     panels.clear();
-
-    S_DEBUG("Recreating panels");
-    register_panel(1, StatsPanel::create(this));
-    register_panel(2, PartitionerPanel::create(this));
 }
 
 /**

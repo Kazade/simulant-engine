@@ -168,6 +168,17 @@ Application::Application(const AppConfig &config):
 }
 
 Application::~Application() {
+    window_->destroy_panels();
+    scene_manager_->destroy_all();
+
+    /* This cleans up the destroyed scenes
+     * before we start wiping out the node
+     * pool. */
+    update_idle_tasks_and_coroutines();
+
+    scene_manager_.reset();
+    asset_manager_.reset();
+
     delete node_pool_;
 }
 
@@ -248,7 +259,7 @@ void Application::construct_window(const AppConfig& config) {
 #ifdef __DREAMCAST__
         if(config_copy.target_frame_rate < 60) {
             float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
-            window_->request_frame_time(frame_time);
+            request_frame_time(frame_time);
         }
 #else
         float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
@@ -505,12 +516,6 @@ int32_t Application::run() {
 
     // Shutdown and clean up the window
     window_->_clean_up();
-
-    // Reset the scene manager before the window
-    // disappears
-    scene_manager_.reset();
-
-    window_.reset();
 
 #ifdef __DREAMCAST__
     if(PROFILING) {

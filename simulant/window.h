@@ -197,6 +197,9 @@ public:
 
     /** Recreates the debugging panels (e.g stats) */
     void create_panels();
+
+    /** Destroys the panels */
+    void destroy_panels();
 protected:
     std::shared_ptr<Renderer> renderer_;
 

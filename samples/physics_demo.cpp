@@ -122,6 +122,7 @@ int main(int argc, char* argv[]) {
 #else
     config.width = 1280;
     config.height = 960;
+    config.fullscreen = false;
 #endif
 
     PhysicsDemo app(config);

@@ -98,7 +98,7 @@ void SceneManager::unload(const std::string& route) {
              * from unload can happen before we destroy the scene
              */
 
-            routes_.erase(routes_.find(route));
+            routes_.erase(it);
 
             get_app()->idle->add_once([scene]() {
                 _S_UNUSED(scene);

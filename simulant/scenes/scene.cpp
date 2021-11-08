@@ -45,13 +45,15 @@ void SceneBase::_update_thunk(float dt) {
         dt = 0.0;
     }
 
-    StageManager::_update_thunk(dt);
+    StageManager::update(dt);
+    update(dt);
 }
 
 void SceneBase::_fixed_update_thunk(float dt) {
     if(!window->has_focus()) return;
 
-    StageManager::_fixed_update_thunk(dt);
+    StageManager::fixed_update(dt);
+    fixed_update(dt);
 }
 
 
