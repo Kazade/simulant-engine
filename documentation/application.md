@@ -8,6 +8,19 @@ The `Application` is the entry point to your game. Normally your `Application` s
     return app.run(argc, argv);  // Run your application, returns 0 on success
 ```
 
+## Signals
+
+The following signals are available for the Application class:
+
+ - `signal<void ()> signal_frame_started();`
+ - `signal<void ()> signal_frame_finished();`
+ - `signal<void ()> signal_pre_swap();`
+ - `signal<void ()> signal_post_idle(); `
+ - `signal<void (float)> signal_update();`
+ - `signal<void (float)> signal_fixed_update();`
+ - `signal<void (float)> signal_late_update();`
+ - `signal<void ()> signal_shutdown();`
+
 # AppConfig
 
 The AppConfig structure allows you to control a number of settings, in particular you can set the following:

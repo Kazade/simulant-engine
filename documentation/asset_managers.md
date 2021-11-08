@@ -21,30 +21,20 @@ There are (currently) two different kinds of `GarbageCollectMethod` that you can
  - `GARBAGE_COLLECT_NEVER` - Never delete the object, keep it around indefinitely until the GC method is changed
  - `GARBAGE_COLLECT_PERIODIC` - The object will be deleted at some point after the final reference is released.
 
-# The GC grace period
+# Period Collection
 
-When you create a asset, you have a 3 second grace period to grab a reference to it, after that time the asset
-will be destroyed and a warning will be logged.
+When you create a asset, you need to maintain a reference to it otherwise the asset
+will be destroyed.
 
 For example, say you load a mesh, like so:
 
-    MeshID my_mesh = stage->new_mesh_from_file("test.obj");
+    MeshPtr my_mesh = stage->new_mesh_from_file("test.obj");
     
-Once the new_mesh_from_file call returns, you have 3 seconds to do this:
-
-    auto mesh = my_mesh.fetch();
-    // when 'mesh' goes out of scope, the mesh will be destroyed!
-    
-or this:
+The mesh will stay loaded while `my_mesh` is in scope, but then it will be released unless you either store the
+MeshPtr somewhere persistent, or attach the mesh to a stage node. e.g.
 
     stage->new_actor_with_mesh(my_mesh); //Links the mesh to an actor, preventing its destruction    
     
-Failure to access a asset within the grace period will result in its destruction,
-and any further attempts to access it will result in a NULL return value.
-
-You can control the grace period on a per-asset-manager basis by using `AssetManager::set_garbage_collection_grace_period` which takes an integer number
-of seconds to allow before a new object is destroyed.
-
 # Disabling collection
 
 Sometimes you want to load a asset once, but there will be periods of time where it won't be attached to anything.
@@ -56,7 +46,7 @@ Not ideal!
 
 Fortunately, when you create a mesh, you can disable its garbage collection on a case-by-case basis:
 
-    MeshID torpedo_mesh = stage()->new_mesh_from_file(
+    MeshPtr torpedo_mesh = stage()->new_mesh_from_file(
         "torpedo.obj", 
         MeshLoadOptions(),
         GARBAGE_COLLECT_NEVER
@@ -64,7 +54,7 @@ Fortunately, when you create a mesh, you can disable its garbage collection on a
     
 Now the torpedo_mesh will never be garbage collected. When you are absolutely finished with it, you can call:
 
-    stage()->mesh(topedo_mesh)->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
+    topedo_mesh->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
     
 The torpedo will then be cleaned up at the next run of the garbage collector.
 

@@ -36,7 +36,7 @@ available mesh will be rendered instead.
 To define the distance ranges that activate each detail level you must use the `Pipeline::set_detail_level_distances(nearest_cutoff, near_cutoff, mid_cutoff, far_cutoff)` method. For example:
 
 ```
-auto pipeline = window.render(stage, camera).fetch();
+auto pipeline = compositor->render(stage, camera);
 pipeline->set_detail_level_distances(10.0f, 20.0f, 40.0f, 80.0f);
 ```
 
