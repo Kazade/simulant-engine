@@ -7,6 +7,19 @@ namespace smlt {
 namespace behaviours {
 namespace impl {
 
+b3Body* DynamicBody::fetch_body() const {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return nullptr;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+    assert(b);
+    return b;
+}
+
+
+
 void DynamicBody::lock_rotation(bool x, bool y, bool z) {
     auto sim = simulation_.lock();
     if(!sim) {
@@ -155,6 +168,14 @@ void DynamicBody::add_impulse_at_position(const Vec3& impulse, const Vec3& posit
     b->ApplyLinearImpulse(i, p, true);
 }
 
+void DynamicBody::add_acceleration_force(const Vec3 &acc) {
+    add_force(acc * mass());
+}
+
+void DynamicBody::add_acceleration_force_at_position(const Vec3 &force, const Vec3 &position) {
+    add_force_at_position(force * mass(), position);
+}
+
 Vec3 DynamicBody::linear_velocity() const {
     auto sim = simulation_.lock();
     if(!sim) {
@@ -253,6 +274,36 @@ bool DynamicBody::is_awake() const {
     b3Body* b = sim->bodies_.at(this);
     return b->IsAwake();
 }
+
+void DynamicBody::set_center_of_mass(const smlt::Vec3& com) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    b3Body* b = sim->bodies_.at(this);
+
+    b3MassData data;
+    b->GetMassData(&data);
+    to_b3vec3(com, data.center);
+    b->SetMassData(&data);
+}
+
+void DynamicBody::set_mass(float m) {
+    auto b = fetch_body();
+
+    b3MassData data;
+    b->GetMassData(&data);
+
+    data.mass = m;
+    b->SetMassData(&data);
+}
+
+float DynamicBody::mass() const {
+    auto b = fetch_body();
+    return b->GetMass();
+}
+
 
 }
 }

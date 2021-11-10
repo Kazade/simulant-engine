@@ -43,31 +43,5 @@ RigidBody::~RigidBody() {
 
 }
 
-void RigidBody::set_center_of_mass(const smlt::Vec3& com) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
-
-    b3Body* b = sim->bodies_.at(this);
-
-    b3MassData data;
-    b->GetMassData(&data);
-    to_b3vec3(com, data.center);
-    b->SetMassData(&data);
-}
-
-float RigidBody::mass() const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return 0;
-    }
-
-    const b3Body* b = sim->bodies_.at(this);
-    return b->GetMass();
-}
-
-
-
 }
 }

@@ -41,9 +41,6 @@ public:
     RigidBody(RigidBodySimulation *simulation);
     virtual ~RigidBody();
 
-    float mass() const;
-    void set_center_of_mass(const smlt::Vec3& com);
-
     using impl::Body::init;
     using impl::Body::clean_up;
 
