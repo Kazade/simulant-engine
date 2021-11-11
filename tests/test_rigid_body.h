@@ -24,10 +24,10 @@ public:
     }
 
     void test_set_mass() {
-        smlt::StagePtr stage = window->new_stage();
+        smlt::StagePtr stage = scene->new_stage();
         smlt::ActorPtr actor = stage->new_actor();
 
-        auto simulation = smlt::behaviours::RigidBodySimulation::create(window->time_keeper);
+        auto simulation = smlt::behaviours::RigidBodySimulation::create(application->time_keeper);
         auto controller = actor->new_behaviour<smlt::behaviours::RigidBody>(simulation.get());
 
         assert_equal(controller->mass(), 1.0f);
