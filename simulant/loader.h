@@ -26,7 +26,12 @@
 #include <memory>
 
 #include "logging.h"
+
+#ifndef _WIN32
 #include "deps/kfs/kfs.h"
+#else
+#include "deps/kfs/kfs/kfs.h"
+#endif
 
 #include "loadable.h"
 #include "streams/file_ifstream.h"
