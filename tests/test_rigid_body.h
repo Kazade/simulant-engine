@@ -22,4 +22,23 @@ public:
 
         scene->destroy_stage(stage->id());
     }
+
+    void test_set_mass() {
+        smlt::StagePtr stage = window->new_stage();
+        smlt::ActorPtr actor = stage->new_actor();
+
+        auto simulation = smlt::behaviours::RigidBodySimulation::create(window->time_keeper);
+        auto controller = actor->new_behaviour<smlt::behaviours::RigidBody>(simulation.get());
+
+        assert_equal(controller->mass(), 1.0f);
+
+        controller->add_box_collider(smlt::Vec3(10.0f), smlt::behaviours::PhysicsMaterial::IRON);
+        assert_true(controller->mass() > 1.0f);
+
+        controller->set_mass(100.0f);
+        assert_equal(controller->mass(), 100.0f);
+
+        controller->set_mass(50.0f);
+        assert_equal(controller->mass(), 50.0f);
+    }
 };

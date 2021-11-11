@@ -13,6 +13,10 @@ public:
     DynamicBody(RigidBodySimulation* simulation):
         Body(simulation) {}
 
+    float mass() const;
+    void set_mass(float m);
+    void set_center_of_mass(const smlt::Vec3& com);
+
     void add_force(const Vec3& force);
     void add_force_at_position(const Vec3& force, const Vec3& position);
     void add_relative_force(const Vec3& force);
@@ -22,6 +26,10 @@ public:
 
     void add_impulse(const Vec3& impulse);
     void add_impulse_at_position(const Vec3& impulse, const Vec3& position);
+
+    /** Add a force to the body over time, ignoring mass */
+    void add_acceleration_force(const Vec3& acc);
+    void add_acceleration_force_at_position(const Vec3& force, const Vec3& position);
 
     void set_linear_damping(const float d);
     void set_angular_damping(const float d);
@@ -57,6 +65,9 @@ public:
     bool is_awake() const;
 
     void lock_rotation(bool x, bool y, bool z);
+
+protected:
+    b3Body* fetch_body() const;
 };
 
 
