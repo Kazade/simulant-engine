@@ -17,7 +17,7 @@ struct b3Hull;
 struct b3Mesh;
 struct b3MeshTriangle;
 struct b3Vec3;
-struct b3Shape;
+struct b3Fixture;
 
 namespace smlt {
 
@@ -121,9 +121,9 @@ protected:
         std::string name;
     };
 
-    void store_collider(b3Shape* shape, const PhysicsMaterial& material);
+    void store_collider(b3Fixture* fixture, const PhysicsMaterial& material);
 
-    std::unordered_map<b3Shape*, ColliderDetails> collider_details_;
+    std::unordered_map<b3Fixture*, ColliderDetails> collider_details_;
 
 private:
     virtual bool is_dynamic() const { return true; }
