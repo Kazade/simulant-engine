@@ -63,11 +63,11 @@ public:
     virtual ~ContactListener() {}
 
     void BeginContact(b3Contact* contact) {
-        b3Shape* shapeA = contact->GetShapeA();
-        b3Shape* shapeB = contact->GetShapeB();
+        b3Fixture* fixtureA = contact->GetFixtureA();
+        b3Fixture* fixtureB = contact->GetFixtureB();
 
-        Body* bodyA = (Body*) shapeA->GetUserData();
-        Body* bodyB = (Body*) shapeB->GetUserData();
+        Body* bodyA = (Body*) fixtureA->GetUserData();
+        Body* bodyB = (Body*) fixtureB->GetUserData();
 
         if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
             auto coll_pair = build_collision_pair(contact);
@@ -89,11 +89,11 @@ public:
             return;
         }
 
-        b3Shape* shapeA = contact->GetShapeA();
-        b3Shape* shapeB = contact->GetShapeB();
+        b3Fixture* fixtureA = contact->GetFixtureA();
+        b3Fixture* fixtureB = contact->GetFixtureB();
 
-        Body* bodyA = (Body*) shapeA->GetUserData();
-        Body* bodyB = (Body*) shapeB->GetUserData();
+        Body* bodyA = (Body*) fixtureA->GetUserData();
+        Body* bodyB = (Body*) fixtureB->GetUserData();
 
         if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
             auto coll_pair = build_collision_pair(contact);
@@ -118,7 +118,7 @@ public:
         std::vector<b3Contact*> ret;
         for(auto contact: active_contacts_) {
 
-            if(contact->GetShapeA()->GetBody() == body || contact->GetShapeB()->GetBody() == body) {
+            if(contact->GetFixtureA()->GetBody() == body || contact->GetFixtureB()->GetBody() == body) {
                 ret.push_back(contact);
             }
         }
@@ -128,28 +128,28 @@ public:
 
 private:
     std::pair<Collision, Collision> build_collision_pair(b3Contact* contact) {
-        b3Shape* shapeA = contact->GetShapeA();
-        b3Shape* shapeB = contact->GetShapeB();
+        b3Fixture* fixtureA = contact->GetFixtureA();
+        b3Fixture* fixtureB = contact->GetFixtureB();
 
-        Body* bodyA = (Body*) shapeA->GetUserData();
-        Body* bodyB = (Body*) shapeB->GetUserData();
+        Body* bodyA = (Body*) fixtureA->GetUserData();
+        Body* bodyB = (Body*) fixtureB->GetUserData();
 
         Collision collA, collB;
 
         collA.this_body = bodyA;
-        collA.this_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collA.this_collider_name = bodyA->collider_details_.at(fixtureA).name;
         collA.this_stage_node = bodyA->stage_node.get();
 
         collA.other_body = bodyB;
-        collA.other_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collA.other_collider_name = bodyB->collider_details_.at(fixtureB).name;
         collA.other_stage_node = bodyB->stage_node.get();
 
         collB.other_body = bodyA;
-        collB.other_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collB.other_collider_name = bodyA->collider_details_.at(fixtureA).name;
         collB.other_stage_node = bodyA->stage_node.get();
 
         collB.this_body = bodyB;
-        collB.this_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collB.this_collider_name = bodyB->collider_details_.at(fixtureB).name;
         collB.this_stage_node = bodyB->stage_node.get();
 
         return std::make_pair(collA, collB);
@@ -204,7 +204,7 @@ smlt::optional<RayCastResult> RigidBodySimulation::ray_cast(const Vec3& start, c
     to_b3vec3(start + (direction * max_distance), d);
 
     struct AlwaysCast : public b3RayCastFilter {
-        bool ShouldRayCast(b3Shape*) {
+        bool ShouldRayCast(b3Fixture*) override {
             return true;
         }
     };
@@ -217,7 +217,7 @@ smlt::optional<RayCastResult> RigidBodySimulation::ray_cast(const Vec3& start, c
 
     if(hit) {
         RayCastResult ret;
-        ret.other_body = get_associated_body(result.shape->GetBody());
+        ret.other_body = get_associated_body(result.fixture->GetBody());
         to_vec3(result.point, ret.impact_point);
         closest = (ret.impact_point - start).length();
         to_vec3(result.normal, ret.normal);
