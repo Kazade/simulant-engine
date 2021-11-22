@@ -142,8 +142,8 @@ JoystickAxis SDL_axis_to_simulant_axis(Uint8 axis) {
     case SDL_CONTROLLER_AXIS_LEFTY: return JOYSTICK_AXIS_1;
     case SDL_CONTROLLER_AXIS_RIGHTX: return JOYSTICK_AXIS_2;
     case SDL_CONTROLLER_AXIS_RIGHTY: return JOYSTICK_AXIS_3;
-    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return JOYSTICK_AXIS_4;
-    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return JOYSTICK_AXIS_5;
+    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return JOYSTICK_AXIS_LTRIGGER;
+    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return JOYSTICK_AXIS_RTRIGGER;
     default:
         throw std::out_of_range("Invalid axis");
     }
@@ -176,19 +176,24 @@ void SDL2Window::check_events() {
                 get_app()->stop_running();
                 break;
 
-            case SDL_JOYAXISMOTION: {
+            case SDL_CONTROLLERAXISMOTION: {
                 auto value = float(event.jaxis.value);
+                if(event.jaxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT || event.jaxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
+                    value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), 0.0f, 1.0f);
+                } else {
+                    value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), -1.0f, 1.0f);
+                }
+
                 input_state->_handle_joystick_axis_motion(
                     event.jaxis.which,
                     SDL_axis_to_simulant_axis(event.jaxis.axis),
-                    clamp(value / 32768.0f, -1.0f, 1.0f)
+                    value
                 );
             } break;
-            case SDL_JOYBUTTONDOWN:
-                // JoystickButton is consistent with SDL's SDL_GameControllerButton
+            case SDL_CONTROLLERBUTTONDOWN:
                 input_state->_handle_joystick_button_down(event.jbutton.which, (JoystickButton) event.jbutton.button);
             break;
-            case SDL_JOYBUTTONUP:
+            case SDL_CONTROLLERBUTTONUP:
                 input_state->_handle_joystick_button_up(event.jbutton.which, (JoystickButton) event.jbutton.button);
             break;
             case SDL_JOYHATMOTION:

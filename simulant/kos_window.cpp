@@ -149,9 +149,12 @@ void KOSWindow::check_events() {
                     
                     float v = float(current) / range;
                     
-                    // This is possible at full range to the left (due to the imbalance of -128 to 127)
-                    if(v < -1.0f) v = -1.0f;
-                    
+                    if(target == JOYSTICK_AXIS_4 || target == JOYSTICK_AXIS_5) {
+                        v = clamp(v, 0.0f, 1.0f);
+                    } else {
+                        v = clamp(v, -1.0f, 1.0f);
+                    }
+
                     input_state->_handle_joystick_axis_motion(controller, target, v);
                     return current;
                 };
