@@ -359,6 +359,22 @@ public:
         assert_close(aabb.depth(), 1.0f, EPSILON);
     }
 
+    void test_submesh_aabb_generated_correctly() {
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto submesh = mesh->new_submesh_as_box(
+            "test", stage_->assets->default_material(),
+            1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
+        );
+
+        auto& aabb = submesh->aabb();
+
+        assert_close(aabb.centre().x, -100.0f, EPSILON);
+        assert_close(aabb.max().x, -99.5f, EPSILON);
+        assert_close(aabb.width(), 1.0f, EPSILON);
+        assert_close(aabb.height(), 1.0f, EPSILON);
+        assert_close(aabb.depth(), 1.0f, EPSILON);
+    }
+
     void test_new_submesh_as_capsule() {
         auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_capsule(
