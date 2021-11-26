@@ -84,6 +84,12 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
 
             args = strip(args);
 
+            if(!commands.count(command)) {
+                S_WARN("Unhandled OBJ command: {0}", command);
+                command.clear();
+                continue;
+            }
+
             if(!commands.at(command)(&info, command, args)) {
                 S_ERROR("Error passing command '{0}' with args: {1}", command, args);
                 return;
