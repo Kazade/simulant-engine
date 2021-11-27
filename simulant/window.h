@@ -71,7 +71,6 @@ class Window :
     friend class Application; /* ContextLock stuff */
 public:
     typedef std::shared_ptr<Window> ptr;
-    static const int STEPS_PER_SECOND = 60;
 
     template<typename T>
     static std::shared_ptr<Window> create(Application* app) {

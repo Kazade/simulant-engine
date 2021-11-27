@@ -65,6 +65,9 @@ struct AppConfig {
     /* This is the frame limit; set to 0 to disable */
     uint16_t target_frame_rate = 60;
 
+    /* This is how many fixed updates should happen per second */
+    uint16_t target_fixed_step_rate = 60;
+
     /* Whether to enable vsync or not */
     bool enable_vsync = false;
 

@@ -105,7 +105,7 @@ namespace smlt {
 static bool PROFILING = false;
 
 Application::Application(const AppConfig &config):
-    time_keeper_(TimeKeeper::create(1.0 / Window::STEPS_PER_SECOND)),
+    time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     idle_(IdleTaskManager::create()),
     stats_(StatsRecorder::create()),
     vfs_(VirtualFileSystem::create()),
