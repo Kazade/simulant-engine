@@ -13,11 +13,9 @@ b3Body* DynamicBody::fetch_body() const {
         return nullptr;
     }
 
-    b3Body* b = sim->bodies_.at(this);
-    assert(b);
-    return b;
+    assert(body_);
+    return body_;
 }
-
 
 
 void DynamicBody::lock_rotation(bool x, bool y, bool z) {
@@ -26,7 +24,7 @@ void DynamicBody::lock_rotation(bool x, bool y, bool z) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
     return b->SetFixedRotation(x, y, z);
 }
 
@@ -36,7 +34,7 @@ void DynamicBody::set_linear_velocity(const Vec3& vel) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
 
     b3Vec3 v;
     to_b3vec3(vel, v);
@@ -49,7 +47,7 @@ void DynamicBody::set_angular_velocity(const Vec3& vel) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
 
     b3Vec3 v;
     to_b3vec3(vel, v);
@@ -62,7 +60,7 @@ void DynamicBody::set_linear_damping(const float d) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
 
     b3Vec3 v;
     v.x = d;
@@ -82,7 +80,7 @@ void DynamicBody::set_angular_damping(const Vec3& vec) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
 
     b3Vec3 v;
     to_b3vec3(vec, v);
@@ -95,7 +93,7 @@ void DynamicBody::set_angular_sleep_tolerance(float x) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
     b->SetAngularSleepTolerance(x);
 }
 
@@ -105,7 +103,7 @@ void DynamicBody::add_force(const Vec3 &force) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
 
     b3Vec3 v;
     to_b3vec3(force, v);
@@ -118,7 +116,7 @@ void DynamicBody::add_relative_force(const Vec3 &force) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
 
     b3Vec3 v;
     to_b3vec3(force, v);
@@ -133,7 +131,7 @@ void DynamicBody::add_relative_torque(const Vec3 &torque) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
+    b3Body* b = fetch_body();
     b3Vec3 t;
     to_b3vec3(torque, t);
 
@@ -147,11 +145,9 @@ void DynamicBody::add_impulse(const Vec3& impulse) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
-
     b3Vec3 v;
     to_b3vec3(impulse, v);
-    b->ApplyLinearImpulse(v, b->GetPosition(), true);
+    body_->ApplyLinearImpulse(v, body_->GetPosition(), true);
 }
 
 void DynamicBody::add_impulse_at_position(const Vec3& impulse, const Vec3& position) {
@@ -160,12 +156,10 @@ void DynamicBody::add_impulse_at_position(const Vec3& impulse, const Vec3& posit
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
-
     b3Vec3 i, p;
     to_b3vec3(impulse, i);
     to_b3vec3(position, p);
-    b->ApplyLinearImpulse(i, p, true);
+    body_->ApplyLinearImpulse(i, p, true);
 }
 
 void DynamicBody::add_acceleration_force(const Vec3 &acc) {
@@ -182,10 +176,8 @@ Vec3 DynamicBody::linear_velocity() const {
         return Vec3();
     }
 
-    const b3Body* b = sim->bodies_.at(this);
-
     Vec3 v;
-    to_vec3(b->GetLinearVelocity(), v);
+    to_vec3(body_->GetLinearVelocity(), v);
     return v;
 }
 
@@ -195,10 +187,8 @@ Vec3 DynamicBody::angular_velocity() const {
         return Vec3();
     }
 
-    const b3Body* b = sim->bodies_.at(this);
-
     Vec3 v;
-    to_vec3(b->GetAngularVelocity(), v);
+    to_vec3(body_->GetAngularVelocity(), v);
     return v;
 }
 
@@ -208,15 +198,13 @@ Vec3 DynamicBody::linear_velocity_at(const Vec3& position) const {
         return Vec3();
     }
 
-    const b3Body* b = sim->bodies_.at(this);
-
     b3Vec3 bv;
     to_b3vec3(position, bv);
-    auto direction_to_point = bv - b->GetPosition();
-    auto relative_torque = b3Cross(b->GetAngularVelocity(), direction_to_point);
+    auto direction_to_point = bv - body_->GetPosition();
+    auto relative_torque = b3Cross(body_->GetAngularVelocity(), direction_to_point);
 
     Vec3 v;
-    to_vec3(b->GetLinearVelocity() + relative_torque, v);
+    to_vec3(body_->GetLinearVelocity() + relative_torque, v);
     return v;
 }
 
@@ -244,13 +232,11 @@ void DynamicBody::add_force_at_position(const Vec3& force, const Vec3& position)
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
-
     b3Vec3 f, p;
     to_b3vec3(force, f);
     to_b3vec3(position, p);
 
-    b->ApplyForce(f, p, true);
+    body_->ApplyForce(f, p, true);
 }
 
 void DynamicBody::add_torque(const Vec3& torque) {
@@ -259,10 +245,9 @@ void DynamicBody::add_torque(const Vec3& torque) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
     b3Vec3 t;
     to_b3vec3(torque, t);
-    b->ApplyTorque(t, true);
+    body_->ApplyTorque(t, true);
 }
 
 bool DynamicBody::is_awake() const {
@@ -271,8 +256,7 @@ bool DynamicBody::is_awake() const {
         return false;
     }
 
-    b3Body* b = sim->bodies_.at(this);
-    return b->IsAwake();
+    return body_->IsAwake();
 }
 
 void DynamicBody::set_center_of_mass(const smlt::Vec3& com) {
@@ -281,12 +265,10 @@ void DynamicBody::set_center_of_mass(const smlt::Vec3& com) {
         return;
     }
 
-    b3Body* b = sim->bodies_.at(this);
-
     b3MassData data;
-    b->GetMassData(&data);
+    body_->GetMassData(&data);
     to_b3vec3(com, data.center);
-    b->SetMassData(&data);
+    body_->SetMassData(&data);
 }
 
 void DynamicBody::set_mass(float m) {

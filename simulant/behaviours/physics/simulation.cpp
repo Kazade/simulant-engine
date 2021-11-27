@@ -274,7 +274,7 @@ impl::Body *RigidBodySimulation::get_associated_body(b3Body *b) {
 }
 
 std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {
-    b3Body* b = bodies_.at(body);
+    b3Body* b = body->body_;
 
     auto position = b->GetWorldCenter();
     auto rotation = b->GetOrientation();
@@ -289,7 +289,7 @@ std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body
 }
 
 void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& position, const Quaternion& rotation) {
-    b3Body* b = bodies_.at(body);
+    b3Body* b = body->body_;
 
     auto axis_angle = rotation.to_axis_angle();
 
