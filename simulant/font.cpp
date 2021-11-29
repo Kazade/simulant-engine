@@ -98,12 +98,16 @@ std::pair<int16_t, int16_t> Font::character_offset(char32_t ch) {
     );
 }
 
-float Font::ascent() const {
+int16_t Font::ascent() const {
     return ascent_;
 }
 
-float Font::descent() const {
+int16_t Font::descent() const {
     return descent_;
+}
+
+int16_t Font::line_gap() const {
+    return line_gap_;
 }
 
 uint16_t Font::page_width(char ch) {

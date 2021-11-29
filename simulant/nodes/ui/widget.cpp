@@ -130,8 +130,8 @@ void Widget::resize(Px width, Rem height) {
 
 void Widget::resize(Rem width, Rem height) {
     assert(font_);
-    Px w = Px(font_->size()) * width;
-    Px h = Px(font_->size()) * height;
+    Px w = float(font_->size()) * width.value;
+    Px h = float(font_->size()) * height.value;
 
     resize(w, h);
 }
@@ -198,7 +198,9 @@ void Widget::render_text() {
     /* Generate lines of text */
     auto text_ptr = &text()[0];
     auto text_length = text().length();
-    auto font_size = font_->size();
+
+    auto line_height = Px(font_->size()) * pimpl_->line_height_;
+    auto line_height_shift = std::floor((line_height.value - font_->size() - font_->line_gap()) * 0.5f);
 
     for(uint32_t i = 0; i < text_length; ++i) {
         unicode::value_type ch = text_ptr[i];
@@ -243,10 +245,14 @@ void Widget::render_text() {
         // Characters are created with their top-line at 0, we then
         // properly manipulate the position when we process the lines later
         auto off = font_->character_offset(ch);
-        corners[0].xyz = smlt::Vec3((left + off.first).value, off.second - ch_height.value - font_size, 0);
-        corners[1].xyz = smlt::Vec3((right + off.first).value, off.second - ch_height.value - font_size, 0);
-        corners[2].xyz = smlt::Vec3((right + off.first).value, off.second - font_size, 0);
-        corners[3].xyz = smlt::Vec3((left + off.first).value, off.second - font_size, 0);
+
+        auto bottom = -((ch_height.value - off.second) + (line_height.value - font_->line_gap() - font_->descent() - font_->ascent()));
+        auto top = bottom + ch_height.value;
+
+        corners[0].xyz = smlt::Vec3((left + off.first).value, bottom, 0);
+        corners[1].xyz = smlt::Vec3((right + off.first).value, bottom, 0);
+        corners[2].xyz = smlt::Vec3((right + off.first).value, top, 0);
+        corners[3].xyz = smlt::Vec3((left + off.first).value, top, 0);
 
         auto min_max = font_->texture_coordinates_for_character(ch);
         corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
@@ -269,16 +275,10 @@ void Widget::render_text() {
         left = next_left;
     }
 
-    auto line_height = Px(font_->size()) * pimpl_->line_height_;
-    auto line_height_shift = (line_height.value - font_->size()) * 0.5f;
-
     /* Now apply line heights */
-    float top = 0;
     uint32_t j = 0;
     for(auto range: line_ranges) {
-        top += line_height_shift;
-
-        uint16_t shift = std::round(top);
+        uint16_t shift = (j * line_height.value) + line_height_shift;
 
         Vertex* ch = &vertices.at(range.first);
         uint16_t hw = line_lengths[j++] * 0.5f;
@@ -302,9 +302,6 @@ void Widget::render_text() {
 
             ch += 4;
         }
-
-        // Increase for the next line
-        top += font_->size() + line_height_shift;
     }
 
     auto sm = mesh_->find_submesh("text");
@@ -327,11 +324,9 @@ void Widget::render_text() {
 
     auto abs_min_x = std::abs(min_x);
     auto abs_max_x = std::abs(max_x);
-    auto abs_min_y = std::abs(min_y) - line_height_shift;
-    auto abs_max_y = std::abs(max_y) + line_height_shift;
 
     auto global_x_shift = (abs_min_x - abs_max_x) / 2;
-    auto global_y_shift = (abs_min_y - abs_max_y) / 2;
+    auto global_y_shift = std::round(pimpl_->content_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
     auto idata = sm->index_data.get();
@@ -377,6 +372,9 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, 0);
     auto width = bounds.width();
     auto height = bounds.height();
+    float hh = height * 0.5f;
+    float hw = width * 0.5f;
+
     auto x_offset = offset.x;
     auto y_offset = offset.y;
 
@@ -387,25 +385,25 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     auto prev_count = mesh_->vertex_data->count();
     mesh_->vertex_data->move_to_end();
 
-    mesh_->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    mesh_->vertex_data->position(x_offset + (-hw), y_offset + (-hh), z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(0.0, 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    mesh_->vertex_data->position(x_offset + (hw), y_offset + (-hh), z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(1.0, 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
+    mesh_->vertex_data->position(x_offset + (hw),  y_offset + (hh), z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(1.0, 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
+    mesh_->vertex_data->position(x_offset + (-hw),  y_offset + (hh), z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(0.0, 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);

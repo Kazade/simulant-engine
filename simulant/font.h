@@ -63,8 +63,9 @@ public:
 
     uint16_t size() const { return font_size_; }
 
-    float ascent() const;
-    float descent() const;
+    int16_t ascent() const;
+    int16_t descent() const;
+    int16_t line_gap() const;
 
 private:
     /* Given a character, return the width/height of the page it's on */
@@ -72,9 +73,9 @@ private:
     uint16_t page_height(char ch);
 
     uint16_t font_size_ = 0;
-    float ascent_ = 0;
-    float descent_ = 0;
-    float line_gap_ = 0;
+    int16_t ascent_ = 0;
+    int16_t descent_ = 0;
+    int16_t line_gap_ = 0;
     float scale_ = 0;
 
     // FIXME: This should be replaced when multiple page

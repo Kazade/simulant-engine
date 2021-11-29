@@ -150,7 +150,7 @@ struct UIConfig {
     std::string font_family_ = "";  /* Use default */
     Px font_size_ = 0; /* Use default */
 
-    Rem line_height_ = Rem(1.2f);
+    Rem line_height_ = Rem(1.5f);
 
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
@@ -186,7 +186,7 @@ struct UIConfig {
     PackedColour4444 progress_bar_border_colour_ = DODGER_BLUE;
     float progress_bar_border_width_ = 1;
     uint16_t progress_bar_width_ = 100;
-    Rem progress_bar_height_ = Rem(1.2f);
+    Rem progress_bar_height_ = Rem(1.5f);
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;
