@@ -326,7 +326,7 @@ void Widget::render_text() {
     auto abs_max_x = std::abs(max_x);
 
     auto global_x_shift = (abs_min_x - abs_max_x) / 2;
-    auto global_y_shift = std::round(pimpl_->content_height_.value * 0.5f);
+    auto global_y_shift = round(pimpl_->content_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
     auto idata = sm->index_data.get();
