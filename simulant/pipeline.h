@@ -24,7 +24,7 @@ public:
     Pipeline(
         Compositor* render_sequence,
         const std::string& name,
-        StageID stage_id, CameraID camera_id
+        StagePtr stage, CameraPtr camera
     );
 
     virtual ~Pipeline();
@@ -74,16 +74,26 @@ public:
         return name_;
     }
 
-    PipelinePtr set_camera(CameraID c);
+    PipelinePtr set_camera(CameraPtr c);
 
+    /** Returns true if the pipeline has a valid stage and camera */
+    bool is_complete() const {
+        return stage_ && camera_;
+    }
 private:
-    void set_stage(StageID s);
+    uint32_t id_ = 0;
+
+    void set_stage(StagePtr s);
+
+    sig::Connection stage_destroy_;
+    sig::Connection camera_destroy_;
 
     Compositor* sequence_ = nullptr;
     int32_t priority_ = 0;
-    StageID stage_;
+    StagePtr stage_;
+    CameraPtr camera_;
+
     TextureID target_;
-    CameraID camera_;
     Viewport viewport_;
 
     uint32_t clear_mask_ = 0;

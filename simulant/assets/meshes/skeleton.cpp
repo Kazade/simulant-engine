@@ -8,17 +8,19 @@
 namespace smlt {
 
 void Joint::rotate_to(const Quaternion& q) {
-    bool recalc = rotation_ != q;
-    rotation_ = q;
-    if(recalc) {
+    if(q == rotation_) {
+        return;
+    } else {
+        rotation_ = q;
         recalc_absolute_transformation();
     }
 }
 
 void Joint::move_to(const Vec3& v) {
-    bool recalc = translation_ != v;
-    translation_ = v;
-    if(recalc) {
+    if(v == translation_) {
+        return;
+    } else {
+        translation_ = v;
         recalc_absolute_transformation();
     }
 }
@@ -106,15 +108,18 @@ void SkeletalFrameUnpacker::prepare_unpack(uint32_t current_frame, uint32_t next
     }
 
     /* Update the rig with the interpolated frame state */
-    for(std::size_t j = 0; j < rig->joint_count(); ++j) {
+    const auto jcount = rig->joint_count();
+    for(std::size_t j = 0; j < jcount; ++j) {
+        auto rjoint = &rig->joints_[j];
+
         const JointState& state0 = joint_state_at_frame(current_frame, j);
         const JointState& state1 = joint_state_at_frame(next_frame, j);
 
         auto q = state0.rotation.slerp(state1.rotation, t);
         auto d = state0.translation.lerp(state1.translation, t);
 
-        rig->joint(j)->rotate_to(q);
-        rig->joint(j)->move_to(d);
+        rjoint->rotate_to(q);
+        rjoint->move_to(d);
     }
 }
 
@@ -133,8 +138,11 @@ void SkeletalFrameUnpacker::unpack_frame(
     /* Make sure everything is up-to-date */
     rig->recalc_absolute_transformations();
 
-    /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
-    mesh_->vertex_data->clone_into(*out);
+    if(out->count() == 0) {
+        /* Initialise the interpolated vertex data with all the mesh data (so UV etc. are populated) */
+        mesh_->vertex_data->clone_into(*out);
+    }
+
     auto skeleton = mesh_->skeleton.get();
 
     /* Debug draw the joints */
@@ -157,19 +165,38 @@ void SkeletalFrameUnpacker::unpack_frame(
      * actual vertex by manipulating its position to take into account the current
      * joint position vs the original joint position for each joint that has a
      * weighting */
-    for(std::size_t i = 0; i < vertices_.size(); ++i) {
-        Vec3 p = *vdata->position_at<Vec3>(i);
-        Vec3 n = *vdata->normal_at<Vec3>(i);
-        auto sv = vertices_[i];
+    vdata->move_to_start();
+
+    assert(vdata->vertex_specification().position_attribute == VERTEX_ATTRIBUTE_3F);
+    assert(vdata->vertex_specification().normal_attribute == VERTEX_ATTRIBUTE_3F);
+    assert(out->vertex_specification().position_attribute == VERTEX_ATTRIBUTE_3F);
+    assert(out->vertex_specification().normal_attribute == VERTEX_ATTRIBUTE_3F);
+
+    uint8_t stride = vdata->vertex_specification().stride();
+    const uint8_t* vin = (uint8_t*) vdata->position_at<Vec3>(0);
+    const uint8_t* nin = (uint8_t*) vdata->normal_at<Vec3>(0);
+
+    uint8_t out_stride = out->vertex_specification().stride();
+    uint8_t* vout = (uint8_t*) out->position_at<Vec3>(0);
+    uint8_t* nout = (uint8_t*) out->normal_at<Vec3>(0);
+
+    Vec3 p, n;
+
+    for(std::size_t i = 0; i < vertices_.size(); ++i, vin += stride, nin += stride, vout += out_stride, nout += out_stride) {
+        const auto& sv = vertices_[i];
+
+        p = *((Vec3*) vin);
+        n = *((Vec3*) nin);
 
         Vec3 po, no;
         for(auto k = 0; k < MAX_JOINTS_PER_VERTEX; ++k) {
-            auto j = sv.joints[k];
+            const auto j = sv.joints[k];
             if(j > -1) {
-                auto q = rig->joint(j)->absolute_rotation_;
-                auto d = rig->joint(j)->absolute_translation_;
+                auto rjoint = &rig->joints_[j];
+                const auto& q = rjoint->absolute_rotation_;
+                const auto& d = rjoint->absolute_translation_;
 
-                auto joint = skeleton->joint(j);
+                auto joint = &skeleton->joints_[j];
 
                 /* FIXME: Optimise! Using matrices may be fewer instructions */
                 Quaternion rot = q * joint->absolute_rotation().inversed();
@@ -178,9 +205,8 @@ void SkeletalFrameUnpacker::unpack_frame(
             }
         }
 
-        out->move_to(i);
-        out->position(po);
-        out->normal(no.normalized());
+        *((Vec3*) vout) = po;
+        *((Vec3*) nout) = no;
     }
 
     out->done();

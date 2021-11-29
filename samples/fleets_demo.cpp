@@ -8,7 +8,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(
             stage_, camera_
@@ -18,7 +18,7 @@ public:
         pipeline->viewport->set_colour(smlt::Colour::BLACK);
 
         camera_->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
-        ship_mesh_id_ = window->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
+        ship_mesh_id_ = app->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         generate_ships();
 
         stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));

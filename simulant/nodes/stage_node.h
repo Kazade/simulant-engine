@@ -57,7 +57,7 @@ class StageNode:
     public virtual BoundableEntity,
     public Organism,
     public HasAutoID<StageNode>,
-    public TwoPhaseConstructed {
+    public virtual TwoPhaseConstructed {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
 
@@ -300,3 +300,5 @@ public:
 #include "iterators/child_iterator.inc"
 #include "iterators/descendent_iterator.inc"
 #include "iterators/ancestor_iterator.inc"
+
+

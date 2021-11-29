@@ -34,13 +34,6 @@
 
 namespace smlt {
 
-struct RenderOptions {
-    bool wireframe_enabled;
-    bool texture_enabled;
-    bool backface_culling_enabled;
-    uint8_t point_size;
-};
-
 class Compositor:
     public RefCounted<Compositor> {
 
@@ -48,21 +41,15 @@ public:
     Compositor(Window* window);
     virtual ~Compositor();
 
-    PipelinePtr new_pipeline(
-        const std::string& name,
-        StageID stage,
-        CameraID camera,
+    PipelinePtr new_pipeline(const std::string& name,
+        StagePtr stage,
+        CameraPtr camera,
         const Viewport& viewport=Viewport(),
         TextureID target=TextureID(),
         int32_t priority=0
     );
 
     PipelinePtr render(StagePtr stage, CameraPtr camera);
-    PipelinePtr render(StageID stage_id, CameraID camera_id) {
-        static int32_t counter = 0;
-        std::string name = _F("{0}").format(counter++);
-        return new_pipeline(name, stage_id, camera_id);
-    }
 
     std::list<PipelinePtr>::iterator begin() {
         return ordered_pipelines_.begin();
@@ -83,12 +70,10 @@ public:
     void set_renderer(Renderer *renderer);
 
     void run();
-    void clean_up();
+    void clean_destroyed_pipelines();
 
     sig::signal<void (Pipeline&)>& signal_pipeline_started() { return signal_pipeline_started_; }
     sig::signal<void (Pipeline&)>& signal_pipeline_finished() { return signal_pipeline_finished_; }
-
-    RenderOptions render_options;
 
     void destroy_object(PipelinePtr pipeline) {
         destroy_pipeline(pipeline->name());

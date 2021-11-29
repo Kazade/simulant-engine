@@ -90,7 +90,13 @@ enum JoystickAxis {
     JOYSTICK_AXIS_7,
     JOYSTICK_AXIS_MAX,
     JOYSTICK_AXIS_X = JOYSTICK_AXIS_0,
-    JOYSTICK_AXIS_Y = JOYSTICK_AXIS_1
+    JOYSTICK_AXIS_Y = JOYSTICK_AXIS_1,
+    JOYSTICK_AXIS_XL = JOYSTICK_AXIS_0,
+    JOYSTICK_AXIS_YL = JOYSTICK_AXIS_1,
+    JOYSTICK_AXIS_XR = JOYSTICK_AXIS_2,
+    JOYSTICK_AXIS_YR = JOYSTICK_AXIS_3,
+    JOYSTICK_AXIS_LTRIGGER = JOYSTICK_AXIS_4,
+    JOYSTICK_AXIS_RTRIGGER = JOYSTICK_AXIS_5,
 };
 
 enum JoystickHatAxis {
@@ -190,8 +196,6 @@ public:
     std::size_t joystick_count() const { return joystick_count_; }
     std::size_t keyboard_count() const { return keyboard_count_; }
     std::size_t mouse_count() const { return mouse_count_; }
-
-    void init_virtual_joypad();
 
     JoystickAxis linked_axis(JoystickID id, JoystickAxis axis);
 private:

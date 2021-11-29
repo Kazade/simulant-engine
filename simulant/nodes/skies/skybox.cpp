@@ -4,10 +4,13 @@
 #include "../../stage.h"
 #include "../../assets/material.h"
 #include "../../window.h"
+#include "../../application.h"
+#include "../../vfs.h"
 
 namespace smlt {
 
 Skybox::Skybox(SkyManager* manager):
+    TypedDestroyableObject<Skybox, SkyManager>(manager),
     ContainerNode(&(Stage&)manager->stage, STAGE_NODE_TYPE_OTHER),
     manager_(manager) {
 
@@ -67,12 +70,12 @@ void Skybox::generate(
             sm->set_material(mat);
         }
 
-        auto up_path = manager_->window->vfs->locate_file(up);
-        auto down_path = manager_->window->vfs->locate_file(down);
-        auto left_path = manager_->window->vfs->locate_file(left);
-        auto right_path = manager_->window->vfs->locate_file(right);
-        auto back_path = manager_->window->vfs->locate_file(back);
-        auto front_path = manager_->window->vfs->locate_file(front);
+        auto up_path = get_app()->vfs->locate_file(up);
+        auto down_path = get_app()->vfs->locate_file(down);
+        auto left_path = get_app()->vfs->locate_file(left);
+        auto right_path = get_app()->vfs->locate_file(right);
+        auto back_path = get_app()->vfs->locate_file(back);
+        auto front_path = get_app()->vfs->locate_file(front);
 
         TextureFlags tf = flags;
         tf.wrap = TEXTURE_WRAP_CLAMP_TO_EDGE;

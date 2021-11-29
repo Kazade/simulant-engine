@@ -2,7 +2,7 @@
 #include "simulation.h"
 
 #include "bounce/bounce.h"
-#include "bounce/collision/shapes/mesh.h"
+#include "bounce/collision/shapes/mesh_shape.h"
 
 #include "../../utils/mesh/triangulate.h"
 
@@ -39,8 +39,6 @@ void StaticBody::b3MeshGenerator::insert_triangles(
         mesh_->triangles = &triangles_[0];
         mesh_->triangleCount = triangles_.size();
     }
-
-    mesh_->BuildTree(); // Rebuild the tree
 }
 
 void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
@@ -75,6 +73,10 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
         bmesh->insert_vertices(vertices.begin(), vertices.end());
         bmesh->insert_triangles(triangles.begin(), triangles.end());
 
+        // Build mesh AABB tree and mesh adjacency
+        bmesh->get_mesh()->BuildTree();
+        bmesh->get_mesh()->BuildAdjacency();
+
         // Store the generator for later
         mesh_cache.insert(std::make_pair(mesh_id, bmesh));
     }
@@ -82,20 +84,16 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
     // Grab the b3Mesh from the generator
     b3Mesh* genMesh = mesh_cache.at(mesh_id)->get_mesh();
 
-    // Build mesh AABB tree and mesh adjacency
-    genMesh->BuildTree();
-    genMesh->BuildAdjacency();
-
     b3MeshShape shape;
     shape.m_mesh = genMesh;
 
-    b3ShapeDef sdef;
+    b3FixtureDef sdef;
     sdef.shape = &shape;
     sdef.density = properties.density;
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+    store_collider(sim->bodies_.at(this)->CreateFixture(sdef), properties);
 }
 
 StaticBody::MeshCache& StaticBody::get_mesh_cache() {

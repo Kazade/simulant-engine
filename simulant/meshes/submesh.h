@@ -72,6 +72,10 @@ public:
      */
     void each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb);
 
+    /** Return the axis-aligned bounding box for the faces making up
+     *  this submesh */
+    const AABB& aabb() const;
+
 public:
     typedef sig::signal<void (SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> MaterialChangedCallback;
 

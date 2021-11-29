@@ -41,6 +41,8 @@ public:
     optional& operator=(const optional& other) {
         if(other.has_value()) {
             set_value(other.value());
+        } else {
+            reset();
         }
 
         return *this;

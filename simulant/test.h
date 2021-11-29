@@ -29,6 +29,7 @@
 
 #include "application.h"
 #include "window.h"
+#include "asset_manager.h"
 
 #define assert_equal(expected, actual) _assert_equal((expected), (actual), __FILE__, __LINE__)
 #define assert_not_equal(expected, actual) _assert_not_equal((expected), (actual), __FILE__, __LINE__)
@@ -448,6 +449,14 @@ private:
 };
 
 
+class TestScene : public smlt::Scene<TestScene> {
+public:
+    TestScene(Window* window):
+        smlt::Scene<TestScene>(window) {}
+
+    void load() override {}
+};
+
 class TestApp: public smlt::Application {
 public:
     TestApp(const AppConfig& config):
@@ -456,13 +465,14 @@ public:
 
 private:
     bool init() {
+        scenes->register_scene<TestScene>("main");
         return true;
     }
 };
 
-class SimulantTestCase : public TestCase {
+class SimulantTestCase: public TestCase {
 private:
-    void set_app_and_window(std::shared_ptr<Application>* app, Window** window) {
+    void set_app_and_window(std::shared_ptr<Application>* app, Window** window, SceneBase** scene) {
         static std::shared_ptr<Application> application;
 
         if(!application) {
@@ -479,23 +489,34 @@ private:
             config.search_paths.push_back("/cd/sample_data");
 
             application.reset(new TestApp(config));
+            application->run_frame();
         } else {
+            application->scenes->unload("main");
             application->window->reset();
+            application->scenes->activate("main");
+
+            /* We have to execute the idle tasks as activate doesn't kick in
+             * until then */
+            application->update_idle_tasks_and_coroutines();
+
+            /* Clean up any assets */
+            application->shared_assets->run_garbage_collection();
         }
 
         *app = application;
         *window = (*app)->window;
+        *scene = (*app)->scenes->active_scene().get();
     }
 
 protected:
     Window* window;
+    SceneBase* scene;
     std::shared_ptr<Application> application;
 
 public:
     virtual void set_up() {
         TestCase::set_up();
-
-        set_app_and_window(&application, &window);
+        set_app_and_window(&application, &window, &scene);
     }
 };
 

@@ -89,7 +89,8 @@ void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat
     case AUDIO_DATA_FORMAT_STEREO8: al_format = AL_FORMAT_STEREO8; break;
     case AUDIO_DATA_FORMAT_STEREO16: al_format = AL_FORMAT_STEREO16; break;
     default:
-        throw std::runtime_error("Invalid format");
+        S_ERROR("Passed invalid format {0} to upload_buffer_data");
+        return;
     }
 
     ALCheck(alBufferData, buffer, al_format, &data[0], bytes, frequency);
@@ -102,9 +103,9 @@ AudioSourceState OpenALSoundDriver::source_state(AudioSourceID source) {
     switch(val) {
     case AL_PLAYING: return AUDIO_SOURCE_STATE_PLAYING;
     case AL_PAUSED: return AUDIO_SOURCE_STATE_PAUSED;
-    case AL_STOPPED: return AUDIO_SOURCE_STATE_STOPPED;
+    case AL_STOPPED:
     default:
-        throw std::runtime_error("Unknown state");
+        return AUDIO_SOURCE_STATE_STOPPED;
     }
 }
 

@@ -23,12 +23,15 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
     set_background_colour(defaults->background_colour_);
 
     std::string family = (defaults->font_family_.empty()) ?
-        owner->window_->application->config->ui.font_family : defaults->font_family_;
+        get_app()->config->ui.font_family : defaults->font_family_;
 
     Px size = (defaults->font_size_ == Px(0)) ?
-        owner->window_->application->config->ui.font_size : defaults->font_size_;
+        get_app()->config->ui.font_size : defaults->font_size_;
 
-    set_font(owner->load_or_get_font(family, size, FONT_WEIGHT_NORMAL));
+    auto font = owner->load_or_get_font(family, size, FONT_WEIGHT_NORMAL);
+    assert(font);
+
+    set_font(font);
 
     _recalc_active_layers();
 }
@@ -113,16 +116,20 @@ void Widget::set_font(FontPtr font) {
 }
 
 void Widget::resize(Rem width, Px height) {
+    assert(font_);
+
     Px w = Px(font_->size()) * width;
     resize(w, height);
 }
 
 void Widget::resize(Px width, Rem height) {
+    assert(font_);
     Px h = Px(font_->size()) * height;
     resize(width, h);
 }
 
 void Widget::resize(Rem width, Rem height) {
+    assert(font_);
     Px w = Px(font_->size()) * width;
     Px h = Px(font_->size()) * height;
 

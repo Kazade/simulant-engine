@@ -148,7 +148,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
 
             // This is set in init_source, and released
             // when the sound stops playing
-            std::shared_ptr<Sound> sound_ptr;
+            std::weak_ptr<Sound> sound_ptr;
         };
 
         auto state = std::make_shared<SourcePlayState>();
@@ -158,18 +158,19 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         // to the lambda). This prevents the sound from being destroyed while
         // the data is being streamed
 
-        state->sound_ptr = wptr.lock();
-        if(!state->sound_ptr) {
+        std::shared_ptr<Sound> sound_ptr;
+        state->sound_ptr = sound_ptr = wptr.lock();
+        if(!sound_ptr) {
             S_WARN("Sound was destroyed before playing");
             return;
         }
 
-        auto stream = std::make_shared<StreamView>(state->sound_ptr->input_stream());
+        auto stream = std::make_shared<StreamView>(sound_ptr->input_stream());
 
         S_DEBUG("Initialized stream_func for source instance {0}", &source);
 
         source.set_stream_func([state, stream](AudioBufferID id) -> int32_t {
-            auto sound = state->sound_ptr;
+            auto sound = state->sound_ptr.lock();
 
             if(sound) {
                 const uint32_t buffer_size = sound->buffer_size();
@@ -181,7 +182,6 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
                 stream->seekg(state->offset, std::ios_base::beg);
 
                 if(remaining_in_bytes == 0) {
-                    state->sound_ptr.reset();  // Release the handle
                     return 0;
                 } else if(remaining_in_bytes < buffer_size) {
                     buffer.resize(remaining_in_bytes);

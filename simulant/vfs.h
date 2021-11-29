@@ -43,7 +43,7 @@ class VirtualFileSystem :
     public RefCounted<VirtualFileSystem> {
 
 public:
-    VirtualFileSystem(Window* window);
+    VirtualFileSystem();
 
     std::list<Path>& search_path() { return resource_path_; }
 
@@ -60,8 +60,6 @@ private:
     Path find_working_directory();
 
     std::list<Path> resource_path_;
-
-    Window* window_;
 };
 
 }

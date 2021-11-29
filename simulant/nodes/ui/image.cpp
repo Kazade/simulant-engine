@@ -1,4 +1,4 @@
-
+#include "ui_manager.h"
 #include "image.h"
 #include "../../texture.h"
 #include "../../macros.h"

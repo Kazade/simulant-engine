@@ -27,19 +27,12 @@
 #include "generic/object_manager.h"
 #include "generic/data_carrier.h"
 
-#include "vfs.h"
-#include "idle_task_manager.h"
 #include "input/input_state.h"
 #include "types.h"
-#include "sound.h"
-#include "stage_manager.h"
-#include "scenes/scene_manager.h"
 #include "loader.h"
 #include "event_listener.h"
-#include "time_keeper.h"
 #include "stats_recorder.h"
 #include "screen.h"
-#include "coroutines/coroutine.h"
 
 namespace smlt {
 
@@ -56,55 +49,28 @@ namespace scenes {
 
 class Application;
 class InputState;
-
-class Loader;
-class LoaderType;
 class Compositor;
 class SceneImpl;
-class VirtualGamepad;
 class Renderer;
 class Panel;
-
-typedef std::shared_ptr<Loader> LoaderPtr;
-typedef std::shared_ptr<LoaderType> LoaderTypePtr;
-
-
-typedef sig::signal<void ()> FrameStartedSignal;
-typedef sig::signal<void ()> FrameFinishedSignal;
-typedef sig::signal<void ()> PreSwapSignal;
-typedef sig::signal<void ()> PostIdleSignal;
-
-typedef sig::signal<void (float)> FixedUpdateSignal;
-typedef sig::signal<void (float)> UpdateSignal;
-typedef sig::signal<void (float)> LateUpdateSignal;
-
-typedef sig::signal<void ()> ShutdownSignal;
+class SoundDriver;
+class StageNode;
 
 typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
 
 class Window :
-    public StageManager,
     public Loadable,
     public RenderTarget,
     public EventListenerManager {
-
-    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
-    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
-    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
-    DEFINE_SIGNAL(PostIdleSignal, signal_post_idle);
-    DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update);
-    DEFINE_SIGNAL(UpdateSignal, signal_update);
-    DEFINE_SIGNAL(LateUpdateSignal, signal_late_update);
-    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
     DEFINE_SIGNAL(ScreenAddedSignal, signal_screen_added);
     DEFINE_SIGNAL(ScreenRemovedSignal, signal_screen_removed);
 
     friend class Screen;  /* Screen needs to call render_screen */
+    friend class Application; /* ContextLock stuff */
 public:
     typedef std::shared_ptr<Window> ptr;
-    static const int STEPS_PER_SECOND = 60;
 
     template<typename T>
     static std::shared_ptr<Window> create(Application* app) {
@@ -123,12 +89,6 @@ public:
         bool enable_vsync
     );
 
-    LoaderPtr loader_for(const Path &filename, LoaderHint hint=LOADER_HINT_NONE);
-    LoaderPtr loader_for(const std::string& loader_name, const Path& filename);
-    LoaderTypePtr loader_type(const std::string& loader_name) const;
-
-    void register_loader(LoaderTypePtr loader_type);
-
     virtual void set_title(const std::string& title) = 0;
     virtual void cursor_position(int32_t& mouse_x, int32_t& mouse_y) = 0;
     virtual void show_cursor(bool cursor_shown=true) = 0;
@@ -137,25 +97,13 @@ public:
     virtual void check_events() = 0;
     virtual void swap_buffers() = 0;
 
-    bool is_paused() const { return is_paused_; }
-
     uint16_t width() const override { return width_; }
     uint16_t height() const override { return height_; }
     bool is_fullscreen() const { return fullscreen_; }
     bool vsync_enabled() const { return vsync_enabled_; }
 
     float aspect_ratio() const;
-
-    bool run_frame();
-
     void set_logging_level(LogLevel level);
-
-    void stop_running() { is_running_ = false; }
-    bool is_shutting_down() const { return is_running_ == false; }
-
-    void enable_virtual_joypad(VirtualGamepadConfig config, bool flipped=false);
-    void disable_virtual_joypad();
-    bool has_virtual_joypad() const { return bool(virtual_gamepad_); }
 
     void reset();
 
@@ -205,9 +153,6 @@ public:
 
     void _destroy_screen(const std::string& name);
 
-    void _fixed_update_thunk(float dt) override;
-    void _update_thunk(float dt) override;
-
     /* Creates the window, but doesn't do any context initialisation */
     virtual bool _init_window() = 0;
 
@@ -237,17 +182,23 @@ public:
     /* Returns true if an explicit audio listener is being used */
     bool has_explicit_audio_listener() const;
 
+    /** Returns true if the renderer has a valid context */
+    bool has_context() const { return has_context_; }
 
-    /* Coroutines */
-    void start_coroutine(std::function<void ()> func);
+    /** Returns true if the window currently has focus */
+    bool has_focus() const { return has_focus_; }
 
-    void update_idle_tasks_and_coroutines();
+    /** Sets whether or not the window has focus, this should
+     *  not be called by user code directly. */
+    void set_has_focus(bool v=true) {
+        has_focus_ = v;
+    }
 
-private:
-    std::list<cort::CoroutineID> coroutines_;
-    void update_coroutines();
-    void stop_all_coroutines();
+    /** Recreates the debugging panels (e.g stats) */
+    void create_panels();
 
+    /** Destroys the panels */
+    void destroy_panels();
 protected:
     std::shared_ptr<Renderer> renderer_;
 
@@ -275,10 +226,7 @@ protected:
 
     Window();
 
-    void set_paused(bool value=true);
     void set_has_context(bool value=true);
-
-    bool has_context() const { return has_context_; }
     thread::Mutex& context_lock() { return context_lock_; }
 
     void set_application(Application* app) { application_ = app; }
@@ -301,8 +249,6 @@ private:
 
     bool can_attach_sound_by_id() const { return false; }
 
-    std::shared_ptr<SharedAssetManager> asset_manager_;
-
     bool initialized_;
 
     uint16_t width_ = 0;
@@ -313,14 +259,8 @@ private:
 
     bool escape_to_quit_ = true;
 
-    std::vector<LoaderTypePtr> loaders_;
-    bool is_running_;
-
-    IdleTaskManager idle_;
-
-    bool is_paused_ = false;
     bool has_context_ = false;
-
+    bool has_focus_ = false;
 
     struct PanelEntry {
         std::shared_ptr<Panel> panel;
@@ -337,30 +277,13 @@ private:
 
     void destroy() {}
 
-    VirtualFileSystem::ptr vfs_;
-
-    float frame_counter_time_;
-    int32_t frame_counter_frames_;
-    float frame_time_in_milliseconds_;
-
-    std::shared_ptr<scenes::Loading> loading_;
     std::shared_ptr<smlt::Compositor> compositor_;
     generic::DataCarrier data_carrier_;
-    std::shared_ptr<VirtualGamepad> virtual_gamepad_;
-    std::shared_ptr<TimeKeeper> time_keeper_;
-
-    StatsRecorder stats_;
-
-    std::shared_ptr<SoundDriver> sound_driver_;
 
     virtual std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) = 0;
 
     std::shared_ptr<InputState> input_state_;
     std::shared_ptr<InputManager> input_manager_;
-
-    void await_frame_time();
-    uint64_t last_frame_time_us_ = 0;
-    float requested_frame_time_ms_ = 0;
 
     std::unordered_map<std::string, Screen::ptr> screens_;
 
@@ -385,24 +308,12 @@ protected:
     InputState* _input_state() const { return input_state_.get(); }
 public:
     //Read only properties
-    S_DEFINE_PROPERTY(shared_assets, &Window::asset_manager_);
     S_DEFINE_PROPERTY(application, &Window::application_);
-    S_DEFINE_PROPERTY(virtual_joypad, &Window::virtual_gamepad_);
     S_DEFINE_PROPERTY(renderer, &Window::renderer_);
-    S_DEFINE_PROPERTY(time_keeper, &Window::time_keeper_);
-    S_DEFINE_PROPERTY(idle, &Window::idle_);
     S_DEFINE_PROPERTY(data, &Window::data_carrier_);
-    S_DEFINE_PROPERTY(vfs, &Window::vfs_);
     S_DEFINE_PROPERTY(input, &Window::input_manager_);
     S_DEFINE_PROPERTY(input_state, &Window::input_state_);
-    S_DEFINE_PROPERTY(stats, &Window::stats_);
     S_DEFINE_PROPERTY(compositor, &Window::compositor_);
-
-    SoundDriver* _sound_driver() const { return sound_driver_.get(); }
-
-    void run_update();
-    void run_fixed_updates();
-    void request_frame_time(float ms);
 };
 
 }

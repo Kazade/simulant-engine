@@ -9,7 +9,7 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage();
+        stage_ = new_stage();
         camera_ = stage_->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
 
         auto pipeline = compositor->render(
@@ -56,7 +56,7 @@ public:
         y -= pg2_->height() + spacing;
 
 
-        auto added = window->vfs->add_search_path("simulant/fonts/orbitron");
+        auto added = app->vfs->add_search_path("simulant/fonts/orbitron");
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font("Orbitron", 32);
@@ -64,7 +64,7 @@ public:
         big_label->move_to(x, y);
 
         if(added) {
-            window->vfs->remove_search_path("simulant/fonts/orbitron");
+            app->vfs->remove_search_path("simulant/fonts/orbitron");
         }
 
         auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");

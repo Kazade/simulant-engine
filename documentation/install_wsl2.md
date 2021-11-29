@@ -1,4 +1,3 @@
-
 # Windows WSL2 Installation
 
 Installing Simulant within a WSL2 environment allows you to use Simulant as if you're running on Linux. 
@@ -20,6 +19,8 @@ Once these Windows tools are installed (you'll need to reboot!) you can open up 
 Inside the Ubuntu terminal, run the following command:
 
 ```
+sudo apt-get update
+sudo apt-get upgrade
 sudo apt-get install python3-pip git python3-setuptools cmake build-essential libsdl2-dev libopenal-dev docker.io
 ```
 

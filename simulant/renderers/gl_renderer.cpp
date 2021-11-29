@@ -1,6 +1,8 @@
 #include "gl_renderer.h"
 
 #include "../window.h"
+#include "../application.h"
+#include "../idle_task_manager.h"
 #include "../utils/gl_error.h"
 #include "../utils/gl_thread_check.h"
 
@@ -34,7 +36,7 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
          * aren't implemented using threads we won't
          * need to do this */
         S_DEBUG("In a coroutine, sending glGenTextures to main thread");
-        win_->idle->add_once([&gl_tex]() {
+        get_app()->idle->add_once([&gl_tex]() {
             GLCheck(glGenTextures, 1, &gl_tex);
         });
         cort::yield_coroutine();
@@ -53,7 +55,7 @@ void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
     GLuint gl_tex = texture->_renderer_specific_id();
 
     if(cort::within_coroutine()) {
-        win_->idle->add_once([&gl_tex]() {
+        get_app()->idle->add_once([&gl_tex]() {
             GLCheck(glDeleteTextures, 1, &gl_tex);
         });
         cort::yield_coroutine();
@@ -242,8 +244,13 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
 
             } break;
             case TEXTURE_FILTER_BILINEAR: {
-                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                if(texture->has_mipmaps()) {
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+                } else {
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                }
             } break;
             case TEXTURE_FILTER_POINT:
             default: {

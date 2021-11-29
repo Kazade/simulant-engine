@@ -167,6 +167,10 @@ void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> c
     }
 }
 
+const AABB &SubMesh::aabb() const {
+    return bounds_;
+}
+
 /**
  * @brief SubMesh::generate_texture_coordinates_cube
  * @param texture - which texture unit to generate coordinates for

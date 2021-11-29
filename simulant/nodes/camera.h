@@ -17,7 +17,8 @@ class Camera:
     public ContainerNode,
     public generic::Identifiable<CameraID>,
     public ChainNameable<Camera>,
-    public AudioSource {
+    public AudioSource,
+    public RefCounted<Camera> {
 
 public:
     using ContainerNode::_get_renderables;

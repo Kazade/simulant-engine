@@ -5,7 +5,6 @@
 #include "../../generic/identifiable.h"
 #include "../../generic/managed.h"
 #include "../../generic/range_value.h"
-#include "ui_manager.h"
 #include "ui_config.h"
 
 namespace smlt {

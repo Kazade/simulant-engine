@@ -25,11 +25,12 @@
 #include "utils/gl_error.h"
 
 #include "logging.h"
-
+#include "application.h"
 #include "window.h"
 #include "texture.h"
 #include "asset_manager.h"
 #include "renderers/renderer.h"
+#include "idle_task_manager.h"
 
 namespace smlt {
 
@@ -92,7 +93,7 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
     /* We intentionally don't mark data dirty here. All that would happen is
      * we would upload a blank texture */
 
-    renderer_ = asset_manager->window->renderer;
+    renderer_ = get_app()->window->renderer;
 }
 
 Texture::~Texture() {
@@ -327,7 +328,7 @@ bool Texture::has_data() const {
 
 void Texture::flush() {
     if(cort::within_coroutine()) {
-        renderer_->window_->idle->add_once([this]() {
+        get_app()->idle->add_once([this]() {
             renderer_->prepare_texture(this);
         });
         cr_yield();

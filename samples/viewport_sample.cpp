@@ -12,7 +12,7 @@ public:
         smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Colour::RED);
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Colour::GREEN);
 
-        auto stage = window->new_stage();
+        auto stage = new_stage();
 
         auto cube = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube->new_submesh_as_cube("cube", stage->assets->new_material(), 1.0);

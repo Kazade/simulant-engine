@@ -14,14 +14,14 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
         stage_->destroy_camera(camera_->id());
-        window->destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
@@ -105,6 +105,8 @@ public:
     }
 
     void test_mesh_garbage_collection() {
+        assert_false(stage_->is_destroyed());
+
         auto initial = stage_->assets->mesh_count();
 
         auto mesh1 = generate_test_mesh(stage_);
@@ -114,12 +116,14 @@ public:
         actor->set_mesh(mesh2);
 
         stage_->assets->run_garbage_collection();
+        assert_false(stage_->is_destroyed());
 
         assert_equal(stage_->assets->mesh_count(), initial + 1);
 
         stage_->destroy_actor(actor->id());
+        assert_false(stage_->is_destroyed());
 
-        window->run_frame();
+        application->run_frame();
 
         stage_->assets->run_garbage_collection();
 
@@ -186,7 +190,7 @@ public:
 
         auto id = actor->id();
         stage_->destroy_actor(actor->id());
-        window->run_frame();
+        application->run_frame();
 
         this->assert_true(!stage_->has_actor(id));
     }
@@ -205,7 +209,7 @@ public:
         this->assert_equal((uint32_t)0, c2->child_count());
 
         stage_->destroy_actor(mid);
-        window->run_frame();
+        application->run_frame();
 
         this->assert_true(!stage_->has_actor(mid));
         this->assert_true(!stage_->has_actor(cid1));
@@ -347,6 +351,22 @@ public:
         );
 
         auto& aabb = mesh->aabb();
+
+        assert_close(aabb.centre().x, -100.0f, EPSILON);
+        assert_close(aabb.max().x, -99.5f, EPSILON);
+        assert_close(aabb.width(), 1.0f, EPSILON);
+        assert_close(aabb.height(), 1.0f, EPSILON);
+        assert_close(aabb.depth(), 1.0f, EPSILON);
+    }
+
+    void test_submesh_aabb_generated_correctly() {
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto submesh = mesh->new_submesh_as_box(
+            "test", stage_->assets->default_material(),
+            1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
+        );
+
+        auto& aabb = submesh->aabb();
 
         assert_close(aabb.centre().x, -100.0f, EPSILON);
         assert_close(aabb.max().x, -99.5f, EPSILON);

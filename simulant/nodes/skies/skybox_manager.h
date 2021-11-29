@@ -28,6 +28,7 @@
 #include "../stage_node_manager.h"
 #include "skybox.h"
 #include "../../asset_manager.h"
+#include "../stage_node_pool.h"
 
 namespace smlt {
 
@@ -35,13 +36,11 @@ class Stage;
 
 typedef StageNodeManager<StageNodePool, SkyID, Skybox> TemplatedSkyboxManager;
 
-class SkyManager :
-    public virtual WindowHolder {
-
+class SkyManager {
     friend class Skybox;
 
 public:
-    SkyManager(Window* window, Stage* stage, StageNodePool *pool);
+    SkyManager(Stage* stage, StageNodePool *pool);
 
     SkyManager(const SkyManager& rhs) = delete;
     SkyManager& operator=(const SkyManager&) = delete;
@@ -65,6 +64,9 @@ public:
     void destroy_skybox(SkyID skybox_id);
 
     Property<Stage* SkyManager::*> stage = { this, &SkyManager::stage_ };
+
+    void destroy_object(Skybox* skybox);
+    void destroy_object_immediately(Skybox* skybox);
 private:
     Stage* stage_ = nullptr;
 

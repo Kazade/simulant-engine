@@ -96,7 +96,7 @@ int event_filter(void* user_data, SDL_Event* event) {
 
     switch(event->type) {
         case SDL_APP_TERMINATING:
-            _this->stop_running();
+            get_app()->stop_running();
         break;
         case SDL_APP_WILLENTERBACKGROUND: {
             std::string sdl_err = SDL_GetError();
@@ -107,7 +107,7 @@ int event_filter(void* user_data, SDL_Event* event) {
             S_INFO("Application is entering the background, disabling rendering");
 
 
-            _this->set_paused(true);
+            _this->set_has_focus(false);
             {
                 //See Window::context_lock_ for details
                 thread::Lock<thread::Mutex> context_lock(_this->context_lock());
@@ -127,7 +127,7 @@ int event_filter(void* user_data, SDL_Event* event) {
                 _this->set_has_context(true);
             }
             //FIXME: Reload textures and shaders
-            _this->set_paused(false);
+            _this->set_has_focus(true);
         } break;
         default:
             break;
@@ -142,8 +142,8 @@ JoystickAxis SDL_axis_to_simulant_axis(Uint8 axis) {
     case SDL_CONTROLLER_AXIS_LEFTY: return JOYSTICK_AXIS_1;
     case SDL_CONTROLLER_AXIS_RIGHTX: return JOYSTICK_AXIS_2;
     case SDL_CONTROLLER_AXIS_RIGHTY: return JOYSTICK_AXIS_3;
-    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return JOYSTICK_AXIS_4;
-    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return JOYSTICK_AXIS_5;
+    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return JOYSTICK_AXIS_LTRIGGER;
+    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return JOYSTICK_AXIS_RTRIGGER;
     default:
         throw std::out_of_range("Invalid axis");
     }
@@ -173,28 +173,27 @@ void SDL2Window::check_events() {
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
             case SDL_QUIT:
-                stop_running();
+                get_app()->stop_running();
                 break;
 
-            case SDL_JOYAXISMOTION: {
+            case SDL_CONTROLLERAXISMOTION: {
                 auto value = float(event.jaxis.value);
-
-                if(event.jaxis.axis == SDL_CONTROLLER_AXIS_LEFTY || event.jaxis.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
-                    /* For reasons that I can't figure out, up is negative in SDL joystick axis' */
-                    value = -value;
+                if(event.jaxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT || event.jaxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
+                    value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), 0.0f, 1.0f);
+                } else {
+                    value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), -1.0f, 1.0f);
                 }
 
                 input_state->_handle_joystick_axis_motion(
                     event.jaxis.which,
                     SDL_axis_to_simulant_axis(event.jaxis.axis),
-                    clamp(value / 32768.0f, -1.0f, 1.0f)
+                    value
                 );
             } break;
-            case SDL_JOYBUTTONDOWN:
-                // JoystickButton is consistent with SDL's SDL_GameControllerButton
+            case SDL_CONTROLLERBUTTONDOWN:
                 input_state->_handle_joystick_button_down(event.jbutton.which, (JoystickButton) event.jbutton.button);
             break;
-            case SDL_JOYBUTTONUP:
+            case SDL_CONTROLLERBUTTONUP:
                 input_state->_handle_joystick_button_up(event.jbutton.which, (JoystickButton) event.jbutton.button);
             break;
             case SDL_JOYHATMOTION:
@@ -269,11 +268,11 @@ void SDL2Window::check_events() {
                  * see a maximize without a restore */
                 switch(event.window.event) {
                     case SDL_WINDOWEVENT_MINIMIZED:
-                        set_paused(true);
+                        set_has_focus(false);
                     break;
                     case SDL_WINDOWEVENT_RESTORED:
                     case SDL_WINDOWEVENT_MAXIMIZED:
-                        set_paused(false);
+                        set_has_focus(true);
                     break;
                     default:
                         break;

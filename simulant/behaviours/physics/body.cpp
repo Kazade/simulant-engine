@@ -81,6 +81,20 @@ void Body::rotate_to(const Quaternion& rotation) {
     stage_node->rotate_to_absolute(rotation);
 }
 
+Quaternion Body::rotation() const {
+    auto p = body_->GetOrientation();
+    Quaternion r;
+    to_quat(p, r);
+    return r;
+}
+
+Vec3 Body::position() const {
+    auto p = body_->GetPosition();
+    Vec3 r;
+    to_vec3(p, r);
+    return r;
+}
+
 void Body::update(float dt) {
     const bool INTERPOLATION_ENABLED = true;
 
@@ -108,16 +122,16 @@ void Body::update(float dt) {
     }
 }
 
-void Body::store_collider(b3Shape *shape, const PhysicsMaterial &material) {
+void Body::store_collider(b3Fixture *fixture, const PhysicsMaterial &material) {
     // Store details about the collider so that when contacts
     // arise we can provide more detailed information to the user
     ColliderDetails details;
     details.material = material;
 
     // Make sure the b3Shape has this body as its userData!
-    shape->SetUserData(this);
+    fixture->SetUserData(this);
 
-    collider_details_.insert(std::make_pair(shape, details));
+    collider_details_.insert(std::make_pair(fixture, details));
 }
 
 void Body::contact_started(const Collision &collision) {
@@ -168,14 +182,14 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     b3HullShape hsdef;
     hsdef.m_hull = def.get();
 
-    b3ShapeDef sdef;
+    b3FixtureDef sdef;
     sdef.shape = &hsdef;
     sdef.userData = this;
     sdef.density = properties.density;
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+    store_collider(sim->bodies_.at(this)->CreateFixture(sdef), properties);
 }
 
 void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, const Vec3& offset) {
@@ -188,13 +202,37 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
     to_b3vec3(offset, sphere.m_center);
     sphere.m_radius = diameter * 0.5f;
 
-    b3ShapeDef sdef;
+    b3FixtureDef sdef;
     sdef.shape = &sphere;
     sdef.density = properties.density;
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(sim->bodies_.at(this)->CreateShape(sdef), properties);
+    store_collider(sim->bodies_.at(this)->CreateFixture(sdef), properties);
+}
+
+void Body::add_capsule_collider(float height, const float diameter, const PhysicsMaterial& properties) {
+    auto sim = simulation_.lock();
+    if(!sim) {
+        return;
+    }
+
+    float off = (height - (diameter * 0.5f)) * 0.5f;
+    b3Vec3 v1(0.0f, off, 0.0f);
+    b3Vec3 v2(0.0f, -off, 0.0f);
+
+    b3CapsuleShape capsule;
+    capsule.m_vertex1 = v1;
+    capsule.m_vertex2 = v2;
+    capsule.m_radius = diameter * 0.5f;
+
+    b3FixtureDef sdef;
+    sdef.shape = &capsule;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    store_collider(sim->bodies_.at(this)->CreateFixture(sdef), properties);
 }
 
 void Body::register_collision_listener(CollisionListener *listener) {

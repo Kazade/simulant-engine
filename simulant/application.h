@@ -35,11 +35,19 @@
 #include "screen.h"
 #include "logging.h"
 #include "path.h"
+#include "loader.h"
+#include "nodes/stage_node_pool.h"
 
 namespace smlt {
 
 class Window;
 class Stage;
+class SharedAssetManager;
+class TimeKeeper;
+class IdleTaskManager;
+class StatsRecorder;
+class VirtualFileSystem;
+class SoundDriver;
 
 class BackgroundLoadException : public std::runtime_error {
 public:
@@ -56,6 +64,9 @@ struct AppConfig {
 
     /* This is the frame limit; set to 0 to disable */
     uint16_t target_frame_rate = 60;
+
+    /* This is how many fixed updates should happen per second */
+    uint16_t target_fixed_step_rate = 60;
 
     /* Whether to enable vsync or not */
     bool enable_vsync = false;
@@ -124,12 +135,38 @@ struct AppConfig {
     } development;
 };
 
+class Loader;
+class LoaderType;
+
+typedef std::shared_ptr<Loader> LoaderPtr;
+typedef std::shared_ptr<LoaderType> LoaderTypePtr;
+
+typedef sig::signal<void ()> FrameStartedSignal;
+typedef sig::signal<void ()> FrameFinishedSignal;
+typedef sig::signal<void ()> PreSwapSignal;
+typedef sig::signal<void ()> PostIdleSignal;
+
+typedef sig::signal<void (float)> FixedUpdateSignal;
+typedef sig::signal<void (float)> UpdateSignal;
+typedef sig::signal<void (float)> LateUpdateSignal;
+
+typedef sig::signal<void ()> ShutdownSignal;
+
 class Application {
     friend class Window;
 
+    DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
+    DEFINE_SIGNAL(PostIdleSignal, signal_post_idle);
+    DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update);
+    DEFINE_SIGNAL(UpdateSignal, signal_update);
+    DEFINE_SIGNAL(LateUpdateSignal, signal_late_update);
+    DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
+
+    DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
+    DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
 public:
     Application(const AppConfig& config);
-    virtual ~Application() {}
+    virtual ~Application();
 
     //Create the window, start do_initialization in a thread, show the loading scene
     //when thread completes, hide the loading scene and run the main loop
@@ -138,25 +175,75 @@ public:
 
     bool initialized() const { return initialized_; }
 
-    /* Returns the process ID for the application, or
+    /** Returns the process ID for the application, or
      * -1 if it's unavailable or unsupported */
     ProcessID process_id() const;
 
-    /* Returns an approximation of the ram usage of
+    /** Returns an approximation of the ram usage of
      * the current process. Returns -1 if an error occurs
      * or not supported on the platform */
     int64_t ram_usage_in_bytes() const;
-protected:
-    StagePtr stage(StageID stage=StageID());
 
+    /** Capacity of the global stagenode pool. This is a
+     * memory buffer where all stage nodes (across all stages)
+     * are stored/released */
+    uint32_t stage_node_pool_capacity() const;
+    uint32_t stage_node_pool_capacity_in_bytes() const;
+
+    /** Runs a single frame of the application. You likely
+     * don't want to call this! */
+    bool run_frame();
+
+    /** Runs the update and late_update methods on the active
+     *  scene. You likely don't want to call this directly. */
+    void run_update(float dt);
+
+    /** Runs fixed_updates, you likely don't want to call this directly */
+    void run_fixed_updates();
+
+    /** Request the target frame time - frames will delay to
+     * match it if the framerate would otherwise be too high */
+    void request_frame_time(float ms);
+
+    /* Coroutines */
+    void start_coroutine(std::function<void ()> func);
+
+    void update_idle_tasks_and_coroutines();
+
+    /** Stops the entire application */
+    void stop_running() { is_running_ = false; }
+
+    /** Returns true if the application is shutting down */
+    bool is_shutting_down() const { return is_running_ == false; }
+
+    /* Loader things */
+    LoaderPtr loader_for(const Path &filename, LoaderHint hint=LOADER_HINT_NONE);
+    LoaderPtr loader_for(const std::string& loader_name, const Path& filename);
+    LoaderTypePtr loader_type(const std::string& loader_name) const;
+
+    void register_loader(LoaderTypePtr loader_type);
+
+protected:
     bool _call_init();
 
 private:
     std::shared_ptr<Window> window_;
     std::shared_ptr<SceneManager> scene_manager_;
+    std::shared_ptr<SharedAssetManager> asset_manager_;
+    std::shared_ptr<TimeKeeper> time_keeper_;
+    std::shared_ptr<IdleTaskManager> idle_;
+    std::shared_ptr<StatsRecorder> stats_;
+    std::shared_ptr<VirtualFileSystem> vfs_;
+    std::shared_ptr<SoundDriver> sound_driver_;
+
+    std::vector<LoaderTypePtr> loaders_;
 
     bool initialized_ = false;
+    bool is_running_ = true;
 
+    float frame_counter_time_ = 0.0f;
+    int32_t frame_counter_frames_ = 0;
+    float frame_time_in_milliseconds_ = 0.0f;
 
     void _call_fixed_update(float dt) {
         fixed_update(dt);
@@ -192,9 +279,20 @@ private:
     generic::DataCarrier data_carrier_;
 
     AppConfig config_;
+    StageNodePool* node_pool_ = nullptr;
+
     void construct_window(const AppConfig& config);
 
     ArgParser args_;
+
+    void await_frame_time();
+    uint64_t last_frame_time_us_ = 0;
+    float requested_frame_time_ms_ = 0;
+
+    std::list<cort::CoroutineID> coroutines_;
+    void update_coroutines();
+    void stop_all_coroutines();
+    void preload_default_font();
 
 public:
     S_DEFINE_PROPERTY(window, &Application::window_);
@@ -202,7 +300,13 @@ public:
     S_DEFINE_PROPERTY(scenes, &Application::scene_manager_);
     S_DEFINE_PROPERTY(args, &Application::args_);
     S_DEFINE_PROPERTY(config, &Application::config_);
-
+    S_DEFINE_PROPERTY(stage_node_pool, &Application::node_pool_);
+    S_DEFINE_PROPERTY(shared_assets, &Application::asset_manager_);    
+    S_DEFINE_PROPERTY(time_keeper, &Application::time_keeper_);
+    S_DEFINE_PROPERTY(idle, &Application::idle_);
+    S_DEFINE_PROPERTY(stats, &Application::stats_);
+    S_DEFINE_PROPERTY(vfs, &Application::vfs_);
+    S_DEFINE_PROPERTY(sound_driver, &Application::sound_driver_);
 private:
     friend Application* get_app();
     static Application* global_app;

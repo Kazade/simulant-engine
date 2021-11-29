@@ -23,6 +23,7 @@
 #include "../stage_node_manager.h"
 #include "../../viewport.h"
 #include "../../application.h"
+#include "../../vfs.h"
 
 namespace smlt {
 namespace ui {
@@ -31,12 +32,12 @@ using namespace std::placeholders;
 
 UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
     stage_(stage),
-    window_(stage->window.get()),
     config_(config) {
 
     manager_.reset(new WidgetManager(pool));
 
-    window_->register_event_listener(this);
+    auto window = get_app()->window.get();
+    window->register_event_listener(this);
 
     /* Each time the stage is rendered with a camera and viewport, we need to process any queued events
      * so that (for example) we can interact with the same widget rendered to different viewports */
@@ -45,7 +46,7 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
     });
 
     /* We clear queued events at the end of each frame */
-    frame_finished_connection_ = window_->signal_frame_finished().connect([this]() {
+    frame_finished_connection_ = get_app()->signal_frame_finished().connect([this]() {
         this->clear_event_queue();
     });
 }
@@ -56,7 +57,12 @@ UIManager::~UIManager() {
 
     pre_render_connection_.disconnect();
     frame_finished_connection_.disconnect();
-    window_->unregister_event_listener(this);
+
+    auto window = get_app()->window.get();
+
+    if(window) {
+        window->unregister_event_listener(this);
+    }
 }
 
 Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {
@@ -200,12 +206,14 @@ void UIManager::clear_event_queue() {
 WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
     WidgetPtr result = nullptr;
 
+    auto window = get_app()->window.get();
+
     for(auto widget: *manager_) {
         auto aabb = widget->transformed_aabb();
         std::vector<Vec3> ss_points;
 
         for(auto& corner: aabb.corners()) {
-            ss_points.push_back(camera->project_point(*window_, viewport, corner).value());
+            ss_points.push_back(camera->project_point(*window, viewport, corner).value());
         }
 
         AABB ss_aabb(&ss_points[0], ss_points.size());
@@ -221,7 +229,7 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 
 FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight) {
     return _load_or_get_font(
-        window_->vfs, stage_->assets, window_->shared_assets.get(),
+        get_app()->vfs, stage_->assets, get_app()->shared_assets.get(),
         family, size, weight
     );
 }
@@ -278,6 +286,15 @@ FontPtr UIManager::_load_or_get_font(
     }
 
     smlt::optional<Path> loc;
+
+
+    std::map<smlt::Path, bool> pushed;
+
+    /* Extend the search path with the specified font directories */
+    for(auto& font_dir: get_app()->config->ui.font_directories) {
+        pushed[font_dir] = vfs->add_search_path(font_dir);
+    }
+
     for(auto& filename: potentials) {
         loc = vfs->locate_file(filename, /*fail_silently=*/true);
         if(loc) {
@@ -298,6 +315,13 @@ FontPtr UIManager::_load_or_get_font(
 
         if(loc) {
             break;
+        }        
+    }
+
+    /* Remove appended font dirs */
+    for(auto& p: pushed) {
+        if(p.second) {
+            vfs->remove_search_path(p.first);
         }
     }
 

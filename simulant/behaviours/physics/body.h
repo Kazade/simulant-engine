@@ -17,7 +17,7 @@ struct b3Hull;
 struct b3Mesh;
 struct b3MeshTriangle;
 struct b3Vec3;
-struct b3Shape;
+struct b3Fixture;
 
 namespace smlt {
 
@@ -86,6 +86,12 @@ public:
         const Vec3& offset=Vec3()
     );
 
+    void add_capsule_collider(
+        float height,
+        const float diameter,
+        const PhysicsMaterial& properties
+    );
+
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 
@@ -96,6 +102,9 @@ public:
             return nullptr;
         }
     }
+
+    Quaternion rotation() const;
+    Vec3 position() const;
 
 protected:
     friend class smlt::behaviours::RigidBodySimulation;
@@ -112,12 +121,13 @@ protected:
         std::string name;
     };
 
-    void store_collider(b3Shape* shape, const PhysicsMaterial& material);
+    void store_collider(b3Fixture* fixture, const PhysicsMaterial& material);
 
-    std::unordered_map<b3Shape*, ColliderDetails> collider_details_;
+    std::unordered_map<b3Fixture*, ColliderDetails> collider_details_;
 
 private:
     virtual bool is_dynamic() const { return true; }
+    virtual bool is_kinematic() const { return false; }
 
     sig::connection simulation_stepped_connection_;
     std::vector<std::shared_ptr<b3Hull>> hulls_;

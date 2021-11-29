@@ -46,7 +46,7 @@
 #include "../interfaces/nameable.h"
 #include "../interfaces/updateable.h"
 #include "../interfaces.h"
-
+#include "../stage_manager.h"
 #include "../generic/any/any.h"
 
 namespace smlt {
@@ -59,7 +59,8 @@ class SceneManager;
 class SceneLoadException : public std::runtime_error {};
 
 class SceneBase:
-    public Updateable {
+    public StageManager {
+
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
@@ -111,6 +112,8 @@ protected:
     void link_pipeline(PipelinePtr pipeline);
     void unlink_pipeline(PipelinePtr pipeline);
 
+    void _update_thunk(float dt) override;
+    void _fixed_update_thunk(float dt) override;
 private:
     std::set<std::string> linked_pipelines_;
 
@@ -119,7 +122,7 @@ private:
 
     bool is_loaded_ = false;
     bool is_active_ = false;
-    bool unload_on_deactivate_ = true;
+    bool unload_on_deactivate_ = true;    
 
     std::string name_;
 

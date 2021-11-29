@@ -1,6 +1,7 @@
 #pragma once
 
 #include <simulant/test.h>
+#include <simulant/simulant.h>
 
 namespace {
 
@@ -12,7 +13,7 @@ public:
     void set_up() {
         smlt::test::SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
         mesh_ = stage_->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
@@ -37,13 +38,13 @@ public:
         ret = stage_->destroy_mesh_instancer(instancer);
         assert_true(ret);
 
-        window->run_frame();
+        application->run_frame();
 
         instancer = stage_->new_mesh_instancer(mesh_);
         assert_equal(stage_->mesh_instancer_count(), 1u);
 
         instancer->destroy();
-        window->run_frame();
+        application->run_frame();
 
         assert_equal(stage_->mesh_instancer_count(), 0u);
     }

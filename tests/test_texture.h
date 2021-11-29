@@ -12,7 +12,7 @@ using namespace smlt;
 class TextureTests : public smlt::test::SimulantTestCase {
 public:
     void test_flush() {
-        auto tex = window->shared_assets->new_texture(
+        auto tex = application->shared_assets->new_texture(
             8, 8,
             TEXTURE_FORMAT_R_1UB_8
         );
@@ -22,15 +22,15 @@ public:
 
         assert_true(tex->has_data());
         tex->flush();
-        window->idle->execute();
+        application->idle->execute();
 
         assert_false(tex->has_data());
     }
 
     void test_transaction_api() {
-        TexturePtr tex = window->shared_assets->new_texture(0, 0);
+        TexturePtr tex = application->shared_assets->new_texture(0, 0);
 
-        window->run_frame();
+        application->run_frame();
         assert_false(tex->_data_dirty());
         assert_false(tex->_params_dirty());
 
@@ -41,7 +41,7 @@ public:
     }
 
     void test_conversion_from_r8_to_rgba4444() {
-        auto tex = window->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R_1UB_8);
+        auto tex = application->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R_1UB_8);
 
         auto data = tex->data_copy();
         data[0] = 255;

@@ -42,6 +42,7 @@ struct SpritesheetAttrs {
 };
 
 class Sprite :
+    public TypedDestroyableObject<Sprite, SpriteManager>,
     public ContainerNode,
     public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
