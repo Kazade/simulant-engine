@@ -15,7 +15,7 @@ public:
         auto pipeline = compositor->render(
             stage_, camera_
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
-        pipeline->viewport->set_colour(smlt::Colour::BLACK);
+        pipeline->viewport->set_colour(smlt::Colour::GREY);
 
         link_pipeline(pipeline);
 
@@ -55,12 +55,17 @@ public:
 
         y -= pg2_->height() + spacing;
 
-        auto ttf_font = stage_->assets->new_font_from_ttf("simulant/fonts/orbitron/Orbitron-Bold.ttf", 32);
+
+        auto added = app->vfs->add_search_path("simulant/fonts/Orbitron");
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
-        big_label->set_font(ttf_font);
+        big_label->set_font("Orbitron", 32);
         big_label->set_anchor_point(0, 1);
         big_label->move_to(x, y);
+
+        if(added) {
+            app->vfs->remove_search_path("simulant/fonts/Orbitron");
+        }
 
         auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
         auto icon = stage_->ui->new_widget_as_image(simulant_logo);
@@ -68,6 +73,21 @@ public:
         icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
 
         //stage_->ui->transform_input_with_camera(camera_);
+
+        auto fixed_width = stage_->ui->new_widget_as_label("This is some text with a fixed width.\n See it works!");
+        fixed_width->resize(200, -1);
+        fixed_width->move_to(100, 200);
+        fixed_width->set_background_colour(smlt::Colour::PURPLE);
+
+        auto fixed_height = stage_->ui->new_widget_as_label("This is some text with a fixed height.\n See it works!");
+        fixed_height->resize(-1, 200);
+        fixed_height->move_to(300, 200);
+        fixed_height->set_background_colour(smlt::Colour::PURPLE);
+
+        auto fit_content = stage_->ui->new_widget_as_label("This widget fits its text content. See it works!");
+        fit_content->resize(-1, -1);
+        fit_content->move_to(700, 200);
+        fit_content->set_background_colour(smlt::Colour::PURPLE);
     }
 
     void update(float dt) {
@@ -119,6 +139,8 @@ int main(int argc, char* argv[]) {
     config.title = "UI Demo";
     config.fullscreen = false;
     
+    config.ui.font_size = 18;
+
 #ifdef __DREAMCAST__
     config.width = 640;
     config.height = 480;

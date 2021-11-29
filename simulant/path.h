@@ -35,6 +35,7 @@ public:
     }
 
     bool operator==(const Path& p) const;
+    bool operator<(const Path& p) const;
 
 private:
     std::string path_;

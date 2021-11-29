@@ -36,11 +36,11 @@ struct WidgetImpl {
      * for performance reasons. We track that here */
     uint8_t active_layers_ = ~0;
 
-    int16_t requested_width_ = 0;
-    int16_t requested_height_ = 0;
+    Px requested_width_ = 0;
+    Px requested_height_ = 0;
 
-    int16_t content_width_ = 0;
-    int16_t content_height_ = 0;
+    Px content_width_ = 0;
+    Px content_height_ = 0;
 
     UInt4 padding_ = {0, 0, 0, 0};
 
@@ -60,7 +60,10 @@ struct WidgetImpl {
     PackedColour4444 background_colour_ = Colour::WHITE;
     PackedColour4444 foreground_colour_ = Colour::NONE; //Transparent
     PackedColour4444 text_colour_ = Colour::BLACK;
-    uint16_t line_height_ = 16;
+
+    /* Line height is always stored as a Rem value, even if specified
+     * as px. This is so changes in font size still work correctly */
+    Rem line_height_ = Rem(1.1f);
 
     bool is_focused_ = false;
     WidgetPtr focus_next_ = nullptr;
@@ -104,8 +107,13 @@ public:
     virtual bool init() override;
     virtual void clean_up() override;
 
-    void resize(int32_t width, int32_t height);
-    void set_font(FontID font_id);
+    void resize(Rem width, Px height);
+    void resize(Px width, Rem height);
+    void resize(Rem width, Rem height);
+    void resize(Px width, Px height);
+
+    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Rem size=Rem(1.0f), FontWeight weight=FONT_WEIGHT_NORMAL);
+    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Px size=DEFAULT_FONT_SIZE, FontWeight weight=FONT_WEIGHT_NORMAL);
 
     /* Allow creating a double-linked list of widgets for focusing. There is no
      * global focused widget but there is only one focused widget in a chain
@@ -155,15 +163,14 @@ public:
 
     void set_text_colour(const Colour& colour);
 
-    uint16_t requested_width() const;
-    uint16_t requested_height() const;
+    Px requested_width() const;
+    Px requested_height() const;
 
-    uint16_t content_width() const;
+    Px content_width() const;
+    Px content_height() const;
 
-    uint16_t content_height() const;
-
-    uint16_t outer_width() const;
-    uint16_t outer_height() const;
+    Px outer_width() const;
+    Px outer_height() const;
 
     /*
     bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
@@ -235,8 +242,8 @@ protected:
         float height() const { return max.y - min.y; }
     };
 
-    virtual WidgetBounds calculate_background_size(float content_width, float content_height) const;
-    virtual WidgetBounds calculate_foreground_size(float content_width, float content_height) const;
+    virtual WidgetBounds calculate_background_size() const;
+    virtual WidgetBounds calculate_foreground_size() const;
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
 
     SubMeshPtr new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour);
@@ -253,6 +260,8 @@ protected:
     void on_transformation_change_attempted() override;
 
     void rebuild();
+    void set_font(FontPtr font_id);
+
 };
 
 }

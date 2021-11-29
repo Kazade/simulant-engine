@@ -63,9 +63,10 @@ struct TextureFlags {
     bool auto_upload = true; // Should the texture be uploaded automatically?
 };
 
-enum DefaultFontStyle {
-    DEFAULT_FONT_STYLE_HEADING,
-    DEFAULT_FONT_STYLE_BODY
+struct FontFlags {
+    uint16_t size = 16;
+    FontWeight weight = FONT_WEIGHT_NORMAL;
+    CharacterSet charset = CHARACTER_SET_LATIN;
 };
 
 /* Majority of the API definitions have been generated using this Python code:
@@ -148,8 +149,7 @@ public:
 
 
     /* Font API */
-    FontPtr new_font_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_from_ttf(const Path& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr new_font_from_file(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(FontID id);
     FontPtr font(FontID id);
     const FontPtr font (FontID id) const;
@@ -189,7 +189,6 @@ public:
 
     void update(float dt);
 
-    virtual FontPtr default_font(DefaultFontStyle style) const;
     virtual MaterialPtr default_material() const;
 
     MaterialPtr clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -273,14 +272,10 @@ public:
 
     void cleanup() {}
 
-    virtual FontPtr default_font(DefaultFontStyle style) const;
     virtual MaterialPtr default_material() const;
 
     void set_default_material_filename(const Path &filename);
     Path default_material_filename() const;
-
-    void set_default_font_filename(DefaultFontStyle style, const Path &filename);
-    Path default_font_filename(DefaultFontStyle style) const;
 
 private:
     mutable MaterialPtr default_material_;

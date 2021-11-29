@@ -18,12 +18,12 @@ Font::Font(FontID id, AssetManager *asset_manager):
 
 }
 
-TextureID Font::texture_id() const {
-    return texture_->id();
+TexturePtr Font::texture() const {
+    return texture_;
 }
 
-MaterialID Font::material_id() const {
-    return material_->id();
+MaterialPtr Font::material() const {
+    return material_;
 }
 
 bool Font::init() {
@@ -62,16 +62,16 @@ float Font::character_width(char32_t ch) {
     }
 
     auto *b = &char_data_.at(ch - 32);
-    return b->x1 - b->x0;
+    return std::abs(b->x1 - b->x0);
 }
 
-float Font::character_height(char32_t ch) {    
+float Font::character_height(char32_t ch) {
     if(ch < 32) {
         return this->size();
     }
 
     auto *b = &char_data_.at(ch - 32);
-    return b->y1 - b->y0;
+    return std::abs(b->y1 - b->y0);
 }
 
 float Font::character_advance(char32_t ch, char32_t next) {
@@ -85,7 +85,7 @@ float Font::character_advance(char32_t ch, char32_t next) {
     return b->xadvance;
 }
 
-std::pair<float, float> Font::character_offset(char32_t ch) {
+std::pair<int16_t, int16_t> Font::character_offset(char32_t ch) {
     if(ch < 32) {
         return std::make_pair(0, 0);
     }
@@ -93,17 +93,21 @@ std::pair<float, float> Font::character_offset(char32_t ch) {
     auto *b = &char_data_.at(ch - 32);
 
     return std::make_pair(
-        b->xoff,
-        -b->yoff
+        (int16_t) b->xoff,
+        (int16_t) -b->yoff
     );
 }
 
-float Font::ascent() const {
+int16_t Font::ascent() const {
     return ascent_;
 }
 
-float Font::descent() const {
+int16_t Font::descent() const {
     return descent_;
+}
+
+int16_t Font::line_gap() const {
+    return line_gap_;
 }
 
 uint16_t Font::page_width(char ch) {

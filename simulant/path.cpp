@@ -20,4 +20,8 @@ bool Path::operator==(const Path& p) const {
     return path_ == p.path_;
 }
 
+bool Path::operator<(const Path &p) const {
+    return path_ < p.path_;
+}
+
 }

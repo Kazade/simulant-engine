@@ -23,14 +23,16 @@
 #include "../stage_node_manager.h"
 #include "../../viewport.h"
 #include "../../application.h"
+#include "../../vfs.h"
 
 namespace smlt {
 namespace ui {
 
 using namespace std::placeholders;
 
-UIManager::UIManager(Stage *stage, StageNodePool *pool):
-    stage_(stage) {
+UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
+    stage_(stage),
+    config_(config) {
 
     manager_.reset(new WidgetManager(pool));
 
@@ -51,7 +53,6 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool):
 
 UIManager::~UIManager() {
     manager_->clear();
-
     manager_.reset();
 
     pre_render_connection_.disconnect();
@@ -224,6 +225,119 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     };
 
     return result;
+}
+
+FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight) {
+    return _load_or_get_font(
+        get_app()->vfs, stage_->assets, get_app()->shared_assets.get(),
+        family, size, weight
+    );
+}
+
+FontPtr UIManager::_load_or_get_font(
+        VirtualFileSystem* vfs, AssetManager* assets, AssetManager* shared_assets,
+        const std::string &familyc, const Px &sizec, const FontWeight& weight) {
+
+
+    /* Apply defaults if that's what was asked */
+
+    std::string family = familyc;
+    if(family == DEFAULT_FONT_FAMILY) {
+        family = get_app()->config->ui.font_family;
+    }
+
+    Px size = sizec;
+    if(size == DEFAULT_FONT_SIZE) {
+        size = get_app()->config->ui.font_size;
+    }
+
+    const std::string px_as_string = smlt::to_string(size.value);
+    const std::string weight_string = font_weight_name(weight);
+
+    /* We search for standard variations of the filename depending on the family,
+     * weight and size */
+    std::string potentials [] = {
+        family + ".ttf",
+        family + "-" + weight_string + ".ttf",
+        family + "-" + weight_string + "-" + px_as_string + ".fnt",
+
+        /* Fall back if the bold/light version is not there */
+        family + "-" + "Regular.ttf",
+        family + "-Regular-" + px_as_string + ".fnt"
+    };
+
+    std::string alias = Font::generate_name(family, size.value, weight);
+
+    /* See if the font is already loaded, first look at the stage
+     * level, but fallback to the window level (in case it was pre-loaded
+     * globally) */
+    FontPtr fnt;
+    if(assets) {
+        fnt = assets->find_font(alias);
+    }
+
+    if(!fnt && shared_assets) {
+        fnt = shared_assets->find_font(alias);
+    }
+
+    /* We already loaded it, all is well! */
+    if(fnt) {
+        return fnt;
+    }
+
+    smlt::optional<Path> loc;
+
+
+    std::map<smlt::Path, bool> pushed;
+
+    /* Extend the search path with the specified font directories */
+    for(auto& font_dir: get_app()->config->ui.font_directories) {
+        pushed[font_dir] = vfs->add_search_path(font_dir);
+    }
+
+    for(auto& filename: potentials) {
+        loc = vfs->locate_file(filename, /*fail_silently=*/true);
+        if(loc) {
+            break;
+        }
+
+        /* Try a font directory prefix */
+        loc = vfs->locate_file(kfs::path::join("fonts", filename), /*fail_silently=*/true);
+        if(loc) {
+            break;
+        }
+
+        /* Finally try a family name dir within fonts */
+        loc = vfs->locate_file(
+            kfs::path::join(kfs::path::join("fonts", family), filename),
+            /*fail_silently=*/true
+        );
+
+        if(loc) {
+            break;
+        }        
+    }
+
+    /* Remove appended font dirs */
+    for(auto& p: pushed) {
+        if(p.second) {
+            vfs->remove_search_path(p.first);
+        }
+    }
+
+    if(!loc) {
+        S_WARN("Unable to locate font file with family {0} and size {1}", family, size.value);
+        return FontPtr(); /* Fail */
+    }
+
+    FontFlags flags;
+    flags.size = size.value;
+    flags.weight = weight;
+
+    S_DEBUG("Loaded font with family {0} and size {1} from {2}", family, size.value, loc.value().str());
+    fnt = assets->new_font_from_file(loc.value(), flags);
+    fnt->set_name(alias);
+    return fnt;
 }
 
 }

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "../../colour.h"
+#include "../../font.h"
 
 namespace smlt {
 namespace ui {
@@ -56,14 +57,100 @@ struct UIDim {
     float height = 0.0;
 };
 
+struct Rem;
+
+/* Absolute pixel value */
+struct Px {
+    int16_t value = 0;
+
+    Px() = default;
+    Px(const int& rhs):
+        value(rhs) {}
+
+    bool operator>=(const Px& rhs) const {
+        return value >= rhs.value;
+    }
+
+    bool operator<(const Px& rhs) const {
+        return value < rhs.value;
+    }
+
+    bool operator>(const int rhs) const {
+        return value > rhs;
+    }
+
+    bool operator==(const int16_t rhs) const {
+        return value == rhs;
+    }
+
+    bool operator==(const Px& rhs) const {
+        return value == rhs.value;
+    }
+
+    bool operator!=(const Px& rhs) const {
+        return !((*this) == rhs);
+    }
+
+    Px operator+(const Px& rhs) const {
+        return Px(value + rhs.value);
+    }
+
+    Px operator-(const Px& rhs) const {
+        return Px(value - rhs.value);
+    }
+
+    Px& operator=(const int& rhs) {
+        value = rhs;
+        return *this;
+    }
+
+    Px operator*(const Rem& rhs) const;
+};
+
+inline std::ostream& operator<<(std::ostream& stream, const Px& value) {
+    return (stream << value.value);
+}
+
+inline bool operator==(const int16_t& lhs, const Px& rhs) {
+    return lhs == rhs.value;
+}
+
+inline bool operator!=(const int16_t& lhs, const Px& rhs) {
+    return lhs != rhs.value;
+}
+
+/* Relative to the "root" size */
+struct Rem {
+    float value = 1.0f;
+
+    Rem() = default;
+    explicit Rem(float r):
+        value(r) {}
+};
+
+/* 100th of the viewport width */
+struct Vw {
+    float value;
+};
+
+/* 100th of the viewport height */
+struct Vh {
+    float value;
+};
+
+
+extern const char* DEFAULT_FONT_FAMILY;
+extern const Px DEFAULT_FONT_SIZE;
 
 struct UIConfig {
     static const Colour ALICE_BLUE;
     static const Colour LIGHT_GREY;
     static const Colour DODGER_BLUE;
 
-    uint16_t font_size_ = 16;
-    uint16_t line_height_ = 18;
+    std::string font_family_ = "";  /* Use default */
+    Px font_size_ = 0; /* Use default */
+
+    Rem line_height_ = Rem(1.5f);
 
     Colour foreground_colour_ = Colour::BLACK;
     Colour background_colour_ = Colour::WHITE;
@@ -99,7 +186,7 @@ struct UIConfig {
     PackedColour4444 progress_bar_border_colour_ = DODGER_BLUE;
     float progress_bar_border_width_ = 1;
     uint16_t progress_bar_width_ = 100;
-    uint16_t progress_bar_height_ = 16;
+    Rem progress_bar_height_ = Rem(1.5f);
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;

@@ -31,6 +31,7 @@
 
 
 #include "nodes/camera.h"
+#include "nodes/ui/ui_manager.h"
 
 #include "renderers/renderer_config.h"
 #include "compositor.h"

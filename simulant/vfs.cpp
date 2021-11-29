@@ -68,6 +68,16 @@ VirtualFileSystem::VirtualFileSystem() {
     resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
     resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
 #endif
+
+    /* In any standard project there are assets in the 'assets' directory.
+     * So we add that in here as a standard location in all
+     * root paths */
+    auto copy = resource_path_;
+    for(auto& path: copy) {
+        resource_path_.push_back(
+            kfs::path::join(path.str(), "assets")
+        );
+    }
 }
 
 bool VirtualFileSystem::add_search_path(const Path& path) {
@@ -85,7 +95,7 @@ void VirtualFileSystem::remove_search_path(const Path& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
+optional<Path> VirtualFileSystem::locate_file(const Path &filename, bool fail_silently) const {
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -134,7 +144,9 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
         }
     }
 #endif
-    S_ERROR("Unable to find file: {0}", final_name);
+    if(!fail_silently) {
+        S_WARN("Unable to find file: {0}", final_name);
+    }
     return optional<Path>();
 }
 

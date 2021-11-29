@@ -25,6 +25,16 @@ struct CharInfo{
    float xoff, yoff, xadvance; // Offsets and advance
 };
 
+enum FontWeight {
+    FONT_WEIGHT_LIGHT,
+    FONT_WEIGHT_NORMAL,
+    FONT_WEIGHT_BOLD
+};
+
+constexpr const char* font_weight_name(FontWeight weight) {
+    return (weight == FONT_WEIGHT_NORMAL) ? "Regular": (weight == FONT_WEIGHT_BOLD) ? "Bold" : "Light";
+}
+
 class Font:
     public RefCounted<Font>,
     public Asset,
@@ -33,34 +43,39 @@ class Font:
     public ChainNameable<Font> {
 
 public:
+    static std::string generate_name(const std::string& family, const uint16_t& size, FontWeight weight) {
+        return family + "-" + font_weight_name(weight) + "-" + smlt::to_string(size);
+    }
+
     Font(FontID id, AssetManager* asset_manager);
 
     bool init() override;
 
     bool is_valid() const { return bool(info_) && texture_; }
-    TextureID texture_id() const;
-    MaterialID material_id() const;
+    TexturePtr texture() const;
+    MaterialPtr material() const;
 
     std::pair<Vec2, Vec2> texture_coordinates_for_character(char32_t c);
     float character_width(char32_t ch);
     float character_height(char32_t ch);
     float character_advance(char32_t ch, char32_t next);
-    std::pair<float, float> character_offset(char32_t ch);
+    std::pair<int16_t, int16_t> character_offset(char32_t ch);
 
-    uint32_t size() const { return font_size_; }
+    uint16_t size() const { return font_size_; }
 
-    float ascent() const;
-    float descent() const;
+    int16_t ascent() const;
+    int16_t descent() const;
+    int16_t line_gap() const;
 
 private:
     /* Given a character, return the width/height of the page it's on */
     uint16_t page_width(char ch);
     uint16_t page_height(char ch);
 
-    uint32_t font_size_ = 0;
-    float ascent_ = 0;
-    float descent_ = 0;
-    float line_gap_ = 0;
+    uint16_t font_size_ = 0;
+    int16_t ascent_ = 0;
+    int16_t descent_ = 0;
+    int16_t line_gap_ = 0;
     float scale_ = 0;
 
     // FIXME: This should be replaced when multiple page

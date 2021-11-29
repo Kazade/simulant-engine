@@ -55,7 +55,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "vfs.h"
 #include "compositor.h"
 #include "utils/gl_error.h"
-
+#include "nodes/ui/ui_manager.h"
 #include "loaders/texture_loader.h"
 #include "loaders/material_script.h"
 #include "loaders/opt_loader.h"
@@ -165,6 +165,8 @@ Application::Application(const AppConfig &config):
     /* We can't do this in the initialiser as we need a valid
      * window before doing things like creating textures */
     asset_manager_ = SharedAssetManager::create();
+
+    preload_default_font();
 }
 
 Application::~Application() {
@@ -180,6 +182,26 @@ Application::~Application() {
     asset_manager_.reset();
 
     delete node_pool_;
+}
+
+void Application::preload_default_font() {
+    auto& ui = config_.ui;
+
+    FontPtr fnt = ui::UIManager::_load_or_get_font(
+        vfs_.get(),
+        shared_assets,
+        nullptr,
+        ui.font_family,
+        ui.font_size,
+        FONT_WEIGHT_NORMAL
+    );
+
+    if(!fnt) {
+        FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
+    }
+
+    std::string alias = Font::generate_name(ui.font_family, ui.font_size, FONT_WEIGHT_NORMAL);
+    fnt->set_name(alias);
 }
 
 void Application::construct_window(const AppConfig& config) {
