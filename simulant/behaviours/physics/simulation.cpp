@@ -291,14 +291,11 @@ std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body
 void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& position, const Quaternion& rotation) {
     b3Body* b = body->body_;
 
-    auto axis_angle = rotation.to_axis_angle();
-
-    b3Vec3 p, a;
+    b3Vec3 p;
     to_b3vec3(position, p);
-    to_b3vec3(axis_angle.axis, a);
 
     b3Quat rot;
-    rot.SetAxisAngle(a, axis_angle.angle.value);
+    to_b3quat(rotation, rot);
 
     b->SetTransform(p, rot);
 }
