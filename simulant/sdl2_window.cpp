@@ -184,11 +184,6 @@ void SDL2Window::check_events() {
                     value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), -1.0f, 1.0f);
                 }
 
-                if(event.jaxis.axis == SDL_CONTROLLER_AXIS_LEFTY || event.jaxis.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
-                    /* For some reason vertical axis (on 360 controllers at least) are inverted? */
-                    value = -value;
-                }
-
                 input_state->_handle_joystick_axis_motion(
                     event.jaxis.which,
                     SDL_axis_to_simulant_axis(event.jaxis.axis),
