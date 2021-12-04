@@ -200,8 +200,7 @@ void Application::preload_default_font() {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }
 
-    std::string alias = Font::generate_name(ui.font_family, ui.font_size, FONT_WEIGHT_NORMAL);
-    fnt->set_name(alias);
+    fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
 }
 
 void Application::construct_window(const AppConfig& config) {
