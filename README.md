@@ -13,7 +13,7 @@ The aim of Simulant is to create an easy-to-use game engine to allow building ho
 
 ## Status
 
-Simulant is currently in the *Alpha* stage. This means that you can use it to build games, but you may come across bugs or shortcomings. 
+Simulant is currently in the *Beta* stage. This means that you can use it to build games, but you may come across bugs or shortcomings. 
 
 This is the perfect time to get involved in the development of Simulant! If you find bugs, please report them, and if you think of cool new features, then feel free to create an issue for those too!
 
@@ -51,15 +51,6 @@ Since then the focus has been to remove dependencies, build an easy-to-use API, 
 ![screenshot 3](/screenshots/screenshot3.png?raw=true)
 ![screenshot 4](/screenshots/screenshot4.png?raw=true)
 
-## Roadmap / TODO
-
- * Implement render-to-texture
- * Fix lightmaps in the Q2 bsp loader
- * Build in support for shadows
- * Improve Dreamcast support (depends on GL 1.x)
- * Restore Android support
- * Port to iOS and PSP
-
 ## Building
 
 Compiling the code requires CMake. Currently there are the following external dependencies:
@@ -67,7 +58,6 @@ Compiling the code requires CMake. Currently there are the following external de
  - ZLIB
  - SDL2
  - OpenGL
- - TinyXML
  - OpenAL
 
 To build:
@@ -81,30 +71,5 @@ To build:
 
 ## How do I use it?
 
-The easiest way to get started is to use simulant-tools which is a Python package (so requires Python and Pip installed):
-
-```
-pip install --user --upgrade git+git://github.com/kazade/simulant-tools.git
-simulant start myproject
-cd myproject
-simulant run --rebuild
-```
-
-This will generate a template project, download pre-compiled Simulant libraries, and compile and run the application.
-
-The advantage of using simulant-tools and sticking to that project structure is this:
-
-```
-simulant package dreamcast
-```
-
-Which would generate a .cdi image of your application for the SEGA Dreamcast.
-
-Or
-
-```
-simulant run dreamcast
-```
-
-Which currently uses the lxdream emulator to run the .cdi image.
+Have a read of the [documentation](https://simulant.dev/docs) and follow the installation instructions for your OS.
 
