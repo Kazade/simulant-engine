@@ -181,6 +181,16 @@ static void explode_r8(const uint8_t* source, const TextureChannelSet& channels,
     a = calculate_component(3, sr, 0, 0, 0);
 }
 
+static void compress_rgb565(uint8_t* dest, float r, float g, float b, float) {
+    uint16_t* out = (uint16_t*) dest;
+
+    uint8_t rr = (uint8_t) (31.0f * r);
+    uint8_t rg = (uint8_t) (63.0f * g);
+    uint8_t rb = (uint8_t) (31.0f * b);
+
+    *out = (rr << 11) | (rg << 5) | (rb << 0);
+}
+
 static void compress_rgba4444(uint8_t* dest, float r, float g, float b, float a) {
     uint16_t* out = (uint16_t*) dest;
 
@@ -239,6 +249,7 @@ static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
 };
 
 static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
+    {TEXTURE_FORMAT_RGB_1US_565, compress_rgb565},
     {TEXTURE_FORMAT_RGBA_1US_4444, compress_rgba4444},
     {TEXTURE_FORMAT_RGBA_4UB_8888, compress_rgba8888}
 };

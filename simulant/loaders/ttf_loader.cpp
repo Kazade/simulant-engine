@@ -80,7 +80,7 @@ namespace loaders {
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_diffuse_map(font->texture_);
 
-        font->material_->set_blend_func(BLEND_ALPHA);
+        font->material_->pass(0)->set_blend_func(BLEND_ALPHA);
         font->material_->set_depth_test_enabled(false);
         font->material_->set_cull_mode(CULL_MODE_NONE);
 
