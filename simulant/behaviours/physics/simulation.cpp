@@ -264,9 +264,12 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
 }
 
 void RigidBodySimulation::release_body(impl::Body *body) {
-    auto bbody = bodies_.at(body);
-    scene_->DestroyBody(bbody);
-    bodies_.erase(body);
+    auto it = bodies_.find(body);
+    if(it != bodies_.end()) {
+        auto bbody = (*it).second;
+        scene_->DestroyBody(bbody);
+        bodies_.erase(it);
+    }
 }
 
 impl::Body *RigidBodySimulation::get_associated_body(b3Body *b) {
