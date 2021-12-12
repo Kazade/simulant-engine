@@ -43,4 +43,7 @@ bool almost_gequal(const T& lhs, const T& rhs, const T& epsilon) {
 
 uint32_t next_power_of_two(uint32_t x);
 
+/** Approximate divide which is faster on some platforms */
+float fast_divide(float x, float y);
+
 }
