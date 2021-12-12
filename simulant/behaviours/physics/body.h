@@ -95,14 +95,6 @@ public:
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 
-    RigidBodySimulation* _simulation_ptr() const {
-        if(auto ret = simulation_.lock()) {
-            return ret.get();
-        } else {
-            return nullptr;
-        }
-    }
-
     Quaternion rotation() const;
     Vec3 position() const;
 
@@ -110,7 +102,7 @@ protected:
     friend class smlt::behaviours::RigidBodySimulation;
 
     b3Body* body_ = nullptr;
-    std::weak_ptr<RigidBodySimulation> simulation_;
+    RigidBodySimulation* simulation_ = nullptr;
 
     std::pair<Vec3, Quaternion> last_state_;
 
