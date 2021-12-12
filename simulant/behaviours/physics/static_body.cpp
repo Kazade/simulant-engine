@@ -9,6 +9,12 @@
 namespace smlt {
 namespace behaviours {
 
+static inline void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
 StaticBody::StaticBody(RigidBodySimulation* simulation):
     Body(simulation) {
 

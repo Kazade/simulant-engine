@@ -14,6 +14,34 @@ namespace smlt {
 namespace behaviours {
 namespace impl {
 
+static inline void to_vec3(const b3Vec3& rhs, Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
+static inline void to_quat(const b3Quat& rhs, Quaternion& out) {
+    out = Quaternion(
+        rhs.v.x,
+        rhs.v.y,
+        rhs.v.z,
+        rhs.s
+    );
+}
+
+static inline void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
+static inline void to_b3quat(const Quaternion& q, b3Quat& ret) {
+    ret.v.x = q.x;
+    ret.v.y = q.y;
+    ret.v.z = q.z;
+    ret.s = q.w;
+}
+
 Body::Body(RigidBodySimulation* simulation):
     simulation_(simulation) {
 

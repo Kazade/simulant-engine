@@ -7,6 +7,18 @@ namespace smlt {
 namespace behaviours {
 namespace impl {
 
+static inline void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
+static inline void to_vec3(const b3Vec3& rhs, Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
 b3Body* DynamicBody::fetch_body() const {
     assert(simulation_);
 
