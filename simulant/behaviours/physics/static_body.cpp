@@ -9,6 +9,12 @@
 namespace smlt {
 namespace behaviours {
 
+static inline void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
 StaticBody::StaticBody(RigidBodySimulation* simulation):
     Body(simulation) {
 
@@ -51,10 +57,7 @@ void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
 }
 
 void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     auto& mesh_cache = get_mesh_cache();
 
@@ -93,7 +96,7 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(sim->bodies_.at(this)->CreateFixture(sdef), properties);
+    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
 }
 
 StaticBody::MeshCache& StaticBody::get_mesh_cache() {

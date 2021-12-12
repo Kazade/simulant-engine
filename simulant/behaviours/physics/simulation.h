@@ -42,6 +42,8 @@ class RigidBodySimulation:
 
 public:
     RigidBodySimulation(TimeKeeper* time_keeper);
+    ~RigidBodySimulation();
+
     bool init() override;
     void clean_up() override;
 
@@ -55,7 +57,7 @@ public:
 
     void set_gravity(const Vec3& gravity);
 
-    bool body_exists(const impl::Body* body) const { return bodies_.count(body); }
+    bool body_exists(const impl::Body* body) const { return bodies_.count((impl::Body*) body); }
 private:
     friend class impl::Body;
     friend class impl::DynamicBody;
@@ -77,17 +79,11 @@ private:
     /* Returns the Simulant body for a b3Body */
     impl::Body* get_associated_body(b3Body* b);
 
-    std::unordered_map<const impl::Body*, b3Body*> bodies_;
+    std::unordered_map<impl::Body*, b3Body*> bodies_;
 
     std::pair<Vec3, Quaternion> body_transform(const impl::Body *body);
     void set_body_transform(impl::Body *body, const Vec3& position, const Quaternion& rotation);    
 };
-
-void to_b3vec3(const Vec3& rhs, b3Vec3& ret);
-void to_vec3(const b3Vec3& rhs, Vec3& ret);
-void to_mat3(const b3Mat33& rhs, Mat3& out);
-void to_quat(const b3Quat& rhs, Quaternion& out);
-void to_b3quat(const Quaternion& q, b3Quat& ret);
 
 // FIXME: Rename the actual class
 typedef RigidBodySimulation PhysicsSimulation;

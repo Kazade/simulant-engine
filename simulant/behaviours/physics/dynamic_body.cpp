@@ -7,11 +7,20 @@ namespace smlt {
 namespace behaviours {
 namespace impl {
 
+static inline void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
+static inline void to_vec3(const b3Vec3& rhs, Vec3& ret) {
+    ret.x = rhs.x;
+    ret.y = rhs.y;
+    ret.z = rhs.z;
+}
+
 b3Body* DynamicBody::fetch_body() const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return nullptr;
-    }
+    assert(simulation_);
 
     assert(body_);
     return body_;
@@ -19,20 +28,14 @@ b3Body* DynamicBody::fetch_body() const {
 
 
 void DynamicBody::lock_rotation(bool x, bool y, bool z) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
     return b->SetFixedRotation(x, y, z);
 }
 
 void DynamicBody::set_linear_velocity(const Vec3& vel) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
 
@@ -42,10 +45,7 @@ void DynamicBody::set_linear_velocity(const Vec3& vel) {
 }
 
 void DynamicBody::set_angular_velocity(const Vec3& vel) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
 
@@ -55,10 +55,7 @@ void DynamicBody::set_angular_velocity(const Vec3& vel) {
 }
 
 void DynamicBody::set_linear_damping(const float d) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
 
@@ -75,10 +72,7 @@ void DynamicBody::set_angular_damping(const float d) {
 }
 
 void DynamicBody::set_angular_damping(const Vec3& vec) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
 
@@ -88,20 +82,14 @@ void DynamicBody::set_angular_damping(const Vec3& vec) {
 }
 
 void DynamicBody::set_angular_sleep_tolerance(float x) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
     b->SetAngularSleepTolerance(x);
 }
 
 void DynamicBody::add_force(const Vec3 &force) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
 
@@ -111,10 +99,7 @@ void DynamicBody::add_force(const Vec3 &force) {
 }
 
 void DynamicBody::add_relative_force(const Vec3 &force) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
 
@@ -126,10 +111,7 @@ void DynamicBody::add_relative_force(const Vec3 &force) {
 }
 
 void DynamicBody::add_relative_torque(const Vec3 &torque) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Body* b = fetch_body();
     b3Vec3 t;
@@ -140,10 +122,7 @@ void DynamicBody::add_relative_torque(const Vec3 &torque) {
 }
 
 void DynamicBody::add_impulse(const Vec3& impulse) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Vec3 v;
     to_b3vec3(impulse, v);
@@ -151,10 +130,7 @@ void DynamicBody::add_impulse(const Vec3& impulse) {
 }
 
 void DynamicBody::add_impulse_at_position(const Vec3& impulse, const Vec3& position) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Vec3 i, p;
     to_b3vec3(impulse, i);
@@ -171,10 +147,7 @@ void DynamicBody::add_acceleration_force_at_position(const Vec3 &force, const Ve
 }
 
 Vec3 DynamicBody::linear_velocity() const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return Vec3();
-    }
+    assert(simulation_);
 
     Vec3 v;
     to_vec3(body_->GetLinearVelocity(), v);
@@ -182,10 +155,7 @@ Vec3 DynamicBody::linear_velocity() const {
 }
 
 Vec3 DynamicBody::angular_velocity() const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return Vec3();
-    }
+    assert(simulation_);
 
     Vec3 v;
     to_vec3(body_->GetAngularVelocity(), v);
@@ -193,10 +163,7 @@ Vec3 DynamicBody::angular_velocity() const {
 }
 
 Vec3 DynamicBody::linear_velocity_at(const Vec3& position) const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return Vec3();
-    }
+    assert(simulation_);
 
     b3Vec3 bv;
     to_b3vec3(position, bv);
@@ -209,28 +176,18 @@ Vec3 DynamicBody::linear_velocity_at(const Vec3& position) const {
 }
 
 Vec3 DynamicBody::position() const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return Vec3();
-    }
+    assert(simulation_);
 
-    return sim->body_transform(this).first;
+    return simulation_->body_transform(this).first;
 }
 
 Quaternion DynamicBody::rotation() const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return Quaternion();
-    }
-
-    return sim->body_transform(this).second;
+    assert(simulation_);
+    return simulation_->body_transform(this).second;
 }
 
 void DynamicBody::add_force_at_position(const Vec3& force, const Vec3& position) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Vec3 f, p;
     to_b3vec3(force, f);
@@ -240,10 +197,7 @@ void DynamicBody::add_force_at_position(const Vec3& force, const Vec3& position)
 }
 
 void DynamicBody::add_torque(const Vec3& torque) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3Vec3 t;
     to_b3vec3(torque, t);
@@ -251,19 +205,13 @@ void DynamicBody::add_torque(const Vec3& torque) {
 }
 
 bool DynamicBody::is_awake() const {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return false;
-    }
+    assert(simulation_);
 
     return body_->IsAwake();
 }
 
 void DynamicBody::set_center_of_mass(const smlt::Vec3& com) {
-    auto sim = simulation_.lock();
-    if(!sim) {
-        return;
-    }
+    assert(simulation_);
 
     b3MassData data;
     body_->GetMassData(&data);

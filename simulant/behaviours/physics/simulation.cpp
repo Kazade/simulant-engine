@@ -18,31 +18,26 @@ void b3EndProfileScope() {
 namespace smlt{
 namespace behaviours {
 
-void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
+static inline void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
     ret.x = rhs.x;
     ret.y = rhs.y;
     ret.z = rhs.z;
 }
 
-void to_b3quat(const Quaternion& q, b3Quat& ret) {
+static inline void to_b3quat(const Quaternion& q, b3Quat& ret) {
     ret.v.x = q.x;
     ret.v.y = q.y;
     ret.v.z = q.z;
     ret.s = q.w;
 }
 
-void to_vec3(const b3Vec3& rhs, Vec3& ret) {
+static inline void to_vec3(const b3Vec3& rhs, Vec3& ret) {
     ret.x = rhs.x;
     ret.y = rhs.y;
     ret.z = rhs.z;
 }
 
-void to_mat3(const b3Mat33& rhs, Mat3& out) {
-    Mat3 ret((float*)&rhs[0]);
-    out = ret;
-}
-
-void to_quat(const b3Quat& rhs, Quaternion& out) {
+static inline void to_quat(const b3Quat& rhs, Quaternion& out) {
     out = Quaternion(
         rhs.v.x,
         rhs.v.y,
@@ -188,6 +183,14 @@ void RigidBodySimulation::clean_up() {
     scene_->SetContactListener(nullptr);
 }
 
+RigidBodySimulation::~RigidBodySimulation() {
+    /* Wipe the simulation from all associated bodies so they don't
+     * try to release and access this */
+    for(auto& body: bodies_) {
+        body.first->simulation_ = nullptr;
+    }
+}
+
 void RigidBodySimulation::fixed_update(float step) {
     uint32_t velocity_iterations = 8;
     uint32_t position_iterations = 2;
@@ -264,9 +267,12 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
 }
 
 void RigidBodySimulation::release_body(impl::Body *body) {
-    auto bbody = bodies_.at(body);
-    scene_->DestroyBody(bbody);
-    bodies_.erase(body);
+    auto it = bodies_.find(body);
+    if(it != bodies_.end()) {
+        auto bbody = (*it).second;
+        scene_->DestroyBody(bbody);
+        bodies_.erase(it);
+    }
 }
 
 impl::Body *RigidBodySimulation::get_associated_body(b3Body *b) {
