@@ -177,16 +177,16 @@ void SDL2Window::check_events() {
                 break;
 
             case SDL_CONTROLLERAXISMOTION: {
-                auto value = float(event.jaxis.value);
-                if(event.jaxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT || event.jaxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
+                auto value = float(event.caxis.value);
+                if(event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT || event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
                     value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), 0.0f, 1.0f);
                 } else {
                     value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), -1.0f, 1.0f);
                 }
 
                 input_state->_handle_joystick_axis_motion(
-                    event.jaxis.which,
-                    SDL_axis_to_simulant_axis(event.jaxis.axis),
+                    event.caxis.which,
+                    SDL_axis_to_simulant_axis(event.caxis.axis),
                     value
                 );
             } break;
