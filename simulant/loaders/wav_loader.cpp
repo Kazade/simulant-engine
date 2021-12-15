@@ -139,7 +139,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         uint32_t offset = data_->tellg();
 
         auto func = get_chunk_func(chunk_id);
-        if(!func(data_.get(), sound, size)) {
+        if(!func(data_.get(), sound, size - 8)) {
             S_ERROR("Unsupported .wav format");
             return;
         }
