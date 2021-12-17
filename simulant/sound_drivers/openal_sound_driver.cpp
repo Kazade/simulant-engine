@@ -110,8 +110,8 @@ AudioSourceState OpenALSoundDriver::source_state(AudioSourceID source) {
 }
 
 int32_t OpenALSoundDriver::source_buffers_processed_count(AudioSourceID source) const {
-    int32_t processed = 0;
-    ALCheck(alGetSourcei, (ALuint) source, AL_BUFFERS_PROCESSED, (ALint*) &processed);
+    ALint processed = 0;
+    ALCheck(alGetSourcei, (ALuint) source, AL_BUFFERS_PROCESSED, &processed);
     return processed;
 }
 

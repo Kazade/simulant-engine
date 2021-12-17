@@ -27,6 +27,8 @@
 
 namespace smlt {
 
+const static int BUFFER_COUNT = 4;
+
 PlayingSoundID PlayingSound::counter_ = 0;
 
 Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver):
@@ -69,7 +71,6 @@ PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, Audi
     id_(++PlayingSound::counter_),
     parent_(parent),
     source_(0),
-    buffers_{0, 0},
     sound_(sound),
     loop_stream_(loop_stream),
     is_dead_(false) {
@@ -77,7 +78,7 @@ PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, Audi
     SoundDriver* driver = parent_._sound_driver();
 
     source_ = driver->generate_sources(1).back();
-    buffers_ = driver->generate_buffers(2);
+    buffers_ = driver->generate_buffers(BUFFER_COUNT);
 
     if(model == DISTANCE_MODEL_AMBIENT) {
         driver->set_source_as_ambient(source_);
@@ -100,19 +101,17 @@ void PlayingSound::start() {
         return;
     }
 
-    //Fill up two buffers to begin with
-    auto bs1 = stream_func_(buffers_[0]);
-    auto bs2 = stream_func_(buffers_[1]);
-
-    if(bs1 < 0 || bs2 < 0) {
-        /* Sound was destroyed immediately */
-        is_dead_ = true;
-        return;
-    }
-
-    int to_queue = (bs1 && bs2) ? 2 : (bs1 || bs2)? 1 : 0;
-
     SoundDriver* driver = parent_._sound_driver();
+
+    int to_queue = BUFFER_COUNT;
+    for(int i = 0; i < to_queue; ++i) {
+        auto bs = stream_func_(buffers_[i]);
+        if(bs < 0) {
+            /* Sound was destroyed immediately */
+            is_dead_ = true;
+            return;
+        }
+    }
 
     driver->queue_buffers_to_source(source_, to_queue, buffers_);
     driver->play_source(source_);
@@ -163,15 +162,9 @@ void PlayingSound::update(float dt) {
     auto sound = sound_.lock();
 
     while(processed--) {
-        AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).back();
+        AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).front();
 
         int32_t bytes = stream_func_(buffer);
-
-        if(bytes <= 0) {
-            /* -1 indicates the sound has been deleted */
-            finished = true;
-            break;
-        }
 
         if(!finished) {
             if(!bytes) {
@@ -192,9 +185,7 @@ void PlayingSound::update(float dt) {
 
         /* Make totally sure we've unqueued everything */
         processed = driver->source_buffers_processed_count(source_);
-        while(processed--) {
-            driver->unqueue_buffers_from_source(source_, 1).back();
-        }
+        driver->unqueue_buffers_from_source(source_, processed);
 
         if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
             //Restart the sound
