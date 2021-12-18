@@ -71,6 +71,7 @@ PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, Audi
     id_(++PlayingSound::counter_),
     parent_(parent),
     source_(0),
+    buffers_{0, 0, 0, 0},
     sound_(sound),
     loop_stream_(loop_stream),
     is_dead_(false) {
@@ -103,13 +104,18 @@ void PlayingSound::start() {
 
     SoundDriver* driver = parent_._sound_driver();
 
-    int to_queue = BUFFER_COUNT;
-    for(int i = 0; i < to_queue; ++i) {
+    int to_queue = 0;
+    for(int i = 0; i < BUFFER_COUNT; ++i) {
         auto bs = stream_func_(buffers_[i]);
         if(bs < 0) {
             /* Sound was destroyed immediately */
             is_dead_ = true;
             return;
+        } else if(!bs) {
+            /* We don't need any more buffers */
+            break;
+        } else {
+            to_queue++;
         }
     }
 
