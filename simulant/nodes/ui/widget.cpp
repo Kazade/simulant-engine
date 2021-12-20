@@ -156,6 +156,10 @@ void Widget::resize(Px width, Px height) {
     on_size_changed();
 }
 
+static bool is_visible_character(unicode::value_type ch) {
+    return ch > 32;
+}
+
 void Widget::render_text() {
     struct Vertex {
         smlt::Vec3 xyz;
@@ -240,33 +244,37 @@ void Widget::render_text() {
             continue;
         }
 
-        Vertex corners[4];
+        /* If the character is visible, then create some vertices for it */
+        if(is_visible_character(ch)) {
+            Vertex corners[4];
 
-        // Characters are created with their top-line at 0, we then
-        // properly manipulate the position when we process the lines later
-        auto off = font_->character_offset(ch);
+            // Characters are created with their top-line at 0, we then
+            // properly manipulate the position when we process the lines later
+            auto off = font_->character_offset(ch);
 
-        auto bottom = -((ch_height.value - off.second) + (line_height.value - font_->line_gap() - font_->descent() - font_->ascent()));
-        auto top = bottom + ch_height.value;
+            auto bottom = -((ch_height.value - off.second) + (line_height.value - font_->line_gap() - font_->descent() - font_->ascent()));
+            auto top = bottom + ch_height.value;
 
-        corners[0].xyz = smlt::Vec3((left + off.first).value, bottom, 0);
-        corners[1].xyz = smlt::Vec3((right + off.first).value, bottom, 0);
-        corners[2].xyz = smlt::Vec3((right + off.first).value, top, 0);
-        corners[3].xyz = smlt::Vec3((left + off.first).value, top, 0);
+            corners[0].xyz = smlt::Vec3((left + off.first).value, bottom, 0);
+            corners[1].xyz = smlt::Vec3((right + off.first).value, bottom, 0);
+            corners[2].xyz = smlt::Vec3((right + off.first).value, top, 0);
+            corners[3].xyz = smlt::Vec3((left + off.first).value, top, 0);
 
-        auto min_max = font_->texture_coordinates_for_character(ch);
-        corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
-        corners[1].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
-        corners[2].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
-        corners[3].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+            auto min_max = font_->texture_coordinates_for_character(ch);
+            corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
+            corners[1].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
+            corners[2].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
+            corners[3].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
 
-        vertices.push_back(corners[0]);
-        vertices.push_back(corners[1]);
-        vertices.push_back(corners[2]);
-        vertices.push_back(corners[3]);
+            vertices.push_back(corners[0]);
+            vertices.push_back(corners[1]);
+            vertices.push_back(corners[2]);
+            vertices.push_back(corners[3]);
+
+            line_char_count++;
+        }
 
         line_length += ch_advance;
-        line_char_count++;
 
         if(i == text().length() - 1) {
             finalize_line();

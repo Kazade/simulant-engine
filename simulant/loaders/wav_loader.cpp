@@ -189,7 +189,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
                 const uint32_t buffer_size = sound->buffer_size();
                 const uint32_t remaining_in_bytes = sound->stream_length() - state->offset;
 
-                assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
+                //assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
 
                 std::vector<uint8_t> buffer;
                 stream->seekg(state->offset, std::ios_base::beg);
