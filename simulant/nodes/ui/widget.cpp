@@ -283,6 +283,9 @@ void Widget::render_text() {
         left = next_left;
     }
 
+    float min_x = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+
     /* Now apply line heights */
     uint32_t j = 0;
     for(auto range: line_ranges) {
@@ -308,32 +311,22 @@ void Widget::render_text() {
             tr->xyz.x -= hw;
             tl->xyz.x -= hw;
 
+            min_x = std::min(bl->xyz.x, min_x);
+            min_x = std::min(tl->xyz.x, min_x);
+            max_x = std::max(br->xyz.x, max_x);
+            max_x = std::max(tr->xyz.x, max_x);
             ch += 4;
         }
+    }
+
+    if(j == 0) {
+        min_x = max_x = 0.0f;
     }
 
     auto sm = mesh_->find_submesh("text");
     assert(sm);
 
-    float min_x = std::numeric_limits<float>::max();
-    float min_y = std::numeric_limits<float>::max();
-    float max_x = std::numeric_limits<float>::lowest();
-    float max_y = std::numeric_limits<float>::lowest();
-
-    for(auto& v: vertices) {
-        min_x = std::min(min_x, v.xyz.x);
-        max_x = std::max(max_x, v.xyz.x);
-        min_y = std::min(min_y, v.xyz.y);
-        max_y = std::max(max_y, v.xyz.y);
-    }
-
-    pimpl_->content_width_ = max_x - min_x;
-    pimpl_->content_height_ = line_height.value * line_ranges.size();
-
-    auto abs_min_x = std::abs(min_x);
-    auto abs_max_x = std::abs(max_x);
-
-    auto global_x_shift = (abs_min_x - abs_max_x) / 2;
+    auto global_x_shift = (std::abs(min_x) - std::abs(max_x)) * 0.5f;
     auto global_y_shift = round(pimpl_->content_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
@@ -357,6 +350,8 @@ void Widget::render_text() {
     vdata->done();
     idata->done();
 
+    pimpl_->content_width_ = max_x - min_x;
+    pimpl_->content_height_ = line_height.value * line_ranges.size();
 }
 
 void Widget::clear_mesh() {
