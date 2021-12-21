@@ -19,7 +19,7 @@ public:
 
         camera_->set_perspective_projection(
             Degrees(45.0),
-            float(window->width()) / float(window->height()),
+            (double) (float(window->width()) / float(window->height())),
             1.0,
             1000.0
         );
@@ -51,9 +51,9 @@ public:
 
         // Load a zombie sound and play it
         sound_ = stage_->assets->new_sound_from_file("sample_data/zombie.wav");
-        actor->play_sound(sound_, AUDIO_REPEAT_FOREVER);
-        actor->set_gain(1);
-        actor->set_reference_distance(50);
+        auto s = actor->play_sound(sound_, AUDIO_REPEAT_FOREVER);
+        s->set_gain(1);
+        s->set_reference_distance(50);
     }
 
 private:
