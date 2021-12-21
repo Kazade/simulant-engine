@@ -197,7 +197,7 @@ public:
 
     void set_parent(TreeNode* node);
 
-    void destroy_after(const Seconds& seconds);
+    smlt::IdleConnectionID destroy_after(const Seconds& seconds);
 
     void update(float dt) override;
     void late_update(float dt) override;

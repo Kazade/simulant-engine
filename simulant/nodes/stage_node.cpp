@@ -135,8 +135,8 @@ void StageNode::set_parent(TreeNode* node) {
     recalc_visibility();
 }
 
-void StageNode::destroy_after(const Seconds& seconds) {
-    get_app()->idle->add_timeout_once(
+smlt::IdleConnectionID StageNode::destroy_after(const Seconds& seconds) {
+    return get_app()->idle->add_timeout_once(
         seconds, std::bind(&StageNode::destroy, this)
     );
 }

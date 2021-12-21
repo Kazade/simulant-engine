@@ -662,6 +662,8 @@ void Widget::set_foreground_image_source_rect(const UICoord& bottom_left, const 
 }
 
 void Widget::set_background_colour(const Colour& colour) {
+    assert(pimpl_);
+
     if(pimpl_->background_colour_ == colour) {
         // Nothing to do
         return;
