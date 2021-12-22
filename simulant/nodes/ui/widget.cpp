@@ -350,7 +350,9 @@ void Widget::render_text() {
     vdata->done();
     idata->done();
 
-    pimpl_->content_width_ = max_x - min_x;
+    float max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
+
+    pimpl_->content_width_ = max_length;
     pimpl_->content_height_ = line_height.value * line_ranges.size();
 }
 
