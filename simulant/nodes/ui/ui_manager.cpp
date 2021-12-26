@@ -17,6 +17,8 @@
 #include "label.h"
 #include "progress_bar.h"
 #include "image.h"
+#include "frame.h"
+
 #include "../../stage.h"
 #include "../camera.h"
 #include "../../window.h"
@@ -63,6 +65,15 @@ UIManager::~UIManager() {
     if(window) {
         window->unregister_event_listener(this);
     }
+}
+
+Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, const Px& height) {
+    auto frame = manager_->make_as<Frame>(this, &config_);
+    frame->set_text(title);
+    frame->resize(width, height);
+    stage_->add_child(frame);
+
+    return frame;
 }
 
 Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {

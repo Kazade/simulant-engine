@@ -352,8 +352,15 @@ void Widget::render_text() {
 
     float max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
-    pimpl_->content_width_ = max_length;
-    pimpl_->content_height_ = line_height.value * line_ranges.size();
+    auto cd = calculate_content_dimensions(
+        max_length,
+        line_height.value * line_ranges.size(),
+        calculate_background_size(),
+        calculate_foreground_size()
+    );
+
+    pimpl_->content_width_ = cd.first;
+    pimpl_->content_height_ = cd.second;
 }
 
 void Widget::clear_mesh() {
@@ -466,8 +473,8 @@ void Widget::rebuild() {
     auto foreground_bounds = calculate_foreground_size();
 
     auto border_bounds = background_bounds;
-    border_bounds.min -= smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
-    border_bounds.max += smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
+    border_bounds.min -= smlt::Vec2(pimpl_->border_width_.value, pimpl_->border_width_.value);
+    border_bounds.max += smlt::Vec2(pimpl_->border_width_.value, pimpl_->border_width_.value);
 
     if(border_active()) {
         auto colour = pimpl_->border_colour_;
@@ -479,7 +486,7 @@ void Widget::rebuild() {
         materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(pimpl_->background_image_);
     }
 
-    if(background_active()) {
+    if(background_active() && !background_bounds.has_non_zero_area()) {
         auto colour = pimpl_->background_colour_;
         colour.set_alpha(colour.af() * pimpl_->opacity_);
 
@@ -493,7 +500,7 @@ void Widget::rebuild() {
         materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(pimpl_->foreground_image_);
     }
 
-    if(foreground_active()) {
+    if(foreground_active() && !foreground_bounds.has_non_zero_area()) {
         auto colour = pimpl_->foreground_colour_;
         colour.set_alpha(colour.af() * pimpl_->opacity_);
         auto fg = new_rectangle("foreground", foreground_bounds, colour);
@@ -553,13 +560,23 @@ Widget::WidgetBounds Widget::calculate_foreground_size() const {
     return calculate_background_size();
 }
 
-void Widget::set_border_width(float x) {
+std::pair<Px, Px> Widget::calculate_content_dimensions(float text_width, float text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
+    _S_UNUSED(bg_size);
+    _S_UNUSED(fg_size);
+    return std::make_pair(Px(text_width), Px(text_height));
+}
+
+void Widget::set_border_width(Px x) {
     if(pimpl_->border_width_ == x) {
         return;
     }
 
     pimpl_->border_width_ = x;
     rebuild();
+}
+
+Px Widget::border_width() const {
+    return pimpl_->border_width_;
 }
 
 void Widget::set_border_colour(const Colour &colour) {
@@ -570,6 +587,10 @@ void Widget::set_border_colour(const Colour &colour) {
     pimpl_->border_colour_ = colour;
     pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER;
     rebuild();
+}
+
+void Widget::set_padding(Px x) {
+    set_padding(x, x, x, x);
 }
 
 void Widget::set_text(const unicode &text) {
@@ -744,12 +765,16 @@ bool Widget::has_foreground_image() const {
     return bool(pimpl_->foreground_image_);
 }
 
-void Widget::set_padding(uint16_t left, uint16_t right, uint16_t bottom, uint16_t top) {
+void Widget::set_padding(Px left, Px right, Px bottom, Px top) {
     pimpl_->padding_.left = left;
     pimpl_->padding_.right = right;
     pimpl_->padding_.bottom = bottom;
     pimpl_->padding_.top = top;
     rebuild();
+}
+
+UInt4 Widget::padding() const {
+    return pimpl_->padding_;
 }
 
 bool Widget::is_pressed_by_finger(uint8_t finger_id) {
@@ -772,6 +797,10 @@ void Widget::set_opacity(RangeValue<0, 1> alpha) {
         pimpl_->opacity_ = alpha;
         rebuild();
     }
+}
+
+Px Widget::line_height() const {
+    return Px(font_->size()) * pimpl_->line_height_;
 }
 
 void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPriority new_priority) {

@@ -44,7 +44,7 @@ struct WidgetImpl {
 
     UInt4 padding_ = {0, 0, 0, 0};
 
-    float border_width_ = 1.0f;
+    Px border_width_ = 1;
     PackedColour4444 border_colour_ = Colour::BLACK;
 
     unicode text_;
@@ -133,11 +133,17 @@ public:
     void click();
 
     void set_text(const unicode& text);
-    void set_border_width(float x);
+
+    void set_border_width(Px x);
+    Px border_width() const;
+
     void set_border_colour(const Colour& colour);
     void set_overflow(OverflowType type);
-    void set_padding(uint16_t x);
-    void set_padding(uint16_t left, uint16_t right, uint16_t bottom, uint16_t top);
+
+    void set_padding(Px x);
+    void set_padding(Px left, Px right, Px bottom, Px top);
+    UInt4 padding() const;
+
     virtual bool set_resize_mode(ResizeMode resize_mode);
 
     ResizeMode resize_mode() const;
@@ -201,6 +207,7 @@ public:
 
     void set_opacity(RangeValue<0, 1> alpha);
 
+    Px line_height() const;
 public:
     MaterialPtr border_material() const { return materials_[0]; }
     MaterialPtr background_material() const { return materials_[1]; }
@@ -240,10 +247,21 @@ protected:
 
         float width() const { return max.x - min.x; }
         float height() const { return max.y - min.y; }
+
+        bool has_non_zero_area() const {
+            return width() > 0.0f && height() > 0.0f;
+        }
     };
 
     virtual WidgetBounds calculate_background_size() const;
     virtual WidgetBounds calculate_foreground_size() const;
+
+    virtual std::pair<Px, Px> calculate_content_dimensions(
+        float text_width, float text_height,
+        WidgetBounds bg_size, WidgetBounds fg_size
+    );
+
+
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
 
     SubMeshPtr new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour);

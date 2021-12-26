@@ -7,13 +7,6 @@
 namespace smlt {
 namespace ui {
 
-struct UInt4 {
-    uint16_t left;
-    uint16_t right;
-    uint16_t bottom;
-    uint16_t top;
-};
-
 struct UICoord {
     UICoord():
         x(0), y(0) {}
@@ -91,6 +84,11 @@ struct Px {
         return !((*this) == rhs);
     }
 
+    Px& operator+=(const Px& rhs) {
+        value += rhs.value;
+        return *this;
+    }
+
     Px operator+(const Px& rhs) const {
         return Px(value + rhs.value);
     }
@@ -105,6 +103,17 @@ struct Px {
     }
 
     Px operator*(const Rem& rhs) const;
+
+    Px operator*(const uint32_t x) const {
+        return Px(value * x);
+    }
+};
+
+struct UInt4 {
+    Px left;
+    Px right;
+    Px bottom;
+    Px top;
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const Px& value) {

@@ -1,0 +1,103 @@
+#include "ui_manager.h"
+#include "frame.h"
+
+namespace smlt {
+namespace ui {
+
+Frame::Frame(UIManager *owner, UIConfig *config):
+    Widget(owner, config) {
+
+}
+
+bool Frame::pack_child(Widget *widget) {
+    if(widget == this) {
+        return false;
+    }
+
+    auto it = std::find(children_.begin(), children_.end(), widget);
+    if(it == children_.end()) {
+        children_.push_back(widget);
+        rebuild();
+        return true;
+    }
+
+    return false;
+}
+
+bool Frame::unpack_child(Widget *widget, ChildCleanup clean_up) {
+    auto it = std::find(children_.begin(), children_.end(), widget);
+    if(it != children_.end()) {
+        children_.erase(std::remove(children_.begin(), children_.end(), widget));
+        if(clean_up == CHILD_CLEANUP_DESTROY) {
+            widget->destroy();
+        }
+        rebuild();
+        return true;
+    }
+
+    return false;
+}
+
+const std::vector<Widget *> &Frame::packed_children() const {
+    return children_;
+}
+
+Widget::WidgetBounds Frame::calculate_background_size() const {
+    auto mode = resize_mode();
+
+    Px content_width = 0, content_height = 0;
+
+    for(auto& child: packed_children()) {
+        content_width = std::max(content_width, child->outer_width());
+        content_height += child->outer_height();
+    }
+
+    auto p = padding();
+
+    content_height += (p.top + p.bottom);
+    content_width += (p.left + p.right);
+    content_height += (space_between() * (children_.size() - 1));
+
+    if(mode == RESIZE_MODE_FIXED) {
+        content_width = p.left + requested_width() + p.right;
+        content_height = p.top + requested_height() + p.bottom;
+    } else if(mode == RESIZE_MODE_FIXED_HEIGHT) {
+        content_height = p.top + requested_height() + p.bottom;
+    } else if(mode == RESIZE_MODE_FIXED_WIDTH) {
+        content_width = p.left + requested_width() + p.right;
+    } else {
+        /* Do nothing, all dynamic */
+    }
+
+    auto hw = std::ceil(float(content_width.value) * 0.5f);
+    auto hh = std::ceil(float(content_height.value) * 0.5f);
+
+    WidgetBounds bounds;
+    bounds.min = smlt::Vec2(-hw, -hh);
+    bounds.max = smlt::Vec2(hw, hh);
+
+    return bounds;
+}
+
+Widget::WidgetBounds Frame::calculate_foreground_size() const {
+    /* Foreground height is literally line-height, if there is text. The width
+     * is the same as the background size */
+
+    WidgetBounds fg_size = calculate_background_size();
+    if(!text().empty()) {
+        fg_size.min = fg_size.max - smlt::Vec2(0, line_height().value);
+    } else {
+        fg_size.min = fg_size.max;
+    }
+
+    return fg_size;
+}
+
+std::pair<Px, Px> Frame::calculate_content_dimensions(float text_width, float text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
+    _S_UNUSED(text_width);
+    _S_UNUSED(text_height);
+    return std::make_pair(Px(bg_size.width()), Px(bg_size.height()));
+}
+
+}
+}
