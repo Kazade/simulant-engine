@@ -47,5 +47,6 @@ bool Image::set_resize_mode(ResizeMode resize_mode) {
     return false;
 }
 
+
 }
 }

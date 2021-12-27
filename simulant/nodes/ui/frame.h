@@ -52,9 +52,11 @@ private:
     LayoutDirection direction_ = LAYOUT_DIRECTION_TOP_TO_BOTTOM;
     Px space_between_ = 0;
 
-    virtual WidgetBounds calculate_background_size() const;
-    virtual WidgetBounds calculate_foreground_size() const;
-    virtual std::pair<Px, Px> calculate_content_dimensions(float text_width, float text_height, WidgetBounds bg_size, WidgetBounds fg_size);
+    virtual WidgetBounds calculate_background_size() const override;
+    virtual WidgetBounds calculate_foreground_size() const override;
+    virtual std::pair<Px, Px> calculate_content_dimensions(float text_width, float text_height, WidgetBounds bg_size, WidgetBounds fg_size) override;
+
+    virtual void prepare_build() override;
 };
 
 

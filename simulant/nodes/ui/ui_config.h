@@ -89,6 +89,11 @@ struct Px {
         return *this;
     }
 
+    Px& operator-=(const Px& rhs) {
+        value -= rhs.value;
+        return *this;
+    }
+
     Px operator+(const Px& rhs) const {
         return Px(value + rhs.value);
     }
@@ -106,6 +111,10 @@ struct Px {
 
     Px operator*(const uint32_t x) const {
         return Px(value * x);
+    }
+
+    Px operator/(const uint32_t x) const {
+        return Px(value / x);
     }
 };
 

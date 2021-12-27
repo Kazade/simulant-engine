@@ -25,43 +25,34 @@ public:
         int spacing = 10;
         int column = window->coordinate_from_normalized(0.25, 0).x;
 
+        auto frame = stage_->ui->new_widget_as_frame("UI Demo");
+        frame->set_anchor_point(0.0f, 1.0f);
+        frame->move_to(x, y);
+        frame->set_space_between(spacing);
+
         auto label = stage_->ui->new_widget_as_label("Label");
         label->resize(column, -1);
-        label->set_anchor_point(0, 1);
-        label->move_to(x, y);
-
-        y -= label->height() + spacing;
+        frame->pack_child(label);
 
         auto button = stage_->ui->new_widget_as_button("Button");
         button->resize(column, -1);
-        button->set_anchor_point(0, 1);
-        button->move_to(x, y);
-
-        y -= button->height() + spacing;
+        frame->pack_child(button);
 
         pg1_ = stage_->ui->new_widget_as_progress_bar();
         pg1_->set_text("Progress Bar (pulse)");
         pg1_->resize(column, -1);
-        pg1_->set_anchor_point(0, 1);
-        pg1_->move_to(x, y);
-
-        y -= pg1_->height() + spacing;
+        frame->pack_child(pg1_);
 
         pg2_ = stage_->ui->new_widget_as_progress_bar();
         pg2_->set_text("Progress Bar (percent)");
         pg2_->resize(column, -1);
-        pg2_->set_anchor_point(0, 1);
-        pg2_->move_to(x, y);
-
-        y -= pg2_->height() + spacing;
-
+        frame->pack_child(pg2_);
 
         auto added = app->vfs->add_search_path("simulant/fonts/Orbitron");
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font("Orbitron", 32);
-        big_label->set_anchor_point(0, 1);
-        big_label->move_to(x, y);
+        frame->pack_child(big_label);
 
         if(added) {
             app->vfs->remove_search_path("simulant/fonts/Orbitron");

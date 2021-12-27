@@ -226,6 +226,7 @@ private:
 
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
+protected:
     WidgetImpl* pimpl_ = nullptr;
 
     virtual void on_size_changed();
@@ -240,7 +241,6 @@ private:
     bool background_active() const;
     bool foreground_active() const;
 
-protected:
     struct WidgetBounds {
         smlt::Vec2 min;
         smlt::Vec2 max;
@@ -249,7 +249,9 @@ protected:
         float height() const { return max.y - min.y; }
 
         bool has_non_zero_area() const {
-            return width() > 0.0f && height() > 0.0f;
+            float w = width();
+            float h = height();
+            return !(smlt::almost_equal(w, 0.0f) || smlt::almost_equal(h, 0.0f));
         }
     };
 
@@ -280,6 +282,7 @@ protected:
     void rebuild();
     void set_font(FontPtr font_id);
 
+    virtual void prepare_build() {}
 };
 
 }

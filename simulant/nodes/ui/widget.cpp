@@ -467,6 +467,8 @@ void Widget::rebuild() {
 
     clear_mesh();
 
+    prepare_build();
+
     render_text();
 
     auto background_bounds = calculate_background_size();
@@ -486,7 +488,7 @@ void Widget::rebuild() {
         materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(pimpl_->background_image_);
     }
 
-    if(background_active() && !background_bounds.has_non_zero_area()) {
+    if(background_active() && background_bounds.has_non_zero_area()) {
         auto colour = pimpl_->background_colour_;
         colour.set_alpha(colour.af() * pimpl_->opacity_);
 
@@ -500,7 +502,7 @@ void Widget::rebuild() {
         materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(pimpl_->foreground_image_);
     }
 
-    if(foreground_active() && !foreground_bounds.has_non_zero_area()) {
+    if(foreground_active() && foreground_bounds.has_non_zero_area()) {
         auto colour = pimpl_->foreground_colour_;
         colour.set_alpha(colour.af() * pimpl_->opacity_);
         auto fg = new_rectangle("foreground", foreground_bounds, colour);

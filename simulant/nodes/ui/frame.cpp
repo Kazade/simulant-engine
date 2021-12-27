@@ -9,6 +9,34 @@ Frame::Frame(UIManager *owner, UIConfig *config):
 
 }
 
+void Frame::prepare_build() {
+    /* We reposition all the children relative to our centre */
+
+    if(direction_ == LAYOUT_DIRECTION_LEFT_TO_RIGHT) {
+
+    } else {
+        Px height = 0;
+        for(auto& child: packed_children()) {
+            height += child->outer_height();
+        }
+
+        height += (space_between() * (packed_children().size() - 1));
+
+        Px y = (height / 2);
+        for(auto& child: packed_children()) {
+            auto ap = child->anchor_point();
+            child->set_anchor_point(0.5f, 1.0f);
+
+            child->move_to(0.0f, y.value);
+            y -= child->outer_height();
+            y -= space_between();
+
+            // Restore anchor point
+            child->set_anchor_point(ap.x, ap.y);
+        }
+    }
+}
+
 bool Frame::pack_child(Widget *widget) {
     if(widget == this) {
         return false;
@@ -127,6 +155,8 @@ Widget::WidgetBounds Frame::calculate_foreground_size() const {
 std::pair<Px, Px> Frame::calculate_content_dimensions(float text_width, float text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
     _S_UNUSED(text_width);
     _S_UNUSED(text_height);
+    _S_UNUSED(fg_size);
+
     return std::make_pair(Px(bg_size.width()), Px(bg_size.height()));
 }
 
