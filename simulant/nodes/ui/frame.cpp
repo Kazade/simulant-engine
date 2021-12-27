@@ -16,6 +16,7 @@ bool Frame::pack_child(Widget *widget) {
 
     auto it = std::find(children_.begin(), children_.end(), widget);
     if(it == children_.end()) {
+        widget->set_parent(this);  // Reparent
         children_.push_back(widget);
         rebuild();
         return true;
@@ -30,6 +31,8 @@ bool Frame::unpack_child(Widget *widget, ChildCleanup clean_up) {
         children_.erase(std::remove(children_.begin(), children_.end(), widget));
         if(clean_up == CHILD_CLEANUP_DESTROY) {
             widget->destroy();
+        } else {
+            widget->set_parent(nullptr);
         }
         rebuild();
         return true;
@@ -42,21 +45,49 @@ const std::vector<Widget *> &Frame::packed_children() const {
     return children_;
 }
 
+void Frame::set_layout_direction(LayoutDirection dir) {
+    if(direction_ == dir) {
+        return;
+    }
+
+    direction_ = dir;
+    rebuild();
+}
+
+void Frame::set_space_between(Px spacing) {
+    if(space_between_ == spacing) {
+        return;
+    }
+
+    space_between_ = spacing;
+    rebuild();
+}
+
 Widget::WidgetBounds Frame::calculate_background_size() const {
     auto mode = resize_mode();
 
     Px content_width = 0, content_height = 0;
 
     for(auto& child: packed_children()) {
-        content_width = std::max(content_width, child->outer_width());
-        content_height += child->outer_height();
+        if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
+            content_width = std::max(content_width, child->outer_width());
+            content_height += child->outer_height();
+        } else {
+            content_width += child->outer_width();
+            content_height = std::max(content_height, child->outer_height());
+        }
     }
 
     auto p = padding();
 
     content_height += (p.top + p.bottom);
     content_width += (p.left + p.right);
-    content_height += (space_between() * (children_.size() - 1));
+
+    if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
+        content_height += (space_between() * (children_.size() - 1));
+    } else {
+        content_width += (space_between() * (children_.size() - 1));
+    }
 
     if(mode == RESIZE_MODE_FIXED) {
         content_width = p.left + requested_width() + p.right;

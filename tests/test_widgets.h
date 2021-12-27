@@ -223,6 +223,21 @@ public:
         assert_equal(frame->outer_width(), expected_width);
     }
 
+    void test_widgets_are_reparented() {
+        smlt::ui::Frame* frame = _setup_frame();
+        auto& children = frame->packed_children();
+
+        for(auto& child: children) {
+            assert_equal(child->parent(), frame);
+        }
+
+        auto child1 = children[0];
+        frame->unpack_child(child1, smlt::ui::CHILD_CLEANUP_RETAIN);
+
+        /* Child parent should be the stage */
+        assert_true(child1->parent_is_stage());
+    }
+
 private:
     smlt::ui::Frame* _setup_frame() {
         smlt::ui::Frame* frame = stage_->ui->new_widget_as_frame("My Title");

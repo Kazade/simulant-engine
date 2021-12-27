@@ -39,13 +39,9 @@ public:
 
     const std::vector<smlt::ui::Widget*>& packed_children() const;
 
-    void set_layout_direction(LayoutDirection dir) {
+    void set_layout_direction(LayoutDirection dir);
 
-    }
-
-    void set_space_between(Px spacing) {
-        space_between_ = spacing;
-    }
+    void set_space_between(Px spacing);
 
     Px space_between() const {
         return space_between_;
@@ -53,6 +49,7 @@ public:
 
 private:
     std::vector<smlt::ui::Widget*> children_;
+    LayoutDirection direction_ = LAYOUT_DIRECTION_TOP_TO_BOTTOM;
     Px space_between_ = 0;
 
     virtual WidgetBounds calculate_background_size() const;
