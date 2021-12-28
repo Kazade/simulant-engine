@@ -7,20 +7,6 @@
 namespace smlt {
 namespace ui {
 
-struct UICoord {
-    UICoord():
-        x(0), y(0) {}
-
-    UICoord(uint16_t x, uint16_t y):
-        x(x), y(y) {}
-
-    bool operator==(const UICoord& rhs) const {
-        return x == rhs.x && y == rhs.y;
-    }
-
-    uint16_t x, y;
-};
-
 enum OverflowType {
     OVERFLOW_TYPE_HIDDEN,
     OVERFLOW_TYPE_VISIBLE,
@@ -45,11 +31,6 @@ enum ChangeFocusBehaviour {
     FOCUS_NONE_IF_NONE_FOCUSED = 0x2
 };
 
-struct UIDim {
-    float width = 0.0;
-    float height = 0.0;
-};
-
 struct Rem;
 
 /* Absolute pixel value */
@@ -59,6 +40,10 @@ struct Px {
     Px() = default;
     Px(const int& rhs):
         value(rhs) {}
+
+    Px operator-() const {
+        return Px(-value);
+    }
 
     bool operator>=(const Px& rhs) const {
         return value >= rhs.value;
@@ -117,6 +102,30 @@ struct Px {
         return Px(value / x);
     }
 };
+
+struct UICoord {
+    UICoord():
+        x(0), y(0) {}
+
+    UICoord(Px x, Px y):
+        x(x), y(y) {}
+
+    bool operator==(const UICoord& rhs) const {
+        return x == rhs.x && y == rhs.y;
+    }
+
+    Px x, y;
+};
+
+struct UIDim {
+    Px width = 0;
+    Px height = 0;
+
+    UIDim() = default;
+    UIDim(Px width, Px height):
+        width(width), height(height) {}
+};
+
 
 struct UInt4 {
     Px left;
@@ -196,14 +205,14 @@ struct UIConfig {
     PackedColour4444 button_text_colour_ = Colour::WHITE;
     PackedColour4444 button_border_colour_ = Colour::NONE;
 
-    uint16_t button_border_width_ = 0;
-    uint16_t button_border_radius_ = 3;
+    Px button_border_width_ = 0;
+    Px button_border_radius_ = 3;
 
     PackedColour4444 progress_bar_foreground_colour_ = DODGER_BLUE;
     PackedColour4444 progress_bar_background_colour_ = Colour::WHITE;
     PackedColour4444 progress_bar_border_colour_ = DODGER_BLUE;
     float progress_bar_border_width_ = 1;
-    uint16_t progress_bar_width_ = 100;
+    Px progress_bar_width_ = 100;
     Rem progress_bar_height_ = Rem(1.5f);
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;

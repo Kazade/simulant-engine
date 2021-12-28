@@ -167,7 +167,7 @@ void Widget::render_text() {
     };
 
     if(!font_ || text().empty()) {
-        pimpl_->content_height_ = pimpl_->content_width_ = 0;
+        pimpl_->text_width_ = pimpl_->text_height_ = 0;
         return;
     }
 
@@ -192,7 +192,9 @@ void Widget::render_text() {
     Px right_bound = (
         pimpl_->resize_mode_ == RESIZE_MODE_FIT_CONTENT ||
         pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT
-    ) ? std::numeric_limits<int>::max() : pimpl_->requested_width_;
+    ) ?
+    std::numeric_limits<int>::max() :
+    (pimpl_->requested_width_ - (pimpl_->padding_.left + pimpl_->padding_.right));
 
     Px left = left_bound;
     uint32_t line_start = 0;
@@ -352,15 +354,8 @@ void Widget::render_text() {
 
     float max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
-    auto cd = calculate_content_dimensions(
-        max_length,
-        line_height.value * line_ranges.size(),
-        calculate_background_size(),
-        calculate_foreground_size()
-    );
-
-    pimpl_->content_width_ = cd.first;
-    pimpl_->content_height_ = cd.second;
+    pimpl_->text_width_ = max_length;
+    pimpl_->text_height_ = line_height.value * line_ranges.size();
 }
 
 void Widget::clear_mesh() {
@@ -381,14 +376,11 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
 
     sm->set_diffuse(colour);
 
-    auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, 0);
-    auto width = bounds.width();
-    auto height = bounds.height();
-    float hh = height * 0.5f;
-    float hw = width * 0.5f;
+    auto min = bounds.min;
+    auto max = bounds.max;
 
-    auto x_offset = offset.x;
-    auto y_offset = offset.y;
+    auto x_offset = 0.0f;
+    auto y_offset = 0.0f;
 
     /* We don't offset Z at all, submeshes are organised back to front
      * so that when rendering they should be correctly blended */
@@ -397,25 +389,25 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     auto prev_count = mesh_->vertex_data->count();
     mesh_->vertex_data->move_to_end();
 
-    mesh_->vertex_data->position(x_offset + (-hw), y_offset + (-hh), z_offset);
+    mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(0.0, 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (hw), y_offset + (-hh), z_offset);
+    mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(1.0, 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (hw),  y_offset + (hh), z_offset);
+    mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(1.0, 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + (-hw),  y_offset + (hh), z_offset);
+    mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(0.0, 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);
@@ -435,13 +427,13 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
     auto dim = image->dimensions();
 
     Vec2 min = Vec2(
-        rect.bottom_left.x / dim.x,
-        rect.bottom_left.y / dim.y
+        rect.bottom_left.x.value / dim.x,
+        rect.bottom_left.y.value / dim.y
     );
 
     Vec2 max = Vec2(
-        (rect.bottom_left.x + rect.size.x) / dim.x,
-        (rect.bottom_left.y + rect.size.y) / dim.y
+        (rect.bottom_left.x.value + rect.size.x.value) / dim.x,
+        (rect.bottom_left.y.value + rect.size.y.value) / dim.y
     );
 
     auto vertices = mesh_->vertex_data.get();
@@ -469,14 +461,27 @@ void Widget::rebuild() {
 
     prepare_build();
 
+    // Sets the text width and height
     render_text();
 
     auto background_bounds = calculate_background_size();
     auto foreground_bounds = calculate_foreground_size();
 
+    auto content_area = calculate_content_dimensions(
+        pimpl_->text_width_,
+        pimpl_->text_height_,
+        background_bounds,
+        foreground_bounds
+    );
+
+    pimpl_->content_width_ = content_area.width;
+    pimpl_->content_height_ = content_area.height;
+
     auto border_bounds = background_bounds;
-    border_bounds.min -= smlt::Vec2(pimpl_->border_width_.value, pimpl_->border_width_.value);
-    border_bounds.max += smlt::Vec2(pimpl_->border_width_.value, pimpl_->border_width_.value);
+    border_bounds.min.x -= pimpl_->border_width_;
+    border_bounds.min.y -= pimpl_->border_width_;
+    border_bounds.max.x += pimpl_->border_width_;
+    border_bounds.max.y += pimpl_->border_width_;
 
     if(border_active()) {
         auto colour = pimpl_->border_colour_;
@@ -528,6 +533,7 @@ void Widget::rebuild() {
     vdata->done();
 
     pimpl_->anchor_point_dirty_ = false;
+    finalize_build();
 }
 
 Widget::WidgetBounds Widget::calculate_background_size() const {
@@ -535,26 +541,26 @@ Widget::WidgetBounds Widget::calculate_background_size() const {
 
     // FIXME: Clipping + other modes
     if(resize_mode() == RESIZE_MODE_FIXED) {
-        box_width = pimpl_->padding_.left + pimpl_->requested_width_.value + pimpl_->padding_.right;
-        box_height = pimpl_->padding_.top + pimpl_->requested_height_.value + pimpl_->padding_.bottom;
+        box_width = pimpl_->requested_width_.value;
+        box_height = pimpl_->requested_height_.value;
     } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        box_width = pimpl_->padding_.left + pimpl_->requested_width_.value + pimpl_->padding_.right;
-        box_height = std::max(pimpl_->requested_height_, pimpl_->content_height_) + pimpl_->padding_.top + pimpl_->padding_.bottom;
+        box_width = pimpl_->requested_width_.value;
+        box_height = pimpl_->text_height_ + pimpl_->padding_.top + pimpl_->padding_.bottom;
     } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
-        box_width = std::max(pimpl_->requested_width_, pimpl_->content_width_) + pimpl_->padding_.left + pimpl_->padding_.right;
-        box_height = pimpl_->padding_.top + pimpl_->requested_height_.value + pimpl_->padding_.bottom;
+        box_width = pimpl_->text_width_ + pimpl_->padding_.left + pimpl_->padding_.right;
+        box_height = pimpl_->requested_height_.value;
     } else {
         /* Fit content */
-        box_width = std::max(pimpl_->requested_width_, pimpl_->content_width_) + pimpl_->padding_.left + pimpl_->padding_.right;
-        box_height = std::max(pimpl_->requested_height_, pimpl_->content_height_) + pimpl_->padding_.top + pimpl_->padding_.bottom;
+        box_width = pimpl_->text_width_ + pimpl_->padding_.left + pimpl_->padding_.right;
+        box_height = pimpl_->text_height_ + pimpl_->padding_.top + pimpl_->padding_.bottom;
     }
 
-    auto hw = std::ceil(float(box_width.value) * 0.5f);
-    auto hh = std::ceil(float(box_height.value) * 0.5f);
+    auto hw = (int16_t) std::ceil(float(box_width.value) * 0.5f);
+    auto hh = (int16_t) std::ceil(float(box_height.value) * 0.5f);
 
     WidgetBounds bounds;
-    bounds.min = smlt::Vec2(-hw, -hh);
-    bounds.max = smlt::Vec2(hw, hh);
+    bounds.min = UICoord(-hw, -hh);
+    bounds.max = UICoord(hw, hh);
     return bounds;
 }
 
@@ -562,10 +568,10 @@ Widget::WidgetBounds Widget::calculate_foreground_size() const {
     return calculate_background_size();
 }
 
-std::pair<Px, Px> Widget::calculate_content_dimensions(float text_width, float text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
+UIDim Widget::calculate_content_dimensions(Px text_width, Px text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
     _S_UNUSED(bg_size);
     _S_UNUSED(fg_size);
-    return std::make_pair(Px(text_width), Px(text_height));
+    return UIDim(Px(text_width), Px(text_height));
 }
 
 void Widget::set_border_width(Px x) {
@@ -738,11 +744,19 @@ Px Widget::content_height() const {
 }
 
 Px Widget::outer_width() const {
-    return content_width() + (pimpl_->border_width_ * 2);
+    if(requested_width() == -1) {
+        return content_width() + (pimpl_->border_width_ * 2) + padding().left + padding().right;
+    } else {
+        return requested_width();
+    }
 }
 
 Px Widget::outer_height() const {
-    return content_height() + (pimpl_->border_width_ * 2);
+    if(requested_height() == -1) {
+        return content_height() + (pimpl_->border_width_ * 2) + padding().top + padding().bottom;
+    } else {
+        return requested_height();
+    }
 }
 
 bool Widget::set_resize_mode(ResizeMode resize_mode) {
@@ -768,6 +782,14 @@ bool Widget::has_foreground_image() const {
 }
 
 void Widget::set_padding(Px left, Px right, Px bottom, Px top) {
+    if(left == pimpl_->padding_.left &&
+        right == pimpl_->padding_.right &&
+        bottom == pimpl_->padding_.bottom &&
+        top == pimpl_->padding_.top) {
+
+        return;
+    }
+
     pimpl_->padding_.left = left;
     pimpl_->padding_.right = right;
     pimpl_->padding_.bottom = bottom;

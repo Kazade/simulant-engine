@@ -9,20 +9,28 @@ Frame::Frame(UIManager *owner, UIConfig *config):
 
 }
 
-void Frame::prepare_build() {
+void Frame::finalize_build() {
+    float ax = -(anchor_point().x - 0.5f);
+    float ay = -(anchor_point().y - 0.5f);
+
     /* We reposition all the children relative to our centre */
+    float cx = ax * outer_width().value;
+    float cy = ay * outer_height().value;
 
     if(direction_ == LAYOUT_DIRECTION_LEFT_TO_RIGHT) {
         Px width = 0;
         for(auto& child: packed_children()) {
-            child->move_to(width.value, 0);
+            child->move_to(cx + width.value, cy);
             width += child->outer_width();
             width += space_between_;
         }
     } else {
-        Px height = 0;
+        Px height = (outer_height() / 2 ) - line_height().value;
         for(auto& child: packed_children()) {
-            child->move_to(0, height.value);
+            child->set_anchor_point(0.5f, 1.0f);
+
+            /* FIXME! I don't know why subtracting the padding is necessary! */
+            child->move_to(cx - padding().left.value, cy + height.value - padding().top.value);
             height -= child->outer_height();
             height -= space_between_;
         }
@@ -86,11 +94,12 @@ void Frame::set_space_between(Px spacing) {
 Widget::WidgetBounds Frame::calculate_background_size() const {
     auto mode = resize_mode();
 
-    Px content_width = 0, content_height = 0;
+    Px content_width = 0;
+    Px content_height = 0;
 
     for(auto& child: packed_children()) {
-        auto child_width = child->outer_width() + child->padding().left + child->padding().right;
-        auto child_height = child->outer_height() + child->padding().top + child->padding().bottom;
+        auto child_width = child->outer_width();
+        auto child_height = child->outer_height();
 
         if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
             content_width = std::max(content_width, child_width);
@@ -103,32 +112,35 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
 
     auto p = padding();
 
-    content_height += (p.top + p.bottom);
-    content_width += (p.left + p.right);
-
     if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
         content_height += (space_between() * (children_.size() - 1));
     } else {
         content_width += (space_between() * (children_.size() - 1));
     }
 
+    content_height += line_height().value;
+    content_height += (p.top + p.bottom);
+    content_width += (p.left + p.right);
+    content_height += (border_width() * 2);
+    content_width += (border_width() * 2);
+
     if(mode == RESIZE_MODE_FIXED) {
-        content_width = p.left + requested_width() + p.right;
-        content_height = p.top + requested_height() + p.bottom;
+        content_width = requested_width();
+        content_height = requested_height();
     } else if(mode == RESIZE_MODE_FIXED_HEIGHT) {
-        content_height = p.top + requested_height() + p.bottom;
+        content_height = requested_height();
     } else if(mode == RESIZE_MODE_FIXED_WIDTH) {
-        content_width = p.left + requested_width() + p.right;
+        content_width = requested_width();
     } else {
         /* Do nothing, all dynamic */
     }
 
-    auto hw = std::ceil(float(content_width.value) * 0.5f);
-    auto hh = std::ceil(float(content_height.value) * 0.5f);
+    Px hw = (int16_t) std::ceil(float(content_width.value) * 0.5f);
+    Px hh = (int16_t) std::ceil(float(content_height.value) * 0.5f);
 
     WidgetBounds bounds;
-    bounds.min = smlt::Vec2(-hw, -hh);
-    bounds.max = smlt::Vec2(hw, hh);
+    bounds.min = UICoord(-hw, -hh);
+    bounds.max = UICoord(hw, hh);
 
     return bounds;
 }
@@ -139,7 +151,9 @@ Widget::WidgetBounds Frame::calculate_foreground_size() const {
 
     WidgetBounds fg_size = calculate_background_size();
     if(!text().empty()) {
-        fg_size.min = fg_size.max - smlt::Vec2(0, line_height().value);
+        fg_size.min = fg_size.max;
+        fg_size.min.y -= line_height().value;
+        fg_size.min.x.value *= -1;
     } else {
         fg_size.min = fg_size.max;
     }
@@ -147,12 +161,12 @@ Widget::WidgetBounds Frame::calculate_foreground_size() const {
     return fg_size;
 }
 
-std::pair<Px, Px> Frame::calculate_content_dimensions(float text_width, float text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
+UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
     _S_UNUSED(text_width);
     _S_UNUSED(text_height);
     _S_UNUSED(fg_size);
 
-    return std::make_pair(Px(bg_size.width()), Px(bg_size.height()));
+    return UIDim(Px(bg_size.width()), Px(bg_size.height()));
 }
 
 }

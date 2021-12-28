@@ -36,6 +36,9 @@ struct WidgetImpl {
      * for performance reasons. We track that here */
     uint8_t active_layers_ = ~0;
 
+    Px text_width_ = 0;
+    Px text_height_ = 0;
+
     Px requested_width_ = 0;
     Px requested_height_ = 0;
 
@@ -85,6 +88,23 @@ struct WidgetImpl {
 
     std::set<uint8_t> fingers_down_;
 };
+
+
+/* Sizing:
+ *
+ * Widgets follow a similar model to the border-box model in CSS. Effectively:
+ *
+ * - If a dimension length has not been defined (e.g. requested_width_ == -1) then
+ *   the dimension is calculated as the content size + padding + border.
+ * - If a dimension length has been defined, then the content size is reduced to make
+ *   room for the padding and border.
+ *
+ * Content area:
+ *
+ * - The size of the content area varies depending on widget, but for most widgets this
+ *   is defined as the area that the text takes to render, unless a fixed size has been
+ *   specified and then this would be the requested size without padding or border
+ */
 
 class Widget:
     public TypedDestroyableObject<Widget, UIManager>,
@@ -175,6 +195,9 @@ public:
     Px content_width() const;
     Px content_height() const;
 
+    /** This returns the outside width of the widget, this will be the same as the
+     * requested_width if it was specified, else it will be the width of the content
+     * area plus padding and border */
     Px outer_width() const;
     Px outer_height() const;
 
@@ -242,24 +265,23 @@ protected:
     bool foreground_active() const;
 
     struct WidgetBounds {
-        smlt::Vec2 min;
-        smlt::Vec2 max;
+        UICoord min;
+        UICoord max;
 
-        float width() const { return max.x - min.x; }
-        float height() const { return max.y - min.y; }
+        Px width() const { return max.x - min.x; }
+        Px height() const { return max.y - min.y; }
 
         bool has_non_zero_area() const {
-            float w = width();
-            float h = height();
-            return !(smlt::almost_equal(w, 0.0f) || smlt::almost_equal(h, 0.0f));
+            Px w = width();
+            Px h = height();
+            return std::abs(w.value) > 0 && std::abs(h.value) > 0;
         }
     };
 
     virtual WidgetBounds calculate_background_size() const;
     virtual WidgetBounds calculate_foreground_size() const;
 
-    virtual std::pair<Px, Px> calculate_content_dimensions(
-        float text_width, float text_height,
+    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height,
         WidgetBounds bg_size, WidgetBounds fg_size
     );
 
@@ -283,6 +305,7 @@ protected:
     void set_font(FontPtr font_id);
 
     virtual void prepare_build() {}
+    virtual void finalize_build() {}
 };
 
 }

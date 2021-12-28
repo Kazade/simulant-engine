@@ -28,7 +28,9 @@ public:
         auto frame = stage_->ui->new_widget_as_frame("UI Demo");
         frame->set_anchor_point(0.0f, 1.0f);
         frame->move_to(x, y);
+        frame->set_padding(spacing);
         frame->set_space_between(spacing);
+        frame->set_foreground_colour(smlt::ui::UIConfig::LIGHT_GREY);
 
         auto label = stage_->ui->new_widget_as_label("Label");
         label->resize(column, -1);
@@ -49,10 +51,11 @@ public:
         frame->pack_child(pg2_);
 
         auto added = app->vfs->add_search_path("simulant/fonts/Orbitron");
+        /*
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font("Orbitron", 32);
-        frame->pack_child(big_label);
+        frame->pack_child(big_label); */
 
         if(added) {
             app->vfs->remove_search_path("simulant/fonts/Orbitron");
