@@ -13,26 +13,18 @@ void Frame::prepare_build() {
     /* We reposition all the children relative to our centre */
 
     if(direction_ == LAYOUT_DIRECTION_LEFT_TO_RIGHT) {
-
+        Px width = 0;
+        for(auto& child: packed_children()) {
+            child->move_to(width.value, 0);
+            width += child->outer_width();
+            width += space_between_;
+        }
     } else {
         Px height = 0;
         for(auto& child: packed_children()) {
-            height += child->outer_height();
-        }
-
-        height += (space_between() * (packed_children().size() - 1));
-
-        Px y = (height / 2);
-        for(auto& child: packed_children()) {
-            auto ap = child->anchor_point();
-            child->set_anchor_point(0.5f, 1.0f);
-
-            child->move_to(0.0f, y.value);
-            y -= child->outer_height();
-            y -= space_between();
-
-            // Restore anchor point
-            child->set_anchor_point(ap.x, ap.y);
+            child->move_to(0, height.value);
+            height -= child->outer_height();
+            height -= space_between_;
         }
     }
 }
@@ -97,12 +89,15 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
     Px content_width = 0, content_height = 0;
 
     for(auto& child: packed_children()) {
+        auto child_width = child->outer_width() + child->padding().left + child->padding().right;
+        auto child_height = child->outer_height() + child->padding().top + child->padding().bottom;
+
         if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
-            content_width = std::max(content_width, child->outer_width());
-            content_height += child->outer_height();
+            content_width = std::max(content_width, child_width);
+            content_height += child_height;
         } else {
-            content_width += child->outer_width();
-            content_height = std::max(content_height, child->outer_height());
+            content_width += child_width;
+            content_height = std::max(content_height, child_height);
         }
     }
 
