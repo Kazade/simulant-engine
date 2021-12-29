@@ -27,8 +27,12 @@ class Label;
 class ProgressBar;
 class Image;
 class Frame;
+class Keyboard;
 
-typedef ::smlt::StageNodeManager<::smlt::StageNodePool, WidgetID, Widget, Button, Label, ProgressBar, Image, Frame> WidgetManager;
+typedef ::smlt::StageNodeManager<
+    ::smlt::StageNodePool,
+    WidgetID, Widget, Button, Label, ProgressBar, Image, Frame, Keyboard
+> WidgetManager;
 
 enum UIEventType {
     UI_EVENT_TYPE_TOUCH
@@ -59,6 +63,7 @@ public:
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TexturePtr& texture);
     Frame* new_widget_as_frame(const unicode& title, const Px& width=-1, const Px& height=-1);
+    Keyboard* new_widget_as_keyboard();
 
     Widget* widget(WidgetID widget_id);
 

@@ -13,6 +13,7 @@
 #include "ui/label.h"
 #include "ui/progress_bar.h"
 #include "ui/frame.h"
+#include "ui/keyboard.h"
 
 #define STAGE_NODE_MANAGER_DEBUG 0
 

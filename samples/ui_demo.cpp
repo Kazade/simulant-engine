@@ -82,6 +82,10 @@ public:
         fit_content->resize(-1, -1);
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
+
+        auto keyboard = stage_->ui->new_widget_as_keyboard();
+        keyboard->set_anchor_point(0.5f, 0.0f);
+        keyboard->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
     }
 
     void update(float dt) {
@@ -118,8 +122,7 @@ public:
     }
 
     bool init() {
-        scenes->register_scene<MainScene>("demo");
-        scenes->register_scene<smlt::scenes::Splash>("main", "demo");
+        scenes->register_scene<MainScene>("main");
 
         return true;
     }

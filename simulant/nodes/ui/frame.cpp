@@ -24,9 +24,12 @@ void Frame::finalize_build() {
     float cy = ay * outer_height().value;
 
     if(direction_ == LAYOUT_DIRECTION_LEFT_TO_RIGHT) {
-        Px width = 0;
+        Px width = -(outer_width() / 2);
         for(auto& child: packed_children()) {
-            child->move_to(cx + width.value, cy);
+            child->set_anchor_point(0.0f, 0.5f);
+
+            /* FIXME! I don't know why subtracting the padding is necessary! */
+            child->move_to(cx + width.value - padding().left.value, cy - padding().top.value);
             width += child->outer_width();
             width += space_between_;
         }
@@ -165,8 +168,8 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
         /* Do nothing, all dynamic */
     }
 
-    Px hw = (int16_t) round(float(content_width.value) * 0.5f);
-    Px hh = (int16_t) round(float(content_height.value) * 0.5f);
+    Px hw = (int16_t) std::ceil(float(content_width.value) * 0.5f);
+    Px hh = (int16_t) std::ceil(float(content_height.value) * 0.5f);
 
     WidgetBounds bounds;
     bounds.min = UICoord(-hw, -hh);

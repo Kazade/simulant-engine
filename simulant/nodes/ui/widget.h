@@ -242,13 +242,14 @@ private:
     ) override;
 
     bool initialized_ = false;
-    UIManager* owner_ = nullptr;
+
     ActorPtr actor_ = nullptr;
     MeshPtr mesh_ = nullptr;
 
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
 protected:
+    UIManager* owner_ = nullptr;
     FontPtr font_ = nullptr;
 
     WidgetImpl* pimpl_ = nullptr;

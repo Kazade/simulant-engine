@@ -193,7 +193,7 @@ void Widget::render_text() {
         pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT
     ) ?
     std::numeric_limits<int>::max() :
-    (pimpl_->requested_width_ - (pimpl_->padding_.left + pimpl_->padding_.right));
+    std::max(Px(0), (pimpl_->requested_width_ - (pimpl_->padding_.left + pimpl_->padding_.right)));
 
     Px left = left_bound;
     uint32_t line_start = 0;
@@ -228,8 +228,7 @@ void Widget::render_text() {
         bool break_line = ch == '\n';
 
         if(resize_mode() == RESIZE_MODE_FIXED || resize_mode() == RESIZE_MODE_FIXED_WIDTH) {
-            // FIXME: if(line_wrap)
-            if(right >= right_bound) {
+            if(right >= right_bound && ch_width < right_bound) {
                 break_line = true;
             }
         }

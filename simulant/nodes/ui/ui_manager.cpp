@@ -18,6 +18,7 @@
 #include "progress_bar.h"
 #include "image.h"
 #include "frame.h"
+#include "keyboard.h"
 
 #include "../../stage.h"
 #include "../camera.h"
@@ -65,6 +66,12 @@ UIManager::~UIManager() {
     if(window) {
         window->unregister_event_listener(this);
     }
+}
+
+Keyboard* UIManager::new_widget_as_keyboard() {
+    auto keyboard = manager_->make_as<Keyboard>(this, &config_);
+    stage_->add_child(keyboard);
+    return keyboard;
 }
 
 Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, const Px& height) {
