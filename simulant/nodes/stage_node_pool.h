@@ -13,6 +13,7 @@
 #include "ui/image.h"
 #include "ui/label.h"
 #include "ui/progress_bar.h"
+#include "ui/frame.h"
 #endif
 
 namespace smlt {
@@ -33,6 +34,7 @@ class Button;
 class Image;
 class Label;
 class ProgressBar;
+class Frame;
 
 }
 
@@ -42,7 +44,7 @@ class Polylist;
 typedef Polylist<
     StageNode,
     Actor, MeshInstancer, Camera, Geom, Light, ParticleSystem, Sprite,
-    ui::Button, ui::Image, ui::Label, ui::ProgressBar,
+    ui::Button, ui::Image, ui::Label, ui::ProgressBar, ui::Frame,
     Skybox
 > StageNodePool;
 

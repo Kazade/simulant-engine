@@ -7,27 +7,6 @@
 namespace smlt {
 namespace ui {
 
-struct UInt4 {
-    uint16_t left;
-    uint16_t right;
-    uint16_t bottom;
-    uint16_t top;
-};
-
-struct UICoord {
-    UICoord():
-        x(0), y(0) {}
-
-    UICoord(uint16_t x, uint16_t y):
-        x(x), y(y) {}
-
-    bool operator==(const UICoord& rhs) const {
-        return x == rhs.x && y == rhs.y;
-    }
-
-    uint16_t x, y;
-};
-
 enum OverflowType {
     OVERFLOW_TYPE_HIDDEN,
     OVERFLOW_TYPE_VISIBLE,
@@ -52,11 +31,6 @@ enum ChangeFocusBehaviour {
     FOCUS_NONE_IF_NONE_FOCUSED = 0x2
 };
 
-struct UIDim {
-    float width = 0.0;
-    float height = 0.0;
-};
-
 struct Rem;
 
 /* Absolute pixel value */
@@ -66,6 +40,10 @@ struct Px {
     Px() = default;
     Px(const int& rhs):
         value(rhs) {}
+
+    Px operator-() const {
+        return Px(-value);
+    }
 
     bool operator>=(const Px& rhs) const {
         return value >= rhs.value;
@@ -91,6 +69,16 @@ struct Px {
         return !((*this) == rhs);
     }
 
+    Px& operator+=(const Px& rhs) {
+        value += rhs.value;
+        return *this;
+    }
+
+    Px& operator-=(const Px& rhs) {
+        value -= rhs.value;
+        return *this;
+    }
+
     Px operator+(const Px& rhs) const {
         return Px(value + rhs.value);
     }
@@ -105,6 +93,45 @@ struct Px {
     }
 
     Px operator*(const Rem& rhs) const;
+
+    Px operator*(const uint32_t x) const {
+        return Px(value * x);
+    }
+
+    Px operator/(const uint32_t x) const {
+        return Px(value / x);
+    }
+};
+
+struct UICoord {
+    UICoord():
+        x(0), y(0) {}
+
+    UICoord(Px x, Px y):
+        x(x), y(y) {}
+
+    bool operator==(const UICoord& rhs) const {
+        return x == rhs.x && y == rhs.y;
+    }
+
+    Px x, y;
+};
+
+struct UIDim {
+    Px width = 0;
+    Px height = 0;
+
+    UIDim() = default;
+    UIDim(Px width, Px height):
+        width(width), height(height) {}
+};
+
+
+struct UInt4 {
+    Px left;
+    Px right;
+    Px bottom;
+    Px top;
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const Px& value) {
@@ -152,16 +179,18 @@ struct UIConfig {
 
     Rem line_height_ = Rem(1.5f);
 
-    Colour foreground_colour_ = Colour::BLACK;
-    Colour background_colour_ = Colour::WHITE;
+    Colour foreground_colour_ = Colour::from_bytes(40, 40, 40, 255);
+    Colour background_colour_ = Colour::from_bytes(53, 53, 53, 255);
+    Colour text_colour_ = Colour::from_bytes(219, 219, 219, 255);
+    Colour highlight_colour_ = Colour::from_bytes(0, 51, 102, 255);
 
     ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
     uint8_t scrollbar_width_ = 16;
-    Colour scrollbar_background_colour_ = LIGHT_GREY;
-    Colour scrollbar_foreground_colour_ = ALICE_BLUE;
+    Colour scrollbar_background_colour_ = background_colour_;
+    Colour scrollbar_foreground_colour_ = foreground_colour_;
 
     uint16_t button_height_ = 36;
     uint16_t button_width_ = 0; // Fit content
@@ -170,23 +199,36 @@ struct UIConfig {
     PackedColour4444 label_background_colour_ = Colour::NONE;
     PackedColour4444 label_foreground_colour_ = Colour::NONE;
     PackedColour4444 label_border_colour_ = Colour::NONE;
-    PackedColour4444 label_text_colour_ = DODGER_BLUE;
+    PackedColour4444 label_text_colour_ = text_colour_;
 
     UInt4 button_padding_ = { 30, 30, 20, 20 };
-    PackedColour4444 button_background_colour_ = DODGER_BLUE;
+    PackedColour4444 button_background_colour_ = highlight_colour_;
     PackedColour4444 button_foreground_colour_ = Colour::NONE;
-    PackedColour4444 button_text_colour_ = Colour::WHITE;
+    PackedColour4444 button_text_colour_ = text_colour_;
     PackedColour4444 button_border_colour_ = Colour::NONE;
 
-    uint16_t button_border_width_ = 0;
-    uint16_t button_border_radius_ = 3;
+    Px button_border_width_ = 0;
+    Px button_border_radius_ = 3;
 
-    PackedColour4444 progress_bar_foreground_colour_ = DODGER_BLUE;
-    PackedColour4444 progress_bar_background_colour_ = Colour::WHITE;
-    PackedColour4444 progress_bar_border_colour_ = DODGER_BLUE;
-    float progress_bar_border_width_ = 1;
-    uint16_t progress_bar_width_ = 100;
+    UInt4 image_padding_ = {0, 0, 0, 0};
+    Px image_border_width_ = 0;
+    PackedColour4444 image_background_colour_ = smlt::Colour::WHITE;
+    PackedColour4444 image_foreground_colour_ = smlt::Colour::NONE;
+    PackedColour4444 image_text_colour_ = smlt::Colour::NONE;
+
+    PackedColour4444 progress_bar_foreground_colour_ = highlight_colour_;
+    PackedColour4444 progress_bar_background_colour_ = background_colour_;
+    PackedColour4444 progress_bar_border_colour_ = foreground_colour_;
+    PackedColour4444 progress_bar_text_colour_ = text_colour_;
+    Px progress_bar_border_width_ = 2;
+    Px progress_bar_width_ = 100;
     Rem progress_bar_height_ = Rem(1.5f);
+
+    PackedColour4444 frame_background_colour_ = background_colour_;
+    PackedColour4444 frame_titlebar_colour_ = foreground_colour_;
+    PackedColour4444 frame_text_colour_ = text_colour_;
+    Px frame_border_width_ = 2;
+    PackedColour4444 frame_border_colour_ = foreground_colour_;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;

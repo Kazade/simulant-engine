@@ -59,6 +59,9 @@ public:
          */
 
         auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
+        button->set_padding(0);
+        button->set_border_width(0);
+
         assert_equal(button->aabb().min().x, 0); // By default, the bounds should start at zero
         assert_equal(button->aabb().min().y, 0);
         button->set_anchor_point(1.0, 0.0); // Bottom-right
@@ -172,5 +175,117 @@ private:
     StagePtr stage_;
 
 };
+
+class FrameTests : public smlt::test::SimulantTestCase {
+public:
+    void set_up() {
+        SimulantTestCase::set_up();
+
+        stage_ = scene->new_stage();
+    }
+
+    void tear_down() {
+        scene->destroy_stage(stage_->id());
+        SimulantTestCase::tear_down();
+    }
+
+    void test_add_child() {
+        _setup_frame();
+    }
+
+    void test_remove_child() {
+        smlt::ui::Frame* frame = _setup_frame();
+
+        auto first_child = frame->packed_children().front();
+        assert_equal(frame->packed_children().size(), 2u);
+        frame->unpack_child(first_child);
+        assert_equal(frame->packed_children().size(), 1u);
+
+        auto p = frame->padding();
+        auto b = frame->border_width();
+
+        first_child = frame->packed_children().front();
+        assert_equal(
+            frame->outer_height(),
+            first_child->outer_height() + p.top + p.bottom + (b * 2)
+        );
+    }
+
+    void test_frame_set_layout_direction() {
+        smlt::ui::Frame* frame = _setup_frame();
+        frame->set_layout_direction(smlt::ui::LAYOUT_DIRECTION_LEFT_TO_RIGHT);
+
+        auto p = frame->padding();
+        auto b = frame->border_width();
+
+        smlt::ui::Px expected_width = p.left + p.right + (b * 2);
+        for(auto& child: frame->packed_children()) {
+            expected_width += child->outer_width();
+        }
+
+        expected_width += (frame->space_between() * (frame->packed_children().size() - 1));
+
+        // Odd number widths will be rounded by the frame (FIXME?)
+        if(expected_width.value % 2 == 1) {
+            expected_width.value++;
+        }
+
+        assert_equal(frame->outer_width(), expected_width);
+    }
+
+    void test_widgets_are_reparented() {
+        smlt::ui::Frame* frame = _setup_frame();
+        auto& children = frame->packed_children();
+
+        for(auto& child: children) {
+            assert_equal(child->parent(), frame);
+        }
+
+        auto child1 = children[0];
+        frame->unpack_child(child1, smlt::ui::CHILD_CLEANUP_RETAIN);
+
+        /* Child parent should be the stage */
+        assert_true(child1->parent_is_stage());
+    }
+
+private:
+    smlt::ui::Frame* _setup_frame() {
+        smlt::ui::Frame* frame = stage_->ui->new_widget_as_frame("");
+        smlt::ui::Button* button = stage_->ui->new_widget_as_button("Button 1");
+        smlt::ui::Label* label = stage_->ui->new_widget_as_label("Test Label");
+
+        /* Can pack a child once, but not itself */
+        assert_true(frame->pack_child(button));
+        assert_false(frame->pack_child(button));
+        assert_false(frame->pack_child(frame));
+
+        /* By default, the frame would resize to contain the button */
+        auto p = frame->padding();
+        auto b = frame->border_width();
+
+        auto fw = frame->outer_width();
+        auto fh = frame->outer_height();
+        auto bw = button->outer_width();
+        auto bh = button->outer_height();
+        assert_equal(fw, bw + p.left + p.right + (b * 2));
+        assert_equal(fh, bh + p.top + p.bottom + (b * 2));
+
+        assert_true(frame->pack_child(label));
+
+        auto max_width = std::max(button->outer_width(), label->outer_width());
+        auto child_height = button->outer_height() + label->outer_height();
+        auto spacing = frame->space_between();
+
+        fw = frame->outer_width();
+        fh = frame->outer_height();
+
+        assert_equal(fw, max_width + p.left + p.right + (b * 2));
+        assert_equal(fh, child_height + spacing + p.top + p.bottom + (b * 2));
+        return frame;
+    }
+
+    StagePtr stage_;
+};
+
 
 }
