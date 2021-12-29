@@ -179,16 +179,18 @@ struct UIConfig {
 
     Rem line_height_ = Rem(1.5f);
 
-    Colour foreground_colour_ = Colour::BLACK;
-    Colour background_colour_ = Colour::WHITE;
+    Colour foreground_colour_ = Colour::from_bytes(57, 63, 63, 255);
+    Colour background_colour_ = Colour::from_bytes(51, 51, 51, 255);
+    Colour text_colour_ = Colour::from_bytes(214, 216, 215, 255);
+    Colour highlight_colour_ = Colour::from_bytes(0, 51, 102, 255);
 
     ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
     uint8_t scrollbar_width_ = 16;
-    Colour scrollbar_background_colour_ = LIGHT_GREY;
-    Colour scrollbar_foreground_colour_ = ALICE_BLUE;
+    Colour scrollbar_background_colour_ = background_colour_;
+    Colour scrollbar_foreground_colour_ = foreground_colour_;
 
     uint16_t button_height_ = 36;
     uint16_t button_width_ = 0; // Fit content
@@ -197,23 +199,36 @@ struct UIConfig {
     PackedColour4444 label_background_colour_ = Colour::NONE;
     PackedColour4444 label_foreground_colour_ = Colour::NONE;
     PackedColour4444 label_border_colour_ = Colour::NONE;
-    PackedColour4444 label_text_colour_ = DODGER_BLUE;
+    PackedColour4444 label_text_colour_ = text_colour_;
 
     UInt4 button_padding_ = { 30, 30, 20, 20 };
-    PackedColour4444 button_background_colour_ = DODGER_BLUE;
+    PackedColour4444 button_background_colour_ = highlight_colour_;
     PackedColour4444 button_foreground_colour_ = Colour::NONE;
-    PackedColour4444 button_text_colour_ = Colour::WHITE;
+    PackedColour4444 button_text_colour_ = text_colour_;
     PackedColour4444 button_border_colour_ = Colour::NONE;
 
     Px button_border_width_ = 0;
     Px button_border_radius_ = 3;
 
-    PackedColour4444 progress_bar_foreground_colour_ = DODGER_BLUE;
-    PackedColour4444 progress_bar_background_colour_ = Colour::WHITE;
-    PackedColour4444 progress_bar_border_colour_ = DODGER_BLUE;
-    float progress_bar_border_width_ = 1;
+    UInt4 image_padding_ = {0, 0, 0, 0};
+    Px image_border_width_ = 0;
+    PackedColour4444 image_background_colour_ = smlt::Colour::WHITE;
+    PackedColour4444 image_foreground_colour_ = smlt::Colour::NONE;
+    PackedColour4444 image_text_colour_ = smlt::Colour::NONE;
+
+    PackedColour4444 progress_bar_foreground_colour_ = highlight_colour_;
+    PackedColour4444 progress_bar_background_colour_ = background_colour_;
+    PackedColour4444 progress_bar_border_colour_ = foreground_colour_;
+    PackedColour4444 progress_bar_text_colour_ = text_colour_;
+    Px progress_bar_border_width_ = 2;
     Px progress_bar_width_ = 100;
     Rem progress_bar_height_ = Rem(1.5f);
+
+    PackedColour4444 frame_background_colour_ = background_colour_;
+    PackedColour4444 frame_titlebar_colour_ = foreground_colour_;
+    PackedColour4444 frame_text_colour_ = text_colour_;
+    Px frame_border_width_ = 2;
+    PackedColour4444 frame_border_colour_ = foreground_colour_;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;

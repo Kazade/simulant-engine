@@ -1,5 +1,6 @@
 #include "ui_manager.h"
 #include "frame.h"
+#include "../../meshes/mesh.h"
 
 namespace smlt {
 namespace ui {
@@ -7,6 +8,11 @@ namespace ui {
 Frame::Frame(UIManager *owner, UIConfig *config):
     Widget(owner, config) {
 
+    set_background_colour(config->frame_background_colour_);
+    set_foreground_colour(config->frame_titlebar_colour_);
+    set_text_colour(config->frame_text_colour_);
+    set_border_width(config->frame_border_width_);
+    set_border_colour(config->frame_border_colour_);
 }
 
 void Frame::finalize_build() {
@@ -33,6 +39,24 @@ void Frame::finalize_build() {
             child->move_to(cx - padding().left.value, cy + height.value - padding().top.value);
             height -= child->outer_height();
             height -= space_between_;
+        }
+    }
+
+    /* Reposition the text to be in the title bar */
+    if(!pimpl_->text_.empty()) {
+
+        auto sm = mesh()->find_submesh("text");
+        auto vdata = mesh()->vertex_data.get();
+
+        Px line_height_shift = (pimpl_->text_height_ - font_->size()) / 2;
+        Px shift =  (int16_t) ((outer_height().value * 0.5f) - line_height().value + (line_height_shift.value));
+
+        for(auto& idx: sm->index_data->all()) {
+            auto vpos = *vdata->position_at<smlt::Vec3>(idx);
+            vpos.y += shift.value;
+
+            vdata->move_to(idx);
+            vdata->position(vpos);
         }
     }
 }

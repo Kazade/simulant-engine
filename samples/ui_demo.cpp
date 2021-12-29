@@ -30,7 +30,6 @@ public:
         frame->move_to(x, y);
         frame->set_padding(spacing);
         frame->set_space_between(spacing);
-        frame->set_foreground_colour(smlt::ui::UIConfig::LIGHT_GREY);
 
         auto label = stage_->ui->new_widget_as_label("Label");
         label->resize(column, -1);
@@ -132,7 +131,7 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "UI Demo";
     config.fullscreen = false;
-    
+
     config.ui.font_size = 18;
 
 #ifdef __DREAMCAST__

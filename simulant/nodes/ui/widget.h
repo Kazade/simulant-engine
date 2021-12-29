@@ -245,11 +245,12 @@ private:
     UIManager* owner_ = nullptr;
     ActorPtr actor_ = nullptr;
     MeshPtr mesh_ = nullptr;
-    FontPtr font_ = nullptr;
 
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
 protected:
+    FontPtr font_ = nullptr;
+
     WidgetImpl* pimpl_ = nullptr;
 
     virtual void on_size_changed();

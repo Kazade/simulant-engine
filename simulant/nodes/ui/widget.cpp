@@ -328,8 +328,13 @@ void Widget::render_text() {
     auto sm = mesh_->find_submesh("text");
     assert(sm);
 
+    float max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
+
+    pimpl_->text_width_ = max_length;
+    pimpl_->text_height_ = line_height.value * line_ranges.size();
+
     auto global_x_shift = (std::abs(min_x) - std::abs(max_x)) * 0.5f;
-    auto global_y_shift = round(pimpl_->content_height_.value * 0.5f);
+    auto global_y_shift = round(pimpl_->text_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
     auto idata = sm->index_data.get();
@@ -351,11 +356,6 @@ void Widget::render_text() {
 
     vdata->done();
     idata->done();
-
-    float max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
-
-    pimpl_->text_width_ = max_length;
-    pimpl_->text_height_ = line_height.value * line_ranges.size();
 }
 
 void Widget::clear_mesh() {
