@@ -54,8 +54,8 @@ public:
     UIManager(Stage* stage, StageNodePool* pool, UIConfig config=UIConfig());
     virtual ~UIManager();
 
-    Button* new_widget_as_button(const unicode& text, float width=.0f, float height=.0f);
-    Label* new_widget_as_label(const unicode& text, float width=.0f, float height=.0f);
+    Button* new_widget_as_button(const unicode& text, Px width=-1, Px height=-1);
+    Label* new_widget_as_label(const unicode& text, Px width=-1, Px height=-1);
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TexturePtr& texture);
     Frame* new_widget_as_frame(const unicode& title, const Px& width=-1, const Px& height=-1);

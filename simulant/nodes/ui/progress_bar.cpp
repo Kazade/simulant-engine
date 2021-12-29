@@ -28,8 +28,10 @@ void ProgressBar::set_pulse_fraction(float value) {
 }
 
 void ProgressBar::refresh_pulse(float dt) {
-    pulse_width_ = this->content_width().value * pulse_fraction_;
-    float pulse_range = (this->content_width().value - pulse_width_);
+    Px bar_width = outer_width() - (border_width() * 2);
+
+    pulse_width_ = bar_width.value * pulse_fraction_;
+    float pulse_range = (bar_width.value - pulse_width_);
     float pulse_max = pulse_range / 2.0f;
     float pulse_min = -pulse_range / 2.0f;
 
@@ -80,7 +82,7 @@ Widget::WidgetBounds ProgressBar::calculate_foreground_size() const {
         result.min.x = pulse_position_ - (pulse_width_ / 2);
         result.max.x = pulse_position_ + (pulse_width_ / 2);
     } else {
-        result.max.x = result.min.x + ((result.max.x - result.min.x) * fraction_);
+        result.max.x = result.min.x + (float((result.max.x - result.min.x).value) * fraction_);
     }
     return result;
 }

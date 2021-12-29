@@ -76,7 +76,7 @@ Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, con
     return frame;
 }
 
-Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {
+Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height) {
     auto button = manager_->make_as<Button>(this, &config_);
     button->set_text(text);
     button->resize(width, height);
@@ -85,7 +85,7 @@ Button* UIManager::new_widget_as_button(const unicode &text, float width, float 
     return button;
 }
 
-Label* UIManager::new_widget_as_label(const unicode &text, float width, float height) {
+Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) {
     auto label = (Label*) &(*manager_->make_as<Label>(this, &config_));
     label->set_text(text);
     label->resize(width, height);

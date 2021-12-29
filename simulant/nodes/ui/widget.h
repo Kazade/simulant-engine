@@ -39,8 +39,8 @@ struct WidgetImpl {
     Px text_width_ = 0;
     Px text_height_ = 0;
 
-    Px requested_width_ = 0;
-    Px requested_height_ = 0;
+    Px requested_width_ = -1;
+    Px requested_height_ = -1;
 
     Px content_width_ = 0;
     Px content_height_ = 0;

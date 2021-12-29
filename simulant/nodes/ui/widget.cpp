@@ -21,6 +21,7 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
 
     set_foreground_colour(defaults->foreground_colour_);
     set_background_colour(defaults->background_colour_);
+    set_text_colour(defaults->text_colour_);
 
     std::string family = (defaults->font_family_.empty()) ?
         get_app()->config->ui.font_family : defaults->font_family_;
@@ -32,8 +33,6 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
     assert(font);
 
     set_font(font);
-
-    _recalc_active_layers();
 }
 
 Widget::~Widget() {
@@ -212,7 +211,7 @@ void Widget::render_text() {
         unicode::value_type ch = text_ptr[i];
         Px ch_width = font_->character_width(ch);
         Px ch_height = font_->character_height(ch);
-        float ch_advance = (i == text_length - 1) ? 0 : font_->character_advance(ch, text_ptr[i + 1]);
+        float ch_advance = font_->character_advance(ch, text_ptr[i + 1]);
 
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
@@ -276,7 +275,11 @@ void Widget::render_text() {
             line_char_count++;
         }
 
-        line_length += ch_advance;
+        /* Include visible characters and spaces in the length
+         * of the line */
+        if(is_visible_character(ch) || ch == ' ') {
+            line_length += ch_advance;
+        }
 
         if(i == text().length() - 1) {
             finalize_line();
@@ -294,7 +297,7 @@ void Widget::render_text() {
         uint16_t shift = (j * line_height.value) + line_height_shift;
 
         Vertex* ch = &vertices.at(range.first);
-        uint16_t hw = line_lengths[j++] * 0.5f;
+        uint16_t hw = round(line_lengths[j++]) * 0.5f;
         for(auto i = 0u; i < range.second; ++i) {
             Vertex* bl = ch;
             Vertex* br = ch + 1;
@@ -458,6 +461,7 @@ void Widget::rebuild() {
     assert(mesh_);
 
     clear_mesh();
+    _recalc_active_layers();
 
     prepare_build();
 

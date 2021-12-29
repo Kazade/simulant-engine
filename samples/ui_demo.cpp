@@ -33,6 +33,7 @@ public:
 
         auto label = stage_->ui->new_widget_as_label("Label");
         label->resize(column, -1);
+        label->set_background_colour(smlt::ui::UIConfig().foreground_colour_);
         frame->pack_child(label);
 
         auto button = stage_->ui->new_widget_as_button("Button");

@@ -31,7 +31,11 @@ void Frame::finalize_build() {
             width += space_between_;
         }
     } else {
-        Px height = (outer_height() / 2 ) - line_height().value;
+        Px height = (outer_height() / 2);
+        if(!text().empty()) {
+            height -= line_height().value;
+        }
+
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.5f, 1.0f);
 
@@ -142,11 +146,13 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
         content_width += (space_between() * (children_.size() - 1));
     }
 
-    content_height += line_height().value;
+    /* Titlebar */
+    if(!text().empty()) {
+        content_height += line_height().value;
+    }
+
     content_height += (p.top + p.bottom);
     content_width += (p.left + p.right);
-    content_height += (border_width() * 2);
-    content_width += (border_width() * 2);
 
     if(mode == RESIZE_MODE_FIXED) {
         content_width = requested_width();
@@ -159,8 +165,8 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
         /* Do nothing, all dynamic */
     }
 
-    Px hw = (int16_t) std::ceil(float(content_width.value) * 0.5f);
-    Px hh = (int16_t) std::ceil(float(content_height.value) * 0.5f);
+    Px hw = (int16_t) round(float(content_width.value) * 0.5f);
+    Px hh = (int16_t) round(float(content_height.value) * 0.5f);
 
     WidgetBounds bounds;
     bounds.min = UICoord(-hw, -hh);
@@ -179,7 +185,8 @@ Widget::WidgetBounds Frame::calculate_foreground_size() const {
         fg_size.min.y -= line_height().value;
         fg_size.min.x.value *= -1;
     } else {
-        fg_size.min = fg_size.max;
+        fg_size.min = UICoord();
+        fg_size.max = UICoord();
     }
 
     return fg_size;

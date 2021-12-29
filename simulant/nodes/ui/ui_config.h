@@ -179,9 +179,9 @@ struct UIConfig {
 
     Rem line_height_ = Rem(1.5f);
 
-    Colour foreground_colour_ = Colour::from_bytes(57, 63, 63, 255);
-    Colour background_colour_ = Colour::from_bytes(51, 51, 51, 255);
-    Colour text_colour_ = Colour::from_bytes(214, 216, 215, 255);
+    Colour foreground_colour_ = Colour::from_bytes(40, 40, 40, 255);
+    Colour background_colour_ = Colour::from_bytes(53, 53, 53, 255);
+    Colour text_colour_ = Colour::from_bytes(219, 219, 219, 255);
     Colour highlight_colour_ = Colour::from_bytes(0, 51, 102, 255);
 
     ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
