@@ -25,15 +25,32 @@ public:
 
     Keyboard(UIManager* owner, UIConfig* config);
 
+    void move_right() {
+        if(focussed_) {
+            focussed_->focus_next_in_chain();
+        }
+    }
+
+    void move_left() {
+        if(focussed_) {
+            focussed_->focus_previous_in_chain();
+        }
+    }
+
 private:
     KeyboardLayout layout_ = KEYBOARD_LAYOUT_ALPHABETICAL;
     std::map<char, Button*> buttons_;
 
     Frame* main_frame_ = nullptr;
     Frame* rows_[5] = {0, 0, 0, 0, 0};
+    smlt::ui::Widget* focussed_ = nullptr;
 
     void clear();
     void generate_alphabetical_layout();
+
+    void focus(smlt::ui::Widget* widget);
+
+    void unfocus(smlt::ui::Widget* widget);
 };
 
 }
