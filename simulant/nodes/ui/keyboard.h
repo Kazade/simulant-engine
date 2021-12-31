@@ -25,6 +25,10 @@ public:
 
     Keyboard(UIManager* owner, UIConfig* config);
 
+    void move_up();
+
+    void move_down();
+
     void move_right() {
         if(focussed_) {
             focussed_->focus_next_in_chain();
@@ -38,6 +42,8 @@ public:
     }
 
 private:
+    void move_row(int dir);
+
     KeyboardLayout layout_ = KEYBOARD_LAYOUT_ALPHABETICAL;
     std::map<char, Button*> buttons_;
 

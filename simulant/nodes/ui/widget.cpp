@@ -1064,6 +1064,14 @@ void Widget::blur() {
     signal_blurred_();
 }
 
+WidgetPtr Widget::next_in_focus_chain() const {
+    return pimpl_->focus_next_;
+}
+
+WidgetPtr Widget::previous_in_focus_chain() const {
+    return pimpl_->focus_previous_;
+}
+
 void Widget::click() {
     signal_clicked_();
 }

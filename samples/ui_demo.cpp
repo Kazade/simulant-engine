@@ -83,9 +83,9 @@ public:
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
-        auto keyboard = stage_->ui->new_widget_as_keyboard();
-        keyboard->set_anchor_point(0.5f, 0.0f);
-        keyboard->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
+        keyboard_ = stage_->ui->new_widget_as_keyboard();
+        keyboard_->set_anchor_point(0.5f, 0.0f);
+        keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
     }
 
     void update(float dt) {
@@ -102,6 +102,22 @@ public:
 
         pg2_->set_value(percent);
         pg1_->pulse();
+
+        if(input->axis_was_pressed("Vertical")) {
+            if(input->axis_value_hard("Vertical") > 0) {
+                keyboard_->move_up();
+            } else {
+                keyboard_->move_down();
+            }
+        }
+
+        if(input->axis_was_pressed("Horizontal")) {
+            if(input->axis_value_hard("Horizontal") > 0) {
+                keyboard_->move_right();
+            } else {
+                keyboard_->move_left();
+            }
+        }
     }
 
 private:
@@ -109,6 +125,8 @@ private:
     smlt::CameraPtr camera_;
     smlt::ui::ProgressBar* pg1_;
     smlt::ui::ProgressBar* pg2_;
+
+    smlt::ui::Keyboard* keyboard_;
 
     bool increasing = true;
     float percent = 0;
