@@ -16,9 +16,12 @@ enum KeyboardLayout {
     KEYBOARD_LAYOUT_ALPHABETICAL
 };
 
+typedef sig::signal<void (char)> KeyboardActivatedSignal;
+
 class Keyboard:
     public Widget {
 
+    DEFINE_SIGNAL(KeyboardActivatedSignal, signal_activated);
 public:
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
@@ -26,21 +29,10 @@ public:
     Keyboard(UIManager* owner, UIConfig* config);
 
     void move_up();
-
     void move_down();
-
-    void move_right() {
-        if(focussed_) {
-            focussed_->focus_next_in_chain();
-        }
-    }
-
-    void move_left() {
-        if(focussed_) {
-            focussed_->focus_previous_in_chain();
-        }
-    }
-
+    void move_right();
+    void move_left();
+    void activate();
 private:
     void move_row(int dir);
 
@@ -49,7 +41,7 @@ private:
 
     Frame* main_frame_ = nullptr;
     Frame* rows_[5] = {0, 0, 0, 0, 0};
-    smlt::ui::Widget* focussed_ = nullptr;
+    smlt::ui::Widget* focused_ = nullptr;
 
     void clear();
     void generate_alphabetical_layout();

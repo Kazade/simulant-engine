@@ -20,6 +20,23 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config):
     rows_[0]->packed_children()[0]->focus();
 }
 
+void Keyboard::activate() {
+    if(!focused_) {
+        return;
+    }
+
+    auto it = std::find_if(
+        buttons_.begin(), buttons_.end(),
+        [this](const std::pair<char, Button*>& p) -> bool {
+            return p.second == focused_;
+        }
+    );
+
+    if(it != buttons_.end()) {
+        signal_activated_(it->first);
+    }
+}
+
 void Keyboard::move_up() {
     move_row(-1);
 }
@@ -28,14 +45,26 @@ void Keyboard::move_down() {
     move_row(1);
 }
 
+void Keyboard::move_right() {
+    if(focused_) {
+        focused_->focus_next_in_chain();
+    }
+}
+
+void Keyboard::move_left() {
+    if(focused_) {
+        focused_->focus_previous_in_chain();
+    }
+}
+
 void Keyboard::move_row(int dir) {
-    if(!focussed_) {
+    if(!focused_) {
         return;
     }
 
     int this_row = std::distance(
-        std::begin(rows_),
-        std::find(std::begin(rows_), std::end(rows_), focussed_->parent())
+                std::begin(rows_),
+        std::find(std::begin(rows_), std::end(rows_), focused_->parent())
     );
 
     int i = this_row;
@@ -46,7 +75,7 @@ void Keyboard::move_row(int dir) {
     if(i != this_row) {
         /* We can move row */
         Px pixels_from_left = 0;
-        smlt::ui::Widget* it = focussed_->previous_in_focus_chain();
+        smlt::ui::Widget* it = focused_->previous_in_focus_chain();
         while(it) {
             pixels_from_left += it->outer_width();
             it = it->previous_in_focus_chain();
@@ -68,9 +97,9 @@ void Keyboard::move_row(int dir) {
                 break;
             }
         }
-        focussed_->blur();
-        focussed_ = new_focussed;
-        focussed_->focus();
+        focused_->blur();
+        focused_ = new_focussed;
+        focused_->focus();
     }
 }
 
@@ -154,12 +183,12 @@ void Keyboard::generate_alphabetical_layout() {
 
 void Keyboard::focus(Widget* widget) {
     widget->set_background_colour(smlt::ui::UIConfig().highlight_colour_);
-    focussed_ = widget;
+    focused_ = widget;
 }
 
 void Keyboard::unfocus(Widget* widget) {
     widget->set_background_colour(smlt::ui::UIConfig().background_colour_);
-    focussed_ = nullptr;
+    focused_ = nullptr;
 }
 
 }
