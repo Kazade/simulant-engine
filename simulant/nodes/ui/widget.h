@@ -143,6 +143,9 @@ public:
     void set_focus_next(WidgetPtr next_widget);
     void focus();
     void blur();
+
+    WidgetPtr next_in_focus_chain() const;
+    WidgetPtr previous_in_focus_chain() const;
     void focus_next_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
     void focus_previous_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
     WidgetPtr first_in_focus_chain();
@@ -242,13 +245,14 @@ private:
     ) override;
 
     bool initialized_ = false;
-    UIManager* owner_ = nullptr;
+
     ActorPtr actor_ = nullptr;
     MeshPtr mesh_ = nullptr;
 
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
 protected:
+    UIManager* owner_ = nullptr;
     FontPtr font_ = nullptr;
 
     WidgetImpl* pimpl_ = nullptr;

@@ -42,6 +42,7 @@
 #include "nodes/ui/progress_bar.h"
 #include "nodes/ui/image.h"
 #include "nodes/ui/frame.h"
+#include "nodes/ui/keyboard.h"
 
 #include "sound.h"
 #include "random.h"

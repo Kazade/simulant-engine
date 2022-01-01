@@ -82,6 +82,17 @@ public:
         fit_content->resize(-1, -1);
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
+
+        keyboard_ = stage_->ui->new_widget_as_keyboard();
+        keyboard_->set_anchor_point(0.5f, 0.0f);
+        keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
+
+        auto entry = stage_->ui->new_widget_as_label("");
+        entry->resize(keyboard_->outer_width(), -1);
+        entry->set_anchor_point(0.5f, 0.0f);
+        entry->move_to(window->coordinate_from_normalized(0.5f, 0.25f));
+        entry->set_background_colour(smlt::ui::UIConfig().background_colour_);
+        keyboard_->set_target(entry);
     }
 
     void update(float dt) {
@@ -98,6 +109,26 @@ public:
 
         pg2_->set_value(percent);
         pg1_->pulse();
+
+        if(input->axis_was_pressed("Vertical")) {
+            if(input->axis_value_hard("Vertical") > 0) {
+                keyboard_->move_up();
+            } else {
+                keyboard_->move_down();
+            }
+        }
+
+        if(input->axis_was_pressed("Horizontal")) {
+            if(input->axis_value_hard("Horizontal") > 0) {
+                keyboard_->move_right();
+            } else {
+                keyboard_->move_left();
+            }
+        }
+
+        if(input->axis_was_pressed("Fire1")) {
+            keyboard_->activate();
+        }
     }
 
 private:
@@ -105,6 +136,8 @@ private:
     smlt::CameraPtr camera_;
     smlt::ui::ProgressBar* pg1_;
     smlt::ui::ProgressBar* pg2_;
+
+    smlt::ui::Keyboard* keyboard_;
 
     bool increasing = true;
     float percent = 0;
@@ -118,8 +151,7 @@ public:
     }
 
     bool init() {
-        scenes->register_scene<MainScene>("demo");
-        scenes->register_scene<smlt::scenes::Splash>("main", "demo");
+        scenes->register_scene<MainScene>("main");
 
         return true;
     }
