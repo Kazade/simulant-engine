@@ -20,21 +20,54 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config):
     rows_[0]->packed_children()[0]->focus();
 }
 
+Keyboard::~Keyboard() {
+    if(target_destroyed_) {
+        target_destroyed_.disconnect();
+    }
+}
+
 void Keyboard::activate() {
     if(!focused_) {
         return;
     }
 
     auto it = std::find_if(
-        buttons_.begin(), buttons_.end(),
+                buttons_.begin(), buttons_.end(),
         [this](const std::pair<char, Button*>& p) -> bool {
             return p.second == focused_;
         }
     );
 
     if(it != buttons_.end()) {
-        signal_activated_(it->first);
+        auto c = it->first;
+
+        signal_activated_(c);
+
+        if(c == '\r') {
+            /* We use \r to signify done.. rightly or wrongly */
+            signal_done_();
+        } else if(target_) {
+            auto txt = target_->text();
+            if(c == 8 && !txt.empty()) { // Backspace
+                txt = txt.slice(nullptr, -1);
+            } else if(c != 8) { // Any other character
+                txt.push_back(wchar_t(c));
+            }
+            target_->set_text(txt);
+        }
     }
+}
+
+void Keyboard::set_target(Widget* widget) {
+    if(target_destroyed_) {
+        target_destroyed_.disconnect();
+    }
+
+    target_ = widget;
+    target_destroyed_ = target_->signal_destroyed().connect([&]() {
+        target_ = nullptr;
+        target_destroyed_.disconnect();
+    });
 }
 
 void Keyboard::move_up() {
@@ -189,6 +222,17 @@ void Keyboard::focus(Widget* widget) {
 void Keyboard::unfocus(Widget* widget) {
     widget->set_background_colour(smlt::ui::UIConfig().background_colour_);
     focused_ = nullptr;
+}
+
+UIDim Keyboard::calculate_content_dimensions(Px text_width, Px text_height, Widget::WidgetBounds bg_size, Widget::WidgetBounds fg_size) {
+    _S_UNUSED(text_width);
+    _S_UNUSED(text_height);
+    _S_UNUSED(bg_size);
+    _S_UNUSED(fg_size);
+    UIDim ret;
+    ret.width = main_frame_->outer_width();
+    ret.height = main_frame_->outer_height();
+    return ret;
 }
 
 }

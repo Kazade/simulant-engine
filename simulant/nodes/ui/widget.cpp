@@ -198,7 +198,7 @@ void Widget::render_text() {
     Px left = left_bound;
     uint32_t line_start = 0;
     float line_length = 0;
-    uint32_t line_char_count = 0;
+    uint32_t line_vertex_count = 0;
 
     /* Generate lines of text */
     auto text_ptr = &text()[0];
@@ -216,13 +216,17 @@ void Widget::render_text() {
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
         auto finalize_line = [&]() {
+            if(line_length == 0) {
+                return;
+            }
+
             /* Ranges are (start_vertex_index, length_in_chars) */
-            line_ranges.push_back(std::make_pair(line_start, line_char_count));
+            line_ranges.push_back(std::make_pair(line_start, line_vertex_count));
             line_lengths.push_back(line_length);
             line_start = vertices.size();
             left = left_bound;
             line_length = 0;
-            line_char_count = 0;
+            line_vertex_count = 0;
         };
 
         bool break_line = ch == '\n';
@@ -271,7 +275,7 @@ void Widget::render_text() {
             vertices.push_back(corners[2]);
             vertices.push_back(corners[3]);
 
-            line_char_count++;
+            line_vertex_count += 4;
         }
 
         /* Include visible characters and spaces in the length
@@ -293,11 +297,17 @@ void Widget::render_text() {
     /* Now apply line heights */
     uint32_t j = 0;
     for(auto range: line_ranges) {
+        if(!range.second) {
+            // If there are no vertices on this line, then
+            // ignore.
+            continue;
+        }
+
         uint16_t shift = (j * line_height.value) + line_height_shift;
 
         Vertex* ch = &vertices.at(range.first);
         uint16_t hw = round(line_lengths[j++]) * 0.5f;
-        for(auto i = 0u; i < range.second; ++i) {
+        for(auto i = 0u; i < range.second; i += 4) {
             Vertex* bl = ch;
             Vertex* br = ch + 1;
             Vertex* tr = ch + 2;

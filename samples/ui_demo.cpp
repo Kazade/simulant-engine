@@ -86,6 +86,13 @@ public:
         keyboard_ = stage_->ui->new_widget_as_keyboard();
         keyboard_->set_anchor_point(0.5f, 0.0f);
         keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
+
+        auto entry = stage_->ui->new_widget_as_label("");
+        entry->resize(keyboard_->outer_width(), -1);
+        entry->set_anchor_point(0.5f, 0.0f);
+        entry->move_to(window->coordinate_from_normalized(0.5f, 0.25f));
+        entry->set_background_colour(smlt::ui::UIConfig().background_colour_);
+        keyboard_->set_target(entry);
     }
 
     void update(float dt) {
@@ -117,6 +124,10 @@ public:
             } else {
                 keyboard_->move_left();
             }
+        }
+
+        if(input->axis_was_pressed("Fire1")) {
+            keyboard_->activate();
         }
     }
 
