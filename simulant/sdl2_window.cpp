@@ -190,9 +190,9 @@ void SDL2Window::check_events() {
                     value
                 );
             } break;
-            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONDOWN: {
                 input_state->_handle_joystick_button_down(event.cbutton.which, (JoystickButton) event.cbutton.button);
-            break;
+            } break;
             case SDL_CONTROLLERBUTTONUP:
                 input_state->_handle_joystick_button_up(event.cbutton.which, (JoystickButton) event.cbutton.button);
             break;
