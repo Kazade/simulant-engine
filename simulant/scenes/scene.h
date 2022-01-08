@@ -144,6 +144,9 @@ private:
     std::vector<any> load_args;
 
 protected:
+    /* Returns the number of arguments passed when loading */
+    std::size_t load_arg_count() const;
+
     template<typename T>
     T get_load_arg(int i) {
         return any_cast<T>(load_args[i]);

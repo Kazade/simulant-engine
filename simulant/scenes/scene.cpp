@@ -57,6 +57,10 @@ void SceneBase::_fixed_update_thunk(float dt) {
     fixed_update(dt);
 }
 
+std::size_t SceneBase::load_arg_count() const {
+    return load_args.size();
+}
+
 
 void SceneBase::_call_load() {
     if(is_loaded_) {
