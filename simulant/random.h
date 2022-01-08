@@ -13,9 +13,7 @@ public:
 
     template<typename T>
     T choice(T* array, std::size_t count) {
-        std::uniform_int_distribution<uint32_t> dist(0, count);
-        auto i = dist(rand_);
-        return array[i];
+        return array[int_in_range(0, count - 1)];
     }
 
     template<typename T>
