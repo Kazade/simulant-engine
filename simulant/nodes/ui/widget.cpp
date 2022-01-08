@@ -319,11 +319,18 @@ void Widget::render_text() {
             tr->xyz.y -= shift;
             tl->xyz.y -= shift;
 
-            // Center each line
-            bl->xyz.x -= hw;
-            br->xyz.x -= hw;
-            tr->xyz.x -= hw;
-            tl->xyz.x -= hw;
+            if(pimpl_->text_alignment_ == TEXT_ALIGNMENT_CENTER) {
+                // Center each line
+                bl->xyz.x -= hw;
+                br->xyz.x -= hw;
+                tr->xyz.x -= hw;
+                tl->xyz.x -= hw;
+            } else if(pimpl_->text_alignment_ == TEXT_ALIGNMENT_RIGHT) {
+                bl->xyz.x += hw * 2.0f;
+                br->xyz.x += hw * 2.0f;
+                tr->xyz.x += hw * 2.0f;
+                tl->xyz.x += hw * 2.0f;
+            }
 
             min_x = std::min(bl->xyz.x, min_x);
             min_x = std::min(tl->xyz.x, min_x);
@@ -345,7 +352,10 @@ void Widget::render_text() {
     pimpl_->text_width_ = max_length;
     pimpl_->text_height_ = line_height.value * line_ranges.size();
 
-    auto global_x_shift = (std::abs(min_x) - std::abs(max_x)) * 0.5f;
+    /* Shift the text depending on the difference in padding */
+    auto diff = padding().left - padding().right;
+
+    auto global_x_shift = diff.value; //(std::abs(min_x) - std::abs(max_x)) * 0.5f;
     auto global_y_shift = round(pimpl_->text_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
@@ -606,7 +616,7 @@ void Widget::set_border_colour(const Colour &colour) {
     }
 
     pimpl_->border_colour_ = colour;
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER;
+    _recalc_active_layers();
     rebuild();
 }
 
@@ -621,6 +631,10 @@ void Widget::set_text(const unicode &text) {
 
     pimpl_->text_ = text;
     on_size_changed();
+}
+
+TextAlignment Widget::text_alignment() const {
+    return pimpl_->text_alignment_;
 }
 
 void Widget::on_size_changed() {
@@ -714,7 +728,8 @@ void Widget::set_background_colour(const Colour& colour) {
     }
 
     pimpl_->background_colour_ = colour;
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND;
+
+    _recalc_active_layers();
     rebuild();
 }
 
@@ -725,8 +740,8 @@ void Widget::set_foreground_colour(const Colour& colour) {
     }
 
     pimpl_->foreground_colour_ = colour;
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND;
 
+    _recalc_active_layers();
     rebuild();
 }
 
@@ -737,6 +752,7 @@ void Widget::set_text_colour(const Colour &colour) {
     }
 
     pimpl_->text_colour_ = colour;
+    _recalc_active_layers();
     rebuild();
 }
 

@@ -93,6 +93,13 @@ public:
         entry->move_to(window->coordinate_from_normalized(0.5f, 0.25f));
         entry->set_background_colour(smlt::ui::UIConfig().background_colour_);
         keyboard_->set_target(entry);
+
+        auto pl = stage_->ui->new_widget_as_label("PL");
+        pl->set_padding(10, 0, 0, 0);
+        //pl->resize(80, -1);
+        pl->set_background_colour(smlt::Colour::GREY);
+        pl->set_anchor_point(1.0f, 1.0f);
+        pl->move_to(window->coordinate_from_normalized(0.75f, 0.75f));
     }
 
     void update(float dt) {

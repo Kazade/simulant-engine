@@ -50,6 +50,8 @@ struct WidgetImpl {
     Px border_width_ = 1;
     PackedColour4444 border_colour_ = Colour::BLACK;
 
+    TextAlignment text_alignment_ = TEXT_ALIGNMENT_CENTER;
+
     unicode text_;
     OverflowType overflow_;
     ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
@@ -156,6 +158,9 @@ public:
     void click();
 
     void set_text(const unicode& text);
+
+    void set_text_alignment(TextAlignment alignment);
+    TextAlignment text_alignment() const;
 
     void set_border_width(Px x);
     Px border_width() const;
