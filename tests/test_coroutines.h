@@ -25,6 +25,21 @@ public:
         assert_equal(value, 100);
     }
 
+    void test_default_promise() {
+        Promise<bool> ret;
+
+        assert_false(ret.is_initialized());
+
+        ret = cr_async([]() -> bool {
+            return true;
+        });
+
+        assert_true(ret.is_initialized());
+        cr_await(ret);
+
+        assert_true(ret.is_ready());
+        assert_true(ret.value());
+    }
 };
 
 }
