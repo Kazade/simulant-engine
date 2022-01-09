@@ -46,7 +46,7 @@ public:
 }
 
 template<typename T>
-class CRPromise {
+class Promise {
 public:
     bool is_ready() const {
         return state_ && state_->value;
@@ -60,13 +60,20 @@ public:
     /* Starts another coroutine that waits until
      * this one has been fulfilled */
     template<typename Func>
-    CRPromise<typename std::result_of<Func()>::type> then(Func func);
+    Promise<typename std::result_of<Func()>::type> then(Func func);
+
+    /* Default constructor does nothing */
+    Promise() = default;
+
+    bool is_initialized() const {
+        return bool(state_);
+    }
 
 private:
     template<typename Func>
-    friend CRPromise<typename std::result_of<Func()>::type> cr_async(Func func);
+    friend Promise<typename std::result_of<Func()>::type> cr_async(Func func);
 
-    CRPromise(typename promise_impl::PromiseState<T>::ptr state):
+    Promise(typename promise_impl::PromiseState<T>::ptr state):
         state_(state) {
 
     }
@@ -75,17 +82,24 @@ private:
 };
 
 template<>
-class CRPromise<void> {
+class Promise<void> {
 private:
     template<typename Func>
-    friend CRPromise<typename std::result_of<Func()>::type> cr_async(Func func);
+    friend Promise<typename std::result_of<Func()>::type> cr_async(Func func);
 
-    CRPromise(typename promise_impl::PromiseState<void>::ptr state):
+    Promise(typename promise_impl::PromiseState<void>::ptr state):
         state_(state) {
 
     }
 
     typename promise_impl::PromiseState<void>::ptr state_;
+
+    /* Default constructor does nothing */
+    Promise() = default;
+
+    bool is_initialized() const {
+        return bool(state_);
+    }
 
 public:
     bool is_ready() const {
@@ -97,18 +111,18 @@ public:
     /* Starts another coroutine that waits until
      * this one has been fulfilled */
     template<typename Func>
-    CRPromise<typename std::result_of<Func()>::type> then(Func func);
+    Promise<typename std::result_of<Func()>::type> then(Func func);
 };
 
 void _trigger_coroutine(std::function<void ()> func);
 void _trigger_idle_updates();
 
 template<typename Func>
-CRPromise<typename std::result_of<Func()>::type> cr_async(Func func) {
+Promise<typename std::result_of<Func()>::type> cr_async(Func func) {
     typedef typename std::result_of<Func()>::type T;
 
     auto state = std::make_shared<typename promise_impl::PromiseState<T>>();
-    CRPromise<T> promise(state);
+    Promise<T> promise(state);
 
     _trigger_coroutine([state, func]() {
         promise_impl::CallAndSetState<Func, T>()(func, state);
@@ -125,7 +139,7 @@ void cr_yield();
 
 template<typename T>
 template<typename Func>
-CRPromise<typename std::result_of<Func()>::type> CRPromise<T>::then(Func func) {
+Promise<typename std::result_of<Func()>::type> Promise<T>::then(Func func) {
 
     /* Copy the smart pointer and pass to the callback */
     auto state = state_;
@@ -142,7 +156,7 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<T>::then(Func func) {
 }
 
 template<typename Func>
-CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func) {
+Promise<typename std::result_of<Func()>::type> Promise<void>::then(Func func) {
     auto state = state_;
 
     auto cb = [this, func, state]() -> typename std::result_of<Func()>::type {
@@ -166,7 +180,7 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func
  * start_coroutine(...).then(...)
  */
 template<typename T>
-T cr_await(const CRPromise<T>& promise) {
+T cr_await(const Promise<T>& promise) {
     while(!promise.is_ready()) {
         if(cort::within_coroutine()){
             cr_yield();

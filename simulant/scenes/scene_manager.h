@@ -165,7 +165,7 @@ public:
     }
 
     template<typename ...Args>
-    CRPromise<void> preload_in_background(
+    Promise<void> preload_in_background(
         const std::string& route,
         Args&& ...args
     ) {
