@@ -642,23 +642,23 @@ void Widget::on_size_changed() {
 }
 
 bool Widget::border_active() const {
-    return pimpl_->active_layers_ & 0x1;
+    return (pimpl_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BORDER));
 }
 
 bool Widget::background_active() const {
-    return pimpl_->active_layers_ & 0x2;
+    return (pimpl_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BACKGROUND));
 }
 
 bool Widget::foreground_active() const {
-    return pimpl_->active_layers_ & 0x4;
+    return (pimpl_->active_layers_ & (1 << WIDGET_LAYER_INDEX_FOREGROUND));
 }
 
 void Widget::_recalc_active_layers() {
     pimpl_->active_layers_ = (
-        (pimpl_->border_colour_ != Colour::NONE) << 0 |
-        (pimpl_->background_colour_ != Colour::NONE) << 1 |
-        (pimpl_->foreground_colour_ != Colour::NONE) << 2 |
-        (pimpl_->text_colour_ != Colour::NONE) << 3
+        (pimpl_->border_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER |
+        (pimpl_->background_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
+        (pimpl_->foreground_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
+        (pimpl_->text_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_TEXT
     );
 }
 

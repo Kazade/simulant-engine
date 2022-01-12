@@ -185,7 +185,7 @@ struct UIConfig {
     Colour highlight_colour_ = Colour::from_bytes(0, 51, 102, 255);
 
     ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
-    ResizeMode button_resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
+    ResizeMode button_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
     uint8_t scrollbar_width_ = 16;
