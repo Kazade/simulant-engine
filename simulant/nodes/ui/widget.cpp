@@ -506,9 +506,10 @@ void Widget::rebuild() {
     border_bounds.max.x += pimpl_->border_width_;
     border_bounds.max.y += pimpl_->border_width_;
 
-    if(border_active()) {
+    if(border_active() && border_width() > 0) {
         auto colour = pimpl_->border_colour_;
         colour.set_alpha(colour.af() * pimpl_->opacity_);
+        /* FIXME! This should be 4 rectangles or a tri-strip */
         new_rectangle("border", border_bounds, colour);
     }
 
