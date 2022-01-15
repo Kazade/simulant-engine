@@ -152,6 +152,7 @@ protected:
         return any_cast<T>(load_args[i]);
     }
 
+public:
     S_DEFINE_PROPERTY(window, &SceneBase::window_);
     S_DEFINE_PROPERTY(app, &SceneBase::app_);
     S_DEFINE_PROPERTY(input, &SceneBase::input_);
