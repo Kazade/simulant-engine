@@ -541,8 +541,8 @@ void Widget::rebuild() {
     }
 
     /* Apply anchoring */
-    auto width = mesh_->aabb().width();
-    auto height = mesh_->aabb().height();
+    auto width = border_bounds.width().value;
+    auto height = border_bounds.height().value;
 
     float xoff = -((pimpl_->anchor_point_.x * width) - (width / 2.0f));
     float yoff = -((pimpl_->anchor_point_.y * height) - (height / 2.0f));
@@ -632,6 +632,10 @@ void Widget::set_text(const unicode &text) {
 
     pimpl_->text_ = text;
     on_size_changed();
+}
+
+void Widget::set_text_alignment(TextAlignment alignment) {
+    pimpl_->text_alignment_ = alignment;
 }
 
 TextAlignment Widget::text_alignment() const {
