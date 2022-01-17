@@ -52,9 +52,8 @@ private:
     LayoutDirection direction_ = LAYOUT_DIRECTION_TOP_TO_BOTTOM;
     Px space_between_ = 0;
 
-    virtual WidgetBounds calculate_background_size() const override;
-    virtual WidgetBounds calculate_foreground_size() const override;
-    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height, WidgetBounds bg_size, WidgetBounds fg_size) override;
+    virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
+    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
     virtual void finalize_build() override;
 };

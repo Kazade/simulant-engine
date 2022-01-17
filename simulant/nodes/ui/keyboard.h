@@ -13,7 +13,8 @@ namespace ui {
 class Frame;
 
 enum KeyboardLayout {
-    KEYBOARD_LAYOUT_ALPHABETICAL
+    KEYBOARD_LAYOUT_ALPHABETICAL,
+    KEYBOARD_LAYOUT_NUMERICAL,
 };
 
 typedef sig::signal<void (char)> KeyboardActivatedSignal;
@@ -28,7 +29,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
 
-    Keyboard(UIManager* owner, UIConfig* config);
+    Keyboard(UIManager* owner, UIConfig* config, KeyboardLayout layout);
     ~Keyboard();
 
     void move_up();
@@ -51,15 +52,17 @@ private:
     sig::Connection target_destroyed_;
 
     void clear();
+
     void generate_alphabetical_layout();
+    void generate_numerical_layout();
 
     void focus(smlt::ui::Widget* widget);
 
     void unfocus(smlt::ui::Widget* widget);
 
-    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height,
-        WidgetBounds bg_size, WidgetBounds fg_size
-    );
+    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
+
+    void on_transformation_change_attempted() override;
 };
 
 }

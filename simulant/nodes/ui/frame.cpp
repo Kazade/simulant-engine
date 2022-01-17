@@ -23,27 +23,28 @@ void Frame::finalize_build() {
     float cx = ax * outer_width().value;
     float cy = ay * outer_height().value;
 
+    auto oh = outer_height() - (border_width() * 2);
+    auto ow = outer_width() - (border_width() * 2);
+
     if(direction_ == LAYOUT_DIRECTION_LEFT_TO_RIGHT) {
-        Px width = -(outer_width() / 2);
+        Px width = -(ow / 2);
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.0f, 0.5f);
-
-            /* FIXME! I don't know why subtracting the padding is necessary! */
-            child->move_to(cx + width.value - padding().left.value, cy - padding().top.value);
+            child->move_to(cx + width.value, cy);
             width += child->outer_width();
             width += space_between_;
         }
     } else {
-        Px height = (outer_height() / 2);
+        Px height = (oh / 2);
+
         if(!text().empty()) {
             height -= line_height().value;
+            height -= padding().top;
         }
 
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.5f, 1.0f);
-
-            /* FIXME! I don't know why subtracting the padding is necessary! */
-            child->move_to(cx - padding().left.value, cy + height.value - padding().top.value);
+            child->move_to(cx, cy + height.value);
             height -= child->outer_height();
             height -= space_between_;
         }
@@ -56,7 +57,9 @@ void Frame::finalize_build() {
         auto vdata = mesh()->vertex_data.get();
 
         Px line_height_shift = (pimpl_->text_height_ - font_->size()) / 2;
-        Px shift =  (int16_t) ((outer_height().value * 0.5f) - line_height().value + (line_height_shift.value));
+        line_height_shift += padding().top;
+
+        Px shift =  (int16_t) ((oh.value * 0.5f) - line_height().value + (line_height_shift.value));
 
         for(auto& idx: sm->index_data->all()) {
             auto vpos = *vdata->position_at<smlt::Vec3>(idx);
@@ -122,11 +125,29 @@ void Frame::set_space_between(Px spacing) {
     rebuild();
 }
 
-Widget::WidgetBounds Frame::calculate_background_size() const {
-    auto mode = resize_mode();
 
-    Px content_width = 0;
-    Px content_height = 0;
+Widget::WidgetBounds Frame::calculate_foreground_size(const UIDim& content_dimensions) const {
+    /* Foreground height is literally line-height, if there is text. The width
+     * is the same as the background size */
+
+    WidgetBounds fg_size = calculate_background_size(content_dimensions);
+    if(!text().empty()) {
+        fg_size.min = fg_size.max;
+        fg_size.min.y -= line_height().value;
+        fg_size.min.x.value *= -1;
+    } else {
+        fg_size.min = UICoord();
+        fg_size.max = UICoord();
+    }
+
+    return fg_size;
+}
+
+UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
+    _S_UNUSED(text_width);
+    _S_UNUSED(text_height);
+
+    Px content_width = -1, content_height = -1;
 
     for(auto& child: packed_children()) {
         auto child_width = child->outer_width();
@@ -141,8 +162,6 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
         }
     }
 
-    auto p = padding();
-
     if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
         content_height += (space_between() * (children_.size() - 1));
     } else {
@@ -154,8 +173,7 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
         content_height += line_height().value;
     }
 
-    content_height += (p.top + p.bottom);
-    content_width += (p.left + p.right);
+    auto mode = resize_mode();
 
     if(mode == RESIZE_MODE_FIXED) {
         content_width = requested_width();
@@ -168,39 +186,7 @@ Widget::WidgetBounds Frame::calculate_background_size() const {
         /* Do nothing, all dynamic */
     }
 
-    Px hw = (int16_t) std::ceil(float(content_width.value) * 0.5f);
-    Px hh = (int16_t) std::ceil(float(content_height.value) * 0.5f);
-
-    WidgetBounds bounds;
-    bounds.min = UICoord(-hw, -hh);
-    bounds.max = UICoord(hw, hh);
-
-    return bounds;
-}
-
-Widget::WidgetBounds Frame::calculate_foreground_size() const {
-    /* Foreground height is literally line-height, if there is text. The width
-     * is the same as the background size */
-
-    WidgetBounds fg_size = calculate_background_size();
-    if(!text().empty()) {
-        fg_size.min = fg_size.max;
-        fg_size.min.y -= line_height().value;
-        fg_size.min.x.value *= -1;
-    } else {
-        fg_size.min = UICoord();
-        fg_size.max = UICoord();
-    }
-
-    return fg_size;
-}
-
-UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
-    _S_UNUSED(text_width);
-    _S_UNUSED(text_height);
-    _S_UNUSED(fg_size);
-
-    return UIDim(Px(bg_size.width()), Px(bg_size.height()));
+    return UIDim(content_width, content_height);
 }
 
 }

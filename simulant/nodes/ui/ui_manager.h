@@ -9,6 +9,7 @@
 #include "../../generic/containers/polylist.h"
 #include "../stage_node.h"
 #include "../stage_node_pool.h"
+#include "keyboard.h"
 
 namespace smlt {
 
@@ -63,7 +64,7 @@ public:
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TexturePtr& texture);
     Frame* new_widget_as_frame(const unicode& title, const Px& width=-1, const Px& height=-1);
-    Keyboard* new_widget_as_keyboard();
+    Keyboard* new_widget_as_keyboard(const KeyboardLayout& layout=KEYBOARD_LAYOUT_NUMERICAL);
 
     Widget* widget(WidgetID widget_id);
 

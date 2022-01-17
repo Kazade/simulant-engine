@@ -76,8 +76,9 @@ void ProgressBar::refresh_bar(float dt) {
     }
 }
 
-Widget::WidgetBounds ProgressBar::calculate_foreground_size() const {
-    WidgetBounds result = Widget::calculate_foreground_size();
+Widget::WidgetBounds ProgressBar::calculate_foreground_size(const UIDim& content_dimensions) const {
+    WidgetBounds result = Widget::calculate_foreground_size(content_dimensions);
+
     if(mode_ == PROGRESS_BAR_MODE_PULSE) {
         result.min.x = pulse_position_ - (pulse_width_ / 2);
         result.max.x = pulse_position_ + (pulse_width_ / 2);

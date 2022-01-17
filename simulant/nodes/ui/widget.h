@@ -289,12 +289,10 @@ protected:
         }
     };
 
-    virtual WidgetBounds calculate_background_size() const;
-    virtual WidgetBounds calculate_foreground_size() const;
+    virtual WidgetBounds calculate_background_size(const UIDim& content_dimensions) const;
+    virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const;
 
-    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height,
-        WidgetBounds bg_size, WidgetBounds fg_size
-    );
+    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height);
 
 
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);

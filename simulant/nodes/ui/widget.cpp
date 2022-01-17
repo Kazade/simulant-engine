@@ -487,18 +487,16 @@ void Widget::rebuild() {
     // Sets the text width and height
     render_text();
 
-    auto background_bounds = calculate_background_size();
-    auto foreground_bounds = calculate_foreground_size();
-
     auto content_area = calculate_content_dimensions(
         pimpl_->text_width_,
-        pimpl_->text_height_,
-        background_bounds,
-        foreground_bounds
+        pimpl_->text_height_
     );
 
     pimpl_->content_width_ = content_area.width;
     pimpl_->content_height_ = content_area.height;
+
+    auto background_bounds = calculate_background_size(content_area);
+    auto foreground_bounds = calculate_foreground_size(content_area);
 
     auto border_bounds = background_bounds;
     border_bounds.min.x -= pimpl_->border_width_;
@@ -560,7 +558,7 @@ void Widget::rebuild() {
     finalize_build();
 }
 
-Widget::WidgetBounds Widget::calculate_background_size() const {
+Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dimensions) const {
     Px box_width, box_height;
 
     // FIXME: Clipping + other modes
@@ -569,14 +567,14 @@ Widget::WidgetBounds Widget::calculate_background_size() const {
         box_height = pimpl_->requested_height_.value;
     } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
         box_width = pimpl_->requested_width_.value;
-        box_height = pimpl_->text_height_ + pimpl_->padding_.top + pimpl_->padding_.bottom;
+        box_height = content_dimensions.height + pimpl_->padding_.top + pimpl_->padding_.bottom;
     } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
-        box_width = pimpl_->text_width_ + pimpl_->padding_.left + pimpl_->padding_.right;
+        box_width = content_dimensions.width + pimpl_->padding_.left + pimpl_->padding_.right;
         box_height = pimpl_->requested_height_.value;
     } else {
         /* Fit content */
-        box_width = pimpl_->text_width_ + pimpl_->padding_.left + pimpl_->padding_.right;
-        box_height = pimpl_->text_height_ + pimpl_->padding_.top + pimpl_->padding_.bottom;
+        box_width = content_dimensions.width + pimpl_->padding_.left + pimpl_->padding_.right;
+        box_height = content_dimensions.height + pimpl_->padding_.top + pimpl_->padding_.bottom;
     }
 
     auto hw = (int16_t) std::ceil(float(box_width.value) * 0.5f);
@@ -588,13 +586,11 @@ Widget::WidgetBounds Widget::calculate_background_size() const {
     return bounds;
 }
 
-Widget::WidgetBounds Widget::calculate_foreground_size() const {
-    return calculate_background_size();
+Widget::WidgetBounds Widget::calculate_foreground_size(const UIDim& content_dimensions) const {
+    return calculate_background_size(content_dimensions);
 }
 
-UIDim Widget::calculate_content_dimensions(Px text_width, Px text_height, WidgetBounds bg_size, WidgetBounds fg_size) {
-    _S_UNUSED(bg_size);
-    _S_UNUSED(fg_size);
+UIDim Widget::calculate_content_dimensions(Px text_width, Px text_height) {
     return UIDim(Px(text_width), Px(text_height));
 }
 

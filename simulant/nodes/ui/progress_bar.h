@@ -55,7 +55,7 @@ private:
     void refresh_fraction();
     void refresh_bar(float dt);
 
-    WidgetBounds calculate_foreground_size() const override;
+    WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
 };
 
 }

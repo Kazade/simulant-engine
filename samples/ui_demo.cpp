@@ -83,7 +83,7 @@ public:
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
-        keyboard_ = stage_->ui->new_widget_as_keyboard();
+        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_LAYOUT_NUMERICAL);
         keyboard_->set_anchor_point(0.5f, 0.0f);
         keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
 
