@@ -225,11 +225,6 @@ public:
 
         expected_width += (frame->space_between() * (frame->packed_children().size() - 1));
 
-        // Odd number widths will be rounded by the frame (FIXME?)
-        if(expected_width.value % 2 == 1) {
-            expected_width.value++;
-        }
-
         assert_equal(frame->outer_width(), expected_width);
     }
 

@@ -147,7 +147,7 @@ UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
     _S_UNUSED(text_width);
     _S_UNUSED(text_height);
 
-    Px content_width = -1, content_height = -1;
+    Px content_width = 0, content_height = 0;
 
     for(auto& child: packed_children()) {
         auto child_width = child->outer_width();
