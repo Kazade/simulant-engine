@@ -51,11 +51,11 @@ public:
         frame->pack_child(pg2_);
 
         auto added = app->vfs->add_search_path("simulant/fonts/Orbitron");
-        /*
+
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font("Orbitron", 32);
-        frame->pack_child(big_label); */
+        frame->pack_child(big_label);
 
         if(added) {
             app->vfs->remove_search_path("simulant/fonts/Orbitron");
@@ -83,7 +83,7 @@ public:
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
-        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_LAYOUT_NUMERICAL);
+        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_LAYOUT_ALPHABETICAL);
         keyboard_->set_anchor_point(0.5f, 0.0f);
         keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
 
