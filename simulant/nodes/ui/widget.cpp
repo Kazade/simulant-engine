@@ -347,6 +347,9 @@ void Widget::render_text() {
     auto sm = mesh_->find_submesh("text");
     assert(sm);
 
+    /* Make sure the font material is up to date! */
+    sm->set_material(font_->material());
+
     float max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
     pimpl_->text_width_ = max_length;

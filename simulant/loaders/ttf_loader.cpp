@@ -75,6 +75,7 @@ namespace loaders {
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
 
+        texture->flush();
         S_DEBUG("F: Finished conversion");
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
