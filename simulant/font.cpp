@@ -38,7 +38,7 @@ std::pair<Vec2, Vec2> Font::texture_coordinates_for_character(char32_t ch) {
 
         stbtt_bakedchar* tmp = (stbtt_bakedchar*) &char_data_[0];
 
-        stbtt_GetBakedQuad(tmp, 512, 512, ch - 32, &x, &y, &q, 1);
+        stbtt_GetBakedQuad(tmp, texture_->width(), texture_->height(), ch - 32, &x, &y, &q, 1);
 
         return std::make_pair(
             Vec2(q.s0, q.t0),
