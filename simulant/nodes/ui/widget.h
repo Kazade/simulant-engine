@@ -258,6 +258,8 @@ private:
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
 protected:
+    friend class Keyboard; // For set_font calls on child widgets
+
     UIManager* owner_ = nullptr;
     FontPtr font_ = nullptr;
 
@@ -311,7 +313,7 @@ protected:
     void on_transformation_change_attempted() override;
 
     void rebuild();
-    void set_font(FontPtr font_id);
+    virtual void set_font(FontPtr font);
 
     virtual void prepare_build() {}
     virtual void finalize_build() {}

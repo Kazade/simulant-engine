@@ -39,6 +39,8 @@ public:
     void activate();
 
     void set_target(smlt::ui::Widget* widget);
+
+    using Widget::set_font;
 private:
     void move_row(int dir);
 
@@ -63,6 +65,7 @@ private:
     virtual UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
     void on_transformation_change_attempted() override;
+    void set_font(FontPtr font) override;
 };
 
 }

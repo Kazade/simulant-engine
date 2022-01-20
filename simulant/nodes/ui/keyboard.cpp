@@ -15,6 +15,9 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, KeyboardLayout layout):
     main_frame_->set_space_between(2);
     main_frame_->set_background_colour(smlt::Colour::NONE);
     main_frame_->set_border_colour(smlt::Colour::NONE);
+    main_frame_->set_foreground_colour(smlt::Colour::NONE);
+
+    set_foreground_colour(smlt::Colour::NONE);
 
     if(layout == KEYBOARD_LAYOUT_ALPHABETICAL) {
         generate_alphabetical_layout();
@@ -150,6 +153,7 @@ void Keyboard::clear() {
     for(auto& frame: rows_) {
         if(frame) {
             main_frame_->unpack_child(frame);
+            assert(frame->is_destroyed());
         }
         frame = nullptr;
     }
@@ -171,6 +175,7 @@ void Keyboard::generate_numerical_layout() {
         btn->set_padding(0);
         btn->set_border_width(0);
         btn->set_background_colour(smlt::Colour::NONE);
+        btn->set_border_colour(smlt::Colour::NONE);
         btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
         btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
         return btn;
@@ -186,6 +191,7 @@ void Keyboard::generate_numerical_layout() {
         row->set_border_width(0);
         row->set_space_between(2);
         row->set_background_colour(smlt::Colour::NONE);
+        row->set_border_colour(smlt::Colour::NONE);
 
         if(i < rows.size()) {
             prev = nullptr;
@@ -237,6 +243,7 @@ void Keyboard::generate_alphabetical_layout() {
         btn->set_padding(0);
         btn->set_border_width(0);
         btn->set_background_colour(smlt::Colour::NONE);
+        btn->set_border_colour(smlt::Colour::NONE);
         btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
         btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
         return btn;
@@ -252,6 +259,7 @@ void Keyboard::generate_alphabetical_layout() {
         row->set_border_width(0);
         row->set_space_between(2);
         row->set_background_colour(smlt::Colour::NONE);
+        row->set_border_colour(smlt::Colour::NONE);
 
         if(i < rows.size()) {
             prev = nullptr;
@@ -315,6 +323,13 @@ void Keyboard::on_transformation_change_attempted() {
         /* We need to move all the children */
         main_frame_->set_anchor_point(anchor_point().x, anchor_point().y);
         main_frame_->move_to(0, 0, 0.001f);
+    }
+}
+
+void Keyboard::set_font(FontPtr font) {
+    Widget::set_font(font);
+    for(auto& button: buttons_) {
+        button.second->set_font(font);
     }
 }
 
