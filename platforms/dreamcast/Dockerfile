@@ -38,7 +38,8 @@ RUN echo -e "\nsource /opt/toolchains/dc/kos/environ.sh" >> /root/.bashrc
 # Build KOS
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
 
-RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
+# FIXME: Restore when kos-ports is fixed
+# RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
 RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libpng && make install clean
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils/makeip && make
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://github.com/Kazade/img4dc.git && cd img4dc && mkdir build && cd build && cmake .. && make
