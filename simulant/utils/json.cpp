@@ -518,6 +518,10 @@ JSONIterator JSONIterator::begin() const {
         return JSONIterator();
     }
 
+    if(current_node_->size() == 0) {
+        return JSONIterator();
+    }
+
     return (*this)[0];
 }
 
