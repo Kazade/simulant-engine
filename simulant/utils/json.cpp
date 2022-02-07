@@ -282,12 +282,19 @@ static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
 
     while(stream->good()) {
         skip_whitespace(stream);
+        auto p = stream->tellg();
         char c = find_comma_or("]", stream);
+        auto p2 = stream->tellg();
+
         if(c == ',') {
             stream->ignore();
             ++count;
         } else {
             assert(c == ']');
+
+            /* If we found the closing ] just after the opening one, then
+             * this is an empty array */
+            bool empty = (p2 - p) == 1;
 
             /* We just do this final check to make sure we didn't double
              * count things... */
@@ -304,7 +311,11 @@ static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
                 S_WARN("Found trailing comma in JSON array");
                 return count;
             } else {
-                return count + 1;
+                if(!empty) {
+                    ++count;
+                }
+
+                return count;
             }
         }
     }
