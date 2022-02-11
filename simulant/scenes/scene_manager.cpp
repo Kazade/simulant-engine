@@ -92,6 +92,8 @@ void SceneManager::unload(const std::string& route) {
     if(it != routes_.end()) {
         std::shared_ptr<SceneBase> scene = it->second;
         scene->_call_unload();
+        scene->load_args.clear();
+
         if(scene->destroy_on_unload()) {
             /* Destroy the scene once it's been unloaded but do
              * it in an idle tasks so that any queued destructions
