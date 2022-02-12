@@ -22,11 +22,7 @@
 #include <iostream>
 #include <sstream>
 
-#ifndef _WIN32
-#include "deps/kfs/kfs.h"
-#else
-#include "deps/kfs/kfs/kfs.h"
-#endif
+#include "utils/kfs.h"
 #include "logging.h"
 #include "vfs.h"
 #include "window.h"

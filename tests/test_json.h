@@ -290,7 +290,7 @@ public:
         const std::string data = R"({"sessions": []})";
         auto json = json_parse(data);
 
-        assert_equal(json["sessions"]->size(), 0);
+        assert_equal(json["sessions"]->size(), 0u);
     }
 };
 

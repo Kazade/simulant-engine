@@ -1,6 +1,3 @@
-[submodule "deps/kfs"]
-	path = deps/kfs
-	url = https://gitlab.com/simulant/kfs.git
 [submodule "deps/bounce"]
 	path = deps/bounce
 	url = https://gitlab.com/simulant/bounce.git

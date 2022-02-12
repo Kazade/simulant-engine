@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simulant/test.h"
-#include "simulant/deps/kfs/kfs.h"
+#include "simulant/utils/kfs.h"
 #include "simulant/loaders/obj_loader.h"
 #include "simulant/asset_manager.h"
 
