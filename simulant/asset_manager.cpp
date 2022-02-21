@@ -414,7 +414,8 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
             if(!mat) {
                 S_ERROR("Tried to fetch material with template_id ({0}). But it didn't exist", template_id);
                 materials_loading_.erase(template_id);
-                throw std::runtime_error(_F("Error loading file: {0}").format(path));
+                S_ERROR("Error loading file: {0}", path);
+                return MaterialPtr();
             }
 
             S_DEBUG("Locating loader for {0}", path);
@@ -422,7 +423,7 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
             if(!loader) {
                 S_ERROR("Unable to find loader for {0}", path);
                 materials_loading_.erase(template_id);
-                throw std::runtime_error(_F("Unable to find loader for file: {0}").format(path));
+                return MaterialPtr();
             }
 
             S_DEBUG("Loading...");
@@ -436,19 +437,21 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
 }
 
 MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
+    auto template_mat = get_template_material(path);
 
-    MaterialID template_id = get_template_material(path);
-
-    assert(template_id);
+    assert(template_mat);
+    if(!template_mat) {
+        return MaterialPtr();
+    }
 
     /* Templates are always created in the base manager, we clone from the base manager into this
      * manager (which might be the same manager) */
-    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_);
+    auto new_mat = base_manager()->material_manager_.clone(template_mat, &this->material_manager_);
     new_mat->manager_ = this;
 
     auto new_mat_id = new_mat->id();
 
-    S_DEBUG("Cloned material {0} into {1}", template_id, new_mat_id);
+    S_DEBUG("Cloned material {0} into {1}", template_mat->id(), new_mat_id);
 
     material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect);
     return new_mat;
