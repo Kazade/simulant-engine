@@ -4,7 +4,6 @@
 
 namespace smlt {
 
-typedef int32_t EnumType;
 typedef uint32_t MaterialPropertyNameHash;
 
 unsigned constexpr material_property_hash(char const *input) {

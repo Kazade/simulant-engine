@@ -179,7 +179,7 @@ void MaterialObject::set_fog_end(float end) {
 }
 
 void MaterialObject::set_fog_mode(FogMode mode) {
-    set_property_value(FOG_MODE_PROPERTY_NAME, (const EnumType&) mode);
+    set_property_value(FOG_MODE_PROPERTY_NAME, (EnumType) mode);
 }
 
 void MaterialObject::set_fog_colour(const Colour& colour) {
@@ -211,11 +211,11 @@ float MaterialObject::fog_end() const {
 }
 
 FogMode MaterialObject::fog_mode() const {
-    const FogMode* ptr = nullptr;
-    bool ok = property_value(FOG_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
+    const EnumType* ptr = nullptr;
+    bool ok = property_value(FOG_MODE_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
-    return *ptr;
+    return *(reinterpret_cast<const FogMode*>(ptr));
 }
 
 const Colour& MaterialObject::fog_colour() const {
@@ -226,21 +226,20 @@ const Colour& MaterialObject::fog_colour() const {
     return *ptr;
 }
 
-
 bool MaterialObject::is_blending_enabled() const {
     return blend_func() != BLEND_NONE;
 }
 
 void MaterialObject::set_blend_func(BlendType b) {
-    set_property_value(BLEND_FUNC_PROPERTY_NAME, (const EnumType&) b);
+    set_property_value(BLEND_FUNC_PROPERTY_NAME, (EnumType) b);
 }
 
 BlendType MaterialObject::blend_func() const {
-    const BlendType* ptr = nullptr;
+    const EnumType* ptr = nullptr;
     bool ok = property_value(BLEND_FUNC_PROPERTY_HASH, (const EnumType*&) ptr);
     assert(ok);
     _S_UNUSED(ok);
-    return *ptr;
+    return *(reinterpret_cast<const BlendType*>(ptr));
 }
 
 void MaterialObject::set_depth_write_enabled(bool v) {
@@ -256,15 +255,15 @@ bool MaterialObject::is_depth_write_enabled() const {
 }
 
 void MaterialObject::set_cull_mode(CullMode mode) {
-    set_property_value(CULL_MODE_PROPERTY_NAME, (const EnumType&) mode);
+    set_property_value(CULL_MODE_PROPERTY_NAME, (EnumType) mode);
 }
 
 CullMode MaterialObject::cull_mode() const {
-    const CullMode* ptr = nullptr;
-    bool ok = property_value(CULL_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
+    const EnumType* ptr = nullptr;
+    bool ok = property_value(CULL_MODE_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
-    return *ptr;
+    return *(reinterpret_cast<const CullMode*>(ptr));
 }
 
 void MaterialObject::set_depth_test_enabled(bool v) {
@@ -312,39 +311,39 @@ float MaterialObject::point_size() const {
 }
 
 void MaterialObject::set_polygon_mode(PolygonMode mode) {
-    set_property_value(POLYGON_MODE_PROPERTY_NAME, (const EnumType&) mode);
+    set_property_value(POLYGON_MODE_PROPERTY_NAME, (EnumType) mode);
 }
 
 PolygonMode MaterialObject::polygon_mode() const {
-    const PolygonMode* ptr = nullptr;
-    bool ok = property_value(POLYGON_MODE_PROPERTY_HASH, (const EnumType*&) ptr);
+    const EnumType* ptr = nullptr;
+    bool ok = property_value(POLYGON_MODE_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
-    return *ptr;
+    return *(reinterpret_cast<const PolygonMode*>(ptr));
 }
 
 void MaterialObject::set_shade_model(ShadeModel model) {
-    set_property_value(SHADE_MODEL_PROPERTY_NAME, (const EnumType&) model);
+    set_property_value(SHADE_MODEL_PROPERTY_NAME, (EnumType) model);
 }
 
 ShadeModel MaterialObject::shade_model() const {
-    const ShadeModel* ptr = nullptr;
-    bool ok = property_value(SHADE_MODEL_PROPERTY_HASH, (const EnumType*&) ptr);
+    const EnumType* ptr = nullptr;
+    bool ok = property_value(SHADE_MODEL_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
-    return *ptr;
+    return *(reinterpret_cast<const ShadeModel*>(ptr));
 }
 
 ColourMaterial MaterialObject::colour_material() const {
-    const ColourMaterial* ptr = nullptr;
-    bool ok = property_value(COLOUR_MATERIAL_PROPERTY_HASH, (const EnumType*&) ptr);
+    const EnumType* ptr = nullptr;
+    bool ok = property_value(COLOUR_MATERIAL_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
-    return *ptr;
+    return *(reinterpret_cast<const ColourMaterial*>(ptr));
 }
 
 void MaterialObject::set_colour_material(ColourMaterial cm) {
-    set_property_value(COLOUR_MATERIAL_PROPERTY_NAME, (const EnumType&) cm);
+    set_property_value(COLOUR_MATERIAL_PROPERTY_NAME, (EnumType) cm);
 }
 
 
