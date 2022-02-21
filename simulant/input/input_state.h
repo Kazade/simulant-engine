@@ -106,7 +106,7 @@ enum JoystickHatAxis {
 
 /* All IDs here (aside INVALID) match up with those
  * that SDL uses. This is for convenience */
-enum JoystickButton {
+enum JoystickButton : int8_t {
     JOYSTICK_BUTTON_INVALID = -1,
     JOYSTICK_BUTTON_A,
     JOYSTICK_BUTTON_B,

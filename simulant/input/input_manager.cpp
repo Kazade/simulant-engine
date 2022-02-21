@@ -64,55 +64,60 @@ InputManager::InputManager(InputState *controller):
 
 InputAxis* InputManager::new_axis(const std::string& name) {
     auto axis = InputAxis::create(name);
-    axises_.push_back(axis);
+    axises_.insert(std::make_pair(name, axis));
     return axis.get();
 }
 
-AxisList InputManager::axises(const std::string& name) const {
+AxisList InputManager::axises(const std::string& name) {
     AxisList result;
-    for(auto& axis: axises_) {
-        if(axis->name() == name) {
-            result.push_back(axis.get());
-        }
+
+    auto it1 = axises_.lower_bound(name);
+    auto it2 = axises_.upper_bound(name);
+
+    while(it1 != it2) {
+        result.push_back(it1->second.get());
+        ++it1;
     }
+
     return result;
 }
 
 void InputManager::each_axis(EachAxisCallback callback) {
     for(auto& axis: axises_) {
-        callback(axis.get());
+        callback(axis.second.get());
     }
 }
 
 void InputManager::destroy_axises(const std::string& name) {
-    axises_.erase(
-        std::remove_if(axises_.begin(), axises_.end(),
-            [&name](InputAxis::ptr axis) -> bool {
-                return axis->name() == name;
-            }
-        ), axises_.end()
-    );
+    axises_.erase(name);
 }
 
 void InputManager::destroy_axis(InputAxis* axis) {
-    axises_.erase(
-        std::remove_if(axises_.begin(), axises_.end(),
-            [axis](InputAxis::ptr ax) -> bool {
-                return ax.get() == axis;
-            }
-        ), axises_.end()
-    );
+    for(auto it = axises_.begin(), last = axises_.end(); it != last; ) {
+        if(it->second.get() == axis) {
+            it = axises_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 std::size_t InputManager::axis_count(const std::string &name) const {
-    return std::count_if(axises_.begin(), axises_.end(), [&name](std::shared_ptr<InputAxis> axis) -> bool {
-        return axis->name() == name;
-    });
+    return axises_.count(name);
 }
 
-float sgn(float v) {
-    if(v > 0) { return 1.0f; }
-    else { return -1.0f; }
+inline static float sgn(float v) {
+    return (v > 0) ? 1.0f : -1.0f;
+}
+
+void InputManager::_process_mouse(int8_t id, int8_t pbtn, int8_t nbtn, bool *positive_pressed, bool *negative_pressed) {
+    if(pbtn != -1 && controller_->mouse_button_state(id, pbtn)) {
+        *positive_pressed = true;
+    }
+
+    if(nbtn != -1 && controller_->mouse_button_state(id, nbtn)) {
+        *negative_pressed = true;
+    }
 }
 
 bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
@@ -124,26 +129,16 @@ bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     bool positive_pressed = false;
     bool negative_pressed = false;
 
-    auto process_mouse = [this, pbtn, nbtn, &positive_pressed, &negative_pressed](MouseID id) {
-        if(pbtn != -1 && controller_->mouse_button_state(id, pbtn)) {
-            positive_pressed = true;
-        }
-
-        if(nbtn != -1 && controller_->mouse_button_state(id, nbtn)) {
-            negative_pressed = true;
-        }
-    };
-
     // If the user requested input from all mice, do that
     if(axis->mouse_source() == ALL_MICE) {
         for(std::size_t i = 0; i < controller_->mouse_count(); ++i) {
             MouseID id = (MouseID) i;
-            process_mouse(id);
+            _process_mouse(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
         }
     } else {
         // Otherwise just check the one they asked for
         MouseID id = axis->mouse_source();
-        process_mouse(id);
+        _process_mouse(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
     }
 
     // If either positive or negative were pressed, adjust the value
@@ -166,6 +161,16 @@ bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     return negative_pressed || positive_pressed;
 }
 
+void InputManager::_process_joystick(int8_t id, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed) {
+    if(pbtn != -1 && controller_->joystick_button_state(id, pbtn)) {
+        *positive_pressed = true;
+    }
+
+    if(nbtn != -1 && controller_->joystick_button_state(id, nbtn)) {
+        *negative_pressed = true;
+    }
+};
+
 bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     float new_value = axis->value_;
 
@@ -175,26 +180,16 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     bool positive_pressed = false;
     bool negative_pressed = false;
 
-    auto process_joystick = [this, pbtn, nbtn, &positive_pressed, &negative_pressed](JoystickID id) {
-        if(pbtn != -1 && controller_->joystick_button_state(id, pbtn)) {
-            positive_pressed = true;
-        }
-
-        if(nbtn != -1 && controller_->joystick_button_state(id, nbtn)) {
-            negative_pressed = true;
-        }
-    };
-
     // If the user requested input from all mice, do that
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
             JoystickID id = (JoystickID) i;
-            process_joystick(id);
+            _process_joystick(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
         }
     } else {
         // Otherwise just check the one they asked for
         JoystickID id = axis->joystick_source();
-        process_joystick(id);
+        _process_joystick(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
     }
 
     // If either positive or negative were pressed, adjust the value
@@ -215,6 +210,16 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     axis->value_ = new_value;
 
     return negative_pressed || positive_pressed;
+}
+
+void InputManager::_process_keyboard(int8_t id, KeyboardCode pkey, KeyboardCode nkey, bool *positive_pressed, bool *negative_pressed) {
+    if(pkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
+        *positive_pressed = true;
+    }
+
+    if(nkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, nkey)) {
+        *negative_pressed = true;
+    }
 }
 
 bool InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
@@ -226,26 +231,16 @@ bool InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     bool positive_pressed = false;
     bool negative_pressed = false;
 
-    auto process_keyboard = [this, pkey, nkey, &positive_pressed, &negative_pressed](KeyboardID id) {
-        if(pkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
-            positive_pressed = true;
-        }
-
-        if(nkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, nkey)) {
-            negative_pressed = true;
-        }
-    };
-
     // If the user requested input from all keyboards, do that
     if(axis->keyboard_source() == ALL_KEYBOARDS) {
         for(std::size_t i = 0; i < controller_->keyboard_count(); ++i) {
             KeyboardID id = (KeyboardID) i;
-            process_keyboard(id);
+            _process_keyboard(id, pkey, nkey, &positive_pressed, &negative_pressed);
         }
     } else {
         // Otherwise just check the one they asked for
         KeyboardID id = axis->keyboard_source();
-        process_keyboard(id);
+        _process_keyboard(id, pkey, nkey, &positive_pressed, &negative_pressed);
     }
 
     // If either positive or negative were pressed, adjust the value
@@ -277,13 +272,13 @@ void InputManager::update(float dt) {
         it.second = false;
     }
 
-    for(auto axis: axises_) {
-        const auto& name = axis->name();
+    for(auto& axis: axises_) {
+        const auto& name = axis.first;
 
-        bool new_state = false;
+        bool new_state = false;       
+        auto axis_ptr = axis.second.get();
+        auto type = axis_ptr->type();
 
-        auto type = axis->type();
-        auto axis_ptr = axis.get();
         if(type == AXIS_TYPE_KEYBOARD_KEY) {
             new_state |= _update_keyboard_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_MOUSE_BUTTON) {
@@ -442,13 +437,19 @@ int8_t InputManager::axis_value_hard(const std::string& name) const {
 
 float InputManager::axis_value(const std::string& name) const {
     auto f = 0.0f;
-    for(auto axis: axises(name)) {
-        auto v = axis->value();
+
+    auto it1 = axises_.lower_bound(name);
+    auto it2 = axises_.upper_bound(name);
+
+    while(it1 != it2) {
+        auto v = it1->second->value();
 
         // Return the result with the greatest overall value (positive or negative)
         if(std::abs(v) > std::abs(f)) {
             f = v;
         }
+
+        ++it1;
     }
 
     return f;
