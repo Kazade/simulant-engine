@@ -485,8 +485,15 @@ private:
             // path on user apps.
             config.search_paths.push_back("assets");
             config.search_paths.push_back("sample_data");
+
+#if defined(__DREAMCAST__)
+            config.search_paths.push_back("/cd");
             config.search_paths.push_back("/cd/assets");
             config.search_paths.push_back("/cd/sample_data");
+            config.search_paths.push_back("/pc");
+            config.search_paths.push_back("/pc/assets");
+            config.search_paths.push_back("/pc/sample_data");
+#endif
 
             application.reset(new TestApp(config));
             application->run_frame();

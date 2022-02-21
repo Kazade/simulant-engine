@@ -217,15 +217,19 @@ public:
     }
 
     Vec3 cross(const Vec3& rhs) const {
-        const float a = -(z * rhs.y);
-        const float b = -(x * rhs.z);
-        const float c = -(y * rhs.x);
+        Vec3 ret;
 
-        return Vec3(
-            ::fmaf(y, rhs.z, a),
-            ::fmaf(z, rhs.x, b),
-            ::fmaf(x, rhs.y, c)
-        );
+        float a = (z * rhs.y);  // fmul
+        float b = (x * rhs.z);  // fmul
+        a = -a;  // fneg
+        float c = (y * rhs.x);  // fmul
+        b = -b;  // fneg
+        ret.x = ::fmaf(y, rhs.z, a);  // fmac
+        c = -c;  // fneg
+        ret.y = ::fmaf(z, rhs.x, b); // fmac
+        ret.z = ::fmaf(x, rhs.y, c);  // fmac
+
+        return ret;
     }
 
     Vec3 limit(float l) {
