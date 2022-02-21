@@ -353,15 +353,7 @@ const RenderPriority RENDER_PRIORITY_FOREGROUND = 100;
 const RenderPriority RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 250;
 const RenderPriority RENDER_PRIORITY_MAX = RENDER_PRIORITY_ABSOLUTE_FOREGROUND + 1;
 
-const std::vector<RenderPriority> RENDER_PRIORITIES = {
-    RENDER_PRIORITY_ABSOLUTE_BACKGROUND,
-    RENDER_PRIORITY_BACKGROUND,
-    RENDER_PRIORITY_DISTANT,
-    RENDER_PRIORITY_MAIN,
-    RENDER_PRIORITY_NEAR,
-    RENDER_PRIORITY_FOREGROUND,
-    RENDER_PRIORITY_ABSOLUTE_FOREGROUND
-};
+extern const std::vector<RenderPriority> RENDER_PRIORITIES;
 
 enum ShaderType {
     SHADER_TYPE_VERTEX,
@@ -374,7 +366,7 @@ enum VirtualGamepadConfig {
     VIRTUAL_GAMEPAD_CONFIG_HAT_AND_BUTTON
 };
 
-const std::string DEFAULT_MATERIAL_SCHEME = "default";
+#define DEFAULT_MATERIAL_SCHEME "default"
 
 class Mesh;
 typedef std::weak_ptr<Mesh> MeshRef;
