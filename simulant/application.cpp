@@ -672,10 +672,11 @@ LoaderPtr Application::loader_for(const Path &filename, LoaderHint hint) {
             }
         }
 
-        throw std::logic_error(_F("More than one possible loader was found for '{0}'. Please specify a hint.").format(filename));
+        assert(0 && "More than one possible loader was found");
+        S_ERROR("More than one possible loader was found for '{0}'. Please specify a hint.", filename);
     }
 
-    S_WARN("No suitable loader found for {0}", filename);
+    S_ERROR("No suitable loader found for {0}", filename);
     return LoaderPtr();
 }
 
