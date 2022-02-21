@@ -57,6 +57,17 @@ public:
         assert_true(v3.equals(v1));
     }
 
+    void test_cross_product() {
+        smlt::Vec3 v1(0, 1, 0);
+        smlt::Vec3 v2(1, 0, 0);
+
+        auto ret = v1.cross(v2);
+
+        assert_equal(ret.x, 0);
+        assert_equal(ret.y, 0);
+        assert_equal(ret.z, -1);
+    }
+
     void test_component_constructor() {
         smlt::Vec3 v(1, 2, 3);
 
