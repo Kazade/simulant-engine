@@ -62,11 +62,11 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 }
 
 _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex, const Mat4& mat) {
-    auto id = (tex) ? tex->_renderer_specific_id() : 0;
-
-    if(!id) {
+    if(!tex) {
         return false;
     }
+
+    auto id = tex->_renderer_specific_id();
 
     if(which >= _S_GL_MAX_TEXTURE_UNITS) {
         return false;
@@ -429,35 +429,19 @@ void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
     textures_enabled_[which] = false;
 }
 
-static GLenum convert_arrangement(MeshArrangement arrangement) {
-    switch(arrangement) {
-    case MESH_ARRANGEMENT_LINES:
-        return GL_LINES;
-    case MESH_ARRANGEMENT_LINE_STRIP:
-        return GL_LINE_STRIP;
-    case MESH_ARRANGEMENT_TRIANGLES:
-        return GL_TRIANGLES;
-    case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-        return GL_TRIANGLE_STRIP;
-    case MESH_ARRANGEMENT_TRIANGLE_FAN:
-        return GL_TRIANGLE_FAN;
-    case MESH_ARRANGEMENT_QUADS:
-        return GL_QUADS;
-    default:
-        assert(0 && "Invalid mesh arrangement");
-        return GL_TRIANGLES;
-    }
+static constexpr GLenum convert_arrangement(MeshArrangement arrangement) {
+    return (arrangement == MESH_ARRANGEMENT_LINES) ? GL_LINES :
+           (arrangement == MESH_ARRANGEMENT_LINE_STRIP) ? GL_LINE_STRIP :
+           (arrangement == MESH_ARRANGEMENT_TRIANGLES) ? GL_TRIANGLES :
+           (arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) ? GL_TRIANGLE_STRIP :
+           (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_STRIP :
+           (arrangement == MESH_ARRANGEMENT_QUADS) ? GL_QUADS : GL_TRIANGLES;
 }
 
-static GLenum convert_index_type(IndexType type) {
-    switch(type) {
-    case INDEX_TYPE_8_BIT: return GL_UNSIGNED_BYTE;
-    case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;
-    case INDEX_TYPE_32_BIT: return GL_UNSIGNED_INT;
-    default:
-        assert(0 && "Invalid index type");
-        return GL_UNSIGNED_SHORT;
-    }
+static constexpr GLenum convert_index_type(IndexType type) {
+    return (type == INDEX_TYPE_8_BIT) ? GL_UNSIGNED_BYTE :
+           (type == INDEX_TYPE_16_BIT) ? GL_UNSIGNED_SHORT :
+           GL_UNSIGNED_INT;
 }
 
 void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
@@ -470,7 +454,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         return;
     }
 
-    const Mat4 model = renderable->final_transformation;
+    const Mat4& model = renderable->final_transformation;
     const Mat4& view = camera_->view_matrix();
     const Mat4& projection = camera_->projection_matrix();
 

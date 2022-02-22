@@ -273,7 +273,8 @@ void VertexData::tex_coordX(uint8_t which, float u, float v) {
     }
 
     Vec2* out = (Vec2*) &data_[cursor_offset() + offset];
-    *out = Vec2(u, v);
+    out->x = u;
+    out->y = v;
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
