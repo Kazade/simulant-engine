@@ -204,6 +204,14 @@ void DynamicBody::add_torque(const Vec3& torque) {
     body_->ApplyTorque(t, true);
 }
 
+Vec3 DynamicBody::absolute_center_of_mass() const {
+    b3Vec3 center = body_->GetWorldCenter();
+
+    smlt::Vec3 ret;
+    to_vec3(center, ret);
+    return ret;
+}
+
 bool DynamicBody::is_awake() const {
     assert(simulation_);
 
@@ -216,7 +224,20 @@ void DynamicBody::set_center_of_mass(const smlt::Vec3& com) {
     b3MassData data;
     body_->GetMassData(&data);
     to_b3vec3(com, data.center);
+
+    data.center = body_->GetLocalPoint(data.center);
     body_->SetMassData(&data);
+}
+
+Vec3 DynamicBody::center_of_mass() const {
+    assert(simulation_);
+
+    b3MassData data;
+    body_->GetMassData(&data);
+
+    smlt::Vec3 ret;
+    to_vec3(data.center, ret);
+    return ret;
 }
 
 void DynamicBody::set_mass(float m) {

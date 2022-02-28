@@ -16,6 +16,8 @@ public:
     float mass() const;
     void set_mass(float m);
     void set_center_of_mass(const smlt::Vec3& com);
+    Vec3 center_of_mass() const;
+    Vec3 absolute_center_of_mass() const;
 
     void add_force(const Vec3& force);
     void add_force_at_position(const Vec3& force, const Vec3& position);

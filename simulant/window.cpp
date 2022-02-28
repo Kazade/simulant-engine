@@ -28,8 +28,6 @@
 #include "platform.h"
 #include "input/input_state.h"
 
-
-
 #include "nodes/camera.h"
 #include "nodes/ui/ui_manager.h"
 
