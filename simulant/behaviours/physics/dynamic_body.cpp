@@ -221,12 +221,22 @@ bool DynamicBody::is_awake() const {
 void DynamicBody::set_center_of_mass(const smlt::Vec3& com) {
     assert(simulation_);
 
-    b3MassData data;
-    body_->GetMassData(&data);
-    to_b3vec3(com, data.center);
+    b3MassData md;
+    b3Vec3 new_center;
+    to_b3vec3(com, new_center);
 
-    data.center = body_->GetLocalPoint(data.center);
-    body_->SetMassData(&data);
+    body_->GetMassData(&md);
+
+    // Shift to old center of mass
+    b3Mat33 Ic = md.I - md.mass * b3Steiner(md.center);
+
+    // Compute new inertia (Shift inertia to local body origin)
+    b3Mat33 I2 = Ic + md.mass * b3Steiner(new_center);
+
+    md.center = new_center;
+    md.I = I2;
+
+    body_->SetMassData(&md);
 }
 
 Vec3 DynamicBody::center_of_mass() const {
