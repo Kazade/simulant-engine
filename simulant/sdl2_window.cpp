@@ -184,6 +184,11 @@ void SDL2Window::check_events() {
                     value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), -1.0f, 1.0f);
                 }
 
+                /* For some reason, SDL Y axis is reversed - up == -1, down == 1. I have no idea if this is a bug or correct */
+                if(event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY || event.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
+                    value = -value;
+                }
+
                 input_state->_handle_joystick_axis_motion(
                     event.caxis.which,
                     SDL_axis_to_simulant_axis(event.caxis.axis),
@@ -316,10 +321,11 @@ std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver(const std::string& 
 bool SDL2Window::_init_window() {
     /* Load the game controller mappings */
     auto rw_ops = SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
-    if(SDL_GameControllerAddMappingsFromRW(rw_ops, 0) < 0) {
+    int ret = SDL_GameControllerAddMappingsFromRW(rw_ops, 1);
+    if(ret < 0) {
         S_WARN("Unable to load controller mappings!");
     } else {
-        S_DEBUG("Successfully loaded SDL controller mappings");
+        S_DEBUG("Successfully loaded {0} SDL controller mappings", ret);
     }
 
     int32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
