@@ -218,6 +218,29 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
     store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
 }
 
+void Body::add_triangle_collider(
+    const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
+    const PhysicsMaterial& properties
+) {
+    assert(simulation_);
+
+    b3Vec3 bv1, bv2, bv3;
+    to_b3vec3(v1, bv1);
+    to_b3vec3(v2, bv2);
+    to_b3vec3(v3, bv3);
+
+    b3TriangleShape tri;
+    tri.Set(bv1, bv2, bv3);
+
+    b3FixtureDef sdef;
+    sdef.shape = &tri;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
+}
+
 void Body::add_capsule_collider(float height, const float diameter, const PhysicsMaterial& properties) {
     assert(simulation_);
 

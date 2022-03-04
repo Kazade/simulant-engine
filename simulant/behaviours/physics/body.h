@@ -92,6 +92,11 @@ public:
         const PhysicsMaterial& properties
     );
 
+    void add_triangle_collider(
+        const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
+        const PhysicsMaterial& properties
+    );
+
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 
