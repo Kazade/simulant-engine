@@ -66,14 +66,14 @@ public:
     void set_return_speed(float ret);
 
     const std::string& name() const { return name_; }
-
-
     const AxisType& type() const { return type_; }
 
     float value(DeadZoneBehaviour dead_zone_behaviour=DEAD_ZONE_BEHAVIOUR_RADIAL) const;
 
     void set_dead_zone(float v) { dead_zone_ = v; }
     float dead_zone() const { return dead_zone_; }
+
+    void set_inversed(bool value=true);
 
 private:
     std::string name_;
@@ -103,6 +103,8 @@ private:
 
     float value_ = 0.0f;
     float dead_zone_ = 0.001f;
+
+    bool inversed_ = false;
 
     /* This is used where an axis has a counterpart
      * (e.g a joystick with X + Y). It's used when
