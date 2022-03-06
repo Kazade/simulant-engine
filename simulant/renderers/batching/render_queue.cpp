@@ -64,14 +64,13 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     assert(camera_);
     assert(render_group_factory_);
 
-    auto idx = renderables_.size();
-    renderables_.push_back(src_renderable);
-    auto renderable = &renderables_.back();
-
-    if(!renderable->is_visible || !renderable->index_element_count) {
-        renderables_.pop_back();
+    if(!src_renderable.is_visible || !src_renderable.index_element_count) {
         return;
     }
+
+    auto idx = renderables_.size();
+    renderables_.push_back(std::move(src_renderable));
+    auto renderable = &renderables_.back();
 
     auto material = renderable->material;
     assert(material);
