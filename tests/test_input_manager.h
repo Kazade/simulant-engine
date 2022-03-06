@@ -72,6 +72,23 @@ public:
         assert_equal(manager_->axis_value_hard("Test"), 1);
     }
 
+    void test_axis_value_inversion() {
+        InputAxis* axis = manager_->new_axis("Test");
+        axis->set_joystick_axis(JOYSTICK_AXIS_0);
+        axis->set_dead_zone(0.1f);
+        axis->set_inversed(true);
+
+        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.05f);
+        manager_->update(1.0);
+
+        assert_equal(manager_->axis_value_hard("Test"), 0);
+
+        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.11f);
+        manager_->update(1.0);
+
+        assert_equal(manager_->axis_value_hard("Test"), -1);
+    }
+
     void test_axis_dead_zone() {
         InputAxis* axis = manager_->new_axis("Test");
         axis->set_joystick_axis(JOYSTICK_AXIS_0);

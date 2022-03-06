@@ -70,31 +70,27 @@ void InputAxis::set_return_speed(float ret) {
 }
 
 float InputAxis::value(DeadZoneBehaviour dead_zone_behaviour) const {
-    float ret = 0.0f;
+    float inversion = ((inversed_) ? -1.0f : 1.0f);
     switch(dead_zone_behaviour) {
     case DEAD_ZONE_BEHAVIOUR_NONE:
-        ret = value_;
-    break;
+        return value_ * inversion;
     default:
     case DEAD_ZONE_BEHAVIOUR_RADIAL: {
         if(type_ == AXIS_TYPE_JOYSTICK_AXIS) {
             Vec2 input(value_, linked_value_);
             float dead_zone_squared = dead_zone_ * dead_zone_;
             if(input.length_squared() < dead_zone_squared) {
-                ret = 0.0f;
+                return 0.0f;
             } else {
                 /* FIXME: Costly divide */
                 input = input.normalized() * ((input.length() - dead_zone_) / (1.0f - dead_zone_));
-                ret = input.x;
+                return input.x * inversion;
             }
         }
     } /* fall through */
-    case DEAD_ZONE_BEHAVIOUR_AXIAL: {
-        ret = std::abs(value_) >= dead_zone_ ? value_ : 0.0f;
+    case DEAD_ZONE_BEHAVIOUR_AXIAL:
+        return (std::abs(value_) >= dead_zone_ ? value_ : 0.0f) * inversion;
     }
-    }
-
-    return ret * ((inversed_) ? -1.0f : 1.0f);
 }
 
 void InputAxis::set_inversed(bool value) {

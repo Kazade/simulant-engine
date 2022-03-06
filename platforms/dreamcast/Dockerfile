@@ -7,6 +7,7 @@ MAINTAINER kazade <kazade@gmail.com>
 RUN dnf -y update && dnf clean all && dnf -y install automake wget make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos
+RUN cd /opt/toolchains/dc/kos && git checkout aac7f34b62071777641f11e00ac0b059f389a277 && cd -
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports
 
 # Speed up compilation
