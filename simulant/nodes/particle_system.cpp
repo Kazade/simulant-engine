@@ -118,6 +118,14 @@ bool ParticleSystem::has_active_emitters() const {
     return false;
 }
 
+bool ParticleSystem::emit_when_hidden() const {
+    return emit_when_hidden_;
+}
+
+void ParticleSystem::set_emit_when_hidden(bool value) {
+    emit_when_hidden_ = value;
+}
+
 void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
     _S_UNUSED(detail_level);
 
@@ -201,7 +209,6 @@ void ParticleSystem::update(float dt) {
         particle_count_ = std::min(particle_count_, particles_.size());
     }
 
-
     // Update existing particles, erase any that are dead
     for(auto i = 0u; i < particle_count_; ++i) {
         Particle& particle = particles_[i];
@@ -229,23 +236,27 @@ void ParticleSystem::update(float dt) {
         manipulator->manipulate(this, &particles_[0], particle_count_, dt);
     }
 
-    for(auto i = 0u; i < script_->emitter_count(); ++i) {
-        if(!emitter_states_[i].is_active) {
-            continue;
-        }
+    /* Don't emit new particles if we're hidden, and we're not supposed to
+     * emit when hidden! */
+    if(is_visible() || emit_when_hidden()) {
+        for(auto i = 0u; i < script_->emitter_count(); ++i) {
+            if(!emitter_states_[i].is_active) {
+                continue;
+            }
 
-        update_emitter(i, dt);
+            update_emitter(i, dt);
 
-        if(particle_count_ < particles_.size()) {
+            /* FIXME: This always means the first emitter gets all the particles ! */
             auto max_can_emit = particles_.size() - particle_count_;
             emit_particles(i, dt, max_can_emit);
-        }
 
-        // We do this after emission so that we always emit particles
-        // on the first update
-        update_active_state(i, dt);
+            // We do this after emission so that we always emit particles
+            // on the first update
+            update_active_state(i, dt);
+        }
     }
 
+    /* If we are set to destroy on completion, then we do so even if we're invisible */
     if(!particle_count_ && !script_->has_repeating_emitters() && !has_active_emitters()) {
         // If the particles are gone, and we don't have repeating emitters and all the emitters are inactive
         // Then destroy the particle system if that's what we've been told to do
@@ -262,7 +273,7 @@ void ParticleSystem::update_active_state(uint16_t e, float dt) {
     if(state.is_active) {
         state.time_active += dt;
 
-        if(state.current_duration && state.time_active >= state.current_duration) {
+        if(state.current_duration > smlt::EPSILON && state.time_active >= state.current_duration) {
             state.is_active = false;
             state.repeat_delay = random_.float_in_range(emitter->repeat_delay_range.first, emitter->repeat_delay_range.second);
             state.time_inactive = 0;
@@ -270,7 +281,7 @@ void ParticleSystem::update_active_state(uint16_t e, float dt) {
     } else {
         state.time_inactive += dt;
 
-        if(state.repeat_delay > 0 && state.time_inactive >= state.repeat_delay) {
+        if(state.repeat_delay > smlt::EPSILON && state.time_inactive >= state.repeat_delay) {
             state.is_active = true;
             state.repeat_delay = 0;
             state.time_active = 0;
@@ -305,7 +316,8 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     auto& state = emitter_states_[e];
     auto emitter = script_->emitter(e);
 
-    float decrement = 1.0f / float(emitter->emission_rate); //Work out how often to emit per second
+    /* FIXME: Add smlt::fast_inverse() and use that */
+    float decrement = smlt::fast_divide(1.0f, float(emitter->emission_rate)); //Work out how often to emit per second
 
     auto scale = absolute_scaling();
 
