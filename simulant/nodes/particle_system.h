@@ -53,8 +53,8 @@ public:
         return StageNode::transformed_aabb();
     }
 
-    void deactivate_emitters() { emitters_active_ = false; }
-    void activate_emitters() { emitters_active_ = true; }
+    bool emitters_active() const;
+    void set_emitters_active(bool value=true);
 
     void set_destroy_on_completion(bool value=true) { destroy_on_completion_ = value; }
     bool destroy_on_completion() const { return destroy_on_completion_; }
@@ -66,7 +66,7 @@ public:
      * @return True if emit_when_hidden is set.
      */
     bool emit_when_hidden() const;
-    void set_emit_when_hidden(bool value);
+    void set_emit_when_hidden(bool value=true);
 
     VertexData* vertex_data() const {
         return vertex_data_;

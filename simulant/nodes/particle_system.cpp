@@ -102,6 +102,14 @@ const AABB &ParticleSystem::aabb() const {
     return aabb_;
 }
 
+bool ParticleSystem::emitters_active() const {
+    return emitters_active_;
+}
+
+void ParticleSystem::set_emitters_active(bool value) {
+    emitters_active_ = value;
+}
+
 
 bool ParticleSystem::has_active_emitters() const {
     if(!emitters_active_) {
