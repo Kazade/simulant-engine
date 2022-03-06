@@ -61,12 +61,12 @@ public:
     bool has_active_emitters() const;
 
     /**
-     * @brief If emit_when_hidden is true, then particles will continue to be simulated
+     * @brief If update_when_hidden is true, then particles will continue to be simulated
      * even if the particle system is hidden via set_visible. The default is false.
-     * @return True if emit_when_hidden is set.
+     * @return True if update_when_hidden is set.
      */
-    bool emit_when_hidden() const;
-    void set_emit_when_hidden(bool value=true);
+    bool update_when_hidden() const;
+    void set_update_when_hidden(bool value=true);
 
     VertexData* vertex_data() const {
         return vertex_data_;
@@ -117,7 +117,7 @@ private:
     IndexData* index_data_ = nullptr;
 
     bool destroy_on_completion_ = false;
-    bool emit_when_hidden_ = false;
+    bool update_when_hidden_ = false;
 
     void rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right);
 

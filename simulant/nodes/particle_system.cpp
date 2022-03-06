@@ -126,12 +126,12 @@ bool ParticleSystem::has_active_emitters() const {
     return false;
 }
 
-bool ParticleSystem::emit_when_hidden() const {
-    return emit_when_hidden_;
+bool ParticleSystem::update_when_hidden() const {
+    return update_when_hidden_;
 }
 
-void ParticleSystem::set_emit_when_hidden(bool value) {
-    emit_when_hidden_ = value;
+void ParticleSystem::set_update_when_hidden(bool value) {
+    update_when_hidden_ = value;
 }
 
 void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
@@ -211,6 +211,11 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
 void ParticleSystem::update(float dt) {
     update_source(dt); //Update any sounds attached to this particle system
 
+    /* Don't update anything at all if we're hidden */
+    if(!is_visible() && !update_when_hidden()) {
+        return;
+    }
+
     if(particles_.size() != script_->quota()) {
         particles_.resize(script_->quota());
         particles_.shrink_to_fit();
@@ -244,24 +249,20 @@ void ParticleSystem::update(float dt) {
         manipulator->manipulate(this, &particles_[0], particle_count_, dt);
     }
 
-    /* Don't emit new particles if we're hidden, and we're not supposed to
-     * emit when hidden! */
-    if(is_visible() || emit_when_hidden()) {
-        for(auto i = 0u; i < script_->emitter_count(); ++i) {
-            if(!emitter_states_[i].is_active) {
-                continue;
-            }
-
-            update_emitter(i, dt);
-
-            /* FIXME: This always means the first emitter gets all the particles ! */
-            auto max_can_emit = particles_.size() - particle_count_;
-            emit_particles(i, dt, max_can_emit);
-
-            // We do this after emission so that we always emit particles
-            // on the first update
-            update_active_state(i, dt);
+    for(auto i = 0u; i < script_->emitter_count(); ++i) {
+        if(!emitter_states_[i].is_active) {
+            continue;
         }
+
+        update_emitter(i, dt);
+
+        /* FIXME: This always means the first emitter gets all the particles ! */
+        auto max_can_emit = particles_.size() - particle_count_;
+        emit_particles(i, dt, max_can_emit);
+
+        // We do this after emission so that we always emit particles
+        // on the first update
+        update_active_state(i, dt);
     }
 
     /* If we are set to destroy on completion, then we do so even if we're invisible */
