@@ -314,13 +314,13 @@ FontPtr UIManager::_load_or_get_font(
     }
 
     for(auto& filename: potentials) {
-        loc = vfs->locate_file(filename, /*fail_silently=*/true);
+        loc = vfs->locate_file(filename, true, /*fail_silently=*/true);
         if(loc) {
             break;
         }
 
         /* Try a font directory prefix */
-        loc = vfs->locate_file(kfs::path::join("fonts", filename), /*fail_silently=*/true);
+        loc = vfs->locate_file(kfs::path::join("fonts", filename), true, /*fail_silently=*/true);
         if(loc) {
             break;
         }
@@ -328,7 +328,7 @@ FontPtr UIManager::_load_or_get_font(
         /* Finally try a family name dir within fonts */
         loc = vfs->locate_file(
             kfs::path::join(kfs::path::join("fonts", family), filename),
-            /*fail_silently=*/true
+            true, /*fail_silently=*/true
         );
 
         if(loc) {
