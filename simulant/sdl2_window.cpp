@@ -344,7 +344,7 @@ bool SDL2Window::_init_window() {
     }
 
     if(is_fullscreen()) {
-        SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN_DESKTOP);
+        SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN);
     }
 
     SDL_SetEventFilter(event_filter, this);
