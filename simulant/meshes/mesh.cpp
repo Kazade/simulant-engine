@@ -689,7 +689,7 @@ void Mesh::transform_vertices(const smlt::Mat4& transform) {
     vertex_data->done();
 }
 
-SubMeshIteratorPair Mesh::each_submesh() const {
+SubMeshIteratorPair Mesh::each_submesh() {
     return SubMeshIteratorPair(submeshes_);
 }
 

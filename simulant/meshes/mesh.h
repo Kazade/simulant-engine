@@ -99,18 +99,13 @@ public:
     typedef typename container_type::iterator iterator_type;
 
 private:
-    /* We copy the container because submeshes are often
-     * altered in a loop, and as they're shared pointers
-     * we can copy the container and maintain the submeshes
-     * for the lifetime of the iterator */
-
     friend class Mesh;
-    SubMeshIteratorPair(const container_type& container):
+    SubMeshIteratorPair(container_type& container):
         container_(container) {
 
     }
 
-    container_type container_;
+    container_type& container_;
 
 public:
     iterator_type begin() {
@@ -257,7 +252,7 @@ public:
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform);
 
-    SubMeshIteratorPair each_submesh() const;
+    SubMeshIteratorPair each_submesh();
 
     void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
