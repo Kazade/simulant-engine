@@ -161,6 +161,7 @@ public:
 #ifndef NDEBUG
         check_valid();
 #endif
+        return true;
     }
 
     void set_max_size(std::size_t size) {
