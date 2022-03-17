@@ -66,20 +66,16 @@ bool Frustum::intersects_cube(const Vec3& centre, float size) const {
     return true;
 }
 
-bool Frustum::intersects_aabb(const AABB& aabb) const {
-    for(const Plane& plane: planes_) {
-        auto points = aabb.corners();
+bool Frustum::intersects_aabb(const AABB& aabb) const {    
+    auto& min = aabb.min();
+    auto& max = aabb.max();
+    Vec3 c = (max + min) * 0.5f;
+    Vec3 e = (max - c);
 
-        int32_t points_behind = 0;
-        for(Vec3& p: points) {
-            auto classification = plane.classify_point(p);
-
-            if(classification == PLANE_CLASSIFICATION_IS_BEHIND_PLANE) {
-                points_behind++;
-            }
-        }
-
-        if(points_behind == 8) {
+    for(const Plane& p: planes_) {
+        float r = e.x * std::abs(p.n.x) + e.y * std::abs(p.n.y) + e.z * std::abs(p.n.z);
+        float s = p.n.dot(c) - p.d;
+        if(std::abs(s) > r) {
             return false;
         }
     }
