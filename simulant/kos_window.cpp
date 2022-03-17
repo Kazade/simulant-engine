@@ -74,7 +74,7 @@ void KOSWindow::probe_vmus() {
 }
 
 static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button) {
-    auto ret = (dc_button == CONT_A) ? JOYSTICK_BUTTON_A :
+    return (dc_button == CONT_A) ? JOYSTICK_BUTTON_A :
            (dc_button == CONT_B) ? JOYSTICK_BUTTON_B :
            (dc_button == CONT_C) ? JOYSTICK_BUTTON_LEFT_SHOULDER :
            (dc_button == CONT_X) ? JOYSTICK_BUTTON_X :
@@ -82,9 +82,6 @@ static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button)
            (dc_button == CONT_Z) ? JOYSTICK_BUTTON_RIGHT_SHOULDER :
            (dc_button == CONT_START) ? JOYSTICK_BUTTON_START :
            JOYSTICK_BUTTON_INVALID;
-
-    assert(ret != JOYSTICK_BUTTON_INVALID);
-    return ret;
 }
 
 void KOSWindow::check_events() {
