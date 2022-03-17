@@ -9,18 +9,18 @@ Vec3 Plane::project(const Vec3 &p) {
     return p - (n.dot(p) + d) * n;
 }
 
-float Plane::distance_to(const Vec3 &p) {
+float Plane::distance_to(const Vec3 &p) const {
     float k1 = d;
-    float k2 = (n.x * p.x) + (n.y * p.y) + (n.z * p.z);
+    float k2 = n.dot(p);
     return k2 - k1;
 }
 
 PlaneClassification Plane::classify_point(const Vec3 &p) const {
-    const static float E = std::numeric_limits<float>::epsilon();
+    const float E = std::numeric_limits<float>::epsilon();
 
     /* This function will determine if a point is on, in front of, or behind*/
     /* the plane.  First we store the dot product of the plane and the point.*/
-    auto distance = n.x * p.x + n.y * p.y + n.z * p.z + d;
+    auto distance = n.dot(p) + d;
 
     /* Simply put if the dot product is greater than 0 then it is infront of it.*/
     /* If it is less than 0 then it is behind it.  And if it is 0 then it is on it.*/
