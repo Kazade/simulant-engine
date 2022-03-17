@@ -26,9 +26,16 @@ private:
     std::size_t max_size_ = 64;
 
     void pop_tail() {
+        if(!tail_) {
+            assert(cache_.empty());
+            assert(!entries_);
+            return;
+        }
+
         Entry* old_tail = tail_;
         tail_ = tail_->prev;
         if(tail_) {
+            assert(entries_);
             tail_->next = nullptr;
         } else {
             /* No tail? Must be last entry */
@@ -39,6 +46,22 @@ private:
 
         delete old_tail;
     }
+
+#ifndef NDEBUG
+    void check_valid() const {
+        auto it = entries_;
+        auto count = 0u;
+        while(it) {
+            assert(it != it->next);
+
+            ++count;
+            it = it->next;
+        }
+
+        assert(cache_.size() == count);
+    }
+#endif
+
 public:
     ~LRUCache() {
         clear();
@@ -49,21 +72,25 @@ public:
         if(it != cache_.end()) {
             auto entry = it->second;
 
-            // Remove from list
-            entry->prev->next = entry->next;
-            entry->next->prev = entry->prev;
+            if(entry != entries_) {
+                // Remove from list
+                if(entry->prev) entry->prev->next = entry->next;
+                if(entry->next) entry->next->prev = entry->prev;
 
-            // Insert at the beginning
-            entry->prev = nullptr;
-            entry->next = entries_;
-            entries_->prev = entry;
-            entries_ = entry;
+                if(tail_ == entry) {
+                    tail_ = entry->prev;
+                }
 
-            if(tail_ == entry) {
-                tail_ = tail_->prev;
-                tail_->next = nullptr;
+                // Insert at the beginning
+                entry->prev = nullptr;
+                entry->next = entries_;
+                entries_->prev = entry;
+                entries_ = entry;
             }
 
+#ifndef NDEBUG
+            check_valid();
+#endif
             return optional<Value>(entry->value);
         }
 
@@ -97,12 +124,16 @@ public:
         }
 
         entries_ = new_entry;
+        cache_.insert(std::make_pair(key, new_entry));
 
         /* If we grew too big, remove the last entry */
         if(cache_.size() > max_size_) {
             pop_tail();
         }
 
+#ifndef NDEBUG
+        check_valid();
+#endif
         return true;
     }
 
@@ -116,14 +147,20 @@ public:
 
         /* Move to the end. Just saves duplicating removal code */
         auto entry = it->second;
-        entry->prev->next = entry->next;
-        entry->next->prev = entry->prev;
-        entry->prev = tail_;
-        tail_->next = entry;
-        tail_ = entry;
+        if(entry != tail_) {
+            if(entry->prev) entry->prev->next = entry->next;
+            if(entry->next) entry->next->prev = entry->prev;
+
+            entry->prev = tail_;
+            tail_->next = entry;
+            tail_ = entry;
+        }
 
         /* Pop the tail */
         pop_tail();
+#ifndef NDEBUG
+        check_valid();
+#endif
     }
 
     void set_max_size(std::size_t size) {

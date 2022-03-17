@@ -23,7 +23,7 @@ public:
         assert_equal(f0.value(), f1.value());
 
         // Should purge the cache
-        vfs->add_search_path(".");
+        vfs->add_search_path("/bananas/");
         assert_equal(vfs->location_cache_size(), 0);
 
         vfs->locate_file("simulant/textures/simulant-icon.png");
