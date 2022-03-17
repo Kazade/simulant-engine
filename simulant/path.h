@@ -36,7 +36,9 @@ public:
 
     bool operator==(const Path& p) const;
     bool operator<(const Path& p) const;
-
+    bool operator!=(const Path& p) const {
+        return !(*this == p);
+    }
 private:
     std::string path_;
 };

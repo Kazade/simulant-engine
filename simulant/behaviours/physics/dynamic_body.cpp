@@ -178,12 +178,23 @@ Vec3 DynamicBody::linear_velocity_at(const Vec3& position) const {
 Vec3 DynamicBody::position() const {
     assert(simulation_);
 
-    return simulation_->body_transform(this).first;
+#ifndef B3_USE_DOUBLE
+    /* Nasty casting for perf */
+    return *((Vec3*) &body_->GetTransform().translation);
+#else
+#error "Double not supported"
+#endif
 }
 
 Quaternion DynamicBody::rotation() const {
     assert(simulation_);
-    return simulation_->body_transform(this).second;
+
+#ifndef B3_USE_DOUBLE
+    /* Nasty casting for perf */
+    return *((Quaternion*) &body_->GetTransform().rotation);
+#else
+#error "Double not supported"
+#endif
 }
 
 void DynamicBody::add_force_at_position(const Vec3& force, const Vec3& position) {

@@ -68,8 +68,7 @@ VirtualFileSystem::VirtualFileSystem() {
     /* In any standard project there are assets in the 'assets' directory.
      * So we add that in here as a standard location in all
      * root paths */
-    auto copy = resource_path_;
-    for(auto& path: copy) {
+    auto copy = resource_path_; for(auto& path: copy) {
         resource_path_.push_back(
             kfs::path::join(path.str(), "assets")
         );
@@ -84,6 +83,7 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
     }
 
     resource_path_.push_back(new_path);
+    clear_location_cache();
     return true;
 }
 
@@ -91,7 +91,25 @@ void VirtualFileSystem::remove_search_path(const Path& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-optional<Path> VirtualFileSystem::locate_file(const Path &filename, bool fail_silently) const {
+std::size_t VirtualFileSystem::location_cache_size() const {
+    return location_cache_.size();
+}
+
+void VirtualFileSystem::clear_location_cache() {
+    location_cache_.clear();
+}
+
+void VirtualFileSystem::set_location_cache_limit(std::size_t entries) {
+    location_cache_.set_max_size(entries);
+}
+
+optional<Path> VirtualFileSystem::locate_file(
+        const Path &filename,
+        bool use_cache,
+        bool fail_silently) const {
+
+    const Path DOES_NOT_EXIST = "";
+
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -119,11 +137,29 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename, bool fail_si
         return filename;
     }
 #else
+
+    if(use_cache) {
+        auto ret = location_cache_.get(final_name);
+        if(ret) {
+            /* An empty Path means that the file doesn't exist */
+            if(ret.value() == DOES_NOT_EXIST) {
+                return optional<Path>();
+            } else {
+                return ret.value();
+            }
+        }
+    }
+
     Path abs_final_name(kfs::path::abs_path(final_name.str()));
 
     S_DEBUG("Checking existence...");
     if(kfs::path::exists(abs_final_name.str())) {
         S_DEBUG("Located file: {0}", abs_final_name);
+
+        if(use_cache) {
+            location_cache_.insert(final_name, abs_final_name);
+        }
+
         return abs_final_name;
     }
 
@@ -136,12 +172,21 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename, bool fail_si
         S_DEBUG("Trying path: {0}", full_path);
         if(kfs::path::exists(full_path)) {
             S_DEBUG("Found: {0}", full_path);
+
+            if(use_cache) {
+                location_cache_.insert(final_name, full_path);
+            }
+
             return optional<Path>(full_path);
         }
     }
 #endif
     if(!fail_silently) {
         S_WARN("Unable to find file: {0}", final_name);
+    }
+
+    if(use_cache) {
+        location_cache_.insert(final_name, DOES_NOT_EXIST);
     }
     return optional<Path>();
 }

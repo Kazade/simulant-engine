@@ -47,7 +47,7 @@ struct Plane {
         return n;
     }
 
-    float distance_to(const Vec3& p);
+    float distance_to(const Vec3& p) const;
 
     PlaneClassification classify_point(const Vec3& p) const;
 

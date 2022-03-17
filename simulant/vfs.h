@@ -22,7 +22,10 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <map>
+#include <queue>
 
+#include "generic/lru_cache.h"
 #include "generic/optional.h"
 #include "generic/managed.h"
 #include "utils/unicode.h"
@@ -38,7 +41,6 @@ public:
         std::runtime_error(what) {}
 };
 
-
 class VirtualFileSystem :
     public RefCounted<VirtualFileSystem> {
 
@@ -47,7 +49,11 @@ public:
 
     std::list<Path>& search_path() { return resource_path_; }
 
-    optional<Path> locate_file(const Path& filename, bool fail_silently=false) const;
+    optional<Path> locate_file(
+        const Path& filename,
+        bool use_cache=true,
+        bool fail_silently=false
+    ) const;
     std::shared_ptr<std::istream> open_file(const Path& filename);
     std::shared_ptr<std::stringstream> read_file(const Path& filename);
     std::vector<std::string> read_file_lines(const Path& filename);
@@ -55,11 +61,22 @@ public:
     bool add_search_path(const Path& path);
     void remove_search_path(const Path& path);
 
+    /* Returns the number of entries in the location cache */
+    std::size_t location_cache_size() const;
+
+    /* Purge the location cache of all entries */
+    void clear_location_cache();
+
+    /* Limit the location cache entries */
+    void set_location_cache_limit(std::size_t entries);
+
 private:
     Path find_executable_directory();
     Path find_working_directory();
 
     std::list<Path> resource_path_;
+
+    mutable LRUCache<Path, Path> location_cache_;
 };
 
 }
