@@ -35,12 +35,12 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
     auto frustum = stage->camera(camera_id)->frustum();
 
     for(auto& node: stage->each_descendent()) {
-        auto aabb = node.transformed_aabb();
-        auto centre = aabb.centre() + node.absolute_position();
-
         /* Check that the node is supposed to
          * be visible (otherwise we could end up doing work for nothing) */
         if(node.is_visible() && !node.is_destroyed()) {
+            auto aabb = node.transformed_aabb();
+            auto centre = aabb.centre();
+
             if(node.node_type() == STAGE_NODE_TYPE_LIGHT) {
                 auto light = dynamic_cast<Light*>(&node);
                 assert(light);

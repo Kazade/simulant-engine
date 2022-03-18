@@ -55,9 +55,12 @@ public:
 
         auto a1 = stage_->new_actor_with_mesh(box_);
 
+        assert_true(a1->has_any_mesh());
         assert_close(a1->aabb().max_dimension(), 1.0f, 0.0001f);
 
         a1->move_to(791, 58, -810);
+
+        assert_false(a1->transformed_aabb().has_zero_area());
 
         std::vector<LightID> lights;
         std::vector<StageNode*> nodes;
