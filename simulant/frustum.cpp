@@ -69,13 +69,20 @@ bool Frustum::intersects_cube(const Vec3& centre, float size) const {
 bool Frustum::intersects_aabb(const AABB& aabb) const {    
     auto& min = aabb.min();
     auto& max = aabb.max();
-    Vec3 c = (max + min) * 0.5f;
-    Vec3 e = (max - c);
 
     for(const Plane& p: planes_) {
-        float r = e.x * std::abs(p.n.x) + e.y * std::abs(p.n.y) + e.z * std::abs(p.n.z);
-        float s = p.n.dot(c) - p.d;
-        if(std::abs(s) > r) {
+        bool nx = p.n.x > 0;
+        bool ny = p.n.y > 0;
+        bool nz = p.n.z > 0;
+
+        Vec3 pv(
+            (nx) ? max.x : min.x,
+            (ny) ? max.y : min.y,
+            (nz) ? max.z : min.z
+        );
+
+        float m = p.n.dot(pv);
+        if(m < -p.d) {
             return false;
         }
     }

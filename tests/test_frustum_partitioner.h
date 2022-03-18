@@ -60,6 +60,8 @@ public:
 
         a1->move_to(791, 58, -810);
 
+        assert_false(a1->transformed_aabb().has_zero_area());
+
         std::vector<LightID> lights;
         std::vector<StageNode*> nodes;
         FrustumPartitioner partitioner(stage_);
