@@ -123,7 +123,7 @@ void PlayingSound::start() {
     driver->play_source(source_);
 }
 
-void PlayingSound::stop() {
+void PlayingSound::do_stop() {
     SoundDriver* driver = parent_._sound_driver();
 
     driver->stop_source(source_);
@@ -133,6 +133,21 @@ void PlayingSound::stop() {
 bool PlayingSound::is_playing() const {
     SoundDriver* driver = parent_._sound_driver();
     return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
+}
+
+void PlayingSound::set_gain(RangeValue<0, 1> gain) {
+    auto driver = get_app()->sound_driver.get();
+    driver->set_source_gain(source_, gain);
+}
+
+void PlayingSound::set_pitch(RangeValue<0, 1> pitch) {
+    auto driver = get_app()->sound_driver.get();
+    driver->set_source_pitch(source_, pitch);
+}
+
+void PlayingSound::set_reference_distance(float dist) {
+    auto driver = get_app()->sound_driver.get();
+    driver->set_source_reference_distance(source_, dist);
 }
 
 void PlayingSound::update(float dt) {
@@ -210,6 +225,12 @@ void PlayingSound::update(float dt) {
     }
 }
 
+void PlayingSound::stop() {
+    /* We don't call do_stop directly because the source
+     * will need to remove the playing sound from its list */
+    parent_.stop_sound(id());
+}
+
 AudioSource::AudioSource(Window *window):
     stage_(nullptr),
     window_(window) {
@@ -227,10 +248,10 @@ AudioSource::~AudioSource() {
 
 }
 
-PlayingSoundID AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
+PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
     if(!sound) {
         S_WARN("Tried to play an invalid sound");
-        return 0;
+        return PlayingSoundPtr();
     }
 
     assert(sound);
@@ -248,13 +269,13 @@ PlayingSoundID AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dista
 
     instances_.push_back(new_source);
 
-    return new_source->id();
+    return PlayingSoundPtr(new_source);
 }
 
 bool AudioSource::stop_sound(PlayingSoundID sound_id) {
     for(auto it = instances_.begin(); it != instances_.end();) {
         if((*it)->id() == sound_id) {
-            (*it)->stop();
+            (*it)->do_stop();
             it = instances_.erase(it);
             return true;
         } else {
@@ -278,24 +299,6 @@ void AudioSource::update_source(float dt) {
 
     for(auto instance: instances_) {
         instance->update(dt);
-    }
-}
-
-void AudioSource::set_pitch(RangeValue<0, 1> pitch) {
-    for(auto& instance: instances_) {
-        _sound_driver()->set_source_pitch(instance->source_, pitch);
-    }
-}
-
-void AudioSource::set_reference_distance(float dist) {
-    for(auto& instance: instances_) {
-        _sound_driver()->set_source_reference_distance(instance->source_, dist);
-    }
-}
-
-void AudioSource::set_gain(RangeValue<0, 1> gain) {
-    for(auto& instance: instances_) {
-        _sound_driver()->set_source_gain(instance->source_, gain);
     }
 }
 

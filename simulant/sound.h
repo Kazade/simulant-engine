@@ -138,6 +138,10 @@ private:
     /* This is used to calculate the velocity */
     smlt::Vec3 previous_position_;
     bool first_update_ = true;
+
+    void start();
+    void do_stop();
+
 public:
     PlayingSound(AudioSource& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~PlayingSound();
@@ -146,7 +150,6 @@ public:
         return id_;
     }
 
-    void start();
     void update(float dt);
     void stop();
 
@@ -157,6 +160,48 @@ public:
     void set_stream_func(StreamFunc func) { stream_func_ = func; }
 
     bool is_dead() const { return is_dead_; }
+
+    void set_gain(RangeValue<0, 1> gain);
+    void set_pitch(RangeValue<0, 1> pitch);
+    void set_reference_distance(float dist);
+};
+
+class AudioSource;
+
+class PlayingSoundPtr {
+    friend class AudioSource;
+
+private:
+    std::weak_ptr<PlayingSound> ptr_;
+
+    PlayingSoundPtr(PlayingSound::ptr ptr):
+        ptr_(ptr) {}
+
+public:
+    PlayingSoundPtr() = default;
+    PlayingSoundPtr(const PlayingSoundPtr& rhs) = default;
+
+    PlayingSoundPtr& operator=(const PlayingSoundPtr& rhs) {
+        ptr_ = rhs.ptr_;
+        return *this;
+    }
+
+    PlayingSound* operator->() const {
+        auto lk = ptr_.lock();
+        if(lk) {
+            return lk.get();
+        } else {
+            return nullptr;
+        }
+    }
+
+    bool is_valid() const {
+        return bool(ptr_.lock());
+    }
+
+    operator bool() const {
+        return is_valid();
+    }
 };
 
 class AudioSource {
@@ -165,11 +210,12 @@ public:
     AudioSource(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~AudioSource();
 
-    PlayingSoundID play_sound(
+    PlayingSoundPtr play_sound(
         SoundPtr sound_id,
         AudioRepeat repeat=AUDIO_REPEAT_NONE,
         DistanceModel model=DISTANCE_MODEL_DEFAULT
     );
+
     bool stop_sound(PlayingSoundID sound_id);
 
     /* The number of sounds this source is currently playing */
@@ -184,10 +230,6 @@ public:
     void update_source(float dt);
 
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
-
-    void set_gain(RangeValue<0, 1> gain);
-    void set_pitch(RangeValue<0, 1> pitch);
-    void set_reference_distance(float dist);
 
 private:
     SoundDriver* _sound_driver() const;
