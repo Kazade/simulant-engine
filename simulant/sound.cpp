@@ -226,6 +226,8 @@ void PlayingSound::update(float dt) {
 }
 
 void PlayingSound::stop() {
+    /* We don't call do_stop directly because the source
+     * will need to remove the playing sound from its list */
     parent_.stop_sound(id());
 }
 
@@ -273,7 +275,7 @@ PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dist
 bool AudioSource::stop_sound(PlayingSoundID sound_id) {
     for(auto it = instances_.begin(); it != instances_.end();) {
         if((*it)->id() == sound_id) {
-            (*it)->stop();
+            (*it)->do_stop();
             it = instances_.erase(it);
             return true;
         } else {

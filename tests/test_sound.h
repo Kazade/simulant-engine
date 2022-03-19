@@ -110,11 +110,12 @@ public:
     void test_sound_stopping() {
         auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
         auto a = stage_->new_actor();
-        auto id = a->play_sound(sound);
+        smlt::PlayingSoundPtr s = a->play_sound(sound);
 
-        assert_true(id); // id > 0
+        assert_true(s);
+        assert_true(s->id()); // id > 0
         assert_true(a->is_sound_playing());
-        assert_true(a->stop_sound(id));
+        assert_true(a->stop_sound(s->id()));
         assert_false(a->is_sound_playing());
     }
 
