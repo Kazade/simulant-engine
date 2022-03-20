@@ -31,8 +31,8 @@
 #include "input/input_state.h"
 #include "sdl2_window.h"
 #include "application.h"
-#include "sound_drivers/openal_sound_driver.h"
-#include "sound_drivers/null_sound_driver.h"
+#include "sound/drivers/openal_sound_driver.h"
+#include "sound/drivers/null_sound_driver.h"
 
 #include "renderers/renderer_config.h"
 

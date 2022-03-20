@@ -1,8 +1,8 @@
 #include <stdexcept>
 
-#include "../math/quaternion.h"
+#include "../../math/quaternion.h"
 #include "openal_sound_driver.h"
-#include "../logging.h"
+#include "../../logging.h"
 #include "al_error.h"
 
 static_assert(sizeof(ALuint) == sizeof(uint32_t), "Unexpected mismatch with AL types");

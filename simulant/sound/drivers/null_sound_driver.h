@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "../sound_driver.h"
+#include "../../sound_driver.h"
 
 namespace smlt {
 
