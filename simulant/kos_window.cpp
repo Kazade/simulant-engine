@@ -8,8 +8,8 @@
 #include "input/input_state.h"
 #include "kos_window.h"
 
-#include "sound_drivers/openal_sound_driver.h"
-#include "sound_drivers/null_sound_driver.h"
+#include "sound/drivers/openal_sound_driver.h"
+#include "sound/drivers/null_sound_driver.h"
 
 #include "renderers/renderer_config.h"
 

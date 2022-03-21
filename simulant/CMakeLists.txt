@@ -7,7 +7,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "renderers/gl2x/*"
     "sdl2_window.*"
     "kos_window.*"
-    "sound_drivers/*"
+    "sound/drivers/*"
 )
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/deps/bounce/include)
@@ -101,9 +101,9 @@ IF(PLATFORM_DREAMCAST)
         SIMULANT_FILES
         ${SIMULANT_FILES}
         kos_window.cpp
-        sound_drivers/openal_sound_driver.cpp
-        sound_drivers/al_error.cpp
-        sound_drivers/null_sound_driver.cpp
+        sound/drivers/openal_sound_driver.cpp
+        sound/drivers/al_error.cpp
+        sound/drivers/null_sound_driver.cpp
     )
 ELSEIF(PLATFORM_PSP)
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/psp/*.cpp)
@@ -119,7 +119,7 @@ ELSEIF(PLATFORM_PSP)
         # FIXME: Use OpenAL on PSP
         # sound_drivers/openal_sound_driver.cpp
         # sound_drivers/al_error.cpp
-        sound_drivers/null_sound_driver.cpp
+        sound/drivers/null_sound_driver.cpp
     )
 ELSE()
 
@@ -142,9 +142,9 @@ ENDIF()
         ${SIMULANT_FILES}
         ${PLATFORM}
         sdl2_window.cpp
-        sound_drivers/openal_sound_driver.cpp
-        sound_drivers/al_error.cpp
-        sound_drivers/null_sound_driver.cpp
+        sound/drivers/openal_sound_driver.cpp
+        sound/drivers/al_error.cpp
+        sound/drivers/null_sound_driver.cpp
     )
 ENDIF()
 

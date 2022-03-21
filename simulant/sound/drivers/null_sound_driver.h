@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "../sound_driver.h"
+#include "../../sound_driver.h"
 
 namespace smlt {
 
@@ -12,9 +12,6 @@ public:
         SoundDriver(window) {}
 
     virtual ~NullSoundDriver();
-
-    bool startup() override;
-    void shutdown() override;
 
     std::vector<AudioSourceID> generate_sources(uint32_t count) override;
     std::vector<AudioBufferID> generate_buffers(uint32_t count) override;
@@ -39,7 +36,11 @@ public:
     void set_source_reference_distance(AudioSourceID id, float dist) override;
     void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) override;
     void set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) override;
+
 private:
+    bool _startup() override;
+    void _shutdown() override;
+
     AudioSourceID source_counter_ = 0;
     AudioBufferID buffer_counter_ = 0;
 

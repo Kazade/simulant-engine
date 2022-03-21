@@ -27,7 +27,7 @@
 
 #include <stdexcept>
 
-#include "../logging.h"
+#include "../../logging.h"
 
 namespace ALChecker {
 void al_check_and_log_error() {
