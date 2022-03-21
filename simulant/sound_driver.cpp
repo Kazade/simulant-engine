@@ -28,11 +28,10 @@ bool SoundDriver::startup() {
 }
 
 void SoundDriver::shutdown() {
-    _shutdown();
-
     source_update_.disconnect();
     delete global_source_;
     global_source_ = nullptr;
+    _shutdown();
 }
 
 PlayingSoundPtr SoundDriver::play_sound(SoundPtr sound, AudioRepeat repeat) {
