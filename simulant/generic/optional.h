@@ -105,8 +105,9 @@ private:
             reset();
         }
 
-        new (data_) T(value);
+        new (data_) T();
         has_value_ = true;
+        *(value_ptr()) = value;
     }
 
     void set_value(T&& value) {

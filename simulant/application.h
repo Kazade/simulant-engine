@@ -216,6 +216,8 @@ public:
     /** Returns true if the application is shutting down */
     bool is_shutting_down() const { return is_running_ == false; }
 
+    void shutdown();
+
     /* Loader things */
     LoaderPtr loader_for(const Path &filename, LoaderHint hint=LOADER_HINT_NONE);
     LoaderPtr loader_for(const std::string& loader_name, const Path& filename);
@@ -227,6 +229,8 @@ protected:
     bool _call_init();
 
 private:
+    bool has_shutdown_ = false;
+
     std::shared_ptr<Window> window_;
     std::shared_ptr<SceneManager> scene_manager_;
     std::shared_ptr<SharedAssetManager> asset_manager_;

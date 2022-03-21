@@ -79,7 +79,15 @@ AudioSource::AudioSource(Stage *stage, StageNode* this_as_node, SoundDriver* dri
 }
 
 AudioSource::~AudioSource() {
-
+    /* If the source is destroyed we should stop all playing instances
+     * immediately */
+    auto app = smlt::get_app();
+    SoundDriver* driver = (app) ? app->sound_driver.get() : nullptr;
+    if(driver) {
+        for(auto& instance: instances_) {
+            driver->stop_source(instance->source_);
+        }
+    }
 }
 
 PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {

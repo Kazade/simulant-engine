@@ -7,11 +7,11 @@ NullSoundDriver::~NullSoundDriver() {
 
 }
 
-bool NullSoundDriver::startup() {
+bool NullSoundDriver::_startup() {
     return true;
 }
 
-void NullSoundDriver::shutdown() {
+void NullSoundDriver::_shutdown() {
 
 }
 

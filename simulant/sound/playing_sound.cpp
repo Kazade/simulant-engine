@@ -19,7 +19,7 @@ PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, Audi
     loop_stream_(loop_stream),
     is_dead_(false) {
 
-    SoundDriver* driver = parent_._sound_driver();
+    SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
     source_ = driver->generate_sources(1).back();
     buffers_ = driver->generate_buffers(BUFFER_COUNT);
@@ -30,7 +30,7 @@ PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, Audi
 }
 
 PlayingSound::~PlayingSound() {
-    SoundDriver* driver = parent_._sound_driver();
+    SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
     if(driver) {
         driver->stop_source(source_); // Make sure we have stopped playing!
@@ -45,7 +45,7 @@ void PlayingSound::start() {
         return;
     }
 
-    SoundDriver* driver = parent_._sound_driver();
+    SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
     int to_queue = 0;
     for(int i = 0; i < BUFFER_COUNT; ++i) {
@@ -67,14 +67,17 @@ void PlayingSound::start() {
 }
 
 void PlayingSound::do_stop() {
-    SoundDriver* driver = parent_._sound_driver();
+    auto app = smlt::get_app();
+    SoundDriver* driver = (app) ? app->sound_driver.get() : nullptr;
 
-    driver->stop_source(source_);
+    if(driver) {
+        driver->stop_source(source_);
+    }
     is_dead_ = true;
 }
 
 bool PlayingSound::is_playing() const {
-    SoundDriver* driver = parent_._sound_driver();
+    SoundDriver* driver = smlt::get_app()->sound_driver.get();
     return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
 }
 
@@ -94,7 +97,7 @@ void PlayingSound::set_reference_distance(float dist) {
 }
 
 void PlayingSound::update(float dt) {
-    SoundDriver* driver = parent_._sound_driver();
+    SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
     // Update the position of the source if this is attached to a stagenode
     if(parent_.node_) {

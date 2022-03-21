@@ -127,9 +127,10 @@ public:
 
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
 
-private:
+protected:
     SoundDriver* _sound_driver() const;
 
+public:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
     SoundDriver* driver_ = nullptr;

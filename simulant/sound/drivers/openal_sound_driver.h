@@ -17,9 +17,6 @@ public:
     OpenALSoundDriver(Window* window):
         SoundDriver(window) {}
 
-    bool startup() override;
-    void shutdown() override;
-
     std::vector<AudioSourceID> generate_sources(uint32_t count) override;
     std::vector<AudioBufferID> generate_buffers(uint32_t count) override;
 
@@ -43,7 +40,11 @@ public:
     void set_source_reference_distance(AudioSourceID id, float dist) override;
     void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) override;
     void set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) override;
+
 private:
+    bool _startup() override;
+    void _shutdown() override;
+
     ALCdevice* dev = nullptr;
     ALCcontext* ctx = nullptr;
 };

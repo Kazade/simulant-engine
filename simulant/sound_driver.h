@@ -77,8 +77,8 @@ public:
 
     virtual ~SoundDriver();
 
-    virtual bool startup() = 0;
-    virtual void shutdown() = 0;
+    virtual bool startup();
+    virtual void shutdown();
 
     virtual std::vector<AudioSourceID> generate_sources(uint32_t count) = 0;
     virtual std::vector<AudioBufferID> generate_buffers(uint32_t count) = 0;
@@ -112,6 +112,9 @@ public:
     PlayingSoundPtr play_sound(SoundPtr sound, AudioRepeat repeat=AUDIO_REPEAT_NONE);
 
 private:
+    virtual bool _startup() = 0;
+    virtual void _shutdown() = 0;
+
     Window* window_ = nullptr;
     AudioSource* global_source_ = nullptr;
 
