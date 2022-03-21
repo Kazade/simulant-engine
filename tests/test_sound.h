@@ -49,6 +49,15 @@ public:
         assert_false(window->has_explicit_audio_listener());
     }
 
+    void test_global_output() {
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto playing = application->sound_driver->play_sound(sound);
+        assert_true(playing->is_playing());
+        while(playing->is_playing()) {
+            application->run_frame();
+        }
+    }
+
     void test_2d_sound_output() {
         smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
 

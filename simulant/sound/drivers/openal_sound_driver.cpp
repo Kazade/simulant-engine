@@ -1,15 +1,15 @@
 #include <stdexcept>
 
-#include "../math/quaternion.h"
+#include "../../math/quaternion.h"
 #include "openal_sound_driver.h"
-#include "../logging.h"
+#include "../../logging.h"
 #include "al_error.h"
 
 static_assert(sizeof(ALuint) == sizeof(uint32_t), "Unexpected mismatch with AL types");
 
 namespace smlt {
 
-bool OpenALSoundDriver::startup() {
+bool OpenALSoundDriver::_startup() {
     dev = alcOpenDevice(NULL);
     if(!dev) {
         // If we couldn't open the default device for some reason,
@@ -30,7 +30,7 @@ bool OpenALSoundDriver::startup() {
     return true;
 }
 
-void OpenALSoundDriver::shutdown() {
+void OpenALSoundDriver::_shutdown() {
     if(ctx) {
         alcDestroyContext(ctx);
         ctx = nullptr;

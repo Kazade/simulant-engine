@@ -24,6 +24,8 @@
 #include "generic/property.h"
 #include "math/vec3.h"
 #include "generic/range_value.h"
+#include "sound/playing_sound.h"
+#include "types.h"
 
 namespace smlt {
 
@@ -67,15 +69,16 @@ class Window;
  *
  * If that ceases to be the case for whatever reason, then we should probably design a nicer API for this. Perhaps.
  */
+class AudioSource;
+
 class SoundDriver {
 public:
-    SoundDriver(Window* window):
-        window_(window) {}
+    SoundDriver(Window* window);
 
-    virtual ~SoundDriver() {}
+    virtual ~SoundDriver();
 
-    virtual bool startup() = 0;
-    virtual void shutdown() = 0;
+    virtual bool startup();
+    virtual void shutdown();
 
     virtual std::vector<AudioSourceID> generate_sources(uint32_t count) = 0;
     virtual std::vector<AudioBufferID> generate_buffers(uint32_t count) = 0;
@@ -105,8 +108,17 @@ public:
     virtual void set_source_reference_distance(AudioSourceID id, float dist) = 0;
     virtual void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) = 0;
     virtual void set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) = 0;
+
+    PlayingSoundPtr play_sound(SoundPtr sound, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+
 private:
+    virtual bool _startup() = 0;
+    virtual void _shutdown() = 0;
+
     Window* window_ = nullptr;
+    AudioSource* global_source_ = nullptr;
+
+    sig::connection source_update_;
 };
 
 

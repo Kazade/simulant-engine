@@ -1,5 +1,5 @@
 #include "null_sound_driver.h"
-#include "../macros.h"
+#include "../../macros.h"
 
 namespace smlt {
 
@@ -7,11 +7,11 @@ NullSoundDriver::~NullSoundDriver() {
 
 }
 
-bool NullSoundDriver::startup() {
+bool NullSoundDriver::_startup() {
     return true;
 }
 
-void NullSoundDriver::shutdown() {
+void NullSoundDriver::_shutdown() {
 
 }
 

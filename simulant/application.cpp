@@ -170,6 +170,8 @@ Application::Application(const AppConfig &config):
 }
 
 Application::~Application() {
+    shutdown();
+
     window_->destroy_panels();
     scene_manager_->destroy_all();
 
@@ -495,21 +497,7 @@ bool Application::run_frame() {
     }
 
     if(!is_running_) {
-        signal_shutdown_();
-        _call_clean_up();
-
-        if(sound_driver_) {
-            sound_driver_->shutdown();
-            sound_driver_.reset();
-        }
-
-        //Shutdown the input controller
-        window_->input_state_.reset();
-
-        std::cout << "Frames rendered: " << stats->frames_run() << std::endl;
-        std::cout << "Fixed updates run: " << stats->fixed_steps_run() << std::endl;
-        std::cout << "Total time: " << time_keeper->total_elapsed_seconds() << std::endl;
-        std::cout << "Average FPS: " << float(stats->frames_run() - 1) / (time_keeper->total_elapsed_seconds()) << std::endl;
+        shutdown();
     }
 
     return is_running_;
@@ -610,6 +598,32 @@ void Application::update_idle_tasks_and_coroutines() {
     if(s) {
         s->clean_destroyed_stages();
     }
+}
+
+void Application::shutdown() {
+    if(has_shutdown_) {
+        return;
+    }
+
+    is_running_ = false;
+
+    signal_shutdown_();
+    _call_clean_up();
+
+    if(sound_driver_) {
+        sound_driver_->shutdown();
+        sound_driver_.reset();
+    }
+
+    //Shutdown the input controller
+    window_->input_state_.reset();
+
+    std::cout << "Frames rendered: " << stats->frames_run() << std::endl;
+    std::cout << "Fixed updates run: " << stats->fixed_steps_run() << std::endl;
+    std::cout << "Total time: " << time_keeper->total_elapsed_seconds() << std::endl;
+    std::cout << "Average FPS: " << float(stats->frames_run() - 1) / (time_keeper->total_elapsed_seconds()) << std::endl;
+
+    has_shutdown_ = true;
 }
 
 void Application::update_coroutines() {

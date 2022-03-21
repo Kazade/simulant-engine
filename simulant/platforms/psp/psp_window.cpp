@@ -1,7 +1,6 @@
 
 #include "psp_window.h"
-#include "../../sound_drivers/null_sound_driver.h"
-
+#include "../../sound/drivers/null_sound_driver.h"
 #include "../../renderers/renderer_config.h"
 
 namespace smlt {

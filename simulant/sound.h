@@ -23,6 +23,7 @@
 #include <list>
 
 #include "sound_driver.h"
+#include "sound/playing_sound.h"
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -98,111 +99,6 @@ private:
     friend class PlayingSound;
 };
 
-typedef std::function<int32_t (AudioBufferID)> StreamFunc;
-
-class AudioSource;
-
-enum AudioRepeat {
-    AUDIO_REPEAT_NONE,
-    AUDIO_REPEAT_FOREVER
-};
-
-enum DistanceModel {
-    DISTANCE_MODEL_POSITIONAL,
-    DISTANCE_MODEL_AMBIENT,
-    DISTANCE_MODEL_DEFAULT = DISTANCE_MODEL_POSITIONAL
-};
-
-typedef std::size_t PlayingSoundID;
-
-class PlayingSound:
-    public RefCounted<PlayingSound> {
-
-    friend class AudioSource;
-
-private:
-    static PlayingSoundID counter_;
-
-    PlayingSoundID id_;
-
-    AudioSource& parent_;
-
-    AudioSourceID source_;
-    std::vector<AudioBufferID> buffers_;
-    std::weak_ptr<Sound> sound_;
-    StreamFunc stream_func_;
-
-    AudioRepeat loop_stream_;
-    bool is_dead_;
-
-    /* This is used to calculate the velocity */
-    smlt::Vec3 previous_position_;
-    bool first_update_ = true;
-
-    void start();
-    void do_stop();
-
-public:
-    PlayingSound(AudioSource& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
-    virtual ~PlayingSound();
-
-    PlayingSoundID id() const {
-        return id_;
-    }
-
-    void update(float dt);
-    void stop();
-
-    bool is_playing() const;
-
-    /* Set the stream function for filling buffers. A -1 return
-     * means the sound has been destroyed */
-    void set_stream_func(StreamFunc func) { stream_func_ = func; }
-
-    bool is_dead() const { return is_dead_; }
-
-    void set_gain(RangeValue<0, 1> gain);
-    void set_pitch(RangeValue<0, 1> pitch);
-    void set_reference_distance(float dist);
-};
-
-class AudioSource;
-
-class PlayingSoundPtr {
-    friend class AudioSource;
-
-private:
-    std::weak_ptr<PlayingSound> ptr_;
-
-    PlayingSoundPtr(PlayingSound::ptr ptr):
-        ptr_(ptr) {}
-
-public:
-    PlayingSoundPtr() = default;
-    PlayingSoundPtr(const PlayingSoundPtr& rhs) = default;
-
-    PlayingSoundPtr& operator=(const PlayingSoundPtr& rhs) {
-        ptr_ = rhs.ptr_;
-        return *this;
-    }
-
-    PlayingSound* operator->() const {
-        auto lk = ptr_.lock();
-        if(lk) {
-            return lk.get();
-        } else {
-            return nullptr;
-        }
-    }
-
-    bool is_valid() const {
-        return bool(ptr_.lock());
-    }
-
-    operator bool() const {
-        return is_valid();
-    }
-};
 
 class AudioSource {
 public:
@@ -231,9 +127,10 @@ public:
 
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
 
-private:
+protected:
     SoundDriver* _sound_driver() const;
 
+public:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
     SoundDriver* driver_ = nullptr;
