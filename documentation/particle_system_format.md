@@ -44,3 +44,8 @@ Additional properties depend on the type of the affector
 
  - colours(array): A list of strings in the format "R G B A" or "R G B" where each element is a floating point number between 0.0 and 1.0
  - interpolate(bool): Whether or not to blend between colours
+
+### Direction
+
+ - force (string): A vector described in the format "X Y Z" which defines the force per second to be applied to each particle's position
+

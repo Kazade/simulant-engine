@@ -88,6 +88,14 @@ public:
 
     void update(float dt) override;
 
+    std::size_t particle_count() const {
+        return particle_count_;
+    }
+
+    const Particle& particle(const std::size_t i) const {
+        return particles_[i];
+    }
+
 private:
     struct EmitterState {
         bool is_active = true;
