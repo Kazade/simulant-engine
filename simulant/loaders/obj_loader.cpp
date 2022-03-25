@@ -435,7 +435,7 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
 }
 
 
-void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
+bool OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     std::vector<HalfVec3> _vertices, _colours, _normals;
     std::vector<HalfVec2> _texcoords;
 
@@ -493,6 +493,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     for(auto& sm: mesh->each_submesh()) {
         sm->index_data->done();
     }
+
+    return true;
 }
 
 }

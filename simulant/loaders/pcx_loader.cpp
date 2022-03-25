@@ -49,7 +49,7 @@ struct Header {
 
 #pragma pack(pop)
 
-TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
+optional<TextureLoadResult> PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     TextureLoadResult result;
 
     stream->seekg(0, std::ios::end);
@@ -60,7 +60,8 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     stream->read((char*) &header, sizeof(Header));
 
     if(header.manufacturer != 0x0a) {
-        throw std::runtime_error("Unsupported PCX manufacturer");
+        S_ERROR("Unsupported PCX manufacturer");
+        return optional<TextureLoadResult>();
     }
 
     result.width = header.xmax - header.xmin + 1;
@@ -71,7 +72,8 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     auto bitcount = header.bits_per_pixel * header.num_color_planes;
     if(bitcount != 8) {
-        throw std::runtime_error("Unsupported PCX bitcount");
+        S_ERROR("Unsupported PCX bitcount");
+        return optional<TextureLoadResult>();
     }
 
     stream->seekg(size - 769);

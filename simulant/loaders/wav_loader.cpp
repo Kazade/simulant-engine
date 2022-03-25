@@ -99,7 +99,7 @@ static ChunkFunc get_chunk_func(const std::string& name) {
     return read_junk;
 }
 
-void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
+bool WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
     _S_UNUSED(options);
 
     Loadable* res_ptr = &resource;
@@ -111,7 +111,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::string id(buffer, buffer + 4);
     if(id != "RIFF") {
         S_ERROR("Unexpected start to WAV file");
-        return;
+        return false;
     }
 
     data_->read(buffer, 4 * sizeof(char));
@@ -123,7 +123,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     if(id != "WAVE") {
         S_ERROR("Unsupported WAV file.");
-        return;
+        return false;
     }
 
     std::set<std::string> seen_chunks;
@@ -141,7 +141,7 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         auto func = get_chunk_func(chunk_id);
         if(!func(data_.get(), sound, size - 8)) {
             S_ERROR("Unsupported .wav format");
-            return;
+            return false;
         }
 
         seen_chunks.insert(chunk_id);
@@ -217,6 +217,8 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         });
     });
+
+    return true;
 }
 
 }

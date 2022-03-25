@@ -31,7 +31,7 @@ public:
         BaseTextureLoader(filename, data) {}
 
 private:
-    TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) override;
+    optional<TextureLoadResult> do_load(std::shared_ptr<FileIfstream> stream) override;
 
     thread::Mutex lock_;
 };

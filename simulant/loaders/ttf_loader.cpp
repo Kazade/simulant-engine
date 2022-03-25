@@ -5,87 +5,91 @@
 
 namespace smlt {
 namespace loaders {
-    void TTFLoader::into(Loadable& resource, const LoaderOptions& options) {
-        const uint32_t TEXTURE_WIDTH = 512;
-        const uint32_t TEXTURE_HEIGHT = 512;
 
-        Font* font = loadable_to<Font>(resource);
+bool TTFLoader::into(Loadable& resource, const LoaderOptions& options) {
+    const uint32_t TEXTURE_WIDTH = 512;
+    const uint32_t TEXTURE_HEIGHT = 512;
 
-        CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
-        uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
+    Font* font = loadable_to<Font>(resource);
 
-        font->info_.reset(new stbtt_fontinfo());
-        font->font_size_ = font_size;
-        font->page_width_ = TEXTURE_WIDTH;
-        font->page_height_ = TEXTURE_HEIGHT;
+    CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
+    uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
 
-        stbtt_fontinfo* info = font->info_.get();
+    font->info_.reset(new stbtt_fontinfo());
+    font->font_size_ = font_size;
+    font->page_width_ = TEXTURE_WIDTH;
+    font->page_height_ = TEXTURE_HEIGHT;
 
-        const std::string buffer_string((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>());
-        const unsigned char* buffer = (const unsigned char*) buffer_string.c_str();
-        // Initialize the font data
-        stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
+    stbtt_fontinfo* info = font->info_.get();
 
-        font->scale_ = stbtt_ScaleForPixelHeight(info, (int) font_size);
+    const std::string buffer_string((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>());
+    const unsigned char* buffer = (const unsigned char*) buffer_string.c_str();
+    // Initialize the font data
+    stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
 
-        int ascent, descent, line_gap;
-        stbtt_GetFontVMetrics(info, &ascent, &descent, &line_gap);
+    font->scale_ = stbtt_ScaleForPixelHeight(info, (int) font_size);
 
-        font->ascent_ = float(ascent) * font->scale_;
-        font->descent_ = float(descent) * font->scale_;
-        font->line_gap_ = float(line_gap) * font->scale_;
+    int ascent, descent, line_gap;
+    stbtt_GetFontVMetrics(info, &ascent, &descent, &line_gap);
 
-        // Generate a new texture for rendering the font to
-        auto texture = font->texture_ = font->asset_manager().new_texture(
-            TEXTURE_WIDTH,
-            TEXTURE_HEIGHT,
-            TEXTURE_FORMAT_R_1UB_8
-        );
+    font->ascent_ = float(ascent) * font->scale_;
+    font->descent_ = float(descent) * font->scale_;
+    font->line_gap_ = float(line_gap) * font->scale_;
 
-        texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+    // Generate a new texture for rendering the font to
+    auto texture = font->texture_ = font->asset_manager().new_texture(
+        TEXTURE_WIDTH,
+        TEXTURE_HEIGHT,
+        TEXTURE_FORMAT_R_1UB_8
+    );
 
-        if(charset != CHARACTER_SET_LATIN) {
-            throw std::runtime_error("Unsupported character set - please submit a patch!");
-        }
+    texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
-        auto first_char = 32;
-        auto char_count = 256 - 32; // Latin-1
-
-        font->char_data_.resize(char_count);
-
-        // Dreamcast needs 16bpp, so we bake the font bitmap here
-        // temporarily and then generate a RGBA texture from it
-
-        std::vector<uint8_t> tmp_buffer(TEXTURE_WIDTH * TEXTURE_HEIGHT);
-        uint8_t* out_buffer = &tmp_buffer[0];
-        stbtt_BakeFontBitmap(
-            &buffer[0], 0, font_size, out_buffer,
-            TEXTURE_WIDTH, TEXTURE_HEIGHT,
-            first_char, char_count,
-            (stbtt_bakedchar*) &font->char_data_[0]
-        );
-
-        texture->set_data(out_buffer, tmp_buffer.size());
-
-        S_DEBUG("F: Converting font texture from 32bit -> 16bit");
-
-        // Convert from 32bpp to 16bpp
-        texture->convert(
-            TEXTURE_FORMAT_RGBA_1US_4444,
-            {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
-        );
-
-        texture->flush();
-        S_DEBUG("F: Finished conversion");
-
-        font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-        font->material_->set_diffuse_map(font->texture_);
-
-        font->material_->pass(0)->set_blend_func(BLEND_ALPHA);
-        font->material_->set_depth_test_enabled(false);
-        font->material_->set_cull_mode(CULL_MODE_NONE);
-
-        S_DEBUG("Font loaded successfully");
+    if(charset != CHARACTER_SET_LATIN) {
+        S_ERROR("Unsupported character set - please submit a patch!");
+        return false;
     }
+
+    auto first_char = 32;
+    auto char_count = 256 - 32; // Latin-1
+
+    font->char_data_.resize(char_count);
+
+    // Dreamcast needs 16bpp, so we bake the font bitmap here
+    // temporarily and then generate a RGBA texture from it
+
+    std::vector<uint8_t> tmp_buffer(TEXTURE_WIDTH * TEXTURE_HEIGHT);
+    uint8_t* out_buffer = &tmp_buffer[0];
+    stbtt_BakeFontBitmap(
+        &buffer[0], 0, font_size, out_buffer,
+        TEXTURE_WIDTH, TEXTURE_HEIGHT,
+        first_char, char_count,
+        (stbtt_bakedchar*) &font->char_data_[0]
+    );
+
+    texture->set_data(out_buffer, tmp_buffer.size());
+
+    S_DEBUG("F: Converting font texture from 32bit -> 16bit");
+
+    // Convert from 32bpp to 16bpp
+    texture->convert(
+        TEXTURE_FORMAT_RGBA_1US_4444,
+        {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
+    );
+
+    texture->flush();
+    S_DEBUG("F: Finished conversion");
+
+    font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+    font->material_->set_diffuse_map(font->texture_);
+
+    font->material_->pass(0)->set_blend_func(BLEND_ALPHA);
+    font->material_->set_depth_test_enabled(false);
+    font->material_->set_cull_mode(CULL_MODE_NONE);
+
+    S_DEBUG("Font loaded successfully");
+    return true;
+}
+
 }
 }

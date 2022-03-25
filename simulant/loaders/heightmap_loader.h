@@ -88,7 +88,7 @@ public:
         Loader("", std::make_shared<std::istringstream>()),
         texture_(texture) {}
 
-    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
+    bool into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 
 private:
     TexturePtr texture_ = nullptr;

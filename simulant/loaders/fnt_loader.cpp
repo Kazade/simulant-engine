@@ -118,7 +118,7 @@ static void parse_line(const std::string& line, std::string& line_type, Options&
     }
 }
 
-void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &options) {
+bool FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &options) {
     _S_UNUSED(options);
 
     data.seekg(0, std::ios::beg);
@@ -172,9 +172,10 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
     }
 
     prepare_texture(font, page);
+    return true;
 }
 
-void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions& options) {
+bool FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions& options) {
     _S_UNUSED(options);
 
     enum BlockType {
@@ -232,7 +233,8 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
                     }
 
                 } else {
-                    throw std::runtime_error("Invalid binary FNT file. Couldn't determine page name length.");
+                    S_ERROR("Invalid binary FNT file. Couldn't determine page name length.");
+                    return false;
                 }
             } break;
             case CHARS: {
@@ -266,6 +268,7 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
     }
 
     prepare_texture(font, pages[0]);
+    return true;
 }
 
 void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
@@ -317,7 +320,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     S_DEBUG("Font texture loaded");
 }
 
-void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
     const char TEXT_MARKER[4] = {'i', 'n', 'f', 'o'};
     const char BINARY_MARKER[4] = {'B', 'M', 'F', '\3'};
 
@@ -328,17 +331,22 @@ void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
     char version_details[4];
     data_->read(version_details, sizeof(char) * 4);
 
+    bool ret = false;
     if(std::memcmp(version_details, TEXT_MARKER, 4) == 0) {
         S_DEBUG("Loading text FNT");
-        read_text(font, *data_, options);
+        ret = read_text(font, *data_, options);
     } else if(std::memcmp(version_details, BINARY_MARKER, 4) == 0) {
         S_DEBUG("Loading binary FNT");
-        read_binary(font, *data_, options);
+        ret = read_binary(font, *data_, options);
     } else {
-        throw std::runtime_error("Unsupported .FNT file");
+        S_ERROR("Unsupported .FNT file");
+        return false;
     }
 
-    S_DEBUG("FNT loaded successfully");
+    if(ret) {
+        S_DEBUG("FNT loaded successfully");
+    }
+    return ret;
 }
 
 }

@@ -80,7 +80,7 @@ const uint8_t PALETTE[768] = {
     87, 159, 91, 83
 };
 
-TextureLoadResult WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
+optional<TextureLoadResult> WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     TextureLoadResult result;
 
     // The file starts with the header, so we can just cast directly to a pointer

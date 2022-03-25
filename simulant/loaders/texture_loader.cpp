@@ -34,7 +34,7 @@
 namespace smlt {
 namespace loaders {
 
-TextureLoadResult TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
+optional<TextureLoadResult> TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     thread::Lock<thread::Mutex> g(lock_); // STB isn't entirely thread-safe
 
     TextureLoadResult result;
@@ -64,7 +64,8 @@ TextureLoadResult TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
             result.format = TEXTURE_FORMAT_R_1UB_8;
         break;
         case 2:
-            throw std::runtime_error("2-channel textures are not supported");
+            S_ERROR("2-channel textures are not supported");
+            return optional<TextureLoadResult>();
         break;
         case 3:
             result.format = TEXTURE_FORMAT_RGB_3UB_888;
@@ -75,12 +76,11 @@ TextureLoadResult TextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
         stbi_image_free(data);
     } else {
-        throw std::runtime_error(
-            _F("Unable to load texture {0}. Reason was {1}").format(
-                filename_,
-                stbi_failure_reason()
-            )
+        S_ERROR("Unable to load texture {0}. Reason was {1}",
+            filename_,
+            stbi_failure_reason()
         );
+        return optional<TextureLoadResult>();
     }
 
     return result;

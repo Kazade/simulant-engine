@@ -4,9 +4,10 @@
 namespace smlt {
 namespace loaders {
 
-TextureLoadResult DDSTextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
+optional<TextureLoadResult> DDSTextureLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     _S_UNUSED(stream);
-    throw std::logic_error("Not yet implemented");
+    S_ERROR("Not yet implemented");
+    return optional<TextureLoadResult>();
 }
 
 }

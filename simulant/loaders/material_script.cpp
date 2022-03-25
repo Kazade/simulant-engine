@@ -156,7 +156,7 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
     }
 }
 
-void MaterialScript::generate(Material& material) {
+bool MaterialScript::generate(Material& material) {
     auto lookup_material_property_type = [](const std::string& kind) -> MaterialPropertyType {
         if(kind == "bool") {
             return MATERIAL_PROPERTY_TYPE_BOOL;
@@ -181,7 +181,7 @@ void MaterialScript::generate(Material& material) {
     auto json = json_read(data_);
 
     if(!json->has_key("passes")) {
-        throw std::runtime_error("Material is missing the passes key");
+        return false;
     }
 
     /* Load any custom properties */
@@ -267,13 +267,15 @@ void MaterialScript::generate(Material& material) {
             material.pass(i)->set_gpu_program(program);
         }
     }
+
+    return true;
 }
 
 namespace loaders {
 
-void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions&) {
+bool MaterialScriptLoader::into(Loadable& resource, const LoaderOptions&) {
     Material* mat = loadable_to<Material>(resource);
-    parser_->generate(*mat);
+    return parser_->generate(*mat);
 }
 
 }

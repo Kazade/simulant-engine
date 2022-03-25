@@ -126,7 +126,7 @@ static std::pair<T*, T*> find_next_previous(T* array, std::size_t count, float f
 MS3DLoader::MS3DLoader(const Path& filename, std::shared_ptr<std::istream> data):
     Loader(filename, data) {}
 
-void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     _S_UNUSED(options);
 
     S_DEBUG("MS3D: Beginning read..");
@@ -145,7 +145,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::string header_id(header.id, 10);
 
     if(header_id != "MS3D000000") {
-        throw std::logic_error("Unsupported MS3D file. ID mismatch");
+        S_ERROR("Unsupported MS3D file. ID mismatch");
+        return false;
     }
 
     S_DEBUG("MS3D: Header OK.");
@@ -529,6 +530,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         anim_data.total_frames,
         frame_data
     );
+
+    return true;
 }
 
 }

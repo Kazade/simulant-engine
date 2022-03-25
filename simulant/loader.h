@@ -72,16 +72,16 @@ public:
         data_(data) {}
 
     virtual ~Loader();
-    void into(Loadable* resource, const LoaderOptions& options = LoaderOptions()) {
-        into(*resource, options);
+    bool into(Loadable* resource, const LoaderOptions& options = LoaderOptions()) {
+        return into(*resource, options);
     }
 
-    void into(std::shared_ptr<Loadable> resource, const LoaderOptions& options=LoaderOptions()) {
-        into(*resource, options);
+    bool into(std::shared_ptr<Loadable> resource, const LoaderOptions& options=LoaderOptions()) {
+        return into(*resource, options);
     }
 
-    void into(Window& window, const LoaderOptions& options=LoaderOptions()) {
-        into((Loadable&) window, options);
+    bool into(Window& window, const LoaderOptions& options=LoaderOptions()) {
+        return into((Loadable&) window, options);
     }
 
     void set_vfs(VirtualFileSystem* locator) { locator_ = locator; }
@@ -105,7 +105,7 @@ protected:
 
 private:
     VirtualFileSystem* locator_ = nullptr;
-    virtual void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
+    virtual bool into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
 };
 
 class LoaderType {
@@ -146,11 +146,11 @@ public:
         Loader(filename, data) {
     }
 
-    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) override;
+    bool into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) override;
 
 private:
     virtual bool format_stored_upside_down() const { return true; }
-    virtual TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) = 0;
+    virtual optional<TextureLoadResult> do_load(std::shared_ptr<FileIfstream> stream) = 0;
 };
 
 }

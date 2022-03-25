@@ -32,7 +32,7 @@ public:
     OGGLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
-    void into(Loadable& resource, const LoaderOptions &options=LoaderOptions());
+    bool into(Loadable& resource, const LoaderOptions &options=LoaderOptions());
 
 };
 

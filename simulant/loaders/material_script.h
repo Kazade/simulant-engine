@@ -41,7 +41,7 @@ class MaterialScript :
     public RefCounted<MaterialScript> {
 public:
     MaterialScript(std::shared_ptr<std::istream> data, const smlt::Path& filename);
-    void generate(Material& material);
+    bool generate(Material& material);
 
 private:
     Path filename_;
@@ -60,7 +60,7 @@ public:
         parser_ = MaterialScript::create(data, filename);
     }
 
-    void into(Loadable& resource, const LoaderOptions& options) override;
+    bool into(Loadable& resource, const LoaderOptions& options) override;
 
 private:
     MaterialScript::ptr parser_;

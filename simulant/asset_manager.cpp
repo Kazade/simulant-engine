@@ -257,10 +257,9 @@ MeshPtr AssetManager::new_mesh_from_file(const Path& path,
     LoaderOptions loader_options;
     loader_options[MESH_LOAD_OPTIONS_KEY] = options;
 
-    loader->into(mesh, loader_options);
-
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
-    return mesh;
+    auto ret = loader->into(mesh, loader_options);
+    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);    
+    return (ret) ? mesh : MeshPtr();
 }
 
 MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
@@ -272,13 +271,13 @@ MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const Heig
 
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
-    loader->into(mesh, {
+    auto ret = loader->into(mesh, {
         { "spec", spec},
     });
 
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
-    return mesh;
+    return (ret) ? mesh : MeshPtr();
 }
 
 MeshPtr AssetManager::new_mesh_from_heightmap(const TextureID& texture_id, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
@@ -286,12 +285,16 @@ MeshPtr AssetManager::new_mesh_from_heightmap(const TextureID& texture_id, const
 
     loaders::HeightmapLoader loader(texture(texture_id));
 
-    loader.into(*mesh, {
+    auto ret = loader.into(*mesh, {
         {"spec", spec},
     });
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
-    return mesh;
+    if(!ret) {
+        return smlt::MeshPtr();
+    } else {
+        return mesh;
+    }
 }
 
 
@@ -400,6 +403,8 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
         }
     }
 
+    bool ret = true;
+
     // Blocking loop while we wait for either this thread or another thread to load the material
     while(materials_loading_.count(template_id)) { // Not really threadsafe...
         if(!load_material && GLThreadCheck::is_current()) {
@@ -427,13 +432,13 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
             }
 
             S_DEBUG("Loading...");
-            loader->into(mat);
+            ret = loader->into(mat);
             materials_loading_.erase(template_id);
             S_DEBUG("Material {0} loaded", mat->id());
         }
     }
 
-    return template_id.fetch();
+    return (ret) ? template_id.fetch() : MaterialPtr();
 }
 
 MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
@@ -500,6 +505,8 @@ TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags fl
     S_DEBUG("Loading texture from file: {0}", path);
     smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, garbage_collect);
 
+    bool ret = true;
+
     {
         S_DEBUG("Finding loader for: {0}", path);
         auto loader = get_app()->loader_for(path, LOADER_HINT_TEXTURE);
@@ -509,7 +516,7 @@ TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags fl
         }
 
         S_DEBUG("Loader found, loading...");
-        loader->into(tex);
+        ret = loader->into(tex);
 
         if(flags.flip_vertically) {
             S_DEBUG("Flipping texture vertically");
@@ -522,8 +529,7 @@ TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags fl
         tex->set_auto_upload(flags.auto_upload);
     }
 
-    S_DEBUG("Texture loaded");
-    return tex;
+    return (ret) ? tex : TexturePtr();
 }
 
 void AssetManager::destroy_texture(TextureID t) {
@@ -557,15 +563,16 @@ SoundPtr AssetManager::new_sound_from_file(const Path& path, GarbageCollectMetho
 
     auto loader = get_app()->loader_for(path);
 
+    bool ret = false;
     if(loader) {
-        loader->into(snd);
+        ret = loader->into(snd);
     } else {
         S_ERROR("Unsupported file type: ", path);
     }
 
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 
-    return snd;
+    return (ret) ? snd : SoundPtr();
 }
 
 SoundPtr AssetManager::find_sound(const std::string &name) {
@@ -629,20 +636,14 @@ FontPtr AssetManager::new_font_from_file(const Path& filename, const FontFlags& 
     auto font_id = font->id();
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
-    try {
-        LoaderOptions options;
-        options["size"] = flags.size;
-        options["weight"] = flags.weight;
-        options["charset"] = flags.charset;
-        get_app()->loader_for(filename)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_font(font_id);
-        throw;
-    }
+    LoaderOptions options;
+    options["size"] = flags.size;
+    options["weight"] = flags.weight;
+    options["charset"] = flags.charset;
+    auto ret = get_app()->loader_for(filename)->into(font.get(), options);
+    font_manager_.set_garbage_collection_method(font_id, garbage_collect);
 
-    return font;
+    return (ret) ? font : FontPtr();
 }
 
 FontPtr AssetManager::find_font(const std::string& name) {
@@ -674,16 +675,9 @@ ParticleScriptPtr AssetManager::new_particle_script_from_file(const Path& filena
     auto ps_id = ps->id();
     particle_script_manager_.set_garbage_collection_method(ps_id, garbage_collect);
 
-    try {
-        LoaderOptions options;
-        get_app()->loader_for(filename)->into(ps.get(), options);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_particle_script(ps_id);
-        throw;
-    }
-
-    return ps;
+    LoaderOptions options;
+    auto ret = get_app()->loader_for(filename)->into(ps.get(), options);
+    return (ret) ? ps : ParticleScriptPtr();
 }
 
 ParticleScriptPtr AssetManager::find_particle_script(const std::string& name) {

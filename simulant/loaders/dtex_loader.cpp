@@ -23,7 +23,7 @@ bool DTEXLoaderType::supports(const Path &filename) const {
     return filename.ext() == ".dtex";
 }
 
-TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
+optional<TextureLoadResult> DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     TextureLoadResult result;
 
     DTexHeader header;

@@ -281,7 +281,7 @@ std::vector<LightmapLocation> pack_lightmaps(const std::vector<Lightmap>& lightm
     return locations;
 }
 
-void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
+bool Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     _S_UNUSED(options);
 
     Loadable* res_ptr = &resource;
@@ -308,7 +308,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     file.read((char*)&header, sizeof(Q2::Header));
 
     if(std::string(header.magic, header.magic + 4) != "IBSP") {
-        throw std::runtime_error("Not a valid Q2 map");
+        S_ERROR("Not a valid Q2 map");
+        return false;
     }
 
     std::vector<char> actor_buffer;
@@ -548,6 +549,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     }
 
     //FIXME: mark mesh as uncollected
+
+    return true;
 }
 
 }

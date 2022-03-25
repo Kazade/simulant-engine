@@ -38,7 +38,7 @@ public:
 
 private:
     bool format_stored_upside_down() const override { return false; }
-    TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) override;
+    optional<TextureLoadResult> do_load(std::shared_ptr<FileIfstream> stream) override;
 };
 
 class DTEXLoaderType : public LoaderType {

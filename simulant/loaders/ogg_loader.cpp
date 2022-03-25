@@ -102,7 +102,7 @@ static void init_source(Sound* self, PlayingSound& source) {
 }
 
 
-void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     _S_UNUSED(options);
 
     Loadable* res_ptr = &resource;
@@ -123,7 +123,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if(!stb_stream) {
         S_ERROR("Unable to load the OGG file");
-        throw std::runtime_error("Unable to load the OGG file");
+        return false;
     }
 
     stb_vorbis_info info = stb_vorbis_get_info(stb_stream);
@@ -142,6 +142,8 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     sound->set_channels(info.channels);
     sound->set_format((info.channels == 2) ? AUDIO_DATA_FORMAT_STEREO16 : AUDIO_DATA_FORMAT_MONO16);
     sound->set_playing_sound_init_function(std::bind(&init_source, sound, std::placeholders::_1));
+
+    return true;
 }
 
 

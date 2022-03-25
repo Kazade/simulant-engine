@@ -29,7 +29,7 @@ public:
     OBJLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
-    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
+    bool into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
 };
 
 void parse_face(const std::string& input, int32_t& vertex_index, int32_t& tex_index, int32_t& normal_index);

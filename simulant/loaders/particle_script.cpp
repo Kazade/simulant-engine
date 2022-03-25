@@ -131,7 +131,7 @@ static smlt::Manipulator* spawn_direction_manipulator(ParticleScript* ps, JSONIt
     return m.get();
 }
 
-void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options) {
+bool ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options) {
     _S_UNUSED(options);
 
     ParticleScript* ps = loadable_to<ParticleScript>(resource);
@@ -313,6 +313,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             }
         }
     }
+
+    return true;
 }
 
 }

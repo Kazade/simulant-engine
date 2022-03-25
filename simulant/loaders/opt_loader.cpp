@@ -447,7 +447,7 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
     }
 }
 
-void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
+bool OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     _S_UNUSED(options);
 
     Loadable* res_ptr = &resource;
@@ -456,7 +456,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     std::ifstream file(filename_.str(), std::ios::binary);
     if(!file.good()) {
-        throw std::runtime_error("Couldn't load the OPT file: " + filename_.str());
+        S_ERROR("Couldn't load the OPT file: " + filename_.str());
+        return false;
     }
 
     VertexSpecification spec;
@@ -569,6 +570,8 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         texture_submesh[tex.name]->index_data->done();
         texture_submesh[tex.name]->reverse_winding();
     }
+
+    return true;
 }
 
 }
