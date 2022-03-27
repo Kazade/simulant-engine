@@ -116,6 +116,7 @@ int32_t OpenALSoundDriver::source_buffers_processed_count(AudioSourceID source) 
 }
 
 void OpenALSoundDriver::set_source_as_ambient(AudioSourceID id) {
+    model_ = DISTANCE_MODEL_AMBIENT;
     ALCheck(alSourcei, id, AL_SOURCE_RELATIVE, AL_TRUE);
     ALCheck(alSource3f, id, AL_POSITION, 0, 0, 0);
 }
@@ -130,6 +131,10 @@ void OpenALSoundDriver::set_listener_properties(const Vec3& position, const Quat
 }
 
 void OpenALSoundDriver::set_source_properties(AudioSourceID id, const Vec3& position, const Vec3& velocity) {
+    if(model_ == DISTANCE_MODEL_AMBIENT) {
+        return;
+    }
+
     ALCheck(alSource3f, id, AL_POSITION, position.x, position.y, position.z);
     ALCheck(alSource3f, id, AL_VELOCITY, velocity.x, velocity.y, velocity.z);
 }

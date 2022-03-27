@@ -47,6 +47,7 @@ private:
 
     ALCdevice* dev = nullptr;
     ALCcontext* ctx = nullptr;
+    DistanceModel model_ = DISTANCE_MODEL_POSITIONAL;
 };
 
 }
