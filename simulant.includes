@@ -225,3 +225,4 @@ simulant/platforms/android
 deps/libgl/GL/yalloc
 deps/libgl/GL/platforms
 deps/libgl/GL/platforms/software
+simulant/renderers/pvr

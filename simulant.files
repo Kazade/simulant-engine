@@ -1365,6 +1365,11 @@ simulant/renderers/gl2x/generic_renderer.cpp
 simulant/renderers/gl2x/generic_renderer.h
 simulant/renderers/gl2x/gpu_program.cpp
 simulant/renderers/gl2x/gpu_program.h
+simulant/renderers/pvr/pvr_render_group_impl.h
+simulant/renderers/pvr/pvr_render_queue_visitor.cpp
+simulant/renderers/pvr/pvr_render_queue_visitor.h
+simulant/renderers/pvr/pvr_renderer.cpp
+simulant/renderers/pvr/pvr_renderer.h
 simulant/renderers/renderer.cpp
 simulant/renderers/renderer.h
 simulant/renderers/renderer_config.h

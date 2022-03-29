@@ -5,6 +5,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "platforms/*"  # Remove platform specific additions
     "renderers/glad/*"
     "renderers/gl2x/*"
+    "renderers/pvr/*"
     "sdl2_window.*"
     "kos_window.*"
     "sound/drivers/*"
@@ -89,6 +90,10 @@ IF(PLATFORM_DREAMCAST)
     )
 
     INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include ${CMAKE_SOURCE_DIR}/deps/libAL/include)
+
+    MESSAGE("-- Including PVR in build")
+    FILE(GLOB_RECURSE PVR_FILES renderers/pvr/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PVR_FILES})
 
     SET(SIMULANT_FILES ${SIMULANT_FILES}
         ${LIBGL}

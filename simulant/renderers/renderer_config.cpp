@@ -4,6 +4,7 @@
 
 #ifdef __DREAMCAST__
     #include "gl1x/gl1x_renderer.h"
+    #include "pvr/pvr_renderer.h"
 #elif defined(__ANDROID__)
     #include "gl2x/generic_renderer.h"
 #else
@@ -20,6 +21,7 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
      *
      * - "gl2x"
      * - "gl1x"
+     * - "pvr"
      *
      * If a renderer is unsupported a message will be logged and a null pointer returned
      */
@@ -31,7 +33,9 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
 
     if(chosen.empty()) {
         /* NULL? Then return the default for the platform */
-#if defined(__DREAMCAST__) || defined(__PSP__)
+#if defined(__DREAMCAST__)
+        return std::make_shared<PVRRenderer>(window);
+#elif defined(__PSP__)
         return std::make_shared<GL1XRenderer>(window);
 #else
         return std::make_shared<GenericRenderer>(window);
@@ -51,6 +55,13 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         return NOT_SUPPORTED;
 #else
         return std::make_shared<GenericRenderer>(window);
+#endif
+    } else if(chosen == "pvr") {
+#if defined(__DREAMCAST__)
+        return std::make_shared<PVRRenderer>(window);
+#else
+        S_ERROR("{0} is not a supported renderer", name);
+        return NOT_SUPPORTED;
 #endif
     }
 
