@@ -149,7 +149,7 @@ Promise<typename std::result_of<Func()>::type> Promise<T>::then(Func func) {
             cr_yield();
         }
 
-        return func();
+        return func(this->value());
     };
 
     return cr_async(cb);
