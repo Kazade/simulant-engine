@@ -40,6 +40,21 @@ public:
         assert_true(ret.is_ready());
         assert_true(ret.value());
     }
+
+    void test_then() {
+        bool called = false;
+        auto callback = [&](bool value) -> bool{
+            called = value;
+            return called;
+        };
+
+        auto ret = cr_async([]() -> bool {
+            return true;
+        }).then(callback);
+
+        cr_await(ret);
+        assert_true(called);
+    }
 };
 
 }
