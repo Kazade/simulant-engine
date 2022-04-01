@@ -75,8 +75,8 @@ int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, Audi
         );
 
         return byte_size;
-
     } else {
+        S_INFO("No more samples available");
         return 0;
     }
 }
@@ -92,6 +92,8 @@ static void init_source(Sound* self, PlayingSound& source) {
      */
 
     auto fstream = std::dynamic_pointer_cast<FileIfstream>(self->input_stream());
+    fstream->seekg(0);
+
     auto stb = stb_vorbis_open_file(fstream->file(), 0, nullptr, nullptr);
     StreamWrapper::ptr stream(new StreamWrapper(stb));
 
