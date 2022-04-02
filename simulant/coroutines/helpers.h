@@ -43,7 +43,22 @@ public:
     }
 };
 
+template <typename T>
+struct func_traits : public func_traits<decltype(&T::operator())> {};
+
+template <typename C, typename Ret, typename... Args>
+struct func_traits<Ret(C::*)(Args...) const> {
+    using result_type =  Ret;
+
+    template <std::size_t i>
+    struct arg {
+        using type = typename std::tuple_element<i, std::tuple<Args...>>::type;
+    };
+};
+
 }
+
+void cr_yield();
 
 template<typename T>
 class Promise {
@@ -60,7 +75,20 @@ public:
     /* Starts another coroutine that waits until
      * this one has been fulfilled */
     template<typename Func>
-    Promise<typename std::result_of<Func()>::type> then(Func func);
+    auto then(Func&& func) -> Promise<typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type> {
+        /* Copy the smart pointer and pass to the callback */
+        auto state = state_;
+
+        auto cb = [this, func, state]() -> typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type {
+            while(!state->value) {
+                cr_yield();
+            }
+
+            return func(this->value());
+        };
+
+        return cr_async(cb);
+    }
 
     /* Default constructor does nothing */
     Promise() = default;
@@ -111,7 +139,19 @@ public:
     /* Starts another coroutine that waits until
      * this one has been fulfilled */
     template<typename Func>
-    Promise<typename std::result_of<Func()>::type> then(Func func);
+    auto then(Func&& func) -> Promise<typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type> {
+        auto state = state_;
+
+        auto cb = [this, func, state]() -> typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type {
+            while(!state->value) {
+                cr_yield();
+            }
+
+            return func();
+        };
+
+        return cr_async(cb);
+    }
 };
 
 void _trigger_coroutine(std::function<void ()> func);
@@ -129,45 +169,6 @@ Promise<typename std::result_of<Func()>::type> cr_async(Func func) {
     });
 
     return promise;
-}
-
-void cr_yield();
-
-
-/* Starts another coroutine that waits until
- * this one has been fulfilled */
-
-template<typename T>
-template<typename Func>
-Promise<typename std::result_of<Func()>::type> Promise<T>::then(Func func) {
-
-    /* Copy the smart pointer and pass to the callback */
-    auto state = state_;
-
-    auto cb = [this, func, state]() -> typename std::result_of<Func()>::type {
-        while(!state->value) {
-            cr_yield();
-        }
-
-        return func(this->value());
-    };
-
-    return cr_async(cb);
-}
-
-template<typename Func>
-Promise<typename std::result_of<Func()>::type> Promise<void>::then(Func func) {
-    auto state = state_;
-
-    auto cb = [this, func, state]() -> typename std::result_of<Func()>::type {
-        while(!state->value) {
-            cr_yield();
-        }
-
-        return func();
-    };
-
-    return cr_async(cb);
 }
 
 /* Will wait for the promise returned by a coroutine

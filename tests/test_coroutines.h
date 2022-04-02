@@ -43,7 +43,7 @@ public:
 
     void test_then() {
         bool called = false;
-        auto callback = [&](bool value) -> bool{
+        auto callback = [&](bool value) -> bool {
             called = value;
             return called;
         };
