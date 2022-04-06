@@ -5,6 +5,8 @@
 
 namespace smlt {
 
+const static float DEADZONE = 0.2f;
+
 InputManager::InputManager(InputState *controller):
     controller_(controller) {
 
@@ -19,6 +21,7 @@ InputManager::InputManager(InputState *controller):
     auto horizontal_js = new_axis("Horizontal");
     horizontal_js->set_type(AXIS_TYPE_JOYSTICK_AXIS);
     horizontal_js->set_joystick_axis(JOYSTICK_AXIS_X);
+    horizontal_js->set_dead_zone(DEADZONE);
 
     auto vertical = new_axis("Vertical");
     vertical->set_positive_keyboard_key(KEYBOARD_CODE_W);
@@ -31,6 +34,7 @@ InputManager::InputManager(InputState *controller):
     auto vertical_js = new_axis("Vertical");
     vertical_js->set_type(AXIS_TYPE_JOYSTICK_AXIS);
     vertical_js->set_joystick_axis(JOYSTICK_AXIS_Y);
+    vertical_js->set_dead_zone(DEADZONE);
 
     auto fire1 = new_axis("Fire1");
     fire1->set_positive_keyboard_key(KEYBOARD_CODE_LCTRL);
@@ -275,7 +279,7 @@ void InputManager::update(float dt) {
     for(auto& axis: axises_) {
         const auto& name = axis.first;
 
-        bool new_state = false;       
+        bool new_state = false;
         auto axis_ptr = axis.second.get();
         auto type = axis_ptr->type();
 
