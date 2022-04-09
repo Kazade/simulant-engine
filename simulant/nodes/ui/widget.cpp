@@ -173,7 +173,7 @@ void Widget::render_text() {
 
     /* static to avoid reallocating each frame */
     static std::vector<std::pair<uint32_t, uint32_t>> line_ranges;
-    static std::vector<float> line_lengths;
+    static std::vector<Px> line_lengths;
     static std::vector<Vertex> vertices;
 
     /* Clear, but not shrink_to_fit */
@@ -198,7 +198,7 @@ void Widget::render_text() {
 
     Px left = left_bound;
     uint32_t line_start = 0;
-    float line_length = 0;
+    Px line_length = 0;
     uint32_t line_vertex_count = 0;
 
     /* Generate lines of text */
@@ -212,7 +212,7 @@ void Widget::render_text() {
         unicode::value_type ch = text_ptr[i];
         Px ch_width = font_->character_width(ch);
         Px ch_height = font_->character_height(ch);
-        float ch_advance = font_->character_advance(ch, text_ptr[i + 1]);
+        Px ch_advance = font_->character_advance(ch, text_ptr[i + 1]);
 
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
@@ -307,7 +307,7 @@ void Widget::render_text() {
         uint16_t shift = (j * line_height.value) + line_height_shift;
 
         Vertex* ch = &vertices.at(range.first);
-        uint16_t hw = round(line_lengths[j++]) * 0.5f;
+        uint16_t hw = line_lengths[j++].value / 2;
         for(auto i = 0u; i < range.second; i += 4) {
             Vertex* bl = ch;
             Vertex* br = ch + 1;
@@ -320,18 +320,11 @@ void Widget::render_text() {
             tr->xyz.y -= shift;
             tl->xyz.y -= shift;
 
-            if(pimpl_->text_alignment_ == TEXT_ALIGNMENT_CENTER) {
-                // Center each line
-                bl->xyz.x -= hw;
-                br->xyz.x -= hw;
-                tr->xyz.x -= hw;
-                tl->xyz.x -= hw;
-            } else if(pimpl_->text_alignment_ == TEXT_ALIGNMENT_RIGHT) {
-                bl->xyz.x += hw * 2.0f;
-                br->xyz.x += hw * 2.0f;
-                tr->xyz.x += hw * 2.0f;
-                tl->xyz.x += hw * 2.0f;
-            }
+            // Center each line
+            bl->xyz.x -= hw;
+            br->xyz.x -= hw;
+            tr->xyz.x -= hw;
+            tl->xyz.x -= hw;
 
             min_x = std::min(bl->xyz.x, min_x);
             min_x = std::min(tl->xyz.x, min_x);
@@ -351,7 +344,7 @@ void Widget::render_text() {
     /* Make sure the font material is up to date! */
     sm->set_material(font_->material());
 
-    float max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
+    auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
     pimpl_->text_width_ = max_length;
     pimpl_->text_height_ = line_height.value * line_ranges.size();
@@ -370,9 +363,29 @@ void Widget::render_text() {
     vdata->reserve(vertices.size());
     idata->reserve(vertices.size());
 
+    if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
+        auto cwidth = std::max(requested_width(), content_width());
+
+        auto j = 0;
+        for(auto range: line_ranges) {
+            Vertex* ch = &vertices.at(range.first);
+
+            auto ashift = (cwidth - line_lengths[j++]) / 2;
+
+            for(auto i = 0u; i < range.second; i++, ch++) {
+                if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
+                    ch->xyz.x -= ashift.value;
+                } else {
+                    ch->xyz.x += ashift.value;
+                }
+            }
+        }
+    }
+
     auto idx = 0;
     for(auto& v: vertices) {
-        vdata->position(v.xyz + Vec3(global_x_shift, global_y_shift, 0));
+        auto p = v.xyz + Vec3(global_x_shift, global_y_shift, 0);
+        vdata->position(p);
         vdata->tex_coord0(v.uv);
         vdata->diffuse(pimpl_->text_colour_);
         vdata->move_next();

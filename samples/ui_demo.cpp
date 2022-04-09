@@ -103,6 +103,27 @@ public:
         pl->set_background_colour(smlt::Colour::GREY);
         pl->set_anchor_point(1.0f, 1.0f);
         pl->move_to(window->coordinate_from_normalized(0.75f, 0.75f));
+
+
+        auto left_label = stage_->ui->new_widget_as_label("This label has left alignment");
+        auto middle_label = stage_->ui->new_widget_as_label("This label has center alignment");
+        auto right_label = stage_->ui->new_widget_as_label("This label has right alignment");
+
+        left_label->set_text_alignment(smlt::ui::TEXT_ALIGNMENT_LEFT);
+        middle_label->set_text_alignment(smlt::ui::TEXT_ALIGNMENT_CENTER);
+        right_label->set_text_alignment(smlt::ui::TEXT_ALIGNMENT_RIGHT);
+
+        auto max = std::max(std::max(left_label->content_width(), right_label->content_width()), middle_label->content_width());
+        left_label->resize(max + 128, -1);
+        middle_label->resize(max + 128, -1);
+        right_label->resize(max + 128, -1);
+
+        auto align_frame = stage_->ui->new_widget_as_frame("");
+        align_frame->pack_child(left_label);
+        align_frame->pack_child(middle_label);
+        align_frame->pack_child(right_label);
+        align_frame->set_anchor_point(1.0f, 1.0f);
+        align_frame->move_to(window->width() - 16, window->height() - 16);
     }
 
     void update(float dt) {
