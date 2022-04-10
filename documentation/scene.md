@@ -69,6 +69,7 @@ You have a lot of control over this process:
  - You can load a `Scene` ahead of time, before activating it by using `SceneManager::preload(name, ...)`
  - You can prevent a `Scene` from being unloaded when deactivated.
  - You can prevent a `Scene` from being deleted when unloaded.
+ - You can either unload the current `Scene` before loading the next, or you can load the next before unloading the current `Scene` by passing the `behaviour` argument as `ACTIVATION_BEHAVIOUR_UNLOAD_FIRST`, or `ACTIVATION_BEHAVIOUR_UNLOAD_AFTER`
  
 This means that you can (for example) create render pipelines that remain active even
 once the `Scene` has been deactivated, and use that to implement transitions etc.

@@ -40,6 +40,13 @@ typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
 typedef sig::signal<void (std::string, SceneBase*)> SceneActivatedSignal;
 
+
+enum ActivateBehaviour {
+    ACTIVATE_BEHAVIOUR_UNLOAD_FIRST,
+    ACTIVATE_BEHAVIOUR_UNLOAD_AFTER
+};
+
+
 class SceneManager :
     public RefCounted<SceneManager> {
 
@@ -70,6 +77,7 @@ class SceneManager :
         std::weak_ptr<SceneManager> _this,
         std::shared_ptr<ConnectionHolder> holder,
         const std::string& route,
+        ActivateBehaviour behaviour,
         Args&&... args
     ) {
 
@@ -84,24 +92,45 @@ class SceneManager :
 
         auto new_scene = self->get_or_create_route(route);
         if(new_scene != self->current_scene_) {
-            if(!new_scene->is_loaded()) {
-                new_scene->load_args.clear();
-                unpack(new_scene->load_args, std::forward<Args>(args)...);
-                new_scene->_call_load();
-            }
+            if(behaviour == ACTIVATE_BEHAVIOUR_UNLOAD_AFTER) {
+                if(!new_scene->is_loaded()) {
+                    new_scene->load_args.clear();
+                    unpack(new_scene->load_args, std::forward<Args>(args)...);
+                    new_scene->_call_load();
+                }
 
-            auto previous = self->current_scene_;
+                auto previous = self->current_scene_;
 
-            if(previous) {
-                previous->_call_deactivate();
-            }
+                if(previous) {
+                    previous->_call_deactivate();
+                }
 
-            std::swap(self->current_scene_, new_scene);
-            self->current_scene_->_call_activate();
+                std::swap(self->current_scene_, new_scene);
+                self->current_scene_->_call_activate();
 
-            if(previous && previous->unload_on_deactivate()) {
-                // If requested, we unload the previous scene once the new on is active
-                self->unload(previous->name());
+                if(previous && previous->unload_on_deactivate()) {
+                    // If requested, we unload the previous scene once the new on is active
+                    self->unload(previous->name());
+                }
+            } else {
+                /* Default behaviour - unload the current scene before activating the next one */
+                auto previous = self->current_scene_;
+
+                if(previous) {
+                    previous->_call_deactivate();
+                    if(previous->unload_on_deactivate()) {
+                        self->unload(previous->name());
+                    }
+                }
+
+                if(!new_scene->is_loaded()) {
+                    new_scene->load_args.clear();
+                    unpack(new_scene->load_args, std::forward<Args>(args)...);
+                    new_scene->_call_load();
+                }
+
+                std::swap(self->current_scene_, new_scene);
+                self->current_scene_->_call_activate();
             }
 
             self->signal_scene_activated_(route, new_scene.get());
@@ -120,7 +149,7 @@ public:
 
     template<typename... Args>
     void activate(
-        const std::string& route,
+        const std::string& route, ActivateBehaviour behaviour,
         Args&& ...args
     ) {
 
@@ -133,10 +162,15 @@ public:
         holder->conn = connect_to_post_idle(
             std::bind(
                 SceneManager::do_activate<Args&...>,
-                shared_from_this(), holder, route, std::forward<Args>(args)...
+                shared_from_this(), holder, route, behaviour, std::forward<Args>(args)...
             )
         );
         scenes_queued_for_activation_++;
+    }
+
+    template<typename... Args>
+    void activate(const std::string& route, Args&& ...args) {
+        activate(route, ACTIVATE_BEHAVIOUR_UNLOAD_FIRST, std::forward<Args>(args)...);
     }
 
     template<typename ...Args>
