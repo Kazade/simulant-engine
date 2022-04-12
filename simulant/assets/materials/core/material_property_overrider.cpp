@@ -32,7 +32,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const bool&
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    bool_properties_[hsh] = value;
+    bool_properties_.push_back(PropertyValue<bool>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_BOOL;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_BOOL);
@@ -51,7 +51,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const float
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    float_properties_[hsh] = value;
+    float_properties_.push_back(PropertyValue<float>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_FLOAT;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_FLOAT);
@@ -70,7 +70,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const int32
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    int_properties_[hsh] = value;
+    int_properties_.push_back(PropertyValue<int32_t>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_INT;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_INT);
@@ -93,7 +93,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Vec4&
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    vec4_properties_[hsh] = value;
+    vec4_properties_.push_back(PropertyValue<Vec4>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_VEC4;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_VEC4);
@@ -112,7 +112,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Vec3&
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    vec3_properties_[hsh] = value;
+    vec3_properties_.push_back(PropertyValue<Vec3>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_VEC3;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_VEC3);
@@ -131,7 +131,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Vec2&
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    vec2_properties_[hsh] = value;
+    vec2_properties_.push_back(PropertyValue<Vec2>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_VEC2;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_VEC2);
@@ -147,7 +147,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Mat3&
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    mat3_properties_[hsh] = value;
+    mat3_properties_.push_back(PropertyValue<Mat3>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_MAT3;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_MAT3);
@@ -166,7 +166,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Mat4&
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    mat4_properties_[hsh] = value;
+    mat4_properties_.push_back(PropertyValue<Mat4>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_MAT4;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_MAT4);
@@ -185,7 +185,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Textu
 
     auto hsh = material_property_hash(name);
     clear_override(hsh);
-    texture_properties_[hsh] = value;
+    texture_properties_.push_back(PropertyValue<TexturePtr>(hsh, value));
     all_overrides_[hsh] = MATERIAL_PROPERTY_TYPE_TEXTURE;
 
     on_override(hsh, name, MATERIAL_PROPERTY_TYPE_TEXTURE);
@@ -194,11 +194,19 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Textu
 template<typename T, typename Map>
 bool fetcher(const MaterialPropertyOverrider* const __restrict__ _this, const MaterialPropertyOverrider* const __restrict__ parent, const Map& map, MaterialPropertyNameHash hsh, const T*& out) {
     auto& lookup = _this->*map;
-    auto it = lookup.find(hsh);
-    if(it != lookup.end()) {
-        out = &it->second;
-        return true;
-    } else if(parent) {
+
+    auto s = lookup.size();
+    if(s) {
+        auto v = &lookup[0];
+        for(std::size_t i = 0; i < s; ++i, ++v) {
+            if(v->hsh == hsh) {
+                out = &v->value;
+                return true;
+            }
+        }
+    }
+
+    if(parent) {
         return fetcher(parent, nullptr, map, hsh, out);
     } else if(is_core_property(hsh)) {
         return core_material_property_value(hsh, out);
@@ -266,31 +274,94 @@ bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
         auto type = it->second;
         switch(type) {
             case MATERIAL_PROPERTY_TYPE_BOOL:
-                bool_properties_.erase(hsh);
+                bool_properties_.erase(
+                    std::remove_if(
+                        bool_properties_.begin(),
+                        bool_properties_.end(),
+                        [&](const PropertyValue<bool>& e) -> bool { return e.hsh == hsh; }
+                    ),
+                    bool_properties_.end()
+                );
             break;
             case MATERIAL_PROPERTY_TYPE_FLOAT:
-                float_properties_.erase(hsh);
+                float_properties_.erase(
+                    std::remove_if(
+                        float_properties_.begin(),
+                        float_properties_.end(),
+                        [&](const PropertyValue<float>& e) -> bool { return e.hsh == hsh; }
+                    ),
+                    float_properties_.end()
+                );
             break;
             case MATERIAL_PROPERTY_TYPE_INT:
-                int_properties_.erase(hsh);
+            int_properties_.erase(
+                std::remove_if(
+                    int_properties_.begin(),
+                    int_properties_.end(),
+                    [&](const PropertyValue<int32_t>& e) -> bool { return e.hsh == hsh; }
+                ),
+                int_properties_.end()
+            );
             break;
             case MATERIAL_PROPERTY_TYPE_VEC2:
-                vec2_properties_.erase(hsh);
+            vec2_properties_.erase(
+                std::remove_if(
+                    vec2_properties_.begin(),
+                    vec2_properties_.end(),
+                    [&](const PropertyValue<Vec2>& e) -> bool { return e.hsh == hsh; }
+                ),
+                vec2_properties_.end()
+            );
             break;
             case MATERIAL_PROPERTY_TYPE_VEC3:
-                vec3_properties_.erase(hsh);
+            vec3_properties_.erase(
+                std::remove_if(
+                    vec3_properties_.begin(),
+                    vec3_properties_.end(),
+                    [&](const PropertyValue<Vec3>& e) -> bool { return e.hsh == hsh; }
+                ),
+                vec3_properties_.end()
+            );
             break;
             case MATERIAL_PROPERTY_TYPE_VEC4:
-                vec4_properties_.erase(hsh);
+            vec4_properties_.erase(
+                std::remove_if(
+                    vec4_properties_.begin(),
+                    vec4_properties_.end(),
+                    [&](const PropertyValue<Vec4>& e) -> bool { return e.hsh == hsh; }
+                ),
+                vec4_properties_.end()
+            );
             break;
             case MATERIAL_PROPERTY_TYPE_MAT3:
-                mat3_properties_.erase(hsh);
+            mat3_properties_.erase(
+                std::remove_if(
+                    mat3_properties_.begin(),
+                    mat3_properties_.end(),
+                    [&](const PropertyValue<Mat3>& e) -> bool { return e.hsh == hsh; }
+                ),
+                mat3_properties_.end()
+            );
             break;
             case MATERIAL_PROPERTY_TYPE_MAT4:
-                mat4_properties_.erase(hsh);
+            mat4_properties_.erase(
+                std::remove_if(
+                    mat4_properties_.begin(),
+                    mat4_properties_.end(),
+                    [&](const PropertyValue<Mat4>& e) -> bool { return e.hsh == hsh; }
+                ),
+                mat4_properties_.end()
+            );
             break;
             case MATERIAL_PROPERTY_TYPE_TEXTURE:
-                texture_properties_.erase(hsh);
+            texture_properties_.erase(
+                std::remove_if(
+                    texture_properties_.begin(),
+                    texture_properties_.end(),
+                    [&](const PropertyValue<TexturePtr>& e) -> bool { return e.hsh == hsh; }
+                ),
+                texture_properties_.end()
+            );
             break;
             default:
             return false;
