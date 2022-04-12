@@ -214,7 +214,7 @@ public:
     void stop_running() { is_running_ = false; }
 
     /** Returns true if the application is shutting down */
-    bool is_shutting_down() const { return is_running_ == false; }
+    bool is_shutting_down() const;
 
     void shutdown();
 
@@ -314,6 +314,8 @@ public:
 private:
     friend Application* get_app();
     static Application* global_app;
+
+    mutable thread::Mutex running_lock_;
 };
 
 Application* get_app();

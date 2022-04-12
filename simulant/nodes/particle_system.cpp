@@ -209,8 +209,6 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
 }
 
 void ParticleSystem::update(float dt) {
-    update_source(dt); //Update any sounds attached to this particle system
-
     /* Don't update anything at all if we're hidden */
     if(!is_visible() && !update_when_hidden()) {
         return;

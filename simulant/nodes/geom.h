@@ -94,10 +94,6 @@ private:
 
     AABB aabb_;
 
-    void update(float dt) override {
-        update_source(dt);
-    }
-
 public:
     Property<decltype(&Geom::culler_)> culler = {this, &Geom::culler_};
 

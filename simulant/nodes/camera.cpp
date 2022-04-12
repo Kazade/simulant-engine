@@ -25,7 +25,6 @@ Camera::~Camera() {
 
 void Camera::update(float dt) {
     StageNode::update(dt);
-    update_source(dt);
 }
 
 void Camera::update_transformation_from_parent() {

@@ -496,6 +496,7 @@ bool Application::run_frame() {
         stats->increment_frames();
     }
 
+    thread::Lock<thread::Mutex> lock(running_lock_);
     if(!is_running_) {
         shutdown();
     }
@@ -600,12 +601,20 @@ void Application::update_idle_tasks_and_coroutines() {
     }
 }
 
+bool Application::is_shutting_down() const {
+    thread::Lock<thread::Mutex> lock(running_lock_);
+    return !is_running_;
+}
+
 void Application::shutdown() {
     if(has_shutdown_) {
         return;
     }
 
-    is_running_ = false;
+    {
+        thread::Lock<thread::Mutex> lock(running_lock_);
+        is_running_ = false;
+    }
 
     signal_shutdown_();
     _call_clean_up();

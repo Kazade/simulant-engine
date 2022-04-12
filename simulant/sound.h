@@ -123,10 +123,9 @@ public:
 
     bool is_sound_playing() const;
 
-    void update_source(float dt);
-
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
 
+    void update_source(float dt);
 protected:
     SoundDriver* _sound_driver() const;
 
@@ -141,6 +140,9 @@ public:
 
     friend class Sound;
     friend class PlayingSound;
+
+    mutable thread::Mutex mutex_;
+    static void source_update_thread();
 };
 
 }
