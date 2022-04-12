@@ -47,10 +47,10 @@ DetailLevel Pipeline::detail_level_at_distance(float dist) const {
      * Given a distance (e.g. from a camera), this will return the detail level
      * that should be used at that distance
      */
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_NEAREST)) return DETAIL_LEVEL_NEAREST;
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_NEAR)) return DETAIL_LEVEL_NEAR;
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_MID)) return DETAIL_LEVEL_MID;
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_FAR)) return DETAIL_LEVEL_FAR;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_NEAREST]) return DETAIL_LEVEL_NEAREST;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_NEAR]) return DETAIL_LEVEL_NEAR;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_MID]) return DETAIL_LEVEL_MID;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_FAR]) return DETAIL_LEVEL_FAR;
 
     return DETAIL_LEVEL_FARTHEST;
 }

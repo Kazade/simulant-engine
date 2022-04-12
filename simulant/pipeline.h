@@ -100,7 +100,7 @@ private:
     bool is_active_ = false;
     std::string name_;
 
-    std::map<DetailLevel, float> detail_level_end_distances_;
+    float detail_level_end_distances_[DETAIL_LEVEL_MAX];
 
     friend class Compositor;
 
