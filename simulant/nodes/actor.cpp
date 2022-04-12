@@ -157,7 +157,6 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
 void Actor::update(float dt) {
     StageNode::update(dt);
 
-    update_source(dt);
     if(animation_state_) {
         animation_state_->update(dt);
     }

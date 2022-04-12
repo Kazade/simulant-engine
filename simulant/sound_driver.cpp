@@ -20,15 +20,11 @@ SoundDriver::~SoundDriver() {
 
 bool SoundDriver::startup() {
     global_source_ = new AudioSource(window_);
-    source_update_ = window_->application->signal_update().connect([&](float dt) {
-        global_source_->update_source(dt);
-    });
 
     return _startup();
 }
 
 void SoundDriver::shutdown() {
-    source_update_.disconnect();
     delete global_source_;
     global_source_ = nullptr;
     _shutdown();

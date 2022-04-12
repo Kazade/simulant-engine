@@ -24,8 +24,40 @@
 #include "sound_driver.h"
 #include "nodes/stage_node.h"
 #include "application.h"
+#include "time_keeper.h"
+#include "threads/thread.h"
 
 namespace smlt {
+
+static thread::Mutex ACTIVE_SOURCES_MUTEX;
+static std::list<AudioSource*> ACTIVE_SOURCES;
+static std::shared_ptr<thread::Thread> SOURCE_UPDATE_THREAD;
+
+void AudioSource::source_update_thread() {
+    static auto update_rate = 1.0f / 30.0f;
+    static auto last_time = get_app()->time_keeper->now_in_us();
+
+    while(!get_app()->is_shutting_down()) {
+        auto now = get_app()->time_keeper->now_in_us();
+        auto diff = now - last_time;
+        auto dt = float(diff) * 0.000001f;
+
+        if(dt < update_rate) {
+            thread::sleep(10);
+            continue;
+        }
+
+        {
+            thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+            for(auto src: ACTIVE_SOURCES) {
+                src->update_source(dt);
+            }
+        }
+
+        last_time = now;
+    }
+}
+
 
 Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver):
     generic::Identifiable<SoundID>(id),
@@ -68,6 +100,21 @@ void Sound::init_source(PlayingSound& source) {
 AudioSource::AudioSource(Window *window):
     stage_(nullptr),
     window_(window) {
+
+    /* Start the source update thread if we didn't already */
+    if(!SOURCE_UPDATE_THREAD) {
+        SOURCE_UPDATE_THREAD = std::make_shared<thread::Thread>(&source_update_thread);
+
+        /* When the app shuts down, wait for the thread to finish before continuing
+         * with the shutdown process */
+        get_app()->signal_shutdown().connect([&]() {
+            SOURCE_UPDATE_THREAD->join();
+            SOURCE_UPDATE_THREAD.reset();
+        });
+    }
+
+    thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+    ACTIVE_SOURCES.push_back(this);
 }
 
 AudioSource::AudioSource(Stage *stage, StageNode* this_as_node, SoundDriver* driver):
@@ -76,11 +123,17 @@ AudioSource::AudioSource(Stage *stage, StageNode* this_as_node, SoundDriver* dri
     driver_(driver),
     node_(this_as_node) {
 
+    thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+    ACTIVE_SOURCES.push_back(this);
 }
 
 AudioSource::~AudioSource() {
     /* If the source is destroyed we should stop all playing instances
      * immediately */
+    thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+    ACTIVE_SOURCES.remove(this);
+
+    thread::Lock<thread::Mutex> lock(mutex_);
     auto app = smlt::get_app();
     SoundDriver* driver = (app) ? app->sound_driver.get() : nullptr;
     if(driver) {
@@ -97,6 +150,8 @@ PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dist
     }
 
     assert(sound);
+
+    thread::Lock<thread::Mutex> lock(mutex_);
 
     // If this is the window, we create an ambient source
     PlayingSound::ptr new_source = PlayingSound::create(
@@ -115,6 +170,8 @@ PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dist
 }
 
 bool AudioSource::stop_sound(PlayingSoundID sound_id) {
+    thread::Lock<thread::Mutex> lock(mutex_);
+
     for(auto it = instances_.begin(); it != instances_.end();) {
         if((*it)->id() == sound_id) {
             (*it)->do_stop();
@@ -129,6 +186,8 @@ bool AudioSource::stop_sound(PlayingSoundID sound_id) {
 }
 
 void AudioSource::update_source(float dt) {
+    thread::Lock<thread::Mutex> lock(mutex_);
+
     //Remove any instances that have finished playing
     instances_.erase(
         std::remove_if(
@@ -149,6 +208,8 @@ SoundDriver *AudioSource::_sound_driver() const {
 }
 
 uint8_t AudioSource::playing_sound_count() const {
+    thread::Lock<thread::Mutex> lock(mutex_);
+
     uint8_t i = 0;
     for(auto instance: instances_) {
         if(instance->is_playing()) {
@@ -159,6 +220,8 @@ uint8_t AudioSource::playing_sound_count() const {
 }
 
 uint8_t AudioSource::played_sound_count() const {
+    thread::Lock<thread::Mutex> lock(mutex_);
+
     return std::count_if(
         instances_.begin(),
         instances_.end(),
