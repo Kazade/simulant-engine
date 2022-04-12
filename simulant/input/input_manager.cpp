@@ -299,7 +299,7 @@ void InputManager::update(float dt) {
 
         /* We may have already set this axis name once this frame, we only
          * want to set to true, never reset back to false here */
-        axis_states_[name] = axis_states_[name] | new_state;
+        axis_states_[name] = axis_states_[name] || new_state;
     }
 }
 
