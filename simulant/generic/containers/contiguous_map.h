@@ -606,8 +606,10 @@ private:
 
     inline int32_t new_node(int32_t parent_index, K&& key, V&& value) {
         auto ret = (int32_t) nodes_.size();
-        nodes_.push_back(node_type(key, value));
-        nodes_.back().parent_index_ = parent_index;
+
+        node_type n(key, value);
+        n.parent_index_ = parent_index;
+        nodes_.push_back(std::move(n));
         return ret;
     }
 

@@ -70,7 +70,7 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
 
     auto idx = renderables_.size();
     renderables_.push_back(std::move(src_renderable));
-    auto renderable = &renderables_.back();
+    auto renderable = &renderables_[idx];
 
     auto material = renderable->material;
     assert(material);
