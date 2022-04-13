@@ -69,6 +69,10 @@ struct FontFlags {
     CharacterSet charset = CHARACTER_SET_LATIN;
 };
 
+struct SoundFlags {
+    bool stream_audio = true;
+};
+
 /* Majority of the API definitions have been generated using this Python code:
  *
  * TEMPLATE="""
@@ -139,7 +143,11 @@ public:
 
 
     /* Sound API */
-    SoundPtr new_sound_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound_from_file(
+        const Path& filename,
+        const SoundFlags& flags=SoundFlags(),
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
     void destroy_sound(SoundID id);
     SoundPtr sound(SoundID id);
     const SoundPtr sound (SoundID id) const;

@@ -40,7 +40,7 @@ void Splash::load() {
     auto texture = stage_->assets->new_texture_from_file(logo_file, flags);
     image_ = stage_->ui->new_widget_as_image(texture);
 
-    sound_ = stage_->assets->new_sound_from_file(SIMULANT_SOUND, smlt::GARBAGE_COLLECT_NEVER);
+    sound_ = stage_->assets->new_sound_from_file(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
 
     image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);

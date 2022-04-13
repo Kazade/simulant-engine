@@ -35,14 +35,20 @@ public:
     StreamWrapper(stb_vorbis* vorbis):
         vorbis_(vorbis) {}
 
+    StreamWrapper(stb_vorbis* vorbis, std::shared_ptr<std::vector<uint8_t>> data):
+        vorbis_(vorbis),
+        data_(data) {}
+
     virtual ~StreamWrapper() {
         stb_vorbis_close(vorbis_);
         vorbis_ = nullptr;
     }
 
     stb_vorbis* get() { return vorbis_; }
+
 private:
     stb_vorbis* vorbis_;
+    std::shared_ptr<std::vector<uint8_t>> data_;
 };
 
 int32_t queue_buffer(std::weak_ptr<Sound> sound, StreamWrapper::ptr stream, AudioBufferID buffer) {
@@ -103,9 +109,27 @@ static void init_source(Sound* self, PlayingSound& source) {
     source.set_stream_func(std::bind(&queue_buffer, wptr, stream, std::placeholders::_1));
 }
 
+static void init_source_memory(Sound* self, PlayingSound& source) {
+    auto fstream = std::dynamic_pointer_cast<FileIfstream>(self->input_stream());
+    fstream->seekg(0);
+
+    std::shared_ptr<std::vector<uint8_t>> data;
+    data.reset(new std::vector<uint8_t>(
+        std::istreambuf_iterator<char>(*fstream), {}
+    ));
+
+    auto stb = stb_vorbis_open_memory(&(*data)[0], data->size(), nullptr, nullptr);
+    StreamWrapper::ptr stream(new StreamWrapper(stb, data));
+
+    /* Using a weak_ptr is important, otherwise the shared_ptr will be bound to the function
+     * object even though the argument is a weak_ptr */
+    std::weak_ptr<Sound> wptr = self->shared_from_this();
+    source.set_stream_func(std::bind(&queue_buffer, wptr, stream, std::placeholders::_1));
+}
 
 void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
-    _S_UNUSED(options);
+    /* Stream unless someone passed stream == false */
+    bool stream = !(options.count("stream") && any_cast<bool>(options.at("stream")) == false);
 
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
@@ -143,7 +167,12 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     sound->set_input_stream(fstream);
     sound->set_channels(info.channels);
     sound->set_format((info.channels == 2) ? AUDIO_DATA_FORMAT_STEREO16 : AUDIO_DATA_FORMAT_MONO16);
-    sound->set_playing_sound_init_function(std::bind(&init_source, sound, std::placeholders::_1));
+
+    if(stream) {
+        sound->set_playing_sound_init_function(std::bind(&init_source, sound, std::placeholders::_1));
+    } else {
+        sound->set_playing_sound_init_function(std::bind(&init_source_memory, sound, std::placeholders::_1));
+    }
 }
 
 

@@ -550,15 +550,18 @@ std::size_t AssetManager::texture_count() const {
     return texture_manager_.count();
 }
 
-SoundPtr AssetManager::new_sound_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
+SoundPtr AssetManager::new_sound_from_file(const Path& path, const SoundFlags &flags, GarbageCollectMethod garbage_collect) {
     //Load the sound
     auto snd = sound_manager_.make(this, get_app()->sound_driver);
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 
     auto loader = get_app()->loader_for(path);
 
+    LoaderOptions opts;
+    opts["stream"] = flags.stream_audio;
+
     if(loader) {
-        loader->into(snd);
+        loader->into(snd, opts);
     } else {
         S_ERROR("Unsupported file type: ", path);
     }
