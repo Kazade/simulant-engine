@@ -211,7 +211,7 @@ public:
     void update_idle_tasks_and_coroutines();
 
     /** Stops the entire application */
-    void stop_running() { is_running_ = false; }
+    void stop_running();
 
     /** Returns true if the application is shutting down */
     bool is_shutting_down() const;
