@@ -170,6 +170,7 @@ Application::Application(const AppConfig &config):
 }
 
 Application::~Application() {
+    stop_running();
     shutdown();
 
     window_->destroy_panels();
@@ -601,6 +602,11 @@ void Application::update_idle_tasks_and_coroutines() {
     }
 }
 
+void Application::stop_running() {
+    thread::Lock<thread::Mutex> lock(running_lock_);
+    is_running_ = false;
+}
+
 bool Application::is_shutting_down() const {
     thread::Lock<thread::Mutex> lock(running_lock_);
     return !is_running_;
@@ -609,11 +615,6 @@ bool Application::is_shutting_down() const {
 void Application::shutdown() {
     if(has_shutdown_) {
         return;
-    }
-
-    {
-        thread::Lock<thread::Mutex> lock(running_lock_);
-        is_running_ = false;
     }
 
     signal_shutdown_();
@@ -633,6 +634,10 @@ void Application::shutdown() {
     std::cout << "Average FPS: " << float(stats->frames_run() - 1) / (time_keeper->total_elapsed_seconds()) << std::endl;
 
     has_shutdown_ = true;
+
+    if(global_app == this) {
+        global_app = nullptr;
+    }
 }
 
 void Application::update_coroutines() {
