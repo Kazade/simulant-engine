@@ -497,12 +497,12 @@ bool Application::run_frame() {
         stats->increment_frames();
     }
 
-    thread::Lock<thread::Mutex> lock(running_lock_);
-    if(!is_running_) {
+    bool is_running = !is_shutting_down();
+    if(!is_running) {
         shutdown();
     }
 
-    return is_running_;
+    return is_running;
 }
 
 int32_t Application::run() {
@@ -534,6 +534,10 @@ int32_t Application::run() {
         profiler_clean_up();
     }
 #endif
+
+    if(global_app == this) {
+        global_app = nullptr;
+    }
 
     return 0;
 }
@@ -617,6 +621,8 @@ void Application::shutdown() {
         return;
     }
 
+    is_running_ = false;
+
     signal_shutdown_();
     _call_clean_up();
 
@@ -634,10 +640,6 @@ void Application::shutdown() {
     std::cout << "Average FPS: " << float(stats->frames_run() - 1) / (time_keeper->total_elapsed_seconds()) << std::endl;
 
     has_shutdown_ = true;
-
-    if(global_app == this) {
-        global_app = nullptr;
-    }
 }
 
 void Application::update_coroutines() {

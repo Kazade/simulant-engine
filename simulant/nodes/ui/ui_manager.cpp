@@ -61,10 +61,13 @@ UIManager::~UIManager() {
     pre_render_connection_.disconnect();
     frame_finished_connection_.disconnect();
 
-    auto window = get_app()->window.get();
+    auto app = get_app();
+    if(app) {
+        auto window = app->window.get();
 
-    if(window) {
-        window->unregister_event_listener(this);
+        if(window) {
+            window->unregister_event_listener(this);
+        }
     }
 }
 

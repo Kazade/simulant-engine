@@ -37,7 +37,13 @@ void AudioSource::source_update_thread() {
     static auto update_rate = 1.0f / 30.0f;
     static auto last_time = get_app()->time_keeper->now_in_us();
 
-    while(get_app() && !get_app()->is_shutting_down()) {
+    S_INFO("Starting source update thread");
+
+    while(true) {
+        if(get_app() && get_app()->is_shutting_down()) {
+            break;
+        }
+
         auto now = get_app()->time_keeper->now_in_us();
         auto diff = now - last_time;
         auto dt = float(diff) * 0.000001f;
@@ -56,6 +62,8 @@ void AudioSource::source_update_thread() {
 
         last_time = now;
     }
+
+    S_INFO("Stopping audio thread");
 }
 
 
