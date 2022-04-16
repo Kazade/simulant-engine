@@ -84,7 +84,7 @@ public:
                 cr_yield();
             }
 
-            return func(this->value());
+            return func(state->value.value());
         };
 
         return cr_async(cb);
