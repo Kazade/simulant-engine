@@ -7,26 +7,26 @@
 namespace smlt {
 namespace ui {
 
-enum OverflowType {
+enum OverflowType : uint8_t {
     OVERFLOW_TYPE_HIDDEN,
     OVERFLOW_TYPE_VISIBLE,
     OVERFLOW_TYPE_AUTO
 };
 
-enum TextAlignment {
+enum TextAlignment : uint8_t {
     TEXT_ALIGNMENT_LEFT,
     TEXT_ALIGNMENT_CENTER,
     TEXT_ALIGNMENT_RIGHT
 };
 
-enum ResizeMode {
+enum ResizeMode : uint8_t {
     RESIZE_MODE_FIXED, // Clips / scrolls text
     RESIZE_MODE_FIXED_WIDTH, // Will expand vertically with text, text is word-wrapped
     RESIZE_MODE_FIXED_HEIGHT, // Will expand horizontally with text, text is not wrapped
     RESIZE_MODE_FIT_CONTENT // Will fit the text, newlines affect the height
 };
 
-enum ChangeFocusBehaviour {
+enum ChangeFocusBehaviour : uint8_t {
     FOCUS_THIS_IF_NONE_FOCUSED = 0x1,
     FOCUS_NONE_IF_NONE_FOCUSED = 0x2
 };

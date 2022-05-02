@@ -51,12 +51,12 @@ void Frame::finalize_build() {
     }
 
     /* Reposition the text to be in the title bar */
-    if(!pimpl_->text_.empty()) {
+    if(!text_.empty()) {
 
         auto sm = mesh()->find_submesh("text");
         auto vdata = mesh()->vertex_data.get();
 
-        Px line_height_shift = (pimpl_->text_height_ - font_->size()) / 2;
+        Px line_height_shift = (text_height_ - font_->size()) / 2;
         line_height_shift += padding().top;
 
         Px shift =  (int16_t) ((oh.value * 0.5f) - line_height().value + (line_height_shift.value));

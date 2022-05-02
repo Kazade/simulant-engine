@@ -171,11 +171,28 @@ void Keyboard::generate_numerical_layout() {
 
     auto new_button = [this](std::string label) -> smlt::ui::Button* {
         auto btn = owner_->new_widget_as_button(label);
+
+        /* We style the style of the first button as the "default" and set
+         * this on all subsequent buttons. We steal the style of the second button
+         * as "highlight" and apply that on focus */
+        if(!default_style_) {
+            btn->set_background_colour(UIConfig().background_colour_);
+            btn->set_border_colour(smlt::Colour::NONE);
+            btn->set_border_width(0);
+            btn->set_padding(0);
+
+            default_style_ = btn->style_;
+        } else if(!highlighted_style_) {
+            btn->set_background_colour(smlt::Colour::NONE);
+            btn->set_border_colour(smlt::Colour::NONE);
+            btn->set_border_width(0);
+            btn->set_padding(0);
+
+            highlighted_style_ = btn->style_;
+            highlighted_style_->background_colour_ = UIConfig().highlight_colour_;
+        }
+
         btn->resize(64, 32);
-        btn->set_padding(0);
-        btn->set_border_width(0);
-        btn->set_background_colour(smlt::Colour::NONE);
-        btn->set_border_colour(smlt::Colour::NONE);
         btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
         btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
         return btn;
@@ -239,11 +256,31 @@ void Keyboard::generate_alphabetical_layout() {
 
     auto new_button = [this](std::string label) -> smlt::ui::Button* {
         auto btn = owner_->new_widget_as_button(label);
+
+        /* We style the style of the first button as the "default" and set
+         * this on all subsequent buttons. We steal the style of the second button
+         * as "highlight" and apply that on focus */
+        if(!default_style_) {
+            btn->set_background_colour(UIConfig().background_colour_);
+            btn->set_border_colour(smlt::Colour::NONE);
+            btn->set_border_width(0);
+            btn->set_padding(0);
+
+            default_style_ = btn->style_;
+        } else if(!highlighted_style_) {
+            btn->set_background_colour(smlt::Colour::NONE);
+            btn->set_border_colour(smlt::Colour::NONE);
+            btn->set_border_width(0);
+            btn->set_padding(0);
+
+            highlighted_style_ = btn->style_;
+            highlighted_style_->background_colour_ = UIConfig().highlight_colour_;
+        }
+
+        assert(default_style_ != highlighted_style_);
+
+        btn->set_style(default_style_);
         btn->resize(32, 32);
-        btn->set_padding(0);
-        btn->set_border_width(0);
-        btn->set_background_colour(smlt::Colour::NONE);
-        btn->set_border_colour(smlt::Colour::NONE);
         btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
         btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
         return btn;
@@ -296,12 +333,12 @@ void Keyboard::generate_alphabetical_layout() {
 }
 
 void Keyboard::focus(Widget* widget) {
-    widget->set_background_colour(smlt::ui::UIConfig().highlight_colour_);
+    widget->set_style(highlighted_style_);
     focused_ = widget;
 }
 
 void Keyboard::unfocus(Widget* widget) {
-    widget->set_background_colour(smlt::Colour::NONE);
+    widget->set_style(default_style_);
     focused_ = nullptr;
 }
 
@@ -315,7 +352,7 @@ UIDim Keyboard::calculate_content_dimensions(Px text_width, Px text_height) {
 }
 
 void Keyboard::on_transformation_change_attempted() {
-    bool rebuild = pimpl_->anchor_point_dirty_;
+    bool rebuild = anchor_point_dirty_;
 
     Widget::on_transformation_change_attempted();
 

@@ -30,32 +30,19 @@ struct ImageRect {
     UICoord size;
 };
 
-struct WidgetImpl {
+struct WidgetStyle {
     /* There are 4 layers: Border, background, foreground and text and
      * by default all are enabled. Setting any of the colours of these
      * layers to Colour::NONE will deactivate drawing of the layer
      * for performance reasons. We track that here */
     uint8_t active_layers_ = ~0;
 
-    Px text_width_ = 0;
-    Px text_height_ = 0;
-
-    Px requested_width_ = -1;
-    Px requested_height_ = -1;
-
-    Px content_width_ = 0;
-    Px content_height_ = 0;
-
     UInt4 padding_ = {0, 0, 0, 0};
-
     Px border_width_ = 1;
     PackedColour4444 border_colour_ = Colour::BLACK;
-
     TextAlignment text_alignment_ = TEXT_ALIGNMENT_CENTER;
 
-    unicode text_;
-    OverflowType overflow_;
-    ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+    OverflowType overflow_ = OVERFLOW_TYPE_AUTO;
 
     TexturePtr background_image_;
     ImageRect background_image_rect_;
@@ -71,25 +58,7 @@ struct WidgetImpl {
      * as px. This is so changes in font size still work correctly */
     Rem line_height_ = Rem(1.1f);
 
-    bool is_focused_ = false;
-    WidgetPtr focus_next_ = nullptr;
-    WidgetPtr focus_previous_ = nullptr;
-
     float opacity_ = 1.0f;
-
-    /*
-     * We regularly need to rebuild the text submesh. Wiping out vertex data
-     * is cumbersome and slow, so instead we wipe the submesh indexes and add
-     * them here, then used these indexes as necessary when rebuilding
-     */
-    std::set<uint16_t> available_indexes_;
-
-    /* A normalized vector representing the relative
-     * anchor position for movement (0, 0 == bottom left) */
-    smlt::Vec2 anchor_point_;
-    bool anchor_point_dirty_;
-
-    std::set<uint8_t> fingers_down_;
 };
 
 
@@ -121,6 +90,7 @@ class Widget:
     DEFINE_SIGNAL(WidgetClickedSignal, signal_clicked);
     DEFINE_SIGNAL(WidgetFocusedSignal, signal_focused);
     DEFINE_SIGNAL(WidgetBlurredSignal, signal_blurred);
+
 public:
     typedef std::shared_ptr<Widget> ptr;
 
@@ -220,7 +190,7 @@ public:
     const AABB& aabb() const override;
 
     const unicode& text() const {
-        return pimpl_->text_;
+        return text_;
     }
 
     // Probably shouldn't use these directly (designed for UIManager)
@@ -258,12 +228,39 @@ private:
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
 protected:
+    /* Allow sharing a style across composite widgets */
+    void set_style(std::shared_ptr<WidgetStyle> style);
+
     friend class Keyboard; // For set_font calls on child widgets
 
     UIManager* owner_ = nullptr;
     FontPtr font_ = nullptr;
 
-    WidgetImpl* pimpl_ = nullptr;
+    std::shared_ptr<WidgetStyle> style_;
+
+    ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+
+    Px text_width_ = 0;
+    Px text_height_ = 0;
+
+    Px requested_width_ = -1;
+    Px requested_height_ = -1;
+
+    Px content_width_ = 0;
+    Px content_height_ = 0;
+
+    unicode text_;
+
+    bool is_focused_ = false;
+    WidgetPtr focus_next_ = nullptr;
+    WidgetPtr focus_previous_ = nullptr;
+
+    /* A normalized vector representing the relative
+     * anchor position for movement (0, 0 == bottom left) */
+    smlt::Vec2 anchor_point_;
+    bool anchor_point_dirty_;
+
+    uint16_t fingers_down_ = 0;
 
     virtual void on_size_changed();
 

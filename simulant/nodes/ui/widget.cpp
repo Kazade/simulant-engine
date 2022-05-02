@@ -11,13 +11,14 @@
 namespace smlt {
 namespace ui {
 
+
 Widget::Widget(UIManager *owner, UIConfig *defaults):
     TypedDestroyableObject<Widget, UIManager>(owner),
     ContainerNode(owner->stage(), STAGE_NODE_TYPE_OTHER),
     owner_(owner),
-    pimpl_(new WidgetImpl()) {
+    style_(std::make_shared<WidgetStyle>()) {
 
-    pimpl_->line_height_ = defaults->line_height_;
+    style_->line_height_ = defaults->line_height_;
 
     set_foreground_colour(defaults->foreground_colour_);
     set_background_colour(defaults->background_colour_);
@@ -36,15 +37,15 @@ Widget::Widget(UIManager *owner, UIConfig *defaults):
 }
 
 Widget::~Widget() {
-    if(pimpl_->focus_next_ && pimpl_->focus_next_->pimpl_->focus_previous_ == this) {
-        pimpl_->focus_next_->pimpl_->focus_previous_ = nullptr;
+    if(focus_next_ && focus_next_->focus_previous_ == this) {
+        focus_next_->focus_previous_ = nullptr;
     }
 
-    if(pimpl_->focus_previous_ && pimpl_->focus_previous_->pimpl_->focus_next_ == this) {
-        pimpl_->focus_previous_->pimpl_->focus_next_ = nullptr;
+    if(focus_previous_ && focus_previous_->focus_next_ == this) {
+        focus_previous_->focus_next_ = nullptr;
     }
 
-    delete pimpl_;
+    style_.reset();
 }
 
 bool Widget::init() {
@@ -137,22 +138,22 @@ void Widget::resize(Rem width, Rem height) {
 }
 
 void Widget::resize(Px width, Px height) {
-    if(pimpl_->requested_width_ == width && pimpl_->requested_height_ == height) {
+    if(requested_width_ == width && requested_height_ == height) {
         return;
     }
 
     if(width == -1 && height > -1) {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
+        resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     } else if(width == -1 && height == -1) {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+        resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     } else if(width > -1 && height == -1) {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+        resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
     } else {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIXED;
+        resize_mode_ = RESIZE_MODE_FIXED;
     }
 
-    pimpl_->requested_width_ = width;
-    pimpl_->requested_height_ = height;
+    requested_width_ = width;
+    requested_height_ = height;
     on_size_changed();
 }
 
@@ -167,7 +168,7 @@ void Widget::render_text() {
     };
 
     if(!font_ || text().empty()) {
-        pimpl_->text_width_ = pimpl_->text_height_ = 0;
+        text_width_ = text_height_ = 0;
         return;
     }
 
@@ -190,11 +191,11 @@ void Widget::render_text() {
      * or if we have a fixed height, but unfixed width. Otherwise the right bound is
      * the requested width */
     Px right_bound = (
-        pimpl_->resize_mode_ == RESIZE_MODE_FIT_CONTENT ||
-        pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT
+        resize_mode_ == RESIZE_MODE_FIT_CONTENT ||
+        resize_mode_ == RESIZE_MODE_FIXED_HEIGHT
     ) ?
     std::numeric_limits<int>::max() :
-    std::max(Px(0), (pimpl_->requested_width_ - (pimpl_->padding_.left + pimpl_->padding_.right)));
+    std::max(Px(0), (requested_width_ - (style_->padding_.left + style_->padding_.right)));
 
     Px left = left_bound;
     uint32_t line_start = 0;
@@ -205,7 +206,7 @@ void Widget::render_text() {
     auto text_ptr = &text()[0];
     auto text_length = text().length();
 
-    auto line_height = Px(font_->size()) * pimpl_->line_height_;
+    auto line_height = Px(font_->size()) * style_->line_height_;
     auto line_height_shift = std::floor((line_height.value - font_->size() - font_->line_gap()) * 0.5f);
 
     for(uint32_t i = 0; i < text_length; ++i) {
@@ -346,14 +347,14 @@ void Widget::render_text() {
 
     auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
-    pimpl_->text_width_ = max_length;
-    pimpl_->text_height_ = line_height.value * line_ranges.size();
+    text_width_ = max_length;
+    text_height_ = line_height.value * line_ranges.size();
 
     /* Shift the text depending on the difference in padding */
     auto diff = padding().left - padding().right;
 
     auto global_x_shift = diff.value; //(std::abs(min_x) - std::abs(max_x)) * 0.5f;
-    auto global_y_shift = round(pimpl_->text_height_.value * 0.5f);
+    auto global_y_shift = round(text_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
     auto idata = sm->index_data.get();
@@ -387,7 +388,7 @@ void Widget::render_text() {
         auto p = v.xyz + Vec3(global_x_shift, global_y_shift, 0);
         vdata->position(p);
         vdata->tex_coord0(v.uv);
-        vdata->diffuse(pimpl_->text_colour_);
+        vdata->diffuse(style_->text_colour_);
         vdata->move_next();
 
         idata->index(idx++);
@@ -505,53 +506,53 @@ void Widget::rebuild() {
     render_text();
 
     auto content_area = calculate_content_dimensions(
-        pimpl_->text_width_,
-        pimpl_->text_height_
+        text_width_,
+        text_height_
     );
 
-    pimpl_->content_width_ = content_area.width;
-    pimpl_->content_height_ = content_area.height;
+    content_width_ = content_area.width;
+    content_height_ = content_area.height;
 
     auto background_bounds = calculate_background_size(content_area);
     auto foreground_bounds = calculate_foreground_size(content_area);
 
     auto border_bounds = background_bounds;
-    border_bounds.min.x -= pimpl_->border_width_;
-    border_bounds.min.y -= pimpl_->border_width_;
-    border_bounds.max.x += pimpl_->border_width_;
-    border_bounds.max.y += pimpl_->border_width_;
+    border_bounds.min.x -= style_->border_width_;
+    border_bounds.min.y -= style_->border_width_;
+    border_bounds.max.x += style_->border_width_;
+    border_bounds.max.y += style_->border_width_;
 
     if(border_active() && border_width() > 0) {
-        auto colour = pimpl_->border_colour_;
-        colour.set_alpha(colour.af() * pimpl_->opacity_);
+        auto colour = style_->border_colour_;
+        colour.set_alpha(colour.af() * style_->opacity_);
         /* FIXME! This should be 4 rectangles or a tri-strip */
         new_rectangle("border", border_bounds, colour);
     }
 
     if(has_background_image()) {
-        materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(pimpl_->background_image_);
+        materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(style_->background_image_);
     }
 
     if(background_active() && background_bounds.has_non_zero_area()) {
-        auto colour = pimpl_->background_colour_;
-        colour.set_alpha(colour.af() * pimpl_->opacity_);
+        auto colour = style_->background_colour_;
+        colour.set_alpha(colour.af() * style_->opacity_);
 
         auto bg = new_rectangle("background", background_bounds, colour);
         if(has_background_image()) {
-            apply_image_rect(bg, pimpl_->background_image_, pimpl_->background_image_rect_);
+            apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
         }
     }
 
     if(has_foreground_image()) {
-        materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(pimpl_->foreground_image_);
+        materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(style_->foreground_image_);
     }
 
     if(foreground_active() && foreground_bounds.has_non_zero_area()) {
-        auto colour = pimpl_->foreground_colour_;
-        colour.set_alpha(colour.af() * pimpl_->opacity_);
+        auto colour = style_->foreground_colour_;
+        colour.set_alpha(colour.af() * style_->opacity_);
         auto fg = new_rectangle("foreground", foreground_bounds, colour);
         if(has_foreground_image()) {
-            apply_image_rect(fg, pimpl_->foreground_image_, pimpl_->foreground_image_rect_);
+            apply_image_rect(fg, style_->foreground_image_, style_->foreground_image_rect_);
         }
     }
 
@@ -559,8 +560,8 @@ void Widget::rebuild() {
     auto width = border_bounds.width().value;
     auto height = border_bounds.height().value;
 
-    float xoff = -((pimpl_->anchor_point_.x * width) - (width / 2.0f));
-    float yoff = -((pimpl_->anchor_point_.y * height) - (height / 2.0f));
+    float xoff = -((anchor_point_.x * width) - (width / 2.0f));
+    float yoff = -((anchor_point_.y * height) - (height / 2.0f));
     auto& vdata = mesh_->vertex_data;
     for(auto i = 0u; i < vdata->count(); ++i) {
         auto p = *vdata->position_at<smlt::Vec3>(i);
@@ -571,7 +572,7 @@ void Widget::rebuild() {
     }
     vdata->done();
 
-    pimpl_->anchor_point_dirty_ = false;
+    anchor_point_dirty_ = false;
     finalize_build();
 }
 
@@ -580,18 +581,18 @@ Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dime
 
     // FIXME: Clipping + other modes
     if(resize_mode() == RESIZE_MODE_FIXED) {
-        box_width = pimpl_->requested_width_.value;
-        box_height = pimpl_->requested_height_.value;
-    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        box_width = pimpl_->requested_width_.value;
-        box_height = content_dimensions.height + pimpl_->padding_.top + pimpl_->padding_.bottom;
-    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
-        box_width = content_dimensions.width + pimpl_->padding_.left + pimpl_->padding_.right;
-        box_height = pimpl_->requested_height_.value;
+        box_width = requested_width_.value;
+        box_height = requested_height_.value;
+    } else if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
+        box_width = requested_width_.value;
+        box_height = content_dimensions.height + style_->padding_.top + style_->padding_.bottom;
+    } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
+        box_width = content_dimensions.width + style_->padding_.left + style_->padding_.right;
+        box_height = requested_height_.value;
     } else {
         /* Fit content */
-        box_width = content_dimensions.width + pimpl_->padding_.left + pimpl_->padding_.right;
-        box_height = content_dimensions.height + pimpl_->padding_.top + pimpl_->padding_.bottom;
+        box_width = content_dimensions.width + style_->padding_.left + style_->padding_.right;
+        box_height = content_dimensions.height + style_->padding_.top + style_->padding_.bottom;
     }
 
     auto hw = (int16_t) std::ceil(float(box_width.value) * 0.5f);
@@ -612,24 +613,24 @@ UIDim Widget::calculate_content_dimensions(Px text_width, Px text_height) {
 }
 
 void Widget::set_border_width(Px x) {
-    if(pimpl_->border_width_ == x) {
+    if(style_->border_width_ == x) {
         return;
     }
 
-    pimpl_->border_width_ = x;
+    style_->border_width_ = x;
     rebuild();
 }
 
 Px Widget::border_width() const {
-    return pimpl_->border_width_;
+    return style_->border_width_;
 }
 
 void Widget::set_border_colour(const Colour &colour) {
-    if(pimpl_->border_colour_ == PackedColour4444(colour)) {
+    if(style_->border_colour_ == PackedColour4444(colour)) {
         return;
     }
 
-    pimpl_->border_colour_ = colour;
+    style_->border_colour_ = colour;
     _recalc_active_layers();
     rebuild();
 }
@@ -639,20 +640,20 @@ void Widget::set_padding(Px x) {
 }
 
 void Widget::set_text(const unicode &text) {
-    if(pimpl_->text_ == text) {
+    if(text_ == text) {
         return;
     }
 
-    pimpl_->text_ = text;
+    text_ = text;
     on_size_changed();
 }
 
 void Widget::set_text_alignment(TextAlignment alignment) {
-    pimpl_->text_alignment_ = alignment;
+    style_->text_alignment_ = alignment;
 }
 
 TextAlignment Widget::text_alignment() const {
-    return pimpl_->text_alignment_;
+    return style_->text_alignment_;
 }
 
 void Widget::on_size_changed() {
@@ -660,23 +661,23 @@ void Widget::on_size_changed() {
 }
 
 bool Widget::border_active() const {
-    return (pimpl_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BORDER));
+    return (style_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BORDER));
 }
 
 bool Widget::background_active() const {
-    return (pimpl_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BACKGROUND));
+    return (style_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BACKGROUND));
 }
 
 bool Widget::foreground_active() const {
-    return (pimpl_->active_layers_ & (1 << WIDGET_LAYER_INDEX_FOREGROUND));
+    return (style_->active_layers_ & (1 << WIDGET_LAYER_INDEX_FOREGROUND));
 }
 
 void Widget::_recalc_active_layers() {
-    pimpl_->active_layers_ = (
-        (pimpl_->border_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER |
-        (pimpl_->background_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
-        (pimpl_->foreground_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
-        (pimpl_->text_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_TEXT
+    style_->active_layers_ = (
+        (style_->border_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER |
+        (style_->background_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
+        (style_->foreground_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
+        (style_->text_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_TEXT
     );
 }
 
@@ -685,11 +686,11 @@ const AABB &Widget::aabb() const {
 }
 
 void Widget::set_background_image(TexturePtr texture) {
-    if(pimpl_->background_image_ == texture) {
+    if(style_->background_image_ == texture) {
         return;
     }
 
-    pimpl_->background_image_ = texture;
+    style_->background_image_ = texture;
 
     auto dim = texture->dimensions();
     // Triggers a rebuild
@@ -700,22 +701,22 @@ void Widget::set_background_image(TexturePtr texture) {
 }
 
 void Widget::set_background_image_source_rect(const UICoord& bottom_left, const UICoord& size) {
-    if(pimpl_->background_image_rect_.bottom_left == bottom_left && pimpl_->background_image_rect_.size == size) {
+    if(style_->background_image_rect_.bottom_left == bottom_left && style_->background_image_rect_.size == size) {
         // Nothing to do
         return;
     }
 
-    pimpl_->background_image_rect_.bottom_left = bottom_left;
-    pimpl_->background_image_rect_.size = size;
+    style_->background_image_rect_.bottom_left = bottom_left;
+    style_->background_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_foreground_image(TexturePtr texture) {
-    if(pimpl_->foreground_image_ == texture) {
+    if(style_->foreground_image_ == texture) {
         return;
     }
 
-    pimpl_->foreground_image_ = texture;
+    style_->foreground_image_ = texture;
 
     auto dim = texture->dimensions();
 
@@ -727,72 +728,72 @@ void Widget::set_foreground_image(TexturePtr texture) {
 }
 
 void Widget::set_foreground_image_source_rect(const UICoord& bottom_left, const UICoord& size) {
-    if(pimpl_->foreground_image_rect_.bottom_left == bottom_left && pimpl_->foreground_image_rect_.size == size) {
+    if(style_->foreground_image_rect_.bottom_left == bottom_left && style_->foreground_image_rect_.size == size) {
         // Nothing to do
         return;
     }
 
-    pimpl_->foreground_image_rect_.bottom_left = bottom_left;
-    pimpl_->foreground_image_rect_.size = size;
+    style_->foreground_image_rect_.bottom_left = bottom_left;
+    style_->foreground_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_background_colour(const Colour& colour) {
-    assert(pimpl_);
+    assert(style_);
 
-    if(pimpl_->background_colour_ == colour) {
+    if(style_->background_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    pimpl_->background_colour_ = colour;
+    style_->background_colour_ = colour;
 
     _recalc_active_layers();
     rebuild();
 }
 
 void Widget::set_foreground_colour(const Colour& colour) {
-    if(pimpl_->foreground_colour_ == colour) {
+    if(style_->foreground_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    pimpl_->foreground_colour_ = colour;
+    style_->foreground_colour_ = colour;
 
     _recalc_active_layers();
     rebuild();
 }
 
 void Widget::set_text_colour(const Colour &colour) {
-    if(pimpl_->text_colour_ == colour) {
+    if(style_->text_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    pimpl_->text_colour_ = colour;
+    style_->text_colour_ = colour;
     _recalc_active_layers();
     rebuild();
 }
 
 Px Widget::requested_width() const {
-    return pimpl_->requested_width_;
+    return requested_width_;
 }
 
 Px Widget::requested_height() const {
-    return pimpl_->requested_height_;
+    return requested_height_;
 }
 
 Px Widget::content_width() const {
-    return pimpl_->content_width_; // Content area
+    return content_width_; // Content area
 }
 
 Px Widget::content_height() const {
-    return pimpl_->content_height_;
+    return content_height_;
 }
 
 Px Widget::outer_width() const {
     if(requested_width() == -1) {
-        return content_width() + (pimpl_->border_width_ * 2) + padding().left + padding().right;
+        return content_width() + (style_->border_width_ * 2) + padding().left + padding().right;
     } else {
         return requested_width();
     }
@@ -800,78 +801,79 @@ Px Widget::outer_width() const {
 
 Px Widget::outer_height() const {
     if(requested_height() == -1) {
-        return content_height() + (pimpl_->border_width_ * 2) + padding().top + padding().bottom;
+        return content_height() + (style_->border_width_ * 2) + padding().top + padding().bottom;
     } else {
         return requested_height();
     }
 }
 
 bool Widget::set_resize_mode(ResizeMode resize_mode) {
-    if(resize_mode == pimpl_->resize_mode_) {
+    if(resize_mode == resize_mode_) {
         return false;
     }
 
-    pimpl_->resize_mode_ = resize_mode;
+    resize_mode_ = resize_mode;
     on_size_changed();
     return true;
 }
 
 ResizeMode Widget::resize_mode() const {
-    return pimpl_->resize_mode_;
+    return resize_mode_;
 }
 
 bool Widget::has_background_image() const {
-    return bool(pimpl_->background_image_);
+    return bool(style_->background_image_);
 }
 
 bool Widget::has_foreground_image() const {
-    return bool(pimpl_->foreground_image_);
+    return bool(style_->foreground_image_);
 }
 
 void Widget::set_padding(Px left, Px right, Px bottom, Px top) {
-    if(left == pimpl_->padding_.left &&
-        right == pimpl_->padding_.right &&
-        bottom == pimpl_->padding_.bottom &&
-        top == pimpl_->padding_.top) {
+    if(left == style_->padding_.left &&
+        right == style_->padding_.right &&
+        bottom == style_->padding_.bottom &&
+        top == style_->padding_.top) {
 
         return;
     }
 
-    pimpl_->padding_.left = left;
-    pimpl_->padding_.right = right;
-    pimpl_->padding_.bottom = bottom;
-    pimpl_->padding_.top = top;
+    style_->padding_.left = left;
+    style_->padding_.right = right;
+    style_->padding_.bottom = bottom;
+    style_->padding_.top = top;
     rebuild();
 }
 
 UInt4 Widget::padding() const {
-    return pimpl_->padding_;
+    return style_->padding_;
 }
 
 bool Widget::is_pressed_by_finger(uint8_t finger_id) {
-    return pimpl_->fingers_down_.find(finger_id) != pimpl_->fingers_down_.end();
+    return fingers_down_ & (1 << finger_id);
 }
 
 void Widget::force_release() {
-    auto fingers_down = pimpl_->fingers_down_; // Copy, fingerup will delete from fingers_down_
-    for(auto& finger_id: fingers_down) {
-        fingerup(finger_id);
+    for(int i = 0; i < 16; ++i) {
+        if(fingers_down_ & (1 << i)) {
+            fingerup(i);
+        }
     }
 }
 
 Vec2 Widget::anchor_point() const {
-    return pimpl_->anchor_point_;
+    return anchor_point_;
 }
 
 void Widget::set_opacity(RangeValue<0, 1> alpha) {
-    if(pimpl_->opacity_ != alpha) {
-        pimpl_->opacity_ = alpha;
+    if(style_->opacity_ != alpha) {
+        style_->opacity_ = alpha;
         rebuild();
     }
 }
 
 Px Widget::line_height() const {
-    return Px(font_->size()) * pimpl_->line_height_;
+    return Px(font_->size()) * style_->line_height_;
 }
 
 void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPriority new_priority) {
@@ -882,26 +884,41 @@ void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPrior
     actor_->set_render_priority(new_priority);
 }
 
+void Widget::set_style(std::shared_ptr<WidgetStyle> style) {
+    style_ = style;
+    rebuild();
+}
+
 void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
-    if(pimpl_->anchor_point_.x != (float) x || pimpl_->anchor_point_.y != (float) y) {
-        pimpl_->anchor_point_ = smlt::Vec2(x, y);
-        pimpl_->anchor_point_dirty_ = true;
+    if(anchor_point_.x != (float) x || anchor_point_.y != (float) y) {
+        anchor_point_ = smlt::Vec2(x, y);
+        anchor_point_dirty_ = true;
     }
 }
 
 void Widget::fingerdown(uint8_t finger_id) {
     // If we added, and it was the first finger down
-    if(pimpl_->fingers_down_.insert(finger_id).second && pimpl_->fingers_down_.size() == 1) {
-        // Emit the widget pressed signal
-        signal_pressed_();
+
+    bool first = !fingers_down_;
+
+    if(!(fingers_down_ & (1 << finger_id))) {
+        fingers_down_ |= (1 << finger_id);
+
+        if(first) {
+            // Emit the widget pressed signal
+            signal_pressed_();
+        }
     }
 }
 
 void Widget::fingerup(uint8_t finger_id) {
-    // If we just released the last finger, emit a widget released signal
-    if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
-        signal_released_();
-        signal_clicked_();
+    if((fingers_down_ & (1 << finger_id))) {
+        fingers_down_ &= ~(1 << finger_id);
+        if(!fingers_down_) {
+            // If we just released the last finger, emit a widget released signal
+            signal_released_();
+            signal_clicked_();
+        }
     }
 }
 
@@ -916,40 +933,44 @@ void Widget::fingermove(uint8_t finger_id) {
 
 void Widget::fingerleave(uint8_t finger_id) {
     // Same as fingerup, but we don't fire the click signal
-    if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
-        signal_released_();
+    if((fingers_down_ & (1 << finger_id))) {
+        fingers_down_ &= ~(1 << finger_id);
+        if(!fingers_down_) {
+            // If we just released the last finger, emit a widget released signal
+            signal_released_();
+        }
     }
 }
 
 bool Widget::is_focused() const {
-    return pimpl_->is_focused_;
+    return is_focused_;
 }
 
 void Widget::set_focus_previous(WidgetPtr previous_widget) {
-    pimpl_->focus_previous_ = previous_widget;
-    if(pimpl_->focus_previous_) {
-        pimpl_->focus_previous_->pimpl_->focus_next_ = this;
+    focus_previous_ = previous_widget;
+    if(focus_previous_) {
+        focus_previous_->focus_next_ = this;
     }
 }
 
 void Widget::set_focus_next(WidgetPtr next_widget) {
-    pimpl_->focus_next_ = next_widget;
-    if(pimpl_->focus_next_) {
-        pimpl_->focus_next_->pimpl_->focus_previous_ = this;
+    focus_next_ = next_widget;
+    if(focus_next_) {
+        focus_next_->focus_previous_ = this;
     }
 }
 
 void Widget::focus() {
     auto focused = focused_in_chain_or_this();
     if(focused == this) {
-        if(!pimpl_->is_focused_) {
-            pimpl_->is_focused_ = true;
+        if(!is_focused_) {
+            is_focused_ = true;
             signal_focused_();
         }
         return;
     } else {
         focused->blur();
-        pimpl_->is_focused_ = true;
+        is_focused_ = true;
         signal_focused_();
     }
 }
@@ -959,7 +980,7 @@ WidgetPtr Widget::focused_in_chain() {
 
     // If we got back this element, but this element isn't focused
     // then return null
-    if(ret == this && !pimpl_->is_focused_) {
+    if(ret == this && !is_focused_) {
         return nullptr;
     }
 
@@ -967,20 +988,20 @@ WidgetPtr Widget::focused_in_chain() {
 }
 
 WidgetPtr Widget::focused_in_chain_or_this() {
-    auto next = pimpl_->focus_next_;
+    auto next = focus_next_;
     while(next && next != this) {
         if(next->is_focused()) {
             return next;
         }
-        next = next->pimpl_->focus_next_;
+        next = next->focus_next_;
     }
 
-    auto previous = pimpl_->focus_previous_;
+    auto previous = focus_previous_;
     while(previous && previous != this) {
         if(previous->is_focused()) {
             return previous;
         }
-        previous = previous->pimpl_->focus_previous_;
+        previous = previous->focus_previous_;
     }
 
     return this;
@@ -991,7 +1012,7 @@ void Widget::on_transformation_change_attempted() {
     // (rather than if it happens)
     // because the anchor point may change and someone might
     // call move_to with the same position
-    if(pimpl_->anchor_point_dirty_) {
+    if(anchor_point_dirty_) {
         // Reconstruct which will clear the dirty flag
         rebuild();
     }
@@ -1013,8 +1034,8 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
     // If something is focused
     if(focused) {
         // Focus the next in the chain, otherwise focus the first in the chain
-        if(focused->pimpl_->focus_next_) {
-            to_focus = focused->pimpl_->focus_next_;
+        if(focused->focus_next_) {
+            to_focus = focused->focus_next_;
         } else {
             to_focus = first_in_focus_chain();
         }
@@ -1036,7 +1057,7 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
     }
 
     if(to_focus) {
-        to_focus->pimpl_->is_focused_ = true;
+        to_focus->is_focused_ = true;
         to_focus->signal_focused_();
     }
 }
@@ -1057,8 +1078,8 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
     // If something is focused
     if(focused) {
         // Focus the previous in the chain, otherwise focus the last in the chain
-        if(focused->pimpl_->focus_previous_) {
-            to_focus = focused->pimpl_->focus_previous_;
+        if(focused->focus_previous_) {
+            to_focus = focused->focus_previous_;
         } else {
             to_focus = last_in_focus_chain();
         }
@@ -1080,15 +1101,15 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
     }
 
     if(to_focus) {
-        to_focus->pimpl_->is_focused_ = true;
+        to_focus->is_focused_ = true;
         to_focus->signal_focused_();
     }
 }
 
 WidgetPtr Widget::first_in_focus_chain() {
     auto search = this;
-    while(search->pimpl_->focus_previous_) {
-        search = search->pimpl_->focus_previous_;
+    while(search->focus_previous_) {
+        search = search->focus_previous_;
     }
 
     return search;
@@ -1096,24 +1117,24 @@ WidgetPtr Widget::first_in_focus_chain() {
 
 WidgetPtr Widget::last_in_focus_chain() {
     auto search = this;
-    while(search->pimpl_->focus_next_) {
-        search = search->pimpl_->focus_next_;
+    while(search->focus_next_) {
+        search = search->focus_next_;
     }
 
     return search;
 }
 
 void Widget::blur() {
-    pimpl_->is_focused_ = false;
+    is_focused_ = false;
     signal_blurred_();
 }
 
 WidgetPtr Widget::next_in_focus_chain() const {
-    return pimpl_->focus_next_;
+    return focus_next_;
 }
 
 WidgetPtr Widget::previous_in_focus_chain() const {
-    return pimpl_->focus_previous_;
+    return focus_previous_;
 }
 
 void Widget::click() {

@@ -44,6 +44,9 @@ public:
 private:
     void move_row(int dir);
 
+    std::shared_ptr<WidgetStyle> default_style_;
+    std::shared_ptr<WidgetStyle> highlighted_style_;
+
     KeyboardLayout layout_ = KEYBOARD_LAYOUT_ALPHABETICAL;
     std::map<char, Button*> buttons_;
 
