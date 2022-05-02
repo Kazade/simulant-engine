@@ -59,7 +59,12 @@ bool Widget::init() {
     actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
 
-    for(auto& material: materials_) {
+    for(auto& material: style_->materials_) {
+        /* Only create materials if necessary */
+        if(material) {
+            continue;
+        }
+
         material = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         if(!material) {
             S_ERROR("[CRITICAL] Unable to load the material for widgets!");
@@ -71,9 +76,9 @@ bool Widget::init() {
     }
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh_with_material("border", materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("background", materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("foreground", materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh_with_material("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
     mesh_->new_submesh_with_material("text", font_->material(), MESH_ARRANGEMENT_QUADS);
 
     rebuild();
@@ -530,7 +535,7 @@ void Widget::rebuild() {
     }
 
     if(has_background_image()) {
-        materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(style_->background_image_);
+        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(style_->background_image_);
     }
 
     if(background_active() && background_bounds.has_non_zero_area()) {
@@ -544,7 +549,7 @@ void Widget::rebuild() {
     }
 
     if(has_foreground_image()) {
-        materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(style_->foreground_image_);
+        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(style_->foreground_image_);
     }
 
     if(foreground_active() && foreground_bounds.has_non_zero_area()) {

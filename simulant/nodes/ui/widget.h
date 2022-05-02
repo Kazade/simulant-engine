@@ -59,6 +59,8 @@ struct WidgetStyle {
     Rem line_height_ = Rem(1.1f);
 
     float opacity_ = 1.0f;
+
+    MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 };
 
 
@@ -211,9 +213,9 @@ public:
 
     Px line_height() const;
 public:
-    MaterialPtr border_material() const { return materials_[0]; }
-    MaterialPtr background_material() const { return materials_[1]; }
-    MaterialPtr foreground_material() const { return materials_[2]; }
+    MaterialPtr border_material() const { return style_->materials_[0]; }
+    MaterialPtr background_material() const { return style_->materials_[1]; }
+    MaterialPtr foreground_material() const { return style_->materials_[2]; }
 
 private:
     void on_render_priority_changed(
@@ -224,8 +226,6 @@ private:
 
     ActorPtr actor_ = nullptr;
     MeshPtr mesh_ = nullptr;
-
-    MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 
 protected:
     /* Allow sharing a style across composite widgets */
