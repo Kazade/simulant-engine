@@ -170,14 +170,20 @@ public:
         id new_id;
         EntryWithMeta* ewm = find_free_entry(&new_id);
 
+        assert(!ewm->meta.reserved);
+
         // Ensure further calls do not return this entry!
         ewm->meta.reserved = 1;
-
-        /* Construct the object */
-        T* ret = new (ewm->data) T(std::forward<Args>(args)...);
-
-        // We're all good now
-        ewm->meta.reserved = 0;
+        T* ret = nullptr;
+        try {
+            /* Construct the object */
+            ret = new (ewm->data) T(std::forward<Args>(args)...);
+            // We're all good now
+            ewm->meta.reserved = 0;
+        } catch(...) {
+            ewm->meta.reserved = 0;
+            throw;
+        }
 
         alloc_entry(ewm, (T*) ewm->data);
 
