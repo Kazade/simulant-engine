@@ -59,7 +59,12 @@ public:
     UIManager(Stage* stage, StageNodePool* pool, UIConfig config=UIConfig());
     virtual ~UIManager();
 
-    Button* new_widget_as_button(const unicode& text, Px width=-1, Px height=-1);
+    Button* new_widget_as_button(
+        const unicode& text,
+        Px width=-1, Px height=-1,
+        std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>()
+    );
+
     Label* new_widget_as_label(const unicode& text, Px width=-1, Px height=-1);
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TexturePtr& texture);

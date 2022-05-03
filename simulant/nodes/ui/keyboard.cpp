@@ -170,7 +170,12 @@ void Keyboard::generate_numerical_layout() {
     };
 
     auto new_button = [this](std::string label) -> smlt::ui::Button* {
-        auto btn = owner_->new_widget_as_button(label);
+        Button* btn = nullptr;
+        if(default_style_ && highlighted_style_) {
+            btn = owner_->new_widget_as_button(label, -1, -1, default_style_);
+        } else {
+            btn = owner_->new_widget_as_button(label, -1, -1);
+        }
 
         /* We style the style of the first button as the "default" and set
          * this on all subsequent buttons. We steal the style of the second button
@@ -183,13 +188,14 @@ void Keyboard::generate_numerical_layout() {
 
             default_style_ = btn->style_;
         } else if(!highlighted_style_) {
-            btn->set_background_colour(smlt::Colour::NONE);
+            btn->set_background_colour(UIConfig().highlight_colour_);
             btn->set_border_colour(smlt::Colour::NONE);
             btn->set_border_width(0);
             btn->set_padding(0);
 
             highlighted_style_ = btn->style_;
-            highlighted_style_->background_colour_ = UIConfig().highlight_colour_;
+
+            btn->set_style(default_style_);
         }
 
         btn->resize(64, 32);
@@ -255,7 +261,12 @@ void Keyboard::generate_alphabetical_layout() {
     };
 
     auto new_button = [this](std::string label) -> smlt::ui::Button* {
-        auto btn = owner_->new_widget_as_button(label);
+        Button* btn = nullptr;
+        if(default_style_ && highlighted_style_) {
+            btn = owner_->new_widget_as_button(label, -1, -1, default_style_);
+        } else {
+            btn = owner_->new_widget_as_button(label, -1, -1);
+        }
 
         /* We style the style of the first button as the "default" and set
          * this on all subsequent buttons. We steal the style of the second button
@@ -268,18 +279,18 @@ void Keyboard::generate_alphabetical_layout() {
 
             default_style_ = btn->style_;
         } else if(!highlighted_style_) {
-            btn->set_background_colour(smlt::Colour::NONE);
+            btn->set_background_colour(UIConfig().highlight_colour_);
             btn->set_border_colour(smlt::Colour::NONE);
             btn->set_border_width(0);
             btn->set_padding(0);
 
             highlighted_style_ = btn->style_;
-            highlighted_style_->background_colour_ = UIConfig().highlight_colour_;
+
+            btn->set_style(default_style_);
         }
 
         assert(default_style_ != highlighted_style_);
 
-        btn->set_style(default_style_);
         btn->resize(32, 32);
         btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
         btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));

@@ -12,17 +12,19 @@ namespace smlt {
 namespace ui {
 
 
-Widget::Widget(UIManager *owner, UIConfig *defaults):
+Widget::Widget(UIManager *owner, UIConfig *defaults, std::shared_ptr<WidgetStyle> shared_style):
     TypedDestroyableObject<Widget, UIManager>(owner),
     ContainerNode(owner->stage(), STAGE_NODE_TYPE_OTHER),
     owner_(owner),
-    style_(std::make_shared<WidgetStyle>()) {
+    style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {
 
-    style_->line_height_ = defaults->line_height_;
+    if(!shared_style) {
+        style_->line_height_ = defaults->line_height_;
 
-    set_foreground_colour(defaults->foreground_colour_);
-    set_background_colour(defaults->background_colour_);
-    set_text_colour(defaults->text_colour_);
+        set_foreground_colour(defaults->foreground_colour_);
+        set_background_colour(defaults->background_colour_);
+        set_text_colour(defaults->text_colour_);
+    }
 
     std::string family = (defaults->font_family_.empty()) ?
         get_app()->config->ui.font_family : defaults->font_family_;

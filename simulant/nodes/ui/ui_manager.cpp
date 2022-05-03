@@ -86,8 +86,8 @@ Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, con
     return frame;
 }
 
-Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height) {
-    auto button = manager_->make_as<Button>(this, &config_);
+Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height, std::shared_ptr<WidgetStyle> shared_style) {
+    auto button = manager_->make_as<Button>(this, &config_, shared_style);
     button->set_text(text);
     button->resize(width, height);
     stage_->add_child(button);
