@@ -137,6 +137,43 @@ void Texture::set_format(TextureFormat format) {
     resize_data(byte_size);
 }
 
+bool Texture::is_paletted_format() const {
+    switch(format_) {
+    case TEXTURE_FORMAT_RGB565_PALETTED4:
+    case TEXTURE_FORMAT_RGB565_PALETTED8:
+    case TEXTURE_FORMAT_RGB8_PALETTED4:
+    case TEXTURE_FORMAT_RGB8_PALETTED8:
+    case TEXTURE_FORMAT_RGBA8_PALETTED4:
+    case TEXTURE_FORMAT_RGBA8_PALETTED8:
+        return true;
+    default:
+        return false;
+    }
+}
+
+uint32_t Texture::palette_size() const {
+    if(!is_paletted_format()) {
+        return 0;
+    }
+
+    if(format_ == TEXTURE_FORMAT_RGB565_PALETTED4) {
+        return 16 * 2;
+    } else if(format_ == TEXTURE_FORMAT_RGB565_PALETTED8) {
+        return 256 * 2;
+    } else if(format_ == TEXTURE_FORMAT_RGB8_PALETTED4) {
+        return 16 * 3;
+    } else if(format_ == TEXTURE_FORMAT_RGB8_PALETTED8) {
+        return 256 * 3;
+    } else if(format_ == TEXTURE_FORMAT_RGBA8_PALETTED4) {
+        return 16 * 4;
+    } else if(format_ == TEXTURE_FORMAT_RGBA8_PALETTED8) {
+        return 256 * 4;
+    }
+
+    assert(0 && "Unhandled paletted format");
+    return 0;
+}
+
 void Texture::resize(uint16_t width, uint16_t height, uint32_t data_size) {
     if(width_ == width && height_ == height && data_size_ == data_size) {
         return;
@@ -378,9 +415,21 @@ uint32_t Texture::data_size() const {
     return data_size_;
 }
 
-void Texture::set_data(const uint8_t* data, std::size_t size) {
+void Texture::set_data(const uint8_t* data, std::size_t size) {    
     resize_data(size);
     std::copy(data, data + size, data_);
+
+    /* If we're using palettes, and our renderer doesn't support them, then we need to emulate
+     * by storing a copy of the data in RAM so that if we change the palette, we can
+     * reupload */
+    if(is_paletted_format() && !renderer_->natively_supports_texture_format(format_)) {
+        if(paletted_data_) {
+            delete [] paletted_data_;
+        }
+
+        paletted_data_ = new uint8_t[data_size()];
+        std::copy(data_, data_ + data_size(), paletted_data_);
+    }
 }
 
 void Texture::save_to_file(const Path& filename) {
@@ -488,8 +537,7 @@ std::vector<uint8_t> Texture::data_copy() const {
 }
 
 void Texture::set_data(const std::vector<uint8_t> &d) {
-    resize_data(d.size()); // Marks data_dirty_ == true
-    std::copy(d.begin(), d.end(), data_);
+    set_data(&d[0], d.size());
 }
 
 void Texture::_set_has_mipmaps(bool v) {

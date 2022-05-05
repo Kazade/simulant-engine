@@ -73,6 +73,64 @@ public:
         uint16_t* third_pixel = (uint16_t*) &tex->data()[4];
         assert_equal(*third_pixel, expected3);
     }
+
+    void test_paletted_textures() {
+        auto tex = application->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_RGB565_PALETTED4);
+
+        const uint32_t texel_size = 2;
+
+        assert_true(tex->is_paletted_format());
+        assert_equal(tex->data_size(), (tex->width() * tex->height() * texel_size) + tex->palette_size());
+
+        uint8_t data [] = {
+            // Palette (2 bytes per colour, 16 colours)
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 0,
+            0, 1, 2, 3  /* Indexes */
+        };
+
+        tex->set_data(data, tex->data_size());
+        tex->flush();
+
+        assert_false(tex->has_data());
+
+        uint8_t new_palette [] = {
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+            1, 0,
+        };
+
+        assert_equal(sizeof(new_palette), tex->palette_size());
+
+        // FIXME: tex->update_palette(new_palette);
+    }
 };
 
 
