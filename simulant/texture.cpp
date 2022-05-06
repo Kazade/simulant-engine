@@ -430,10 +430,6 @@ uint8_t* Texture::_stash_paletted_data() {
     return paletted_data_;
 }
 
-uint8_t *Texture::_paletted_data() const {
-    return paletted_data_;
-}
-
 void Texture::save_to_file(const Path& filename) {
     _S_UNUSED(filename);
     assert(0 && "Not Implemented");
