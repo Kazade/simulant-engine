@@ -97,6 +97,11 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
 }
 
 Texture::~Texture() {
+    if(paletted_data_) {
+        delete [] paletted_data_;
+        paletted_data_ = nullptr;
+    }
+
     free();
 }
 
