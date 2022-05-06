@@ -158,16 +158,78 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         auto format = convert_format(f);
         auto internal_format = texture_format_to_internal_format(f);
         auto type = convert_type(f);
+        auto data = &texture->data()[0];
+
+        bool hardware_palettes_supported = GLAD_GL_OES_compressed_paletted_texture;
+        bool paletted = texture->is_paletted_format();
+        std::vector<uint8_t> new_data;
+
+        if(paletted) {
+            /* Paletted textures need some additional work. If we can support them
+             * in hardware, we do, otherwise the data gets copied to the paletted_data
+             * and unpacked before upload */
+            if(hardware_palettes_supported) {
+                /* We can upload directly! Set the types appropriately!*/
+                internal_format = (f == TEXTURE_FORMAT_RGB565_PALETTED4) ? GL_PALETTE4_R5_G6_B5_OES :
+                                  (f == TEXTURE_FORMAT_RGB565_PALETTED8) ? GL_PALETTE8_R5_G6_B5_OES :
+                                  (f == TEXTURE_FORMAT_RGB8_PALETTED4) ? GL_PALETTE4_RGB8_OES :
+                                  (f == TEXTURE_FORMAT_RGB8_PALETTED8) ? GL_PALETTE8_RGB8_OES :
+                                  (f == TEXTURE_FORMAT_RGBA8_PALETTED4) ? GL_PALETTE4_RGBA8_OES :
+                                  GL_PALETTE4_RGBA8_OES;
+                type = GL_UNSIGNED_BYTE;  /* Is this correct??? */
+            } else {
+                /* It's unpack time! */
+                uint8_t* palette = texture->_stash_paletted_data();
+                uint8_t* indexed = palette + texture->palette_size();
+
+                auto half_byte = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGBA8_PALETTED4);
+                auto texel_size = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB565_PALETTED8) ? 2 :
+                                  (f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4) ? 3 : 4;
+
+                for(int i = 0; i < texture->width() * texture->height(); ++i) {
+                    uint8_t current_byte = indexed[i];
+
+                    if(half_byte) {
+                        uint8_t index = (current_byte & 0xF0) >> 4;
+
+                        for(int j = 0; j < texel_size; ++j) {
+                            new_data.push_back(palette[index + j]);
+                        }
+
+                        index = (current_byte & 0x0F) >> 0;
+
+                        for(int j = 0; j < texel_size; ++j) {
+                            new_data.push_back(palette[index + j]);
+                        }
+
+                        i++; // We've done two texels in one iteration so skip
+                    } else {
+                        for(int j = 0; j < texel_size; ++j) {
+                            new_data.push_back(palette[current_byte + j]);
+                        }
+                    }
+                }
+
+                /* We want to use the new data, not what was uploaded by the user. That
+                 * data is now stashed in the palette */
+                data = &new_data[0];
+                internal_format = (texel_size == 4) ? GL_RGBA : GL_RGB;
+                type = (texel_size == 2) ? GL_UNSIGNED_SHORT_5_6_5 : (texel_size == 3) ? GL_RGB : GL_RGBA;
+            }
+        }
 
         if(format > 0 && type > 0) {
-            if(texture->is_compressed()) {
+            /* Paletted textures are uploaded using glCompressedTexImage2D if the
+             * OES_compressed_paletted_texture extension is available */
+
+            if(texture->is_compressed() || (hardware_palettes_supported && paletted)) {
                 GLCheck(glCompressedTexImage2D,
                     GL_TEXTURE_2D,
                     0,
                     format,
                     texture->width(), texture->height(), 0,
                     texture->data_size(),
-                    &texture->data()[0]
+                    data
                 );
             } else {
                 GLCheck(glTexImage2D,
@@ -175,7 +237,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                     0, internal_format,
                     texture->width(), texture->height(), 0,
                     format,
-                    type, &texture->data()[0]
+                    type, data
                 );
 
                 if(texture_format_contains_mipmaps(f)) {

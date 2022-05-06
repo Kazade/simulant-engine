@@ -418,18 +418,20 @@ uint32_t Texture::data_size() const {
 void Texture::set_data(const uint8_t* data, std::size_t size) {    
     resize_data(size);
     std::copy(data, data + size, data_);
+}
 
-    /* If we're using palettes, and our renderer doesn't support them, then we need to emulate
-     * by storing a copy of the data in RAM so that if we change the palette, we can
-     * reupload */
-    if(is_paletted_format() && !renderer_->natively_supports_texture_format(format_)) {
-        if(paletted_data_) {
-            delete [] paletted_data_;
-        }
-
-        paletted_data_ = new uint8_t[data_size()];
-        std::copy(data_, data_ + data_size(), paletted_data_);
+uint8_t* Texture::_stash_paletted_data() {
+    if(paletted_data_) {
+        delete [] paletted_data_;
     }
+
+    paletted_data_ = new uint8_t[data_size()];
+    std::copy(data_, data_ + data_size(), paletted_data_);
+    return paletted_data_;
+}
+
+uint8_t *Texture::_paletted_data() const {
+    return paletted_data_;
 }
 
 void Texture::save_to_file(const Path& filename) {

@@ -315,6 +315,9 @@ public:
     /** INTERNAL: returns true if the filters are dirty */
     bool _params_dirty() const;
     void _set_has_mipmaps(bool v);
+
+    /** INTERNAL: copy the current data to the paletted data array */
+    uint8_t* _stash_paletted_data();
 private:
     Renderer* renderer_ = nullptr;
 
