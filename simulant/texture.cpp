@@ -124,6 +124,18 @@ std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint1
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
             /* 2048 byte codebook, 8bpp per 2x2 */
             return 2048 + ((width / 2) * (height / 2));
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+            return (2 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
+            return (2 * 256) + ((width * height));
+        case TEXTURE_FORMAT_RGB8_PALETTED4:
+            return (3 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGB8_PALETTED8:
+            return (3 * 256) + ((width * height));
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+            return (4 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
+            return (4 * 256) + ((width * height));
         default:
             break;
     }
