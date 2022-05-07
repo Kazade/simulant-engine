@@ -465,9 +465,10 @@ bool Application::run_frame() {
     run_update(dt);
 
     asset_manager_->update(time_keeper->delta_time());
-    asset_manager_->run_garbage_collection();
 
     update_idle_tasks_and_coroutines();
+
+    asset_manager_->run_garbage_collection();
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
