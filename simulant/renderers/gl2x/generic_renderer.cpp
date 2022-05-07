@@ -67,7 +67,6 @@ GPUProgramID GenericRenderer::default_gpu_program_id() const {
 }
 
 GenericRenderer::GenericRenderer(Window *window):
-    Renderer(window),
     GLRenderer(window),
     buffer_manager_(VBOManager::create()) {
 

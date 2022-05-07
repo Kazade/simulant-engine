@@ -28,6 +28,19 @@ public:
         assert_true(label->height() > label2->height());
     }
 
+    void test_materials_freed() {
+        auto mc = stage_->assets->material_count();
+
+        auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
+        assert_equal(stage_->assets->material_count(), mc + 3);  /* background, foreground, border */
+
+        label->destroy();
+        application->run_frame();
+        application->run_frame();
+
+        assert_equal(stage_->assets->material_count(), mc); /* Destroyed */
+    }
+
     void test_foreground_and_background_images_differ() {
         auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
 

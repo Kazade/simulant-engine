@@ -35,14 +35,6 @@ namespace loaders {
         font->descent_ = float(descent) * font->scale_;
         font->line_gap_ = float(line_gap) * font->scale_;
 
-        // Generate a new texture for rendering the font to
-        auto texture = font->texture_ = font->asset_manager().new_texture(
-            TEXTURE_WIDTH,
-            TEXTURE_HEIGHT,
-            TEXTURE_FORMAT_R_1UB_8
-        );
-
-        texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
         if(charset != CHARACTER_SET_LATIN) {
             throw std::runtime_error("Unsupported character set - please submit a patch!");
@@ -65,23 +57,51 @@ namespace loaders {
             (stbtt_bakedchar*) &font->char_data_[0]
         );
 
-        texture->set_data(out_buffer, tmp_buffer.size());
+        /* We create a 16 colour paletted texture. This is an RGBA texture
+         * where the colour is white with 16 levels of alpha. We then pack
+         * into 4bpp data. This means that a 512x512 texture takes up less than
+         * 150kb - essential for memory constrained systems. */
 
-        S_DEBUG("F: Converting font texture from 32bit -> 16bit");
+        S_DEBUG("Converting to paletted format");
+        std::vector<uint8_t> palette_data;
+        for(int i = 0; i < 16; ++i) {
+            palette_data.push_back(255);
+            palette_data.push_back(255);
+            palette_data.push_back(255);
+            palette_data.push_back((i * 17));
+        }
 
-        // Convert from 32bpp to 16bpp
-        texture->convert(
-            TEXTURE_FORMAT_RGBA_1US_4444,
-            {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
+        for(std::size_t i = 0; i < tmp_buffer.size(); i += 2) {
+            uint8_t t0 = tmp_buffer[i];
+            uint8_t t1 = tmp_buffer[i + 1];
+            uint8_t i0 = t0 >> 4;
+            uint8_t i1 = t1 >> 4;
+            palette_data.push_back((i0 << 4) | i1);
+        }
+
+        S_DEBUG("Finished conversion");
+
+        // Generate a new texture for rendering the font to
+        auto texture = font->texture_ = font->asset_manager().new_texture(
+            TEXTURE_WIDTH,
+            TEXTURE_HEIGHT,
+            TEXTURE_FORMAT_RGBA8_PALETTED4
         );
 
+#if defined(__DREAMCAST__)
+        /* FIXME: Implement 4bpp mipmap generation in GLdc */
+        texture->set_mipmap_generation(MIPMAP_GENERATE_NONE);
+#endif
+
+        texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+        texture->set_data(palette_data);
+        texture->set_free_data_mode(TEXTURE_FREE_DATA_AFTER_UPLOAD);
         texture->flush();
-        S_DEBUG("F: Finished conversion");
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_diffuse_map(font->texture_);
 
-        font->material_->pass(0)->set_blend_func(BLEND_ALPHA);
+        font->material_->set_blend_func(BLEND_ALPHA);
         font->material_->set_depth_test_enabled(false);
         font->material_->set_cull_mode(CULL_MODE_NONE);
 

@@ -83,6 +83,14 @@ enum TextureFormat {
     TEXTURE_FORMAT_ARGB_1US_4444_TWID,
     TEXTURE_FORMAT_ARGB_1US_1555_TWID,
 
+    // Paletted formats
+    TEXTURE_FORMAT_RGB8_PALETTED4,
+    TEXTURE_FORMAT_RGBA8_PALETTED4,
+    TEXTURE_FORMAT_RGB565_PALETTED4,
+    TEXTURE_FORMAT_RGB8_PALETTED8,
+    TEXTURE_FORMAT_RGBA8_PALETTED8,
+    TEXTURE_FORMAT_RGB565_PALETTED8,
+    
     // Dreamcast PVR VQ compressed
     TEXTURE_FORMAT_RGB_1US_565_VQ_TWID,
     TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID,
@@ -148,6 +156,23 @@ public:
     TextureFormat format() const;
     void set_format(TextureFormat format);
 
+    /** Returns true if this is a paletted texture format */
+    bool is_paletted_format() const;
+
+    /** Returns the size in bytes of the palette for paletted
+     *  textures. Returns 0 if the format is not paletted */
+    uint32_t palette_size() const;
+
+    /**
+     *  Changes the current palette. The palette must be sizes
+     *  correctly based on the format. This will return false
+     *  if a previous palette and data has not been supplied
+     *  through set_data() etc.
+     *
+     *  NOT YET IMPLEMENTED! PATCHES WELCOME!
+     */
+    bool update_palette(const uint8_t* palette);
+
     /** Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
     void convert(
         TextureFormat new_format,
@@ -198,16 +223,20 @@ public:
     /** Return a copy of the internal data array */
     std::vector<uint8_t> data_copy() const;
 
+    /** Returns the current in-ram data. For paletted texture the data
+     *  will be prefixed with the palette. */
     const uint8_t* data() const;
 
     /** Returns the size of the currently allocated data
      *  buffer, this will be zero if the data only
-     *  exists in vram */
+     *  exists in vram. For paletted texture this will be the size of the data plus
+     *  the size of the palette. */
     uint32_t data_size() const;
 
     /** The required size that data() should be to hold a texture in this format with these dimensions.
       * For non-compressed formats this is usually the width * height * stride. For compressed formats
-      * this can vary, and will include any space for things like codebooks.
+      * this can vary, and will include any space for things like codebooks. For paletted textures
+      * this will return the size of the index data + plus the size of the palette
     */
     static std::size_t required_data_size(TextureFormat fmt, uint16_t width, uint16_t height);
 
@@ -286,6 +315,9 @@ public:
     /** INTERNAL: returns true if the filters are dirty */
     bool _params_dirty() const;
     void _set_has_mipmaps(bool v);
+
+    /** INTERNAL: copy the current data to the paletted data array */
+    uint8_t* _stash_paletted_data();
 private:
     Renderer* renderer_ = nullptr;
 
@@ -303,6 +335,17 @@ private:
     bool data_dirty_ = true;
     uint8_t* data_ = nullptr;
     uint32_t data_size_ = 0;
+
+    /* This is used to store the palette, followed by the index data if:
+     * - The format is a paletted format
+     * - OES_compressed_paletted_texture is unsupported.
+     *
+     * If OES_compressed_paletted_texture is supported then paletted data is
+     * uploaded directly. If it is not, then we store the paletted_data here
+     * and keep it resident in RAM so we can update the main data if the palette
+     * changes */
+    uint8_t* paletted_data_ = nullptr;
+
     TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
 
     MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;
