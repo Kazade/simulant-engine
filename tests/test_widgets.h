@@ -36,7 +36,6 @@ public:
 
         label->destroy();
         application->run_frame();
-        application->run_frame();
 
         assert_equal(stage_->assets->material_count(), mc); /* Destroyed */
     }
