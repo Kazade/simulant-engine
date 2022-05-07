@@ -68,13 +68,15 @@ namespace loaders {
             palette_data.push_back(255);
             palette_data.push_back(255);
             palette_data.push_back(255);
-            palette_data.push_back((i * 15.9375f));
+            palette_data.push_back((i * 17));
         }
 
         for(std::size_t i = 0; i < tmp_buffer.size(); i += 2) {
             uint8_t t0 = tmp_buffer[i];
             uint8_t t1 = tmp_buffer[i + 1];
-            palette_data.push_back((t0 >> 4) << 4 | (t1 >> 4));
+            uint8_t i0 = t0 >> 4;
+            uint8_t i1 = t1 >> 4;
+            palette_data.push_back((i0 << 4) | i1);
         }
 
         S_DEBUG("Finished conversion");
@@ -86,15 +88,20 @@ namespace loaders {
             TEXTURE_FORMAT_RGBA8_PALETTED4
         );
 
+#if defined(__DREAMCAST__)
+        /* FIXME: Implement 4bpp mipmap generation in GLdc */
+        texture->set_mipmap_generation(MIPMAP_GENERATE_NONE);
+#endif
+
         texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
         texture->set_data(palette_data);
+        texture->set_free_data_mode(TEXTURE_FREE_DATA_AFTER_UPLOAD);
         texture->flush();
-
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_diffuse_map(font->texture_);
 
-        font->material_->pass(0)->set_blend_func(BLEND_ALPHA);
+        font->material_->set_blend_func(BLEND_ALPHA);
         font->material_->set_depth_test_enabled(false);
         font->material_->set_cull_mode(CULL_MODE_NONE);
 
