@@ -77,10 +77,8 @@ public:
     void test_paletted_textures() {
         auto tex = application->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_RGB565_PALETTED4);
 
-        const uint32_t texel_size = 2;
-
         assert_true(tex->is_paletted_format());
-        assert_equal(tex->data_size(), (tex->width() * tex->height() * texel_size) + tex->palette_size());
+        assert_equal(tex->data_size(), ((tex->width() * tex->height()) / 2) + tex->palette_size());
 
         uint8_t data [] = {
             // Palette (2 bytes per colour, 16 colours)
