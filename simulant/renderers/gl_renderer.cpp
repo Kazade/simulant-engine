@@ -73,6 +73,10 @@ uint32_t GLRenderer::convert_format(TextureFormat format) {
             return GL_RED;
         case TEXTURE_FORMAT_RGB_3UB_888:
         case TEXTURE_FORMAT_RGB_1US_565:
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
+        case TEXTURE_FORMAT_RGB8_PALETTED4:
+        case TEXTURE_FORMAT_RGB8_PALETTED8:
             return GL_RGB;
         case TEXTURE_FORMAT_ARGB_1US_4444:
         case TEXTURE_FORMAT_ARGB_1US_1555:
@@ -80,6 +84,8 @@ uint32_t GLRenderer::convert_format(TextureFormat format) {
         case TEXTURE_FORMAT_RGBA_1US_4444:
         case TEXTURE_FORMAT_RGBA_1US_5551:
         case TEXTURE_FORMAT_RGBA_4UB_8888:
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
             return GL_RGBA;
 #ifdef __DREAMCAST__
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
@@ -106,6 +112,12 @@ uint32_t GLRenderer::convert_type(TextureFormat format) {
     case TEXTURE_FORMAT_R_1UB_8:
     case TEXTURE_FORMAT_RGB_3UB_888:
     case TEXTURE_FORMAT_RGBA_4UB_8888:
+    case TEXTURE_FORMAT_RGB565_PALETTED4:
+    case TEXTURE_FORMAT_RGB565_PALETTED8:
+    case TEXTURE_FORMAT_RGB8_PALETTED4:
+    case TEXTURE_FORMAT_RGB8_PALETTED8:
+    case TEXTURE_FORMAT_RGBA8_PALETTED4:
+    case TEXTURE_FORMAT_RGBA8_PALETTED8:
         return GL_UNSIGNED_BYTE;
     case TEXTURE_FORMAT_RGB_1US_565:
         return GL_UNSIGNED_SHORT_5_6_5;
@@ -160,7 +172,14 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         auto type = convert_type(f);
         auto data = &texture->data()[0];
 
+#if defined(__DREAMCAST__)
+        bool hardware_palettes_supported = true;
+#elif defined(__PSP__)
+        /* FIXME: Does PSP GL support this? Unlikely... */
+        bool hardware_palettes_supported = false;
+#else
         bool hardware_palettes_supported = GLAD_GL_OES_compressed_paletted_texture;
+#endif
         bool paletted = texture->is_paletted_format();
         std::vector<uint8_t> new_data;
 
@@ -170,12 +189,12 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
              * and unpacked before upload */
             if(hardware_palettes_supported) {
                 /* We can upload directly! Set the types appropriately!*/
-                internal_format = (f == TEXTURE_FORMAT_RGB565_PALETTED4) ? GL_PALETTE4_R5_G6_B5_OES :
-                                  (f == TEXTURE_FORMAT_RGB565_PALETTED8) ? GL_PALETTE8_R5_G6_B5_OES :
-                                  (f == TEXTURE_FORMAT_RGB8_PALETTED4) ? GL_PALETTE4_RGB8_OES :
-                                  (f == TEXTURE_FORMAT_RGB8_PALETTED8) ? GL_PALETTE8_RGB8_OES :
-                                  (f == TEXTURE_FORMAT_RGBA8_PALETTED4) ? GL_PALETTE4_RGBA8_OES :
-                                  GL_PALETTE4_RGBA8_OES;
+                format = (f == TEXTURE_FORMAT_RGB565_PALETTED4) ? GL_PALETTE4_R5_G6_B5_OES :
+                          (f == TEXTURE_FORMAT_RGB565_PALETTED8) ? GL_PALETTE8_R5_G6_B5_OES :
+                          (f == TEXTURE_FORMAT_RGB8_PALETTED4) ? GL_PALETTE4_RGB8_OES :
+                          (f == TEXTURE_FORMAT_RGB8_PALETTED8) ? GL_PALETTE8_RGB8_OES :
+                          (f == TEXTURE_FORMAT_RGBA8_PALETTED4) ? GL_PALETTE4_RGBA8_OES :
+                          GL_PALETTE4_RGBA8_OES;
                 type = GL_UNSIGNED_BYTE;  /* Is this correct??? */
             } else {
                 /* It's unpack time! */
@@ -186,26 +205,23 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 auto texel_size = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB565_PALETTED8) ? 2 :
                                   (f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4) ? 3 : 4;
 
-                for(int i = 0; i < texture->width() * texture->height(); ++i) {
+                for(int i = 0; i < (texture->width() * texture->height()) / 2; ++i) {
                     uint8_t current_byte = indexed[i];
 
                     if(half_byte) {
                         uint8_t index = (current_byte & 0xF0) >> 4;
-
                         for(int j = 0; j < texel_size; ++j) {
-                            new_data.push_back(palette[index + j]);
+                            new_data.push_back(palette[(index * texel_size) + j]);
                         }
 
                         index = (current_byte & 0x0F) >> 0;
 
                         for(int j = 0; j < texel_size; ++j) {
-                            new_data.push_back(palette[index + j]);
+                            new_data.push_back(palette[(index * texel_size) + j]);
                         }
-
-                        i++; // We've done two texels in one iteration so skip
                     } else {
                         for(int j = 0; j < texel_size; ++j) {
-                            new_data.push_back(palette[current_byte + j]);
+                            new_data.push_back(palette[(current_byte * texel_size) + j]);
                         }
                     }
                 }
@@ -213,8 +229,8 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 /* We want to use the new data, not what was uploaded by the user. That
                  * data is now stashed in the palette */
                 data = &new_data[0];
-                internal_format = (texel_size == 4) ? GL_RGBA : GL_RGB;
-                type = (texel_size == 2) ? GL_UNSIGNED_SHORT_5_6_5 : (texel_size == 3) ? GL_RGB : GL_RGBA;
+                format = internal_format = (texel_size == 4) ? GL_RGBA : GL_RGB;
+                type = (texel_size == 2) ? GL_UNSIGNED_SHORT_5_6_5 : GL_UNSIGNED_BYTE;
             }
         }
 
@@ -344,6 +360,20 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
     if(active != (GLint) target) {
         GLCheck(glBindTexture, GL_TEXTURE_2D, active);
     }
+}
+
+bool GLRenderer::texture_format_is_native(TextureFormat fmt) {
+    /* We handle conversion of paletted textures automatically */
+    if(fmt == TEXTURE_FORMAT_RGB565_PALETTED4 ||
+        fmt == TEXTURE_FORMAT_RGB565_PALETTED8 ||
+        fmt == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+        fmt == TEXTURE_FORMAT_RGB8_PALETTED8 ||
+        fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
+        fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
+        return true;
+    }
+
+    return Renderer::texture_format_is_native(fmt);
 }
 
 }

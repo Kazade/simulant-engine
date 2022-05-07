@@ -87,7 +87,6 @@ std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visi
 }
 
 smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
-    Renderer(window),
     GLRenderer(window) {
 }
 
