@@ -97,6 +97,11 @@ Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint
 }
 
 Texture::~Texture() {
+    if(paletted_data_) {
+        delete [] paletted_data_;
+        paletted_data_ = nullptr;
+    }
+
     free();
 }
 
@@ -119,6 +124,18 @@ std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint1
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
             /* 2048 byte codebook, 8bpp per 2x2 */
             return 2048 + ((width / 2) * (height / 2));
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+            return (2 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
+            return (2 * 256) + ((width * height));
+        case TEXTURE_FORMAT_RGB8_PALETTED4:
+            return (3 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGB8_PALETTED8:
+            return (3 * 256) + ((width * height));
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+            return (4 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
+            return (4 * 256) + ((width * height));
         default:
             break;
     }
@@ -135,6 +152,43 @@ void Texture::set_format(TextureFormat format) {
 
     auto byte_size = required_data_size(format, width_, height_);
     resize_data(byte_size);
+}
+
+bool Texture::is_paletted_format() const {
+    switch(format_) {
+    case TEXTURE_FORMAT_RGB565_PALETTED4:
+    case TEXTURE_FORMAT_RGB565_PALETTED8:
+    case TEXTURE_FORMAT_RGB8_PALETTED4:
+    case TEXTURE_FORMAT_RGB8_PALETTED8:
+    case TEXTURE_FORMAT_RGBA8_PALETTED4:
+    case TEXTURE_FORMAT_RGBA8_PALETTED8:
+        return true;
+    default:
+        return false;
+    }
+}
+
+uint32_t Texture::palette_size() const {
+    if(!is_paletted_format()) {
+        return 0;
+    }
+
+    if(format_ == TEXTURE_FORMAT_RGB565_PALETTED4) {
+        return 16 * 2;
+    } else if(format_ == TEXTURE_FORMAT_RGB565_PALETTED8) {
+        return 256 * 2;
+    } else if(format_ == TEXTURE_FORMAT_RGB8_PALETTED4) {
+        return 16 * 3;
+    } else if(format_ == TEXTURE_FORMAT_RGB8_PALETTED8) {
+        return 256 * 3;
+    } else if(format_ == TEXTURE_FORMAT_RGBA8_PALETTED4) {
+        return 16 * 4;
+    } else if(format_ == TEXTURE_FORMAT_RGBA8_PALETTED8) {
+        return 256 * 4;
+    }
+
+    assert(0 && "Unhandled paletted format");
+    return 0;
 }
 
 void Texture::resize(uint16_t width, uint16_t height, uint32_t data_size) {
@@ -378,9 +432,19 @@ uint32_t Texture::data_size() const {
     return data_size_;
 }
 
-void Texture::set_data(const uint8_t* data, std::size_t size) {
+void Texture::set_data(const uint8_t* data, std::size_t size) {    
     resize_data(size);
     std::copy(data, data + size, data_);
+}
+
+uint8_t* Texture::_stash_paletted_data() {
+    if(paletted_data_) {
+        delete [] paletted_data_;
+    }
+
+    paletted_data_ = new uint8_t[data_size()];
+    std::copy(data_, data_ + data_size(), paletted_data_);
+    return paletted_data_;
 }
 
 void Texture::save_to_file(const Path& filename) {
@@ -488,8 +552,7 @@ std::vector<uint8_t> Texture::data_copy() const {
 }
 
 void Texture::set_data(const std::vector<uint8_t> &d) {
-    resize_data(d.size()); // Marks data_dirty_ == true
-    std::copy(d.begin(), d.end(), data_);
+    set_data(&d[0], d.size());
 }
 
 void Texture::_set_has_mipmaps(bool v) {

@@ -73,8 +73,7 @@ private:
 typedef ObjectManager<GPUProgramID, GPUProgram, DO_REFCOUNT> GPUProgramManager;
 
 class GenericRenderer:
-    public Renderer,
-    private GLRenderer {
+    public GLRenderer {
 
 public:
     GenericRenderer(Window* window);
@@ -123,18 +122,6 @@ private:
     std::shared_ptr<GPUBuffer> buffer_stash_;
 
     friend class GL2RenderQueueVisitor;
-
-    void on_texture_prepare(Texture* texture) override {
-        GLRenderer::on_texture_prepare(texture);
-    }
-
-    void on_texture_register(TextureID tex_id, Texture* texture) override {
-        GLRenderer::on_texture_register(tex_id, texture);
-    }
-
-    void on_texture_unregister(TextureID tex_id, Texture* texture) override {
-        GLRenderer::on_texture_unregister(tex_id, texture);
-    }
 };
 
 }
