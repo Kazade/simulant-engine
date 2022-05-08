@@ -21,8 +21,8 @@ namespace loaders {
 
         stbtt_fontinfo* info = font->info_.get();
 
-        const std::string buffer_string((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>());
-        const unsigned char* buffer = (const unsigned char*) buffer_string.c_str();
+        std::vector<char> data((std::istreambuf_iterator<char>(*this->data_)), std::istreambuf_iterator<char>());
+        const unsigned char* buffer = (const unsigned char*) &data[0];
         // Initialize the font data
         stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
 
@@ -34,7 +34,6 @@ namespace loaders {
         font->ascent_ = float(ascent) * font->scale_;
         font->descent_ = float(descent) * font->scale_;
         font->line_gap_ = float(line_gap) * font->scale_;
-
 
         if(charset != CHARACTER_SET_LATIN) {
             throw std::runtime_error("Unsupported character set - please submit a patch!");
@@ -57,6 +56,10 @@ namespace loaders {
             (stbtt_bakedchar*) &font->char_data_[0]
         );
 
+        /* We don't need the file data anymore */
+        data.clear();
+        data.shrink_to_fit();
+
         /* We create a 16 colour paletted texture. This is an RGBA texture
          * where the colour is white with 16 levels of alpha. We then pack
          * into 4bpp data. This means that a 512x512 texture takes up less than
@@ -78,6 +81,10 @@ namespace loaders {
             uint8_t i1 = t1 >> 4;
             palette_data.push_back((i0 << 4) | i1);
         }
+
+        /* We're done with this now */
+        tmp_buffer.clear();
+        tmp_buffer.shrink_to_fit();
 
         S_DEBUG("Finished conversion");
 
