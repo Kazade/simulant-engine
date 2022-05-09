@@ -82,13 +82,13 @@ std::size_t texture_format_channels(TextureFormat format) {
 
 Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
     Asset(asset_manager),
-    generic::Identifiable<TextureID>(id) {
+    generic::Identifiable<TextureID>(id),
+    width_(width),
+    height_(height) {
 
     S_DEBUG("Creating texture {0}x{1}", width, height);
-    resize(width, height);
-
     S_DEBUG("Setting format to: {0}", format);
-    set_format(format);
+    set_format(format);  /* This will allocate the data */
 
     /* We intentionally don't mark data dirty here. All that would happen is
      * we would upload a blank texture */
