@@ -117,6 +117,13 @@ private:
         AssetManager* assets, AssetManager* shared_assets,
         const std::string& family, const Px& size, const FontWeight &weight
     );
+
+    MaterialPtr global_background_material_;
+    MaterialPtr global_foreground_material_;
+    MaterialPtr global_border_material_;
+
+    MaterialPtr clone_global_background_material();
+    MaterialPtr clone_global_foreground_material();
 };
 
 }

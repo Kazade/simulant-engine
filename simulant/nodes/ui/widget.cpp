@@ -61,21 +61,10 @@ bool Widget::init() {
     actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
 
-    for(auto& material: style_->materials_) {
-        /* Only create materials if necessary */
-        if(material) {
-            continue;
-        }
-
-        material = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-        if(!material) {
-            S_ERROR("[CRITICAL] Unable to load the material for widgets!");
-            return false;
-        }
-        material->set_blend_func(BLEND_ALPHA);
-        material->set_depth_test_enabled(false);
-        material->set_cull_mode(CULL_MODE_NONE);
-    }
+    /* Use the global materials until we can't anymore! */
+    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = owner_->global_border_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = owner_->global_background_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->global_foreground_material_;
 
     /* Now we must create the submeshes in the order we want them rendered */
     mesh_->new_submesh_with_material("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
@@ -536,10 +525,6 @@ void Widget::rebuild() {
         new_rectangle("border", border_bounds, colour);
     }
 
-    if(has_background_image()) {
-        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(style_->background_image_);
-    }
-
     if(background_active() && background_bounds.has_non_zero_area()) {
         auto colour = style_->background_colour_;
         colour.set_alpha(colour.af() * style_->opacity_);
@@ -548,10 +533,6 @@ void Widget::rebuild() {
         if(has_background_image()) {
             apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
         }
-    }
-
-    if(has_foreground_image()) {
-        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(style_->foreground_image_);
     }
 
     if(foreground_active() && foreground_bounds.has_non_zero_area()) {
@@ -697,7 +678,16 @@ void Widget::set_background_image(TexturePtr texture) {
         return;
     }
 
+    assert(owner_->global_background_material_);
+
+    if(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] == owner_->global_background_material_) {
+        /* We need to switch to an independent material and can't use the global one anymore */
+        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = owner_->clone_global_background_material();
+        mesh_->find_submesh("background")->set_material(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]);
+    }
+
     style_->background_image_ = texture;
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(style_->background_image_);
 
     auto dim = texture->dimensions();
     // Triggers a rebuild
@@ -723,7 +713,16 @@ void Widget::set_foreground_image(TexturePtr texture) {
         return;
     }
 
+    assert(owner_->global_foreground_material_);
+
+    if(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] == owner_->global_foreground_material_) {
+        /* We need to switch to an independent material and can't use the global one anymore */
+        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->clone_global_foreground_material();
+        mesh_->find_submesh("foreground")->set_material(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]);
+    }
+
     style_->foreground_image_ = texture;
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(style_->foreground_image_);
 
     auto dim = texture->dimensions();
 

@@ -35,7 +35,7 @@ using namespace std::placeholders;
 
 UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
     stage_(stage),
-    config_(config) {
+    config_(config) {    
 
     manager_.reset(new WidgetManager(pool));
 
@@ -52,6 +52,26 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
     frame_finished_connection_ = get_app()->signal_frame_finished().connect([this]() {
         this->clear_event_queue();
     });
+
+    auto new_material = [&]() -> smlt::MaterialPtr {
+        auto material = stage_->asset_manager_->new_material_from_file(
+            Material::BuiltIns::TEXTURE_ONLY
+        );
+
+        if(!material) {
+            S_ERROR("[CRITICAL] Unable to load the material for widgets!");
+            return smlt::MaterialPtr();
+        }
+
+        material->set_blend_func(BLEND_ALPHA);
+        material->set_depth_test_enabled(false);
+        material->set_cull_mode(CULL_MODE_NONE);
+        return material;
+    };
+
+    global_background_material_ = new_material();
+    global_foreground_material_ = new_material();
+    global_border_material_ = new_material();
 }
 
 UIManager::~UIManager() {
@@ -359,6 +379,16 @@ FontPtr UIManager::_load_or_get_font(
     fnt = assets->new_font_from_file(loc.value(), flags);
     fnt->set_name(alias);
     return fnt;
+}
+
+MaterialPtr UIManager::clone_global_background_material() {
+    assert(global_background_material_);
+    return stage_->asset_manager_->clone_material(global_background_material_);
+}
+
+MaterialPtr UIManager::clone_global_foreground_material() {
+    assert(global_foreground_material_);
+    return stage_->asset_manager_->clone_material(global_foreground_material_);
 }
 
 }

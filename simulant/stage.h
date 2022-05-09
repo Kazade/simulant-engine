@@ -100,6 +100,9 @@ class Stage:
     DEFINE_SIGNAL(StagePreRenderSignal, signal_stage_pre_render);
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
 
+    /* Necessary to access asset_manager before the assets Property<> is initialized */
+    friend class ui::UIManager;
+
 public:
     Stage(
         StageManager *parent,
@@ -275,13 +278,14 @@ private:
     void set_partitioner(AvailablePartitioner partitioner);
 
     std::shared_ptr<Debug> debug_;
-    std::unique_ptr<ui::UIManager> ui_;
-
-    unicode name_;
 
     //FIXME: All managers should be composition rather than inheritence,
     // like this one!
     std::shared_ptr<AssetManager> asset_manager_;
+    std::unique_ptr<ui::UIManager> ui_;
+
+    unicode name_;
+
     smlt::Colour ambient_light_ = smlt::Colour(0.3, 0.3, 0.3, 1.0);
 
     std::unique_ptr<GeomManager> geom_manager_;
