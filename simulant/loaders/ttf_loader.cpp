@@ -2,6 +2,7 @@
 #include "ttf_loader.h"
 #include "../font.h"
 #include "../asset_manager.h"
+#include "../platform.h"
 
 namespace smlt {
 namespace loaders {
@@ -66,27 +67,6 @@ namespace loaders {
          * 150kb - essential for memory constrained systems. */
 
         S_DEBUG("Converting to paletted format");
-        std::vector<uint8_t> palette_data;
-        for(int i = 0; i < 16; ++i) {
-            palette_data.push_back(255);
-            palette_data.push_back(255);
-            palette_data.push_back(255);
-            palette_data.push_back((i * 17));
-        }
-
-        for(std::size_t i = 0; i < tmp_buffer.size(); i += 2) {
-            uint8_t t0 = tmp_buffer[i];
-            uint8_t t1 = tmp_buffer[i + 1];
-            uint8_t i0 = t0 >> 4;
-            uint8_t i1 = t1 >> 4;
-            palette_data.push_back((i0 << 4) | i1);
-        }
-
-        /* We're done with this now */
-        tmp_buffer.clear();
-        tmp_buffer.shrink_to_fit();
-
-        S_DEBUG("Finished conversion");
 
         // Generate a new texture for rendering the font to
         auto texture = font->texture_ = font->asset_manager().new_texture(
@@ -99,10 +79,31 @@ namespace loaders {
         /* FIXME: Implement 4bpp mipmap generation in GLdc */
         texture->set_mipmap_generation(MIPMAP_GENERATE_NONE);
 #endif
-
         texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
-        texture->set_data(palette_data);
         texture->set_free_data_mode(TEXTURE_FREE_DATA_AFTER_UPLOAD);
+        texture->mutate_data([&](uint8_t* palette_data, uint16_t, uint16_t, TextureFormat) {
+            uint8_t* pout = palette_data;
+            for(int i = 0; i < 16; ++i) {
+                *(pout++) = 255;
+                *(pout++) = 255;
+                *(pout++) = 255;
+                *(pout++) = (i * 17);
+            }
+
+            for(std::size_t i = 0; i < tmp_buffer.size(); i += 2) {
+                uint8_t t0 = tmp_buffer[i];
+                uint8_t t1 = tmp_buffer[i + 1];
+                uint8_t i0 = t0 >> 4;
+                uint8_t i1 = t1 >> 4;
+                *(pout++) = ((i0 << 4) | i1);
+            }
+        });
+
+        /* We're done with this now */
+        tmp_buffer.clear();
+        tmp_buffer.shrink_to_fit();
+        S_DEBUG("Finished conversion");
+
         texture->flush();
 
         font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
