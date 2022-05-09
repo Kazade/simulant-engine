@@ -32,7 +32,9 @@ public:
         auto mc = stage_->assets->material_count();
 
         auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
-        assert_equal(stage_->assets->material_count(), mc + 3);  /* background, foreground, border */
+        label->set_background_image(stage_->assets->new_texture(16, 16));
+        label->set_foreground_image(stage_->assets->new_texture(16, 16));
+        assert_equal(stage_->assets->material_count(), mc + 2);  /* background, foreground */
 
         label->destroy();
         application->run_frame();
