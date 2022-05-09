@@ -598,9 +598,13 @@ void AssetManager::destroy_sound(SoundID t) {
 MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect) {
     assert(mat_id && "No default material, called to early?");
 
-    auto& manager = material_manager_;
-    auto new_mat_id = manager.clone(mat_id);
-    manager.set_garbage_collection_method(new_mat_id, garbage_collect);
+    auto manager = &material_manager_;
+    if(!manager->contains(mat_id) && parent_) {
+        manager = &parent_->material_manager_;
+    }
+
+    auto new_mat_id = manager->clone(mat_id);
+    manager->set_garbage_collection_method(new_mat_id, garbage_collect);
 
     assert(new_mat_id);
     return material(new_mat_id);
