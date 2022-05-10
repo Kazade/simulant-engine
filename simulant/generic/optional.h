@@ -14,6 +14,10 @@ class optional {
 public:
     optional() = default;
 
+    ~optional() {
+        reset();
+    }
+
     template<typename U>
     optional(optional<U>&& other) {
         auto src = other.value_ptr();

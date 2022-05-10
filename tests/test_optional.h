@@ -16,6 +16,27 @@ public:
         assert_true(int2.has_value());
         assert_equal(int2.value(), 42);
     }
+
+    void test_destruction() {
+        bool called = false;
+        struct Thing {
+            Thing(bool& called):
+                called(called) {}
+
+            ~Thing() {
+                called = true;
+            }
+
+            bool& called;
+        };
+
+        Thing t(called);
+        {
+            smlt::optional<Thing> ot = std::move(t);
+        }
+
+        assert_true(called);
+    }
 };
 
 }
