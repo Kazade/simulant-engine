@@ -55,6 +55,49 @@ public:
         cr_await(ret);
         assert_true(called);
     }
+
+    void test_coroutine_order() {
+        /* All coroutines should run after each update */
+        int counter = 3;
+        std::vector<int> order;
+
+        std::function<void (int)> cb = [&](int a) {
+            /* Trigger a cr from a cr. The new cr should
+             * go to the end, and still be run in order */
+            if(a < 3) {
+                cr_async([&]() { cb(a + 1); });
+            }
+
+            while(1) {
+                order.push_back(a);
+                ++counter;
+                cr_yield();
+            }
+        };
+
+        auto update_cb = [&](float) {
+            assert_equal(counter, 3);
+            counter = 0;
+        };
+
+        cr_async([&]() { cb(1); });
+
+        application->signal_update().connect(update_cb);
+        application->run_frame();
+        application->run_frame();
+        application->run_frame();
+
+        assert_equal(order.size(), 9);
+        assert_equal(order[0], 1);
+        assert_equal(order[1], 2);
+        assert_equal(order[2], 3);
+        assert_equal(order[3], 1);
+        assert_equal(order[4], 2);
+        assert_equal(order[5], 3);
+        assert_equal(order[6], 1);
+        assert_equal(order[7], 2);
+        assert_equal(order[8], 3);
+    }
 };
 
 }
