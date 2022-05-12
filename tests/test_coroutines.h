@@ -60,6 +60,7 @@ public:
         /* All coroutines should run after each update */
         int counter = 3;
         std::vector<int> order;
+        bool done = false;
 
         std::function<void (int)> cb = [&](int a) {
             /* Trigger a cr from a cr. The new cr should
@@ -68,7 +69,7 @@ public:
                 cr_async([&]() { cb(a + 1); });
             }
 
-            while(1) {
+            while(!done) {
                 order.push_back(a);
                 ++counter;
                 cr_yield();
@@ -97,6 +98,10 @@ public:
         assert_equal(order[6], 1);
         assert_equal(order[7], 2);
         assert_equal(order[8], 3);
+
+        /* Make sure everything quits nicely */
+        done = true;
+        application->stop_all_coroutines();
     }
 };
 

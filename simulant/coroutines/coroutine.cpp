@@ -153,13 +153,13 @@ void yield_coroutine() {
 
     current->is_running = false;
     current->cond.notify_one();
-    while(!current->is_running) {
-        current->cond.wait(current->mutex);
+    while(!current->is_running) {        
         if(current->is_terminating) {
             /* This forces an incomplete coroutine to
              * end if stop_coroutine has been called */
             thread::Thread::exit();
         }
+        current->cond.wait(current->mutex);
     }
 }
 
