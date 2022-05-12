@@ -20,7 +20,9 @@ Condition::Condition() {
 #elif defined(__DREAMCAST__)
     cond_init(&cond_);
 #else
-    pthread_cond_init(&cond_, NULL);
+    int err = pthread_cond_init(&cond_, NULL);
+    _S_UNUSED(err);
+    assert(!err);
 #endif
 }
 
@@ -63,7 +65,9 @@ void Condition::wait(Mutex& mutex) {
     assert(!err);
 #else
     assert(!mutex.try_lock());  /* Mutex should've been locked by this thread */
-    pthread_cond_wait(&cond_, &mutex.mutex_); /* FIXME: I've heard that this can wake early? */
+    int err = pthread_cond_wait(&cond_, &mutex.mutex_); /* FIXME: I've heard that this can wake early? */
+    _S_UNUSED(err);
+    assert(!err);
 #endif
 }
 
@@ -83,7 +87,9 @@ void Condition::notify_one() {
     _S_UNUSED(err);
     assert(!err);
 #else
-    pthread_cond_signal(&cond_);
+    int err = pthread_cond_signal(&cond_);
+    _S_UNUSED(err);
+    assert(!err);
 #endif
 }
 

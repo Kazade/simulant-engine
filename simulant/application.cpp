@@ -656,8 +656,9 @@ void Application::update_coroutines() {
 }
 
 void Application::stop_all_coroutines() {
-    for(auto it = coroutines_.begin(); it != coroutines_.end(); ++it) {
+    for(auto it = coroutines_.begin(); it != coroutines_.end();) {
         cort::stop_coroutine(*it);
+        it = coroutines_.erase(it);
     }
 }
 

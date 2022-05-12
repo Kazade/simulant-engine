@@ -95,8 +95,9 @@ static Context* find_coroutine(CoroutineID id) {
 static void run_coroutine(Context* context) {
     set_current_context(context);
 
-    context->mutex.lock();
     context->func();
+
+    context->mutex.lock();
     context->is_running = false;
     context->is_finished = true;
     context->cond.notify_one();
@@ -117,29 +118,29 @@ COResult resume_coroutine(CoroutineID id) {
         return CO_RESULT_FINISHED;
     }
 
-    auto& context = *routine;
-    context.mutex.lock();
-    context.is_running = true;
-    if(!context.is_started) {
+    routine->mutex.lock();
+    routine->is_running = true;
+    if(!routine->is_started) {
         /* Start the coroutine running */
-        context.thread = new thread::Thread(&run_coroutine, &context);
-        context.is_started = true;
-        context.mutex.unlock();
+        routine->thread = new thread::Thread(&run_coroutine, routine);
+        routine->is_started = true;
+        while(routine->is_running) {
+            routine->cond.wait(routine->mutex);
+        }
+        routine->mutex.unlock();
     } else {
         /* Tell the coroutine to run */
-        context.mutex.unlock();
-        context.cond.notify_one();
+        routine->cond.notify_one();
+        routine->mutex.unlock();
+
+        routine->mutex.lock();
+        while(routine->is_running) {
+            routine->cond.wait(routine->mutex);
+        }
+        routine->mutex.unlock();
     }
 
-    context.mutex.lock();
-    /* Wait for the coroutine to yield */
-    while(context.is_running) {
-        context.cond.wait(context.mutex);
-    }
-
-    context.mutex.unlock();
-
-    return CO_RESULT_RUNNING;
+    return (routine->is_finished) ? CO_RESULT_FINISHED : CO_RESULT_RUNNING;
 }
 
 void yield_coroutine() {
@@ -151,16 +152,25 @@ void yield_coroutine() {
 
     auto current = current_context();
 
+    current->mutex.lock();
     current->is_running = false;
     current->cond.notify_one();
-    while(!current->is_running) {        
-        if(current->is_terminating) {
-            /* This forces an incomplete coroutine to
-             * end if stop_coroutine has been called */
-            thread::Thread::exit();
-        }
+
+    while(!current->is_running) {
         current->cond.wait(current->mutex);
     }
+
+    if(current->is_terminating) {
+        /* This forces an incomplete coroutine to
+         * end if stop_coroutine has been called */
+        current->is_running = false;
+        current->is_finished = true;
+        current->cond.notify_one();
+        current->mutex.unlock();
+        thread::Thread::exit();
+    }
+
+    current->mutex.unlock();
 }
 
 bool within_coroutine() {
@@ -177,11 +187,10 @@ void stop_coroutine(CoroutineID id) {
         if(context.is_started) {
             context.mutex.lock();
             context.is_terminating = true;
-            context.cond.notify_one();
             context.mutex.unlock();
 
             /* This will cause the thread to terminate now */
-            resume_coroutine(id);
+            while(resume_coroutine(id) != CO_RESULT_FINISHED) {}
 
             context.thread->join();
 

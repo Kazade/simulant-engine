@@ -499,7 +499,10 @@ private:
             application->run_frame();
         } else {
             application->scenes->unload("main");
+            application->stop_all_coroutines();
+            application->update_idle_tasks_and_coroutines();
             application->window->reset();
+
             application->scenes->activate("main");
 
             /* We have to execute the idle tasks as activate doesn't kick in

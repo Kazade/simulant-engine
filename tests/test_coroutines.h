@@ -83,7 +83,7 @@ public:
 
         cr_async([&]() { cb(1); });
 
-        application->signal_update().connect(update_cb);
+        auto sig = application->signal_update().connect(update_cb);
         application->run_frame();
         application->run_frame();
         application->run_frame();
@@ -102,6 +102,7 @@ public:
         /* Make sure everything quits nicely */
         done = true;
         application->stop_all_coroutines();
+        sig.disconnect();
     }
 };
 
