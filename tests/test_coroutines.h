@@ -65,10 +65,10 @@ public:
             return true;
         });
 
-        application->run_frame();
+        application->update_coroutines();
         assert_false(called);
-        thread::sleep(0.1 * 1000);
-        application->run_frame();
+        thread::sleep(200);
+        application->update_coroutines();
         assert_true(called);
     }
 

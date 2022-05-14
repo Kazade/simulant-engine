@@ -500,11 +500,6 @@ void Stage::update(float dt) {
     node_pool_->shrink_to_fit();
 }
 
-void Stage::late_update(float dt) {
-    ContainerNode::late_update(dt);
-    clean_up_dead_objects();
-}
-
 Debug* Stage::enable_debug(bool v) {
     if(debug_ && !v) {
         debug_.reset();
@@ -619,7 +614,7 @@ void Stage::clean_up_dead_objects() {
     geom_manager_->clean_up();
     particle_system_manager_->clean_up();
     camera_manager_->clean_up();
-    mesh_instancer_manager_->clean_up();    
+    mesh_instancer_manager_->clean_up();
 }
 
 }

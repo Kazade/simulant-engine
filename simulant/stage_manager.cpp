@@ -89,16 +89,18 @@ void StageManager::fixed_update(float dt) {
 }
 
 void StageManager::late_update(float dt) {
+    /* We only update stages that are part of an active
+     * pipeline, but we *always* clean up dead objects */
     for(auto stage: *manager_) {
-        if(!stage->is_part_of_active_pipeline()) {
-            continue;
+        if(stage->is_part_of_active_pipeline()) {
+            stage->late_update(dt);
+
+            for(auto& node: stage->each_descendent()) {
+                node.late_update(dt);
+            }
         }
 
-        stage->late_update(dt);
-
-        for(auto& node: stage->each_descendent()) {
-            node.late_update(dt);
-        }
+        stage->clean_up_dead_objects();
     }
 }
 

@@ -148,7 +148,7 @@ typedef sig::signal<void ()> PostCoroutinesSignal;
 typedef sig::signal<void (float)> FixedUpdateSignal;
 typedef sig::signal<void (float)> UpdateSignal;
 typedef sig::signal<void (float)> LateUpdateSignal;
-
+typedef sig::signal<void ()> PostLateUpdateSignal;
 typedef sig::signal<void ()> ShutdownSignal;
 
 class Application {
@@ -159,6 +159,7 @@ class Application {
     DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update);
     DEFINE_SIGNAL(UpdateSignal, signal_update);
     DEFINE_SIGNAL(LateUpdateSignal, signal_late_update);
+    DEFINE_SIGNAL(PostLateUpdateSignal, signal_post_late_update);
     DEFINE_SIGNAL(ShutdownSignal, signal_shutdown);
 
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
@@ -304,7 +305,7 @@ public:
     S_DEFINE_PROPERTY(args, &Application::args_);
     S_DEFINE_PROPERTY(config, &Application::config_);
     S_DEFINE_PROPERTY(stage_node_pool, &Application::node_pool_);
-    S_DEFINE_PROPERTY(shared_assets, &Application::asset_manager_);    
+    S_DEFINE_PROPERTY(shared_assets, &Application::asset_manager_);
     S_DEFINE_PROPERTY(time_keeper, &Application::time_keeper_);
     S_DEFINE_PROPERTY(stats, &Application::stats_);
     S_DEFINE_PROPERTY(vfs, &Application::vfs_);

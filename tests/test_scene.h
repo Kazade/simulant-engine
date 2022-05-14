@@ -103,7 +103,7 @@ public:
         manager_->register_scene<TestScene>("main");
 
         manager_->activate("main");
-        application->run_frame();
+        manager_->late_update(1.0f);
 
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
         scr->set_destroy_on_unload(false); //Don't destroy on unload
@@ -114,7 +114,7 @@ public:
         assert_false(scr->unload_called);
 
         manager_->activate("main"); //activateing to the same place should do nothing
-        application->run_frame();
+        manager_->late_update(1.0f);
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -123,7 +123,7 @@ public:
 
         manager_->register_scene<TestScene>("/test");
         manager_->activate("/test");
-        application->run_frame();
+        manager_->late_update(1.0f);
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);

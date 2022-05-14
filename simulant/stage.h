@@ -213,9 +213,7 @@ public:
     void clean_up() override;
 
     // Updateable interface
-
     void update(float dt) override;
-    void late_update(float dt) override;
 
     ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
     ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
@@ -304,6 +302,8 @@ private:
     thread::Atomic<uint8_t> active_pipeline_count_ = {0};
 
 private:
+    friend class StageManager;
+
     void on_actor_created(ActorID actor_id);
     void on_actor_destroyed(ActorID actor_id);
 

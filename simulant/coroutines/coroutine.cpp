@@ -131,6 +131,7 @@ COResult resume_coroutine(CoroutineID id) {
     if(routine->resume) {
         auto now = get_app()->time_keeper->now_in_us();
         if(routine->resume > now) {
+            S_ERROR("NOT TIME: {0}", routine->resume - now);
             routine->mutex.unlock();
             return CO_RESULT_RUNNING;
         } else {
@@ -215,6 +216,7 @@ void stop_coroutine(CoroutineID id) {
         if(context.is_started) {
             context.mutex.lock();
             context.is_terminating = true;
+            context.resume = 0;  /* Disable any delay */
             context.mutex.unlock();
 
             /* This will cause the thread to terminate now */
