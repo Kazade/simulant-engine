@@ -393,10 +393,11 @@ bool Texture::has_data() const {
 
 void Texture::flush() {
     if(cort::within_coroutine()) {
-        get_app()->idle->add_once([this]() {
+        auto promise = cr_async([this]() {
             renderer_->prepare_texture(this);
         });
-        cr_yield();
+
+        cr_await(promise);
     } else {
         renderer_->prepare_texture(this);
     }

@@ -23,7 +23,6 @@
 #include "utils/gl_thread_check.h"
 #include "loaders/heightmap_loader.h"
 #include "application.h"
-#include "idle_task_manager.h"
 #include "application.h"
 
 /** FIXME
@@ -383,7 +382,7 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
     MaterialID template_id;
 
     /* We must load the material outside the lock, because loading the material
-     * in thread B might cause a IdleManager::run_sync which will block and deadlock
+     * in thread B might cause a coroutine which will block and deadlock
      * as it will be holding the template_material_lock_ and the thread A
      * will hanging waiting on it.
      */
@@ -404,9 +403,11 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
     while(materials_loading_.count(template_id)) { // Not really threadsafe...
         if(!load_material && GLThreadCheck::is_current()) {
             /* If we aren't loading the material in this thread, but this is the main thread and the material is loading
-             * in another thread we *must* run the idle tasks while we wait for it to finish. Otherwise it will deadlock
+             * in another thread we *must* run the coroutine tasks while we wait for it to finish. Otherwise it will deadlock
              * on a run_sync call */
-            get_app()->idle->execute();
+
+            smlt::cr_yield();
+
         } else if(load_material) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
             S_INFO("Loading material {0} into {1}", path, template_id);

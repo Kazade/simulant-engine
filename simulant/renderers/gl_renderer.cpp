@@ -51,10 +51,10 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
          * aren't implemented using threads we won't
          * need to do this */
         S_DEBUG("In a coroutine, sending glGenTextures to main thread");
-        get_app()->idle->add_once([&gl_tex]() {
+        auto promise = cr_async([&gl_tex]() {
             GLCheck(glGenTextures, 1, &gl_tex);
-        });
-        cort::yield_coroutine();
+        });        
+        cr_await(promise);
     } else {
         S_DEBUG("Generating a texture with GL");
         GLCheck(glGenTextures, 1, &gl_tex);
@@ -70,10 +70,10 @@ void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
     GLuint gl_tex = texture->_renderer_specific_id();
 
     if(cort::within_coroutine()) {
-        get_app()->idle->add_once([&gl_tex]() {
+        auto promise = cr_async([&gl_tex]() {
             GLCheck(glDeleteTextures, 1, &gl_tex);
         });
-        cort::yield_coroutine();
+        cr_await(promise);
     } else {
         GLCheck(glDeleteTextures, 1, &gl_tex);
     }

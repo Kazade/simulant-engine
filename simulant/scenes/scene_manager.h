@@ -73,25 +73,13 @@ class SceneManager :
     };
 
     template<typename... Args>
-    static void do_activate(
-        std::weak_ptr<SceneManager> _this,
-        std::shared_ptr<ConnectionHolder> holder,
+    void do_activate(
         const std::string& route,
         ActivateBehaviour behaviour,
         Args&&... args
     ) {
-
-        auto self = _this.lock();
-
-        /* Little bit of cleverness to check that the scene manager is still alive */
-        if(!self) {
-            S_DEBUG("Not activating {0} as SceneManager was destroyed", route);
-            holder->conn.disconnect();
-            return;
-        }
-
-        auto new_scene = self->get_or_create_route(route);
-        if(new_scene != self->current_scene_) {
+        auto new_scene = get_or_create_route(route);
+        if(new_scene != current_scene_) {
             if(behaviour == ACTIVATE_BEHAVIOUR_UNLOAD_AFTER) {
                 if(!new_scene->is_loaded()) {
                     new_scene->load_args.clear();
@@ -99,27 +87,27 @@ class SceneManager :
                     new_scene->_call_load();
                 }
 
-                auto previous = self->current_scene_;
+                auto previous = current_scene_;
 
                 if(previous) {
                     previous->_call_deactivate();
                 }
 
-                std::swap(self->current_scene_, new_scene);
-                self->current_scene_->_call_activate();
+                std::swap(current_scene_, new_scene);
+                current_scene_->_call_activate();
 
                 if(previous && previous->unload_on_deactivate()) {
                     // If requested, we unload the previous scene once the new on is active
-                    self->unload(previous->name());
+                    unload(previous->name());
                 }
             } else {
                 /* Default behaviour - unload the current scene before activating the next one */
-                auto previous = self->current_scene_;
+                auto previous = current_scene_;
 
                 if(previous) {
                     previous->_call_deactivate();
                     if(previous->unload_on_deactivate()) {
-                        self->unload(previous->name());
+                        unload(previous->name());
                     }
                 }
 
@@ -129,16 +117,12 @@ class SceneManager :
                     new_scene->_call_load();
                 }
 
-                std::swap(self->current_scene_, new_scene);
-                self->current_scene_->_call_activate();
+                std::swap(current_scene_, new_scene);
+                current_scene_->_call_activate();
             }
 
-            self->signal_scene_activated_(route, new_scene.get());
+            signal_scene_activated_(route, new_scene.get());
         }
-
-        holder->conn.disconnect();
-        self->scenes_queued_for_activation_--;
-        assert(self->scenes_queued_for_activation_ >= 0);
     };
 public:
     SceneManager(Window* window);
@@ -152,20 +136,13 @@ public:
         const std::string& route, ActivateBehaviour behaviour,
         Args&& ...args
     ) {
-
-        auto holder = std::make_shared<ConnectionHolder>();
-        std::weak_ptr<SceneManager> _this = shared_from_this();
-
-        /* Little bit of trickery here. We want to activate the scene after idle tasks
-         * have run, but then we want to immediately disconnect. So we pass the connection
-         * wrapped in a shared_ptr which has been bound to the lambda */
-        holder->conn = connect_to_post_idle(
-            std::bind(
-                SceneManager::do_activate<Args&...>,
-                shared_from_this(), holder, route, behaviour, std::forward<Args>(args)...
-            )
-        );
-        scenes_queued_for_activation_++;
+        scene_activation_trigger_ = [=, &args...]() {
+            do_activate<Args...>(
+                route,
+                behaviour,
+                std::forward<Args>(args)...
+            );
+        };
     }
 
     template<typename... Args>
@@ -257,9 +234,6 @@ public:
         return std::dynamic_pointer_cast<T>(resolve_scene(route));
     }
 private:
-    /* This exists to avoid a circular include */
-    sig::Connection connect_to_post_idle(std::function<void ()> func);
-
     void _store_scene_factory(const std::string& name, SceneFactory func) {
         scene_factories_[name] = func;
     }
@@ -270,9 +244,6 @@ private:
     std::unordered_map<std::string, SceneBasePtr> routes_;
 
     SceneBasePtr current_scene_;
-    int scenes_queued_for_activation_ = 0;
-
-
     SceneBasePtr get_or_create_route(const std::string& route);
 
     struct BackgroundTask {
@@ -287,6 +258,9 @@ private:
     void update(float dt);
     void late_update(float dt);
     void fixed_update(float step);
+
+    std::function<void ()> scene_activation_trigger_;
+    std::set<std::string> routes_queued_for_destruction_;
 };
 
 }

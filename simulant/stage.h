@@ -215,6 +215,7 @@ public:
     // Updateable interface
 
     void update(float dt) override;
+    void late_update(float dt) override;
 
     ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
     ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
@@ -307,7 +308,6 @@ private:
     void on_actor_destroyed(ActorID actor_id);
 
     void clean_up_dead_objects();
-    sig::connection clean_up_signal_;
 
 public:
     Property<decltype(&Stage::debug_)> debug = {this, &Stage::debug_};

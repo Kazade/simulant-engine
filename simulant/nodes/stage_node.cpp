@@ -135,10 +135,16 @@ void StageNode::set_parent(TreeNode* node) {
     recalc_visibility();
 }
 
-smlt::IdleConnectionID StageNode::destroy_after(const Seconds& seconds) {
-    return get_app()->idle->add_timeout_once(
-        seconds, std::bind(&StageNode::destroy, this)
-    );
+smlt::Promise<bool> StageNode::destroy_after(const Seconds& seconds) {    
+    return cr_async([=]() -> bool {
+        cr_yield_and_wait(seconds);
+        if(is_destroyed()) {
+            return false;
+        }
+
+        destroy();
+        return true;
+    });
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {

@@ -43,15 +43,18 @@ public:
         auto done = std::make_shared<bool>(false);
 
         // While we're loading, continually pulse the progress bar to show that stuff is happening
-        app->idle->add([this, loading, done]() {
+        cr_async([this, loading, done]() {
             if(!scenes->has_scene("_loading")) {
-                return false;
+                return;
             }
 
-            if(loading->is_loaded() && loading->progress_bar) {
-                loading->progress_bar->pulse();
+            while(!(*done)) {
+                if(loading->is_loaded() && loading->progress_bar) {
+                    loading->progress_bar->pulse();
+                }
+
+                cr_yield();
             }
-            return !(*done);
         });
 
         stage_ = new_stage(smlt::PARTITIONER_NULL);

@@ -176,7 +176,8 @@ bool Window::initialize_assets_and_devices() {
 
     S_DEBUG("Initialization finished");
 
-    application->idle->add_once([this]() {
+    /* Render the simulant icon to the VMU */
+    cr_async([this]() {
         each_screen([](std::string, Screen* screen) {
             if(screen->width() / screen->integer_scale() == simulant_icon_vmu_width && screen->height() / screen->integer_scale() == simulant_icon_vmu_height) {
                 screen->render(simulant_icon_vmu_bits, SCREEN_FORMAT_G1);
@@ -275,7 +276,7 @@ void Window::create_panels() {
 
     S_DEBUG("Recreating panels");
     register_panel(1, StatsPanel::create(this));
-    register_panel(2, PartitionerPanel::create(this));
+    // register_panel(2, PartitionerPanel::create(this));
 }
 
 void Window::destroy_panels() {
@@ -295,14 +296,11 @@ void Window::destroy_panels() {
 void Window::reset() {
     S_DEBUG("Resetting Window state");
 
-    application->idle->execute(); //Execute any idle tasks before we go deleting things
-
     compositor_->destroy_all_pipelines();
     compositor_->clean_up();
 
     S_DEBUG("Recreating defaults");
     create_defaults();
-
     create_panels();
 }
 

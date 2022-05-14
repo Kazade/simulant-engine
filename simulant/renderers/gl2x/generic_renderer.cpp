@@ -360,13 +360,13 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
 
     /* Build the GPU program on the main thread */
     if(cort::within_coroutine()) {
-        window->application->idle->add_once([&]() {
+        auto promise = cr_async([&]() {
             program->build();
         });
 
         /* Let the main routine do the build before
          * resuming */
-        cort::yield_coroutine();
+        cr_await(promise);
     } else {
         program->build();
     }

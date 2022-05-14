@@ -51,7 +51,6 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "input/input_state.h"
 #include "platform.h"
 #include "time_keeper.h"
-#include "idle_task_manager.h"
 #include "vfs.h"
 #include "compositor.h"
 #include "utils/gl_error.h"
@@ -106,7 +105,6 @@ static bool PROFILING = false;
 
 Application::Application(const AppConfig &config):
     time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
-    idle_(IdleTaskManager::create()),
     stats_(StatsRecorder::create()),
     vfs_(VirtualFileSystem::create()),
     config_(config),
@@ -179,7 +177,7 @@ Application::~Application() {
     /* This cleans up the destroyed scenes
      * before we start wiping out the node
      * pool. */
-    update_idle_tasks_and_coroutines();
+    run_coroutines_and_late_update();
 
     scene_manager_.reset();
     asset_manager_.reset();
@@ -403,12 +401,6 @@ void Application::run_update(float dt) {
 
     signal_update_(dt);
     _call_update(dt);
-
-    if(scene_manager_) {
-        scene_manager_->late_update(dt);
-    }
-    signal_late_update_(dt);
-    _call_late_update(dt);
 }
 
 void Application::run_fixed_updates() {
@@ -466,7 +458,7 @@ bool Application::run_frame() {
 
     asset_manager_->update(time_keeper->delta_time());
 
-    update_idle_tasks_and_coroutines();
+    run_coroutines_and_late_update();
 
     asset_manager_->run_garbage_collection();
 
@@ -523,8 +515,8 @@ int32_t Application::run() {
     /* Make sure we unload and destroy all scenes */
     scene_manager_->destroy_all();
 
-    // Finish running any idle tasks before we shutdown
-    idle->execute();
+    /* Run any coroutines before we shut down */
+    update_coroutines();
 
     // Shutdown and clean up the window
     window_->_clean_up();
@@ -595,11 +587,17 @@ void Application::start_coroutine(std::function<void ()> func) {
     coroutines_.push_back(cort::start_coroutine(func));
 }
 
-void Application::update_idle_tasks_and_coroutines() {
-    idle_->execute();
-    signal_post_idle_();
-
+void Application::run_coroutines_and_late_update() {
     update_coroutines();
+
+    float dt = time_keeper_->delta_time();
+
+    if(scene_manager_) {
+        scene_manager_->late_update(dt);
+    }
+
+    signal_late_update_(dt);
+    _call_late_update(dt);
 
     // House keeping
     auto s = scenes->active_scene();
@@ -653,6 +651,8 @@ void Application::update_coroutines() {
             ++it;
         }
     }
+
+    signal_post_coroutines_();
 }
 
 void Application::stop_all_coroutines() {

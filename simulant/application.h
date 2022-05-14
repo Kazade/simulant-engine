@@ -44,7 +44,6 @@ class Window;
 class Stage;
 class SharedAssetManager;
 class TimeKeeper;
-class IdleTaskManager;
 class StatsRecorder;
 class VirtualFileSystem;
 class SoundDriver;
@@ -144,7 +143,7 @@ typedef std::shared_ptr<LoaderType> LoaderTypePtr;
 typedef sig::signal<void ()> FrameStartedSignal;
 typedef sig::signal<void ()> FrameFinishedSignal;
 typedef sig::signal<void ()> PreSwapSignal;
-typedef sig::signal<void ()> PostIdleSignal;
+typedef sig::signal<void ()> PostCoroutinesSignal;
 
 typedef sig::signal<void (float)> FixedUpdateSignal;
 typedef sig::signal<void (float)> UpdateSignal;
@@ -156,7 +155,7 @@ class Application {
     friend class Window;
 
     DEFINE_SIGNAL(PreSwapSignal, signal_pre_swap);
-    DEFINE_SIGNAL(PostIdleSignal, signal_post_idle);
+    DEFINE_SIGNAL(PostCoroutinesSignal, signal_post_coroutines);
     DEFINE_SIGNAL(FixedUpdateSignal, signal_fixed_update);
     DEFINE_SIGNAL(UpdateSignal, signal_update);
     DEFINE_SIGNAL(LateUpdateSignal, signal_late_update);
@@ -207,8 +206,8 @@ public:
 
     /* Coroutines */
     void start_coroutine(std::function<void ()> func);
-
-    void update_idle_tasks_and_coroutines();
+    void update_coroutines();
+    void stop_all_coroutines();
 
     /** Stops the entire application */
     void stop_running();
@@ -229,13 +228,15 @@ protected:
     bool _call_init();
 
 private:
+    void run_coroutines_and_late_update();
+
+
     bool has_shutdown_ = false;
 
     std::shared_ptr<Window> window_;
     std::shared_ptr<SceneManager> scene_manager_;
     std::shared_ptr<SharedAssetManager> asset_manager_;
     std::shared_ptr<TimeKeeper> time_keeper_;
-    std::shared_ptr<IdleTaskManager> idle_;
     std::shared_ptr<StatsRecorder> stats_;
     std::shared_ptr<VirtualFileSystem> vfs_;
     std::shared_ptr<SoundDriver> sound_driver_;
@@ -294,8 +295,6 @@ private:
     float requested_frame_time_ms_ = 0;
 
     std::list<cort::CoroutineID> coroutines_;
-    void update_coroutines();
-    void stop_all_coroutines();
     void preload_default_font();
 
 public:
@@ -307,7 +306,6 @@ public:
     S_DEFINE_PROPERTY(stage_node_pool, &Application::node_pool_);
     S_DEFINE_PROPERTY(shared_assets, &Application::asset_manager_);    
     S_DEFINE_PROPERTY(time_keeper, &Application::time_keeper_);
-    S_DEFINE_PROPERTY(idle, &Application::idle_);
     S_DEFINE_PROPERTY(stats, &Application::stats_);
     S_DEFINE_PROPERTY(vfs, &Application::vfs_);
     S_DEFINE_PROPERTY(sound_driver, &Application::sound_driver_);

@@ -12,7 +12,12 @@ void _trigger_coroutine(std::function<void ()> func) {
 }
 
 void cr_yield() {
-    cort::yield_coroutine();
+    if(cort::within_coroutine()) {
+        cort::yield_coroutine();
+    } else {
+        /* Main thread, just update the coroutines */
+        get_app()->update_coroutines();
+    }
 }
 
 void cr_yield_and_wait(const smlt::Seconds& seconds) {
@@ -20,7 +25,7 @@ void cr_yield_and_wait(const smlt::Seconds& seconds) {
 }
 
 void _trigger_idle_updates() {
-    get_app()->update_idle_tasks_and_coroutines();
+    get_app()->update_coroutines();
 }
 
 }

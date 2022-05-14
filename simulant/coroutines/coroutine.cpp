@@ -115,13 +115,11 @@ COResult resume_coroutine(CoroutineID id) {
     assert(!current_context());
 
     auto routine = find_coroutine(id);
-
-    routine->mutex.lock();
-
     if(!routine) {
-        routine->mutex.unlock();
         return CO_RESULT_INVALID;
     }
+
+    routine->mutex.lock();
 
     /* We've finished, do nothing */
     if(routine->is_finished) {
@@ -131,7 +129,8 @@ COResult resume_coroutine(CoroutineID id) {
 
     /* Don't resume the coroutine if we're not ready yet */
     if(routine->resume) {
-        if(routine->resume > get_app()->time_keeper->now_in_us()) {
+        auto now = get_app()->time_keeper->now_in_us();
+        if(routine->resume > now) {
             routine->mutex.unlock();
             return CO_RESULT_RUNNING;
         } else {
@@ -179,7 +178,7 @@ void yield_coroutine(const smlt::Seconds& from_now) {
     /* Set the timeout if necessary */
     if(from_now > 0.0f) {
         current->resume = get_app()->time_keeper->now_in_us() + (
-            from_now.to_float() * 1000000
+            from_now.to_float() * 1000000.0f
         );
     }
 

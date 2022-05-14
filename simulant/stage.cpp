@@ -66,15 +66,9 @@ Stage::Stage(StageManager *parent, StageNodePool *node_pool, AvailablePartitione
     camera_manager_(new CameraManager(node_pool_)) {
 
     set_partitioner(partitioner);
-
-    clean_up_signal_ = get_app()->signal_post_idle().connect(
-        std::bind(&Stage::clean_up_dead_objects, this)
-    );
 }
 
 Stage::~Stage() {
-    clean_up_signal_.disconnect();
-
     // Composite things first
     sprite_manager_.reset();
     sky_manager_.reset();
@@ -97,8 +91,6 @@ bool Stage::init() {
 }
 
 void Stage::clean_up() {
-    clean_up_signal_.disconnect();
-
     ui_.reset();
     debug_.reset();
 
@@ -506,6 +498,11 @@ void Stage::update(float dt) {
 
     /* Regularly trim the node pool size */
     node_pool_->shrink_to_fit();
+}
+
+void Stage::late_update(float dt) {
+    ContainerNode::late_update(dt);
+    clean_up_dead_objects();
 }
 
 Debug* Stage::enable_debug(bool v) {

@@ -12,7 +12,7 @@ SpriteManager::SpriteManager(Stage* stage, StageNodePool* pool):
     stage_(stage),
     sprite_manager_(new TemplatedSpriteManager(pool)) {
 
-    clean_up_conn_ = get_app()->signal_post_idle().connect([&]() {
+    clean_up_conn_ = get_app()->signal_late_update().connect([&](float) {
        sprite_manager_->clean_up();
     });
 }
