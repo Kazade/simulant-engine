@@ -30,7 +30,6 @@
 #include "texture.h"
 #include "asset_manager.h"
 #include "renderers/renderer.h"
-#include "idle_task_manager.h"
 
 namespace smlt {
 

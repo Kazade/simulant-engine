@@ -23,7 +23,6 @@
 #include "../window.h"
 #include "../pipeline.h"
 #include "../application.h"
-#include "../idle_task_manager.h"
 
 namespace smlt {
 

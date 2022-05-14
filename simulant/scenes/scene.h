@@ -112,10 +112,6 @@ protected:
     void link_pipeline(PipelinePtr pipeline);
     void unlink_pipeline(PipelinePtr pipeline);
 
-    /** Link an Idle task to the Scene so that it's removed on
-     *  deactivate */
-    void link_promise(smlt::IdleConnectionID conn_id);
-
     void _update_thunk(float dt) override;
     void _fixed_update_thunk(float dt) override;
 private:

@@ -2,7 +2,6 @@
 
 #include "../window.h"
 #include "../application.h"
-#include "../idle_task_manager.h"
 #include "../utils/gl_error.h"
 #include "../utils/gl_thread_check.h"
 

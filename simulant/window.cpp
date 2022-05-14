@@ -22,7 +22,6 @@
 #endif
 
 #include "application.h"
-#include "idle_task_manager.h"
 #include "utils/gl_error.h"
 #include "window.h"
 #include "platform.h"

@@ -486,8 +486,6 @@ typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 class Skybox;
 typedef default_init_ptr<Skybox> SkyboxPtr;
 
-typedef uint32_t IdleConnectionID;
-
 typedef UniqueID<MeshPtr> MeshID;
 typedef UniqueID<TexturePtr> TextureID;
 typedef UniqueID<FontPtr> FontID;

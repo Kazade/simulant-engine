@@ -59,7 +59,6 @@
 #include "nodes/particle_system.h"
 #include "nodes/camera.h"
 #include "platform.h"
-#include "idle_task_manager.h"
 #include "vfs.h"
 
 #include "assets/meshes/skeleton.h"

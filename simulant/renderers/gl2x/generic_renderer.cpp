@@ -33,7 +33,6 @@
 #include "../../window.h"
 #include "../../coroutines/coroutine.h"
 #include "../../application.h"
-#include "../../idle_task_manager.h"
 
 namespace smlt {
 

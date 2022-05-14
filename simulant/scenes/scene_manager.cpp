@@ -21,7 +21,6 @@
 #include "scene.h"
 #include "../window.h"
 #include "../application.h"
-#include "../idle_task_manager.h"
 
 namespace smlt {
 
