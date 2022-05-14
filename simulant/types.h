@@ -52,6 +52,35 @@
 
 namespace smlt {
 
+class Seconds {
+public:
+    Seconds():
+        value_(0) {}
+
+    explicit Seconds(float t):
+        value_(t) {}
+
+    Seconds operator+(const Seconds& rhs) const {
+        return Seconds(value_ + rhs.value_);
+    }
+
+    Seconds& operator+=(const Seconds& rhs) {
+        value_ += rhs.value_;
+        return *this;
+    }
+
+    bool operator>(float rhs) const {
+        return value_ > rhs;
+    }
+
+    float to_float() const {
+        return value_;
+    }
+
+private:
+    float value_;
+};
+
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_2F,

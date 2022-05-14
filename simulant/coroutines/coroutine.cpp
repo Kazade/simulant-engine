@@ -4,6 +4,8 @@
 #include "../threads/thread.h"
 #include "../threads/mutex.h"
 #include "../threads/condition.h"
+#include "../application.h"
+#include "../time_keeper.h"
 
 namespace smlt {
 namespace cort {
@@ -14,11 +16,16 @@ struct Context {
     bool is_started = false;
     bool is_finished = false;
     bool is_terminating = false;
+
     thread::Thread* thread = nullptr;
     std::function<void ()> func;
 
     thread::Mutex mutex;
     thread::Condition cond;
+
+    /* If non-zero then the coroutine won't resume until this time
+     * has passed */
+    uint64_t resume = 0;
 
     Context* next = nullptr;
     Context* prev = nullptr;
@@ -109,16 +116,30 @@ COResult resume_coroutine(CoroutineID id) {
 
     auto routine = find_coroutine(id);
 
+    routine->mutex.lock();
+
     if(!routine) {
+        routine->mutex.unlock();
         return CO_RESULT_INVALID;
     }
 
     /* We've finished, do nothing */
     if(routine->is_finished) {
+        routine->mutex.unlock();
         return CO_RESULT_FINISHED;
     }
 
-    routine->mutex.lock();
+    /* Don't resume the coroutine if we're not ready yet */
+    if(routine->resume) {
+        if(routine->resume > get_app()->time_keeper->now_in_us()) {
+            routine->mutex.unlock();
+            return CO_RESULT_RUNNING;
+        } else {
+            /* Reset, we can run now */
+            routine->resume = 0;
+        }
+    }
+
     routine->is_running = true;
     if(!routine->is_started) {
         /* Start the coroutine running */
@@ -143,7 +164,7 @@ COResult resume_coroutine(CoroutineID id) {
     return (routine->is_finished) ? CO_RESULT_FINISHED : CO_RESULT_RUNNING;
 }
 
-void yield_coroutine() {
+void yield_coroutine(const smlt::Seconds& from_now) {
     if(!current_context()) {
         /* Yield called from outside a coroutine
          * just return */
@@ -154,6 +175,14 @@ void yield_coroutine() {
 
     current->mutex.lock();
     current->is_running = false;
+
+    /* Set the timeout if necessary */
+    if(from_now > 0.0f) {
+        current->resume = get_app()->time_keeper->now_in_us() + (
+            from_now.to_float() * 1000000
+        );
+    }
+
     current->cond.notify_one();
 
     while(!current->is_running) {

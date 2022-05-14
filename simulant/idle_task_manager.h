@@ -33,31 +33,6 @@ namespace smlt {
 
 class Window;
 
-class Seconds {
-public:
-    Seconds():
-        value_(0) {}
-
-    explicit Seconds(float t):
-        value_(t) {}
-
-    Seconds operator+(const Seconds& rhs) const {
-        return Seconds(value_ + rhs.value_);
-    }
-
-    Seconds& operator+=(const Seconds& rhs) {
-        value_ += rhs.value_;
-        return *this;
-    }
-
-    float to_float() {
-        return value_;
-    }
-
-private:
-    float value_;
-};
-
 class IdleTaskManager:
     public RefCounted<IdleTaskManager> {
 

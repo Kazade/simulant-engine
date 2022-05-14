@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "../generic/optional.h"
+#include "../types.h"
 
 namespace smlt {
 namespace cort {
@@ -22,7 +23,7 @@ enum COResult {
 CoroutineID start_coroutine(std::function<void ()> func);
 void stop_coroutine(CoroutineID id);
 COResult resume_coroutine(CoroutineID id);
-void yield_coroutine();
+void yield_coroutine(const smlt::Seconds& from_now=smlt::Seconds());
 bool within_coroutine();
 
 }
