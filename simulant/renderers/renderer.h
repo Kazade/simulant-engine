@@ -106,6 +106,8 @@ public:
     void prepare_texture(Texture *texture);
     void prepare_material(Material* material);
 
+    /* Called from swap buffers */
+    virtual void end_scene() {}
 private:
     friend class Texture;
 

@@ -40,7 +40,8 @@ struct RenderGroupKey {
     uint8_t pass; // 1 byte
     bool is_blended; // 1 byte
     float distance_to_camera; // 4 bytes
-    uint16_t padding; // 2-bytes to get 8-byte alignment
+    void* data = nullptr;  // 4-bytes
+    uint16_t padding; // 2-bytes to get 4-byte alignment
 };
 
 

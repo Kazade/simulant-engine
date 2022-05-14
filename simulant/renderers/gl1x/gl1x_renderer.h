@@ -52,6 +52,8 @@ public:
     void prepare_to_render(const Renderable *renderable) override {
         _S_UNUSED(renderable);
     }
+
+    void end_scene() override;
 private:
     void on_texture_prepare(Texture* texture) override {
         GLRenderer::on_texture_prepare(texture);

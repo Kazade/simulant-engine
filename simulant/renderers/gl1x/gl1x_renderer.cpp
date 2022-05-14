@@ -20,6 +20,7 @@
 #include "gl1x_renderer.h"
 #ifdef __DREAMCAST__
     #include "../../../deps/libgl/include/GL/gl.h"
+    #include "../../../deps/libgl/include/GL/glkos.h"
 #elif defined(__PSP__)
     #include <GL/gl.h>
 #else
@@ -80,6 +81,12 @@ void GL1XRenderer::init_context() {
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
+}
+
+void GL1XRenderer::end_scene() {
+#ifdef __DREAMCAST__
+    glKosSwapBuffers();
+#endif
 }
 
 std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visitor(CameraPtr camera) {

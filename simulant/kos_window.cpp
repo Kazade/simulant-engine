@@ -23,7 +23,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS | INIT_NET);
 
 
 void KOSWindow::swap_buffers() {
-    glKosSwapBuffers();
+    renderer_->end_scene();
 }
 
 bool KOSWindow::_init_window() {
@@ -109,7 +109,7 @@ void KOSWindow::check_events() {
     };
 
     static std::array<uint8_t, 256> previous_key_state = {}; // value-initialize to zero
-    
+
     struct ControllerState {
         int8_t joyx = 0;
         int8_t joyy = 0;
@@ -118,9 +118,9 @@ void KOSWindow::check_events() {
         uint8_t ltrig = 0;
         uint8_t rtrig = 0;
     };
-    
+
     static std::array<ControllerState, MAX_CONTROLLERS> previous;
-    
+
     // Rescan for devices in case a controller has been added or removed
     initialize_input_controller(*this->_input_state());
 
@@ -138,14 +138,14 @@ void KOSWindow::check_events() {
                 auto joyy2_state = state->joy2y;
                 auto ltrig_state = state->ltrig;
                 auto rtrig_state = state->rtrig;
-                
+
                 auto handle_joystick_axis = [this](int prev, int current, int controller, smlt::JoystickAxis target, float range=127.0f) -> int16_t {
                     if(prev == current) {
-	                    return current;
+                        return current;
                     }
-                    
+
                     float v = float(current) / range;
-                    
+
                     if(target == JOYSTICK_AXIS_LTRIGGER || target == JOYSTICK_AXIS_RTRIGGER) {
                         v = clamp(v, 0.0f, 1.0f);
                     } else {
@@ -159,14 +159,14 @@ void KOSWindow::check_events() {
                     input_state->_handle_joystick_axis_motion(controller, target, v);
                     return current;
                 };
-			    
+
                 previous[i].joyx = handle_joystick_axis(previous[i].joyx, joyx_state, i, JOYSTICK_AXIS_X);
                 previous[i].joyy = handle_joystick_axis(previous[i].joyy, joyy_state, i, JOYSTICK_AXIS_Y);
                 previous[i].joyx2 = handle_joystick_axis(previous[i].joyx2, joyx2_state, i, JOYSTICK_AXIS_2);
-                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, i, JOYSTICK_AXIS_3);				
-                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, i, JOYSTICK_AXIS_4, 255.0f);	
-                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, i, JOYSTICK_AXIS_5, 255.0f);					
-            
+                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, i, JOYSTICK_AXIS_3);
+                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, i, JOYSTICK_AXIS_4, 255.0f);
+                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, i, JOYSTICK_AXIS_5, 255.0f);
+
                 // Check the current button state against the previous one
                 // and update the input controller appropriately
                 for(auto button: CONTROLLER_BUTTONS) {

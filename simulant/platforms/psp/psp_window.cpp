@@ -10,6 +10,7 @@ namespace smlt {
 #define SCREEN_DEPTH 32
 
 void PSPWindow::swap_buffers() {
+    renderer_->end_scene();
     eglSwapBuffers(dpy_, surface_);
 }
 

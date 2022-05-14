@@ -458,6 +458,8 @@ void SDL2Window::destroy_window() {
 }
 
 void SDL2Window::swap_buffers() {
+    renderer_->end_scene();
+
     SDL_GL_SwapWindow(screen_);
 }
 
