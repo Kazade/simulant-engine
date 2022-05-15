@@ -60,7 +60,7 @@ public:
         bool called = false;
 
         auto ret = cr_async([&]() -> bool {
-            cr_yield_and_wait(Seconds(0.1f));
+            cr_yield_for(Seconds(0.1f));
             called = true;
             return true;
         });

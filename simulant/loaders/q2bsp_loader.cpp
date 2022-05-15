@@ -538,13 +538,19 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     mesh->vertex_data->done();
 
+    std::vector<std::string> to_destroy;
+
     for(auto submesh: mesh->each_submesh()) {
         //Delete empty submeshes
         if(!submesh->index_data->count()) {
-            mesh->destroy_submesh(submesh->name());
+            to_destroy.push_back(submesh->name());
             continue;
         }
         submesh->index_data->done();
+    }
+
+    for(auto& sm: to_destroy) {
+        mesh->destroy_submesh(sm);
     }
 
     //FIXME: mark mesh as uncollected

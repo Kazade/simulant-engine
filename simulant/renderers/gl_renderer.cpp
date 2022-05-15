@@ -43,21 +43,9 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
 
     S_DEBUG("Registering texture...");
 
-    if(cort::within_coroutine()) {
-        /* If we're in a coroutine, we need to make sure
-         * we run the GL function on the idle task manager
-         * and then yield. FIXME: When/if coroutines
-         * aren't implemented using threads we won't
-         * need to do this */
-        S_DEBUG("In a coroutine, sending glGenTextures to main thread");
-        auto promise = cr_async([&gl_tex]() {
-            GLCheck(glGenTextures, 1, &gl_tex);
-        });        
-        cr_await(promise);
-    } else {
-        S_DEBUG("Generating a texture with GL");
+    cr_run_main([&gl_tex]() {
         GLCheck(glGenTextures, 1, &gl_tex);
-    }
+    });
 
     S_DEBUG("Setting the GL texture ID");
     texture->_set_renderer_specific_id(gl_tex);
@@ -68,17 +56,11 @@ void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
 
     GLuint gl_tex = texture->_renderer_specific_id();
 
-    if(cort::within_coroutine()) {
-        auto promise = cr_async([&gl_tex]() {
-            GLCheck(glDeleteTextures, 1, &gl_tex);
-        });
-        cr_await(promise);
-    } else {
+    cr_run_main([&gl_tex]() {
         GLCheck(glDeleteTextures, 1, &gl_tex);
-    }
+    });
 
     texture->_set_renderer_specific_id(0);
-
 }
 
 uint32_t GLRenderer::convert_format(TextureFormat format) {

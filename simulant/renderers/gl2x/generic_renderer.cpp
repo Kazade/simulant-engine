@@ -358,17 +358,9 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
     program_manager_.set_garbage_collection_method(program->id(), GARBAGE_COLLECT_PERIODIC);
 
     /* Build the GPU program on the main thread */
-    if(cort::within_coroutine()) {
-        auto promise = cr_async([&]() {
-            program->build();
-        });
-
-        /* Let the main routine do the build before
-         * resuming */
-        cr_await(promise);
-    } else {
+    cr_run_main([&]() {
         program->build();
-    }
+    });
 
     return program->id();
 }

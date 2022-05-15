@@ -650,7 +650,15 @@ void Application::update_coroutines() {
             cort::stop_coroutine(*it);
             it = coroutines_.erase(it);
         } else {
-            ++it;
+            /* If the coroutine yielded with a synced function
+             * we run it then *resume the same coroutine* so we
+             * don't increment! */
+            if(cr_synced_function_) {
+                cr_synced_function_();
+                cr_synced_function_ = std::function<void ()>();
+            } else {
+                ++it;
+            }
         }
     }
 

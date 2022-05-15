@@ -131,7 +131,6 @@ COResult resume_coroutine(CoroutineID id) {
     if(routine->resume) {
         auto now = get_app()->time_keeper->now_in_us();
         if(routine->resume > now) {
-            S_ERROR("NOT TIME: {0}", routine->resume - now);
             routine->mutex.unlock();
             return CO_RESULT_RUNNING;
         } else {
@@ -178,9 +177,8 @@ void yield_coroutine(const smlt::Seconds& from_now) {
 
     /* Set the timeout if necessary */
     if(from_now > 0.0f) {
-        current->resume = get_app()->time_keeper->now_in_us() + (
-            from_now.to_float() * 1000000.0f
-        );
+        float offset = from_now.to_float() * 1000 * 1000;
+        current->resume = get_app()->time_keeper->now_in_us() + (uint64_t(offset));
     }
 
     current->cond.notify_one();

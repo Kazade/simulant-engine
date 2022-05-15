@@ -136,7 +136,7 @@ void StageNode::set_parent(TreeNode* node) {
 
 smlt::Promise<bool> StageNode::destroy_after(const Seconds& seconds) {    
     return cr_async([=]() -> bool {
-        cr_yield_and_wait(seconds);
+        cr_yield_for(seconds);
         if(is_destroyed()) {
             return false;
         }

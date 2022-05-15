@@ -20,8 +20,18 @@ void cr_yield() {
     }
 }
 
-void cr_yield_and_wait(const smlt::Seconds& seconds) {
+void cr_yield_for(const smlt::Seconds& seconds) {
     cort::yield_coroutine(seconds);
+}
+
+void cr_run_main(std::function<void ()> func) {
+    if(cort::within_coroutine()) {
+        get_app()->cr_synced_function_ = func;
+        cr_yield();
+    } else {
+        /* Already in the main thread */
+        func();
+    }
 }
 
 void _trigger_idle_updates() {

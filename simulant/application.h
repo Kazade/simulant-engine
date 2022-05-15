@@ -229,6 +229,9 @@ protected:
     bool _call_init();
 
 private:
+    friend void cr_run_main(std::function<void ()> func);
+    std::function<void ()> cr_synced_function_;
+
     void run_coroutines_and_late_update();
 
 
