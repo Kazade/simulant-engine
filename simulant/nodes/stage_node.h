@@ -11,6 +11,7 @@
 #include "../generic/data_carrier.h"
 #include "../shadows.h"
 #include "../generic/manual_object.h"
+#include "../coroutines/helpers.h"
 
 #include "iterators/sibling_iterator.h"
 #include "iterators/child_iterator.h"
@@ -197,7 +198,7 @@ public:
 
     void set_parent(TreeNode* node);
 
-    smlt::IdleConnectionID destroy_after(const Seconds& seconds);
+    smlt::Promise<bool> destroy_after(const Seconds& seconds);
 
     void update(float dt) override;
     void late_update(float dt) override;

@@ -56,6 +56,22 @@ public:
         assert_true(called);
     }
 
+    void test_yield_and_wait() {
+        bool called = false;
+
+        auto ret = cr_async([&]() -> bool {
+            cr_yield_for(Seconds(0.1f));
+            called = true;
+            return true;
+        });
+
+        application->update_coroutines();
+        assert_false(called);
+        thread::sleep(200);
+        application->update_coroutines();
+        assert_true(called);
+    }
+
     void test_coroutine_order() {
         /* All coroutines should run after each update */
         int counter = 3;

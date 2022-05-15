@@ -15,10 +15,11 @@ The following signals are available for the Application class:
  - `signal<void ()> signal_frame_started();`
  - `signal<void ()> signal_frame_finished();`
  - `signal<void ()> signal_pre_swap();`
- - `signal<void ()> signal_post_idle(); `
+ - `signal<void ()> signal_post_coroutines(); `
  - `signal<void (float)> signal_update();`
  - `signal<void (float)> signal_fixed_update();`
  - `signal<void (float)> signal_late_update();`
+ - `signal<void (float)> signal_post_late_update();`
  - `signal<void ()> signal_shutdown();`
 
 # AppConfig

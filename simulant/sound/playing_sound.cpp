@@ -126,7 +126,7 @@ void PlayingSound::update(float dt) {
     /* We lock through the entire update, mainly so that if a sound finishes
      * but it's looping, we don't lose the sound before we reinitialise the
      * source instance */
-    auto sound = sound_.lock();
+    auto sound = sound_.lock();    
 
     while(processed--) {
         AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).front();
@@ -134,7 +134,7 @@ void PlayingSound::update(float dt) {
         int32_t bytes = stream_func_(buffer);
 
         if(!finished) {
-            if(!bytes) {
+            if(bytes <= 0) {
                 // Just because we have nothing left to queue, doesn't mean that all buffers
                 // are finished, so wait for the last buffer to be unqueued
                 finished = driver->source_state(source_) == AUDIO_SOURCE_STATE_STOPPED;

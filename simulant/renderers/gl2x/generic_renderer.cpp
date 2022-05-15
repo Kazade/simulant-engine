@@ -33,7 +33,6 @@
 #include "../../window.h"
 #include "../../coroutines/coroutine.h"
 #include "../../application.h"
-#include "../../idle_task_manager.h"
 
 namespace smlt {
 
@@ -359,17 +358,9 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
     program_manager_.set_garbage_collection_method(program->id(), GARBAGE_COLLECT_PERIODIC);
 
     /* Build the GPU program on the main thread */
-    if(cort::within_coroutine()) {
-        window->application->idle->add_once([&]() {
-            program->build();
-        });
-
-        /* Let the main routine do the build before
-         * resuming */
-        cort::yield_coroutine();
-    } else {
+    cr_run_main([&]() {
         program->build();
-    }
+    });
 
     return program->id();
 }

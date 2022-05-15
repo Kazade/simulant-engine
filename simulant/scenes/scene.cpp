@@ -23,7 +23,6 @@
 #include "../window.h"
 #include "../pipeline.h"
 #include "../application.h"
-#include "../idle_task_manager.h"
 
 namespace smlt {
 
@@ -107,11 +106,6 @@ void SceneBase::_call_deactivate() {
         return;
     }
 
-    for(auto& id: linked_connections_) {
-        app_->idle->remove(id);
-    }
-    linked_connections_.clear();
-
     for(auto name: linked_pipelines_) {
         compositor->find_pipeline(name)->deactivate();
     }
@@ -137,9 +131,6 @@ void SceneBase::unlink_pipeline(PipelinePtr pipeline) {
     unlink_pipeline(pipeline->name());
 }
 
-void SceneBase::link_promise(IdleConnectionID conn_id) {
-    linked_connections_.insert(conn_id);
-}
 
 
 }

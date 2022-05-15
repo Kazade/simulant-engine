@@ -30,7 +30,6 @@
 #include "texture.h"
 #include "asset_manager.h"
 #include "renderers/renderer.h"
-#include "idle_task_manager.h"
 
 namespace smlt {
 
@@ -144,7 +143,7 @@ std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint1
 }
 
 void Texture::set_format(TextureFormat format) {
-    if(format_ == format) {
+    if(data_ && format_ == format) {
         return;
     }
 
@@ -392,14 +391,10 @@ bool Texture::has_data() const {
 }
 
 void Texture::flush() {
-    if(cort::within_coroutine()) {
-        get_app()->idle->add_once([this]() {
-            renderer_->prepare_texture(this);
-        });
-        cr_yield();
-    } else {
+    /* If in a coroutine: yield, run this code in the main thread, then resume */
+    cr_run_main([this]() {
         renderer_->prepare_texture(this);
-    }
+    });
 }
 
 void Texture::mutate_data(Texture::MutationFunc func) {

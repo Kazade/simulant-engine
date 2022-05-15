@@ -52,6 +52,35 @@
 
 namespace smlt {
 
+class Seconds {
+public:
+    Seconds():
+        value_(0) {}
+
+    explicit Seconds(float t):
+        value_(t) {}
+
+    Seconds operator+(const Seconds& rhs) const {
+        return Seconds(value_ + rhs.value_);
+    }
+
+    Seconds& operator+=(const Seconds& rhs) {
+        value_ += rhs.value_;
+        return *this;
+    }
+
+    bool operator>(float rhs) const {
+        return value_ > rhs;
+    }
+
+    float to_float() const {
+        return value_;
+    }
+
+private:
+    float value_;
+};
+
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_2F,
@@ -456,8 +485,6 @@ typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 
 class Skybox;
 typedef default_init_ptr<Skybox> SkyboxPtr;
-
-typedef uint32_t IdleConnectionID;
 
 typedef UniqueID<MeshPtr> MeshID;
 typedef UniqueID<TexturePtr> TextureID;

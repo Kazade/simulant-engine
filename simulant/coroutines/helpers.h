@@ -59,6 +59,8 @@ struct func_traits<Ret(C::*)(Args...) const> {
 }
 
 void cr_yield();
+void cr_yield_for(const Seconds& seconds);
+void cr_run_main(std::function<void ()> func);
 
 template<typename T>
 class Promise {

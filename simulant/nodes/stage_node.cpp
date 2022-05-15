@@ -2,7 +2,6 @@
 #include "camera.h"
 #include "../window.h"
 #include "../application.h"
-#include "../idle_task_manager.h"
 
 namespace smlt {
 
@@ -135,10 +134,16 @@ void StageNode::set_parent(TreeNode* node) {
     recalc_visibility();
 }
 
-smlt::IdleConnectionID StageNode::destroy_after(const Seconds& seconds) {
-    return get_app()->idle->add_timeout_once(
-        seconds, std::bind(&StageNode::destroy, this)
-    );
+smlt::Promise<bool> StageNode::destroy_after(const Seconds& seconds) {    
+    return cr_async([=]() -> bool {
+        cr_yield_for(seconds);
+        if(is_destroyed()) {
+            return false;
+        }
+
+        destroy();
+        return true;
+    });
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {

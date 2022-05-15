@@ -70,8 +70,7 @@ to delete the objects with a delete call:
 
     stage->destroy_actor(actor_id);
     
-StageNodes like Actors will not be released immediately. They will be destroyed after the idle
-tasks have run, but before the render queue is constructed.
+StageNodes like Actors will not be released immediately. They will be destroyed after `late_update()` but before the render queue is constructed.
     
 For more information see [Refcounted Managers](refcount_managers.md) and 
 [Manual Managers](manual_managers.md)

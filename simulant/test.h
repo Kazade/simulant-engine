@@ -500,17 +500,14 @@ private:
         } else {
             application->scenes->unload("main");
             application->stop_all_coroutines();
-            application->update_idle_tasks_and_coroutines();
+            application->update_coroutines();
             application->window->reset();
 
             application->scenes->activate("main");
 
-            /* We have to execute the idle tasks as activate doesn't kick in
-             * until then */
-            application->update_idle_tasks_and_coroutines();
-
-            /* Clean up any assets */
-            application->shared_assets->run_garbage_collection();
+            /* We have to run a frame as activate doesn't kick in
+             * until late_update */
+            application->run_frame();
         }
 
         *app = application;

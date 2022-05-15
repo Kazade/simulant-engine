@@ -213,7 +213,6 @@ public:
     void clean_up() override;
 
     // Updateable interface
-
     void update(float dt) override;
 
     ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
@@ -303,11 +302,12 @@ private:
     thread::Atomic<uint8_t> active_pipeline_count_ = {0};
 
 private:
+    friend class StageManager;
+
     void on_actor_created(ActorID actor_id);
     void on_actor_destroyed(ActorID actor_id);
 
     void clean_up_dead_objects();
-    sig::connection clean_up_signal_;
 
 public:
     Property<decltype(&Stage::debug_)> debug = {this, &Stage::debug_};

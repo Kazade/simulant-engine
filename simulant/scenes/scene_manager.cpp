@@ -21,7 +21,6 @@
 #include "scene.h"
 #include "../window.h"
 #include "../application.h"
-#include "../idle_task_manager.h"
 
 namespace smlt {
 
@@ -40,18 +39,29 @@ void SceneManager::destroy_all() {
         route.second->_call_unload();
 
         auto name = route.first;
-        get_app()->idle->add_once([this, name]() {
-            auto it = routes_.find(name);
-            if(it != routes_.end()) {
-                routes_.erase(it);
-            }
-        });
+        routes_queued_for_destruction_.insert(name);
     }
 }
 
 void SceneManager::late_update(float dt) {
     if(active_scene()) {
         active_scene()->_late_update_thunk(dt);
+    }
+
+    /* Destroy any scenes that have been queued */
+    for(auto& name: routes_queued_for_destruction_) {
+        auto it = routes_.find(name);
+        if(it != routes_.end()) {
+            routes_.erase(it);
+        }
+    }
+
+    routes_queued_for_destruction_.clear();
+
+    /* Finally, if a scene has been activated, do so! */
+    if(scene_activation_trigger_) {
+        scene_activation_trigger_();
+        scene_activation_trigger_ = std::function<void()> ();
     }
 }
 
@@ -85,7 +95,9 @@ SceneBase::ptr SceneManager::active_scene() const {
     return current_scene_;
 }
 
-
+bool SceneManager::scene_queued_for_activation() const {
+    return bool(scene_activation_trigger_);
+}
 
 void SceneManager::unload(const std::string& route) {
     auto it = routes_.find(route);
@@ -96,15 +108,10 @@ void SceneManager::unload(const std::string& route) {
 
         if(scene->destroy_on_unload()) {
             /* Destroy the scene once it's been unloaded but do
-             * it in an idle tasks so that any queued destructions
+             * it after late_update so that any queued destructions
              * from unload can happen before we destroy the scene
              */
-
-            routes_.erase(it);
-
-            get_app()->idle->add_once([scene]() {
-                _S_UNUSED(scene);
-            });
+            routes_queued_for_destruction_.insert(route);
         }
     }
 }
@@ -132,14 +139,6 @@ void SceneManager::reset() {
     }
     routes_.clear();
     scene_factories_.clear();
-}
-
-bool SceneManager::scene_queued_for_activation() const {
-    return scenes_queued_for_activation_ > 0;
-}
-
-sig::Connection SceneManager::connect_to_post_idle(std::function<void ()> func) {
-    return get_app()->signal_post_idle().connect(func);
 }
 
 }

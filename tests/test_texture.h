@@ -22,7 +22,7 @@ public:
 
         assert_true(tex->has_data());
         tex->flush();
-        application->idle->execute();
+        application->run_frame();
 
         assert_false(tex->has_data());
     }
