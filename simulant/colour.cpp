@@ -114,6 +114,7 @@ bool PackedColour4444::operator==(const Colour& rhs) const {
 }
 
 void PackedColour4444::set_alpha(NormalizedFloat a) {
+    colour_ &= ~(0xF000);
     colour_ |= uint32_t(a * 15.0f) << 12;
 }
 

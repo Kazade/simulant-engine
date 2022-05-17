@@ -43,6 +43,7 @@ public:
         pg1_ = stage_->ui->new_widget_as_progress_bar();
         pg1_->set_text("Progress Bar (pulse)");
         pg1_->resize(column, -1);
+        pg1_->set_opacity(0.2f);
         frame->pack_child(pg1_);
 
         pg2_ = stage_->ui->new_widget_as_progress_bar();

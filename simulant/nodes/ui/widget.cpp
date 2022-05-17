@@ -379,12 +379,15 @@ void Widget::render_text() {
         }
     }
 
+    auto c = style_->text_colour_;
+    c.set_alpha(style_->opacity_);
+
     auto idx = 0;
     for(auto& v: vertices) {
         auto p = v.xyz + Vec3(global_x_shift, global_y_shift, 0);
         vdata->position(p);
         vdata->tex_coord0(v.uv);
-        vdata->diffuse(style_->text_colour_);
+        vdata->diffuse(c);
         vdata->move_next();
 
         idata->index(idx++);
@@ -520,7 +523,8 @@ void Widget::rebuild() {
 
     if(border_active() && border_width() > 0) {
         auto colour = style_->border_colour_;
-        colour.set_alpha(colour.af() * style_->opacity_);
+        float a = colour.af() * style_->opacity_;
+        colour.set_alpha(a);
         /* FIXME! This should be 4 rectangles or a tri-strip */
         new_rectangle("border", border_bounds, colour);
     }
