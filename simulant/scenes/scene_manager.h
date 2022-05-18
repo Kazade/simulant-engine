@@ -136,13 +136,10 @@ public:
         const std::string& route, ActivateBehaviour behaviour,
         Args&& ...args
     ) {
-        scene_activation_trigger_ = [=, &args...]() {
-            do_activate<Args...>(
-                route,
-                behaviour,
-                std::forward<Args>(args)...
-            );
-        };
+        scene_activation_trigger_ = std::bind(
+            &SceneManager::do_activate<Args&...>,
+            this, route, behaviour, std::forward<Args>(args)...
+        );
     }
 
     template<typename... Args>
