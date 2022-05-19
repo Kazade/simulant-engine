@@ -178,7 +178,7 @@ build:android-armeabiv7a-gcc:debug:
 
 build:psp-mips-gcc:debug:
   stage: build
-  image: sharkwouter/pspdev
+  image: pspdev/pspdev:latest
   variables:
     TARGET: psp-mips-gcc
   script:
@@ -194,7 +194,7 @@ build:psp-mips-gcc:debug:
 
 build:psp-mips-gcc:release:
   stage: build
-  image: sharkwouter/pspdev
+  image: pspdev/pspdev:latest
   variables:
     TARGET: psp-mips-gcc
   script:
