@@ -44,6 +44,8 @@ private:
 
     thread::Mutex vmu_mutex_;
     std::unordered_map<std::string, std::pair<int, int>> vmu_lookup_;
+
+    float time_since_last_vmu_check_ = 0.0f;
 };
 
 }

@@ -7,6 +7,8 @@
 
 #include "input/input_state.h"
 #include "kos_window.h"
+#include "time_keeper.h"
+#include "application.h"
 
 #include "sound/drivers/openal_sound_driver.h"
 #include "sound/drivers/null_sound_driver.h"
@@ -40,6 +42,8 @@ bool KOSWindow::_init_window() {
 }
 
 bool KOSWindow::_init_renderer(Renderer* renderer) {
+    _S_UNUSED(renderer);
+
     set_has_context(true); //Mark that we have a valid GL context
 
     S_DEBUG("Renderer initialized");
@@ -52,6 +56,13 @@ void KOSWindow::destroy_window() {
 }
 
 void KOSWindow::probe_vmus() {
+    time_since_last_vmu_check_ += application->time_keeper->delta_time();
+    if(time_since_last_vmu_check_ >= 0.5f) {
+        time_since_last_vmu_check_ = 0.0f;
+    } else {
+        return;
+    }
+
     const static char LETTERS [] = {'A', 'B', 'C', 'D'};
 
     const static int MAX_VMUS = 8;  // Four ports, two slots in each
@@ -81,6 +92,14 @@ static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button)
            (dc_button == CONT_Y) ? JOYSTICK_BUTTON_Y :
            (dc_button == CONT_Z) ? JOYSTICK_BUTTON_RIGHT_SHOULDER :
            (dc_button == CONT_START) ? JOYSTICK_BUTTON_START :
+           (dc_button == CONT_DPAD_UP) ? JOYSTICK_BUTTON_DPAD_UP :
+           (dc_button == CONT_DPAD_DOWN) ? JOYSTICK_BUTTON_DPAD_DOWN :
+           (dc_button == CONT_DPAD_LEFT) ? JOYSTICK_BUTTON_DPAD_LEFT :
+           (dc_button == CONT_DPAD_RIGHT) ? JOYSTICK_BUTTON_DPAD_RIGHT :
+           (dc_button == CONT_DPAD2_UP) ? JOYSTICK_BUTTON_DPAD2_UP :
+           (dc_button == CONT_DPAD2_DOWN) ? JOYSTICK_BUTTON_DPAD2_DOWN :
+           (dc_button == CONT_DPAD2_LEFT) ? JOYSTICK_BUTTON_DPAD2_LEFT :
+           (dc_button == CONT_DPAD2_RIGHT) ? JOYSTICK_BUTTON_DPAD2_RIGHT :
            JOYSTICK_BUTTON_INVALID;
 }
 
@@ -88,28 +107,15 @@ void KOSWindow::check_events() {
     probe_vmus();
 
     const int8_t MAX_CONTROLLERS = 4;
-    const static std::vector<uint16_t> CONTROLLER_BUTTONS = {
-        CONT_A, CONT_B, CONT_C, CONT_D, CONT_X, CONT_Y, CONT_Z, CONT_START
-    };
-
-    const static std::vector<uint16_t> HAT1_BUTTONS = {
-        CONT_DPAD_UP, CONT_DPAD_DOWN, CONT_DPAD_LEFT, CONT_DPAD_RIGHT
-    };
-
-    const static std::vector<uint16_t> HAT2_BUTTONS = {
+    const static uint16_t CONTROLLER_BUTTONS [] = {
+        CONT_A, CONT_B, CONT_C, CONT_D, CONT_X, CONT_Y, CONT_Z, CONT_START,
+        CONT_DPAD_UP, CONT_DPAD_DOWN, CONT_DPAD_LEFT, CONT_DPAD_RIGHT,
         CONT_DPAD2_UP, CONT_DPAD2_DOWN, CONT_DPAD2_LEFT, CONT_DPAD2_RIGHT
     };
 
-    static std::array<uint32_t, MAX_CONTROLLERS> previous_controller_button_state = {{0, 0, 0, 0}};
-    static std::array<HatPosition, MAX_CONTROLLERS> previous_hat1_state = {
-        {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
-    };
-    static std::array<HatPosition, MAX_CONTROLLERS> previous_hat2_state = {
-        {HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED, HAT_POSITION_CENTERED}
-    };
+    static uint32_t previous_controller_button_state[MAX_CONTROLLERS] = {0};
+    static uint8_t previous_key_state[256] = {0}; // value-initialize to zero
 
-    static std::array<uint8_t, 256> previous_key_state = {}; // value-initialize to zero
-    
     struct ControllerState {
         int8_t joyx = 0;
         int8_t joyy = 0;
@@ -118,9 +124,9 @@ void KOSWindow::check_events() {
         uint8_t ltrig = 0;
         uint8_t rtrig = 0;
     };
-    
-    static std::array<ControllerState, MAX_CONTROLLERS> previous;
-    
+
+    static ControllerState previous[MAX_CONTROLLERS];
+
     // Rescan for devices in case a controller has been added or removed
     initialize_input_controller(*this->_input_state());
 
@@ -138,14 +144,14 @@ void KOSWindow::check_events() {
                 auto joyy2_state = state->joy2y;
                 auto ltrig_state = state->ltrig;
                 auto rtrig_state = state->rtrig;
-                
+
                 auto handle_joystick_axis = [this](int prev, int current, int controller, smlt::JoystickAxis target, float range=127.0f) -> int16_t {
                     if(prev == current) {
-	                    return current;
+                        return current;
                     }
-                    
+
                     float v = float(current) / range;
-                    
+
                     if(target == JOYSTICK_AXIS_LTRIGGER || target == JOYSTICK_AXIS_RTRIGGER) {
                         v = clamp(v, 0.0f, 1.0f);
                     } else {
@@ -159,14 +165,14 @@ void KOSWindow::check_events() {
                     input_state->_handle_joystick_axis_motion(controller, target, v);
                     return current;
                 };
-			    
+
                 previous[i].joyx = handle_joystick_axis(previous[i].joyx, joyx_state, i, JOYSTICK_AXIS_X);
                 previous[i].joyy = handle_joystick_axis(previous[i].joyy, joyy_state, i, JOYSTICK_AXIS_Y);
                 previous[i].joyx2 = handle_joystick_axis(previous[i].joyx2, joyx2_state, i, JOYSTICK_AXIS_2);
-                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, i, JOYSTICK_AXIS_3);				
-                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, i, JOYSTICK_AXIS_4, 255.0f);	
-                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, i, JOYSTICK_AXIS_5, 255.0f);					
-            
+                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, i, JOYSTICK_AXIS_3);
+                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, i, JOYSTICK_AXIS_4, 255.0f);
+                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, i, JOYSTICK_AXIS_5, 255.0f);
+
                 // Check the current button state against the previous one
                 // and update the input controller appropriately
                 for(auto button: CONTROLLER_BUTTONS) {
@@ -184,60 +190,6 @@ void KOSWindow::check_events() {
                             i, dc_button_to_simulant_button(button)
                         );
                     }
-                }
-
-                uint32_t hat1_state = (uint32_t) HAT_POSITION_CENTERED;
-                for(auto button: HAT1_BUTTONS) {
-                    if(button_state & button) {
-                        switch(button) {
-                        case CONT_DPAD_UP:
-                            hat1_state |= (uint32_t) HAT_POSITION_UP;
-                        break;
-                        case CONT_DPAD_DOWN:
-                            hat1_state |= (uint32_t) HAT_POSITION_DOWN;
-                        break;
-                        case CONT_DPAD_LEFT:
-                            hat1_state |= (uint32_t) HAT_POSITION_LEFT;
-                        break;
-                        case CONT_DPAD_RIGHT:
-                            hat1_state |= (uint32_t) HAT_POSITION_RIGHT;
-                        break;
-                        default:
-                            break;
-                        }
-                    }
-                }
-
-                if(hat1_state != previous_hat1_state[i]) {
-                    input_state->_handle_joystick_hat_motion(i, 0, (HatPosition) hat1_state);
-                    previous_hat1_state[i] = (HatPosition) hat1_state;
-                }
-
-                uint32_t hat2_state = (uint32_t) HAT_POSITION_CENTERED;
-                for(auto button: HAT2_BUTTONS) {
-                    if(button_state & button) {
-                        switch(button) {
-                        case CONT_DPAD2_UP:
-                            hat2_state |= (uint32_t) HAT_POSITION_UP;
-                        break;
-                        case CONT_DPAD2_DOWN:
-                            hat2_state |= (uint32_t) HAT_POSITION_DOWN;
-                        break;
-                        case CONT_DPAD2_LEFT:
-                            hat2_state |= (uint32_t) HAT_POSITION_LEFT;
-                        break;
-                        case CONT_DPAD2_RIGHT:
-                            hat2_state |= (uint32_t) HAT_POSITION_RIGHT;
-                        break;
-                        default:
-                            break;
-                        }
-                    }
-                }
-
-                if(hat2_state != previous_hat2_state[i]) {
-                    input_state->_handle_joystick_hat_motion(i, 0, (HatPosition) hat2_state);
-                    previous_hat2_state[i] = (HatPosition) hat2_state;
                 }
 
                 previous_controller_button_state[i] = button_state;
@@ -259,8 +211,7 @@ void KOSWindow::check_events() {
             };
 
             if(state) {
-                std::array<uint8_t, 256> key_state;
-                std::copy(state->matrix, state->matrix + 256, key_state.begin());
+                const uint8_t* key_state = state->matrix;
 
                 for(uint32_t j = 0; j < 256; ++j) {
                     if(key_state[j] && !previous_key_state[j]) {
@@ -280,7 +231,7 @@ void KOSWindow::check_events() {
                     }
                 }
 
-                previous_key_state = key_state;
+                std::copy(key_state, key_state + sizeof(key_state), previous_key_state);
             }
         }
     }
