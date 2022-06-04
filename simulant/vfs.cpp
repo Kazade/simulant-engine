@@ -40,17 +40,23 @@ namespace smlt {
 
 VirtualFileSystem::VirtualFileSystem() {
 
-    resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
+    auto cwd = find_working_directory();
+    if(!cwd.str().empty()) {
+        resource_path_.push_back(cwd); //Add the working directory (might be different)
+    }
 
 #ifndef __ANDROID__
     //Android can't find the executable directory in release mode, but can in debug!
-    resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
+    auto ed = find_executable_directory();
+    if(!ed.str().empty()) {
+        resource_path_.push_back(ed); //Make sure the directory the executable lives is on the resource path
+    }
 #endif
 
 #ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
-    resource_path_.push_back("/pc");
     resource_path_.push_back("/cd");
+    resource_path_.push_back("/pc");
 #endif
 
 #ifdef __PSP__
