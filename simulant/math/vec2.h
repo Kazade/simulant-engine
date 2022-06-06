@@ -11,6 +11,20 @@ struct Vec4;
 struct Degrees;
 
 struct Vec2 {
+
+public:
+    static const Vec2 NEGATIVE_X;
+    static const Vec2 POSITIVE_X;
+    static const Vec2 NEGATIVE_Y;
+    static const Vec2 POSITIVE_Y;
+
+    static const Vec2 DOWN;
+    static const Vec2 LEFT;
+    static const Vec2 ONE;
+    static const Vec2 RIGHT;
+    static const Vec2 UP;
+    static const Vec2 ZERO;
+
     float x;
     float y;
 
