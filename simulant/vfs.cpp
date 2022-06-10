@@ -41,48 +41,47 @@ namespace smlt {
 VirtualFileSystem::VirtualFileSystem() {
 
     auto cwd = find_working_directory();
-    if(!cwd.str().empty()) {
-        resource_path_.push_back(cwd); //Add the working directory (might be different)
-    }
+    add_search_path(cwd); //Add the working directory (might be different)
 
 #ifndef __ANDROID__
     //Android can't find the executable directory in release mode, but can in debug!
     auto ed = find_executable_directory();
-    if(!ed.str().empty()) {
-        resource_path_.push_back(ed); //Make sure the directory the executable lives is on the resource path
-    }
+    add_search_path(ed); //Make sure the directory the executable lives is on the resource path
 #endif
 
 #ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
-    resource_path_.push_back("/cd");
-    resource_path_.push_back("/pc");
+    add_search_path("/cd");
+    add_search_path("/pc");
 #endif
 
 #ifdef __PSP__
-    resource_path_.push_back(".");
-    resource_path_.push_back("umd0:");
-    resource_path_.push_back("ms0:");
-    resource_path_.push_back("disc0:");
+    add_search_path(".");
+    add_search_path("umd0:");
+    add_search_path("ms0:");
+    add_search_path("disc0:");
 #endif
 
 #ifdef __linux__
-    resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
-    resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
+    add_search_path("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
+    add_search_path("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
 #endif
 
     /* In any standard project there are assets in the 'assets' directory.
      * So we add that in here as a standard location in all
      * root paths */
-    auto copy = resource_path_; for(auto& path: copy) {
-        resource_path_.push_back(
-            kfs::path::join(path.str(), "assets")
-        );
+    auto copy = resource_path_;
+    for(auto& path: copy) {
+        add_search_path(kfs::path::join(path.str(), "assets"));
     }
 }
 
 bool VirtualFileSystem::add_search_path(const Path& path) {
     Path new_path(kfs::path::abs_path(path.str()));
+
+    if(path.str().empty() || path.str() == "/") {
+        return false;
+    }
 
     if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
         return false;
