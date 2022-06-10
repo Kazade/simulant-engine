@@ -89,8 +89,15 @@ struct AppConfig {
         /** If specified, these directories are added to the path
          * temporarily while loading the default font */
         std::vector<Path> font_directories = {
+#ifdef __DREAMCAST__
+            "/cd/simulant/fonts/Orbitron",
+            "/cd/assets/simulant/fonts/Orbitron"
+            "/pc/simulant/fonts/Orbitron",
+            "/pc/assets/simulant/fonts/Orbitron"
+#else
             "simulant/fonts/Orbitron",
             "assets/simulant/fonts/Orbitron"
+#endif
         };
 
         /** The font-family that is used by default for widgets */
