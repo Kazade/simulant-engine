@@ -18,7 +18,7 @@
 //
 
 #include "types.h"
-#include "random.h"
+#include "utils/random.h"
 
 namespace smlt {
 

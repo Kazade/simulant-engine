@@ -2,7 +2,8 @@
 
 #include <random>
 #include <vector>
-#include "types.h"
+#include "../types.h"
+#include "_rnd.h"
 
 namespace smlt {
 
@@ -40,7 +41,7 @@ public:
     smlt::Vec3 direction_3d();
 
 private:
-    std::default_random_engine rand_;
+    rnd_pcg_t rand_;
 };
 
 
