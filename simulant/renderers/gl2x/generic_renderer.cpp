@@ -683,13 +683,29 @@ GPUProgramID GenericRenderer::current_gpu_program_id() const {
 
 void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buffers) {
     auto element_count = renderable->index_element_count;
-    auto index_type = convert_id_type(renderable->index_data->index_type());
-    auto arrangement = renderable->arrangement;
+    auto arrangement = convert_arrangement(renderable->arrangement);
+    if(element_count) {
+        auto index_type = convert_id_type(renderable->index_data->index_type());
+        auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
+        GLCheck(glDrawElements, arrangement, element_count, index_type, BUFFER_OFFSET(offset));
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+    } else {
+        assert(renderable->vertex_ranges);
+        assert(renderable->vertex_range_count);
 
-    auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
+        auto range = renderable->vertex_ranges;
+        auto total = 0;
+        for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
+            GLCheck(
+                glDrawArrays,
+                arrangement, range->start, range->count
+            );
 
-    GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(offset));
-    get_app()->stats->increment_polygons_rendered(arrangement, element_count);
+            total += range->count;
+        }
+
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, total);
+    }
 }
 
 void GenericRenderer::init_context() {

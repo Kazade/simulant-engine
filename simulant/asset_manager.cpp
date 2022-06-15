@@ -202,6 +202,12 @@ const MeshPtr AssetManager::mesh(MeshID id) const {
 }
 
 MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
+    if(submesh->type() == SUBMESH_TYPE_RANGED) {
+        /* FIXME: Implement this! */
+        S_ERROR("Ranged submeshes can't currently be turned into meshes");
+        return MeshPtr();
+    }
+
     auto source_vdata = submesh->mesh->vertex_data.get();
 
     VertexSpecification spec = source_vdata->vertex_specification();
@@ -209,9 +215,10 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
     auto mesh = new_mesh(spec, garbage_collect);
     auto target_vdata = mesh->vertex_data.get();
 
-    SubMesh* target = mesh->new_submesh_with_material(
+    SubMesh* target = mesh->new_submesh(
         submesh->name(),
         submesh->material(),
+        submesh->index_data->index_type(),
         submesh->arrangement()
     );
 

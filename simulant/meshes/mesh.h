@@ -164,31 +164,48 @@ public:
     /* Returns true if the Mesh has had a skeleton added */
     bool has_skeleton() const;
 
-    SubMeshPtr new_submesh_with_material(
+    /**
+     * @brief Create a new ranged submesh with the specified material
+     * @param name
+     * @param material
+     * @param arrangement
+     * @return
+     */
+    SubMeshPtr new_submesh(
         const std::string& name,
         MaterialID material,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        IndexType=INDEX_TYPE_16_BIT
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
     );
 
-    SubMeshPtr new_submesh_with_material(
+    /**
+     * @brief Create a new indexed submesh with the specified material and index type
+     * @param name
+     * @param material
+     * @param index_type
+     * @param arrangement
+     * @return
+     */
+    SubMeshPtr new_submesh(
+        const std::string& name,
+        MaterialID material,
+        IndexType index_type,
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
+    );
+
+    /**
+     * @brief Create a new indexed submesh with shared index data
+     * @param name
+     * @param material
+     * @param index_data
+     * @param arrangement
+     * @return
+     */
+    SubMeshPtr new_submesh(
         const std::string& name,
         MaterialID material,
         IndexDataPtr index_data,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
-    );
-
-    SubMeshPtr new_submesh(
-        const std::string& name,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        IndexType=INDEX_TYPE_16_BIT
-    );
-
-    SubMeshPtr new_submesh(
-        const std::string& name,
-        IndexDataPtr index_data,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
-    );
+    );   
 
     SubMeshPtr new_submesh_as_capsule(
         const std::string& name,

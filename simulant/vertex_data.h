@@ -166,6 +166,17 @@ public:
         return out.count() - 1;
     }
 
+    std::size_t extend(const VertexData& other) {
+        if(vertex_specification_ != other.vertex_specification_) {
+            S_ERROR("Tried to extend vertex data with incompatible data");
+            return 0;
+        }
+
+        data_.insert(data_.end(), other.data_.begin(), other.data_.end());
+        vertex_count_ += other.count();
+        return count();
+    }
+
     void transform_by(const Mat4& transform) {
         for(auto i = 0u; i < count(); ++i) {
             move_to(i);

@@ -228,7 +228,9 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     // Rebuild the mesh from the loaded data
     mesh->reset(vertex_specification);
 
-    SubMesh* submesh = mesh->new_submesh("default", MESH_ARRANGEMENT_TRIANGLES);
+    auto mat = asset_manager->clone_default_material();
+
+    SubMesh* submesh = mesh->new_submesh("default", mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     S_DEBUG("Loading MD2 model: {0}", filename_);
 

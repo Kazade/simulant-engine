@@ -189,10 +189,10 @@ bool Debug::init() {
 
     auto mesh = mesh_.fetch();
 
-    lines_with_depth_ = mesh->new_submesh_with_material("lines_with_depth", material_, MESH_ARRANGEMENT_LINES);
-    lines_without_depth_ = mesh->new_submesh_with_material("lines_without_depth", material_no_depth_, MESH_ARRANGEMENT_LINES);
-    points_with_depth_ = mesh->new_submesh_with_material("points_with_depth", material_, MESH_ARRANGEMENT_TRIANGLES);
-    points_without_depth_ = mesh->new_submesh_with_material("points_without_depth", material_no_depth_, MESH_ARRANGEMENT_TRIANGLES);
+    lines_with_depth_ = mesh->new_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    lines_without_depth_ = mesh->new_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    points_with_depth_ = mesh->new_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    points_without_depth_ = mesh->new_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     return true;
 }

@@ -43,11 +43,11 @@ OctreeCuller::OctreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth):
 
     /* Find the size of index we need to store all indices */
     IndexType type = INDEX_TYPE_8_BIT;
-    for(auto submesh: mesh->each_submesh()) {
-        if(submesh->index_data->index_type() > type) {
-            type = submesh->index_data->index_type();
-        }
-    };
+    if(mesh->vertex_data->count() >= std::numeric_limits<uint8_t>::max()) {
+        type = INDEX_TYPE_16_BIT;
+    } else if(mesh->vertex_data->count() >= std::numeric_limits<uint16_t>::max()) {
+        type = INDEX_TYPE_32_BIT;
+    }
 
     index_type_ = type;
 }

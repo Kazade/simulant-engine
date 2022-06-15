@@ -449,8 +449,9 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     _S_UNUSED(iteration);
 
     auto element_count = renderable->index_element_count;
+    auto vertex_range_count = renderable->vertex_range_count;
     // Don't bother doing *anything* if there is nothing to render
-    if(!element_count) {
+    if(!element_count && !vertex_range_count) {
         return;
     }
 
@@ -555,20 +556,39 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         }
     }
 
-    assert(element_count);
-
-    auto index_type = convert_index_type(renderable->index_data->index_type());
     auto arrangement = convert_arrangement(renderable->arrangement);
 
-    GLCheck(
-        glDrawElements,
-        arrangement,
-        element_count,
-        index_type,
-        (const void*) index_data
-    );
+    if(element_count) {
+        /* Indexed renderable */
+        auto index_type = convert_index_type(renderable->index_data->index_type());
 
-    get_app()->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+        GLCheck(
+            glDrawElements,
+            arrangement,
+            element_count,
+            index_type,
+            (const void*) index_data
+        );
+
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+    } else {
+        /* Range-based renderable */
+        assert(renderable->vertex_ranges);
+        assert(renderable->vertex_range_count);
+
+        auto range = renderable->vertex_ranges;
+        auto total = 0;
+        for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
+            GLCheck(
+                glDrawArrays,
+                arrangement, range->start, range->count
+            );
+
+            total += range->count;
+        }
+
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, total);
+    }
 }
 
 }

@@ -376,7 +376,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             sm = mesh->find_submesh(material.name);
         } else {
             /* Otherwise we create a new one for this material */
-            sm = mesh->new_submesh_with_material(material.name, mat);
+            sm = mesh->new_submesh(material.name, mat, INDEX_TYPE_16_BIT);
         }
 
         auto idata = sm->index_data.get();

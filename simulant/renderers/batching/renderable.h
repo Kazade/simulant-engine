@@ -30,6 +30,7 @@ namespace smlt {
 
 class VertexData;
 class IndexData;
+struct VertexRange;
 
 typedef sig::signal<void (RenderPriority, RenderPriority)> RenderPriorityChangedSignal;
 
@@ -66,8 +67,13 @@ private:
 struct Renderable final {
     MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
     const VertexData* vertex_data = nullptr;
+
     const IndexData* index_data = nullptr;
     std::size_t index_element_count = 0;
+
+    const VertexRange* vertex_ranges = nullptr;
+    std::size_t vertex_range_count = 0;
+
     RenderPriority render_priority = RENDER_PRIORITY_MAIN;
     Mat4 final_transformation;
     Material* material = nullptr;

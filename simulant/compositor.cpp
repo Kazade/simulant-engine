@@ -333,7 +333,6 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
             );
 
             assert(renderable->material);
-            assert(renderable->index_data);
             assert(renderable->vertex_data);
 
             renderable->light_count = renderable_lights.size();
