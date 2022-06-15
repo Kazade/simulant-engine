@@ -62,7 +62,7 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
 
     while(!data_->eof()) {
         auto c = data_->get();
-        if(c == ' ' && !strip(command).empty()) {
+        if((c == ' ' || c == '\n')  && !strip(command).empty()) {
             command = strip(command);
 
             if(command != last_command) {
