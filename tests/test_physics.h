@@ -212,6 +212,13 @@ public:
         body->unregister_collision_listener(&listener);
     }
 
+    void test_add_mesh_collider() {
+        auto mesh = stage->assets->new_mesh_as_cube_with_submesh_per_face(10.0f);
+        auto actor1 = stage->new_actor();
+        auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
+        body->add_mesh_collider(mesh, behaviours::PhysicsMaterial::WOOD);
+    }
+
     void test_collision_listener_stay() {
         skip_if(true, "Not yet implemented");
 

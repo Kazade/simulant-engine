@@ -3,7 +3,7 @@
 
 #include "bounce/bounce.h"
 #include "bounce/collision/shapes/mesh_shape.h"
-
+#include "../../meshes/mesh.h"
 #include "../../utils/mesh/triangulate.h"
 
 namespace smlt {
@@ -69,8 +69,19 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
         std::vector<Vec3> vertices;
         std::vector<utils::Triangle> triangles;
 
-        // Turn the mesh into a list of vertices + triangle indexes
-        triangulate(mesh, vertices, triangles);
+        for(std::size_t i = 0; i < mesh->vertex_data->count(); ++i) {
+            vertices.push_back(*mesh->vertex_data->position_at<Vec3>(i));
+        }
+
+        for(auto& submesh: mesh->each_submesh()) {
+            submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
+                utils::Triangle tri;
+                tri.idx[0] = a;
+                tri.idx[1] = b;
+                tri.idx[2] = c;
+                triangles.push_back(tri);
+            });
+        }
 
         // Add them to our b3Mesh generator
         bmesh->insert_vertices(vertices.begin(), vertices.end());
