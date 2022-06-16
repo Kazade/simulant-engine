@@ -532,6 +532,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     /* OK now transfer the vertex data from the batches! */
     for(auto& batch: info.batches) {
+        if(!batch.data->count()) {
+            continue;
+        }
+
         if(batch.type == VERTEX_BATCH_TYPE_TRIANGLES) {
             auto sm = mesh->find_submesh(batch.material_name);
             if(!sm) {
