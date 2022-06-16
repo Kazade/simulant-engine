@@ -28,7 +28,7 @@ public:
         smlt::MaterialID mid = application->shared_assets->new_material();
         smlt::MeshID mesh_id = application->shared_assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
         auto mesh = application->shared_assets->mesh(mesh_id);
-        smlt::SubMesh* sm = mesh->new_submesh_with_material("test", mid);
+        smlt::SubMesh* sm = mesh->new_submesh("test", mid);
         this->assert_equal(mid, (smlt::MaterialID) sm->material());
     }
 

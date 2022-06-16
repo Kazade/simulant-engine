@@ -34,10 +34,27 @@
 namespace smlt {
 namespace loaders {
 
+enum VertexBatchType {
+    VERTEX_BATCH_TYPE_TRIANGLES,
+    VERTEX_BATCH_TYPE_FANS
+};
+
+struct VertexDataBatch {
+    std::string material_name;
+    VertexBatchType type;
+    std::shared_ptr<VertexData> data;
+    std::vector<int> ranges;
+};
+
 struct LoadInfo {
     Mesh* target_mesh = nullptr;
     AssetManager* assets = nullptr;
+
+    MaterialPtr default_material = nullptr;
+    std::map<std::string, MaterialPtr> materials;
+
     Material* current_material = nullptr;
+
     VertexData* vdata = nullptr;
     VertexSpecification vspec;
 
@@ -46,6 +63,8 @@ struct LoadInfo {
 
     std::istream* stream;
     Path folder;
+
+    std::list<VertexDataBatch> batches;
 };
 
 typedef std::function<bool (LoadInfo*, std::string, std::string)> CommandHandler;
@@ -62,7 +81,7 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
 
     while(!data_->eof()) {
         auto c = data_->get();
-        if(c == ' ' && !strip(command).empty()) {
+        if((c == ' ' || c == '\n')  && !strip(command).empty()) {
             command = strip(command);
 
             if(command != last_command) {
@@ -109,22 +128,22 @@ static bool null(LoadInfo*, std::string, std::string) {
 static bool newmtl(LoadInfo* info, std::string, std::string args) {
     auto mat_name = strip(args);
 
-    if(info->target_mesh->has_submesh(mat_name)) {
-        info->current_material = info->target_mesh->find_submesh(mat_name)->material().get();
+    if(info->materials.count(mat_name)) {
+        info->current_material = info->materials.at(mat_name).get();
     } else {
-        auto sm = info->target_mesh->new_submesh(mat_name);
-        info->current_material = sm->material().get();
-        info->current_material->set_name(args);
-        info->current_material->set_cull_mode(info->cull_mode);
+        auto new_mat = info->assets->clone_default_material();
+        new_mat->set_name(args);
+        new_mat->set_cull_mode(info->cull_mode);
+
+        info->materials[mat_name] = new_mat;
+        info->current_material = new_mat.get();
     }
 
     return true;
 }
 
 static bool map_Kd(LoadInfo* info, std::string, std::string args) {
-    Material* mat = (info->current_material) ?
-        info->current_material :
-        info->target_mesh->find_submesh("__default__")->material().get();
+    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
     /* Handle replacing the texture extension if that was desired */
     if(!info->overridden_tex_format.empty()) {
@@ -146,9 +165,7 @@ static bool map_Kd(LoadInfo* info, std::string, std::string args) {
 }
 
 static bool Ka(LoadInfo* info, std::string, std::string args) {
-    Material* mat = (info->current_material) ?
-        info->current_material :
-        info->target_mesh->find_submesh("__default__")->material().get();
+    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
     auto parts = split(args);
 
@@ -162,9 +179,7 @@ static bool Ka(LoadInfo* info, std::string, std::string args) {
 }
 
 static bool Kd(LoadInfo* info, std::string, std::string args) {
-    Material* mat = (info->current_material) ?
-        info->current_material :
-        info->target_mesh->find_submesh("__default__")->material().get();
+    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
     auto parts = split(args);
 
@@ -178,9 +193,7 @@ static bool Kd(LoadInfo* info, std::string, std::string args) {
 }
 
 static bool Ks(LoadInfo* info, std::string, std::string args) {
-    Material* mat = (info->current_material) ?
-        info->current_material :
-        info->target_mesh->find_submesh("__default__")->material().get();
+    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
     auto parts = split(args);
 
@@ -193,9 +206,7 @@ static bool Ks(LoadInfo* info, std::string, std::string args) {
 }
 
 static bool Ke(LoadInfo* info, std::string, std::string args) {
-    Material* mat = (info->current_material) ?
-        info->current_material :
-        info->target_mesh->find_submesh("__default__")->material().get();
+    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
     auto parts = split(args);
 
@@ -208,9 +219,7 @@ static bool Ke(LoadInfo* info, std::string, std::string args) {
 }
 
 static bool Ns(LoadInfo* info, std::string, std::string args) {
-    Material* mat = (info->current_material) ?
-        info->current_material :
-        info->target_mesh->find_submesh("__default__")->material().get();
+    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
     float s = smlt::stof(args);
 
@@ -219,9 +228,7 @@ static bool Ns(LoadInfo* info, std::string, std::string args) {
 }
 
 static bool d(LoadInfo* info, std::string, std::string args) {
-    Material* mat = (info->current_material) ?
-        info->current_material :
-        info->target_mesh->find_submesh("__default__")->material().get();
+    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
     float d = smlt::stof(args);
     if(almost_equal(d, 1.0f)) {
@@ -287,10 +294,8 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
 static bool apply_material(LoadInfo* info, std::string, std::string args) {
     auto mat_name = strip(args);
 
-    auto sm = info->target_mesh->find_submesh(mat_name);
-
-    if(sm) {
-        info->current_material = sm->material().get();
+    if(info->materials.count(mat_name)) {
+        info->current_material = info->materials[mat_name].get();
         return true;
     }
 
@@ -368,18 +373,53 @@ static bool load_normal(LoadInfo* info, std::string, std::string args) {
 
 
 static bool load_face(LoadInfo* info, std::string, std::string args) {
-    smlt::SubMeshPtr submesh;
-    if(info->current_material) {
-        submesh = info->target_mesh->find_submesh(info->current_material->name());
-    } else {
-        if(info->target_mesh->has_submesh("__default__")) {
-            submesh = info->target_mesh->find_submesh("__default__");
-        } else {
-            submesh = info->target_mesh->new_submesh("__default__");
+    /* To render things as efficiently as possible, we need two submeshes per material:
+     *
+     * 1. For triangles, rendered as a single "draw arrays" call
+     * 2. For triangle-fans, rendered as a series of "draw arrays" calls
+     *
+     * Because these things all need the same vertex data, we need to essentially
+     * "cache" the data into separate arrays and the inject them into the
+     * final data as:
+     *
+     * [mat0tris, mat0fans, mat1tris, mat1fans, ...]
+     *
+     */
+
+    auto find_batch = [info](const std::string& material_name, VertexBatchType type) -> VertexDataBatch* {
+        for(auto& batch: info->batches) {
+            if(batch.material_name == material_name && batch.type == type) {
+                return &batch;
+            }
         }
-    }
+
+        VertexDataBatch new_batch;
+        new_batch.material_name = material_name;
+        new_batch.type = type;
+        new_batch.data = std::make_shared<VertexData>(info->vspec);
+        info->batches.push_back(new_batch);
+        return &info->batches.back();
+    };
+
+    VertexDataBatch* batches[2];
+
+    batches[0] =
+        (info->current_material) ?
+            find_batch(info->current_material->name(), VERTEX_BATCH_TYPE_TRIANGLES) :
+            find_batch("__default__", VERTEX_BATCH_TYPE_TRIANGLES);
+
+    batches[1] =
+        (info->current_material) ?
+            find_batch(info->current_material->name(), VERTEX_BATCH_TYPE_FANS) :
+            find_batch("__default__", VERTEX_BATCH_TYPE_FANS);
+
+    assert(batches[0]);
+    assert(batches[1]);
 
     auto corners = split(args);
+
+    auto batch = (corners.size() == 3) ? batches[0] : batches[1];
+    batch->ranges.push_back(corners.size());
 
     for(auto& corner: corners) {
         int32_t vindex = -1, tindex = -1, nindex = -1;
@@ -402,7 +442,7 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
         smlt::Colour diffuse = smlt::Colour::WHITE;
         if(vindex == -1) {
             return false;
-        } else {
+        } else if((vindex - 1) < (int) VERTICES->size()) {
             Vec3 p = VERTICES->at(vindex - 1);
             Vec3 c = COLOURS->at(vindex - 1);
 
@@ -410,27 +450,28 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
             diffuse.g = c.y;
             diffuse.b = c.z;
 
-            info->vdata->position(p);
+            batch->data->position(p);
+        } else {
+            S_WARN("Invalid vertex index {0} while loading model", vindex - 1);
+            batch->data->position(smlt::Vec3());
         }
 
         if(tindex != -1 && info->vspec.has_texcoord0()) {
             Vec2 t = TEXCOORDS->at(tindex - 1);
-            info->vdata->tex_coord0(t);
+            batch->data->tex_coord0(t);
         }
 
         if(nindex != -1 && info->vspec.has_normals()) {
             Vec3 n = NORMALS->at(nindex - 1);
-            info->vdata->normal(n);
+            batch->data->normal(n);
         }
 
         if(info->vspec.has_diffuse()) {
-            info->vdata->diffuse(diffuse);
+            batch->data->diffuse(diffuse);
         }
 
-        info->vdata->move_next();
-        submesh->index_data->index(info->vdata->count() - 1);
-    }
-
+        batch->data->move_next();
+    }       
     return true;
 }
 
@@ -484,15 +525,74 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     info.stream = data_.get();
     info.cull_mode = mesh_opts.cull_mode;
     info.overridden_tex_format = mesh_opts.override_texture_extension;
-
+    info.default_material = mesh->asset_manager().clone_default_material();
     info.folder = kfs::path::dir_name(filename_.str());
 
     run_parser(info, commands);
 
-    vdata->done();
-    for(auto& sm: mesh->each_submesh()) {
-        sm->index_data->done();
+    /* OK now transfer the vertex data from the batches! */
+    for(auto& batch: info.batches) {
+        if(!batch.data->count()) {
+            continue;
+        }
+
+        if(batch.type == VERTEX_BATCH_TYPE_TRIANGLES) {
+            auto sm = mesh->find_submesh(batch.material_name);
+            if(!sm) {
+                if(batch.material_name == "__default__") {
+                    sm = mesh->new_submesh(batch.material_name, info.default_material);
+                } else {
+                    sm = mesh->new_submesh(batch.material_name, info.materials.at(batch.material_name));
+                }
+            }
+
+            sm->add_vertex_range(mesh->vertex_data->count(), batch.data->count());
+            mesh->vertex_data->extend(*batch.data);
+            batch.data.reset();
+        } else {
+            /* Same thing, but with a triangle fan arrangement */
+            auto sm_name = batch.material_name + "_fan";
+            auto sm = mesh->find_submesh(sm_name);
+            if(!sm) {
+                if(batch.material_name == "__default__") {
+                    sm = mesh->new_submesh(sm_name, info.default_material, MESH_ARRANGEMENT_TRIANGLE_FAN);
+                } else {
+                    sm = mesh->new_submesh(sm_name, info.materials.at(batch.material_name), MESH_ARRANGEMENT_TRIANGLE_FAN);
+                }
+            }
+            auto start = mesh->vertex_data->count();
+            for(auto range: batch.ranges) {
+                sm->add_vertex_range(start, range);
+                start += range;
+            }
+            mesh->vertex_data->extend(*batch.data);
+            batch.data.reset();
+        }
     }
+
+    vdata->done();
+
+    /* Final nicety - search for diffuse/specular/bump maps in the current directory */
+    std::string extensions [] = {
+        ".jpg",
+        ".png",
+        ".tga"
+    };
+
+    for(auto& ext: extensions) {
+        auto path = this->filename_.replace_ext(ext);
+        if(kfs::path::exists(path.str().c_str())) {
+            auto tex = mesh->asset_manager().new_texture_from_file(path);
+            info.default_material->set_diffuse_map(tex);
+        } else {
+            path = kfs::path::split_ext(filename_.str()).first + "_color" + ext;
+            if(kfs::path::exists(path.str().c_str())) {
+                auto tex = mesh->asset_manager().new_texture_from_file(path);
+                info.default_material->set_diffuse_map(tex);
+            }
+        }
+    }
+
 }
 
 }

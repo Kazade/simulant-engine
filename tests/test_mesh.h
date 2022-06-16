@@ -46,7 +46,7 @@ public:
 
         data->done();
 
-        first_mesh_ = mesh->new_submesh("test");
+        first_mesh_ = mesh->new_submesh("test", stage_->assets->clone_default_material(), INDEX_TYPE_16_BIT);
         smlt::SubMesh* submesh = first_mesh_;
 
         submesh->index_data->index(0);
@@ -59,7 +59,7 @@ public:
         submesh->index_data->done();
 
         //Draw a line between the first two vertices
-        smlt::SubMesh* sm = mesh->new_submesh("test2", smlt::MESH_ARRANGEMENT_LINES);
+        smlt::SubMesh* sm = mesh->new_submesh("test2", stage_->assets->clone_default_material(), INDEX_TYPE_16_BIT, smlt::MESH_ARRANGEMENT_LINES);
         sm->index_data->index(0);
         sm->index_data->index(1);
         sm->index_data->done();
@@ -154,9 +154,10 @@ public:
         m1->vertex_data->position(0, 0, 0);
         m1->vertex_data->done();
 
-        m1->new_submesh("sm1", index_data);
-        m1->new_submesh("sm2", index_data);
-        m1->new_submesh("sm3");
+        auto mat = stage_->assets->new_material();
+        m1->new_submesh("sm1", mat, index_data);
+        m1->new_submesh("sm2", mat, index_data);
+        m1->new_submesh("sm3", mat, INDEX_TYPE_16_BIT);
 
         m1->destroy_submesh("sm2");
 

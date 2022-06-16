@@ -99,14 +99,6 @@ int main(int argc, char* argv[]) {
     AppConfig config;
     config.title = "Fleets Demo";
 
-    #ifdef __DREAMCAST__
-    config.width = 640;
-    config.height = 480;
-#else
-    config.width = 1280;
-    config.height = 960;
-#endif
-
     FleetsDemo app(config);
     return app.run();
 }

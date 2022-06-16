@@ -386,7 +386,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             continue;
         }
 
-        submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
+        submeshes_by_material[material] = mesh->new_submesh(_F("{0}").format(i++), material, INDEX_TYPE_16_BIT);
         if(material) {
             material.fetch()->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC); // Re-enable GC now the material has been applied
         }

@@ -30,9 +30,10 @@ SubMesh* new_rectangle_submesh(
     float x_offset, float y_offset, float z_offset, MaterialID material_id) {
 
     //Create a submesh
-    SubMesh* submesh = mesh->new_submesh_with_material(
+    SubMesh* submesh = mesh->new_submesh(
         "rectangle",
         (material_id) ? material_id : mesh->asset_manager().clone_default_material(),
+        INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
     );
 
@@ -138,9 +139,10 @@ SubMesh *rectangle(
     }
 
     //Create a submesh that uses the shared data
-    SubMesh* submesh = mesh->new_submesh_with_material(
+    SubMesh* submesh = mesh->new_submesh(
         "rectangle",
         material,
+        INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
     );
     submesh->index_data->index(offset + 0);
@@ -195,9 +197,10 @@ SubMesh* rectangle_outline(
     if(!material) {
         material = mesh->asset_manager().clone_default_material();
     }
-    SubMesh* submesh = mesh->new_submesh_with_material(
+    SubMesh* submesh = mesh->new_submesh(
         "rectangle_outline",
         material,
+        INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_LINE_STRIP
     );
 

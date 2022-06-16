@@ -348,8 +348,8 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // We divide the heightmap into patches for more efficient rendering
     smlt::MaterialPtr mat = mesh->asset_manager().clone_default_material();
 
-    auto sm = mesh->new_submesh_with_material(
-        "terrain", mat, MESH_ARRANGEMENT_TRIANGLES, index_type
+    auto sm = mesh->new_submesh(
+        "terrain", mat, index_type, MESH_ARRANGEMENT_TRIANGLES
     );
 
     int32_t height = (int32_t) tex->height();

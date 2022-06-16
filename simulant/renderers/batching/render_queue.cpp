@@ -64,7 +64,11 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     assert(camera_);
     assert(render_group_factory_);
 
-    if(!src_renderable.is_visible || !src_renderable.index_element_count) {
+    if(!src_renderable.is_visible) {
+        return;
+    }
+
+    if(!src_renderable.vertex_range_count && !src_renderable.index_element_count) {
         return;
     }
 

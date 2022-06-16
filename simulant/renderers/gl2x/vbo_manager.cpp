@@ -4,7 +4,9 @@ namespace smlt {
 
 void GPUBuffer::bind_vbos() {
     vertex_vbo->bind(vertex_vbo_slot);
-    index_vbo->bind(index_vbo_slot);
+    if(index_vbo) {
+        index_vbo->bind(index_vbo_slot);
+    }
 }
 
 void VBOManager::on_index_data_destroyed(IndexData* index_data) {
@@ -76,20 +78,22 @@ std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, 
 
 GPUBuffer VBOManager::update_and_fetch_buffers(const Renderable *renderable) {
     const auto& vdata = renderable->vertex_data;
-    const auto& idata = renderable->index_data;
-
     auto vpair = perform_fetch_or_upload(vdata, dedicated_vertex_vbos_, vertex_data_slots_);
-    auto ipair = perform_fetch_or_upload(idata, dedicated_index_vbos_, index_data_slots_);
-
-    GPUBuffer buffer;
 
     assert(vpair.first->target() == GL_ARRAY_BUFFER);
-    assert(ipair.first->target() == GL_ELEMENT_ARRAY_BUFFER);
 
-    buffer.index_vbo = ipair.first;
+    GPUBuffer buffer;
     buffer.vertex_vbo = vpair.first;
-    buffer.index_vbo_slot = ipair.second;
     buffer.vertex_vbo_slot = vpair.second;
+
+    if(renderable->index_data) {
+        const auto& idata = renderable->index_data;
+        auto ipair = perform_fetch_or_upload(idata, dedicated_index_vbos_, index_data_slots_);
+        assert(ipair.first->target() == GL_ELEMENT_ARRAY_BUFFER);
+
+        buffer.index_vbo = ipair.first;
+        buffer.index_vbo_slot = ipair.second;
+    }
 
     return buffer;
 }

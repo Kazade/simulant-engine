@@ -67,10 +67,10 @@ bool Widget::init() {
     style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->global_foreground_material_;
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh_with_material("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("text", font_->material(), MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("text", font_->material(), INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
 
     rebuild();
 

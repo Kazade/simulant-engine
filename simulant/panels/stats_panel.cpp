@@ -179,7 +179,7 @@ void StatsPanel::rebuild_ram_graph() {
         return;
     }
 
-    auto submesh = ram_graph_mesh_->new_submesh_with_material("ram-usage", graph_material_, MESH_ARRANGEMENT_QUADS);
+    auto submesh = ram_graph_mesh_->new_submesh("ram-usage", graph_material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
     auto& vdata = ram_graph_mesh_->vertex_data;
     auto& idata = submesh->index_data;
 

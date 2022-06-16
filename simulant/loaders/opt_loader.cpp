@@ -518,9 +518,10 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         new_tex->set_data(tex.data);
 
         //Create a submesh for each texture.
-        texture_submesh[tex.name] = mesh->new_submesh_with_material(
+        texture_submesh[tex.name] = mesh->new_submesh(
             tex.name,
             mesh->asset_manager().new_material_from_texture(new_tex->id()),
+            INDEX_TYPE_16_BIT,
             MESH_ARRANGEMENT_TRIANGLES
         );
     }
