@@ -7,9 +7,10 @@
 namespace smlt {
 
 RandomGenerator::RandomGenerator() {
-    time_t seconds;
-    time(&seconds);
-    rnd_pcg_seed(&rand_, (RND_U32) seconds);
+    /* rand works everywhere, but it's not easy to create "instances" of rand so we
+     * just use it to seed the pcg there */
+    uint32_t r = rand();
+    rnd_pcg_seed(&rand_, r);
 }
 
 RandomGenerator::RandomGenerator(uint32_t seed) {
