@@ -1,24 +1,26 @@
+#define RND_IMPLEMENTATION
+#include "_rnd.h"
 #include "random.h"
 
 namespace smlt {
 
 RandomGenerator::RandomGenerator() {
-    std::random_device rd;
-    rand_.seed(rd());
+    time_t seconds;
+    time(&seconds);
+    rnd_pcg_seed(&rand_, (RND_U32) seconds);
 }
 
 RandomGenerator::RandomGenerator(uint32_t seed) {
-    rand_.seed(seed);
+    rnd_pcg_seed(&rand_, (RND_U32) seed);
 }
 
 float RandomGenerator::float_in_range(float lower, float upper) {
-    std::uniform_real_distribution<float> dist(lower, upper);
-    return dist(rand_);
+    float dist = upper - lower;
+    return lower + (dist * rnd_pcg_nextf(&rand_));
 }
 
 int32_t RandomGenerator::int_in_range(int32_t lower, int32_t upper) {
-    std::uniform_int_distribution<> dist(lower, upper);
-    return dist(rand_);
+    return rnd_pcg_range(&rand_, lower, upper);
 }
 
 Vec2 RandomGenerator::point_in_circle(float diameter) {

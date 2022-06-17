@@ -45,7 +45,7 @@
 #include "nodes/ui/keyboard.h"
 
 #include "sound.h"
-#include "random.h"
+#include "utils/random.h"
 #include "compositor.h"
 #include "nodes/light.h"
 #include "meshes/mesh.h"

@@ -104,7 +104,7 @@ public:
         application->run_frame();
         application->run_frame();
 
-        assert_equal(order.size(), 9);
+        assert_equal(order.size(), 9u);
         assert_equal(order[0], 1);
         assert_equal(order[1], 2);
         assert_equal(order[2], 3);

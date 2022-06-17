@@ -13,7 +13,7 @@
 #include "../interfaces.h"
 #include "../types.h"
 #include "../vertex_data.h"
-#include "../random.h"
+#include "../utils/random.h"
 #include "../assets/particle_script.h"
 
 namespace smlt {

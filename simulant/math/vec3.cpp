@@ -1,5 +1,5 @@
 #include "../types.h"
-#include "../random.h"
+#include "../utils/random.h"
 
 #include "vec3.h"
 #include "aabb.h"

@@ -21,7 +21,7 @@
 #include "stage.h"
 #include "debug.h"
 #include "nodes/actor.h"
-#include "random.h"
+#include "utils/random.h"
 #include "window.h"
 #include "macros.h"
 #include "application.h"
