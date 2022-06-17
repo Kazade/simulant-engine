@@ -473,10 +473,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     renderer_->prepare_to_render(renderable);
 
     const auto vertex_data = renderable->vertex_data->data();
-    const auto index_data = renderable->index_data->data();
-
     assert(vertex_data);
-    assert(index_data);
 
     const auto has_positions = spec.has_positions();
     if(has_positions) {
@@ -560,6 +557,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     if(element_count) {
         /* Indexed renderable */
+        const auto index_data = renderable->index_data->data();
         auto index_type = convert_index_type(renderable->index_data->index_type());
 
         GLCheck(
