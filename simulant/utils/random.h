@@ -3,6 +3,12 @@
 #include <random>
 #include <vector>
 #include "../types.h"
+
+#include <cstdint>
+
+#define RND_U32 uint32_t
+#define RND_U64 uint64_t
+
 #include "_rnd.h"
 
 namespace smlt {

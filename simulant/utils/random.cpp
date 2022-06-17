@@ -1,4 +1,6 @@
 #define RND_IMPLEMENTATION
+
+#include <cstdint>
 #include "_rnd.h"
 #include "random.h"
 

@@ -326,6 +326,8 @@ bool Application::_call_init() {
     sound_driver_ = window->create_sound_driver(config_.development.force_sound_driver);
     sound_driver_->startup();
 
+    S_DEBUG("Sound driver started");
+
     scene_manager_.reset(new SceneManager(window_.get()));
 
     scene_manager_->signal_scene_activated().connect([this](std::string, SceneBase*) {
@@ -338,7 +340,11 @@ bool Application::_call_init() {
     // user so wishes
     scenes->register_scene<scenes::Loading>("_loading");
 
+    S_DEBUG("Loading scene registered");
+
     initialized_ = init();
+
+    S_DEBUG("Initialization result: {0}", initialized_);
 
     // If we successfully initialized, but the user didn't specify
     // a particular scene, we just hit the root route
