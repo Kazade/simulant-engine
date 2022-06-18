@@ -76,9 +76,9 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
         for(auto& submesh: mesh->each_submesh()) {
             submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
                 utils::Triangle tri;
-                tri.idx[0] = a;
+                tri.idx[0] = c;
                 tri.idx[1] = b;
-                tri.idx[2] = c;
+                tri.idx[2] = a;
                 triangles.push_back(tri);
             });
         }
