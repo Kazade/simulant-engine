@@ -96,7 +96,7 @@ static int thd_each_cb(kthread_t* thd, void* data) {
 
     /* The idea is that if this code right here is running in the profiling
      * thread, then all the PCs from the other threads are
-     * current. Obviouly thought between iterations the
+     * current. Obviously though between iterations the
      * PC will change so it's not like this is a true snapshot
      * in time across threads */
     uint32_t PC = thd->context.pc;
@@ -367,7 +367,7 @@ static void* run(void* args) {
 
 void profiler_init(const char* output) {
     /* Store the filename */
-    strncpy(OUTPUT_FILENAME, output, sizeof(OUTPUT_FILENAME));
+    strncpy(OUTPUT_FILENAME, output, sizeof(OUTPUT_FILENAME) - 1);
 
     /* Initialize the file */
     printf("Creating samples file...\n");
