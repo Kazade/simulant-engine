@@ -421,6 +421,9 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
     auto batch = (corners.size() == 3) ? batches[0] : batches[1];
     batch->ranges.push_back(corners.size());
 
+    /* The face order is the opposite to what we expect */
+    std::reverse(corners.begin(), corners.end());
+
     for(auto& corner: corners) {
         int32_t vindex = -1, tindex = -1, nindex = -1;
         auto parts = split(corner, "/");
