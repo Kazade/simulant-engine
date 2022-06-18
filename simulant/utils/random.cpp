@@ -1,6 +1,8 @@
 #define RND_IMPLEMENTATION
 
 #include <cstdint>
+#include "../application.h"
+#include "../time_keeper.h"
 #include "_rnd.h"
 #include "random.h"
 
@@ -9,8 +11,14 @@ namespace smlt {
 RandomGenerator::RandomGenerator() {
     /* rand works everywhere, but it's not easy to create "instances" of rand so we
      * just use it to seed the pcg there */
-    uint32_t r = rand();
-    rnd_pcg_seed(&rand_, r);
+    int32_t r = time(NULL);
+    if(r == -1) {
+        /* If time fails for some reason, fallback to time in us... but this
+         * might still be fairly determinate */
+        S_WARN("Failed to get the time in seconds");
+        r = get_app()->time_keeper->now_in_us() * 1000000;
+    }
+    rnd_pcg_seed(&rand_, (uint32_t) r);
 }
 
 RandomGenerator::RandomGenerator(uint32_t seed) {
