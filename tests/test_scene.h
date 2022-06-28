@@ -111,9 +111,9 @@ public:
         scr->signal_activated().connect(sig_cb);
 
         manager_->activate("main");
-        assert_true(signal_called);
-
         manager_->late_update(1.0f);
+
+        assert_true(signal_called);
 
         scr->set_destroy_on_unload(false); //Don't destroy on unload        
 

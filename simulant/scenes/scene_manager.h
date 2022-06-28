@@ -199,6 +199,7 @@ public:
     void reset();
 
     SceneBasePtr active_scene() const;
+
     bool scene_queued_for_activation() const;
 
     template<typename T, typename... Args>
