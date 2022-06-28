@@ -38,6 +38,10 @@
 #include "loader.h"
 #include "nodes/stage_node_pool.h"
 
+
+#define DEFAULT_LANGUAGE_CODE "en-us"
+
+
 namespace smlt {
 
 class Window;
@@ -80,6 +84,8 @@ struct AppConfig {
 
     /* If set to true, the mouse cursor will not be hidden by default */
     bool show_cursor = false;
+
+    std::string source_language_code = DEFAULT_LANGUAGE_CODE;
 
     struct General {
         uint32_t stage_node_pool_size = 64;
@@ -232,6 +238,31 @@ public:
 
     void register_loader(LoaderTypePtr loader_type);
 
+    /** Activates a new language for UI widgets. This will search
+     *  asset paths for a .po file for the language using fallback
+     *  logic (e.g. en-gb -> en). Codes are ISO 639-1 and should be
+     *  lower-case. This function will return false if the .po file
+     *  cannot be found or loaded. */
+    bool activate_language(const std::string& language_code);
+
+    /**  Returns the currently active language */
+    std::string active_language();
+
+    /** Returns the localised text for the active language. This
+     *  will return source_text if no translation exists or the
+     *  active language is the same as the default language in the
+     *  AppConfig. This method is wrapped by the `_T()` helper macro
+     *  and you should prefer to use that so that your translated strings
+     *  can be detected by automated scanning. */
+    unicode translated_text(const unicode& source_text) {
+        auto it = active_translations_.find(source_text);
+        if(it == active_translations_.end()) {
+            return source_text;
+        } else {
+            return it->second;
+        }
+    }
+
 protected:
     bool _call_init();
 
@@ -308,6 +339,8 @@ private:
     std::list<cort::CoroutineID> coroutines_;
     void preload_default_font();
 
+    std::string active_language_ = DEFAULT_LANGUAGE_CODE;
+    std::map<unicode, unicode> active_translations_;
 public:
     S_DEFINE_PROPERTY(window, &Application::window_);
     S_DEFINE_PROPERTY(data, &Application::data_carrier_);
@@ -330,5 +363,8 @@ private:
 Application* get_app();
 
 }
+
+#define _T(text) \
+    smlt::get_app()->translated_text((text))
 
 #endif // APPLICATION_H
