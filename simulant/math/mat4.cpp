@@ -112,7 +112,7 @@ Mat4 Mat4::as_projection(const Degrees &fov, float aspect, float zNear, float zF
 
     auto fovy = Radians(fov).value;
 
-    float const tanHalfFovy = tan(fovy / 2.0f);
+    float const tanHalfFovy = std::tan(fovy * 0.5f);
 
     Mat4 result;
 
