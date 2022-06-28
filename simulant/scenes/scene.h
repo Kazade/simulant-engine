@@ -58,8 +58,14 @@ class SceneManager;
 
 class SceneLoadException : public std::runtime_error {};
 
+typedef sig::signal<void ()> SceneActivatedSignal;
+typedef sig::signal<void ()> SceneDeactivatedSignal;
+
 class SceneBase:
     public StageManager {
+
+    DEFINE_SIGNAL(SceneActivatedSignal, signal_activated);
+    DEFINE_SIGNAL(SceneDeactivatedSignal, signal_deactivated);
 
 public:
     typedef std::shared_ptr<SceneBase> ptr;
