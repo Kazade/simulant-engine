@@ -63,8 +63,12 @@ public:
     bool is_blending_enabled() const;
     void set_blend_func(BlendType b);
     BlendType blend_func() const;
+
+    void set_depth_func(DepthFunc b);
+    DepthFunc depth_func() const;
     void set_depth_write_enabled(bool v);
     bool is_depth_write_enabled() const;
+
     void set_cull_mode(CullMode mode);
     CullMode cull_mode() const;
     void set_depth_test_enabled(bool v);
