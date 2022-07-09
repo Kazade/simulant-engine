@@ -104,6 +104,7 @@ namespace smlt {
 static bool PROFILING = false;
 
 Application::Application(const AppConfig &config):
+    main_thread_id_(thread::this_thread_id()),
     time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
     vfs_(VirtualFileSystem::create()),
@@ -568,6 +569,10 @@ ProcessID Application::process_id() const {
 #endif
 }
 
+thread::ThreadID Application::thread_id() const {
+    return main_thread_id_;
+}
+
 int64_t Application::ram_usage_in_bytes() const {
     return get_platform()->process_ram_usage_in_bytes(
         process_id()
@@ -651,6 +656,8 @@ void Application::shutdown() {
 }
 
 void Application::update_coroutines() {
+    assert(thread_id() == thread::this_thread_id());  /* Must be called from the main thread */
+
     for(auto it = coroutines_.begin(); it != coroutines_.end();) {
         if(cort::resume_coroutine(*it) == cort::CO_RESULT_FINISHED) {
             cort::stop_coroutine(*it);

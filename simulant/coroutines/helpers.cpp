@@ -15,8 +15,11 @@ void cr_yield() {
     if(cort::within_coroutine()) {
         cort::yield_coroutine();
     } else {
-        /* Main thread, just update the coroutines */
-        get_app()->update_coroutines();
+        auto app = get_app();
+        if(thread::this_thread_id() == app->thread_id()) {
+            /* Main thread, just update the coroutines */
+            get_app()->update_coroutines();
+        }
     }
 }
 
