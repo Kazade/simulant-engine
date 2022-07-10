@@ -255,6 +255,12 @@ static bool d(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
+/* tr is the inverse of dissolve so we just reverse */
+static bool tr(LoadInfo* info, std::string _, std::string args) {
+    float v = smlt::clamp(smlt::stof(args), 0.0f, 1.0f);
+    return d(info, _, _F("{0}").format(1.0f - v));
+}
+
 static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
     const std::map<std::string, CommandHandler> commands = {
         {"newmtl", newmtl},
@@ -265,6 +271,7 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
         {"Ns", Ns},
         {"Ni", null},
         {"d", d},
+        {"tr", tr},
         {"illum", null},
         {"map_Kd", map_Kd},
         {"#", null},
