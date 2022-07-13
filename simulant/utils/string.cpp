@@ -1,6 +1,11 @@
+#include <algorithm>
 #include "string.h"
 
 namespace smlt {
+
+bool starts_with(const std::string& s, const std::string& what) {
+    return s.find(what) == 0;
+}
 
 bool ends_with(const std::string& s, const std::string& what) {
     if(what.size() > s.size()) {
@@ -80,6 +85,18 @@ std::string replace_all(const std::string &s, const std::string &search, const s
     }
 
     return result;
+}
+
+std::string lower_case(const std::string& s) {
+    std::string cpy = s;
+    std::transform(cpy.begin(), cpy.end(), cpy.begin(), ::tolower);
+    return cpy;
+}
+
+std::string upper_case(const std::string& s) {
+    std::string cpy = s;
+    std::transform(cpy.begin(), cpy.end(), cpy.begin(), ::toupper);
+    return cpy;
 }
 
 }
