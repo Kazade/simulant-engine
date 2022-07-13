@@ -30,7 +30,7 @@ This section covers the base subsystems and usages of Simulant.
  - Application: [The Application](application.md)
  - Scene Management: [The Scene](scene.md) | [Managing Scenes](scene_management.md)
  - Stage Heirarchy: [Stage Nodes](stage_nodes.md) | [Actors](actors.md) | [MeshInstancers](mesh_instancer.md) | Cameras: [Cameras](cameras.md)
- - The rendering process: [The Render Sequence](render_sequence.md) | [Pipelines](pipelines.md) | [Viewports](viewport.md) 
+ - The rendering process: [The Render Sequence](render_sequence.md) | [Pipelines](pipelines.md) | [Viewports](viewport.md)
  - Partitioning: [Overview](partitioners.md) | [Spatial Hash Partitioner](spatial_hashing.md) | [The Null Partitioner](null_partitioner.md)
  - Behaviours: [Organisms and Behaviours](behaviours.md)
  - Helpers: [3D Math](maths.md) | [Threads](threading.md) | [JSON Parser](json.md) | [Environment Variables](environment_variables.md) | [Coroutines](coroutines.md)
@@ -41,6 +41,6 @@ This section covers the base subsystems and usages of Simulant.
  - Debugging: [Debugging](debugging.md) | [Logging](logging.md)
  - Profiling: [Profiling](profiling.md)
  - Devices: [Screens](screens.md)
- - User interfaces: [Widgets](widgets.md)
- - Utilities: [Random](random.md) | [Command Line Args](arg_parsing.md) 
+ - User interfaces: [Widgets](widgets.md) | [Localisation](localisation.md)
+ - Utilities: [Random](random.md) | [Command Line Args](arg_parsing.md)
 
