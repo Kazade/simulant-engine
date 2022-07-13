@@ -239,14 +239,16 @@ public:
     void register_loader(LoaderTypePtr loader_type);
 
     /** Activates a new language for UI widgets. This will search
-     *  asset paths for a .po file for the language using fallback
+     *  asset paths for an .arb file for the language using fallback
      *  logic (e.g. en-gb -> en). Codes are ISO 639-1 and should be
      *  lower-case. This function will return false if the .po file
      *  cannot be found or loaded. */
     bool activate_language(const std::string& language_code);
 
     /**  Returns the currently active language */
-    std::string active_language();
+    std::string active_language() const {
+        return active_language_;
+    }
 
     /** Returns the localised text for the active language. This
      *  will return source_text if no translation exists or the
@@ -358,6 +360,9 @@ private:
     static Application* global_app;
 
     mutable thread::Mutex running_lock_;
+
+    std::vector<std::string> generate_potential_codes(const std::string& language_code);
+    bool load_arb_file(const smlt::Path& filename);
 };
 
 Application* get_app();
