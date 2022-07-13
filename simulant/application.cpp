@@ -72,6 +72,8 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "loaders/wav_loader.h"
 #include "loaders/ms3d_loader.h"
 #include "loaders/dtex_loader.h"
+#include "utils/json.h"
+#include "utils/string.h"
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
@@ -203,6 +205,17 @@ void Application::preload_default_font() {
     }
 
     fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
+}
+
+std::vector<std::string> Application::generate_potential_codes(const std::string &language_code) {
+    std::vector<std::string> codes;
+    codes.push_back(language_code);
+    auto underscore = language_code.find("_");
+    if(underscore != std::string::npos) {
+        codes.push_back(language_code.substr(0, underscore));
+    }
+
+    return codes;
 }
 
 void Application::construct_window(const AppConfig& config) {
@@ -694,6 +707,92 @@ void Application::register_loader(LoaderTypePtr loader) {
     loaders_.push_back(loader);
 }
 
+
+std::string normalize_language_code(const std::string& language_code) {
+    /* FIXME: Validate code length format etc. */
+
+    auto underscore = language_code.find("_");
+    if(underscore != std::string::npos) {
+        auto first = language_code.substr(0, underscore);
+        auto second = language_code.substr(underscore);
+        return lower_case(first) + "_" + upper_case(second);
+    } else {
+        return lower_case(language_code);
+    }
+}
+
+bool Application::load_arb_file(const smlt::Path& filename) {
+    const char* LOCALE_KEY = "@@locale";
+
+    auto json = json_read(vfs->open_file(filename));
+
+    if(!json->has_key(LOCALE_KEY)) {
+        S_ERROR("No {0} in the specified ARB file", LOCALE_KEY);
+        return false;
+    }
+
+    std::map<std::string, unicode> id_to_translation;
+    std::map<unicode, unicode> new_translations;
+
+    for(auto& key: json->keys()) {
+        if(starts_with(key, "@@")) {
+            continue;
+        }
+
+        if(starts_with(key, "@")) {
+            auto id = key.substr(1);
+            if(!id_to_translation.count(id)) {
+                S_ERROR("Found data at key {0} for non existent id {1}", key, id);
+                continue;
+            }
+
+            auto source_text_maybe = json[key]["source_text"]->to_str();
+            if(!source_text_maybe) {
+                S_ERROR("Couldn't find source text for key {0}", key);
+                continue;
+            }
+
+            new_translations.insert(std::make_pair(source_text_maybe.value(), id_to_translation.at(id)));
+            id_to_translation.erase(id);
+        } else {
+            auto trans_maybe = json[key]->to_str();
+            if(!trans_maybe) {
+                S_ERROR("Found translation key {0} but no translation?", key);
+                continue;
+            }
+
+            id_to_translation.insert(std::make_pair(key, trans_maybe.value()));
+        }
+   }
+
+   active_translations_ = new_translations;
+
+   return true;
+}
+
+bool Application::activate_language(const std::string &language_code) {
+    auto normalized_code = normalize_language_code(language_code);
+    if(active_language_ == normalized_code) {
+        return true;
+    }
+
+    auto fallbacks = generate_potential_codes(language_code);
+    for(auto& fallback: fallbacks) {
+        smlt::Path filename = _F("{0}.arb").format(fallback);
+        auto path_maybe = vfs->locate_file(filename);
+        if(path_maybe) {
+            if(load_arb_file(path_maybe.value())) {
+                active_language_ = fallback;
+                return true;
+            } else {
+                S_ERROR("Error loading ARB file at {0}", path_maybe.value());
+            }
+        }
+    }
+
+    return false;
+}
+
 LoaderPtr Application::loader_for(const Path &filename, LoaderHint hint) {
     auto p = vfs->locate_file(filename);
     if(!p.has_value()) {
@@ -712,8 +811,8 @@ LoaderPtr Application::loader_for(const Path &filename, LoaderHint hint) {
             new_loader->set_vfs(vfs_.get());
 
             possible_loaders.push_back(
-                std::make_pair(loader_type, new_loader)
-            );
+                        std::make_pair(loader_type, new_loader)
+                        );
         }
     }
 
