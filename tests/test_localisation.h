@@ -9,6 +9,11 @@ using namespace smlt;
 
 class LocalisationTests : public smlt::test::SimulantTestCase {
 public:
+    void set_up() {
+        smlt::test::SimulantTestCase::set_up();
+        smlt::get_app()->activate_language("en_US");
+    }
+
     void test_basic_usage() {
         const char* ARB_SAMPLE = R"({
     "@@locale": "fr",
@@ -40,6 +45,30 @@ public:
         assert_true(get_app()->activate_language("fr"));
         assert_equal(get_app()->translated_text("Press Start"), "appuyez sur Start");
         assert_equal(get_app()->active_language(), "fr");
+    }
+
+    void test_loading_unicode() {
+        const char* ARB_SAMPLE = u8R"({
+    "@@locale": "fr",
+    "start_text": "RÉSEAU",
+    "@start_text": {
+        "type": "text",
+        "context": "Menu",
+        "source_text": "NETWORK"
+    }
+}
+)";
+        auto locale_dir = kfs::path::join(kfs::temp_dir(), "locales");
+        kfs::make_dirs(locale_dir);
+
+        auto file = kfs::path::join(locale_dir, "fr.arb");
+
+        std::ofstream arb(file);
+        arb.write(ARB_SAMPLE, strlen(ARB_SAMPLE));
+        arb.close();
+
+        assert_true(get_app()->activate_language("fr"));
+        assert_equal(get_app()->translated_text("NETWORK").encode(), u8"RÉSEAU");
     }
 };
 

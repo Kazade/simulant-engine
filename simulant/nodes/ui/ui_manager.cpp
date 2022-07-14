@@ -330,8 +330,6 @@ FontPtr UIManager::_load_or_get_font(
     }
 
     smlt::optional<Path> loc;
-
-
     std::map<smlt::Path, bool> pushed;
 
     /* Extend the search path with the specified font directories */
