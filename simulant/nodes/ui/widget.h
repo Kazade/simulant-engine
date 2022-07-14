@@ -107,8 +107,8 @@ public:
     void resize(Rem width, Rem height);
     void resize(Px width, Px height);
 
-    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Rem size=Rem(1.0f), FontWeight weight=FONT_WEIGHT_NORMAL);
-    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Px size=DEFAULT_FONT_SIZE, FontWeight weight=FONT_WEIGHT_NORMAL);
+    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Rem size=Rem(1.0f), FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
+    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Px size=DEFAULT_FONT_SIZE, FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
 
     /* Allow creating a double-linked list of widgets for focusing. There is no
      * global focused widget but there is only one focused widget in a chain

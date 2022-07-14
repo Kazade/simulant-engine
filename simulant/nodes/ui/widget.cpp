@@ -32,7 +32,7 @@ Widget::Widget(UIManager *owner, UIConfig *defaults, std::shared_ptr<WidgetStyle
     Px size = (defaults->font_size_ == Px(0)) ?
         get_app()->config->ui.font_size : defaults->font_size_;
 
-    auto font = owner->load_or_get_font(family, size, FONT_WEIGHT_NORMAL);
+    auto font = owner->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
     assert(font);
 
     set_font(font);
@@ -87,13 +87,13 @@ void Widget::clean_up() {
     StageNode::clean_up();
 }
 
-void Widget::set_font(const std::string& family, Rem size, FontWeight weight) {
+void Widget::set_font(const std::string& family, Rem size, FontWeight weight, FontStyle style) {
     Px final = owner_->config()->font_size_ * size;
-    set_font(family, final, weight);
+    set_font(family, final, weight, style);
 }
 
-void Widget::set_font(const std::string& family, Px size, FontWeight weight) {
-    set_font(owner_->load_or_get_font(family, size, weight));
+void Widget::set_font(const std::string& family, Px size, FontWeight weight, FontStyle style) {
+    set_font(owner_->load_or_get_font(family, size, weight, style));
 }
 
 /* Internal only! */

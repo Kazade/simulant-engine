@@ -108,7 +108,7 @@ private:
     sig::connection pre_render_connection_;
 
     FontPtr load_or_get_font(
-        const std::string& family, const Px& size, const FontWeight &weight
+        const std::string& family, const Px& size, const FontWeight &weight, const FontStyle& style
     );
 
 private:
@@ -116,7 +116,7 @@ private:
     static FontPtr _load_or_get_font(VirtualFileSystem* vfs,
         AssetManager* assets, AssetManager* shared_assets,
         const std::string& family, const Px& size, const FontWeight &weight
-    );
+    , const FontStyle &style);
 
     MaterialPtr global_background_material_;
     MaterialPtr global_foreground_material_;
