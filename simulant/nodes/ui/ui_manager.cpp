@@ -298,7 +298,7 @@ FontPtr UIManager::_load_or_get_font(
     const std::string weight_string = font_weight_name(weight);
     const std::string style_string = (style == FONT_STYLE_NORMAL) ? "" : font_style_name(style);
 
-    std::string identifier = _F("{0}-{1}-{2}").format(familyc, px_as_string, weight_string);
+    std::string identifier = _F("{0}-{1}-{2}-{3}").format(familyc, px_as_string, weight_string, style_string);
 
     /* We search for standard variations of the filename depending on the family,
      * weight, style, and size. We look for the following (example) variations:
