@@ -268,16 +268,16 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     return result;
 }
 
-FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight) {
+FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style) {
     return _load_or_get_font(
         get_app()->vfs, stage_->assets, get_app()->shared_assets.get(),
-        family, size, weight
+        family, size, weight, style
     );
 }
 
 FontPtr UIManager::_load_or_get_font(
         VirtualFileSystem* vfs, AssetManager* assets, AssetManager* shared_assets,
-        const std::string &familyc, const Px &sizec, const FontWeight& weight) {
+        const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style) {
 
     static LRUCache<std::string, smlt::Path> location_cache;
     location_cache.set_max_size(8);
@@ -296,22 +296,25 @@ FontPtr UIManager::_load_or_get_font(
 
     const std::string px_as_string = smlt::to_string(size.value);
     const std::string weight_string = font_weight_name(weight);
+    const std::string style_string = (style == FONT_STYLE_NORMAL) ? "" : font_style_name(style);
 
     std::string identifier = _F("{0}-{1}-{2}").format(familyc, px_as_string, weight_string);
 
     /* We search for standard variations of the filename depending on the family,
-     * weight and size */
-    std::string potentials [] = {
-        family + ".ttf",
-        family + "-" + weight_string + ".ttf",
-        family + "-" + weight_string + "-" + px_as_string + ".fnt",
+     * weight, style, and size. We look for the following (example) variations:
+     *
+     * - Kanit-Regular.ttf
+     * - Kanit-RegularItalic.ttf
+     * - Kanit-BlackItalic.ttf
+     * - Kanit-BlackItalic-18.fnt
+     */
 
-        /* Fall back if the bold/light version is not there */
-        family + "-" + "Regular.ttf",
-        family + "-Regular-" + px_as_string + ".fnt"
+    std::string potentials [] = {        
+        family + "-" + weight_string + style_string + ".ttf",
+        family + "-" + weight_string + style_string + "-" + px_as_string + ".fnt",
     };
 
-    std::string alias = Font::generate_name(family, size.value, weight);
+    std::string alias = Font::generate_name(family, size.value, weight, style);
 
     /* See if the font is already loaded, first look at the stage
      * level, but fallback to the window level (in case it was pre-loaded

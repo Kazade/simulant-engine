@@ -25,15 +25,26 @@ struct CharInfo{
    float xoff, yoff, xadvance; // Offsets and advance
 };
 
+enum FontStyle {
+    FONT_STYLE_NORMAL,
+    FONT_STYLE_ITALIC
+};
+
 enum FontWeight {
     FONT_WEIGHT_LIGHT,
     FONT_WEIGHT_NORMAL,
-    FONT_WEIGHT_BOLD
+    FONT_WEIGHT_BOLD,
+    FONT_WEIGHT_BLACK
 };
 
 constexpr const char* font_weight_name(FontWeight weight) {
-    return (weight == FONT_WEIGHT_NORMAL) ? "Regular": (weight == FONT_WEIGHT_BOLD) ? "Bold" : "Light";
+    return (weight == FONT_WEIGHT_NORMAL) ? "Regular": (weight == FONT_WEIGHT_BOLD) ? "Bold" : (weight == FONT_WEIGHT_BLACK) ? "Black" : "Light";
 }
+
+constexpr const char* font_style_name(FontStyle style) {
+    return (style == FONT_STYLE_NORMAL) ? "Normal" : "Italic";
+}
+
 
 class Font:
     public RefCounted<Font>,
@@ -43,8 +54,8 @@ class Font:
     public ChainNameable<Font> {
 
 public:
-    static std::string generate_name(const std::string& family, const uint16_t& size, FontWeight weight) {
-        return family + "-" + font_weight_name(weight) + "-" + smlt::to_string(size);
+    static std::string generate_name(const std::string& family, const uint16_t& size, FontWeight weight, FontStyle style) {
+        return family + "-" + font_weight_name(weight) + "-" + font_style_name(style) + "-" + smlt::to_string(size);
     }
 
     Font(FontID id, AssetManager* asset_manager);

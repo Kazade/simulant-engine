@@ -197,7 +197,8 @@ void Application::preload_default_font() {
         nullptr,
         ui.font_family,
         ui.font_size,
-        FONT_WEIGHT_NORMAL
+        FONT_WEIGHT_NORMAL,
+        FONT_STYLE_NORMAL
     );
 
     if(!fnt) {
