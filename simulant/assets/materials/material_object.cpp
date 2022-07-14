@@ -242,6 +242,18 @@ BlendType MaterialObject::blend_func() const {
     return *(reinterpret_cast<const BlendType*>(ptr));
 }
 
+void MaterialObject::set_depth_func(DepthFunc b) {
+    set_property_value(DEPTH_FUNC_PROPERTY_NAME, (EnumType) b);
+}
+
+DepthFunc MaterialObject::depth_func() const {
+    const EnumType* ptr = nullptr;
+    bool ok = property_value(DEPTH_FUNC_PROPERTY_HASH, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *(reinterpret_cast<const DepthFunc*>(ptr));
+}
+
 void MaterialObject::set_depth_write_enabled(bool v) {
     set_property_value(DEPTH_WRITE_ENABLED_PROPERTY_NAME, v);
 }

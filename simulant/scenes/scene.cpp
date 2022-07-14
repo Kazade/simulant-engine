@@ -95,6 +95,7 @@ void SceneBase::_call_activate() {
 
     activate();
     is_active_ = true;
+    signal_activated_();
 
     for(auto name: linked_pipelines_) {
         compositor->find_pipeline(name)->activate();
@@ -113,6 +114,7 @@ void SceneBase::_call_deactivate() {
 
     deactivate();
     is_active_ = false;
+    signal_deactivated_();
 }
 
 void SceneBase::link_pipeline(const std::string &name) {

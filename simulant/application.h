@@ -192,6 +192,9 @@ public:
      * -1 if it's unavailable or unsupported */
     ProcessID process_id() const;
 
+    /** Returns the thread ID of the main process */
+    smlt::thread::ThreadID thread_id() const;
+
     /** Returns an approximation of the ram usage of
      * the current process. Returns -1 if an error occurs
      * or not supported on the platform */
@@ -274,7 +277,7 @@ private:
 
     void run_coroutines_and_late_update();
 
-
+    thread::ThreadID main_thread_id_;
     bool has_shutdown_ = false;
 
     std::shared_ptr<Window> window_;

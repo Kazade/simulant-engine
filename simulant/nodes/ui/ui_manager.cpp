@@ -279,6 +279,8 @@ FontPtr UIManager::_load_or_get_font(
         VirtualFileSystem* vfs, AssetManager* assets, AssetManager* shared_assets,
         const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style) {
 
+    static LRUCache<std::string, smlt::Path> location_cache;
+    location_cache.set_max_size(8);
 
     /* Apply defaults if that's what was asked */
 
@@ -295,6 +297,8 @@ FontPtr UIManager::_load_or_get_font(
     const std::string px_as_string = smlt::to_string(size.value);
     const std::string weight_string = font_weight_name(weight);
     const std::string style_string = (style == FONT_STYLE_NORMAL) ? "" : font_style_name(style);
+
+    std::string identifier = _F("{0}-{1}-{2}").format(familyc, px_as_string, weight_string);
 
     /* We search for standard variations of the filename depending on the family,
      * weight, style, and size. We look for the following (example) variations:
@@ -329,42 +333,47 @@ FontPtr UIManager::_load_or_get_font(
         return fnt;
     }
 
-    smlt::optional<Path> loc;
-    std::map<smlt::Path, bool> pushed;
+    auto loc = location_cache.get(identifier);
+    if(!loc) {
+        std::map<smlt::Path, bool> pushed;
 
-    /* Extend the search path with the specified font directories */
-    for(auto& font_dir: get_app()->config->ui.font_directories) {
-        pushed[font_dir] = vfs->add_search_path(font_dir);
-    }
-
-    for(auto& filename: potentials) {
-        loc = vfs->locate_file(filename, true, /*fail_silently=*/true);
-        if(loc) {
-            break;
+        /* Extend the search path with the specified font directories */
+        for(auto& font_dir: get_app()->config->ui.font_directories) {
+            pushed[font_dir] = vfs->add_search_path(font_dir);
         }
 
-        /* Try a font directory prefix */
-        loc = vfs->locate_file(kfs::path::join("fonts", filename), true, /*fail_silently=*/true);
-        if(loc) {
-            break;
+        for(auto& filename: potentials) {
+            loc = vfs->locate_file(filename, true, /*fail_silently=*/true);
+            if(loc) {
+                break;
+            }
+
+            /* Try a font directory prefix */
+            loc = vfs->locate_file(kfs::path::join("fonts", filename), true, /*fail_silently=*/true);
+            if(loc) {
+                break;
+            }
+
+            /* Finally try a family name dir within fonts */
+            loc = vfs->locate_file(
+                kfs::path::join(kfs::path::join("fonts", family), filename),
+                true, /*fail_silently=*/true
+            );
+
+            if(loc) {
+                location_cache.insert(identifier, loc.value());
+                break;
+            }
         }
 
-        /* Finally try a family name dir within fonts */
-        loc = vfs->locate_file(
-            kfs::path::join(kfs::path::join("fonts", family), filename),
-            true, /*fail_silently=*/true
-        );
-
-        if(loc) {
-            break;
-        }        
-    }
-
-    /* Remove appended font dirs */
-    for(auto& p: pushed) {
-        if(p.second) {
-            vfs->remove_search_path(p.first);
+        /* Remove appended font dirs */
+        for(auto& p: pushed) {
+            if(p.second) {
+                vfs->remove_search_path(p.first);
+            }
         }
+    } else {
+        S_DEBUG("Found cached font location");
     }
 
     if(!loc) {

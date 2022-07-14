@@ -94,6 +94,11 @@ public:
     }
 
     void test_activate() {
+        bool signal_called = false;
+        auto sig_cb = [&]() {
+            signal_called = true;
+        };
+
         auto cb = [this]() {
             manager_->activate("main");
         };
@@ -102,11 +107,15 @@ public:
 
         manager_->register_scene<TestScene>("main");
 
+        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
+        scr->signal_activated().connect(sig_cb);
+
         manager_->activate("main");
         manager_->late_update(1.0f);
 
-        TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
-        scr->set_destroy_on_unload(false); //Don't destroy on unload
+        assert_true(signal_called);
+
+        scr->set_destroy_on_unload(false); //Don't destroy on unload        
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
