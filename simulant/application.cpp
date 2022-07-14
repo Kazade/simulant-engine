@@ -211,9 +211,9 @@ void Application::preload_default_font() {
 std::vector<std::string> Application::generate_potential_codes(const std::string &language_code) {
     std::vector<std::string> codes;
     codes.push_back(language_code);
-    auto underscore = language_code.find("_");
-    if(underscore != std::string::npos) {
-        codes.push_back(language_code.substr(0, underscore));
+    auto hyphen = language_code.find("-");
+    if(hyphen != std::string::npos) {
+        codes.push_back(language_code.substr(0, hyphen));
     }
 
     return codes;
@@ -713,10 +713,15 @@ std::string normalize_language_code(const std::string& language_code) {
     /* FIXME: Validate code length format etc. */
 
     auto underscore = language_code.find("_");
+    auto hyphen = language_code.find("-");
     if(underscore != std::string::npos) {
         auto first = language_code.substr(0, underscore);
-        auto second = language_code.substr(underscore);
-        return lower_case(first) + "_" + upper_case(second);
+        auto second = language_code.substr(underscore + 1);
+        return lower_case(first) + "-" + lower_case(second);
+    } else if(hyphen != std::string::npos) {
+        auto first = language_code.substr(0, hyphen);
+        auto second = language_code.substr(hyphen + 1);
+        return lower_case(first) + "-" + lower_case(second);
     } else {
         return lower_case(language_code);
     }
@@ -753,7 +758,8 @@ bool Application::load_arb_file(const smlt::Path& filename) {
                 continue;
             }
 
-            new_translations.insert(std::make_pair(source_text_maybe.value(), id_to_translation.at(id)));
+            unicode source_text(source_text_maybe.value(), "utf-8");
+            new_translations.insert(std::make_pair(source_text, id_to_translation.at(id)));
             id_to_translation.erase(id);
         } else {
             auto trans_maybe = json[key]->to_str();
@@ -762,7 +768,8 @@ bool Application::load_arb_file(const smlt::Path& filename) {
                 continue;
             }
 
-            id_to_translation.insert(std::make_pair(key, trans_maybe.value()));
+            unicode translated_text(trans_maybe.value(), "utf-8");
+            id_to_translation.insert(std::make_pair(key, translated_text));
         }
    }
 
@@ -773,20 +780,33 @@ bool Application::load_arb_file(const smlt::Path& filename) {
 
 bool Application::activate_language(const std::string &language_code) {
     auto normalized_code = normalize_language_code(language_code);
+
     if(active_language_ == normalized_code) {
+        return true;
+    }
+
+    if(normalized_code == normalize_language_code(config_.source_language_code)) {
+        active_language_ = normalized_code;
+        active_translations_.clear();
         return true;
     }
 
     auto fallbacks = generate_potential_codes(language_code);
     for(auto& fallback: fallbacks) {
-        smlt::Path filename = _F("{0}.arb").format(fallback);
-        auto path_maybe = vfs->locate_file(filename);
-        if(path_maybe) {
-            if(load_arb_file(path_maybe.value())) {
-                active_language_ = fallback;
-                return true;
-            } else {
-                S_ERROR("Error loading ARB file at {0}", path_maybe.value());
+        smlt::Path filenames [] = {
+            _F("{0}.arb").format(fallback),
+            _F("locales/{0}.arb").format(fallback)
+        };
+
+        for(auto& filename: filenames) {
+            auto path_maybe = vfs->locate_file(filename);
+            if(path_maybe) {
+                if(load_arb_file(path_maybe.value())) {
+                    active_language_ = fallback;
+                    return true;
+                } else {
+                    S_ERROR("Error loading ARB file at {0}", path_maybe.value());
+                }
             }
         }
     }
