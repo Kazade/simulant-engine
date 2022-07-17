@@ -54,10 +54,6 @@ struct WidgetStyle {
     PackedColour4444 foreground_colour_ = Colour::NONE; //Transparent
     PackedColour4444 text_colour_ = Colour::BLACK;
 
-    /* Line height is always stored as a Rem value, even if specified
-     * as px. This is so changes in font size still work correctly */
-    Rem line_height_ = Rem(1.1f);
-
     float opacity_ = 1.0f;
 
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};

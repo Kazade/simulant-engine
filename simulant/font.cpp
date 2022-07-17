@@ -94,7 +94,7 @@ std::pair<int16_t, int16_t> Font::character_offset(char32_t ch) {
 
     return std::make_pair(
         (int16_t) b->xoff,
-        (int16_t) -b->yoff
+        (int16_t) b->yoff
     );
 }
 

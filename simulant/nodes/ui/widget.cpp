@@ -19,8 +19,6 @@ Widget::Widget(UIManager *owner, UIConfig *defaults, std::shared_ptr<WidgetStyle
     style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {
 
     if(!shared_style) {
-        style_->line_height_ = defaults->line_height_;
-
         set_foreground_colour(defaults->foreground_colour_);
         set_background_colour(defaults->background_colour_);
         set_text_colour(defaults->text_colour_);
@@ -202,9 +200,6 @@ void Widget::render_text() {
     auto text_ptr = &text()[0];
     auto text_length = text().length();
 
-    auto line_height = Px(font_->size()) * style_->line_height_;
-    auto line_height_shift = std::floor((line_height.value - font_->size() - font_->line_gap()) * 0.5f);
-
     for(uint32_t i = 0; i < text_length; ++i) {
         unicode::value_type ch = text_ptr[i];
         Px ch_width = font_->character_width(ch);
@@ -254,8 +249,11 @@ void Widget::render_text() {
             // properly manipulate the position when we process the lines later
             auto off = font_->character_offset(ch);
 
-            auto bottom = -((ch_height.value - off.second) + (line_height.value - font_->line_gap() - font_->descent() - font_->ascent()));
-            auto top = bottom + ch_height.value;
+            auto top = -off.second;
+            auto bottom = top - ch_height.value;
+
+            top -= font_->ascent();
+            bottom -= font_->ascent();
 
             corners[0].xyz = smlt::Vec3((left + off.first).value, bottom, 0);
             corners[1].xyz = smlt::Vec3((right + off.first).value, bottom, 0);
@@ -301,7 +299,7 @@ void Widget::render_text() {
             continue;
         }
 
-        uint16_t shift = (j * line_height.value) + line_height_shift;
+        uint16_t shift = (j * line_height().value);
 
         Vertex* ch = &vertices.at(range.first);
         uint16_t hw = line_lengths[j++].value / 2;
@@ -344,7 +342,7 @@ void Widget::render_text() {
     auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
     text_width_ = max_length;
-    text_height_ = line_height.value * line_ranges.size();
+    text_height_ = line_height().value * line_ranges.size();
 
     /* Shift the text depending on the difference in padding */
     auto diff = padding().left - padding().right;
@@ -883,7 +881,7 @@ void Widget::set_opacity(RangeValue<0, 1> alpha) {
 }
 
 Px Widget::line_height() const {
-    return Px(font_->size()) * style_->line_height_;
+    return Px(font_->ascent() - font_->descent() + font_->line_gap());
 }
 
 void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPriority new_priority) {
