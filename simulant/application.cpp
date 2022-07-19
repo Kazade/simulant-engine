@@ -730,7 +730,8 @@ std::string normalize_language_code(const std::string& language_code) {
 bool Application::load_arb_file(const smlt::Path& filename) {
     const char* LOCALE_KEY = "@@locale";
 
-    auto json = json_read(vfs->open_file(filename));
+    auto stream = vfs->open_file(filename);
+    auto json = json_read(stream);
 
     if(!json->has_key(LOCALE_KEY)) {
         S_ERROR("No {0} in the specified ARB file", LOCALE_KEY);
