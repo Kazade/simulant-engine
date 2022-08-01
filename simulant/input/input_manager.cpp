@@ -43,12 +43,18 @@ InputManager::InputManager(InputState *controller):
     fire1_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
     fire1_js->set_positive_joystick_button(JOYSTICK_BUTTON_A);
 
+    auto fire1_ms = new_axis("Fire1");
+    fire1_ms->set_positive_mouse_button(MouseButtonID(0));
+
     auto fire2 = new_axis("Fire2");
-    fire2->set_positive_keyboard_key(KEYBOARD_CODE_LALT);
+    fire2->set_positive_keyboard_key(KEYBOARD_CODE_RALT);
 
     auto fire2_js = new_axis("Fire2");
     fire2_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
     fire2_js->set_positive_joystick_button(JOYSTICK_BUTTON_B);
+
+    auto fire2_ms = new_axis("Fire2");
+    fire2_ms->set_positive_mouse_button(MouseButtonID(1));
 
     auto start = new_axis("Start");
     start->set_positive_keyboard_key(KEYBOARD_CODE_RETURN);
