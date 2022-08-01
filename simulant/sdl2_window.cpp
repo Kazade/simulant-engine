@@ -328,7 +328,7 @@ bool SDL2Window::_init_window() {
         S_DEBUG("Successfully loaded {0} SDL controller mappings", ret);
     }
 
-    int32_t flags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
+    int32_t flags = SDL_WINDOW_OPENGL;
 
     screen_ = SDL_CreateWindow(
         "",
