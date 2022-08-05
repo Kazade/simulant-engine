@@ -3,9 +3,25 @@
 #include "keyboard.h"
 #include "button.h"
 #include "frame.h"
+#include "../../stage.h"
 
 namespace smlt {
 namespace ui {
+
+const uint16_t SPACE_CHAR = ' ';
+const uint16_t BACKSPACE_CHAR = 8;  // ASCII BS
+const uint16_t DONE_CHAR = 6;  // ASCII ACK
+
+const uint8_t SPACE_ICON [] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 Keyboard::Keyboard(UIManager *owner, UIConfig *config, KeyboardLayout layout):
     Widget(owner, config) {
@@ -52,12 +68,11 @@ void Keyboard::activate() {
 
         signal_activated_(c);
 
-        if(c == '\r') {
-            /* We use \r to signify done.. rightly or wrongly */
+        if(c == DONE_CHAR) {
             signal_done_();
         } else if(target_) {
             auto txt = target_->text();
-            if(c == 8 && !txt.empty()) { // Backspace
+            if(c == BACKSPACE_CHAR && !txt.empty()) { // Backspace
                 txt = txt.slice(nullptr, -1);
             } else if(c != 8) { // Any other character
                 txt.push_back(wchar_t(c));
@@ -79,6 +94,24 @@ void Keyboard::set_target(Widget* widget) {
     });
 }
 
+void Keyboard::limit_chars_to(const unicode& char_list) {
+    limited_chars_ = char_list;
+    if(limited_chars_.empty()) {
+        for(auto it: buttons_) {
+            set_enabled(it.second, true);
+        }
+    } else {
+        for(auto it: buttons_) {
+            if(it.first == DONE_CHAR) {
+                continue;
+            }
+
+            auto enable = (limited_chars_.find(it.first) != unicode::npos);
+            set_enabled(it.second, enable);
+        }
+    }
+}
+
 void Keyboard::move_up() {
     move_row(-1);
 }
@@ -89,13 +122,27 @@ void Keyboard::move_down() {
 
 void Keyboard::move_right() {
     if(focused_) {
-        focused_->focus_next_in_chain();
+        auto to_focus = focused_->next_in_focus_chain();
+        while(to_focus && !to_focus->data->get<bool>("enabled")) {
+            to_focus = to_focus->next_in_focus_chain();
+        }
+
+        if(to_focus) {
+            to_focus->focus();
+        }
     }
 }
 
 void Keyboard::move_left() {
     if(focused_) {
-        focused_->focus_previous_in_chain();
+        auto to_focus = focused_->previous_in_focus_chain();
+        while(to_focus && !to_focus->data->get<bool>("enabled")) {
+            to_focus = to_focus->previous_in_focus_chain();
+        }
+
+        if(to_focus) {
+            to_focus->focus();
+        }
     }
 }
 
@@ -105,7 +152,7 @@ void Keyboard::move_row(int dir) {
     }
 
     int this_row = std::distance(
-                std::begin(rows_),
+        std::begin(rows_),
         std::find(std::begin(rows_), std::end(rows_), focused_->parent())
     );
 
@@ -145,6 +192,16 @@ void Keyboard::move_row(int dir) {
     }
 }
 
+void Keyboard::set_enabled(Button* btn, bool value) {
+    if(value) {
+        btn->set_style(default_style_);
+    } else {
+        btn->set_style(disabled_style_);
+    }
+
+    btn->data->stash(value, "enabled");
+}
+
 void Keyboard::clear() {
     for(auto& button: buttons_) {
         button.second->destroy();
@@ -169,41 +226,6 @@ void Keyboard::generate_numerical_layout() {
         {"/:0[]"}
     };
 
-    auto new_button = [this](std::string label) -> smlt::ui::Button* {
-        Button* btn = nullptr;
-        if(default_style_ && highlighted_style_) {
-            btn = owner_->new_widget_as_button(label, -1, -1, default_style_);
-        } else {
-            btn = owner_->new_widget_as_button(label, -1, -1);
-        }
-
-        /* We style the style of the first button as the "default" and set
-         * this on all subsequent buttons. We steal the style of the second button
-         * as "highlight" and apply that on focus */
-        if(!default_style_) {
-            btn->set_background_colour(UIConfig().background_colour_);
-            btn->set_border_colour(smlt::Colour::NONE);
-            btn->set_border_width(0);
-            btn->set_padding(0);
-
-            default_style_ = btn->style_;
-        } else if(!highlighted_style_) {
-            btn->set_background_colour(UIConfig().highlight_colour_);
-            btn->set_border_colour(smlt::Colour::NONE);
-            btn->set_border_width(0);
-            btn->set_padding(0);
-
-            highlighted_style_ = btn->style_;
-
-            btn->set_style(default_style_);
-        }
-
-        btn->resize(64, 32);
-        btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
-        btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
-        return btn;
-    };
-
     smlt::ui::Widget* prev = nullptr;
 
     for(std::size_t i = 0; i < 5; ++i) {
@@ -232,23 +254,78 @@ void Keyboard::generate_numerical_layout() {
     }
 
     /* Now, we add Backspace, space and return */
-    buttons_[8] = new_button("<--");
-    buttons_[8]->resize(32 * 3 + (2 * 2), 32);
-    rows_[4]->pack_child(buttons_[8]);
+    buttons_[BACKSPACE_CHAR] = new_button("<--");
+    buttons_[BACKSPACE_CHAR]->resize(32 * 3 + (2 * 2), 32);
+    rows_[4]->pack_child(buttons_[BACKSPACE_CHAR]);
 
     /* Now, we add space and return */
-    buttons_[' '] = new_button("___");
-    buttons_[' ']->set_focus_previous(buttons_[8]);
-    buttons_[' ']->resize(32 * 4 + (2 * 3), 32);
-    rows_[4]->pack_child(buttons_[' ']);
+    buttons_[SPACE_CHAR] = new_button("");
 
-    buttons_['\r'] = new_button("DONE");
-    buttons_['\r']->set_focus_previous(buttons_[' ']);
-    buttons_['\r']->resize(32 * 3 + (2 * 2), 32);
-    rows_[4]->pack_child(buttons_['\r']);
+    auto space_tex = buttons_[SPACE_CHAR]->stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
+    space_tex->set_data(SPACE_ICON, 16 * 8);
+    space_tex->convert(TEXTURE_FORMAT_RGB_3UB_888, {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED});
+    space_tex->flush();
+
+    buttons_[SPACE_CHAR]->set_background_image(space_tex);
+    buttons_[SPACE_CHAR]->set_focus_previous(buttons_[BACKSPACE_CHAR]);
+    buttons_[SPACE_CHAR]->resize(32 * 4 + (2 * 3), 32);
+    rows_[4]->pack_child(buttons_[SPACE_CHAR]);
+
+    /* \6 == ACK - we don't use return because we may want multiline input */
+    buttons_[DONE_CHAR] = new_button("DONE");
+    buttons_[DONE_CHAR]->set_focus_previous(buttons_[SPACE_CHAR]);
+    buttons_[DONE_CHAR]->resize(32 * 3 + (2 * 2), 32);
+    rows_[4]->pack_child(buttons_[DONE_CHAR]);
 
     main_frame_->pack_child(rows_[4]);
 }
+
+smlt::ui::Button* Keyboard::new_button(const unicode& label) {
+    Button* btn = nullptr;
+    if(default_style_ && highlighted_style_ && disabled_style_) {
+        btn = owner_->new_widget_as_button(label, -1, -1, default_style_);
+    } else {
+        btn = owner_->new_widget_as_button(label, -1, -1);
+    }
+
+    /* We style the style of the first button as the "default" and set
+     * this on all subsequent buttons. We steal the style of the second button
+     * as "highlight" and apply that on focus */
+    if(!default_style_) {
+        btn->set_background_colour(UIConfig().background_colour_);
+        btn->set_border_colour(smlt::Colour::NONE);
+        btn->set_border_width(0);
+        btn->set_padding(0);
+
+        default_style_ = btn->style_;
+    } else if(!highlighted_style_) {
+        btn->set_background_colour(UIConfig().highlight_colour_);
+        btn->set_border_colour(smlt::Colour::NONE);
+        btn->set_border_width(0);
+        btn->set_padding(0);
+
+        highlighted_style_ = btn->style_;
+
+        btn->set_style(default_style_);
+    } else if(!disabled_style_) {
+        btn->set_background_colour(UIConfig().background_colour_);
+        btn->set_border_colour(smlt::Colour::NONE);
+        btn->set_border_width(0);
+        btn->set_padding(0);
+        btn->set_text_colour(UIConfig().background_colour_);
+
+        disabled_style_ = btn->style_;
+
+        btn->set_style(default_style_);
+    }
+
+    assert(default_style_ != highlighted_style_);
+
+    btn->resize(32, 32);
+    btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
+    btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
+    return btn;
+};
 
 void Keyboard::generate_alphabetical_layout() {
     clear();
@@ -260,43 +337,6 @@ void Keyboard::generate_alphabetical_layout() {
         {"UVWXYZ.,<>?*"}
     };
 
-    auto new_button = [this](std::string label) -> smlt::ui::Button* {
-        Button* btn = nullptr;
-        if(default_style_ && highlighted_style_) {
-            btn = owner_->new_widget_as_button(label, -1, -1, default_style_);
-        } else {
-            btn = owner_->new_widget_as_button(label, -1, -1);
-        }
-
-        /* We style the style of the first button as the "default" and set
-         * this on all subsequent buttons. We steal the style of the second button
-         * as "highlight" and apply that on focus */
-        if(!default_style_) {
-            btn->set_background_colour(UIConfig().background_colour_);
-            btn->set_border_colour(smlt::Colour::NONE);
-            btn->set_border_width(0);
-            btn->set_padding(0);
-
-            default_style_ = btn->style_;
-        } else if(!highlighted_style_) {
-            btn->set_background_colour(UIConfig().highlight_colour_);
-            btn->set_border_colour(smlt::Colour::NONE);
-            btn->set_border_width(0);
-            btn->set_padding(0);
-
-            highlighted_style_ = btn->style_;
-
-            btn->set_style(default_style_);
-        }
-
-        assert(default_style_ != highlighted_style_);
-
-        btn->resize(32, 32);
-        btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
-        btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
-        return btn;
-    };
-
     smlt::ui::Widget* prev = nullptr;
 
     for(std::size_t i = 0; i < 5; ++i) {
@@ -325,20 +365,31 @@ void Keyboard::generate_alphabetical_layout() {
     }
 
     /* Now, we add Backspace, space and return */
-    buttons_[8] = new_button("<--");
-    buttons_[8]->resize(32 * 2 + (2 * 1), 32);
-    rows_[4]->pack_child(buttons_[8]);
+    buttons_[BACKSPACE_CHAR] = new_button("<--");
+    buttons_[BACKSPACE_CHAR]->resize(32 * 2 + (2 * 1), 32);
+    rows_[4]->pack_child(buttons_[BACKSPACE_CHAR]);
 
     /* Now, we add space and return */
-    buttons_[' '] = new_button("___");
-    buttons_[' ']->set_focus_previous(buttons_[8]);
-    buttons_[' ']->resize(32 * 6 + (2 * 5), 32);
-    rows_[4]->pack_child(buttons_[' ']);
+    buttons_[SPACE_CHAR] = new_button("");
 
-    buttons_['\r'] = new_button("DONE");
-    buttons_['\r']->set_focus_previous(buttons_[' ']);
-    buttons_['\r']->resize(32 * 4 + (2 * 3), 32);
-    rows_[4]->pack_child(buttons_['\r']);
+    auto space_tex = buttons_[SPACE_CHAR]->stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
+    space_tex->set_data(SPACE_ICON, 16 * 8);
+    space_tex->flip_vertically();
+    space_tex->convert(
+        TEXTURE_FORMAT_RGBA_4UB_8888,
+        {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
+    );
+    space_tex->flush();
+
+    buttons_[SPACE_CHAR]->set_foreground_image(space_tex);
+    buttons_[SPACE_CHAR]->set_focus_previous(buttons_[BACKSPACE_CHAR]);
+    buttons_[SPACE_CHAR]->resize(32 * 6 + (2 * 5), 32);
+    rows_[4]->pack_child(buttons_[SPACE_CHAR]);
+
+    buttons_[DONE_CHAR] = new_button("DONE");
+    buttons_[DONE_CHAR]->set_focus_previous(buttons_[SPACE_CHAR]);
+    buttons_[DONE_CHAR]->resize(32 * 4 + (2 * 3), 32);
+    rows_[4]->pack_child(buttons_[DONE_CHAR]);
 
     main_frame_->pack_child(rows_[4]);
 }
@@ -349,7 +400,12 @@ void Keyboard::focus(Widget* widget) {
 }
 
 void Keyboard::unfocus(Widget* widget) {
-    widget->set_style(default_style_);
+    if(!widget->data->get<bool>("enabled")) {
+        widget->set_style(disabled_style_);
+    } else {
+        widget->set_style(default_style_);
+    }
+
     focused_ = nullptr;
 }
 

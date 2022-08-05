@@ -307,13 +307,15 @@ static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
     {TEXTURE_FORMAT_RGBA_4UB_8888, compress_rgba8888}
 };
 
-void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
+bool Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
     std::vector<uint8_t> original_data(data_size());
     std::copy(data_, data_ + data_size(), original_data.begin());
 
     auto original_format = format();
 
     set_format(new_format);
+
+    auto failed = std::make_shared<bool>(false);
 
     mutate_data([=](uint8_t* data, uint16_t, uint16_t, TextureFormat nf) {
         _S_UNUSED(nf);
@@ -326,7 +328,9 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
         uint8_t* dest_ptr = &data[0];
 
         if(!EXPLODERS.count(original_format) || !COMPRESSORS.count(new_format)) {
-            throw std::logic_error("Unsupported texture conversion");
+            S_ERROR("Unsupported texture conversion from {0} to {1}", original_format, new_format);
+            *failed = true;
+            return;
         }
 
         auto explode = EXPLODERS.at(original_format);
@@ -339,6 +343,12 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
             compress(dest_ptr, r, g, b, a);
         }
     });
+
+    if(*failed) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 
@@ -427,7 +437,7 @@ uint32_t Texture::data_size() const {
     return data_size_;
 }
 
-void Texture::set_data(const uint8_t* data, std::size_t size) {    
+void Texture::set_data(const uint8_t* data, std::size_t size) {
     resize_data(size);
     std::copy(data, data + size, data_);
 }

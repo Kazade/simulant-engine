@@ -40,15 +40,24 @@ public:
 
     void set_target(smlt::ui::Widget* widget);
 
+    /** This only enables the keys that appear in the passed list, passing
+     *  an empty string will remove any limitation */
+    void limit_chars_to(const unicode& char_list);
+
     using Widget::set_font;
 private:
     void move_row(int dir);
 
     std::shared_ptr<WidgetStyle> default_style_;
     std::shared_ptr<WidgetStyle> highlighted_style_;
+    std::shared_ptr<WidgetStyle> disabled_style_;
 
     KeyboardLayout layout_ = KEYBOARD_LAYOUT_ALPHABETICAL;
-    std::map<char, Button*> buttons_;
+    unicode limited_chars_;
+    // utf-16
+    std::map<uint16_t, Button*> buttons_;
+    void set_enabled(Button* btn, bool value);
+
 
     Frame* main_frame_ = nullptr;
     Frame* rows_[5] = {0, 0, 0, 0, 0};
@@ -69,6 +78,8 @@ private:
 
     void on_transformation_change_attempted() override;
     void set_font(FontPtr font) override;
+
+    smlt::ui::Button* new_button(const unicode& label);
 };
 
 }
