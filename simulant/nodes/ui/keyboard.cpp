@@ -25,6 +25,28 @@ const uint8_t SPACE_ICON [] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+const uint8_t ENTER_ICON [] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00,
+    0x00, 0x50, 0xC0, 0x00, 0x00, 0xFF, 0x00, 0x00,
+    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
+    0x00, 0x50, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+const uint8_t CASE_ICON [] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 Keyboard::Keyboard(UIManager *owner, UIConfig *config, KeyboardLayout layout):
     Widget(owner, config),
     layout_(layout) {
@@ -238,6 +260,18 @@ void Keyboard::move_row(int dir) {
     }
 }
 
+Keyboard::SpecialStyle *Keyboard::new_special_style(uint16_t button) {
+    SpecialStyle* style = &special_styles_[button];
+
+    style->def = std::make_shared<WidgetStyle>(*default_style_);
+    style->highlight = std::make_shared<WidgetStyle>(*highlighted_style_);
+
+    style->def->active_layers_ |= (1 << WIDGET_LAYER_INDEX_FOREGROUND);
+    style->highlight->active_layers_ |= (1 << WIDGET_LAYER_INDEX_FOREGROUND);
+
+    return style;
+}
+
 void Keyboard::set_enabled(Button* btn, bool value) {
     btn->data->stash(value, "enabled");
 }
@@ -247,6 +281,7 @@ void Keyboard::clear() {
         info.second.button->destroy();
     }
     buttons_.clear();
+    special_styles_.clear();
 
     for(auto& frame: rows_) {
         if(frame) {
@@ -340,9 +375,26 @@ smlt::ui::Button* Keyboard::new_button(const unicode& label) {
 void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
     /* Now, we add Backspace, space and return */
 
+
     if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
         buttons_[CASE_TOGGLE_CHAR].button = new_button("^");
         buttons_[CASE_TOGGLE_CHAR].button->resize(32, 32);
+
+        auto ss = new_special_style(CASE_TOGGLE_CHAR);
+        buttons_[CASE_TOGGLE_CHAR].button->set_style(ss->def);
+
+        auto enter_tex = buttons_[CASE_TOGGLE_CHAR].button->stage->assets->new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
+        enter_tex->set_data(CASE_ICON, 8 * 8);
+        enter_tex->flip_vertically();
+        enter_tex->convert(
+            TEXTURE_FORMAT_RGBA_4UB_8888,
+            {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
+        );
+        enter_tex->flush();
+
+        buttons_[CASE_TOGGLE_CHAR].button->set_foreground_colour(smlt::Colour::WHITE);
+        buttons_[CASE_TOGGLE_CHAR].button->set_foreground_image(enter_tex);
+
         target->pack_child(buttons_[CASE_TOGGLE_CHAR].button);
     }
 
@@ -366,6 +418,9 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         /* Now, we add space and return */
         buttons_[SPACE_CHAR].button = new_button("");
 
+        auto ss = new_special_style(SPACE_CHAR);
+        buttons_[SPACE_CHAR].button->set_style(ss->def);
+
         auto space_tex = buttons_[SPACE_CHAR].button->stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
         space_tex->set_data(SPACE_ICON, 16 * 8);
         space_tex->flip_vertically();
@@ -375,6 +430,7 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         );
         space_tex->flush();
 
+        buttons_[SPACE_CHAR].button->set_foreground_colour(smlt::Colour::WHITE);
         buttons_[SPACE_CHAR].button->set_foreground_image(space_tex);
 
         if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
@@ -399,8 +455,23 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
     }
 
     if(action_flags & ACTION_FLAGS_ENTER) {
-        buttons_[DONE_CHAR].button = new_button(_T("OK"));
+        buttons_[DONE_CHAR].button = new_button(_T(""));
         buttons_[DONE_CHAR].button->resize(32, 32);
+
+        auto ss = new_special_style(DONE_CHAR);
+        buttons_[DONE_CHAR].button->set_style(ss->def);
+
+        auto enter_tex = buttons_[DONE_CHAR].button->stage->assets->new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
+        enter_tex->set_data(ENTER_ICON, 8 * 8);
+        enter_tex->flip_vertically();
+        enter_tex->convert(
+            TEXTURE_FORMAT_RGBA_4UB_8888,
+            {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
+        );
+        enter_tex->flush();
+
+        buttons_[DONE_CHAR].button->set_foreground_colour(smlt::Colour::WHITE);
+        buttons_[DONE_CHAR].button->set_foreground_image(enter_tex);
 
         if(action_flags & ACTION_FLAGS_BACKSPACE) {
             buttons_[DONE_CHAR].button->set_focus_previous(buttons_[BACKSPACE_CHAR].button);
