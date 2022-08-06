@@ -4,6 +4,7 @@
 #include "button.h"
 #include "frame.h"
 #include "../../stage.h"
+#include "../../application.h"
 
 namespace smlt {
 namespace ui {
@@ -66,18 +67,58 @@ void Keyboard::activate() {
     if(it != buttons_.end()) {
         auto c = it->first;
 
-        signal_activated_(c);
+        SoftKeyPressedEvent evt;
+        evt.character = c;
 
-        if(c == DONE_CHAR) {
-            signal_done_();
-        } else if(target_) {
-            auto txt = target_->text();
-            if(c == BACKSPACE_CHAR && !txt.empty()) { // Backspace
-                txt = txt.slice(nullptr, -1);
-            } else if(c != 8) { // Any other character
-                txt.push_back(wchar_t(c));
+        signal_key_pressed_(evt);
+
+        if(!evt.cancelled) {
+            if(c == DONE_CHAR) {
+                signal_done_();
+            } else if(target_) {
+                auto txt = target_->text();
+                if(c == BACKSPACE_CHAR && !txt.empty()) { // Backspace
+                    txt = txt.slice(nullptr, -1);
+                } else if(c != BACKSPACE_CHAR) { // Any other character
+                    txt.push_back(wchar_t(c));
+                }
+                target_->set_text(txt);
             }
-            target_->set_text(txt);
+        } else {
+            /* Indicate failure by flashing red */
+            struct State {
+                float t = 0.0f;
+                sig::connection conn;
+            };
+
+            auto state = std::make_shared<State>();
+            auto marker = std::weak_ptr<bool>(alive_marker_);
+
+            auto original_style = buttons_[c]->style_;
+            auto temp_style = std::make_shared<WidgetStyle>(*buttons_[c]->style_);
+            buttons_[c]->set_style(temp_style);
+
+            state->conn = get_app()->signal_update().connect([=](float dt) {
+                if(!marker.lock()) {
+                    state->conn.disconnect();
+                    return;
+                }
+
+                state->t += (dt * 2.0f);
+                if(state->t > 1.0f) {
+                    state->t = 1.0f;
+                }
+
+                auto current_style = (buttons_[c]->is_focused()) ? highlighted_style_ : default_style_;
+
+                temp_style->background_colour_ = smlt::Colour::RED.lerp(current_style->background_colour_, state->t);
+                buttons_[c]->rebuild();
+
+                if(state->t == 1.0f) {
+                    buttons_[c]->set_style(current_style);
+                    state->conn.disconnect();
+                }
+            });
         }
     }
 }
@@ -94,24 +135,6 @@ void Keyboard::set_target(Widget* widget) {
     });
 }
 
-void Keyboard::limit_chars_to(const unicode& char_list) {
-    limited_chars_ = char_list;
-    if(limited_chars_.empty()) {
-        for(auto it: buttons_) {
-            set_enabled(it.second, true);
-        }
-    } else {
-        for(auto it: buttons_) {
-            if(it.first == DONE_CHAR) {
-                continue;
-            }
-
-            auto enable = (limited_chars_.find(it.first) != unicode::npos);
-            set_enabled(it.second, enable);
-        }
-    }
-}
-
 void Keyboard::move_up() {
     move_row(-1);
 }
@@ -123,10 +146,6 @@ void Keyboard::move_down() {
 void Keyboard::move_right() {
     if(focused_) {
         auto to_focus = focused_->next_in_focus_chain();
-        while(to_focus && !to_focus->data->get<bool>("enabled")) {
-            to_focus = to_focus->next_in_focus_chain();
-        }
-
         if(to_focus) {
             to_focus->focus();
         }
@@ -136,10 +155,6 @@ void Keyboard::move_right() {
 void Keyboard::move_left() {
     if(focused_) {
         auto to_focus = focused_->previous_in_focus_chain();
-        while(to_focus && !to_focus->data->get<bool>("enabled")) {
-            to_focus = to_focus->previous_in_focus_chain();
-        }
-
         if(to_focus) {
             to_focus->focus();
         }
@@ -193,12 +208,6 @@ void Keyboard::move_row(int dir) {
 }
 
 void Keyboard::set_enabled(Button* btn, bool value) {
-    if(value) {
-        btn->set_style(default_style_);
-    } else {
-        btn->set_style(disabled_style_);
-    }
-
     btn->data->stash(value, "enabled");
 }
 
@@ -282,7 +291,7 @@ void Keyboard::generate_numerical_layout() {
 
 smlt::ui::Button* Keyboard::new_button(const unicode& label) {
     Button* btn = nullptr;
-    if(default_style_ && highlighted_style_ && disabled_style_) {
+    if(default_style_ && highlighted_style_) {
         btn = owner_->new_widget_as_button(label, -1, -1, default_style_);
     } else {
         btn = owner_->new_widget_as_button(label, -1, -1);
@@ -305,16 +314,6 @@ smlt::ui::Button* Keyboard::new_button(const unicode& label) {
         btn->set_padding(0);
 
         highlighted_style_ = btn->style_;
-
-        btn->set_style(default_style_);
-    } else if(!disabled_style_) {
-        btn->set_background_colour(UIConfig().background_colour_);
-        btn->set_border_colour(smlt::Colour::NONE);
-        btn->set_border_width(0);
-        btn->set_padding(0);
-        btn->set_text_colour(UIConfig().background_colour_);
-
-        disabled_style_ = btn->style_;
 
         btn->set_style(default_style_);
     }
@@ -400,12 +399,7 @@ void Keyboard::focus(Widget* widget) {
 }
 
 void Keyboard::unfocus(Widget* widget) {
-    if(!widget->data->get<bool>("enabled")) {
-        widget->set_style(disabled_style_);
-    } else {
-        widget->set_style(default_style_);
-    }
-
+    widget->set_style(default_style_);
     focused_ = nullptr;
 }
 
