@@ -12,6 +12,7 @@ namespace ui {
 const uint16_t SPACE_CHAR = ' ';
 const uint16_t BACKSPACE_CHAR = 8;  // ASCII BS
 const uint16_t DONE_CHAR = 6;  // ASCII ACK
+const uint16_t CASE_TOGGLE_CHAR = 1;  // ASCII Start of Heading
 
 const uint8_t SPACE_ICON [] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -25,7 +26,8 @@ const uint8_t SPACE_ICON [] = {
 };
 
 Keyboard::Keyboard(UIManager *owner, UIConfig *config, KeyboardLayout layout):
-    Widget(owner, config) {
+    Widget(owner, config),
+    layout_(layout) {
 
     main_frame_ = owner->new_widget_as_frame("");
     main_frame_->set_parent(this);
@@ -59,8 +61,8 @@ void Keyboard::activate() {
 
     auto it = std::find_if(
                 buttons_.begin(), buttons_.end(),
-        [this](const std::pair<char, Button*>& p) -> bool {
-            return p.second == focused_;
+        [this](const std::pair<char, ButtonInfo>& p) -> bool {
+            return p.second.button == focused_;
         }
     );
 
@@ -73,7 +75,9 @@ void Keyboard::activate() {
         signal_key_pressed_(evt);
 
         if(!evt.cancelled) {
-            if(c == DONE_CHAR) {
+            if(c == CASE_TOGGLE_CHAR) {
+                set_mode((mode_ == KEYBOARD_MODE_UPPERCASE) ? KEYBOARD_MODE_LOWERCASE : KEYBOARD_MODE_UPPERCASE);
+            } else if(c == DONE_CHAR) {
                 signal_done_();
             } else if(target_) {
                 auto txt = target_->text();
@@ -104,8 +108,8 @@ void Keyboard::activate() {
             auto state = std::make_shared<State>();
             auto marker = std::weak_ptr<bool>(alive_marker_);
 
-            auto temp_style = std::make_shared<WidgetStyle>(*buttons_[c]->style_);
-            buttons_[c]->set_style(temp_style);
+            auto temp_style = std::make_shared<WidgetStyle>(*buttons_[c].button->style_);
+            buttons_[c].button->set_style(temp_style);
 
             state->conn = get_app()->signal_update().connect([=](float dt) {
                 if(!marker.lock()) {
@@ -119,15 +123,15 @@ void Keyboard::activate() {
                     state->t = 1.0f;
                 }
 
-                auto current_style = (buttons_[c]->is_focused()) ? highlighted_style_ : default_style_;
+                auto current_style = (buttons_[c].button->is_focused()) ? highlighted_style_ : default_style_;
 
                 temp_style->background_colour_ = smlt::Colour::RED.lerp(current_style->background_colour_, state->t);
-                buttons_[c]->rebuild();
+                buttons_[c].button->rebuild();
 
                 if(state->t == 1.0f) {
                     /* We're done, reset to the correct style - this will destroy our temporary style when we
                      * leave the function */
-                    buttons_[c]->set_style(current_style);
+                    buttons_[c].button->set_style(current_style);
 
                     /* Disconnect from update() */
                     state->conn.disconnect();
@@ -147,6 +151,19 @@ void Keyboard::set_target(Widget* widget) {
         target_ = nullptr;
         target_destroyed_.disconnect();
     });
+}
+
+void Keyboard::set_mode(KeyboardMode mode) {
+    if(mode_ == mode) {
+        return;
+    }
+
+    mode_ = mode;
+
+    if(layout_ == KEYBOARD_LAYOUT_ALPHABETICAL) {
+        generate_alphabetical_layout(mode_ == KEYBOARD_MODE_UPPERCASE);
+        buttons_[CASE_TOGGLE_CHAR].button->focus();
+    }
 }
 
 void Keyboard::move_up() {
@@ -226,9 +243,10 @@ void Keyboard::set_enabled(Button* btn, bool value) {
 }
 
 void Keyboard::clear() {
-    for(auto& button: buttons_) {
-        button.second->destroy();
+    for(auto& info: buttons_) {
+        info.second.button->destroy();
     }
+    buttons_.clear();
 
     for(auto& frame: rows_) {
         if(frame) {
@@ -264,41 +282,20 @@ void Keyboard::generate_numerical_layout() {
         if(i < rows.size()) {
             prev = nullptr;
             for(auto ch: rows[i]) {
-                buttons_[ch] = new_button(std::string(1, ch));
+                buttons_[ch].button = new_button(std::string(1, ch));
+
                 if(prev) {
-                    prev->set_focus_next(buttons_[ch]);
+                    prev->set_focus_next(buttons_[ch].button);
                 }
-                prev = buttons_[ch];
-                row->pack_child(buttons_[ch]);
+                prev = buttons_[ch].button;
+                row->pack_child(buttons_[ch].button);
             }
 
             main_frame_->pack_child(row);
         }
     }
 
-    /* Now, we add Backspace, space and return */
-    buttons_[BACKSPACE_CHAR] = new_button("<--");
-    buttons_[BACKSPACE_CHAR]->resize(32 * 3 + (2 * 2), 32);
-    rows_[4]->pack_child(buttons_[BACKSPACE_CHAR]);
-
-    /* Now, we add space and return */
-    buttons_[SPACE_CHAR] = new_button("");
-
-    auto space_tex = buttons_[SPACE_CHAR]->stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
-    space_tex->set_data(SPACE_ICON, 16 * 8);
-    space_tex->convert(TEXTURE_FORMAT_RGB_3UB_888, {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED});
-    space_tex->flush();
-
-    buttons_[SPACE_CHAR]->set_background_image(space_tex);
-    buttons_[SPACE_CHAR]->set_focus_previous(buttons_[BACKSPACE_CHAR]);
-    buttons_[SPACE_CHAR]->resize(32 * 4 + (2 * 3), 32);
-    rows_[4]->pack_child(buttons_[SPACE_CHAR]);
-
-    /* \6 == ACK - we don't use return because we may want multiline input */
-    buttons_[DONE_CHAR] = new_button(_T("OK"));
-    buttons_[DONE_CHAR]->set_focus_previous(buttons_[SPACE_CHAR]);
-    buttons_[DONE_CHAR]->resize(32 * 3 + (2 * 2), 32);
-    rows_[4]->pack_child(buttons_[DONE_CHAR]);
+    populate_action_row(rows_[4], ACTION_FLAGS_DEFAULT);
 
     main_frame_->pack_child(rows_[4]);
 }
@@ -340,15 +337,101 @@ smlt::ui::Button* Keyboard::new_button(const unicode& label) {
     return btn;
 };
 
-void Keyboard::generate_alphabetical_layout() {
+void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
+    /* Now, we add Backspace, space and return */
+
+    if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
+        buttons_[CASE_TOGGLE_CHAR].button = new_button("^");
+        buttons_[CASE_TOGGLE_CHAR].button->resize(32, 32);
+        target->pack_child(buttons_[CASE_TOGGLE_CHAR].button);
+    }
+
+    if(action_flags & ACTION_FLAGS_SPACEBAR) {
+        Px width = rows_[0]->outer_width() - padding().left;
+        if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
+            width -= 32;
+            width -= target->space_between();
+        }
+
+        if(action_flags & ACTION_FLAGS_BACKSPACE) {
+            width -= 32;
+            width -= target->space_between();
+        }
+
+        if(action_flags & ACTION_FLAGS_ENTER) {
+            width -= 32;
+            width -= target->space_between();
+        }
+
+        /* Now, we add space and return */
+        buttons_[SPACE_CHAR].button = new_button("");
+
+        auto space_tex = buttons_[SPACE_CHAR].button->stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
+        space_tex->set_data(SPACE_ICON, 16 * 8);
+        space_tex->flip_vertically();
+        space_tex->convert(
+            TEXTURE_FORMAT_RGBA_4UB_8888,
+            {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
+        );
+        space_tex->flush();
+
+        buttons_[SPACE_CHAR].button->set_foreground_image(space_tex);
+
+        if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
+            buttons_[SPACE_CHAR].button->set_focus_previous(buttons_[CASE_TOGGLE_CHAR].button);
+        }
+
+        buttons_[SPACE_CHAR].button->resize(width, 32);
+        target->pack_child(buttons_[SPACE_CHAR].button);
+    }
+
+    if(action_flags & ACTION_FLAGS_BACKSPACE) {
+        buttons_[BACKSPACE_CHAR].button = new_button("<--");
+        buttons_[BACKSPACE_CHAR].button->resize(32, 32);
+
+        if(action_flags & ACTION_FLAGS_SPACEBAR) {
+            buttons_[BACKSPACE_CHAR].button->set_focus_previous(buttons_[SPACE_CHAR].button);
+        } else if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
+            buttons_[BACKSPACE_CHAR].button->set_focus_previous(buttons_[CASE_TOGGLE_CHAR].button);
+        }
+
+        target->pack_child(buttons_[BACKSPACE_CHAR].button);
+    }
+
+    if(action_flags & ACTION_FLAGS_ENTER) {
+        buttons_[DONE_CHAR].button = new_button(_T("OK"));
+        buttons_[DONE_CHAR].button->resize(32, 32);
+
+        if(action_flags & ACTION_FLAGS_BACKSPACE) {
+            buttons_[DONE_CHAR].button->set_focus_previous(buttons_[BACKSPACE_CHAR].button);
+        } else if(action_flags & ACTION_FLAGS_SPACEBAR) {
+            buttons_[DONE_CHAR].button->set_focus_previous(buttons_[SPACE_CHAR].button);
+        } else if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
+            buttons_[DONE_CHAR].button->set_focus_previous(buttons_[CASE_TOGGLE_CHAR].button);
+        }
+
+        target->pack_child(buttons_[DONE_CHAR].button);
+    }
+}
+
+void Keyboard::generate_alphabetical_layout(bool uppercase) {
     clear();
 
-    std::vector<std::string> rows = {
+    const std::vector<std::string> uppercase_rows = {
         {"1234567890#!"},
         {"ABCDEFGHIJ+_"},
         {"KLMNOPQRST@-"},
         {"UVWXYZ.,<>?*"}
     };
+
+    const std::vector<std::string> lowercase_rows = {
+        {"1234567890#!"},
+        {"abcdefghij+_"},
+        {"klmnopqrst@-"},
+        {"uvwxyz.,<>?*"}
+    };
+
+    const auto& rows = (uppercase) ? uppercase_rows : lowercase_rows;
 
     smlt::ui::Widget* prev = nullptr;
 
@@ -365,44 +448,20 @@ void Keyboard::generate_alphabetical_layout() {
         if(i < rows.size()) {
             prev = nullptr;
             for(auto ch: rows[i]) {
-                buttons_[ch] = new_button(std::string(1, ch));
+                buttons_[ch].button = new_button(std::string(1, ch));
+
                 if(prev) {
-                    prev->set_focus_next(buttons_[ch]);
+                    prev->set_focus_next(buttons_[ch].button);
                 }
-                prev = buttons_[ch];
-                row->pack_child(buttons_[ch]);
+                prev = buttons_[ch].button;
+                row->pack_child(buttons_[ch].button);
             }
 
             main_frame_->pack_child(row);
         }
     }
 
-    /* Now, we add Backspace, space and return */
-    buttons_[BACKSPACE_CHAR] = new_button("<--");
-    buttons_[BACKSPACE_CHAR]->resize(32 * 2 + (2 * 1), 32);
-    rows_[4]->pack_child(buttons_[BACKSPACE_CHAR]);
-
-    /* Now, we add space and return */
-    buttons_[SPACE_CHAR] = new_button("");
-
-    auto space_tex = buttons_[SPACE_CHAR]->stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
-    space_tex->set_data(SPACE_ICON, 16 * 8);
-    space_tex->flip_vertically();
-    space_tex->convert(
-        TEXTURE_FORMAT_RGBA_4UB_8888,
-        {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
-    );
-    space_tex->flush();
-
-    buttons_[SPACE_CHAR]->set_foreground_image(space_tex);
-    buttons_[SPACE_CHAR]->set_focus_previous(buttons_[BACKSPACE_CHAR]);
-    buttons_[SPACE_CHAR]->resize(32 * 6 + (2 * 5), 32);
-    rows_[4]->pack_child(buttons_[SPACE_CHAR]);
-
-    buttons_[DONE_CHAR] = new_button(_T("OK"));
-    buttons_[DONE_CHAR]->set_focus_previous(buttons_[SPACE_CHAR]);
-    buttons_[DONE_CHAR]->resize(32 * 4 + (2 * 3), 32);
-    rows_[4]->pack_child(buttons_[DONE_CHAR]);
+    populate_action_row(rows_[4], ACTION_FLAGS_BACKSPACE | ACTION_FLAGS_CASE_TOGGLE | ACTION_FLAGS_SPACEBAR | ACTION_FLAGS_ENTER);
 
     main_frame_->pack_child(rows_[4]);
 }
@@ -441,7 +500,7 @@ void Keyboard::on_transformation_change_attempted() {
 void Keyboard::set_font(FontPtr font) {
     Widget::set_font(font);
     for(auto& button: buttons_) {
-        button.second->set_font(font);
+        button.second.button->set_font(font);
     }
 }
 
