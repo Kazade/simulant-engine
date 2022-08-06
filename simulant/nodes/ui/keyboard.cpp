@@ -85,7 +85,17 @@ void Keyboard::activate() {
                 target_->set_text(txt);
             }
         } else {
-            /* Indicate failure by flashing red */
+            /* Indicate failure by flashing red. A bit of explanation:
+             *
+             * - state keeps track of the lerp-ing between colours. It's not using a
+             * coroutine because we want to keep this lightweight. Either way though handling
+             * the case that the keyboard was destroyed while updating is tricksy
+             * - So we also hold a weak pointer to alive_marker_. If the keyboard is destroyed
+             * we can detect that and bail out immediately
+             * - We create a temporary style for this key, so that changing its colour doesn't
+             * affect other keys, we then lerp the colour to whatever background it should be
+             * (depending on whether the button is focussed or not)
+             */
             struct State {
                 float t = 0.0f;
                 sig::connection conn;
@@ -94,12 +104,12 @@ void Keyboard::activate() {
             auto state = std::make_shared<State>();
             auto marker = std::weak_ptr<bool>(alive_marker_);
 
-            auto original_style = buttons_[c]->style_;
             auto temp_style = std::make_shared<WidgetStyle>(*buttons_[c]->style_);
             buttons_[c]->set_style(temp_style);
 
             state->conn = get_app()->signal_update().connect([=](float dt) {
                 if(!marker.lock()) {
+                    /* Keyboard was destroyed, just bail out */
                     state->conn.disconnect();
                     return;
                 }
@@ -115,7 +125,11 @@ void Keyboard::activate() {
                 buttons_[c]->rebuild();
 
                 if(state->t == 1.0f) {
+                    /* We're done, reset to the correct style - this will destroy our temporary style when we
+                     * leave the function */
                     buttons_[c]->set_style(current_style);
+
+                    /* Disconnect from update() */
                     state->conn.disconnect();
                 }
             });
@@ -281,7 +295,7 @@ void Keyboard::generate_numerical_layout() {
     rows_[4]->pack_child(buttons_[SPACE_CHAR]);
 
     /* \6 == ACK - we don't use return because we may want multiline input */
-    buttons_[DONE_CHAR] = new_button("DONE");
+    buttons_[DONE_CHAR] = new_button(_T("OK"));
     buttons_[DONE_CHAR]->set_focus_previous(buttons_[SPACE_CHAR]);
     buttons_[DONE_CHAR]->resize(32 * 3 + (2 * 2), 32);
     rows_[4]->pack_child(buttons_[DONE_CHAR]);
@@ -385,7 +399,7 @@ void Keyboard::generate_alphabetical_layout() {
     buttons_[SPACE_CHAR]->resize(32 * 6 + (2 * 5), 32);
     rows_[4]->pack_child(buttons_[SPACE_CHAR]);
 
-    buttons_[DONE_CHAR] = new_button("DONE");
+    buttons_[DONE_CHAR] = new_button(_T("OK"));
     buttons_[DONE_CHAR]->set_focus_previous(buttons_[SPACE_CHAR]);
     buttons_[DONE_CHAR]->resize(32 * 4 + (2 * 3), 32);
     rows_[4]->pack_child(buttons_[DONE_CHAR]);
