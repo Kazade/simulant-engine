@@ -379,7 +379,7 @@ void Keyboard::generate_numerical_layout() {
         }
     }
 
-    populate_action_row(rows_[4], ACTION_FLAGS_DEFAULT);
+    populate_action_row(rows_[4], ACTION_FLAGS_DEFAULT | ACTION_FLAGS_SPACEBAR);
 
     main_frame_->pack_child(rows_[4]);
 }
@@ -421,10 +421,14 @@ smlt::ui::Button* Keyboard::new_button(const unicode& label) {
     return btn;
 };
 
+static bool mask_set(uint32_t mask, uint32_t c) {
+    return (mask & c) == c;
+}
+
 void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
     /* Now, we add Backspace, space and return */
 
-    if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
+    if(mask_set(action_flags, ACTION_FLAGS_CASE_TOGGLE)) {
         buttons_[CASE_TOGGLE_CHAR].button = new_button("^");
         buttons_[CASE_TOGGLE_CHAR].button->resize(32, 32);
 
@@ -445,19 +449,19 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         target->pack_child(buttons_[CASE_TOGGLE_CHAR].button);
     }
 
-    if(action_flags & ACTION_FLAGS_SPACEBAR) {
+    if(mask_set(action_flags, ACTION_FLAGS_SPACEBAR)) {
         Px width = rows_[0]->outer_width() - padding().left;
-        if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
+        if(mask_set(action_flags, ACTION_FLAGS_CASE_TOGGLE)) {
             width -= 32;
             width -= target->space_between();
         }
 
-        if(action_flags & ACTION_FLAGS_BACKSPACE) {
+        if(mask_set(action_flags, ACTION_FLAGS_BACKSPACE)) {
             width -= 32;
             width -= target->space_between();
         }
 
-        if(action_flags & ACTION_FLAGS_ENTER) {
+        if(mask_set(action_flags, ACTION_FLAGS_ENTER)) {
             width -= 32;
             width -= target->space_between();
         }
@@ -489,7 +493,7 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         target->pack_child(buttons_[SPACE_CHAR].button);
     }
 
-    if(action_flags & ACTION_FLAGS_BACKSPACE) {
+    if(mask_set(action_flags, ACTION_FLAGS_BACKSPACE)) {
         buttons_[BACKSPACE_CHAR].button = new_button("");
         buttons_[BACKSPACE_CHAR].button->resize(32, 32);
 
@@ -515,7 +519,7 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         target->pack_child(buttons_[BACKSPACE_CHAR].button);
     }
 
-    if(action_flags & ACTION_FLAGS_ENTER) {
+    if(mask_set(action_flags, ACTION_FLAGS_ENTER)) {
         buttons_[DONE_CHAR].button = new_button(_T(""));
         buttons_[DONE_CHAR].button->resize(32, 32);
 
