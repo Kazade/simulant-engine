@@ -234,6 +234,28 @@ static void explode_r8(const uint8_t* source, const TextureChannelSet& channels,
     a = calculate_component(3, sr, 0, 0, 0);
 }
 
+static void explode_rgb565(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
+    uint16_t* texel = (uint16_t*) source;
+
+    auto calculate_component = [&channels](uint8_t i, uint16_t texel) -> float {
+        switch(channels[i]) {
+            case TEXTURE_CHANNEL_ZERO: return 0.0f;
+            case TEXTURE_CHANNEL_ONE: return 1.0f;
+            case TEXTURE_CHANNEL_RED: return float((texel & 0xF800) >> 11) / 31.0f;
+            case TEXTURE_CHANNEL_GREEN: return float((texel & 0x7E0) >> 5) / 63.0f;
+            case TEXTURE_CHANNEL_BLUE: return float((texel & 0x1F)) / 31.0f;
+            case TEXTURE_CHANNEL_ALPHA: return 1.0f;
+        }
+
+        return 0.0f;
+    };
+
+    r = calculate_component(0, *texel);
+    g = calculate_component(1, *texel);
+    b = calculate_component(2, *texel);
+    a = calculate_component(3, *texel);
+}
+
 static void compress_rgb565(uint8_t* dest, float r, float g, float b, float) {
     uint16_t* out = (uint16_t*) dest;
 
@@ -298,6 +320,7 @@ typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
 static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
     {TEXTURE_FORMAT_R_1UB_8, explode_r8},
+    {TEXTURE_FORMAT_RGB_1US_565, explode_rgb565},
     {TEXTURE_FORMAT_RGBA_4UB_8888, explode_rgba8888}
 };
 
@@ -307,13 +330,15 @@ static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
     {TEXTURE_FORMAT_RGBA_4UB_8888, compress_rgba8888}
 };
 
-void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
+bool Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
     std::vector<uint8_t> original_data(data_size());
     std::copy(data_, data_ + data_size(), original_data.begin());
 
     auto original_format = format();
 
     set_format(new_format);
+
+    auto failed = std::make_shared<bool>(false);
 
     mutate_data([=](uint8_t* data, uint16_t, uint16_t, TextureFormat nf) {
         _S_UNUSED(nf);
@@ -326,7 +351,9 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
         uint8_t* dest_ptr = &data[0];
 
         if(!EXPLODERS.count(original_format) || !COMPRESSORS.count(new_format)) {
-            throw std::logic_error("Unsupported texture conversion");
+            S_ERROR("Unsupported texture conversion from {0} to {1}", original_format, new_format);
+            *failed = true;
+            return;
         }
 
         auto explode = EXPLODERS.at(original_format);
@@ -339,6 +366,12 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
             compress(dest_ptr, r, g, b, a);
         }
     });
+
+    if(*failed) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 
@@ -427,7 +460,7 @@ uint32_t Texture::data_size() const {
     return data_size_;
 }
 
-void Texture::set_data(const uint8_t* data, std::size_t size) {    
+void Texture::set_data(const uint8_t* data, std::size_t size) {
     resize_data(size);
     std::copy(data, data + size, data_);
 }

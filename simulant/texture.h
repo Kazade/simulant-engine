@@ -90,7 +90,7 @@ enum TextureFormat {
     TEXTURE_FORMAT_RGB8_PALETTED8,
     TEXTURE_FORMAT_RGBA8_PALETTED8,
     TEXTURE_FORMAT_RGB565_PALETTED8,
-    
+
     // Dreamcast PVR VQ compressed
     TEXTURE_FORMAT_RGB_1US_565_VQ_TWID,
     TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID,
@@ -174,7 +174,7 @@ public:
     bool update_palette(const uint8_t* palette);
 
     /** Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
-    void convert(
+    bool convert(
         TextureFormat new_format,
         const TextureChannelSet& channels=Texture::DEFAULT_SOURCE_CHANNELS
     );

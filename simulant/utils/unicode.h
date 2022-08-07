@@ -34,6 +34,7 @@ public:
 
 class unicode {
 public:
+    static const size_t npos = -1;
     typedef ustring::size_type size_type;
     typedef ustring::value_type value_type;
 
@@ -122,6 +123,10 @@ public:
         //Automatically convert UTF-8 strings to unicode
         *this = unicode(rhs);
         return *this;
+    }
+
+    std::size_t find(const char16_t c) const {
+        return string_.find(c);
     }
 
     std::size_t find(const unicode& what) const {
