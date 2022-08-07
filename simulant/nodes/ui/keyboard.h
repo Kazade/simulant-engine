@@ -65,14 +65,6 @@ private:
     std::shared_ptr<WidgetStyle> default_style_;
     std::shared_ptr<WidgetStyle> highlighted_style_;
 
-    struct SpecialStyle {
-        std::shared_ptr<WidgetStyle> def;
-        std::shared_ptr<WidgetStyle> highlight;
-    };
-
-    std::map<uint16_t, SpecialStyle> special_styles_;
-    SpecialStyle* new_special_style(uint16_t button);
-
     unicode limited_chars_;
 
     struct ButtonInfo {

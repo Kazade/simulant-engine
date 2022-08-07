@@ -25,26 +25,88 @@ const uint8_t SPACE_ICON [] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-const uint8_t ENTER_ICON [] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00,
-    0x00, 0x50, 0xC0, 0x00, 0x00, 0xFF, 0x00, 0x00,
-    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
-    0x00, 0x50, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+static const struct {
+  unsigned int 	 width;
+  unsigned int 	 height;
+  unsigned int 	 bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+  unsigned char	 pixel_data[16 * 16 * 2 + 1];
+} ENTER_ICON = {
+  16, 16, 2,
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\242\020\323\234\353Z\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000e)\377\377\363\234\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000e)\377\377\363\234\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\242\020\000\000\000\000\000\000e)\377\377\363\234\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\060\204\333\336(B\000\000\000\000e)\377\377\363\234\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\060\204\276\367\272\326\246\061\000\000\000\000e)\377\377\363\234\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\060\204\276\367\272\326\307\071\000\000\000\000\000\000e)\377\377\363\234\000"
+  "\000\000\000\000\000\000\000\000\000\060\204\276\367\377\377\333\336\272\326\272\326\272\326"
+  "\272\326\272\326\377\377\363\234\000\000\000\000\000\000\000\000\000\000\060\204\276\367\377\377"
+  "\333\336\272\326\272\326\272\326\272\326\272\326\272\326\020\204\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\060\204\276\367\272\326\307\071\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\060\204\276\367\272\326\246\061\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\060\204\333\336(B\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\242\020\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000",
 };
 
-const uint8_t CASE_ICON [] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+static const struct {
+  unsigned int 	 width;
+  unsigned int 	 height;
+  unsigned int 	 bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+  unsigned char	 pixel_data[16 * 16 * 2 + 1];
+} CASE_TOGGLE_ICON = {
+  16, 16, 2,
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\252R\252R\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\252R\034\347\034\347\252R\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\252"
+  "R\373\336\377\377\377\377\373\336\252R\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\252R\034\347}\357}\357}\357}\357\034\347\252R\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\252R\373\336\236\367\256s\373\336\373\336\256s\236\367\373\336\252R\000"
+  "\000\000\000\000\000\000\000\000\000\252R\034\347\236\367\317{\000\000\373\336\373\336\000\000\317{"
+  "\236\367\034\347\252R\000\000\000\000\000\000\000\000\252R\272\326\256s\000\000\000\000\373\336\373"
+  "\336\000\000\000\000\317{\272\326\252R\000\000\000\000\000\000\000\000\000\000E)\000\000\000\000\000\000\373\336"
+  "\373\336\000\000\000\000\000\000e)\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\373\336\373"
+  "\336\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\373\336\373"
+  "\336\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\034\347\034\347"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\317{\317{\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000",
+};
+
+static const struct {
+  unsigned int 	 width;
+  unsigned int 	 height;
+  unsigned int 	 bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+  unsigned char	 pixel_data[16 * 16 * 2 + 1];
+} BACKSPACE_ICON = {
+  16, 16, 2,
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\262"
+  "\224\276\367\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\070\306\000\000\000\000,c}\357\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\000\000\343"
+  "\030y\316\377\377\377\377\377\377\276\367\337\377\377\377\377\377\377\377"
+  "}\357\377\377\377\377\377\377\377\377\000\000\064\245\377\377\377\377\377\377"
+  "\377\377\262\224\222\224\337\377\377\377<\347,c\070\306\377\377\377\377\377"
+  "\377,c\236\367\377\377\377\377\377\377\377\377<\347\014c\222\224\373\336\313"
+  "Z\222\224\337\377\377\377\377\377\377\377\232\326\377\377\377\377\377\377"
+  "\377\377\377\377\377\377<\347\313Z\246\061\222\224\276\367\377\377\377\377"
+  "\377\377\377\377\232\326\377\377\377\377\377\377\377\377\377\377\377\377"
+  "<\347\313Z\246\061\222\224\276\367\377\377\377\377\377\377\377\377,c\236\367"
+  "\377\377\377\377\377\377\377\377<\347\014c\222\224\373\336\313Z\222\224\337"
+  "\377\377\377\377\377\377\377\000\000\064\245\377\377\377\377\377\377\377\377\262"
+  "\224\222\224\337\377\377\377<\347,c\070\306\377\377\377\377\377\377\000\000\343"
+  "\030y\316\377\377\377\377\377\377\276\367\337\377\377\377\377\377\377\377"
+  "}\357\377\377\377\377\377\377\377\377\000\000\000\000,c}\357\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377\377"
+  "\377\000\000\000\000\000\000\262\224\276\367\377\377\377\377\377\377\377\377\377\377"
+  "\377\377\377\377\377\377\377\377\377\377\070\306\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
+  "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000",
 };
 
 Keyboard::Keyboard(UIManager *owner, UIConfig *config, KeyboardLayout layout):
@@ -260,18 +322,6 @@ void Keyboard::move_row(int dir) {
     }
 }
 
-Keyboard::SpecialStyle *Keyboard::new_special_style(uint16_t button) {
-    SpecialStyle* style = &special_styles_[button];
-
-    style->def = std::make_shared<WidgetStyle>(*default_style_);
-    style->highlight = std::make_shared<WidgetStyle>(*highlighted_style_);
-
-    style->def->active_layers_ |= (1 << WIDGET_LAYER_INDEX_FOREGROUND);
-    style->highlight->active_layers_ |= (1 << WIDGET_LAYER_INDEX_FOREGROUND);
-
-    return style;
-}
-
 void Keyboard::set_enabled(Button* btn, bool value) {
     btn->data->stash(value, "enabled");
 }
@@ -281,7 +331,6 @@ void Keyboard::clear() {
         info.second.button->destroy();
     }
     buttons_.clear();
-    special_styles_.clear();
 
     for(auto& frame: rows_) {
         if(frame) {
@@ -375,25 +424,23 @@ smlt::ui::Button* Keyboard::new_button(const unicode& label) {
 void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
     /* Now, we add Backspace, space and return */
 
-
     if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
         buttons_[CASE_TOGGLE_CHAR].button = new_button("^");
         buttons_[CASE_TOGGLE_CHAR].button->resize(32, 32);
 
-        auto ss = new_special_style(CASE_TOGGLE_CHAR);
-        buttons_[CASE_TOGGLE_CHAR].button->set_style(ss->def);
-
-        auto enter_tex = buttons_[CASE_TOGGLE_CHAR].button->stage->assets->new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
-        enter_tex->set_data(CASE_ICON, 8 * 8);
-        enter_tex->flip_vertically();
-        enter_tex->convert(
+        auto tex = buttons_[CASE_TOGGLE_CHAR].button->stage->assets->new_texture(CASE_TOGGLE_ICON.width, CASE_TOGGLE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
+        tex->set_data(CASE_TOGGLE_ICON.pixel_data, CASE_TOGGLE_ICON.width * CASE_TOGGLE_ICON.height * CASE_TOGGLE_ICON.bytes_per_pixel);
+        tex->convert(
             TEXTURE_FORMAT_RGBA_4UB_8888,
             {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
         );
-        enter_tex->flush();
+        tex->flush();
 
-        buttons_[CASE_TOGGLE_CHAR].button->set_foreground_colour(smlt::Colour::WHITE);
-        buttons_[CASE_TOGGLE_CHAR].button->set_foreground_image(enter_tex);
+        auto widget = stage->ui->new_widget_as_image(tex);
+        widget->set_anchor_point(0.5f, 0.5f);
+        widget->set_parent(buttons_[CASE_TOGGLE_CHAR].button);
+        widget->move_to(16, 0);
+        widget->scale_to(1.0f, -1.0f, 1.0f);
 
         target->pack_child(buttons_[CASE_TOGGLE_CHAR].button);
     }
@@ -418,10 +465,8 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         /* Now, we add space and return */
         buttons_[SPACE_CHAR].button = new_button("");
 
-        auto ss = new_special_style(SPACE_CHAR);
-        buttons_[SPACE_CHAR].button->set_style(ss->def);
-
-        auto space_tex = buttons_[SPACE_CHAR].button->stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
+        auto stage = buttons_[SPACE_CHAR].button->stage.get();
+        auto space_tex = stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
         space_tex->set_data(SPACE_ICON, 16 * 8);
         space_tex->flip_vertically();
         space_tex->convert(
@@ -430,8 +475,11 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         );
         space_tex->flush();
 
-        buttons_[SPACE_CHAR].button->set_foreground_colour(smlt::Colour::WHITE);
-        buttons_[SPACE_CHAR].button->set_foreground_image(space_tex);
+        auto space_widget = stage->ui->new_widget_as_image(space_tex);
+        space_widget->set_anchor_point(0.5f, 0.5f);
+        space_widget->set_parent(buttons_[SPACE_CHAR].button);
+        space_widget->move_to(width.value / 2, 0);
+        space_widget->scale_to(8.0f, 2.0f, 1.0f);
 
         if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
             buttons_[SPACE_CHAR].button->set_focus_previous(buttons_[CASE_TOGGLE_CHAR].button);
@@ -442,8 +490,21 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
     }
 
     if(action_flags & ACTION_FLAGS_BACKSPACE) {
-        buttons_[BACKSPACE_CHAR].button = new_button("<--");
+        buttons_[BACKSPACE_CHAR].button = new_button("");
         buttons_[BACKSPACE_CHAR].button->resize(32, 32);
+
+        auto tex = buttons_[BACKSPACE_CHAR].button->stage->assets->new_texture(BACKSPACE_ICON.width, BACKSPACE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
+        tex->set_data(BACKSPACE_ICON.pixel_data, 16 * 16 * 2);
+        tex->convert(
+            TEXTURE_FORMAT_RGBA_4UB_8888,
+            {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
+        );
+        tex->flush();
+
+        auto widget = stage->ui->new_widget_as_image(tex);
+        widget->set_anchor_point(0.5f, 0.5f);
+        widget->set_parent(buttons_[BACKSPACE_CHAR].button);
+        widget->move_to(16, 0);
 
         if(action_flags & ACTION_FLAGS_SPACEBAR) {
             buttons_[BACKSPACE_CHAR].button->set_focus_previous(buttons_[SPACE_CHAR].button);
@@ -458,20 +519,19 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         buttons_[DONE_CHAR].button = new_button(_T(""));
         buttons_[DONE_CHAR].button->resize(32, 32);
 
-        auto ss = new_special_style(DONE_CHAR);
-        buttons_[DONE_CHAR].button->set_style(ss->def);
-
-        auto enter_tex = buttons_[DONE_CHAR].button->stage->assets->new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
-        enter_tex->set_data(ENTER_ICON, 8 * 8);
-        enter_tex->flip_vertically();
-        enter_tex->convert(
+        auto tex = buttons_[DONE_CHAR].button->stage->assets->new_texture(ENTER_ICON.width, ENTER_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
+        tex->set_data(ENTER_ICON.pixel_data, ENTER_ICON.width * ENTER_ICON.height * ENTER_ICON.bytes_per_pixel);
+        tex->convert(
             TEXTURE_FORMAT_RGBA_4UB_8888,
             {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
         );
-        enter_tex->flush();
+        tex->flush();
 
-        buttons_[DONE_CHAR].button->set_foreground_colour(smlt::Colour::WHITE);
-        buttons_[DONE_CHAR].button->set_foreground_image(enter_tex);
+        auto widget = stage->ui->new_widget_as_image(tex);
+        widget->set_anchor_point(0.5f, 0.5f);
+        widget->set_parent(buttons_[DONE_CHAR].button);
+        widget->move_to(16, 0);
+        widget->scale_to(1.0f, -1.0f, 1.0f);
 
         if(action_flags & ACTION_FLAGS_BACKSPACE) {
             buttons_[DONE_CHAR].button->set_focus_previous(buttons_[BACKSPACE_CHAR].button);

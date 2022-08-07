@@ -234,6 +234,28 @@ static void explode_r8(const uint8_t* source, const TextureChannelSet& channels,
     a = calculate_component(3, sr, 0, 0, 0);
 }
 
+static void explode_rgb565(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
+    uint16_t* texel = (uint16_t*) source;
+
+    auto calculate_component = [&channels](uint8_t i, uint16_t texel) -> float {
+        switch(channels[i]) {
+            case TEXTURE_CHANNEL_ZERO: return 0.0f;
+            case TEXTURE_CHANNEL_ONE: return 1.0f;
+            case TEXTURE_CHANNEL_RED: return float((texel & 0xF800) >> 11) / 31.0f;
+            case TEXTURE_CHANNEL_GREEN: return float((texel & 0x7E0) >> 5) / 63.0f;
+            case TEXTURE_CHANNEL_BLUE: return float((texel & 0x1F)) / 31.0f;
+            case TEXTURE_CHANNEL_ALPHA: return 1.0f;
+        }
+
+        return 0.0f;
+    };
+
+    r = calculate_component(0, *texel);
+    g = calculate_component(1, *texel);
+    b = calculate_component(2, *texel);
+    a = calculate_component(3, *texel);
+}
+
 static void compress_rgb565(uint8_t* dest, float r, float g, float b, float) {
     uint16_t* out = (uint16_t*) dest;
 
@@ -298,6 +320,7 @@ typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
 static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
     {TEXTURE_FORMAT_R_1UB_8, explode_r8},
+    {TEXTURE_FORMAT_RGB_1US_565, explode_rgb565},
     {TEXTURE_FORMAT_RGBA_4UB_8888, explode_rgba8888}
 };
 
