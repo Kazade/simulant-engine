@@ -32,6 +32,12 @@ bool Font::init() {
 }
 
 std::pair<Vec2, Vec2> Font::texture_coordinates_for_character(char32_t ch) {
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
     if(info_) {
         stbtt_aligned_quad q;
         float x = 0, y = 0;
@@ -61,6 +67,12 @@ float Font::character_width(char32_t ch) {
         return 0;
     }
 
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
     auto *b = &char_data_.at(ch - 32);
     return std::abs(b->x1 - b->x0);
 }
@@ -68,6 +80,12 @@ float Font::character_width(char32_t ch) {
 float Font::character_height(char32_t ch) {
     if(ch < 32) {
         return this->size();
+    }
+
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
     }
 
     auto *b = &char_data_.at(ch - 32);
@@ -81,6 +99,12 @@ float Font::character_advance(char32_t ch, char32_t next) {
         return 0;
     }
 
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
     auto *b = &char_data_.at(ch - 32);
     return b->xadvance;
 }
@@ -88,6 +112,12 @@ float Font::character_advance(char32_t ch, char32_t next) {
 std::pair<int16_t, int16_t> Font::character_offset(char32_t ch) {
     if(ch < 32) {
         return std::make_pair(0, 0);
+    }
+
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
     }
 
     auto *b = &char_data_.at(ch - 32);
