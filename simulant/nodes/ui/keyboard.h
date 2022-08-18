@@ -5,6 +5,9 @@
 #include "../../keycodes.h"
 
 namespace smlt {
+
+class EventListener;
+
 namespace ui {
 
 /** An onscreen keyboard.
@@ -18,7 +21,9 @@ enum KeyboardLayout {
 };
 
 struct SoftKeyPressedEvent {
-    uint16_t character;
+    KeyboardCode code;
+    wchar_t character;
+
     bool cancelled = false;
 
     void cancel() {
@@ -46,15 +51,23 @@ public:
     Keyboard(UIManager* owner, UIConfig* config, KeyboardLayout layout);
     ~Keyboard();
 
-    void move_up();
-    void move_down();
-    void move_right();
-    void move_left();
+    void cursor_up();
+    void cursor_down();
+    void cursor_right();
+    void cursor_left();
+
+    bool cursor_to_key(KeyboardCode code);
 
     /** Sends the key_pressed signal for the selected key */
     void activate();
     void set_target(smlt::ui::Widget* widget);
     void set_mode(KeyboardMode mode);
+
+    bool is_keyboard_integration_enabled() const {
+        return bool(keyboard_listener_);
+    }
+
+    void set_keyboard_integration_enabled(bool value);
 
     using Widget::set_font;
 private:
@@ -74,7 +87,7 @@ private:
     };
 
     // utf-16
-    std::map<uint16_t, ButtonInfo> buttons_;
+    std::map<KeyboardCode, ButtonInfo> buttons_;
     void set_enabled(Button* btn, bool value);
 
     Frame* main_frame_ = nullptr;
@@ -85,6 +98,7 @@ private:
 
     void clear();
 
+    void build_rows(const struct KeyEntry *entries, std::size_t entry_count, uint32_t flags);
     void generate_alphabetical_layout(bool uppercase=true);
     void generate_numerical_layout();
 
@@ -112,6 +126,8 @@ private:
     std::vector<sig::connection> update_connections_;
 
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
+
+    std::shared_ptr<EventListener> keyboard_listener_;
 };
 
 }

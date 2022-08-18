@@ -3,16 +3,36 @@
 #include "keyboard.h"
 #include "button.h"
 #include "frame.h"
+
+#include "../../window.h"
 #include "../../stage.h"
 #include "../../application.h"
+#include "../../event_listener.h"
 
 namespace smlt {
 namespace ui {
 
-const uint16_t SPACE_CHAR = ' ';
-const uint16_t BACKSPACE_CHAR = 8;  // ASCII BS
-const uint16_t DONE_CHAR = 6;  // ASCII ACK
-const uint16_t CASE_TOGGLE_CHAR = 1;  // ASCII Start of Heading
+
+class KeyboardListener : public EventListener {
+public:
+    KeyboardListener(Keyboard* keyboard):
+        keyboard_(keyboard) {
+        smlt::get_app()->window->register_event_listener(this);
+    }
+
+    ~KeyboardListener() {
+        smlt::get_app()->window->unregister_event_listener(this);
+    }
+
+    void on_key_up(const KeyEvent& evt) {
+        if(keyboard_->cursor_to_key(evt.keyboard_code)) {
+            keyboard_->activate();
+        }
+    }
+
+private:
+    Keyboard* keyboard_ = nullptr;
+};
 
 const uint8_t SPACE_ICON [] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -145,7 +165,7 @@ void Keyboard::activate() {
 
     auto it = std::find_if(
                 buttons_.begin(), buttons_.end(),
-        [this](const std::pair<char, ButtonInfo>& p) -> bool {
+        [this](const std::pair<KeyboardCode, ButtonInfo>& p) -> bool {
             return p.second.button == focused_;
         }
     );
@@ -154,21 +174,22 @@ void Keyboard::activate() {
         auto c = it->first;
 
         SoftKeyPressedEvent evt;
-        evt.character = c;
+        evt.code = c;
+        evt.character = it->second.option_count ? it->second.options[0] : 0;
 
         signal_key_pressed_(evt);
 
         if(!evt.cancelled) {
-            if(c == CASE_TOGGLE_CHAR) {
+            if(c == KEYBOARD_CODE_CAPSLOCK) {
                 set_mode((mode_ == KEYBOARD_MODE_UPPERCASE) ? KEYBOARD_MODE_LOWERCASE : KEYBOARD_MODE_UPPERCASE);
-            } else if(c == DONE_CHAR) {
+            } else if(c == KEYBOARD_CODE_ESCAPE) {
                 signal_done_();
             } else if(target_) {
                 auto txt = target_->text();
-                if(c == BACKSPACE_CHAR && !txt.empty()) { // Backspace
+                if(c == KEYBOARD_CODE_BACKSPACE && !txt.empty()) { // Backspace
                     txt = txt.slice(nullptr, -1);
-                } else if(c != BACKSPACE_CHAR) { // Any other character
-                    txt.push_back(wchar_t(c));
+                } else if(c != KEYBOARD_CODE_BACKSPACE) { // Any other character
+                    txt.push_back(evt.character);
                 }
                 target_->set_text(txt);
             }
@@ -246,19 +267,27 @@ void Keyboard::set_mode(KeyboardMode mode) {
 
     if(layout_ == KEYBOARD_LAYOUT_ALPHABETICAL) {
         generate_alphabetical_layout(mode_ == KEYBOARD_MODE_UPPERCASE);
-        buttons_[CASE_TOGGLE_CHAR].button->focus();
+        buttons_[KEYBOARD_CODE_CAPSLOCK].button->focus();
     }
 }
 
-void Keyboard::move_up() {
+void Keyboard::set_keyboard_integration_enabled(bool value) {
+    if(value && !keyboard_listener_) {
+        keyboard_listener_ = std::make_shared<KeyboardListener>(this);
+    } else if(!value) {
+        keyboard_listener_.reset();
+    }
+}
+
+void Keyboard::cursor_up() {
     move_row(-1);
 }
 
-void Keyboard::move_down() {
+void Keyboard::cursor_down() {
     move_row(1);
 }
 
-void Keyboard::move_right() {
+void Keyboard::cursor_right() {
     if(focused_) {
         auto to_focus = focused_->next_in_focus_chain();
         if(to_focus) {
@@ -267,13 +296,31 @@ void Keyboard::move_right() {
     }
 }
 
-void Keyboard::move_left() {
+void Keyboard::cursor_left() {
     if(focused_) {
         auto to_focus = focused_->previous_in_focus_chain();
         if(to_focus) {
             to_focus->focus();
         }
     }
+}
+
+bool Keyboard::cursor_to_key(KeyboardCode code) {
+    for(auto& row: rows_) {
+        if(row && row->packed_children().size()) {
+            auto f = row->packed_children()[0]->focused_in_chain();
+            if(f) f->blur();
+        }
+    }
+
+    for(auto& key: buttons_) {
+        if(key.first == code) {
+            key.second.button->focus();
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void Keyboard::move_row(int dir) {
@@ -341,47 +388,95 @@ void Keyboard::clear() {
     }
 }
 
-void Keyboard::generate_numerical_layout() {
-    clear();
+struct KeyEntry {
+    KeyboardCode code;
+    uint16_t character;
+    bool last_in_row;
+};
 
-    std::vector<std::string> rows = {
-        {"+123%"},
-        {"-456."},
-        {"*789,"},
-        {"/:0[]"}
-    };
-
+void Keyboard::build_rows(const KeyEntry* entries, std::size_t entry_count, uint32_t flags) {
     smlt::ui::Widget* prev = nullptr;
+    bool init_new_row = true;
 
-    for(std::size_t i = 0; i < 5; ++i) {
+    std::size_t i = 0;
+    for(std::size_t j = 0; j < entry_count; ++j) {
         auto& row = rows_[i];
-        row = owner_->new_widget_as_frame("");
-        row->set_anchor_point(0.5f, 0.5f);
-        row->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
-        row->set_border_width(0);
-        row->set_space_between(2);
-        row->set_background_colour(smlt::Colour::NONE);
-        row->set_border_colour(smlt::Colour::NONE);
+        auto& entry = entries[j];
 
-        if(i < rows.size()) {
+        if(init_new_row) {
+            row = owner_->new_widget_as_frame("");
+            row->set_anchor_point(0.5f, 0.5f);
+            row->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
+            row->set_border_width(0);
+            row->set_space_between(2);
+            row->set_background_colour(smlt::Colour::NONE);
+            row->set_border_colour(smlt::Colour::NONE);
+            init_new_row = false;
+        }
+
+        buttons_[entry.code].button = new_button(std::string(1, entry.character));
+        buttons_[entry.code].option_count = 1;
+        buttons_[entry.code].options[0] = entry.character;
+
+        if(prev) {
+            prev->set_focus_next(buttons_[entry.code].button);
+        }
+
+        prev = buttons_[entry.code].button;
+        row->pack_child(buttons_[entry.code].button);
+
+        if(entry.last_in_row) {
             prev = nullptr;
-            for(auto ch: rows[i]) {
-                buttons_[ch].button = new_button(std::string(1, ch));
-
-                if(prev) {
-                    prev->set_focus_next(buttons_[ch].button);
-                }
-                prev = buttons_[ch].button;
-                row->pack_child(buttons_[ch].button);
-            }
-
             main_frame_->pack_child(row);
+            init_new_row = true;
+            ++i;
         }
     }
 
-    populate_action_row(rows_[4], ACTION_FLAGS_DEFAULT | ACTION_FLAGS_SPACEBAR);
+    auto& row = rows_[4];
+    row = owner_->new_widget_as_frame("");
+    row->set_anchor_point(0.5f, 0.5f);
+    row->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
+    row->set_border_width(0);
+    row->set_space_between(2);
+    row->set_background_colour(smlt::Colour::NONE);
+    row->set_border_colour(smlt::Colour::NONE);
+
+    populate_action_row(rows_[4], flags);
 
     main_frame_->pack_child(rows_[4]);
+}
+
+void Keyboard::generate_numerical_layout() {
+    clear();
+
+    const KeyEntry rows [] = {
+        {KEYBOARD_CODE_KP_PLUS, '+', false},
+        {KEYBOARD_CODE_KP_1, '1', false},
+        {KEYBOARD_CODE_KP_2, '2', false},
+        {KEYBOARD_CODE_KP_3, '3', false},
+        {KEYBOARD_CODE_KP_PERCENT, '%', true},
+
+        {KEYBOARD_CODE_KP_MINUS, '-', false},
+        {KEYBOARD_CODE_KP_4, '4', false},
+        {KEYBOARD_CODE_KP_5, '5', false},
+        {KEYBOARD_CODE_KP_6, '6', false},
+        {KEYBOARD_CODE_KP_PERIOD, '.', true},
+
+        {KEYBOARD_CODE_KP_MULTIPLY, '*', false},
+        {KEYBOARD_CODE_KP_7, '7', false},
+        {KEYBOARD_CODE_KP_8, '8', false},
+        {KEYBOARD_CODE_KP_9, '9', false},
+        {KEYBOARD_CODE_KP_COMMA, ',', true},
+
+        {KEYBOARD_CODE_KP_DIVIDE, '/', false},
+        {KEYBOARD_CODE_KP_COLON, ':', false},
+        {KEYBOARD_CODE_KP_0, '0', false},
+        {KEYBOARD_CODE_LEFTBRACKET, '[', false},
+        {KEYBOARD_CODE_RIGHTBRACKET, ']', true},
+    };
+
+    build_rows(rows, sizeof(rows) / sizeof(KeyEntry), ACTION_FLAGS_DEFAULT | ACTION_FLAGS_SPACEBAR);
 }
 
 smlt::ui::Button* Keyboard::new_button(const unicode& label) {
@@ -429,10 +524,10 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
     /* Now, we add Backspace, space and return */
 
     if(mask_set(action_flags, ACTION_FLAGS_CASE_TOGGLE)) {
-        buttons_[CASE_TOGGLE_CHAR].button = new_button("^");
-        buttons_[CASE_TOGGLE_CHAR].button->resize(32, 32);
+        buttons_[KEYBOARD_CODE_CAPSLOCK].button = new_button("^");
+        buttons_[KEYBOARD_CODE_CAPSLOCK].button->resize(32, 32);
 
-        auto tex = buttons_[CASE_TOGGLE_CHAR].button->stage->assets->new_texture(CASE_TOGGLE_ICON.width, CASE_TOGGLE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
+        auto tex = buttons_[KEYBOARD_CODE_CAPSLOCK].button->stage->assets->new_texture(CASE_TOGGLE_ICON.width, CASE_TOGGLE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
         tex->set_data(CASE_TOGGLE_ICON.pixel_data, CASE_TOGGLE_ICON.width * CASE_TOGGLE_ICON.height * CASE_TOGGLE_ICON.bytes_per_pixel);
         tex->convert(
             TEXTURE_FORMAT_RGBA_4UB_8888,
@@ -442,11 +537,11 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
 
         auto widget = stage->ui->new_widget_as_image(tex);
         widget->set_anchor_point(0.5f, 0.5f);
-        widget->set_parent(buttons_[CASE_TOGGLE_CHAR].button);
+        widget->set_parent(buttons_[KEYBOARD_CODE_CAPSLOCK].button);
         widget->move_to(16, 0);
         widget->scale_to(1.0f, -1.0f, 1.0f);
 
-        target->pack_child(buttons_[CASE_TOGGLE_CHAR].button);
+        target->pack_child(buttons_[KEYBOARD_CODE_CAPSLOCK].button);
     }
 
     if(mask_set(action_flags, ACTION_FLAGS_SPACEBAR)) {
@@ -467,9 +562,11 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
         }
 
         /* Now, we add space and return */
-        buttons_[SPACE_CHAR].button = new_button("");
+        buttons_[KEYBOARD_CODE_SPACE].button = new_button("");
+        buttons_[KEYBOARD_CODE_SPACE].options[0] = ' ';
+        buttons_[KEYBOARD_CODE_SPACE].option_count = 1;
 
-        auto stage = buttons_[SPACE_CHAR].button->stage.get();
+        auto stage = buttons_[KEYBOARD_CODE_SPACE].button->stage.get();
         auto space_tex = stage->assets->new_texture(16, 8, TEXTURE_FORMAT_R_1UB_8);
         space_tex->set_data(SPACE_ICON, 16 * 8);
         space_tex->flip_vertically();
@@ -481,23 +578,23 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
 
         auto space_widget = stage->ui->new_widget_as_image(space_tex);
         space_widget->set_anchor_point(0.5f, 0.5f);
-        space_widget->set_parent(buttons_[SPACE_CHAR].button);
+        space_widget->set_parent(buttons_[KEYBOARD_CODE_SPACE].button);
         space_widget->move_to(width.value / 2, 0);
         space_widget->scale_to(8.0f, 2.0f, 1.0f);
 
         if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
-            buttons_[SPACE_CHAR].button->set_focus_previous(buttons_[CASE_TOGGLE_CHAR].button);
+            buttons_[KEYBOARD_CODE_SPACE].button->set_focus_previous(buttons_[KEYBOARD_CODE_CAPSLOCK].button);
         }
 
-        buttons_[SPACE_CHAR].button->resize(width, 32);
-        target->pack_child(buttons_[SPACE_CHAR].button);
+        buttons_[KEYBOARD_CODE_SPACE].button->resize(width, 32);
+        target->pack_child(buttons_[KEYBOARD_CODE_SPACE].button);
     }
 
     if(mask_set(action_flags, ACTION_FLAGS_BACKSPACE)) {
-        buttons_[BACKSPACE_CHAR].button = new_button("");
-        buttons_[BACKSPACE_CHAR].button->resize(32, 32);
+        buttons_[KEYBOARD_CODE_BACKSPACE].button = new_button("");
+        buttons_[KEYBOARD_CODE_BACKSPACE].button->resize(32, 32);
 
-        auto tex = buttons_[BACKSPACE_CHAR].button->stage->assets->new_texture(BACKSPACE_ICON.width, BACKSPACE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
+        auto tex = buttons_[KEYBOARD_CODE_BACKSPACE].button->stage->assets->new_texture(BACKSPACE_ICON.width, BACKSPACE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
         tex->set_data(BACKSPACE_ICON.pixel_data, 16 * 16 * 2);
         tex->convert(
             TEXTURE_FORMAT_RGBA_4UB_8888,
@@ -507,23 +604,23 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
 
         auto widget = stage->ui->new_widget_as_image(tex);
         widget->set_anchor_point(0.5f, 0.5f);
-        widget->set_parent(buttons_[BACKSPACE_CHAR].button);
+        widget->set_parent(buttons_[KEYBOARD_CODE_BACKSPACE].button);
         widget->move_to(16, 0);
 
         if(action_flags & ACTION_FLAGS_SPACEBAR) {
-            buttons_[BACKSPACE_CHAR].button->set_focus_previous(buttons_[SPACE_CHAR].button);
+            buttons_[KEYBOARD_CODE_BACKSPACE].button->set_focus_previous(buttons_[KEYBOARD_CODE_SPACE].button);
         } else if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
-            buttons_[BACKSPACE_CHAR].button->set_focus_previous(buttons_[CASE_TOGGLE_CHAR].button);
+            buttons_[KEYBOARD_CODE_BACKSPACE].button->set_focus_previous(buttons_[KEYBOARD_CODE_CAPSLOCK].button);
         }
 
-        target->pack_child(buttons_[BACKSPACE_CHAR].button);
+        target->pack_child(buttons_[KEYBOARD_CODE_BACKSPACE].button);
     }
 
     if(mask_set(action_flags, ACTION_FLAGS_ENTER)) {
-        buttons_[DONE_CHAR].button = new_button(_T(""));
-        buttons_[DONE_CHAR].button->resize(32, 32);
+        buttons_[KEYBOARD_CODE_ESCAPE].button = new_button(_T(""));
+        buttons_[KEYBOARD_CODE_ESCAPE].button->resize(32, 32);
 
-        auto tex = buttons_[DONE_CHAR].button->stage->assets->new_texture(ENTER_ICON.width, ENTER_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
+        auto tex = buttons_[KEYBOARD_CODE_ESCAPE].button->stage->assets->new_texture(ENTER_ICON.width, ENTER_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
         tex->set_data(ENTER_ICON.pixel_data, ENTER_ICON.width * ENTER_ICON.height * ENTER_ICON.bytes_per_pixel);
         tex->convert(
             TEXTURE_FORMAT_RGBA_4UB_8888,
@@ -533,72 +630,136 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
 
         auto widget = stage->ui->new_widget_as_image(tex);
         widget->set_anchor_point(0.5f, 0.5f);
-        widget->set_parent(buttons_[DONE_CHAR].button);
+        widget->set_parent(buttons_[KEYBOARD_CODE_ESCAPE].button);
         widget->move_to(16, 0);
         widget->scale_to(1.0f, -1.0f, 1.0f);
 
         if(action_flags & ACTION_FLAGS_BACKSPACE) {
-            buttons_[DONE_CHAR].button->set_focus_previous(buttons_[BACKSPACE_CHAR].button);
+            buttons_[KEYBOARD_CODE_ESCAPE].button->set_focus_previous(buttons_[KEYBOARD_CODE_BACKSPACE].button);
         } else if(action_flags & ACTION_FLAGS_SPACEBAR) {
-            buttons_[DONE_CHAR].button->set_focus_previous(buttons_[SPACE_CHAR].button);
+            buttons_[KEYBOARD_CODE_ESCAPE].button->set_focus_previous(buttons_[KEYBOARD_CODE_SPACE].button);
         } else if(action_flags & ACTION_FLAGS_CASE_TOGGLE) {
-            buttons_[DONE_CHAR].button->set_focus_previous(buttons_[CASE_TOGGLE_CHAR].button);
+            buttons_[KEYBOARD_CODE_ESCAPE].button->set_focus_previous(buttons_[KEYBOARD_CODE_CAPSLOCK].button);
         }
 
-        target->pack_child(buttons_[DONE_CHAR].button);
+        target->pack_child(buttons_[KEYBOARD_CODE_ESCAPE].button);
     }
 }
 
 void Keyboard::generate_alphabetical_layout(bool uppercase) {
     clear();
 
-    const std::vector<std::string> uppercase_rows = {
-        {"1234567890#!"},
-        {"ABCDEFGHIJ+_"},
-        {"KLMNOPQRST@-"},
-        {"UVWXYZ.,<>?*"}
+    const KeyEntry uppercase_rows [] = {
+        {KEYBOARD_CODE_KP_PLUS, '+', false},
+        {KEYBOARD_CODE_KP_1, '1', false},
+        {KEYBOARD_CODE_KP_2, '2', false},
+        {KEYBOARD_CODE_KP_3, '3', false},
+        {KEYBOARD_CODE_KP_4, '4', false},
+        {KEYBOARD_CODE_KP_5, '5', false},
+        {KEYBOARD_CODE_KP_6, '6', false},
+        {KEYBOARD_CODE_KP_7, '7', false},
+        {KEYBOARD_CODE_KP_8, '8', false},
+        {KEYBOARD_CODE_KP_9, '9', false},
+        {KEYBOARD_CODE_KP_0, '0', false},
+        {KEYBOARD_CODE_KP_EXCLAM, '!', true},
+
+        {KEYBOARD_CODE_A, 'A', false},
+        {KEYBOARD_CODE_B, 'B', false},
+        {KEYBOARD_CODE_C, 'C', false},
+        {KEYBOARD_CODE_D, 'D', false},
+        {KEYBOARD_CODE_E, 'E', false},
+        {KEYBOARD_CODE_F, 'F', false},
+        {KEYBOARD_CODE_G, 'G', false},
+        {KEYBOARD_CODE_H, 'H', false},
+        {KEYBOARD_CODE_I, 'I', false},
+        {KEYBOARD_CODE_J, 'J', false},
+        {KEYBOARD_CODE_KP_PLUS, '+', false},
+        {KEYBOARD_CODE_KP_MINUS, '_', true},
+
+        {KEYBOARD_CODE_K, 'K', false},
+        {KEYBOARD_CODE_L, 'L', false},
+        {KEYBOARD_CODE_M, 'M', false},
+        {KEYBOARD_CODE_N, 'N', false},
+        {KEYBOARD_CODE_O, 'O', false},
+        {KEYBOARD_CODE_P, 'P', false},
+        {KEYBOARD_CODE_Q, 'Q', false},
+        {KEYBOARD_CODE_R, 'R', false},
+        {KEYBOARD_CODE_S, 'S', false},
+        {KEYBOARD_CODE_T, 'T', false},
+        {KEYBOARD_CODE_APOSTROPHE, '@', false},
+        {KEYBOARD_CODE_KP_MINUS, '-', true},
+
+        {KEYBOARD_CODE_U, 'U', false},
+        {KEYBOARD_CODE_V, 'V', false},
+        {KEYBOARD_CODE_W, 'W', false},
+        {KEYBOARD_CODE_X, 'X', false},
+        {KEYBOARD_CODE_Y, 'Y', false},
+        {KEYBOARD_CODE_Z, 'Z', false},
+        {KEYBOARD_CODE_PERIOD, '.', false},
+        {KEYBOARD_CODE_COMMA, ',', false},
+        {KEYBOARD_CODE_COMMA, '<', false},
+        {KEYBOARD_CODE_PERIOD, '>', false},
+        {KEYBOARD_CODE_SLASH, '?', false},
+        {KEYBOARD_CODE_8, '*', true},
     };
 
-    const std::vector<std::string> lowercase_rows = {
-        {"1234567890#!"},
-        {"abcdefghij+_"},
-        {"klmnopqrst@-"},
-        {"uvwxyz.,<>?*"}
+    const KeyEntry lowercase_rows [] = {
+        {KEYBOARD_CODE_KP_PLUS, '+', false},
+        {KEYBOARD_CODE_KP_1, '1', false},
+        {KEYBOARD_CODE_KP_2, '2', false},
+        {KEYBOARD_CODE_KP_3, '3', false},
+        {KEYBOARD_CODE_KP_4, '4', false},
+        {KEYBOARD_CODE_KP_5, '5', false},
+        {KEYBOARD_CODE_KP_6, '6', false},
+        {KEYBOARD_CODE_KP_7, '7', false},
+        {KEYBOARD_CODE_KP_8, '8', false},
+        {KEYBOARD_CODE_KP_9, '9', false},
+        {KEYBOARD_CODE_KP_0, '0', false},
+        {KEYBOARD_CODE_KP_EXCLAM, '!', true},
+
+        {KEYBOARD_CODE_A, 'a', false},
+        {KEYBOARD_CODE_B, 'b', false},
+        {KEYBOARD_CODE_C, 'c', false},
+        {KEYBOARD_CODE_D, 'd', false},
+        {KEYBOARD_CODE_E, 'e', false},
+        {KEYBOARD_CODE_F, 'f', false},
+        {KEYBOARD_CODE_G, 'g', false},
+        {KEYBOARD_CODE_H, 'h', false},
+        {KEYBOARD_CODE_I, 'i', false},
+        {KEYBOARD_CODE_J, 'j', false},
+        {KEYBOARD_CODE_KP_PLUS, '+', false},
+        {KEYBOARD_CODE_KP_MINUS, '_', true},
+
+        {KEYBOARD_CODE_K, 'k', false},
+        {KEYBOARD_CODE_L, 'l', false},
+        {KEYBOARD_CODE_M, 'm', false},
+        {KEYBOARD_CODE_N, 'n', false},
+        {KEYBOARD_CODE_O, 'o', false},
+        {KEYBOARD_CODE_P, 'p', false},
+        {KEYBOARD_CODE_Q, 'q', false},
+        {KEYBOARD_CODE_R, 'r', false},
+        {KEYBOARD_CODE_S, 's', false},
+        {KEYBOARD_CODE_T, 't', false},
+        {KEYBOARD_CODE_APOSTROPHE, '@', false},
+        {KEYBOARD_CODE_KP_MINUS, '-', true},
+
+        {KEYBOARD_CODE_U, 'u', false},
+        {KEYBOARD_CODE_V, 'v', false},
+        {KEYBOARD_CODE_W, 'w', false},
+        {KEYBOARD_CODE_X, 'x', false},
+        {KEYBOARD_CODE_Y, 'y', false},
+        {KEYBOARD_CODE_Z, 'z', false},
+        {KEYBOARD_CODE_PERIOD, '.', false},
+        {KEYBOARD_CODE_COMMA, ',', false},
+        {KEYBOARD_CODE_COMMA, '<', false},
+        {KEYBOARD_CODE_PERIOD, '>', false},
+        {KEYBOARD_CODE_SLASH, '?', false},
+        {KEYBOARD_CODE_8, '*', true},
     };
 
     const auto& rows = (uppercase) ? uppercase_rows : lowercase_rows;
 
-    smlt::ui::Widget* prev = nullptr;
-
-    for(std::size_t i = 0; i < 5; ++i) {
-        auto& row = rows_[i];
-        row = owner_->new_widget_as_frame("");
-        row->set_anchor_point(0.5f, 0.5f);
-        row->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
-        row->set_border_width(0);
-        row->set_space_between(2);
-        row->set_background_colour(smlt::Colour::NONE);
-        row->set_border_colour(smlt::Colour::NONE);
-
-        if(i < rows.size()) {
-            prev = nullptr;
-            for(auto ch: rows[i]) {
-                buttons_[ch].button = new_button(std::string(1, ch));
-
-                if(prev) {
-                    prev->set_focus_next(buttons_[ch].button);
-                }
-                prev = buttons_[ch].button;
-                row->pack_child(buttons_[ch].button);
-            }
-
-            main_frame_->pack_child(row);
-        }
-    }
-
-    populate_action_row(rows_[4], ACTION_FLAGS_BACKSPACE | ACTION_FLAGS_CASE_TOGGLE | ACTION_FLAGS_SPACEBAR | ACTION_FLAGS_ENTER);
-
-    main_frame_->pack_child(rows_[4]);
+    build_rows(rows, sizeof(rows) / sizeof(KeyEntry), ACTION_FLAGS_BACKSPACE | ACTION_FLAGS_CASE_TOGGLE | ACTION_FLAGS_SPACEBAR | ACTION_FLAGS_ENTER);
 }
 
 void Keyboard::focus(Widget* widget) {
