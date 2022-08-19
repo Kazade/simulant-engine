@@ -86,14 +86,9 @@ void warn(const std::string& text, const std::string& file, int32_t line) {
     get_logger("/")->warn(text, file, line);
 }
 
-void warn_once(const std::string& text, const std::string& file, int32_t line) {
-    get_logger("/")->warn_once(text, file, line);
-}
-
 void error(const std::string& text, const std::string& file, int32_t line) {
     get_logger("/")->error(text, file, line);
 }
-
 
 Logger* get_logger(const std::string& name) {
     typedef std::unordered_map<std::string, Logger::ptr> LoggerMap;

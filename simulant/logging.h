@@ -111,28 +111,6 @@ public:
         write_message("WARN", "\x1b[33m" + text + "\x1b[0m", file, line);
     }
 
-    void warn_once(const std::string& text, const std::string& file="None", int32_t line=-1) {
-        /*
-         *  This is *slow*, be aware of that, don't call in performance critical code!
-         */
-
-        if(line == -1) {
-            warn(text, file, line); //Can't warn once if no line is specified
-            return;
-        }
-
-        static std::unordered_map<std::string, std::unordered_set<int32_t>> warned;
-
-        bool already_logged = warned.find(file) != warned.end() && warned[file].count(line);
-
-        if(already_logged) {
-            return;
-        } else {
-            warned[file].insert(line);
-            warn(text, file, line);
-        }
-    }
-
     void error(const std::string& text, const std::string& file="None", int32_t line=-1) {
         if(level_ < LOG_LEVEL_ERROR) return;
 
@@ -172,7 +150,6 @@ Logger* get_logger(const std::string& name);
 void debug(const std::string& text, const std::string& file="None", int32_t line=-1);
 void info(const std::string& text, const std::string& file="None", int32_t line=-1);
 void warn(const std::string& text, const std::string& file="None", int32_t line=-1);
-void warn_once(const std::string& text, const std::string& file="None", int32_t line=-1);
 void error(const std::string& text, const std::string& file="None", int32_t line=-1);
 
 
@@ -208,8 +185,17 @@ private:
 #define S_ERROR(str, ...) \
     smlt::error(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
+#define S_DEBUG_ONCE(str, ...) \
+    do { static char _done = 0; if(!_done++) smlt::debug(_F(str).format(__VA_ARGS__)); } while(0)
+
+#define S_INFO_ONCE(str, ...) \
+    do { static char _done = 0; if(!_done++) smlt::info(_F(str).format(__VA_ARGS__)); } while(0)
+
 #define S_WARN_ONCE(str, ...) \
-    smlt::warn_once(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
+    do { static char _done = 0; if(!_done++) smlt::warn(_F(str).format(__VA_ARGS__)); } while(0)
+
+#define S_ERROR_ONCE(str, ...) \
+    do { static char _done = 0; if(!_done++) smlt::error(_F(str).format(__VA_ARGS__)); } while(0)
 
 #else
 
@@ -225,7 +211,16 @@ private:
 #define S_ERROR(str, ...) \
     smlt::error(_F(str).format(__VA_ARGS__))
 
+#define S_DEBUG_ONCE(str, ...) \
+    do { static char _done = 0; if(!_done++) smlt::debug(_F(str).format(__VA_ARGS__)); } while(0)
+
+#define S_INFO_ONCE(str, ...) \
+    do { static char _done = 0; if(!_done++) smlt::info(_F(str).format(__VA_ARGS__)); } while(0)
+
 #define S_WARN_ONCE(str, ...) \
-    smlt::warn_once(_F(str).format(__VA_ARGS__))
+    do { static char _done = 0; if(!_done++) smlt::warn(_F(str).format(__VA_ARGS__)); } while(0)
+
+#define S_ERROR_ONCE(str, ...) \
+    do { static char _done = 0; if(!_done++) smlt::error(_F(str).format(__VA_ARGS__)); } while(0)
 
 #endif
