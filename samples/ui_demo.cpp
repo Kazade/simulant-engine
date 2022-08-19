@@ -97,6 +97,8 @@ public:
            }
         });
 
+        keyboard_->set_keyboard_integration_enabled(true);
+
         auto entry = stage_->ui->new_widget_as_label("");
         entry->resize(keyboard_->outer_width(), -1);
         entry->set_anchor_point(0.5f, 0.0f);
@@ -150,17 +152,17 @@ public:
 
         if(input->axis_was_pressed("Vertical")) {
             if(input->axis_value_hard("Vertical") > 0) {
-                keyboard_->move_up();
+                keyboard_->cursor_up();
             } else {
-                keyboard_->move_down();
+                keyboard_->cursor_down();
             }
         }
 
         if(input->axis_was_pressed("Horizontal")) {
             if(input->axis_value_hard("Horizontal") > 0) {
-                keyboard_->move_right();
+                keyboard_->cursor_right();
             } else {
-                keyboard_->move_left();
+                keyboard_->cursor_left();
             }
         }
 
