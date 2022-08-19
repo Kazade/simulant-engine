@@ -66,6 +66,10 @@ bool SubMesh::add_vertex_range(uint32_t start, uint32_t count) {
     return true;
 }
 
+void SubMesh::remove_all_vertex_ranges() {
+    vertex_ranges_.clear();
+}
+
 void SubMesh::set_diffuse(const smlt::Colour& colour) {
     auto vertex_data = parent_->vertex_data.get();
 

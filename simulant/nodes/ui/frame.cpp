@@ -61,12 +61,15 @@ void Frame::finalize_build() {
 
         Px shift =  (int16_t) ((oh.value * 0.5f) - line_height().value + (line_height_shift.value));
 
-        for(auto& idx: sm->index_data->all()) {
-            auto vpos = *vdata->position_at<smlt::Vec3>(idx);
-            vpos.y += shift.value;
+        for(std::size_t i = 0; i < sm->vertex_range_count(); ++i) {
+            auto& range = sm->vertex_ranges()[i];
+            for(auto idx = range.start; idx < range.start + range.count; ++idx) {
+                auto vpos = *vdata->position_at<smlt::Vec3>(idx);
+                vpos.y += shift.value;
 
-            vdata->move_to(idx);
-            vdata->position(vpos);
+                vdata->move_to(idx);
+                vdata->position(vpos);
+            }
         }
     }
 }

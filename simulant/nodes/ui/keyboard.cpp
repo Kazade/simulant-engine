@@ -24,7 +24,7 @@ public:
         smlt::get_app()->window->unregister_event_listener(this);
     }
 
-    void on_key_up(const KeyEvent& evt) {
+    void on_key_up(const KeyEvent& evt) {        
         if(keyboard_->cursor_to_key(evt.keyboard_code)) {
             keyboard_->activate();
         }
@@ -306,18 +306,27 @@ void Keyboard::cursor_left() {
 }
 
 bool Keyboard::cursor_to_key(KeyboardCode code) {
-    for(auto& row: rows_) {
-        if(row && row->packed_children().size()) {
-            auto f = row->packed_children()[0]->focused_in_chain();
-            if(f) f->blur();
-        }
-    }
+    smlt::ui::Button* to_focus = nullptr;
 
     for(auto& key: buttons_) {
         if(key.first == code) {
-            key.second.button->focus();
-            return true;
+            to_focus = key.second.button;
+            break;
         }
+    }
+
+    if(to_focus) {
+        /* Unfocus whatever is focused (we have multiple focus chains so the focused one might
+         * be in another one) */
+        for(auto& row: rows_) {
+            if(row && row->packed_children().size()) {
+                auto f = row->packed_children()[0]->focused_in_chain();
+                if(f) f->blur();
+            }
+        }
+
+        to_focus->focus();
+        return true;
     }
 
     return false;
