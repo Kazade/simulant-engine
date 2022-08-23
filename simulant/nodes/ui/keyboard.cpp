@@ -24,7 +24,7 @@ public:
         smlt::get_app()->window->unregister_event_listener(this);
     }
 
-    void on_key_up(const KeyEvent& evt) {
+    void on_key_up(const KeyEvent& evt) {        
         if(keyboard_->cursor_to_key(evt.keyboard_code)) {
             keyboard_->activate();
         }
@@ -306,18 +306,27 @@ void Keyboard::cursor_left() {
 }
 
 bool Keyboard::cursor_to_key(KeyboardCode code) {
-    for(auto& row: rows_) {
-        if(row && row->packed_children().size()) {
-            auto f = row->packed_children()[0]->focused_in_chain();
-            if(f) f->blur();
-        }
-    }
+    smlt::ui::Button* to_focus = nullptr;
 
     for(auto& key: buttons_) {
         if(key.first == code) {
-            key.second.button->focus();
-            return true;
+            to_focus = key.second.button;
+            break;
         }
+    }
+
+    if(to_focus) {
+        /* Unfocus whatever is focused (we have multiple focus chains so the focused one might
+         * be in another one) */
+        for(auto& row: rows_) {
+            if(row && row->packed_children().size()) {
+                auto f = row->packed_children()[0]->focused_in_chain();
+                if(f) f->blur();
+            }
+        }
+
+        to_focus->focus();
+        return true;
     }
 
     return false;
@@ -451,27 +460,27 @@ void Keyboard::generate_numerical_layout() {
     clear();
 
     const KeyEntry rows [] = {
-        {KEYBOARD_CODE_KP_PLUS, '+', false},
-        {KEYBOARD_CODE_KP_1, '1', false},
-        {KEYBOARD_CODE_KP_2, '2', false},
-        {KEYBOARD_CODE_KP_3, '3', false},
-        {KEYBOARD_CODE_KP_PERCENT, '%', true},
+        {KEYBOARD_CODE_EQUALS, '+', false},
+        {KEYBOARD_CODE_1, '1', false},
+        {KEYBOARD_CODE_2, '2', false},
+        {KEYBOARD_CODE_3, '3', false},
+        {KEYBOARD_CODE_5, '%', true},
 
-        {KEYBOARD_CODE_KP_MINUS, '-', false},
-        {KEYBOARD_CODE_KP_4, '4', false},
-        {KEYBOARD_CODE_KP_5, '5', false},
-        {KEYBOARD_CODE_KP_6, '6', false},
-        {KEYBOARD_CODE_KP_PERIOD, '.', true},
+        {KEYBOARD_CODE_MINUS, '-', false},
+        {KEYBOARD_CODE_4, '4', false},
+        {KEYBOARD_CODE_5, '5', false},
+        {KEYBOARD_CODE_6, '6', false},
+        {KEYBOARD_CODE_PERIOD, '.', true},
 
-        {KEYBOARD_CODE_KP_MULTIPLY, '*', false},
-        {KEYBOARD_CODE_KP_7, '7', false},
-        {KEYBOARD_CODE_KP_8, '8', false},
-        {KEYBOARD_CODE_KP_9, '9', false},
-        {KEYBOARD_CODE_KP_COMMA, ',', true},
+        {KEYBOARD_CODE_8, '*', false},
+        {KEYBOARD_CODE_7, '7', false},
+        {KEYBOARD_CODE_8, '8', false},
+        {KEYBOARD_CODE_9, '9', false},
+        {KEYBOARD_CODE_COMMA, ',', true},
 
-        {KEYBOARD_CODE_KP_DIVIDE, '/', false},
-        {KEYBOARD_CODE_KP_COLON, ':', false},
-        {KEYBOARD_CODE_KP_0, '0', false},
+        {KEYBOARD_CODE_SLASH, '/', false},
+        {KEYBOARD_CODE_SEMICOLON, ':', false},
+        {KEYBOARD_CODE_0, '0', false},
         {KEYBOARD_CODE_LEFTBRACKET, '[', false},
         {KEYBOARD_CODE_RIGHTBRACKET, ']', true},
     };
@@ -649,18 +658,18 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
 void Keyboard::generate_alphabetical_layout(bool uppercase) {
     clear();
 
-    const KeyEntry uppercase_rows [] = {
-        {KEYBOARD_CODE_KP_PLUS, '+', false},
-        {KEYBOARD_CODE_KP_1, '1', false},
-        {KEYBOARD_CODE_KP_2, '2', false},
-        {KEYBOARD_CODE_KP_3, '3', false},
-        {KEYBOARD_CODE_KP_4, '4', false},
-        {KEYBOARD_CODE_KP_5, '5', false},
-        {KEYBOARD_CODE_KP_6, '6', false},
-        {KEYBOARD_CODE_KP_7, '7', false},
-        {KEYBOARD_CODE_KP_8, '8', false},
-        {KEYBOARD_CODE_KP_9, '9', false},
-        {KEYBOARD_CODE_KP_0, '0', false},
+    const KeyEntry uppercase_rows [] = {        
+        {KEYBOARD_CODE_1, '1', false},
+        {KEYBOARD_CODE_2, '2', false},
+        {KEYBOARD_CODE_3, '3', false},
+        {KEYBOARD_CODE_4, '4', false},
+        {KEYBOARD_CODE_5, '5', false},
+        {KEYBOARD_CODE_6, '6', false},
+        {KEYBOARD_CODE_7, '7', false},
+        {KEYBOARD_CODE_8, '8', false},
+        {KEYBOARD_CODE_9, '9', false},
+        {KEYBOARD_CODE_0, '0', false},
+        {KEYBOARD_CODE_BACKSLASH, '#', false},
         {KEYBOARD_CODE_KP_EXCLAM, '!', true},
 
         {KEYBOARD_CODE_A, 'A', false},
@@ -673,8 +682,8 @@ void Keyboard::generate_alphabetical_layout(bool uppercase) {
         {KEYBOARD_CODE_H, 'H', false},
         {KEYBOARD_CODE_I, 'I', false},
         {KEYBOARD_CODE_J, 'J', false},
-        {KEYBOARD_CODE_KP_PLUS, '+', false},
-        {KEYBOARD_CODE_KP_MINUS, '_', true},
+        {KEYBOARD_CODE_EQUALS, '+', false},
+        {KEYBOARD_CODE_MINUS, '_', true},
 
         {KEYBOARD_CODE_K, 'K', false},
         {KEYBOARD_CODE_L, 'L', false},
@@ -687,7 +696,7 @@ void Keyboard::generate_alphabetical_layout(bool uppercase) {
         {KEYBOARD_CODE_S, 'S', false},
         {KEYBOARD_CODE_T, 'T', false},
         {KEYBOARD_CODE_APOSTROPHE, '@', false},
-        {KEYBOARD_CODE_KP_MINUS, '-', true},
+        {KEYBOARD_CODE_MINUS, '-', true},
 
         {KEYBOARD_CODE_U, 'U', false},
         {KEYBOARD_CODE_V, 'V', false},
@@ -700,21 +709,21 @@ void Keyboard::generate_alphabetical_layout(bool uppercase) {
         {KEYBOARD_CODE_COMMA, '<', false},
         {KEYBOARD_CODE_PERIOD, '>', false},
         {KEYBOARD_CODE_SLASH, '?', false},
-        {KEYBOARD_CODE_8, '*', true},
+        {KEYBOARD_CODE_KP_MULTIPLY, '*', true},
     };
 
     const KeyEntry lowercase_rows [] = {
-        {KEYBOARD_CODE_KP_PLUS, '+', false},
-        {KEYBOARD_CODE_KP_1, '1', false},
-        {KEYBOARD_CODE_KP_2, '2', false},
-        {KEYBOARD_CODE_KP_3, '3', false},
-        {KEYBOARD_CODE_KP_4, '4', false},
-        {KEYBOARD_CODE_KP_5, '5', false},
-        {KEYBOARD_CODE_KP_6, '6', false},
-        {KEYBOARD_CODE_KP_7, '7', false},
-        {KEYBOARD_CODE_KP_8, '8', false},
-        {KEYBOARD_CODE_KP_9, '9', false},
-        {KEYBOARD_CODE_KP_0, '0', false},
+        {KEYBOARD_CODE_1, '1', false},
+        {KEYBOARD_CODE_2, '2', false},
+        {KEYBOARD_CODE_3, '3', false},
+        {KEYBOARD_CODE_4, '4', false},
+        {KEYBOARD_CODE_5, '5', false},
+        {KEYBOARD_CODE_6, '6', false},
+        {KEYBOARD_CODE_7, '7', false},
+        {KEYBOARD_CODE_8, '8', false},
+        {KEYBOARD_CODE_9, '9', false},
+        {KEYBOARD_CODE_0, '0', false},
+        {KEYBOARD_CODE_BACKSLASH, '#', false},
         {KEYBOARD_CODE_KP_EXCLAM, '!', true},
 
         {KEYBOARD_CODE_A, 'a', false},
@@ -727,8 +736,8 @@ void Keyboard::generate_alphabetical_layout(bool uppercase) {
         {KEYBOARD_CODE_H, 'h', false},
         {KEYBOARD_CODE_I, 'i', false},
         {KEYBOARD_CODE_J, 'j', false},
-        {KEYBOARD_CODE_KP_PLUS, '+', false},
-        {KEYBOARD_CODE_KP_MINUS, '_', true},
+        {KEYBOARD_CODE_EQUALS, '+', false},
+        {KEYBOARD_CODE_MINUS, '_', true},
 
         {KEYBOARD_CODE_K, 'k', false},
         {KEYBOARD_CODE_L, 'l', false},
@@ -741,7 +750,7 @@ void Keyboard::generate_alphabetical_layout(bool uppercase) {
         {KEYBOARD_CODE_S, 's', false},
         {KEYBOARD_CODE_T, 't', false},
         {KEYBOARD_CODE_APOSTROPHE, '@', false},
-        {KEYBOARD_CODE_KP_MINUS, '-', true},
+        {KEYBOARD_CODE_MINUS, '-', true},
 
         {KEYBOARD_CODE_U, 'u', false},
         {KEYBOARD_CODE_V, 'v', false},
@@ -754,7 +763,7 @@ void Keyboard::generate_alphabetical_layout(bool uppercase) {
         {KEYBOARD_CODE_COMMA, '<', false},
         {KEYBOARD_CODE_PERIOD, '>', false},
         {KEYBOARD_CODE_SLASH, '?', false},
-        {KEYBOARD_CODE_8, '*', true},
+        {KEYBOARD_CODE_KP_MULTIPLY, '*', true},
     };
 
     const auto& rows = (uppercase) ? uppercase_rows : lowercase_rows;

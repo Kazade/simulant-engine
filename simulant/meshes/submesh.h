@@ -77,6 +77,8 @@ public:
         return vertex_ranges_.size();
     }
 
+    void remove_all_vertex_ranges();
+
     void set_material(MaterialPtr material);
     void set_material_at_slot(MaterialSlot var, MaterialPtr material);
 

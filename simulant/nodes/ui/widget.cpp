@@ -65,10 +65,10 @@ bool Widget::init() {
     style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->global_foreground_material_;
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh("text", font_->material(), INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("text", font_->material(), MESH_ARRANGEMENT_QUADS);
 
     rebuild();
 
@@ -351,12 +351,10 @@ void Widget::render_text() {
     auto global_y_shift = round(text_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
-    auto idata = sm->index_data.get();
-    vdata->move_to_start();
 
+    vdata->move_to_start();
     /* Allocate memory first */
     vdata->reserve(vertices.size());
-    idata->reserve(vertices.size());
 
     if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
         auto cwidth = std::max(requested_width(), content_width());
@@ -380,19 +378,18 @@ void Widget::render_text() {
     auto c = style_->text_colour_;
     c.set_alpha(style_->opacity_);
 
-    auto idx = 0;
+    auto idx = vdata->count();
     for(auto& v: vertices) {
         auto p = v.xyz + Vec3(global_x_shift, global_y_shift, 0);
         vdata->position(p);
         vdata->tex_coord0(v.uv);
         vdata->diffuse(c);
         vdata->move_next();
-
-        idata->index(idx++);
     }
 
+    sm->add_vertex_range(idx, vertices.size());
+
     vdata->done();
-    idata->done();
 }
 
 void Widget::clear_mesh() {
@@ -400,7 +397,11 @@ void Widget::clear_mesh() {
 
     mesh_->vertex_data->clear(/*release_memory=*/false);
     for(auto submesh: mesh_->each_submesh()) {
-        submesh->index_data->clear();
+        if(submesh->type() == smlt::SUBMESH_TYPE_INDEXED) {
+            submesh->index_data->clear();
+        } else {
+            submesh->remove_all_vertex_ranges();
+        }
     }
 }
 
@@ -424,8 +425,8 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     auto z_offset = 0.0f;
 
     auto prev_count = mesh_->vertex_data->count();
-    mesh_->vertex_data->move_to_end();
 
+    mesh_->vertex_data->move_to_end();
     mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(0.0, 0.0f);
@@ -451,11 +452,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     mesh_->vertex_data->move_next();
     mesh_->vertex_data->done();
 
-    sm->index_data->index(prev_count + 0);
-    sm->index_data->index(prev_count + 1);
-    sm->index_data->index(prev_count + 2);
-    sm->index_data->index(prev_count + 3);
-    sm->index_data->done();
+    sm->add_vertex_range(prev_count, 4);
 
     return sm;
 }
@@ -474,9 +471,14 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
     );
 
     auto vertices = mesh_->vertex_data.get();
-    auto indices = submesh->index_data.get();
 
-    auto first_idx = indices->at(0);
+    if(!submesh->vertex_range_count()) {
+        S_ERROR("Something went wrong with the generation of a widget. Could not apply image rect");
+        return;
+    }
+
+    auto idx = submesh->vertex_ranges()[0].start;
+    auto first_idx = idx;
     vertices->move_to(first_idx);
     vertices->tex_coord0(min.x, min.y);
     vertices->move_to(first_idx + 1);
