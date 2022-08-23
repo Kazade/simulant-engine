@@ -65,10 +65,10 @@ bool Widget::init() {
     style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->global_foreground_material_;
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh("text", font_->material(), MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     rebuild();
 
@@ -379,15 +379,29 @@ void Widget::render_text() {
     c.set_alpha(style_->opacity_);
 
     auto idx = vdata->count();
-    for(auto& v: vertices) {
-        auto p = v.xyz + Vec3(global_x_shift, global_y_shift, 0);
+    auto count = 0;
+    for(std::size_t i = 0; i < vertices.size(); ++i) {
+        Vertex* v = &vertices[i];
+
+        /* Turn into a tri-strip, rather than a quad */
+        if(i % 4 == 2) {
+            v++;
+        } else if(i % 4 == 3) {
+            v--;
+        }
+
+        auto p = v->xyz + Vec3(global_x_shift, global_y_shift, 0);
         vdata->position(p);
-        vdata->tex_coord0(v.uv);
+        vdata->tex_coord0(v->uv);
         vdata->diffuse(c);
         vdata->move_next();
-    }
 
-    sm->add_vertex_range(idx, vertices.size());
+        /* Add this strip */
+        if(count++ % 4 == 0) {
+            sm->add_vertex_range(idx, 4);
+            idx += 4;
+        }
+    }
 
     vdata->done();
 }
@@ -439,18 +453,18 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
-    mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(1.0, 1.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
-
     mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
     mesh_->vertex_data->tex_coord0(0.0, 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
     mesh_->vertex_data->done();
+
+    mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
+    mesh_->vertex_data->diffuse(colour);
+    mesh_->vertex_data->tex_coord0(1.0, 1.0f);
+    mesh_->vertex_data->normal(0, 0, 1);
+    mesh_->vertex_data->move_next();
 
     sm->add_vertex_range(prev_count, 4);
 
@@ -483,9 +497,9 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
     vertices->tex_coord0(min.x, min.y);
     vertices->move_to(first_idx + 1);
     vertices->tex_coord0(max.x, min.y);
-    vertices->move_to(first_idx + 2);
-    vertices->tex_coord0(max.x, max.y);
     vertices->move_to(first_idx + 3);
+    vertices->tex_coord0(max.x, max.y);
+    vertices->move_to(first_idx + 2);
     vertices->tex_coord0(min.x, max.y);
     vertices->done();
 }
