@@ -114,7 +114,8 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
         case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return spec.diffuse_attribute;
         case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
     default:
-        throw std::logic_error("Invalid vertex attribute type");
+        assert(0 && "Invalid vertex attribute type");
+        return VERTEX_ATTRIBUTE_NONE;
     }
 }
 
@@ -141,13 +142,16 @@ void VertexData::clear(bool release_memory) {
 
 void VertexData::position_checks() {
     if(!vertex_specification_.has_positions()) {
-        throw std::logic_error("Vertex data has no position attribute");
+        return;
+    }
+
+    if(cursor_position_ > (int32_t) vertex_count_) {
+        assert(0 && "Cursor has moved out of range");
+        cursor_position_ = (int32_t) vertex_count_;
     }
 
     if(cursor_position_ == (int32_t) vertex_count_) {
         push_back();
-    } else if(cursor_position_ > (int32_t) vertex_count_) {
-        throw std::out_of_range("Cursor moved out of range");
     }
 }
 
@@ -454,16 +458,22 @@ void VertexData::move_to_end() {
     move_to(data_.size() / stride());
 }
 
-void VertexData::move_by(int32_t amount) {
+bool VertexData::move_by(int32_t amount) {
+    if(int32_t(cursor_position_) + amount >= (int32_t) vertex_count_) {
+        return false;
+    }
+
     cursor_position_ += amount;
+    return false;
 }
 
-void VertexData::move_to(int32_t index) {
+bool VertexData::move_to(int32_t index) {
     if(index > (int32_t) vertex_count_) {
-        throw std::out_of_range("Tried to move outside the range of the data");
+        return false;
     }
 
     cursor_position_ = index;
+    return true;
 }
 
 uint32_t VertexData::move_next() {
@@ -483,14 +493,15 @@ void VertexData::recalc_attributes() {
 
 }
 
-void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state, uint32_t dest_idx, VertexData &out, uint32_t out_idx, float interp) {
+bool VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state, uint32_t dest_idx, VertexData &out, uint32_t out_idx, float interp) {
     /*
      * Given a VertexData representing the destination state, this will interpolate
      * the vertex position and normal into the out data of the specified index
      */
 
     if(out.vertex_specification_ != this->vertex_specification_ || dest_state.vertex_specification_ != this->vertex_specification_) {
-        throw std::logic_error("You cannot interpolate vertices between data with different specifications");
+        S_ERROR("You cannot interpolate vertices between data with different specifications");
+        return false;
     }
 
     // First, copy all the data from the source to the current out vertex
@@ -527,6 +538,7 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
     }
 
     //FIXME: Interpolate normals here
+    return true;
 }
 
 void VertexData::reserve(uint32_t size) {
