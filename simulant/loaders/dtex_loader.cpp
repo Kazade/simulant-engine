@@ -28,6 +28,7 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     DTexHeader header;
 
+    stream->seekg(0);
     stream->read((char*) &header, sizeof(DTexHeader));
 
     bool twiddled = (header.type & (1 << 26)) < 1;
@@ -38,7 +39,8 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     if(strided || format > 2) {
         S_ERROR(
-            "Strided, paletted or bumpmap .dtex textures are currently unsupported"
+            "Strided, paletted or bumpmap .dtex textures are currently unsupported. Type: {0}, Format: {1}",
+             header.type, format
         );
 
         /* FIXME: Failure?!? */
