@@ -231,9 +231,10 @@ protected:
 
     void set_application(Application* app) { application_ = app; }
 
+public:
     void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
     bool escape_to_quit_enabled() const { return escape_to_quit_; }
-public:
+
     // Panels
     void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
     void unregister_panel(uint8_t function_key);
