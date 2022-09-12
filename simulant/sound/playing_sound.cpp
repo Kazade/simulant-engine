@@ -47,7 +47,6 @@ void PlayingSound::start() {
 
     SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
-    int to_queue = 0;
     for(int i = 0; i < BUFFER_COUNT; ++i) {
         auto bs = stream_func_(buffers_[i]);
         if(bs < 0) {
@@ -58,12 +57,16 @@ void PlayingSound::start() {
             /* We don't need any more buffers */
             break;
         } else {
-            to_queue++;
+            /* We queue each buffer one after the other, and then play once the first
+             * buffer is pushed. This avoids a stall while all initial buffers are uploaded */
+            std::vector<AudioBufferID> t = {buffers_[i]};
+            driver->queue_buffers_to_source(source_, 1, t);
+
+            if(i == 0) {
+                driver->play_source(source_);
+            }
         }
     }
-
-    driver->queue_buffers_to_source(source_, to_queue, buffers_);
-    driver->play_source(source_);
 }
 
 void PlayingSound::do_stop() {
