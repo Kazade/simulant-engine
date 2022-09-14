@@ -14,10 +14,10 @@ public:
     void test_flush() {
         auto tex = application->shared_assets->new_texture(
             8, 8,
-            TEXTURE_FORMAT_R_1UB_8
+            TEXTURE_FORMAT_RGB_3UB_888
         );
 
-        std::vector<uint8_t> data(8 * 8, 255);
+        std::vector<uint8_t> data(8 * 8 * 3, 255);
         tex->set_data(data);
 
         assert_true(tex->has_data());
@@ -28,7 +28,7 @@ public:
     }
 
     void test_transaction_api() {
-        TexturePtr tex = application->shared_assets->new_texture(0, 0);
+        TexturePtr tex = application->shared_assets->new_texture(8, 8);
 
         application->run_frame();
         assert_false(tex->_data_dirty());
@@ -41,7 +41,7 @@ public:
     }
 
     void test_conversion_from_r8_to_rgba4444() {
-        auto tex = application->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_R_1UB_8);
+        auto tex = application->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
 
         auto data = tex->data_copy();
         data[0] = 255;
@@ -49,7 +49,7 @@ public:
         data[2] = 0;
         data[3] = 255;
 
-        assert_equal(4u, data.size());
+        assert_equal(64u, data.size());
 
         tex->set_data(data);
 
@@ -59,7 +59,7 @@ public:
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ZERO, TEXTURE_CHANNEL_GREEN, TEXTURE_CHANNEL_RED}}
         );
 
-        assert_equal(8u, tex->data_size());
+        assert_equal(128u, tex->data_size());
 
         auto expected1 = 0b1111000000001111;
         uint16_t* first_pixel = (uint16_t*) &tex->data()[0];
@@ -75,6 +75,8 @@ public:
     }
 
     void test_paletted_textures() {
+        skip_if(get_platform()->name() == "dreamcast", "Dreamcast doesn't support tex width < 8");
+
         auto tex = application->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_RGB565_PALETTED4);
 
         assert_true(tex->is_paletted_format());
