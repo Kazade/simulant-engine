@@ -29,11 +29,24 @@ uint32_t next_power_of_two(uint32_t x) {
     return value;
 }
 
-float fast_divide(float x, float y) {
 #ifdef __DREAMCAST__
-    return MATH_Fast_Divide(x, y);
+static inline __attribute__((always_inline)) float fsrra(float x) {
+    asm volatile ("fsrra %[one_div_sqrt]\n"
+    : [one_div_sqrt] "+f" (x) // outputs, "+" means r/w
+    : // no inputs
+    : // no clobbers
+    );
+
+    return x;
+}
+#endif
+
+float fast_divide(float d, float n) {
+#ifdef __DREAMCAST__
+    const float sgn = (n > 0) - (n < 0);
+    return sgn * fsrra(n * n) * d;
 #else
-    return x / y;
+    return d / n;
 #endif
 }
 
