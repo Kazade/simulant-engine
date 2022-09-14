@@ -34,7 +34,7 @@ static std::list<AudioSource*> ACTIVE_SOURCES;
 static std::shared_ptr<thread::Thread> SOURCE_UPDATE_THREAD;
 
 void AudioSource::source_update_thread() {
-    static auto update_rate = 1.0f / 10.0f;
+    static auto update_rate = 1.0f / 20.0f;
     static auto last_time = get_app()->time_keeper->now_in_us();
 
     S_INFO("Starting source update thread");
@@ -49,7 +49,7 @@ void AudioSource::source_update_thread() {
         auto dt = float(diff) * 0.000001f;
 
         if(dt < update_rate) {
-            thread::sleep(10);
+            thread::yield();
             continue;
         }
 
