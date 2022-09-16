@@ -53,7 +53,13 @@ void al_check_and_log_error() {
         }
 
         S_ERROR("An OpenAL error occurred: {0}", error);
-        throw std::runtime_error(_F("AL ERROR: {0}").format(error_string));
+        S_ERROR("AL ERROR: {0}", error_string);
+#ifndef NDEBUG
+        /* If we're debugging, this is a fatal error, otherwise it's better to limp along
+         * with broken sound than crash outright */
+        FATAL_ERROR(smlt::ERROR_CODE_AUDIO_SUBSYSTEM_ERROR, "OpenAL Error Occurred. This likely a bug in your program.");
+#endif
+
     }
 }
 }
