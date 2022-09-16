@@ -97,7 +97,7 @@ void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat
 }
 
 AudioSourceState OpenALSoundDriver::source_state(AudioSourceID source) {
-    ALint val;
+    ALint val = AL_STOPPED;
     ALCheck(alGetSourcei, source, AL_SOURCE_STATE, &val);
 
     switch(val) {
