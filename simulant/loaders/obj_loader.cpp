@@ -152,6 +152,7 @@ static bool map_Kd(LoadInfo* info, std::string, std::string args) {
             ext = "." + ext;
         }
 
+        S_DEBUG("Overriding texture format on load: {0}", ext);
         args = kfs::path::split_ext(args).first + ext;
     }
 
@@ -579,27 +580,28 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     vdata->done();
 
-    /* Final nicety - search for diffuse/specular/bump maps in the current directory */
-    std::string extensions [] = {
-        ".jpg",
-        ".png",
-        ".tga"
-    };
+    if(!info.default_material->diffuse_map()) {
+        /* Final nicety - search for diffuse/specular/bump maps in the current directory */
+        std::string extensions [] = {
+            ".jpg",
+            ".png",
+            ".tga"
+        };
 
-    for(auto& ext: extensions) {
-        auto path = this->filename_.replace_ext(ext);
-        if(kfs::path::exists(path.str().c_str())) {
-            auto tex = mesh->asset_manager().new_texture_from_file(path);
-            info.default_material->set_diffuse_map(tex);
-        } else {
-            path = kfs::path::split_ext(filename_.str()).first + "_color" + ext;
+        for(auto& ext: extensions) {
+            auto path = this->filename_.replace_ext(ext);
             if(kfs::path::exists(path.str().c_str())) {
                 auto tex = mesh->asset_manager().new_texture_from_file(path);
                 info.default_material->set_diffuse_map(tex);
+            } else {
+                path = kfs::path::split_ext(filename_.str()).first + "_color" + ext;
+                if(kfs::path::exists(path.str().c_str())) {
+                    auto tex = mesh->asset_manager().new_texture_from_file(path);
+                    info.default_material->set_diffuse_map(tex);
+                }
             }
         }
     }
-
 }
 
 }
