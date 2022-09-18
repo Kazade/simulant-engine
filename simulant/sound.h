@@ -100,7 +100,12 @@ private:
 };
 
 
+typedef sig::signal<void (SoundPtr, AudioRepeat, DistanceModel)> SoundPlayedSignal;
+
+
 class AudioSource {
+    DEFINE_SIGNAL(SoundPlayedSignal, signal_sound_played);
+
 public:
     AudioSource(Window* window);
     AudioSource(Stage* stage, StageNode* this_as_node, SoundDriver *driver);

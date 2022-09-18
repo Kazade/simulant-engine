@@ -174,6 +174,8 @@ PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dist
 
     instances_.push_back(new_source);
 
+    signal_sound_played_(sound, repeat, model);
+
     return PlayingSoundPtr(new_source);
 }
 

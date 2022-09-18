@@ -74,6 +74,34 @@ public:
         }
     }
 
+    void test_played_signal() {
+        bool played = false;
+
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+
+        auto actor = stage_->new_actor();
+
+        assert_false(actor->playing_sound_count());
+
+        actor->signal_sound_played().connect([&](smlt::SoundPtr s, smlt::AudioRepeat repeat, smlt::DistanceModel model) {
+            played = true;
+
+            /* Check args to the signal are correct */
+            assert_equal(s, sound);
+            assert_equal(repeat, smlt::AUDIO_REPEAT_NONE);
+            assert_equal(model, smlt::DISTANCE_MODEL_DEFAULT);
+        });
+
+        actor->play_sound(sound);
+
+        assert_true(actor->playing_sound_count());
+        assert_true(played);  /* Signal should have fired */
+
+        while(actor->playing_sound_count()) {
+            application->run_frame();
+        }
+    }
+
     void test_3d_sound_output() {
         smlt::SoundPtr sound = stage_->assets->new_sound_from_file("test_sound.ogg");
 
