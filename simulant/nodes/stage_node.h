@@ -279,6 +279,9 @@ private:
 
     /* Whether or not this node should be culled by the partitioner (e.g. when offscreen) */
     bool cullable_ = true;
+
+    /* Passed to coroutines and used to detect when the object has been destroyed */
+    std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
 };
 
 

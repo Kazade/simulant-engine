@@ -134,9 +134,19 @@ void StageNode::set_parent(TreeNode* node) {
     recalc_visibility();
 }
 
-smlt::Promise<bool> StageNode::destroy_after(const Seconds& seconds) {    
+smlt::Promise<bool> StageNode::destroy_after(const Seconds& seconds) {
+    std::weak_ptr<bool> alive = alive_marker_;
+
     return cr_async([=]() -> bool {
         cr_yield_for(seconds);
+
+        /* Detect whether the object was already destroyed. This avoids a weird
+         * bug where the wrong object can be destroyed if the original was replaced
+         * in the stage node pool before this code runs */
+        if(!alive.lock()) {
+            return false;
+        }
+
         if(is_destroyed()) {
             return false;
         }
