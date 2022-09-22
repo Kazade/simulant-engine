@@ -66,16 +66,10 @@ public:
 
         S_DEBUG("Creating a new object with ID: {0}", new_id);
         auto obj = T::create(new_id, std::forward<Args>(args)...);
-
-        S_DEBUG("Binding ID pointer");
         obj->_bind_id_pointer(obj);
-
         objects_.insert(std::make_pair(obj->id(), obj));
-
-        S_DEBUG("Calling on_make()");
         on_make(obj->id());
 
-        S_DEBUG("Created");
         return SmartPointerConverter::convert(obj);
     }
 
