@@ -38,6 +38,7 @@ bool KOSWindow::_init_window() {
     }
 
     S_DEBUG("OpenGL initialized");
+    probe_vmus();
     return true;
 }
 
@@ -69,7 +70,7 @@ void KOSWindow::probe_vmus() {
 
     thread::Lock<thread::Mutex> g(vmu_mutex_);
 
-    vmu_lookup_.clear();
+    std::unordered_map<std::string, std::pair<int, int>> new_lookup;
 
     for(auto i = 0; i < MAX_VMUS; ++i) {
         auto device = maple_enum_type(i, MAPLE_FUNC_LCD);
@@ -78,10 +79,26 @@ void KOSWindow::probe_vmus() {
                 LETTERS[device->port],
                 device->unit
             );
-
-            vmu_lookup_[identifier] = std::make_pair(device->port, device->unit);
+            new_lookup[identifier] = std::make_pair(device->port, device->unit);
         }
     }
+
+    for(auto& p: vmu_lookup_) {
+        if(new_lookup.find(p.first) == new_lookup.end()) {
+            /* Delete the screen */
+            _destroy_screen(p.first);
+        }
+    }
+
+    for(auto& p: new_lookup) {
+        if(vmu_lookup_.find(p.first) == vmu_lookup_.end()) {
+            /* Create a screen */
+            _create_screen(p.first, 48, 32, SCREEN_FORMAT_G1, 60);
+            S_DEBUG("Creating screen for VMU: {0}", p.first);
+        }
+    }
+
+    vmu_lookup_ = new_lookup;
 }
 
 static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button) {
