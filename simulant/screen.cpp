@@ -17,40 +17,18 @@ void Screen::render(const uint8_t *data, ScreenFormat format) {
         return;
     }
 
+    buffer_.resize(data_size());
+    buffer_.assign(data, data + data_size());
+}
 
-    {
-        thread::Lock<thread::Mutex> lock(buffer_mutex_);
+void Screen::update(float dt) {
+    time_till_next_refresh_ -= dt;
+    if(time_till_next_refresh_ <= 0.0f) {
+        time_till_next_refresh_ = smlt::fast_divide(1.0f, refresh_rate_);
 
-        buffer_.resize(data_size());
-        buffer_.assign(data, data + data_size());
-    }
-
-    /* Is there already a valid future? */
-    if(fut.is_valid()) {
-        /* If so, is it ready? */
-        if(fut.wait_for(std::chrono::milliseconds(0)) == thread::FutureStatus::ready) {
-            /* Then get it, and mark it as not valid */
-            fut.get();
-        }
-    }
-
-    /* We don't have a valid future, defer a new one */
-    if(!fut.is_valid()) {
-        /* We async this and return immediately */
-        std::function<void()> f = [this]() {
-            std::vector<uint8_t> tmp;
-            {
-                /* Copy the buffer while locking */
-                thread::Lock<thread::Mutex> lock(buffer_mutex_);
-                tmp = buffer_;
-            }
-
-            /* Now if this blocks, it doesn't matter. The main thread
-             * can continue to update buffer_ without waiting */
-            window_->render_screen(this, &tmp[0]);
-        };
-
-        fut = thread::async(f);
+        /* Now if this blocks, it doesn't matter. The main thread
+         * can continue to update buffer_ without waiting */
+        window_->render_screen(this, &buffer_[0]);
     }
 }
 

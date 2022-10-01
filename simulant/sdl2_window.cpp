@@ -462,6 +462,7 @@ void SDL2Window::swap_buffers() {
 }
 
 bool SDL2Window::initialize_screen(Screen *screen) {
+    auto current = SDL_GL_GetCurrentContext();
     auto window = SDL_CreateWindow(
         "Virtual Screen",
         SDL_WINDOWPOS_UNDEFINED,
@@ -476,6 +477,8 @@ bool SDL2Window::initialize_screen(Screen *screen) {
     }
 
     screen->stash(window, "window");
+
+    SDL_GL_MakeCurrent(screen_, current);
     return true;
 }
 
@@ -487,6 +490,7 @@ void SDL2Window::shutdown_screen(Screen* screen) {
 }
 
 void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
+    auto current = SDL_GL_GetCurrentContext();
     auto window = screen->get<SDL_Window*>("window");
 
     auto surface = SDL_GetWindowSurface(window);
@@ -524,10 +528,12 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
         }
     } else {
         S_ERROR("Unsupported screen format");
+        SDL_GL_MakeCurrent(screen_, current);
         return;
     }
 
     SDL_UpdateWindowSurface(window);
+    SDL_GL_MakeCurrent(screen_, current);
 }
 
 
