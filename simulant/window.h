@@ -231,6 +231,8 @@ protected:
 
     void set_application(Application* app) { application_ = app; }
 
+    void update_screens(float dt);
+    sig::Connection update_conn_;
 public:
     void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
     bool escape_to_quit_enabled() const { return escape_to_quit_; }

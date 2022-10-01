@@ -93,7 +93,7 @@ void KOSWindow::probe_vmus() {
     for(auto& p: new_lookup) {
         if(vmu_lookup_.find(p.first) == vmu_lookup_.end()) {
             /* Create a screen */
-            _create_screen(p.first, 48, 32, SCREEN_FORMAT_G1, 60);
+            _create_screen(p.first, 48, 32, SCREEN_FORMAT_G1, 5);
             S_DEBUG("Creating screen for VMU: {0}", p.first);
         }
     }

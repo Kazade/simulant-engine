@@ -95,10 +95,10 @@ void Viewport::apply(const RenderTarget& target) {
 
     GLCheck(glDisable, GL_SCISSOR_TEST);
 
-    double x = x_ * target.width();
-    double y = y_ * target.height();
-    double width = width_ * target.width();
-    double height = height_ * target.height();
+    auto x = x_ * target.width();
+    auto y = y_ * target.height();
+    auto width = width_ * target.width();
+    auto height = height_ * target.height();
 
     GLCheck(glEnable, GL_SCISSOR_TEST);
     GLCheck(glScissor, x, y, width, height);

@@ -101,6 +101,8 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
 
     has_focus_ = true;
 
+    update_conn_ = application->signal_late_update().connect(std::bind(&Window::update_screens, this, std::placeholders::_1));
+
     return true;
 }
 
@@ -114,6 +116,12 @@ void Window::create_defaults() {
 }
 
 void Window::_clean_up() {
+    update_conn_.disconnect();
+    auto screens = screens_;
+    for(auto& screen: screens) {
+        _destroy_screen(screen.first);
+    }
+
     auto panels = panels_;
     for(auto p: panels) {
         unregister_panel(p.first);
@@ -262,6 +270,12 @@ float Window::aspect_ratio() const {
     assert(height_ > 0);
 
     return float(width_) / float(height_);
+}
+
+void Window::update_screens(float dt) {
+    for(auto& scr: screens_) {
+        scr.second->update(dt);
+    }
 }
 
 void Window::set_has_context(bool value) {

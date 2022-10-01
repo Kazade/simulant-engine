@@ -69,6 +69,8 @@ public:
     uint32_t data_size() const;
     std::string name() const;
 
+    void update(float dt);
+
 private:
     Window* window_;
     std::string name_;
@@ -78,6 +80,7 @@ private:
     ScreenFormat format_ = SCREEN_FORMAT_G1;
     uint16_t refresh_rate_ = 60;    
     uint8_t integer_scale_ = 1;
+    float time_till_next_refresh_ = 0.0f;
 
     std::vector<uint8_t> buffer_;
     thread::Mutex buffer_mutex_;
