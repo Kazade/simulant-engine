@@ -117,6 +117,10 @@ void Window::create_defaults() {
 
 void Window::_clean_up() {
     update_conn_.disconnect();
+    auto screens = screens_;
+    for(auto& screen: screens) {
+        _destroy_screen(screen.first);
+    }
 
     auto panels = panels_;
     for(auto p: panels) {
