@@ -8,17 +8,13 @@
 namespace smlt {
 
 
-void Screen::render(const uint8_t *data, ScreenFormat format) {
+void Screen::render(const uint8_t *data) {
+    assert(format_ == SCREEN_FORMAT_G1);
 
-    static thread::Future<void> fut;
+    std::copy(data, data + buffer_.size(), &buffer_[0]);
 
-    if(format != this->format()) {
-        S_WARN("Not uploading screen image due to format mismatch. Conversion not yet supported");
-        return;
-    }
-
-    buffer_.resize(data_size());
-    buffer_.assign(data, data + data_size());
+    printf("Copied data!\n");
+    time_till_next_refresh_ = 0.0f;
 }
 
 void Screen::update(float dt) {
@@ -28,23 +24,20 @@ void Screen::update(float dt) {
 
         /* Now if this blocks, it doesn't matter. The main thread
          * can continue to update buffer_ without waiting */
-        window_->render_screen(this, &buffer_[0]);
+        window_->render_screen(this, &buffer_[0], row_stride_);
     }
 }
 
-uint32_t Screen::data_size() const {
-    if(format_ == SCREEN_FORMAT_G1) {
-        return (width() * height()) / 8;
-    } else {
-        S_ERROR("Unknown format");
-        return 1;
-    }
-}
 
-Screen::Screen(Window *window, const std::string &name):
+Screen::Screen(Window *window, const std::string &name, uint16_t w, uint16_t h, ScreenFormat format, uint16_t refresh):
     window_(window),
-    name_(name) {
+    name_(name),
+    width_(w),
+    height_(h),
+    format_(format),
+    refresh_rate_(refresh) {
 
+    buffer_.resize((w * h) / 8, 0);
 }
 
 std::string Screen::name() const {

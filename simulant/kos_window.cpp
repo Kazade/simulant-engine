@@ -56,6 +56,14 @@ void KOSWindow::destroy_window() {
 
 }
 
+static std::string vmu_port(int number) {
+    /* Returns a, b, c, or d - depending if number is 0, 1, 2, or 3 */
+    assert(number >= 0);
+    assert(number < 4);
+    char c(number + 97);
+    return std::string(&c, 1);
+}
+
 void KOSWindow::probe_vmus() {
     time_since_last_vmu_check_ += application->time_keeper->delta_time();
     if(time_since_last_vmu_check_ >= 0.5f) {
@@ -63,8 +71,6 @@ void KOSWindow::probe_vmus() {
     } else {
         return;
     }
-
-    const static char LETTERS [] = {'A', 'B', 'C', 'D'};
 
     const static int MAX_VMUS = 8;  // Four ports, two slots in each
 
@@ -76,7 +82,7 @@ void KOSWindow::probe_vmus() {
         auto device = maple_enum_type(i, MAPLE_FUNC_LCD);
         if(device && device->valid) {
             std::string identifier = _F("{0}{1}").format(
-                LETTERS[device->port],
+                vmu_port(device->port),
                 device->unit
             );
             new_lookup[identifier] = std::make_pair(device->port, device->unit);
@@ -311,7 +317,7 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
     controller._update_joystick_devices(joypads);
 }
 
-void KOSWindow::render_screen(Screen* screen, const uint8_t* data) {
+void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_stride) {
     thread::Lock<thread::Mutex> g(vmu_mutex_);
 
     auto it = vmu_lookup_.find(screen->name());
@@ -323,9 +329,20 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data) {
 
     auto vmu = it->second;
 
+    std::vector<uint8_t> rw_data(data, data + 192);
+
     auto device = maple_enum_dev(vmu.first, vmu.second);
     if(device) {
-        vmu_draw_lcd(device, (void*) data);
+        printf("Rendering data to VMU\n-----\n\n");
+        for(int i = 0; i < 192; ++i) {
+            printf("%d, ", int(rw_data[i]));
+        }
+        printf("\n");
+
+        int err = vmu_draw_lcd(device, (uint8_t*) &rw_data[0]);
+        if(err < 0) {
+            S_ERROR("There was an error updating the VMU LCD: {0}", err);
+        }
     }
 }
 
