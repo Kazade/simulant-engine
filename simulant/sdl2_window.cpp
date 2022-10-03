@@ -489,7 +489,7 @@ void SDL2Window::shutdown_screen(Screen* screen) {
     }
 }
 
-void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
+void SDL2Window::render_screen(Screen* screen, const uint8_t* data, int row_stride) {
     auto current = SDL_GL_GetCurrentContext();
     auto window = screen->get<SDL_Window*>("window");
 
@@ -502,11 +502,10 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
         auto y = 0;
 
         // Get the number of bytes in the data
-        auto bytes = (screen->width() * screen->height()) / 8;
+        auto bytes = (row_stride * screen->height());
 
         // Go through the bytes
         for(auto i = 0; i < bytes; ++i) {
-
             // Go through each bit
             for(auto bit = 0; bit < 8; ++bit) {
 
@@ -523,6 +522,7 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data) {
                 if(x == screen->width()) {
                     x = 0;
                     y++;
+                    i += (row_stride - (screen->width() / 8));
                 }
             }
         }

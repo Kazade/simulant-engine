@@ -291,9 +291,10 @@ private:
     std::unordered_map<std::string, Screen::ptr> screens_;
 
     /* This is called by Screens to render themselves to devices. Default behaviour is a no-op */
-    virtual void render_screen(Screen* screen, const uint8_t* data) {
+    virtual void render_screen(Screen* screen, const uint8_t* data, int row_stride) {
         _S_UNUSED(screen);
         _S_UNUSED(data);
+        _S_UNUSED(row_stride);
     }
 
     /* To be overridden by subclasses if external screens need some kind of initialization/clean_up */

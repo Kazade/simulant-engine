@@ -2,6 +2,7 @@
 #include "simulant/shortcuts.h"
 #include "simulant/extra.h"
 #include "simulant/macros.h"
+#include "simulant/utils/dreamcast.h"
 
 using namespace smlt;
 
@@ -55,6 +56,20 @@ public:
 
         auto axis = input->new_axis("F");
         axis->set_positive_keyboard_key(smlt::KEYBOARD_CODE_F);
+
+        auto tex = stage_->assets->new_texture_from_file("simulant/textures/icons/simulant-icon-vmu.png");
+        tex->convert(smlt::TEXTURE_FORMAT_RGBA_4UB_8888, {smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED});
+        auto data_maybe = smlt::utils::vmu_lcd_image_from_texture(tex, utils::VMU_IMAGE_GENERATION_MODE_ALPHA);
+        auto data = data_maybe.value();
+
+        /* Render the simulant icon to the VMU */
+        window->each_screen([&data](std::string, Screen* screen) {
+            if(screen->width() / screen->integer_scale() == 48 && screen->height() / screen->integer_scale() == 32) {
+                screen->render(&data[0]);
+            }
+        });
+
+
     }
 
     void update(float dt) {
