@@ -38,7 +38,7 @@ private:
 
     void probe_vmus();
 
-    void render_screen(Screen* screen, const uint8_t* data) override;
+    void render_screen(Screen* screen, const uint8_t* data, int row_stride) override;
 
     /* Name, to port/unit combo. This only includes VMUs we've seen during the last probe */
 

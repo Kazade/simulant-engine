@@ -76,7 +76,7 @@ private:
 
     bool initialize_screen(Screen *screen) override;
     void shutdown_screen(Screen* screen) override;
-    void render_screen(Screen* screen, const uint8_t* data) override;
+    void render_screen(Screen* screen, const uint8_t* data, int row_stride) override;
 
     friend class Application;
 };

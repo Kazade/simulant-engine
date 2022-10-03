@@ -20,7 +20,7 @@ class Screen:
     public generic::DataCarrier {
 
 public:
-    Screen(Window* window, const std::string& name);
+    Screen(Window* window, const std::string& name, uint16_t w, uint16_t h, ScreenFormat format=SCREEN_FORMAT_G1, uint16_t refresh=60);
 
     /* Render image data. data must be of size width x height x bits where bits
      * is defined by the ScreenFormat. Data should be arranged from top-left.
@@ -34,7 +34,7 @@ public:
      * You can use a Scene fixed_update, a Behaviour or window->idle->add_timeout
      * to update with a regular frequency.
      */
-    void render(const uint8_t* data, ScreenFormat format);
+    void render(const uint8_t* data);
 
     uint16_t height() const {
         return height_;
@@ -66,7 +66,6 @@ public:
         integer_scale_ = scale;
     }
 
-    uint32_t data_size() const;
     std::string name() const;
 
     void update(float dt);
@@ -77,6 +76,7 @@ private:
 
     uint16_t width_ = 0;
     uint16_t height_ = 0;
+    uint16_t row_stride_ = 0;
     ScreenFormat format_ = SCREEN_FORMAT_G1;
     uint16_t refresh_rate_ = 60;    
     uint8_t integer_scale_ = 1;

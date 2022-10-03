@@ -124,7 +124,8 @@ enum TextureChannel {
     TEXTURE_CHANNEL_BLUE,
     TEXTURE_CHANNEL_ALPHA,
     TEXTURE_CHANNEL_ZERO,
-    TEXTURE_CHANNEL_ONE
+    TEXTURE_CHANNEL_ONE,
+    TEXTURE_CHANNEL_INVERSE_RED,
 };
 
 typedef std::array<TextureChannel, 4> TextureChannelSet;
