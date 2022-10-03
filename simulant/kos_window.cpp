@@ -333,12 +333,6 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_strid
 
     auto device = maple_enum_dev(vmu.first, vmu.second);
     if(device) {
-        printf("Rendering data to VMU\n-----\n\n");
-        for(int i = 0; i < 192; ++i) {
-            printf("%d, ", int(rw_data[i]));
-        }
-        printf("\n");
-
         int err = vmu_draw_lcd(device, (uint8_t*) &rw_data[0]);
         if(err < 0) {
             S_ERROR("There was an error updating the VMU LCD: {0}", err);

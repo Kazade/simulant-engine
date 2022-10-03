@@ -1,12 +1,13 @@
 
 #include <simulant/simulant.h>
+#include <simulant/utils/dreamcast.h>
 
 class MainScene : public smlt::Scene<MainScene> {
 public:
     MainScene(smlt::Window* window):
         smlt::Scene<MainScene>(window) {}
 
-    void load() {
+    void load() override {
         stage_ = new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(
@@ -23,9 +24,24 @@ public:
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
         S_DEBUG("Scene loaded");
+
+
+        auto tex = stage_->assets->new_texture_from_file("simulant/textures/icons/simulant-icon-vmu.png");
+        tex->convert(smlt::TEXTURE_FORMAT_RGBA_4UB_8888, {smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED});
+        auto data_maybe = smlt::utils::vmu_lcd_image_from_texture(tex, smlt::utils::VMU_IMAGE_GENERATION_MODE_ALPHA);
+        data = data_maybe.value();
+
+        /* Render the simulant icon to the VMU */
+    }
+
+    void update(float dt) override {
+        window->each_screen([=](std::string, smlt::Screen* screen) {
+            screen->render(&data[0]);
+        });
     }
 
 private:
+    std::vector<uint8_t> data;
     smlt::StagePtr stage_;
     smlt::CameraPtr camera_;
 };

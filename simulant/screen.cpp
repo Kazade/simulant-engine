@@ -13,7 +13,6 @@ void Screen::render(const uint8_t *data) {
 
     std::copy(data, data + buffer_.size(), &buffer_[0]);
 
-    printf("Copied data!\n");
     time_till_next_refresh_ = 0.0f;
 }
 
