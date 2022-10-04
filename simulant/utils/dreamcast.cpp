@@ -25,14 +25,13 @@ smlt::optional<std::vector<uint8_t>> vmu_lcd_image_from_texture(TexturePtr tex, 
 
             for(int x = 0; x < 48; ++x, src += 4) {
                 uint8_t alpha = *(src + 3);
-                row <<= 1; row |= (alpha > 0);
+                row |= uint64_t(alpha > 0) << x;
             }
 
             const uint8_t* byte = (const uint8_t*) &row;
-            int row_index = 31 - y;
 
             for(int i = 5; i >= 0; --i) {
-                result[(row_index * 6) + (5 - i)] = *(byte + i);
+                result[(y * 6) + (5 - i)] = *(byte + i);
             }
         }
     } else {
