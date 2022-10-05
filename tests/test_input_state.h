@@ -13,7 +13,7 @@ public:
 
     void set_up() {
         SimulantTestCase::set_up();
-        controller_ = new InputState();
+        controller_ = new InputState(window);
     }
 
     void tear_down() {
@@ -45,13 +45,13 @@ public:
 
         controller_->_update_joystick_devices(joysticks);
 
-        assert_equal(controller_->joystick_count(), 2u);
+        assert_equal(controller_->game_controller_count(), 2u);
 
         joysticks.resize(1);
 
         controller_->_update_joystick_devices(joysticks);
 
-        assert_equal(controller_->joystick_count(), 1u);
+        assert_equal(controller_->game_controller_count(), 1u);
     }
 
     void test_mouse_hotplugging() {
@@ -81,13 +81,13 @@ public:
 
         controller_->_update_joystick_devices(joysticks);
 
-        controller_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 1.0f);
+        controller_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 1.0f);
 
-        assert_equal(controller_->joystick_axis_state(0, JOYSTICK_AXIS_X), 1.0f);
+        assert_equal(controller_->joystick_axis_state(GameControllerID(0), JOYSTICK_AXIS_X), 1.0f);
 
-        controller_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_1, -1.0f);
+        controller_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_1, -1.0f);
 
-        assert_equal(controller_->joystick_axis_state(0, JOYSTICK_AXIS_Y), -1.0f);
+        assert_equal(controller_->joystick_axis_state(GameControllerID(0), JOYSTICK_AXIS_Y), -1.0f);
     }
 
     void test_joystick_button_input() {
@@ -97,13 +97,13 @@ public:
 
         controller_->_update_joystick_devices(joysticks);
 
-        controller_->_handle_joystick_button_down(0, JOYSTICK_BUTTON_A);
+        controller_->_handle_joystick_button_down(GameControllerID(0), JOYSTICK_BUTTON_A);
 
-        assert_true(controller_->joystick_button_state(0, JOYSTICK_BUTTON_A));
+        assert_true(controller_->joystick_button_state(GameControllerID(0), JOYSTICK_BUTTON_A));
 
-        controller_->_handle_joystick_button_up(0, JOYSTICK_BUTTON_A);
+        controller_->_handle_joystick_button_up(GameControllerID(0), JOYSTICK_BUTTON_A);
 
-        assert_false(controller_->joystick_button_state(0, JOYSTICK_BUTTON_A));
+        assert_false(controller_->joystick_button_state(GameControllerID(0), JOYSTICK_BUTTON_A));
     }
 
     void test_mouse_axis_input() {

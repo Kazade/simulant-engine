@@ -15,9 +15,9 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        state_.reset(new InputState());
+        state_.reset(new InputState(window));
         state_->_update_keyboard_devices({KeyboardDeviceInfo{0}});
-        state_->_update_joystick_devices({JoystickDeviceInfo{0, "test", 1, 1, 0}});
+        state_->_update_joystick_devices({JoystickDeviceInfo{0, "test", 1, 1, 0, false}});
         manager_.reset(new InputManager(state_.get()));
     }
 
@@ -61,12 +61,12 @@ public:
         axis->set_joystick_axis(JOYSTICK_AXIS_0);
         axis->set_dead_zone(0.1f);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.05f);
+        state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 0.05f);
         manager_->update(1.0);
 
         assert_equal(manager_->axis_value_hard("Test"), 0);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.11f);
+        state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 0.11f);
         manager_->update(1.0);
 
         assert_equal(manager_->axis_value_hard("Test"), 1);
@@ -78,12 +78,12 @@ public:
         axis->set_dead_zone(0.1f);
         axis->set_inversed(true);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.05f);
+        state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 0.05f);
         manager_->update(1.0);
 
         assert_equal(manager_->axis_value_hard("Test"), 0);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.11f);
+        state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 0.11f);
         manager_->update(1.0);
 
         assert_equal(manager_->axis_value_hard("Test"), -1);
@@ -94,17 +94,17 @@ public:
         axis->set_joystick_axis(JOYSTICK_AXIS_0);
         axis->set_dead_zone(0.1f);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.05f);
+        state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 0.05f);
         manager_->update(1.0);
 
         assert_equal(axis->value(), 0.0f);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 0.1f);
+        state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 0.1f);
         manager_->update(1.0);
 
         assert_equal(axis->value(), 0.0f);
 
-        state_->_handle_joystick_axis_motion(0, JOYSTICK_AXIS_0, 1.0f);
+        state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 1.0f);
         manager_->update(1.0);
         assert_equal(axis->value(), 1.0f);
     }

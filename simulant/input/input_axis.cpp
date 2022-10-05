@@ -37,7 +37,7 @@ void InputAxis::set_negative_joystick_button(JoystickButton button) {
     negative_joystick_button_ = button;
 }
 
-void InputAxis::set_joystick_source(JoystickID joystick) {
+void InputAxis::set_joystick_source(GameControllerID joystick) {
     joystick_source_ = joystick;
 }
 

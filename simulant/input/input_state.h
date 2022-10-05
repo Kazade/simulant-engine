@@ -39,11 +39,12 @@ namespace smlt {
 class InputState;
 
 struct JoystickDeviceInfo {
-    uint32_t id;
+    int32_t id;
     std::string name;
     uint8_t button_count;
     uint8_t axis_count;
     uint8_t hat_count;
+    bool has_rumble;
 };
 
 struct KeyboardDeviceInfo {
@@ -57,15 +58,27 @@ struct MouseDeviceInfo {
 };
 
 
+#define STRONG_TYPEDEF(name, type) \
+    typedef struct tag_ ## name { \
+        type v; \
+        type to_ ## type () const { return v; } \
+        tag_ ## name () {} \
+        explicit tag_ ## name (type i): v(i) {} \
+        bool operator==(const tag_ ## name & rhs) const { return v == rhs.v; } \
+    } (name)
+
+
 typedef int8_t KeyboardID;
 typedef int8_t MouseID;
-typedef int8_t JoystickID;
+
+STRONG_TYPEDEF(GameControllerID, int8_t);
+
 typedef int8_t MouseButtonID;
 typedef int8_t JoystickHatID;
 
 static const KeyboardID ALL_KEYBOARDS = -1;
 static const MouseID ALL_MICE = -1;
-static const JoystickID ALL_JOYSTICKS = -1;
+static const GameControllerID ALL_JOYSTICKS = GameControllerID(-1);
 
 enum MouseAxis {
     MOUSE_AXIS_INVALID = -1,
@@ -146,10 +159,52 @@ enum HatPosition {
     HAT_POSITION_LEFT_DOWN = HAT_POSITION_LEFT | HAT_POSITION_DOWN
 };
 
+class InputState;
+
+class GameController {
+    friend class InputState;
+
+    GameController() = default;
+    GameController(InputState* parent, GameControllerID id):
+        parent_(parent),
+        id_(id) {}
+
+public:
+    GameControllerID id() const {
+        return id_;
+    }
+
+    bool has_rumble_effect() const;
+    bool start_rumble(uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration);
+    void stop_rumble();
+
+    bool button_state(JoystickButton button) const;
+    float axis_state(JoystickAxis axis) const;
+    HatPosition hat_state(JoystickHatID hat) const;
+
+private:
+    InputState* parent_ = nullptr;
+    GameControllerID id_ = GameControllerID(-1);
+
+    uint8_t button_count = 0;
+    uint8_t axis_count = 0;
+    uint8_t hat_count = 0;
+
+    bool has_rumble_ = false;
+
+    bool buttons[JOYSTICK_BUTTON_MAX] = {0};
+    float axises[JOYSTICK_AXIS_MAX] = {0};
+    HatPosition hats[MAX_JOYSTICK_HATS] = {HAT_POSITION_CENTERED};
+};
+
+
 class InputState:
     public RefCounted<InputState> {
 
 public:
+    InputState(Window* window):
+        window_(window) {}
+
     void pre_update(float dt);
     void update(float dt);
 
@@ -179,11 +234,11 @@ public:
     void _handle_mouse_up(MouseID mouse_id, MouseButtonID button_id);
 
     // value must be a value between -1.0f and 1.0f!
-    void _handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis axis, float value);
+    void _handle_joystick_axis_motion(GameControllerID joypad_id, JoystickAxis axis, float value);
 
-    void _handle_joystick_button_down(JoystickID joypad_id, JoystickButton button);
-    void _handle_joystick_button_up(JoystickID joypad_id, JoystickButton button);
-    void _handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position);
+    void _handle_joystick_button_down(GameControllerID joypad_id, JoystickButton button);
+    void _handle_joystick_button_up(GameControllerID joypad_id, JoystickButton button);
+    void _handle_joystick_hat_motion(GameControllerID joypad_id, JoystickHatID hat_id, HatPosition position);
 
     // Public state accessor functions
     bool keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const;
@@ -193,16 +248,26 @@ public:
     float mouse_axis_state(MouseID mouse_id, MouseAxis axis) const;
     Vec2 mouse_position(MouseID mouse_id) const;
 
-    bool joystick_button_state(JoystickID joystick_id, JoystickButton button) const;
-    float joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const;
-    HatPosition joystick_hat_state(JoystickID joystick_id, JoystickHatID hat) const;
+    GameController* game_controller_by_id(GameControllerID id);
+    const GameController* game_controller_by_id(GameControllerID id) const;
+    GameController* game_controller(uint8_t id);
 
-    std::size_t joystick_count() const { return joystick_count_; }
+    std::size_t game_controller_count() const { return joystick_count_; }
     std::size_t keyboard_count() const { return keyboard_count_; }
     std::size_t mouse_count() const { return mouse_count_; }
 
-    JoystickAxis linked_axis(JoystickID id, JoystickAxis axis);
+    JoystickAxis linked_axis(GameControllerID id, JoystickAxis axis);
+
 private:
+    friend class GameController;
+
+    Window* window_ = nullptr;
+
+    bool joystick_button_state(GameControllerID joystick_id, JoystickButton button) const;
+    float joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const;
+    HatPosition joystick_hat_state(GameControllerID joystick_id, JoystickHatID hat) const;
+
+
     struct KeyboardState {
         bool keys[MAX_KEYBOARD_CODES] = {0};
     };
@@ -224,18 +289,8 @@ private:
     uint8_t mouse_count_ = 0;
     MouseState mice_[4];
 
-    struct JoystickState {
-        uint8_t button_count = 0;
-        uint8_t axis_count = 0;
-        uint8_t hat_count = 0;
-
-        bool buttons[JOYSTICK_BUTTON_MAX] = {0};
-        float axises[JOYSTICK_AXIS_MAX] = {0};
-        HatPosition hats[MAX_JOYSTICK_HATS] = {HAT_POSITION_CENTERED};
-    };
-
     uint8_t joystick_count_ = 0;
-    JoystickState joysticks_[4];
+    GameController joysticks_[4];
 };
 
 }

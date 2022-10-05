@@ -309,7 +309,21 @@ private:
 
     StageNode* audio_listener_ = nullptr;
 protected:
+    friend class GameController;
+
     InputState* _input_state() const { return input_state_.get(); }
+
+    virtual void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) {
+        _S_UNUSED(id);
+        _S_UNUSED(low_hz);
+        _S_UNUSED(high_hz);
+        _S_UNUSED(duration);
+    }
+
+    virtual void game_controller_stop_rumble(GameControllerID id) {
+        _S_UNUSED(id);
+    }
+
 public:
     //Read only properties
     S_DEFINE_PROPERTY(application, &Window::application_);

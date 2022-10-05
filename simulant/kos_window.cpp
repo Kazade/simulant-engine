@@ -340,7 +340,46 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_strid
     }
 }
 
+void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) {
+    _S_UNUSED(high_hz);
 
+    auto device = maple_enum_dev(id.to_int8_t(), MAPLE_FUNC_CONTROLLER);
+    if(device && device->info.functions & MAPLE_FUNC_PURUPURU) {
+        int intensity = (float(low_hz) / 65535.0f) * 7;
+
+        purupuru_effect_t effect;
+        effect.duration = 0xFF;
+        effect.effect1 = PURUPURU_EFFECT1_INTENSITY(intensity) | PURUPURU_EFFECT1_PULSE;
+        effect.special = PURUPURU_SPECIAL_MOTOR1;
+        purupuru_rumble(device, &effect);
+
+        /* We increase a counter so that we only call stop if no other effect has
+         * been started since */
+        game_controller_effect_counters_[id.to_int8_t()]++;
+        int counter = game_controller_effect_counters_[id.to_int8_t()];
+
+        /* Unfortunately, the duration field doesn't work properly / isn't documented, so we have to rely on
+         * some coroutine magic to stop things... */
+        cr_async([=]() {
+            cr_yield_for(duration);
+            if(counter == game_controller_effect_counters_[id.to_int8_t()]) {
+                game_controller_stop_rumble(id);
+            }
+        });
+    }
+}
+
+void game_controller_stop_rumble(GameControllerID id) {
+    auto device = maple_enum_dev(id.to_int8_t(), MAPLE_FUNC_CONTROLLER);
+    if(device && device->info.functions & MAPLE_FUNC_PURUPURU) {
+        purupuru_effect_t
+        effect.duration = 0x00;
+        effect.effect2 = 0x00;
+        effect.effect1 = 0x00;
+        effect.special = PURUPURU_SPECIAL_MOTOR1;
+        purupuru_rumble(device, &effect);
+    }
+}
 
 }
 

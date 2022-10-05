@@ -190,19 +190,28 @@ void SDL2Window::check_events() {
                 }
 
                 input_state->_handle_joystick_axis_motion(
-                    event.caxis.which,
+                    GameControllerID(event.caxis.which),
                     SDL_axis_to_simulant_axis(event.caxis.axis),
                     value
                 );
             } break;
             case SDL_CONTROLLERBUTTONDOWN: {
-                input_state->_handle_joystick_button_down(event.cbutton.which, (JoystickButton) event.cbutton.button);
+                input_state->_handle_joystick_button_down(
+                    GameControllerID(event.cbutton.which),
+                    (JoystickButton) event.cbutton.button
+                );
             } break;
             case SDL_CONTROLLERBUTTONUP:
-                input_state->_handle_joystick_button_up(event.cbutton.which, (JoystickButton) event.cbutton.button);
+                input_state->_handle_joystick_button_up(
+                    GameControllerID(event.cbutton.which),
+                    (JoystickButton) event.cbutton.button
+                );
             break;
             case SDL_JOYHATMOTION:
-                input_state->_handle_joystick_hat_motion(event.jhat.which, event.jhat.hat, (HatPosition) event.jhat.value);
+                input_state->_handle_joystick_hat_motion(
+                    GameControllerID(event.jhat.which),
+                    event.jhat.hat, (HatPosition) event.jhat.value
+                );
             break;
             case SDL_KEYDOWN: {
                 input_state->_handle_key_down(0, (KeyboardCode) event.key.keysym.scancode);
@@ -420,6 +429,7 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
         info.axis_count = SDL_JoystickNumAxes(joystick);
         info.button_count = SDL_JoystickNumButtons(joystick);
         info.hat_count = SDL_JoystickNumHats(joystick);
+        info.has_rumble = SDL_JoystickHasRumble(joystick);
 
         joypads.push_back(info);
         open_joysticks_.push_back(joystick);
@@ -534,6 +544,14 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data, int row_stri
 
     SDL_UpdateWindowSurface(window);
     SDL_GL_MakeCurrent(screen_, current);
+}
+
+void SDL2Window::game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const Seconds &duration) {
+    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(id.to_int8_t()), low_hz, high_hz, duration.to_float());
+}
+
+void SDL2Window::game_controller_stop_rumble(GameControllerID id) {
+    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(id.to_int8_t()), 0, 0, 0);
 }
 
 

@@ -78,6 +78,9 @@ private:
     void shutdown_screen(Screen* screen) override;
     void render_screen(Screen* screen, const uint8_t* data, int row_stride) override;
 
+    virtual void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) override;
+    virtual void game_controller_stop_rumble(GameControllerID id) override;
+
     friend class Application;
 };
 

@@ -46,6 +46,10 @@ private:
     std::unordered_map<std::string, std::pair<int, int>> vmu_lookup_;
 
     float time_since_last_vmu_check_ = 0.0f;
+
+    uint8_t game_controller_effect_counters_[4] = {0};
+    virtual void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) override;
+    virtual void game_controller_stop_rumble(GameControllerID id) override;
 };
 
 }
