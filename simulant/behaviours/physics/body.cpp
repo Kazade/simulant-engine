@@ -123,7 +123,7 @@ void Body::update(float dt) {
         auto next_state = simulation_->body_transform(this);
 
         // Prevent a divide by zero.
-        float t = (dt == 0.0f) ? 0.0f : simulation_->time_keeper_->fixed_step_remainder() / dt;
+        float t = (dt == 0.0f) ? 0.0f : smlt::fast_divide(simulation_->time_keeper_->fixed_step_remainder(), dt);
 
         auto new_pos = prev_state.first.lerp(next_state.first, t);
         auto new_rot = prev_state.second.slerp(next_state.second, t);

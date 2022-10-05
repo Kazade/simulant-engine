@@ -30,7 +30,7 @@ void SizeManipulator::do_manipulate(ParticleSystem* system, Particle* particles,
     Particle* particle = particles;
     for(auto i = 0u; i < particle_count; ++i) {
         float e = (particle->lifetime - particle->ttl);
-        float n =  e / particle->lifetime;
+        float n =  smlt::fast_divide(e, particle->lifetime);
         particle->dimensions.x = curve(particle->initial_dimensions.x, n, e);
         particle->dimensions.y = curve(particle->initial_dimensions.y, n, e);
 
