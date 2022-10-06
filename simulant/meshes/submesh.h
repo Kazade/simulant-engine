@@ -12,8 +12,8 @@ class IndexData;
 class Mesh;
 class Renderer;
 
-enum MaterialSlot {
-    MATERIAL_SLOT0,
+enum MaterialSlot : uint8_t {
+    MATERIAL_SLOT0 = 0,
     MATERIAL_SLOT1,
     MATERIAL_SLOT2,
     MATERIAL_SLOT3,

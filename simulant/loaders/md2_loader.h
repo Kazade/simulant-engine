@@ -48,7 +48,7 @@ public:
     }
 
     bool supports(const Path& filename) const override {
-        return filename.ext() == ".md2";
+        return smlt::lower_case(filename.ext()) == ".md2";
     }
 
     Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const override {
