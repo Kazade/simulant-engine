@@ -155,6 +155,8 @@ void KOSWindow::check_events() {
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
+        auto id = GameControllerID(i);
+
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
             auto state = (cont_state_t*) maple_dev_status(device);
@@ -168,7 +170,7 @@ void KOSWindow::check_events() {
                 auto ltrig_state = state->ltrig;
                 auto rtrig_state = state->rtrig;
 
-                auto handle_joystick_axis = [this](int prev, int current, int controller, smlt::JoystickAxis target, float range=127.0f) -> int16_t {
+                auto handle_joystick_axis = [this](int prev, int current, GameControllerID controller, smlt::JoystickAxis target, float range=127.0f) -> int16_t {
                     if(prev == current) {
                         return current;
                     }
@@ -189,12 +191,12 @@ void KOSWindow::check_events() {
                     return current;
                 };
 
-                previous[i].joyx = handle_joystick_axis(previous[i].joyx, joyx_state, i, JOYSTICK_AXIS_X);
-                previous[i].joyy = handle_joystick_axis(previous[i].joyy, joyy_state, i, JOYSTICK_AXIS_Y);
-                previous[i].joyx2 = handle_joystick_axis(previous[i].joyx2, joyx2_state, i, JOYSTICK_AXIS_2);
-                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, i, JOYSTICK_AXIS_3);
-                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, i, JOYSTICK_AXIS_4, 255.0f);
-                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, i, JOYSTICK_AXIS_5, 255.0f);
+                previous[i].joyx = handle_joystick_axis(previous[i].joyx, joyx_state, id, JOYSTICK_AXIS_X);
+                previous[i].joyy = handle_joystick_axis(previous[i].joyy, joyy_state, id, JOYSTICK_AXIS_Y);
+                previous[i].joyx2 = handle_joystick_axis(previous[i].joyx2, joyx2_state, id, JOYSTICK_AXIS_2);
+                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, id, JOYSTICK_AXIS_3);
+                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, id, JOYSTICK_AXIS_4, 255.0f);
+                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, id, JOYSTICK_AXIS_5, 255.0f);
 
                 // Check the current button state against the previous one
                 // and update the input controller appropriately
@@ -205,12 +207,12 @@ void KOSWindow::check_events() {
                     if(!prev && curr) {
                         // Button down
                         input_state->_handle_joystick_button_down(
-                            i, dc_button_to_simulant_button(button)
+                            id, dc_button_to_simulant_button(button)
                         );
                     } else if(prev && !curr) {
                         // Button up
                         input_state->_handle_joystick_button_up(
-                            i, dc_button_to_simulant_button(button)
+                            id, dc_button_to_simulant_button(button)
                         );
                     }
                 }
@@ -303,7 +305,7 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
             JoystickDeviceInfo info;
-            info.id = i;
+            info.id = GameControllerID(i);
             info.name = device->info.product_name;
             info.button_count = 5;
             info.axis_count = 4; //2 triggers, 2 for analog
@@ -340,7 +342,7 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_strid
     }
 }
 
-void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) {
+void KOSWindow::game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) {
     _S_UNUSED(high_hz);
 
     auto device = maple_enum_dev(id.to_int8_t(), MAPLE_FUNC_CONTROLLER);
@@ -369,10 +371,10 @@ void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t
     }
 }
 
-void game_controller_stop_rumble(GameControllerID id) {
+void KOSWindow::game_controller_stop_rumble(GameControllerID id) {
     auto device = maple_enum_dev(id.to_int8_t(), MAPLE_FUNC_CONTROLLER);
     if(device && device->info.functions & MAPLE_FUNC_PURUPURU) {
-        purupuru_effect_t
+        purupuru_effect_t effect;
         effect.duration = 0x00;
         effect.effect2 = 0x00;
         effect.effect1 = 0x00;

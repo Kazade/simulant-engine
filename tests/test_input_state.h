@@ -40,8 +40,8 @@ public:
 
     void test_joystick_hotplugging() {
         std::vector<JoystickDeviceInfo> joysticks(2);
-        joysticks[0].id = 0;
-        joysticks[1].id = 1;
+        joysticks[0].id = GameControllerID(0);
+        joysticks[1].id = GameControllerID(1);
 
         controller_->_update_joystick_devices(joysticks);
 
@@ -76,7 +76,7 @@ public:
 
     void test_joystick_axis_input() {
         std::vector<JoystickDeviceInfo> joysticks(1);
-        joysticks[0].id = 0;
+        joysticks[0].id = GameControllerID(0);
         joysticks[0].axis_count = 2;
 
         controller_->_update_joystick_devices(joysticks);
@@ -92,7 +92,7 @@ public:
 
     void test_joystick_button_input() {
         std::vector<JoystickDeviceInfo> joysticks(1);
-        joysticks[0].id = 0;
+        joysticks[0].id = GameControllerID(0);
         joysticks[0].button_count = 2;
 
         controller_->_update_joystick_devices(joysticks);

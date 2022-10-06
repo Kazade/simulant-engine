@@ -38,8 +38,31 @@ namespace smlt {
 
 class InputState;
 
+typedef int8_t KeyboardID;
+typedef int8_t MouseID;
+
+#define STRONG_TYPEDEF(name, type) \
+    typedef struct tag_ ## name { \
+        type v; \
+        type to_ ## type () const { return v; } \
+        tag_ ## name () {} \
+        explicit tag_ ## name (type i): v(i) {} \
+        bool operator==(const tag_ ## name & rhs) const { return v == rhs.v; } \
+    } (name)
+
+
+STRONG_TYPEDEF(GameControllerID, int8_t);
+
+typedef int8_t MouseButtonID;
+typedef int8_t JoystickHatID;
+
+static const KeyboardID ALL_KEYBOARDS = -1;
+static const MouseID ALL_MICE = -1;
+static const GameControllerID ALL_JOYSTICKS = GameControllerID(-1);
+
+
 struct JoystickDeviceInfo {
-    int32_t id;
+    GameControllerID id;
     std::string name;
     uint8_t button_count;
     uint8_t axis_count;
@@ -57,28 +80,6 @@ struct MouseDeviceInfo {
     uint8_t axis_count;
 };
 
-
-#define STRONG_TYPEDEF(name, type) \
-    typedef struct tag_ ## name { \
-        type v; \
-        type to_ ## type () const { return v; } \
-        tag_ ## name () {} \
-        explicit tag_ ## name (type i): v(i) {} \
-        bool operator==(const tag_ ## name & rhs) const { return v == rhs.v; } \
-    } (name)
-
-
-typedef int8_t KeyboardID;
-typedef int8_t MouseID;
-
-STRONG_TYPEDEF(GameControllerID, int8_t);
-
-typedef int8_t MouseButtonID;
-typedef int8_t JoystickHatID;
-
-static const KeyboardID ALL_KEYBOARDS = -1;
-static const MouseID ALL_MICE = -1;
-static const GameControllerID ALL_JOYSTICKS = GameControllerID(-1);
 
 enum MouseAxis {
     MOUSE_AXIS_INVALID = -1,

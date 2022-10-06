@@ -422,17 +422,17 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
 
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
         SDL_Joystick* joystick = SDL_JoystickOpen(i);
+        open_joysticks_.push_back(joystick);
 
         JoystickDeviceInfo info;
-        info.id = i;
+        info.id = GameControllerID(SDL_JoystickInstanceID(joystick));
         info.name = SDL_JoystickName(joystick);
         info.axis_count = SDL_JoystickNumAxes(joystick);
         info.button_count = SDL_JoystickNumButtons(joystick);
         info.hat_count = SDL_JoystickNumHats(joystick);
         info.has_rumble = SDL_JoystickHasRumble(joystick);
 
-        joypads.push_back(info);
-        open_joysticks_.push_back(joystick);
+        joypads.push_back(info);        
     }
 
     controller._update_keyboard_devices({keyboard});
