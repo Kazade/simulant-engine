@@ -97,6 +97,10 @@ static void init_source(Sound* self, PlayingSound& source) {
      *  data on the Source, well, not explicitly.
      */
 
+    /* Set the stream func to nothing - this will give any captured smart pointers
+     * the opportunity to unload before we do anything else */
+    source.set_stream_func(StreamFunc());
+
     auto fstream = std::dynamic_pointer_cast<FileIfstream>(self->input_stream());
     fstream->seekg(0);
 
