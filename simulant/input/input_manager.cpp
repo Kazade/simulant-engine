@@ -171,12 +171,13 @@ bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     return negative_pressed || positive_pressed;
 }
 
-void InputManager::_process_joystick(int8_t id, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed) {
-    if(pbtn != -1 && controller_->joystick_button_state(id, pbtn)) {
+void InputManager::_process_joystick(const struct tag_GameControllerID &id, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed) {
+    auto controller = controller_->game_controller_by_id(id);
+    if(pbtn != -1 && controller->button_state(pbtn)) {
         *positive_pressed = true;
     }
 
-    if(nbtn != -1 && controller_->joystick_button_state(id, nbtn)) {
+    if(nbtn != -1 && controller->button_state(nbtn)) {
         *negative_pressed = true;
     }
 };
@@ -192,13 +193,13 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
 
     // If the user requested input from all mice, do that
     if(axis->joystick_source() == ALL_JOYSTICKS) {
-        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
-            JoystickID id = (JoystickID) i;
+        for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
+            GameControllerID id = controller_->game_controller(i)->id();
             _process_joystick(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
         }
     } else {
         // Otherwise just check the one they asked for
-        JoystickID id = axis->joystick_source();
+        GameControllerID id = axis->joystick_source();
         _process_joystick(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
     }
 
@@ -340,19 +341,20 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
 
     float new_value = 0.0f;
 
-    auto process_joystick = [this, axis](JoystickID joystick_id) {
-        return controller_->joystick_axis_state(joystick_id, axis->joystick_axis_);
+    auto process_joystick = [this, axis](GameControllerID joystick_id) {
+        auto controller = controller_->game_controller_by_id(joystick_id);
+        return controller->axis_state(axis->joystick_axis_);
     };
 
-    JoystickID joystick_used = axis->joystick_source();
+    GameControllerID joystick_used = axis->joystick_source();
 
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
     if(axis->joystick_source() == ALL_JOYSTICKS) {
-        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
-            auto this_value = process_joystick((JoystickID) i);
-            if(std::abs(this_value) > std::abs(new_value)) {
+        for(uint8_t i = 0; i < controller_->game_controller_count(); ++i) {
+            auto this_value = process_joystick(controller_->game_controller(i)->id());
+            if(std::abs(this_value) >= std::abs(new_value)) {
                 new_value = this_value;
-                joystick_used = i;
+                joystick_used = controller_->game_controller(i)->id();
             }
         }
     } else {
@@ -365,7 +367,12 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
      * that if there is one. This currently will only work on the first joystick */
     auto linked_axis = controller_->linked_axis(joystick_used, axis->joystick_axis_);
     if(linked_axis != JOYSTICK_AXIS_INVALID) {
-        axis->linked_value_ = controller_->joystick_axis_state(joystick_used, linked_axis);
+        auto controller = controller_->game_controller_by_id(joystick_used);
+        if(controller) {
+            axis->linked_value_ = controller->axis_state(linked_axis);
+        } else {
+            axis->linked_value_ = 0;
+        }
     } else {
         axis->linked_value_ = 0;
     }
@@ -379,8 +386,9 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
 bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     float new_value = 0.0f;
 
-    auto process_joystick = [this, axis](JoystickID joystick_id) {
-        auto state = controller_->joystick_hat_state(joystick_id, axis->joystick_hat_);
+    auto process_joystick = [this, axis](GameControllerID joystick_id) {
+        auto controller = controller_->game_controller_by_id(joystick_id);
+        auto state = controller->hat_state(axis->joystick_hat_);
 
         if(axis->joystick_hat_axis_ == JOYSTICK_HAT_AXIS_X) {
             switch(state) {
@@ -411,8 +419,8 @@ bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
 
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
     if(axis->joystick_source() == ALL_JOYSTICKS) {
-        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
-            auto this_value = process_joystick((JoystickID) i);
+        for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
+            auto this_value = process_joystick((GameControllerID) i);
             if(std::abs(this_value) > std::abs(new_value)) {
                 new_value = this_value;
             }

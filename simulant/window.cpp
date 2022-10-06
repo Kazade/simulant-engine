@@ -84,7 +84,7 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
 
 void Window::create_defaults() {
     //This needs to happen after SDL or whatever is initialized
-    input_state_ = InputState::create();
+    input_state_ = InputState::create(this);
     input_manager_ = InputManager::create(input_state_.get());
 
     // Tell subclasses to initialize input devices

@@ -19,7 +19,7 @@ private:
         auto particle = particles;
         for(auto i = 0u; i < particle_count; ++i) {
             float e = (particle->lifetime - particle->ttl);
-            float n = e / particle->lifetime;
+            float n = smlt::fast_divide(e, particle->lifetime);
             long unsigned int colour = (size * n);
 
             particle->colour = colours_[colour];

@@ -174,7 +174,7 @@ public:
       Rig* const rig,
       VertexData* const out,
       Debug* const debug=nullptr
-    ) {
+    ) override {
         _S_UNUSED(rig);
         _S_UNUSED(debug);  // We don't have any debugging for MD2 models. Maybe normals?
 

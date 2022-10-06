@@ -72,9 +72,9 @@ void ParticleSystem::calc_aabb() {
             // If this is not a point emitter, then calculate the max/min possible for
             // each emitter using their dimensions.
 
-            float hw = (emitter->dimensions.x / 2.0f);
-            float hh = (emitter->dimensions.y / 2.0f);
-            float hd = (emitter->dimensions.z / 2.0f);
+            float hw = smlt::fast_divide(emitter->dimensions.x, 2.0f);
+            float hh = smlt::fast_divide(emitter->dimensions.y, 2.0f);
+            float hd = smlt::fast_divide(emitter->dimensions.z, 2.0f);
 
             float minx = pos.x - hw;
             float maxx = pos.x + hw;
