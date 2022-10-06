@@ -430,7 +430,7 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
         info.axis_count = SDL_JoystickNumAxes(joystick);
         info.button_count = SDL_JoystickNumButtons(joystick);
         info.hat_count = SDL_JoystickNumHats(joystick);
-        info.has_rumble = SDL_JoystickHasRumble(joystick);
+        info.has_rumble = SDL_JoystickIsHaptic(joystick);
 
         joypads.push_back(info);        
     }
