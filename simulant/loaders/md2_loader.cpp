@@ -273,38 +273,45 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     data_->seekg(header.offset_skins, std::ios::beg);
     data_->read((char*) &skins[0], sizeof(MD2Skin) * header.num_skins);
 
-    MD2Skin* skin = &skins[0];
+    for(int i = 0; i < header.num_skins; ++i) {
+        MD2Skin* skin = &skins[i];
+        // Only load the first skin
+        std::string skin_name(skin->name);
+        skin_name = kfs::path::norm_path(skin->name);
 
-    // Only load the first skin
-    std::string skin_name(skin->name);
-    skin_name = kfs::path::norm_path(skin->name);
+        S_DEBUG("Loading skin: {0}", skin_name);
 
-    std::vector<std::string> possible_paths = {
-        kfs::path::join(kfs::path::dir_name(filename_.str()), kfs::path::split(skin_name).second),
-        skin_name
-    };
+        std::vector<std::string> possible_paths = {
+            kfs::path::join(kfs::path::dir_name(filename_.str()), kfs::path::split(skin_name).second),
+            skin_name
+        };
 
-    smlt::TextureID tex_id;
-    bool found = false;
-    for(auto& texture_path: possible_paths) {
-        auto p = vfs->locate_file(texture_path);
-        if(p.has_value()) {
-            tex_id = asset_manager->new_texture_from_file(p.value());
-            found = true;
-            break;
+        smlt::TextureID tex_id;
+        bool found = false;
+        for(auto& texture_path: possible_paths) {
+            auto p = vfs->locate_file(texture_path);
+            if(p.has_value()) {
+                tex_id = asset_manager->new_texture_from_file(p.value());
+                found = true;
+                break;
+            } else {
+                S_DEBUG("MD2 skin not found at: {0}", texture_path);
+            }
+        }
+
+        if(!found) {
+            S_WARN("Unable to locate MD2 skin: {0}", skin_name);
+        }
+
+        auto material = asset_manager->clone_default_material();
+        material->set_diffuse_map(asset_manager->texture(tex_id));
+
+        if(i == 0) {
+            submesh->set_material(material);
         } else {
-            S_DEBUG("MD2 skin not found at: {0}", texture_path);
+            submesh->set_material_at_slot((MaterialSlot) (uint8_t) (MATERIAL_SLOT0 + i), material);
         }
     }
-
-    if(!found) {
-        S_WARN("Unable to locate MD2 skin: {0}", skin_name);
-    }
-
-    auto material = asset_manager->clone_default_material();
-    material->set_diffuse_map(asset_manager->texture(tex_id));
-
-    submesh->set_material(material);
 
     // =========== TEXTURE COORDS =============
     std::vector<MD2TexCoord> texture_coordinates(header.num_st);
