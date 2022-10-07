@@ -4,7 +4,7 @@
 #include <functional>
 #include <map>
 #include <unordered_map>
-
+#include "../generic/property.h"
 #include "../generic/managed.h"
 #include "../keycodes.h"
 
@@ -61,8 +61,11 @@ private:
     bool _update_joystick_hat_axis(InputAxis* axis, float dt);
 
     void _process_mouse(int8_t id, int8_t pbtn, int8_t nbtn, bool* positive_pressed, bool* negative_pressed);
-    void _process_joystick(const struct tag_GameControllerID& id, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed);
+    void _process_joystick(int8_t id, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed);
     void _process_keyboard(int8_t id, KeyboardCode pbtn, KeyboardCode nbtn, bool *positive_pressed, bool *negative_pressed);
+
+public:
+    S_DEFINE_PROPERTY(state, &InputManager::controller_);
 };
 
 }

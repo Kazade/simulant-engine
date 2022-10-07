@@ -58,7 +58,7 @@ typedef int8_t JoystickHatID;
 
 static const KeyboardID ALL_KEYBOARDS = -1;
 static const MouseID ALL_MICE = -1;
-static const GameControllerID ALL_JOYSTICKS = GameControllerID(-1);
+static const uint8_t ALL_JOYSTICKS = -1;
 
 
 struct JoystickDeviceInfo {
