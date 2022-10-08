@@ -198,13 +198,17 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
             auto controller = state->game_controller(GameControllerIndex(i));
-            _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
+            if(controller) {
+                _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
+            }
         }
     } else {
         // Otherwise just check the one they asked for
         GameControllerIndex id = axis->joystick_source();
         auto controller = state->game_controller(id);
-        _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
+        if(controller) {
+            _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
+        }
     }
 
     // If either positive or negative were pressed, adjust the value

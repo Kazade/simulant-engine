@@ -52,8 +52,9 @@ public:
         controller_->_update_game_controllers(game_controllers);
 
         assert_equal(controller_->game_controller_count(), 1u);
-        assert_equal(controller_->game_controller(GameControllerIndex(0))->id().to_int8_t(), 1);
+        assert_is_not_null(controller_->game_controller(GameControllerIndex(0)));
         assert_is_null(controller_->game_controller(GameControllerIndex(1)));
+        assert_equal(controller_->game_controller(GameControllerIndex(0))->id().to_int8_t(), 1);
     }
 
     void test_mouse_hotplugging() {
