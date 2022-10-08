@@ -152,11 +152,17 @@ const GameController *InputState::game_controller_by_id(GameControllerID id) con
 }
 
 GameController *InputState::game_controller(GameControllerIndex index) {
-    if(index.to_int8_t() >= (int8_t) game_controller_count()) {
+    auto idx = index.to_int8_t();
+    if(idx >= (int8_t) game_controller_count()) {
         return nullptr;
     }
 
-    return &joysticks_[index.to_int8_t()];
+    if(idx < 0) {
+        S_ERROR("Received negative index to game_controller()");
+        return nullptr;
+    }
+
+    return &joysticks_[idx];
 }
 
 float InputState::joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const {
