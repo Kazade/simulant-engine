@@ -411,7 +411,7 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
 }
 
 void SDL2Window::initialize_input_controller(InputState &controller) {
-    std::vector<JoystickDeviceInfo> joypads;
+    std::vector<GameControllerInfo> joypads;
 
     MouseDeviceInfo mouse;
     mouse.id = 0;
@@ -424,9 +424,9 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
         SDL_Joystick* joystick = SDL_JoystickOpen(i);
         open_joysticks_.push_back(joystick);
 
-        JoystickDeviceInfo info;
+        GameControllerInfo info;
         info.id = GameControllerID(SDL_JoystickInstanceID(joystick));
-        info.name = SDL_JoystickName(joystick);
+        std::strncpy(info.name, SDL_JoystickName(joystick), sizeof(info.name));
         info.axis_count = SDL_JoystickNumAxes(joystick);
         info.button_count = SDL_JoystickNumButtons(joystick);
         info.hat_count = SDL_JoystickNumHats(joystick);
@@ -437,7 +437,7 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
 
     controller._update_keyboard_devices({keyboard});
     controller._update_mouse_devices({mouse});
-    controller._update_joystick_devices(joypads);
+    controller._update_game_controllers(joypads);
 }
 
 void SDL2Window::initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale) {

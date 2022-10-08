@@ -171,8 +171,11 @@ bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     return negative_pressed || positive_pressed;
 }
 
-void InputManager::_process_joystick(int8_t id, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed) {
-    auto controller = controller_->game_controller(id);
+void InputManager::_process_game_controller(GameController* controller, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed) {
+    if(!controller) {
+        return;
+    }
+
     if(pbtn != -1 && controller->button_state(pbtn)) {
         *positive_pressed = true;
     }
@@ -194,12 +197,14 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     // If the user requested input from all game controllers, do that
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
-            _process_joystick(i, pbtn, nbtn, &positive_pressed, &negative_pressed);
+            auto controller = state->game_controller(GameControllerIndex(i));
+            _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
         }
     } else {
         // Otherwise just check the one they asked for
-        uint8_t id = axis->joystick_source();
-        _process_joystick(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
+        GameControllerIndex id = axis->joystick_source();
+        auto controller = state->game_controller(id);
+        _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
     }
 
     // If either positive or negative were pressed, adjust the value
@@ -340,20 +345,25 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
 
     float new_value = 0.0f;
 
-    auto process_joystick = [this, axis](uint8_t joystick_id) {
+    auto process_joystick = [this, axis](GameControllerIndex joystick_id) -> float {
         auto controller = controller_->game_controller(joystick_id);
+        if(!controller) {
+            return 0.0f;
+        }
+
         return controller->axis_state(axis->joystick_axis_);
     };
 
-    uint8_t joystick_used = axis->joystick_source();
+    GameControllerIndex joystick_used = axis->joystick_source();
 
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(uint8_t i = 0; i < controller_->game_controller_count(); ++i) {
-            auto this_value = process_joystick(i);
+            GameControllerIndex index(i);
+            auto this_value = process_joystick(index);
             if(std::abs(this_value) >= std::abs(new_value)) {
                 new_value = this_value;
-                joystick_used = i;
+                joystick_used = index;
             }
         }
     } else {
@@ -385,8 +395,12 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
 bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     float new_value = 0.0f;
 
-    auto process_joystick = [this, axis](uint8_t joystick_id) {
+    auto process_joystick = [this, axis](GameControllerIndex joystick_id) -> float {
         auto controller = controller_->game_controller(joystick_id);
+        if(!controller) {
+            return 0.0f;
+        }
+
         auto state = controller->hat_state(axis->joystick_hat_);
 
         if(axis->joystick_hat_axis_ == JOYSTICK_HAT_AXIS_X) {
@@ -419,7 +433,7 @@ bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
     if(axis->joystick_source() == ALL_JOYSTICKS) {
         for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
-            auto this_value = process_joystick(i);
+            auto this_value = process_joystick(GameControllerIndex(i));
             if(std::abs(this_value) > std::abs(new_value)) {
                 new_value = this_value;
             }
