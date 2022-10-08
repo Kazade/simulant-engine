@@ -88,7 +88,7 @@ private:
     MouseButtonID positive_mouse_button_ = -1;
     MouseButtonID negative_mouse_button_ = -1;
 
-    GameControllerIndex joystick_source_ = ALL_JOYSTICKS;
+    GameControllerIndex joystick_source_ = ALL_GAME_CONTROLLERS;
     JoystickButton positive_joystick_button_ = JOYSTICK_BUTTON_INVALID;
     JoystickButton negative_joystick_button_ = JOYSTICK_BUTTON_INVALID;
 

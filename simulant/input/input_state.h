@@ -64,7 +64,7 @@ typedef int8_t JoystickHatID;
 
 static const KeyboardID ALL_KEYBOARDS = -1;
 static const MouseID ALL_MICE = -1;
-static const GameControllerIndex ALL_JOYSTICKS = GameControllerIndex(-1);
+static const GameControllerIndex ALL_GAME_CONTROLLERS = GameControllerIndex(-1);
 
 
 struct GameControllerInfo {

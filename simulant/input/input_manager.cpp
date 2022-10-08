@@ -195,7 +195,7 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     bool negative_pressed = false;
 
     // If the user requested input from all game controllers, do that
-    if(axis->joystick_source() == ALL_JOYSTICKS) {
+    if(axis->joystick_source() == ALL_GAME_CONTROLLERS) {
         for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
             auto controller = state->game_controller(GameControllerIndex(i));
             if(controller) {
@@ -361,7 +361,7 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     GameControllerIndex joystick_used = axis->joystick_source();
 
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
-    if(axis->joystick_source() == ALL_JOYSTICKS) {
+    if(axis->joystick_source() == ALL_GAME_CONTROLLERS) {
         for(uint8_t i = 0; i < controller_->game_controller_count(); ++i) {
             GameControllerIndex index(i);
             auto this_value = process_joystick(index);
@@ -375,19 +375,29 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     }
 
     axis->value_ = new_value;
+    axis->linked_value_ = 0.0f;
 
     /* FIXME: Code some API to find the "linked_axis" for an axis and use
      * that if there is one. This currently will only work on the first joystick */
-    auto linked_axis = controller_->linked_axis(GameControllerID(), axis->joystick_axis_);
-    if(linked_axis != JOYSTICK_AXIS_INVALID) {
-        auto controller = controller_->game_controller(joystick_used);
-        if(controller) {
-            axis->linked_value_ = controller->axis_state(linked_axis);
+    auto linked_axis = controller_->linked_axis(GameControllerID(), axis->joystick_axis_);    
+    if(linked_axis != JOYSTICK_AXIS_INVALID) {        
+        if(joystick_used == ALL_GAME_CONTROLLERS) {
+            /* Use the greatest value for the linked axis */
+            for(uint8_t i = 0; i < controller_->game_controller_count(); ++i) {
+                auto controller = controller_->game_controller(joystick_used);
+                if(controller) {
+                    auto value = controller->axis_state(linked_axis);
+                    if(std::abs(value) >= std::abs(axis->linked_value_)) {
+                        axis->linked_value_ = value;
+                    }
+                }
+            }
         } else {
-            axis->linked_value_ = 0;
+            auto controller = controller_->game_controller(joystick_used);
+            if(controller) {
+                axis->linked_value_ = controller->axis_state(linked_axis);
+            }
         }
-    } else {
-        axis->linked_value_ = 0;
     }
 
     /* Anything in the deadzone returns 0.0f exactly */
@@ -435,7 +445,7 @@ bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     };
 
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
-    if(axis->joystick_source() == ALL_JOYSTICKS) {
+    if(axis->joystick_source() == ALL_GAME_CONTROLLERS) {
         for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
             auto this_value = process_joystick(GameControllerIndex(i));
             if(std::abs(this_value) > std::abs(new_value)) {
