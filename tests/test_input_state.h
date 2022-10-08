@@ -38,20 +38,23 @@ public:
         assert_equal(controller_->keyboard_count(), 1u);
     }
 
-    void test_joystick_hotplugging() {
-        std::vector<JoystickDeviceInfo> joysticks(2);
-        joysticks[0].id = GameControllerID(0);
-        joysticks[1].id = GameControllerID(1);
+    void test_game_controller_hotplugging() {
+        std::vector<GameControllerInfo> game_controllers(2);
+        game_controllers[0].id = GameControllerID(0);
+        game_controllers[1].id = GameControllerID(1);
 
-        controller_->_update_joystick_devices(joysticks);
+        controller_->_update_game_controllers(game_controllers);
 
         assert_equal(controller_->game_controller_count(), 2u);
 
-        joysticks.resize(1);
+        game_controllers = {game_controllers[1]};
 
-        controller_->_update_joystick_devices(joysticks);
+        controller_->_update_game_controllers(game_controllers);
 
         assert_equal(controller_->game_controller_count(), 1u);
+        assert_is_not_null(controller_->game_controller(GameControllerIndex(0)));
+        assert_is_null(controller_->game_controller(GameControllerIndex(1)));
+        assert_equal(controller_->game_controller(GameControllerIndex(0))->id().to_int8_t(), 1);
     }
 
     void test_mouse_hotplugging() {
@@ -75,11 +78,11 @@ public:
     }
 
     void test_joystick_axis_input() {
-        std::vector<JoystickDeviceInfo> joysticks(1);
+        std::vector<GameControllerInfo> joysticks(1);
         joysticks[0].id = GameControllerID(0);
         joysticks[0].axis_count = 2;
 
-        controller_->_update_joystick_devices(joysticks);
+        controller_->_update_game_controllers(joysticks);
 
         controller_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 1.0f);
 
@@ -91,11 +94,11 @@ public:
     }
 
     void test_joystick_button_input() {
-        std::vector<JoystickDeviceInfo> joysticks(1);
+        std::vector<GameControllerInfo> joysticks(1);
         joysticks[0].id = GameControllerID(0);
         joysticks[0].button_count = 2;
 
-        controller_->_update_joystick_devices(joysticks);
+        controller_->_update_game_controllers(joysticks);
 
         controller_->_handle_joystick_button_down(GameControllerID(0), JOYSTICK_BUTTON_A);
 

@@ -151,12 +151,18 @@ const GameController *InputState::game_controller_by_id(GameControllerID id) con
     return nullptr;
 }
 
-GameController *InputState::game_controller(uint8_t index) {
-    if(index >= game_controller_count()) {
+GameController *InputState::game_controller(GameControllerIndex index) {
+    auto idx = index.to_int8_t();
+    if(idx >= (int8_t) game_controller_count()) {
         return nullptr;
     }
 
-    return &joysticks_[index];
+    if(idx < 0) {
+        S_ERROR("Received negative index to game_controller()");
+        return nullptr;
+    }
+
+    return &joysticks_[idx];
 }
 
 float InputState::joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const {
@@ -192,7 +198,7 @@ void InputState::update(float dt) {
     _S_UNUSED(dt);
 }
 
-void InputState::_update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info) {
+void InputState::_update_game_controllers(const std::vector<GameControllerInfo>& device_info) {
     if(device_info.size() > joystick_count_) {
         S_INFO("{0} controllers connected", device_info.size() - joystick_count_);
     } else if(device_info.size() < joystick_count_) {

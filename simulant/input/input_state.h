@@ -51,19 +51,25 @@ typedef int8_t MouseID;
     } (name)
 
 
+/** GameControllerID represents the unique id of a *detected* controller
+ *  it is *not* a zero-based index into the detected controller list */
 STRONG_TYPEDEF(GameControllerID, int8_t);
+
+/** GameControllerIndex is an index into the detected controller list, if
+ *  a controller is unplugged, the IDs of all other controllers may change */
+STRONG_TYPEDEF(GameControllerIndex, int8_t);
 
 typedef int8_t MouseButtonID;
 typedef int8_t JoystickHatID;
 
 static const KeyboardID ALL_KEYBOARDS = -1;
 static const MouseID ALL_MICE = -1;
-static const uint8_t ALL_JOYSTICKS = -1;
+static const GameControllerIndex ALL_GAME_CONTROLLERS = GameControllerIndex(-1);
 
 
-struct JoystickDeviceInfo {
+struct GameControllerInfo {
     GameControllerID id;
-    std::string name;
+    char name[32];
     uint8_t button_count;
     uint8_t axis_count;
     uint8_t hat_count;
@@ -225,7 +231,7 @@ public:
         keyboard_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
     }
 
-    void _update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info);
+    void _update_game_controllers(const std::vector<GameControllerInfo>& device_info);
 
     void _handle_key_down(KeyboardID keyboard_id, KeyboardCode code);
     void _handle_key_up(KeyboardID keyboard_id, KeyboardCode code);
@@ -251,7 +257,7 @@ public:
 
     GameController* game_controller_by_id(GameControllerID id);
     const GameController* game_controller_by_id(GameControllerID id) const;
-    GameController* game_controller(uint8_t id);
+    GameController* game_controller(GameControllerIndex id);
 
     std::size_t game_controller_count() const { return joystick_count_; }
     std::size_t keyboard_count() const { return keyboard_count_; }

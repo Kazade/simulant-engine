@@ -52,8 +52,8 @@ public:
     void set_negative_joystick_button(JoystickButton button);
     JoystickButton positive_joystick_button() const { return positive_joystick_button_; }
     JoystickButton negative_joystick_button() const { return negative_joystick_button_; }
-    void set_joystick_source(uint8_t joystick);
-    uint8_t joystick_source() const { return joystick_source_; }
+    void set_joystick_source(GameControllerIndex joystick);
+    GameControllerIndex joystick_source() const { return joystick_source_; }
 
     void set_mouse_axis(MouseAxis axis);
     void set_joystick_axis(JoystickAxis axis);
@@ -88,7 +88,7 @@ private:
     MouseButtonID positive_mouse_button_ = -1;
     MouseButtonID negative_mouse_button_ = -1;
 
-    int8_t joystick_source_ = ALL_JOYSTICKS;
+    GameControllerIndex joystick_source_ = ALL_GAME_CONTROLLERS;
     JoystickButton positive_joystick_button_ = JOYSTICK_BUTTON_INVALID;
     JoystickButton negative_joystick_button_ = JOYSTICK_BUTTON_INVALID;
 
