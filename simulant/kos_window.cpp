@@ -282,7 +282,7 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver(const std::string& f
 }
 
 void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
-    std::vector<JoystickDeviceInfo> joypads;
+    std::vector<GameControllerInfo> joypads;
 
     auto mouse_dev = maple_enum_type(0, MAPLE_FUNC_MOUSE);
     if(mouse_dev) {
@@ -304,9 +304,9 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
     for(int8_t i = 0; i < 4; ++i) {
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
-            JoystickDeviceInfo info;
+            GameControllerInfo info;
             info.id = GameControllerID(i);
-            info.name = device->info.product_name;
+            std::strncpy(info.name, device->info.product_name, sizeof(info.name));
             info.button_count = 5;
             info.axis_count = 4; //2 triggers, 2 for analog
             info.hat_count = 1; // 1 D-pad
@@ -316,7 +316,7 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
         }
     }
 
-    controller._update_joystick_devices(joypads);
+    controller._update_game_controllers(joypads);
 }
 
 void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_stride) {
