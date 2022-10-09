@@ -65,13 +65,6 @@ static std::string vmu_port(int number) {
 }
 
 void KOSWindow::probe_vmus() {
-    time_since_last_vmu_check_ += application->time_keeper->delta_time();
-    if(time_since_last_vmu_check_ >= 0.5f) {
-        time_since_last_vmu_check_ = 0.0f;
-    } else {
-        return;
-    }
-
     const static int MAX_VMUS = 8;  // Four ports, two slots in each
 
     thread::Lock<thread::Mutex> g(vmu_mutex_);
@@ -127,7 +120,16 @@ static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button)
 }
 
 void KOSWindow::check_events() {
-    probe_vmus();
+    time_since_last_rumble_ += application->time_keeper->delta_time();
+
+    /* Regularly recheck the controller state */
+    time_since_last_controller_update_ += application->time_keeper->delta_time();
+    if(time_since_last_controller_update_ > 0.5f) {
+        time_since_last_controller_update_ = 0.0f;
+
+        // Rescan for devices in case a controller has been added or removed
+        initialize_input_controller(*this->_input_state());
+    }
 
     const int8_t MAX_CONTROLLERS = 4;
     const static uint16_t CONTROLLER_BUTTONS [] = {
@@ -149,9 +151,6 @@ void KOSWindow::check_events() {
     };
 
     static ControllerState previous[MAX_CONTROLLERS];
-
-    // Rescan for devices in case a controller has been added or removed
-    initialize_input_controller(*this->_input_state());
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
@@ -300,23 +299,44 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
         controller._update_keyboard_devices({keyboard});
     }
 
+    const int MAX_DEVICES_PER_PORT = 6;
+
+    S_DEBUG("{0} devices connected", maple_enum_count());
+
     auto controller_count = 0u;
     for(int8_t i = 0; i < 4; ++i) {
-        auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
-        if(device) {
+        auto device = maple_enum_dev(i, 0);
+        if(device && (device->info.functions & MAPLE_FUNC_CONTROLLER)) {
+            S_DEBUG("Found controller at port {0} unit {1}", device->port, device->unit);
             GameControllerInfo info;
-            info.id = GameControllerID(i);
+            info.id = GameControllerID(device->port);
             std::strncpy(info.name, device->info.product_name, sizeof(info.name));
             info.button_count = 5;
             info.axis_count = 4; //2 triggers, 2 for analog
-            info.hat_count = 1; // 1 D-pad
+            info.hat_count = 1; // 1 D-pad            
+            info.has_rumble = false;
+
+            for(int j = 1; j < MAX_DEVICES_PER_PORT; ++j) {
+                auto purupuru = maple_enum_dev(device->port, j);
+                if(purupuru && (purupuru->info.functions & MAPLE_FUNC_PURUPURU)) {
+                    info.has_rumble = true;
+                    /* Store the unit in the platform data */
+                    info.platform_data.b[0] = purupuru->unit;
+                    S_DEBUG("Found rumble at port {0} unit {1}", purupuru->port, purupuru->unit);
+                    break;
+                }
+            }
+
             joypads.push_back(info);
 
             controller_count++;
         }
     }
 
+    S_DEBUG("Calling controller update with {0} controllers", controller_count);
     controller._update_game_controllers(joypads);
+
+    probe_vmus();
 }
 
 void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_stride) {
@@ -342,32 +362,53 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_strid
     }
 }
 
-void KOSWindow::game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) {
-    _S_UNUSED(high_hz);
+void KOSWindow::game_controller_start_rumble(GameController* controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {
+    _S_UNUSED(high_rumble);
 
-    auto device = maple_enum_dev(id.to_int8_t(), MAPLE_FUNC_CONTROLLER);
-    if(device && device->info.functions & MAPLE_FUNC_PURUPURU) {
-        int intensity = (float(low_hz) / 65535.0f) * 7;
+    /* The Maple bus struggles if we spam the rumble pak, so this
+     * just throttles it back to avoid that */
+    if(time_since_last_rumble_ <= 0.35f) {
+        return;
+    }
 
-        int length = std::min(duration.to_float() * 0.25f, 255.0f);
+    const float M = 4;
 
-        purupuru_effect_t effect;
-        effect.duration = length;
-        effect.effect1 = PURUPURU_EFFECT1_INTENSITY(intensity) | PURUPURU_EFFECT1_PULSE;
-        effect.special = PURUPURU_SPECIAL_MOTOR1;
-        purupuru_rumble(device, &effect);
+    if(controller && controller->has_rumble_effect()) {
+        time_since_last_rumble_ = 0.0f;
+
+        const uint8_t* pdata = controller->platform_data();
+        auto purupuru_unit = pdata[0];
+
+        int intensity = smlt::clamp(low_rumble * 7, 0, 7);
+        uint8_t length = std::max(std::min(duration.to_float() * M, 255.0f), 4.0f);
+
+        auto device = maple_enum_dev(controller->id().to_int8_t(), purupuru_unit);
+        if(device && (device->info.functions & MAPLE_FUNC_PURUPURU)) {
+            purupuru_effect_t effect;
+            effect.duration = length;
+            effect.effect1 = PURUPURU_EFFECT1_INTENSITY(intensity) | PURUPURU_EFFECT1_PULSE;
+            effect.special = PURUPURU_SPECIAL_MOTOR1;
+            purupuru_rumble(device, &effect);
+            S_DEBUG("PURUPURU: {0} {1} -> {2}", device->port, device->unit, intensity);
+        } else {
+            S_WARN("Failed to start rumble - couldn't find PURUPURU");
+        }
     }
 }
 
-void KOSWindow::game_controller_stop_rumble(GameControllerID id) {
-    auto device = maple_enum_dev(id.to_int8_t(), MAPLE_FUNC_CONTROLLER);
-    if(device && device->info.functions & MAPLE_FUNC_PURUPURU) {
+void KOSWindow::game_controller_stop_rumble(GameController *controller) {
+    if(controller && controller->has_rumble_effect()) {
+        const uint8_t* pdata = controller->platform_data();
+        auto purupuru_unit = pdata[0];
+        auto device = maple_enum_dev(controller->id().to_int8_t(), purupuru_unit);
+
         purupuru_effect_t effect;
         effect.duration = 0x00;
         effect.effect2 = 0x00;
         effect.effect1 = 0x00;
         effect.special = PURUPURU_SPECIAL_MOTOR1;
         purupuru_rumble(device, &effect);
+        S_DEBUG("Stopped PURPURU");
     }
 }
 

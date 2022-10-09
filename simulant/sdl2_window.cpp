@@ -546,12 +546,12 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data, int row_stri
     SDL_GL_MakeCurrent(screen_, current);
 }
 
-void SDL2Window::game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const Seconds &duration) {
-    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(id.to_int8_t()), low_hz, high_hz, duration.to_float());
+void SDL2Window::game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const Seconds &duration) {
+    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(controller->id().to_int8_t()), low_rumble * float(0xFFFF), high_rumble * float(0xFFFF), duration.to_float());
 }
 
-void SDL2Window::game_controller_stop_rumble(GameControllerID id) {
-    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(id.to_int8_t()), 0, 0, 0);
+void SDL2Window::game_controller_stop_rumble(GameController *controller) {
+    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(controller->id().to_int8_t()), 0, 0, 0);
 }
 
 

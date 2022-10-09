@@ -313,15 +313,15 @@ protected:
 
     InputState* _input_state() const { return input_state_.get(); }
 
-    virtual void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) {
-        _S_UNUSED(id);
-        _S_UNUSED(low_hz);
-        _S_UNUSED(high_hz);
+    virtual void game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {
+        _S_UNUSED(controller);
+        _S_UNUSED(low_rumble);
+        _S_UNUSED(high_rumble);
         _S_UNUSED(duration);
     }
 
-    virtual void game_controller_stop_rumble(GameControllerID id) {
-        _S_UNUSED(id);
+    virtual void game_controller_stop_rumble(GameController *controller) {
+        _S_UNUSED(controller);
     }
 
 public:
