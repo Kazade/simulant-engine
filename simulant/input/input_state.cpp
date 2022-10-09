@@ -199,6 +199,8 @@ void InputState::update(float dt) {
 }
 
 void InputState::_update_game_controllers(const std::vector<GameControllerInfo>& device_info) {
+    S_DEBUG("Updating controllers with new list of size: {0}", device_info.size());
+
     if(device_info.size() > joystick_count_) {
         S_INFO("{0} controllers connected", device_info.size() - joystick_count_);
     } else if(device_info.size() < joystick_count_) {
@@ -212,6 +214,7 @@ void InputState::_update_game_controllers(const std::vector<GameControllerInfo>&
         joysticks_[i].axis_count = device_info[i].axis_count;
         joysticks_[i].hat_count = device_info[i].hat_count;
         joysticks_[i].has_rumble_ = device_info[i].has_rumble;
+        joysticks_[i].platform_data_.i = device_info[i].platform_data.i;
     }
 }
 
@@ -226,17 +229,17 @@ bool GameController::has_rumble_effect() const {
     return has_rumble_;
 }
 
-bool GameController::start_rumble(uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) {    
+bool GameController::start_rumble(float low_rumble, float high_rumble, const smlt::Seconds& duration) {
     if(!has_rumble_) {
         return false;
     }
 
-    parent_->window_->game_controller_start_rumble(id_, low_hz, high_hz, duration);
+    parent_->window_->game_controller_start_rumble(this, low_rumble, high_rumble, duration);
     return true;
 }
 
 void GameController::stop_rumble() {
-    parent_->window_->game_controller_stop_rumble(id_);
+    parent_->window_->game_controller_stop_rumble(this);
 }
 
 bool GameController::button_state(JoystickButton button) const {

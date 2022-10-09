@@ -45,10 +45,11 @@ private:
     thread::Mutex vmu_mutex_;
     std::unordered_map<std::string, std::pair<int, int>> vmu_lookup_;
 
-    float time_since_last_vmu_check_ = 0.0f;
+    float time_since_last_controller_update_ = 0.0f;
+    float time_since_last_rumble_ = 0.25f;
 
-    virtual void game_controller_start_rumble(GameControllerID id, uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration) override;
-    virtual void game_controller_stop_rumble(GameControllerID id) override;
+    virtual void game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) override;
+    virtual void game_controller_stop_rumble(GameController *controller) override;
 };
 
 }

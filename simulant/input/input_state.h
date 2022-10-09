@@ -74,6 +74,12 @@ struct GameControllerInfo {
     uint8_t axis_count;
     uint8_t hat_count;
     bool has_rumble;
+
+    /* Space for each platform to store some limited data */
+    union {
+        uint32_t i;
+        uint8_t  b[4];
+    } platform_data;
 };
 
 struct KeyboardDeviceInfo {
@@ -182,13 +188,14 @@ public:
     }
 
     bool has_rumble_effect() const;
-    bool start_rumble(uint16_t low_hz, uint16_t high_hz, const smlt::Seconds& duration);
+    bool start_rumble(float low_rumble, float high_rumble, const smlt::Seconds& duration);
     void stop_rumble();
 
     bool button_state(JoystickButton button) const;
     float axis_state(JoystickAxis axis) const;
     HatPosition hat_state(JoystickHatID hat) const;
 
+    const uint8_t* platform_data() const { return &platform_data_.b[0]; }
 private:
     InputState* parent_ = nullptr;
     GameControllerID id_ = GameControllerID(-1);
@@ -198,6 +205,10 @@ private:
     uint8_t hat_count = 0;
 
     bool has_rumble_ = false;
+    union {
+        uint32_t i;
+        uint8_t  b[4];
+    } platform_data_;
 
     bool buttons[JOYSTICK_BUTTON_MAX] = {0};
     float axises[JOYSTICK_AXIS_MAX] = {0};
