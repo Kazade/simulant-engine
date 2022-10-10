@@ -38,6 +38,11 @@ public:
         window->each_screen([=](std::string, smlt::Screen* screen) {
             screen->render(&data[0]);
         });
+
+        auto controller = window->input->state->game_controller(smlt::GameControllerIndex(0));
+        if(controller) {
+            controller->start_rumble(0.75f, 0, smlt::Seconds(1.0f));
+        }
     }
 
 private:

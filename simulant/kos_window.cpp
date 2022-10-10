@@ -124,11 +124,12 @@ void KOSWindow::check_events() {
 
     /* Regularly recheck the controller state */
     time_since_last_controller_update_ += application->time_keeper->delta_time();
-    if(time_since_last_controller_update_ > 0.5f) {
+    if(time_since_last_controller_update_ > 1.0f) {
         time_since_last_controller_update_ = 0.0f;
 
         // Rescan for devices in case a controller has been added or removed
-        initialize_input_controller(*this->_input_state());
+        //initialize_input_controller(*this->_input_state());
+        probe_vmus();
     }
 
     const int8_t MAX_CONTROLLERS = 4;
@@ -335,8 +336,6 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
 
     S_DEBUG("Calling controller update with {0} controllers", controller_count);
     controller._update_game_controllers(joypads);
-
-    probe_vmus();
 }
 
 void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_stride) {
@@ -388,7 +387,7 @@ void KOSWindow::game_controller_start_rumble(GameController* controller, RangeVa
             effect.duration = length;
             effect.effect1 = PURUPURU_EFFECT1_INTENSITY(intensity) | PURUPURU_EFFECT1_PULSE;
             effect.special = PURUPURU_SPECIAL_MOTOR1;
-            purupuru_rumble(device, &effect);
+            while(purupuru_rumble(device, &effect) == MAPLE_EAGAIN) {}
             S_DEBUG("PURUPURU: {0} {1} -> {2}", device->port, device->unit, intensity);
         } else {
             S_WARN("Failed to start rumble - couldn't find PURUPURU");
