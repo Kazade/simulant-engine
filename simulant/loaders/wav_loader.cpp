@@ -156,6 +156,8 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::weak_ptr<Sound> wptr = sound->shared_from_this();
 
     sound->set_playing_sound_init_function([wptr](PlayingSound& source) {
+        source.set_stream_func(StreamFunc());
+
         struct SourcePlayState {
             int offset = 0;
 
