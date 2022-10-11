@@ -181,7 +181,18 @@ void Keyboard::activate() {
 
         if(!evt.cancelled) {
             if(c == KEYBOARD_CODE_CAPSLOCK) {
-                set_mode((mode_ == KEYBOARD_MODE_UPPERCASE) ? KEYBOARD_MODE_LOWERCASE : KEYBOARD_MODE_UPPERCASE);
+
+                /* If we generate the keyboard here, we end up using a bunch of memory because we haven't destroyed the
+                 * existing keyboard. So we clear, and then defer creating the new keyboard until after garbage collection
+                 * has run */
+                clear();
+
+                std::shared_ptr<sig::Connection> conn = std::make_shared<sig::connection>();
+                *conn = smlt::get_app()->signal_frame_started().connect([=]() {
+                    set_mode((mode_ == KEYBOARD_MODE_UPPERCASE) ? KEYBOARD_MODE_LOWERCASE : KEYBOARD_MODE_UPPERCASE);
+                    conn->disconnect();
+                });
+
             } else if(c == KEYBOARD_CODE_ESCAPE) {
                 signal_done_();
             } else if(target_) {
