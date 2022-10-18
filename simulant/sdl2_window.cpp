@@ -339,6 +339,10 @@ bool SDL2Window::_init_window() {
 
     int32_t flags = SDL_WINDOW_OPENGL;
 
+    if(is_fullscreen()) {
+        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    }
+
     screen_ = SDL_CreateWindow(
         "",
         SDL_WINDOWPOS_CENTERED,
@@ -352,9 +356,10 @@ bool SDL2Window::_init_window() {
         throw std::runtime_error("FATAL: Unable to create SDL window");
     }
 
-    if(is_fullscreen()) {
-        SDL_SetWindowFullscreen(screen_, flags | SDL_WINDOW_FULLSCREEN);
-    }
+    int w, h;
+    SDL_GetWindowSize(screen_, &w, &h);
+    set_width(w);
+    set_height(h);
 
     SDL_SetEventFilter(event_filter, this);
 

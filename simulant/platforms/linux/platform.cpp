@@ -14,6 +14,7 @@ Resolution LinuxPlatform::native_resolution() const {
 
     Resolution native;
     if(SDL_GetDesktopDisplayMode(0, &mode) == -1) {
+        printf("%s\n", SDL_GetError());
         S_WARN("Unable to get the current desktop display mode!!");
         S_WARN("{0}", SDL_GetError());
         S_WARN("Falling back to 1080p");
