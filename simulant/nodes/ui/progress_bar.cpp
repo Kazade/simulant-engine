@@ -80,10 +80,10 @@ Widget::WidgetBounds ProgressBar::calculate_foreground_size(const UIDim& content
     WidgetBounds result = Widget::calculate_foreground_size(content_dimensions);
 
     if(mode_ == PROGRESS_BAR_MODE_PULSE) {
-        result.min.x = pulse_position_ - (pulse_width_ / 2);
-        result.max.x = pulse_position_ + (pulse_width_ / 2);
+        result.min.x = Px(pulse_position_ - (pulse_width_ / 2));
+        result.max.x = Px(pulse_position_ + (pulse_width_ / 2));
     } else {
-        result.max.x = result.min.x + (float((result.max.x - result.min.x).value) * fraction_);
+        result.max.x = result.min.x + int(float((result.max.x - result.min.x).value) * fraction_);
     }
     return result;
 }

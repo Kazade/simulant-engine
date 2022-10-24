@@ -291,7 +291,7 @@ FontPtr UIManager::_load_or_get_font(
 
     Px size = sizec;
     if(size == DEFAULT_FONT_SIZE) {
-        size = get_app()->config->ui.font_size;
+        size = Px(get_app()->config->ui.font_size);
     }
 
     const std::string px_as_string = smlt::to_string(size.value);

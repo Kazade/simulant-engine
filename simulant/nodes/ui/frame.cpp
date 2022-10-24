@@ -38,7 +38,7 @@ void Frame::finalize_build() {
         Px height = (oh / 2);
 
         if(!text().empty()) {
-            height -= line_height().value;
+            height -= line_height();
             height -= padding().top;
         }
 
@@ -59,7 +59,7 @@ void Frame::finalize_build() {
         Px line_height_shift = (text_height_ - font_->size()) / 2;
         line_height_shift += padding().top;
 
-        Px shift =  (int16_t) ((oh.value * 0.5f) - line_height().value + (line_height_shift.value));
+        Px shift = Px((oh.value * 0.5f) - line_height().value + (line_height_shift.value));
 
         for(std::size_t i = 0; i < sm->vertex_range_count(); ++i) {
             auto& range = sm->vertex_ranges()[i];
@@ -136,7 +136,7 @@ Widget::WidgetBounds Frame::calculate_foreground_size(const UIDim& content_dimen
     WidgetBounds fg_size = calculate_background_size(content_dimensions);
     if(!text().empty()) {
         fg_size.min = fg_size.max;
-        fg_size.min.y -= line_height().value;
+        fg_size.min.y -= line_height();
         fg_size.min.x.value *= -1;
     } else {
         fg_size.min = UICoord();
@@ -150,7 +150,7 @@ UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
     _S_UNUSED(text_width);
     _S_UNUSED(text_height);
 
-    Px content_width = 0, content_height = 0;
+    Px content_width, content_height;
 
     for(auto& child: packed_children()) {
         auto child_width = child->outer_width();
@@ -166,14 +166,14 @@ UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
     }
 
     if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
-        content_height += (space_between() * (children_.size() - 1));
+        content_height += (space_between() * int(children_.size() - 1));
     } else {
-        content_width += (space_between() * (children_.size() - 1));
+        content_width += (space_between() * int(children_.size() - 1));
     }
 
     /* Titlebar */
     if(!text().empty()) {
-        content_height += line_height().value;
+        content_height += line_height();
     }
 
     auto mode = resize_mode();

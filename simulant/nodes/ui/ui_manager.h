@@ -61,14 +61,14 @@ public:
 
     Button* new_widget_as_button(
         const unicode& text,
-        Px width=-1, Px height=-1,
+        Px width=Px(-1), Px height=Px(-1),
         std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>()
     );
 
-    Label* new_widget_as_label(const unicode& text, Px width=-1, Px height=-1);
+    Label* new_widget_as_label(const unicode& text, Px width=Px(-1), Px height=Px(-1));
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TexturePtr& texture);
-    Frame* new_widget_as_frame(const unicode& title, const Px& width=-1, const Px& height=-1);
+    Frame* new_widget_as_frame(const unicode& title, const Px& width=Px(-1), const Px& height=Px(-1));
     Keyboard* new_widget_as_keyboard(const KeyboardLayout& layout=KEYBOARD_LAYOUT_NUMERICAL);
 
     Widget* widget(WidgetID widget_id);

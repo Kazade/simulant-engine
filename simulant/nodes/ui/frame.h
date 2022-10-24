@@ -50,7 +50,7 @@ public:
 private:
     std::vector<smlt::ui::Widget*> children_;
     LayoutDirection direction_ = LAYOUT_DIRECTION_TOP_TO_BOTTOM;
-    Px space_between_ = 0;
+    Px space_between_;
 
     virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
     virtual UIDim calculate_content_dimensions(Px text_width, Px text_height) override;

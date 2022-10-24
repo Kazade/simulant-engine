@@ -38,8 +38,29 @@ struct Px {
     int16_t value = 0;
 
     Px() = default;
+
+    /* Implicitly convert integer types */
     Px(const int& rhs):
         value(rhs) {}
+
+    Px(const unsigned int& rhs):
+        value(rhs) {}
+
+    Px(const uint16_t& rhs):
+        value(rhs) {}
+
+    /* Don't convert float types implicitly */
+    explicit Px(const float& rhs):
+        value(rhs) {}
+
+    explicit operator bool() const {
+        return value != 0;
+    }
+
+    Px& operator=(const int rhs) {
+        value = rhs;
+        return *this;
+    }
 
     Px operator-() const {
         return Px(-value);
@@ -47,6 +68,10 @@ struct Px {
 
     bool operator>=(const Px& rhs) const {
         return value >= rhs.value;
+    }
+
+    bool operator>(const Px& rhs) const {
+        return value > rhs.value;
     }
 
     bool operator<(const Px& rhs) const {
@@ -67,6 +92,30 @@ struct Px {
 
     bool operator!=(const Px& rhs) const {
         return !((*this) == rhs);
+    }
+
+    bool operator<(const int rhs) const {
+        return value < rhs;
+    }
+
+    Px operator*(const int rhs) const {
+        return Px(value * rhs);
+    }
+
+    Px operator/(const int rhs) const {
+        return Px(value / rhs);
+    }
+
+    Px operator+(const int rhs) const {
+        return Px(value + rhs);
+    }
+
+    Px operator+(const uint16_t rhs) const {
+        return Px(value + rhs);
+    }
+
+    Px operator-(const uint16_t rhs) const {
+        return Px(value - rhs);
     }
 
     Px& operator+=(const Px& rhs) {
@@ -103,6 +152,18 @@ struct Px {
     }
 };
 
+inline bool operator<(const int& lhs, const Px& rhs) {
+    return lhs < rhs.value;
+}
+
+inline Px operator+(const int& lhs, const Px& rhs) {
+    return Px(lhs + rhs.value);
+}
+
+inline Px operator-(const int& lhs, const Px& rhs) {
+    return Px(lhs - rhs.value);
+}
+
 struct UICoord {
     UICoord():
         x(0), y(0) {}
@@ -118,8 +179,8 @@ struct UICoord {
 };
 
 struct UIDim {
-    Px width = 0;
-    Px height = 0;
+    Px width = Px(0);
+    Px height = Px(0);
 
     UIDim() = default;
     UIDim(Px width, Px height):
@@ -175,7 +236,7 @@ struct UIConfig {
     static const Colour DODGER_BLUE;
 
     std::string font_family_ = "";  /* Use default */
-    Px font_size_ = 0; /* Use default */
+    Px font_size_ = Px(0); /* Use default */
 
     Rem line_height_ = Rem(1.5f);
 
@@ -195,23 +256,23 @@ struct UIConfig {
     uint16_t button_height_ = 36;
     uint16_t button_width_ = 0; // Fit content
 
-    UInt4 label_padding_ = { 5, 5, 5, 5 };
+    UInt4 label_padding_ = { Px(4), Px(4), Px(4), Px(4) };
     PackedColour4444 label_background_colour_ = Colour::NONE;
     PackedColour4444 label_foreground_colour_ = Colour::NONE;
     PackedColour4444 label_border_colour_ = Colour::NONE;
     PackedColour4444 label_text_colour_ = text_colour_;
 
-    UInt4 button_padding_ = { 30, 30, 20, 20 };
+    UInt4 button_padding_ = { Px(30), Px(30), Px(20), Px(20) };
     PackedColour4444 button_background_colour_ = highlight_colour_;
     PackedColour4444 button_foreground_colour_ = Colour::NONE;
     PackedColour4444 button_text_colour_ = text_colour_;
     PackedColour4444 button_border_colour_ = Colour::NONE;
 
-    Px button_border_width_ = 0;
-    Px button_border_radius_ = 3;
+    Px button_border_width_ = Px(0);
+    Px button_border_radius_ = Px(4);
 
-    UInt4 image_padding_ = {0, 0, 0, 0};
-    Px image_border_width_ = 0;
+    UInt4 image_padding_ = {Px(), Px(), Px(), Px()};
+    Px image_border_width_ = Px(0);
     PackedColour4444 image_background_colour_ = smlt::Colour::WHITE;
     PackedColour4444 image_foreground_colour_ = smlt::Colour::NONE;
     PackedColour4444 image_text_colour_ = smlt::Colour::NONE;
@@ -220,14 +281,14 @@ struct UIConfig {
     PackedColour4444 progress_bar_background_colour_ = background_colour_;
     PackedColour4444 progress_bar_border_colour_ = foreground_colour_;
     PackedColour4444 progress_bar_text_colour_ = text_colour_;
-    Px progress_bar_border_width_ = 2;
-    Px progress_bar_width_ = 100;
+    Px progress_bar_border_width_ = Px(2);
+    Px progress_bar_width_ = Px(100);
     Rem progress_bar_height_ = Rem(1.5f);
 
     PackedColour4444 frame_background_colour_ = background_colour_;
     PackedColour4444 frame_titlebar_colour_ = foreground_colour_;
     PackedColour4444 frame_text_colour_ = text_colour_;
-    Px frame_border_width_ = 2;
+    Px frame_border_width_ = Px(2);
     PackedColour4444 frame_border_colour_ = foreground_colour_;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;

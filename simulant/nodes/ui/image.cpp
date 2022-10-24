@@ -39,7 +39,7 @@ void Image::set_texture(const TexturePtr &texture) {
 
     auto dim = texture->dimensions();
     // Changing the texture resets the source rect
-    set_source_rect(UICoord(), UICoord(dim.x, dim.y));
+    set_source_rect(UICoord(), UICoord(Px(dim.x), Px(dim.y)));
 }
 
 void Image::set_source_rect(const UICoord &bottom_left, const UICoord& size) {

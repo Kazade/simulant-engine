@@ -135,7 +135,7 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, KeyboardLayout layout):
 
     main_frame_ = owner->new_widget_as_frame("");
     main_frame_->set_parent(this);
-    main_frame_->set_space_between(2);
+    main_frame_->set_space_between(Px(2));
     main_frame_->set_background_colour(smlt::Colour::NONE);
     main_frame_->set_border_colour(smlt::Colour::NONE);
     main_frame_->set_foreground_colour(smlt::Colour::NONE);
@@ -360,7 +360,7 @@ void Keyboard::move_row(int dir) {
 
     if(i != this_row) {
         /* We can move row */
-        Px pixels_from_left = 0;
+        Px pixels_from_left;
         smlt::ui::Widget* it = focused_->previous_in_focus_chain();
         while(it) {
             pixels_from_left += it->outer_width();
@@ -370,7 +370,7 @@ void Keyboard::move_row(int dir) {
         smlt::ui::Widget* new_focussed = nullptr;
         smlt::ui::Frame* new_row = rows_[i];
 
-        Px new_pixels_from_left = 0;
+        Px new_pixels_from_left;
         for(auto& child: new_row->packed_children()) {
             if(!new_focussed) {
                 new_focussed = child;
@@ -427,8 +427,8 @@ void Keyboard::build_rows(const KeyEntry* entries, std::size_t entry_count, uint
             row = owner_->new_widget_as_frame("");
             row->set_anchor_point(0.5f, 0.5f);
             row->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
-            row->set_border_width(0);
-            row->set_space_between(2);
+            row->set_border_width(Px(0));
+            row->set_space_between(Px(2));
             row->set_background_colour(smlt::Colour::NONE);
             row->set_border_colour(smlt::Colour::NONE);
             init_new_row = false;
@@ -457,8 +457,8 @@ void Keyboard::build_rows(const KeyEntry* entries, std::size_t entry_count, uint
     row = owner_->new_widget_as_frame("");
     row->set_anchor_point(0.5f, 0.5f);
     row->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
-    row->set_border_width(0);
-    row->set_space_between(2);
+    row->set_border_width(Px(0));
+    row->set_space_between(Px(2));
     row->set_background_colour(smlt::Colour::NONE);
     row->set_border_colour(smlt::Colour::NONE);
 
@@ -502,9 +502,9 @@ void Keyboard::generate_numerical_layout() {
 smlt::ui::Button* Keyboard::new_button(const unicode& label) {
     Button* btn = nullptr;
     if(default_style_ && highlighted_style_) {
-        btn = owner_->new_widget_as_button(label, -1, -1, default_style_);
+        btn = owner_->new_widget_as_button(label, Px(-1), Px(-1), default_style_);
     } else {
-        btn = owner_->new_widget_as_button(label, -1, -1);
+        btn = owner_->new_widget_as_button(label, Px(-1), Px(-1));
     }
 
     /* We style the style of the first button as the "default" and set
@@ -513,15 +513,15 @@ smlt::ui::Button* Keyboard::new_button(const unicode& label) {
     if(!default_style_) {
         btn->set_background_colour(UIConfig().background_colour_);
         btn->set_border_colour(smlt::Colour::NONE);
-        btn->set_border_width(0);
-        btn->set_padding(0);
+        btn->set_border_width(Px(0));
+        btn->set_padding(Px(0));
 
         default_style_ = btn->style_;
     } else if(!highlighted_style_) {
         btn->set_background_colour(UIConfig().highlight_colour_);
         btn->set_border_colour(smlt::Colour::NONE);
-        btn->set_border_width(0);
-        btn->set_padding(0);
+        btn->set_border_width(Px(0));
+        btn->set_padding(Px(0));
 
         highlighted_style_ = btn->style_;
 
@@ -530,7 +530,7 @@ smlt::ui::Button* Keyboard::new_button(const unicode& label) {
 
     assert(default_style_ != highlighted_style_);
 
-    btn->resize(32, 32);
+    btn->resize(Px(32), Px(32));
     btn->signal_focused().connect(std::bind(&Keyboard::focus, this, btn));
     btn->signal_blurred().connect(std::bind(&Keyboard::unfocus, this, btn));
     return btn;
@@ -545,7 +545,7 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
 
     if(mask_set(action_flags, ACTION_FLAGS_CASE_TOGGLE)) {
         buttons_[KEYBOARD_CODE_CAPSLOCK].button = new_button("^");
-        buttons_[KEYBOARD_CODE_CAPSLOCK].button->resize(32, 32);
+        buttons_[KEYBOARD_CODE_CAPSLOCK].button->resize(Px(32), Px(32));
 
         auto tex = buttons_[KEYBOARD_CODE_CAPSLOCK].button->stage->assets->new_texture(CASE_TOGGLE_ICON.width, CASE_TOGGLE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
         tex->set_data(CASE_TOGGLE_ICON.pixel_data, CASE_TOGGLE_ICON.width * CASE_TOGGLE_ICON.height * CASE_TOGGLE_ICON.bytes_per_pixel);
@@ -567,17 +567,17 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
     if(mask_set(action_flags, ACTION_FLAGS_SPACEBAR)) {
         Px width = rows_[0]->outer_width() - padding().left;
         if(mask_set(action_flags, ACTION_FLAGS_CASE_TOGGLE)) {
-            width -= 32;
+            width -= Px(32);
             width -= target->space_between();
         }
 
         if(mask_set(action_flags, ACTION_FLAGS_BACKSPACE)) {
-            width -= 32;
+            width -= Px(32);
             width -= target->space_between();
         }
 
         if(mask_set(action_flags, ACTION_FLAGS_ENTER)) {
-            width -= 32;
+            width -= Px(32);
             width -= target->space_between();
         }
 
@@ -606,13 +606,13 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
             buttons_[KEYBOARD_CODE_SPACE].button->set_focus_previous(buttons_[KEYBOARD_CODE_CAPSLOCK].button);
         }
 
-        buttons_[KEYBOARD_CODE_SPACE].button->resize(width, 32);
+        buttons_[KEYBOARD_CODE_SPACE].button->resize(width, Px(32));
         target->pack_child(buttons_[KEYBOARD_CODE_SPACE].button);
     }
 
     if(mask_set(action_flags, ACTION_FLAGS_BACKSPACE)) {
         buttons_[KEYBOARD_CODE_BACKSPACE].button = new_button("");
-        buttons_[KEYBOARD_CODE_BACKSPACE].button->resize(32, 32);
+        buttons_[KEYBOARD_CODE_BACKSPACE].button->resize(Px(32), Px(32));
 
         auto tex = buttons_[KEYBOARD_CODE_BACKSPACE].button->stage->assets->new_texture(BACKSPACE_ICON.width, BACKSPACE_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
         tex->set_data(BACKSPACE_ICON.pixel_data, 16 * 16 * 2);
@@ -638,7 +638,7 @@ void Keyboard::populate_action_row(Frame* target, uint32_t action_flags) {
 
     if(mask_set(action_flags, ACTION_FLAGS_ENTER)) {
         buttons_[KEYBOARD_CODE_ESCAPE].button = new_button(_T(""));
-        buttons_[KEYBOARD_CODE_ESCAPE].button->resize(32, 32);
+        buttons_[KEYBOARD_CODE_ESCAPE].button->resize(Px(32), Px(32));
 
         auto tex = buttons_[KEYBOARD_CODE_ESCAPE].button->stage->assets->new_texture(ENTER_ICON.width, ENTER_ICON.height, TEXTURE_FORMAT_RGB_1US_565);
         tex->set_data(ENTER_ICON.pixel_data, ENTER_ICON.width * ENTER_ICON.height * ENTER_ICON.bytes_per_pixel);
