@@ -2,10 +2,6 @@
 #include <cmath>
 #include "utils.h"
 
-#ifdef __DREAMCAST__
-#include "../utils/sh4_math.h"
-#endif
-
 namespace smlt {
 
 float smoothstep(const float e0, const float e1, float x) {
@@ -29,24 +25,25 @@ uint32_t next_power_of_two(uint32_t x) {
     return value;
 }
 
-#ifdef __DREAMCAST__
-static inline __attribute__((always_inline)) float fsrra(float x) {
-    asm volatile ("fsrra %[one_div_sqrt]\n"
-    : [one_div_sqrt] "+f" (x) // outputs, "+" means r/w
-    : // no inputs
-    : // no clobbers
-    );
-
-    return x;
-}
-#endif
-
 float fast_divide(float d, float n) {
 #ifdef __DREAMCAST__
     const float sgn = (n > 0) - (n < 0);
-    return sgn * fsrra(n * n) * d;
+    return sgn * (1.f / __builtin_sqrtf(n * n)) * d;
 #else
     return d / n;
+#endif
+}
+
+float fast_sqrt(float n) {
+    return __builtin_sqrtf(n);
+}
+
+void fast_sincos(double v, double* s, double* c) {
+#ifdef __DREAMCAST__
+    __builtin_sincos(v, s, c);
+#else
+    *s = sin(v);
+    *c = cos(v);
 #endif
 }
 

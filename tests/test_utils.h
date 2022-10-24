@@ -76,11 +76,11 @@ public:
 class FastDivideTests : public smlt::test::TestCase {
 public:
     void test_fast_divide() {
-        assert_close(fast_divide(1.0f, 2.0f), 1.0f / 2.0f, 0.000001f);
-        assert_close(fast_divide(1.0f, -2.0f), 1.0f / -2.0f, 0.000001f);
-        assert_close(fast_divide(100.0f, 0.001f), 100.0f / 0.001f, 0.000001f);
-        assert_close(fast_divide(-5.0f, 2.0f), -5.0f / 2.0f, 0.000001f);
-        assert_close(fast_divide(100000000.0f, 2.0f), 100000000.0f / 2.0f, 0.000001f);
+        assert_close(fast_divide(1.0f, 2.0f), 1.0f / 2.0f, 0.00001f);
+        assert_close(fast_divide(1.0f, -2.0f), 1.0f / -2.0f, 0.00001f);
+        assert_close(fast_divide(100.0f, 0.001f), 100.0f / 0.001f, 0.00001f);
+        assert_close(fast_divide(-5.0f, 2.0f), -5.0f / 2.0f, 0.00001f);
+        assert_close(fast_divide(100000000.0f, 2.0f), 100000000.0f / 2.0f, 0.00001f);
     }
 };
 
