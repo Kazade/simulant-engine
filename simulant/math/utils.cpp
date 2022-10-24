@@ -26,8 +26,12 @@ uint32_t next_power_of_two(uint32_t x) {
 }
 
 float fast_divide(float d, float n) {
+#ifdef __DREAMCAST__
     const float sgn = (n > 0) - (n < 0);
     return sgn * (1.f / __builtin_sqrtf(n * n)) * d;
+#else
+    return d / n;
+#endif
 }
 
 float fast_sqrt(float n) {
