@@ -31,7 +31,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
 
-    Frame(UIManager* owner, UIConfig* config);
+    Frame(UIManager* owner, UIConfig* config, Stage* stage);
 
     bool pack_child(Widget* widget);
 

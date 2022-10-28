@@ -56,8 +56,8 @@ public:
     void clean_up() override;
     void update(float dt) override;
 
-    void destroy() override;
-    void destroy_immediately() override;
+    bool destroy() override;
+    bool destroy_immediately() override;
 
     Sprite(SpriteManager *manager, SoundDriver *sound_driver);
 

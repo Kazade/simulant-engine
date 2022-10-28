@@ -92,13 +92,13 @@ UIManager::~UIManager() {
 }
 
 Keyboard* UIManager::new_widget_as_keyboard(const KeyboardLayout& layout) {
-    auto keyboard = manager_->make_as<Keyboard>(this, &config_, layout);
+    auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, layout);
     stage_->add_child(keyboard);
     return keyboard;
 }
 
 Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, const Px& height) {
-    auto frame = manager_->make_as<Frame>(this, &config_);
+    auto frame = manager_->make_as<Frame>(this, &config_, stage_);
     frame->set_text(title);
     frame->resize(width, height);
     stage_->add_child(frame);
@@ -107,7 +107,7 @@ Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, con
 }
 
 Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height, std::shared_ptr<WidgetStyle> shared_style) {
-    auto button = manager_->make_as<Button>(this, &config_, shared_style);
+    auto button = manager_->make_as<Button>(this, &config_, stage_, shared_style);
     button->set_text(text);
     button->resize(width, height);
     stage_->add_child(button);
@@ -116,7 +116,7 @@ Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height
 }
 
 Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) {
-    auto label = (Label*) &(*manager_->make_as<Label>(this, &config_));
+    auto label = (Label*) &(*manager_->make_as<Label>(this, &config_, stage_));
     label->set_text(text);
     label->resize(width, height);
 
@@ -126,7 +126,7 @@ Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) 
 }
 
 Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
-    auto image = (Image*) &(*manager_->make_as<Image>(this, &config_));
+    auto image = (Image*) &(*manager_->make_as<Image>(this, &config_, stage_));
     image->set_texture(texture);
 
     stage_->add_child(image);
@@ -139,7 +139,7 @@ Widget* UIManager::widget(WidgetID widget_id) {
 }
 
 ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
-    auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_));
+    auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_, stage_));
 
     pg->set_range(min, max);
     pg->set_value(value);

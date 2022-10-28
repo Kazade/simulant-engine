@@ -92,7 +92,7 @@ class Widget:
 public:
     typedef std::shared_ptr<Widget> ptr;
 
-    Widget(UIManager* owner, UIConfig* defaults, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
+    Widget(UIManager* owner, UIConfig* defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
     virtual ~Widget();
 
     virtual bool init() override;
@@ -221,15 +221,17 @@ private:
     bool initialized_ = false;
 
     ActorPtr actor_ = nullptr;
-    MeshPtr mesh_ = nullptr;
 
 protected:
+    MeshPtr mesh_ = nullptr;
+
     /* Allow sharing a style across composite widgets */
     void set_style(std::shared_ptr<WidgetStyle> style);
 
     friend class Keyboard; // For set_font calls on child widgets
 
     UIManager* owner_ = nullptr;
+    UIConfig* theme_ = nullptr;
     FontPtr font_ = nullptr;
 
     std::shared_ptr<WidgetStyle> style_;
@@ -292,14 +294,22 @@ protected:
 
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
 
-    SubMeshPtr new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour);
+    SubMeshPtr new_rectangle(
+        const std::string& name,
+        WidgetBounds bounds,
+        const smlt::Colour& colour,
+        const Vec2 *uvs=nullptr
+    );
     void clear_mesh();
 
     bool is_initialized() const { return initialized_; }
 
     MeshPtr mesh() { return mesh_; }
 
-    void render_text();
+    virtual void render_text();
+    virtual void render_border(const WidgetBounds &border_bounds);
+    virtual void render_background(const WidgetBounds &background_bounds);
+    virtual void render_foreground(const WidgetBounds &foreground_bounds);
 
     WidgetPtr focused_in_chain_or_this();
 

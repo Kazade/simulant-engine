@@ -23,12 +23,12 @@ bool Skybox::init() {
 void Skybox::clean_up() {
 }
 
-void Skybox::destroy() {
-    manager_->destroy_skybox(id());
+bool Skybox::destroy() {
+    return manager_->destroy_skybox(id());
 }
 
-void Skybox::destroy_immediately() {
-    manager_->sky_manager_->destroy_immediately(id());
+bool Skybox::destroy_immediately() {
+    return manager_->sky_manager_->destroy_immediately(id());
 }
 
 const AABB &Skybox::aabb() const {

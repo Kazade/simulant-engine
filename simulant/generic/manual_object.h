@@ -19,8 +19,8 @@ protected:
 public:
     virtual ~DestroyableObject() {}
 
-    virtual void destroy() = 0;
-    virtual void destroy_immediately() = 0;
+    virtual bool destroy() = 0;
+    virtual bool destroy_immediately() = 0;
 
     bool is_destroyed() const {
         return destroyed_;
@@ -43,20 +43,25 @@ public:
         }
     }
 
-    void destroy() override {
-        if(!destroyed_) {
+    bool destroy() override {
+        if(!destroyed_ && owner_) {
             signal_destroyed()();
             destroyed_ = true;
             owner_->destroy_object((T*) this);
+            return true;
         }
+        return false;
     }
 
-    void destroy_immediately() override {
-        if(!destroyed_) {
+    bool destroy_immediately() override {
+        if(!destroyed_ && owner_) {
             signal_destroyed()();
             destroyed_ = true;
             owner_->destroy_object_immediately((T*) this);
+            return true;
         }
+
+        return false;
     }
 
 private:

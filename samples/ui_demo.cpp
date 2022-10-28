@@ -86,7 +86,7 @@ public:
 
         keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_LAYOUT_ALPHABETICAL);
         keyboard_->set_anchor_point(0.5f, 0.0f);
-        keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
+        keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.5f));
         keyboard_->set_font("Orbitron", 14);
         keyboard_->set_background_colour(smlt::Colour(0.1f, 0.1f, 0.1f, 0.5f));
         keyboard_->set_border_colour(smlt::Colour::NONE);
@@ -98,13 +98,6 @@ public:
         });
 
         keyboard_->set_keyboard_integration_enabled(true);
-
-        auto entry = stage_->ui->new_widget_as_label("");
-        entry->resize(keyboard_->outer_width(), -1);
-        entry->set_anchor_point(0.5f, 0.0f);
-        entry->move_to(window->coordinate_from_normalized(0.5f, 0.25f));
-        entry->set_background_colour(smlt::ui::UIConfig().background_colour_);
-        keyboard_->set_target(entry);
 
         auto pl = stage_->ui->new_widget_as_label("PL");
         pl->set_padding(10, 0, 0, 0);
