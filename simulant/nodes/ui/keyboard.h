@@ -15,10 +15,6 @@ namespace ui {
 
 class Frame;
 
-enum KeyboardLayout {
-    KEYBOARD_LAYOUT_ALPHABETICAL,
-    KEYBOARD_LAYOUT_NUMERICAL,
-};
 
 struct SoftKeyPressedEvent {
     KeyboardCode code;
@@ -32,11 +28,14 @@ struct SoftKeyPressedEvent {
 };
 
 typedef sig::signal<void (SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
-typedef sig::signal<void ()> KeyboardDoneSignal;
+typedef sig::signal<void (const unicode&)> KeyboardDoneSignal;
 
 enum KeyboardMode {
     KEYBOARD_MODE_UPPERCASE,
-    KEYBOARD_MODE_LOWERCASE
+    KEYBOARD_MODE_LOWERCASE,
+    KEYBOARD_MODE_NUMERICAL,
+    KEYBOARD_MODE_ACCENT_LOWERCASE,
+    KEYBOARD_MODE_ACCENT_UPPERCASE
 };
 
 class KeyboardPanel;
@@ -51,7 +50,7 @@ public:
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
-    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardLayout layout);
+    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardMode mode);
     ~Keyboard();
 
     void cursor_up();
@@ -73,11 +72,13 @@ public:
 
     void set_font(FontPtr font) override;
 private:
+    void on_transformation_change_attempted() override;
 
-    KeyboardLayout layout_ = KEYBOARD_LAYOUT_ALPHABETICAL;
-    KeyboardMode mode_ = KEYBOARD_MODE_UPPERCASE;
+    UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
     std::shared_ptr<KeyboardPanel> panel_;
+    std::shared_ptr<Label> entry_;
+    std::shared_ptr<Frame> info_row_;
 
     Frame* main_frame_ = nullptr;
 

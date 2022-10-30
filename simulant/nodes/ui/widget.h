@@ -294,11 +294,10 @@ protected:
 
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
 
-    SubMeshPtr new_rectangle(
-        const std::string& name,
+    SubMeshPtr new_rectangle(const std::string& name,
         WidgetBounds bounds,
         const smlt::Colour& colour,
-        const Vec2 *uvs=nullptr
+        const Vec2 *uvs=nullptr, float z_offset=0.0f
     );
     void clear_mesh();
 
@@ -319,6 +318,7 @@ protected:
     virtual void set_font(FontPtr font);
 
     virtual void prepare_build() {}
+    virtual void finalize_render() {}
     virtual void finalize_build() {}
 };
 

@@ -133,6 +133,12 @@ void unicode::push_back(const wchar_t c) {
     string_.push_back(c);
 }
 
+void unicode::pop_back() {
+    if(!string_.empty()) {
+        string_.pop_back();
+    }
+}
+
 unicode unicode::replace(const unicode& to_find, const unicode& to_replace) const {
     ustring subject = this->string_;
     ustring search = to_find.string_;

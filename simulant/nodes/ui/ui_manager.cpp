@@ -91,8 +91,8 @@ UIManager::~UIManager() {
     }
 }
 
-Keyboard* UIManager::new_widget_as_keyboard(const KeyboardLayout& layout) {
-    auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, layout);
+Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode) {
+    auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, mode);
     stage_->add_child(keyboard);
     return keyboard;
 }

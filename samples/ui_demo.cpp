@@ -84,12 +84,9 @@ public:
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
-        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_LAYOUT_ALPHABETICAL);
-        keyboard_->set_anchor_point(0.5f, 0.0f);
+        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_MODE_LOWERCASE);
+        keyboard_->set_anchor_point(0.5f, 1.0f);
         keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.5f));
-        keyboard_->set_font("Orbitron", 14);
-        keyboard_->set_background_colour(smlt::Colour(0.1f, 0.1f, 0.1f, 0.5f));
-        keyboard_->set_border_colour(smlt::Colour::NONE);
         keyboard_->signal_key_pressed().connect([](smlt::ui::SoftKeyPressedEvent& evt) {
            /* Don't allow spaces (for testing) */
            if(evt.character == ' ') {

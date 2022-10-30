@@ -420,7 +420,7 @@ void Widget::clear_mesh() {
     }
 }
 
-SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const smlt::Vec2* uvs) {
+SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const smlt::Vec2* uvs, float z_offset) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
 
@@ -434,10 +434,6 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
 
     auto x_offset = 0.0f;
     auto y_offset = 0.0f;
-
-    /* We don't offset Z at all, submeshes are organised back to front
-     * so that when rendering they should be correctly blended */
-    auto z_offset = 0.0f;
 
     auto prev_count = mesh_->vertex_data->count();
 
@@ -575,6 +571,8 @@ void Widget::rebuild() {
         render_foreground(foreground_bounds);
     }
 
+    finalize_render();
+
     /* Apply anchoring */
     auto width = border_bounds.width().value;
     auto height = border_bounds.height().value;
@@ -591,8 +589,10 @@ void Widget::rebuild() {
     }
     vdata->done();
 
-    anchor_point_dirty_ = false;
+    anchor_point_dirty_ = false;    
+
     finalize_build();
+
 }
 
 Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dimensions) const {
