@@ -13,6 +13,53 @@ namespace smlt {
 namespace ui {
 
 
+/* Attempts to match a Keyboard code to a character on a standard GB
+ * keyboard. */
+uint16_t keyboard_code_to_char(const KeyboardCode& code, KeyboardMode mode) {
+    switch(code) {
+        case KEYBOARD_CODE_0: return '0';
+        case KEYBOARD_CODE_1: return '1';
+        case KEYBOARD_CODE_2: return '2';
+        case KEYBOARD_CODE_3: return '3';
+        case KEYBOARD_CODE_4: return '4';
+        case KEYBOARD_CODE_5: return '5';
+        case KEYBOARD_CODE_6: return '6';
+        case KEYBOARD_CODE_7: return '7';
+        case KEYBOARD_CODE_8: return '8';
+        case KEYBOARD_CODE_9: return '9';
+        case KEYBOARD_CODE_A: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'a' : 'A';
+        case KEYBOARD_CODE_B: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'b' : 'B';
+        case KEYBOARD_CODE_C: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'c' : 'C';
+        case KEYBOARD_CODE_D: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'd' : 'D';
+        case KEYBOARD_CODE_E: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'e' : 'E';
+        case KEYBOARD_CODE_F: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'f' : 'F';
+        case KEYBOARD_CODE_G: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'g' : 'G';
+        case KEYBOARD_CODE_H: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'h' : 'H';
+        case KEYBOARD_CODE_I: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'i' : 'I';
+        case KEYBOARD_CODE_J: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'j' : 'J';
+        case KEYBOARD_CODE_K: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'k' : 'K';
+        case KEYBOARD_CODE_L: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'l' : 'L';
+        case KEYBOARD_CODE_M: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'm' : 'M';
+        case KEYBOARD_CODE_N: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'n' : 'N';
+        case KEYBOARD_CODE_O: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'o' : 'O';
+        case KEYBOARD_CODE_P: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'p' : 'P';
+        case KEYBOARD_CODE_Q: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'q' : 'Q';
+        case KEYBOARD_CODE_R: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'r' : 'R';
+        case KEYBOARD_CODE_S: return (mode == KEYBOARD_MODE_LOWERCASE) ? 's' : 'S';
+        case KEYBOARD_CODE_T: return (mode == KEYBOARD_MODE_LOWERCASE) ? 't' : 'T';
+        case KEYBOARD_CODE_U: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'u' : 'U';
+        case KEYBOARD_CODE_V: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'v' : 'V';
+        case KEYBOARD_CODE_W: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'w' : 'W';
+        case KEYBOARD_CODE_X: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'x' : 'X';
+        case KEYBOARD_CODE_Y: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'y' : 'Y';
+        case KEYBOARD_CODE_Z: return (mode == KEYBOARD_MODE_LOWERCASE) ? 'z' : 'Z';
+        case KEYBOARD_CODE_SPACE: return (mode == KEYBOARD_MODE_LOWERCASE) ? ' ' : ' ';
+    default:
+        return 0;
+    }
+}
+
+
 class KeyboardListener : public EventListener {
 public:
     KeyboardListener(Keyboard* keyboard):
@@ -24,8 +71,53 @@ public:
         smlt::get_app()->window->unregister_event_listener(this);
     }
 
-    void on_key_up(const KeyEvent& evt) {        
+    void on_key_up(const KeyEvent& evt) override {
+        uint16_t chr = keyboard_code_to_char(evt.keyboard_code, keyboard_->mode());
+        if(chr) {
+            if(keyboard_->cursor_to_char(chr)) {
+                keyboard_->activate();
+            }
+        } else {
+            if(evt.keyboard_code == KEYBOARD_CODE_RETURN) {
+                keyboard_->cursor_to_return();
+                keyboard_->activate();
+            } else if(evt.keyboard_code == KEYBOARD_CODE_BACKSPACE) {
+                keyboard_->cursor_to_backspace();
+                keyboard_->activate();
+            } else if(evt.keyboard_code == KEYBOARD_CODE_CAPSLOCK) {
+                keyboard_->cursor_to_case_toggle();
+                keyboard_->activate();
+            }
+        }
+    }
 
+    void on_game_controller_button_up(const GameControllerEvent& evt) override {
+        if(evt.index.to_int8_t() != 0) {
+            return;
+        }
+
+        if(evt.button == JOYSTICK_BUTTON_A) {
+            keyboard_->activate();
+        } else if(evt.button == JOYSTICK_BUTTON_B) {
+            keyboard_->cancel();
+        } else if(evt.button == JOYSTICK_BUTTON_X) {
+            keyboard_->cursor_to_backspace();
+            keyboard_->activate();
+        } else if(evt.button == JOYSTICK_BUTTON_Y) {
+            keyboard_->cursor_to_space();
+            keyboard_->activate();
+        } else if(evt.button == JOYSTICK_BUTTON_START) {
+            keyboard_->cursor_to_ok();
+            keyboard_->activate();
+        } else if(evt.button == JOYSTICK_BUTTON_DPAD_UP) {
+            keyboard_->cursor_up();
+        } else if(evt.button == JOYSTICK_BUTTON_DPAD_DOWN) {
+            keyboard_->cursor_down();
+        } else if(evt.button == JOYSTICK_BUTTON_DPAD_LEFT) {
+            keyboard_->cursor_left();
+        } else if(evt.button == JOYSTICK_BUTTON_DPAD_RIGHT) {
+            keyboard_->cursor_right();
+        }
     }
 
 private:
@@ -830,12 +922,14 @@ private:
 
         for(int y = 0; y < rows(); ++y) {
             for(int x = 0; x < columns(); ++x) {
+                uint16_t displayed_char = 0;
+
                 if(x < columns() - 1) {
                     key_bounds.min.x = (key_width() * x);
                     key_bounds.min.y = (key_height() * y);
 
-                    key_bounds.min.x += key_padding() * (x + 1);
-                    key_bounds.min.y += key_padding() * (y + 1);
+                    key_bounds.min.x += key_padding() * (x);
+                    key_bounds.min.y += key_padding() * (y);
 
                     key_bounds.min.x -= (bounds.width() / 2);
                     key_bounds.min.y -= (bounds.height() / 2);
@@ -844,6 +938,7 @@ private:
                         /* Space bar */
                         key_bounds.max.x = key_bounds.min.x + ((key_width() + key_padding()) * (columns() - 4)) - key_padding();
                         key_bounds.max.y = key_bounds.min.y + key_height();
+                        displayed_char = ' ';
                     } else if((y == 0 && x < 3) || y > 0) {
                         /* All other keys */
                         key_bounds.max.x = key_bounds.min.x + key_width();
@@ -856,8 +951,8 @@ private:
                     key_bounds.min.x = (key_width() * x);
                     key_bounds.min.y = (key_height() * y);
 
-                    key_bounds.min.x += key_padding() * (x + 1);
-                    key_bounds.min.y += key_padding() * (y + 1);
+                    key_bounds.min.x += key_padding() * (x);
+                    key_bounds.min.y += key_padding() * (y);
 
                     key_bounds.min.x -= (bounds.width() / 2);
                     key_bounds.min.y -= (bounds.height() / 2);
@@ -884,6 +979,7 @@ private:
                 new_key.center.x += (key_bounds.width() / 2);
                 new_key.center.y += (key_bounds.height() / 2);
                 new_key.first_vertex_index = mesh_->vertex_data->count();
+                new_key.displayed_character = displayed_char;
 
                 keys_.push_back(new_key);
 
@@ -910,8 +1006,8 @@ private:
 
         Px height = ((key_height() + key_padding()) * rows());
         Px width = ((key_width() + key_padding()) * columns());
-        width += key_padding();
-        height += key_padding();
+        width -= key_padding();
+        height -= key_padding();
 
         return UIDim(width, height);
     }
@@ -939,23 +1035,42 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     main_frame_ = owner->new_widget_as_frame("");
     main_frame_->set_parent(this);
     main_frame_->set_space_between(0);
-    main_frame_->set_background_colour(smlt::Colour::NONE);
-    main_frame_->set_border_colour(smlt::Colour::NONE);
+    main_frame_->set_border_width(0);
+    main_frame_->set_background_colour(config->background_colour_);
+    main_frame_->set_border_colour(config->background_colour_);
     main_frame_->set_foreground_colour(smlt::Colour::NONE);
 
     panel_ = KeyboardPanel::create(config, stage);
+
+    auto font = owner->load_or_get_font(
+        "Cantarell",
+        smlt::get_app()->config->ui.font_size,
+        FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
+    );
+
+    assert(font);
+
+    panel_->set_background_colour(config->background_colour_);
+    panel_->set_border_colour(config->background_colour_);
+    panel_->set_border_width(2);
+    panel_->set_font(font);
     panel_->rebuild();
 
     entry_ = Label::create(nullptr, config, stage);
-    entry_->resize(panel_->content_width() - 2, panel_->line_height() * 2);
-    entry_->set_background_colour(smlt::Colour::WHITE);
     entry_->set_border_width(2);
+    entry_->resize(panel_->content_width(), panel_->line_height() * 2);
+    entry_->set_font(font);
+    entry_->set_background_colour(smlt::Colour::WHITE);
     entry_->set_border_colour(config->background_colour_);
-    entry_->set_text_colour(smlt::Colour::BLACK);
+    entry_->set_text_colour(config->foreground_colour_);
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
+    entry_->set_padding(Px(4));
 
     info_row_ = Frame::create(nullptr, config, stage);
+    info_row_->set_border_colour(config->foreground_colour_);
+    info_row_->set_border_width(2);
     info_row_->set_background_colour(style_->foreground_colour_);
+    info_row_->set_foreground_colour(style_->foreground_colour_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
     auto x_button = Label::create(nullptr, config, stage);
@@ -974,7 +1089,7 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
 
     info_row_->pack_child(x_button.get());
     info_row_->pack_child(x_label.get());
-    info_row_->resize(panel_->content_width() - 2, -1);
+    info_row_->resize(panel_->content_width(), -1);
     info_row_->rebuild();
 
     main_frame_->pack_child(entry_.get());
@@ -992,6 +1107,12 @@ Keyboard::~Keyboard() {
     panel_.reset();
     entry_.reset();
     info_row_.reset();
+}
+
+void Keyboard::cancel() {
+    entry_->set_text("");
+    panel_->focus_key(0, 0);
+    signal_cancelled_();
 }
 
 void Keyboard::activate() {
@@ -1043,6 +1164,10 @@ void Keyboard::set_mode(KeyboardMode mode) {
     panel_->set_mode(mode);
 }
 
+KeyboardMode Keyboard::mode() const {
+    return panel_->mode_;
+}
+
 void Keyboard::set_keyboard_integration_enabled(bool value) {
     if(value && !keyboard_listener_) {
         keyboard_listener_ = std::make_shared<KeyboardListener>(this);
@@ -1052,7 +1177,7 @@ void Keyboard::set_keyboard_integration_enabled(bool value) {
 }
 
 void Keyboard::set_font(FontPtr font) {
-    panel_->set_font(font);
+    /*panel_->set_font(font);
     panel_->rebuild();
     entry_->set_font(font);
     entry_->rebuild();
@@ -1063,7 +1188,7 @@ void Keyboard::set_font(FontPtr font) {
     main_frame_->set_font(font);
     main_frame_->rebuild();
 
-    Widget::set_font(font);
+    Widget::set_font(font);*/
 }
 
 void Keyboard::on_transformation_change_attempted() {
@@ -1084,6 +1209,62 @@ UIDim Keyboard::calculate_content_dimensions(Px text_width, Px text_height) {
     }
 
     return ret;
+}
+
+void Keyboard::cursor_to_space() {
+    for(auto& k: panel_->keys_) {
+        if(k.is_space_key()) {
+            panel_->focus_key(k.x, k.y);
+            return;
+        }
+    }
+}
+
+void Keyboard::cursor_to_ok() {
+    for(auto& k: panel_->keys_) {
+        if(k.is_ok_key()) {
+            panel_->focus_key(k.x, k.y);
+            return;
+        }
+    }
+}
+
+void Keyboard::cursor_to_backspace() {
+    for(auto& k: panel_->keys_) {
+        if(k.is_backspace_key()) {
+            panel_->focus_key(k.x, k.y);
+            return;
+        }
+    }
+}
+
+void Keyboard::cursor_to_return() {
+    for(auto& k: panel_->keys_) {
+        if(k.is_return_key()) {
+            panel_->focus_key(k.x, k.y);
+            return;
+        }
+    }
+}
+
+void Keyboard::cursor_to_case_toggle() {
+    for(auto& k: panel_->keys_) {
+        if(k.is_case_toggle_key()) {
+            panel_->focus_key(k.x, k.y);
+            return;
+        }
+    }
+}
+
+bool Keyboard::cursor_to_char(uint16_t displayed_char) {
+    for(auto& k: panel_->keys_) {
+        if(k.displayed_character == displayed_char) {
+            panel_->focus_key(k.x, k.y);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void Keyboard::cursor_up() {

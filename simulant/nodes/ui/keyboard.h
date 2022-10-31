@@ -29,6 +29,7 @@ struct SoftKeyPressedEvent {
 
 typedef sig::signal<void (SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
 typedef sig::signal<void (const unicode&)> KeyboardDoneSignal;
+typedef sig::signal<void ()> KeyboardCancelledSignal;
 
 enum KeyboardMode {
     KEYBOARD_MODE_UPPERCASE,
@@ -46,6 +47,7 @@ class Keyboard:
 
     DEFINE_SIGNAL(KeyboardKeyPressedSignal, signal_key_pressed);
     DEFINE_SIGNAL(KeyboardDoneSignal, signal_done);
+    DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
 public:
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
@@ -57,10 +59,19 @@ public:
     void cursor_down();
     void cursor_right();
     void cursor_left();
+    bool cursor_to_char(uint16_t displayed_char);
+    void cursor_to_return();
+    void cursor_to_case_toggle();
+    void cursor_to_backspace();
+    void cursor_to_ok();
+    void cursor_to_space();
 
     /** Sends the key_pressed signal for the selected key */
     void activate();
+    void cancel();
+
     void set_mode(KeyboardMode mode);
+    KeyboardMode mode() const;
 
     bool is_keyboard_integration_enabled() const {
         return bool(keyboard_listener_);

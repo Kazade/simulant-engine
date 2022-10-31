@@ -133,26 +133,6 @@ public:
 
         pg2_->set_value(percent);
         pg1_->pulse();
-
-        if(input->axis_was_pressed("Vertical")) {
-            if(input->axis_value_hard("Vertical") > 0) {
-                keyboard_->cursor_up();
-            } else {
-                keyboard_->cursor_down();
-            }
-        }
-
-        if(input->axis_was_pressed("Horizontal")) {
-            if(input->axis_value_hard("Horizontal") > 0) {
-                keyboard_->cursor_right();
-            } else {
-                keyboard_->cursor_left();
-            }
-        }
-
-        if(input->axis_was_pressed("Fire1")) {
-            keyboard_->activate();
-        }
     }
 
 private:

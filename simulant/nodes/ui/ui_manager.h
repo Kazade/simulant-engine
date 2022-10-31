@@ -84,6 +84,11 @@ public:
     const UIConfig* config() const {
         return &config_;
     }
+
+    FontPtr load_or_get_font(
+        const std::string& family, const Px& size, const FontWeight &weight, const FontStyle& style
+    );
+
 private:
     friend class ::smlt::Stage;
 
@@ -106,10 +111,6 @@ private:
 
     sig::connection frame_finished_connection_;
     sig::connection pre_render_connection_;
-
-    FontPtr load_or_get_font(
-        const std::string& family, const Px& size, const FontWeight &weight, const FontStyle& style
-    );
 
 private:
     friend class ::smlt::Application;
