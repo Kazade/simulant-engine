@@ -92,7 +92,9 @@ void Widget::set_font(const std::string& family, Rem size, FontWeight weight, Fo
 }
 
 void Widget::set_font(const std::string& family, Px size, FontWeight weight, FontStyle style) {
-    set_font(owner_->load_or_get_font(family, size, weight, style));
+    if(owner_) {
+        set_font(owner_->load_or_get_font(family, size, weight, style));
+    }
 }
 
 /* Internal only! */
@@ -358,19 +360,28 @@ void Widget::render_text() {
     vdata->reserve(vertices.size());
 
     if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
-        auto cwidth = std::max(requested_width(), content_width());
+        auto cwidth = std::max(requested_width(), content_width()) - padding().left - padding().right;
 
         auto j = 0;
         for(auto range: line_ranges) {
+            if(!range.second) {
+                // If there are no vertices on this line, then
+                // ignore.
+                continue;
+            }
+
             Vertex* ch = &vertices.at(range.first);
 
-            auto ashift = (cwidth - line_lengths[j++]) / 2;
+            auto ashift = std::ceil(-line_lengths[j++].value * 0.5f);
+            ashift += std::ceil(cwidth.value * 0.5f);
 
             for(auto i = 0u; i < range.second; i++, ch++) {
                 if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
-                    ch->xyz.x -= ashift.value;
+                    ch->xyz.x -= ashift;
+                    ch->xyz.x += padding().left.value;
                 } else {
-                    ch->xyz.x += ashift.value;
+                    ch->xyz.x += ashift;
+                    ch->xyz.x -= padding().right.value;
                 }
             }
         }
