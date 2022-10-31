@@ -51,18 +51,12 @@ public:
         pg2_->resize(column, -1);
         frame->pack_child(pg2_);
 
-        auto added = app->vfs->add_search_path("simulant/fonts/Orbitron");
-
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font("Orbitron", 32);
         frame->pack_child(big_label);
 
-        if(added) {
-            app->vfs->remove_search_path("simulant/fonts/Orbitron");
-        }
-
-        auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
+        auto simulant_logo = stage_->assets->new_texture_from_file("textures/simulant-icon.png");
         auto icon = stage_->ui->new_widget_as_image(simulant_logo);
         icon->set_anchor_point(1, 1);
         icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
@@ -195,7 +189,6 @@ int main(int argc, char* argv[]) {
     config.title = "UI Demo";
     config.fullscreen = false;
 
-    config.ui.font_size = 18;
 
 #ifdef __DREAMCAST__
     config.width = 640;

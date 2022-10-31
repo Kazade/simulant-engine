@@ -96,22 +96,22 @@ struct AppConfig {
          * temporarily while loading the default font */
         std::vector<Path> font_directories = {
 #ifdef __DREAMCAST__
-            "/cd/simulant/fonts/Orbitron",
-            "/cd/assets/simulant/fonts/Orbitron"
-            "/pc/simulant/fonts/Orbitron",
-            "/pc/assets/simulant/fonts/Orbitron"
+            "/cd/simulant",
+            "/cd/assets/simulant"
+            "/pc/simulant",
+            "/pc/assets/simulant"
 #else
-            "simulant/fonts/Orbitron",
-            "assets/simulant/fonts/Orbitron"
+            "simulant",
+            "assets/simulant"
 #endif
         };
 
         /** The font-family that is used by default for widgets */
-        std::string font_family = "Orbitron";
+        std::string font_family = "Cantarell";
 
         /** The root font size, all Rem measurements are based on this
           * unless overridden in a UIConfig */
-        uint16_t font_size = 16;
+        uint16_t font_size = 20;
     } ui;
 
     struct Desktop {
