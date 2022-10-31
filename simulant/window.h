@@ -133,6 +133,9 @@ public:
     void on_key_down(KeyboardCode code, ModifierKeyState modifiers);
     void on_key_up(KeyboardCode code, ModifierKeyState modifiers);
 
+    void on_game_controller_button_down(GameControllerIndex index, JoystickButton button);
+    void on_game_controller_button_up(GameControllerIndex index, JoystickButton button);
+
     /* Return the number of screens connected */
     std::size_t screen_count() const;
 

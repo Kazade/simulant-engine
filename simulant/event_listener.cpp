@@ -38,6 +38,22 @@ void EventListener::handle_touch_move(Window* window, TouchPointID touch_id, flo
     on_touch_move(evt);
 }
 
+void EventListener::handle_controller_button_down(GameControllerIndex controller, JoystickButton button) {
+    GameControllerEvent evt;
+    evt.type = GAME_CONTROLLER_EVENT_TYPE_BUTTON_DOWN;
+    evt.index = controller;
+    evt.button = button;
+    on_game_controller_button_down(evt);
+}
+
+void EventListener::handle_controller_button_up(GameControllerIndex controller, JoystickButton button) {
+    GameControllerEvent evt;
+    evt.type = GAME_CONTROLLER_EVENT_TYPE_BUTTON_UP;
+    evt.index = controller;
+    evt.button = button;
+    on_game_controller_button_up(evt);
+}
+
 void EventListener::handle_key_down(Window* window, KeyboardCode code, ModifierKeyState modifiers) {
     _S_UNUSED(window);
 
