@@ -71,7 +71,7 @@ public:
         smlt::get_app()->window->unregister_event_listener(this);
     }
 
-    void on_key_up(const KeyEvent& evt) override {
+    void on_key_down(const KeyEvent& evt) override {
         if(!keyboard_->is_visible()) {
             return;
         }
@@ -83,7 +83,11 @@ public:
             }
         } else {
             if(evt.keyboard_code == KEYBOARD_CODE_RETURN) {
-                keyboard_->cursor_to_return();
+                if(evt.modifiers.lshift || evt.modifiers.rshift) {
+                    keyboard_->cursor_to_ok();
+                } else {
+                    keyboard_->cursor_to_return();
+                }
                 keyboard_->activate();
             } else if(evt.keyboard_code == KEYBOARD_CODE_BACKSPACE) {
                 keyboard_->cursor_to_backspace();
@@ -91,11 +95,21 @@ public:
             } else if(evt.keyboard_code == KEYBOARD_CODE_CAPSLOCK) {
                 keyboard_->cursor_to_case_toggle();
                 keyboard_->activate();
+            } else if(evt.keyboard_code == KEYBOARD_CODE_LCTRL) {
+                keyboard_->activate();
+            } else if(evt.keyboard_code == KEYBOARD_CODE_UP) {
+                keyboard_->cursor_up();
+            } else if(evt.keyboard_code == KEYBOARD_CODE_DOWN) {
+                keyboard_->cursor_down();
+            } else if(evt.keyboard_code == KEYBOARD_CODE_LEFT) {
+                keyboard_->cursor_left();
+            } else if(evt.keyboard_code == KEYBOARD_CODE_RIGHT) {
+                keyboard_->cursor_right();
             }
         }
     }
 
-    void on_game_controller_button_up(const GameControllerEvent& evt) override {
+    void on_game_controller_button_down(const GameControllerEvent& evt) override {
         if(evt.index.to_int8_t() != 0) {
             return;
         }
