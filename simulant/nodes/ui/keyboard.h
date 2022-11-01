@@ -52,7 +52,7 @@ public:
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
-    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardMode mode);
+    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardMode mode, const unicode& initial_text="");
     ~Keyboard();
 
     void cursor_up();
