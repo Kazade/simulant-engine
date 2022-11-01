@@ -145,18 +145,18 @@ SkyboxPtr SkyManager::skybox(SkyID skybox_id) {
     return sky_manager_->get(skybox_id);
 }
 
-void SkyManager::destroy_skybox(SkyID skybox_id) {
-    sky_manager_->destroy(skybox_id);
+bool SkyManager::destroy_skybox(SkyID skybox_id) {
+    return sky_manager_->destroy(skybox_id);
 }
 
-void SkyManager::destroy_object(Skybox* skybox) {
+bool SkyManager::destroy_object(Skybox* skybox) {
     auto id = skybox->id();
-    sky_manager_->destroy(id);
+    return sky_manager_->destroy(id);
 }
 
-void SkyManager::destroy_object_immediately(Skybox* skybox) {
+bool SkyManager::destroy_object_immediately(Skybox* skybox) {
     auto id = skybox->id();
-    sky_manager_->destroy_immediately(id);
+    return sky_manager_->destroy_immediately(id);
 }
 
 }

@@ -31,9 +31,9 @@
 
 namespace smlt {
 
-const std::string Material::BuiltIns::DEFAULT = "simulant/materials/${RENDERER}/default.smat";
-const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/${RENDERER}/texture_only.smat";
-const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/${RENDERER}/diffuse_only.smat";
+const std::string Material::BuiltIns::DEFAULT = "materials/${RENDERER}/default.smat";
+const std::string Material::BuiltIns::TEXTURE_ONLY = "materials/${RENDERER}/texture_only.smat";
+const std::string Material::BuiltIns::DIFFUSE_ONLY = "materials/${RENDERER}/diffuse_only.smat";
 
 /* This list is used by the particle script loader to determine if a specified material
  * is a built-in or not. Please keep this up-to-date when changing the above materials!

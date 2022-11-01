@@ -5,8 +5,8 @@
 namespace smlt {
 namespace ui {
 
-Frame::Frame(UIManager *owner, UIConfig *config):
-    Widget(owner, config) {
+Frame::Frame(UIManager *owner, UIConfig *config, Stage* stage):
+    Widget(owner, config, stage) {
 
     set_background_colour(config->frame_background_colour_);
     set_foreground_colour(config->frame_titlebar_colour_);

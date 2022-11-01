@@ -299,6 +299,18 @@ void Window::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
     });
 }
 
+void Window::on_game_controller_button_down(GameControllerIndex index, JoystickButton button) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_controller_button_down(index, button);
+    });
+}
+
+void Window::on_game_controller_button_up(GameControllerIndex index, JoystickButton button) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_controller_button_up(index, button);
+    });
+}
+
 std::size_t Window::screen_count() const {
     return screens_.size();
 }

@@ -4,8 +4,8 @@
 namespace smlt {
 namespace ui {
 
-Button::Button(UIManager *owner, UIConfig *config, std::shared_ptr<WidgetStyle> shared_style):
-    Widget(owner, config, shared_style) {
+Button::Button(UIManager *owner, UIConfig *config, Stage* stage, std::shared_ptr<WidgetStyle> shared_style):
+    Widget(owner, config, stage, shared_style) {
 
     set_resize_mode(config->button_resize_mode_);
 

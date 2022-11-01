@@ -4,6 +4,7 @@
 #include "types.h"
 #include "keycodes.h"
 #include "macros.h"
+#include "input/input_state.h"
 
 namespace smlt {
 
@@ -61,6 +62,17 @@ struct KeyEvent {
     ModifierKeyState modifiers;
 };
 
+enum GameControllerEventType {
+    GAME_CONTROLLER_EVENT_TYPE_BUTTON_DOWN,
+    GAME_CONTROLLER_EVENT_TYPE_BUTTON_UP
+};
+
+struct GameControllerEvent {
+    GameControllerIndex index;
+    GameControllerEventType type;
+    JoystickButton button;
+};
+
 class EventListener {
 public:
     EventListener() {}
@@ -72,6 +84,9 @@ public:
 
     void handle_key_down(Window* window, KeyboardCode code, ModifierKeyState modifiers);
     void handle_key_up(Window* window, KeyboardCode code, ModifierKeyState modifiers);
+
+    void handle_controller_button_down(GameControllerIndex controller, JoystickButton button);
+    void handle_controller_button_up(GameControllerIndex controller, JoystickButton button);
 
 private:
     virtual void on_key_down(const KeyEvent& evt) {
@@ -91,6 +106,14 @@ private:
     }
 
     virtual void on_touch_move(const TouchEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_game_controller_button_down(const GameControllerEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_game_controller_button_up(const GameControllerEvent& evt) {
         _S_UNUSED(evt);
     }
 

@@ -51,18 +51,12 @@ public:
         pg2_->resize(column, -1);
         frame->pack_child(pg2_);
 
-        auto added = app->vfs->add_search_path("simulant/fonts/Orbitron");
-
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font("Orbitron", 32);
         frame->pack_child(big_label);
 
-        if(added) {
-            app->vfs->remove_search_path("simulant/fonts/Orbitron");
-        }
-
-        auto simulant_logo = stage_->assets->new_texture_from_file("simulant/textures/simulant-icon.png");
+        auto simulant_logo = stage_->assets->new_texture_from_file("textures/simulant-icon.png");
         auto icon = stage_->ui->new_widget_as_image(simulant_logo);
         icon->set_anchor_point(1, 1);
         icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
@@ -84,12 +78,9 @@ public:
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
-        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_LAYOUT_ALPHABETICAL);
-        keyboard_->set_anchor_point(0.5f, 0.0f);
-        keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.05f));
-        keyboard_->set_font("Orbitron", 14);
-        keyboard_->set_background_colour(smlt::Colour(0.1f, 0.1f, 0.1f, 0.5f));
-        keyboard_->set_border_colour(smlt::Colour::NONE);
+        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_MODE_LOWERCASE);
+        keyboard_->set_anchor_point(0.5f, 1.0f);
+        keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.5f));
         keyboard_->signal_key_pressed().connect([](smlt::ui::SoftKeyPressedEvent& evt) {
            /* Don't allow spaces (for testing) */
            if(evt.character == ' ') {
@@ -98,13 +89,6 @@ public:
         });
 
         keyboard_->set_keyboard_integration_enabled(true);
-
-        auto entry = stage_->ui->new_widget_as_label("");
-        entry->resize(keyboard_->outer_width(), -1);
-        entry->set_anchor_point(0.5f, 0.0f);
-        entry->move_to(window->coordinate_from_normalized(0.5f, 0.25f));
-        entry->set_background_colour(smlt::ui::UIConfig().background_colour_);
-        keyboard_->set_target(entry);
 
         auto pl = stage_->ui->new_widget_as_label("PL");
         pl->set_padding(10, 0, 0, 0);
@@ -149,26 +133,6 @@ public:
 
         pg2_->set_value(percent);
         pg1_->pulse();
-
-        if(input->axis_was_pressed("Vertical")) {
-            if(input->axis_value_hard("Vertical") > 0) {
-                keyboard_->cursor_up();
-            } else {
-                keyboard_->cursor_down();
-            }
-        }
-
-        if(input->axis_was_pressed("Horizontal")) {
-            if(input->axis_value_hard("Horizontal") > 0) {
-                keyboard_->cursor_right();
-            } else {
-                keyboard_->cursor_left();
-            }
-        }
-
-        if(input->axis_was_pressed("Fire1")) {
-            keyboard_->activate();
-        }
     }
 
 private:
@@ -205,7 +169,6 @@ int main(int argc, char* argv[]) {
     config.title = "UI Demo";
     config.fullscreen = false;
 
-    config.ui.font_size = 18;
 
 #ifdef __DREAMCAST__
     config.width = 640;

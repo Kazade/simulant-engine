@@ -91,6 +91,7 @@ public:
     bool contains(const wchar_t ch) const;
 
     void push_back(const wchar_t c);
+    void pop_back();
 
     unicode slice(int32_t beg, int32_t end) const;
     unicode slice(int32_t beg, void* null) const;
