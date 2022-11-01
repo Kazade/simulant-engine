@@ -140,11 +140,11 @@ build:android-armeabiv7a-gcc:debug:
   allow_failure: true
   variables:
    APPLICATIONMK: >-
-     APP_PLATFORM := android-23\n
+     APP_PLATFORM := android-31\n
      APP_ABI := armeabi-v7a\n
   before_script:
-   - apt-get update -y
-   - apt-get install -y file
+   - dnf upgrade -y
+   - dnf install -y file
    - echo ${PATH}
   script:
    - mkdir ${CI_PROJECT_DIR}/build
