@@ -72,6 +72,10 @@ public:
     }
 
     void on_key_up(const KeyEvent& evt) override {
+        if(!keyboard_->is_visible()) {
+            return;
+        }
+
         uint16_t chr = keyboard_code_to_char(evt.keyboard_code, keyboard_->mode());
         if(chr) {
             if(keyboard_->cursor_to_char(chr)) {
@@ -93,6 +97,10 @@ public:
 
     void on_game_controller_button_up(const GameControllerEvent& evt) override {
         if(evt.index.to_int8_t() != 0) {
+            return;
+        }
+
+        if(!keyboard_->is_visible()) {
             return;
         }
 
