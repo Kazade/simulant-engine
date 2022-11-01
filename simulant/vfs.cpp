@@ -74,6 +74,13 @@ VirtualFileSystem::VirtualFileSystem() {
     for(auto& path: copy) {
         add_search_path(kfs::path::join(path.str(), "assets"));
     }
+
+    /* Finally add the simulant directory to all search paths as projects
+     * have assets/simulant */
+    copy = resource_path_;
+    for(auto& path: copy) {
+        add_search_path(kfs::path::join(path.str(), "simulant"));
+    }
 }
 
 bool VirtualFileSystem::add_search_path(const Path& path) {

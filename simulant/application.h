@@ -94,17 +94,7 @@ struct AppConfig {
     struct UI {
         /** If specified, these directories are added to the path
          * temporarily while loading the default font */
-        std::vector<Path> font_directories = {
-#ifdef __DREAMCAST__
-            "/cd/simulant",
-            "/cd/assets/simulant"
-            "/pc/simulant",
-            "/pc/assets/simulant"
-#else
-            "simulant",
-            "assets/simulant"
-#endif
-        };
+        std::vector<Path> font_directories = {};
 
         /** The font-family that is used by default for widgets */
         std::string font_family = "Cantarell";
