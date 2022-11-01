@@ -69,7 +69,7 @@ public:
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TexturePtr& texture);
     Frame* new_widget_as_frame(const unicode& title, const Px& width=-1, const Px& height=-1);
-    Keyboard* new_widget_as_keyboard(const KeyboardMode& mode=KEYBOARD_MODE_NUMERICAL);
+    Keyboard* new_widget_as_keyboard(const KeyboardMode& mode=KEYBOARD_MODE_UPPERCASE, const unicode& initial_text="");
 
     Widget* widget(WidgetID widget_id);
 

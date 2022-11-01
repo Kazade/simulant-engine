@@ -1023,7 +1023,7 @@ private:
     }
 };
 
-Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMode mode):
+Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMode mode, const unicode &initial_text):
     Widget(owner, config, stage) {
 
     resize(-1, -1);
@@ -1057,6 +1057,7 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     panel_->rebuild();
 
     entry_ = Label::create(nullptr, config, stage);
+    entry_->set_text(initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->line_height() * 2);
     entry_->set_font(font);
