@@ -94,6 +94,8 @@ private:
     Frame* main_frame_ = nullptr;
 
     std::shared_ptr<EventListener> keyboard_listener_;
+
+    bool pre_set_text(const unicode& text) override;
 };
 
 }

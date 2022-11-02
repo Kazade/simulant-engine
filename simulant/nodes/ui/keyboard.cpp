@@ -595,11 +595,18 @@ private:
     std::vector<KeyInfo> keys_;
 
     Px key_width() const {
-        return line_height() * 3;
+        /* We use a 4:3 aspect ratio to determine what the keyboard width should
+         * be, and use 80% of that. This should work on all platforms including
+         * ultra-wide monitors */
+        auto w = smlt::get_app()->window->height() * (4 / 3);
+        w *= 0.8f;
+        return Px(w / 12);
     }
 
     Px key_height() const {
-        return line_height() * 2;
+        auto h = smlt::get_app()->window->height();
+        h *= 0.25f;
+        return Px(h / 5);
     }
 
     Px key_padding() const {
@@ -1064,25 +1071,15 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
 
     panel_ = KeyboardPanel::create(config, stage);
 
-    auto font = owner->load_or_get_font(
-        "Cantarell",
-        smlt::get_app()->config->ui.font_size,
-        FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
-    );
-
-    assert(font);
-
     panel_->set_background_colour(config->background_colour_);
     panel_->set_border_colour(config->background_colour_);
     panel_->set_border_width(2);
-    panel_->set_font(font);
     panel_->rebuild();
 
     entry_ = Label::create(nullptr, config, stage);
     entry_->set_text(initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->line_height() * 2);
-    entry_->set_font(font);
     entry_->set_background_colour(smlt::Colour::WHITE);
     entry_->set_border_colour(config->background_colour_);
     entry_->set_text_colour(config->foreground_colour_);
@@ -1103,7 +1100,6 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     x_button->rebuild();
 
     auto x_label = Label::create(nullptr, config, stage);
-    x_label->set_font(font_);
     x_label->set_background_colour(smlt::Colour::RED);
     x_label->set_text(_T("Cancel"));
     x_label->set_text_colour(smlt::Colour::WHITE);
@@ -1232,6 +1228,12 @@ UIDim Keyboard::calculate_content_dimensions(Px text_width, Px text_height) {
     }
 
     return ret;
+}
+
+bool Keyboard::pre_set_text(const unicode &text) {
+    /* We set the text on the entry and don't set the text on the keyboard */
+    entry_->set_text(text);
+    return false;
 }
 
 void Keyboard::cursor_to_space() {

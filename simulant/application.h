@@ -101,7 +101,7 @@ struct AppConfig {
 
         /** The root font size, all Rem measurements are based on this
           * unless overridden in a UIConfig */
-        uint16_t font_size = 20;
+        uint16_t font_size = 18;
     } ui;
 
     struct Desktop {

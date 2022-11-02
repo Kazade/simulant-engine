@@ -320,6 +320,7 @@ protected:
     virtual void prepare_build() {}
     virtual void finalize_render() {}
     virtual void finalize_build() {}
+    virtual bool pre_set_text(const unicode& txt) { return true; }
 };
 
 }

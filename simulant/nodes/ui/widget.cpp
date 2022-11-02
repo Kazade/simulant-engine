@@ -670,6 +670,10 @@ void Widget::set_padding(Px x) {
 }
 
 void Widget::set_text(const unicode &text) {
+    if(!pre_set_text(text)) {
+        return;
+    }
+
     if(text_ == text) {
         return;
     }
