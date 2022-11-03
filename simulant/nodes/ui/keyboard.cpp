@@ -854,8 +854,8 @@ private:
         key = find_key(2, 4);
         if(key) {
             WidgetBounds bounds;
-            auto w = digits_.tex->width() / 2;
-            auto h = digits_.tex->height() / 2;
+            auto w = digits_.tex->width() / 4;
+            auto h = digits_.tex->height() / 4;
 
             bounds.min.x = key->center.x - w;
             bounds.max.x = key->center.x + w;
@@ -1177,7 +1177,7 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     entry_ = Label::create(nullptr, config, stage);
     entry_->set_text(initial_text);
     entry_->set_border_width(2);
-    entry_->resize(panel_->content_width(), panel_->line_height() * 2);
+    entry_->resize(panel_->content_width(), panel_->key_height());
     entry_->set_background_colour(smlt::Colour::WHITE);
     entry_->set_border_colour(config->background_colour_);
     entry_->set_text_colour(config->foreground_colour_);
@@ -1194,7 +1194,7 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     auto x_button = Label::create(nullptr, config, stage);
     x_button->set_text("X");
     x_button->set_text_colour(smlt::Colour::WHITE);
-    x_button->resize(panel_->line_height() * 2, panel_->line_height() * 2);
+    x_button->resize(panel_->line_height() * 2, panel_->key_height());
     x_button->rebuild();
 
     auto x_label = Label::create(nullptr, config, stage);
