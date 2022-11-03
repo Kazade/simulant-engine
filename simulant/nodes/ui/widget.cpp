@@ -451,19 +451,19 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     mesh_->vertex_data->move_to_end();
     mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0, (uvs) ? uvs[0].y : 0.0f);
+    mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f, (uvs) ? uvs[0].y : 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
     mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0, (uvs) ? uvs[1].y : 0.0f);
+    mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f, (uvs) ? uvs[1].y : 0.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
 
     mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
     mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0, (uvs) ? uvs[2].y : 1.0f);
+    mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f, (uvs) ? uvs[2].y : 1.0f);
     mesh_->vertex_data->normal(0, 0, 1);
     mesh_->vertex_data->move_next();
     mesh_->vertex_data->done();
