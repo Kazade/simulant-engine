@@ -1194,14 +1194,14 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     auto x_button = Label::create(nullptr, config, stage);
     x_button->set_text("X");
     x_button->set_text_colour(smlt::Colour::WHITE);
-    x_button->resize(panel_->line_height() * 2, panel_->key_height());
+    x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
     auto x_label = Label::create(nullptr, config, stage);
     x_label->set_background_colour(smlt::Colour::RED);
     x_label->set_text(_T("Cancel"));
     x_label->set_text_colour(smlt::Colour::WHITE);
-    x_label->resize(-1, panel_->line_height() * 2);
+    x_label->resize(-1, panel_->key_height());
     x_label->rebuild();
 
     info_row_->pack_child(x_button.get());
