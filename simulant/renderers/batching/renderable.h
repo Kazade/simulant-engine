@@ -64,7 +64,7 @@ private:
     }
 };
 
-struct Renderable final {
+struct alignas(8) Renderable final {
     MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
     const VertexData* vertex_data = nullptr;
 
