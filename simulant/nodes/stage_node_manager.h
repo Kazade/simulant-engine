@@ -70,7 +70,8 @@ public:
 
     T* get(const IDType& id) const {
         StageNode* node = (*pool_)[id.value()];
-        T* result = dynamic_cast<T*>(node);
+        assert(dynamic_cast<T*>(node));  // In debug, check the type
+        T* result = (T*) node;
 #if STAGE_NODE_MANAGER_DEBUG
         assert((node && result) || (!node && !result));
 #endif
@@ -118,7 +119,8 @@ public:
                 (*it)->destroyed_ = true;
             }
 
-            T* a = dynamic_cast<T*>(node);
+            assert(dynamic_cast<T*>(node));
+            T* a = (T*) node;
             assert((node && a) || (!node && !a));
 
             a->clean_up();
