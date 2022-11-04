@@ -421,11 +421,11 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
 }
 
-void SubMesh::set_material(MaterialPtr material) {
+void SubMesh::set_material(const MaterialPtr& material) {
     set_material_at_slot(MATERIAL_SLOT0, material);
 }
 
-void SubMesh::set_material_at_slot(MaterialSlot var, MaterialPtr mat) {
+void SubMesh::set_material_at_slot(MaterialSlot var, const MaterialPtr &mat) {
     auto old_material_id = (materials_[var]) ? materials_[var]->id() : MaterialID();
 
     if(old_material_id == mat->id()) {

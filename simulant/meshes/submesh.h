@@ -79,8 +79,8 @@ public:
 
     void remove_all_vertex_ranges();
 
-    void set_material(MaterialPtr material);
-    void set_material_at_slot(MaterialSlot var, MaterialPtr material);
+    void set_material(const MaterialPtr &material);
+    void set_material_at_slot(MaterialSlot var, const MaterialPtr& material);
 
     MaterialPtr material() const;
     MaterialPtr material_at_slot(MaterialSlot var, bool fallback=false) const;
