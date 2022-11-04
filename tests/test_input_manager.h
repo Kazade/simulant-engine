@@ -17,7 +17,7 @@ public:
 
         state_.reset(new InputState(window));
         state_->_update_keyboard_devices({KeyboardDeviceInfo{0}});
-        state_->_update_game_controllers({GameControllerInfo{GameControllerID(0), "test", 1, 1, 0, false}});
+        state_->_update_game_controllers({GameControllerInfo{GameControllerID(0), "test", 1, 1, 0, false, {0}}});
         manager_.reset(new InputManager(state_.get()));
     }
 
