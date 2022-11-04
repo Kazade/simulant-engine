@@ -65,13 +65,13 @@ public:
     }
 
     bool contains(const IDType& id) const {
-        return bool(get(id));
+        StageNode* node = (*pool_)[id.value()];
+        return bool(dynamic_cast<T*>(node));
     }
 
     T* get(const IDType& id) const {
         StageNode* node = (*pool_)[id.value()];
-        assert(dynamic_cast<T*>(node));  // In debug, check the type
-        T* result = (T*) node;
+        T* result = dynamic_cast<T*>(node);
 #if STAGE_NODE_MANAGER_DEBUG
         assert((node && result) || (!node && !result));
 #endif
