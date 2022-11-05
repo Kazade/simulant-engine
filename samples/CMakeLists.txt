@@ -43,6 +43,8 @@ foreach(sample ${SAMPLES})
 
     ADD_EXECUTABLE(${sample} ${SAMPLE_SOURCES})
 
+    target_link_options(${sample} PRIVATE "-Wl,-Map,${sample}.${CMAKE_BUILD_TYPE}.map")
+
     IF(PLATFORM_PSP)
         create_pbp_file(TARGET ${sample})
         file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp)
