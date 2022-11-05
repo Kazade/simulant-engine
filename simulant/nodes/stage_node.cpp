@@ -302,7 +302,7 @@ void StageNode::fixed_update(float step) {
 }
 
 bool StageNode::parent_is_stage() const {
-    return bool(dynamic_cast<Stage*>(parent_));
+    return parent_ == stage_;
 }
 
 }
