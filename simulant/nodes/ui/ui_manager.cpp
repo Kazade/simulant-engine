@@ -193,16 +193,17 @@ void UIManager::on_touch_move(const TouchEvent &evt) {
 
 void UIManager::queue_event(const TouchEvent& e) {
     UIEvent evt(e);
-    queued_events_.push(evt);
+    queued_events_.push_back(evt);
 }
 
 void UIManager::process_event_queue(const Camera* camera, const Viewport &viewport) const {
+    if(queued_events_.empty()) {
+        return;
+    }
+
     auto queued_events = queued_events_; // Copy the queue
 
-    while(!queued_events.empty()) {
-        auto evt = queued_events.front();
-        queued_events.pop();
-
+    for(auto& evt: queued_events) {
         switch(evt.type) {
             case UI_EVENT_TYPE_TOUCH: {
                 auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y));
@@ -241,7 +242,7 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
 }
 
 void UIManager::clear_event_queue() {
-    queued_events_ = std::queue<UIEvent>();
+    queued_events_.clear();
 }
 
 WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {

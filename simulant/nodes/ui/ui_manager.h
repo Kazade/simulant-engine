@@ -105,7 +105,7 @@ private:
     void process_event_queue(const Camera *camera, const Viewport& viewport) const;
     void clear_event_queue();
 
-    std::queue<UIEvent> queued_events_;
+    std::vector<UIEvent> queued_events_;
 
     WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport& viewport, const Vec2& window_coord) const;
 
