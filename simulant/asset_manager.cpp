@@ -33,9 +33,6 @@
 
 namespace smlt {
 
-#define HEADING_FONT "simulant/fonts/orbitron/orbitron-regular-48.fnt"
-#define BODY_FONT "simulant/fonts/orbitron/orbitron-regular-18.fnt"
-
 AssetManager::AssetManager(AssetManager* parent):
     parent_(parent) {
 

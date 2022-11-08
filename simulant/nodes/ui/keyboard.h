@@ -15,10 +15,6 @@ namespace ui {
 
 class Frame;
 
-enum KeyboardLayout {
-    KEYBOARD_LAYOUT_ALPHABETICAL,
-    KEYBOARD_LAYOUT_NUMERICAL,
-};
 
 struct SoftKeyPressedEvent {
     KeyboardCode code;
@@ -32,36 +28,50 @@ struct SoftKeyPressedEvent {
 };
 
 typedef sig::signal<void (SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
-typedef sig::signal<void ()> KeyboardDoneSignal;
+typedef sig::signal<void (const unicode&)> KeyboardDoneSignal;
+typedef sig::signal<void ()> KeyboardCancelledSignal;
 
 enum KeyboardMode {
     KEYBOARD_MODE_UPPERCASE,
-    KEYBOARD_MODE_LOWERCASE
+    KEYBOARD_MODE_LOWERCASE,
+    KEYBOARD_MODE_NUMERICAL,
+    KEYBOARD_MODE_ACCENT_LOWERCASE,
+    KEYBOARD_MODE_ACCENT_UPPERCASE
 };
 
+class KeyboardPanel;
+
+/* A keyboard is combined of a TextInput and a KeyboardPanel */
 class Keyboard:
     public Widget {
 
     DEFINE_SIGNAL(KeyboardKeyPressedSignal, signal_key_pressed);
     DEFINE_SIGNAL(KeyboardDoneSignal, signal_done);
+    DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
 public:
-    using Widget::init; // Pull in init to satisfy Managed<Image>
+    using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
-    Keyboard(UIManager* owner, UIConfig* config, KeyboardLayout layout);
+    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardMode mode, const unicode& initial_text="");
     ~Keyboard();
 
     void cursor_up();
     void cursor_down();
     void cursor_right();
     void cursor_left();
-
-    bool cursor_to_key(KeyboardCode code);
+    bool cursor_to_char(uint16_t displayed_char);
+    void cursor_to_return();
+    void cursor_to_case_toggle();
+    void cursor_to_backspace();
+    void cursor_to_ok();
+    void cursor_to_space();
 
     /** Sends the key_pressed signal for the selected key */
     void activate();
-    void set_target(smlt::ui::Widget* widget);
+    void cancel();
+
     void set_mode(KeyboardMode mode);
+    KeyboardMode mode() const;
 
     bool is_keyboard_integration_enabled() const {
         return bool(keyboard_listener_);
@@ -70,64 +80,22 @@ public:
     void set_keyboard_integration_enabled(bool value);
 
     using Widget::set_font;
+
+    void set_font(FontPtr font) override;
 private:
-    void move_row(int dir);
+    void on_transformation_change_attempted() override;
 
-    KeyboardLayout layout_ = KEYBOARD_LAYOUT_ALPHABETICAL;
-    KeyboardMode mode_ = KEYBOARD_MODE_UPPERCASE;
-    std::shared_ptr<WidgetStyle> default_style_;
-    std::shared_ptr<WidgetStyle> highlighted_style_;
+    UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
-    unicode limited_chars_;
-
-    struct ButtonInfo {
-        Button* button = nullptr;
-        uint8_t option_count = 0;
-        uint16_t options[4] = {0};
-    };
-
-    // utf-16
-    std::map<KeyboardCode, ButtonInfo> buttons_;
-    void set_enabled(Button* btn, bool value);
+    std::shared_ptr<KeyboardPanel> panel_;
+    std::shared_ptr<Label> entry_;
+    std::shared_ptr<Frame> info_row_;
 
     Frame* main_frame_ = nullptr;
-    Frame* rows_[5] = {0, 0, 0, 0, 0};
-    smlt::ui::Widget* focused_ = nullptr;
-    smlt::ui::Widget* target_ = nullptr;
-    sig::Connection target_destroyed_;
-
-    void clear();
-
-    void build_rows(const struct KeyEntry *entries, std::size_t entry_count, uint32_t flags);
-    void generate_alphabetical_layout(bool uppercase=true);
-    void generate_numerical_layout();
-
-    void focus(smlt::ui::Widget* widget);
-
-    void unfocus(smlt::ui::Widget* widget);
-
-    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
-
-    void on_transformation_change_attempted() override;
-    void set_font(FontPtr font) override;
-
-    smlt::ui::Button* new_button(const unicode& label);
-
-    enum ActionFlags {
-        ACTION_FLAGS_BACKSPACE = 0x2,
-        ACTION_FLAGS_CASE_TOGGLE = 0x4,
-        ACTION_FLAGS_SPACEBAR = 0x8,
-        ACTION_FLAGS_ENTER = 0xF,
-        ACTION_FLAGS_DEFAULT = ACTION_FLAGS_BACKSPACE
-    };
-
-    void populate_action_row(Frame* target, uint32_t action_flags=ACTION_FLAGS_DEFAULT);
-
-    std::vector<sig::connection> update_connections_;
-
-    std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
 
     std::shared_ptr<EventListener> keyboard_listener_;
+
+    bool pre_set_text(const unicode& text) override;
 };
 
 }

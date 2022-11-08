@@ -34,6 +34,23 @@
 namespace smlt {
 namespace loaders {
 
+_S_FORCE_INLINE void fast_split(const std::string& s, std::vector<std::string>* out) {
+    std::string buffer;
+    for(auto& c: s) {
+        if(c == ' ' || c == '\t') {
+            out->push_back(buffer);
+            buffer.clear();
+        } else {
+            buffer.push_back(c);
+        }
+    }
+
+    if(!buffer.empty()) {
+        out->push_back(buffer);
+    }
+}
+
+
 enum VertexBatchType {
     VERTEX_BATCH_TYPE_TRIANGLES,
     VERTEX_BATCH_TYPE_FANS
@@ -67,7 +84,7 @@ struct LoadInfo {
     std::list<VertexDataBatch> batches;
 };
 
-typedef std::function<bool (LoadInfo*, std::string, std::string)> CommandHandler;
+typedef std::function<bool (LoadInfo*, std::string, const std::vector<std::string>&)> CommandHandler;
 
 typedef std::map<std::string, CommandHandler> CommandList;
 
@@ -78,6 +95,8 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
 
     // Only used for debug logging
     std::string last_command;
+
+    std::vector<std::string> arg_parts;
 
     while(!data_->eof()) {
         auto c = data_->get();
@@ -103,13 +122,16 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
 
             args = strip(args);
 
+            arg_parts.clear();
+            fast_split(args, &arg_parts);
+
             if(!commands.count(command)) {
                 S_WARN("Unhandled OBJ command: {0}", command);
                 command.clear();
                 continue;
             }
 
-            if(!commands.at(command)(&info, command, args)) {
+            if(!commands.at(command)(&info, command, arg_parts)) {
                 S_ERROR("Error passing command '{0}' with args: {1}", command, args);
                 return;
             }
@@ -121,18 +143,18 @@ static void run_parser(LoadInfo& info, const CommandList& commands) {
     }
 }
 
-static bool null(LoadInfo*, std::string, std::string) {
+static bool null(LoadInfo*, std::string, const std::vector<std::string>&) {
     return true;
 }
 
-static bool newmtl(LoadInfo* info, std::string, std::string args) {
-    auto mat_name = strip(args);
+static bool newmtl(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
+    auto mat_name = strip(parts[0]);
 
     if(info->materials.count(mat_name)) {
         info->current_material = info->materials.at(mat_name).get();
     } else {
         auto new_mat = info->assets->clone_default_material();
-        new_mat->set_name(args);
+        new_mat->set_name(mat_name);
         new_mat->set_cull_mode(info->cull_mode);
 
         info->materials[mat_name] = new_mat;
@@ -142,8 +164,10 @@ static bool newmtl(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool map_Kd(LoadInfo* info, std::string, std::string args) {
+static bool map_Kd(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+
+    std::string tex_path = parts[0];
 
     /* Handle replacing the texture extension if that was desired */
     if(!info->overridden_tex_format.empty()) {
@@ -153,10 +177,10 @@ static bool map_Kd(LoadInfo* info, std::string, std::string args) {
         }
 
         S_DEBUG("Overriding texture format on load: {0}", ext);
-        args = kfs::path::split_ext(args).first + ext;
+        tex_path = kfs::path::split_ext(tex_path).first + ext;
     }
 
-    auto tex = info->assets->new_texture_from_file(args);
+    auto tex = info->assets->new_texture_from_file(tex_path);
 
     /* Force upload to VRAM and free the RAM */
     tex->flush();
@@ -165,10 +189,8 @@ static bool map_Kd(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool Ka(LoadInfo* info, std::string, std::string args) {
+static bool Ka(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
-
-    auto parts = split(args);
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
@@ -179,10 +201,8 @@ static bool Ka(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool Kd(LoadInfo* info, std::string, std::string args) {
+static bool Kd(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
-
-    auto parts = split(args);
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
@@ -193,10 +213,8 @@ static bool Kd(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool Ks(LoadInfo* info, std::string, std::string args) {
+static bool Ks(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
-
-    auto parts = split(args);
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
@@ -206,10 +224,8 @@ static bool Ks(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool Ke(LoadInfo* info, std::string, std::string args) {
+static bool Ke(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
-
-    auto parts = split(args);
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
@@ -219,19 +235,19 @@ static bool Ke(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool Ns(LoadInfo* info, std::string, std::string args) {
+static bool Ns(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
-    float s = smlt::stof(args);
+    float s = smlt::stof(parts[0]);
 
     mat->set_shininess(128.0f * (0.001f * s));
     return true;
 }
 
-static bool d(LoadInfo* info, std::string, std::string args) {
+static bool d(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
 
-    float d = smlt::stof(args);
+    float d = smlt::stof(parts[0]);
     if(almost_equal(d, 1.0f)) {
         mat->set_blend_func(smlt::BLEND_NONE);
     } else {
@@ -257,12 +273,12 @@ static bool d(LoadInfo* info, std::string, std::string args) {
 }
 
 /* Tr is the inverse of dissolve so we just reverse */
-static bool Tr(LoadInfo* info, std::string _, std::string args) {
-    float v = smlt::clamp(smlt::stof(args), 0.0f, 1.0f);
-    return d(info, _, _F("{0}").format(1.0f - v));
+static bool Tr(LoadInfo* info, std::string _, const std::vector<std::string>& parts) {
+    float v = smlt::clamp(smlt::stof(parts[0]), 0.0f, 1.0f);
+    return d(info, _, {_F("{0}").format(1.0f - v)});
 }
 
-static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
+static bool load_material_lib(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     const std::map<std::string, CommandHandler> commands = {
         {"newmtl", newmtl},
         {"Ka", Ka},
@@ -284,7 +300,7 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
 
     auto added = vfs->add_search_path(info->folder);
 
-    auto mtl_stream = vfs->open_file(args);
+    auto mtl_stream = vfs->open_file(parts[0]);
 
     info->stream = mtl_stream.get();
 
@@ -299,8 +315,8 @@ static bool load_material_lib(LoadInfo* info, std::string, std::string args) {
     return true;
 }
 
-static bool apply_material(LoadInfo* info, std::string, std::string args) {
-    auto mat_name = strip(args);
+static bool apply_material(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
+    auto mat_name = strip(parts[0]);
 
     if(info->materials.count(mat_name)) {
         info->current_material = info->materials[mat_name].get();
@@ -316,71 +332,55 @@ static std::vector<HalfVec3>* COLOURS = nullptr;
 static std::vector<HalfVec2>* TEXCOORDS = nullptr;
 static std::vector<HalfVec3>* NORMALS = nullptr;
 
-static uint8_t parse_floats(std::string stream, float* out, uint8_t count) {
+static uint8_t parse_floats(const std::vector<std::string>& parts, float* out, uint8_t count) {
     uint8_t current = 0;
 
-    char buffer[32];
-    uint8_t buffer_c = 0;
-
-    for(auto& c: stream) {
-        if(c == ' ' || c == '\t') {
-            assert(buffer_c < 32 - 1);
-            buffer[buffer_c++] = '\0';
-            out[current++] = atof(buffer);
-            if(current == count) {
-                return true;
-            }
-
-            buffer_c = 0;
-        } else {
-            assert(buffer_c < 32 - 1);
-            buffer[buffer_c++] = c;
+    for(auto& part: parts) {
+        auto f = atof(part.c_str());
+        out[current++] = f;
+        if(current == count) {
+            return true;
         }
     }
-
-    assert(buffer_c > 0);
-    assert(buffer_c < 32 - 1);
-    buffer[buffer_c++] = '\0';
-    out[current++] = atof(buffer);
 
     return current;
 }
 
-static bool load_vertex(LoadInfo*, std::string, std::string args) {
+static bool load_vertex(LoadInfo*, std::string, const std::vector<std::string>& parts) {
     float xyzrgb[6] = {0, 0, 0, 1, 1, 1};
 
-    parse_floats(args, xyzrgb, 6);
+    parse_floats(parts, xyzrgb, 6);
     VERTICES->push_back(HalfVec3(xyzrgb[0], xyzrgb[1], xyzrgb[2]));
     COLOURS->push_back(HalfVec3(xyzrgb[3], xyzrgb[4], xyzrgb[5]));
     return true;
 }
 
-static bool load_texcoord(LoadInfo* info, std::string, std::string args) {
+static bool load_texcoord(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     if(!info->vspec.has_texcoord0()) {
         return true;
     }
 
     float uv[2] = {0, 0};
 
-    parse_floats(args, uv, 2);
+    parse_floats(parts, uv, 2);
     TEXCOORDS->push_back(HalfVec2(uv[0], uv[1]));
     return true;
 }
 
-static bool load_normal(LoadInfo* info, std::string, std::string args) {
+static bool load_normal(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
     if(!info->vspec.has_normals()) {
         return true;
     }
 
     float nxyz[3] = {0, 0, 0};
 
-    parse_floats(args, nxyz, 3);
+    parse_floats(parts, nxyz, 3);
     NORMALS->push_back(HalfVec3(nxyz[0], nxyz[1], nxyz[2]));
     return true;
 }
 
 
-static bool load_face(LoadInfo* info, std::string, std::string args) {
+static bool load_face(LoadInfo* info, std::string, const std::vector<std::string>& corners) {
     /* To render things as efficiently as possible, we need two submeshes per material:
      *
      * 1. For triangles, rendered as a single "draw arrays" call
@@ -423,8 +423,6 @@ static bool load_face(LoadInfo* info, std::string, std::string args) {
 
     assert(batches[0]);
     assert(batches[1]);
-
-    auto corners = split(args);
 
     auto batch = (corners.size() == 3) ? batches[0] : batches[1];
     batch->ranges.push_back(corners.size());

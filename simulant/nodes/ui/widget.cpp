@@ -12,10 +12,11 @@ namespace smlt {
 namespace ui {
 
 
-Widget::Widget(UIManager *owner, UIConfig *defaults, std::shared_ptr<WidgetStyle> shared_style):
+Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style):
     TypedDestroyableObject<Widget, UIManager>(owner),
-    ContainerNode(owner->stage(), STAGE_NODE_TYPE_OTHER),
+    ContainerNode(stage, STAGE_NODE_TYPE_OTHER),
     owner_(owner),
+    theme_(defaults),
     style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {
 
     if(!shared_style) {
@@ -30,7 +31,7 @@ Widget::Widget(UIManager *owner, UIConfig *defaults, std::shared_ptr<WidgetStyle
     Px size = (defaults->font_size_ == Px(0)) ?
         Px(get_app()->config->ui.font_size) : Px(defaults->font_size_);
 
-    auto font = owner->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
+    auto font = stage->ui->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
     assert(font);
 
     set_font(font);
@@ -60,9 +61,9 @@ bool Widget::init() {
     actor_->set_parent(this);
 
     /* Use the global materials until we can't anymore! */
-    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = owner_->global_border_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = owner_->global_background_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->global_foreground_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
 
     /* Now we must create the submeshes in the order we want them rendered */
     mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
@@ -91,7 +92,9 @@ void Widget::set_font(const std::string& family, Rem size, FontWeight weight, Fo
 }
 
 void Widget::set_font(const std::string& family, Px size, FontWeight weight, FontStyle style) {
-    set_font(owner_->load_or_get_font(family, size, weight, style));
+    if(owner_) {
+        set_font(owner_->load_or_get_font(family, size, weight, style));
+    }
 }
 
 /* Internal only! */
@@ -138,9 +141,9 @@ void Widget::resize(Px width, Px height) {
 
     if(width == Px(-1) && height > Px(-1)) {
         resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
-    } else if(width == Px(-1) && height == Px(-1)) {
+    } else if(width == -1 && height == -1) {
         resize_mode_ = RESIZE_MODE_FIT_CONTENT;
-    } else if(width > Px(-1) && height == Px(-1)) {
+    } else if(width > -1 && height == -1) {
         resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
     } else {
         resize_mode_ = RESIZE_MODE_FIXED;
@@ -162,7 +165,7 @@ void Widget::render_text() {
     };
 
     if(!font_ || text().empty()) {
-        text_width_ = text_height_ = Px(0);
+        text_width_ = text_height_ = Px();
         return;
     }
 
@@ -179,7 +182,7 @@ void Widget::render_text() {
     /* We know how many vertices we'll need (roughly) */
     vertices.reserve(text().length() * 4);
 
-    Px left_bound;
+    Px left_bound = 0;
 
     /* We don't have a right bound if the widget is supposed to fit the content
      * or if we have a fixed height, but unfixed width. Otherwise the right bound is
@@ -188,12 +191,12 @@ void Widget::render_text() {
         resize_mode_ == RESIZE_MODE_FIT_CONTENT ||
         resize_mode_ == RESIZE_MODE_FIXED_HEIGHT
     ) ?
-    std::numeric_limits<Px>::max() :
+    std::numeric_limits<int>::max() :
     std::max(Px(0), (requested_width_ - (style_->padding_.left + style_->padding_.right)));
 
     Px left = left_bound;
     uint32_t line_start = 0;
-    Px line_length;
+    Px line_length = 0;
     uint32_t line_vertex_count = 0;
 
     /* Generate lines of text */
@@ -202,14 +205,17 @@ void Widget::render_text() {
 
     for(uint32_t i = 0; i < text_length; ++i) {
         unicode::value_type ch = text_ptr[i];
-        Px ch_width = Px(font_->character_width(ch));
-        Px ch_height = Px(font_->character_height(ch));
-        Px ch_advance = Px(font_->character_advance(ch, text_ptr[i + 1]));
+        Px ch_width = font_->character_width(ch);
+        Px ch_height = font_->character_height(ch);
+
+        /* FIXME: This seems wrong.. if advance *should be* a float then we should probably
+         * not do this cast here */
+        Px ch_advance = (uint16_t) font_->character_advance(ch, text_ptr[i + 1]);
 
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
         auto finalize_line = [&]() {
-            if(!line_length) {
+            if(line_length == 0) {
                 return;
             }
 
@@ -218,7 +224,7 @@ void Widget::render_text() {
             line_lengths.push_back(line_length);
             line_start = vertices.size();
             left = left_bound;
-            line_length = Px();
+            line_length = Px(0);
             line_vertex_count = 0;
         };
 
@@ -357,19 +363,28 @@ void Widget::render_text() {
     vdata->reserve(vertices.size());
 
     if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
-        auto cwidth = std::max(requested_width(), content_width());
+        auto cwidth = std::max(requested_width(), content_width()) - padding().left - padding().right;
 
         auto j = 0;
         for(auto range: line_ranges) {
+            if(!range.second) {
+                // If there are no vertices on this line, then
+                // ignore.
+                continue;
+            }
+
             Vertex* ch = &vertices.at(range.first);
 
-            auto ashift = Px((cwidth - line_lengths[j++]).value / 2);
+            auto ashift = std::ceil(-line_lengths[j++].value * 0.5f);
+            ashift += std::ceil(cwidth.value * 0.5f);
 
             for(auto i = 0u; i < range.second; i++, ch++) {
                 if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
-                    ch->xyz.x -= ashift.value;
+                    ch->xyz.x -= ashift;
+                    ch->xyz.x += padding().left.value;
                 } else {
-                    ch->xyz.x += ashift.value;
+                    ch->xyz.x += ashift;
+                    ch->xyz.x -= padding().right.value;
                 }
             }
         }
@@ -419,7 +434,7 @@ void Widget::clear_mesh() {
     }
 }
 
-SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const Px& border_radius) {
+SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const Px& border_radius, const smlt::Vec2* uvs, float z_offset) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
 
@@ -433,10 +448,6 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
 
     auto x_offset = 0.0f;
     auto y_offset = 0.0f;
-
-    /* We don't offset Z at all, submeshes are organised back to front
-     * so that when rendering they should be correctly blended */
-    auto z_offset = 0.0f;
 
     auto prev_count = mesh_->vertex_data->count();
 
@@ -490,26 +501,26 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
         mesh_->vertex_data->move_to_end();
         mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
         mesh_->vertex_data->diffuse(colour);
-        mesh_->vertex_data->tex_coord0(0.0, 0.0f);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f, (uvs) ? uvs[0].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
         mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
         mesh_->vertex_data->diffuse(colour);
-        mesh_->vertex_data->tex_coord0(1.0, 0.0f);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f, (uvs) ? uvs[1].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
         mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
         mesh_->vertex_data->diffuse(colour);
-        mesh_->vertex_data->tex_coord0(0.0, 1.0f);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f, (uvs) ? uvs[2].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
         mesh_->vertex_data->done();
 
         mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
         mesh_->vertex_data->diffuse(colour);
-        mesh_->vertex_data->tex_coord0(1.0, 1.0f);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[3].x : 1.0f, (uvs) ? uvs[3].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
@@ -552,6 +563,33 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
     vertices->done();
 }
 
+void Widget::render_border(const WidgetBounds& border_bounds) {
+    auto colour = style_->border_colour_;
+    float a = colour.af() * style_->opacity_;
+    colour.set_alpha(a);
+    /* FIXME! This should be 4 rectangles or a tri-strip */
+    new_rectangle("border", border_bounds, colour, style_->border_radius_);
+}
+
+void Widget::render_background(const WidgetBounds& background_bounds) {
+    auto colour = style_->background_colour_;
+    colour.set_alpha(colour.af() * style_->opacity_);
+
+    auto bg = new_rectangle("background", background_bounds, colour, style_->border_radius_);
+    if(has_background_image()) {
+        apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
+    }
+}
+
+void Widget::render_foreground(const WidgetBounds& foreground_bounds) {
+    auto colour = style_->foreground_colour_;
+    colour.set_alpha(colour.af() * style_->opacity_);
+    auto fg = new_rectangle("foreground", foreground_bounds, colour, style_->border_radius_);
+    if(has_foreground_image()) {
+        apply_image_rect(fg, style_->foreground_image_, style_->foreground_image_rect_);
+    }
+}
+
 void Widget::rebuild() {
     // If we aren't initialized, don't do anything yet
     if(!is_initialized()) return;
@@ -584,31 +622,18 @@ void Widget::rebuild() {
     border_bounds.max.y += style_->border_width_;
 
     if(border_active() && border_width() > 0) {
-        auto colour = style_->border_colour_;
-        float a = colour.af() * style_->opacity_;
-        colour.set_alpha(a);
-        /* FIXME! This should be 4 rectangles or a tri-strip */
-        new_rectangle("border", border_bounds, colour, style_->border_radius_);
+        render_border(border_bounds);
     }
 
     if(background_active() && background_bounds.has_non_zero_area()) {
-        auto colour = style_->background_colour_;
-        colour.set_alpha(colour.af() * style_->opacity_);
-
-        auto bg = new_rectangle("background", background_bounds, colour, style_->border_radius_);
-        if(has_background_image()) {
-            apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
-        }
+        render_background(background_bounds);
     }
 
     if(foreground_active() && foreground_bounds.has_non_zero_area()) {
-        auto colour = style_->foreground_colour_;
-        colour.set_alpha(colour.af() * style_->opacity_);
-        auto fg = new_rectangle("foreground", foreground_bounds, colour, style_->border_radius_);
-        if(has_foreground_image()) {
-            apply_image_rect(fg, style_->foreground_image_, style_->foreground_image_rect_);
-        }
+        render_foreground(foreground_bounds);
     }
+
+    finalize_render();
 
     /* Apply anchoring */
     auto width = border_bounds.width().value;
@@ -707,6 +732,10 @@ void Widget::set_padding(Px x) {
 }
 
 void Widget::set_text(const unicode &text) {
+    if(!pre_set_text(text)) {
+        return;
+    }
+
     if(text_ == text) {
         return;
     }
@@ -749,7 +778,12 @@ void Widget::_recalc_active_layers() {
 }
 
 const AABB &Widget::aabb() const {
-    return actor_->aabb();
+    if(actor_) {
+        return actor_->aabb();
+    } else {
+        static AABB no_aabb;
+        return no_aabb;
+    }
 }
 
 void Widget::set_background_image(TexturePtr texture) {

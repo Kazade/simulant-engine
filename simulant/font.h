@@ -67,8 +67,8 @@ public:
     MaterialPtr material() const;
 
     std::pair<Vec2, Vec2> texture_coordinates_for_character(char32_t c);
-    float character_width(char32_t ch);
-    float character_height(char32_t ch);
+    uint16_t character_width(char32_t ch);
+    uint16_t character_height(char32_t ch);
     float character_advance(char32_t ch, char32_t next);
     std::pair<int16_t, int16_t> character_offset(char32_t ch);
 

@@ -5,7 +5,7 @@
 
 namespace smlt {
 
-const std::string ParticleScript::BuiltIns::FIRE = "simulant/particles/fire.kglp";
+const std::string ParticleScript::BuiltIns::FIRE = "particles/fire.kglp";
 
 bool ParticleScript::has_repeating_emitters() const {
     for(auto i = 0u; i < emitter_count_; ++i) {

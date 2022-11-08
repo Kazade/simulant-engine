@@ -209,11 +209,16 @@ void KOSWindow::check_events() {
                         input_state->_handle_joystick_button_down(
                             id, dc_button_to_simulant_button(button)
                         );
+
+                        on_game_controller_button_down(GameControllerIndex(i), dc_button_to_simulant_button(button));
+
                     } else if(prev && !curr) {
                         // Button up
                         input_state->_handle_joystick_button_up(
                             id, dc_button_to_simulant_button(button)
                         );
+
+                        on_game_controller_button_up(GameControllerIndex(i), dc_button_to_simulant_button(button));
                     }
                 }
 
@@ -256,7 +261,7 @@ void KOSWindow::check_events() {
                     }
                 }
 
-                std::copy(key_state, key_state + sizeof(key_state), previous_key_state);
+                std::copy(key_state, key_state + 256, previous_key_state);
             }
         }
     }

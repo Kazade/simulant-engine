@@ -211,15 +211,15 @@ MeshID Actor::mesh_id(DetailLevel detail_level) const {
     return (mesh) ? mesh->id() : MeshID(0);
 }
 
-MeshPtr Actor::best_mesh(DetailLevel detail_level) const {
+const MeshPtr &Actor::best_mesh(DetailLevel detail_level) const {
     return find_mesh(detail_level);
 }
 
-MeshPtr Actor::base_mesh() const {
+const MeshPtr& Actor::base_mesh() const {
     return mesh(DETAIL_LEVEL_NEAREST);
 }
 
-MeshPtr Actor::mesh(DetailLevel detail_level) const {
+const MeshPtr& Actor::mesh(DetailLevel detail_level) const {
     return meshes_[detail_level];
 }
 
@@ -229,7 +229,7 @@ bool Actor::has_any_mesh() const {
 
 bool Actor::has_mesh(DetailLevel detail_level) const {
     /* Returns True if the Actor has a mesh at this detail level */
-    return bool(meshes_[detail_level]);
+    return bool(meshes_[detail_level].get());
 }
 
 void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {

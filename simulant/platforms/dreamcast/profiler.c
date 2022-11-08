@@ -15,7 +15,7 @@ static volatile bool PROFILER_RUNNING = false;
 static volatile bool PROFILER_RECORDING = false;
 
 #define BASE_ADDRESS 0x8c010000
-#define BUCKET_SIZE 10000
+#define BUCKET_SIZE 5000
 
 #define INTERVAL_IN_MS 10
 
@@ -284,9 +284,9 @@ static bool write_samples(const char* path) {
     root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
-            printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
+            // printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
             bins[(root->pc - lowest_address) / bin_size]++;
-            printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
+            // printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
 
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;

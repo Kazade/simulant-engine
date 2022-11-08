@@ -220,9 +220,12 @@ void StageNode::update_transformation_from_parent() {
 void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
     _S_UNUSED(oldp);
 
-    parent_stage_node_ = dynamic_cast<StageNode*>(newp);
-    assert(parent_stage_node_);
+    if(!newp) {
+        return;
+    }
 
+    assert(dynamic_cast<StageNode*>(newp));
+    parent_stage_node_ = (StageNode*) (newp);
     update_transformation_from_parent();
 }
 
@@ -299,7 +302,7 @@ void StageNode::fixed_update(float step) {
 }
 
 bool StageNode::parent_is_stage() const {
-    return bool(dynamic_cast<Stage*>(parent_));
+    return parent_ == stage_;
 }
 
 }

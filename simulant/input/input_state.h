@@ -269,6 +269,7 @@ public:
     GameController* game_controller_by_id(GameControllerID id);
     const GameController* game_controller_by_id(GameControllerID id) const;
     GameController* game_controller(GameControllerIndex id);
+    GameControllerIndex game_controller_index_from_id(GameControllerID id) const;
 
     std::size_t game_controller_count() const { return joystick_count_; }
     std::size_t keyboard_count() const { return keyboard_count_; }

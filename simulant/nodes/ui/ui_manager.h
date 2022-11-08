@@ -69,7 +69,7 @@ public:
     ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
     Image* new_widget_as_image(const TexturePtr& texture);
     Frame* new_widget_as_frame(const unicode& title, const Px& width=Px(-1), const Px& height=Px(-1));
-    Keyboard* new_widget_as_keyboard(const KeyboardLayout& layout=KEYBOARD_LAYOUT_NUMERICAL);
+    Keyboard* new_widget_as_keyboard(const KeyboardMode& mode=KEYBOARD_MODE_UPPERCASE, const unicode& initial_text="");
 
     Widget* widget(WidgetID widget_id);
 
@@ -84,6 +84,11 @@ public:
     const UIConfig* config() const {
         return &config_;
     }
+
+    FontPtr load_or_get_font(
+        const std::string& family, const Px& size, const FontWeight &weight, const FontStyle& style
+    );
+
 private:
     friend class ::smlt::Stage;
 
@@ -100,16 +105,12 @@ private:
     void process_event_queue(const Camera *camera, const Viewport& viewport) const;
     void clear_event_queue();
 
-    std::queue<UIEvent> queued_events_;
+    std::vector<UIEvent> queued_events_;
 
     WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport& viewport, const Vec2& window_coord) const;
 
     sig::connection frame_finished_connection_;
     sig::connection pre_render_connection_;
-
-    FontPtr load_or_get_font(
-        const std::string& family, const Px& size, const FontWeight &weight, const FontStyle& style
-    );
 
 private:
     friend class ::smlt::Application;

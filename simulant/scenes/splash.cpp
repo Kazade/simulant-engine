@@ -13,13 +13,13 @@
 #include "../scenes/scene_manager.h"
 #include "splash.h"
 
-#define SIMULANT_TEXT_512 "simulant/textures/simulant-text-512.png"
-#define SIMULANT_TEXT_1024 "simulant/textures/simulant-text.png"
+#define SIMULANT_TEXT_512 "textures/simulant-text-512.png"
+#define SIMULANT_TEXT_1024 "textures/simulant-text.png"
 
-#define SIMULANT_LOGO_256 "simulant/textures/simulant-icon-256.png"
-#define SIMULANT_LOGO_512 "simulant/textures/simulant-icon.png"
+#define SIMULANT_LOGO_256 "textures/simulant-icon-256.png"
+#define SIMULANT_LOGO_512 "textures/simulant-icon.png"
 
-#define SIMULANT_SOUND "simulant/sounds/simulant.wav"
+#define SIMULANT_SOUND "sounds/simulant.wav"
 
 namespace smlt {
 namespace scenes {

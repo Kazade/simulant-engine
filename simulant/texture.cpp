@@ -33,8 +33,8 @@
 
 namespace smlt {
 
-const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/textures/checkerboard.png";
-const std::string Texture::BuiltIns::BUTTON = "simulant/textures/button.png";
+const std::string Texture::BuiltIns::CHECKERBOARD = "textures/checkerboard.png";
+const std::string Texture::BuiltIns::BUTTON = "textures/button.png";
 
 const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_RED,

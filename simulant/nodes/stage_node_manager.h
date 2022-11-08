@@ -65,7 +65,8 @@ public:
     }
 
     bool contains(const IDType& id) const {
-        return bool(get(id));
+        StageNode* node = (*pool_)[id.value()];
+        return bool(dynamic_cast<T*>(node));
     }
 
     T* get(const IDType& id) const {
@@ -118,7 +119,8 @@ public:
                 (*it)->destroyed_ = true;
             }
 
-            T* a = dynamic_cast<T*>(node);
+            assert(dynamic_cast<T*>(node));
+            T* a = (T*) node;
             assert((node && a) || (!node && !a));
 
             a->clean_up();

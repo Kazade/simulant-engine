@@ -6,8 +6,8 @@
 namespace smlt {
 namespace ui {
 
-Image::Image(UIManager* owner, UIConfig* config):
-    Widget(owner, config) {
+Image::Image(UIManager* owner, UIConfig* config, Stage* stage):
+    Widget(owner, config, stage) {
 
     /* By default, images don't have a border */
     set_border_width(config->image_border_width_);

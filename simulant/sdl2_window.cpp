@@ -200,13 +200,17 @@ void SDL2Window::check_events() {
                     GameControllerID(event.cbutton.which),
                     (JoystickButton) event.cbutton.button
                 );
+                auto idx = input_state->game_controller_index_from_id(GameControllerID(event.cbutton.which));
+                on_game_controller_button_down(idx, (JoystickButton) event.cbutton.button);
             } break;
-            case SDL_CONTROLLERBUTTONUP:
+            case SDL_CONTROLLERBUTTONUP: {
                 input_state->_handle_joystick_button_up(
                     GameControllerID(event.cbutton.which),
                     (JoystickButton) event.cbutton.button
                 );
-            break;
+                auto idx = input_state->game_controller_index_from_id(GameControllerID(event.cbutton.which));
+                on_game_controller_button_up(idx, (JoystickButton) event.cbutton.button);
+            } break;
             case SDL_JOYHATMOTION:
                 input_state->_handle_joystick_hat_motion(
                     GameControllerID(event.jhat.which),

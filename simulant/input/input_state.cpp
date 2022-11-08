@@ -165,6 +165,19 @@ GameController *InputState::game_controller(GameControllerIndex index) {
     return &joysticks_[idx];
 }
 
+GameControllerIndex InputState::game_controller_index_from_id(GameControllerID id) const {
+    auto idx = 0;
+    for(auto& cont: joysticks_) {
+        if(cont.id() == id) {
+            return GameControllerIndex(idx);
+        }
+
+        ++idx;
+    }
+
+    return GameControllerIndex(-1);
+}
+
 float InputState::joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const {
     const GameController* controller = game_controller_by_id(joystick_id);
     if(controller) {
