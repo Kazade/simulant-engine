@@ -460,6 +460,9 @@ bool Texture::is_compressed() const {
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
     case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+    case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
         return true;
     default:
         return false;
