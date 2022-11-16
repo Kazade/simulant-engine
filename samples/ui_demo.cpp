@@ -78,18 +78,6 @@ public:
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
-        keyboard_ = stage_->ui->new_widget_as_keyboard(smlt::ui::KEYBOARD_MODE_LOWERCASE);
-        keyboard_->set_anchor_point(0.5f, 1.0f);
-        keyboard_->move_to(window->coordinate_from_normalized(0.5f, 0.5f));
-        keyboard_->signal_key_pressed().connect([](smlt::ui::SoftKeyPressedEvent& evt) {
-           /* Don't allow spaces (for testing) */
-           if(evt.character == ' ') {
-               evt.cancel();
-           }
-        });
-
-        keyboard_->set_keyboard_integration_enabled(true);
-
         auto pl = stage_->ui->new_widget_as_label("PL");
         pl->set_padding(10, 0, 0, 0);
         //pl->resize(80, -1);
@@ -117,6 +105,21 @@ public:
         align_frame->pack_child(right_label);
         align_frame->set_anchor_point(1.0f, 1.0f);
         align_frame->move_to(window->width() - 16, window->height() - 16);
+
+        if(!input->start_text_input()) {
+            /* No on-screen keyboard, so show a dialog */
+            auto dialog = stage_->ui->new_widget_as_frame("Please enter some text");
+            auto entry = stage_->ui->new_widget_as_label("");
+            dialog->pack_child(entry);
+            dialog->move_to(window->width() / 2, window->height() / 2);
+
+            input->signal_text_input_received().connect([=](const char16_t& chr) -> bool {
+                auto txt = entry->text();
+                txt.push_back(chr);
+                entry->set_text(txt);
+                return true;
+            });
+        }
     }
 
     void update(float dt) {
@@ -140,8 +143,6 @@ private:
     smlt::CameraPtr camera_;
     smlt::ui::ProgressBar* pg1_;
     smlt::ui::ProgressBar* pg2_;
-
-    smlt::ui::Keyboard* keyboard_;
 
     bool increasing = true;
     float percent = 0;

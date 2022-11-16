@@ -170,6 +170,37 @@ public:
         assert_true(manager_->axis_was_released("Test"));
     }
 
+    void test_start_text_input() {
+        auto& input = window->input;
+
+        if(input->state->keyboard_count()) {
+            /* We have a physical keyboard, so start_text_input should return false */
+            auto ret = input->start_text_input();
+            assert_false(ret);
+        } else {
+            /* On screen keyboard! */
+            auto ret = input->start_text_input();
+            assert_true(ret);
+        }
+
+        unicode text;
+
+        auto conn = input->signal_text_input_received().connect([&](const char16_t& c) -> bool {
+            text.push_back(c);
+            return true;
+        });
+
+        window->on_key_down(smlt::KEYBOARD_CODE_A, smlt::ModifierKeyState());
+        assert_equal(text, "a");
+
+        auto modifier = ModifierKeyState();
+        modifier.lshift = true;
+        text = "";
+
+        window->on_key_down(smlt::KEYBOARD_CODE_APOSTROPHE, modifier);
+        assert_equal(text, "@");
+    }
+
 private:
     std::shared_ptr<InputState> state_;
     std::shared_ptr<InputManager> manager_;

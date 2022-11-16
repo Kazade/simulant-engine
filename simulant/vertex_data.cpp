@@ -158,25 +158,54 @@ void VertexData::position_checks() {
 void VertexData::position(float x, float y, float z, float w) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4* out = (Vec4*) &data_[cursor_offset()];
-    *out = Vec4(x, y, z, w);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+    float* out = (float*) &data_[cursor_offset()];
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    out[3] = w;
 }
 
 void VertexData::position(float x, float y, float z) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3* out = (Vec3*) &data_[cursor_offset()];
-    *out = Vec3(x, y, z);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+
+    float* out = (float*) &data_[cursor_offset()];
+    switch(vertex_specification_.position_attribute_) {
+    case VERTEX_ATTRIBUTE_4F:
+        out[3] = 1.0f;
+    case VERTEX_ATTRIBUTE_3F:  // Fallthrough
+        out[0] = x;
+        out[1] = y;
+        out[2] = z;
+    break;
+    default:
+        return;
+    }
 }
 
 void VertexData::position(float x, float y) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
-    Vec2* out = (Vec2*) &data_[cursor_offset()];
-    *out = Vec2(x, y);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_2F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+
+    float* out = (float*) &data_[cursor_offset()];
+    switch(vertex_specification_.position_attribute_) {
+    case VERTEX_ATTRIBUTE_4F:  // Fallthrough
+        out[3] = 1.0f;
+    case VERTEX_ATTRIBUTE_3F:  // Fallthrough
+        out[2] = 0.0f;
+    case VERTEX_ATTRIBUTE_2F:
+        out[0] = x;
+        out[1] = y;
+    break;
+    default:
+        return;
+    }
 }
 
 void VertexData::position(const Vec2 &pos) {

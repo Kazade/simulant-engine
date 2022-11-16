@@ -2,6 +2,12 @@
 #include "input_manager.h"
 #include "input_state.h"
 #include "../macros.h"
+#include "keyboard_mappings.h"
+#include "../application.h"
+#include "../window.h"
+#include "../pipeline.h"
+#include "../nodes/ui/keyboard.h"
+#include "../stage.h"
 
 namespace smlt {
 
@@ -70,6 +76,15 @@ InputManager::InputManager(InputState *controller):
     auto mouse_y = new_axis("MouseY");
     mouse_y->set_type(AXIS_TYPE_MOUSE_AXIS);
     mouse_y->set_mouse_axis(MOUSE_AXIS_1);
+
+    /* We need to watch for when scenes deactivate so we can destroy
+     * the onscreen keyboard */
+    smlt::get_app()->scenes->signal_scene_deactivated().connect(
+        std::bind(
+            &InputManager::on_scene_deactivated,
+            this, std::placeholders::_1, std::placeholders::_2
+        )
+    );
 }
 
 InputAxis* InputManager::new_axis(const std::string& name) {
@@ -238,6 +253,19 @@ void InputManager::_process_keyboard(int8_t id, KeyboardCode pkey, KeyboardCode 
 
     if(nkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, nkey)) {
         *negative_pressed = true;
+    }
+}
+
+void InputManager::on_scene_deactivated(std::string, SceneBase*) {
+    if(keyboard_) {
+        keyboard_->destroy();
+        keyboard_pipeline_->destroy();
+        keyboard_stage_->destroy();
+
+        keyboard_stage_ = nullptr;
+        keyboard_ = nullptr;
+        keyboard_camera_ = nullptr;
+        keyboard_pipeline_ = nullptr;
     }
 }
 
@@ -518,6 +546,54 @@ bool InputManager::axis_was_released(const std::string& name) const {
     bool b_active = (b != axis_states_.end()) && b->second;
 
     return a_active && !b_active;
+}
+
+bool InputManager::start_text_input(bool force_onscreen) {
+    if(text_input_enabled_) {
+        return false;
+    }
+
+    text_input_enabled_ = true;
+
+    if(!force_onscreen && controller_->keyboard_count()) {
+        /* Attach the keyboard listener */
+        smlt::get_app()->window->register_event_listener(&event_listener_);
+        return false;
+    }
+
+    /* FIXME: OK we need to show our onscreen keyboard */
+    S_WARN("On screen keyboard not implemented");
+    return true;
+}
+
+unicode InputManager::stop_text_input() {
+    if(!text_input_enabled_) {
+        return "";
+    }
+
+    text_input_enabled_ = false;
+
+    /* FIXME: Return on-screen keyboard text */
+    S_WARN("On screen keyboard not implemented");
+    return "";
+}
+
+/* This watches for keyboard inputs while text input is active - we map keyboard codes to characters
+ * depending on the keyboard layout */
+void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
+    char16_t chr = character_for_keyboard_code(
+        KEYBOARD_LAYOUT_UK,
+        evt.keyboard_code,
+        evt.modifiers.lshift || evt.modifiers.rshift
+    );
+
+    TextInputReceivedControl ctrl;
+    self_->signal_text_input_received_(chr, ctrl);
+
+    if(ctrl.cancelled) {
+        /* FIXME: Tell on-screen keyboard to ignore */
+        S_WARN("FIXME: Signal_text_input_received doesn't handle return values");
+    }
 }
 
 }

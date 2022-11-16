@@ -39,6 +39,7 @@ typedef std::shared_ptr<SceneBase> SceneBasePtr;
 typedef std::function<SceneBasePtr (Window*)> SceneFactory;
 
 typedef sig::signal<void (std::string, SceneBase*)> SceneActivatedSignal;
+typedef sig::signal<void (std::string, SceneBase*)> SceneDeactivatedSignal;
 
 
 enum ActivateBehaviour {
@@ -53,6 +54,7 @@ class SceneManager :
     friend class Application;
 
     DEFINE_SIGNAL(SceneActivatedSignal, signal_scene_activated);
+    DEFINE_SIGNAL(SceneDeactivatedSignal, signal_scene_deactivated);
 
     template<typename T>
     static void unpack(std::vector<any>& output, T&& arg) {
@@ -91,6 +93,7 @@ class SceneManager :
 
                 if(previous) {
                     previous->_call_deactivate();
+                    signal_scene_deactivated_(previous->name(), previous);
                 }
 
                 std::swap(current_scene_, new_scene);
@@ -106,6 +109,7 @@ class SceneManager :
 
                 if(previous) {
                     previous->_call_deactivate();
+                    signal_scene_deactivated_(previous->name(), previous);
                     if(previous->unload_on_deactivate()) {
                         unload(previous->name());
                     }
