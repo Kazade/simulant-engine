@@ -50,6 +50,7 @@ class InputManager:
 
 public:
     InputManager(InputState* controller);
+    ~InputManager();
 
     InputAxis* new_axis(const std::string& name);
     AxisList axises(const std::string& name);
@@ -126,6 +127,7 @@ private:
     PipelinePtr keyboard_pipeline_;
     ui::Keyboard* keyboard_ = nullptr;
 
+    sig::connection scene_deactivated_conn_;
     void on_scene_deactivated(std::string, SceneBase* scene);
 
 public:

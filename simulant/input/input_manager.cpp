@@ -8,6 +8,9 @@
 #include "../pipeline.h"
 #include "../nodes/ui/keyboard.h"
 #include "../stage.h"
+#include "../scenes/scene_manager.h"
+#include "../compositor.h"
+#include "../nodes/ui/ui_manager.h"
 
 namespace smlt {
 
@@ -76,15 +79,10 @@ InputManager::InputManager(InputState *controller):
     auto mouse_y = new_axis("MouseY");
     mouse_y->set_type(AXIS_TYPE_MOUSE_AXIS);
     mouse_y->set_mouse_axis(MOUSE_AXIS_1);
+}
 
-    /* We need to watch for when scenes deactivate so we can destroy
-     * the onscreen keyboard */
-    smlt::get_app()->scenes->signal_scene_deactivated().connect(
-        std::bind(
-            &InputManager::on_scene_deactivated,
-            this, std::placeholders::_1, std::placeholders::_2
-        )
-    );
+InputManager::~InputManager() {
+    scene_deactivated_conn_.disconnect();
 }
 
 InputAxis* InputManager::new_axis(const std::string& name) {
@@ -561,20 +559,65 @@ bool InputManager::start_text_input(bool force_onscreen) {
         return false;
     }
 
-    /* FIXME: OK we need to show our onscreen keyboard */
-    S_WARN("On screen keyboard not implemented");
+    assert(!keyboard_);
+
+    auto active_scene = smlt::get_app()->scenes->active_scene();
+    if(!active_scene) {
+        S_ERROR("Couldn't activate the on-screen keyboard because there is no active scene");
+        return false;
+    }
+
+    auto& window = smlt::get_app()->window;
+
+    /* Build our camera and make it render with the highest priority */
+    keyboard_stage_ = active_scene->new_stage();
+    keyboard_camera_ = keyboard_stage_->new_camera_for_ui();
+    keyboard_pipeline_ = window->compositor->render(
+        keyboard_stage_, keyboard_camera_
+    );
+    keyboard_pipeline_->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    keyboard_pipeline_->activate();
+
+    keyboard_ = keyboard_stage_->ui->new_widget_as_keyboard();
+    keyboard_->set_anchor_point(0.5f, 0.0f);
+    keyboard_->move_to(window->width() / 2, window->height() * 0.1f);
+    keyboard_->set_keyboard_integration_enabled(true);
+
+    if(!scene_deactivated_conn_) {
+        /* We need to watch for when scenes deactivate so we can destroy
+         * the onscreen keyboard */
+        scene_deactivated_conn_ = smlt::get_app()->scenes->signal_scene_deactivated().connect(
+            std::bind(
+                &InputManager::on_scene_deactivated,
+                this, std::placeholders::_1, std::placeholders::_2
+            )
+        );
+    }
+
     return true;
 }
 
 unicode InputManager::stop_text_input() {
+    unicode ret;
+
     if(!text_input_enabled_) {
-        return "";
+        return ret;
     }
 
     text_input_enabled_ = false;
 
-    /* FIXME: Return on-screen keyboard text */
-    S_WARN("On screen keyboard not implemented");
+    if(keyboard_) {
+        assert(keyboard_stage_);
+
+        ret = keyboard_->text();
+
+        keyboard_stage_->destroy();
+        keyboard_pipeline_->destroy();
+        keyboard_stage_ = nullptr;
+        keyboard_pipeline_ = nullptr;
+        keyboard_ = nullptr;
+    }
+
     return "";
 }
 

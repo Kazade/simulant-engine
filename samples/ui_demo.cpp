@@ -105,21 +105,26 @@ public:
         align_frame->pack_child(right_label);
         align_frame->set_anchor_point(1.0f, 1.0f);
         align_frame->move_to(window->width() - 16, window->height() - 16);
+    }
 
-        if(!input->start_text_input()) {
+    void activate() override {
+        auto entry = stage_->ui->new_widget_as_label("");
+
+        if(!input->start_text_input(false)) {
             /* No on-screen keyboard, so show a dialog */
             auto dialog = stage_->ui->new_widget_as_frame("Please enter some text");
-            auto entry = stage_->ui->new_widget_as_label("");
             dialog->pack_child(entry);
             dialog->move_to(window->width() / 2, window->height() / 2);
-
-            input->signal_text_input_received().connect([=](const char16_t& chr) -> bool {
-                auto txt = entry->text();
-                txt.push_back(chr);
-                entry->set_text(txt);
-                return true;
-            });
+        } else {
+            entry->move_to(window->width() / 2, window->height() / 2);
         }
+
+        input->signal_text_input_received().connect([=](const char16_t& chr, smlt::TextInputReceivedControl&) -> bool {
+            auto txt = entry->text();
+            txt.push_back(chr);
+            entry->set_text(txt);
+            return true;
+        });
     }
 
     void update(float dt) {

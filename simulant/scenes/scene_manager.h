@@ -93,7 +93,7 @@ class SceneManager :
 
                 if(previous) {
                     previous->_call_deactivate();
-                    signal_scene_deactivated_(previous->name(), previous);
+                    signal_scene_deactivated_(previous->name(), previous.get());
                 }
 
                 std::swap(current_scene_, new_scene);
@@ -109,7 +109,7 @@ class SceneManager :
 
                 if(previous) {
                     previous->_call_deactivate();
-                    signal_scene_deactivated_(previous->name(), previous);
+                    signal_scene_deactivated_(previous->name(), previous.get());
                     if(previous->unload_on_deactivate()) {
                         unload(previous->name());
                     }

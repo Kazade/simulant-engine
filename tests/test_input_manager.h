@@ -185,7 +185,7 @@ public:
 
         unicode text;
 
-        auto conn = input->signal_text_input_received().connect([&](const char16_t& c) -> bool {
+        auto conn = input->signal_text_input_received().connect([&](const char16_t& c, TextInputReceivedControl& ctrl) -> bool {
             text.push_back(c);
             return true;
         });
@@ -199,6 +199,8 @@ public:
 
         window->on_key_down(smlt::KEYBOARD_CODE_APOSTROPHE, modifier);
         assert_equal(text, "@");
+
+        conn.disconnect();
     }
 
 private:

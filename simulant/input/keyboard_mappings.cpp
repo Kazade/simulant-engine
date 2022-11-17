@@ -79,8 +79,8 @@ KeyboardMap UK [] = {
     {KEYBOARD_CODE_SEMICOLON, true, ':'},
     {KEYBOARD_CODE_APOSTROPHE, false, '\''},
     {KEYBOARD_CODE_APOSTROPHE, true, '@'},
-    {KEYBOARD_CODE_NONUSHASH, false, '#'},
-    {KEYBOARD_CODE_NONUSHASH, true, '~'},
+    {KEYBOARD_CODE_BACKSLASH, false, '#'},
+    {KEYBOARD_CODE_BACKSLASH, true, '~'},
     {KEYBOARD_CODE_NONUSBACKSLASH, false, '\\'},
     {KEYBOARD_CODE_NONUSBACKSLASH, true, '|'},
     {KEYBOARD_CODE_PERIOD, false, '.'},
@@ -93,6 +93,12 @@ KeyboardMap UK [] = {
     {KEYBOARD_CODE_LEFTBRACKET, true, '{'},
     {KEYBOARD_CODE_RIGHTBRACKET, false, ']'},
     {KEYBOARD_CODE_RIGHTBRACKET, true, '}'},
+    {KEYBOARD_CODE_SPACE, false, ' '},
+    {KEYBOARD_CODE_SPACE, true, ' '},
+    {KEYBOARD_CODE_LSHIFT, false, '\0'},
+    {KEYBOARD_CODE_LSHIFT, true, '\0'},
+    {KEYBOARD_CODE_RSHIFT, false, '\0'},
+    {KEYBOARD_CODE_RSHIFT, true, '\0'},
 };
 
 char16_t find_key(KeyboardMap* map, std::size_t len, KeyboardCode code, bool shift) {
