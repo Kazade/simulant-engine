@@ -50,7 +50,7 @@ public:
 
         auto pos = data->position_at<smlt::Vec4>(0);
         assert_close(pos->x, 9.0f, 0.00001f);
-        assert_close(pos->y, 9.0f, 0.00001f);
+        assert_close(pos->y, 8.0f, 0.00001f);
         assert_close(pos->z, 0.0f, 0.00001f);
         assert_close(pos->w, 1.0f, 0.00001f);
     }
