@@ -177,10 +177,12 @@ public:
             /* We have a physical keyboard, so start_text_input should return false */
             auto ret = input->start_text_input();
             assert_false(ret);
-        } else {
+            assert_false(input->onscreen_keyboard_active());
+        } else {            
             /* On screen keyboard! */
             auto ret = input->start_text_input();
             assert_true(ret);
+            assert_true(input->onscreen_keyboard_active());
         }
 
         unicode text;

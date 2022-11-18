@@ -86,6 +86,10 @@ public:
         return text_input_enabled_;
     }
 
+    bool onscreen_keyboard_active() const {
+        return bool(keyboard_);
+    }
+
 private:
     InputState* controller_;
 
@@ -132,6 +136,7 @@ private:
 
 public:
     S_DEFINE_PROPERTY(state, &InputManager::controller_);
+    S_DEFINE_PROPERTY(onscreen_keyboard, &InputManager::controller_);
 };
 
 }
