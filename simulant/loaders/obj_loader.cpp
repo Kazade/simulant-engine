@@ -181,6 +181,9 @@ static bool map_Kd(LoadInfo* info, std::string, const std::vector<std::string>& 
     }
 
     auto tex = info->assets->new_texture_from_file(tex_path);
+    if(!tex) {
+        return false;
+    }
 
     /* Force upload to VRAM and free the RAM */
     tex->flush();

@@ -1334,6 +1334,11 @@ bool Keyboard::pre_set_text(const unicode &text) {
     return false;
 }
 
+const unicode &Keyboard::calc_text() const {
+    static unicode blank = "";
+    return (entry_) ? entry_->text() : blank;
+}
+
 void Keyboard::cursor_to_space() {
     for(auto& k: panel_->keys_) {
         if(k.is_space_key()) {

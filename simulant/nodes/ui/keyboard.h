@@ -96,6 +96,8 @@ private:
     std::shared_ptr<EventListener> keyboard_listener_;
 
     bool pre_set_text(const unicode& text) override;
+
+    const unicode& calc_text() const;
 };
 
 }

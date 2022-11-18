@@ -188,7 +188,7 @@ public:
     const AABB& aabb() const override;
 
     const unicode& text() const {
-        return text_;
+        return calc_text();
     }
 
     // Probably shouldn't use these directly (designed for UIManager)
@@ -214,6 +214,10 @@ public:
     MaterialPtr foreground_material() const { return style_->materials_[2]; }
 
 private:
+    virtual const unicode& calc_text() const {
+        return text_;
+    }
+
     void on_render_priority_changed(
         RenderPriority old_priority, RenderPriority new_priority
     ) override;
@@ -320,7 +324,7 @@ protected:
     virtual void prepare_build() {}
     virtual void finalize_render() {}
     virtual void finalize_build() {}
-    virtual bool pre_set_text(const unicode& txt) { return true; }
+    virtual bool pre_set_text(const unicode&) { return true; }
 };
 
 }
