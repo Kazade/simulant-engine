@@ -454,7 +454,8 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     if(border_radius) {
         std::vector<Vec3> points;
 
-        int radius = std::min((int) border_radius.value, (int) std::min(width(), height()) / 2);
+        int max_radius = std::min((bounds.max.x - bounds.min.x).value, (bounds.max.y - bounds.min.y).value) / 2;
+        int radius = std::min((int) border_radius.value, max_radius);
 
         /* First add left section */
         for(int i = 0; i < radius; ++i) {
