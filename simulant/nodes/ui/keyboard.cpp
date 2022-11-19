@@ -1240,8 +1240,13 @@ void Keyboard::activate() {
 
     auto txt = entry_->text();
     if(focused->displayed_character) {
-        txt.push_back(focused->displayed_character);
-        entry_->set_text(txt);
+        SoftKeyPressedEvent evt;
+        evt.chr = focused->displayed_character;
+        signal_key_pressed_(evt);
+        if(!evt.cancelled) {
+            txt.push_back(focused->displayed_character);
+            entry_->set_text(txt);
+        }
     } else if(focused->is_backspace_key()) {
         txt.pop_back();
         entry_->set_text(txt);
@@ -1332,6 +1337,11 @@ bool Keyboard::pre_set_text(const unicode &text) {
     /* We set the text on the entry and don't set the text on the keyboard */
     entry_->set_text(text);
     return false;
+}
+
+const unicode &Keyboard::calc_text() const {
+    static unicode blank = "";
+    return (entry_) ? entry_->text() : blank;
 }
 
 void Keyboard::cursor_to_space() {
