@@ -68,7 +68,7 @@ std::pair<Vec2, Vec2> Font::texture_coordinates_for_character(char32_t ch) {
     }
 }
 
-float Font::character_width(char32_t ch) {
+uint16_t Font::character_width(char32_t ch) {
     if(ch < 32) {
         return 0;
     }
@@ -85,7 +85,7 @@ float Font::character_width(char32_t ch) {
     return std::abs(b->x1 - b->x0);
 }
 
-float Font::character_height(char32_t ch) {
+uint16_t Font::character_height(char32_t ch) {
     if(ch < 32) {
         return this->size();
     }

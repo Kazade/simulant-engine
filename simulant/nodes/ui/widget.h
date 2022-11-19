@@ -37,8 +37,9 @@ struct WidgetStyle {
      * for performance reasons. We track that here */
     uint8_t active_layers_ = ~0;
 
-    UInt4 padding_ = {0, 0, 0, 0};
-    Px border_width_ = 1;
+    UInt4 padding_ = {Px(), Px(), Px(), Px()};
+    Px border_radius_ = Px(0);
+    Px border_width_ = Px(1);
     PackedColour4444 border_colour_ = Colour::BLACK;
     TextAlignment text_alignment_ = TEXT_ALIGNMENT_CENTER;
 
@@ -133,6 +134,9 @@ public:
 
     void set_border_width(Px x);
     Px border_width() const;
+
+    void set_border_radius(Px x);
+    Px border_radius() const;
 
     void set_border_colour(const Colour& colour);
     void set_overflow(OverflowType type);
@@ -242,14 +246,14 @@ protected:
 
     ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
 
-    Px text_width_ = 0;
-    Px text_height_ = 0;
+    Px text_width_ = Px(0);
+    Px text_height_ = Px(0);
 
-    Px requested_width_ = -1;
-    Px requested_height_ = -1;
+    Px requested_width_ = Px(-1);
+    Px requested_height_ = Px(-1);
 
-    Px content_width_ = 0;
-    Px content_height_ = 0;
+    Px content_width_ = Px(0);
+    Px content_height_ = Px(0);
 
     unicode text_;
 
@@ -301,6 +305,7 @@ protected:
     SubMeshPtr new_rectangle(const std::string& name,
         WidgetBounds bounds,
         const smlt::Colour& colour,
+        const Px &border_radius,
         const Vec2 *uvs=nullptr, float z_offset=0.0f
     );
     void clear_mesh();

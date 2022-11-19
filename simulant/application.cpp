@@ -196,7 +196,7 @@ void Application::preload_default_font() {
         shared_assets,
         nullptr,
         ui.font_family,
-        ui.font_size,
+        ui::Px(ui.font_size),
         FONT_WEIGHT_NORMAL,
         FONT_STYLE_NORMAL
     );

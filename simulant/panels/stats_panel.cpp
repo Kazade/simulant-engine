@@ -61,7 +61,7 @@ bool StatsPanel::init() {
     auto overlay = stage_;
 
     auto hw = 32;
-    float label_width = window_->width() * 0.5f;
+    auto label_width = ui::Px(window_->width() * 0.5f);
 
     const float diff = 32;
     float vheight = window_->height() - diff;

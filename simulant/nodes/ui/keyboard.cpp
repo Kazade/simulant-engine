@@ -783,7 +783,7 @@ private:
 
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
-            new_rectangle("space", bounds, colour, nullptr);
+            new_rectangle("space", bounds, colour, 0, nullptr);
         }
 
         /* Backspace */
@@ -799,7 +799,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("backspace", bounds, colour, nullptr);
+            new_rectangle("backspace", bounds, colour, 0, nullptr);
         }
 
         /* Return key */
@@ -815,7 +815,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("return", bounds, colour, nullptr);
+            new_rectangle("return", bounds, colour, 0, nullptr);
         }
 
         /* Accented chars */
@@ -831,7 +831,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("accent", bounds, colour, nullptr);
+            new_rectangle("accent", bounds, colour, 0, nullptr);
         }
 
         /* Toggle case */
@@ -847,7 +847,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("case", bounds, colour, nullptr);
+            new_rectangle("case", bounds, colour, 0, nullptr);
         }
 
         /* Digits*/
@@ -863,7 +863,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("digits", bounds, colour, nullptr);
+            new_rectangle("digits", bounds, colour, 0, nullptr);
         }
 
         /* OK */
@@ -879,7 +879,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("ok", bounds, colour, nullptr);
+            new_rectangle("ok", bounds, colour, 0, nullptr);
         }
     }
 
@@ -1006,7 +1006,7 @@ private:
                         smlt::Vec2(min_max.second.x, min_max.first.y)
                     };
 
-                    sm = new_rectangle("text", bounds, c, uvs);
+                    sm = new_rectangle("text", bounds, c, 0, uvs);
 
                     info->displayed_character = ch;
                 }
@@ -1029,8 +1029,8 @@ private:
         auto colour = calc_foreground_colour();
 
         WidgetBounds total_bounds;
-        total_bounds.min.y = total_bounds.min.x = 10000;
-        total_bounds.max.y = total_bounds.max.x = -10000;
+        total_bounds.min.y = total_bounds.min.x = Px(10000);
+        total_bounds.max.y = total_bounds.max.x = Px(-10000);
 
         WidgetBounds key_bounds;
 
@@ -1115,7 +1115,7 @@ private:
                 total_bounds.max.x = std::max(new_key.bounds.max.x, total_bounds.max.x);
                 total_bounds.max.y = std::max(new_key.bounds.max.y, total_bounds.max.y);
 
-                new_rectangle("foreground", key_bounds, colour);
+                new_rectangle("foreground", key_bounds, colour, 0);
             }
         }
 

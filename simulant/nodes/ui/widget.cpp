@@ -29,7 +29,7 @@ Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_p
         get_app()->config->ui.font_family : defaults->font_family_;
 
     Px size = (defaults->font_size_ == Px(0)) ?
-        get_app()->config->ui.font_size : defaults->font_size_;
+        Px(get_app()->config->ui.font_size) : Px(defaults->font_size_);
 
     auto font = stage->ui->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
     assert(font);
@@ -128,8 +128,8 @@ void Widget::resize(Px width, Rem height) {
 
 void Widget::resize(Rem width, Rem height) {
     assert(font_);
-    Px w = float(font_->size()) * width.value;
-    Px h = float(font_->size()) * height.value;
+    Px w = Px(float(font_->size()) * width.value);
+    Px h = Px(float(font_->size()) * height.value);
 
     resize(w, h);
 }
@@ -139,7 +139,7 @@ void Widget::resize(Px width, Px height) {
         return;
     }
 
-    if(width == -1 && height > -1) {
+    if(width == Px(-1) && height > Px(-1)) {
         resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     } else if(width == -1 && height == -1) {
         resize_mode_ = RESIZE_MODE_FIT_CONTENT;
@@ -165,7 +165,7 @@ void Widget::render_text() {
     };
 
     if(!font_ || text().empty()) {
-        text_width_ = text_height_ = 0;
+        text_width_ = text_height_ = Px();
         return;
     }
 
@@ -207,7 +207,10 @@ void Widget::render_text() {
         unicode::value_type ch = text_ptr[i];
         Px ch_width = font_->character_width(ch);
         Px ch_height = font_->character_height(ch);
-        Px ch_advance = font_->character_advance(ch, text_ptr[i + 1]);
+
+        /* FIXME: This seems wrong.. if advance *should be* a float then we should probably
+         * not do this cast here */
+        Px ch_advance = (uint16_t) font_->character_advance(ch, text_ptr[i + 1]);
 
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
@@ -221,7 +224,7 @@ void Widget::render_text() {
             line_lengths.push_back(line_length);
             line_start = vertices.size();
             left = left_bound;
-            line_length = 0;
+            line_length = Px(0);
             line_vertex_count = 0;
         };
 
@@ -345,7 +348,7 @@ void Widget::render_text() {
     auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
     text_width_ = max_length;
-    text_height_ = line_height().value * line_ranges.size();
+    text_height_ = line_height() * int(line_ranges.size());
 
     /* Shift the text depending on the difference in padding */
     auto diff = padding().left - padding().right;
@@ -431,7 +434,7 @@ void Widget::clear_mesh() {
     }
 }
 
-SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const smlt::Vec2* uvs, float z_offset) {
+SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const Px& border_radius, const smlt::Vec2* uvs, float z_offset) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
 
@@ -448,33 +451,81 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
 
     auto prev_count = mesh_->vertex_data->count();
 
-    mesh_->vertex_data->move_to_end();
-    mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f, (uvs) ? uvs[0].y : 0.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
+    if(border_radius) {
+        std::vector<Vec3> points;
 
-    mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f, (uvs) ? uvs[1].y : 0.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
+        int radius = std::min((int) border_radius.value, (int) std::min(width(), height()) / 2);
 
-    mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f, (uvs) ? uvs[2].y : 1.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
-    mesh_->vertex_data->done();
+        /* First add left section */
+        for(int i = 0; i < radius; ++i) {
+            float r = (PI * 0.5f) * (float(i) / float(radius));
 
-    mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0((uvs) ? uvs[3].x : 1.0f, (uvs) ? uvs[3].y : 1.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
+            Px x(radius - (radius * sin(r)));
+            Px y(radius - (radius * cos(r)));
 
-    sm->add_vertex_range(prev_count, 4);
+            points.push_back(Vec3(min.x.value + x.value, max.y.value - y.value, z_offset));
+            points.push_back(Vec3(min.x.value + x.value, min.y.value + y.value, z_offset));
+        }
+
+        /* Now add the central section */
+        points.push_back(Vec3((min.x.value + radius), max.y.value, z_offset));
+        points.push_back(Vec3((min.x.value + radius), min.y.value, z_offset));
+        points.push_back(Vec3((max.x.value - radius), max.y.value, z_offset));
+        points.push_back(Vec3((max.x.value - radius), min.y.value, z_offset));
+
+        /* Finally the central section */
+        for(int i = 0; i < radius; ++i) {
+            float r = (PI * 0.5f) * (float(i) / float(radius));
+
+            Px x(radius * sin(r));
+            Px y(radius - (radius * cos(r)));
+
+            int xstart = max.x.value - radius;
+
+            points.push_back(Vec3(xstart + x.value, max.y.value - y.value, z_offset));
+            points.push_back(Vec3(xstart + x.value, min.y.value + y.value, z_offset));
+        }
+
+
+        for(auto& p: points) {
+            mesh_->vertex_data->move_to_end();
+            mesh_->vertex_data->position(p);
+            mesh_->vertex_data->diffuse(colour);
+            mesh_->vertex_data->tex_coord0(0.0, 0.0f);
+            mesh_->vertex_data->normal(0, 0, 1);
+            mesh_->vertex_data->move_next();
+        }
+
+        sm->add_vertex_range(prev_count, points.size());
+    } else {
+        mesh_->vertex_data->move_to_end();
+        mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f, (uvs) ? uvs[0].y : 0.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+
+        mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f, (uvs) ? uvs[1].y : 0.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+
+        mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f, (uvs) ? uvs[2].y : 1.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+        mesh_->vertex_data->done();
+
+        mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[3].x : 1.0f, (uvs) ? uvs[3].y : 1.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+
+        sm->add_vertex_range(prev_count, 4);
+    }
 
     return sm;
 }
@@ -517,14 +568,14 @@ void Widget::render_border(const WidgetBounds& border_bounds) {
     float a = colour.af() * style_->opacity_;
     colour.set_alpha(a);
     /* FIXME! This should be 4 rectangles or a tri-strip */
-    new_rectangle("border", border_bounds, colour);
+    new_rectangle("border", border_bounds, colour, style_->border_radius_);
 }
 
 void Widget::render_background(const WidgetBounds& background_bounds) {
     auto colour = style_->background_colour_;
     colour.set_alpha(colour.af() * style_->opacity_);
 
-    auto bg = new_rectangle("background", background_bounds, colour);
+    auto bg = new_rectangle("background", background_bounds, colour, style_->border_radius_);
     if(has_background_image()) {
         apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
     }
@@ -533,7 +584,7 @@ void Widget::render_background(const WidgetBounds& background_bounds) {
 void Widget::render_foreground(const WidgetBounds& foreground_bounds) {
     auto colour = style_->foreground_colour_;
     colour.set_alpha(colour.af() * style_->opacity_);
-    auto fg = new_rectangle("foreground", foreground_bounds, colour);
+    auto fg = new_rectangle("foreground", foreground_bounds, colour, style_->border_radius_);
     if(has_foreground_image()) {
         apply_image_rect(fg, style_->foreground_image_, style_->foreground_image_rect_);
     }
@@ -600,10 +651,8 @@ void Widget::rebuild() {
     }
     vdata->done();
 
-    anchor_point_dirty_ = false;    
-
+    anchor_point_dirty_ = false;
     finalize_build();
-
 }
 
 Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dimensions) const {
@@ -611,22 +660,22 @@ Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dime
 
     // FIXME: Clipping + other modes
     if(resize_mode() == RESIZE_MODE_FIXED) {
-        box_width = requested_width_.value;
-        box_height = requested_height_.value;
+        box_width = requested_width_;
+        box_height = requested_height_;
     } else if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        box_width = requested_width_.value;
+        box_width = requested_width_;
         box_height = content_dimensions.height + style_->padding_.top + style_->padding_.bottom;
     } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
         box_width = content_dimensions.width + style_->padding_.left + style_->padding_.right;
-        box_height = requested_height_.value;
+        box_height = requested_height_;
     } else {
         /* Fit content */
         box_width = content_dimensions.width + style_->padding_.left + style_->padding_.right;
         box_height = content_dimensions.height + style_->padding_.top + style_->padding_.bottom;
     }
 
-    auto hw = (int16_t) std::ceil(float(box_width.value) * 0.5f);
-    auto hh = (int16_t) std::ceil(float(box_height.value) * 0.5f);
+    auto hw = Px((int16_t) std::ceil(float(box_width.value) * 0.5f));
+    auto hh = Px((int16_t) std::ceil(float(box_height.value) * 0.5f));
 
     WidgetBounds bounds;
     bounds.min = UICoord(-hw, -hh);
@@ -653,6 +702,19 @@ void Widget::set_border_width(Px x) {
 
 Px Widget::border_width() const {
     return style_->border_width_;
+}
+
+void Widget::set_border_radius(Px x) {
+    if(style_->border_radius_ == x) {
+        return;
+    }
+
+    style_->border_radius_ = x;
+    rebuild();
+}
+
+Px Widget::border_radius() const {
+    return style_->border_radius_;
 }
 
 void Widget::set_border_colour(const Colour &colour) {
@@ -744,7 +806,7 @@ void Widget::set_background_image(TexturePtr texture) {
     // Triggers a rebuild
     set_background_image_source_rect(
         UICoord(),
-        UICoord(dim.x, dim.y)
+        UICoord(Px(dim.x), Px(dim.y))
     );
 }
 
@@ -780,7 +842,7 @@ void Widget::set_foreground_image(TexturePtr texture) {
     // Triggers a rebuild
     set_foreground_image_source_rect(
         UICoord(),
-        UICoord(dim.x, dim.y)
+        UICoord(Px(dim.x), Px(dim.y))
     );
 }
 
@@ -849,7 +911,7 @@ Px Widget::content_height() const {
 }
 
 Px Widget::outer_width() const {
-    if(requested_width() == -1) {
+    if(requested_width() == Px(-1)) {
         return content_width() + (style_->border_width_ * 2) + padding().left + padding().right;
     } else {
         return requested_width();
@@ -857,7 +919,7 @@ Px Widget::outer_width() const {
 }
 
 Px Widget::outer_height() const {
-    if(requested_height() == -1) {
+    if(requested_height() == Px(-1)) {
         return content_height() + (style_->border_width_ * 2) + padding().top + padding().bottom;
     } else {
         return requested_height();

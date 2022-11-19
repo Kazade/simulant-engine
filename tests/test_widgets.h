@@ -43,7 +43,7 @@ public:
     }
 
     void test_foreground_and_background_images_differ() {
-        auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
 
         auto t1 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
         auto t2 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
@@ -56,7 +56,7 @@ public:
     }
 
     void test_render_priority() {
-        auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
         assert_equal(button->render_priority(), RENDER_PRIORITY_MAIN);
         button->set_render_priority(RENDER_PRIORITY_NEAR);
         assert_equal(button->render_priority(), RENDER_PRIORITY_NEAR);
@@ -72,7 +72,7 @@ public:
          * at the bottom left initially
          */
 
-        auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
         button->set_padding(0);
         button->set_border_width(0);
 
@@ -88,11 +88,11 @@ public:
     }
 
     void test_button_creation() {
-        auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
 
         assert_equal(_u("Test"), button->text());
-        assert_equal(100, button->requested_width());
-        assert_equal(20, button->requested_height());
+        assert_equal(ui::Px(100), button->requested_width());
+        assert_equal(ui::Px(20), button->requested_height());
     }
 
     void test_focus_chain() {
@@ -179,7 +179,7 @@ public:
         auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
         auto image = stage_->ui->new_widget_as_image(texture);
 
-        image->set_source_rect(smlt::ui::UICoord(0, 0), smlt::ui::UICoord(128, 128));
+        image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));
 
         assert_equal(image->width(), 128);
         assert_equal(image->height(), 128);
@@ -237,7 +237,7 @@ public:
             expected_width += child->outer_width();
         }
 
-        expected_width += (frame->space_between() * (frame->packed_children().size() - 1));
+        expected_width += (frame->space_between() * int(frame->packed_children().size() - 1));
 
         assert_equal(frame->outer_width(), expected_width);
     }

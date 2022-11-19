@@ -22,7 +22,7 @@ public:
         auto coord = window->coordinate_from_normalized(0.05, 0.95);
         int x = coord.x;
         int y = coord.y;
-        int spacing = 10;
+        smlt::ui::Px spacing = 10;
         int column = window->coordinate_from_normalized(0.25, 0).x;
 
         auto frame = stage_->ui->new_widget_as_frame("UI Demo");
@@ -67,6 +67,8 @@ public:
         fixed_width->resize(200, -1);
         fixed_width->move_to(100, 200);
         fixed_width->set_background_colour(smlt::Colour::PURPLE);
+        fixed_width->set_border_radius(smlt::ui::Px(10));
+        fixed_width->set_padding(10);
 
         auto fixed_height = stage_->ui->new_widget_as_label("This is some text with a fixed height.\n See it works!");
         fixed_height->resize(-1, 200);
