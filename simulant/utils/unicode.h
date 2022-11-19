@@ -76,6 +76,8 @@ public:
     unicode lstrip() const;
     unicode rstrip() const;
 
+    unicode substr(std::size_t pos = 0, std::size_t len = npos) const;
+
     unicode strip(const unicode& things) const;
     unicode lstrip(const unicode& things) const;
     unicode rstrip(const unicode& things) const;
