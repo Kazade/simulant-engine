@@ -18,7 +18,7 @@ class Frame;
 
 struct SoftKeyPressedEvent {
     KeyboardCode code;
-    wchar_t character;
+    char16_t chr;
 
     bool cancelled = false;
 

@@ -1240,8 +1240,13 @@ void Keyboard::activate() {
 
     auto txt = entry_->text();
     if(focused->displayed_character) {
-        txt.push_back(focused->displayed_character);
-        entry_->set_text(txt);
+        SoftKeyPressedEvent evt;
+        evt.chr = focused->displayed_character;
+        signal_key_pressed_(evt);
+        if(!evt.cancelled) {
+            txt.push_back(focused->displayed_character);
+            entry_->set_text(txt);
+        }
     } else if(focused->is_backspace_key()) {
         txt.pop_back();
         entry_->set_text(txt);

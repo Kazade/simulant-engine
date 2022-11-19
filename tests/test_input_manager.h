@@ -170,27 +170,50 @@ public:
         assert_true(manager_->axis_was_released("Test"));
     }
 
+    void test_virtual_input() {
+        auto& input = window->input;
+        auto ret = input->start_text_input(true);
+        assert_true(ret);
+
+        unicode text;
+        auto conn = input->signal_text_input_received().connect(
+            [&](const char16_t& c, TextInputReceivedControl&) -> bool {
+                text.push_back(c);
+                return true;
+            }
+        );
+
+        input->onscreen_keyboard->cursor_to_char('1');
+        input->onscreen_keyboard->activate();
+        assert_equal(text, "1");
+    }
+
     void test_start_text_input() {
         auto& input = window->input;
+        auto ret = input->start_text_input();
 
         if(input->state->keyboard_count()) {
             /* We have a physical keyboard, so start_text_input should return false */
-            auto ret = input->start_text_input();
             assert_false(ret);
             assert_false(input->onscreen_keyboard_active());
         } else {            
             /* On screen keyboard! */
-            auto ret = input->start_text_input();
             assert_true(ret);
             assert_true(input->onscreen_keyboard_active());
+            input->onscreen_keyboard->cursor_to_char('1');
+            input->onscreen_keyboard->activate();
+            assert_equal(input->onscreen_keyboard->text(), "1");
+            input->onscreen_keyboard->set_text("");
         }
 
         unicode text;
 
-        auto conn = input->signal_text_input_received().connect([&](const char16_t& c, TextInputReceivedControl& ctrl) -> bool {
-            text.push_back(c);
-            return true;
-        });
+        auto conn = input->signal_text_input_received().connect(
+            [&](const char16_t& c, TextInputReceivedControl&) -> bool {
+                text.push_back(c);
+                return true;
+            }
+        );
 
         window->on_key_down(smlt::KEYBOARD_CODE_A, smlt::ModifierKeyState());
         assert_equal(text, "a");

@@ -583,6 +583,15 @@ bool InputManager::start_text_input(bool force_onscreen) {
     keyboard_->move_to(window->width() / 2, window->height() * 0.1f);
     keyboard_->set_keyboard_integration_enabled(true);
 
+    /* This forward virtual keypresses to the text input received signal */
+    keyboard_->signal_key_pressed().connect([=](ui::SoftKeyPressedEvent& evt) {
+        TextInputReceivedControl ctrl;
+        signal_text_input_received_(evt.chr, ctrl);
+        if(ctrl.cancelled) {
+            evt.cancel();
+        }
+    });
+
     if(!scene_deactivated_conn_) {
         /* We need to watch for when scenes deactivate so we can destroy
          * the onscreen keyboard */
@@ -624,6 +633,11 @@ unicode InputManager::stop_text_input() {
 /* This watches for keyboard inputs while text input is active - we map keyboard codes to characters
  * depending on the keyboard layout */
 void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
+    if(self_->onscreen_keyboard_active()) {
+        /* This signal would be triggered by the onscreen keyboard instead */
+        return;
+    }
+
     char16_t chr = character_for_keyboard_code(
         KEYBOARD_LAYOUT_UK,
         evt.keyboard_code,

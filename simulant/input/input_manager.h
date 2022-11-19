@@ -136,7 +136,7 @@ private:
 
 public:
     S_DEFINE_PROPERTY(state, &InputManager::controller_);
-    S_DEFINE_PROPERTY(onscreen_keyboard, &InputManager::controller_);
+    S_DEFINE_PROPERTY(onscreen_keyboard, &InputManager::keyboard_);
 };
 
 }
