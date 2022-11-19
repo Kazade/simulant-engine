@@ -49,7 +49,13 @@ struct Px {
     Px(const uint16_t& rhs):
         value(rhs) {}
 
+    Px(const long unsigned int& rhs):
+        value(rhs) {}
+
     /* Don't convert float types implicitly */
+    explicit Px(const double& rhs):
+        value(rhs) {}
+
     explicit Px(const float& rhs):
         value(rhs) {}
 
