@@ -107,6 +107,12 @@ bool unicode::contains(const unicode& thing) const {
     return contains(thing.encode());
 }
 
+unicode unicode::substr(std::size_t pos, std::size_t len) const {
+    auto ret = *this;
+    ret.string_ = ret.string_.substr(pos, len);
+    return ret;
+}
+
 bool unicode::contains(const wchar_t ch) const {
     return string_.find(ch) != ustring::npos;
 }

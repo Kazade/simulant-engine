@@ -112,7 +112,7 @@ public:
     void activate() override {
         auto entry = stage_->ui->new_widget_as_label("");
 
-        if(!input->start_text_input(false)) {
+        if(!input->start_text_input(true)) {
             /* No on-screen keyboard, so show a dialog */
             auto dialog = stage_->ui->new_widget_as_frame("Please enter some text");
             dialog->pack_child(entry);

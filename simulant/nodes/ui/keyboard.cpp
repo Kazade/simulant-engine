@@ -3,6 +3,7 @@
 #include "keyboard.h"
 #include "button.h"
 #include "frame.h"
+#include "text_entry.h"
 
 #include "../../window.h"
 #include "../../stage.h"
@@ -139,6 +140,10 @@ public:
             keyboard_->cursor_left();
         } else if(evt.button == JOYSTICK_BUTTON_DPAD_RIGHT) {
             keyboard_->cursor_right();
+        } else if(evt.button == JOYSTICK_BUTTON_LEFT_SHOULDER) {
+            keyboard_->entry()->caret_left();
+        } else if(evt.button == JOYSTICK_BUTTON_RIGHT_SHOULDER) {
+            keyboard_->entry()->caret_right();
         }
     }
 
@@ -1174,7 +1179,7 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    entry_ = Label::create(nullptr, config, stage);
+    entry_ = TextEntry::create(nullptr, config, stage);
     entry_->set_text(initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
@@ -1244,15 +1249,10 @@ void Keyboard::activate() {
         evt.chr = focused->displayed_character;
         signal_key_pressed_(evt);
         if(!evt.cancelled) {
-            txt.push_back(focused->displayed_character);
-            entry_->set_text(txt);
+            entry_->insert_character(evt.chr);
         }
     } else if(focused->is_backspace_key()) {
-        txt.pop_back();
-        entry_->set_text(txt);
-    } else if(focused->is_space_key()) {
-        txt.push_back(' ');
-        entry_->set_text(txt);
+        entry_->backspace_character();
     } else if(focused->is_accent_key()) {
         if(panel_->mode_ == KEYBOARD_MODE_LOWERCASE) {
             set_mode(KEYBOARD_MODE_ACCENT_LOWERCASE);

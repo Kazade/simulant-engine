@@ -14,7 +14,7 @@ namespace ui {
  */
 
 class Frame;
-
+class TextEntry;
 
 struct SoftKeyPressedEvent {
     KeyboardCode code;
@@ -82,13 +82,17 @@ public:
     using Widget::set_font;
 
     void set_font(FontPtr font) override;
+
+    TextEntry* entry() {
+        return entry_.get();
+    }
 private:
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
     std::shared_ptr<KeyboardPanel> panel_;
-    std::shared_ptr<Label> entry_;
+    std::shared_ptr<TextEntry> entry_;
     std::shared_ptr<Frame> info_row_;
 
     Frame* main_frame_ = nullptr;
