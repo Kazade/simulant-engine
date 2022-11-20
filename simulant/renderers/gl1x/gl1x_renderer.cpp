@@ -80,7 +80,10 @@ void GL1XRenderer::init_context() {
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
+
+#ifndef __PSP__
     GLCheck(glHint, GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+#endif
 }
 
 std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visitor(CameraPtr camera) {
