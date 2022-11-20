@@ -130,16 +130,19 @@ void MeshInstancer::_get_renderables(
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = mesh_->vertex_data.get();
         new_renderable.index_data = submesh->index_data.get();
-        new_renderable.index_element_count = new_renderable.index_data->count();
+        new_renderable.index_element_count = (new_renderable.index_data) ? new_renderable.index_data->count() : 0;
+        new_renderable.vertex_ranges = submesh->vertex_ranges();
+        new_renderable.vertex_range_count = submesh->vertex_range_count();
 
         // FIXME: Support material slots like actors?
         new_renderable.material = submesh->material_at_slot(MATERIAL_SLOT0, true).get();
 
         for(auto& mesh_instance: instances_) {
-            new_renderable.final_transformation = mesh_instance.second.abs_transformation;
-            new_renderable.is_visible = mesh_instance.second.is_visible;
-            new_renderable.centre = mesh_instance.second.aabb.centre();
-            render_queue->insert_renderable(std::move(new_renderable));
+            auto to_insert = new_renderable;  // Create a copy
+            to_insert.final_transformation = mesh_instance.second.abs_transformation;
+            to_insert.is_visible = mesh_instance.second.is_visible;
+            to_insert.centre = mesh_instance.second.aabb.centre();
+            render_queue->insert_renderable(std::move(to_insert));
         }
     }
 }
