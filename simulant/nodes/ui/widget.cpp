@@ -454,18 +454,19 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     if(border_radius) {
         std::vector<Vec3> points;
 
+        float half_height = (bounds.max.y - bounds.min.y).value / 2;
         int max_radius = std::min((bounds.max.x - bounds.min.x).value, (bounds.max.y - bounds.min.y).value) / 2;
         int radius = std::min((int) border_radius.value, max_radius);
+        float fr = float(radius);
 
         /* First add left section */
         for(int i = 0; i < radius; ++i) {
-            float r = (PI * 0.5f) * (float(i) / float(radius));
+            float r = (PI * 0.5f) * (float(i) / fr);
+            float x = fr - (fr * std::cos(r));
+            float y = fr - (fr * std::sin(r));
 
-            Px x(radius - (radius * sin(r)));
-            Px y(radius - (radius * cos(r)));
-
-            points.push_back(Vec3(min.x.value + x.value, max.y.value - y.value, z_offset));
-            points.push_back(Vec3(min.x.value + x.value, min.y.value + y.value, z_offset));
+            points.push_back(Vec3(float(min.x.value) + x, half_height - y, z_offset));
+            points.push_back(Vec3(float(min.x.value) + x, (-half_height) + y, z_offset));
         }
 
         /* Now add the central section */
@@ -476,15 +477,15 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
 
         /* Finally the central section */
         for(int i = 0; i < radius; ++i) {
-            float r = (PI * 0.5f) * (float(i) / float(radius));
+            float r = (PI * 0.5f) * (float(i) / fr);
 
-            Px x(radius * sin(r));
-            Px y(radius - (radius * cos(r)));
+            float x(fr * std::sin(r));
+            float y(fr - (fr * std::cos(r)));
 
             int xstart = max.x.value - radius;
 
-            points.push_back(Vec3(xstart + x.value, max.y.value - y.value, z_offset));
-            points.push_back(Vec3(xstart + x.value, min.y.value + y.value, z_offset));
+            points.push_back(Vec3(xstart + x, max.y.value - y, z_offset));
+            points.push_back(Vec3(xstart + x, min.y.value + y, z_offset));
         }
 
 
