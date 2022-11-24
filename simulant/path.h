@@ -14,6 +14,8 @@ public:
     Path(const std::string& path):
         path_(path) {}
 
+    Path parent() const;
+
     std::string str() const {
         return path_;
     }
