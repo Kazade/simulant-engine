@@ -46,7 +46,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     FileHeader fheader;
     data_->read((char*) &fheader, sizeof(FileHeader));
 
-    if(fheader.version != 1) {
+    if(fheader.version != DCM_CURRENT_VERSION) {
         S_ERROR("Unsupported dcm version: {0}", fheader.version);
         return;
     }
