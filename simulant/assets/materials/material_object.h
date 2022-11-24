@@ -27,6 +27,8 @@ public:
     void set_shininess(float shininess);
     void set_diffuse_map(TexturePtr texture);
     void set_light_map(TexturePtr texture);
+    void set_specular_map(TexturePtr texture);
+    void set_normal_map(TexturePtr texture);
 
     const Mat4& diffuse_map_matrix() const;
     const Mat4& light_map_matrix() const;
