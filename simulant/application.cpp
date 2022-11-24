@@ -72,6 +72,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "loaders/wav_loader.h"
 #include "loaders/ms3d_loader.h"
 #include "loaders/dtex_loader.h"
+#include "loaders/dcm_loader.h"
 #include "utils/json.h"
 #include "utils/string.h"
 
@@ -155,6 +156,7 @@ Application::Application(const AppConfig &config):
     register_loader(std::make_shared<smlt::loaders::WAVLoaderType>());
     register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
+    register_loader(std::make_shared<smlt::loaders::DCMLoaderType>());
 
     try {
         construct_window(config);

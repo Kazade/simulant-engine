@@ -44,6 +44,14 @@ void MaterialObject::set_light_map(TexturePtr texture) {
     set_property_value(LIGHT_MAP_PROPERTY_NAME, texture);
 }
 
+void MaterialObject::set_specular_map(TexturePtr texture) {
+    set_property_value(SPECULAR_MAP_PROPERTY_NAME, texture);
+}
+
+void MaterialObject::set_normal_map(TexturePtr texture) {
+    set_property_value(NORMAL_MAP_PROPERTY_NAME, texture);
+}
+
 void MaterialObject::set_diffuse_map_matrix(const Mat4& mat) {
     set_property_value(DIFFUSE_MAP_MATRIX_PROPERTY_NAME, mat);
 }

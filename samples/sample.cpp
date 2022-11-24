@@ -27,7 +27,7 @@ public:
         stage_->new_light_as_directional();
         stage_->set_ambient_light(smlt::Colour(0.3, 0.3, 0.3, 1.0));
 
-        auto mesh = stage_->assets->new_mesh_from_file("sample_data/autumn_house/autumn_house.obj");
+        auto mesh = stage_->assets->new_mesh_from_file("sample_data/autumn_house/autumn_house.dcm");
 
         actor_ = stage_->new_actor_with_mesh(mesh); // Create an instance of it
         actor_->move_to(0.0f, -0.05f, -1.0f);
