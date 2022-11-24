@@ -58,8 +58,8 @@ public:
 
 private:
     bool init() {
-        scenes->register_scene<GameScene>("main");
-        // scenes->register_scene<smlt::scenes::Splash>("main", "ingame");
+        scenes->register_scene<GameScene>("ingame");
+        scenes->register_scene<smlt::scenes::Splash>("main", "ingame");
         return true;
     }
 };

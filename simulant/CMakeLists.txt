@@ -56,8 +56,27 @@ IF(PLATFORM_PSP)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${PROC_FILE})
 ENDIF()
 
+IF(PLATFORM_DREAMCAST OR SIMULANT_USE_ALDC)
+    SET(
+        LIBAL
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/buffer.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/core.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/context.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/alut.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/math.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/listener.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/platform.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/source.c
+    )
+
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libAL/include)
+
+    MESSAGE("-- Including ALdc in build")
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBAL})
+ENDIF()
+
 IF(PLATFORM_DREAMCAST)
-    MESSAGE("-- Including GLdc and ALdc in build, as this is the Dreamcast")
+    MESSAGE("-- Including GLdc in build, as this is the Dreamcast")
 
     set(GLDC_VERSION "gldc-version-simulant-builtin")
     configure_file(${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c.in ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c)
@@ -76,24 +95,11 @@ IF(PLATFORM_DREAMCAST)
         MESSAGE("-- Including platform specific files: ${PLATFORM}")
     ENDIF()
 
-    SET(
-        LIBAL
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/buffer.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/core.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/context.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/alut.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/math.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/listener.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/platform.c
-        ${CMAKE_SOURCE_DIR}/deps/libAL/src/source.c
-    )
-
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include ${CMAKE_SOURCE_DIR}/deps/libAL/include)
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include)
 
     SET(SIMULANT_FILES ${SIMULANT_FILES}
         ${LIBGL}
         ${LIBGL_ASM}
-        ${LIBAL}
         ${PLATFORM}
     )
 

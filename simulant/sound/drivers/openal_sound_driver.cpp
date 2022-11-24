@@ -32,6 +32,7 @@ bool OpenALSoundDriver::_startup() {
 
 void OpenALSoundDriver::_shutdown() {
     if(ctx) {
+        alcMakeContextCurrent(NULL);
         alcDestroyContext(ctx);
         ctx = nullptr;
     }

@@ -18,6 +18,9 @@ OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 OPTION(SIMULANT_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 
+# This is only for testing! You will not get any sound!
+OPTION(SIMULANT_USE_ALDC "Use ALdc on all platforms" OFF)
+
 IF(PLATFORM_DREAMCAST)
 OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
 ELSE()
@@ -125,8 +128,12 @@ IF(NOT PLATFORM_DREAMCAST)
         SET(SDL2_LIBRARIES SDL2)
         SET(SDL2_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/.android/sdl/include)
 
-        SET(OPENAL_LIBRARY openal)
-        SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/.android/openal/OpenAL/include)
+        IF(SIMULANT_USE_ALDC)
+
+        ELSE()
+            SET(OPENAL_LIBRARY openal)
+            SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/.android/openal/OpenAL/include)
+        ENDIF()
 
         FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
         FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
@@ -151,13 +158,21 @@ IF(NOT PLATFORM_DREAMCAST)
                 FIND_PACKAGE(SDL2 REQUIRED)
             ENDIF()
 
-            SET(OPENAL_INCLUDE_DIR $ENV{OPENALDIR}/include)
-            SET(OPENAL_INCLUDE_DIRS $ENV{OPENALDIR}/include)
+            IF(NOT SIMULANT_USE_ALDC)
+                SET(OPENAL_INCLUDE_DIR $ENV{OPENALDIR}/include)
+                SET(OPENAL_INCLUDE_DIRS $ENV{OPENALDIR}/include)
+            ENDIF()
 
             SET(ZLIB_INCLUDE_DIR $ENV{ZLIBDIR}/include)
         ENDIF()
 
-        FIND_PACKAGE(OpenAL REQUIRED)
+        IF(SIMULANT_USE_ALDC)
+            SET(OPENAL_INCLUDE_DIRS "")
+            SET(OPENAL_LIBRARY "")
+        ELSE()
+            FIND_PACKAGE(OpenAL REQUIRED)
+        ENDIF()
+
         FIND_PACKAGE(OpenGL REQUIRED)
         FIND_PACKAGE(ZLIB REQUIRED)
     ENDIF()
