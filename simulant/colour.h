@@ -36,6 +36,24 @@ struct Colour {
         return Colour(float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f, float(a) / 255.0f);
     }
 
+    /* Read count colour components from buf. All other components will be zero
+     * except alpha which will be one. */
+    Colour(const float* buf, std::size_t count):
+        r(0), g(0), b(0), a(1) {
+        if(count > 0) {
+            r = *buf++;
+        }
+        if(count > 1) {
+            g = *buf++;
+        }
+        if(count > 2) {
+            b = *buf++;
+        }
+        if(count > 3) {
+            a = *buf++;
+        }
+    }
+
     Colour(float r, float g, float b, float a):
         r(r), g(g), b(b), a(a) {}
 
