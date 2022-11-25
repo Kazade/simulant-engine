@@ -81,9 +81,14 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         int enabled_textures = 0;
 
         if(mat.diffuse_map[0]) {
-            auto tex = mesh->asset_manager().new_texture_from_file(mat.diffuse_map);
+            Path final = Path(mat.diffuse_map);
+            if(!mesh_opts.override_texture_extension.empty()) {
+                final = final.replace_ext(mesh_opts.override_texture_extension);
+            }
+
+            auto tex = mesh->asset_manager().new_texture_from_file(final);
             if(!tex) {
-                S_WARN("Couldn't locate texture: {0}", mat.diffuse_map);
+                S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_diffuse_map(tex);
             }
@@ -92,9 +97,14 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         if(mat.specular_map[0]) {
-            auto tex = mesh->asset_manager().new_texture_from_file(mat.specular_map);
+            Path final = Path(mat.specular_map);
+            if(!mesh_opts.override_texture_extension.empty()) {
+                final = final.replace_ext(mesh_opts.override_texture_extension);
+            }
+
+            auto tex = mesh->asset_manager().new_texture_from_file(final);
             if(!tex) {
-                S_WARN("Couldn't locate texture: {0}", mat.specular_map);
+                S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_specular_map(tex);
             }
@@ -103,9 +113,14 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         if(mat.light_map[0]) {
-            auto tex = mesh->asset_manager().new_texture_from_file(mat.light_map);
+            Path final = Path(mat.light_map);
+            if(!mesh_opts.override_texture_extension.empty()) {
+                final = final.replace_ext(mesh_opts.override_texture_extension);
+            }
+
+            auto tex = mesh->asset_manager().new_texture_from_file(final);
             if(!tex) {
-                S_WARN("Couldn't locate texture: {0}", mat.light_map);
+                S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_light_map(tex);
             }
@@ -114,9 +129,14 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         if(mat.normal_map[0]) {
-            auto tex = mesh->asset_manager().new_texture_from_file(mat.normal_map);
+            Path final = Path(mat.normal_map);
+            if(!mesh_opts.override_texture_extension.empty()) {
+                final = final.replace_ext(mesh_opts.override_texture_extension);
+            }
+
+            auto tex = mesh->asset_manager().new_texture_from_file(final);
             if(!tex) {
-                S_WARN("Couldn't locate texture: {0}", mat.normal_map);
+                S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_normal_map(tex);
             }

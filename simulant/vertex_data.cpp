@@ -196,10 +196,12 @@ void VertexData::position(float x, float y) {
 
     float* out = (float*) &data_[cursor_offset()];
     switch(vertex_specification_.position_attribute_) {
-    case VERTEX_ATTRIBUTE_4F:  // Fallthrough
+    case VERTEX_ATTRIBUTE_4F:
         out[3] = 1.0f;
-    case VERTEX_ATTRIBUTE_3F:  // Fallthrough
+        // fallthrough
+    case VERTEX_ATTRIBUTE_3F:
         out[2] = 0.0f;
+        // fallthrough
     case VERTEX_ATTRIBUTE_2F:
         out[0] = x;
         out[1] = y;
