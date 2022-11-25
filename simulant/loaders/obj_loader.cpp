@@ -579,6 +579,10 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
     }
 
+    for(auto& sm: mesh->each_submesh()) {
+        sm->mark_changed();
+    }
+
     vdata->done();
 
     if(!info.default_material->diffuse_map()) {

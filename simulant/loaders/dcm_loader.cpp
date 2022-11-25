@@ -235,6 +235,10 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             mesh->new_submesh(smlt::to_string(i), materials[sheader.material_id], index_data, arrangement);
         }
     }
+
+    for(auto& sm: mesh->each_submesh()) {
+        sm->mark_changed();
+    }
 }
 
 }

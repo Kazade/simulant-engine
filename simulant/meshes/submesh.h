@@ -68,6 +68,7 @@ public:
      * @param count
      */
     bool add_vertex_range(uint32_t start, uint32_t count);
+    void mark_changed();
 
     const VertexRange* vertex_ranges() const {
         return &vertex_ranges_[0];

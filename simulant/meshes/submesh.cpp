@@ -128,6 +128,10 @@ void SubMesh::_recalc_bounds(AABB &bounds) {
     }
 }
 
+void SubMesh::mark_changed() {
+    parent_->submesh_index_data_updated(this);
+}
+
 void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
     float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
     float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
