@@ -35,6 +35,8 @@ public:
     }
 
     void update(float dt) override {
+        _S_UNUSED(dt);
+
         window->each_screen([=](std::string, smlt::Screen* screen) {
             screen->render(&data[0]);
         });

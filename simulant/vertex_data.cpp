@@ -176,7 +176,8 @@ void VertexData::position(float x, float y, float z) {
     switch(vertex_specification_.position_attribute_) {
     case VERTEX_ATTRIBUTE_4F:
         out[3] = 1.0f;
-    case VERTEX_ATTRIBUTE_3F:  // Fallthrough
+        // Fallthrough
+    case VERTEX_ATTRIBUTE_3F:
         out[0] = x;
         out[1] = y;
         out[2] = z;

@@ -35,7 +35,7 @@ FileHandler::FileHandler(const std::string& filename):
     }
 }
 
-void FileHandler::do_write_message(Logger* logger,
+void FileHandler::do_write_message(Logger*,
                    const DateTime& time,
                    const std::string& level,
                    const std::string &message) {
@@ -51,7 +51,7 @@ StdIOHandler::StdIOHandler() {
 
 }
 
-void StdIOHandler::do_write_message(Logger* logger,
+void StdIOHandler::do_write_message(Logger*,
                                     const DateTime& time,
                        const std::string& level,
                        const std::string& message) {

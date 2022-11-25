@@ -70,8 +70,8 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         ::smlt::MaterialPtr new_mat = mesh->asset_manager().clone_default_material();
         new_mat->set_pass_count(1);
-        new_mat->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
-        new_mat->set_blend_func(smlt::BLEND_ALPHA);
+        new_mat->set_cull_mode(mesh_opts.cull_mode);
+        new_mat->set_blend_func(mesh_opts.blending_enabled ? BLEND_ALPHA : BLEND_NONE);
         new_mat->set_diffuse(smlt::Colour(mat.diffuse, 4));
         new_mat->set_ambient(smlt::Colour(mat.ambient, 4));
         new_mat->set_specular(smlt::Colour(mat.specular, 4));

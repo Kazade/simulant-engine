@@ -2,6 +2,9 @@
 #include "simulant/shortcuts.h"
 
 int main(int argc, char* argv[]) {
+    _S_UNUSED(argc);
+    _S_UNUSED(argv);
+
 	//Set up logging to stdio
 
 /** FIXME:
