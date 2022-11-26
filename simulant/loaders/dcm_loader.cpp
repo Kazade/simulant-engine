@@ -77,6 +77,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         new_mat->set_specular(smlt::Colour(mat.specular, 4));
         new_mat->set_emission(smlt::Colour(mat.emission, 4));
         new_mat->set_shininess(mat.shininess);
+        new_mat->set_name(mat.name);
 
         int enabled_textures = 0;
 
