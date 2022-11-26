@@ -76,7 +76,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         new_mat->set_ambient(smlt::Colour(mat.ambient, 4));
         new_mat->set_specular(smlt::Colour(mat.specular, 4));
         new_mat->set_emission(smlt::Colour(mat.emission, 4));
-        new_mat->set_shininess(mat.shininess);
+        new_mat->set_shininess(mat.shininess * 128.0f);
         new_mat->set_name(mat.name);
 
         int enabled_textures = 0;
@@ -185,7 +185,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Colour::from_bytes(color[0], color[1], color[2], color[3]));
+            vdata->diffuse(smlt::Colour::from_bytes(color[2], color[1], color[0], color[3]));
         } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F) {
             float color[4];
             data_->read((char*) &color, sizeof(color));

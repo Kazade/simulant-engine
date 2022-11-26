@@ -75,7 +75,7 @@ struct FileHeader {
 };
 
 struct Material {
-    char name[16];
+    char name[32];
     float ambient[4] = {0, 0, 0, 1};
     float diffuse[4] = {0, 0, 0, 1};  /* Diffuse in RGBA order */
     float specular[4] = {0, 0, 0, 1};
@@ -88,7 +88,7 @@ struct Material {
 };
 
 struct MeshHeader {
-    char name[16];
+    char name[32];
     uint8_t submesh_count; /* Number of submeshes that follow the vertex data */
     uint8_t reserved[3];  /* Potentially bone count etc. */
     uint32_t vertex_count; /* Number of vertices that follow this header */
