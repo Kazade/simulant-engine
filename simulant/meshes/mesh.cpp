@@ -727,6 +727,38 @@ SubMesh* Mesh::find_submesh(const std::string& name) const {
     return nullptr;
 }
 
+SubMesh* Mesh::find_submesh_with_material(const MaterialPtr& mat) const {
+    auto it = std::find_if(submeshes_.begin(), submeshes_.end(), [&mat](const std::shared_ptr<SubMesh>& i) {
+        return i->material()->id() == mat->id();
+    });
+
+    if(it != submeshes_.end()) {
+        return it->get();
+    }
+
+    return nullptr;
+}
+
+std::vector<SubMeshPtr> Mesh::find_all_submeshes(const std::string& name) const {
+    std::vector<SubMeshPtr> ret;
+    for(auto& sm: submeshes_) {
+        if(sm->name() == name) {
+            ret.push_back(sm.get());
+        }
+    }
+    return ret;
+}
+
+std::vector<SubMeshPtr> Mesh::find_all_submeshes_with_material(const MaterialPtr& mat) const {
+    std::vector<SubMeshPtr> ret;
+    for(auto& sm: submeshes_) {
+        if(sm->material() == mat) {
+            ret.push_back(sm.get());
+        }
+    }
+    return ret;
+}
+
 void Mesh::generate_adjacency_info() {
     adjacency_.reset(new AdjacencyInfo(this));
     adjacency_->rebuild();

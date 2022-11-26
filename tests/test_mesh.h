@@ -46,7 +46,13 @@ public:
 
         data->done();
 
-        first_mesh_ = mesh->new_submesh("test", stage_->assets->clone_default_material(), INDEX_TYPE_16_BIT);
+        auto mat = stage_->assets->clone_default_material();
+        first_mesh_ = mesh->new_submesh("test", mat, INDEX_TYPE_16_BIT);
+
+        assert_equal(mesh->find_submesh_with_material(mat), first_mesh_);
+        assert_equal(mesh->find_all_submeshes_with_material(mat).size(), 1u);
+        assert_equal(mesh->find_all_submeshes_with_material(mat)[0], first_mesh_);
+
         smlt::SubMesh* submesh = first_mesh_;
 
         submesh->index_data->index(0);

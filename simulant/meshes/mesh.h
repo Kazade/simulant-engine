@@ -256,6 +256,10 @@ public:
     uint32_t submesh_count() const { return submeshes_.size(); }
     bool has_submesh(const std::string& name) const;
     SubMeshPtr find_submesh(const std::string& name) const;
+    SubMeshPtr find_submesh_with_material(const MaterialPtr& mat) const;
+    std::vector<SubMeshPtr> find_all_submeshes(const std::string& name) const;
+    std::vector<SubMeshPtr> find_all_submeshes_with_material(const MaterialPtr& mat) const;
+
     SubMeshPtr first_submesh() const;
 
     void destroy_submesh(const std::string& name);
