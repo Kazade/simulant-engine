@@ -97,7 +97,6 @@ void Widget::set_font(const std::string& family, Px size, FontWeight weight, Fon
     }
 }
 
-/* Internal only! */
 void Widget::set_font(FontPtr font) {
     if(!font) {
         S_WARN("Tried to set NULL font on a widget");

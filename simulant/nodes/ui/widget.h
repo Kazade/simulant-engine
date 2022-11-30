@@ -107,6 +107,9 @@ public:
     void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Rem size=Rem(1.0f), FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
     void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Px size=DEFAULT_FONT_SIZE, FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
 
+    // You probably don't want this one
+    virtual void set_font(FontPtr font);
+
     /* Allow creating a double-linked list of widgets for focusing. There is no
      * global focused widget but there is only one focused widget in a chain
      */
@@ -324,7 +327,6 @@ protected:
     void on_transformation_change_attempted() override;
 
     void rebuild();
-    virtual void set_font(FontPtr font);
 
     virtual void prepare_build() {}
     virtual void finalize_render() {}

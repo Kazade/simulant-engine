@@ -27,6 +27,27 @@ public:
         assert_false(tex->has_data());
     }
 
+    void test_blur() {
+        TexturePtr tex = application->shared_assets->new_texture(3, 3, smlt::TEXTURE_FORMAT_R_1UB_8);
+        tex->set_auto_upload(false);
+
+        auto data = tex->data_copy();
+        data[4] = 255;
+
+        tex->set_data(data);
+        tex->blur(BLUR_TYPE_SIMPLE, 1);  // Simple box blur with a radius of 1
+
+        assert_equal(+tex->data()[0], 28);
+        assert_equal(+tex->data()[1], 28);
+        assert_equal(+tex->data()[2], 28);
+        assert_equal(+tex->data()[3], 28);
+        assert_equal(+tex->data()[4], 28);
+        assert_equal(+tex->data()[5], 28);
+        assert_equal(+tex->data()[6], 28);
+        assert_equal(+tex->data()[7], 28);
+        assert_equal(+tex->data()[8], 28);
+    }
+
     void test_transaction_api() {
         TexturePtr tex = application->shared_assets->new_texture(8, 8);
 

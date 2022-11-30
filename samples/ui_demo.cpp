@@ -51,9 +51,14 @@ public:
         pg2_->resize(column, -1);
         frame->pack_child(pg2_);
 
+        smlt::FontFlags flags;
+        flags.blur_radius = 1;
+        flags.size = 32;
+        auto blurred_font = stage_->assets->new_font_from_file("fonts/Orbitron/Orbitron-Regular.ttf", flags);
+
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
         big_label->resize(column, -1);
-        big_label->set_font("Orbitron", 32);
+        big_label->set_font(blurred_font);
         frame->pack_child(big_label);
 
         auto simulant_logo = stage_->assets->new_texture_from_file("textures/simulant-icon.png");

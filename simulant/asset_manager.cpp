@@ -646,6 +646,7 @@ FontPtr AssetManager::new_font_from_file(const Path& filename, const FontFlags& 
         options["size"] = flags.size;
         options["weight"] = flags.weight;
         options["charset"] = flags.charset;
+        options["blur_radius"] = flags.blur_radius;
         get_app()->loader_for(filename)->into(font.get(), options);
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {

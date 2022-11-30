@@ -52,6 +52,11 @@ enum TextureFilter {
     TEXTURE_FILTER_TRILINEAR
 };
 
+enum BlurType {
+    BLUR_TYPE_SIMPLE,
+    BLUR_TYPE_GAUSSIAN,
+};
+
 /*
  * Simulant intentionally only supports a handful of formats for portability.
  *
@@ -68,6 +73,8 @@ enum TextureFilter {
  * in which case they are omitted.
  */
 enum TextureFormat {
+    TEXTURE_FORMAT_INVALID = 0,
+
     // Standard formats
     TEXTURE_FORMAT_R_1UB_8,
     TEXTURE_FORMAT_RGB_3UB_888,
@@ -99,9 +106,7 @@ enum TextureFormat {
     // PVR VQ Compressed but with mipmap data included
     TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP,
     TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP,
-    TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP,
-
-    TEXTURE_FORMAT_INVALID
+    TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP
 };
 
 std::size_t texture_format_stride(TextureFormat format);
@@ -126,6 +131,19 @@ enum TextureChannel {
     TEXTURE_CHANNEL_ZERO,
     TEXTURE_CHANNEL_ONE,
     TEXTURE_CHANNEL_INVERSE_RED,
+};
+
+struct Pixel {
+    Pixel() = default;
+    Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a):
+        rgba{r, g, b, a} {}
+
+    uint8_t rgba[4];
+
+    /** Will attempt to convert to the specified format, will
+     *  return empty data if this isn't possible. Return size
+     *  will depend on the size of the texture format */
+    std::vector<uint8_t> to_format(TextureFormat fmt);
 };
 
 typedef std::array<TextureChannel, 4> TextureChannelSet;
@@ -173,6 +191,16 @@ public:
      *  NOT YET IMPLEMENTED! PATCHES WELCOME!
      */
     bool update_palette(const uint8_t* palette);
+
+    /* Applies a blur to the texture, this must be called before
+     * a texture is uploaded to the GPU. This function will return false
+     * if the blur type is unimplemented (patches welcome!) or the
+     * texture data is empty */
+    bool blur(BlurType blur_type, std::size_t radius);
+
+    /* Returns the byte colour data for the specified location. Will return
+     * nothing if the texture data is empty, or it's a compressed texture */
+    smlt::optional<Pixel> pixel(std::size_t x, std::size_t y);
 
     /** Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
     bool convert(

@@ -14,6 +14,7 @@ namespace loaders {
 
         CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
         uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
+        std::size_t blur = smlt::any_cast<std::size_t>(options.at("blur_radius"));
 
         font->info_.reset(new stbtt_fontinfo());
         font->font_size_ = font_size;
@@ -48,18 +49,30 @@ namespace loaders {
         // Dreamcast needs 16bpp, so we bake the font bitmap here
         // temporarily and then generate a RGBA texture from it
 
-        std::vector<uint8_t> tmp_buffer(TEXTURE_WIDTH * TEXTURE_HEIGHT);
-        uint8_t* out_buffer = &tmp_buffer[0];
-        stbtt_BakeFontBitmap(
-            &buffer[0], 0, font_size, out_buffer,
-            TEXTURE_WIDTH, TEXTURE_HEIGHT,
-            first_char, char_count,
-            (stbtt_bakedchar*) &font->char_data_[0]
+        auto tmp_texture = font->asset_manager().new_texture(
+            TEXTURE_WIDTH,
+            TEXTURE_HEIGHT,
+            TEXTURE_FORMAT_R_1UB_8
         );
+
+        tmp_texture->set_auto_upload(false);
+
+        tmp_texture->mutate_data([&](uint8_t* tex_data, uint16_t w, uint16_t h, TextureFormat) {
+            stbtt_BakeFontBitmap(
+                &buffer[0], 0, font_size, tex_data,
+                w, h,
+                first_char, char_count,
+                (stbtt_bakedchar*) &font->char_data_[0]
+            );
+        });
 
         /* We don't need the file data anymore */
         data.clear();
         data.shrink_to_fit();
+
+        if(blur) {
+            tmp_texture->blur(BLUR_TYPE_SIMPLE, blur);
+        }
 
         /* We create a 16 colour paletted texture. This is an RGBA texture
          * where the colour is white with 16 levels of alpha. We then pack
@@ -67,6 +80,8 @@ namespace loaders {
          * 150kb - essential for memory constrained systems. */
 
         S_DEBUG("Converting to paletted format");
+
+        const uint8_t* tmp_buffer = tmp_texture->data();
 
         // Generate a new texture for rendering the font to
         auto texture = font->texture_ = font->asset_manager().new_texture(
@@ -90,7 +105,7 @@ namespace loaders {
                 *(pout++) = (i * 17);
             }
 
-            for(std::size_t i = 0; i < tmp_buffer.size(); i += 2) {
+            for(std::size_t i = 0; i < tmp_texture->data_size(); i += 2) {
                 uint8_t t0 = tmp_buffer[i];
                 uint8_t t1 = tmp_buffer[i + 1];
                 uint8_t i0 = t0 >> 4;
@@ -100,8 +115,7 @@ namespace loaders {
         });
 
         /* We're done with this now */
-        tmp_buffer.clear();
-        tmp_buffer.shrink_to_fit();
+        tmp_texture.reset();
         S_DEBUG("Finished conversion");
 
         texture->flush();

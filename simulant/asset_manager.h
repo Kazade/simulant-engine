@@ -67,6 +67,10 @@ struct FontFlags {
     uint16_t size = 16;
     FontWeight weight = FONT_WEIGHT_NORMAL;
     CharacterSet charset = CHARACTER_SET_LATIN;
+
+    /* If non-zero, this will apply a blur to the font texture
+     * before upload. Useful for drop shadows */
+    std::size_t blur_radius = 0;
 };
 
 struct SoundFlags {

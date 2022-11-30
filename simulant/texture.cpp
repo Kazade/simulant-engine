@@ -190,6 +190,105 @@ uint32_t Texture::palette_size() const {
     return 0;
 }
 
+smlt::optional<Pixel> Texture::pixel(std::size_t x, std::size_t y) {
+    // FIXME: this won't account for aligned formats (where rows are aligned to
+    // particular boundaries) - we need to add a row_stride() to texture */
+    auto stride = texture_format_stride(format_);
+    uint8_t* src = data_ + ((y * width() * stride) + (x * stride));
+    switch(format_) {
+    case TEXTURE_FORMAT_R_1UB_8:
+        return Pixel(*src, 0, 0, 255);
+    break;
+    case TEXTURE_FORMAT_RGB_3UB_888:
+        return Pixel(*src, *(src + 1), *(src + 2), 255);
+    break;
+    case TEXTURE_FORMAT_RGBA_4UB_8888:
+        return Pixel(*src, *(src + 1), *(src + 2), *(src + 3));
+    break;
+    default:
+        break;
+    }
+
+    /* Unsupported */
+    S_WARN("Texture::pixel() is not yet implemented for format {0}", format_);
+    return smlt::optional<Pixel>();
+}
+
+bool Texture::blur(BlurType blur_type, std::size_t radius) {
+    if(blur_type != BLUR_TYPE_SIMPLE) {
+        S_WARN("Unimplemented blur type: {0}", blur_type);
+        return false;
+    }
+
+    if(radius == 0 || is_compressed() || is_paletted_format()) {
+        S_WARN("Unsupported format or no radius when blurring");
+        return false;
+    }
+
+    int blur_width = (radius * 2) + 1;
+    std::vector<Pixel> bucket(blur_width * blur_width);
+
+    std::vector<uint8_t> new_data(this->data_size());
+
+    auto s = texture_format_stride(format_);
+
+    for(int y = 0; y < height(); ++y) {
+        for(int x = 0; x < width(); ++x) {
+            int j0 = 0;
+            int k0 = 0;
+
+            float accum [4] = {0};
+
+            // gather the colours from the surrouding box, including the
+            // pixel we care about. If we go outside the bounds of the image
+            // then we just assume a border (for now, probably there are better
+            // options)
+            for(int j = y - radius; j <= y + (int) radius; ++j, ++j0) {
+                k0 = 0;
+                for(int k = x - radius; k <= x + (int) radius; ++k, ++k0) {
+                    int bucket_idx = (j0 * blur_width) + k0;
+                    assert(bucket_idx < (int) bucket.size());
+
+                    int ki = std::min(std::max(k, 0), width() - 1);
+                    int ji = std::min(std::max(j, 0), height() - 1);
+                    bucket[bucket_idx] = pixel(ki, ji).value_or(Pixel(255, 0, 255, 255));  // Default to a really glaring purple to show an error
+                }
+            }
+
+            /* Go through the bucket and sum the rgba components */
+            for(auto& pixel: bucket) {
+                for(uint8_t i = 0; i < 4; ++i) {
+                    accum[i] += pixel.rgba[i];
+                }
+            }
+
+            /* Average into a new pixel */
+            Pixel new_pixel;
+            int i = 0;
+            for(auto& v: accum) {
+                v /= (blur_width * blur_width);
+                new_pixel.rgba[i] = smlt::clamp(v, 0, 255);
+                ++i;
+            }
+
+            /* Now convert that pixel into the target format */
+            std::size_t target = (y * width() * s) + (x * s);
+            uint8_t* dst = &new_data[target];
+            auto final = new_pixel.to_format(format_);
+            if(final.empty()) {
+                S_ERROR("Unable to convert pixel to specified format");
+                return false;
+            }
+
+            std::memcpy(dst, &final[0], final.size());
+        }
+    }
+
+    set_data(new_data);
+
+    return true;
+}
+
 void Texture::resize(uint16_t width, uint16_t height, uint32_t data_size) {
     if(width_ == width && height_ == height && data_size_ == data_size) {
         return;
@@ -622,6 +721,7 @@ void Texture::resize_data(uint32_t byte_size) {
     }
 
     data_ = new uint8_t[byte_size];
+    std::memset(data_, 0, byte_size);
     data_size_ = byte_size;
     data_dirty_ = true;
 }
@@ -674,6 +774,20 @@ std::size_t texture_format_stride(TextureFormat format) {
     default:
         assert(0 && "Not implemented");
         return 0;
+    }
+}
+
+std::vector<uint8_t> Pixel::to_format(TextureFormat fmt) {
+    switch(fmt) {
+    case TEXTURE_FORMAT_R_1UB_8:
+        return {rgba[0]};
+    case TEXTURE_FORMAT_RGB_3UB_888:
+        return {rgba[0], rgba[1], rgba[2]};
+    case TEXTURE_FORMAT_RGBA_4UB_8888:
+        return {rgba[0], rgba[1], rgba[2], rgba[2]};
+    default:
+        S_WARN("Unsupported operation to convert pixel to format: {0}", fmt);
+        return std::vector<uint8_t>();
     }
 }
 
