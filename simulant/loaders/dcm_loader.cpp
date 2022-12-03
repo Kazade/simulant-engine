@@ -77,12 +77,12 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         new_mat->set_specular(smlt::Colour(mat.specular, 4));
         new_mat->set_emission(smlt::Colour(mat.emission, 4));
         new_mat->set_shininess(mat.shininess * 128.0f);
-        new_mat->set_name(mat.name);
+        new_mat->set_name(std::string(mat.name, 32).c_str());
 
         int enabled_textures = 0;
 
         if(mat.diffuse_map[0]) {
-            Path final = Path(mat.diffuse_map);
+            Path final = Path(std::string(mat.diffuse_map, 32));
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
@@ -98,7 +98,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         if(mat.specular_map[0]) {
-            Path final = Path(mat.specular_map);
+            Path final = Path(std::string(mat.specular_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
@@ -114,7 +114,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         if(mat.light_map[0]) {
-            Path final = Path(mat.light_map);
+            Path final = Path(std::string(mat.light_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
@@ -130,7 +130,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         if(mat.normal_map[0]) {
-            Path final = Path(mat.normal_map);
+            Path final = Path(std::string(mat.normal_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
