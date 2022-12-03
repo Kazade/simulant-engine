@@ -29,10 +29,11 @@ class ProgressBar;
 class Image;
 class Frame;
 class Keyboard;
+class TextEntry;
 
 typedef ::smlt::StageNodeManager<
     ::smlt::StageNodePool,
-    WidgetID, Widget, Button, Label, ProgressBar, Image, Frame, Keyboard
+    WidgetID, Widget, Button, Label, ProgressBar, Image, Frame, Keyboard, TextEntry
 > WidgetManager;
 
 enum UIEventType {
@@ -70,6 +71,7 @@ public:
     Image* new_widget_as_image(const TexturePtr& texture);
     Frame* new_widget_as_frame(const unicode& title, const Px& width=Px(-1), const Px& height=Px(-1));
     Keyboard* new_widget_as_keyboard(const KeyboardMode& mode=KEYBOARD_MODE_UPPERCASE, const unicode& initial_text="");
+    TextEntry* new_widget_as_text_entry(const unicode& text="", Px width=Px(-1), Px height=Px(-1));
 
     Widget* widget(WidgetID widget_id);
 

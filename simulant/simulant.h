@@ -43,6 +43,7 @@
 #include "nodes/ui/image.h"
 #include "nodes/ui/frame.h"
 #include "nodes/ui/keyboard.h"
+#include "nodes/ui/text_entry.h"
 
 #include "sound.h"
 #include "utils/random.h"

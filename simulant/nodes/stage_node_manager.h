@@ -14,6 +14,7 @@
 #include "ui/progress_bar.h"
 #include "ui/frame.h"
 #include "ui/keyboard.h"
+#include "ui/text_entry.h"
 
 #define STAGE_NODE_MANAGER_DEBUG 0
 

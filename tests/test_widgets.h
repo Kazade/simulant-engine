@@ -118,6 +118,27 @@ private:
     StagePtr stage_;
 };
 
+class TextEntryTests : public smlt::test::SimulantTestCase {
+public:
+    void set_up() {
+        SimulantTestCase::set_up();
+
+        stage_ = scene->new_stage();
+    }
+
+    void tear_down() {
+        scene->destroy_stage(stage_->id());
+        SimulantTestCase::tear_down();
+    }
+
+    void test_set_text() {
+        auto entry = stage_->ui->new_widget_as_text_entry("Hello");
+        assert_equal(entry->text(), "Hello");
+    }
+
+private:
+    StagePtr stage_;
+};
 
 class ProgressBarTests : public smlt::test::SimulantTestCase {
 public:

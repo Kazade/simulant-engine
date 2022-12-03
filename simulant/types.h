@@ -462,6 +462,7 @@ class Widget;
 class ProgressBar;
 class Button;
 class Label;
+class TextEntry;
 
 typedef default_init_ptr<Widget> WidgetPtr;
 

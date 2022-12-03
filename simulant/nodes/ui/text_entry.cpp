@@ -21,8 +21,6 @@ void TextEntry::insert_character(uint16_t c) {
     new_text.push_back(c);
     new_text += txt.substr(caret_position_);
 
-    auto prev_caret = caret_position_;
-
     freeze_caret_ = true;
     caret_position_ += 1;
     set_text(new_text);

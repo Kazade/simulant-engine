@@ -115,6 +115,16 @@ Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height
     return button;
 }
 
+TextEntry* UIManager::new_widget_as_text_entry(const unicode &text, Px width, Px height) {
+    auto label = (TextEntry*) &(*manager_->make_as<TextEntry>(this, &config_, stage_));
+    label->set_text(text);
+    label->resize(width, height);
+
+    stage_->add_child(label);
+
+    return label;
+}
+
 Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) {
     auto label = (Label*) &(*manager_->make_as<Label>(this, &config_, stage_));
     label->set_text(text);
