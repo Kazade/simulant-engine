@@ -62,6 +62,7 @@ std::size_t texture_format_channels(TextureFormat format) {
     case TEXTURE_FORMAT_RGB_1US_565_TWID:
     case TEXTURE_FORMAT_RGB_3UB_888:
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+    case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
         return 3;
     case TEXTURE_FORMAT_RGBA_4UB_8888:
     case TEXTURE_FORMAT_RGBA_1US_4444:
@@ -72,6 +73,8 @@ std::size_t texture_format_channels(TextureFormat format) {
     case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
     case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
         return 4;
     default:
         S_ERROR("Invalid TextureFormat!");
@@ -116,7 +119,7 @@ uint16_t Texture::height() const {
     return height_;
 }
 
-std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint16_t height) {
+std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint16_t height) {   
     switch(fmt) {
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:

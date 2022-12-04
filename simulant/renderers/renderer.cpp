@@ -50,6 +50,9 @@ bool Renderer::texture_format_is_native(TextureFormat fmt) {
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
 #endif
             return true;
         default:

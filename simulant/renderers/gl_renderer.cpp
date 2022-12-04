@@ -243,6 +243,10 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                     texture->data_size(),
                     data
                 );
+
+                if(texture_format_contains_mipmaps(f)) {
+                    texture->_set_has_mipmaps(true);
+                }
             } else {
                 GLCheck(glTexImage2D,
                     GL_TEXTURE_2D,

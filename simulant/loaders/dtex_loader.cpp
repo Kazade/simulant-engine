@@ -11,10 +11,10 @@ namespace loaders {
 
 struct DTexHeader {
     uint8_t	 id[4];	// 'DTEX'
-    int16_t width;
-    int16_t height;
-    int32_t type;
-    int32_t	size;
+    uint16_t width;
+    uint16_t height;
+    uint32_t type;
+    uint32_t size;
 };
 
 bool DTEXLoaderType::supports(const Path &filename) const {
@@ -46,10 +46,6 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
         /* FIXME: Failure?!? */
         return result;
     }
-
-    /* FIXME: Currently mipmaps are not loaded. In the case of VQ compressed mipmaps
-     * the mipmap data follows the level 0 data and so these will require a new
-     * texture format as mipmaps are not loaded in the traditional way (level-by-level) */
 
     uint32_t COMPRESSED_MASK = 4;
     uint32_t TWIDDLED_MASK = 2;
