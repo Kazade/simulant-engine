@@ -45,10 +45,14 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
 
 bool texture_format_contains_mipmaps(TextureFormat format) {
     switch(format) {
+    /* FIXME: We don't currently extract mipmap data from these formats on
+     * non-Dreamcast platforms. We should fix this! */
+#ifdef __DREAMCAST__
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
             return true;
+#endif
         default:
             return false;
     }
@@ -124,6 +128,11 @@ std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint1
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+        // FIXME: these values aren't correct! It shouldn't matter in practice
+        // because compressed textures set their data directly...
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
             /* 2048 byte codebook, 8bpp per 2x2 */
             return 2048 + ((width / 2) * (height / 2));
         case TEXTURE_FORMAT_RGB565_PALETTED4:
