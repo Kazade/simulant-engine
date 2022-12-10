@@ -84,7 +84,7 @@ bool Renderer::is_texture_registered(TextureID texture_id) const {
 }
 
 void Renderer::pre_render() {
-    for(auto wptr: texture_registry_){
+    for(auto& wptr: texture_registry_){
         prepare_texture(wptr.second);
     }
 }
@@ -200,6 +200,9 @@ static TextureFormat untwiddle_format(TextureFormat fmt) {
         case TEXTURE_FORMAT_ARGB_1US_1555_TWID: return TEXTURE_FORMAT_ARGB_1US_1555;
         case TEXTURE_FORMAT_ARGB_1US_4444_TWID: return TEXTURE_FORMAT_ARGB_1US_4444;
         case TEXTURE_FORMAT_RGB_1US_565_TWID: return TEXTURE_FORMAT_RGB_1US_565;
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP: return TEXTURE_FORMAT_ARGB_1US_1555;
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP: return TEXTURE_FORMAT_ARGB_1US_4444;
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP: return TEXTURE_FORMAT_RGB_1US_565;
         default:
             return fmt;
     }

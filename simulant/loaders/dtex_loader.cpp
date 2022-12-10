@@ -31,7 +31,8 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     stream->seekg(0);
     stream->read((char*) &header, sizeof(DTexHeader));
 
-    bool twiddled = (header.type & (1 << 26)) < 1;
+    bool untwiddled = (header.type & (1 << 26));
+    bool twiddled = !untwiddled;
     bool compressed = (header.type & (1 << 30)) > 0;
     bool mipmapped = (header.type & (1 << 31)) > 0;
     bool strided = (header.type & (1 << 25)) > 0;
@@ -86,7 +87,6 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
             return result; /* FIXME: Failure... */
     }
 
-    result.data.resize(header.size);
     result.width = header.width;
     result.height = header.height;
     result.format = lookup[(compressed << 2) | (twiddled << 1) | mipmapped];
@@ -96,8 +96,43 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
         return result; //FIXME: Failure
     }
 
+    result.data.resize(header.size);
+
     /* Read the data \o/ */
     stream->read((char*) &result.data[0], header.size);
+
+#ifndef __DREAMCAST__
+    if(compressed && mipmapped) {
+        /* Non DC platforms can't deal with the mipmap data trailing
+         * the main data. So we simply drop the mipmaps and pretend they
+         * don't exist. However mipmaps are *first* in the data, so we skip them */
+        auto calc_vq_mipmap_size = [](std::size_t s) -> std::size_t {
+            std::size_t ret = 0;
+            while(s != 1) {
+                ret += (s / 2) * (s / 2);
+                s /= 2;
+            }
+
+            ret += (1 * 1);
+            return ret;
+        };
+
+        std::size_t base_size = ((header.width / 2) * (header.height / 2));
+        std::size_t offset = calc_vq_mipmap_size(header.width / 2);
+        result.data.insert(result.data.begin() + 2048, result.data.begin() + 2048 + offset, result.data.end());
+        result.data.resize(base_size + 2048);
+        result.data.shrink_to_fit();
+        if(result.format == TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP) {
+            result.format = TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID;
+        } else if(result.format == TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP) {
+            result.format = TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID;
+        } else if(result.format == TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP) {
+            result.format = TEXTURE_FORMAT_RGB_1US_565_VQ_TWID;
+        } else {
+            S_ERROR("Unexpected compressed + mipmapped format: {0}", result.format);
+        }
+    }
+#endif
 
     auto renderer = get_app()->window->renderer.get();
     if(!renderer->supports_texture_format(result.format)) {

@@ -124,17 +124,27 @@ uint16_t Texture::height() const {
 }
 
 std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint16_t height) {   
+    auto calc_vq_mipmap_size = [](std::size_t s) -> std::size_t {
+        std::size_t ret = 0;
+        while(s != 1) {
+            ret += (s / 2) * (s / 2);
+            s /= 2;
+        }
+
+        ret += (1 * 1);
+        return ret;
+    };
+
     switch(fmt) {
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
-        // FIXME: these values aren't correct! It shouldn't matter in practice
-        // because compressed textures set their data directly...
+            /* 2048 byte codebook, 8bpp per 2x2 */
+            return 2048 + ((width / 2) * (height / 2));
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
-            /* 2048 byte codebook, 8bpp per 2x2 */
-            return 2048 + ((width / 2) * (height / 2));
+            return 2048 + calc_vq_mipmap_size(width);
         case TEXTURE_FORMAT_RGB565_PALETTED4:
             return (2 * 16) + ((width * height) / 2);
         case TEXTURE_FORMAT_RGB565_PALETTED8:
