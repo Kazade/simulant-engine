@@ -480,6 +480,7 @@ private:
             config.width = 640;
             config.height = 480;
             config.fullscreen = false;
+            config.log_level = LOG_LEVEL_WARN;
 
             // FIXME: This is a bit simulant-specific, you wouldn't necessarily want this
             // path on user apps.

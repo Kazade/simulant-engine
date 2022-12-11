@@ -584,7 +584,16 @@ thread::ThreadID Application::thread_id() const {
 }
 
 int64_t Application::ram_usage_in_bytes() const {
-    return get_platform()->process_ram_usage_in_bytes(
+    if(!is_running_) {
+        return -1;
+    }
+
+    auto p = get_platform();
+    if(!p) {
+        return -1;
+    }
+
+    return p->process_ram_usage_in_bytes(
         process_id()
     );
 }
