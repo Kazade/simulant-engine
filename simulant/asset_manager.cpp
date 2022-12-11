@@ -58,6 +58,16 @@ AssetManager::~AssetManager() {
     }
 }
 
+void AssetManager::destroy_all() {
+    mesh_manager_.destroy_all();
+    material_manager_.destroy_all();
+    texture_manager_.destroy_all();
+    sound_manager_.destroy_all();
+    font_manager_.destroy_all();
+    particle_script_manager_.destroy_all();
+    run_garbage_collection();
+}
+
 void AssetManager::update(float dt) {
     material_manager_.each([dt](uint32_t, MaterialPtr mat) {
         mat->update(dt);

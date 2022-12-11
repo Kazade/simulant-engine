@@ -36,6 +36,9 @@ public:
     typedef ObjectTypePtrType ObjectTypePtr;
     typedef typename ObjectTypePtrType::element_type object_type;
 
+    virtual ~ObjectManagerBase() {
+    }
+
     virtual void update() = 0;
 
     uint32_t count() const {

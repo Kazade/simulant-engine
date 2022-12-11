@@ -80,7 +80,7 @@ struct AppConfig {
     // Program arguments
     std::vector<unicode> arguments;
 
-    smlt::LogLevel log_level = smlt::LOG_LEVEL_WARN;
+    smlt::LogLevel log_level = smlt::LOG_LEVEL_INFO;
 
     /* If set to true, the mouse cursor will not be hidden by default */
     bool show_cursor = false;
@@ -134,6 +134,10 @@ struct AppConfig {
         /* If not empty, logging entries will be written to this
          * file as well as stdout */
         std::string log_file = "";
+
+        /* Additional memory debug logging. If set to true information
+          about scene memory usage will be logged at INFO level */
+        bool additional_memory_logging = true;
     } development;
 };
 
@@ -291,9 +295,7 @@ private:
         fixed_update(dt);
     }
 
-    void _call_clean_up() {
-        clean_up();
-    }
+    void _call_clean_up();
 
     void _call_update(float dt) {
         update(dt);

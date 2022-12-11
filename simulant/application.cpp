@@ -75,6 +75,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "loaders/dcm_loader.h"
 #include "utils/json.h"
 #include "utils/string.h"
+#include "scenes/scene_manager.h"
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
@@ -494,8 +495,6 @@ bool Application::run_frame() {
         }
     }
 
-    signal_frame_finished_();
-
     /* We totally ignore the first frame as it can take a while and messes up
      * delta time for both updates (like particle systems) and FPS
      */
@@ -510,6 +509,8 @@ bool Application::run_frame() {
     if(!is_running) {
         shutdown();
     }
+
+    signal_frame_finished_();
 
     return is_running;
 }
@@ -626,6 +627,12 @@ void Application::run_coroutines_and_late_update() {
     if(s) {
         s->clean_destroyed_stages();
     }
+}
+
+void Application::_call_clean_up() {
+    clean_up();
+
+    scene_manager_->reset();
 }
 
 void Application::stop_running() {

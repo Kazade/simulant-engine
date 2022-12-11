@@ -208,6 +208,7 @@ public:
 
     AssetManager* base_manager() const;
 
+    void destroy_all();
     void run_garbage_collection();
 
     bool is_base_manager() const;

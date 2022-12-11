@@ -104,6 +104,9 @@ void Stage::clean_up() {
     camera_manager_->clear();
     geom_manager_->clear();
 
+    asset_manager_->destroy_all();
+    asset_manager_.reset();
+
     S_DEBUG("Stage {0} destroyed", id());
 }
 

@@ -23,6 +23,7 @@
 #include "../window.h"
 #include "../pipeline.h"
 #include "../application.h"
+#include "../platform.h"
 
 namespace smlt {
 
@@ -66,8 +67,23 @@ void SceneBase::_call_load() {
         return;
     }
 
+    auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
+    auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
+
     pre_load();
     load();
+
+    auto used = smlt::get_app()->ram_usage_in_bytes();
+    auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
+    if(smlt::get_app()->config->development.additional_memory_logging) {
+        S_INFO("Loading scene {0} Memory usage {1} (before) vs {2} (after)", name(), memory_usage, used);
+        if(used_nodes != stage_node_capacity) {
+            S_INFO(
+                "Stage node pool capacity change from {0} to {1}",
+                stage_node_capacity, used_nodes
+            );
+        }
+    }
 
     is_loaded_ = true;
 }
@@ -79,6 +95,9 @@ void SceneBase::_call_unload() {
 
     _call_deactivate();
 
+    auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
+    auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
+
     is_loaded_ = false;
     unload();
     post_unload();
@@ -86,6 +105,21 @@ void SceneBase::_call_unload() {
     /* Make sure all stages have been destroyed */
     destroy_all_stages();       
     clean_destroyed_stages();
+
+    smlt::get_app()->shared_assets->run_garbage_collection();
+
+    auto n = name();
+    auto used = smlt::get_app()->ram_usage_in_bytes();
+    auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
+    if(smlt::get_app()->config->development.additional_memory_logging) {
+        S_INFO("Unloading scene {0} Memory usage {1} (before) vs {2} (after)", n, memory_usage, used);
+        if(used_nodes != stage_node_capacity) {
+            S_INFO(
+                "Stage node pool capacity change from {0} to {1}",
+                stage_node_capacity, used_nodes
+            );
+        }
+    }
 }
 
 void SceneBase::_call_activate() {
