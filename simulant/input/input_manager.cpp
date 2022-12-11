@@ -585,8 +585,26 @@ bool InputManager::start_text_input(bool force_onscreen) {
 
     /* This forward virtual keypresses to the text input received signal */
     keyboard_->signal_key_pressed().connect([=](ui::SoftKeyPressedEvent& evt) {
-        TextInputReceivedControl ctrl;
-        signal_text_input_received_(evt.chr, ctrl);
+        TextInputEvent ctrl;
+
+        switch(evt.code) {
+        case KEYBOARD_CODE_BACKSPACE:
+            case KEYBOARD_CODE_DELETE:
+            case KEYBOARD_CODE_RETURN:
+            case KEYBOARD_CODE_SPACE:  // Space is sent as a character, but we send anyway */
+            case KEYBOARD_CODE_LEFT:
+            case KEYBOARD_CODE_RIGHT:
+            case KEYBOARD_CODE_UP:
+            case KEYBOARD_CODE_DOWN:
+            case KEYBOARD_CODE_HOME:
+            case KEYBOARD_CODE_END:
+            ctrl.keyboard_code = evt.code;
+            break;
+        default:
+            break;
+        }
+
+        signal_text_input_received_(unicode(1, evt.chr), ctrl);
         if(ctrl.cancelled) {
             evt.cancel();
         }
@@ -615,6 +633,8 @@ unicode InputManager::stop_text_input() {
 
     text_input_enabled_ = false;
 
+    smlt::get_app()->window->unregister_event_listener(&event_listener_);
+
     if(keyboard_) {
         assert(keyboard_stage_);
 
@@ -627,7 +647,7 @@ unicode InputManager::stop_text_input() {
         keyboard_ = nullptr;
     }
 
-    return "";
+    return ret;
 }
 
 /* This watches for keyboard inputs while text input is active - we map keyboard codes to characters
@@ -644,8 +664,28 @@ void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
         evt.modifiers.lshift || evt.modifiers.rshift
     );
 
-    TextInputReceivedControl ctrl;
-    self_->signal_text_input_received_(chr, ctrl);
+    if(chr == 0) {
+        switch(evt.keyboard_code) {
+        case KEYBOARD_CODE_BACKSPACE:
+            case KEYBOARD_CODE_DELETE:
+            case KEYBOARD_CODE_RETURN:
+            case KEYBOARD_CODE_SPACE:  // Space is sent as a character, but we send anyway */
+            case KEYBOARD_CODE_LEFT:
+            case KEYBOARD_CODE_RIGHT:
+            case KEYBOARD_CODE_UP:
+            case KEYBOARD_CODE_DOWN:
+            case KEYBOARD_CODE_HOME:
+            case KEYBOARD_CODE_END:
+            break;
+        default:
+            return;
+        }
+    }
+
+    /* FIXME: Do this better. This isn't suitable for true CJK languages at all */
+    TextInputEvent ctrl;
+    ctrl.keyboard_code = evt.keyboard_code;
+    self_->signal_text_input_received_(unicode(1, chr), ctrl);
 
     if(ctrl.cancelled) {
         /* FIXME: Tell on-screen keyboard to ignore */

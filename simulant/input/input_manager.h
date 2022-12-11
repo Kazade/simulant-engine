@@ -24,8 +24,13 @@ namespace ui {
 typedef std::function<void (InputAxis*)> EachAxisCallback;
 typedef std::vector<InputAxis*> AxisList;
 
-struct TextInputReceivedControl {
+struct TextInputEvent {
     friend class InputManager;
+
+    /* Some keys will trigger additional text input events
+     * that may be without content. These include backspace, enter, delete,
+     * arrow keys, home, end, and space */
+    KeyboardCode keyboard_code = KEYBOARD_CODE_NONE;
 
     void cancel() {
         cancelled = true;
@@ -35,7 +40,7 @@ private:
     bool cancelled = false;
 };
 
-typedef sig::signal<bool (const char16_t&, TextInputReceivedControl&)> TextInputReceivedSignal;
+typedef sig::signal<bool (const unicode&, TextInputEvent&)> TextInputReceivedSignal;
 
 enum JoystickButton : int8_t;
 

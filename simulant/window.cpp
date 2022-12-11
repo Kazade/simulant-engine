@@ -275,6 +275,9 @@ void Window::destroy_panels() {
 void Window::reset() {
     S_DEBUG("Resetting Window state");
 
+    // Make sure we aren't still getting text input
+    input->stop_text_input();
+
     compositor_->destroy_all_pipelines();
     compositor_->clean_up();
 

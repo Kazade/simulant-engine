@@ -176,8 +176,8 @@ public:
 
         unicode text;
         auto conn = input->signal_text_input_received().connect(
-            [&](const char16_t& c, TextInputReceivedControl&) -> bool {
-                text.push_back(c);
+            [&](const unicode& c, TextInputEvent&) -> bool {
+                text += c;
                 return true;
             }
         );
@@ -185,6 +185,34 @@ public:
         input->onscreen_keyboard->cursor_to_char('1');
         input->onscreen_keyboard->activate();
         assert_equal(text, "1");
+
+        auto final_text = input->stop_text_input();
+        assert_equal(text, final_text);
+        conn.disconnect();
+    }
+
+    void test_input_receives_backspace_event() {
+        auto& input = window->input;
+        input->start_text_input(false);
+
+        bool backspace = false;
+        auto conn = input->signal_text_input_received().connect(
+            [&](const unicode&, TextInputEvent& evt) -> bool {
+                if(evt.keyboard_code == KEYBOARD_CODE_BACKSPACE) {
+                    backspace = true;
+                }
+                return true;
+            }
+        );
+
+        window->on_key_down(KEYBOARD_CODE_SPACE, ModifierKeyState());
+        assert_false(backspace);
+
+        window->on_key_down(KEYBOARD_CODE_BACKSPACE, ModifierKeyState());
+        assert_true(backspace);
+
+        input->stop_text_input();
+        conn.disconnect();
     }
 
     void test_start_text_input() {
@@ -208,8 +236,8 @@ public:
         unicode text;
 
         auto conn = input->signal_text_input_received().connect(
-            [&](const char16_t& c, TextInputReceivedControl&) -> bool {
-                text.push_back(c);
+            [&](const unicode& c, TextInputEvent&) -> bool {
+                text += c;
                 return true;
             }
         );

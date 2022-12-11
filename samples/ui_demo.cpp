@@ -126,10 +126,9 @@ public:
             entry->move_to(window->width() / 2, window->height() / 2);
         }
 
-        input->signal_text_input_received().connect([=](const char16_t& chr, smlt::TextInputReceivedControl&) -> bool {
+        input->signal_text_input_received().connect([=](const unicode& chr, smlt::TextInputEvent&) -> bool {
             auto txt = entry->text();
-            txt.push_back(chr);
-            entry->set_text(txt);
+            entry->set_text(txt + chr);
             return true;
         });
     }
