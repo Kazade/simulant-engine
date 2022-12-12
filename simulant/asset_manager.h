@@ -213,6 +213,14 @@ public:
 
     bool is_base_manager() const;
 
+    std::size_t child_manager_count() const {
+        return children_.size();
+    }
+
+    const AssetManager* child_manager(std::size_t i) const {
+        return children_.at(i);
+    }
+
 private:
     AssetManager* parent_ = nullptr;
 
@@ -229,13 +237,13 @@ private:
 
     MaterialPtr get_template_material(const Path &path);
 
-    std::set<AssetManager*> children_;
+    std::vector<AssetManager*> children_;
     void register_child(AssetManager* child) {
-        children_.insert(child);
+        children_.push_back(child);
     }
 
     void unregister_child(AssetManager* child) {
-        children_.erase(child);
+        children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
     }
 
     void set_garbage_collection_method(const Asset* resource, GarbageCollectMethod method) {

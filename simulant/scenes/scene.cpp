@@ -24,6 +24,7 @@
 #include "../pipeline.h"
 #include "../application.h"
 #include "../platform.h"
+#include "../asset_manager.h"
 
 namespace smlt {
 
@@ -62,6 +63,29 @@ std::size_t SceneBase::load_arg_count() const {
 }
 
 
+static void print_asset_stats() {
+    const auto& sa = smlt::get_app()->shared_assets;
+    S_INFO("Shared assets: ");
+    S_INFO("- Meshes: {0}", sa->mesh_count());
+    S_INFO("- Textures: {0}", sa->texture_count());
+    S_INFO("- Sounds: {0}", sa->sound_count());
+    S_INFO("- Fonts: {0}", sa->font_count());
+    S_INFO("- Particle Scripts: {0}", sa->particle_script_count());
+    S_INFO("---");
+
+    for(std::size_t i = 0; i < sa->child_manager_count(); ++i) {
+        auto c = sa->child_manager(i);
+        S_INFO("   {0}", c);
+        S_INFO("  - Meshes: {0}", c->mesh_count());
+        S_INFO("  - Textures: {0}", c->texture_count());
+        S_INFO("  - Sounds: {0}", c->sound_count());
+        S_INFO("  - Fonts: {0}", c->font_count());
+        S_INFO("  - Particle Scripts: {0}", c->particle_script_count());
+        S_INFO("---");
+    }
+}
+
+
 void SceneBase::_call_load() {
     if(is_loaded_) {
         return;
@@ -83,6 +107,8 @@ void SceneBase::_call_load() {
                 stage_node_capacity, used_nodes
             );
         }
+
+        print_asset_stats();
     }
 
     is_loaded_ = true;
