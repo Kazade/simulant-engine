@@ -116,8 +116,7 @@ private:
 
 private:
     friend class ::smlt::Application;
-    static FontPtr _load_or_get_font(VirtualFileSystem* vfs,
-        AssetManager* assets, AssetManager* shared_assets,
+    static FontPtr _load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
         const std::string& family, const Px& size, const FontWeight &weight
     , const FontStyle &style);
 

@@ -64,8 +64,9 @@ struct TextureFlags {
 };
 
 struct FontFlags {
-    uint16_t size = 16;
+    uint16_t size = 0;
     FontWeight weight = FONT_WEIGHT_NORMAL;
+    FontStyle style = FONT_STYLE_NORMAL;
     CharacterSet charset = CHARACTER_SET_LATIN;
 
     /* If non-zero, this will apply a blur to the font texture
@@ -161,6 +162,22 @@ public:
 
 
     /* Font API */
+    /** Loads a font by searching asset paths for a match.
+     * Searches for standard variations of the filename depending on the family,
+     * weight, style, and size. We look for the following (example) variations:
+     *
+     * - Kanit-Regular.ttf
+     * - Kanit-RegularItalic.ttf
+     * - Kanit-BlackItalic.ttf
+     * - Kanit-BlackItalic-18.fnt
+     *
+     * and in the following example paths:
+     *
+     * $path/$filename
+     * $path/fonts/$filename
+     * $path/fonts/family/$filename
+     */
+    FontPtr new_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     FontPtr new_font_from_file(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(FontID id);
     FontPtr font(FontID id);

@@ -24,6 +24,8 @@
 #include "loaders/heightmap_loader.h"
 #include "application.h"
 #include "application.h"
+#include "generic/lru_cache.h"
+#include "vfs.h"
 
 /** FIXME
  *
@@ -646,6 +648,58 @@ AssetManager* AssetManager::base_manager() const {
 
 // ========== FONTS ======================
 
+FontPtr AssetManager::new_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
+    uint16_t size = flags.size || get_app()->config->ui.font_size;
+    const std::string px_as_string = smlt::to_string(size);
+    const std::string weight_string = font_weight_name(flags.weight);
+    const std::string style_string = (flags.style == FONT_STYLE_NORMAL) ? "" : font_style_name(flags.style);
+
+    std::string potentials [] = {
+        family + "-" + weight_string + style_string + ".ttf",
+        family + "-" + weight_string + style_string + "-" + px_as_string + ".fnt",
+    };
+
+    std::string alias = Font::generate_name(family, size, flags.weight, flags.style);
+
+    /* This LRUCache prevents us continually searching for the font */
+    static LRUCache<std::string, smlt::Path> location_cache;
+    location_cache.set_max_size(8);
+
+    optional<Path> loc = location_cache.get(alias);
+    if(!loc) {
+        for(auto& filename: potentials) {
+            loc = get_app()->vfs->locate_file(filename, true, /*fail_silently=*/true);
+            if(loc) {
+                break;
+            }
+
+            /* Try a font directory prefix */
+            loc = get_app()->vfs->locate_file(kfs::path::join("fonts", filename), true, /*fail_silently=*/true);
+            if(loc) {
+                break;
+            }
+
+            /* Finally try a family name dir within fonts */
+            loc = get_app()->vfs->locate_file(
+                kfs::path::join(kfs::path::join("fonts", family), filename),
+                true, /*fail_silently=*/true
+            );
+
+            if(loc) {
+                location_cache.insert(alias, loc.value());
+                break;
+            }
+        }
+    }
+
+    if(loc) {
+        return new_font_from_file(loc.value(), flags, garbage_collect);
+    } else {
+        S_WARN("Unable to locate font file with family {0} and size {1}", family, size);
+        return FontPtr();
+    }
+}
+
 FontPtr AssetManager::new_font_from_file(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
@@ -653,8 +707,9 @@ FontPtr AssetManager::new_font_from_file(const Path& filename, const FontFlags& 
 
     try {
         LoaderOptions options;
-        options["size"] = flags.size;
+        options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
         options["weight"] = flags.weight;
+        options["style"] = flags.style;
         options["charset"] = flags.charset;
         options["blur_radius"] = flags.blur_radius;
         get_app()->loader_for(filename)->into(font.get(), options);

@@ -194,20 +194,15 @@ Application::~Application() {
 void Application::preload_default_font() {
     auto& ui = config_.ui;
 
-    FontPtr fnt = ui::UIManager::_load_or_get_font(
-        vfs_.get(),
-        shared_assets,
-        nullptr,
-        ui.font_family,
-        ui::Px(ui.font_size),
-        FONT_WEIGHT_NORMAL,
-        FONT_STYLE_NORMAL
-    );
+    FontFlags flags;
+    flags.size = ui.font_size;
+    auto fnt = shared_assets->new_font_from_family(ui.font_family, flags);
 
     if(!fnt) {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }
 
+    fnt->set_name(Font::generate_name(ui.font_family, flags.size, flags.weight, flags.style));
     fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
 }
 

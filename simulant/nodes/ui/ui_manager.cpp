@@ -281,20 +281,15 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 
 FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style) {
     return _load_or_get_font(
-        get_app()->vfs, stage_->assets, get_app()->shared_assets.get(),
+        stage_->assets, get_app()->shared_assets.get(),
         family, size, weight, style
     );
 }
 
-FontPtr UIManager::_load_or_get_font(
-        VirtualFileSystem* vfs, AssetManager* assets, AssetManager* shared_assets,
+FontPtr UIManager::_load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
         const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style) {
 
-    static LRUCache<std::string, smlt::Path> location_cache;
-    location_cache.set_max_size(8);
-
     /* Apply defaults if that's what was asked */
-
     std::string family = familyc;
     if(family == DEFAULT_FONT_FAMILY) {
         family = get_app()->config->ui.font_family;
@@ -304,26 +299,6 @@ FontPtr UIManager::_load_or_get_font(
     if(size == DEFAULT_FONT_SIZE) {
         size = Px(get_app()->config->ui.font_size);
     }
-
-    const std::string px_as_string = smlt::to_string(size.value);
-    const std::string weight_string = font_weight_name(weight);
-    const std::string style_string = (style == FONT_STYLE_NORMAL) ? "" : font_style_name(style);
-
-    std::string identifier = _F("{0}-{1}-{2}-{3}").format(familyc, px_as_string, weight_string, style_string);
-
-    /* We search for standard variations of the filename depending on the family,
-     * weight, style, and size. We look for the following (example) variations:
-     *
-     * - Kanit-Regular.ttf
-     * - Kanit-RegularItalic.ttf
-     * - Kanit-BlackItalic.ttf
-     * - Kanit-BlackItalic-18.fnt
-     */
-
-    std::string potentials [] = {        
-        family + "-" + weight_string + style_string + ".ttf",
-        family + "-" + weight_string + style_string + "-" + px_as_string + ".fnt",
-    };
 
     std::string alias = Font::generate_name(family, size.value, weight, style);
 
@@ -344,61 +319,16 @@ FontPtr UIManager::_load_or_get_font(
         return fnt;
     }
 
-    auto loc = location_cache.get(identifier);
-    if(!loc) {
-        std::map<smlt::Path, bool> pushed;
-
-        /* Extend the search path with the specified font directories */
-        for(auto& font_dir: get_app()->config->ui.font_directories) {
-            pushed[font_dir] = vfs->add_search_path(font_dir);
-        }
-
-        for(auto& filename: potentials) {
-            loc = vfs->locate_file(filename, true, /*fail_silently=*/true);
-            if(loc) {
-                break;
-            }
-
-            /* Try a font directory prefix */
-            loc = vfs->locate_file(kfs::path::join("fonts", filename), true, /*fail_silently=*/true);
-            if(loc) {
-                break;
-            }
-
-            /* Finally try a family name dir within fonts */
-            loc = vfs->locate_file(
-                kfs::path::join(kfs::path::join("fonts", family), filename),
-                true, /*fail_silently=*/true
-            );
-
-            if(loc) {
-                location_cache.insert(identifier, loc.value());
-                break;
-            }
-        }
-
-        /* Remove appended font dirs */
-        for(auto& p: pushed) {
-            if(p.second) {
-                vfs->remove_search_path(p.first);
-            }
-        }
-    } else {
-        S_DEBUG("Found cached font location");
-    }
-
-    if(!loc) {
-        S_WARN("Unable to locate font file with family {0} and size {1}", family, size.value);
-        return FontPtr(); /* Fail */
-    }
-
     FontFlags flags;
     flags.size = size.value;
     flags.weight = weight;
+    flags.style = style;
 
-    S_DEBUG("Loaded font with family {0} and size {1} from {2}", family, size.value, loc.value().str());
-    fnt = assets->new_font_from_file(loc.value(), flags);
-    fnt->set_name(alias);
+    fnt = assets->new_font_from_family(family, flags);
+    if(fnt) {
+        fnt->set_name(alias);
+    }
+
     return fnt;
 }
 
