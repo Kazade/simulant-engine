@@ -93,18 +93,21 @@ void SceneBase::_call_load() {
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
     auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
+    auto stage_node_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
 
     pre_load();
     load();
 
     auto used = smlt::get_app()->ram_usage_in_bytes();
     auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
+    auto used_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
     if(smlt::get_app()->config->development.additional_memory_logging) {
         S_INFO("Loading scene {0} Memory usage {1} (before) vs {2} (after)", name(), memory_usage, used);
+        S_INFO("Stage node count: {0}", smlt::get_app()->stage_node_pool->size());
         if(used_nodes != stage_node_capacity) {
             S_INFO(
-                "Stage node pool capacity change from {0} to {1}",
-                stage_node_capacity, used_nodes
+                "Stage node pool capacity change from {0} ({1} bytes) to {2} ({3} bytes)",
+                stage_node_capacity, stage_node_bytes, used_nodes, used_bytes
             );
         }
 
@@ -123,6 +126,7 @@ void SceneBase::_call_unload() {
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
     auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
+    auto stage_node_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
 
     is_loaded_ = false;
     unload();
@@ -137,12 +141,14 @@ void SceneBase::_call_unload() {
     auto n = name();
     auto used = smlt::get_app()->ram_usage_in_bytes();
     auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
+    auto used_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
     if(smlt::get_app()->config->development.additional_memory_logging) {
         S_INFO("Unloading scene {0} Memory usage {1} (before) vs {2} (after)", n, memory_usage, used);
+        S_INFO("Stage node count: {0}", smlt::get_app()->stage_node_pool->size());
         if(used_nodes != stage_node_capacity) {
             S_INFO(
-                "Stage node pool capacity change from {0} to {1}",
-                stage_node_capacity, used_nodes
+                "Stage node pool capacity change from {0} ({1} bytes) to {2} ({3} bytes)",
+                stage_node_capacity, stage_node_bytes, used_nodes, used_bytes
             );
         }
     }

@@ -1,4 +1,5 @@
 #include <GL/glkos.h>
+#include <malloc.h>
 
 #include "platform.h"
 
@@ -27,7 +28,7 @@ uint64_t DreamcastPlatform::available_ram_in_bytes() const {
     }
 
     struct mallinfo mi = mallinfo();
-    return systemRam - (mi.usmblks + stackSize);
+    return systemRam - (mi.uordblks + stackSize);
 }
 
 uint64_t DreamcastPlatform::total_ram_in_bytes() const {
