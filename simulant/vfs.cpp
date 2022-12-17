@@ -120,6 +120,11 @@ optional<Path> VirtualFileSystem::locate_file(
         bool use_cache,
         bool fail_silently) const {
 
+    if(read_blocking_enabled_) {
+        S_ERROR("Attempted to locate {0} while read blocking was enabled", filename.str());
+        return optional<Path>();
+    }
+
     const Path DOES_NOT_EXIST = "";
 
     /**
@@ -166,7 +171,7 @@ optional<Path> VirtualFileSystem::locate_file(
 
     S_DEBUG("Checking existence...");
     if(kfs::path::exists(abs_final_name.str())) {
-        S_DEBUG("Located file: {0}", abs_final_name);
+        S_INFO("Located file: {0}", abs_final_name);
 
         if(use_cache) {
             location_cache_.insert(final_name, abs_final_name);
@@ -183,7 +188,7 @@ optional<Path> VirtualFileSystem::locate_file(
 
         S_DEBUG("Trying path: {0}", full_path);
         if(kfs::path::exists(full_path)) {
-            S_DEBUG("Found: {0}", full_path);
+            S_INFO("Located file: {0}", full_path);
 
             if(use_cache) {
                 location_cache_.insert(final_name, full_path);

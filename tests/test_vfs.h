@@ -29,6 +29,23 @@ public:
         vfs->locate_file("simulant/textures/simulant-icon.png");
         assert_equal(vfs->location_cache_size(), 1u);
     }
+
+    void test_read_blocking() {
+        auto vfs = application->vfs.get();
+        auto path = vfs->locate_file("simulant/textures/simulant-icon.png");
+        assert_true(path);
+
+        assert_false(vfs->read_blocking_enabled());
+        vfs->enable_read_blocking();
+        assert_true(vfs->read_blocking_enabled());
+
+        path = vfs->locate_file("simulant/textures/simulant-icon.png");
+        assert_false(path);
+
+        vfs->disable_read_blocking();
+        path = vfs->locate_file("simulant/textures/simulant-icon.png");
+        assert_true(path);
+    }
 };
 
 }

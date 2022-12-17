@@ -70,7 +70,26 @@ public:
     /* Limit the location cache entries */
     void set_location_cache_limit(std::size_t entries);
 
+    /** If read blocking is enabled, then all attempts to access the filesyste
+     * will fail and an error will be logged. This is useful if you are
+     * targetting a device that loads from a CD and plays CD-audio where a
+     * read could stop the audio playing */
+    void enable_read_blocking() {
+        read_blocking_enabled_ = true;
+    }
+
+    void disable_read_blocking() {
+        read_blocking_enabled_ = false;
+    }
+
+    bool read_blocking_enabled() const {
+        return read_blocking_enabled_;
+    }
+
+
 private:
+    bool read_blocking_enabled_ = false;
+
     Path find_executable_directory();
     Path find_working_directory();
 
