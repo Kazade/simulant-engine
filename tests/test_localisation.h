@@ -14,6 +14,22 @@ public:
         smlt::get_app()->activate_language("en_US");
     }
 
+    void test_activate_language_from_binary_data() {
+        const std::string ARB_SAMPLE = R"({
+    "@@locale": "fr",
+    "start_text": "appuyez sur Start",
+    "@start_text": {
+        "type": "text",
+        "context": "Title Screen",
+        "source_text": "Press Start"
+    }
+}
+)";
+        std::vector<uint8_t> data(std::begin(ARB_SAMPLE), std::end(ARB_SAMPLE));
+        assert_true(get_app()->activate_language_from_arb_data(&data[0], data.size()));
+        assert_equal(get_app()->active_language(), "fr");
+    }
+
     void test_basic_usage() {
         const char* ARB_SAMPLE = R"({
     "@@locale": "fr",

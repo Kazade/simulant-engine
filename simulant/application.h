@@ -248,7 +248,7 @@ public:
      *  Activates a language from an ARB file that's already been loaded from
      *  disk. The language code is read from the ARB itself and no locale
      *  directories are searched. */
-    bool activate_language_from_binary_data(const uint8_t* data, std::size_t byte_size);
+    bool activate_language_from_arb_data(const uint8_t* data, std::size_t byte_size);
 
 
     /**  Returns the currently active language */

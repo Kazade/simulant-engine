@@ -797,27 +797,10 @@ bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* la
    return true;
 }
 
-bool Application::activate_language_from_binary_data(const uint8_t* data, std::size_t byte_size) {
-    class membuf : public std::basic_streambuf<char> {
-    public:
-      membuf(const uint8_t *p, size_t l) {
-        setg((char*)p, (char*)p, (char*)p + l);
-      }
-    };
+bool Application::activate_language_from_arb_data(const uint8_t* data, std::size_t byte_size) {
+    auto stream = std::make_shared<std::stringstream>();
+    stream->write((const char*) data, byte_size);
 
-    class memstream : public std::istream {
-    public:
-      memstream(const uint8_t *p, size_t l) :
-        std::istream(&_buffer),
-        _buffer(p, l) {
-        rdbuf(&_buffer);
-      }
-
-    private:
-      membuf _buffer;
-    };
-
-    auto stream = std::make_shared<memstream>(data, byte_size);
     std::string language_code;
     auto ret = load_arb(stream, &language_code);
     if(ret) {
