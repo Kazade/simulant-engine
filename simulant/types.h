@@ -415,6 +415,9 @@ typedef std::shared_ptr<Texture> TexturePtr;
 class ParticleScript;
 typedef std::shared_ptr<ParticleScript> ParticleScriptPtr;
 
+class Binary;
+typedef std::shared_ptr<Binary> BinaryPtr;
+
 class Sound;
 typedef std::weak_ptr<Sound> SoundRef;
 typedef std::shared_ptr<Sound> SoundPtr;
@@ -493,6 +496,7 @@ typedef UniqueID<FontPtr> FontID;
 typedef UniqueID<CameraPtr> CameraID;
 typedef UniqueID<MaterialPtr> MaterialID;
 typedef UniqueID<ParticleScriptPtr> ParticleScriptID;
+typedef UniqueID<BinaryPtr> BinaryID;
 
 typedef UniqueID<LightPtr> LightID;
 typedef UniqueID<StagePtr> StageID;

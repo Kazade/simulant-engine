@@ -32,6 +32,7 @@
 #include "font.h"
 #include "assets/particle_script.h"
 #include "path.h"
+#include "assets/binary_data.h"
 
 namespace smlt {
 
@@ -43,6 +44,7 @@ typedef ObjectManager<TextureID, Texture, DO_REFCOUNT> TextureManager;
 typedef ObjectManager<SoundID, Sound, DO_REFCOUNT> SoundManager;
 typedef ObjectManager<FontID, Font, DO_REFCOUNT> FontManager;
 typedef ObjectManager<ParticleScriptID, ParticleScript, DO_REFCOUNT> ParticleScriptManager;
+typedef ObjectManager<BinaryID, Binary, DO_REFCOUNT> BinaryManager;
 
 struct TextureFlags {
     TextureFlags(
@@ -160,6 +162,13 @@ public:
     bool has_sound(SoundID id) const;
     SoundPtr find_sound(const std::string& name);
 
+    /* Load raw binary data from a file */
+    BinaryPtr new_binary_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    BinaryPtr binary(BinaryID id) const;
+    std::size_t binary_count() const;
+    bool has_binary(BinaryID id) const;
+    BinaryPtr find_binary(const std::string& name);
+    void destroy_binary(BinaryID id);
 
     /* Font API */
     /** Loads a font by searching asset paths for a match.
@@ -247,6 +256,7 @@ private:
     MeshManager mesh_manager_;
     SoundManager sound_manager_;
     ParticleScriptManager particle_script_manager_;
+    BinaryManager binary_manager_;
 
     thread::Mutex template_material_lock_;
     std::unordered_map<Path, MaterialID> template_materials_;

@@ -17,6 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <iterator>
 #include "asset_manager.h"
 #include "loader.h"
 #include "procedural/mesh.h"
@@ -67,6 +68,7 @@ void AssetManager::destroy_all() {
     sound_manager_.destroy_all();
     font_manager_.destroy_all();
     particle_script_manager_.destroy_all();
+    binary_manager_.destroy_all();
     run_garbage_collection();
 }
 
@@ -171,6 +173,7 @@ void AssetManager::run_garbage_collection() {
     sound_manager_.update();
     font_manager_.update();
     particle_script_manager_.update();
+    binary_manager_.update();
 }
 
 bool AssetManager::is_base_manager() const {
@@ -610,6 +613,44 @@ bool AssetManager::has_sound(SoundID s) const {
 
 void AssetManager::destroy_sound(SoundID t) {
     sound_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
+}
+
+BinaryPtr AssetManager::new_binary_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
+
+    auto stream = smlt::get_app()->vfs->read_file(filename);
+    if(!stream) {
+        return BinaryPtr();
+    }
+
+    std::vector<uint8_t> data;
+    std::copy(std::istream_iterator<uint8_t>(*stream), std::istream_iterator<uint8_t>(), back_inserter(data));
+
+    stream.reset();
+
+    auto bin = binary_manager_.make(this, std::move(data));
+    binary_manager_.set_garbage_collection_method(bin->id(), garbage_collect);
+
+    return bin;
+}
+
+BinaryPtr AssetManager::binary(BinaryID id) const {
+    GET_X(Binary, binary, binary_manager_);
+}
+
+std::size_t AssetManager::binary_count() const {
+    return binary_manager_.count();
+}
+
+bool AssetManager::has_binary(BinaryID id) const {
+    return binary_manager_.contains(id);
+}
+
+BinaryPtr AssetManager::find_binary(const std::string& name) {
+    return binary_manager_.find_object(name);
+}
+
+void AssetManager::destroy_binary(BinaryID id) {
+    binary_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
 }
 
 MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect) {

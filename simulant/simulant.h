@@ -55,6 +55,7 @@
 #include "loader.h"
 #include "texture.h"
 #include "application.h"
+#include "assets/binary_data.h"
 #include "debug.h"
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
