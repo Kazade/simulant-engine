@@ -249,6 +249,10 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& file
 #else
 
     auto file_in = open_file(filename);
+    if(!file_in) {
+        return std::shared_ptr<std::stringstream>();
+    }
+
     std::shared_ptr<std::stringstream> result(new std::stringstream);
     (*result) << file_in->rdbuf();
     return result;

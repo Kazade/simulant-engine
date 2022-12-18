@@ -30,6 +30,12 @@ public:
         assert_equal(vfs->location_cache_size(), 1u);
     }
 
+    void test_read_non_existent_file() {
+        auto vfs = application->vfs.get();
+        auto ptr = vfs->read_file("/some/file");
+        assert_false(ptr);
+    }
+
     void test_read_blocking() {
         auto vfs = application->vfs.get();
         auto path = vfs->locate_file("simulant/textures/simulant-icon.png");
