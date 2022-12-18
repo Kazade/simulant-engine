@@ -733,10 +733,14 @@ std::string normalize_language_code(const std::string& language_code) {
     }
 }
 
-bool Application::load_arb_file(const smlt::Path& filename) {
+bool Application::load_arb_from_file(const smlt::Path& filename) {
+    auto stream = vfs->open_file(filename);
+    return load_arb(stream);
+}
+
+bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* language_code) {
     const char* LOCALE_KEY = "@@locale";
 
-    auto stream = vfs->open_file(filename);
     auto json = json_read(stream);
 
     if(!json->has_key(LOCALE_KEY)) {
@@ -747,7 +751,15 @@ bool Application::load_arb_file(const smlt::Path& filename) {
     std::map<std::string, unicode> id_to_translation;
     std::map<unicode, unicode> new_translations;
 
+
     for(auto& key: json->keys()) {
+        if(key == "@@locale") {
+            if(language_code) {
+                *language_code = json[key]->to_str().value_or("");
+            }
+            continue;
+        }
+
         if(starts_with(key, "@@")) {
             continue;
         }
@@ -785,6 +797,35 @@ bool Application::load_arb_file(const smlt::Path& filename) {
    return true;
 }
 
+bool Application::activate_language_from_binary_data(const uint8_t* data, std::size_t byte_size) {
+    class membuf : public std::basic_streambuf<char> {
+    public:
+      membuf(const uint8_t *p, size_t l) {
+        setg((char*)p, (char*)p, (char*)p + l);
+      }
+    };
+
+    class memstream : public std::istream {
+    public:
+      memstream(const uint8_t *p, size_t l) :
+        std::istream(&_buffer),
+        _buffer(p, l) {
+        rdbuf(&_buffer);
+      }
+
+    private:
+      membuf _buffer;
+    };
+
+    auto stream = std::make_shared<memstream>(data, byte_size);
+    std::string language_code;
+    auto ret = load_arb(stream, &language_code);
+    if(ret) {
+        active_language_ = normalize_language_code(language_code);
+    }
+    return ret;
+}
+
 bool Application::activate_language(const std::string &language_code) {
     auto normalized_code = normalize_language_code(language_code);
 
@@ -808,7 +849,7 @@ bool Application::activate_language(const std::string &language_code) {
         for(auto& filename: filenames) {
             auto path_maybe = vfs->locate_file(filename);
             if(path_maybe) {
-                if(load_arb_file(path_maybe.value())) {
+                if(load_arb_from_file(path_maybe.value())) {
                     active_language_ = fallback;
                     return true;
                 } else {

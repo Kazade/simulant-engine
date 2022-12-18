@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include <list>
+#include <iosfwd>
 
 #include "arg_parser.h"
 #include "keycodes.h"
@@ -242,6 +243,14 @@ public:
      *  cannot be found or loaded. */
     bool activate_language(const std::string& language_code);
 
+
+    /**
+     *  Activates a language from an ARB file that's already been loaded from
+     *  disk. The language code is read from the ARB itself and no locale
+     *  directories are searched. */
+    bool activate_language_from_binary_data(const uint8_t* data, std::size_t byte_size);
+
+
     /**  Returns the currently active language */
     std::string active_language() const {
         return active_language_;
@@ -357,7 +366,8 @@ private:
     mutable thread::Mutex running_lock_;
 
     std::vector<std::string> generate_potential_codes(const std::string& language_code);
-    bool load_arb_file(const smlt::Path& filename);
+    bool load_arb(std::shared_ptr<std::istream> stream, std::string* language_code = nullptr);
+    bool load_arb_from_file(const smlt::Path& filename);
 };
 
 Application* get_app();
