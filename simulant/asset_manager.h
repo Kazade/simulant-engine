@@ -289,6 +289,8 @@ private:
             texture_manager_.set_garbage_collection_method(p->id(), method);
         } else if(auto p = dynamic_cast<const ParticleScript*>(resource)) {
             particle_script_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Binary*>(resource)) {
+            binary_manager_.set_garbage_collection_method(p->id(), method);
         } else {
             S_ERROR("Unhandled asset type. GC method not set");
         }
