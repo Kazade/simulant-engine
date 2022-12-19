@@ -623,6 +623,7 @@ BinaryPtr AssetManager::new_binary_from_file(const Path& filename, GarbageCollec
     }
 
     std::vector<uint8_t> data;
+    std::noskipws(*stream);
     std::copy(std::istream_iterator<uint8_t>(*stream), std::istream_iterator<uint8_t>(), back_inserter(data));
 
     stream.reset();
