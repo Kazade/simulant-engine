@@ -722,6 +722,16 @@ public:
         }
     }
 
+    V& at(const K& key) {
+        auto it = map_.find(key);
+
+        if(it == map_.end()) {
+            throw std::out_of_range("Key not found");
+        }
+
+        return (*it).second;
+    }
+
     const V& at(const K& key) const {
         auto it = map_.find(key);
 

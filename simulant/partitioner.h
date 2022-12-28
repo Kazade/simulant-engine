@@ -24,6 +24,7 @@
 #include <map>
 #include <vector>
 
+#include "generic/containers/contiguous_map.h"
 #include "generic/property.h"
 #include "generic/managed.h"
 #include "renderers/renderer.h"
@@ -93,7 +94,12 @@ protected:
     template<typename ID>
     void stage_write(const ID& id, const StagedWrite& op) {
         auto key = make_unique_id_key(id);
-        auto& value = staged_writes_[key];
+        auto it = staged_writes_.find(key);
+        if(it == staged_writes_.end()) {
+            staged_writes_.insert(key, WriteSlots());
+        }
+
+        auto& value = staged_writes_.at(key);
         value.slot[op.operation] = op;
 
         if(!(value.bits & (1 << WRITE_OPERATION_ADD)) && op.operation == WRITE_OPERATION_REMOVE) {
@@ -120,7 +126,7 @@ private:
         uint8_t bits = 0;
     };
 
-    std::map<UniqueIDKey, WriteSlots> staged_writes_;
+    ContiguousMap<UniqueIDKey, WriteSlots> staged_writes_;
 
 protected:
     Property<decltype(&Partitioner::stage_)> stage = { this, &Partitioner::stage_ };
