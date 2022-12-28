@@ -57,6 +57,10 @@ public:
     float set_orthographic_projection_from_height(float desired_height_in_units, float ratio);
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     AABB bounds_;
     Frustum frustum_;
 

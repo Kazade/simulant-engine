@@ -84,6 +84,10 @@ public:
 
     const AABB& aabb() const override;
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     SpriteManager* manager_;
 
     float frame_width_ = 0;

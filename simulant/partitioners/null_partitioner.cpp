@@ -34,6 +34,8 @@ void NullPartitioner::lights_and_geometry_visible_from(
 
     _S_UNUSED(camera_id);
 
+    _apply_writes();
+
     for(auto& key: all_nodes_) {
         if(key.first == typeid(Light)) {
             lights_out.push_back(make_unique_id_from_key<LightID>(key));
@@ -49,6 +51,8 @@ void NullPartitioner::lights_and_geometry_visible_from(
         } else if(key.first == typeid(MeshInstancer)) {
             auto mi = stage->mesh_instancer(make_unique_id_from_key<MeshInstancerID>(key));
             geom_out.push_back(mi);
+        } else if(key.first == typeid(Camera)) {
+            /* Skip */
         } else {
             assert(0 && "Not implemented");
         }

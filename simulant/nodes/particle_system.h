@@ -97,6 +97,10 @@ public:
     }
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     struct EmitterState {
         bool is_active = true;
         float time_active = 0.0f;

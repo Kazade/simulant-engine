@@ -104,7 +104,12 @@ public:
     void clean_up() override {
         StageNode::clean_up();
     }
+
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     LightType type_;
 
     smlt::Colour ambient_;

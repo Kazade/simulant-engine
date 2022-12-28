@@ -8,110 +8,6 @@
 
 namespace smlt {
 
-void Partitioner::add_particle_system(ParticleSystemID ps) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-    stage_write(ps, write);
-}
-
-void Partitioner::update_particle_system(ParticleSystemID ps, const AABB &bounds) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_UPDATE;
-    write.stage_node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-    write.new_bounds = bounds;
-    stage_write(ps, write);
-}
-
-void Partitioner::remove_particle_system(ParticleSystemID ps) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-    stage_write(ps, write);
-}
-
-void Partitioner::add_geom(GeomID geom_id) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_GEOM;
-    stage_write(geom_id, write);
-}
-
-void Partitioner::remove_geom(GeomID geom_id) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_GEOM;
-    stage_write(geom_id, write);
-}
-
-void Partitioner::add_actor(ActorID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_ACTOR;
-    stage_write(obj, write);
-}
-
-void Partitioner::update_actor(ActorID actor_id, const AABB &bounds) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_UPDATE;
-    write.stage_node_type = STAGE_NODE_TYPE_ACTOR;
-    write.new_bounds = bounds;
-    stage_write(actor_id, write);
-}
-
-void Partitioner::remove_actor(ActorID obj) {
-    assert(obj);
-
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_ACTOR;
-    stage_write(obj, write);
-}
-
-void Partitioner::add_light(LightID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
-    stage_write(obj, write);
-}
-
-void Partitioner::update_light(LightID light_id, const AABB &bounds) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_UPDATE;
-    write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
-    write.new_bounds = bounds;
-    stage_write(light_id, write);
-}
-
-void Partitioner::remove_light(LightID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
-    stage_write(obj, write);
-}
-
-void Partitioner::add_mesh_instancer(MeshInstancerID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
-    stage_write(obj, write);
-}
-
-void Partitioner::update_mesh_instancer(MeshInstancerID mesh_instancer_id, const AABB &bounds) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_UPDATE;
-    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
-    write.new_bounds = bounds;
-    stage_write(mesh_instancer_id, write);
-}
-
-void Partitioner::remove_mesh_instancer(MeshInstancerID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
-    stage_write(obj, write);
-}
-
 void Partitioner::_apply_writes() {
     for(auto& p: staged_writes_) {
         bool remove_first = p.second.bits & (1 << WRITE_OPERATION_MAX);
@@ -145,6 +41,26 @@ void Partitioner::_apply_writes() {
     }
 
     staged_writes_.clear();
+}
+
+void Partitioner::stage_write(const UniqueIDKey& key, const StagedWrite& op) {
+    staged_writes_.insert(key, WriteSlots());
+
+    auto& value = staged_writes_.at(key);
+    value.slot[op.operation] = op;
+
+    if(!(value.bits & (1 << WRITE_OPERATION_ADD)) && op.operation == WRITE_OPERATION_REMOVE) {
+        /* If no write op has happened, and this was a remove operation, we store
+             * that this was the first operation of the two */
+        value.bits |= (1 << WRITE_OPERATION_MAX);
+    }
+
+    value.bits |= (1 << op.operation);
+
+    /* Apply staged writes immediately to prevent the size spiralling */
+    if(staged_writes_.size() >= MAX_STAGED_WRITES) {
+        _apply_writes();
+    }
 }
 
 

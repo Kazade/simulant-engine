@@ -59,22 +59,21 @@ public:
         ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_actor(actor);
-        partitioner.add_actor(actor);
+        partitioner.remove_stage_node(actor);
+        partitioner.add_stage_node(actor);
         partitioner._apply_writes();
 
         assert_true(exists);
         exists = false;
 
-        partitioner.add_actor(actor);
-        partitioner.remove_actor(actor);
+        partitioner.add_stage_node(actor);
+        partitioner.remove_stage_node(actor);
         partitioner._apply_writes();
         assert_false(exists);
     }
 
     void test_add_actor_stages_write() {
         auto test = [=](const StagedWrite& write) {
-            assert_equal(write.stage_node_type, STAGE_NODE_TYPE_ACTOR);
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
@@ -82,7 +81,7 @@ public:
         ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_actor(actor->id());
+        partitioner.add_stage_node(actor);
         partitioner._apply_writes();
 
         scene->destroy_stage(stage->id());
@@ -90,7 +89,6 @@ public:
 
     void test_remove_actor_stages_write() {
         auto test = [=](const StagedWrite& write) {
-            assert_equal(write.stage_node_type, STAGE_NODE_TYPE_ACTOR);
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
@@ -98,7 +96,7 @@ public:
         ActorPtr actor = stage->new_actor();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_actor(actor->id());
+        partitioner.remove_stage_node(actor);
         partitioner._apply_writes();
 
         scene->destroy_stage(stage->id());
@@ -106,7 +104,6 @@ public:
 
     void test_add_light_stages_write() {
         auto test = [=](const StagedWrite& write) {
-            assert_equal(write.stage_node_type, STAGE_NODE_TYPE_LIGHT);
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
@@ -114,7 +111,7 @@ public:
         auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_light(light->id());
+        partitioner.add_stage_node(light);
         partitioner._apply_writes();
 
         scene->destroy_stage(stage->id());
@@ -122,7 +119,6 @@ public:
 
     void test_remove_light_stages_write() {
         auto test = [=](const StagedWrite& write) {
-            assert_equal(write.stage_node_type, STAGE_NODE_TYPE_LIGHT);
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
@@ -130,7 +126,7 @@ public:
         auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_light(light->id());
+        partitioner.remove_stage_node(light);
         partitioner._apply_writes();
 
         scene->destroy_stage(stage->id());
@@ -138,7 +134,6 @@ public:
 
     void test_add_particle_system_stages_write() {
         auto test = [=](const StagedWrite& write) {
-            assert_equal(write.stage_node_type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
@@ -148,7 +143,7 @@ public:
         );
 
         MockPartitioner partitioner(stage, test);
-        partitioner.add_particle_system(ps->id());
+        partitioner.add_stage_node(ps);
         partitioner._apply_writes();
 
         scene->destroy_stage(stage->id());
@@ -156,7 +151,6 @@ public:
 
     void test_remove_particle_system_stages_write() {
         auto test = [=](const StagedWrite& write) {
-            assert_equal(write.stage_node_type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
@@ -166,7 +160,7 @@ public:
         );
 
         MockPartitioner partitioner(stage, test);
-        partitioner.remove_particle_system(ps->id());
+        partitioner.remove_stage_node(ps);
         partitioner._apply_writes();
         scene->destroy_stage(stage->id());
     }

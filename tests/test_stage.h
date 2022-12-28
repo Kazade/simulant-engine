@@ -17,9 +17,10 @@ public:
         auto destroyed_count = 0;
 
         std::set<ActorID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_actor_destroyed().connect([&](smlt::ActorID id) {
+        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
+            assert_equal(type, STAGE_NODE_TYPE_ACTOR);
             destroyed_count++;
-            destroyed_ids.insert(id);
+            destroyed_ids.insert(dynamic_cast<Actor*>(node)->id());
         });
 
         auto a1 = stage->new_actor();
@@ -44,9 +45,10 @@ public:
         auto destroyed_count = 0;
 
         std::set<CameraID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_camera_destroyed().connect([&](smlt::CameraID id) {
+        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](smlt::StageNode* node, StageNodeType type) {
+            assert_equal(type, STAGE_NODE_TYPE_CAMERA);
             destroyed_count++;
-            destroyed_ids.insert(id);
+            destroyed_ids.insert(dynamic_cast<Camera*>(node)->id());
         });
 
         auto a1 = stage->new_camera();
@@ -72,9 +74,10 @@ public:
         auto destroyed_count = 0;
 
         std::set<ParticleSystemID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_particle_system_destroyed().connect([&](smlt::ParticleSystemID id) {
-            destroyed_count++;
-            destroyed_ids.insert(id);
+        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
+          assert_equal(type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+          destroyed_count++;
+          destroyed_ids.insert(dynamic_cast<ParticleSystem*>(node)->id());
         });
 
         auto script = stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);

@@ -119,14 +119,16 @@ ActorPtr Stage::new_actor() {
 
     a->set_parent(this);
 
-    auto id = a->id();
     /* Whenever the actor moves, we need to tell the stage's partitioner */
-    a->signal_bounds_updated().connect([this, id](const AABB& new_bounds) {
-        this->partitioner->update_actor(id, new_bounds);
+    a->signal_bounds_updated().connect([this, a](const AABB& new_bounds) {
+        this->partitioner->update_stage_node(a, new_bounds);
     });
 
     //Tell everyone about the new actor
-    signal_actor_created_(a->id());
+    signal_stage_node_created_(a, STAGE_NODE_TYPE_ACTOR);
+    a->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(a, STAGE_NODE_TYPE_ACTOR);
+    });
 
     S_DEBUG("Actor created: {0}", a->id());
     return a;
@@ -144,16 +146,19 @@ ActorPtr Stage::new_actor_with_mesh(MeshID mid) {
     auto a = actor_manager_->make(this, sound_driver());
     a->set_parent(this);
 
-    auto id = a->id();
     /* Whenever the actor moves, we need to tell the stage's partitioner */
-    a->signal_bounds_updated().connect([this, id](const AABB& new_bounds) {
-        this->partitioner->update_actor(id, new_bounds);
+    a->signal_bounds_updated().connect([this, a](const AABB& new_bounds) {
+        this->partitioner->update_stage_node(a, new_bounds);
     });
 
     // Tell everyone about the new actor
     // It's important this happens *before* we set the mesh that will
     // trigger a bounds update.
-    signal_actor_created_(id);
+    signal_stage_node_created_(a, STAGE_NODE_TYPE_ACTOR);
+
+    a->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(a, STAGE_NODE_TYPE_ACTOR);
+    });
 
     //If a mesh was specified, set it
     if(mid) {
@@ -220,13 +225,14 @@ MeshInstancerPtr Stage::new_mesh_instancer(MeshID mid) {
 
     instance->set_parent(this);
 
-    auto id = instance->id();
-
-    instance->signal_bounds_updated().connect([this, id](const AABB& new_bounds) {
-        this->partitioner->update_mesh_instancer(id, new_bounds);
+    instance->signal_bounds_updated().connect([this, instance](const AABB& new_bounds) {
+        this->partitioner->update_stage_node(instance, new_bounds);
     });
 
-    signal_mesh_instancer_created_(id);
+    signal_stage_node_created_(instance, STAGE_NODE_TYPE_MESH_INSTANCER);
+    instance->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(instance, STAGE_NODE_TYPE_MESH_INSTANCER);
+    });
 
     return instance;
 }
@@ -256,6 +262,11 @@ bool Stage::has_mesh_instancer(MeshInstancerID mid) const {
 CameraPtr Stage::new_camera() {
     auto new_camera = camera_manager_->make(this, sound_driver());
     new_camera->set_parent(this);
+    signal_stage_node_created_(new_camera, STAGE_NODE_TYPE_CAMERA);
+    new_camera->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(new_camera, STAGE_NODE_TYPE_CAMERA);
+    });
+
     return new_camera;
 }
 
@@ -337,7 +348,10 @@ GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, 
     );
     gid->set_parent(this);
 
-    signal_geom_created_(gid->id());
+    signal_stage_node_created_(gid, STAGE_NODE_TYPE_GEOM);
+    gid->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(gid, STAGE_NODE_TYPE_GEOM);
+    });
 
     return gid;
 }
@@ -366,16 +380,18 @@ ParticleSystemPtr Stage::new_particle_system(ParticleScriptID particle_script) {
         assets->particle_script(particle_script)
     );
 
-    auto new_id = p->id();
-
     /* Whenever the particle system moves, we need to tell the stage's partitioner */
-    p->signal_bounds_updated().connect([this, new_id](const AABB& new_bounds) {
-        this->partitioner->update_particle_system(new_id, new_bounds);
+    p->signal_bounds_updated().connect([this, p](const AABB& new_bounds) {
+        this->partitioner->update_stage_node(p, new_bounds);
     });
 
     p->set_parent(this);
 
-    signal_particle_system_created_(new_id);
+    signal_stage_node_created_(p, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+    p->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(p, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+    });
+
     return p;
 }
 
@@ -405,7 +421,6 @@ std::size_t Stage::particle_system_count() const { return particle_system_manage
 
 LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colour& colour) {
     auto light = light_manager_->make(this);
-    auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_DIRECTIONAL);
     light->set_direction(direction.normalized());
@@ -413,17 +428,19 @@ LightPtr Stage::new_light_as_directional(const Vec3& direction, const smlt::Colo
     light->set_parent(this);
 
     /* Whenever the light moves, we need to tell the stage's partitioner */
-    light->signal_bounds_updated().connect([this, light_id](const AABB& new_bounds) {
-        this->partitioner->update_light(light_id, new_bounds);
+    light->signal_bounds_updated().connect([this, light](const AABB& new_bounds) {
+        this->partitioner->update_stage_node(light, new_bounds);
     });
 
-    signal_light_created_(light_id);
+    signal_stage_node_created_(light, STAGE_NODE_TYPE_LIGHT);
+    light->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(light, STAGE_NODE_TYPE_LIGHT);
+    });
     return light;
 }
 
 LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& colour) {
     auto light = light_manager_->make(this);
-    auto light_id = light->id();
 
     light->set_type(smlt::LIGHT_TYPE_POINT);
     light->move_to(position);
@@ -432,11 +449,15 @@ LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& col
     light->set_parent(this);
 
     /* Whenever the light moves, we need to tell the stage's partitioner */
-    light->signal_bounds_updated().connect([this, light_id](const AABB& new_bounds) {
-        this->partitioner->update_light(light_id, new_bounds);
+    light->signal_bounds_updated().connect([this, light](const AABB& new_bounds) {
+        this->partitioner->update_stage_node(light, new_bounds);
     });
 
-    signal_light_created_(light_id);
+    signal_stage_node_created_(light, STAGE_NODE_TYPE_LIGHT);
+    light->signal_destroyed().connect([=]() {
+        signal_stage_node_destroyed_(light, STAGE_NODE_TYPE_LIGHT);
+    });
+
     return light;
 }
 
@@ -476,20 +497,15 @@ void Stage::set_partitioner(AvailablePartitioner partitioner) {
     assert(partitioner_);
 
     //Keep the partitioner updated with new meshes and lights
-    signal_actor_created().connect(std::bind(&Partitioner::add_actor, partitioner_.get(), std::placeholders::_1));
-    signal_actor_destroyed().connect(std::bind(&Partitioner::remove_actor, partitioner_.get(), std::placeholders::_1));
+    signal_stage_node_created().connect(
+        std::bind(&Partitioner::add_stage_node, partitioner_.get(),
+        std::placeholders::_1
+    ));
 
-    signal_geom_created().connect(std::bind(&Partitioner::add_geom, partitioner_, std::placeholders::_1));
-    signal_geom_destroyed().connect(std::bind(&Partitioner::remove_geom, partitioner_, std::placeholders::_1));
-
-    signal_light_created().connect(std::bind(&Partitioner::add_light, partitioner_.get(), std::placeholders::_1));
-    signal_light_destroyed().connect(std::bind(&Partitioner::remove_light, partitioner_.get(), std::placeholders::_1));
-
-    signal_particle_system_created().connect(std::bind(&Partitioner::add_particle_system, partitioner_.get(), std::placeholders::_1));
-    signal_particle_system_destroyed().connect(std::bind(&Partitioner::remove_particle_system, partitioner_.get(), std::placeholders::_1));
-
-    signal_mesh_instancer_created().connect(std::bind(&Partitioner::add_mesh_instancer, partitioner_.get(), std::placeholders::_1));
-    signal_mesh_instancer_destroyed().connect(std::bind(&Partitioner::remove_mesh_instancer, partitioner_.get(), std::placeholders::_1));
+    signal_stage_node_destroyed().connect(
+                [=](StageNode* node, StageNodeType) {
+        partitioner_->remove_stage_node(node);
+    });
 }
 
 void Stage::update(float dt) {
@@ -515,87 +531,63 @@ Debug* Stage::enable_debug(bool v) {
 
 void Stage::destroy_object(Actor* object) {
     auto id = object->id();
-    if(actor_manager_->destroy(id)) {
-        signal_actor_destroyed_(id);
-    }
+    actor_manager_->destroy(id);
 }
 
 void Stage::destroy_object(Light* object) {
     auto id = object->id();
-    if(light_manager_->destroy(id)) {
-        signal_light_destroyed_(id);
-    }
+    light_manager_->destroy(id);
 }
 
 void Stage::destroy_object(Camera* object) {
     auto id = object->id();
-    if(camera_manager_->destroy(id)) {
-        signal_camera_destroyed_(id);
-    }
+    camera_manager_->destroy(id);
 }
 
 void Stage::destroy_object(Geom* object) {
     auto id = object->id();
-    if(geom_manager_->destroy(id)) {
-        signal_geom_destroyed_(id);
-    }
+    geom_manager_->destroy(id);
 }
 
 void Stage::destroy_object(ParticleSystem* object) {
     auto id = object->id();
-    if(particle_system_manager_->destroy(id)) {
-        signal_particle_system_destroyed_(id);
-    }
+    particle_system_manager_->destroy(id);
 }
 
 void Stage::destroy_object(MeshInstancer* object) {
     auto id = object->id();
-    if(mesh_instancer_manager_->destroy(id)) {
-        signal_mesh_instancer_destroyed_(id);
-    }
+    mesh_instancer_manager_->destroy(id);
 }
 
 void Stage::destroy_object_immediately(Actor* object) {
     // Only send the signal if we didn't already
     auto id = object->id();
-    if(actor_manager_->destroy_immediately(id)) {
-        signal_actor_destroyed_(id);
-    }
+    actor_manager_->destroy_immediately(id);
 }
 
 void Stage::destroy_object_immediately(Light* object) {
     auto id = object->id();
-    if(light_manager_->destroy_immediately(id)) {
-        signal_light_destroyed_(id);
-    }
+    light_manager_->destroy_immediately(id);
 }
 
 void Stage::destroy_object_immediately(Camera* object) {
     auto id = object->id();
-    if(camera_manager_->destroy_immediately(id)) {
-        signal_camera_destroyed_(id);
-    }
+    camera_manager_->destroy_immediately(id);
 }
 
 void Stage::destroy_object_immediately(Geom* object) {
     auto id = object->id();
-    if(geom_manager_->destroy_immediately(id)) {
-        signal_geom_destroyed_(id);
-    }
+    geom_manager_->destroy_immediately(id);
 }
 
 void Stage::destroy_object_immediately(ParticleSystem* object) {
     auto id = object->id();
-    if(particle_system_manager_->destroy_immediately(id)) {
-        signal_particle_system_destroyed_(id);
-    }
+    particle_system_manager_->destroy_immediately(id);
 }
 
 void Stage::destroy_object_immediately(MeshInstancer *object) {
     auto id = object->id();
-    if(mesh_instancer_manager_->destroy_immediately(id)) {
-        signal_mesh_instancer_destroyed_(id);
-    }
+    mesh_instancer_manager_->destroy_immediately(id);
 }
 
 void Stage::on_actor_created(ActorID actor_id) {

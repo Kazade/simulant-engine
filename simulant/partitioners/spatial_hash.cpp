@@ -136,6 +136,8 @@ void SpatialHashPartitioner::stage_remove_particle_system(ParticleSystemID ps) {
 }
 
 void SpatialHashPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
+    _apply_writes();
+
     bool is_actor = key.first == typeid(Actor);
     bool is_geom = key.first == typeid(Geom);
     bool is_light = key.first == typeid(Light);

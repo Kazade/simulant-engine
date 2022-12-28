@@ -32,6 +32,8 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
         CameraID camera_id, std::vector<LightID> &lights_out,
         std::vector<StageNode*> &geom_out) {
 
+    _apply_writes();
+
     auto frustum = stage->camera(camera_id)->frustum();
 
     for(auto& node: stage->each_descendent()) {

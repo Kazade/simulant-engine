@@ -69,6 +69,10 @@ public:
     }
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     friend class SkyManager;
 
     SkyManager* manager_ = nullptr;

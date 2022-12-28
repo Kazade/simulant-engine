@@ -63,23 +63,11 @@ typedef StageNodeManager<StageNodePool, ParticleSystemID, ParticleSystem> Partic
 typedef StageNodeManager<StageNodePool, CameraID, Camera> CameraManager;
 typedef StageNodeManager<StageNodePool, MeshInstancerID, MeshInstancer> MeshInstancerManager;
 
-typedef sig::signal<void (const ActorID&)> ActorCreatedSignal;
-typedef sig::signal<void (const ActorID&)> ActorDestroyedSignal;
-
-typedef sig::signal<void (GeomID)> GeomCreatedSignal;
-typedef sig::signal<void (GeomID)> GeomDestroyedSignal;
-
-typedef sig::signal<void (ParticleSystemID)> ParticleSystemCreatedSignal;
-typedef sig::signal<void (ParticleSystemID)> ParticleSystemDestroyedSignal;
-
-typedef sig::signal<void (CameraID)> CameraCreatedSignal;
-typedef sig::signal<void (CameraID)> CameraDestroyedSignal;
+typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
+typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
 
 typedef sig::signal<void (CameraID, Viewport)> StagePreRenderSignal;
 typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
-
-typedef sig::signal<void (MeshInstancerID)> MeshInstancerCreatedSignal;
-typedef sig::signal<void (MeshInstancerID)> MeshInstancerDestroyedSignal;
 
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
@@ -91,11 +79,8 @@ class Stage:
     public ChainNameable<Stage>,
     public RefCounted<Stage> {
 
-    DEFINE_SIGNAL(MeshInstancerCreatedSignal, signal_mesh_instancer_created);
-    DEFINE_SIGNAL(MeshInstancerDestroyedSignal, signal_mesh_instancer_destroyed);
-
-    DEFINE_SIGNAL(ParticleSystemCreatedSignal, signal_particle_system_created);
-    DEFINE_SIGNAL(ParticleSystemDestroyedSignal, signal_particle_system_destroyed);
+    DEFINE_SIGNAL(StageNodeCreatedSignal, signal_stage_node_created);
+    DEFINE_SIGNAL(StageNodeDestroyedSignal, signal_stage_node_destroyed);
 
     DEFINE_SIGNAL(StagePreRenderSignal, signal_stage_pre_render);
     DEFINE_SIGNAL(StagePostRenderSignal, signal_stage_post_render);
@@ -215,18 +200,6 @@ public:
     // Updateable interface
     void update(float dt) override;
 
-    ActorCreatedSignal& signal_actor_created() { return signal_actor_created_; }
-    ActorDestroyedSignal& signal_actor_destroyed() { return signal_actor_destroyed_; }
-
-    GeomCreatedSignal& signal_geom_created() { return signal_geom_created_; }
-    GeomDestroyedSignal& signal_geom_destroyed() { return signal_geom_destroyed_; }
-
-    CameraCreatedSignal& signal_camera_created() { return signal_camera_created_; }
-    CameraDestroyedSignal& signal_camera_destroyed() { return signal_camera_destroyed_; }
-
-    sig::signal<void (LightID)>& signal_light_created() { return signal_light_created_; }
-    sig::signal<void (LightID)>& signal_light_destroyed() { return signal_light_destroyed_; }
-
     const AABB& aabb() const override { return aabb_; }
     const AABB transformed_aabb() const override { return aabb_; }
 
@@ -253,24 +226,13 @@ public:
     }
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     StageNodePool* node_pool_ = nullptr;
 
     AABB aabb_;
-
-    ActorCreatedSignal signal_actor_created_;
-    ActorDestroyedSignal signal_actor_destroyed_;
-
-    GeomCreatedSignal signal_geom_created_;
-    GeomDestroyedSignal signal_geom_destroyed_;
-
-    CameraCreatedSignal signal_camera_created_;
-    CameraDestroyedSignal signal_camera_destroyed_;
-
-    sig::signal<void (LightID)> signal_light_created_;
-    sig::signal<void (LightID)> signal_light_destroyed_;
-
-    sig::signal<void (SpriteID)> signal_sprite_created_;
-    sig::signal<void (SpriteID)> signal_sprite_destroyed_;
 
     std::shared_ptr<Partitioner> partitioner_;
 

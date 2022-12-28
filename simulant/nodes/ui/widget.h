@@ -221,6 +221,10 @@ public:
     MaterialPtr foreground_material() const { return style_->materials_[2]; }
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     virtual const unicode& calc_text() const {
         return text_;
     }

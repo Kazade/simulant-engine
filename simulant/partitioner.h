@@ -45,11 +45,10 @@ enum WriteOperation {
 
 struct StagedWrite {
     WriteOperation operation;
-    StageNodeType stage_node_type;
     AABB new_bounds;
 };
 
-#define MAX_STAGED_WRITES 256
+#define MAX_STAGED_WRITES 1024
 
 class Partitioner:
     public RefCounted<Partitioner> {
@@ -58,24 +57,24 @@ public:
     Partitioner(Stage* ss):
         stage_(ss) {}
 
-    void add_particle_system(ParticleSystemID particle_system_id);
-    void update_particle_system(ParticleSystemID particle_system_id, const AABB& bounds);
-    void remove_particle_system(ParticleSystemID particle_system_id);
+    void add_stage_node(StageNode* node) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_ADD;
+        stage_write(node->key(), write);
+    }
 
-    void add_geom(GeomID geom_id);
-    void remove_geom(GeomID geom_id);
+    void update_stage_node(StageNode* node, const AABB& bounds) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_UPDATE;
+        write.new_bounds = bounds;
+        stage_write(node->key(), write);
+    }
 
-    void add_actor(ActorID actor_id);
-    void update_actor(ActorID actor_id, const AABB& bounds);
-    void remove_actor(ActorID actor_id);
-
-    void add_light(LightID light_id);
-    void update_light(LightID light_id, const AABB& bounds);
-    void remove_light(LightID light_id);
-
-    void add_mesh_instancer(MeshInstancerID mesh_instancer_id);
-    void update_mesh_instancer(MeshInstancerID mesh_instancer_id, const AABB& bounds);
-    void remove_mesh_instancer(MeshInstancerID mesh_instancer_id);
+    void remove_stage_node(StageNode* node) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_REMOVE;
+        stage_write(node->key(), write);
+    }
 
     void _apply_writes();
 
@@ -91,30 +90,7 @@ protected:
 
     virtual void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) = 0;
 
-    template<typename ID>
-    void stage_write(const ID& id, const StagedWrite& op) {
-        auto key = make_unique_id_key(id);
-        auto it = staged_writes_.find(key);
-        if(it == staged_writes_.end()) {
-            staged_writes_.insert(key, WriteSlots());
-        }
-
-        auto& value = staged_writes_.at(key);
-        value.slot[op.operation] = op;
-
-        if(!(value.bits & (1 << WRITE_OPERATION_ADD)) && op.operation == WRITE_OPERATION_REMOVE) {
-            /* If no write op has happened, and this was a remove operation, we store
-             * that this was the first operation of the two */
-            value.bits |= (1 << WRITE_OPERATION_MAX);
-        }
-
-        value.bits |= (1 << op.operation);
-
-        /* Apply staged writes immediately to prevent the size spiralling */
-        if(staged_writes_.size() >= MAX_STAGED_WRITES) {
-            _apply_writes();
-        }
-    }
+    void stage_write(const UniqueIDKey& key, const StagedWrite& op);
 
 private:
     Stage* stage_;

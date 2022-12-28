@@ -97,6 +97,10 @@ public:
     }
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
          * from the level to NEAREST and return the first non-null result */

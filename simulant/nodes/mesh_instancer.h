@@ -88,7 +88,12 @@ public:
         const CameraPtr camera,
         const DetailLevel detail_level
     ) override;
+
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     MeshPtr mesh_;
 
     /* The axis-aligned box containing all mesh instances */
