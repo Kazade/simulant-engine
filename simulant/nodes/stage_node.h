@@ -12,6 +12,7 @@
 #include "../shadows.h"
 #include "../generic/manual_object.h"
 #include "../coroutines/helpers.h"
+#include "../partitioner.h"
 
 #include "iterators/sibling_iterator.h"
 #include "iterators/child_iterator.h"
@@ -64,6 +65,13 @@ class StageNode:
 
     // Fired when the node is cleaned up later, following destroy
     DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up);
+
+private:
+    /* This is ugly, but it's here for performance to avoid
+     * a map lookup when staging writes to the partitioner */
+    friend class Partitioner;
+    bool partitioner_dirty_ = false;
+    bool partitioner_added_ = false;
 
 public:
     class SiblingIteratorPair {
