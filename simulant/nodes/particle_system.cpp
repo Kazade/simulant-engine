@@ -62,7 +62,11 @@ void ParticleSystem::calc_aabb() {
         auto pos = emitter->relative_position;
 
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            result.encapsulate(pos);
+            if(e == 0) {
+                result.set_min_max(pos, pos);
+            } else {
+                result.encapsulate(pos);
+            }
         } else {
             // If this is not a point emitter, then calculate the max/min possible for
             // each emitter using their dimensions.
@@ -71,9 +75,12 @@ void ParticleSystem::calc_aabb() {
             float hh = smlt::fast_divide(emitter->dimensions.y, 2.0f);
             float hd = smlt::fast_divide(emitter->dimensions.z, 2.0f);
 
-
             AABB emitter_bounds(pos, Vec3(hw, hh, hd));
-            result.encapsulate(emitter_bounds);
+            if(e == 0) {
+                result = emitter_bounds;
+            } else {
+                result.encapsulate(emitter_bounds);
+            }
         }
     }
 }
