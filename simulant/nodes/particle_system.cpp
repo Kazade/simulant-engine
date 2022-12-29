@@ -55,19 +55,14 @@ void ParticleSystem::calc_aabb() {
     }
 
     AABB& result = aabb_;
-    bool first = true;
+    result = AABB();
+
     for(auto e = 0u; e < script_->emitter_count(); ++e) {
         auto emitter = script_->emitter(e);
         auto pos = emitter->relative_position;
 
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            if(pos.x > result.max().x || first) result.set_max_x(pos.x);
-            if(pos.y > result.max().y || first) result.set_max_y(pos.y);
-            if(pos.z > result.max().z || first) result.set_max_z(pos.z);
-
-            if(pos.x < result.min().x || first) result.set_min_x(pos.x);
-            if(pos.y < result.min().x || first) result.set_min_y(pos.y);
-            if(pos.z < result.min().x || first) result.set_min_z(pos.z);
+            result.encapsulate(pos);
         } else {
             // If this is not a point emitter, then calculate the max/min possible for
             // each emitter using their dimensions.
@@ -76,25 +71,11 @@ void ParticleSystem::calc_aabb() {
             float hh = smlt::fast_divide(emitter->dimensions.y, 2.0f);
             float hd = smlt::fast_divide(emitter->dimensions.z, 2.0f);
 
-            float minx = pos.x - hw;
-            float maxx = pos.x + hw;
-            float miny = pos.y - hh;
-            float maxy = pos.y + hh;
-            float minz = pos.z - hd;
-            float maxz = pos.z + hd;
 
-            if(maxx > result.max().x || first) result.set_max_x(maxx);
-            if(maxy > result.max().y || first) result.set_max_y(maxy);
-            if(maxz > result.max().z || first) result.set_max_z(maxz);
-
-            if(minx > result.min().x || first) result.set_min_x(minx);
-            if(miny > result.min().y || first) result.set_min_y(miny);
-            if(minz > result.min().z || first) result.set_min_z(minz);
+            AABB emitter_bounds(pos, Vec3(hw, hh, hd));
+            result.encapsulate(emitter_bounds);
         }
-
-        first = false;
     }
-
 }
 
 //Boundable entity things

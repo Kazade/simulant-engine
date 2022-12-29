@@ -145,6 +145,11 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
         return;
     }
 
+    if(vertex_ranges_.empty()) {
+        bounds = AABB();
+        return;
+    }
+
     auto& pos_attr = vdata->vertex_specification().position_attribute;
 
     if(pos_attr == VERTEX_ATTRIBUTE_2F) {
@@ -185,8 +190,7 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
         }
     }
 
-    bounds.set_min(Vec3(minx, miny, minz));
-    bounds.set_max(Vec3(maxx, maxy, maxz));
+    bounds.set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
 }
 
 void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
@@ -244,8 +248,7 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
         }
     }
 
-    bounds.set_min(Vec3(minx, miny, minz));
-    bounds.set_max(Vec3(maxx, maxy, maxz));
+    bounds.set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
 }
 
 void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {

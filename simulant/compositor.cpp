@@ -280,8 +280,6 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
             // Filter by whether or not the renderable bounds intersects the light bounds
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
                 return true;
-            } else if(light->type() == LIGHT_TYPE_SPOT_LIGHT) {
-                return node->transformed_aabb().intersects_aabb(light->transformed_aabb());
             } else {
                 return node->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
             }

@@ -5,32 +5,20 @@
 
 namespace smlt {
 
-AABB::AABB(const Vec3 &min, const Vec3 &max) {
-    set_min(min);
-    set_max(max);
-
-    corners_dirty_ = true;
-}
-
 AABB::AABB(const Vec3 &centre, float width) {
-    set_min(centre - Vec3(width * 0.5f, width * 0.5f, width * 0.5f));
-    set_max(centre + Vec3(width * 0.5f, width * 0.5f, width * 0.5f));
-
-    corners_dirty_ = true;
+    center_ = centre;
+    extents_ = Vec3(width * 0.5f, width * 0.5f, width * 0.5f);
 }
 
 AABB::AABB(const Vec3 &centre, float xsize, float ysize, float zsize) {
-    set_min(centre - Vec3(xsize * 0.5f, ysize * 0.5f, zsize * 0.5f));
-    set_max(centre + Vec3(xsize * 0.5f, ysize * 0.5f, zsize * 0.5f));
-
-    corners_dirty_ = true;
+    center_ = centre;
+    extents_ = Vec3(xsize * 0.5f, ysize * 0.5f, zsize * 0.5f);
 }
 
 AABB::AABB(const VertexData& vertex_data) {
     if(vertex_data.empty()) {
-        set_min(Vec3());
-        set_max(Vec3());
-        corners_dirty_ = true;
+        extents_ = Vec3();
+        center_ = Vec3();
         return;
     }
 
@@ -42,28 +30,36 @@ AABB::AABB(const VertexData& vertex_data) {
     float maxy = std::numeric_limits<float>::lowest();
     float maxz = std::numeric_limits<float>::lowest();
 
+    const uint8_t* p = vertex_data.data() + vertex_data.vertex_specification().position_offset();
+    bool twod = vertex_data.vertex_specification().position_attribute == VERTEX_ATTRIBUTE_2F;
+
     for(std::size_t i = 0; i < vertex_data.count(); ++i) {
-        auto v = vertex_data.position_nd_at(i);
+        float* x = (float*) p;
+        float* y = (float*) (p + sizeof(float));
 
-        if(v.x < minx) minx = v.x;
-        if(v.y < miny) miny = v.y;
-        if(v.z < minz) minz = v.z;
+        if(*x < minx) minx = *x;
+        if(*y < miny) miny = *y;
+        if(*x > maxx) maxx = *x;
+        if(*y > maxy) maxy = *y;
 
-        if(v.x > maxx) maxx = v.x;
-        if(v.y > maxy) maxy = v.y;
-        if(v.z > maxz) maxz = v.z;
+        if(!twod) {
+            float* z = (float*) (p + sizeof(float) + sizeof(float));
+            if(*z < minz) minz = *z;
+            if(*z > maxz) maxz = *z;
+        } else {
+            minz = maxz = 0.0f;
+        }
+
+        p += vertex_data.vertex_specification().stride();
     }
 
-    set_min(Vec3(minx, miny, minz));
-    set_max(Vec3(maxx, maxy, maxz));
-    corners_dirty_ = true;
+    set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
 }
 
 AABB::AABB(const Vec3 *vertices, const std::size_t count) {
     if(count == 0) {
-        set_min(Vec3());
-        set_max(Vec3());
-        corners_dirty_ = true;
+        extents_ = Vec3();
+        center_ = Vec3();
         return;
     }
 
@@ -85,18 +81,18 @@ AABB::AABB(const Vec3 *vertices, const std::size_t count) {
         if(vertices[i].z > maxz) maxz = vertices[i].z;
     }
 
-    set_min(Vec3(minx, miny, minz));
-    set_max(Vec3(maxx, maxy, maxz));
-    corners_dirty_ = true;
+    set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
 }
 
-bool AABB::intersects_aabb(const AABB &other) const {
-    if (max_.x < other.min_.x) return false;
-    if (min_.x > other.max_.x) return false;
-    if (max_.y < other.min_.y) return false;
-    if (min_.y > other.max_.y) return false;
-    if (max_.z < other.min_.z) return false;
-    if (min_.z > other.max_.z) return false;
+bool AABB::intersects_aabb(const AABB &bounds) const {
+    auto lmin = min();
+    auto rmin = bounds.min();
+    auto lmax = max();
+    auto rmax = bounds.max();
+
+    return (lmin.x <= rmax.x) && (lmax.x >= rmin.x) &&
+        (lmin.y <= rmax.y) && (lmax.y >= rmin.y) &&
+        (lmin.z <= rmax.z) && (lmax.z >= rmin.z);
 
     return true;
 }
@@ -104,21 +100,20 @@ bool AABB::intersects_aabb(const AABB &other) const {
 bool AABB::intersects_sphere(const smlt::Vec3& center, float diameter) const {
     float radius = diameter * 0.5f;
 
-    auto ex = std::max(min_.x - center.x, 0.0f) + std::max(center.x - max_.x, 0.0f);
-    auto ey = std::max(min_.y - center.y, 0.0f) + std::max(center.y - max_.y, 0.0f);
-    auto ez = std::max(min_.z - center.z, 0.0f) + std::max(center.z - max_.z, 0.0f);
+    auto ex = std::max(min().x - center.x, 0.0f) + std::max(center.x - max().x, 0.0f);
+    auto ey = std::max(min().y - center.y, 0.0f) + std::max(center.y - max().y, 0.0f);
+    auto ez = std::max(min().z - center.z, 0.0f) + std::max(center.z - max().z, 0.0f);
 
     return (ex < radius) && (ey < radius) && (ez < radius) && (ex * ex + ey * ey + ez * ez < radius * radius);
 }
 
-void AABB::encapsulate(const AABB &other) {
-    if(other.min_.x < min_.x) min_.x = other.min_.x;
-    if(other.min_.y < min_.y) min_.y = other.min_.y;
-    if(other.min_.z < min_.z) min_.z = other.min_.z;
+void AABB::encapsulate(const AABB &bounds) {
+    encapsulate(bounds.center_ - bounds.extents_);
+    encapsulate(bounds.center_ + bounds.extents_);
+}
 
-    if(other.max_.x > max_.x) max_.x = other.max_.x;
-    if(other.max_.y > max_.y) max_.y = other.max_.y;
-    if(other.max_.z > max_.z) max_.z = other.max_.z;
+void AABB::encapsulate(const Vec3& point) {
+    set_min_max(Vec3::min(min(), point), Vec3::max(max(), point));
 }
 
 std::ostream& operator<<(std::ostream& stream, const AABB& aabb) {

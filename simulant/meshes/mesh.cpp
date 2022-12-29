@@ -143,23 +143,16 @@ void Mesh::rebuild_aabb() {
         return;
     }
 
-    float max = std::numeric_limits<float>::max();
-    float min = std::numeric_limits<float>::lowest();
-
-    result.set_min(smlt::Vec3(max, max, max));
-    result.set_max(smlt::Vec3(min, min, min));
+    bool first = true;
+    result = AABB();
 
     for(auto sm: submeshes_) {
-        auto sm_min = sm->bounds_.min();
-        auto sm_max = sm->bounds_.max();
-
-        if(sm_min.x < result.min().x) result.set_min_x(sm_min.x);
-        if(sm_min.y < result.min().y) result.set_min_y(sm_min.y);
-        if(sm_min.z < result.min().z) result.set_min_z(sm_min.z);
-
-        if(sm_max.x > result.max().x) result.set_max_x(sm_max.x);
-        if(sm_max.y > result.max().y) result.set_max_y(sm_max.y);
-        if(sm_max.z > result.max().z) result.set_max_z(sm_max.z);
+        if(first) {
+            result = sm->bounds_;
+            first = false;
+        } else {
+            result.encapsulate(sm->bounds_);
+        }
     }
 }
 

@@ -67,8 +67,8 @@ bool Frustum::intersects_cube(const Vec3& centre, float size) const {
 }
 
 bool Frustum::intersects_aabb(const AABB& aabb) const {    
-    auto& min = aabb.min();
-    auto& max = aabb.max();
+    auto min = aabb.min();
+    auto max = aabb.max();
 
     for(const Plane& p: planes_) {
         bool nx = p.n.x > 0;

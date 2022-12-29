@@ -20,111 +20,43 @@ enum AABBCorner {
 };
 
 class AABB {
-    /* This was originally a basic struct but for performance reasons it's now a class
-     * so that we can store things like pre-calculate corners and know they are kept up-to-date
-     * with setters */
-
-    Vec3 min_;
-    Vec3 max_;
-
-    mutable std::array<Vec3, 8> corners_;
-    mutable bool corners_dirty_ = true;
-
-    void rebuild_corners() const {
-        corners_[AABB_CORNER_NEG_X_NEG_Y_NEG_Z] = {min_.x, min_.y, min_.z};
-        corners_[AABB_CORNER_POS_X_NEG_Y_NEG_Z] = {max_.x, min_.y, min_.z};
-        corners_[AABB_CORNER_POS_X_NEG_Y_POS_Z] = {max_.x, min_.y, max_.z};
-        corners_[AABB_CORNER_NEG_X_NEG_Y_POS_Z] = {min_.x, min_.y, max_.z};
-
-        corners_[AABB_CORNER_NEG_X_POS_Y_NEG_Z] = {min_.x, max_.y, min_.z};
-        corners_[AABB_CORNER_POS_X_POS_Y_NEG_Z] = {max_.x, max_.y, min_.z};
-        corners_[AABB_CORNER_POS_X_POS_Y_POS_Z] = {max_.x, max_.y, max_.z};
-        corners_[AABB_CORNER_NEG_X_POS_Y_POS_Z] = {min_.x, max_.y, max_.z};
-
-        corners_dirty_ = false;
-    }
+    Vec3 center_;
+    Vec3 extents_;
 
 public:
-    void set_min(const Vec3& min) {
-        if(min_ != min) {
-            min_ = min;
-            corners_dirty_ = true;
-        }
+    void set_min_max(const Vec3& min, const Vec3& max) {
+        extents_ = (max - min) * 0.5f;
+        center_ = min + extents_;
     }
 
-    void set_min_x(float x) {
-        if(x != min_.x) {
-            min_.x = x;
-            corners_dirty_ = true;
-        }
+    Vec3 min() const {
+        return center_ - extents_;
     }
 
-    void set_min_y(float y) {
-        if(y != min_.y) {
-            min_.y = y;
-            corners_dirty_ = true;
-        }
+    Vec3 max() const {
+        return center_ + extents_;
     }
 
-    void set_min_z(float z) {
-        if(z != min_.z) {
-            min_.z = z;
-            corners_dirty_ = true;
-        }
-    }
+    AABB() = default;
 
+    AABB(const Vec3& center, const Vec3& extents):
+        center_(center), extents_(extents) {}
 
-    void set_max_x(float x) {
-        if(x != max_.x) {
-            max_.x = x;
-            corners_dirty_ = true;
-        }
-    }
-
-    void set_max_y(float y) {
-        if(y != max_.y) {
-            max_.y = y;
-            corners_dirty_ = true;
-        }
-    }
-
-    void set_max_z(float z) {
-        if(z != max_.z) {
-            max_.z = z;
-            corners_dirty_ = true;
-        }
-    }
-
-    void set_max(const Vec3& max) {
-        if(max_ != max) {
-            max_ = max;
-            corners_dirty_ = true;
-        }
-    }
-
-    const Vec3& min() const { return min_; }
-    const Vec3& max() const { return max_; }
-
-    AABB() {
-        rebuild_corners();
-    }
-
-    AABB(const Vec3& min, const Vec3& max);
     AABB(const Vec3& centre, float width);
     AABB(const Vec3& centre, float xsize, float ysize, float zsize);
     AABB(const Vec3* vertices, const std::size_t count);    
     AABB(const VertexData& vertex_data);
 
     float width() const {
-        return std::abs(max_.x - min_.x);
+        return extents_.x * 2.0f;
     }
 
     float height() const {
-        return std::abs(max_.y - min_.y);
+        return extents_.y * 2.0f;
     }
 
     float depth() const  {
-        return std::abs(max_.z - min_.z);
+        return extents_.z * 2.0f;
     }
 
     const Vec3 dimensions() const {
@@ -143,7 +75,7 @@ public:
     bool intersects_sphere(const smlt::Vec3& center, float radius) const;
 
     Vec3 centre() const {
-        return Vec3(min_) + ((Vec3(max_) - Vec3(min_)) * 0.5f);
+        return center_;
     }
 
     bool has_zero_area() const {
@@ -158,9 +90,10 @@ public:
     }
 
     bool contains_point(const Vec3& p) const {
-        if(p.x >= min_.x && p.x <= max_.x &&
-           p.y >= min_.y && p.y <= max_.y &&
-           p.z >= min_.z && p.z <= max_.z) {
+        // FIXME: Use extents_ directly
+        if(p.x >= min().x && p.x <= max().x &&
+           p.y >= min().y && p.y <= max().y &&
+           p.z >= min().z && p.z <= max().z) {
             return true;
         }
 
@@ -181,16 +114,21 @@ public:
         return contains_points(&points[0], points.size());
     }
 
-    /* NOTE: The corners are recalculated when called, so don't hold onto a reference for long */
-    const std::array<Vec3, 8>& corners() const {
-        if(corners_dirty_) {
-            rebuild_corners();
-        }
-
-        return corners_;
+    std::array<Vec3, 8> corners() const {
+        return {
+            center_ + Vec3(-extents_.x, -extents_.y, -extents_.z),
+            center_ + Vec3( extents_.x, -extents_.y, -extents_.z),
+            center_ + Vec3( extents_.x, -extents_.y,  extents_.z),
+            center_ + Vec3(-extents_.x, -extents_.y,  extents_.z),
+            center_ + Vec3(-extents_.x,  extents_.y, -extents_.z),
+            center_ + Vec3( extents_.x,  extents_.y, -extents_.z),
+            center_ + Vec3( extents_.x,  extents_.y,  extents_.z),
+            center_ + Vec3(-extents_.x,  extents_.y,  extents_.z),
+        };
     }
 
     void encapsulate(const AABB& other);
+    void encapsulate(const Vec3& point);
 
     bool operator==(const AABB& rhs) const {
         return min().equals(rhs.min()) && max().equals(rhs.max());

@@ -297,6 +297,14 @@ public:
     /* Returns the Quaternion rotation between this vector
      * and `dir` */
     Quaternion rotation_to(const Vec3& dir) const;
+
+    static Vec3 min(const Vec3& a, const Vec3& b) {
+        return Vec3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
+    }
+
+    static Vec3 max(const Vec3& a, const Vec3& b) {
+        return Vec3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
