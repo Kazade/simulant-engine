@@ -30,10 +30,10 @@
 #include "renderers/renderer.h"
 #include "types.h"
 #include "interfaces.h"
-#include "nodes/stage_node.h"
 
 namespace smlt {
 
+class StageNode;
 class SubActor;
 
 enum WriteOperation {
@@ -54,26 +54,31 @@ class Partitioner:
     public RefCounted<Partitioner> {
 
 public:
+    struct WriteSlots {
+        StagedWrite slot[WRITE_OPERATION_MAX];
+        uint8_t bits = 0;
+    };
+
     Partitioner(Stage* ss):
         stage_(ss) {}
 
     void add_stage_node(StageNode* node) {
         StagedWrite write;
         write.operation = WRITE_OPERATION_ADD;
-        stage_write(node->key(), write);
+        stage_write(node, write);
     }
 
     void update_stage_node(StageNode* node, const AABB& bounds) {
         StagedWrite write;
         write.operation = WRITE_OPERATION_UPDATE;
         write.new_bounds = bounds;
-        stage_write(node->key(), write);
+        stage_write(node, write);
     }
 
     void remove_stage_node(StageNode* node) {
         StagedWrite write;
         write.operation = WRITE_OPERATION_REMOVE;
-        stage_write(node->key(), write);
+        stage_write(node, write);
     }
 
     void _apply_writes();
@@ -90,19 +95,15 @@ protected:
 
     virtual void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) = 0;
 
-    void stage_write(const UniqueIDKey& key, const StagedWrite& op);
+    void stage_write(StageNode* node, const StagedWrite& op);
 
 private:
     Stage* stage_;
 
     thread::Mutex staging_lock_;
 
-    struct WriteSlots {
-        StagedWrite slot[WRITE_OPERATION_MAX];
-        uint8_t bits = 0;
-    };
-
-    ContiguousMap<UniqueIDKey, WriteSlots> staged_writes_;
+    std::vector<StageNode*> staged_writes_;
+    std::unordered_map<StageNode*, UniqueIDKey> removed_nodes_;
 
 protected:
     Property<decltype(&Partitioner::stage_)> stage = { this, &Partitioner::stage_ };
