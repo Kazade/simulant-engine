@@ -45,5 +45,7 @@ uint32_t next_power_of_two(uint32_t x);
 
 /** Approximate divide which is faster on some platforms */
 float fast_divide(float x, float y);
+float fast_sqrt(float n);
+void fast_sincos(double v, double* s, double* c);
 
 }
