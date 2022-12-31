@@ -124,6 +124,7 @@ private:
 
     typename promise_impl::PromiseState<void>::ptr state_;
 
+public:
     /* Default constructor does nothing */
     Promise() = default;
 
@@ -131,7 +132,6 @@ private:
         return bool(state_);
     }
 
-public:
     bool is_ready() const {
         return state_ && state_->value;
     }
