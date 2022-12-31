@@ -177,7 +177,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         bool hardware_palettes_supported = GLAD_GL_OES_compressed_paletted_texture;
 #endif
         bool paletted = texture->is_paletted_format();
-        std::vector<uint8_t> new_data;
+        std::vector<uint8_t> new_data;        
 
         if(paletted) {
             /* Paletted textures need some additional work. If we can support them
@@ -201,6 +201,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 auto texel_size = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB565_PALETTED8) ? 2 :
                                   (f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4) ? 3 : 4;
 
+                new_data.reserve((texture->width() * texture->height()));
                 for(int i = 0; i < (texture->width() * texture->height()) / 2; ++i) {
                     uint8_t current_byte = indexed[i];
 
