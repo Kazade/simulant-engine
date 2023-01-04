@@ -38,18 +38,24 @@ void NullPartitioner::lights_and_geometry_visible_from(
 
     for(auto& key: all_nodes_) {
         if(key.first == typeid(Light)) {
-            lights_out.push_back(make_unique_id_from_key<LightID>(key));
+            auto light = stage->light(make_unique_id_from_key<LightID>(key));
+            assert(light);
+            lights_out.push_back(light);
         } else if(key.first == typeid(Actor)) {
             auto actor = stage->actor(make_unique_id_from_key<ActorID>(key));
+            assert(actor);
             geom_out.push_back(actor);
         } else if(key.first == typeid(Geom)) {
             auto geom = stage->geom(make_unique_id_from_key<GeomID>(key));
+            assert(geom);
             geom_out.push_back(geom);
         } else if(key.first == typeid(ParticleSystem)) {
             auto ps = stage->particle_system(make_unique_id_from_key<ParticleSystemID>(key));
+            assert(ps);
             geom_out.push_back(ps);
         } else if(key.first == typeid(MeshInstancer)) {
             auto mi = stage->mesh_instancer(make_unique_id_from_key<MeshInstancerID>(key));
+            assert(mi);
             geom_out.push_back(mi);
         } else if(key.first == typeid(Camera)) {
             /* Skip */
