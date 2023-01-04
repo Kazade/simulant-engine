@@ -188,6 +188,7 @@ RigidBodySimulation::~RigidBodySimulation() {
      * try to release and access this */
     for(auto& body: bodies_) {
         body.first->simulation_ = nullptr;
+        scene_->DestroyBody(body.second);
     }
 }
 
