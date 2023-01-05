@@ -46,6 +46,7 @@ enum WriteOperation {
 struct StagedWrite {
     WriteOperation operation;
     AABB new_bounds;
+    StageNode* node = nullptr;
 };
 
 #define MAX_STAGED_WRITES 1024
@@ -65,6 +66,7 @@ public:
     void add_stage_node(StageNode* node) {
         StagedWrite write;
         write.operation = WRITE_OPERATION_ADD;
+        write.node = node;
         stage_write(node, write);
     }
 
@@ -72,12 +74,14 @@ public:
         StagedWrite write;
         write.operation = WRITE_OPERATION_UPDATE;
         write.new_bounds = bounds;
+        write.node = node;
         stage_write(node, write);
     }
 
     void remove_stage_node(StageNode* node) {
         StagedWrite write;
         write.operation = WRITE_OPERATION_REMOVE;
+        write.node = node;
         stage_write(node, write);
     }
 

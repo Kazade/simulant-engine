@@ -21,12 +21,14 @@ void Partitioner::_apply_writes() {
             if(p->partitioner_added_) {
                 StagedWrite write;
                 write.operation = WRITE_OPERATION_ADD;
+                write.node = p;
                 apply_staged_write(key, write);
             }
 
             StagedWrite write;
             write.operation = WRITE_OPERATION_UPDATE;
             write.new_bounds = p->transformed_aabb();
+            write.node = p;
             apply_staged_write(key, write);
         }
 

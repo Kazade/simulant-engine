@@ -19,7 +19,10 @@
 #ifndef NULL_PARTITIONER_H
 #define NULL_PARTITIONER_H
 
+#include <map>
+
 #include "../partitioner.h"
+#include "../generic/unique_id.h"
 
 namespace smlt {
 
@@ -34,11 +37,13 @@ public:
         CameraID camera_id,
         std::vector<LightID> &lights_out,
         std::vector<StageNode*> &geom_out
-    );
+    ) override;
 
 private:
     void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) override;
-    std::set<UniqueIDKey> all_nodes_;
+
+    std::map<UniqueIDKey, StageNode*> geometry_;
+    std::map<UniqueIDKey, Light*> lights_;
 };
 
 }

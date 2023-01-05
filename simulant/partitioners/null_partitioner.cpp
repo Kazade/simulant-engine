@@ -36,40 +36,31 @@ void NullPartitioner::lights_and_geometry_visible_from(
 
     _apply_writes();
 
-    for(auto& key: all_nodes_) {
-        if(key.first == typeid(Light)) {
-            auto light = stage->light(make_unique_id_from_key<LightID>(key));
-            assert(light);
-            lights_out.push_back(light);
-        } else if(key.first == typeid(Actor)) {
-            auto actor = stage->actor(make_unique_id_from_key<ActorID>(key));
-            assert(actor);
-            geom_out.push_back(actor);
-        } else if(key.first == typeid(Geom)) {
-            auto geom = stage->geom(make_unique_id_from_key<GeomID>(key));
-            assert(geom);
-            geom_out.push_back(geom);
-        } else if(key.first == typeid(ParticleSystem)) {
-            auto ps = stage->particle_system(make_unique_id_from_key<ParticleSystemID>(key));
-            assert(ps);
-            geom_out.push_back(ps);
-        } else if(key.first == typeid(MeshInstancer)) {
-            auto mi = stage->mesh_instancer(make_unique_id_from_key<MeshInstancerID>(key));
-            assert(mi);
-            geom_out.push_back(mi);
-        } else if(key.first == typeid(Camera)) {
-            /* Skip */
-        } else {
-            assert(0 && "Not implemented");
-        }
+    lights_out.reserve(lights_.size());
+    geom_out.reserve(geometry_.size());
+    for(auto& node: lights_) {
+        lights_out.push_back(node.second->id());
+    }
+
+    for(auto& node: geometry_) {
+        geom_out.push_back(node.second);
     }
 }
 
 void NullPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
     if(write.operation == WRITE_OPERATION_ADD) {
-        all_nodes_.insert(key);
+        if(key.first == typeid(Light)) {
+            assert(write.node);
+            lights_.insert(std::make_pair(key, (Light*) write.node));
+        } else if(key.first == typeid(Camera)) {
+            // Skip cameras
+        } else {
+            assert(write.node);
+            geometry_.insert(std::make_pair(key, write.node));
+        }
     } else if(write.operation == WRITE_OPERATION_REMOVE) {
-        all_nodes_.erase(key);
+        geometry_.erase(key);
+        lights_.erase(key);
     } else if(write.operation == WRITE_OPERATION_UPDATE) {
         // Do nothing!
     }
