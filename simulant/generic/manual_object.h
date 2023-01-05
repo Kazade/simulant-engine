@@ -7,6 +7,7 @@ namespace smlt {
 typedef sig::signal<void ()> DestroyedSignal;
 
 class DestroyableObject {
+public:
     // Fired when destroy() is called
     DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
 

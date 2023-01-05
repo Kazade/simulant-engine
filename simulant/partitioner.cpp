@@ -15,6 +15,7 @@ void Partitioner::_apply_writes() {
             StagedWrite write;
             write.operation = WRITE_OPERATION_REMOVE;
             apply_staged_write(it->second, write);
+            removed_nodes_.erase(it);
         } else {
             auto key = p->key();
             if(p->partitioner_added_) {
@@ -32,6 +33,13 @@ void Partitioner::_apply_writes() {
         /* We always wipe this out once we've applied this node */
         p->partitioner_dirty_ = false;
         p->partitioner_added_ = false;
+    }
+
+    /* We've handled any writes, now deal with any remaining removed nodes */
+    for(auto n: removed_nodes_) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_REMOVE;
+        apply_staged_write(n.second, write);
     }
 
     staged_writes_.clear();
@@ -52,11 +60,11 @@ void Partitioner::stage_write(StageNode* node, const StagedWrite& op) {
         /* OK, we haven't staged this node yet */
         staged_writes_.push_back(node);
         node->partitioner_dirty_ = true;
+    }
 
-        /* Apply staged writes immediately to prevent the size spiralling */
-        if(staged_writes_.size() >= MAX_STAGED_WRITES) {
-            _apply_writes();
-        }
+    /* Apply staged writes immediately to prevent the size spiralling */
+    if((staged_writes_.size() + removed_nodes_.size()) >= MAX_STAGED_WRITES) {
+        _apply_writes();
     }
 }
 
