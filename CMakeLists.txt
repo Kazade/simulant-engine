@@ -74,7 +74,7 @@ IF(NOT PLATFORM_DREAMCAST)
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
 ELSE()
 # On the Dreamcast, force a frame pointer when debugging
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
+set (CMAKE_CXX_FLAGS_DEBUG "-g ${CMAKE_CXX_FLAGS_DEBUG} -DFRAME_POINTERS -fno-omit-frame-pointer -Og")
 ENDIF()
 
 IF(SIMULANT_ENABLE_ASAN)
