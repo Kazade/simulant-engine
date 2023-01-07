@@ -27,6 +27,7 @@ Simulant is supported by the following Patreons:
  - clmjfr
  - Leonidas Antoniadis
  - Derek Pascarella
+ - PJ Perretta
 
 ## Features
 
