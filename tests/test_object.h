@@ -267,7 +267,9 @@ public:
 
     void test_destroy_after() {
         auto a1 = stage_->new_actor()->set_name_and_get("test");
-        a1->destroy_after(smlt::Seconds(0.1));
+        auto p = a1->destroy_after(smlt::Seconds(0.1));
+
+        assert_false(p.is_ready());
         assert_is_not_null(stage_->find_descendent_with_name("test"));
 
         auto t = application->time_keeper->now_in_us();
@@ -276,6 +278,7 @@ public:
         }
 
         assert_is_null(stage_->find_descendent_with_name("test"));
+        assert_true(p.is_ready());
     }
 
     void test_link_position() {

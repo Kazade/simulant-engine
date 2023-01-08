@@ -77,6 +77,7 @@ public:
      */
     bool fulfill(T&& value) {
         if(!state_) {
+            S_WARN("Tried to fulfill a Promise without state");
             return false;
         }
 
@@ -118,6 +119,12 @@ public:
         return bool(state_);
     }
 
+    static Promise<T> create() {
+        return Promise<T>(
+            std::make_shared<promise_impl::PromiseState<T>>()
+        );
+    }
+
 private:
     template<typename Func>
     friend Promise<typename std::result_of<Func()>::type> cr_async(Func func);
@@ -147,6 +154,12 @@ public:
     /* Default constructor does nothing */
     Promise() = default;
 
+    static Promise<void> create() {
+        return Promise<void>(
+            std::make_shared<promise_impl::PromiseState<void>>()
+        );
+    }
+
     bool is_initialized() const {
         return bool(state_);
     }
@@ -157,6 +170,7 @@ public:
 
     bool fulfill() {
         if(!state_) {
+            S_WARN("Tried to fulfill a Promise without state");
             return false;
         }
 

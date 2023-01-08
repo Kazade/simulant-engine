@@ -151,7 +151,7 @@ smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
     auto conn = std::make_shared<sig::connection>();
     auto counter = std::make_shared<float>(0.0f);
 
-    Promise<void> p;
+    auto p = Promise<void>::create();
 
     *conn = smlt::get_app()->signal_update().connect([=] (float dt) mutable {
         *counter += dt;
