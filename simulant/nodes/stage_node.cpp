@@ -145,26 +145,35 @@ void StageNode::set_parent(TreeNode* node) {
     recalc_visibility();
 }
 
-smlt::Promise<bool> StageNode::destroy_after(const Seconds& seconds) {
+smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
     std::weak_ptr<bool> alive = alive_marker_;
 
-    return cr_async([=]() -> bool {
-        cr_yield_for(seconds);
+    auto conn = std::make_shared<sig::connection>();
+    auto counter = std::make_shared<float>(0.0f);
+
+    Promise<void> p;
+
+    *conn = smlt::get_app()->signal_update().connect([=] (float dt) mutable {
+        *counter += dt;
+
+        if(*counter < seconds.to_float()) {
+            return;
+        }
 
         /* Detect whether the object was already destroyed. This avoids a weird
          * bug where the wrong object can be destroyed if the original was replaced
          * in the stage node pool before this code runs */
-        if(!alive.lock()) {
-            return false;
+        if(alive.lock()) {
+            if(!is_destroyed()) {
+                destroy();
+            }
         }
 
-        if(is_destroyed()) {
-            return false;
-        }
-
-        destroy();
-        return true;
+        conn->disconnect();
+        p.fulfill();
     });
+
+    return p;
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {

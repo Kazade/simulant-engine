@@ -69,6 +69,25 @@ public:
         return state_ && state_->value;
     }
 
+    /**
+     * @brief fulfill
+     * @param value
+     * @return returns true if the promise is successfully fulfilled, or false
+     * if it was already filfulled or could not be.
+     */
+    bool fulfill(T&& value) {
+        if(!state_) {
+            return false;
+        }
+
+        if(is_ready()) {
+            return false;
+        }
+
+        state_->value = std::move(value);
+        return true;
+    }
+
     T& value() const {
         assert(state_->value);
         return (state_->value.value());
@@ -134,6 +153,19 @@ public:
 
     bool is_ready() const {
         return state_ && state_->value;
+    }
+
+    bool fulfill() {
+        if(!state_) {
+            return false;
+        }
+
+        if(is_ready()) {
+            return false;
+        }
+
+        state_->value = true;
+        return true;
     }
 
     void value() const {}

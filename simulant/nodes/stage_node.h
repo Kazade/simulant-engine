@@ -206,7 +206,7 @@ public:
 
     void set_parent(TreeNode* node);
 
-    smlt::Promise<bool> destroy_after(const Seconds& seconds);
+    smlt::Promise<void> destroy_after(const Seconds& seconds);
 
     void update(float dt) override;
     void late_update(float dt) override;
