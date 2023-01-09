@@ -18,7 +18,7 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+    smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
 );
 
 ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
@@ -26,8 +26,7 @@ ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, Particle
     StageNode(stage, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
     AudioSource(stage, this, sound_driver),
     script_(script),
-    vertex_data_(new VertexData(PS_VERTEX_SPEC)),
-    index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
+    vertex_data_(new VertexData(PS_VERTEX_SPEC)) {
 
     // Initialize the emitter states
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
@@ -43,9 +42,6 @@ ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, Particle
 ParticleSystem::~ParticleSystem() {
     delete vertex_data_;
     vertex_data_ = nullptr;
-
-    delete index_data_;
-    index_data_ = nullptr;
 }
 
 void ParticleSystem::calc_aabb() {
@@ -136,9 +132,11 @@ void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const 
     new_renderable.arrangement = MESH_ARRANGEMENT_QUADS;
     new_renderable.render_priority = render_priority();
     new_renderable.final_transformation = Mat4();
-    new_renderable.index_data = index_data_;
-    new_renderable.vertex_data = vertex_data_;
-    new_renderable.index_element_count = index_data_->count();
+    new_renderable.index_data = nullptr;
+    new_renderable.index_element_count = 0;
+    new_renderable.vertex_range_count = vertex_ranges_.size();
+    new_renderable.vertex_ranges = vertex_ranges_.data();
+    new_renderable.vertex_data = vertex_data_;    
     new_renderable.is_visible = true;
     new_renderable.material = script_->material().get();
     new_renderable.centre = transformed_aabb().centre();
@@ -150,11 +148,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     vertex_data_->resize(particle_count_ * 4);
     vertex_data_->move_to_start();
 
-    /* FIXME: Remove this when #193 is complete */
-    index_data_->resize(particle_count_ * 4);
-    index_data_->clear();
+    vertex_ranges_.resize(0);
 
-    auto i = 0;
     for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
 
@@ -189,15 +184,15 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         vertex_data_->diffuse(p.colour);
         vertex_data_->tex_coord0(0, 1);
         vertex_data_->move_next();
-
-        index_data_->index(i++);
-        index_data_->index(i++);
-        index_data_->index(i++);
-        index_data_->index(i++);
     }
 
+    /* Use one giant vertex range of quads (glDrawArrays) */
+    VertexRange new_range;
+    new_range.start = 0;
+    new_range.count = vertex_data_->count();
+    vertex_ranges_.push_back(new_range);
+
     vertex_data_->done();
-    index_data_->done();
 }
 
 void ParticleSystem::update(float dt) {

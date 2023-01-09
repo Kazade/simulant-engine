@@ -72,10 +72,6 @@ public:
         return vertex_data_;
     }
 
-    IndexData* index_data() const {
-        return index_data_;
-    }
-
     void clean_up() override {
         StageNode::clean_up();
     }
@@ -126,7 +122,7 @@ private:
     std::size_t particle_count_ = 0;
 
     VertexData* vertex_data_ = nullptr;
-    IndexData* index_data_ = nullptr;
+    std::vector<VertexRange> vertex_ranges_;
 
     bool destroy_on_completion_ = false;
     bool update_when_hidden_ = false;
