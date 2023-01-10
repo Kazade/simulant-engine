@@ -50,15 +50,9 @@ _S_FORCE_INLINE void fast_split(const std::string& s, std::vector<std::string>* 
     }
 }
 
-
-enum VertexBatchType {
-    VERTEX_BATCH_TYPE_TRIANGLES,
-    VERTEX_BATCH_TYPE_FANS
-};
-
 struct VertexDataBatch {
     std::string material_name;
-    VertexBatchType type;
+    MeshArrangement type;
     std::shared_ptr<VertexData> data;
     std::vector<int> ranges;
 };
@@ -397,7 +391,7 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
      *
      */
 
-    auto find_batch = [info](const std::string& material_name, VertexBatchType type) -> VertexDataBatch* {
+    auto find_batch = [info](const std::string& material_name, MeshArrangement type) -> VertexDataBatch* {
         for(auto& batch: info->batches) {
             if(batch.material_name == material_name && batch.type == type) {
                 return &batch;
@@ -412,22 +406,46 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
         return &info->batches.back();
     };
 
-    VertexDataBatch* batches[2];
+    VertexDataBatch* batches[2] = {nullptr, nullptr};
 
     batches[0] =
         (info->current_material) ?
-            find_batch(info->current_material->name(), VERTEX_BATCH_TYPE_TRIANGLES) :
-            find_batch("__default__", VERTEX_BATCH_TYPE_TRIANGLES);
+            find_batch(info->current_material->name(), MESH_ARRANGEMENT_TRIANGLES) :
+            find_batch("__default__", MESH_ARRANGEMENT_TRIANGLES);
 
     batches[1] =
         (info->current_material) ?
-            find_batch(info->current_material->name(), VERTEX_BATCH_TYPE_FANS) :
-            find_batch("__default__", VERTEX_BATCH_TYPE_FANS);
+            find_batch(info->current_material->name(), MESH_ARRANGEMENT_TRIANGLE_STRIP) :
+            find_batch("__default__", MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     assert(batches[0]);
     assert(batches[1]);
 
     auto batch = (corners.size() == 3) ? batches[0] : batches[1];
+
+    if(corners.size() > 3) {
+        /* If there are more than 3 corners, then we have a polygon, but polygons
+         * are bad for performance, so we explode the corners array into
+         * a triangle strip. If the corners list is:
+         *
+         * [A, B, C, D, E]
+         *
+         * we change it to:
+         *
+         * [A, B, C, A, D, A, E]
+         *
+         * by iterating *backwards* and adding A at every other place
+         */
+        auto orig_count = corners.size();
+        auto new_count = ((corners.size() - 3) * 2) + 3;
+
+
+        for(int j = 0; j < orig_count - 3; ++j) {
+
+        }
+    }
+
+
     batch->ranges.push_back(corners.size());
 
     for(auto& corner: corners) {
@@ -545,7 +563,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             continue;
         }
 
-        if(batch.type == VERTEX_BATCH_TYPE_TRIANGLES) {
+        if(batch.type == MESH_ARRANGEMENT_TRIANGLES) {
             auto sm = mesh->find_submesh(batch.material_name);
             if(!sm) {
                 if(batch.material_name == "__default__") {

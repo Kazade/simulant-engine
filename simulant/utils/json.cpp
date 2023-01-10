@@ -5,7 +5,7 @@
 
 namespace smlt {
 
-const std::string WHITESPACE = "\t\n\r ";
+static const char* WHITESPACE = "\t\n\r ";
 
 static void unget(_json_impl::IStreamPtr& stream) {
     /* Frustratingly, if you hit the end of the stream
@@ -355,7 +355,7 @@ static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
                 unget(stream);
                 unget(stream);
                 c = stream->get(); // Moves forward one, so we move back twice each loop
-            } while(WHITESPACE.find(c) != std::string::npos);
+            } while(std::string(WHITESPACE).find(c) != std::string::npos);
 
             stream->seekg(end, std::ios::beg);
 
@@ -378,6 +378,9 @@ static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
 /* Parse an object node and return its size if the parse is successful */
 static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
     std::size_t count = 0;
+
+    auto start = stream->tellg();
+
     while(!stream->eof()) {
         if(skip_whitespace(stream) == -1) {
             break;
@@ -416,7 +419,17 @@ static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
             stream->unget();
             return optional<std::size_t>(count);
         } else {
+            auto end = stream->tellg();
+            stream->seekg(start);
+
+            std::vector<char> buffer(end - start);
+            stream->read(&buffer[0], buffer.size());
+
+            std::string preceding(buffer.data(), buffer.data() + buffer.size());
+
             S_ERROR("Unexpected character: {0} when parsing object", c);
+            S_ERROR("Preceding text was:\n\n {0}", preceding);
+
             return optional<std::size_t>();
         }
     }
