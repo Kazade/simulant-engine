@@ -153,12 +153,12 @@ bool Window::initialize_assets_and_devices() {
         S_INFO("Initializing the default resources");
 
         create_defaults();
+        create_panels();
 
         initialized_ = true;
     }
 
     S_DEBUG("Initialization finished");
-
 
     return true;
 }

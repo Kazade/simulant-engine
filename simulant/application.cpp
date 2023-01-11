@@ -336,12 +336,6 @@ bool Application::_call_init() {
 
     scene_manager_.reset(new SceneManager(window_.get()));
 
-    scene_manager_->signal_scene_activated().connect([this](std::string, SceneBase*) {
-        /* We create the panels here because they need an active scene */
-        /* FIXME: Should be controllable via config */
-        window_->create_panels();
-    });
-
     // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
     scenes->register_scene<scenes::Loading>("_loading");

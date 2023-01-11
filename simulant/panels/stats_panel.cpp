@@ -96,7 +96,6 @@ bool StatsPanel::init() {
 
     stage_node_pool_size_ = overlay->ui->new_widget_as_label("", label_width);
     stage_node_pool_size_->move_to(hw, vheight);
-    vheight -= diff;
 
     graph_material_ = stage_->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
