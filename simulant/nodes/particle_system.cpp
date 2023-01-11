@@ -125,6 +125,11 @@ void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const 
         return;
     }
 
+    if(!particle_count()) {
+        // No particles, no renderables!
+        return;
+    }
+
     /* Rebuild the vertex data with the current camera direction */
     rebuild_vertex_data(camera->up(), camera->right());
 
@@ -149,6 +154,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     vertex_data_->move_to_start();
 
     vertex_ranges_.resize(0);
+
+    if(!particle_count_) {
+        return;
+    }
 
     for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
