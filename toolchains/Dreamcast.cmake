@@ -20,6 +20,7 @@ set(CMAKE_SYSTEM_INCLUDE_PATH "${CMAKE_SYSTEM_INCLUDE_PATH} $ENV{KOS_BASE}/inclu
 
 # This is the minimum set of flags to enable the SH4 instructions when using optimisations
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfsrra -mfsca -ffp-contract=fast -ffast-math")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
 
 INCLUDE_DIRECTORIES(
     $ENV{KOS_BASE}/include
