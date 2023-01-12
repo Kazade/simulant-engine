@@ -154,17 +154,55 @@ private:
     RigidBodySimulation* simulation_;
 };
 
+
+class PrivateContactFilter : public b3ContactFilter {
+public:
+    PrivateContactFilter(RigidBodySimulation* simulation):
+        simulation_(simulation) {
+
+    }
+
+    bool ShouldCollide(b3Fixture *fixtureA, b3Fixture *fixtureB) override {
+        if(!simulation_->filter_) {
+            return true;
+        }
+
+        Fixture a(simulation_, fixtureA);
+        Fixture b(simulation_, fixtureB);
+
+        return simulation_->filter_->should_collide(&a, &b);
+    }
+
+    bool ShouldRespond(b3Fixture *fixtureA, b3Fixture *fixtureB) override {
+        if(!simulation_->filter_) {
+            return true;
+        }
+
+        Fixture a(simulation_, fixtureA);
+        Fixture b(simulation_, fixtureB);
+
+        return simulation_->filter_->should_respond(&a, &b);
+    }
+
+private:
+    RigidBodySimulation* simulation_ = nullptr;
+};
+
+}
+
+Fixture::Fixture(RigidBodySimulation* sim, b3Fixture* fixture) {
+    body_ = sim->get_associated_body(fixture->GetBody());
+    assert(body_);
+
+    kind_ = body_->collider_details_.at(fixture).kind;
 }
 
 
 RigidBodySimulation::RigidBodySimulation(TimeKeeper *time_keeper):
-    time_keeper_(time_keeper) {
+    time_keeper_(time_keeper),
+    scene_(std::make_shared<b3World>()) {
 
-    contact_listener_ = std::make_shared<impl::ContactListener>(this);
-
-    scene_.reset(new b3World());
     scene_->SetGravity(b3Vec3(0, -9.81, 0));
-    scene_->SetContactListener(contact_listener_.get());
 }
 
 void RigidBodySimulation::set_gravity(const Vec3& gravity) {
@@ -174,13 +212,18 @@ void RigidBodySimulation::set_gravity(const Vec3& gravity) {
 }
 
 bool RigidBodySimulation::init() {
+    contact_listener_ = std::make_shared<impl::ContactListener>(this);
+    contact_filter_ = std::make_shared<impl::PrivateContactFilter>(this);
 
+    scene_->SetContactListener(contact_listener_.get());
+    scene_->SetContactFilter(contact_filter_.get());
     return true;
 }
 
 void RigidBodySimulation::clean_up() {
     // Disconnect the contact listener
     scene_->SetContactListener(nullptr);
+    scene_->SetContactFilter(nullptr);
 }
 
 RigidBodySimulation::~RigidBodySimulation() {

@@ -87,7 +87,7 @@ public:
         assert_true(hit);
 
         // Check that the local offset is respected
-        body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD, Vec3(5, 0, 0));
+        body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD, 0, Vec3(5, 0, 0));
         hit = physics->ray_cast(Vec3(5.0, 2, 0), Vec3(0, -1, 0), 2);
         assert_true(hit);
         assert_close(1.5f, hit->distance, 0.0001f);
@@ -118,6 +118,71 @@ public:
 
         assert_true(hit);
         assert_close(hit->distance, 1.0f, 0.0001f);
+    }
+
+    void test_contact_filtering() {
+        bool enter_called = false;
+        bool leave_called = false;
+
+        // Create a CollisionListener
+        Listener listener(&enter_called, nullptr, &leave_called);
+
+        // Create body A
+        uint16_t kind_a = 1;
+        auto actor1 = stage->new_actor();
+        auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
+        body->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD, kind_a);
+        body->register_collision_listener(&listener); // Register the listener
+
+        // Create overlapping body B!
+        uint16_t kind_b = 2;
+        auto actor2 = stage->new_actor();
+        auto body2 = actor2->new_behaviour<behaviours::RigidBody>(physics.get());
+        body2->add_box_collider(Vec3(1, 1, 1), behaviours::PhysicsMaterial::WOOD, kind_b);
+
+        class ContactFilter1 : public smlt::behaviours::ContactFilter {
+        public:
+            bool should_collide(const smlt::behaviours::Fixture *lhs, const smlt::behaviours::Fixture *rhs) override {
+                return lhs->kind() == 1 && rhs->kind() == 2 ||
+                       lhs->kind() == 2 && rhs->kind() == 1;
+            }
+        };
+
+        class ContactFilter2 : public smlt::behaviours::ContactFilter {
+        public:
+            bool should_collide(const smlt::behaviours::Fixture *lhs, const smlt::behaviours::Fixture *rhs) override {
+                return lhs->kind() == rhs->kind();
+            }
+        };
+
+        ContactFilter1 filter1;
+        ContactFilter2 filter2;
+
+        physics->set_contact_filter(&filter1);
+
+        // Run physics
+        physics->fixed_update(1.0f / 60.0f);
+
+        /* Should collide, because the contact filter says that the two
+         * kinds do so */
+        assert_true(enter_called);
+
+        // Move away (should still not call anything)
+        body2->move_to(Vec3(0, 10, 0));
+
+        physics->fixed_update(1.0f / 60.0f);
+        assert_true(leave_called);
+
+        enter_called = false;
+        physics->set_contact_filter(&filter2);
+
+        // Move back
+        body2->move_to(Vec3(0, 0, 0));
+        physics->fixed_update(1.0f / 60.0f);
+
+        /* Should *not* collide, because the contact filter says that the two
+         * kinds do not */
+        assert_false(enter_called);
     }
 
     void test_mesh_collider_addition() {
