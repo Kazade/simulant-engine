@@ -29,6 +29,8 @@ class StageNode;
 
 namespace behaviours {
 
+class Fixture;
+
 namespace impl {
 class Body;
 }
@@ -78,23 +80,27 @@ public:
     void add_box_collider(
         const Vec3& size,
         const PhysicsMaterial& properties,
+        uint16_t kind=0,
         const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
     );
 
     void add_sphere_collider(const float diameter,
         const PhysicsMaterial& properties,
+        uint16_t kind=0,
         const Vec3& offset=Vec3()
     );
 
     void add_capsule_collider(
         float height,
         const float diameter,
-        const PhysicsMaterial& properties
+        const PhysicsMaterial& properties,
+        uint16_t kind=0
     );
 
     void add_triangle_collider(
         const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
-        const PhysicsMaterial& properties
+        const PhysicsMaterial& properties,
+        uint16_t kind=0
     );
 
     void register_collision_listener(CollisionListener* listener);
@@ -105,6 +111,7 @@ public:
 
 protected:
     friend class smlt::behaviours::RigidBodySimulation;
+    friend class smlt::behaviours::Fixture;
 
     b3Body* body_ = nullptr;
     RigidBodySimulation* simulation_ = nullptr;
@@ -116,9 +123,10 @@ protected:
     struct ColliderDetails {
         PhysicsMaterial material;
         std::string name;
+        uint16_t kind = 0;
     };
 
-    void store_collider(b3Fixture* fixture, const PhysicsMaterial& material);
+    void store_collider(b3Fixture* fixture, const PhysicsMaterial& material, uint16_t kind);
 
     std::unordered_map<b3Fixture*, ColliderDetails> collider_details_;
 

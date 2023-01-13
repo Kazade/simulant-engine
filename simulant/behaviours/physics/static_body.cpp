@@ -56,7 +56,7 @@ void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
     mesh_->vertexCount = vertices_.size();
 }
 
-void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {
+void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation) {
     assert(simulation_);
 
     auto& mesh_cache = get_mesh_cache();
@@ -107,7 +107,7 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
+    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
 }
 
 StaticBody::MeshCache& StaticBody::get_mesh_cache() {

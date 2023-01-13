@@ -137,11 +137,12 @@ void Body::update(float dt) {
     }
 }
 
-void Body::store_collider(b3Fixture *fixture, const PhysicsMaterial &material) {
+void Body::store_collider(b3Fixture *fixture, const PhysicsMaterial &material, uint16_t kind) {
     // Store details about the collider so that when contacts
     // arise we can provide more detailed information to the user
     ColliderDetails details;
     details.material = material;
+    details.kind = kind;
 
     // Make sure the b3Shape has this body as its userData!
     fixture->SetUserData(this);
@@ -169,7 +170,8 @@ void Body::on_behaviour_added(Organism *organism) {
     body_ = simulation_->acquire_body(this);
 }
 
-void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties, const Vec3 &offset, const Quaternion &rotation) {
+void Body::add_box_collider(
+    const Vec3 &size, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation) {
     assert(simulation_);
 
     b3Vec3 p;
@@ -199,10 +201,10 @@ void Body::add_box_collider(const Vec3 &size, const PhysicsMaterial &properties,
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
+    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
 }
 
-void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, const Vec3& offset) {
+void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset) {
     assert(simulation_);
 
     b3SphereShape sphere;
@@ -215,12 +217,12 @@ void Body::add_sphere_collider(const float diameter, const PhysicsMaterial& prop
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
+    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
 }
 
 void Body::add_triangle_collider(
     const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
-    const PhysicsMaterial& properties
+    const PhysicsMaterial& properties, uint16_t kind
 ) {
     assert(simulation_);
 
@@ -238,10 +240,10 @@ void Body::add_triangle_collider(
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
+    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
 }
 
-void Body::add_capsule_collider(float height, const float diameter, const PhysicsMaterial& properties) {
+void Body::add_capsule_collider(float height, const float diameter, const PhysicsMaterial& properties, uint16_t kind) {
     assert(simulation_);
 
     float off = (height - (diameter * 0.5f)) * 0.5f;
@@ -259,7 +261,7 @@ void Body::add_capsule_collider(float height, const float diameter, const Physic
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties);
+    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
 }
 
 void Body::register_collision_listener(CollisionListener *listener) {
