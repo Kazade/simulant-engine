@@ -92,6 +92,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_diffuse_map(tex);
+                tex->flush();
             }
 
             enabled_textures |= DIFFUSE_MAP_ENABLED;
@@ -108,6 +109,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_specular_map(tex);
+                tex->flush();
             }
 
             enabled_textures |= SPECULAR_MAP_ENABLED;
@@ -124,6 +126,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_light_map(tex);
+                tex->flush();
             }
 
             enabled_textures |= LIGHT_MAP_ENABLED;
@@ -140,6 +143,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
                 new_mat->set_normal_map(tex);
+                tex->flush();
             }
 
             enabled_textures |= NORMAL_MAP_ENABLED;
