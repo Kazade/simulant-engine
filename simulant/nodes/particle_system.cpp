@@ -358,7 +358,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         p.velocity *= rot;
 
         p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first, emitter->ttl_range.second);
-        p.colour = emitter->colour;
+        p.colour = random_.choice(emitter->colours);
         p.initial_dimensions = p.dimensions = smlt::Vec2(script_->particle_width() * scale.x, script_->particle_height() * scale.y);
 
         //FIXME: Initialize other properties
