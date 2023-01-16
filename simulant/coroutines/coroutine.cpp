@@ -69,6 +69,8 @@ static void set_current_context(Context* context) {
 #endif
 
 CoroutineID start_coroutine(std::function<void ()> f) {
+    S_DEBUG("Starting new coroutine: {0}", ID_COUNTER + 1);
+
     if(!CONTEXTS) {
         CONTEXTS = new Context();
         CONTEXTS->id = ++ID_COUNTER;
@@ -224,6 +226,7 @@ void stop_coroutine(CoroutineID id) {
 
             delete context.thread;
             context.thread = nullptr;
+            S_DEBUG("Coroutine {0} destroyed", id);
         }
 
         if(CONTEXTS == routine) {

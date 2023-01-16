@@ -29,10 +29,17 @@ StaticBody::b3MeshGenerator::b3MeshGenerator():
 
 }
 
+void StaticBody::b3MeshGenerator::reserve_vertices(std::size_t count) {
+    vertices_.reserve(count);
+}
+
 void StaticBody::b3MeshGenerator::insert_triangles(
-    const std::vector<utils::Triangle>::iterator first,
-    const std::vector<utils::Triangle>::iterator last) {
+        const std::vector<utils::Triangle>::iterator first,
+        const std::vector<utils::Triangle>::iterator last) {
     b3MeshTriangle btri;
+
+    auto count = std::distance(first, last);
+    triangles_.reserve(triangles_.size() + count);
 
     for(auto it = first; it != last; ++it) {
         utils::Triangle& tri = (*it);
@@ -59,44 +66,44 @@ void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
 void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation) {
     assert(simulation_);
 
-    auto& mesh_cache = get_mesh_cache();
+    auto bmesh = std::make_shared<b3MeshGenerator>();
+    auto mesh = mesh_id.fetch();
 
-    // If we haven't already seen this mesh, then create a new b3Mesh for it
-    if(mesh_cache.count(mesh_id) == 0) {
-        auto bmesh = std::make_shared<b3MeshGenerator>();
-        auto mesh = mesh_id.fetch();
+    std::vector<utils::Triangle> triangles;
 
-        std::vector<Vec3> vertices;
-        std::vector<utils::Triangle> triangles;
+    bmesh->reserve_vertices(mesh->vertex_data->count());
 
-        for(std::size_t i = 0; i < mesh->vertex_data->count(); ++i) {
-            vertices.push_back(*mesh->vertex_data->position_at<Vec3>(i));
-        }
+    uint8_t* pos = mesh->vertex_data->data();
+    auto stride = mesh->vertex_data->vertex_specification().stride();
 
-        for(auto& submesh: mesh->each_submesh()) {
-            submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
-                utils::Triangle tri;
-                tri.idx[0] = c;
-                tri.idx[1] = b;
-                tri.idx[2] = a;
-                triangles.push_back(tri);
-            });
-        }
+    Mat4 tx(rotation, offset, Vec3(1));
 
-        // Add them to our b3Mesh generator
-        bmesh->insert_vertices(vertices.begin(), vertices.end());
-        bmesh->insert_triangles(triangles.begin(), triangles.end());
-
-        // Build mesh AABB tree and mesh adjacency
-        bmesh->get_mesh()->BuildTree();
-        bmesh->get_mesh()->BuildAdjacency();
-
-        // Store the generator for later
-        mesh_cache.insert(std::make_pair(mesh_id, bmesh));
+    for(std::size_t i = 0; i < mesh->vertex_data->count(); ++i, pos += stride) {
+        auto p = tx * Vec4(*((Vec3*) pos), 1);
+        bmesh->append_vertex(Vec3(p.x, p.y, p.z));
     }
 
+    for(auto& submesh: mesh->each_submesh()) {
+        submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
+            utils::Triangle tri;
+            tri.idx[0] = c;
+            tri.idx[1] = b;
+            tri.idx[2] = a;
+            triangles.push_back(tri);
+        });
+    }
+
+    // Add them to our b3Mesh generator
+    bmesh->insert_triangles(triangles.begin(), triangles.end());
+
+    // Build mesh AABB tree and mesh adjacency
+    bmesh->get_mesh()->BuildTree();
+    bmesh->get_mesh()->BuildAdjacency();
+
+    meshes_.push_back(bmesh);
+
     // Grab the b3Mesh from the generator
-    b3Mesh* genMesh = mesh_cache.at(mesh_id)->get_mesh();
+    b3Mesh* genMesh = bmesh->get_mesh();
 
     b3MeshShape shape;
     shape.m_mesh = genMesh;
@@ -109,12 +116,6 @@ void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial 
 
     store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
 }
-
-StaticBody::MeshCache& StaticBody::get_mesh_cache() {
-    static MeshCache mesh_cache;
-    return mesh_cache;
-}
-
 
 }
 }

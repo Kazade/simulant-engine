@@ -52,7 +52,7 @@ public:
         return body_;
     }
 
-    const uint16_t kind() const {
+    uint16_t kind() const {
         return kind_;
     }
 };

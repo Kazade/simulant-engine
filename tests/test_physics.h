@@ -143,8 +143,8 @@ public:
         class ContactFilter1 : public smlt::behaviours::ContactFilter {
         public:
             bool should_collide(const smlt::behaviours::Fixture *lhs, const smlt::behaviours::Fixture *rhs) override {
-                return lhs->kind() == 1 && rhs->kind() == 2 ||
-                       lhs->kind() == 2 && rhs->kind() == 1;
+                return (lhs->kind() == 1 && rhs->kind() == 2) ||
+                       (lhs->kind() == 2 && rhs->kind() == 1);
             }
         };
 

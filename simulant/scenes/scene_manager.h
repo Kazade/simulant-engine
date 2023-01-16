@@ -127,7 +127,7 @@ class SceneManager :
 
             signal_scene_activated_(route, new_scene.get());
         }
-    };
+    }
 public:
     SceneManager(Window* window);
     ~SceneManager();
