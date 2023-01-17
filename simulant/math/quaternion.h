@@ -214,7 +214,7 @@ struct Quaternion {
             auto sin_theta = std::sin(theta);
             auto sin_theta_0 = std::sin(theta_0);
 
-            auto s1 = fast_divide(sin_theta, sin_theta_0);
+            auto s1 = sin_theta / sin_theta_0;
             auto s0 = std::cos(theta) - cos_theta * s1;
 
             return ((*this) * s0) + (z * s1);
