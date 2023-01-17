@@ -40,7 +40,7 @@ public:
     Vec2 rotated_by(const Degrees& degrees) const;
 
     float length() const {
-        return sqrtf(x * x + y * y);
+        return fast_sqrt(x * x + y * y);
     }
 
     float length_squared() const {
@@ -48,7 +48,7 @@ public:
     }
 
     void normalize() {
-        float l = 1.0f / length();
+        float l = fsrra(length_squared());
         x *= l;
         y *= l;
     }
@@ -91,12 +91,13 @@ public:
     }
 
     Vec2& operator/=(float rhs) {
-        *this = *this / rhs;
+        x = fast_divide(x, rhs);
+        y = fast_divide(y, rhs);
         return *this;
     }
 
     Vec2 operator/(float rhs) const {
-        Vec2 result(x / rhs, y / rhs);
+        Vec2 result(fast_divide(x, rhs), fast_divide(y, rhs));
         return result;
     }
 

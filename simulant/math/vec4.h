@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <ostream>
+#include "utils.h"
 
 namespace smlt {
 
@@ -54,15 +55,15 @@ struct Vec4 {
     }
 
     float length() const {
-        return sqrtf(length_squared());
+        return fast_sqrt(length_squared());
     }
 
     float length_squared() const {
-        return x * x + y * y + z * z + w * w;
+        return fast_sum_of_squares(x, y, z, w);
     }
 
     void normalize() {
-        float l = 1.0f / length();
+        float l = fsrra(length_squared());
         x *= l;
         y *= l;
         z *= l;

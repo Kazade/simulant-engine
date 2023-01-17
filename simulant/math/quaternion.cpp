@@ -9,7 +9,7 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
 }
 
 Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up) {
-    float d = std::abs(up.dot(direction));
+    float d = fast_abs(up.dot(direction));
     if(almost_equal(d, 1.0f)) {
         return Quaternion();
     }
@@ -43,13 +43,13 @@ Quaternion::Quaternion(const Degrees &pitch, const Degrees &yaw, const Degrees &
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
-    auto half_rad = Radians(degrees).value / 2.0f;
-    auto factor = sinf(half_rad);
+    auto half_rad = fast_divide(Radians(degrees).value, 2.0f);
+    float factor = 0.0f;
+    fast_sincos(half_rad, &factor, &w);
 
     x = axis.x * factor;
     y = axis.y * factor;
     z = axis.z * factor;
-    w = cosf(half_rad);
 
     normalize();
 }
@@ -67,30 +67,30 @@ Quaternion::Quaternion(const Mat3& rot_matrix) {
     float t = m00 + m11 + m22;
     // we protect the division by s by ensuring that s>=1
     if (t > 0) { // by w
-        float root = std::sqrt(t + 1.0f);
+        float root = fast_sqrt(t + 1.0f);
         w = 0.5f * root;
-        root = 0.5f / root;
+        root = fast_divide(0.5f, root);
         x = (m21 - m12) * root;
         y = (m02 - m20) * root;
         z = (m10 - m01) * root;
     } else if ((m00 > m11) && (m00 > m22)) { // by x
-        float s = sqrt(1 + m00 - m11 - m22);
+        float s = fast_sqrt(1 + m00 - m11 - m22);
         x = s * 0.5f;
-        s = 0.5f / s;
+        s = fast_divide(0.5f, s);
         y = (m10 + m01) * s;
         z = (m02 + m20) * s;
         w = (m21 - m12) * s;
     } else if (m11 > m22) { // by y
-        float s = sqrt(1 + m11 - m00 - m22);
+        float s = fast_sqrt(1 + m11 - m00 - m22);
         y = s * 0.5f;
-        s = 0.5f / s;
+        s = fast_divide(0.5f, s);
         x = (m10 + m01) * s;
         z = (m21 + m12) * s;
         w = (m02 - m20) * s;
     } else { // by z
-        float s = sqrt(1 + m22 - m00 - m11);
+        float s = fast_sqrt(1 + m22 - m00 - m11);
         z = s * 0.5f;
-        s = 0.5f / s;
+        s = fast_divide(0.5f, s);
         x = (m02 + m20) * s;
         y = (m21 + m12) * s;
         w = (m10 - m01) * s;
@@ -111,11 +111,6 @@ AxisAngle Quaternion::to_axis_angle() const {
     ret.angle = Degrees(angle());
     return ret;
 }
-
-
-
-
-
 
 Quaternion operator*(float s, const Quaternion &q) {
     return q * s;

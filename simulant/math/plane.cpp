@@ -51,7 +51,7 @@ smlt::optional<Vec3> Plane::intersect_planes(const Plane &p1, const Plane &p2, c
 
     auto ret = r1 - r2 - r3;
 
-    ret *= 1.0f / denom;
+    ret *= smlt::fast_divide(1.0f, denom);
 
     return smlt::optional<Vec3>(std::move(ret));
 }

@@ -6,10 +6,6 @@
 #include "utils.h"
 #include "vec3.h"
 
-#ifdef __DREAMCAST__
-#include "../utils/sh4_math.h"
-#endif
-
 namespace smlt {
 
 struct Vec3;
@@ -55,23 +51,16 @@ struct Quaternion {
     AxisAngle to_axis_angle() const;
 
     float length_squared() const {
-#ifdef __DREAMCAST__
-        return MATH_Sum_of_Squares(x, y, z, w);
-#else
-        return (x * x + y * y + z * z) + (w * w);
-#endif
+        return fast_sum_of_squares(x, y, z, w);
     }
 
     float length() const {
-        return sqrtf(length_squared());
+        return fast_sqrt(length_squared());
     }
 
     void normalize() {
-#ifdef __DREAMCAST__
-        float l = MATH_fsrra(length_squared());
-#else
-        float l = 1.0f / length();
-#endif
+        float l = fsrra(length_squared());
+
         x *= l;
         y *= l;
         z *= l;
@@ -89,11 +78,7 @@ struct Quaternion {
     }
 
     float dot(const Quaternion& rhs) const __attribute__((always_inline)) {
-#ifdef __DREAMCAST__
-        return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
-#else
-        return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
-#endif
+        return fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
     }
 
     void inverse() {
@@ -112,7 +97,7 @@ struct Quaternion {
     }
 
     bool operator==(const Quaternion& rhs) const {
-        return std::abs(dot(rhs)) > (1.0f - EPSILON);
+        return fast_abs(dot(rhs)) > (1.0f - EPSILON);
     }
 
     bool operator!=(const Quaternion& rhs) const {
@@ -160,7 +145,7 @@ struct Quaternion {
     }
 
     Quaternion operator/(const float rhs) const {
-        float l = 1.0f / rhs;
+        float l = fast_divide(1.0f, rhs);
         return Quaternion(*this) *= l;
     }
 
@@ -170,7 +155,7 @@ struct Quaternion {
             return Vec3(0, 0, 1);
         }
 
-        auto tmp2 = 1.0f / sqrtf(tmp1);
+        auto tmp2 = fsrra(tmp1);
         return Vec3(x * tmp2, y * tmp2, z * tmp2);
     }
 
@@ -229,11 +214,7 @@ struct Quaternion {
             auto sin_theta = std::sin(theta);
             auto sin_theta_0 = std::sin(theta_0);
 
-#ifdef __DREAMCAST__
-            auto s1 = MATH_Fast_Divide(sin_theta, sin_theta_0);
-#else
-            auto s1 = sin_theta / sin_theta_0;
-#endif
+            auto s1 = fast_divide(sin_theta, sin_theta_0);
             auto s0 = std::cos(theta) - cos_theta * s1;
 
             return ((*this) * s0) + (z * s1);

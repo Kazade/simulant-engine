@@ -1,16 +1,18 @@
-#include <algorithm>
-#include <cmath>
 #include "utils.h"
+
+#ifdef __DREAMCAST__
+#include "../utils/sh4_math.h"
+#endif
 
 namespace smlt {
 
 float smoothstep(const float e0, const float e1, float x) {
-    x = clamp((x - e0) / (e1 - e0), 0.0f, 1.0f);
+    x = clamp(fast_divide((x - e0), (e1 - e0)), 0.0f, 1.0f);
     return x * x * (3 - 2 * x);
 }
 
 float smootherstep(const float e0, const float e1, float x) {
-    x = clamp((x - e0) / (e1 - e0), 0.0f, 1.0f);
+    x = clamp(fast_divide((x - e0), (e1 - e0)), 0.0f, 1.0f);
     return x * x * x * (x * (x * 6 - 15) + 10);
 }
 
@@ -47,6 +49,79 @@ void fast_sincos(double v, double* s, double* c) {
 #else
     *s = sin(v);
     *c = cos(v);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+void fast_sincos(float v, float* s, float* c) {
+#ifdef __DREAMCAST__
+    __builtin_sincos(v, s, c);
+#else
+    *s = sin(v);
+    *c = cos(v);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fast_abs(float x) {
+#ifdef __DREAMCAST__
+    return __builtin_fabsf(x);
+#else
+    return std::abs(x);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fast_fmaf(float a, float b, float c) {
+#ifdef __DREAMCAST__
+    return __builtin_fmaf(a, b, c);
+#else
+    return std::fmaf(a, b, c);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fast_sum_of_squares(float w, float x, float y, float z) {
+#ifdef __DREAMCAST__
+    return MATH_Sum_of_Squares(w, x, y, z);
+#else
+    return w * w + x * x + y * y + z * z;
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fast_min(float a, float b) {
+#ifdef __DREAMCAST__
+    return __builtin_fminf(a, b);
+#else
+    return std::min(a, b);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fast_max(float a, float b) {
+#ifdef __DREAMCAST__
+    return __builtin_fmaxf(a, b);
+#else
+    return std::max(a, b);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fsrra(float n) {
+#ifdef __DREAMCAST__
+    return MATH_fsrra(n);
+#else
+    return 1 / __builtin_sqrtf(n);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fipr(float x1, float y1, float z1, float w1, float x2, float y2, float z2, float w2) {
+#ifdef __DREAMCAST__
+    return MATH_fipr(x1, y1, z1, w1, x2, y2, z2, w2);
+#else
+    return x1 * x2 + y1 * y2 + z1 * z2 + w1 * w2;
 #endif
 }
 
