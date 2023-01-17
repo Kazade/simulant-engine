@@ -55,10 +55,10 @@ void fast_sincos(double v, double* s, double* c) {
 __attribute__((optimize("O3", "fast-math")))
 void fast_sincos(float v, float* s, float* c) {
 #ifdef __DREAMCAST__
-    __builtin_sincos(v, s, c);
+    __builtin_sincosf(v, s, c);
 #else
-    *s = sin(v);
-    *c = cos(v);
+    *s = sinf(v);
+    *c = cosf(v);
 #endif
 }
 
