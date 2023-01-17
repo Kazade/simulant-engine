@@ -3,6 +3,7 @@
 #include <cmath>
 #include "../utils/unicode.h"
 #include "../utils/formatter.h"
+#include "utils.h"
 
 namespace smlt {
 
