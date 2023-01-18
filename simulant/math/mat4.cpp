@@ -1,6 +1,7 @@
 #include "mat4.h"
 #include "mat3.h"
 #include "../types.h"
+#include "utils.h"
 
 namespace smlt {
 
@@ -313,13 +314,12 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
         assert(0 && "Invalid plane index");
     }
 
-    t = sqrtf(out.n.x * out.n.x +
-              out.n.y * out.n.y +
-              out.n.z * out.n.z);
-    out.n.x /= t;
-    out.n.y /= t;
-    out.n.z /= t;
-    out.d /= t;
+    t = fast_sum_of_squares(out.n.x, out.n.y, out.n.z, 0.0f);
+    
+    out.n.x *= fsrra(t);
+    out.n.y *= fsrra(t);
+    out.n.z *= fsrra(t);
+    out.d *= fsrra(t);
 
     return out;
 }
