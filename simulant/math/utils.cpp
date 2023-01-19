@@ -72,7 +72,7 @@ float fast_fmaf(float a, float b, float c) {
 #ifdef __DREAMCAST__
     return __builtin_fmaf(a, b, c);
 #else
-    return std::fmaf(a, b, c);
+    return fmaf(a, b, c);
 #endif
 }
 
