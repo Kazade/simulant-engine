@@ -51,7 +51,11 @@ struct Quaternion {
     AxisAngle to_axis_angle() const;
 
     float length_squared() const {
-        return fast_sum_of_squares(x, y, z, w);
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, z, w);
+#else
+        return dot(*this);
+#endif
     }
 
     float length() const {
@@ -59,8 +63,7 @@ struct Quaternion {
     }
 
     void normalize() {
-        float l = fsrra(length_squared());
-
+        float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
         z *= l;
@@ -77,8 +80,12 @@ struct Quaternion {
         return Quaternion(-x, -y, -z, w);
     }
 
-    float dot(const Quaternion& rhs) const __attribute__((always_inline)) {
-        return fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
+    float dot(const Quaternion& rhs) const {
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
+#else
+        return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
+#endif
     }
 
     void inverse() {
@@ -155,7 +162,7 @@ struct Quaternion {
             return Vec3(0, 0, 1);
         }
 
-        auto tmp2 = fsrra(tmp1);
+        auto tmp2 = fast_inverse_sqrt(tmp1);
         return Vec3(x * tmp2, y * tmp2, z * tmp2);
     }
 

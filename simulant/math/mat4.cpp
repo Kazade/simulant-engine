@@ -262,7 +262,7 @@ void Mat4::inverse() {
         return;
     }
 
-    det = 1.0f / det;
+    det = fast_divide(1.0f, det);
 
     for (uint8_t i = 0; i < 16; i++) {
         m[i] = tmp.m[i] * det;
@@ -314,12 +314,14 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
         assert(0 && "Invalid plane index");
     }
 
-    t = fast_sum_of_squares(out.n.x, out.n.y, out.n.z, 0.0f);
-    
-    out.n.x *= fsrra(t);
-    out.n.y *= fsrra(t);
-    out.n.z *= fsrra(t);
-    out.d *= fsrra(t);
+#ifdef __DREAMCAST__
+    t = MATH_Sum_of_Squares(out.n.x, out.n.y, out.n.z, 0.0f);
+#else
+    t = out.n.dot(out.n);
+#endif
+
+    out.n *= fast_inverse_sqrt(t);
+    out.d *= fast_inverse_sqrt(t);
 
     return out;
 }
@@ -329,7 +331,6 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
 
     float d = up.dot((target - eye));
     auto tu = (almost_equal(d * d, 1.0f)) ? Vec3(up.x, up.z, up.y) : up;
-
 
     Vec3 f = (target - eye).normalized();
     Vec3 s = f.cross(tu).normalized();
@@ -359,6 +360,5 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
 
     return ret;
 }
-
 
 }

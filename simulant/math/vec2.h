@@ -45,11 +45,15 @@ public:
     }
 
     float length_squared() const {
-        return x * x + y * y;
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, 0.0f, 0.0f);
+#else
+        return dot(*this);
+#endif
     }
 
     void normalize() {
-        float l = fsrra(length_squared());
+        float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
     }
@@ -92,13 +96,14 @@ public:
     }
 
     Vec2& operator/=(float rhs) {
-        x = fast_divide(x, rhs);
-        y = fast_divide(y, rhs);
+        float l = fast_divide(1.0f, rhs);
+        *this *= l;
         return *this;
     }
 
     Vec2 operator/(float rhs) const {
-        Vec2 result(fast_divide(x, rhs), fast_divide(y, rhs));
+        float l = fast_divide(1.0f, rhs);
+        Vec2 result(x * l, y * l);
         return result;
     }
 
@@ -110,8 +115,12 @@ public:
         return Vec2(x - rhs.x, y - rhs.y);
     }
 
-    float dot(const Vec2& rhs) const {
+    float dot(const Vec2& rhs) const {       
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, 0.0f, 0.0f, rhs.x, rhs.y, 0.0f, 0.0f);
+#else
         return x * rhs.x + y * rhs.y;
+#endif
     }
 
     Vec3 xyz(float z = 0.0f) const;

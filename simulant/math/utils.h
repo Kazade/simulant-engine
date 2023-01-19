@@ -5,6 +5,10 @@
 #include <cstdint>
 #include <algorithm>
 
+#ifdef __DREAMCAST__
+#include "../utils/sh4_math.h"
+#endif
+
 namespace smlt {
 
 const float PI = std::acos(-1.0f);
@@ -53,20 +57,17 @@ float fast_abs(float x);
 /** Returns a*b+c */
 float fast_fmaf(float a, float b, float c);
 
-/** Sum of Squares (w^2 + x^2 + y^2 + z^2) */
-float fast_sum_of_squares(float x, float y, float z, float w);
-
 /** Same as fminf */
 float fast_min(float a, float b);
 
 /** Same as fmaxf */
 float fast_max(float a, float b);
 
-/** Returns 1 / sqrt(n) */
-float fsrra(float n);
+/** Returns the inverse square root: 1 / sqrt(n) */
+float fast_inverse_sqrt(float n);
 
 /** Returns the inner (dot) product (x1 * x2) + (y1 * y2) + (z1 * z2) * (w1 * w2) */
-float fipr(float x1, float y1, float z1, float w1, float x2, float y2, float z2, float w2);
+//float fipr(float x1, float y1, float z1, float w1, float x2, float y2, float z2, float w2);
 
 
 /** Clamps x between l and h*/

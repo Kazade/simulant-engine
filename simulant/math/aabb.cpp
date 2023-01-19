@@ -104,7 +104,12 @@ bool AABB::intersects_sphere(const smlt::Vec3& center, float diameter) const {
     const float ey = fast_max(min().y - center.y, 0.0f) + fast_max(center.y - max().y, 0.0f);
     const float ez = fast_max(min().z - center.z, 0.0f) + fast_max(center.z - max().z, 0.0f);
 
-    const bool sqrad = fast_sum_of_squares(ex, ey, ez, 0.0f) < (radius * radius);
+#ifdef __DREAMCAST__
+    const bool sqrad = MATH_Sum_of_Squares(ex, ey, ez, 0.0f) < (radius * radius);
+#else
+    Vec3 sum = Vec3(ex, ey, ez);
+    const bool sqrad = sum.dot(sum) < (radius * radius);
+#endif
 
     return (ex < radius) && (ey < radius) && (ez < radius) && sqrad;
 }

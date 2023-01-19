@@ -113,14 +113,14 @@ public:
     }
 
     Vec3& operator/=(float rhs) {
-        x = fast_divide(x, rhs);
-        y = fast_divide(y, rhs);
-        z = fast_divide(z, rhs);
+        float l = fast_divide(1.0f, rhs);
+        *this *= l;
         return *this;
     }
 
     Vec3 operator/(float rhs) const {
-        Vec3 result(fast_divide(x, rhs), fast_divide(y, rhs), fast_divide(z, rhs));
+        float l = fast_divide(1.0f, rhs);
+        Vec3 result(x * l, y * l, z * l);
         return result;
     }
 
@@ -143,7 +143,11 @@ public:
     }
 
     float length_squared() const {
-        return fast_sum_of_squares(x, y, z, 0.0f);
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, z, 0.0f);
+#else
+        return dot(*this);
+#endif
     }
 
     float length() const {
@@ -151,7 +155,7 @@ public:
     }
 
     void normalize() {
-        float l = fsrra(length_squared());
+        float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
         z *= l;
@@ -201,7 +205,11 @@ public:
     }
 
     float dot(const Vec3& rhs) const {
-        return fipr(x, y, z, 0.0f, rhs.x, rhs.y, rhs.z, 0.0f);
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, z, 0.0f, rhs.x, rhs.y, rhs.z, 0.0f);
+#else
+        return x * rhs.x + y * rhs.y + z * rhs.z;
+#endif
     }
 
     Vec3 cross(const Vec3& rhs) const {

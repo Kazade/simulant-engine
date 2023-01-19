@@ -48,10 +48,8 @@ Vec3 operator*(float lhs, const Vec3& rhs) {
 
 Vec3 operator/(float lhs, const Vec3& rhs) {
     smlt::Vec3 result = rhs;
-    result.x = fast_divide(result.x, lhs);
-    result.y = fast_divide(result.y, lhs);
-    result.z = fast_divide(result.z, lhs);
-    return result;
+    float l = fast_divide(1.0f, lhs);
+    return result * l;
 }
 
 Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
@@ -145,7 +143,12 @@ float Vec3::distance_to(const AABB& aabb) const {
     float dy = fast_max(fast_abs(y - centre.y) - (aabb.height() * 0.5f), 0.0f);
     float dz = fast_max(fast_abs(z - centre.z) - (aabb.depth() * 0.5f), 0.0f);
 
-    return fast_sqrt(fast_sum_of_squares(dx, dy, dz, 0));
+#ifdef __DREAMCAST__
+    return fast_sqrt(MATH_Sum_of_Squares(dx, dy, dz, 0));
+#else
+    Vec3 d = Vec3(dx, dy, dz);
+    return fast_sqrt(dot(d));
+#endif
 }
 
 }
