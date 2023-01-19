@@ -1,13 +1,13 @@
 # Dockerfile for generating a Fedora image with the full KallistiOS SDK installed so you can compile
 # Dreamcast applications
 
-FROM fedora:30 as Build
+FROM fedora:37 as Build
 MAINTAINER kazade <kazade@gmail.com>
 
-RUN dnf -y update && dnf clean all && dnf -y install automake wget make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel meson openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
+RUN dnf -y update && dnf clean all && dnf -y install automake wget make git hostname diffutils glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel meson openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos
-RUN cd /opt/toolchains/dc/kos && git fetch && git checkout 951f63297ef7eb62ea6673a2a9961d169d2e5e8d && cd -
+# RUN cd /opt/toolchains/dc/kos && git fetch && git checkout 951f63297ef7eb62ea6673a2a9961d169d2e5e8d && cd -
 RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolchains/dc/kos-ports
 
 # Speed up compilation
@@ -37,7 +37,7 @@ RUN echo -e "\nsource /opt/toolchains/dc/kos/environ.sh" >> /etc/bash.bashrc
 RUN echo -e "\nsource /opt/toolchains/dc/kos/environ.sh" >> /root/.bashrc
 
 # Build KOS
-RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make
+RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos && make clean && make
 
 # FIXME: Restore when kos-ports is fixed
 # RUN source /etc/bash.bashrc; cd /opt/toolchains/dc/kos-ports/libjpeg && make install clean
@@ -47,7 +47,7 @@ RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://git
 RUN dnf -y install libisofs-devel
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://gitlab.com/simulant/mkdcdisc.git && cd mkdcdisc && mkdir build && cd build && meson .. && ninja
 
-FROM fedora:30
+FROM fedora:37
 COPY --from=Build /opt/toolchains /opt/toolchains
 COPY --from=Build /etc/bash.bashrc /etc/bash.bashrc
 COPY --from=Build /root/.bashrc /root/.bashrc
