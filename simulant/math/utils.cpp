@@ -26,7 +26,7 @@ uint32_t next_power_of_two(uint32_t x) {
 __attribute__((optimize("O3", "fast-math")))
 float fast_divide(float d, float n) {
 #ifdef __DREAMCAST__
-    const float sgn = (n > 0) - (n < 0);
+    const float sgn = ((*(unsigned int*)&n)>>31)*2+1;
     return sgn * (MATH_fsrra(n * n)) * d;
 #else
     return d / n;
