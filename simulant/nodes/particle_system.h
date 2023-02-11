@@ -23,6 +23,7 @@ struct Particle {
     smlt::Vec3 velocity;
     smlt::Vec2 dimensions;
     smlt::Vec2 initial_dimensions;
+    smlt::Quaternion rotation; // TODO!
     float ttl;
     float lifetime;
     smlt::Colour colour;
