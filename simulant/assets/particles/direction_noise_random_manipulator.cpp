@@ -7,13 +7,14 @@ namespace smlt {
 
 void DirectionNoiseRandomManipulator::do_manipulate(ParticleSystem *system, Particle *particles, std::size_t particle_count, float dt) const {
     _S_UNUSED(system);
+    static RandomGenerator rgen;
 
     Particle* it = particles;
     while(particle_count--) {
-        smlt::Vec3 noise = smlt::Vec3(
-            (rand() % 100 - 50) * noise_amount_.x,
-            (rand() % 100 - 50) * noise_amount_.y,
-            (rand() % 100 - 50) * noise_amount_.z
+        Vec3 noise = Vec3(
+            rgen.float_in_range(-50, 50) * noise_amount_.x,
+            rgen.float_in_range(-50, 50) * noise_amount_.y,
+            rgen.float_in_range(-50, 50) * noise_amount_.z
         );
 
         auto final_dir = dir_ + noise;
