@@ -19,8 +19,7 @@ void DirectionNoiseRandomManipulator::do_manipulate(ParticleSystem *system, Part
         auto final_dir = dir_ + noise;
         it->position += final_dir * dt;
 
-        /* Make sure we also rotate the particle according to its direction */
-        auto rot = Quaternion(smlt::Euler(final_dir.x, final_dir.y, final_dir.z));
+        auto rot = Quaternion::look_rotation(final_dir);
         it->rotation = rot * dt;
 
         ++it;
