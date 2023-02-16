@@ -333,8 +333,9 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
     t = out.n.dot(out.n);
 #endif
 
-    out.n *= fast_inverse_sqrt(t);
-    out.d *= fast_inverse_sqrt(t);
+    const float inv_sqrt_t = fast_inverse_sqrt(t);
+    out.n *= inv_sqrt_t;
+    out.d *= inv_sqrt_t;
 
     return out;
 }
