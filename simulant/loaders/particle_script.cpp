@@ -24,6 +24,7 @@
 #include "../assets/particles/size_manipulator.h"
 #include "../assets/particles/colour_fader.h"
 #include "../assets/particles/direction_manipulator.h"
+#include "../assets/particles/direction_noise_random_manipulator.h"
 
 #include "../vfs.h"
 
@@ -93,6 +94,20 @@ static auto parse_colour = [](const std::string& colour) -> smlt::Colour {
     }
 };
 
+static auto parse_vec3 = [](const std::string& dir) -> smlt::Vec3 {
+    auto parts = unicode(dir).split(" ");
+    if(parts.size() == 3) {
+        return smlt::Vec3(
+            parts[0].to_float(),
+            parts[1].to_float(),
+            parts[2].to_float()
+        );
+    } else {
+        S_WARN("Invalid number of vector components to direction manipulator");
+        return smlt::Vec3();
+    }
+};
+
 static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
     std::vector<smlt::Colour> colours;
 
@@ -110,23 +125,18 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSO
 }
 
 static smlt::Manipulator* spawn_direction_manipulator(ParticleScript* ps, JSONIterator& js) {
-    auto parse_vec3 = [](const std::string& dir) -> smlt::Vec3 {
-        auto parts = unicode(dir).split(" ");
-        if(parts.size() == 3) {
-            return smlt::Vec3(
-                parts[0].to_float(),
-                parts[1].to_float(),
-                parts[2].to_float()
-            );
-        } else {
-            S_WARN("Invalid number of vector components to direction manipulator");
-            return smlt::Vec3();
-        }
-    };
-
     auto dir = (js->has_key("force") ? parse_vec3(js["force"]->to_str().value_or("")) : smlt::Vec3());
 
     auto m = std::make_shared<DirectionManipulator>(ps, dir);
+    ps->add_manipulator(m);
+    return m.get();
+}
+
+static smlt::Manipulator* spawn_direction_noise_random_manipulator(ParticleScript* ps, JSONIterator& js) {
+    auto dir = (js->has_key("force") ? parse_vec3(js["force"]->to_str().value_or("")) : smlt::Vec3());
+    auto noise_amount = (js->has_key("noise_amount") ? parse_vec3(js["noise_amount"]->to_str().value_or("")) : smlt::Vec3());
+
+    auto m = std::make_shared<DirectionNoiseRandomManipulator>(ps, dir, noise_amount);
     ps->add_manipulator(m);
     return m.get();
 }
@@ -314,6 +324,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                     spawn_colour_fader_manipulator(ps, manipulator);
                 } else if(manipulator["type"]->to_str().value() == "direction") {
                     spawn_direction_manipulator(ps, manipulator);
+                } else if(manipulator["type"]->to_str().value() == "direction_noise_random") {
+                    spawn_direction_noise_random_manipulator(ps, manipulator);
                 }
             }
         }
