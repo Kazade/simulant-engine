@@ -65,12 +65,14 @@ public:
     }
 
     Vec4 operator*(const Vec4& rhs) const;
+    Vec3 operator*(const Vec3& rhs) const;
 
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);
     static Mat4 as_rotation_y(const Degrees& angle);
     static Mat4 as_rotation_z(const Degrees& angle);
+    static Mat4 as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y, const Degrees& angle_z);
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
     static Mat4 as_scaling(float s);
     static Mat4 from_pos_rot_scale(const Vec3& pos, const Quaternion& rot, const Vec3& scale);

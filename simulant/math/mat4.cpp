@@ -51,6 +51,14 @@ Vec4 Mat4::operator*(const Vec4 &v) const {
     return ret;
 }
 
+Vec3 Mat4::operator*(const Vec3 &v) const {
+    Vec3 ret;
+    ret.x = m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12];
+    ret.y = m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13];
+    ret.z = m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14];
+    return ret;
+}
+
 void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const {
     Mat3 rot(*this);
     rotation = Quaternion(rot);
@@ -72,6 +80,11 @@ Mat4 Mat4::as_rotation_y(const Degrees &angle) {
 
 Mat4 Mat4::as_rotation_z(const Degrees &angle) {
     Quaternion rot(Degrees(), Degrees(), angle);
+    return Mat4(rot);
+}
+
+Mat4 Mat4::as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y, const Degrees& angle_z) {
+    Quaternion rot(angle_x, angle_y, angle_z);
     return Mat4(rot);
 }
 
