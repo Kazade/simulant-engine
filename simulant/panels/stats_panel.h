@@ -43,7 +43,6 @@ private:
     void do_activate() override;
     void do_deactivate() override;
 
-    StagePtr stage_;
     CameraPtr ui_camera_;
     PipelinePtr pipeline_;
 

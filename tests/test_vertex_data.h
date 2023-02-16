@@ -36,6 +36,25 @@ public:
         assert_equal(sizeof(float) * 5, (uint32_t) data->vertex_specification().normal_offset());
     }
 
+    void test_position_works_with_a_subset_of_components() {
+        /* Position should automatically fill z == 0, and w == 1 if they aren't
+         * specified */
+
+        smlt::VertexSpecification spec;
+        spec.position_attribute = VERTEX_ATTRIBUTE_4F;
+
+        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+
+        data->position(smlt::Vec2(9.0f, 8.0f));
+        data->move_next();
+
+        auto pos = data->position_at<smlt::Vec4>(0);
+        assert_close(pos->x, 9.0f, 0.00001f);
+        assert_close(pos->y, 8.0f, 0.00001f);
+        assert_close(pos->z, 0.0f, 0.00001f);
+        assert_close(pos->w, 1.0f, 0.00001f);
+    }
+
     void test_packed_normal_offsets() {
         smlt::VertexSpecification spec;
         spec.position_attribute = VERTEX_ATTRIBUTE_3F;

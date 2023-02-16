@@ -348,8 +348,8 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // We divide the heightmap into patches for more efficient rendering
     smlt::MaterialPtr mat = mesh->asset_manager().clone_default_material();
 
-    auto sm = mesh->new_submesh_with_material(
-        "terrain", mat, MESH_ARRANGEMENT_TRIANGLES, index_type
+    auto sm = mesh->new_submesh(
+        "terrain", mat, index_type, MESH_ARRANGEMENT_TRIANGLES
     );
 
     int32_t height = (int32_t) tex->height();
@@ -358,7 +358,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     int32_t total = width * height;
 
     std::vector<float> heights(total);
-    auto& tex_data = tex->data();
+    auto tex_data = tex->data();
     auto stride = texture_format_stride(tex->format());
     float m = 1.0f / 256.0f;
     for(int32_t i = 0; i < total; i++) {

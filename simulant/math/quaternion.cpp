@@ -112,64 +112,10 @@ AxisAngle Quaternion::to_axis_angle() const {
     return ret;
 }
 
-Vec3 Quaternion::operator*(const Vec3& v) const {
-    const Vec3 quat_vector(x, y, z);
-    const Vec3 uv = quat_vector.cross(v);
-    const Vec3 uuv = quat_vector.cross(uv);
 
-    return v + ((uv * w) + uuv) * 2.0f;
-}
 
-Quaternion Quaternion::nlerp(const Quaternion &rhs, float t) const {
-    auto z = rhs;
-    auto theta = this->dot(rhs);
 
-    if(theta < 0.0f) {
-        z = -rhs;
-    }
 
-    // Linear interpolation (result normalized)
-    return Quaternion(
-        lerp(this->x, z.x, t),
-        lerp(this->y, z.y, t),
-        lerp(this->z, z.z, t),
-        lerp(this->w, z.w, t)
-    ).normalized();
-}
-
-Quaternion Quaternion::slerp(const Quaternion &rhs, float t) const {
-    auto z = rhs;
-
-    auto cos_theta = this->dot(rhs);
-
-    // negate to avoid interpolation taking long way around
-    if (cos_theta < 0.0f) {
-        z = -rhs;
-        cos_theta = -cos_theta;
-    }
-
-    const constexpr float DOT_THRESHOLD = 0.9995f;
-
-    // Lerp to avoid side effect of sin(angle) becoming a zero denominator
-    if(cos_theta > DOT_THRESHOLD) {
-        // Linear interpolation
-        return Quaternion(
-            lerp(this->x, z.x, t),
-            lerp(this->y, z.y, t),
-            lerp(this->z, z.z, t),
-            lerp(this->w, z.w, t)
-        ).normalized();
-    } else {
-        auto theta_0 = std::acos(cos_theta);
-        auto theta = theta_0 * t;
-        auto sin_theta = std::sin(theta);
-        auto sin_theta_0 = std::sin(theta_0);
-
-        auto s0 = std::cos(theta) - cos_theta * sin_theta / sin_theta_0;
-        auto s1 = sin_theta / sin_theta_0;
-        return (s0 * (*this)) + (s1 * z);
-    }
-}
 
 Quaternion operator*(float s, const Quaternion &q) {
     return q * s;

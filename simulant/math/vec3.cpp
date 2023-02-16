@@ -1,5 +1,5 @@
 #include "../types.h"
-#include "../random.h"
+#include "../utils/random.h"
 
 #include "vec3.h"
 #include "aabb.h"
@@ -32,12 +32,7 @@ Vec3::Vec3(const Vec2 &v2, float z):
 
 }
 
-Vec3 Vec3::lerp(const Vec3& end, float t) const {
-    t = std::min(t, 1.0f);
-    t = std::max(t, 0.0f);
 
-    return *this + ((end - *this) * t);
-}
 
 Vec3 Vec3::rotated_by(const Quaternion &q) const {
     return q * (*this);
@@ -103,10 +98,6 @@ Quaternion Vec3::rotation_to(const Vec3 &dir) const {
             s * 0.5f
         ).normalized();
    }
-}
-
-Vec3 Vec3::operator*(const Quaternion &rhs) const {
-    return rhs * (*this);
 }
 
 Vec3 Vec3::rotated_by(const Mat4 &rot) const {

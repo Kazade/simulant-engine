@@ -21,16 +21,18 @@
 #include "stage.h"
 #include "debug.h"
 #include "nodes/actor.h"
-#include "random.h"
+#include "utils/random.h"
 #include "window.h"
 #include "macros.h"
+#include "application.h"
+#include "time_keeper.h"
 
 namespace smlt {
 
 Debug::Debug(Stage &stage):
     stage_(stage) {
 
-    frame_finished_connection_ = stage_.window->signal_frame_finished().connect(
+    frame_finished_connection_ = get_app()->signal_frame_finished().connect(
         std::bind(&Debug::frame_finished, this)
     );
 }
@@ -55,7 +57,7 @@ Debug::~Debug() {
 }
 
 void Debug::frame_finished() {
-    auto dt = stage_.window->time_keeper->delta_time();
+    auto dt = get_app()->time_keeper->delta_time();
 
     for(auto it = elements_.begin(); it != elements_.end(); ++it) {
         auto& element = (*it);
@@ -187,10 +189,10 @@ bool Debug::init() {
 
     auto mesh = mesh_.fetch();
 
-    lines_with_depth_ = mesh->new_submesh_with_material("lines_with_depth", material_, MESH_ARRANGEMENT_LINES);
-    lines_without_depth_ = mesh->new_submesh_with_material("lines_without_depth", material_no_depth_, MESH_ARRANGEMENT_LINES);
-    points_with_depth_ = mesh->new_submesh_with_material("points_with_depth", material_, MESH_ARRANGEMENT_TRIANGLES);
-    points_without_depth_ = mesh->new_submesh_with_material("points_without_depth", material_no_depth_, MESH_ARRANGEMENT_TRIANGLES);
+    lines_with_depth_ = mesh->new_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    lines_without_depth_ = mesh->new_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    points_with_depth_ = mesh->new_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    points_without_depth_ = mesh->new_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     return true;
 }

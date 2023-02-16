@@ -17,12 +17,16 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "window.h"
+#include <iterator>
 #include "asset_manager.h"
 #include "loader.h"
 #include "procedural/mesh.h"
 #include "utils/gl_thread_check.h"
 #include "loaders/heightmap_loader.h"
+#include "application.h"
+#include "application.h"
+#include "generic/lru_cache.h"
+#include "vfs.h"
 
 /** FIXME
  *
@@ -32,11 +36,7 @@
 
 namespace smlt {
 
-#define HEADING_FONT "simulant/fonts/orbitron/orbitron-regular-48.fnt"
-#define BODY_FONT "simulant/fonts/orbitron/orbitron-regular-18.fnt"
-
-AssetManager::AssetManager(Window* window, AssetManager* parent):
-    WindowHolder(window),
+AssetManager::AssetManager(AssetManager* parent):
     parent_(parent) {
 
     if(parent_) {
@@ -59,6 +59,17 @@ AssetManager::~AssetManager() {
 
         S_DEBUG("Destroyed base manager: {0}", this);
     }
+}
+
+void AssetManager::destroy_all() {
+    mesh_manager_.destroy_all();
+    material_manager_.destroy_all();
+    texture_manager_.destroy_all();
+    sound_manager_.destroy_all();
+    font_manager_.destroy_all();
+    particle_script_manager_.destroy_all();
+    binary_manager_.destroy_all();
+    run_garbage_collection();
 }
 
 void AssetManager::update(float dt) {
@@ -114,8 +125,6 @@ static TexturePtr create_texture_with_colour(AssetManager* manager, const Colour
 bool SharedAssetManager::init() {
     S_DEBUG("Initalizing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
-    set_default_font_filename(DEFAULT_FONT_STYLE_BODY, BODY_FONT);
-    set_default_font_filename(DEFAULT_FONT_STYLE_HEADING, HEADING_FONT);
 
     white_tex_ = create_texture_with_colour(this, smlt::Colour::WHITE);
     white_tex_->set_name("s_white_texture");
@@ -152,51 +161,6 @@ MaterialPtr SharedAssetManager::default_material() const {
     return default_material_;
 }
 
-void SharedAssetManager::set_default_font_filename(DefaultFontStyle style, const Path& filename) {
-    if(style == DEFAULT_FONT_STYLE_BODY) {
-        default_body_font_filename_ = filename;
-        default_body_font_.reset();
-    } else {
-        default_heading_font_filename_ = filename;
-        default_heading_font_.reset();
-    }
-}
-
-Path SharedAssetManager::default_font_filename(DefaultFontStyle style) const {
-    if(style == DEFAULT_FONT_STYLE_BODY) {
-        return default_body_font_filename_;
-    } else {
-        return default_heading_font_filename_;
-    }
-}
-
-FontPtr SharedAssetManager::default_font(DefaultFontStyle style) const {
-    assert(is_base_manager());
-
-    if(style == DEFAULT_FONT_STYLE_BODY) {
-        if(!default_body_font_) {
-            default_body_font_ = const_cast<SharedAssetManager*>(this)->new_font_from_file(
-                default_body_font_filename_
-            );
-        }
-
-        return default_body_font_;
-    } else {
-        if(!default_heading_font_) {
-            default_heading_font_ = const_cast<SharedAssetManager*>(this)->new_font_from_file(
-                default_heading_font_filename_
-            );
-        }
-
-        return default_heading_font_;
-    }
-}
-
-FontPtr AssetManager::default_font(DefaultFontStyle style) const {
-    assert(!is_base_manager());
-    return base_manager()->default_font(style);
-}
-
 void AssetManager::run_garbage_collection() {
     for(auto child: children_) {
         child->run_garbage_collection();
@@ -209,6 +173,7 @@ void AssetManager::run_garbage_collection() {
     sound_manager_.update();
     font_manager_.update();
     particle_script_manager_.update();
+    binary_manager_.update();
 }
 
 bool AssetManager::is_base_manager() const {
@@ -249,6 +214,12 @@ const MeshPtr AssetManager::mesh(MeshID id) const {
 }
 
 MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
+    if(submesh->type() == SUBMESH_TYPE_RANGED) {
+        /* FIXME: Implement this! */
+        S_ERROR("Ranged submeshes can't currently be turned into meshes");
+        return MeshPtr();
+    }
+
     auto source_vdata = submesh->mesh->vertex_data.get();
 
     VertexSpecification spec = source_vdata->vertex_specification();
@@ -256,9 +227,10 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
     auto mesh = new_mesh(spec, garbage_collect);
     auto target_vdata = mesh->vertex_data.get();
 
-    SubMesh* target = mesh->new_submesh_with_material(
+    SubMesh* target = mesh->new_submesh(
         submesh->name(),
         submesh->material(),
+        submesh->index_data->index_type(),
         submesh->arrangement()
     );
 
@@ -292,7 +264,7 @@ MeshPtr AssetManager::new_mesh_from_file(const Path& path,
 
     //Load the material
     auto mesh = new_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
-    auto loader = window->loader_for(path);
+    auto loader = get_app()->loader_for(path);
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
     if(!loader) {
@@ -310,7 +282,7 @@ MeshPtr AssetManager::new_mesh_from_file(const Path& path,
 }
 
 MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
-    auto loader = window->loader_for("heightmap_loader", image_file);
+    auto loader = get_app()->loader_for("heightmap_loader", image_file);
 
     if(!loader) {
         return nullptr;
@@ -429,7 +401,7 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
     MaterialID template_id;
 
     /* We must load the material outside the lock, because loading the material
-     * in thread B might cause a IdleManager::run_sync which will block and deadlock
+     * in thread B might cause a coroutine which will block and deadlock
      * as it will be holding the template_material_lock_ and the thread A
      * will hanging waiting on it.
      */
@@ -450,9 +422,11 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
     while(materials_loading_.count(template_id)) { // Not really threadsafe...
         if(!load_material && GLThreadCheck::is_current()) {
             /* If we aren't loading the material in this thread, but this is the main thread and the material is loading
-             * in another thread we *must* run the idle tasks while we wait for it to finish. Otherwise it will deadlock
+             * in another thread we *must* run the coroutine tasks while we wait for it to finish. Otherwise it will deadlock
              * on a run_sync call */
-            window->idle->execute();
+
+            smlt::cr_yield();
+
         } else if(load_material) {
             /* Otherwise, if we're loading the material, we load it, then remove it from the list */
             S_INFO("Loading material {0} into {1}", path, template_id);
@@ -460,15 +434,16 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
             if(!mat) {
                 S_ERROR("Tried to fetch material with template_id ({0}). But it didn't exist", template_id);
                 materials_loading_.erase(template_id);
-                throw std::runtime_error(_F("Error loading file: {0}").format(path));
+                S_ERROR("Error loading file: {0}", path);
+                return MaterialPtr();
             }
 
             S_DEBUG("Locating loader for {0}", path);
-            auto loader = window->loader_for(path);
+            auto loader = get_app()->loader_for(path);
             if(!loader) {
                 S_ERROR("Unable to find loader for {0}", path);
                 materials_loading_.erase(template_id);
-                throw std::runtime_error(_F("Unable to find loader for file: {0}").format(path));
+                return MaterialPtr();
             }
 
             S_DEBUG("Loading...");
@@ -482,19 +457,21 @@ MaterialPtr AssetManager::get_template_material(const Path& path) {
 }
 
 MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
+    auto template_mat = get_template_material(path);
 
-    MaterialID template_id = get_template_material(path);
-
-    assert(template_id);
+    assert(template_mat);
+    if(!template_mat) {
+        return MaterialPtr();
+    }
 
     /* Templates are always created in the base manager, we clone from the base manager into this
      * manager (which might be the same manager) */
-    auto new_mat = base_manager()->material_manager_.clone(template_id, &this->material_manager_);
+    auto new_mat = base_manager()->material_manager_.clone(template_mat, &this->material_manager_);
     new_mat->manager_ = this;
 
     auto new_mat_id = new_mat->id();
 
-    S_DEBUG("Cloned material {0} into {1}", template_id, new_mat_id);
+    S_DEBUG("Cloned material {0} into {1}", template_mat->id(), new_mat_id);
 
     material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect);
     return new_mat;
@@ -545,7 +522,7 @@ TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags fl
 
     {
         S_DEBUG("Finding loader for: {0}", path);
-        auto loader = window->loader_for(path, LOADER_HINT_TEXTURE);
+        auto loader = get_app()->loader_for(path, LOADER_HINT_TEXTURE);
         if(!loader) {
             S_WARN("Couldn't find loader for texture");
             return smlt::TexturePtr();
@@ -593,15 +570,18 @@ std::size_t AssetManager::texture_count() const {
     return texture_manager_.count();
 }
 
-SoundPtr AssetManager::new_sound_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
+SoundPtr AssetManager::new_sound_from_file(const Path& path, const SoundFlags &flags, GarbageCollectMethod garbage_collect) {
     //Load the sound
-    auto snd = sound_manager_.make(this, window->_sound_driver());
+    auto snd = sound_manager_.make(this, get_app()->sound_driver);
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
 
-    auto loader = window->loader_for(path);
+    auto loader = get_app()->loader_for(path);
+
+    LoaderOptions opts;
+    opts["stream"] = flags.stream_audio;
 
     if(loader) {
-        loader->into(snd);
+        loader->into(snd, opts);
     } else {
         S_ERROR("Unsupported file type: ", path);
     }
@@ -635,12 +615,55 @@ void AssetManager::destroy_sound(SoundID t) {
     sound_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
+BinaryPtr AssetManager::new_binary_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
+
+    auto stream = smlt::get_app()->vfs->read_file(filename);
+    if(!stream) {
+        return BinaryPtr();
+    }
+
+    std::vector<uint8_t> data;
+    std::noskipws(*stream);
+    std::copy(std::istream_iterator<uint8_t>(*stream), std::istream_iterator<uint8_t>(), back_inserter(data));
+
+    stream.reset();
+
+    auto bin = binary_manager_.make(this, std::move(data));
+    binary_manager_.set_garbage_collection_method(bin->id(), garbage_collect);
+
+    return bin;
+}
+
+BinaryPtr AssetManager::binary(BinaryID id) const {
+    GET_X(Binary, binary, binary_manager_);
+}
+
+std::size_t AssetManager::binary_count() const {
+    return binary_manager_.count();
+}
+
+bool AssetManager::has_binary(BinaryID id) const {
+    return binary_manager_.contains(id);
+}
+
+BinaryPtr AssetManager::find_binary(const std::string& name) {
+    return binary_manager_.find_object(name);
+}
+
+void AssetManager::destroy_binary(BinaryID id) {
+    binary_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
+}
+
 MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect) {
     assert(mat_id && "No default material, called to early?");
 
-    auto& manager = base_manager()->material_manager_;
-    auto new_mat_id = manager.clone(mat_id);
-    manager.set_garbage_collection_method(new_mat_id, garbage_collect);
+    auto manager = &material_manager_;
+    if(!manager->contains(mat_id) && parent_) {
+        manager = &parent_->material_manager_;
+    }
+
+    auto new_mat_id = manager->clone(mat_id);
+    manager->set_garbage_collection_method(new_mat_id, garbage_collect);
 
     assert(new_mat_id);
     return material(new_mat_id);
@@ -667,36 +690,71 @@ AssetManager* AssetManager::base_manager() const {
 
 // ========== FONTS ======================
 
-FontPtr AssetManager::new_font_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
-    auto font = font_manager_.make(this);
-    auto font_id = font->id();
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
+FontPtr AssetManager::new_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
+    uint16_t size = flags.size || get_app()->config->ui.font_size;
+    const std::string px_as_string = smlt::to_string(size);
+    const std::string weight_string = font_weight_name(flags.weight);
+    const std::string style_string = (flags.style == FONT_STYLE_NORMAL) ? "" : font_style_name(flags.style);
 
-    try {
-        LoaderOptions options;
-        window->loader_for(filename)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_font(font_id);
-        throw;
+    std::string potentials [] = {
+        family + "-" + weight_string + style_string + ".ttf",
+        family + "-" + weight_string + style_string + "-" + px_as_string + ".fnt",
+    };
+
+    std::string alias = Font::generate_name(family, size, flags.weight, flags.style);
+
+    /* This LRUCache prevents us continually searching for the font */
+    static LRUCache<std::string, smlt::Path> location_cache;
+    location_cache.set_max_size(8);
+
+    optional<Path> loc = location_cache.get(alias);
+    if(!loc) {
+        for(auto& filename: potentials) {
+            loc = get_app()->vfs->locate_file(filename, true, /*fail_silently=*/true);
+            if(loc) {
+                break;
+            }
+
+            /* Try a font directory prefix */
+            loc = get_app()->vfs->locate_file(kfs::path::join("fonts", filename), true, /*fail_silently=*/true);
+            if(loc) {
+                break;
+            }
+
+            /* Finally try a family name dir within fonts */
+            loc = get_app()->vfs->locate_file(
+                kfs::path::join(kfs::path::join("fonts", family), filename),
+                true, /*fail_silently=*/true
+            );
+
+            if(loc) {
+                location_cache.insert(alias, loc.value());
+                break;
+            }
+        }
     }
 
-    return font;
+    if(loc) {
+        return new_font_from_file(loc.value(), flags, garbage_collect);
+    } else {
+        S_WARN("Unable to locate font file with family {0} and size {1}", family, size);
+        return FontPtr();
+    }
 }
 
-FontPtr AssetManager::new_font_from_ttf(const Path &filename, uint32_t font_size, CharacterSet charset, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::new_font_from_file(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
-
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
     try {
         LoaderOptions options;
-        options["size"] = font_size;
-        options["charset"] = charset;
-        window->loader_for(filename)->into(font.get(), options);
-
+        options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
+        options["weight"] = flags.weight;
+        options["style"] = flags.style;
+        options["charset"] = flags.charset;
+        options["blur_radius"] = flags.blur_radius;
+        get_app()->loader_for(filename)->into(font.get(), options);
         font_manager_.set_garbage_collection_method(font_id, garbage_collect);
     } catch (...) {
         // Make sure we don't leave the font hanging around
@@ -738,7 +796,7 @@ ParticleScriptPtr AssetManager::new_particle_script_from_file(const Path& filena
 
     try {
         LoaderOptions options;
-        window->loader_for(filename)->into(ps.get(), options);
+        get_app()->loader_for(filename)->into(ps.get(), options);
     } catch (...) {
         // Make sure we don't leave the font hanging around
         destroy_particle_script(ps_id);

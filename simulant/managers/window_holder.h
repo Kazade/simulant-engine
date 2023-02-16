@@ -34,7 +34,7 @@ public:
     Property<Window* WindowHolder::*> window = { this, &WindowHolder::window_ };
 
 protected:
-    Window* get_window() const { return window_; }
+    Window* _window() const { return window_; }
 
 private:
     Window* window_;

@@ -17,7 +17,8 @@ class Camera:
     public ContainerNode,
     public generic::Identifiable<CameraID>,
     public ChainNameable<Camera>,
-    public AudioSource {
+    public AudioSource,
+    public RefCounted<Camera> {
 
 public:
     using ContainerNode::_get_renderables;
@@ -51,11 +52,15 @@ public:
 
     Frustum& frustum() { return frustum_; }
 
-    void set_perspective_projection(const Degrees &fov, double aspect, double near=1.0, double far=1000.0);
-    void set_orthographic_projection(double left, double right, double bottom, double top, double near=-1.0, double far=1.0);
-    double set_orthographic_projection_from_height(double desired_height_in_units, double ratio);
+    void set_perspective_projection(const Degrees &fov, float aspect, float near=1.0f, float far=1000.0f);
+    void set_orthographic_projection(float left, float right, float bottom, float top, float near=-1.0, float far=1.0);
+    float set_orthographic_projection_from_height(float desired_height_in_units, float ratio);
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     AABB bounds_;
     Frustum frustum_;
 

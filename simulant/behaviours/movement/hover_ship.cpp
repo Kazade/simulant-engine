@@ -46,10 +46,9 @@ void HoverShip::update(float dt) {
 void HoverShip::fixed_update(float step) {
     _S_UNUSED(step);
 
-    float dist = 0.0f;
-    auto hit = simulation_->intersect_ray(body_->position(), -body_->up() * hover_height_, &dist);
-    if(hit.second) {
-        auto prop_height = (hover_height_ - dist) / hover_height_;
+    auto hit = simulation_->ray_cast(body_->position(), -body_->up(), hover_height_);
+    if(hit) {
+        auto prop_height = (hover_height_ - hit.value().distance) / hover_height_;
         auto force = smlt::Vec3::POSITIVE_Y * prop_height * hover_force_;
         body_->add_force(force);
     }

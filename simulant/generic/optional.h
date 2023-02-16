@@ -14,6 +14,10 @@ class optional {
 public:
     optional() = default;
 
+    ~optional() {
+        reset();
+    }
+
     template<typename U>
     optional(optional<U>&& other) {
         auto src = other.value_ptr();
@@ -41,6 +45,8 @@ public:
     optional& operator=(const optional& other) {
         if(other.has_value()) {
             set_value(other.value());
+        } else {
+            reset();
         }
 
         return *this;
@@ -103,8 +109,9 @@ private:
             reset();
         }
 
-        new (data_) T(value);
+        new (data_) T();
         has_value_ = true;
+        *(value_ptr()) = value;
     }
 
     void set_value(T&& value) {

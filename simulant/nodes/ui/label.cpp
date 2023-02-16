@@ -1,10 +1,11 @@
+#include "ui_manager.h"
 #include "label.h"
 
 namespace smlt {
 namespace ui {
 
-Label::Label(UIManager *owner, UIConfig *config):
-    Widget(owner, config) {
+Label::Label(UIManager *owner, UIConfig *config, Stage* stage):
+    Widget(owner, config, stage) {
 
     set_resize_mode(config->label_resize_mode_);
     set_background_colour(config->label_background_colour_);

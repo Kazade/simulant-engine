@@ -12,8 +12,8 @@ class IndexData;
 class Mesh;
 class Renderer;
 
-enum MaterialSlot {
-    MATERIAL_SLOT0,
+enum MaterialSlot : uint8_t {
+    MATERIAL_SLOT0 = 0,
     MATERIAL_SLOT1,
     MATERIAL_SLOT2,
     MATERIAL_SLOT3,
@@ -24,11 +24,25 @@ enum MaterialSlot {
     MATERIAL_SLOT_MAX
 };
 
+enum SubmeshType {
+    SUBMESH_TYPE_INDEXED,
+    SUBMESH_TYPE_RANGED,
+};
+
+struct VertexRange {
+    uint32_t start;
+    uint32_t count;
+};
+
+typedef std::vector<VertexRange> VertexRangeList;
+
+
 class SubMesh:
     public RefCounted<SubMesh>,
     public Nameable {
 
 public:
+    /* Indexed submesh constructor */
     SubMesh(Mesh* parent,
         const std::string& name,
         MaterialPtr material,
@@ -36,17 +50,45 @@ public:
         MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
     );
 
+    /* Ranged submesh constructor */
+    SubMesh(Mesh* parent,
+        const std::string& name,
+        MaterialPtr material,
+        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
+    );
+
     virtual ~SubMesh();
 
-    void set_material(MaterialPtr material);
-    void set_material_at_slot(MaterialSlot var, MaterialPtr material);
+    SubmeshType type() const;
+
+    /**
+     * @brief Add a vertex range to this submesh. `count` vertices will be rendered
+     * from the `start` index in the mesh vertex data.
+     * @param start
+     * @param count
+     */
+    bool add_vertex_range(uint32_t start, uint32_t count);
+    void mark_changed();
+
+    const VertexRange* vertex_ranges() const {
+        return &vertex_ranges_[0];
+    }
+
+    std::size_t vertex_range_count() const {
+        return vertex_ranges_.size();
+    }
+
+    void remove_all_vertex_ranges();
+
+    void set_material(const MaterialPtr &material);
+    void set_material_at_slot(MaterialSlot var, const MaterialPtr& material);
 
     MaterialPtr material() const;
     MaterialPtr material_at_slot(MaterialSlot var, bool fallback=false) const;
 
     MeshArrangement arrangement() const { return arrangement_; }
 
-    void reverse_winding();
+    bool reverse_winding();
 
     void generate_texture_coordinates_cube(uint32_t texture=0);
 
@@ -72,6 +114,10 @@ public:
      */
     void each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb);
 
+    /** Return the axis-aligned bounding box for the faces making up
+     *  this submesh */
+    const AABB& aabb() const;
+
 public:
     typedef sig::signal<void (SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> MaterialChangedCallback;
 
@@ -85,16 +131,22 @@ private:
     sig::connection material_change_connection_;
 
     Mesh* parent_;
+    SubmeshType type_;
     sig::connection parent_update_connection_;
-
 
     std::array<MaterialPtr, MATERIAL_SLOT_MAX> materials_;
 
     MeshArrangement arrangement_;
 
     std::shared_ptr<IndexData> index_data_;
+    VertexRangeList vertex_ranges_;
 
     void _recalc_bounds(AABB& bounds);
+    void _recalc_bounds_indexed(AABB& bounds);
+    void _recalc_bounds_ranged(AABB& bounds);
+
+    void _each_triangle_indexed(std::function<void (uint32_t, uint32_t, uint32_t)> cb);
+    void _each_triangle_ranged(std::function<void (uint32_t, uint32_t, uint32_t)> cb);
 
     MaterialChangedCallback signal_material_changed_;
 

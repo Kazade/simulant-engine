@@ -43,18 +43,21 @@ public:
         auto done = std::make_shared<bool>(false);
 
         // While we're loading, continually pulse the progress bar to show that stuff is happening
-        window->idle->add([this, loading, done]() {
+        cr_async([this, loading, done]() {
             if(!scenes->has_scene("_loading")) {
-                return false;
+                return;
             }
 
-            if(loading->is_loaded() && loading->progress_bar) {
-                loading->progress_bar->pulse();
+            while(!(*done)) {
+                if(loading->is_loaded() && loading->progress_bar) {
+                    loading->progress_bar->pulse();
+                }
+
+                cr_yield();
             }
-            return !(*done);
         });
 
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         pipeline_ = compositor->render(
             stage_, camera_
@@ -66,7 +69,7 @@ public:
         link_pipeline(pipeline_);
 
         camera_->set_perspective_projection(
-            Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0
+            Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0f
         );
 
         auto cam = camera_;
@@ -149,8 +152,14 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Terrain Demo";
     config.fullscreen = false;
-    config.width = 640 * 2;
-    config.height = 480 * 2;
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
+    config.width = 1280;
+    config.height = 960;
+#endif
 
     TerrainDemo app(config);
     return app.run();

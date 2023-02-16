@@ -18,9 +18,19 @@
 //
 
 #include "types.h"
-#include "random.h"
+#include "utils/random.h"
 
 namespace smlt {
+
+const std::vector<RenderPriority> RENDER_PRIORITIES = {
+    RENDER_PRIORITY_ABSOLUTE_BACKGROUND,
+    RENDER_PRIORITY_BACKGROUND,
+    RENDER_PRIORITY_DISTANT,
+    RENDER_PRIORITY_MAIN,
+    RENDER_PRIORITY_NEAR,
+    RENDER_PRIORITY_FOREGROUND,
+    RENDER_PRIORITY_ABSOLUTE_FOREGROUND
+};
 
 VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
         VertexAttribute texcoord1, VertexAttribute texcoord2, VertexAttribute texcoord3, VertexAttribute texcoord4,

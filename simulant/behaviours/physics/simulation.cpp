@@ -18,31 +18,26 @@ void b3EndProfileScope() {
 namespace smlt{
 namespace behaviours {
 
-void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
+static inline void to_b3vec3(const Vec3& rhs, b3Vec3& ret) {
     ret.x = rhs.x;
     ret.y = rhs.y;
     ret.z = rhs.z;
 }
 
-void to_b3quat(const Quaternion& q, b3Quat& ret) {
+static inline void to_b3quat(const Quaternion& q, b3Quat& ret) {
     ret.v.x = q.x;
     ret.v.y = q.y;
     ret.v.z = q.z;
     ret.s = q.w;
 }
 
-void to_vec3(const b3Vec3& rhs, Vec3& ret) {
+static inline void to_vec3(const b3Vec3& rhs, Vec3& ret) {
     ret.x = rhs.x;
     ret.y = rhs.y;
     ret.z = rhs.z;
 }
 
-void to_mat3(const b3Mat33& rhs, Mat3& out) {
-    Mat3 ret((float*)&rhs[0]);
-    out = ret;
-}
-
-void to_quat(const b3Quat& rhs, Quaternion& out) {
+static inline void to_quat(const b3Quat& rhs, Quaternion& out) {
     out = Quaternion(
         rhs.v.x,
         rhs.v.y,
@@ -63,11 +58,11 @@ public:
     virtual ~ContactListener() {}
 
     void BeginContact(b3Contact* contact) {
-        b3Shape* shapeA = contact->GetShapeA();
-        b3Shape* shapeB = contact->GetShapeB();
+        b3Fixture* fixtureA = contact->GetFixtureA();
+        b3Fixture* fixtureB = contact->GetFixtureB();
 
-        Body* bodyA = (Body*) shapeA->GetUserData();
-        Body* bodyB = (Body*) shapeB->GetUserData();
+        Body* bodyA = (Body*) fixtureA->GetUserData();
+        Body* bodyB = (Body*) fixtureB->GetUserData();
 
         if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
             auto coll_pair = build_collision_pair(contact);
@@ -89,11 +84,11 @@ public:
             return;
         }
 
-        b3Shape* shapeA = contact->GetShapeA();
-        b3Shape* shapeB = contact->GetShapeB();
+        b3Fixture* fixtureA = contact->GetFixtureA();
+        b3Fixture* fixtureB = contact->GetFixtureB();
 
-        Body* bodyA = (Body*) shapeA->GetUserData();
-        Body* bodyB = (Body*) shapeB->GetUserData();
+        Body* bodyA = (Body*) fixtureA->GetUserData();
+        Body* bodyB = (Body*) fixtureB->GetUserData();
 
         if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
             auto coll_pair = build_collision_pair(contact);
@@ -118,7 +113,7 @@ public:
         std::vector<b3Contact*> ret;
         for(auto contact: active_contacts_) {
 
-            if(contact->GetShapeA()->GetBody() == body || contact->GetShapeB()->GetBody() == body) {
+            if(contact->GetFixtureA()->GetBody() == body || contact->GetFixtureB()->GetBody() == body) {
                 ret.push_back(contact);
             }
         }
@@ -128,28 +123,28 @@ public:
 
 private:
     std::pair<Collision, Collision> build_collision_pair(b3Contact* contact) {
-        b3Shape* shapeA = contact->GetShapeA();
-        b3Shape* shapeB = contact->GetShapeB();
+        b3Fixture* fixtureA = contact->GetFixtureA();
+        b3Fixture* fixtureB = contact->GetFixtureB();
 
-        Body* bodyA = (Body*) shapeA->GetUserData();
-        Body* bodyB = (Body*) shapeB->GetUserData();
+        Body* bodyA = (Body*) fixtureA->GetUserData();
+        Body* bodyB = (Body*) fixtureB->GetUserData();
 
         Collision collA, collB;
 
         collA.this_body = bodyA;
-        collA.this_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collA.this_collider_name = bodyA->collider_details_.at(fixtureA).name;
         collA.this_stage_node = bodyA->stage_node.get();
 
         collA.other_body = bodyB;
-        collA.other_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collA.other_collider_name = bodyB->collider_details_.at(fixtureB).name;
         collA.other_stage_node = bodyB->stage_node.get();
 
         collB.other_body = bodyA;
-        collB.other_collider_name = bodyA->collider_details_.at(shapeA).name;
+        collB.other_collider_name = bodyA->collider_details_.at(fixtureA).name;
         collB.other_stage_node = bodyA->stage_node.get();
 
         collB.this_body = bodyB;
-        collB.this_collider_name = bodyB->collider_details_.at(shapeB).name;
+        collB.this_collider_name = bodyB->collider_details_.at(fixtureB).name;
         collB.this_stage_node = bodyB->stage_node.get();
 
         return std::make_pair(collA, collB);
@@ -159,17 +154,55 @@ private:
     RigidBodySimulation* simulation_;
 };
 
+
+class PrivateContactFilter : public b3ContactFilter {
+public:
+    PrivateContactFilter(RigidBodySimulation* simulation):
+        simulation_(simulation) {
+
+    }
+
+    bool ShouldCollide(b3Fixture *fixtureA, b3Fixture *fixtureB) override {
+        if(!simulation_->filter_) {
+            return true;
+        }
+
+        Fixture a(simulation_, fixtureA);
+        Fixture b(simulation_, fixtureB);
+
+        return simulation_->filter_->should_collide(&a, &b);
+    }
+
+    bool ShouldRespond(b3Fixture *fixtureA, b3Fixture *fixtureB) override {
+        if(!simulation_->filter_) {
+            return true;
+        }
+
+        Fixture a(simulation_, fixtureA);
+        Fixture b(simulation_, fixtureB);
+
+        return simulation_->filter_->should_respond(&a, &b);
+    }
+
+private:
+    RigidBodySimulation* simulation_ = nullptr;
+};
+
+}
+
+Fixture::Fixture(RigidBodySimulation* sim, b3Fixture* fixture) {
+    body_ = sim->get_associated_body(fixture->GetBody());
+    assert(body_);
+
+    kind_ = body_->collider_details_.at(fixture).kind;
 }
 
 
 RigidBodySimulation::RigidBodySimulation(TimeKeeper *time_keeper):
-    time_keeper_(time_keeper) {
+    time_keeper_(time_keeper),
+    scene_(std::make_shared<b3World>()) {
 
-    contact_listener_ = std::make_shared<impl::ContactListener>(this);
-
-    scene_.reset(new b3World());
     scene_->SetGravity(b3Vec3(0, -9.81, 0));
-    scene_->SetContactListener(contact_listener_.get());
 }
 
 void RigidBodySimulation::set_gravity(const Vec3& gravity) {
@@ -179,13 +212,27 @@ void RigidBodySimulation::set_gravity(const Vec3& gravity) {
 }
 
 bool RigidBodySimulation::init() {
+    contact_listener_ = std::make_shared<impl::ContactListener>(this);
+    contact_filter_ = std::make_shared<impl::PrivateContactFilter>(this);
 
+    scene_->SetContactListener(contact_listener_.get());
+    scene_->SetContactFilter(contact_filter_.get());
     return true;
 }
 
 void RigidBodySimulation::clean_up() {
     // Disconnect the contact listener
     scene_->SetContactListener(nullptr);
+    scene_->SetContactFilter(nullptr);
+}
+
+RigidBodySimulation::~RigidBodySimulation() {
+    /* Wipe the simulation from all associated bodies so they don't
+     * try to release and access this */
+    for(auto& body: bodies_) {
+        body.first->simulation_ = nullptr;
+        scene_->DestroyBody(body.second);
+    }
 }
 
 void RigidBodySimulation::fixed_update(float step) {
@@ -196,15 +243,15 @@ void RigidBodySimulation::fixed_update(float step) {
     scene_->Step(step, velocity_iterations, position_iterations);
 }
 
-std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, const Vec3& direction, float* distance, Vec3* normal) {
+smlt::optional<RayCastResult> RigidBodySimulation::ray_cast(const Vec3& start, const Vec3& direction, float max_distance) {
     b3RayCastSingleOutput result;
     b3Vec3 s, d;
 
     to_b3vec3(start, s);
-    to_b3vec3(start + direction, d);
+    to_b3vec3(start + (direction * max_distance), d);
 
     struct AlwaysCast : public b3RayCastFilter {
-        bool ShouldRayCast(b3Shape*) {
+        bool ShouldRayCast(b3Fixture*) override {
             return true;
         }
     };
@@ -214,38 +261,42 @@ std::pair<Vec3, bool> RigidBodySimulation::intersect_ray(const Vec3& start, cons
     bool hit = scene_->RayCastSingle(&result, &filter, s, d);
 
     float closest = std::numeric_limits<float>::max();
-    Vec3 impact_point, closest_normal;
 
     if(hit) {
-        to_vec3(result.point, impact_point);
-        closest = (impact_point - start).length();
-        to_vec3(result.normal, closest_normal);
-
-        if(distance) {
-            *distance = closest;
-        }
-
-        if(normal) {
-            *normal = closest_normal;
-        }
+        RayCastResult ret;
+        ret.other_body = get_associated_body(result.fixture->GetBody());
+        to_vec3(result.point, ret.impact_point);
+        closest = (ret.impact_point - start).length();
+        to_vec3(result.normal, ret.normal);
+        ret.distance = closest;
+        return smlt::optional<RayCastResult>(ret);
     }
 
-    return std::make_pair(impact_point, hit);
+    return smlt::optional<RayCastResult>();
 }
 
 b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
     b3BodyDef def;
 
     bool is_dynamic = body->is_dynamic();
-    def.type = (is_dynamic) ? b3BodyType::e_dynamicBody : b3BodyType::e_staticBody;
+    bool is_kinematic = body->is_kinematic();
 
+    if(is_kinematic) {
+        def.type = b3BodyType::e_kinematicBody;
+    } else if(is_dynamic) {
+        def.type = b3BodyType::e_dynamicBody;
+    } else {
+        def.type = b3BodyType::e_staticBody;
+    }
+
+    /* Kinematic bodies are dynamic bodies */
     b3Vec3 v;
     v.x = (is_dynamic) ? 1.0f : 0.0f;
     v.y = (is_dynamic) ? 1.0f : 0.0f;
     v.z = (is_dynamic) ? 1.0f : 0.0f;
 
     def.gravityScale = v;
-    def.userData = this;
+    def.userData = body;
 
     // If the body is attached to a stage node then set up the initial rotation
     // and position from that.
@@ -260,16 +311,23 @@ b3Body *RigidBodySimulation::acquire_body(impl::Body *body) {
 }
 
 void RigidBodySimulation::release_body(impl::Body *body) {
-    auto bbody = bodies_.at(body);
-    scene_->DestroyBody(bbody);
-    bodies_.erase(body);
+    auto it = bodies_.find(body);
+    if(it != bodies_.end()) {
+        auto bbody = (*it).second;
+        scene_->DestroyBody(bbody);
+        bodies_.erase(it);
+    }
+}
+
+impl::Body *RigidBodySimulation::get_associated_body(b3Body *b) {
+    return (impl::Body*) b->GetUserData();
 }
 
 std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body *body) {
-    b3Body* b = bodies_.at(body);
+    b3Body* b = body->body_;
 
-    auto position = b->GetWorldCenter();
-    auto rotation = b->GetOrientation();
+    auto position = b->GetTransform().translation;
+    auto rotation = b->GetTransform().rotation;
 
     Vec3 p;
     to_vec3(position, p);
@@ -281,16 +339,13 @@ std::pair<Vec3, Quaternion> RigidBodySimulation::body_transform(const impl::Body
 }
 
 void RigidBodySimulation::set_body_transform(impl::Body* body, const Vec3& position, const Quaternion& rotation) {
-    b3Body* b = bodies_.at(body);
+    b3Body* b = body->body_;
 
-    auto axis_angle = rotation.to_axis_angle();
-
-    b3Vec3 p, a;
+    b3Vec3 p;
     to_b3vec3(position, p);
-    to_b3vec3(axis_angle.axis, a);
 
     b3Quat rot;
-    rot.SetAxisAngle(a, axis_angle.angle.value);
+    to_b3quat(rotation, rot);
 
     b->SetTransform(p, rot);
 }

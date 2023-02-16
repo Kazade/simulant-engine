@@ -16,13 +16,13 @@ public:
 
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        window->destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
     }
 
     void test_audio_listener() {
@@ -43,14 +43,23 @@ public:
         assert_true(window->has_explicit_audio_listener());
 
         stage_->destroy_actor(actor);
-        window->run_frame(); // actually destroy
+        application->run_frame(); // actually destroy
 
         assert_equal(window->audio_listener(), camera_);
         assert_false(window->has_explicit_audio_listener());
     }
 
+    void test_global_output() {
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto playing = application->sound_driver->play_sound(sound);
+        assert_true(playing->is_playing());
+        while(playing->is_playing()) {
+            application->run_frame();
+        }
+    }
+
     void test_2d_sound_output() {
-        smlt::SoundPtr sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
 
         auto actor = stage_->new_actor();
 
@@ -61,7 +70,35 @@ public:
         assert_true(actor->playing_sound_count());
 
         while(actor->playing_sound_count()) {
-            window->run_frame();
+            application->run_frame();
+        }
+    }
+
+    void test_played_signal() {
+        bool played = false;
+
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+
+        auto actor = stage_->new_actor();
+
+        assert_false(actor->playing_sound_count());
+
+        actor->signal_sound_played().connect([&](smlt::SoundPtr s, smlt::AudioRepeat repeat, smlt::DistanceModel model) {
+            played = true;
+
+            /* Check args to the signal are correct */
+            assert_equal(s, sound);
+            assert_equal(repeat, smlt::AUDIO_REPEAT_NONE);
+            assert_equal(model, smlt::DISTANCE_MODEL_DEFAULT);
+        });
+
+        actor->play_sound(sound);
+
+        assert_true(actor->playing_sound_count());
+        assert_true(played);  /* Signal should have fired */
+
+        while(actor->playing_sound_count()) {
+            application->run_frame();
         }
     }
 
@@ -79,42 +116,43 @@ public:
 
         // Finish playing the sound
         while(actor->playing_sound_count()) {
-            window->run_frame();
+            application->run_frame();
         }
     }
 
     void test_sound_destruction_stops_play() {
-        auto sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
 
         auto sid = sound->id();
 
         auto a = stage_->new_actor();
 
-        assert_true(window->shared_assets->has_sound(sid));
+        assert_true(application->shared_assets->has_sound(sid));
         a->play_sound(sound);
 
         assert_true(a->is_sound_playing());
 
-        window->shared_assets->destroy_sound(sound);
+        application->shared_assets->destroy_sound(sound);
         sound.reset();
 
-        window->shared_assets->run_garbage_collection();
+        application->shared_assets->run_garbage_collection();
         while(a->playing_sound_count()) {
-            window->run_frame();
+            application->run_frame();
         }
 
-        assert_false(window->shared_assets->has_sound(sid));
+        assert_false(application->shared_assets->has_sound(sid));
         assert_false(a->is_sound_playing());
     }
 
     void test_sound_stopping() {
-        auto sound = window->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
         auto a = stage_->new_actor();
-        auto id = a->play_sound(sound);
+        smlt::PlayingSoundPtr s = a->play_sound(sound);
 
-        assert_true(id); // id > 0
+        assert_true(s);
+        assert_true(s->id()); // id > 0
         assert_true(a->is_sound_playing());
-        assert_true(a->stop_sound(id));
+        assert_true(a->stop_sound(s->id()));
         assert_false(a->is_sound_playing());
     }
 

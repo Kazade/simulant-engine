@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include "vertex_data.h"
 #include "window.h"
+#include "time_keeper.h"
 #include "utils/gl_thread_check.h"
 
 namespace smlt {
@@ -63,13 +64,7 @@ _S_FORCE_INLINE Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
 
 const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
     VERTEX_ATTRIBUTE_3F,  // Position
-#ifdef __DREAMCAST__
-    /* We enable this only on the Dreamcast as Mesa3D suffers a bug
-     * on Linux. But it's on the DC that this matters anyway */
-    VERTEX_ATTRIBUTE_PACKED_VEC4_1I, // Normal
-#else
     VERTEX_ATTRIBUTE_3F,
-#endif
     VERTEX_ATTRIBUTE_2F, // UV
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
@@ -119,7 +114,8 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
         case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return spec.diffuse_attribute;
         case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
     default:
-        throw std::logic_error("Invalid vertex attribute type");
+        assert(0 && "Invalid vertex attribute type");
+        return VERTEX_ATTRIBUTE_NONE;
     }
 }
 
@@ -146,38 +142,73 @@ void VertexData::clear(bool release_memory) {
 
 void VertexData::position_checks() {
     if(!vertex_specification_.has_positions()) {
-        throw std::logic_error("Vertex data has no position attribute");
+        return;
+    }
+
+    if(cursor_position_ > (int32_t) vertex_count_) {
+        assert(0 && "Cursor has moved out of range");
+        cursor_position_ = (int32_t) vertex_count_;
     }
 
     if(cursor_position_ == (int32_t) vertex_count_) {
         push_back();
-    } else if(cursor_position_ > (int32_t) vertex_count_) {
-        throw std::out_of_range("Cursor moved out of range");
     }
 }
 
 void VertexData::position(float x, float y, float z, float w) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F);
-    Vec4* out = (Vec4*) &data_[cursor_offset()];
-    *out = Vec4(x, y, z, w);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+    float* out = (float*) &data_[cursor_offset()];
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    out[3] = w;
 }
 
 void VertexData::position(float x, float y, float z) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F);
-    Vec3* out = (Vec3*) &data_[cursor_offset()];
-    *out = Vec3(x, y, z);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+
+    float* out = (float*) &data_[cursor_offset()];
+    switch(vertex_specification_.position_attribute_) {
+    case VERTEX_ATTRIBUTE_4F:
+        out[3] = 1.0f;
+        // Fallthrough
+    case VERTEX_ATTRIBUTE_3F:
+        out[0] = x;
+        out[1] = y;
+        out[2] = z;
+    break;
+    default:
+        return;
+    }
 }
 
 void VertexData::position(float x, float y) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F);
-    Vec2* out = (Vec2*) &data_[cursor_offset()];
-    *out = Vec2(x, y);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_2F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+
+    float* out = (float*) &data_[cursor_offset()];
+    switch(vertex_specification_.position_attribute_) {
+    case VERTEX_ATTRIBUTE_4F:
+        out[3] = 1.0f;
+        // fallthrough
+    case VERTEX_ATTRIBUTE_3F:
+        out[2] = 0.0f;
+        // fallthrough
+    case VERTEX_ATTRIBUTE_2F:
+        out[0] = x;
+        out[1] = y;
+    break;
+    default:
+        return;
+    }
 }
 
 void VertexData::position(const Vec2 &pos) {
@@ -278,7 +309,8 @@ void VertexData::tex_coordX(uint8_t which, float u, float v) {
     }
 
     Vec2* out = (Vec2*) &data_[cursor_offset() + offset];
-    *out = Vec2(u, v);
+    out->x = u;
+    out->y = v;
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
@@ -458,16 +490,22 @@ void VertexData::move_to_end() {
     move_to(data_.size() / stride());
 }
 
-void VertexData::move_by(int32_t amount) {
+bool VertexData::move_by(int32_t amount) {
+    if(int32_t(cursor_position_) + amount >= (int32_t) vertex_count_) {
+        return false;
+    }
+
     cursor_position_ += amount;
+    return false;
 }
 
-void VertexData::move_to(int32_t index) {
+bool VertexData::move_to(int32_t index) {
     if(index > (int32_t) vertex_count_) {
-        throw std::out_of_range("Tried to move outside the range of the data");
+        return false;
     }
 
     cursor_position_ = index;
+    return true;
 }
 
 uint32_t VertexData::move_next() {
@@ -487,14 +525,15 @@ void VertexData::recalc_attributes() {
 
 }
 
-void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state, uint32_t dest_idx, VertexData &out, uint32_t out_idx, float interp) {
+bool VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state, uint32_t dest_idx, VertexData &out, uint32_t out_idx, float interp) {
     /*
      * Given a VertexData representing the destination state, this will interpolate
      * the vertex position and normal into the out data of the specified index
      */
 
     if(out.vertex_specification_ != this->vertex_specification_ || dest_state.vertex_specification_ != this->vertex_specification_) {
-        throw std::logic_error("You cannot interpolate vertices between data with different specifications");
+        S_ERROR("You cannot interpolate vertices between data with different specifications");
+        return false;
     }
 
     // First, copy all the data from the source to the current out vertex
@@ -531,6 +570,7 @@ void VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
     }
 
     //FIXME: Interpolate normals here
+    return true;
 }
 
 void VertexData::reserve(uint32_t size) {

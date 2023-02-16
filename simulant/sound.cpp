@@ -23,10 +23,49 @@
 #include "sound.h"
 #include "sound_driver.h"
 #include "nodes/stage_node.h"
+#include "application.h"
+#include "time_keeper.h"
+#include "threads/thread.h"
 
 namespace smlt {
 
-PlayingSoundID PlayingSound::counter_ = 0;
+static thread::Mutex ACTIVE_SOURCES_MUTEX;
+static std::list<AudioSource*> ACTIVE_SOURCES;
+static std::shared_ptr<thread::Thread> SOURCE_UPDATE_THREAD;
+
+void AudioSource::source_update_thread() {
+    static auto update_rate = 1.0f / 20.0f;
+    static auto last_time = get_app()->time_keeper->now_in_us();
+
+    S_INFO("Starting source update thread");
+
+    while(true) {
+        if(get_app() && get_app()->is_shutting_down()) {
+            break;
+        }
+
+        auto now = get_app()->time_keeper->now_in_us();
+        auto diff = now - last_time;
+        auto dt = float(diff) * 0.000001f;
+
+        if(dt < update_rate) {
+            thread::yield();
+            continue;
+        }
+
+        {
+            thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+            for(auto src: ACTIVE_SOURCES) {
+                src->update_source(dt);
+            }
+        }
+
+        last_time = now;
+    }
+
+    S_INFO("Stopping audio thread");
+}
+
 
 Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver):
     generic::Identifiable<SoundID>(id),
@@ -50,8 +89,8 @@ std::size_t Sound::buffer_size() const {
 
 #ifdef __DREAMCAST__
     /* The Dreamcast sound chip only allows 65534 samples and ALdc
-     * will truncate if it's larger so this just prevents us missing
-     * a sample */
+     * will truncate if it's larger so this prevents us triggering
+     * an OpenAL error */
     ret = std::min(ret, (std::size_t) 65534);
 #endif
 
@@ -64,158 +103,26 @@ void Sound::init_source(PlayingSound& source) {
     init_playing_sound_(source);
 }
 
-PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
-    id_(++PlayingSound::counter_),
-    parent_(parent),
-    source_(0),
-    buffers_{0, 0},
-    sound_(sound),
-    loop_stream_(loop_stream),
-    is_dead_(false) {
 
-
-    SoundDriver* driver = parent_._sound_driver();
-
-    source_ = driver->generate_sources(1).back();
-    buffers_ = driver->generate_buffers(2);
-
-    if(model == DISTANCE_MODEL_AMBIENT) {
-        driver->set_source_as_ambient(source_);
-    }
-}
-
-PlayingSound::~PlayingSound() {
-    SoundDriver* driver = parent_._sound_driver();
-
-    if(driver) {
-        driver->stop_source(source_); // Make sure we have stopped playing!
-        driver->destroy_sources({source_});
-        driver->destroy_buffers(buffers_);
-    }
-}
-
-void PlayingSound::start() {
-    if(!stream_func_) {
-        S_WARN("Not playing sound as no stream func was set");
-        return;
-    }
-
-    //Fill up two buffers to begin with
-    auto bs1 = stream_func_(buffers_[0]);
-    auto bs2 = stream_func_(buffers_[1]);
-
-    if(bs1 < 0 || bs2 < 0) {
-        /* Sound was destroyed immediately */
-        is_dead_ = true;
-        return;
-    }
-
-    int to_queue = (bs1 && bs2) ? 2 : (bs1 || bs2)? 1 : 0;
-
-    SoundDriver* driver = parent_._sound_driver();
-
-    driver->queue_buffers_to_source(source_, to_queue, buffers_);
-    driver->play_source(source_);
-}
-
-void PlayingSound::stop() {
-    SoundDriver* driver = parent_._sound_driver();
-
-    driver->stop_source(source_);
-    is_dead_ = true;
-}
-
-bool PlayingSound::is_playing() const {
-    SoundDriver* driver = parent_._sound_driver();
-    return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
-}
-
-void PlayingSound::update(float dt) {
-    SoundDriver* driver = parent_._sound_driver();
-
-    // Update the position of the source if this is attached to a stagenode
-    if(parent_.node_) {
-        auto pos = parent_.node_->absolute_position();
-        driver->set_source_properties(
-            source_,
-            pos,
-            // Use the last position to calculate the velocity, this is a bit of
-            // a hack... FIXME maybe..
-            // FIXME: This is value is "scaled" to assume the velocity over a second
-            // this isn't accurate as update isn't called with a fixed timestep
-            (first_update_) ? smlt::Vec3() : (pos - previous_position_) * (1.0f / dt)
-        );
-
-        previous_position_ = pos;
-
-        // We don't apply velocity on the first update otherwise things might go
-        // funny
-        first_update_ = false;
-    }
-
-    int32_t processed = driver->source_buffers_processed_count(source_);
-
-    bool finished = false;
-
-    /* We lock through the entire update, mainly so that if a sound finishes
-     * but it's looping, we don't lose the sound before we reinitialise the
-     * source instance */
-    auto sound = sound_.lock();
-
-    while(processed--) {
-        AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).back();
-
-        int32_t bytes = stream_func_(buffer);
-
-        if(bytes <= 0) {
-            /* -1 indicates the sound has been deleted */
-            finished = true;
-            break;
-        }
-
-        if(!finished) {
-            if(!bytes) {
-                // Just because we have nothing left to queue, doesn't mean that all buffers
-                // are finished, so wait for the last buffer to be unqueued
-                finished = driver->source_state(source_) == AUDIO_SOURCE_STATE_STOPPED;
-            } else {
-                driver->queue_buffers_to_source(source_, 1, {buffer});
-            }
-        }
-    }
-
-    if(finished) {
-        parent_.signal_stream_finished_();
-
-        /* Make sure we're totally stopped! */
-        driver->stop_source(source_);
-
-        /* Make totally sure we've unqueued everything */
-        processed = driver->source_buffers_processed_count(source_);
-        while(processed--) {
-            driver->unqueue_buffers_from_source(source_, 1).back();
-        }
-
-        if(loop_stream_ == AUDIO_REPEAT_FOREVER) {
-            //Restart the sound
-            if(sound) {
-                sound->init_source(*this);
-                start();
-                is_dead_ = false;
-            } else {
-                S_WARN("Sound unexpectedly vanished while looping");
-                is_dead_ = true;
-            }
-        } else {
-            //Mark as dead
-            is_dead_ = true;
-        }
-    }
-}
 
 AudioSource::AudioSource(Window *window):
     stage_(nullptr),
     window_(window) {
+
+    /* Start the source update thread if we didn't already */
+    if(!SOURCE_UPDATE_THREAD) {
+        SOURCE_UPDATE_THREAD = std::make_shared<thread::Thread>(&source_update_thread);
+
+        /* When the app shuts down, wait for the thread to finish before continuing
+         * with the shutdown process */
+        get_app()->signal_shutdown().connect([&]() {
+            SOURCE_UPDATE_THREAD->join();
+            SOURCE_UPDATE_THREAD.reset();
+        });
+    }
+
+    thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+    ACTIVE_SOURCES.push_back(this);
 }
 
 AudioSource::AudioSource(Stage *stage, StageNode* this_as_node, SoundDriver* driver):
@@ -224,19 +131,35 @@ AudioSource::AudioSource(Stage *stage, StageNode* this_as_node, SoundDriver* dri
     driver_(driver),
     node_(this_as_node) {
 
+    thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+    ACTIVE_SOURCES.push_back(this);
 }
 
 AudioSource::~AudioSource() {
+    /* If the source is destroyed we should stop all playing instances
+     * immediately */
+    thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
+    ACTIVE_SOURCES.remove(this);
 
+    thread::Lock<thread::Mutex> lock(mutex_);
+    auto app = smlt::get_app();
+    SoundDriver* driver = (app) ? app->sound_driver.get() : nullptr;
+    if(driver) {
+        for(auto& instance: instances_) {
+            driver->stop_source(instance->source_);
+        }
+    }
 }
 
-PlayingSoundID AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
+PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
     if(!sound) {
         S_WARN("Tried to play an invalid sound");
-        return 0;
+        return PlayingSoundPtr();
     }
 
     assert(sound);
+
+    thread::Lock<thread::Mutex> lock(mutex_);
 
     // If this is the window, we create an ambient source
     PlayingSound::ptr new_source = PlayingSound::create(
@@ -251,14 +174,21 @@ PlayingSoundID AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dista
 
     instances_.push_back(new_source);
 
-    return new_source->id();
+    signal_sound_played_(sound, repeat, model);
+
+    return PlayingSoundPtr(new_source);
 }
 
 bool AudioSource::stop_sound(PlayingSoundID sound_id) {
-    for(auto& instance: instances_) {
-        if(instance->id() == sound_id) {
-            instance->stop();
+    thread::Lock<thread::Mutex> lock(mutex_);
+
+    for(auto it = instances_.begin(); it != instances_.end();) {
+        if((*it)->id() == sound_id) {
+            (*it)->do_stop();
+            it = instances_.erase(it);
             return true;
+        } else {
+            ++it;
         }
     }
 
@@ -266,44 +196,30 @@ bool AudioSource::stop_sound(PlayingSoundID sound_id) {
 }
 
 void AudioSource::update_source(float dt) {
-    for(auto instance: instances_) {
-        instance->update(dt);
-    }
+    thread::Lock<thread::Mutex> lock(mutex_);
 
     //Remove any instances that have finished playing
     instances_.erase(
-                std::remove_if(
-                    instances_.begin(),
-                    instances_.end(),
+        std::remove_if(
+            instances_.begin(),
+            instances_.end(),
             std::bind(&PlayingSound::is_dead, std::placeholders::_1)
         ),
         instances_.end()
     );
-}
 
-void AudioSource::set_pitch(RangeValue<0, 1> pitch) {
-    for(auto& instance: instances_) {
-        _sound_driver()->set_source_pitch(instance->source_, pitch);
-    }
-}
-
-void AudioSource::set_reference_distance(float dist) {
-    for(auto& instance: instances_) {
-        _sound_driver()->set_source_reference_distance(instance->source_, dist);
-    }
-}
-
-void AudioSource::set_gain(RangeValue<0, 1> gain) {
-    for(auto& instance: instances_) {
-        _sound_driver()->set_source_gain(instance->source_, gain);
+    for(auto instance: instances_) {
+        instance->update(dt);
     }
 }
 
 SoundDriver *AudioSource::_sound_driver() const {
-    return (window_) ? window_->_sound_driver() : driver_;
+    return get_app()->sound_driver.get();
 }
 
 uint8_t AudioSource::playing_sound_count() const {
+    thread::Lock<thread::Mutex> lock(mutex_);
+
     uint8_t i = 0;
     for(auto instance: instances_) {
         if(instance->is_playing()) {
@@ -314,6 +230,8 @@ uint8_t AudioSource::playing_sound_count() const {
 }
 
 uint8_t AudioSource::played_sound_count() const {
+    thread::Lock<thread::Mutex> lock(mutex_);
+
     return std::count_if(
         instances_.begin(),
         instances_.end(),

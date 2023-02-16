@@ -99,18 +99,13 @@ public:
     typedef typename container_type::iterator iterator_type;
 
 private:
-    /* We copy the container because submeshes are often
-     * altered in a loop, and as they're shared pointers
-     * we can copy the container and maintain the submeshes
-     * for the lifetime of the iterator */
-
     friend class Mesh;
-    SubMeshIteratorPair(const container_type& container):
+    SubMeshIteratorPair(container_type& container):
         container_(container) {
 
     }
 
-    container_type container_;
+    container_type& container_;
 
 public:
     iterator_type begin() {
@@ -169,31 +164,48 @@ public:
     /* Returns true if the Mesh has had a skeleton added */
     bool has_skeleton() const;
 
-    SubMeshPtr new_submesh_with_material(
+    /**
+     * @brief Create a new ranged submesh with the specified material
+     * @param name
+     * @param material
+     * @param arrangement
+     * @return
+     */
+    SubMeshPtr new_submesh(
         const std::string& name,
         MaterialID material,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        IndexType=INDEX_TYPE_16_BIT
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
     );
 
-    SubMeshPtr new_submesh_with_material(
+    /**
+     * @brief Create a new indexed submesh with the specified material and index type
+     * @param name
+     * @param material
+     * @param index_type
+     * @param arrangement
+     * @return
+     */
+    SubMeshPtr new_submesh(
+        const std::string& name,
+        MaterialID material,
+        IndexType index_type,
+        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
+    );
+
+    /**
+     * @brief Create a new indexed submesh with shared index data
+     * @param name
+     * @param material
+     * @param index_data
+     * @param arrangement
+     * @return
+     */
+    SubMeshPtr new_submesh(
         const std::string& name,
         MaterialID material,
         IndexDataPtr index_data,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
-    );
-
-    SubMeshPtr new_submesh(
-        const std::string& name,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES,
-        IndexType=INDEX_TYPE_16_BIT
-    );
-
-    SubMeshPtr new_submesh(
-        const std::string& name,
-        IndexDataPtr index_data,
-        MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
-    );
+    );   
 
     SubMeshPtr new_submesh_as_capsule(
         const std::string& name,
@@ -244,6 +256,10 @@ public:
     uint32_t submesh_count() const { return submeshes_.size(); }
     bool has_submesh(const std::string& name) const;
     SubMeshPtr find_submesh(const std::string& name) const;
+    SubMeshPtr find_submesh_with_material(const MaterialPtr& mat) const;
+    std::vector<SubMeshPtr> find_all_submeshes(const std::string& name) const;
+    std::vector<SubMeshPtr> find_all_submeshes_with_material(const MaterialPtr& mat) const;
+
     SubMeshPtr first_submesh() const;
 
     void destroy_submesh(const std::string& name);
@@ -257,7 +273,7 @@ public:
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform);
 
-    SubMeshIteratorPair each_submesh() const;
+    SubMeshIteratorPair each_submesh();
 
     void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data);
     bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }

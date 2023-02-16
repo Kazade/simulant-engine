@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 
+#include "renderer.h"
 #include "../types.h"
 #include "../texture.h"
 #include "../threads/mutex.h"
@@ -46,14 +47,15 @@ constexpr const char* const INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY = "s_inv
  * is the most straightforward way to share the code.
 */
 
-class GLRenderer {
+class GLRenderer : public Renderer {
 protected:
     GLRenderer(Window* window):
-        win_(window) {}
+        Renderer(window) {}
 
-    void on_texture_register(TextureID tex_id, Texture *texture);
-    void on_texture_unregister(TextureID tex_id, Texture* texture);
-    void on_texture_prepare(Texture* texture);
+    void on_texture_register(TextureID tex_id, Texture *texture) override;
+    void on_texture_unregister(TextureID tex_id, Texture* texture) override;
+    void on_texture_prepare(Texture* texture) override;
+    bool texture_format_is_native(TextureFormat fmt) override;
 
     uint32_t convert_format(TextureFormat format);
     uint32_t convert_type(TextureFormat format);
@@ -61,9 +63,6 @@ protected:
     thread::Mutex texture_object_mutex_;
     std::unordered_map<TextureID, uint32_t> texture_objects_;
 
-private:
-    // Not called window_ to avoid name clashes in subclasses
-    Window* win_;
 };
 
 }

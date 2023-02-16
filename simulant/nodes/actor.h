@@ -55,9 +55,9 @@ public:
     const AABB& aabb() const override;
 
     MeshID mesh_id(DetailLevel detail_level) const;
-    MeshPtr mesh(DetailLevel detail_level) const;
-    MeshPtr best_mesh(DetailLevel detail_level) const;
-    MeshPtr base_mesh() const;
+    const MeshPtr &mesh(DetailLevel detail_level) const;
+    const MeshPtr& best_mesh(DetailLevel detail_level) const;
+    const MeshPtr &base_mesh() const;
 
     bool has_mesh(DetailLevel detail_level) const;
     bool has_any_mesh() const;
@@ -97,7 +97,11 @@ public:
     }
 
 private:
-    MeshPtr find_mesh(DetailLevel level) const {
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
+    const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
          * from the level to NEAREST and return the first non-null result */
         return effective_meshes_[level];

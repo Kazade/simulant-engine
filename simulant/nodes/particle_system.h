@@ -13,7 +13,7 @@
 #include "../interfaces.h"
 #include "../types.h"
 #include "../vertex_data.h"
-#include "../random.h"
+#include "../utils/random.h"
 #include "../assets/particle_script.h"
 
 namespace smlt {
@@ -53,19 +53,23 @@ public:
         return StageNode::transformed_aabb();
     }
 
-    void deactivate_emitters() { emitters_active_ = false; }
-    void activate_emitters() { emitters_active_ = true; }
+    bool emitters_active() const;
+    void set_emitters_active(bool value=true);
 
     void set_destroy_on_completion(bool value=true) { destroy_on_completion_ = value; }
     bool destroy_on_completion() const { return destroy_on_completion_; }
     bool has_active_emitters() const;
 
+    /**
+     * @brief If update_when_hidden is true, then particles will continue to be simulated
+     * even if the particle system is hidden via set_visible. The default is false.
+     * @return True if update_when_hidden is set.
+     */
+    bool update_when_hidden() const;
+    void set_update_when_hidden(bool value=true);
+
     VertexData* vertex_data() const {
         return vertex_data_;
-    }
-
-    IndexData* index_data() const {
-        return index_data_;
     }
 
     void clean_up() override {
@@ -80,7 +84,19 @@ public:
 
     void update(float dt) override;
 
+    std::size_t particle_count() const {
+        return particle_count_;
+    }
+
+    const Particle& particle(const std::size_t i) const {
+        return particles_[i];
+    }
+
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     struct EmitterState {
         bool is_active = true;
         float time_active = 0.0f;
@@ -106,9 +122,10 @@ private:
     std::size_t particle_count_ = 0;
 
     VertexData* vertex_data_ = nullptr;
-    IndexData* index_data_ = nullptr;
+    std::vector<VertexRange> vertex_ranges_;
 
     bool destroy_on_completion_ = false;
+    bool update_when_hidden_ = false;
 
     void rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right);
 

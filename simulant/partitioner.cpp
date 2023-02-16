@@ -4,124 +4,70 @@
 #include "nodes/particle_system.h"
 #include "nodes/geom.h"
 #include "nodes/light.h"
+#include "nodes/mesh_instancer.h"
 
 namespace smlt {
 
-void Partitioner::add_particle_system(ParticleSystemID ps) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-    stage_write(ps, write);
-}
-
-void Partitioner::update_particle_system(ParticleSystemID ps, const AABB &bounds) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_UPDATE;
-    write.stage_node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-    write.new_bounds = bounds;
-    stage_write(ps, write);
-}
-
-void Partitioner::remove_particle_system(ParticleSystemID ps) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-    stage_write(ps, write);
-}
-
-void Partitioner::add_geom(GeomID geom_id) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_GEOM;
-    stage_write(geom_id, write);
-}
-
-void Partitioner::remove_geom(GeomID geom_id) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_GEOM;
-    stage_write(geom_id, write);
-}
-
-void Partitioner::add_actor(ActorID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_ACTOR;
-    stage_write(obj, write);
-}
-
-void Partitioner::update_actor(ActorID actor_id, const AABB &bounds) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_UPDATE;
-    write.stage_node_type = STAGE_NODE_TYPE_ACTOR;
-    write.new_bounds = bounds;
-    stage_write(actor_id, write);
-}
-
-void Partitioner::remove_actor(ActorID obj) {
-    assert(obj);
-
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_ACTOR;
-    stage_write(obj, write);
-}
-
-void Partitioner::add_light(LightID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_ADD;
-    write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
-    stage_write(obj, write);
-}
-
-void Partitioner::update_light(LightID light_id, const AABB &bounds) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_UPDATE;
-    write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
-    write.new_bounds = bounds;
-    stage_write(light_id, write);
-}
-
-void Partitioner::remove_light(LightID obj) {
-    StagedWrite write;
-    write.operation = WRITE_OPERATION_REMOVE;
-    write.stage_node_type = STAGE_NODE_TYPE_LIGHT;
-    stage_write(obj, write);
-}
-
 void Partitioner::_apply_writes() {
-    for(auto& p: staged_writes_) {
-        bool remove_first = p.second.bits & (1 << WRITE_OPERATION_MAX);
-
-        /* FIXME: This breaks if the order was update -> remove -> add */
-        if(remove_first) {
-            if((p.second.bits & (1 << WRITE_OPERATION_REMOVE))) {
-                apply_staged_write(p.first, p.second.slot[WRITE_OPERATION_REMOVE]);
-            }
-
-            if((p.second.bits & (1 << WRITE_OPERATION_ADD))) {
-                apply_staged_write(p.first, p.second.slot[WRITE_OPERATION_ADD]);
-            }
-
-            if((p.second.bits & (1 << WRITE_OPERATION_UPDATE))) {
-                apply_staged_write(p.first, p.second.slot[WRITE_OPERATION_UPDATE]);
-            }
+    for(auto p: staged_writes_) {
+        auto it = removed_nodes_.find(p);
+        if(it != removed_nodes_.end()) {
+            StagedWrite write;
+            write.operation = WRITE_OPERATION_REMOVE;
+            apply_staged_write(it->second, write);
+            removed_nodes_.erase(it);
         } else {
-            if((p.second.bits & (1 << WRITE_OPERATION_ADD))) {
-                apply_staged_write(p.first, p.second.slot[WRITE_OPERATION_ADD]);
+            auto key = p->key();
+            if(p->partitioner_added_) {
+                StagedWrite write;
+                write.operation = WRITE_OPERATION_ADD;
+                write.node = p;
+                apply_staged_write(key, write);
             }
 
-            if((p.second.bits & (1 << WRITE_OPERATION_UPDATE))) {
-                apply_staged_write(p.first, p.second.slot[WRITE_OPERATION_UPDATE]);
-            }
-
-            if((p.second.bits & (1 << WRITE_OPERATION_REMOVE))) {
-                apply_staged_write(p.first, p.second.slot[WRITE_OPERATION_REMOVE]);
-            }
+            StagedWrite write;
+            write.operation = WRITE_OPERATION_UPDATE;
+            write.new_bounds = p->transformed_aabb();
+            write.node = p;
+            apply_staged_write(key, write);
         }
+
+        /* We always wipe this out once we've applied this node */
+        p->partitioner_dirty_ = false;
+        p->partitioner_added_ = false;
+    }
+
+    /* We've handled any writes, now deal with any remaining removed nodes */
+    for(auto n: removed_nodes_) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_REMOVE;
+        apply_staged_write(n.second, write);
     }
 
     staged_writes_.clear();
+    removed_nodes_.clear();
+}
+
+void Partitioner::stage_write(StageNode* node, const StagedWrite& op) {
+    if(op.operation == WRITE_OPERATION_REMOVE) {
+        removed_nodes_.insert(std::make_pair(node, node->key()));
+    } else if(!node->partitioner_dirty_ || removed_nodes_.count(node)) {
+        if(op.operation == WRITE_OPERATION_ADD) {
+            node->partitioner_added_ = true;
+
+            // If we re-added the node, we undo the removal
+            removed_nodes_.erase(node);
+        }
+
+        /* OK, we haven't staged this node yet */
+        staged_writes_.push_back(node);
+        node->partitioner_dirty_ = true;
+    }
+
+    /* Apply staged writes immediately to prevent the size spiralling */
+    if((staged_writes_.size() + removed_nodes_.size()) >= MAX_STAGED_WRITES) {
+        _apply_writes();
+    }
 }
 
 

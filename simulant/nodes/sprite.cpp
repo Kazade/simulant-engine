@@ -29,6 +29,7 @@
 using namespace smlt;
 
 Sprite::Sprite(SpriteManager *manager, SoundDriver* sound_driver):
+    TypedDestroyableObject<Sprite, SpriteManager>(manager),
     ContainerNode(manager->stage.get(), STAGE_NODE_TYPE_OTHER),
     AudioSource(manager->stage, this, sound_driver),
     manager_(manager) {
@@ -36,12 +37,12 @@ Sprite::Sprite(SpriteManager *manager, SoundDriver* sound_driver):
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
-void Sprite::destroy() {
-    manager_->destroy_sprite(id());
+bool Sprite::destroy() {
+    return manager_->destroy_sprite(id());
 }
 
-void Sprite::destroy_immediately() {
-    manager_->sprite_manager_->destroy_immediately(id());
+bool Sprite::destroy_immediately() {
+    return manager_->sprite_manager_->destroy_immediately(id());
 }
 
 bool Sprite::init() {

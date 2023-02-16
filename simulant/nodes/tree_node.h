@@ -36,6 +36,16 @@ public:
     TreeNode* next_node() const { return next_; }
     TreeNode* previous_node() const { return prev_; }
 
+    /** Iterates the child nodes to return the one at index i */
+    TreeNode* child_at(std::size_t i) const {
+        TreeNode* it = first_child_;
+        while(it && i--) {
+            it = it->next_node();
+        }
+
+        return it;
+    }
+
 protected:
     TreeNode* root_ = nullptr;
     TreeNode* parent_ = nullptr;

@@ -14,14 +14,14 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
         camera_ = stage_->new_camera();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
         stage_->destroy_camera(camera_->id());
-        window->destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
     }
 
     smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
@@ -46,7 +46,13 @@ public:
 
         data->done();
 
-        first_mesh_ = mesh->new_submesh("test");
+        auto mat = stage_->assets->clone_default_material();
+        first_mesh_ = mesh->new_submesh("test", mat, INDEX_TYPE_16_BIT);
+
+        assert_equal(mesh->find_submesh_with_material(mat), first_mesh_);
+        assert_equal(mesh->find_all_submeshes_with_material(mat).size(), 1u);
+        assert_equal(mesh->find_all_submeshes_with_material(mat)[0], first_mesh_);
+
         smlt::SubMesh* submesh = first_mesh_;
 
         submesh->index_data->index(0);
@@ -59,7 +65,7 @@ public:
         submesh->index_data->done();
 
         //Draw a line between the first two vertices
-        smlt::SubMesh* sm = mesh->new_submesh("test2", smlt::MESH_ARRANGEMENT_LINES);
+        smlt::SubMesh* sm = mesh->new_submesh("test2", stage_->assets->clone_default_material(), INDEX_TYPE_16_BIT, smlt::MESH_ARRANGEMENT_LINES);
         sm->index_data->index(0);
         sm->index_data->index(1);
         sm->index_data->done();
@@ -105,6 +111,8 @@ public:
     }
 
     void test_mesh_garbage_collection() {
+        assert_false(stage_->is_destroyed());
+
         auto initial = stage_->assets->mesh_count();
 
         auto mesh1 = generate_test_mesh(stage_);
@@ -114,12 +122,14 @@ public:
         actor->set_mesh(mesh2);
 
         stage_->assets->run_garbage_collection();
+        assert_false(stage_->is_destroyed());
 
         assert_equal(stage_->assets->mesh_count(), initial + 1);
 
         stage_->destroy_actor(actor->id());
+        assert_false(stage_->is_destroyed());
 
-        window->run_frame();
+        application->run_frame();
 
         stage_->assets->run_garbage_collection();
 
@@ -150,9 +160,10 @@ public:
         m1->vertex_data->position(0, 0, 0);
         m1->vertex_data->done();
 
-        m1->new_submesh("sm1", index_data);
-        m1->new_submesh("sm2", index_data);
-        m1->new_submesh("sm3");
+        auto mat = stage_->assets->new_material();
+        m1->new_submesh("sm1", mat, index_data);
+        m1->new_submesh("sm2", mat, index_data);
+        m1->new_submesh("sm3", mat, INDEX_TYPE_16_BIT);
 
         m1->destroy_submesh("sm2");
 
@@ -186,7 +197,7 @@ public:
 
         auto id = actor->id();
         stage_->destroy_actor(actor->id());
-        window->run_frame();
+        application->run_frame();
 
         this->assert_true(!stage_->has_actor(id));
     }
@@ -205,7 +216,7 @@ public:
         this->assert_equal((uint32_t)0, c2->child_count());
 
         stage_->destroy_actor(mid);
-        window->run_frame();
+        application->run_frame();
 
         this->assert_true(!stage_->has_actor(mid));
         this->assert_true(!stage_->has_actor(cid1));
@@ -347,6 +358,22 @@ public:
         );
 
         auto& aabb = mesh->aabb();
+
+        assert_close(aabb.centre().x, -100.0f, EPSILON);
+        assert_close(aabb.max().x, -99.5f, EPSILON);
+        assert_close(aabb.width(), 1.0f, EPSILON);
+        assert_close(aabb.height(), 1.0f, EPSILON);
+        assert_close(aabb.depth(), 1.0f, EPSILON);
+    }
+
+    void test_submesh_aabb_generated_correctly() {
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto submesh = mesh->new_submesh_as_box(
+            "test", stage_->assets->default_material(),
+            1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
+        );
+
+        auto& aabb = submesh->aabb();
 
         assert_close(aabb.centre().x, -100.0f, EPSILON);
         assert_close(aabb.max().x, -99.5f, EPSILON);

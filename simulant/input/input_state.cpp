@@ -24,7 +24,6 @@
 #include "input_state.h"
 
 #include "../window.h"
-#include "../virtual_gamepad.h"
 
 namespace smlt {
 
@@ -64,31 +63,39 @@ void InputState::_handle_mouse_up(MouseID mouse_id, MouseButtonID button_id) {
     }
 }
 
-void InputState::_handle_joystick_axis_motion(JoystickID joypad_id, JoystickAxis axis, float value) {
-    if(joypad_id < joystick_count_) {
-        auto& js = joysticks_[joypad_id];
-        js.axises[axis] = value;
+void InputState::_handle_joystick_axis_motion(GameControllerID joypad_id, JoystickAxis axis, float value) {
+    GameController* controller = game_controller_by_id(joypad_id);
+    if(controller) {
+        controller->axises[axis] = value;
+    } else {
+        S_WARN("Recevied input for invalid game controller: {0}", joypad_id.to_int8_t());
     }
 }
 
-void InputState::_handle_joystick_button_down(JoystickID joypad_id, JoystickButton button) {
-    if(joypad_id < joystick_count_) {
-        auto& js = joysticks_[joypad_id];
-        js.buttons[button] = true;
+void InputState::_handle_joystick_button_down(GameControllerID joypad_id, JoystickButton button) {
+    GameController* controller = game_controller_by_id(joypad_id);
+    if(controller) {
+        controller->buttons[button] = true;
+    } else {
+        S_WARN("Recevied input for invalid game controller: {0}", joypad_id.to_int8_t());
     }
 }
 
-void InputState::_handle_joystick_button_up(JoystickID joypad_id, JoystickButton button) {
-    if(joypad_id < joystick_count_) {
-        auto& js = joysticks_[joypad_id];
-        js.buttons[button] = false;
+void InputState::_handle_joystick_button_up(GameControllerID joypad_id, JoystickButton button) {
+    GameController* controller = game_controller_by_id(joypad_id);
+    if(controller) {
+        controller->buttons[button] = false;
+    } else {
+        S_WARN("Recevied input for invalid game controller: {0}", joypad_id.to_int8_t());
     }
 }
 
-void InputState::_handle_joystick_hat_motion(JoystickID joypad_id, JoystickHatID hat_id, HatPosition position) {
-    if(joypad_id < joystick_count_) {
-        auto& js = joysticks_[joypad_id];
-        js.hats[hat_id] = position;
+void InputState::_handle_joystick_hat_motion(GameControllerID joypad_id, JoystickHatID hat_id, HatPosition position) {
+    GameController* controller = game_controller_by_id(joypad_id);
+    if(controller) {
+        controller->hats[hat_id] = position;
+    } else {
+        S_WARN("Recevied input for invalid game controller: {0}", joypad_id.to_int8_t());
     }
 }
 
@@ -108,11 +115,11 @@ bool InputState::mouse_button_state(MouseID mouse_id, MouseButtonID button) cons
     return false;
 }
 
-bool InputState::joystick_button_state(JoystickID joystick_id, JoystickButton button) const {
-    if(joystick_id < joystick_count_) {
-        return joysticks_[joystick_id].buttons[button];
+bool InputState::joystick_button_state(GameControllerID joystick_id, JoystickButton button) const {
+    const GameController* controller = game_controller_by_id(joystick_id);
+    if(controller) {
+        return controller->buttons[button];
     }
-
     return false;
 }
 
@@ -124,17 +131,65 @@ float InputState::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
     return 0.0f;
 }
 
-float InputState::joystick_axis_state(JoystickID joystick_id, JoystickAxis axis) const {
-    if(joystick_id < joystick_count_) {
-        return joysticks_[joystick_id].axises[axis];
+GameController *InputState::game_controller_by_id(GameControllerID id) {
+    for(int i = 0; i < joystick_count_; ++i) {
+        if(joysticks_[i].id_ == id) {
+            return &joysticks_[i];
+        }
     }
 
+    return nullptr;
+}
+
+const GameController *InputState::game_controller_by_id(GameControllerID id) const {
+    for(int i = 0; i < joystick_count_; ++i) {
+        if(joysticks_[i].id_ == id) {
+            return &joysticks_[i];
+        }
+    }
+
+    return nullptr;
+}
+
+GameController *InputState::game_controller(GameControllerIndex index) {
+    auto idx = index.to_int8_t();
+    if(idx >= (int8_t) game_controller_count()) {
+        return nullptr;
+    }
+
+    if(idx < 0) {
+        S_ERROR("Received negative index to game_controller()");
+        return nullptr;
+    }
+
+    return &joysticks_[idx];
+}
+
+GameControllerIndex InputState::game_controller_index_from_id(GameControllerID id) const {
+    auto idx = 0;
+    for(auto& cont: joysticks_) {
+        if(cont.id() == id) {
+            return GameControllerIndex(idx);
+        }
+
+        ++idx;
+    }
+
+    return GameControllerIndex(-1);
+}
+
+float InputState::joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const {
+    const GameController* controller = game_controller_by_id(joystick_id);
+    if(controller) {
+        return controller->axises[axis];
+    }
     return 0.0f;
 }
 
-HatPosition InputState::joystick_hat_state(JoystickID joystick_id, JoystickHatID hat) const {
-    if(joystick_id < joystick_count_) {
-        return joysticks_[joystick_id].hats[hat];
+HatPosition InputState::joystick_hat_state(GameControllerID joystick_id, JoystickHatID hat) const {
+    const GameController* controller = game_controller_by_id(joystick_id);
+    if(controller) {
+        return controller->hats[hat];
     }
 
     return HAT_POSITION_CENTERED;
@@ -154,13 +209,11 @@ void InputState::pre_update(float dt) {
 
 void InputState::update(float dt) {
     _S_UNUSED(dt);
-    /*
-    if(virtual_joypad_) {
-        virtual_joypad_->_update(dt);
-    }*/
 }
 
-void InputState::_update_joystick_devices(const std::vector<JoystickDeviceInfo>& device_info) {
+void InputState::_update_game_controllers(const std::vector<GameControllerInfo>& device_info) {
+    S_DEBUG("Updating controllers with new list of size: {0}", device_info.size());
+
     if(device_info.size() > joystick_count_) {
         S_INFO("{0} controllers connected", device_info.size() - joystick_count_);
     } else if(device_info.size() < joystick_count_) {
@@ -169,49 +222,49 @@ void InputState::_update_joystick_devices(const std::vector<JoystickDeviceInfo>&
 
     joystick_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
     for(decltype(joystick_count_) i = 0; i < joystick_count_; ++i) {
+        joysticks_[i] = GameController(this, GameControllerID(device_info[i].id));
         joysticks_[i].button_count = device_info[i].button_count;
         joysticks_[i].axis_count = device_info[i].axis_count;
         joysticks_[i].hat_count = device_info[i].hat_count;
+        joysticks_[i].has_rumble_ = device_info[i].has_rumble;
+        joysticks_[i].platform_data_.i = device_info[i].platform_data.i;
     }
 }
 
-void InputState::init_virtual_joypad() {
-    /*
-    if(!virtual_joypad_) {
-        virtual_joypad_ = std::make_shared<Joypad>();
-    }
-
-    auto& vpad = window_.virtual_joypad;
-
-    for(auto conn: virtual_joypad_connections_) {
-        conn.disconnect();
-    }
-    virtual_joypad_connections_.clear();
-
-    virtual_joypad_connections_.push_back(
-        vpad->signal_button_down().connect([=](int btn) {
-            joypad(joypads_.size())._handle_button_down_event(btn);
-        })
-    );
-
-    virtual_joypad_connections_.push_back(
-        vpad->signal_button_up().connect([=](int btn) {
-            joypad(joypads_.size())._handle_button_up_event(btn);
-        })
-    );
-
-    virtual_joypad_connections_.push_back(
-        vpad->signal_hat_changed().connect([=](HatPosition pos) {
-            joypad(joypads_.size())._handle_hat_changed_event(0, pos);
-        })
-    ); */
-}
-
-JoystickAxis InputState::linked_axis(JoystickID id, JoystickAxis axis) {
+JoystickAxis InputState::linked_axis(GameControllerID id, JoystickAxis axis) {
     _S_UNUSED(id);
     if(axis == JOYSTICK_AXIS_X) return JOYSTICK_AXIS_Y;
     if(axis == JOYSTICK_AXIS_Y) return JOYSTICK_AXIS_X;
     return JOYSTICK_AXIS_INVALID;
+}
+
+bool GameController::has_rumble_effect() const {
+    return has_rumble_;
+}
+
+bool GameController::start_rumble(float low_rumble, float high_rumble, const smlt::Seconds& duration) {
+    if(!has_rumble_) {
+        return false;
+    }
+
+    parent_->window_->game_controller_start_rumble(this, low_rumble, high_rumble, duration);
+    return true;
+}
+
+void GameController::stop_rumble() {
+    parent_->window_->game_controller_stop_rumble(this);
+}
+
+bool GameController::button_state(JoystickButton button) const {
+    return parent_->joystick_button_state(id_, button);
+}
+
+float GameController::axis_state(JoystickAxis axis) const {
+    return parent_->joystick_axis_state(id_, axis);
+}
+
+HatPosition GameController::hat_state(JoystickHatID hat) const {
+    return parent_->joystick_hat_state(id_, hat);
 }
 
 

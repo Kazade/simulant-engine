@@ -254,7 +254,7 @@ public:
         assert_equal(map.at("second"), 2);
         assert_raises(
             std::out_of_range,
-            std::bind(&ContiguousMap<std::string, int>::at, &map, "third")
+            [&]() { map.at("third"); }
         );
     }
 

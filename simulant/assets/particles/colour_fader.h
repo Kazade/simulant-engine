@@ -15,22 +15,23 @@ public:
 
 private:
     void do_manipulate(ParticleSystem*, Particle* particles, std::size_t particle_count, float) const {
-        auto size = colours_.size();
+        auto size = (float) colours_.size();
+        float fsize = float(size);
         auto particle = particles;
-        for(auto i = 0u; i < particle_count; ++i) {
-            float e = (particle->lifetime - particle->ttl);
-            float n = e / particle->lifetime;
-            long unsigned int colour = (size * n);
+        for(auto i = 0u; i < particle_count; ++i, ++particle) {
+            const float e = (particle->lifetime - particle->ttl);
+            const float n = smlt::fast_divide(e, particle->lifetime);
+            const float fsizen = fsize * n;
+
+            uint8_t colour = smlt::clamp(fsizen, 0.0f, fsize);
 
             particle->colour = colours_[colour];
 
             if(interpolate_) {
-                float f = (size * n) - int(size * n);
+                const float f = fsizen - std::floor(fsizen);
                 auto next_colour = colours_[std::min((uint32_t) colour + 1, (uint32_t) size - 1)];
                 particle->colour = (particle->colour * (1.0f - f)) + (next_colour * f);
             }
-
-            ++particle;
         }
     }
 

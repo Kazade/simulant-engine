@@ -21,6 +21,7 @@
 #include <cassert>
 #include <map>
 
+#include "../application.h"
 #include "../window.h"
 #include "../asset_manager.h"
 #include "../renderers/renderer.h"
@@ -30,9 +31,9 @@
 
 namespace smlt {
 
-const std::string Material::BuiltIns::DEFAULT = "simulant/materials/${RENDERER}/default.smat";
-const std::string Material::BuiltIns::TEXTURE_ONLY = "simulant/materials/${RENDERER}/texture_only.smat";
-const std::string Material::BuiltIns::DIFFUSE_ONLY = "simulant/materials/${RENDERER}/diffuse_only.smat";
+const std::string Material::BuiltIns::DEFAULT = "materials/${RENDERER}/default.smat";
+const std::string Material::BuiltIns::TEXTURE_ONLY = "materials/${RENDERER}/texture_only.smat";
+const std::string Material::BuiltIns::DIFFUSE_ONLY = "materials/${RENDERER}/diffuse_only.smat";
 
 /* This list is used by the particle script loader to determine if a specified material
  * is a built-in or not. Please keep this up-to-date when changing the above materials!
@@ -48,7 +49,7 @@ std::unordered_map<MaterialPropertyNameHash, Material::PropertyName> Material::h
 Material::Material(MaterialID id, AssetManager* asset_manager):
     Asset(asset_manager),
     generic::Identifiable<MaterialID>(id),
-    renderer_(asset_manager->window->renderer) {
+    renderer_(get_app()->window->renderer) {
 
     /* The core material has 4 texture properties by default */
     texture_properties_.insert(LIGHT_MAP_PROPERTY_HASH);
@@ -145,7 +146,7 @@ MaterialPass::MaterialPass(Material *material):
     MaterialObject(material) {
 
     /* If the renderer supports GPU programs, at least specify *something* */
-    auto& renderer = this->material()->asset_manager().window->renderer;
+    auto& renderer = get_app()->window->renderer;
     if(renderer->supports_gpu_programs()) {
         set_gpu_program(renderer->default_gpu_program_id());
     }

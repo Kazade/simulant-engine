@@ -53,13 +53,13 @@ It is highly recommended that if you are manipulating a `Stage` in a background 
 
 # Destruction
 
-You can destroy a `StageNode` by calling its `destroy()` method. This won't release the `StageNode` immediately, but it will fire the `signal_destroyed` signal. The actual clean-up of the node will happen when any idle tasks have run, but before the render queue is built. This helps prevent issues where queued tasks try to access deleted nodes.
+You can destroy a `StageNode` by calling its `destroy()` method. This won't release the `StageNode` immediately, but it will fire the `signal_destroyed` signal. The actual clean-up of the node will happen after `late_update()`, but before the render queue is built. This helps prevent issues where queued tasks try to access deleted nodes.
 
 When the clean-up process runs, an additional `signal_cleaned_up` signal will fire just before deletion of the node.
 
 ## Delayed Destruction
 
-`StageNodes` have a helper method called `destroy_after(Seconds)` that you can call to fire `destroy()` after the number of seconds have passed. Internally this simply queues an idle task to call `destroy()`. Be aware, `destroy_after` is a fire-and-forget method - you can't cancel once you've triggered it! 
+`StageNodes` have a helper method called `destroy_after(Seconds)` that you can call to fire `destroy()` after the number of seconds have passed. Internally this simply queues a coroutine to call `destroy()`. Be aware, `destroy_after` is a fire-and-forget method - you can't cancel once you've triggered it! 
 
  > Note: `is_marked_for_destruction()` will return false until the elapsed time has passed, and `destroy()` has been called.
 

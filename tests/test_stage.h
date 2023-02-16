@@ -13,13 +13,14 @@ class StageTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_actor_destruction() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
         std::set<ActorID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_actor_destroyed().connect([&](smlt::ActorID id) {
+        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
+            assert_equal(type, STAGE_NODE_TYPE_ACTOR);
             destroyed_count++;
-            destroyed_ids.insert(id);
+            destroyed_ids.insert(dynamic_cast<Actor*>(node)->id());
         });
 
         auto a1 = stage->new_actor();
@@ -29,7 +30,7 @@ public:
         auto a2id = a2->id();
         a2->destroy();
 
-        window->run_frame();
+        application->run_frame();
 
         assert_false(a1->child_count()); // No children now
         assert_equal(destroyed_count, 2); // Should've destroyed 2
@@ -40,13 +41,14 @@ public:
     }
 
     void test_camera_destruction() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
         std::set<CameraID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_camera_destroyed().connect([&](smlt::CameraID id) {
+        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](smlt::StageNode* node, StageNodeType type) {
+            assert_equal(type, STAGE_NODE_TYPE_CAMERA);
             destroyed_count++;
-            destroyed_ids.insert(id);
+            destroyed_ids.insert(dynamic_cast<Camera*>(node)->id());
         });
 
         auto a1 = stage->new_camera();
@@ -59,7 +61,7 @@ public:
         auto a2id = a2->id();
         a2->destroy();
 
-        window->run_frame();
+        application->run_frame();
 
         assert_false(a1->child_count()); // No children now
         assert_equal(destroyed_count, 2); // Should've destroyed 2
@@ -68,13 +70,14 @@ public:
     }
 
     void test_particle_system_destruction() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
         std::set<ParticleSystemID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_particle_system_destroyed().connect([&](smlt::ParticleSystemID id) {
-            destroyed_count++;
-            destroyed_ids.insert(id);
+        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
+          assert_equal(type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+          destroyed_count++;
+          destroyed_ids.insert(dynamic_cast<ParticleSystem*>(node)->id());
         });
 
         auto script = stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);
@@ -89,7 +92,7 @@ public:
         auto a2id = a2->id();
         a2->destroy();
 
-        window->run_frame();
+        application->run_frame();
 
         assert_false(a1->child_count()); // No children now
         assert_equal(destroyed_count, 2); // Should've destroyed 2
@@ -98,7 +101,7 @@ public:
     }
 
     void test_stage_node_clean_up_signals() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         auto actor = stage->new_actor();
 
@@ -118,19 +121,19 @@ public:
         assert_true(destroyed);
         assert_false(cleaned_up);
 
-        window->run_frame();
+        application->run_frame();
 
         assert_true(destroyed);
         assert_true(cleaned_up);
     }
 
     void test_iteration_types() {
-        auto stage = window->new_stage();
+        auto stage = scene->new_stage();
 
         for(auto& node: stage->each_child()) {
             node.destroy();
         }
-        window->run_frame();
+        application->run_frame();
 
         /*
             stage-> o

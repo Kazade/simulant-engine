@@ -15,7 +15,7 @@ static volatile bool PROFILER_RUNNING = false;
 static volatile bool PROFILER_RECORDING = false;
 
 #define BASE_ADDRESS 0x8c010000
-#define BUCKET_SIZE 10000
+#define BUCKET_SIZE 5000
 
 #define INTERVAL_IN_MS 10
 
@@ -96,7 +96,7 @@ static int thd_each_cb(kthread_t* thd, void* data) {
 
     /* The idea is that if this code right here is running in the profiling
      * thread, then all the PCs from the other threads are
-     * current. Obviouly thought between iterations the
+     * current. Obviously though between iterations the
      * PC will change so it's not like this is a true snapshot
      * in time across threads */
     uint32_t PC = thd->context.pc;
@@ -284,9 +284,9 @@ static bool write_samples(const char* path) {
     root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
-            printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
+            // printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
             bins[(root->pc - lowest_address) / bin_size]++;
-            printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
+            // printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
 
             /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
@@ -367,7 +367,7 @@ static void* run(void* args) {
 
 void profiler_init(const char* output) {
     /* Store the filename */
-    strncpy(OUTPUT_FILENAME, output, sizeof(OUTPUT_FILENAME));
+    strncpy(OUTPUT_FILENAME, output, sizeof(OUTPUT_FILENAME) - 1);
 
     /* Initialize the file */
     printf("Creating samples file...\n");

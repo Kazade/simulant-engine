@@ -64,14 +64,24 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     assert(camera_);
     assert(render_group_factory_);
 
-    auto idx = renderables_.size();
-    renderables_.push_back(src_renderable);
-    auto renderable = &renderables_.back();
-
-    if(!renderable->is_visible || !renderable->index_element_count) {
-        renderables_.pop_back();
+    if(!src_renderable.is_visible) {
         return;
     }
+
+    if(!src_renderable.vertex_range_count && !src_renderable.index_element_count) {
+        return;
+    }
+
+    assert(src_renderable.vertex_data && src_renderable.vertex_data->count());
+
+    if(!src_renderable.vertex_data->count()) {
+        S_ERROR("Attempted to add renderable without any vertex data");
+        return;
+    }
+
+    auto idx = renderables_.size();
+    renderables_.push_back(std::move(src_renderable));
+    auto renderable = &renderables_[idx];
 
     auto material = renderable->material;
     assert(material);

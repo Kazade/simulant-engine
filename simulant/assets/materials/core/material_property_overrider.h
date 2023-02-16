@@ -70,6 +70,15 @@ public:
 
     bool property_type(const char* property_name, MaterialPropertyType* type) const;
 
+    template<typename T>
+    struct PropertyValue {
+        MaterialPropertyNameHash hsh;
+        T value;
+
+        PropertyValue() = default;
+        PropertyValue(MaterialPropertyNameHash hsh, T value):
+            hsh(hsh), value(value) {}
+    };
 protected:
     virtual void on_override(
         MaterialPropertyNameHash hsh,
@@ -92,15 +101,16 @@ protected:
     const MaterialPropertyOverrider* parent_ = nullptr;
 
     std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
-    std::unordered_map<MaterialPropertyNameHash, int32_t> int_properties_;
-    std::unordered_map<MaterialPropertyNameHash, float> float_properties_;
-    std::unordered_map<MaterialPropertyNameHash, bool> bool_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Vec2> vec2_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Vec3> vec3_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Vec4> vec4_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Mat3> mat3_properties_;
-    std::unordered_map<MaterialPropertyNameHash, Mat4> mat4_properties_;
-    std::unordered_map<MaterialPropertyNameHash, TexturePtr> texture_properties_;
+
+    std::vector<PropertyValue<int32_t>> int_properties_;
+    std::vector<PropertyValue<float>> float_properties_;
+    std::vector<PropertyValue<bool>> bool_properties_;
+    std::vector<PropertyValue<Vec2>> vec2_properties_;
+    std::vector<PropertyValue<Vec3>> vec3_properties_;
+    std::vector<PropertyValue<Vec4>> vec4_properties_;
+    std::vector<PropertyValue<Mat3>> mat3_properties_;
+    std::vector<PropertyValue<Mat4>> mat4_properties_;
+    std::vector<PropertyValue<TexturePtr>> texture_properties_;
 };
 
 }

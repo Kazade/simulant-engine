@@ -22,6 +22,19 @@ The `repeat` argument of `play_sound` can be one of the following:
  - `AUDIO_REPEAT_NONE` - The sound will stop playing when it finishes
  - `AUDIO_REPEAT_FOREVER` - The sound will loop forever until manually stopped
 
+### Playing sound across Scenes
+
+`AudioSources` are normally `StageNodes`, but `StageNodes` belong to a `Stage`, which in turn is owned by a `Scene`. A side-effect of this is that if you want
+to play a continuous sound while transitioning between `Scenes` you won't be able to; your `AudioSource` will be destroyed.
+
+In these cases you can play audio through the `SoundDriver` directly:
+
+```
+auto playing_sound = application->sound_driver->play_sound(sound);
+```
+
+This sound will continue playing until you stop it, even while switching the active `Scene`.
+
 ## Controlling the volume
 
 The volume of a playing sound can be controlled on a per-Source basis using `Source::set_gain(gain)` where gain is clamped between 0 and 1. By default

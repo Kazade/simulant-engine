@@ -32,15 +32,17 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
         CameraID camera_id, std::vector<LightID> &lights_out,
         std::vector<StageNode*> &geom_out) {
 
+    _apply_writes();
+
     auto frustum = stage->camera(camera_id)->frustum();
 
     for(auto& node: stage->each_descendent()) {
-        auto aabb = node.transformed_aabb();
-        auto centre = aabb.centre() + node.absolute_position();
-
-        /* Check that the node isn't being destroyed, and it's supposed to
+        /* Check that the node is supposed to
          * be visible (otherwise we could end up doing work for nothing) */
-        if(!node.is_marked_for_destruction() && node.is_visible()) {
+        if(node.is_visible() && !node.is_destroyed()) {
+            auto aabb = node.transformed_aabb();
+            auto centre = aabb.centre();
+
             if(node.node_type() == STAGE_NODE_TYPE_LIGHT) {
                 auto light = dynamic_cast<Light*>(&node);
                 assert(light);

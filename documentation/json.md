@@ -61,7 +61,7 @@ auto i = obj["five"]->to_int();
 i.has_value();  // false, null is not convertible to int
 ```
 
->>> *Caution! Each JSONIterator instance will retain an reference-count on the underlying stream! Make sure you don't persist JSONIterators longer than necessary.
+> *Caution! Each JSONIterator instance will retain an reference-count on the underlying stream! Make sure you don't persist JSONIterators longer than necessary.
 
 
 ## Iterating Arrays

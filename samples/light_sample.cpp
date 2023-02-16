@@ -2,6 +2,7 @@
 #include "simulant/shortcuts.h"
 #include "simulant/extra.h"
 #include "simulant/macros.h"
+#include "simulant/utils/dreamcast.h"
 
 using namespace smlt;
 
@@ -11,7 +12,7 @@ public:
         smlt::Scene<GameScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
@@ -23,18 +24,18 @@ public:
             1000.0
         );
 
-        stage_->set_ambient_light(smlt::Colour(1.0, 1.0, 1.0, 1.0));
-
-        auto cube = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        cube->new_submesh_as_cube("rect", stage_->assets->new_material(), 2.0);
-        actor_ = stage_->new_actor_with_mesh(cube);
-        actor_->move_to(0.0, 0.0, -5.0);
+        stage_->set_ambient_light(smlt::Colour(0.25f, 0.25f, 0.25f, 1.0f));
 
         texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
         texture_->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
-        material_ = actor_->base_mesh()->first_submesh()->material();
-        material_->set_diffuse_map(texture_);
+        material_ = stage_->assets->new_material_from_texture(texture_);
+        material_->pass(0)->set_lighting_enabled(true);
+
+        auto cube = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        cube->new_submesh_as_cube("rect", material_, 2.0);
+        actor_ = stage_->new_actor_with_mesh(cube);
+        actor_->move_to(0.0, 0.0, -5.0);
 
         // Test Camera::look_at function
         camera_->look_at(actor_->absolute_position());
@@ -52,11 +53,23 @@ public:
             stage_->new_light_as_directional(Vec3(1, 0, 0), smlt::Colour::YELLOW);
         }
 
-        /* FIXME: Replace
-        window->new_background_as_scrollable_from_file("sample_data/background.png"); */
 
         auto axis = input->new_axis("F");
         axis->set_positive_keyboard_key(smlt::KEYBOARD_CODE_F);
+
+        auto tex = stage_->assets->new_texture_from_file("simulant/textures/icons/simulant-icon-vmu.png");
+        tex->convert(smlt::TEXTURE_FORMAT_RGBA_4UB_8888, {smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED});
+        auto data_maybe = smlt::utils::vmu_lcd_image_from_texture(tex, utils::VMU_IMAGE_GENERATION_MODE_ALPHA);
+        auto data = data_maybe.value();
+
+        /* Render the simulant icon to the VMU */
+        window->each_screen([&data](std::string, Screen* screen) {
+            if(screen->width() / screen->integer_scale() == 48 && screen->height() / screen->integer_scale() == 32) {
+                screen->render(&data[0]);
+            }
+        });
+
+
     }
 
     void update(float dt) {
@@ -124,8 +137,14 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Light Sample";
     config.fullscreen = false;
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
     config.width = 1280;
     config.height = 960;
+#endif
 
     config.desktop.enable_virtual_screen = true;
 

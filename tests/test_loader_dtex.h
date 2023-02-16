@@ -14,7 +14,7 @@ class DTEXLoaderTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_1555_vq() {
-        auto tex = window->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->new_texture_from_file(
             "textures/1555_vq.dtex"
         );
 
@@ -28,7 +28,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_1555);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
         uint16_t texel = *((uint16_t*) &tex->data()[0]);
         assert_equal(texel, 0xFC1F);
 #else
@@ -37,7 +37,7 @@ public:
     }
 
     void test_4444_vq() {
-        auto tex = window->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->new_texture_from_file(
             "textures/4444_vq.dtex"
         );
 
@@ -51,7 +51,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
         uint16_t texel = *((uint16_t*) &tex->data()[0]);
         assert_equal(texel, 0xFF0F);
 #else
@@ -60,7 +60,7 @@ public:
     }
 
     void test_565_vq() {
-        auto tex = window->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->new_texture_from_file(
             "textures/565_vq.dtex"
         );
 
@@ -74,7 +74,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_RGB_1US_565);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
         uint16_t texel = *((uint16_t*) &tex->data()[0]);
         assert_equal(texel, 0xF81F);
 #else
@@ -83,7 +83,7 @@ public:
     }
 
     void test_1555() {
-        auto tex = window->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->new_texture_from_file(
             "textures/1555.dtex"
         );
 
@@ -97,7 +97,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_1555);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
 #else
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_1555_TWID);
 #endif
@@ -106,7 +106,7 @@ public:
     }
 
     void test_4444() {
-        auto tex = window->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->new_texture_from_file(
             "textures/4444.dtex"
         );
 
@@ -120,7 +120,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
 #else
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444_TWID);
 #endif
@@ -130,7 +130,7 @@ public:
     }
 
     void test_565() {
-        auto tex = window->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->new_texture_from_file(
             "textures/565.dtex"
         );
 
@@ -144,7 +144,7 @@ public:
 #ifndef __DREAMCAST__
         /* Only the Dreamcast supports VQ compression and twiddling */
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_RGB_1US_565);
-        assert_equal(tex->data().size(), 8 * 8 * 2u);
+        assert_equal(tex->data_size(), 8 * 8 * 2u);
 #else
         assert_equal(tex->format(), smlt::TEXTURE_FORMAT_RGB_1US_565_TWID);
 #endif

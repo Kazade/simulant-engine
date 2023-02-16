@@ -5,7 +5,6 @@
 #include "../../generic/identifiable.h"
 #include "../../generic/managed.h"
 #include "../../generic/range_value.h"
-#include "ui_manager.h"
 #include "ui_config.h"
 
 namespace smlt {
@@ -14,7 +13,8 @@ namespace ui {
 enum WidgetLayerIndex {
     WIDGET_LAYER_INDEX_BORDER,
     WIDGET_LAYER_INDEX_BACKGROUND,
-    WIDGET_LAYER_INDEX_FOREGROUND
+    WIDGET_LAYER_INDEX_FOREGROUND,
+    WIDGET_LAYER_INDEX_TEXT,
 };
 
 class UIManager;
@@ -30,27 +30,20 @@ struct ImageRect {
     UICoord size;
 };
 
-struct WidgetImpl {
+struct WidgetStyle {
     /* There are 4 layers: Border, background, foreground and text and
      * by default all are enabled. Setting any of the colours of these
      * layers to Colour::NONE will deactivate drawing of the layer
      * for performance reasons. We track that here */
     uint8_t active_layers_ = ~0;
 
-    int16_t requested_width_ = 0;
-    int16_t requested_height_ = 0;
-
-    int16_t content_width_ = 0;
-    int16_t content_height_ = 0;
-
-    UInt4 padding_ = {0, 0, 0, 0};
-
-    float border_width_ = 1.0f;
+    UInt4 padding_ = {Px(), Px(), Px(), Px()};
+    Px border_radius_ = Px(0);
+    Px border_width_ = Px(1);
     PackedColour4444 border_colour_ = Colour::BLACK;
+    TextAlignment text_alignment_ = TEXT_ALIGNMENT_CENTER;
 
-    unicode text_;
-    OverflowType overflow_;
-    ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+    OverflowType overflow_ = OVERFLOW_TYPE_AUTO;
 
     TexturePtr background_image_;
     ImageRect background_image_rect_;
@@ -61,28 +54,28 @@ struct WidgetImpl {
     PackedColour4444 background_colour_ = Colour::WHITE;
     PackedColour4444 foreground_colour_ = Colour::NONE; //Transparent
     PackedColour4444 text_colour_ = Colour::BLACK;
-    uint16_t line_height_ = 16;
-
-    bool is_focused_ = false;
-    WidgetPtr focus_next_ = nullptr;
-    WidgetPtr focus_previous_ = nullptr;
 
     float opacity_ = 1.0f;
 
-    /*
-     * We regularly need to rebuild the text submesh. Wiping out vertex data
-     * is cumbersome and slow, so instead we wipe the submesh indexes and add
-     * them here, then used these indexes as necessary when rebuilding
-     */
-    std::set<uint16_t> available_indexes_;
-
-    /* A normalized vector representing the relative
-     * anchor position for movement (0, 0 == bottom left) */
-    smlt::Vec2 anchor_point_;
-    bool anchor_point_dirty_;
-
-    std::set<uint8_t> fingers_down_;
+    MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 };
+
+
+/* Sizing:
+ *
+ * Widgets follow a similar model to the border-box model in CSS. Effectively:
+ *
+ * - If a dimension length has not been defined (e.g. requested_width_ == -1) then
+ *   the dimension is calculated as the content size + padding + border.
+ * - If a dimension length has been defined, then the content size is reduced to make
+ *   room for the padding and border.
+ *
+ * Content area:
+ *
+ * - The size of the content area varies depending on widget, but for most widgets this
+ *   is defined as the area that the text takes to render, unless a fixed size has been
+ *   specified and then this would be the requested size without padding or border
+ */
 
 class Widget:
     public TypedDestroyableObject<Widget, UIManager>,
@@ -96,17 +89,26 @@ class Widget:
     DEFINE_SIGNAL(WidgetClickedSignal, signal_clicked);
     DEFINE_SIGNAL(WidgetFocusedSignal, signal_focused);
     DEFINE_SIGNAL(WidgetBlurredSignal, signal_blurred);
+
 public:
     typedef std::shared_ptr<Widget> ptr;
 
-    Widget(UIManager* owner, UIConfig* defaults);
+    Widget(UIManager* owner, UIConfig* defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
     virtual ~Widget();
 
     virtual bool init() override;
     virtual void clean_up() override;
 
-    void resize(int32_t width, int32_t height);
-    void set_font(FontID font_id);
+    void resize(Rem width, Px height);
+    void resize(Px width, Rem height);
+    void resize(Rem width, Rem height);
+    void resize(Px width, Px height);
+
+    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Rem size=Rem(1.0f), FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
+    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Px size=DEFAULT_FONT_SIZE, FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
+
+    // You probably don't want this one
+    virtual void set_font(FontPtr font);
 
     /* Allow creating a double-linked list of widgets for focusing. There is no
      * global focused widget but there is only one focused widget in a chain
@@ -116,6 +118,9 @@ public:
     void set_focus_next(WidgetPtr next_widget);
     void focus();
     void blur();
+
+    WidgetPtr next_in_focus_chain() const;
+    WidgetPtr previous_in_focus_chain() const;
     void focus_next_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
     void focus_previous_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
     WidgetPtr first_in_focus_chain();
@@ -126,11 +131,23 @@ public:
     void click();
 
     void set_text(const unicode& text);
-    void set_border_width(float x);
+
+    void set_text_alignment(TextAlignment alignment);
+    TextAlignment text_alignment() const;
+
+    void set_border_width(Px x);
+    Px border_width() const;
+
+    void set_border_radius(Px x);
+    Px border_radius() const;
+
     void set_border_colour(const Colour& colour);
     void set_overflow(OverflowType type);
-    void set_padding(uint16_t x);
-    void set_padding(uint16_t left, uint16_t right, uint16_t bottom, uint16_t top);
+
+    void set_padding(Px x);
+    void set_padding(Px left, Px right, Px bottom, Px top);
+    UInt4 padding() const;
+
     virtual bool set_resize_mode(ResizeMode resize_mode);
 
     ResizeMode resize_mode() const;
@@ -156,15 +173,17 @@ public:
 
     void set_text_colour(const Colour& colour);
 
-    uint16_t requested_width() const;
-    uint16_t requested_height() const;
+    Px requested_width() const;
+    Px requested_height() const;
 
-    uint16_t content_width() const;
+    Px content_width() const;
+    Px content_height() const;
 
-    uint16_t content_height() const;
-
-    uint16_t outer_width() const;
-    uint16_t outer_height() const;
+    /** This returns the outside width of the widget, this will be the same as the
+     * requested_width if it was specified, else it will be the width of the content
+     * area plus padding and border */
+    Px outer_width() const;
+    Px outer_height() const;
 
     /*
     bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
@@ -176,7 +195,7 @@ public:
     const AABB& aabb() const override;
 
     const unicode& text() const {
-        return pimpl_->text_;
+        return calc_text();
     }
 
     // Probably shouldn't use these directly (designed for UIManager)
@@ -195,25 +214,66 @@ public:
 
     void set_opacity(RangeValue<0, 1> alpha);
 
+    Px line_height() const;
 public:
-    MaterialPtr border_material() const { return materials_[0]; }
-    MaterialPtr background_material() const { return materials_[1]; }
-    MaterialPtr foreground_material() const { return materials_[2]; }
+    MaterialPtr border_material() const { return style_->materials_[0]; }
+    MaterialPtr background_material() const { return style_->materials_[1]; }
+    MaterialPtr foreground_material() const { return style_->materials_[2]; }
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
+    virtual const unicode& calc_text() const {
+        return text_;
+    }
+
     void on_render_priority_changed(
         RenderPriority old_priority, RenderPriority new_priority
     ) override;
 
     bool initialized_ = false;
-    UIManager* owner_ = nullptr;
+
     ActorPtr actor_ = nullptr;
+
+protected:
     MeshPtr mesh_ = nullptr;
+
+    /* Allow sharing a style across composite widgets */
+    void set_style(std::shared_ptr<WidgetStyle> style);
+
+    friend class Keyboard; // For set_font calls on child widgets
+
+    UIManager* owner_ = nullptr;
+    UIConfig* theme_ = nullptr;
     FontPtr font_ = nullptr;
 
-    MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
+    std::shared_ptr<WidgetStyle> style_;
 
-    WidgetImpl* pimpl_ = nullptr;
+    ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+
+    Px text_width_ = Px(0);
+    Px text_height_ = Px(0);
+
+    Px requested_width_ = Px(-1);
+    Px requested_height_ = Px(-1);
+
+    Px content_width_ = Px(0);
+    Px content_height_ = Px(0);
+
+    unicode text_;
+
+    bool is_focused_ = false;
+    WidgetPtr focus_next_ = nullptr;
+    WidgetPtr focus_previous_ = nullptr;
+
+    /* A normalized vector representing the relative
+     * anchor position for movement (0, 0 == bottom left) */
+    smlt::Vec2 anchor_point_;
+    bool anchor_point_dirty_;
+
+    uint16_t fingers_down_ = 0;
 
     virtual void on_size_changed();
 
@@ -227,33 +287,55 @@ private:
     bool background_active() const;
     bool foreground_active() const;
 
-protected:
     struct WidgetBounds {
-        smlt::Vec2 min;
-        smlt::Vec2 max;
+        UICoord min;
+        UICoord max;
 
-        float width() const { return max.x - min.x; }
-        float height() const { return max.y - min.y; }
+        Px width() const { return max.x - min.x; }
+        Px height() const { return max.y - min.y; }
+
+        bool has_non_zero_area() const {
+            Px w = width();
+            Px h = height();
+            return std::abs(w.value) > 0 && std::abs(h.value) > 0;
+        }
     };
 
-    virtual WidgetBounds calculate_background_size(float content_width, float content_height) const;
-    virtual WidgetBounds calculate_foreground_size(float content_width, float content_height) const;
+    virtual WidgetBounds calculate_background_size(const UIDim& content_dimensions) const;
+    virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const;
+
+    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height);
+
+
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
 
-    SubMeshPtr new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour);
+    SubMeshPtr new_rectangle(const std::string& name,
+        WidgetBounds bounds,
+        const smlt::Colour& colour,
+        const Px &border_radius,
+        const Vec2 *uvs=nullptr, float z_offset=0.0f
+    );
     void clear_mesh();
 
     bool is_initialized() const { return initialized_; }
 
     MeshPtr mesh() { return mesh_; }
 
-    void render_text();
+    virtual void render_text();
+    virtual void render_border(const WidgetBounds &border_bounds);
+    virtual void render_background(const WidgetBounds &background_bounds);
+    virtual void render_foreground(const WidgetBounds &foreground_bounds);
 
     WidgetPtr focused_in_chain_or_this();
 
     void on_transformation_change_attempted() override;
 
     void rebuild();
+
+    virtual void prepare_build() {}
+    virtual void finalize_render() {}
+    virtual void finalize_build() {}
+    virtual bool pre_set_text(const unicode&) { return true; }
 };
 
 }

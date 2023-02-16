@@ -5,29 +5,48 @@
 #include "../actor.h"
 #include "../../stage.h"
 #include "../../assets/material.h"
+#include "../../window.h"
+#include "../../application.h"
 
 namespace smlt {
 namespace ui {
 
-Widget::Widget(UIManager *owner, UIConfig *defaults):
-    TypedDestroyableObject<Widget, UIManager>(owner),
-    ContainerNode(owner->stage(), STAGE_NODE_TYPE_OTHER),
-    owner_(owner),
-    pimpl_(new WidgetImpl()) {
 
-    _recalc_active_layers();
+Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style):
+    TypedDestroyableObject<Widget, UIManager>(owner),
+    ContainerNode(stage, STAGE_NODE_TYPE_OTHER),
+    owner_(owner),
+    theme_(defaults),
+    style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {
+
+    if(!shared_style) {
+        set_foreground_colour(defaults->foreground_colour_);
+        set_background_colour(defaults->background_colour_);
+        set_text_colour(defaults->text_colour_);
+    }
+
+    std::string family = (defaults->font_family_.empty()) ?
+        get_app()->config->ui.font_family : defaults->font_family_;
+
+    Px size = (defaults->font_size_ == Px(0)) ?
+        Px(get_app()->config->ui.font_size) : Px(defaults->font_size_);
+
+    auto font = stage->ui->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
+    assert(font);
+
+    set_font(font);
 }
 
 Widget::~Widget() {
-    if(pimpl_->focus_next_ && pimpl_->focus_next_->pimpl_->focus_previous_ == this) {
-        pimpl_->focus_next_->pimpl_->focus_previous_ = nullptr;
+    if(focus_next_ && focus_next_->focus_previous_ == this) {
+        focus_next_->focus_previous_ = nullptr;
     }
 
-    if(pimpl_->focus_previous_ && pimpl_->focus_previous_->pimpl_->focus_next_ == this) {
-        pimpl_->focus_previous_->pimpl_->focus_next_ = nullptr;
+    if(focus_previous_ && focus_previous_->focus_next_ == this) {
+        focus_previous_->focus_next_ = nullptr;
     }
 
-    delete pimpl_;
+    style_.reset();
 }
 
 bool Widget::init() {
@@ -41,31 +60,16 @@ bool Widget::init() {
     actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
 
-    for(auto& material: materials_) {
-        material = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-        if(!material) {
-            S_ERROR("[CRITICAL] Unable to load the material for widgets!");
-            return false;
-        }
-        material->set_blend_func(BLEND_ALPHA);
-        material->set_depth_test_enabled(false);
-        material->set_cull_mode(CULL_MODE_NONE);
-    }
-
-    // Assign the default font as default
-    auto font = stage->assets->default_font(DEFAULT_FONT_STYLE_BODY);
-    if(!font) {
-        S_ERROR("[CRITICAL] Unable to load the font for widgets!");
-        return false;
-    }
-
-    set_font(font);
+    /* Use the global materials until we can't anymore! */
+    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh_with_material("border", materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("background", materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("foreground", materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_QUADS);
-    mesh_->new_submesh_with_material("text", font_->material_id(), MESH_ARRANGEMENT_QUADS);
+    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     rebuild();
 
@@ -82,35 +86,75 @@ void Widget::clean_up() {
     StageNode::clean_up();
 }
 
-void Widget::set_font(FontID font_id) {
-    if(font_ && font_->id() == font_id) {
+void Widget::set_font(const std::string& family, Rem size, FontWeight weight, FontStyle style) {
+    Px final = owner_->config()->font_size_ * size;
+    set_font(family, final, weight, style);
+}
+
+void Widget::set_font(const std::string& family, Px size, FontWeight weight, FontStyle style) {
+    if(owner_) {
+        set_font(owner_->load_or_get_font(family, size, weight, style));
+    }
+}
+
+void Widget::set_font(FontPtr font) {
+    if(!font) {
+        S_WARN("Tried to set NULL font on a widget");
         return;
     }
 
-    font_ = stage->assets->font(font_id);
-    pimpl_->line_height_ = ::round(float(font_->size()) * 1.1f);
+    if(font_ && font && font_->id() == font->id()) {
+        return;
+    }
+
+    font_ = font;
 
     on_size_changed();
 }
 
-void Widget::resize(int32_t width, int32_t height) {
-    if(pimpl_->requested_width_ == width && pimpl_->requested_height_ == height) {
+void Widget::resize(Rem width, Px height) {
+    assert(font_);
+
+    Px w = Px(font_->size()) * width;
+    resize(w, height);
+}
+
+void Widget::resize(Px width, Rem height) {
+    assert(font_);
+    Px h = Px(font_->size()) * height;
+    resize(width, h);
+}
+
+void Widget::resize(Rem width, Rem height) {
+    assert(font_);
+    Px w = Px(float(font_->size()) * width.value);
+    Px h = Px(float(font_->size()) * height.value);
+
+    resize(w, h);
+}
+
+void Widget::resize(Px width, Px height) {
+    if(requested_width_ == width && requested_height_ == height) {
         return;
     }
 
-    if(width == -1 && height > -1) {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
+    if(width == Px(-1) && height > Px(-1)) {
+        resize_mode_ = RESIZE_MODE_FIXED_HEIGHT;
     } else if(width == -1 && height == -1) {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+        resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     } else if(width > -1 && height == -1) {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
+        resize_mode_ = RESIZE_MODE_FIXED_WIDTH;
     } else {
-        pimpl_->resize_mode_ = RESIZE_MODE_FIXED;
+        resize_mode_ = RESIZE_MODE_FIXED;
     }
 
-    pimpl_->requested_width_ = width;
-    pimpl_->requested_height_ = height;
+    requested_width_ = width;
+    requested_height_ = height;
     on_size_changed();
+}
+
+static bool is_visible_character(unicode::value_type ch) {
+    return ch > 32;
 }
 
 void Widget::render_text() {
@@ -119,14 +163,14 @@ void Widget::render_text() {
         smlt::Vec2 uv;
     };
 
-    if(text().empty()) {
-        pimpl_->content_height_ = pimpl_->content_width_ = 0;
+    if(!font_ || text().empty()) {
+        text_width_ = text_height_ = Px();
         return;
     }
 
     /* static to avoid reallocating each frame */
     static std::vector<std::pair<uint32_t, uint32_t>> line_ranges;
-    static std::vector<float> line_lengths;
+    static std::vector<Px> line_lengths;
     static std::vector<Vertex> vertices;
 
     /* Clear, but not shrink_to_fit */
@@ -137,38 +181,56 @@ void Widget::render_text() {
     /* We know how many vertices we'll need (roughly) */
     vertices.reserve(text().length() * 4);
 
-    float left_bound = 0;
-    auto right_bound = pimpl_->requested_width_;
-    float left = left_bound;
-    uint32_t line_start = 0;
-    float line_length = 0;
-    uint32_t line_char_count = 0;
+    Px left_bound = 0;
 
+    /* We don't have a right bound if the widget is supposed to fit the content
+     * or if we have a fixed height, but unfixed width. Otherwise the right bound is
+     * the requested width */
+    Px right_bound = (
+        resize_mode_ == RESIZE_MODE_FIT_CONTENT ||
+        resize_mode_ == RESIZE_MODE_FIXED_HEIGHT
+    ) ?
+    std::numeric_limits<int>::max() :
+    std::max(Px(0), (requested_width_ - (style_->padding_.left + style_->padding_.right)));
+
+    Px left = left_bound;
+    uint32_t line_start = 0;
+    Px line_length = 0;
+    uint32_t line_vertex_count = 0;
 
     /* Generate lines of text */
-    for(uint32_t i = 0; i < text().length(); ++i) {
-        unicode::value_type ch = text()[i];
-        float ch_width = font_->character_width(ch);
-        float ch_height = font_->character_height(ch);
-        float ch_advance = (i == text().length() - 1) ? 0 : font_->character_advance(ch, text()[i + 1]);
+    auto text_ptr = &text()[0];
+    auto text_length = text().length();
+
+    for(uint32_t i = 0; i < text_length; ++i) {
+        unicode::value_type ch = text_ptr[i];
+        Px ch_width = font_->character_width(ch);
+        Px ch_height = font_->character_height(ch);
+
+        /* FIXME: This seems wrong.. if advance *should be* a float then we should probably
+         * not do this cast here */
+        Px ch_advance = (uint16_t) font_->character_advance(ch, text_ptr[i + 1]);
 
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
         auto finalize_line = [&]() {
+            if(line_length == 0) {
+                return;
+            }
+
             /* Ranges are (start_vertex_index, length_in_chars) */
-            line_ranges.push_back(std::make_pair(line_start, line_char_count));
+            line_ranges.push_back(std::make_pair(line_start, line_vertex_count));
             line_lengths.push_back(line_length);
             line_start = vertices.size();
             left = left_bound;
-            line_length = 0;
-            line_char_count = 0;
+            line_length = Px(0);
+            line_vertex_count = 0;
         };
 
         bool break_line = ch == '\n';
 
         if(resize_mode() == RESIZE_MODE_FIXED || resize_mode() == RESIZE_MODE_FIXED_WIDTH) {
-            // FIXME: if(line_wrap)
-            if(right >= right_bound) {
+            if(right >= right_bound && ch_width < right_bound) {
                 break_line = true;
             }
         }
@@ -184,29 +246,44 @@ void Widget::render_text() {
             continue;
         }
 
-        Vertex corners[4];
+        /* If the character is visible, then create some vertices for it */
+        if(is_visible_character(ch)) {
+            Vertex corners[4];
 
-        // Characters are created with their top-line at 0, we then
-        // properly manipulate the position when we process the lines later
-        auto off = font_->character_offset(ch);
-        corners[0].xyz = smlt::Vec3(left + off.first, off.second - ch_height, 0);
-        corners[1].xyz = smlt::Vec3(right + off.first, off.second - ch_height, 0);
-        corners[2].xyz = smlt::Vec3(right + off.first, off.second, 0);
-        corners[3].xyz = smlt::Vec3(left + off.first, off.second, 0);
+            // Characters are created with their top-line at 0, we then
+            // properly manipulate the position when we process the lines later
+            auto off = font_->character_offset(ch);
 
-        auto min_max = font_->texture_coordinates_for_character(ch);
-        corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
-        corners[1].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
-        corners[2].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
-        corners[3].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+            auto top = -off.second;
+            auto bottom = top - ch_height.value;
 
-        vertices.push_back(corners[0]);
-        vertices.push_back(corners[1]);
-        vertices.push_back(corners[2]);
-        vertices.push_back(corners[3]);
+            top -= font_->ascent();
+            bottom -= font_->ascent();
 
-        line_length += ch_advance;
-        line_char_count++;
+            corners[0].xyz = smlt::Vec3((left + off.first).value, bottom, 0);
+            corners[1].xyz = smlt::Vec3((right + off.first).value, bottom, 0);
+            corners[2].xyz = smlt::Vec3((right + off.first).value, top, 0);
+            corners[3].xyz = smlt::Vec3((left + off.first).value, top, 0);
+
+            auto min_max = font_->texture_coordinates_for_character(ch);
+            corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
+            corners[1].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
+            corners[2].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
+            corners[3].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+
+            vertices.push_back(corners[0]);
+            vertices.push_back(corners[1]);
+            vertices.push_back(corners[2]);
+            vertices.push_back(corners[3]);
+
+            line_vertex_count += 4;
+        }
+
+        /* Include visible characters and spaces in the length
+         * of the line */
+        if(is_visible_character(ch) || ch == ' ') {
+            line_length += ch_advance;
+        }
 
         if(i == text().length() - 1) {
             finalize_line();
@@ -215,23 +292,33 @@ void Widget::render_text() {
         left = next_left;
     }
 
+    float min_x = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+
     /* Now apply line heights */
-    float top = 0;
     uint32_t j = 0;
     for(auto range: line_ranges) {
+        if(!range.second) {
+            // If there are no vertices on this line, then
+            // ignore.
+            continue;
+        }
+
+        uint16_t shift = (j * line_height().value);
+
         Vertex* ch = &vertices.at(range.first);
-        float hw = line_lengths[j++] * 0.5f;
-        for(auto i = 0u; i < range.second; ++i) {
+        uint16_t hw = line_lengths[j++].value / 2;
+        for(auto i = 0u; i < range.second; i += 4) {
             Vertex* bl = ch;
             Vertex* br = ch + 1;
             Vertex* tr = ch + 2;
             Vertex* tl = ch + 3;
 
             // Shift the vertex downwards
-            bl->xyz.y -= top;
-            br->xyz.y -= top;
-            tr->xyz.y -= top;
-            tl->xyz.y -= top;
+            bl->xyz.y -= shift;
+            br->xyz.y -= shift;
+            tr->xyz.y -= shift;
+            tl->xyz.y -= shift;
 
             // Center each line
             bl->xyz.x -= hw;
@@ -239,54 +326,98 @@ void Widget::render_text() {
             tr->xyz.x -= hw;
             tl->xyz.x -= hw;
 
+            min_x = std::min(bl->xyz.x, min_x);
+            min_x = std::min(tl->xyz.x, min_x);
+            max_x = std::max(br->xyz.x, max_x);
+            max_x = std::max(tr->xyz.x, max_x);
             ch += 4;
         }
-
-        // Increase for the next line
-        top += pimpl_->line_height_;
     }
 
-    // Now we have to shift the entire thing up to vertically center!
-    for(Vertex& v: vertices) {
-        v.xyz.y += int(top / 2.0f);
+    if(j == 0) {
+        min_x = max_x = 0.0f;
     }
 
     auto sm = mesh_->find_submesh("text");
     assert(sm);
 
-    float min_x = std::numeric_limits<float>::max();
-    float min_y = std::numeric_limits<float>::max();
-    float max_x = std::numeric_limits<float>::lowest();
-    float max_y = std::numeric_limits<float>::lowest();
+    /* Make sure the font material is up to date! */
+    sm->set_material(font_->material());
+
+    auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
+
+    text_width_ = max_length;
+    text_height_ = line_height() * int(line_ranges.size());
+
+    /* Shift the text depending on the difference in padding */
+    auto diff = padding().left - padding().right;
+
+    auto global_x_shift = diff.value; //(std::abs(min_x) - std::abs(max_x)) * 0.5f;
+    auto global_y_shift = round(text_height_.value * 0.5f);
 
     auto vdata = mesh_->vertex_data.get();
-    auto idata = sm->index_data.get();
-    vdata->move_to_start();
 
+    vdata->move_to_start();
     /* Allocate memory first */
     vdata->reserve(vertices.size());
-    idata->reserve(vertices.size());
 
-    auto idx = 0;
-    for(auto& v: vertices) {
-        min_x = std::min(min_x, v.xyz.x);
-        max_x = std::max(max_x, v.xyz.x);
-        min_y = std::min(min_y, v.xyz.y);
-        max_y = std::max(max_y, v.xyz.y);
+    if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
+        auto cwidth = std::max(requested_width(), content_width()) - padding().left - padding().right;
 
-        vdata->position(v.xyz);
-        vdata->tex_coord0(v.uv);
-        vdata->diffuse(pimpl_->text_colour_);
+        auto j = 0;
+        for(auto range: line_ranges) {
+            if(!range.second) {
+                // If there are no vertices on this line, then
+                // ignore.
+                continue;
+            }
+
+            Vertex* ch = &vertices.at(range.first);
+
+            auto ashift = std::ceil(-line_lengths[j++].value * 0.5f);
+            ashift += std::ceil(cwidth.value * 0.5f);
+
+            for(auto i = 0u; i < range.second; i++, ch++) {
+                if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
+                    ch->xyz.x -= ashift;
+                    ch->xyz.x += padding().left.value;
+                } else {
+                    ch->xyz.x += ashift;
+                    ch->xyz.x -= padding().right.value;
+                }
+            }
+        }
+    }
+
+    auto c = style_->text_colour_;
+    c.set_alpha(style_->opacity_);
+
+    auto idx = vdata->count();
+    auto count = 0;
+    for(std::size_t i = 0; i < vertices.size(); ++i) {
+        Vertex* v = &vertices[i];
+
+        /* Turn into a tri-strip, rather than a quad */
+        if(i % 4 == 2) {
+            v++;
+        } else if(i % 4 == 3) {
+            v--;
+        }
+
+        auto p = v->xyz + Vec3(global_x_shift, global_y_shift, 0);
+        vdata->position(p);
+        vdata->tex_coord0(v->uv);
+        vdata->diffuse(c);
         vdata->move_next();
 
-        idata->index(idx++);
+        /* Add this strip */
+        if(count++ % 4 == 0) {
+            sm->add_vertex_range(idx, 4);
+            idx += 4;
+        }
     }
 
     vdata->done();
-    idata->done();
-
-    pimpl_->content_width_ = max_x - min_x;
-    pimpl_->content_height_ = max_y - min_y;
 }
 
 void Widget::clear_mesh() {
@@ -294,11 +425,15 @@ void Widget::clear_mesh() {
 
     mesh_->vertex_data->clear(/*release_memory=*/false);
     for(auto submesh: mesh_->each_submesh()) {
-        submesh->index_data->clear();
+        if(submesh->type() == smlt::SUBMESH_TYPE_INDEXED) {
+            submesh->index_data->clear();
+        } else {
+            submesh->remove_all_vertex_ranges();
+        }
     }
 }
 
-SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour) {
+SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const Px& border_radius, const smlt::Vec2* uvs, float z_offset) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
 
@@ -307,49 +442,91 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
 
     sm->set_diffuse(colour);
 
-    auto offset = smlt::Vec3(bounds.width() / 2, bounds.height() / 2, 0) + smlt::Vec3(bounds.min.x, bounds.min.y, 0);
-    auto width = bounds.width();
-    auto height = bounds.height();
-    auto x_offset = offset.x;
-    auto y_offset = offset.y;
+    auto min = bounds.min;
+    auto max = bounds.max;
 
-    /* We don't offset Z at all, submeshes are organised back to front
-     * so that when rendering they should be correctly blended */
-    auto z_offset = 0.0f;
+    auto x_offset = 0.0f;
+    auto y_offset = 0.0f;
 
     auto prev_count = mesh_->vertex_data->count();
-    mesh_->vertex_data->move_to_end();
 
-    mesh_->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(0.0, 0.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
+    if(border_radius) {
+        std::vector<Vec3> points;
 
-    mesh_->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(1.0, 0.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
+        float half_height = (bounds.max.y - bounds.min.y).value / 2;
+        int max_radius = std::min((bounds.max.x - bounds.min.x).value, (bounds.max.y - bounds.min.y).value) / 2;
+        int radius = std::min((int) border_radius.value, max_radius);
+        float fr = float(radius);
 
-    mesh_->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(1.0, 1.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
+        /* First add left section */
+        for(int i = 0; i < radius; ++i) {
+            float r = (PI * 0.5f) * (float(i) / fr);
+            float x = fr - (fr * std::cos(r));
+            float y = fr - (fr * std::sin(r));
 
-    mesh_->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    mesh_->vertex_data->diffuse(colour);
-    mesh_->vertex_data->tex_coord0(0.0, 1.0f);
-    mesh_->vertex_data->normal(0, 0, 1);
-    mesh_->vertex_data->move_next();
-    mesh_->vertex_data->done();
+            points.push_back(Vec3(float(min.x.value) + x, half_height - y, z_offset));
+            points.push_back(Vec3(float(min.x.value) + x, (-half_height) + y, z_offset));
+        }
 
-    sm->index_data->index(prev_count + 0);
-    sm->index_data->index(prev_count + 1);
-    sm->index_data->index(prev_count + 2);
-    sm->index_data->index(prev_count + 3);
-    sm->index_data->done();
+        /* Now add the central section */
+        points.push_back(Vec3((min.x.value + radius), max.y.value, z_offset));
+        points.push_back(Vec3((min.x.value + radius), min.y.value, z_offset));
+        points.push_back(Vec3((max.x.value - radius), max.y.value, z_offset));
+        points.push_back(Vec3((max.x.value - radius), min.y.value, z_offset));
+
+        /* Finally the central section */
+        for(int i = 0; i < radius; ++i) {
+            float r = (PI * 0.5f) * (float(i) / fr);
+
+            float x(fr * std::sin(r));
+            float y(fr - (fr * std::cos(r)));
+
+            int xstart = max.x.value - radius;
+
+            points.push_back(Vec3(xstart + x, max.y.value - y, z_offset));
+            points.push_back(Vec3(xstart + x, min.y.value + y, z_offset));
+        }
+
+
+        for(auto& p: points) {
+            mesh_->vertex_data->move_to_end();
+            mesh_->vertex_data->position(p);
+            mesh_->vertex_data->diffuse(colour);
+            mesh_->vertex_data->tex_coord0(0.0, 0.0f);
+            mesh_->vertex_data->normal(0, 0, 1);
+            mesh_->vertex_data->move_next();
+        }
+
+        sm->add_vertex_range(prev_count, points.size());
+    } else {
+        mesh_->vertex_data->move_to_end();
+        mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f, (uvs) ? uvs[0].y : 0.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+
+        mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f, (uvs) ? uvs[1].y : 0.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+
+        mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f, (uvs) ? uvs[2].y : 1.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+        mesh_->vertex_data->done();
+
+        mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
+        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->tex_coord0((uvs) ? uvs[3].x : 1.0f, (uvs) ? uvs[3].y : 1.0f);
+        mesh_->vertex_data->normal(0, 0, 1);
+        mesh_->vertex_data->move_next();
+
+        sm->add_vertex_range(prev_count, 4);
+    }
 
     return sm;
 }
@@ -358,28 +535,60 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
     auto dim = image->dimensions();
 
     Vec2 min = Vec2(
-        rect.bottom_left.x / dim.x,
-        rect.bottom_left.y / dim.y
+        rect.bottom_left.x.value / dim.x,
+        rect.bottom_left.y.value / dim.y
     );
 
     Vec2 max = Vec2(
-        (rect.bottom_left.x + rect.size.x) / dim.x,
-        (rect.bottom_left.y + rect.size.y) / dim.y
+        (rect.bottom_left.x.value + rect.size.x.value) / dim.x,
+        (rect.bottom_left.y.value + rect.size.y.value) / dim.y
     );
 
     auto vertices = mesh_->vertex_data.get();
-    auto indices = submesh->index_data.get();
 
-    auto first_idx = indices->at(0);
+    if(!submesh->vertex_range_count()) {
+        S_ERROR("Something went wrong with the generation of a widget. Could not apply image rect");
+        return;
+    }
+
+    auto idx = submesh->vertex_ranges()[0].start;
+    auto first_idx = idx;
     vertices->move_to(first_idx);
     vertices->tex_coord0(min.x, min.y);
     vertices->move_to(first_idx + 1);
     vertices->tex_coord0(max.x, min.y);
-    vertices->move_to(first_idx + 2);
-    vertices->tex_coord0(max.x, max.y);
     vertices->move_to(first_idx + 3);
+    vertices->tex_coord0(max.x, max.y);
+    vertices->move_to(first_idx + 2);
     vertices->tex_coord0(min.x, max.y);
     vertices->done();
+}
+
+void Widget::render_border(const WidgetBounds& border_bounds) {
+    auto colour = style_->border_colour_;
+    float a = colour.af() * style_->opacity_;
+    colour.set_alpha(a);
+    /* FIXME! This should be 4 rectangles or a tri-strip */
+    new_rectangle("border", border_bounds, colour, style_->border_radius_);
+}
+
+void Widget::render_background(const WidgetBounds& background_bounds) {
+    auto colour = style_->background_colour_;
+    colour.set_alpha(colour.af() * style_->opacity_);
+
+    auto bg = new_rectangle("background", background_bounds, colour, style_->border_radius_);
+    if(has_background_image()) {
+        apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
+    }
+}
+
+void Widget::render_foreground(const WidgetBounds& foreground_bounds) {
+    auto colour = style_->foreground_colour_;
+    colour.set_alpha(colour.af() * style_->opacity_);
+    auto fg = new_rectangle("foreground", foreground_bounds, colour, style_->border_radius_);
+    if(has_foreground_image()) {
+        apply_image_rect(fg, style_->foreground_image_, style_->foreground_image_rect_);
+    }
 }
 
 void Widget::rebuild() {
@@ -389,67 +598,50 @@ void Widget::rebuild() {
     assert(mesh_);
 
     clear_mesh();
+    _recalc_active_layers();
 
+    prepare_build();
+
+    // Sets the text width and height
     render_text();
 
-    // FIXME: Clipping + other modes
-    if(resize_mode() == RESIZE_MODE_FIXED) {
-        pimpl_->content_width_ = pimpl_->requested_width_;
-        pimpl_->content_height_ = pimpl_->requested_height_;
-    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        pimpl_->content_height_ = std::max(pimpl_->requested_height_, pimpl_->content_height_);
-        pimpl_->content_width_ = pimpl_->requested_width_;
-    } else if(pimpl_->resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
-        pimpl_->content_width_ = std::max(pimpl_->requested_width_, pimpl_->content_width_);
-        pimpl_->content_height_ = pimpl_->requested_height_;
-    }
+    auto content_area = calculate_content_dimensions(
+        text_width_,
+        text_height_
+    );
 
-    auto background_bounds = calculate_background_size(pimpl_->content_width_, pimpl_->content_height_);
-    auto foreground_bounds = calculate_foreground_size(pimpl_->content_width_, pimpl_->content_height_);
+    content_width_ = content_area.width;
+    content_height_ = content_area.height;
+
+    auto background_bounds = calculate_background_size(content_area);
+    auto foreground_bounds = calculate_foreground_size(content_area);
 
     auto border_bounds = background_bounds;
-    border_bounds.min -= smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
-    border_bounds.max += smlt::Vec2(pimpl_->border_width_, pimpl_->border_width_);
+    border_bounds.min.x -= style_->border_width_;
+    border_bounds.min.y -= style_->border_width_;
+    border_bounds.max.x += style_->border_width_;
+    border_bounds.max.y += style_->border_width_;
 
-    if(border_active()) {
-        auto colour = pimpl_->border_colour_;
-        colour.set_alpha(colour.af() * pimpl_->opacity_);
-        new_rectangle("border", border_bounds, colour);
+    if(border_active() && border_width() > 0) {
+        render_border(border_bounds);
     }
 
-    if(has_background_image()) {
-        materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(pimpl_->background_image_);
+    if(background_active() && background_bounds.has_non_zero_area()) {
+        render_background(background_bounds);
     }
 
-    if(background_active()) {
-        auto colour = pimpl_->background_colour_;
-        colour.set_alpha(colour.af() * pimpl_->opacity_);
-
-        auto bg = new_rectangle("background", background_bounds, colour);
-        if(has_background_image()) {
-            apply_image_rect(bg, pimpl_->background_image_, pimpl_->background_image_rect_);
-        }
+    if(foreground_active() && foreground_bounds.has_non_zero_area()) {
+        render_foreground(foreground_bounds);
     }
 
-    if(has_foreground_image()) {
-        materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(pimpl_->foreground_image_);
-    }
-
-    if(foreground_active()) {
-        auto colour = pimpl_->foreground_colour_;
-        colour.set_alpha(colour.af() * pimpl_->opacity_);
-        auto fg = new_rectangle("foreground", foreground_bounds, colour);
-        if(has_foreground_image()) {
-            apply_image_rect(fg, pimpl_->foreground_image_, pimpl_->foreground_image_rect_);
-        }
-    }
+    finalize_render();
 
     /* Apply anchoring */
-    auto width = mesh_->aabb().width();
-    auto height = mesh_->aabb().height();
+    auto width = border_bounds.width().value;
+    auto height = border_bounds.height().value;
 
-    float xoff = -((pimpl_->anchor_point_.x * width) - (width / 2.0f));
-    float yoff = -((pimpl_->anchor_point_.y * height) - (height / 2.0f));
+    float xoff = -((anchor_point_.x * width) - (width / 2.0f));
+    float yoff = -((anchor_point_.y * height) - (height / 2.0f));
     auto& vdata = mesh_->vertex_data;
     for(auto i = 0u; i < vdata->count(); ++i) {
         auto p = *vdata->position_at<smlt::Vec3>(i);
@@ -460,50 +652,105 @@ void Widget::rebuild() {
     }
     vdata->done();
 
-    pimpl_->anchor_point_dirty_ = false;
+    anchor_point_dirty_ = false;
+    finalize_build();
 }
 
-Widget::WidgetBounds Widget::calculate_background_size(float content_width, float content_height) const {
-    /* By default, we just return the content_width + padding */
-    auto hw = content_width / 2.0f;
-    auto hh = content_height / 2.0f;
+Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dimensions) const {
+    Px box_width, box_height;
+
+    // FIXME: Clipping + other modes
+    if(resize_mode() == RESIZE_MODE_FIXED) {
+        box_width = requested_width_;
+        box_height = requested_height_;
+    } else if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
+        box_width = requested_width_;
+        box_height = content_dimensions.height + style_->padding_.top + style_->padding_.bottom;
+    } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
+        box_width = content_dimensions.width + style_->padding_.left + style_->padding_.right;
+        box_height = requested_height_;
+    } else {
+        /* Fit content */
+        box_width = content_dimensions.width + style_->padding_.left + style_->padding_.right;
+        box_height = content_dimensions.height + style_->padding_.top + style_->padding_.bottom;
+    }
+
+    auto hw = Px((int16_t) std::ceil(float(box_width.value) * 0.5f));
+    auto hh = Px((int16_t) std::ceil(float(box_height.value) * 0.5f));
 
     WidgetBounds bounds;
-    bounds.min = smlt::Vec2(-(hw + pimpl_->padding_.left), -(hh + pimpl_->padding_.bottom));
-    bounds.max = smlt::Vec2(hw + pimpl_->padding_.right, hh + pimpl_->padding_.top);
+    bounds.min = UICoord(-hw, -hh);
+    bounds.max = UICoord(hw, hh);
     return bounds;
 }
 
-Widget::WidgetBounds Widget::calculate_foreground_size(float content_width, float content_height) const {
-    return calculate_background_size(content_width, content_height);
+Widget::WidgetBounds Widget::calculate_foreground_size(const UIDim& content_dimensions) const {
+    return calculate_background_size(content_dimensions);
 }
 
-void Widget::set_border_width(float x) {
-    if(pimpl_->border_width_ == x) {
+UIDim Widget::calculate_content_dimensions(Px text_width, Px text_height) {
+    return UIDim(Px(text_width), Px(text_height));
+}
+
+void Widget::set_border_width(Px x) {
+    if(style_->border_width_ == x) {
         return;
     }
 
-    pimpl_->border_width_ = x;
+    style_->border_width_ = x;
     rebuild();
+}
+
+Px Widget::border_width() const {
+    return style_->border_width_;
+}
+
+void Widget::set_border_radius(Px x) {
+    if(style_->border_radius_ == x) {
+        return;
+    }
+
+    style_->border_radius_ = x;
+    rebuild();
+}
+
+Px Widget::border_radius() const {
+    return style_->border_radius_;
 }
 
 void Widget::set_border_colour(const Colour &colour) {
-    if(pimpl_->border_colour_ == PackedColour4444(colour)) {
+    if(style_->border_colour_ == PackedColour4444(colour)) {
         return;
     }
 
-    pimpl_->border_colour_ = colour;
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER;
+    style_->border_colour_ = colour;
+    _recalc_active_layers();
     rebuild();
 }
 
+void Widget::set_padding(Px x) {
+    set_padding(x, x, x, x);
+}
+
 void Widget::set_text(const unicode &text) {
-    if(pimpl_->text_ == text) {
+    if(!pre_set_text(text)) {
         return;
     }
 
-    pimpl_->text_ = text;
+    if(text_ == text) {
+        return;
+    }
+
+    text_ = text;
     on_size_changed();
+}
+
+void Widget::set_text_alignment(TextAlignment alignment) {
+    style_->text_alignment_ = alignment;
+}
+
+TextAlignment Widget::text_alignment() const {
+    return style_->text_alignment_;
 }
 
 void Widget::on_size_changed() {
@@ -511,190 +758,242 @@ void Widget::on_size_changed() {
 }
 
 bool Widget::border_active() const {
-    return pimpl_->active_layers_ & 0x1;
+    return (style_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BORDER));
 }
 
 bool Widget::background_active() const {
-    return pimpl_->active_layers_ & 0x2;
+    return (style_->active_layers_ & (1 << WIDGET_LAYER_INDEX_BACKGROUND));
 }
 
 bool Widget::foreground_active() const {
-    return pimpl_->active_layers_ & 0x4;
+    return (style_->active_layers_ & (1 << WIDGET_LAYER_INDEX_FOREGROUND));
 }
 
 void Widget::_recalc_active_layers() {
-    pimpl_->active_layers_ = (
-        (pimpl_->border_colour_ != Colour::NONE) << 0 |
-        (pimpl_->background_colour_ != Colour::NONE) << 1 |
-        (pimpl_->foreground_colour_ != Colour::NONE) << 2 |
-        (pimpl_->text_colour_ != Colour::NONE) << 3
+    style_->active_layers_ = (
+        (style_->border_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER |
+        (style_->background_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
+        (style_->foreground_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
+        (style_->text_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_TEXT
     );
 }
 
 const AABB &Widget::aabb() const {
-    return actor_->aabb();
+    if(actor_) {
+        return actor_->aabb();
+    } else {
+        static AABB no_aabb;
+        return no_aabb;
+    }
 }
 
 void Widget::set_background_image(TexturePtr texture) {
-    if(pimpl_->background_image_ == texture) {
+    if(style_->background_image_ == texture) {
         return;
     }
 
-    pimpl_->background_image_ = texture;
+    assert(owner_->global_background_material_);
+
+    if(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] == owner_->global_background_material_) {
+        /* We need to switch to an independent material and can't use the global one anymore */
+        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = owner_->clone_global_background_material();
+        mesh_->find_submesh("background")->set_material(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]);
+    }
+
+    style_->background_image_ = texture;
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(style_->background_image_);
 
     auto dim = texture->dimensions();
     // Triggers a rebuild
     set_background_image_source_rect(
         UICoord(),
-        UICoord(dim.x, dim.y)
+        UICoord(Px(dim.x), Px(dim.y))
     );
 }
 
 void Widget::set_background_image_source_rect(const UICoord& bottom_left, const UICoord& size) {
-    if(pimpl_->background_image_rect_.bottom_left == bottom_left && pimpl_->background_image_rect_.size == size) {
+    if(style_->background_image_rect_.bottom_left == bottom_left && style_->background_image_rect_.size == size) {
         // Nothing to do
         return;
     }
 
-    pimpl_->background_image_rect_.bottom_left = bottom_left;
-    pimpl_->background_image_rect_.size = size;
+    style_->background_image_rect_.bottom_left = bottom_left;
+    style_->background_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_foreground_image(TexturePtr texture) {
-    if(pimpl_->foreground_image_ == texture) {
+    if(style_->foreground_image_ == texture) {
         return;
     }
 
-    pimpl_->foreground_image_ = texture;
+    assert(owner_->global_foreground_material_);
+
+    if(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] == owner_->global_foreground_material_) {
+        /* We need to switch to an independent material and can't use the global one anymore */
+        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->clone_global_foreground_material();
+        mesh_->find_submesh("foreground")->set_material(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]);
+    }
+
+    style_->foreground_image_ = texture;
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(style_->foreground_image_);
 
     auto dim = texture->dimensions();
 
     // Triggers a rebuild
     set_foreground_image_source_rect(
         UICoord(),
-        UICoord(dim.x, dim.y)
+        UICoord(Px(dim.x), Px(dim.y))
     );
 }
 
 void Widget::set_foreground_image_source_rect(const UICoord& bottom_left, const UICoord& size) {
-    if(pimpl_->foreground_image_rect_.bottom_left == bottom_left && pimpl_->foreground_image_rect_.size == size) {
+    if(style_->foreground_image_rect_.bottom_left == bottom_left && style_->foreground_image_rect_.size == size) {
         // Nothing to do
         return;
     }
 
-    pimpl_->foreground_image_rect_.bottom_left = bottom_left;
-    pimpl_->foreground_image_rect_.size = size;
+    style_->foreground_image_rect_.bottom_left = bottom_left;
+    style_->foreground_image_rect_.size = size;
     rebuild();
 }
 
 void Widget::set_background_colour(const Colour& colour) {
-    if(pimpl_->background_colour_ == colour) {
+    assert(style_);
+
+    if(style_->background_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    pimpl_->background_colour_ = colour;
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND;
+    style_->background_colour_ = colour;
+
+    _recalc_active_layers();
     rebuild();
 }
 
 void Widget::set_foreground_colour(const Colour& colour) {
-    if(pimpl_->foreground_colour_ == colour) {
+    if(style_->foreground_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    pimpl_->foreground_colour_ = colour;    
-    pimpl_->active_layers_ |= (colour != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND;
+    style_->foreground_colour_ = colour;
 
+    _recalc_active_layers();
     rebuild();
 }
 
 void Widget::set_text_colour(const Colour &colour) {
-    if(pimpl_->text_colour_ == colour) {
+    if(style_->text_colour_ == colour) {
         // Nothing to do
         return;
     }
 
-    pimpl_->text_colour_ = colour;
+    style_->text_colour_ = colour;
+    _recalc_active_layers();
     rebuild();
 }
 
-uint16_t Widget::requested_width() const {
-    return pimpl_->requested_width_;
+Px Widget::requested_width() const {
+    return requested_width_;
 }
 
-uint16_t Widget::requested_height() const {
-    return pimpl_->requested_height_;
+Px Widget::requested_height() const {
+    return requested_height_;
 }
 
-uint16_t Widget::content_width() const {
-    return pimpl_->content_width_; // Content area
+Px Widget::content_width() const {
+    return content_width_; // Content area
 }
 
-uint16_t Widget::content_height() const {
-    return pimpl_->content_height_;
+Px Widget::content_height() const {
+    return content_height_;
 }
 
-uint16_t Widget::outer_width() const {
-    return content_width() + (pimpl_->border_width_ * 2);
+Px Widget::outer_width() const {
+    if(requested_width() == Px(-1)) {
+        return content_width() + (style_->border_width_ * 2) + padding().left + padding().right;
+    } else {
+        return requested_width();
+    }
 }
 
-uint16_t Widget::outer_height() const {
-    return content_height() + (pimpl_->border_width_ * 2);
+Px Widget::outer_height() const {
+    if(requested_height() == Px(-1)) {
+        return content_height() + (style_->border_width_ * 2) + padding().top + padding().bottom;
+    } else {
+        return requested_height();
+    }
 }
 
 bool Widget::set_resize_mode(ResizeMode resize_mode) {
-    if(resize_mode == pimpl_->resize_mode_) {
+    if(resize_mode == resize_mode_) {
         return false;
     }
 
-    pimpl_->resize_mode_ = resize_mode;
+    resize_mode_ = resize_mode;
     on_size_changed();
     return true;
 }
 
 ResizeMode Widget::resize_mode() const {
-    return pimpl_->resize_mode_;
+    return resize_mode_;
 }
 
 bool Widget::has_background_image() const {
-    return bool(pimpl_->background_image_);
+    return bool(style_->background_image_);
 }
 
 bool Widget::has_foreground_image() const {
-    return bool(pimpl_->foreground_image_);
+    return bool(style_->foreground_image_);
 }
 
-void Widget::set_padding(uint16_t left, uint16_t right, uint16_t bottom, uint16_t top) {
-    pimpl_->padding_.left = left;
-    pimpl_->padding_.right = right;
-    pimpl_->padding_.bottom = bottom;
-    pimpl_->padding_.top = top;
+void Widget::set_padding(Px left, Px right, Px bottom, Px top) {
+    if(left == style_->padding_.left &&
+        right == style_->padding_.right &&
+        bottom == style_->padding_.bottom &&
+        top == style_->padding_.top) {
+
+        return;
+    }
+
+    style_->padding_.left = left;
+    style_->padding_.right = right;
+    style_->padding_.bottom = bottom;
+    style_->padding_.top = top;
     rebuild();
 }
 
+UInt4 Widget::padding() const {
+    return style_->padding_;
+}
+
 bool Widget::is_pressed_by_finger(uint8_t finger_id) {
-    return pimpl_->fingers_down_.find(finger_id) != pimpl_->fingers_down_.end();
+    return fingers_down_ & (1 << finger_id);
 }
 
 void Widget::force_release() {
-    auto fingers_down = pimpl_->fingers_down_; // Copy, fingerup will delete from fingers_down_
-    for(auto& finger_id: fingers_down) {
-        fingerup(finger_id);
+    for(int i = 0; i < 16; ++i) {
+        if(fingers_down_ & (1 << i)) {
+            fingerup(i);
+        }
     }
 }
 
 Vec2 Widget::anchor_point() const {
-    return pimpl_->anchor_point_;
+    return anchor_point_;
 }
 
 void Widget::set_opacity(RangeValue<0, 1> alpha) {
-    if(pimpl_->opacity_ != alpha) {
-        pimpl_->opacity_ = alpha;
+    if(style_->opacity_ != alpha) {
+        style_->opacity_ = alpha;
         rebuild();
     }
+}
+
+Px Widget::line_height() const {
+    return Px(font_->ascent() - font_->descent() + font_->line_gap());
 }
 
 void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPriority new_priority) {
@@ -705,26 +1004,41 @@ void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPrior
     actor_->set_render_priority(new_priority);
 }
 
+void Widget::set_style(std::shared_ptr<WidgetStyle> style) {
+    style_ = style;
+    rebuild();
+}
+
 void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
-    if(pimpl_->anchor_point_.x != (float) x || pimpl_->anchor_point_.y != (float) y) {
-        pimpl_->anchor_point_ = smlt::Vec2(x, y);
-        pimpl_->anchor_point_dirty_ = true;
+    if(anchor_point_.x != (float) x || anchor_point_.y != (float) y) {
+        anchor_point_ = smlt::Vec2(x, y);
+        anchor_point_dirty_ = true;
     }
 }
 
 void Widget::fingerdown(uint8_t finger_id) {
     // If we added, and it was the first finger down
-    if(pimpl_->fingers_down_.insert(finger_id).second && pimpl_->fingers_down_.size() == 1) {
-        // Emit the widget pressed signal
-        signal_pressed_();
+
+    bool first = !fingers_down_;
+
+    if(!(fingers_down_ & (1 << finger_id))) {
+        fingers_down_ |= (1 << finger_id);
+
+        if(first) {
+            // Emit the widget pressed signal
+            signal_pressed_();
+        }
     }
 }
 
 void Widget::fingerup(uint8_t finger_id) {
-    // If we just released the last finger, emit a widget released signal
-    if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
-        signal_released_();
-        signal_clicked_();
+    if((fingers_down_ & (1 << finger_id))) {
+        fingers_down_ &= ~(1 << finger_id);
+        if(!fingers_down_) {
+            // If we just released the last finger, emit a widget released signal
+            signal_released_();
+            signal_clicked_();
+        }
     }
 }
 
@@ -734,44 +1048,49 @@ void Widget::fingerenter(uint8_t finger_id) {
 
 void Widget::fingermove(uint8_t finger_id) {
     //FIXME: fire signal
+
 }
 
 void Widget::fingerleave(uint8_t finger_id) {
     // Same as fingerup, but we don't fire the click signal
-    if(pimpl_->fingers_down_.erase(finger_id) && pimpl_->fingers_down_.empty()) {
-        signal_released_();
+    if((fingers_down_ & (1 << finger_id))) {
+        fingers_down_ &= ~(1 << finger_id);
+        if(!fingers_down_) {
+            // If we just released the last finger, emit a widget released signal
+            signal_released_();
+        }
     }
 }
 
 bool Widget::is_focused() const {
-    return pimpl_->is_focused_;
+    return is_focused_;
 }
 
 void Widget::set_focus_previous(WidgetPtr previous_widget) {
-    pimpl_->focus_previous_ = previous_widget;
-    if(pimpl_->focus_previous_) {
-        pimpl_->focus_previous_->pimpl_->focus_next_ = this;
+    focus_previous_ = previous_widget;
+    if(focus_previous_) {
+        focus_previous_->focus_next_ = this;
     }
 }
 
 void Widget::set_focus_next(WidgetPtr next_widget) {
-    pimpl_->focus_next_ = next_widget;
-    if(pimpl_->focus_next_) {
-        pimpl_->focus_next_->pimpl_->focus_previous_ = this;
+    focus_next_ = next_widget;
+    if(focus_next_) {
+        focus_next_->focus_previous_ = this;
     }
 }
 
 void Widget::focus() {
     auto focused = focused_in_chain_or_this();
     if(focused == this) {
-        if(!pimpl_->is_focused_) {
-            pimpl_->is_focused_ = true;
+        if(!is_focused_) {
+            is_focused_ = true;
             signal_focused_();
         }
         return;
     } else {
         focused->blur();
-        pimpl_->is_focused_ = true;
+        is_focused_ = true;
         signal_focused_();
     }
 }
@@ -781,7 +1100,7 @@ WidgetPtr Widget::focused_in_chain() {
 
     // If we got back this element, but this element isn't focused
     // then return null
-    if(ret == this && !pimpl_->is_focused_) {
+    if(ret == this && !is_focused_) {
         return nullptr;
     }
 
@@ -789,20 +1108,20 @@ WidgetPtr Widget::focused_in_chain() {
 }
 
 WidgetPtr Widget::focused_in_chain_or_this() {
-    auto next = pimpl_->focus_next_;
+    auto next = focus_next_;
     while(next && next != this) {
         if(next->is_focused()) {
             return next;
         }
-        next = next->pimpl_->focus_next_;
+        next = next->focus_next_;
     }
 
-    auto previous = pimpl_->focus_previous_;
+    auto previous = focus_previous_;
     while(previous && previous != this) {
         if(previous->is_focused()) {
             return previous;
         }
-        previous = previous->pimpl_->focus_previous_;
+        previous = previous->focus_previous_;
     }
 
     return this;
@@ -813,7 +1132,7 @@ void Widget::on_transformation_change_attempted() {
     // (rather than if it happens)
     // because the anchor point may change and someone might
     // call move_to with the same position
-    if(pimpl_->anchor_point_dirty_) {
+    if(anchor_point_dirty_) {
         // Reconstruct which will clear the dirty flag
         rebuild();
     }
@@ -835,8 +1154,8 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
     // If something is focused
     if(focused) {
         // Focus the next in the chain, otherwise focus the first in the chain
-        if(focused->pimpl_->focus_next_) {
-            to_focus = focused->pimpl_->focus_next_;
+        if(focused->focus_next_) {
+            to_focus = focused->focus_next_;
         } else {
             to_focus = first_in_focus_chain();
         }
@@ -858,7 +1177,7 @@ void Widget::focus_next_in_chain(ChangeFocusBehaviour behaviour) {
     }
 
     if(to_focus) {
-        to_focus->pimpl_->is_focused_ = true;
+        to_focus->is_focused_ = true;
         to_focus->signal_focused_();
     }
 }
@@ -879,8 +1198,8 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
     // If something is focused
     if(focused) {
         // Focus the previous in the chain, otherwise focus the last in the chain
-        if(focused->pimpl_->focus_previous_) {
-            to_focus = focused->pimpl_->focus_previous_;
+        if(focused->focus_previous_) {
+            to_focus = focused->focus_previous_;
         } else {
             to_focus = last_in_focus_chain();
         }
@@ -902,15 +1221,15 @@ void Widget::focus_previous_in_chain(ChangeFocusBehaviour behaviour) {
     }
 
     if(to_focus) {
-        to_focus->pimpl_->is_focused_ = true;
+        to_focus->is_focused_ = true;
         to_focus->signal_focused_();
     }
 }
 
 WidgetPtr Widget::first_in_focus_chain() {
     auto search = this;
-    while(search->pimpl_->focus_previous_) {
-        search = search->pimpl_->focus_previous_;
+    while(search->focus_previous_) {
+        search = search->focus_previous_;
     }
 
     return search;
@@ -918,16 +1237,24 @@ WidgetPtr Widget::first_in_focus_chain() {
 
 WidgetPtr Widget::last_in_focus_chain() {
     auto search = this;
-    while(search->pimpl_->focus_next_) {
-        search = search->pimpl_->focus_next_;
+    while(search->focus_next_) {
+        search = search->focus_next_;
     }
 
     return search;
 }
 
 void Widget::blur() {
-    pimpl_->is_focused_ = false;
+    is_focused_ = false;
     signal_blurred_();
+}
+
+WidgetPtr Widget::next_in_focus_chain() const {
+    return focus_next_;
+}
+
+WidgetPtr Widget::previous_in_focus_chain() const {
+    return focus_previous_;
 }
 
 void Widget::click() {

@@ -1,15 +1,8 @@
 #include <algorithm>
+#include <cmath>
 #include "utils.h"
 
 namespace smlt {
-
-float clamp(const float x, const float l, const float h) {
-    return std::min(std::max(x, l), h);
-}
-
-float lerp(const float x, const float y, const float t) {
-    return x + (t * (y - x));
-}
 
 float smoothstep(const float e0, const float e1, float x) {
     x = clamp((x - e0) / (e1 - e0), 0.0f, 1.0f);
@@ -30,6 +23,31 @@ uint32_t next_power_of_two(uint32_t x) {
     }
 
     return value;
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fast_divide(float d, float n) {
+#ifdef __DREAMCAST__
+    const float sgn = (n > 0) - (n < 0);
+    return sgn * (1.f / __builtin_sqrtf(n * n)) * d;
+#else
+    return d / n;
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+float fast_sqrt(float n) {
+    return __builtin_sqrtf(n);
+}
+
+__attribute__((optimize("O3", "fast-math")))
+void fast_sincos(double v, double* s, double* c) {
+#ifdef __DREAMCAST__
+    __builtin_sincos(v, s, c);
+#else
+    *s = sin(v);
+    *c = cos(v);
+#endif
 }
 
 }

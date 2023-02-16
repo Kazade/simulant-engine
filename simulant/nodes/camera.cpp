@@ -4,6 +4,7 @@
 #include "../stage.h"
 #include "../window.h"
 #include "../viewport.h"
+#include "../application.h"
 
 namespace smlt {
 
@@ -15,7 +16,7 @@ Camera::Camera(Stage *stage, SoundDriver* sound_driver):
 
     assert(stage);
 
-    set_perspective_projection(smlt::Degrees(45.0f), stage->window->aspect_ratio());
+    set_perspective_projection(smlt::Degrees(45.0f), get_app()->window->aspect_ratio());
 }
 
 Camera::~Camera() {
@@ -24,7 +25,6 @@ Camera::~Camera() {
 
 void Camera::update(float dt) {
     StageNode::update(dt);
-    update_source(dt);
 }
 
 void Camera::update_transformation_from_parent() {
@@ -35,26 +35,26 @@ void Camera::update_transformation_from_parent() {
 
 void Camera::update_frustum() {
     //Recalculate the view matrix
-    view_matrix_ = transform_.inversed();
+    view_matrix_ = Mat4::as_look_at(absolute_position(), absolute_position() + forward(), smlt::Vec3::POSITIVE_Y);
 
     Mat4 mvp = projection_matrix_ * view_matrix_;
 
     frustum_.build(&mvp); //Update the frustum for this camera
 }
 
-void Camera::set_perspective_projection(const Degrees& fov, double aspect, double near, double far) {
+void Camera::set_perspective_projection(const Degrees& fov, float aspect, float near, float far) {
     projection_matrix_ = Mat4::as_projection(fov, aspect, near, far);
     update_frustum();
 }
 
-void Camera::set_orthographic_projection(double left, double right, double bottom, double top, double near, double far) {
+void Camera::set_orthographic_projection(float left, float right, float bottom, float top, float near, float far) {
     projection_matrix_ = Mat4::as_orthographic(left, right, bottom, top, near, far);
     update_frustum();
 }
 
-double Camera::set_orthographic_projection_from_height(double desired_height_in_units, double ratio) {
-    double width = desired_height_in_units * ratio;
-    set_orthographic_projection(-width / 2.0, width / 2.0, -desired_height_in_units / 2.0, desired_height_in_units / 2.0, -10.0, 10.0);
+float Camera::set_orthographic_projection_from_height(float desired_height_in_units, float ratio) {
+    float width = desired_height_in_units * ratio;
+    set_orthographic_projection(-width / 2.0f, width / 2.0f, -desired_height_in_units / 2.0f, desired_height_in_units / 2.0f, -10.0f, 10.0f);
     return width;
 }
 

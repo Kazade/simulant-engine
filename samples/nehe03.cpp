@@ -7,7 +7,7 @@ public:
         smlt::Scene<MainScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage();
+        stage_ = new_stage();
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
@@ -61,6 +61,15 @@ int main(int argc, char* argv[]) {
 
     smlt::AppConfig config;
     config.title = "NeHe 01";
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
+    config.width = 1280;
+    config.height = 960;
+#endif
+
     App app(config);
     return app.run();
 }

@@ -285,6 +285,13 @@ public:
 
         assert_equal(counter, json["array"]->size());
     }
+
+    void test_empty_array_value() {
+        const std::string data = R"({"sessions": []})";
+        auto json = json_parse(data);
+
+        assert_equal(json["sessions"]->size(), 0u);
+    }
 };
 
 }

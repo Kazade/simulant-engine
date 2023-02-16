@@ -19,13 +19,19 @@
 #pragma once
 
 #include "../event_listener.h"
+#include "../nodes/stage_node_pool.h"
 
 namespace smlt {
+
+class Stage;
 
 class Panel:
     public EventListener {
 public:
     virtual ~Panel() {}
+
+    bool init();
+    void clean_up();
 
     bool is_active() const { return is_active_; }
 
@@ -43,11 +49,14 @@ public:
         is_active_ = false;
     }
 
-    void on_key_down(const KeyEvent& evt);
+    void on_key_down(const KeyEvent& evt) override;
 
     void set_activation_key(KeyboardCode code) {
         activation_key_ = code;
     }
+
+protected:
+    std::shared_ptr<Stage> stage_;
 
 private:
     KeyboardCode activation_key_ = KEYBOARD_CODE_NONE;

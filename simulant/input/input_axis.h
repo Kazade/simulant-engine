@@ -52,8 +52,8 @@ public:
     void set_negative_joystick_button(JoystickButton button);
     JoystickButton positive_joystick_button() const { return positive_joystick_button_; }
     JoystickButton negative_joystick_button() const { return negative_joystick_button_; }
-    void set_joystick_source(JoystickID joystick);
-    JoystickID joystick_source() const { return joystick_source_; }
+    void set_joystick_source(GameControllerIndex joystick);
+    GameControllerIndex joystick_source() const { return joystick_source_; }
 
     void set_mouse_axis(MouseAxis axis);
     void set_joystick_axis(JoystickAxis axis);
@@ -66,14 +66,14 @@ public:
     void set_return_speed(float ret);
 
     const std::string& name() const { return name_; }
-
-
     const AxisType& type() const { return type_; }
 
     float value(DeadZoneBehaviour dead_zone_behaviour=DEAD_ZONE_BEHAVIOUR_RADIAL) const;
 
     void set_dead_zone(float v) { dead_zone_ = v; }
     float dead_zone() const { return dead_zone_; }
+
+    void set_inversed(bool value=true);
 
 private:
     std::string name_;
@@ -88,7 +88,7 @@ private:
     MouseButtonID positive_mouse_button_ = -1;
     MouseButtonID negative_mouse_button_ = -1;
 
-    JoystickID joystick_source_ = ALL_JOYSTICKS;
+    GameControllerIndex joystick_source_ = ALL_GAME_CONTROLLERS;
     JoystickButton positive_joystick_button_ = JOYSTICK_BUTTON_INVALID;
     JoystickButton negative_joystick_button_ = JOYSTICK_BUTTON_INVALID;
 
@@ -103,6 +103,8 @@ private:
 
     float value_ = 0.0f;
     float dead_zone_ = 0.001f;
+
+    bool inversed_ = false;
 
     /* This is used where an axis has a counterpart
      * (e.g a joystick with X + Y). It's used when

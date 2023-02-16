@@ -23,7 +23,9 @@ enum ErrorCode {
     ERROR_CODE_THREAD_SPAWN_FAILED,
     ERROR_CODE_THREAD_JOIN_FAILED,
     ERROR_CODE_SDL_INIT_FAILED,
-    ERROR_CODE_INVALID_TYPE_ERROR
+    ERROR_CODE_INVALID_TYPE_ERROR,
+    ERROR_CODE_MISSING_ASSET_ERROR,
+    ERROR_CODE_AUDIO_SUBSYSTEM_ERROR,
 };
 
 namespace _errors {
@@ -36,7 +38,7 @@ void log_critical_error(const std::string& msg);
 
 #define FATAL_ERROR(code, msg) \
     do { \
-        _errors::log_critical_error(_F("FATAL ERROR ({0}): {1}").format((int)code, msg)); \
-        _errors::log_critical_error(_F(">>> {0}:{1}").format(__FILE__, __LINE__)); \
+        smlt::_errors::log_critical_error(_F("FATAL ERROR ({0}): {1}").format((int)code, msg)); \
+        smlt::_errors::log_critical_error(_F(">>> {0}:{1}").format(__FILE__, __LINE__)); \
         ::exit((int) code); \
     } while(0)

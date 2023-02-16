@@ -22,7 +22,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "deps/kfs/kfs.h"
+#include "utils/kfs.h"
 #include "logging.h"
 #include "vfs.h"
 #include "window.h"
@@ -30,46 +30,68 @@
 #include "loader.h"
 #include "platform.h"
 #include "streams/file_ifstream.h"
+#include "application.h"
 
 namespace smlt {
 
-VirtualFileSystem::VirtualFileSystem(Window *window):
-    window_(window) {
+VirtualFileSystem::VirtualFileSystem() {
 
-    resource_path_.push_back(find_working_directory()); //Add the working directory (might be different)
+    auto cwd = find_working_directory();
+    add_search_path(cwd); //Add the working directory (might be different)
 
 #ifndef __ANDROID__
     //Android can't find the executable directory in release mode, but can in debug!
-    resource_path_.push_back(find_executable_directory()); //Make sure the directory the executable lives is on the resource path
+    auto ed = find_executable_directory();
+    add_search_path(ed); //Make sure the directory the executable lives is on the resource path
 #endif
 
 #ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
-    resource_path_.push_back("/pc");
-    resource_path_.push_back("/cd");
+    add_search_path("/cd");
+    add_search_path("/pc");
 #endif
 
 #ifdef __PSP__
-    resource_path_.push_back(".");
-    resource_path_.push_back("umd0:");
-    resource_path_.push_back("ms0:");
-    resource_path_.push_back("disc0:");
+    add_search_path(".");
+    add_search_path("umd0:");
+    add_search_path("ms0:");
+    add_search_path("disc0:");
 #endif
 
 #ifdef __linux__
-    resource_path_.push_back("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
-    resource_path_.push_back("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
+    add_search_path("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
+    add_search_path("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
 #endif
+
+    /* In any standard project there are assets in the 'assets' directory.
+     * So we add that in here as a standard location in all
+     * root paths */
+    auto copy = resource_path_;
+    for(auto& path: copy) {
+        add_search_path(kfs::path::join(path.str(), "assets"));
+    }
+
+    /* Finally add the simulant directory to all search paths as projects
+     * have assets/simulant */
+    copy = resource_path_;
+    for(auto& path: copy) {
+        add_search_path(kfs::path::join(path.str(), "simulant"));
+    }
 }
 
 bool VirtualFileSystem::add_search_path(const Path& path) {
     Path new_path(kfs::path::abs_path(path.str()));
+
+    if(path.str().empty() || path.str() == "/") {
+        return false;
+    }
 
     if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
         return false;
     }
 
     resource_path_.push_back(new_path);
+    clear_location_cache();
     return true;
 }
 
@@ -77,7 +99,30 @@ void VirtualFileSystem::remove_search_path(const Path& path) {
     resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
 }
 
-optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
+std::size_t VirtualFileSystem::location_cache_size() const {
+    return location_cache_.size();
+}
+
+void VirtualFileSystem::clear_location_cache() {
+    location_cache_.clear();
+}
+
+void VirtualFileSystem::set_location_cache_limit(std::size_t entries) {
+    location_cache_.set_max_size(entries);
+}
+
+optional<Path> VirtualFileSystem::locate_file(
+        const Path &filename,
+        bool use_cache,
+        bool fail_silently) const {
+
+    if(read_blocking_enabled_) {
+        S_ERROR("Attempted to locate {0} while read blocking was enabled", filename.str());
+        return optional<Path>();
+    }
+
+    const Path DOES_NOT_EXIST = "";
+
     /**
       Locates a file on one of the resource paths, throws an IOError if the file
       cannot be found
@@ -88,7 +133,7 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
     // FIXME: Don't use unicode!
     Path final_name(unicode(filename.str()).replace(
         "${RENDERER}",
-        window_->renderer->name()
+        get_app()->window->renderer->name()
     ).replace(
         "${PLATFORM}",
         get_platform()->name()
@@ -96,11 +141,28 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
 
     final_name = kfs::path::norm_path(final_name.str());
 
+    if(use_cache) {
+        auto ret = location_cache_.get(final_name);
+        if(ret) {
+            /* An empty Path means that the file doesn't exist */
+            if(ret.value() == DOES_NOT_EXIST) {
+                return optional<Path>();
+            } else {
+                return ret.value();
+            }
+        }
+    }
+
     Path abs_final_name(kfs::path::abs_path(final_name.str()));
 
     S_DEBUG("Checking existence...");
     if(kfs::path::exists(abs_final_name.str())) {
-        S_DEBUG("Located file: {0}", abs_final_name);
+        S_INFO("Located file: {0}", abs_final_name);
+
+        if(use_cache) {
+            location_cache_.insert(final_name, abs_final_name);
+        }
+
         return abs_final_name;
     }
 
@@ -112,12 +174,23 @@ optional<Path> VirtualFileSystem::locate_file(const Path &filename) const {
 
         S_DEBUG("Trying path: {0}", full_path);
         if(kfs::path::exists(full_path)) {
-            S_DEBUG("Found: {0}", full_path);
+            S_INFO("Located file: {0}", full_path);
+
+            if(use_cache) {
+                location_cache_.insert(final_name, full_path);
+            }
+
             return optional<Path>(full_path);
         }
     }
 
-    S_ERROR("Unable to find file: {0}", final_name);
+    if(!fail_silently) {
+        S_WARN("Unable to find file: {0}", final_name);
+    }
+
+    if(use_cache) {
+        location_cache_.insert(final_name, DOES_NOT_EXIST);
+    }
     return optional<Path>();
 }
 
@@ -137,6 +210,10 @@ std::shared_ptr<std::istream> VirtualFileSystem::open_file(const Path& filename)
 
 std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& filename) {
     auto file_in = open_file(filename);
+    if(!file_in) {
+        return std::shared_ptr<std::stringstream>();
+    }
+
     std::shared_ptr<std::stringstream> result(new std::stringstream);
     (*result) << file_in->rdbuf();
     return result;

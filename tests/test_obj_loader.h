@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simulant/test.h"
-#include "simulant/deps/kfs/kfs.h"
+#include "simulant/utils/kfs.h"
 #include "simulant/loaders/obj_loader.h"
 #include "simulant/asset_manager.h"
 
@@ -13,14 +13,14 @@ class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_loading_without_texture_coords() {
         //Shouldn't throw
-        smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj");
+        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj");
     }
 
     void test_culling_method_applied() {
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        smlt::MeshID mid = window->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
+        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
         smlt::MeshPtr m = mid.fetch();
 
         assert_equal(m->submesh_count(), 1u);
@@ -44,7 +44,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
@@ -78,7 +78,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
@@ -112,7 +112,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = window->shared_assets->new_mesh_from_file(
+        auto mesh = application->shared_assets->new_mesh_from_file(
             "cube.obj",
             smlt::VertexSpecification::POSITION_ONLY
         );

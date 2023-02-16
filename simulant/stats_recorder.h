@@ -1,11 +1,15 @@
 #pragma once
 
 #include <cstdint>
+
+#include "generic/managed.h"
 #include "types.h"
 
 namespace smlt {
 
-class StatsRecorder {
+class StatsRecorder:
+    public RefCounted<StatsRecorder> {
+
 public:
     uint32_t geometry_visible() const {
         return geometry_visible_;

@@ -33,7 +33,7 @@ private:
     EGLSurface surface_;
     EGLContext ctx_;
 
-    void render_screen(Screen*, const uint8_t*) override {}
+    void render_screen(Screen*, const uint8_t*, int) override {}
 
     bool _init_window() override;
     bool _init_renderer(Renderer *renderer) override;

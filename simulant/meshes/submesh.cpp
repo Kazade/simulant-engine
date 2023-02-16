@@ -12,8 +12,22 @@ namespace smlt {
 
 SubMesh::SubMesh(
     Mesh* parent, const std::string& name,
+    MaterialPtr material, MeshArrangement arrangement):
+    parent_(parent),
+    type_(SUBMESH_TYPE_RANGED),
+    arrangement_(arrangement) {
+
+    set_name(name);
+
+    assert(material);
+    set_material(material);
+}
+
+SubMesh::SubMesh(
+    Mesh* parent, const std::string& name,
     MaterialPtr material, std::shared_ptr<IndexData>& index_data, MeshArrangement arrangement):
     parent_(parent),
+    type_(SUBMESH_TYPE_INDEXED),
     arrangement_(arrangement),
     index_data_(index_data) {
 
@@ -33,20 +47,58 @@ SubMesh::~SubMesh() {
     parent_update_connection_.disconnect();
 }
 
+SubmeshType SubMesh::type() const {
+    return type_;
+}
+
+bool SubMesh::add_vertex_range(uint32_t start, uint32_t count) {
+    if(type_ != SUBMESH_TYPE_RANGED) {
+        S_ERROR("Attempted to add a range to an indexed submesh");
+        return false;
+    }
+
+    if(!count) {
+        S_DEBUG("Added 0 length vertex range");
+        return false;
+    }
+
+    vertex_ranges_.push_back(VertexRange{start, count});
+    return true;
+}
+
+void SubMesh::remove_all_vertex_ranges() {
+    vertex_ranges_.clear();
+}
+
 void SubMesh::set_diffuse(const smlt::Colour& colour) {
     auto vertex_data = parent_->vertex_data.get();
 
-    for(auto i: *index_data) {
-        vertex_data->move_to(i);
-        vertex_data->diffuse(colour);
-    };
+    if(type_ == SUBMESH_TYPE_INDEXED) {
+        for(auto i: *index_data) {
+            vertex_data->move_to(i);
+            vertex_data->diffuse(colour);
+        };
+    } else {
+        for(auto& range: vertex_ranges_) {
+            for(uint32_t i = range.start; i < range.start + range.count; ++i) {
+                vertex_data->move_to(i);
+                vertex_data->diffuse(colour);
+            };
+        }
+    }
 
     vertex_data->done();
 }
 
-void SubMesh::reverse_winding() {
+bool SubMesh::reverse_winding() {
     if(arrangement_ != MESH_ARRANGEMENT_TRIANGLES) {
-        assert(0 && "Not implemented");
+        S_ERROR("Attempted to reverse winding on a non-triangle submesh");
+        return false;
+    }
+
+    if(type_ == SUBMESH_TYPE_RANGED) {
+        S_ERROR("Unable to reverse winding on a ranged submesh");
+        return false;
     }
 
     auto original = index_data->all();
@@ -58,6 +110,8 @@ void SubMesh::reverse_winding() {
         index_data->index(original[(i * 3) + 1]);
     }
     index_data->done();
+
+    return true;
 }
 
 /**
@@ -66,7 +120,80 @@ void SubMesh::reverse_winding() {
  * Recalculate the bounds of the submesh. This involves interating over all of the
  * vertices that make up the submesh and so is potentially quite slow.
  */
-void SubMesh::_recalc_bounds(AABB& bounds) {
+void SubMesh::_recalc_bounds(AABB &bounds) {
+    if(type_ == SUBMESH_TYPE_INDEXED) {
+        _recalc_bounds_indexed(bounds);
+    } else {
+        _recalc_bounds_ranged(bounds);
+    }
+}
+
+void SubMesh::mark_changed() {
+    parent_->submesh_index_data_updated(this);
+}
+
+void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
+    float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
+    float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
+
+    // Store a raw-pointer for performance
+    VertexData* vdata = parent_->vertex_data.get();
+
+    if(vdata->empty()) {
+        /* MD2 frames don't necessarily have vertex data until they
+         * have been animated */
+        return;
+    }
+
+    if(vertex_ranges_.empty()) {
+        bounds = AABB();
+        return;
+    }
+
+    auto& pos_attr = vdata->vertex_specification().position_attribute;
+
+    if(pos_attr == VERTEX_ATTRIBUTE_2F) {
+        for(auto& range: vertex_ranges_) {
+            for(uint32_t i = range.start; i < range.start + range.count; ++i) {
+                auto pos = vdata->position_at<Vec2>(i);
+                if(pos->x < minx) minx = pos->x;
+                if(pos->y < miny) miny = pos->y;
+                if(pos->x > maxx) maxx = pos->x;
+                if(pos->y > maxy) maxy = pos->y;
+            }
+        }
+    } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
+        for(auto& range: vertex_ranges_) {
+            for(uint32_t i = range.start; i < range.start + range.count; ++i) {
+                auto pos = vdata->position_at<Vec3>(i);
+                if(pos->x < minx) minx = pos->x;
+                if(pos->y < miny) miny = pos->y;
+                if(pos->z < minz) minz = pos->z;
+                if(pos->x > maxx) maxx = pos->x;
+                if(pos->y > maxy) maxy = pos->y;
+                if(pos->z > maxz) maxz = pos->z;
+            }
+        }
+    } else {
+        assert(pos_attr == VERTEX_ATTRIBUTE_4F);
+
+        for(auto& range: vertex_ranges_) {
+            for(uint32_t i = range.start; i < range.start + range.count; ++i) {
+                auto pos = vdata->position_at<Vec4>(i);
+                if(pos->x < minx) minx = pos->x;
+                if(pos->y < miny) miny = pos->y;
+                if(pos->z < minz) minz = pos->z;
+                if(pos->x > maxx) maxx = pos->x;
+                if(pos->y > maxy) maxy = pos->y;
+                if(pos->z > maxz) maxz = pos->z;
+            }
+        }
+    }
+
+    bounds.set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
+}
+
+void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
     float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
     float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
 
@@ -121,11 +248,40 @@ void SubMesh::_recalc_bounds(AABB& bounds) {
         }
     }
 
-    bounds.set_min(Vec3(minx, miny, minz));
-    bounds.set_max(Vec3(maxx, maxy, maxz));
+    bounds.set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
 }
 
 void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {
+    if(type_ == SUBMESH_TYPE_INDEXED) {
+        _each_triangle_indexed(cb);
+    } else {
+        _each_triangle_ranged(cb);
+    }
+}
+
+void SubMesh::_each_triangle_ranged(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {
+    for(auto& range: vertex_ranges_) {
+        if(arrangement_ == MESH_ARRANGEMENT_TRIANGLES) {
+            for(uint32_t i = range.start; i < range.start + range.count; i += 3) {
+                cb(i, i + 1, i + 2);
+            }
+        } else if(arrangement_ == MESH_ARRANGEMENT_TRIANGLE_FAN) {
+            for(uint32_t i = range.start + 1; i < range.start + range.count; i += 2) {
+                cb(0, i, i + 1);
+            }
+        } else if(arrangement_ == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
+            for(uint32_t i = range.start + 2; i < range.start + range.count; i++) {
+                if(i % 2 == 0) {
+                    cb(i - 2, i - 1, i);
+                } else {
+                    cb(i - 1, i - 2, i);
+                }
+            }
+        }
+    }
+}
+
+void SubMesh::_each_triangle_indexed(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {
     if(arrangement_ == MESH_ARRANGEMENT_TRIANGLES) {
         assert(index_data_->count() % 3 == 0);
         for(uint32_t i = 0; i < index_data_->count(); i += 3) {
@@ -165,6 +321,10 @@ void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> c
             );
         }
     }
+}
+
+const AABB &SubMesh::aabb() const {
+    return bounds_;
 }
 
 /**
@@ -268,11 +428,11 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
 }
 
-void SubMesh::set_material(MaterialPtr material) {
+void SubMesh::set_material(const MaterialPtr& material) {
     set_material_at_slot(MATERIAL_SLOT0, material);
 }
 
-void SubMesh::set_material_at_slot(MaterialSlot var, MaterialPtr mat) {
+void SubMesh::set_material_at_slot(MaterialSlot var, const MaterialPtr &mat) {
     auto old_material_id = (materials_[var]) ? materials_[var]->id() : MaterialID();
 
     if(old_material_id == mat->id()) {

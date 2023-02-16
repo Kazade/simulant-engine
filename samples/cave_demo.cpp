@@ -8,12 +8,13 @@ public:
     GameScene(smlt::Window* window):
         smlt::Scene<GameScene>(window) {}
 
-        void load() {
-            stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+    void load() override {
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
             camera_ = stage_->new_camera();
             auto pipeline = compositor->render(
             stage_, camera_
         );
+
         link_pipeline(pipeline);
 
         pipeline->viewport->set_colour(smlt::Colour::BLACK);
@@ -23,9 +24,9 @@ public:
         camera_->rotate_global_y_by(Degrees(180 - 90));
 
         // Meshes
-        cave_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj");
-        godray_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj");
-        fairy_mesh_ = window->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj");
+        cave_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj");
+        godray_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj");
+        fairy_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj");
 
         // Materials + Textures
         for(auto submesh : cave_mesh_->each_submesh())
@@ -73,9 +74,15 @@ public:
         fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(0));
     }
 
+    void update(float dt) override {
+        _S_UNUSED(dt);
 
+        if(input->axis_value_hard("Start") == 1) {
+            app->stop_running();
+        }
+    }
 
-void fixed_update(float dt) override {
+    void fixed_update(float dt) override {
 
         // Move the camera between two points
         camera_->move_to(camera_->position() + Vec3::LEFT * cameraSpeed_ * dt);
@@ -114,26 +121,26 @@ void fixed_update(float dt) override {
         fairyPathTime_ += fairyPathSpeedFactor_ * dt;
     }
 
-        private:
-        StagePtr stage_;
-        CameraPtr camera_;
+private:
+    StagePtr stage_;
+    CameraPtr camera_;
 
-        MeshPtr cave_mesh_;
-        MeshPtr godray_mesh_;
-        MeshPtr fairy_mesh_;
+    MeshPtr cave_mesh_;
+    MeshPtr godray_mesh_;
+    MeshPtr fairy_mesh_;
 
-        GeomPtr cave_geom_;
-        GeomPtr godray_geom_;
-        ActorPtr fairy_actor_;
+    GeomPtr cave_geom_;
+    GeomPtr godray_geom_;
+    ActorPtr fairy_actor_;
 
-        float cameraSpeed_ = 0.35f;
-        BezierCurve* fairyPath_ = nullptr;
-        float fairyPathTime_ = 0;
-        const float fairyPathSpeed_ = 0.75f;
+    float cameraSpeed_ = 0.35f;
+    BezierCurve* fairyPath_ = nullptr;
+    float fairyPathTime_ = 0;
+    const float fairyPathSpeed_ = 0.75f;
 
-        float fairyPathSpeedFactor_ = fairyPathSpeed_ / 10;
-        const float fairyPathStepSize_ = (fairyPathSpeed_ / 60) * (fairyPathSpeed_ / 60);
-        float lastFairyPathStepSize;
+    float fairyPathSpeedFactor_ = fairyPathSpeed_ / 10;
+    const float fairyPathStepSize_ = (fairyPathSpeed_ / 60) * (fairyPathSpeed_ / 60);
+    float lastFairyPathStepSize;
 };
 
 
@@ -157,8 +164,15 @@ int main(int argc, char* argv[]) {
     AppConfig config;
     config.title = "Cave Demo";
     config.fullscreen = false;
-    config.width = 640 * 2;
-    config.height = 480 * 2;
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
+    config.width = 1280;
+    config.height = 960;
+#endif
+
     CaveDemo app(config);
     return app.run();
 }

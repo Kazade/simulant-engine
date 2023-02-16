@@ -1,4 +1,4 @@
-
+#include "ui_manager.h"
 #include "image.h"
 #include "../../texture.h"
 #include "../../macros.h"
@@ -6,13 +6,22 @@
 namespace smlt {
 namespace ui {
 
-Image::Image(UIManager* owner, UIConfig* config):
-    Widget(owner, config) {
+Image::Image(UIManager* owner, UIConfig* config, Stage* stage):
+    Widget(owner, config, stage) {
 
     /* By default, images don't have a border */
-    set_border_width(0);
+    set_border_width(config->image_border_width_);
     set_border_colour(smlt::Colour::NONE);
-    set_foreground_colour(smlt::Colour::NONE);
+
+    set_background_colour(config->image_background_colour_);
+    set_padding(
+        config->image_padding_.left,
+        config->image_padding_.right,
+        config->image_padding_.bottom,
+        config->image_padding_.top
+    );
+
+    set_foreground_colour(config->image_foreground_colour_);
 
     if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
         // Rebuild if the resize mode didn't change
@@ -30,7 +39,7 @@ void Image::set_texture(const TexturePtr &texture) {
 
     auto dim = texture->dimensions();
     // Changing the texture resets the source rect
-    set_source_rect(UICoord(), UICoord(dim.x, dim.y));
+    set_source_rect(UICoord(), UICoord(Px(dim.x), Px(dim.y)));
 }
 
 void Image::set_source_rect(const UICoord &bottom_left, const UICoord& size) {
@@ -46,6 +55,7 @@ bool Image::set_resize_mode(ResizeMode resize_mode) {
     S_WARN("Warning, tried to change the resize mode of an Image widget");
     return false;
 }
+
 
 }
 }

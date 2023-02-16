@@ -22,6 +22,7 @@ Simulant's rigid body simulation is implemented entirely using `Behaviours`. The
 
  - `RigidBody` - a dynamic physics object
  - `StaticBody` - a static physics object
+ - `KinematicBody` - a kinematic physics object
  - `RaycastVehicle` - a work-in-progress `Behaviour` for non-realistic car physics
 
 All of these `Behaviours` require a `RigidBodySimulation` instance to function. The easiest way to get access to one of these is to make use of the `PhysicsScene` class when constructing your game scene.

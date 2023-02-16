@@ -186,6 +186,17 @@ public:
         }
     }
 
+    /** Connect to the callback, but disconnect after the first call */
+    Connection connect_once(const callback& func) {
+        std::shared_ptr<Connection> conn = std::make_shared<Connection>();
+        *conn = connect([func, conn]() {
+            func();
+            conn->disconnect();
+        });
+
+        return *conn;
+    }
+
     void operator()(Args... args) {
         Link* it = head_;
 

@@ -50,6 +50,9 @@ bool Renderer::texture_format_is_native(TextureFormat fmt) {
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
 #endif
             return true;
         default:
@@ -63,10 +66,13 @@ bool Renderer::texture_format_is_usable(TextureFormat fmt) {
          * natively supported formats */
         case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
         case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
         case TEXTURE_FORMAT_RGB_1US_565_TWID:
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
             return true;
         default:
             return false;
@@ -78,7 +84,7 @@ bool Renderer::is_texture_registered(TextureID texture_id) const {
 }
 
 void Renderer::pre_render() {
-    for(auto wptr: texture_registry_){
+    for(auto& wptr: texture_registry_){
         prepare_texture(wptr.second);
     }
 }
@@ -181,6 +187,9 @@ static TextureFormat uncompress_format(TextureFormat fmt) {
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID: return TEXTURE_FORMAT_ARGB_1US_1555;
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID: return TEXTURE_FORMAT_ARGB_1US_4444;
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID: return TEXTURE_FORMAT_RGB_1US_565;
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP: return TEXTURE_FORMAT_ARGB_1US_1555;
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP: return TEXTURE_FORMAT_ARGB_1US_4444;
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP: return TEXTURE_FORMAT_RGB_1US_565;
         default:
             return fmt;
     }
@@ -191,6 +200,9 @@ static TextureFormat untwiddle_format(TextureFormat fmt) {
         case TEXTURE_FORMAT_ARGB_1US_1555_TWID: return TEXTURE_FORMAT_ARGB_1US_1555;
         case TEXTURE_FORMAT_ARGB_1US_4444_TWID: return TEXTURE_FORMAT_ARGB_1US_4444;
         case TEXTURE_FORMAT_RGB_1US_565_TWID: return TEXTURE_FORMAT_RGB_1US_565;
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP: return TEXTURE_FORMAT_ARGB_1US_1555;
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP: return TEXTURE_FORMAT_ARGB_1US_4444;
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP: return TEXTURE_FORMAT_RGB_1US_565;
         default:
             return fmt;
     }
@@ -211,6 +223,9 @@ bool Renderer::convert_if_necessary(Texture* tex) {
         TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID,
         TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID,
         TEXTURE_FORMAT_RGB_1US_565_VQ_TWID,
+        TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP,
+        TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP,
+        TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP,
         (TextureFormat) 0
     };
 
@@ -234,7 +249,7 @@ bool Renderer::convert_if_necessary(Texture* tex) {
     bool untwiddle = format_in_list(fmt, can_untwiddle);
 
     if(untwiddle) {
-        std::vector<uint8_t> tmp(tex->data().size());
+        std::vector<uint8_t> tmp(tex->data_size());
 
         untwiddle_16bpp(&tex->data()[0], &tmp[0], tex->width(), tex->height());
         fmt = untwiddle_format(fmt);

@@ -8,16 +8,18 @@
 #include "../platform.h"
 #include "../nodes/ui/ui_manager.h"
 #include "../nodes/ui/label.h"
-
+#include "../application.h"
+#include "../time_keeper.h"
+#include "../scenes/scene_manager.h"
 #include "splash.h"
 
-#define SIMULANT_TEXT_512 "simulant/textures/simulant-text-512.png"
-#define SIMULANT_TEXT_1024 "simulant/textures/simulant-text.png"
+#define SIMULANT_TEXT_512 "textures/simulant-text-512.png"
+#define SIMULANT_TEXT_1024 "textures/simulant-text.png"
 
-#define SIMULANT_LOGO_256 "simulant/textures/simulant-icon-256.png"
-#define SIMULANT_LOGO_512 "simulant/textures/simulant-icon.png"
+#define SIMULANT_LOGO_256 "textures/simulant-icon-256.png"
+#define SIMULANT_LOGO_512 "textures/simulant-icon.png"
 
-#define SIMULANT_SOUND "simulant/sounds/simulant.wav"
+#define SIMULANT_SOUND "sounds/simulant.wav"
 
 namespace smlt {
 namespace scenes {
@@ -27,7 +29,7 @@ void Splash::load() {
     flags.mipmap = smlt::MIPMAP_GENERATE_NONE;
 
     //Create a stage
-    stage_ = window->new_stage();
+    stage_ = new_stage();
 
     auto text_file = (window->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
     auto logo_file = (window->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
@@ -38,7 +40,7 @@ void Splash::load() {
     auto texture = stage_->assets->new_texture_from_file(logo_file, flags);
     image_ = stage_->ui->new_widget_as_image(texture);
 
-    sound_ = stage_->assets->new_sound_from_file(SIMULANT_SOUND, smlt::GARBAGE_COLLECT_NEVER);
+    sound_ = stage_->assets->new_sound_from_file(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
 
     image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);
@@ -63,11 +65,11 @@ void Splash::load() {
 void Splash::unload() {
     //Clean up
     pipeline_->destroy();
-    window->destroy_stage(stage_->id());
+    stage_->destroy();
 }
 
 void Splash::activate() {
-    start_time_ = window->time_keeper->now_in_us();
+    start_time_ = app->time_keeper->now_in_us();
     camera_->play_sound(
         sound_,
         AUDIO_REPEAT_NONE,
@@ -92,7 +94,7 @@ void Splash::update(float dt) {
         return;
     }
 
-    auto diff = window->time_keeper->now_in_us() - start_time_;
+    auto diff = app->time_keeper->now_in_us() - start_time_;
     float elapsed = float(diff) / 1000000.0f;
 
     image_->set_opacity(std::min(elapsed * FADE_SPEED, 1.0f));

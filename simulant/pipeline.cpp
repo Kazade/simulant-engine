@@ -5,9 +5,12 @@
 
 namespace smlt {
 
+static uint32_t PIPELINE_COUNTER = 0;
+
 Pipeline::Pipeline(Compositor* render_sequence,
-    const std::string &name, StageID stage_id, CameraID camera_id):
+    const std::string &name, StagePtr stage, CameraPtr camera):
         TypedDestroyableObject<Pipeline, Compositor>(render_sequence),
+        id_(++PIPELINE_COUNTER),
         sequence_(render_sequence),
         priority_(0),
         is_active_(false) {
@@ -17,8 +20,8 @@ Pipeline::Pipeline(Compositor* render_sequence,
     }
 
     set_name(name);
-    set_stage(stage_id);
-    set_camera(camera_id);
+    set_stage(stage);
+    set_camera(camera);
 
     /* Set sane defaults for detail ranges */
     detail_level_end_distances_[DETAIL_LEVEL_NEAREST] = 25.0f;
@@ -44,16 +47,23 @@ DetailLevel Pipeline::detail_level_at_distance(float dist) const {
      * Given a distance (e.g. from a camera), this will return the detail level
      * that should be used at that distance
      */
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_NEAREST)) return DETAIL_LEVEL_NEAREST;
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_NEAR)) return DETAIL_LEVEL_NEAR;
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_MID)) return DETAIL_LEVEL_MID;
-    if(dist < detail_level_end_distances_.at(DETAIL_LEVEL_FAR)) return DETAIL_LEVEL_FAR;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_NEAREST]) return DETAIL_LEVEL_NEAREST;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_NEAR]) return DETAIL_LEVEL_NEAR;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_MID]) return DETAIL_LEVEL_MID;
+    if(dist < detail_level_end_distances_[DETAIL_LEVEL_FAR]) return DETAIL_LEVEL_FAR;
 
     return DETAIL_LEVEL_FARTHEST;
 }
 
-PipelinePtr Pipeline::set_camera(CameraID c) {
+PipelinePtr Pipeline::set_camera(CameraPtr c) {
+    camera_destroy_.disconnect();
     camera_ = c;
+    if(camera_) {
+        camera_destroy_ = camera_->signal_destroyed().connect([&]() {
+            camera_ = nullptr;
+            camera_destroy_.disconnect();
+        });
+    }
     return this;
 }
 
@@ -70,14 +80,17 @@ PipelinePtr Pipeline::set_priority(int32_t priority) {
 
 Pipeline::~Pipeline() {
     deactivate();
+
+    camera_destroy_.disconnect();
+    stage_destroy_.disconnect();
 }
 
 CameraPtr Pipeline::camera() const {
-    return stage()->camera(camera_);
+    return camera_;
 }
 
 StagePtr Pipeline::stage() const {
-    return sequence_->window->stage(stage_);
+    return stage_;
 }
 
 TexturePtr Pipeline::target() const {
@@ -98,10 +111,7 @@ void Pipeline::deactivate() {
     is_active_ = false;
 
     if(stage_) {
-        auto s = sequence_->window->stage(stage_);
-        if(s) {
-            s->active_pipeline_count_--;
-        }
+        stage_->active_pipeline_count_--;
     }
 }
 
@@ -111,25 +121,27 @@ void Pipeline::activate() {
     is_active_ = true;
 
     if(stage_) {
-        auto s = sequence_->window->stage(stage_);
-        if(s) {
-            s->active_pipeline_count_++;
-        }
+        stage_->active_pipeline_count_++;
     }
 }
 
-void Pipeline::set_stage(StageID s) {
+void Pipeline::set_stage(StagePtr stage) {
     if(stage_ && is_active()) {
-        StagePtr s = sequence_->window->stage(stage_);
-        s->active_pipeline_count_--;
+        stage_->active_pipeline_count_--;
     }
 
-    stage_ = s;
+    stage_destroy_.disconnect();
 
-    if(stage_&& is_active()) {
-        StagePtr s = sequence_->window->stage(stage_);
-        if(s) {
-            s->active_pipeline_count_++;
+    stage_ = stage;
+
+    if(stage_) {
+        stage_destroy_ = stage->signal_destroyed().connect([&]() {
+            stage_ = nullptr;
+            stage_destroy_.disconnect();
+        });
+
+        if(is_active()) {
+            stage_->active_pipeline_count_++;
         }
     }
 }

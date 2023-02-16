@@ -14,6 +14,8 @@ public:
     Path(const std::string& path):
         path_(path) {}
 
+    Path parent() const;
+
     std::string str() const {
         return path_;
     }
@@ -35,7 +37,10 @@ public:
     }
 
     bool operator==(const Path& p) const;
-
+    bool operator<(const Path& p) const;
+    bool operator!=(const Path& p) const {
+        return !(*this == p);
+    }
 private:
     std::string path_;
 };

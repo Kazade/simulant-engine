@@ -56,8 +56,8 @@ public:
         auto halfd = maxd / 2.0f;
 
         auto half = Vec3(halfd, halfd, halfd);
-        bounds_.set_min(centre_ - half);
-        bounds_.set_max(centre_ + half);
+
+        bounds_ = AABB(centre_, half);
 
         /* Grow the tree to whatever size we passed in */
         grow(max_level_count);

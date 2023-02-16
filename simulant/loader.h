@@ -26,8 +26,8 @@
 #include <memory>
 
 #include "logging.h"
-#include "deps/kfs/kfs.h"
 
+#include "utils/kfs.h"
 #include "loadable.h"
 #include "streams/file_ifstream.h"
 #include "generic/property.h"

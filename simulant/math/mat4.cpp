@@ -82,6 +82,22 @@ Mat4 Mat4::as_scaling(float s) {
     return ret;
 }
 
+Mat4 Mat4::from_pos_rot_scale(const Vec3 &pos, const Quaternion &rot, const Vec3 &scale) {
+    Mat4 s;
+    Mat4 t;
+    Mat4 r(rot);
+
+    s[0] = scale.x;
+    s[5] = scale.y;
+    s[10] = scale.z;
+
+    t[12] = pos.x;
+    t[13] = pos.y;
+    t[14] = pos.z;
+
+    return t * r * s;
+}
+
 Mat4 Mat4::as_translation(const Vec3 &v) {
     Mat4 ret;
     ret[12] = v.x;
@@ -96,7 +112,7 @@ Mat4 Mat4::as_projection(const Degrees &fov, float aspect, float zNear, float zF
 
     auto fovy = Radians(fov).value;
 
-    float const tanHalfFovy = tan(fovy / 2.0f);
+    float const tanHalfFovy = std::tan(fovy * 0.5f);
 
     Mat4 result;
 

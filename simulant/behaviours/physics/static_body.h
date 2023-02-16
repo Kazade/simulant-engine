@@ -24,6 +24,7 @@ public:
     void add_mesh_collider(
         const MeshID& mesh,
         const PhysicsMaterial& properties,
+        uint16_t kind=0,
         const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
     );
 
@@ -39,8 +40,13 @@ private:
     public:
         b3MeshGenerator();
 
+        void reserve_vertices(std::size_t count);
+
         template<typename InputIterator>
         void insert_vertices(InputIterator first, InputIterator last) {
+            auto count = std::distance(first, last);
+            vertices_.reserve(vertices_.size() + count);
+
             for(auto it = first; it != last; ++it) {
                 append_vertex((*it));
             }
@@ -56,8 +62,7 @@ private:
         b3Mesh* get_mesh() const { return mesh_.get(); }
     };
 
-    typedef std::unordered_map<MeshID, std::shared_ptr<b3MeshGenerator>> MeshCache;
-    static MeshCache& get_mesh_cache();
+    std::list<std::shared_ptr<b3MeshGenerator>> meshes_;
 };
 
 }

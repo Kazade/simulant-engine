@@ -18,12 +18,12 @@ Font::Font(FontID id, AssetManager *asset_manager):
 
 }
 
-TextureID Font::texture_id() const {
-    return texture_->id();
+TexturePtr Font::texture() const {
+    return texture_;
 }
 
-MaterialID Font::material_id() const {
-    return material_->id();
+MaterialPtr Font::material() const {
+    return material_;
 }
 
 bool Font::init() {
@@ -32,20 +32,32 @@ bool Font::init() {
 }
 
 std::pair<Vec2, Vec2> Font::texture_coordinates_for_character(char32_t ch) {
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch < 32) {
+        ch = '?';
+    } else {
+        ch -= 32;
+    }
+
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
     if(info_) {
         stbtt_aligned_quad q;
         float x = 0, y = 0;
 
         stbtt_bakedchar* tmp = (stbtt_bakedchar*) &char_data_[0];
 
-        stbtt_GetBakedQuad(tmp, 512, 512, ch - 32, &x, &y, &q, 1);
+        stbtt_GetBakedQuad(tmp, texture_->width(), texture_->height(), ch, &x, &y, &q, 1);
 
         return std::make_pair(
             Vec2(q.s0, q.t0),
             Vec2(q.s1, q.t1)
         );
     } else {
-        auto data = char_data_[ch - 32];
+        auto data = char_data_[ch];
         auto pw = float(page_width(ch));
         auto ph = float(page_height(ch));
 
@@ -56,22 +68,38 @@ std::pair<Vec2, Vec2> Font::texture_coordinates_for_character(char32_t ch) {
     }
 }
 
-float Font::character_width(char32_t ch) {
+uint16_t Font::character_width(char32_t ch) {
     if(ch < 32) {
         return 0;
     }
 
-    auto *b = &char_data_.at(ch - 32);
-    return b->x1 - b->x0;
+    ch -= 32;
+
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
+    auto *b = &char_data_.at(ch);
+    return std::abs(b->x1 - b->x0);
 }
 
-float Font::character_height(char32_t ch) {    
+uint16_t Font::character_height(char32_t ch) {
     if(ch < 32) {
         return this->size();
     }
 
-    auto *b = &char_data_.at(ch - 32);
-    return b->y1 - b->y0;
+    ch -= 32;
+
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
+    auto *b = &char_data_.at(ch);
+    return std::abs(b->y1 - b->y0);
 }
 
 float Font::character_advance(char32_t ch, char32_t next) {
@@ -81,29 +109,49 @@ float Font::character_advance(char32_t ch, char32_t next) {
         return 0;
     }
 
-    auto *b = &char_data_.at(ch - 32);
+    ch -= 32;
+
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
+    auto *b = &char_data_.at(ch);
     return b->xadvance;
 }
 
-std::pair<float, float> Font::character_offset(char32_t ch) {
+std::pair<int16_t, int16_t> Font::character_offset(char32_t ch) {
     if(ch < 32) {
         return std::make_pair(0, 0);
     }
 
-    auto *b = &char_data_.at(ch - 32);
+    ch -= 32;
+
+    /* If we're out of range, just display a '?' */
+    /* FIXME: Deal with unicode properly! */
+    if(ch >= char_data_.size()) {
+        ch = '?';
+    }
+
+    auto *b = &char_data_.at(ch);
 
     return std::make_pair(
-        b->xoff,
-        -b->yoff
+        (int16_t) b->xoff,
+        (int16_t) b->yoff
     );
 }
 
-float Font::ascent() const {
+int16_t Font::ascent() const {
     return ascent_;
 }
 
-float Font::descent() const {
+int16_t Font::descent() const {
     return descent_;
+}
+
+int16_t Font::line_gap() const {
+    return line_gap_;
 }
 
 uint16_t Font::page_width(char ch) {

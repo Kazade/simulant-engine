@@ -116,7 +116,7 @@ public:
                  * so move to the next one that isn't empty */
                 auto next_chunk_id = current_->chunk + 1;
                 auto next_chunk = owner_->chunks_[next_chunk_id];
-                while((!next_chunk->used_list_head_) && next_chunk_id < owner_->chunks_.size() - 1) {
+                while((!next_chunk->used_list_head_) && next_chunk_id < (int) owner_->chunks_.size() - 1) {
                     next_chunk = owner_->chunks_[++next_chunk_id];
                 }
 
@@ -168,17 +168,28 @@ public:
         static_assert(sizeof(T) <= entry_size, "sizeof(T) was greater than entry_size");
 
         id new_id;
-        auto ewm = find_free_entry(&new_id);
+        EntryWithMeta* ewm = find_free_entry(&new_id);
 
-        /* Construct the object */
-        T* ret = new (ewm->data) T(std::forward<Args>(args)...);
+        assert(!ewm->meta.reserved);
+
+        // Ensure further calls do not return this entry!
+        ewm->meta.reserved = 1;
+        T* ret = nullptr;
+        try {
+            /* Construct the object */
+            ret = new (ewm->data) T(std::forward<Args>(args)...);
+            // We're all good now
+            ewm->meta.reserved = 0;
+        } catch(...) {
+            ewm->meta.reserved = 0;
+            throw;
+        }
+
+        alloc_entry(ewm, (T*) ewm->data);
 
         assert(ret);
         assert((void*) ret == (void*) ewm->data);
         assert((void*) ret == (void*) ewm);
-
-        alloc_entry(ewm, ret);
-
         assert((Base*) ret == ewm->meta.entry);
 
         return std::make_pair(ret, new_id);
@@ -323,7 +334,12 @@ public:
     }
 
     Base* operator[](id i) {
-        return object_from_id(i)->meta.entry;
+        auto obj = object_from_id(i);
+        if(obj) {
+            return obj->meta.entry;
+        } else {
+            return nullptr;
+        }
     }
 
     const Base* operator[](id i) const {
@@ -350,10 +366,14 @@ private:
         EntryMeta* prev = nullptr; //4
         EntryMeta* next = nullptr; //4
 
+        /* We reserve entries during type construction
+         * and mark them as unreserved when done */
+        uint16_t reserved = 0; // 2
+
         Base* entry = nullptr; // 4
         uint32_t padding = 0; // 4
 
-        std::size_t chunk = 0;  // 4
+        uint16_t chunk = 0;  // 2
         std::size_t index = 0;  // 4
     };
 
@@ -509,7 +529,7 @@ private:
     EntryWithMeta* find_free_entry(id* new_id) {
         uint32_t i = 0;
         for(auto chunk: chunks_) {
-            if(chunk->free_list_head_) {
+            if(chunk->free_list_head_ && !chunk->free_list_head_->reserved) {
                 EntryMeta* result = chunk->free_list_head_;
 
                 assert(result->chunk == i);
@@ -528,6 +548,10 @@ private:
     }
 
     EntryWithMeta* object_from_id(id i) const {
+        if(i == 0) {
+            return nullptr;
+        }
+
         std::size_t idx = i - 1;
         std::size_t chunk_id = (idx / chunk_size);
         std::size_t index = (idx % chunk_size);

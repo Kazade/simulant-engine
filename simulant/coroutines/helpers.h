@@ -43,13 +43,50 @@ public:
     }
 };
 
+template <typename T>
+struct func_traits : public func_traits<decltype(&T::operator())> {};
+
+template <typename C, typename Ret, typename... Args>
+struct func_traits<Ret(C::*)(Args...) const> {
+    using result_type =  Ret;
+
+    template <std::size_t i>
+    struct arg {
+        using type = typename std::tuple_element<i, std::tuple<Args...>>::type;
+    };
+};
+
 }
 
+void cr_yield();
+void cr_yield_for(const Seconds& seconds);
+void cr_run_main(std::function<void ()> func);
+
 template<typename T>
-class CRPromise {
+class Promise {
 public:
     bool is_ready() const {
         return state_ && state_->value;
+    }
+
+    /**
+     * @brief fulfill
+     * @param value
+     * @return returns true if the promise is successfully fulfilled, or false
+     * if it was already filfulled or could not be.
+     */
+    bool fulfill(T&& value) {
+        if(!state_) {
+            S_WARN("Tried to fulfill a Promise without state");
+            return false;
+        }
+
+        if(is_ready()) {
+            return false;
+        }
+
+        state_->value = std::move(value);
+        return true;
     }
 
     T& value() const {
@@ -60,13 +97,39 @@ public:
     /* Starts another coroutine that waits until
      * this one has been fulfilled */
     template<typename Func>
-    CRPromise<typename std::result_of<Func()>::type> then(Func func);
+    auto then(Func&& func) -> Promise<typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type> {
+        /* Copy the smart pointer and pass to the callback */
+        auto state = state_;
+
+        auto cb = [this, func, state]() -> typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type {
+            while(!state->value) {
+                cr_yield();
+            }
+
+            return func(state->value.value());
+        };
+
+        return cr_async(cb);
+    }
+
+    /* Default constructor does nothing */
+    Promise() = default;
+
+    bool is_initialized() const {
+        return bool(state_);
+    }
+
+    static Promise<T> create() {
+        return Promise<T>(
+            std::make_shared<promise_impl::PromiseState<T>>()
+        );
+    }
 
 private:
     template<typename Func>
-    friend CRPromise<typename std::result_of<Func()>::type> cr_async(Func func);
+    friend Promise<typename std::result_of<Func()>::type> cr_async(Func func);
 
-    CRPromise(typename promise_impl::PromiseState<T>::ptr state):
+    Promise(typename promise_impl::PromiseState<T>::ptr state):
         state_(state) {
 
     }
@@ -75,12 +138,12 @@ private:
 };
 
 template<>
-class CRPromise<void> {
+class Promise<void> {
 private:
     template<typename Func>
-    friend CRPromise<typename std::result_of<Func()>::type> cr_async(Func func);
+    friend Promise<typename std::result_of<Func()>::type> cr_async(Func func);
 
-    CRPromise(typename promise_impl::PromiseState<void>::ptr state):
+    Promise(typename promise_impl::PromiseState<void>::ptr state):
         state_(state) {
 
     }
@@ -88,8 +151,35 @@ private:
     typename promise_impl::PromiseState<void>::ptr state_;
 
 public:
+    /* Default constructor does nothing */
+    Promise() = default;
+
+    static Promise<void> create() {
+        return Promise<void>(
+            std::make_shared<promise_impl::PromiseState<void>>()
+        );
+    }
+
+    bool is_initialized() const {
+        return bool(state_);
+    }
+
     bool is_ready() const {
         return state_ && state_->value;
+    }
+
+    bool fulfill() {
+        if(!state_) {
+            S_WARN("Tried to fulfill a Promise without state");
+            return false;
+        }
+
+        if(is_ready()) {
+            return false;
+        }
+
+        state_->value = true;
+        return true;
     }
 
     void value() const {}
@@ -97,63 +187,36 @@ public:
     /* Starts another coroutine that waits until
      * this one has been fulfilled */
     template<typename Func>
-    CRPromise<typename std::result_of<Func()>::type> then(Func func);
+    auto then(Func&& func) -> Promise<typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type> {
+        auto state = state_;
+
+        auto cb = [this, func, state]() -> typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type {
+            while(!state->value) {
+                cr_yield();
+            }
+
+            return func();
+        };
+
+        return cr_async(cb);
+    }
 };
 
 void _trigger_coroutine(std::function<void ()> func);
 void _trigger_idle_updates();
 
 template<typename Func>
-CRPromise<typename std::result_of<Func()>::type> cr_async(Func func) {
+Promise<typename std::result_of<Func()>::type> cr_async(Func func) {
     typedef typename std::result_of<Func()>::type T;
 
     auto state = std::make_shared<typename promise_impl::PromiseState<T>>();
-    CRPromise<T> promise(state);
+    Promise<T> promise(state);
 
     _trigger_coroutine([state, func]() {
         promise_impl::CallAndSetState<Func, T>()(func, state);
     });
 
     return promise;
-}
-
-void cr_yield();
-
-
-/* Starts another coroutine that waits until
- * this one has been fulfilled */
-
-template<typename T>
-template<typename Func>
-CRPromise<typename std::result_of<Func()>::type> CRPromise<T>::then(Func func) {
-
-    /* Copy the smart pointer and pass to the callback */
-    auto state = state_;
-
-    auto cb = [this, func, state]() -> typename std::result_of<Func()>::type {
-        while(!state->value) {
-            cr_yield();
-        }
-
-        return func();
-    };
-
-    return cr_async(cb);
-}
-
-template<typename Func>
-CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func) {
-    auto state = state_;
-
-    auto cb = [this, func, state]() -> typename std::result_of<Func()>::type {
-        while(!state->value) {
-            cr_yield();
-        }
-
-        return func();
-    };
-
-    return cr_async(cb);
 }
 
 /* Will wait for the promise returned by a coroutine
@@ -166,7 +229,7 @@ CRPromise<typename std::result_of<Func()>::type> CRPromise<void>::then(Func func
  * start_coroutine(...).then(...)
  */
 template<typename T>
-T cr_await(const CRPromise<T>& promise) {
+T cr_await(const Promise<T>& promise) {
     while(!promise.is_ready()) {
         if(cort::within_coroutine()){
             cr_yield();

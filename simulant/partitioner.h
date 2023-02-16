@@ -24,15 +24,16 @@
 #include <map>
 #include <vector>
 
+#include "generic/containers/contiguous_map.h"
 #include "generic/property.h"
 #include "generic/managed.h"
 #include "renderers/renderer.h"
 #include "types.h"
 #include "interfaces.h"
-#include "nodes/stage_node.h"
 
 namespace smlt {
 
+class StageNode;
 class SubActor;
 
 enum WriteOperation {
@@ -44,33 +45,45 @@ enum WriteOperation {
 
 struct StagedWrite {
     WriteOperation operation;
-    StageNodeType stage_node_type;
     AABB new_bounds;
+    StageNode* node = nullptr;
 };
 
-#define MAX_STAGED_WRITES 256
+#define MAX_STAGED_WRITES 1024
 
 class Partitioner:
     public RefCounted<Partitioner> {
 
 public:
+    struct WriteSlots {
+        StagedWrite slot[WRITE_OPERATION_MAX];
+        uint8_t bits = 0;
+    };
+
     Partitioner(Stage* ss):
         stage_(ss) {}
 
-    void add_particle_system(ParticleSystemID particle_system_id);
-    void update_particle_system(ParticleSystemID particle_system_id, const AABB& bounds);
-    void remove_particle_system(ParticleSystemID particle_system_id);
+    void add_stage_node(StageNode* node) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_ADD;
+        write.node = node;
+        stage_write(node, write);
+    }
 
-    void add_geom(GeomID geom_id);
-    void remove_geom(GeomID geom_id);
+    void update_stage_node(StageNode* node, const AABB& bounds) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_UPDATE;
+        write.new_bounds = bounds;
+        write.node = node;
+        stage_write(node, write);
+    }
 
-    void add_actor(ActorID actor_id);
-    void update_actor(ActorID actor_id, const AABB& bounds);
-    void remove_actor(ActorID actor_id);
-
-    void add_light(LightID light_id);
-    void update_light(LightID light_id, const AABB& bounds);
-    void remove_light(LightID light_id);
+    void remove_stage_node(StageNode* node) {
+        StagedWrite write;
+        write.operation = WRITE_OPERATION_REMOVE;
+        write.node = node;
+        stage_write(node, write);
+    }
 
     void _apply_writes();
 
@@ -86,37 +99,15 @@ protected:
 
     virtual void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) = 0;
 
-    template<typename ID>
-    void stage_write(const ID& id, const StagedWrite& op) {
-        auto key = make_unique_id_key(id);
-        auto& value = staged_writes_[key];
-        value.slot[op.operation] = op;
-
-        if(!(value.bits & (1 << WRITE_OPERATION_ADD)) && op.operation == WRITE_OPERATION_REMOVE) {
-            /* If no write op has happened, and this was a remove operation, we store
-             * that this was the first operation of the two */
-            value.bits |= (1 << WRITE_OPERATION_MAX);
-        }
-
-        value.bits |= (1 << op.operation);
-
-        /* Apply staged writes immediately to prevent the size spiralling */
-        if(staged_writes_.size() >= MAX_STAGED_WRITES) {
-            _apply_writes();
-        }
-    }
+    void stage_write(StageNode* node, const StagedWrite& op);
 
 private:
     Stage* stage_;
 
     thread::Mutex staging_lock_;
 
-    struct WriteSlots {
-        StagedWrite slot[WRITE_OPERATION_MAX];
-        uint8_t bits = 0;
-    };
-
-    std::map<UniqueIDKey, WriteSlots> staged_writes_;
+    std::vector<StageNode*> staged_writes_;
+    std::unordered_map<StageNode*, UniqueIDKey> removed_nodes_;
 
 protected:
     Property<decltype(&Partitioner::stage_)> stage = { this, &Partitioner::stage_ };

@@ -93,22 +93,12 @@ public:
         assert_false(manager_->has_scene("main"));
     }
 
-    void test_scenes_queued_for_activation() {
-        assert_false(manager_->scene_queued_for_activation());
-        manager_->register_scene<TestScene>("main");
-
-        assert_false(manager_->scene_queued_for_activation());
-        manager_->activate("main");
-        assert_true(manager_->scene_queued_for_activation());
-
-        manager_->activate("main");
-        assert_true(manager_->scene_queued_for_activation());
-
-        window->signal_post_idle()();
-        assert_false(manager_->scene_queued_for_activation());
-    }
-
     void test_activate() {
+        bool signal_called = false;
+        auto sig_cb = [&]() {
+            signal_called = true;
+        };
+
         auto cb = [this]() {
             manager_->activate("main");
         };
@@ -117,11 +107,15 @@ public:
 
         manager_->register_scene<TestScene>("main");
 
-        manager_->activate("main");
-        window->signal_post_idle()();
-
         TestScene* scr = dynamic_cast<TestScene*>(manager_->resolve_scene("main").get());
-        scr->set_destroy_on_unload(false); //Don't destroy on unload
+        scr->signal_activated().connect(sig_cb);
+
+        manager_->activate("main");
+        manager_->late_update(1.0f);
+
+        assert_true(signal_called);
+
+        scr->set_destroy_on_unload(false); //Don't destroy on unload        
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -129,7 +123,7 @@ public:
         assert_false(scr->unload_called);
 
         manager_->activate("main"); //activateing to the same place should do nothing
-        window->signal_post_idle()();
+        manager_->late_update(1.0f);
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -137,14 +131,8 @@ public:
         assert_false(scr->unload_called);
 
         manager_->register_scene<TestScene>("/test");
-
-        auto initial = window->signal_post_idle().connection_count();
         manager_->activate("/test");
-        assert_equal(window->signal_post_idle().connection_count(), initial + 1);
-        window->signal_post_idle()();
-
-        // Check that we disconnect the activate signal
-        assert_equal(window->signal_post_idle().connection_count(), initial);
+        manager_->late_update(1.0f);
 
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
@@ -167,13 +155,12 @@ public:
         manager_->preload_in_background("main").then([this]() {
             manager_->activate("main");
         });
-        window->run_frame();
+        application->run_frame();
         assert_true(scr->load_called);
     }
 
     void test_preload_args() {
         manager_->register_scene<PreloadArgsScene>("main");
-
         manager_->activate(
             "main",
             99 // Additional argument

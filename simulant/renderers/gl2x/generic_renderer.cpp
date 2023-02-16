@@ -31,6 +31,8 @@
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 #include "../../window.h"
+#include "../../coroutines/coroutine.h"
+#include "../../application.h"
 
 namespace smlt {
 
@@ -64,7 +66,6 @@ GPUProgramID GenericRenderer::default_gpu_program_id() const {
 }
 
 GenericRenderer::GenericRenderer(Window *window):
-    Renderer(window),
     GLRenderer(window),
     buffer_manager_(VBOManager::create()) {
 
@@ -357,17 +358,9 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
     program_manager_.set_garbage_collection_method(program->id(), GARBAGE_COLLECT_PERIODIC);
 
     /* Build the GPU program on the main thread */
-    if(cort::within_coroutine()) {
-        window->idle->add_once([&]() {
-            program->build();
-        });
-
-        /* Let the main routine do the build before
-         * resuming */
-        cort::yield_coroutine();
-    } else {
+    cr_run_main([&]() {
         program->build();
-    }
+    });
 
     return program->id();
 }
@@ -690,13 +683,29 @@ GPUProgramID GenericRenderer::current_gpu_program_id() const {
 
 void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buffers) {
     auto element_count = renderable->index_element_count;
-    auto index_type = convert_id_type(renderable->index_data->index_type());
-    auto arrangement = renderable->arrangement;
+    auto arrangement = convert_arrangement(renderable->arrangement);
+    if(element_count) {
+        auto index_type = convert_id_type(renderable->index_data->index_type());
+        auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
+        GLCheck(glDrawElements, arrangement, element_count, index_type, BUFFER_OFFSET(offset));
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+    } else {
+        assert(renderable->vertex_ranges);
+        assert(renderable->vertex_range_count);
 
-    auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
+        auto range = renderable->vertex_ranges;
+        auto total = 0;
+        for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
+            GLCheck(
+                glDrawArrays,
+                arrangement, range->start, range->count
+            );
 
-    GLCheck(glDrawElements, convert_arrangement(arrangement), element_count, index_type, BUFFER_OFFSET(offset));
-    window->stats->increment_polygons_rendered(arrangement, element_count);
+            total += range->count;
+        }
+
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, total);
+    }
 }
 
 void GenericRenderer::init_context() {

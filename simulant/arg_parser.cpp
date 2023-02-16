@@ -1,7 +1,7 @@
 #include <iomanip>
 #include "logging.h"
-#include "deps/kfs/kfs.h"
 
+#include "utils/kfs.h"
 #include "arg_parser.h"
 
 namespace smlt {

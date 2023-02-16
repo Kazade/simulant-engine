@@ -37,6 +37,10 @@ void InputAxis::set_negative_joystick_button(JoystickButton button) {
     negative_joystick_button_ = button;
 }
 
+void InputAxis::set_joystick_source(GameControllerIndex joystick) {
+    joystick_source_ = joystick;
+}
+
 void InputAxis::set_mouse_source(MouseID mouse) {
     mouse_source_ = mouse;
 }
@@ -66,9 +70,10 @@ void InputAxis::set_return_speed(float ret) {
 }
 
 float InputAxis::value(DeadZoneBehaviour dead_zone_behaviour) const {
+    float inversion = ((inversed_) ? -1.0f : 1.0f);
     switch(dead_zone_behaviour) {
     case DEAD_ZONE_BEHAVIOUR_NONE:
-        return value_;
+        return value_ * inversion;
     default:
     case DEAD_ZONE_BEHAVIOUR_RADIAL: {
         if(type_ == AXIS_TYPE_JOYSTICK_AXIS) {
@@ -79,13 +84,17 @@ float InputAxis::value(DeadZoneBehaviour dead_zone_behaviour) const {
             } else {
                 /* FIXME: Costly divide */
                 input = input.normalized() * ((input.length() - dead_zone_) / (1.0f - dead_zone_));
-                return input.x;
+                return input.x * inversion;
             }
         }
     } /* fall through */
     case DEAD_ZONE_BEHAVIOUR_AXIAL:
-        return std::abs(value_) >= dead_zone_ ? value_ : 0.0f;
+        return (std::abs(value_) >= dead_zone_ ? value_ : 0.0f) * inversion;
     }
+}
+
+void InputAxis::set_inversed(bool value) {
+    inversed_ = value;
 }
 
 void InputAxis::set_type(AxisType type) {

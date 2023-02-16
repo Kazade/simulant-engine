@@ -23,7 +23,7 @@ static int convert_to_int(char* buffer, int len) {
     return a;
 }
 
-static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
+static bool read_fmt(std::istream* stream, Sound* sound, std::size_t len) {
     _S_UNUSED(len);
 
     char buffer[4];
@@ -32,9 +32,6 @@ static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
     std::size_t freq;
     uint8_t channels;
 
-    stream->read(buffer, 4 * sizeof(char));      //WAVE
-    stream->read(buffer, 4 * sizeof(char));      //fmt
-    stream->read(buffer, 4 * sizeof(char));      //16
     stream->read(buffer, 2 * sizeof(char));      //1 == pcm
     stream->read(buffer, 2 * sizeof(char));      //channels
 
@@ -45,8 +42,6 @@ static bool read_riff(std::istream* stream, Sound* sound, std::size_t len) {
     stream->read(buffer, 2 * sizeof(char)); //
     stream->read(buffer, 2 * sizeof(char));
     int bps = convert_to_int(buffer, 2);
-    stream->read(buffer, 4 * sizeof(char));      //data
-    stream->read(buffer, 4 * sizeof(char));
 
     if(channels == 1) {
         format = (bps == 8) ? AUDIO_DATA_FORMAT_MONO8 : (bps == 16) ? AUDIO_DATA_FORMAT_MONO16 : AUDIO_DATA_FORMAT_MONO24;
@@ -99,8 +94,8 @@ static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
 typedef std::function<bool (std::istream* stream, Sound* sound, std::size_t len)> ChunkFunc;
 
 static ChunkFunc get_chunk_func(const std::string& name) {
-    if(name == std::string("RIFF")) return read_riff;
-    else if(name == std::string("data")) return read_data;
+    if(name == std::string("data")) return read_data;
+    else if(name == std::string("fmt ")) return read_fmt;
     return read_junk;
 }
 
@@ -110,6 +105,28 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
     assert(sound && "You passed a Resource that is not a Sound to the OGG loader");
+
+    char buffer[4];
+    data_->read(buffer, 4 * sizeof(char));
+    std::string id(buffer, buffer + 4);
+    if(id != "RIFF") {
+        S_ERROR("Unexpected start to WAV file");
+        return;
+    }
+
+    data_->read(buffer, 4 * sizeof(char));
+    uint32_t file_length = convert_to_int(buffer, 4);
+    _S_UNUSED(file_length);
+
+    data_->read(buffer, 4 * sizeof(char));
+    id = std::string(buffer, buffer + 4);
+
+    if(id != "WAVE") {
+        S_ERROR("Unsupported WAV file.");
+        return;
+    }
+
+    std::set<std::string> seen_chunks;
 
     while(!data_->eof()) {
         char buffer[4];
@@ -121,34 +138,32 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         uint32_t size = convert_to_int(buffer, 4);
         uint32_t offset = data_->tellg();
 
-        if(chunk_id == "RIFF") {
-            // RIFF is the top-level chunk and its size is
-            // the size of the file, not the header, so we force
-            // it to match here (header is 36 bytes, minus the 8 we just read)
-            size = 36 - 8;
-        }
-
         auto func = get_chunk_func(chunk_id);
-        if(!func(data_.get(), sound, size)) {
+        if(!func(data_.get(), sound, size - 8)) {
             S_ERROR("Unsupported .wav format");
             return;
         }
 
-        if(chunk_id == "data") {
+        seen_chunks.insert(chunk_id);
+
+        if(seen_chunks.count("data") && seen_chunks.count("fmt ")) {
             break;
         }
+
         data_->seekg(offset + size);
     }
 
     std::weak_ptr<Sound> wptr = sound->shared_from_this();
 
     sound->set_playing_sound_init_function([wptr](PlayingSound& source) {
+        source.set_stream_func(StreamFunc());
+
         struct SourcePlayState {
             int offset = 0;
 
             // This is set in init_source, and released
             // when the sound stops playing
-            std::shared_ptr<Sound> sound_ptr;
+            std::weak_ptr<Sound> sound_ptr;
         };
 
         auto state = std::make_shared<SourcePlayState>();
@@ -158,30 +173,30 @@ void WAVLoader::into(Loadable& resource, const LoaderOptions &options) {
         // to the lambda). This prevents the sound from being destroyed while
         // the data is being streamed
 
-        state->sound_ptr = wptr.lock();
-        if(!state->sound_ptr) {
+        std::shared_ptr<Sound> sound_ptr;
+        state->sound_ptr = sound_ptr = wptr.lock();
+        if(!sound_ptr) {
             S_WARN("Sound was destroyed before playing");
             return;
         }
 
-        auto stream = std::make_shared<StreamView>(state->sound_ptr->input_stream());
+        auto stream = std::make_shared<StreamView>(sound_ptr->input_stream());
 
         S_DEBUG("Initialized stream_func for source instance {0}", &source);
 
         source.set_stream_func([state, stream](AudioBufferID id) -> int32_t {
-            auto sound = state->sound_ptr;
+            auto sound = state->sound_ptr.lock();
 
             if(sound) {
                 const uint32_t buffer_size = sound->buffer_size();
                 const uint32_t remaining_in_bytes = sound->stream_length() - state->offset;
 
-                assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
+                //assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
 
                 std::vector<uint8_t> buffer;
                 stream->seekg(state->offset, std::ios_base::beg);
 
                 if(remaining_in_bytes == 0) {
-                    state->sound_ptr.reset();  // Release the handle
                     return 0;
                 } else if(remaining_in_bytes < buffer_size) {
                     buffer.resize(remaining_in_bytes);

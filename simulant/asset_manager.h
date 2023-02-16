@@ -32,6 +32,7 @@
 #include "font.h"
 #include "assets/particle_script.h"
 #include "path.h"
+#include "assets/binary_data.h"
 
 namespace smlt {
 
@@ -43,6 +44,7 @@ typedef ObjectManager<TextureID, Texture, DO_REFCOUNT> TextureManager;
 typedef ObjectManager<SoundID, Sound, DO_REFCOUNT> SoundManager;
 typedef ObjectManager<FontID, Font, DO_REFCOUNT> FontManager;
 typedef ObjectManager<ParticleScriptID, ParticleScript, DO_REFCOUNT> ParticleScriptManager;
+typedef ObjectManager<BinaryID, Binary, DO_REFCOUNT> BinaryManager;
 
 struct TextureFlags {
     TextureFlags(
@@ -63,9 +65,19 @@ struct TextureFlags {
     bool auto_upload = true; // Should the texture be uploaded automatically?
 };
 
-enum DefaultFontStyle {
-    DEFAULT_FONT_STYLE_HEADING,
-    DEFAULT_FONT_STYLE_BODY
+struct FontFlags {
+    uint16_t size = 0;
+    FontWeight weight = FONT_WEIGHT_NORMAL;
+    FontStyle style = FONT_STYLE_NORMAL;
+    CharacterSet charset = CHARACTER_SET_LATIN;
+
+    /* If non-zero, this will apply a blur to the font texture
+     * before upload. Useful for drop shadows */
+    std::size_t blur_radius = 0;
+};
+
+struct SoundFlags {
+    bool stream_audio = true;
 };
 
 /* Majority of the API definitions have been generated using this Python code:
@@ -92,11 +104,9 @@ for klass, name in (
     print(TEMPLATE % {"klass": klass, "name": name})
 */
 
-class AssetManager:
-    public virtual WindowHolder {
-
+class AssetManager {
 public:
-    AssetManager(Window* window, AssetManager* parent=nullptr);
+    AssetManager(AssetManager* parent=nullptr);
     virtual ~AssetManager();
 
     // Generated API
@@ -140,7 +150,11 @@ public:
 
 
     /* Sound API */
-    SoundPtr new_sound_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    SoundPtr new_sound_from_file(
+        const Path& filename,
+        const SoundFlags& flags=SoundFlags(),
+        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
+    );
     void destroy_sound(SoundID id);
     SoundPtr sound(SoundID id);
     const SoundPtr sound (SoundID id) const;
@@ -148,10 +162,32 @@ public:
     bool has_sound(SoundID id) const;
     SoundPtr find_sound(const std::string& name);
 
+    /* Load raw binary data from a file */
+    BinaryPtr new_binary_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    BinaryPtr binary(BinaryID id) const;
+    std::size_t binary_count() const;
+    bool has_binary(BinaryID id) const;
+    BinaryPtr find_binary(const std::string& name);
+    void destroy_binary(BinaryID id);
 
     /* Font API */
-    FontPtr new_font_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_from_ttf(const Path& filename, uint32_t font_size, CharacterSet charset=CHARACTER_SET_LATIN, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    /** Loads a font by searching asset paths for a match.
+     * Searches for standard variations of the filename depending on the family,
+     * weight, style, and size. We look for the following (example) variations:
+     *
+     * - Kanit-Regular.ttf
+     * - Kanit-RegularItalic.ttf
+     * - Kanit-BlackItalic.ttf
+     * - Kanit-BlackItalic-18.fnt
+     *
+     * and in the following example paths:
+     *
+     * $path/$filename
+     * $path/fonts/$filename
+     * $path/fonts/family/$filename
+     */
+    FontPtr new_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr new_font_from_file(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(FontID id);
     FontPtr font(FontID id);
     const FontPtr font (FontID id) const;
@@ -191,7 +227,6 @@ public:
 
     void update(float dt);
 
-    virtual FontPtr default_font(DefaultFontStyle style) const;
     virtual MaterialPtr default_material() const;
 
     MaterialPtr clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
@@ -199,9 +234,18 @@ public:
 
     AssetManager* base_manager() const;
 
+    void destroy_all();
     void run_garbage_collection();
 
     bool is_base_manager() const;
+
+    std::size_t child_manager_count() const {
+        return children_.size();
+    }
+
+    const AssetManager* child_manager(std::size_t i) const {
+        return children_.at(i);
+    }
 
 private:
     AssetManager* parent_ = nullptr;
@@ -212,6 +256,7 @@ private:
     MeshManager mesh_manager_;
     SoundManager sound_manager_;
     ParticleScriptManager particle_script_manager_;
+    BinaryManager binary_manager_;
 
     thread::Mutex template_material_lock_;
     std::unordered_map<Path, MaterialID> template_materials_;
@@ -219,13 +264,13 @@ private:
 
     MaterialPtr get_template_material(const Path &path);
 
-    std::set<AssetManager*> children_;
+    std::vector<AssetManager*> children_;
     void register_child(AssetManager* child) {
-        children_.insert(child);
+        children_.push_back(child);
     }
 
     void unregister_child(AssetManager* child) {
-        children_.erase(child);
+        children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
     }
 
     void set_garbage_collection_method(const Asset* resource, GarbageCollectMethod method) {
@@ -244,6 +289,8 @@ private:
             texture_manager_.set_garbage_collection_method(p->id(), method);
         } else if(auto p = dynamic_cast<const ParticleScript*>(resource)) {
             particle_script_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Binary*>(resource)) {
+            binary_manager_.set_garbage_collection_method(p->id(), method);
         } else {
             S_ERROR("Unhandled asset type. GC method not set");
         }
@@ -257,9 +304,8 @@ class LocalAssetManager:
     public RefCounted<LocalAssetManager> {
 
 public:
-    LocalAssetManager(Window* window, AssetManager* parent=nullptr):
-        WindowHolder(window),
-        AssetManager(window, parent) {}
+    LocalAssetManager(AssetManager* parent=nullptr):
+        AssetManager(parent) {}
 
     bool init() { return true; }
     void clean_up() {}
@@ -270,22 +316,16 @@ class SharedAssetManager:
     public AssetManager,
     public RefCounted<SharedAssetManager> {
 public:
-    SharedAssetManager(Window* window):
-        WindowHolder(window),
-        AssetManager(window) {}
+    SharedAssetManager() = default;
 
     bool init();
 
     void cleanup() {}
 
-    virtual FontPtr default_font(DefaultFontStyle style) const;
     virtual MaterialPtr default_material() const;
 
     void set_default_material_filename(const Path &filename);
     Path default_material_filename() const;
-
-    void set_default_font_filename(DefaultFontStyle style, const Path &filename);
-    Path default_font_filename(DefaultFontStyle style) const;
 
 private:
     mutable MaterialPtr default_material_;

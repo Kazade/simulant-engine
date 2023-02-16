@@ -83,7 +83,12 @@ public:
     bool init() override;
 
     void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     MeshID mesh_id_;
     GeomCullerOptions culler_options_;
     Vec3 desired_transform;
@@ -93,10 +98,6 @@ private:
     std::shared_ptr<GeomCuller> culler_;
 
     AABB aabb_;
-
-    void update(float dt) override {
-        update_source(dt);
-    }
 
 public:
     Property<decltype(&Geom::culler_)> culler = {this, &Geom::culler_};

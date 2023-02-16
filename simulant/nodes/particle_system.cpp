@@ -18,7 +18,7 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+    smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
 );
 
 ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
@@ -26,8 +26,7 @@ ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, Particle
     StageNode(stage, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
     AudioSource(stage, this, sound_driver),
     script_(script),
-    vertex_data_(new VertexData(PS_VERTEX_SPEC)),
-    index_data_(new IndexData(INDEX_TYPE_16_BIT)) {
+    vertex_data_(new VertexData(PS_VERTEX_SPEC)) {
 
     // Initialize the emitter states
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
@@ -43,9 +42,6 @@ ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, Particle
 ParticleSystem::~ParticleSystem() {
     delete vertex_data_;
     vertex_data_ = nullptr;
-
-    delete index_data_;
-    index_data_ = nullptr;
 }
 
 void ParticleSystem::calc_aabb() {
@@ -55,51 +51,47 @@ void ParticleSystem::calc_aabb() {
     }
 
     AABB& result = aabb_;
-    bool first = true;
+    result = AABB();
+
     for(auto e = 0u; e < script_->emitter_count(); ++e) {
         auto emitter = script_->emitter(e);
         auto pos = emitter->relative_position;
 
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            if(pos.x > result.max().x || first) result.set_max_x(pos.x);
-            if(pos.y > result.max().y || first) result.set_max_y(pos.y);
-            if(pos.z > result.max().z || first) result.set_max_z(pos.z);
-
-            if(pos.x < result.min().x || first) result.set_min_x(pos.x);
-            if(pos.y < result.min().x || first) result.set_min_y(pos.y);
-            if(pos.z < result.min().x || first) result.set_min_z(pos.z);
+            if(e == 0) {
+                result.set_min_max(pos, pos);
+            } else {
+                result.encapsulate(pos);
+            }
         } else {
             // If this is not a point emitter, then calculate the max/min possible for
             // each emitter using their dimensions.
 
-            float hw = (emitter->dimensions.x / 2.0f);
-            float hh = (emitter->dimensions.y / 2.0f);
-            float hd = (emitter->dimensions.z / 2.0f);
+            float hw = smlt::fast_divide(emitter->dimensions.x, 2.0f);
+            float hh = smlt::fast_divide(emitter->dimensions.y, 2.0f);
+            float hd = smlt::fast_divide(emitter->dimensions.z, 2.0f);
 
-            float minx = pos.x - hw;
-            float maxx = pos.x + hw;
-            float miny = pos.y - hh;
-            float maxy = pos.y + hh;
-            float minz = pos.z - hd;
-            float maxz = pos.z + hd;
-
-            if(maxx > result.max().x || first) result.set_max_x(maxx);
-            if(maxy > result.max().y || first) result.set_max_y(maxy);
-            if(maxz > result.max().z || first) result.set_max_z(maxz);
-
-            if(minx > result.min().x || first) result.set_min_x(minx);
-            if(miny > result.min().y || first) result.set_min_y(miny);
-            if(minz > result.min().z || first) result.set_min_z(minz);
+            AABB emitter_bounds(pos, Vec3(hw, hh, hd));
+            if(e == 0) {
+                result = emitter_bounds;
+            } else {
+                result.encapsulate(emitter_bounds);
+            }
         }
-
-        first = false;
     }
-
 }
 
 //Boundable entity things
 const AABB &ParticleSystem::aabb() const {
     return aabb_;
+}
+
+bool ParticleSystem::emitters_active() const {
+    return emitters_active_;
+}
+
+void ParticleSystem::set_emitters_active(bool value) {
+    emitters_active_ = value;
 }
 
 
@@ -118,8 +110,25 @@ bool ParticleSystem::has_active_emitters() const {
     return false;
 }
 
+bool ParticleSystem::update_when_hidden() const {
+    return update_when_hidden_;
+}
+
+void ParticleSystem::set_update_when_hidden(bool value) {
+    update_when_hidden_ = value;
+}
+
 void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
     _S_UNUSED(detail_level);
+
+    if(!is_visible()) {
+        return;
+    }
+
+    if(!particle_count()) {
+        // No particles, no renderables!
+        return;
+    }
 
     /* Rebuild the vertex data with the current camera direction */
     rebuild_vertex_data(camera->up(), camera->right());
@@ -128,10 +137,12 @@ void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const 
     new_renderable.arrangement = MESH_ARRANGEMENT_QUADS;
     new_renderable.render_priority = render_priority();
     new_renderable.final_transformation = Mat4();
-    new_renderable.index_data = index_data_;
-    new_renderable.vertex_data = vertex_data_;
-    new_renderable.index_element_count = index_data_->count();
-    new_renderable.is_visible = is_visible();
+    new_renderable.index_data = nullptr;
+    new_renderable.index_element_count = 0;
+    new_renderable.vertex_range_count = vertex_ranges_.size();
+    new_renderable.vertex_ranges = vertex_ranges_.data();
+    new_renderable.vertex_data = vertex_data_;    
+    new_renderable.is_visible = true;
     new_renderable.material = script_->material().get();
     new_renderable.centre = transformed_aabb().centre();
 
@@ -142,11 +153,12 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     vertex_data_->resize(particle_count_ * 4);
     vertex_data_->move_to_start();
 
-    /* FIXME: Remove this when #193 is complete */
-    index_data_->resize(particle_count_ * 4);
-    index_data_->clear();
+    vertex_ranges_.resize(0);
 
-    auto i = 0;
+    if(!particle_count_) {
+        return;
+    }
+
     for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
 
@@ -181,26 +193,28 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         vertex_data_->diffuse(p.colour);
         vertex_data_->tex_coord0(0, 1);
         vertex_data_->move_next();
-
-        index_data_->index(i++);
-        index_data_->index(i++);
-        index_data_->index(i++);
-        index_data_->index(i++);
     }
 
+    /* Use one giant vertex range of quads (glDrawArrays) */
+    VertexRange new_range;
+    new_range.start = 0;
+    new_range.count = vertex_data_->count();
+    vertex_ranges_.push_back(new_range);
+
     vertex_data_->done();
-    index_data_->done();
 }
 
 void ParticleSystem::update(float dt) {
-    update_source(dt); //Update any sounds attached to this particle system
+    /* Don't update anything at all if we're hidden */
+    if(!is_visible() && !update_when_hidden()) {
+        return;
+    }
 
     if(particles_.size() != script_->quota()) {
         particles_.resize(script_->quota());
         particles_.shrink_to_fit();
         particle_count_ = std::min(particle_count_, particles_.size());
     }
-
 
     // Update existing particles, erase any that are dead
     for(auto i = 0u; i < particle_count_; ++i) {
@@ -236,16 +250,16 @@ void ParticleSystem::update(float dt) {
 
         update_emitter(i, dt);
 
-        if(particle_count_ < particles_.size()) {
-            auto max_can_emit = particles_.size() - particle_count_;
-            emit_particles(i, dt, max_can_emit);
-        }
+        /* FIXME: This always means the first emitter gets all the particles ! */
+        auto max_can_emit = particles_.size() - particle_count_;
+        emit_particles(i, dt, max_can_emit);
 
         // We do this after emission so that we always emit particles
         // on the first update
         update_active_state(i, dt);
     }
 
+    /* If we are set to destroy on completion, then we do so even if we're invisible */
     if(!particle_count_ && !script_->has_repeating_emitters() && !has_active_emitters()) {
         // If the particles are gone, and we don't have repeating emitters and all the emitters are inactive
         // Then destroy the particle system if that's what we've been told to do
@@ -262,7 +276,7 @@ void ParticleSystem::update_active_state(uint16_t e, float dt) {
     if(state.is_active) {
         state.time_active += dt;
 
-        if(state.current_duration && state.time_active >= state.current_duration) {
+        if(state.current_duration > smlt::EPSILON && state.time_active >= state.current_duration) {
             state.is_active = false;
             state.repeat_delay = random_.float_in_range(emitter->repeat_delay_range.first, emitter->repeat_delay_range.second);
             state.time_inactive = 0;
@@ -270,7 +284,7 @@ void ParticleSystem::update_active_state(uint16_t e, float dt) {
     } else {
         state.time_inactive += dt;
 
-        if(state.repeat_delay > 0 && state.time_inactive >= state.repeat_delay) {
+        if(state.repeat_delay > smlt::EPSILON && state.time_inactive >= state.repeat_delay) {
             state.is_active = true;
             state.repeat_delay = 0;
             state.time_active = 0;
@@ -305,7 +319,8 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     auto& state = emitter_states_[e];
     auto emitter = script_->emitter(e);
 
-    float decrement = 1.0f / float(emitter->emission_rate); //Work out how often to emit per second
+    /* FIXME: Add smlt::fast_inverse() and use that */
+    float decrement = smlt::fast_divide(1.0f, float(emitter->emission_rate)); //Work out how often to emit per second
 
     auto scale = absolute_scaling();
 
@@ -343,7 +358,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         p.velocity *= rot;
 
         p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first, emitter->ttl_range.second);
-        p.colour = emitter->colour;
+        p.colour = random_.choice(emitter->colours);
         p.initial_dimensions = p.dimensions = smlt::Vec2(script_->particle_width() * scale.x, script_->particle_height() * scale.y);
 
         //FIXME: Initialize other properties

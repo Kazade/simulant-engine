@@ -71,8 +71,8 @@ public:
     void clear(bool release_memory=false);
 
     void move_to_start();
-    void move_by(int32_t amount);
-    void move_to(int32_t index);
+    bool move_by(int32_t amount);
+    bool move_to(int32_t index);
     void move_to_end();
     uint32_t move_next();
 
@@ -166,6 +166,17 @@ public:
         return out.count() - 1;
     }
 
+    std::size_t extend(const VertexData& other) {
+        if(vertex_specification_ != other.vertex_specification_) {
+            S_ERROR("Tried to extend vertex data with incompatible data");
+            return 0;
+        }
+
+        data_.insert(data_.end(), other.data_.begin(), other.data_.end());
+        vertex_count_ += other.count();
+        return count();
+    }
+
     void transform_by(const Mat4& transform) {
         for(auto i = 0u; i < count(); ++i) {
             move_to(i);
@@ -184,7 +195,7 @@ public:
         }
     }
 
-    void interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);
+    bool interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
     const uint8_t* data() const { if(empty()) { return nullptr; } return &data_[0]; }
     uint32_t data_size() const { return data_.size(); }

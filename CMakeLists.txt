@@ -18,6 +18,9 @@ OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 OPTION(SIMULANT_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 
+# This is only for testing! You will not get any sound!
+OPTION(SIMULANT_USE_ALDC "Use ALdc on all platforms" OFF)
+
 IF(PLATFORM_DREAMCAST)
 OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
 ELSE()
@@ -27,7 +30,12 @@ ENDIF()
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdouble-promotion -faligned-new")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdouble-promotion")
+
+if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new")
+endif()
+
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall")
 SET(CMAKE_ASM_FLAGS "")
 
@@ -46,8 +54,14 @@ ENDIF()
 
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
+# Fast-math is important on DC!
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
+
+IF(PLATFORM_DREAMCAST)
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math")
+ENDIF()
 
 IF(NOT PLATFORM_PSP)
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
@@ -116,19 +130,18 @@ IF(NOT PLATFORM_DREAMCAST)
 
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
-        link_libraries(
-            android
-            native_app_glue
-            EGL
-            GLESv1_CM
-            log
-        )
+        IF(SIMULANT_USE_ALDC)
+
+        ELSE()
+            SET(OPENAL_LIBRARY openal)
+            SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/.android/openal/OpenAL/include)
+        ENDIF()
+
+        FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
+        FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
     ELSEIF(PLATFORM_PSP)
         SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
         SET(SDL2_LIBRARIES "")
-
-        SET(ZLIB_INCLUDE_DIRS $ENV{KOS_PORTS}/include/zlib)
-        SET(ZLIB_LIBRARIES z)
     ELSE()
         FIND_PACKAGE(SDL2)  # Try cmake modules first
         IF(NOT SDL2_FOUND)
@@ -144,15 +157,20 @@ IF(NOT PLATFORM_DREAMCAST)
                 FIND_PACKAGE(SDL2 REQUIRED)
             ENDIF()
 
-            SET(OPENAL_INCLUDE_DIR $ENV{OPENALDIR}/include)
-            SET(OPENAL_INCLUDE_DIRS $ENV{OPENALDIR}/include)
-
-            SET(ZLIB_INCLUDE_DIR $ENV{ZLIBDIR}/include)
+            IF(NOT SIMULANT_USE_ALDC)
+                SET(OPENAL_INCLUDE_DIR $ENV{OPENALDIR}/include)
+                SET(OPENAL_INCLUDE_DIRS $ENV{OPENALDIR}/include)
+            ENDIF()
         ENDIF()
 
-        FIND_PACKAGE(OpenAL REQUIRED)
+        IF(SIMULANT_USE_ALDC)
+            SET(OPENAL_INCLUDE_DIRS "")
+            SET(OPENAL_LIBRARY "")
+        ELSE()
+            FIND_PACKAGE(OpenAL REQUIRED)
+        ENDIF()
+
         FIND_PACKAGE(OpenGL REQUIRED)
-        FIND_PACKAGE(ZLIB REQUIRED)
     ENDIF()
 
     IF(NOT PLATFORM_PSP)
@@ -168,9 +186,6 @@ ELSE()
 
     SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on DC
     SET(SDL2_LIBRARIES "")
-
-    SET(ZLIB_INCLUDE_DIRS $ENV{KOS_PORTS}/include/zlib)
-    SET(ZLIB_LIBRARIES z)
 
     # We build libGL source files into Simulant directly (see simulant/CMakeLists.txt)
     SET(OPENGL_INCLUDE_DIRS "")
@@ -191,10 +206,9 @@ INCLUDE_DIRECTORIES(
     ${SDL2_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIRS}
     ${OPENAL_INCLUDE_DIRS}
-    ${ZLIB_INCLUDE_DIRS}
 )
 
-LINK_LIBRARIES(${SDL2_LIBRARIES} ${SDL2_LIBRARY} ${OPENAL_LIBRARY} ${ZLIB_LIBRARIES} ${OPENGL_LIBRARIES})
+LINK_LIBRARIES(${SDL2_LIBRARIES} ${SDL2_LIBRARY} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES})
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 LINK_LIBRARIES(rt)

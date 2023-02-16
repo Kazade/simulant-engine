@@ -46,7 +46,7 @@
 #include "../interfaces/nameable.h"
 #include "../interfaces/updateable.h"
 #include "../interfaces.h"
-
+#include "../stage_manager.h"
 #include "../generic/any/any.h"
 
 namespace smlt {
@@ -58,8 +58,15 @@ class SceneManager;
 
 class SceneLoadException : public std::runtime_error {};
 
+typedef sig::signal<void ()> SceneOnActivatedSignal;
+typedef sig::signal<void ()> SceneOnDeactivatedSignal;
+
 class SceneBase:
-    public Updateable {
+    public StageManager {
+
+    DEFINE_SIGNAL(SceneOnActivatedSignal, signal_activated);
+    DEFINE_SIGNAL(SceneOnDeactivatedSignal, signal_deactivated);
+
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
@@ -111,6 +118,8 @@ protected:
     void link_pipeline(PipelinePtr pipeline);
     void unlink_pipeline(PipelinePtr pipeline);
 
+    void _update_thunk(float dt) override;
+    void _fixed_update_thunk(float dt) override;
 private:
     std::set<std::string> linked_pipelines_;
 
@@ -119,7 +128,7 @@ private:
 
     bool is_loaded_ = false;
     bool is_active_ = false;
-    bool unload_on_deactivate_ = true;
+    bool unload_on_deactivate_ = true;    
 
     std::string name_;
 
@@ -136,11 +145,15 @@ private:
     std::vector<any> load_args;
 
 protected:
+    /* Returns the number of arguments passed when loading */
+    std::size_t load_arg_count() const;
+
     template<typename T>
     T get_load_arg(int i) {
         return any_cast<T>(load_args[i]);
     }
 
+public:
     S_DEFINE_PROPERTY(window, &SceneBase::window_);
     S_DEFINE_PROPERTY(app, &SceneBase::app_);
     S_DEFINE_PROPERTY(input, &SceneBase::input_);

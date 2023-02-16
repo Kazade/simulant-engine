@@ -23,6 +23,7 @@
 #include <list>
 
 #include "sound_driver.h"
+#include "sound/playing_sound.h"
 
 #include "generic/managed.h"
 #include "generic/identifiable.h"
@@ -98,78 +99,24 @@ private:
     friend class PlayingSound;
 };
 
-typedef std::function<int32_t (AudioBufferID)> StreamFunc;
 
-class AudioSource;
+typedef sig::signal<void (SoundPtr, AudioRepeat, DistanceModel)> SoundPlayedSignal;
 
-enum AudioRepeat {
-    AUDIO_REPEAT_NONE,
-    AUDIO_REPEAT_FOREVER
-};
-
-enum DistanceModel {
-    DISTANCE_MODEL_POSITIONAL,
-    DISTANCE_MODEL_AMBIENT,
-    DISTANCE_MODEL_DEFAULT = DISTANCE_MODEL_POSITIONAL
-};
-
-typedef std::size_t PlayingSoundID;
-
-class PlayingSound:
-    public RefCounted<PlayingSound> {
-
-    friend class AudioSource;
-
-private:
-    static PlayingSoundID counter_;
-
-    PlayingSoundID id_;
-
-    AudioSource& parent_;
-
-    AudioSourceID source_;
-    std::vector<AudioBufferID> buffers_;
-    std::weak_ptr<Sound> sound_;
-    StreamFunc stream_func_;
-
-    AudioRepeat loop_stream_;
-    bool is_dead_;
-
-    /* This is used to calculate the velocity */
-    smlt::Vec3 previous_position_;
-    bool first_update_ = true;
-public:
-    PlayingSound(AudioSource& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
-    virtual ~PlayingSound();
-
-    PlayingSoundID id() const {
-        return id_;
-    }
-
-    void start();
-    void update(float dt);
-    void stop();
-
-    bool is_playing() const;
-
-    /* Set the stream function for filling buffers. A -1 return
-     * means the sound has been destroyed */
-    void set_stream_func(StreamFunc func) { stream_func_ = func; }
-
-    bool is_dead() const { return is_dead_; }
-};
 
 class AudioSource {
+    DEFINE_SIGNAL(SoundPlayedSignal, signal_sound_played);
+
 public:
     AudioSource(Window* window);
     AudioSource(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
     virtual ~AudioSource();
 
-    PlayingSoundID play_sound(
+    PlayingSoundPtr play_sound(
         SoundPtr sound_id,
         AudioRepeat repeat=AUDIO_REPEAT_NONE,
         DistanceModel model=DISTANCE_MODEL_DEFAULT
     );
+
     bool stop_sound(PlayingSoundID sound_id);
 
     /* The number of sounds this source is currently playing */
@@ -181,17 +128,13 @@ public:
 
     bool is_sound_playing() const;
 
-    void update_source(float dt);
-
     sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
 
-    void set_gain(RangeValue<0, 1> gain);
-    void set_pitch(RangeValue<0, 1> pitch);
-    void set_reference_distance(float dist);
-
-private:
+    void update_source(float dt);
+protected:
     SoundDriver* _sound_driver() const;
 
+public:
     Stage* stage_ = nullptr;
     Window* window_ = nullptr;
     SoundDriver* driver_ = nullptr;
@@ -202,6 +145,9 @@ private:
 
     friend class Sound;
     friend class PlayingSound;
+
+    mutable thread::Mutex mutex_;
+    static void source_update_thread();
 };
 
 }

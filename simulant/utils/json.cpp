@@ -22,7 +22,7 @@ static void unget(_json_impl::IStreamPtr& stream) {
 
 static std::string read_string(_json_impl::IStreamPtr& stream) {
     std::string buffer;
-    while(stream->good()) {
+    while(!stream->eof()) {
         char c = stream->get();
 
         if(c == '"') {
@@ -46,12 +46,10 @@ static bool check_remainder(_json_impl::IStreamPtr& stream, const std::string& r
 }
 
 static std::streampos seek_next_not_of(_json_impl::IStreamPtr& stream, const std::string& chars) {
-    while(stream->good()) {
+    while(!stream->eof()) {
         char c = stream->get();
-
-        /* We need to go back twice if we hit the end of the stream */
-        if(!stream->good()) {
-            unget(stream);
+        if(stream->eof()) {
+            break;
         }
 
         if(chars.find(c) == std::string::npos) {
@@ -60,8 +58,7 @@ static std::streampos seek_next_not_of(_json_impl::IStreamPtr& stream, const std
         }
     }
 
-    // FIXME optional<>
-    return stream->tellg();
+    return std::streampos(-1);
 }
 
 static std::streampos skip_whitespace(_json_impl::IStreamPtr& stream) {
@@ -69,7 +66,7 @@ static std::streampos skip_whitespace(_json_impl::IStreamPtr& stream) {
 }
 
 static std::streampos seek_next_of(_json_impl::IStreamPtr& stream, const std::string& chars) {
-    while(stream->good()) {
+    while(!stream->eof()) {
         auto c = stream->get();
         if(chars.find(c) != std::string::npos) {
             unget(stream);
@@ -82,36 +79,72 @@ static std::streampos seek_next_of(_json_impl::IStreamPtr& stream, const std::st
     return stream->tellg();
 }
 
-/* Returns the found character or \0 if not found */
-static char find_comma_or(const std::string& other, _json_impl::IStreamPtr stream) {
+static std::streampos find_comma_or_closing_brace(_json_impl::IStreamPtr& stream) {
+    bool in_quotes = false;
+
     int nested_counter = 0;
-    while(stream->good()) {
+    while(!stream->eof()) {
         char c = stream->get();
-
-        /* Otherwise we just skip past strings */
         if(c == '"') {
-            read_string(stream);
-            continue;
-        }
-
-        if(c == '{' || c == '[') {
-            ++nested_counter;
-            continue;
-        } else if(c == '}' || c == ']') {
-            if(nested_counter == 0) {
-                return c;
+            in_quotes = !in_quotes;
+        } else if(c == '[' || c == '{') {
+            if(!in_quotes) {
+                nested_counter++;
             }
-            --nested_counter;
-            continue;
-        }
-
-        if(!nested_counter && (other.find(c) != std::string::npos || c == ',')) {
-            unget(stream);
-            return c;
+        } else if(c == ']') {
+            if(!in_quotes) {
+                nested_counter--;
+            }
+        } else if(c == ',') {
+            if(!in_quotes && nested_counter == 0) {
+                unget(stream);
+                return stream->tellg();
+            }
+        } else if(c == '}') {
+            if(!in_quotes && nested_counter == 0) {
+                unget(stream);
+                return stream->tellg();
+            } else {
+                nested_counter--;
+            }
         }
     }
 
-    return '\0';
+    return std::streampos(-1);
+}
+
+static std::streampos find_comma_or_closing_bracket(_json_impl::IStreamPtr& stream) {
+    bool in_quotes = false;
+
+    int nested_counter = 0;
+    while(!stream->eof()) {
+        char c = stream->get();
+        if(c == '"') {
+            in_quotes = !in_quotes;
+        } else if(c == '[' || c == '{') {
+            if(!in_quotes) {
+                nested_counter++;
+            }
+        } else if(c == '}') {
+            if(!in_quotes) {
+                nested_counter--;
+            }
+        } else if(c == ',') {
+            if(!in_quotes && nested_counter == 0) {
+                unget(stream);
+                return stream->tellg();
+            }
+        } else if(c == ']') {
+            if(!in_quotes && nested_counter == 0) {
+                unget(stream);
+                return stream->tellg();
+            } else {
+                nested_counter--;
+            }
+        }
+    }
+
+    return std::streampos(-1);
 }
 
 template<typename Func>
@@ -121,10 +154,12 @@ void JSONNode::read_keys(Func&& cb) const {
         return;
     }
 
-    stream_->seekg(start_);
+
+    assert(!stream_->bad());
+    assert(!stream_->fail());
     assert(!stream_->eof());
 
-    stream_->clear();  /* Clear any failed bit set by an EOF */
+    stream_->seekg(start_);
 
     auto c = stream_->get();
 
@@ -134,11 +169,16 @@ void JSONNode::read_keys(Func&& cb) const {
         return;
     }
 
-    while(stream_->good()) {
-        skip_whitespace(stream_);
+    while(!stream_->eof()) {
+        if(skip_whitespace(stream_) == -1) {
+            break;
+        }
+
         assert(stream_->good());
-        assert(!stream_->eof());
+
         char c = stream_->get();
+        assert(stream_->good());
+
         if(c == '"') {
             std::string key = read_string(stream_);
             if(cb(key)) {
@@ -146,14 +186,26 @@ void JSONNode::read_keys(Func&& cb) const {
             }
             skip_whitespace(stream_);
             assert(stream_->good());
+
             c = stream_->get();
+            assert(stream_->good());
+
             if(c != ':') {
                 S_WARN("Expected ':' found '{0}'", c);
                 return;
             }
             skip_whitespace(stream_);
-            c = find_comma_or("}", stream_);
-            stream_->get(); /* Ignore the comma or } */
+            assert(stream_->good());
+
+            auto pos = find_comma_or_closing_brace(stream_);
+            if(pos == -1) {
+                S_ERROR("Unable to find command or closing }");
+                return;
+            }
+
+            assert(stream_->good());
+            c = stream_->get(); /* Get the comma or } */
+            assert(stream_->good());
 
             if(c == '}') {
                 return;
@@ -175,7 +227,6 @@ std::string JSONNode::read_value_from_stream() const {
      * So we need to add 1 to the length. */
     auto len = (end_ - start_) + 1;
     stream_->seekg(start_);
-    stream_->clear();
 
     char buffer[len + 1];
     stream_->read(buffer, len);
@@ -280,14 +331,22 @@ bool JSONNode::is_null() const {
 static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
     std::size_t count = 0;
 
-    while(stream->good()) {
+    skip_whitespace(stream);
+    auto p = stream->tellg();
+
+    while(!stream->eof()) {
         skip_whitespace(stream);
-        char c = find_comma_or("]", stream);
+        auto p2 = find_comma_or_closing_bracket(stream);
+        auto c = stream->get();
+
         if(c == ',') {
-            stream->ignore();
             ++count;
         } else {
             assert(c == ']');
+
+            /* If we found the closing ] just after the opening one, then
+             * this is an empty array */
+            bool empty = (p2 - p) == 0;
 
             /* We just do this final check to make sure we didn't double
              * count things... */
@@ -304,7 +363,11 @@ static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
                 S_WARN("Found trailing comma in JSON array");
                 return count;
             } else {
-                return count + 1;
+                if(!empty) {
+                    ++count;
+                }
+
+                return count;
             }
         }
     }
@@ -315,8 +378,11 @@ static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
 /* Parse an object node and return its size if the parse is successful */
 static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
     std::size_t count = 0;
-    while(stream->good()) {
-        skip_whitespace(stream);
+    while(!stream->eof()) {
+        if(skip_whitespace(stream) == -1) {
+            break;
+        }
+
         char c = stream->get();
 
         if(c == '"') {
@@ -329,30 +395,37 @@ static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
                 return optional<std::size_t>();
             }
 
-            c = find_comma_or("}", stream);
+            skip_whitespace(stream);
 
-            if(!c) {
+            auto pos = find_comma_or_closing_brace(stream);
+
+            if(pos == -1) {
+                S_ERROR("Couldn't find comma or closing brace");
                 return optional<std::size_t>();
-            } else if(c == '}'){
-                return optional<std::size_t>(count);
+            } else {
+                c = stream->get();
+                assert(c == ',' || c == '}');
+
+                if(c == '}') {
+                    return optional<std::size_t>(count);
+                } else {
+                    stream->ignore();
+                }
             }
-            assert(c == ',');
-            stream->ignore();  /* Skip past the comma */
         } else if(c == '}') {
             stream->unget();
             return optional<std::size_t>(count);
         } else {
-            S_WARN("Unexpected character: {0} when parsing object", c);
+            S_ERROR("Unexpected character: {0} when parsing object", c);
             return optional<std::size_t>();
         }
     }
 
-    return optional<std::size_t>();
+    return optional<std::size_t>(count);
 }
 
 void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std::streampos pos) {
     stream->seekg(pos);
-    stream->clear();
 
     skip_whitespace(stream);
 
@@ -430,7 +503,6 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
     }
 
     stream_->seekg(current_node_->start());
-    stream_->clear();
 
     char c = stream_->get(); // Skip the opening '['
     assert(c == '[');
@@ -507,6 +579,10 @@ JSONIterator JSONIterator::begin() const {
         return JSONIterator();
     }
 
+    if(current_node_->size() == 0) {
+        return JSONIterator();
+    }
+
     return (*this)[0];
 }
 
@@ -519,7 +595,14 @@ JSONIterator &JSONIterator::operator++() {
     stream_->seekg(current_node_->end());
 
     /* Find the comma following the item end */
-    auto c = find_comma_or("]", stream_);
+    auto pos = find_comma_or_closing_bracket(stream_);
+    if(pos == -1) {
+        S_ERROR("Unable to find comma or closing bracket");
+        return *this;
+    }
+    auto c = stream_->get();
+    assert(c == ',' || c == ']');
+
     if(c == ']') {
         /* Hit the end of the array, this iterator is
          * done with */
@@ -530,7 +613,7 @@ JSONIterator &JSONIterator::operator++() {
     skip_whitespace(stream_);
 
     /* Now set this to the next element in the array */
-    (*this) = JSONIterator(stream_, int(stream_->tellg()) + 1);
+    (*this) = JSONIterator(stream_, int(stream_->tellg()));
     is_array_iterator_ = true;
     return *this;
 }

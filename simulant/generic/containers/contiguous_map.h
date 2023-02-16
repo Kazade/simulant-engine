@@ -72,11 +72,7 @@ public:
         iterator_base(ContiguousMultiMap* map):
             map_(map) {
 
-            current_node_ = map->root_index_;
-
-            while(current_node_ > -1 && _node(current_node_)->left_index_ > -1) {
-                current_node_ = _node(current_node_)->left_index_;
-            }
+            current_node_ = map->leftmost_index_;
         }
 
         /* Passing -1 means end(), anything else points to the specified node */
@@ -265,7 +261,8 @@ public:
     ContiguousMultiMap() = default;
 
     ContiguousMultiMap(std::size_t reserve_count):
-        root_index_(-1) {
+        root_index_(-1),
+        leftmost_index_(-1) {
         nodes_.reserve(reserve_count);
     }
 
@@ -286,6 +283,7 @@ public:
     void clear() {
         nodes_.clear();
         root_index_ = -1;
+        leftmost_index_ = -1;
     }
 
     void shrink_to_fit() {
@@ -553,7 +551,7 @@ private:
     bool _insert(K&& key, V&& value) {
         if(root_index_ == -1) {
             /* Root case, just set to black */
-            root_index_ = new_node(-1, std::move(key), std::move(value));
+            leftmost_index_ = root_index_ = new_node(-1, std::move(key), std::move(value));
             nodes_.back().is_black = true;
             return true;
         } else {
@@ -564,9 +562,11 @@ private:
                 root_index_, std::move(key), std::move(value), &new_index
             );
 
+            node_type* inserted = (new_index > -1) ? &nodes_[new_index] : nullptr;
+
+            auto ret = new_index > 1;
             if(new_index > -1 && !is_black) {
                 /* Parent was red! rebalance! */
-                node_type* inserted = &nodes_[new_index];
                 _insert_repair_tree(inserted, new_index);
 
                 /* Reset root index */
@@ -586,18 +586,30 @@ private:
                     }
                 }
 
-                return true;
+                ret = true;
             }
 
-            /* p.first is the new index, it will be -1 on insert failure */
-            return new_index > -1;
+            assert(leftmost_index_ > -1);
+
+            /* If we inserted, and the parent is the leftmost index
+             * then we check to see if this is now the leftmost index */
+            if(inserted && inserted->parent_index_ == leftmost_index_) {
+                node_type* p = &nodes_[inserted->parent_index_];
+                if(p && p->left_index_ == new_index) {
+                    leftmost_index_ = new_index;
+                }
+            }
+
+            return ret;
         }
     }
 
     inline int32_t new_node(int32_t parent_index, K&& key, V&& value) {
         auto ret = (int32_t) nodes_.size();
-        nodes_.push_back(node_type(key, value));
-        nodes_.back().parent_index_ = parent_index;
+
+        node_type n(key, value);
+        n.parent_index_ = parent_index;
+        nodes_.push_back(std::move(n));
         return ret;
     }
 
@@ -677,13 +689,18 @@ private:
     std::vector<node_type> nodes_;
 
     int32_t root_index_ = -1;
+    int32_t leftmost_index_ = -1;
+
     Compare compare_;
 };
 
 
-template<typename K, typename V, typename Compare=std::less<K>>
+template<typename K, typename V, typename Compare=ThreeWayCompare<K>>
 class ContiguousMap {
 public:
+    typedef typename ContiguousMultiMap<K, V, Compare>::iterator iterator;
+    typedef typename ContiguousMultiMap<K, V, Compare>::const_iterator const_iterator;
+
     ContiguousMap() = default;
     ContiguousMap(std::size_t reserve):
         map_(reserve) {}
@@ -703,6 +720,16 @@ public:
         } else {
             return false;
         }
+    }
+
+    V& at(const K& key) {
+        auto it = map_.find(key);
+
+        if(it == map_.end()) {
+            throw std::out_of_range("Key not found");
+        }
+
+        return (*it).second;
     }
 
     const V& at(const K& key) const {
@@ -731,8 +758,32 @@ public:
     void clear() {
         map_.clear();
     }
+
+    iterator find(const K& key) {
+        return map_.find(key);
+    }
+
+    const_iterator find(const K &key) const {
+        return map_.find(key);
+    }
+
+    iterator begin() {
+        return map_.begin();
+    }
+
+    iterator end() {
+        return map_.end();
+    }
+
+    const_iterator begin() const {
+        return map_.begin();
+    }
+
+    const_iterator end() const {
+        return map_.end();
+    }
 private:
-    ContiguousMultiMap<K, V> map_;
+    ContiguousMultiMap<K, V, Compare> map_;
 };
 
 

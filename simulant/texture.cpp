@@ -25,7 +25,7 @@
 #include "utils/gl_error.h"
 
 #include "logging.h"
-
+#include "application.h"
 #include "window.h"
 #include "texture.h"
 #include "asset_manager.h"
@@ -33,8 +33,8 @@
 
 namespace smlt {
 
-const std::string Texture::BuiltIns::CHECKERBOARD = "simulant/textures/checkerboard.png";
-const std::string Texture::BuiltIns::BUTTON = "simulant/textures/button.png";
+const std::string Texture::BuiltIns::CHECKERBOARD = "textures/checkerboard.png";
+const std::string Texture::BuiltIns::BUTTON = "textures/button.png";
 
 const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_RED,
@@ -45,10 +45,14 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
 
 bool texture_format_contains_mipmaps(TextureFormat format) {
     switch(format) {
+    /* FIXME: We don't currently extract mipmap data from these formats on
+     * non-Dreamcast platforms. We should fix this! */
+#ifdef __DREAMCAST__
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
             return true;
+#endif
         default:
             return false;
     }
@@ -62,6 +66,7 @@ std::size_t texture_format_channels(TextureFormat format) {
     case TEXTURE_FORMAT_RGB_1US_565_TWID:
     case TEXTURE_FORMAT_RGB_3UB_888:
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+    case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
         return 3;
     case TEXTURE_FORMAT_RGBA_4UB_8888:
     case TEXTURE_FORMAT_RGBA_1US_4444:
@@ -72,6 +77,8 @@ std::size_t texture_format_channels(TextureFormat format) {
     case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
     case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
         return 4;
     default:
         S_ERROR("Invalid TextureFormat!");
@@ -81,18 +88,27 @@ std::size_t texture_format_channels(TextureFormat format) {
 
 Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
     Asset(asset_manager),
-    generic::Identifiable<TextureID>(id) {
+    generic::Identifiable<TextureID>(id),
+    width_(width),
+    height_(height) {
 
     S_DEBUG("Creating texture {0}x{1}", width, height);
-    resize(width, height);
-
     S_DEBUG("Setting format to: {0}", format);
-    set_format(format);
+    set_format(format);  /* This will allocate the data */
 
     /* We intentionally don't mark data dirty here. All that would happen is
      * we would upload a blank texture */
 
-    renderer_ = asset_manager->window->renderer;
+    renderer_ = get_app()->window->renderer;
+}
+
+Texture::~Texture() {
+    if(paletted_data_) {
+        delete [] paletted_data_;
+        paletted_data_ = nullptr;
+    }
+
+    free();
 }
 
 TextureFormat Texture::format() const {
@@ -107,13 +123,40 @@ uint16_t Texture::height() const {
     return height_;
 }
 
-std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint16_t height) {
+std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint16_t height) {   
+    auto calc_vq_mipmap_size = [](std::size_t s) -> std::size_t {
+        std::size_t ret = 0;
+        while(s != 1) {
+            ret += (s / 2) * (s / 2);
+            s /= 2;
+        }
+
+        ret += (1 * 1);
+        return ret;
+    };
+
     switch(fmt) {
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
             /* 2048 byte codebook, 8bpp per 2x2 */
             return 2048 + ((width / 2) * (height / 2));
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
+            return 2048 + calc_vq_mipmap_size(width);
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+            return (2 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
+            return (2 * 256) + ((width * height));
+        case TEXTURE_FORMAT_RGB8_PALETTED4:
+            return (3 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGB8_PALETTED8:
+            return (3 * 256) + ((width * height));
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+            return (4 * 16) + ((width * height) / 2);
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
+            return (4 * 256) + ((width * height));
         default:
             break;
     }
@@ -122,29 +165,160 @@ std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint1
 }
 
 void Texture::set_format(TextureFormat format) {
-    if(format_ == format) {
+    if(data_ && format_ == format) {
         return;
     }
 
     format_ = format;
 
-    data_.resize(required_data_size(format, width_, height_));
-    data_.shrink_to_fit();
+    auto byte_size = required_data_size(format, width_, height_);
+    resize_data(byte_size);
+}
 
-    data_dirty_ = true;
+bool Texture::is_paletted_format() const {
+    switch(format_) {
+    case TEXTURE_FORMAT_RGB565_PALETTED4:
+    case TEXTURE_FORMAT_RGB565_PALETTED8:
+    case TEXTURE_FORMAT_RGB8_PALETTED4:
+    case TEXTURE_FORMAT_RGB8_PALETTED8:
+    case TEXTURE_FORMAT_RGBA8_PALETTED4:
+    case TEXTURE_FORMAT_RGBA8_PALETTED8:
+        return true;
+    default:
+        return false;
+    }
+}
+
+uint32_t Texture::palette_size() const {
+    if(!is_paletted_format()) {
+        return 0;
+    }
+
+    if(format_ == TEXTURE_FORMAT_RGB565_PALETTED4) {
+        return 16 * 2;
+    } else if(format_ == TEXTURE_FORMAT_RGB565_PALETTED8) {
+        return 256 * 2;
+    } else if(format_ == TEXTURE_FORMAT_RGB8_PALETTED4) {
+        return 16 * 3;
+    } else if(format_ == TEXTURE_FORMAT_RGB8_PALETTED8) {
+        return 256 * 3;
+    } else if(format_ == TEXTURE_FORMAT_RGBA8_PALETTED4) {
+        return 16 * 4;
+    } else if(format_ == TEXTURE_FORMAT_RGBA8_PALETTED8) {
+        return 256 * 4;
+    }
+
+    assert(0 && "Unhandled paletted format");
+    return 0;
+}
+
+smlt::optional<Pixel> Texture::pixel(std::size_t x, std::size_t y) {
+    // FIXME: this won't account for aligned formats (where rows are aligned to
+    // particular boundaries) - we need to add a row_stride() to texture */
+    auto stride = texture_format_stride(format_);
+    uint8_t* src = data_ + ((y * width() * stride) + (x * stride));
+    switch(format_) {
+    case TEXTURE_FORMAT_R_1UB_8:
+        return Pixel(*src, 0, 0, 255);
+    break;
+    case TEXTURE_FORMAT_RGB_3UB_888:
+        return Pixel(*src, *(src + 1), *(src + 2), 255);
+    break;
+    case TEXTURE_FORMAT_RGBA_4UB_8888:
+        return Pixel(*src, *(src + 1), *(src + 2), *(src + 3));
+    break;
+    default:
+        break;
+    }
+
+    /* Unsupported */
+    S_WARN("Texture::pixel() is not yet implemented for format {0}", format_);
+    return smlt::optional<Pixel>();
+}
+
+bool Texture::blur(BlurType blur_type, std::size_t radius) {
+    if(blur_type != BLUR_TYPE_SIMPLE) {
+        S_WARN("Unimplemented blur type: {0}", blur_type);
+        return false;
+    }
+
+    if(radius == 0 || is_compressed() || is_paletted_format()) {
+        S_WARN("Unsupported format or no radius when blurring");
+        return false;
+    }
+
+    int blur_width = (radius * 2) + 1;
+    std::vector<Pixel> bucket(blur_width * blur_width);
+
+    std::vector<uint8_t> new_data(this->data_size());
+
+    auto s = texture_format_stride(format_);
+
+    for(int y = 0; y < height(); ++y) {
+        for(int x = 0; x < width(); ++x) {
+            int j0 = 0;
+            int k0 = 0;
+
+            float accum [4] = {0};
+
+            // gather the colours from the surrouding box, including the
+            // pixel we care about. If we go outside the bounds of the image
+            // then we just assume a border (for now, probably there are better
+            // options)
+            for(int j = y - radius; j <= y + (int) radius; ++j, ++j0) {
+                k0 = 0;
+                for(int k = x - radius; k <= x + (int) radius; ++k, ++k0) {
+                    int bucket_idx = (j0 * blur_width) + k0;
+                    assert(bucket_idx < (int) bucket.size());
+
+                    int ki = std::min(std::max(k, 0), width() - 1);
+                    int ji = std::min(std::max(j, 0), height() - 1);
+                    bucket[bucket_idx] = pixel(ki, ji).value_or(Pixel(255, 0, 255, 255));  // Default to a really glaring purple to show an error
+                }
+            }
+
+            /* Go through the bucket and sum the rgba components */
+            for(auto& pixel: bucket) {
+                for(uint8_t i = 0; i < 4; ++i) {
+                    accum[i] += pixel.rgba[i];
+                }
+            }
+
+            /* Average into a new pixel */
+            Pixel new_pixel;
+            int i = 0;
+            for(auto& v: accum) {
+                v /= (blur_width * blur_width);
+                new_pixel.rgba[i] = smlt::clamp(v, 0, 255);
+                ++i;
+            }
+
+            /* Now convert that pixel into the target format */
+            std::size_t target = (y * width() * s) + (x * s);
+            uint8_t* dst = &new_data[target];
+            auto final = new_pixel.to_format(format_);
+            if(final.empty()) {
+                S_ERROR("Unable to convert pixel to specified format");
+                return false;
+            }
+
+            std::memcpy(dst, &final[0], final.size());
+        }
+    }
+
+    set_data(new_data);
+
+    return true;
 }
 
 void Texture::resize(uint16_t width, uint16_t height, uint32_t data_size) {
-    if(width_ == width && height_ == height && data_.size() == data_size) {
+    if(width_ == width && height_ == height && data_size_ == data_size) {
         return;
     }
 
     width_ = width;
     height_ = height;
-    data_.resize(data_size);
-    data_.shrink_to_fit();
-
-    data_dirty_ = true;
+    resize_data(data_size);
 }
 
 void Texture::resize(uint16_t width, uint16_t height) {
@@ -155,10 +329,8 @@ void Texture::resize(uint16_t width, uint16_t height) {
     width_ = width;
     height_ = height;
 
-    data_.resize(required_data_size(format_, width, height));
-    data_.shrink_to_fit();
-
-    data_dirty_ = true;
+    auto data_size = required_data_size(format_, width, height);
+    resize_data(data_size);
 }
 
 static void explode_r8(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
@@ -172,6 +344,7 @@ static void explode_r8(const uint8_t* source, const TextureChannelSet& channels,
             case TEXTURE_CHANNEL_GREEN: return sg;
             case TEXTURE_CHANNEL_BLUE: return sb;
             case TEXTURE_CHANNEL_ALPHA: return sa;
+            case TEXTURE_CHANNEL_INVERSE_RED: return 1.0f - sr;
         }
 
         return 0.0f;
@@ -181,6 +354,39 @@ static void explode_r8(const uint8_t* source, const TextureChannelSet& channels,
     g = calculate_component(1, sr, 0, 0, 0);
     b = calculate_component(2, sr, 0, 0, 0);
     a = calculate_component(3, sr, 0, 0, 0);
+}
+
+static void explode_rgb565(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
+    uint16_t* texel = (uint16_t*) source;
+
+    auto calculate_component = [&channels](uint8_t i, uint16_t texel) -> float {
+        switch(channels[i]) {
+            case TEXTURE_CHANNEL_ZERO: return 0.0f;
+            case TEXTURE_CHANNEL_ONE: return 1.0f;
+            case TEXTURE_CHANNEL_RED: return float((texel & 0xF800) >> 11) / 31.0f;
+            case TEXTURE_CHANNEL_GREEN: return float((texel & 0x7E0) >> 5) / 63.0f;
+            case TEXTURE_CHANNEL_BLUE: return float((texel & 0x1F)) / 31.0f;
+            case TEXTURE_CHANNEL_ALPHA: return 1.0f;
+            case TEXTURE_CHANNEL_INVERSE_RED: return 1.0f - (float((texel & 0xF800) >> 11) / 31.0f);
+        }
+
+        return 0.0f;
+    };
+
+    r = calculate_component(0, *texel);
+    g = calculate_component(1, *texel);
+    b = calculate_component(2, *texel);
+    a = calculate_component(3, *texel);
+}
+
+static void compress_rgb565(uint8_t* dest, float r, float g, float b, float) {
+    uint16_t* out = (uint16_t*) dest;
+
+    uint8_t rr = (uint8_t) (31.0f * r);
+    uint8_t rg = (uint8_t) (63.0f * g);
+    uint8_t rb = (uint8_t) (31.0f * b);
+
+    *out = (rr << 11) | (rg << 5) | (rb << 0);
 }
 
 static void compress_rgba4444(uint8_t* dest, float r, float g, float b, float a) {
@@ -205,20 +411,35 @@ static void compress_rgba8888(uint8_t* dest, float r, float g, float b, float a)
     *out = (rr << 24) | (rg << 16) | (rb << 8) | ra;
 }
 
+auto calculate_component = [](const TextureChannelSet& channels, uint8_t i, float sr, float sg, float sb, float sa) -> float {
+    switch(channels[i]) {
+        case TEXTURE_CHANNEL_ZERO: return 0.0f;
+        case TEXTURE_CHANNEL_ONE: return 1.0f;
+        case TEXTURE_CHANNEL_RED: return sr;
+        case TEXTURE_CHANNEL_GREEN: return sg;
+        case TEXTURE_CHANNEL_BLUE: return sb;
+        case TEXTURE_CHANNEL_ALPHA: return sa;
+        case TEXTURE_CHANNEL_INVERSE_RED: return 1.0f - sr;
+    }
+
+    return 0.0f;
+};
+
+
+static void explode_rgb888(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
+    const float inv = 1.0f / 255.0f;
+
+    float sr = float(source[0]) * inv;
+    float sg = float(source[1]) * inv;
+    float sb = float(source[2]) * inv;
+
+    r = calculate_component(channels, 0, sr, sg, sb, 1.0f);
+    g = calculate_component(channels, 1, sr, sg, sb, 1.0f);
+    b = calculate_component(channels, 2, sr, sg, sb, 1.0f);
+    a = 1.0f;
+}
+
 static void explode_rgba8888(const uint8_t* source, const TextureChannelSet& channels, float& r, float& g, float& b, float& a) {
-    auto calculate_component = [&channels](uint8_t i, float sr, float sg, float sb, float sa) -> float {
-        switch(channels[i]) {
-            case TEXTURE_CHANNEL_ZERO: return 0.0f;
-            case TEXTURE_CHANNEL_ONE: return 1.0f;
-            case TEXTURE_CHANNEL_RED: return sr;
-            case TEXTURE_CHANNEL_GREEN: return sg;
-            case TEXTURE_CHANNEL_BLUE: return sb;
-            case TEXTURE_CHANNEL_ALPHA: return sa;
-        }
-
-        return 0.0f;
-    };
-
     const float inv = 1.0f / 255.0f;
 
     float sr = float(source[0]) * inv;
@@ -226,10 +447,10 @@ static void explode_rgba8888(const uint8_t* source, const TextureChannelSet& cha
     float sb = float(source[2]) * inv;
     float sa = float(source[3]) * inv;
 
-    r = calculate_component(0, sr, sg, sb, sa);
-    g = calculate_component(1, sr, sg, sb, sa);
-    b = calculate_component(2, sr, sg, sb, sa);
-    a = calculate_component(3, sr, sg, sb, sa);
+    r = calculate_component(channels, 0, sr, sg, sb, sa);
+    g = calculate_component(channels, 1, sr, sg, sb, sa);
+    b = calculate_component(channels, 2, sr, sg, sb, sa);
+    a = calculate_component(channels, 3, sr, sg, sb, sa);
 }
 
 typedef void (*ExplodeFunc)(const uint8_t*, const TextureChannelSet&, float&, float&, float&, float&);
@@ -237,19 +458,26 @@ typedef void (*CompressFunc)(uint8_t*, float, float, float, float);
 
 static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
     {TEXTURE_FORMAT_R_1UB_8, explode_r8},
+    {TEXTURE_FORMAT_RGB_1US_565, explode_rgb565},
+    {TEXTURE_FORMAT_RGB_3UB_888, explode_rgb888},
     {TEXTURE_FORMAT_RGBA_4UB_8888, explode_rgba8888}
 };
 
 static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
+    {TEXTURE_FORMAT_RGB_1US_565, compress_rgb565},
     {TEXTURE_FORMAT_RGBA_1US_4444, compress_rgba4444},
     {TEXTURE_FORMAT_RGBA_4UB_8888, compress_rgba8888}
 };
 
-void Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
-    auto original_data = data();
+bool Texture::convert(TextureFormat new_format, const TextureChannelSet &channels) {
+    std::vector<uint8_t> original_data(data_size());
+    std::copy(data_, data_ + data_size(), original_data.begin());
+
     auto original_format = format();
 
     set_format(new_format);
+
+    auto failed = std::make_shared<bool>(false);
 
     mutate_data([=](uint8_t* data, uint16_t, uint16_t, TextureFormat nf) {
         _S_UNUSED(nf);
@@ -262,7 +490,9 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
         uint8_t* dest_ptr = &data[0];
 
         if(!EXPLODERS.count(original_format) || !COMPRESSORS.count(new_format)) {
-            throw std::logic_error("Unsupported texture conversion");
+            S_ERROR("Unsupported texture conversion from {0} to {1}", original_format, new_format);
+            *failed = true;
+            return;
         }
 
         auto explode = EXPLODERS.at(original_format);
@@ -275,6 +505,12 @@ void Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
             compress(dest_ptr, r, g, b, a);
         }
     });
+
+    if(*failed) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 
@@ -313,27 +549,24 @@ void Texture::set_source(const Path& source) {
 }
 
 void Texture::free() {
-    data_.clear();
-    data_.shrink_to_fit();
-
     /* We don't mark data dirty here, we don't want
      * anything to be updated in GL, we're just freeing
      * the RAM */
+
+    delete [] data_;
+    data_ = nullptr;
+    data_size_ = 0;
 }
 
 bool Texture::has_data() const {
-    return !data_.empty();
+    return bool(data_);
 }
 
 void Texture::flush() {
-    if(cort::within_coroutine()) {
-        renderer_->window_->idle->add_once([this]() {
-            renderer_->prepare_texture(this);
-        });
-        cr_yield();
-    } else {
+    /* If in a coroutine: yield, run this code in the main thread, then resume */
+    cr_run_main([this]() {
         renderer_->prepare_texture(this);
-    }
+    });
 }
 
 void Texture::mutate_data(Texture::MutationFunc func) {
@@ -348,6 +581,9 @@ bool Texture::is_compressed() const {
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
     case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+    case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
         return true;
     default:
         return false;
@@ -358,12 +594,27 @@ uint8_t Texture::channels() const {
     return texture_format_channels(format_);
 }
 
-const Texture::Data &Texture::data() const {
+const uint8_t *Texture::data() const {
     return data_;
 }
 
+uint32_t Texture::data_size() const {
+    return data_size_;
+}
+
 void Texture::set_data(const uint8_t* data, std::size_t size) {
-    data_.assign(data, data + size);
+    resize_data(size);
+    std::copy(data, data + size, data_);
+}
+
+uint8_t* Texture::_stash_paletted_data() {
+    if(paletted_data_) {
+        delete [] paletted_data_;
+    }
+
+    paletted_data_ = new uint8_t[data_size()];
+    std::copy(data_, data_ + data_size(), paletted_data_);
+    return paletted_data_;
 }
 
 void Texture::save_to_file(const Path& filename) {
@@ -464,13 +715,37 @@ void Texture::set_mipmap_generation(MipmapGenerate type) {
     params_dirty_ = true;
 }
 
-void Texture::set_data(const Texture::Data& d) {
-    data_ = d;
-    data_dirty_ = true;
+std::vector<uint8_t> Texture::data_copy() const {
+    std::vector<uint8_t> result(data_size());
+    std::copy(data_, data_ + data_size_, result.begin());
+    return result;
+}
+
+void Texture::set_data(const std::vector<uint8_t> &d) {
+    set_data(&d[0], d.size());
 }
 
 void Texture::_set_has_mipmaps(bool v) {
     has_mipmaps_ = v;
+}
+
+void Texture::resize_data(uint32_t byte_size) {
+    if(byte_size == data_size_) {
+        return;
+    }
+
+    // FIXME: Do we bother if byte_size is lower, and
+    // close to data_size_? Optimisation to avoid realloc?
+
+    if(data_) {
+        delete [] data_;
+        data_ = nullptr;
+    }
+
+    data_ = new uint8_t[byte_size];
+    std::memset(data_, 0, byte_size);
+    data_size_ = byte_size;
+    data_dirty_ = true;
 }
 
 bool Texture::init() {
@@ -521,6 +796,20 @@ std::size_t texture_format_stride(TextureFormat format) {
     default:
         assert(0 && "Not implemented");
         return 0;
+    }
+}
+
+std::vector<uint8_t> Pixel::to_format(TextureFormat fmt) {
+    switch(fmt) {
+    case TEXTURE_FORMAT_R_1UB_8:
+        return {rgba[0]};
+    case TEXTURE_FORMAT_RGB_3UB_888:
+        return {rgba[0], rgba[1], rgba[2]};
+    case TEXTURE_FORMAT_RGBA_4UB_8888:
+        return {rgba[0], rgba[1], rgba[2], rgba[2]};
+    default:
+        S_WARN("Unsupported operation to convert pixel to format: {0}", fmt);
+        return std::vector<uint8_t>();
     }
 }
 

@@ -34,6 +34,7 @@ public:
 
 class unicode {
 public:
+    static const size_t npos = -1;
     typedef ustring::size_type size_type;
     typedef ustring::value_type value_type;
 
@@ -75,6 +76,8 @@ public:
     unicode lstrip() const;
     unicode rstrip() const;
 
+    unicode substr(std::size_t pos = 0, std::size_t len = npos) const;
+
     unicode strip(const unicode& things) const;
     unicode lstrip(const unicode& things) const;
     unicode rstrip(const unicode& things) const;
@@ -90,6 +93,7 @@ public:
     bool contains(const wchar_t ch) const;
 
     void push_back(const wchar_t c);
+    void pop_back();
 
     unicode slice(int32_t beg, int32_t end) const;
     unicode slice(int32_t beg, void* null) const;
@@ -122,6 +126,10 @@ public:
         //Automatically convert UTF-8 strings to unicode
         *this = unicode(rhs);
         return *this;
+    }
+
+    std::size_t find(const char16_t c) const {
+        return string_.find(c);
     }
 
     std::size_t find(const unicode& what) const {

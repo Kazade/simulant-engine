@@ -157,7 +157,6 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
 void Actor::update(float dt) {
     StageNode::update(dt);
 
-    update_source(dt);
     if(animation_state_) {
         animation_state_->update(dt);
     }
@@ -212,15 +211,15 @@ MeshID Actor::mesh_id(DetailLevel detail_level) const {
     return (mesh) ? mesh->id() : MeshID(0);
 }
 
-MeshPtr Actor::best_mesh(DetailLevel detail_level) const {
+const MeshPtr &Actor::best_mesh(DetailLevel detail_level) const {
     return find_mesh(detail_level);
 }
 
-MeshPtr Actor::base_mesh() const {
+const MeshPtr& Actor::base_mesh() const {
     return mesh(DETAIL_LEVEL_NEAREST);
 }
 
-MeshPtr Actor::mesh(DetailLevel detail_level) const {
+const MeshPtr& Actor::mesh(DetailLevel detail_level) const {
     return meshes_[detail_level];
 }
 
@@ -230,7 +229,7 @@ bool Actor::has_any_mesh() const {
 
 bool Actor::has_mesh(DetailLevel detail_level) const {
     /* Returns True if the Actor has a mesh at this detail level */
-    return bool(meshes_[detail_level]);
+    return bool(meshes_[detail_level].get());
 }
 
 void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
@@ -271,7 +270,10 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();
-        new_renderable.index_element_count = new_renderable.index_data->count();
+        new_renderable.index_element_count = (new_renderable.index_data) ? new_renderable.index_data->count() : 0;
+        new_renderable.vertex_ranges = submesh->vertex_ranges();
+        new_renderable.vertex_range_count = submesh->vertex_range_count();
+        new_renderable.index_element_count = (new_renderable.index_data) ? new_renderable.index_data->count() : 0;
         new_renderable.material = submesh->material_at_slot(material_slot_, true).get();
         new_renderable.centre = transformed_aabb().centre();
 

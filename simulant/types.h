@@ -41,6 +41,7 @@
 #include "math/aabb.h"
 #include "math/plane.h"
 #include "math/ray.h"
+#include "math/operators.h"
 
 #include "generic/object_manager.h"
 #include "generic/unique_id.h"
@@ -50,6 +51,35 @@
 #include "material_constants.h"
 
 namespace smlt {
+
+class Seconds {
+public:
+    Seconds():
+        value_(0) {}
+
+    explicit Seconds(float t):
+        value_(t) {}
+
+    Seconds operator+(const Seconds& rhs) const {
+        return Seconds(value_ + rhs.value_);
+    }
+
+    Seconds& operator+=(const Seconds& rhs) {
+        value_ += rhs.value_;
+        return *this;
+    }
+
+    bool operator>(float rhs) const {
+        return value_ > rhs;
+    }
+
+    float to_float() const {
+        return value_;
+    }
+
+private:
+    float value_;
+};
 
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,
@@ -352,15 +382,7 @@ const RenderPriority RENDER_PRIORITY_FOREGROUND = 100;
 const RenderPriority RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 250;
 const RenderPriority RENDER_PRIORITY_MAX = RENDER_PRIORITY_ABSOLUTE_FOREGROUND + 1;
 
-const std::vector<RenderPriority> RENDER_PRIORITIES = {
-    RENDER_PRIORITY_ABSOLUTE_BACKGROUND,
-    RENDER_PRIORITY_BACKGROUND,
-    RENDER_PRIORITY_DISTANT,
-    RENDER_PRIORITY_MAIN,
-    RENDER_PRIORITY_NEAR,
-    RENDER_PRIORITY_FOREGROUND,
-    RENDER_PRIORITY_ABSOLUTE_FOREGROUND
-};
+extern const std::vector<RenderPriority> RENDER_PRIORITIES;
 
 enum ShaderType {
     SHADER_TYPE_VERTEX,
@@ -373,7 +395,7 @@ enum VirtualGamepadConfig {
     VIRTUAL_GAMEPAD_CONFIG_HAT_AND_BUTTON
 };
 
-const std::string DEFAULT_MATERIAL_SCHEME = "default";
+#define DEFAULT_MATERIAL_SCHEME "default"
 
 class Mesh;
 typedef std::weak_ptr<Mesh> MeshRef;
@@ -393,6 +415,9 @@ typedef std::shared_ptr<Texture> TexturePtr;
 class ParticleScript;
 typedef std::shared_ptr<ParticleScript> ParticleScriptPtr;
 
+class Binary;
+typedef std::shared_ptr<Binary> BinaryPtr;
+
 class Sound;
 typedef std::weak_ptr<Sound> SoundRef;
 typedef std::shared_ptr<Sound> SoundPtr;
@@ -406,6 +431,9 @@ typedef default_init_ptr<Actor> ActorPtr;
 
 class Geom;
 typedef default_init_ptr<Geom> GeomPtr;
+
+class MeshInstancer;
+typedef default_init_ptr<MeshInstancer> MeshInstancerPtr;
 
 class ParticleSystem;
 typedef default_init_ptr<ParticleSystem> ParticleSystemPtr;
@@ -437,6 +465,7 @@ class Widget;
 class ProgressBar;
 class Button;
 class Label;
+class TextEntry;
 
 typedef default_init_ptr<Widget> WidgetPtr;
 
@@ -461,19 +490,19 @@ typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 class Skybox;
 typedef default_init_ptr<Skybox> SkyboxPtr;
 
-typedef uint32_t IdleConnectionID;
-
 typedef UniqueID<MeshPtr> MeshID;
 typedef UniqueID<TexturePtr> TextureID;
 typedef UniqueID<FontPtr> FontID;
 typedef UniqueID<CameraPtr> CameraID;
 typedef UniqueID<MaterialPtr> MaterialID;
 typedef UniqueID<ParticleScriptPtr> ParticleScriptID;
+typedef UniqueID<BinaryPtr> BinaryID;
 
 typedef UniqueID<LightPtr> LightID;
 typedef UniqueID<StagePtr> StageID;
 typedef UniqueID<ActorPtr> ActorID;
 typedef UniqueID<GeomPtr> GeomID;
+typedef UniqueID<MeshInstancerPtr> MeshInstancerID;
 typedef UniqueID<SoundPtr> SoundID;
 typedef UniqueID<SpritePtr> SpriteID;
 typedef UniqueID<BackgroundPtr> BackgroundID;

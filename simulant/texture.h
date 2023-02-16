@@ -52,6 +52,11 @@ enum TextureFilter {
     TEXTURE_FILTER_TRILINEAR
 };
 
+enum BlurType {
+    BLUR_TYPE_SIMPLE,
+    BLUR_TYPE_GAUSSIAN,
+};
+
 /*
  * Simulant intentionally only supports a handful of formats for portability.
  *
@@ -68,6 +73,8 @@ enum TextureFilter {
  * in which case they are omitted.
  */
 enum TextureFormat {
+    TEXTURE_FORMAT_INVALID = 0,
+
     // Standard formats
     TEXTURE_FORMAT_R_1UB_8,
     TEXTURE_FORMAT_RGB_3UB_888,
@@ -83,6 +90,14 @@ enum TextureFormat {
     TEXTURE_FORMAT_ARGB_1US_4444_TWID,
     TEXTURE_FORMAT_ARGB_1US_1555_TWID,
 
+    // Paletted formats
+    TEXTURE_FORMAT_RGB8_PALETTED4,
+    TEXTURE_FORMAT_RGBA8_PALETTED4,
+    TEXTURE_FORMAT_RGB565_PALETTED4,
+    TEXTURE_FORMAT_RGB8_PALETTED8,
+    TEXTURE_FORMAT_RGBA8_PALETTED8,
+    TEXTURE_FORMAT_RGB565_PALETTED8,
+
     // Dreamcast PVR VQ compressed
     TEXTURE_FORMAT_RGB_1US_565_VQ_TWID,
     TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID,
@@ -91,9 +106,7 @@ enum TextureFormat {
     // PVR VQ Compressed but with mipmap data included
     TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP,
     TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP,
-    TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP,
-
-    TEXTURE_FORMAT_INVALID
+    TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP
 };
 
 std::size_t texture_format_stride(TextureFormat format);
@@ -116,7 +129,21 @@ enum TextureChannel {
     TEXTURE_CHANNEL_BLUE,
     TEXTURE_CHANNEL_ALPHA,
     TEXTURE_CHANNEL_ZERO,
-    TEXTURE_CHANNEL_ONE
+    TEXTURE_CHANNEL_ONE,
+    TEXTURE_CHANNEL_INVERSE_RED,
+};
+
+struct Pixel {
+    Pixel() = default;
+    Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a):
+        rgba{r, g, b, a} {}
+
+    uint8_t rgba[4];
+
+    /** Will attempt to convert to the specified format, will
+     *  return empty data if this isn't possible. Return size
+     *  will depend on the size of the texture format */
+    std::vector<uint8_t> to_format(TextureFormat fmt);
 };
 
 typedef std::array<TextureChannel, 4> TextureChannelSet;
@@ -142,12 +169,41 @@ public:
     typedef std::vector<uint8_t> Data;
 
     Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
+    ~Texture();
+
 
     TextureFormat format() const;
     void set_format(TextureFormat format);
 
+    /** Returns true if this is a paletted texture format */
+    bool is_paletted_format() const;
+
+    /** Returns the size in bytes of the palette for paletted
+     *  textures. Returns 0 if the format is not paletted */
+    uint32_t palette_size() const;
+
+    /**
+     *  Changes the current palette. The palette must be sizes
+     *  correctly based on the format. This will return false
+     *  if a previous palette and data has not been supplied
+     *  through set_data() etc.
+     *
+     *  NOT YET IMPLEMENTED! PATCHES WELCOME!
+     */
+    bool update_palette(const uint8_t* palette);
+
+    /* Applies a blur to the texture, this must be called before
+     * a texture is uploaded to the GPU. This function will return false
+     * if the blur type is unimplemented (patches welcome!) or the
+     * texture data is empty */
+    bool blur(BlurType blur_type, std::size_t radius);
+
+    /* Returns the byte colour data for the specified location. Will return
+     * nothing if the texture data is empty, or it's a compressed texture */
+    smlt::optional<Pixel> pixel(std::size_t x, std::size_t y);
+
     /** Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
-    void convert(
+    bool convert(
         TextureFormat new_format,
         const TextureChannelSet& channels=Texture::DEFAULT_SOURCE_CHANNELS
     );
@@ -193,16 +249,28 @@ public:
     void set_auto_upload(bool v=true);
     void set_mipmap_generation(MipmapGenerate type);
 
-    const Texture::Data& data() const;
+    /** Return a copy of the internal data array */
+    std::vector<uint8_t> data_copy() const;
+
+    /** Returns the current in-ram data. For paletted texture the data
+     *  will be prefixed with the palette. */
+    const uint8_t* data() const;
+
+    /** Returns the size of the currently allocated data
+     *  buffer, this will be zero if the data only
+     *  exists in vram. For paletted texture this will be the size of the data plus
+     *  the size of the palette. */
+    uint32_t data_size() const;
 
     /** The required size that data() should be to hold a texture in this format with these dimensions.
       * For non-compressed formats this is usually the width * height * stride. For compressed formats
-      * this can vary, and will include any space for things like codebooks.
+      * this can vary, and will include any space for things like codebooks. For paletted textures
+      * this will return the size of the index data + plus the size of the palette
     */
     static std::size_t required_data_size(TextureFormat fmt, uint16_t width, uint16_t height);
 
     void set_data(const uint8_t* data, std::size_t size);
-    void set_data(const Texture::Data& data);
+    void set_data(const std::vector<uint8_t>& data);
 
     /** Clear the data buffer */
     void free();
@@ -276,6 +344,9 @@ public:
     /** INTERNAL: returns true if the filters are dirty */
     bool _params_dirty() const;
     void _set_has_mipmaps(bool v);
+
+    /** INTERNAL: copy the current data to the paletted data array */
+    uint8_t* _stash_paletted_data();
 private:
     Renderer* renderer_ = nullptr;
 
@@ -287,8 +358,23 @@ private:
     Path source_;
 
     bool auto_upload_ = true; /* If true, the texture is uploaded by the renderer asap */
+
+    void resize_data(uint32_t byte_size);
+
     bool data_dirty_ = true;
-    Texture::Data data_;
+    uint8_t* data_ = nullptr;
+    uint32_t data_size_ = 0;
+
+    /* This is used to store the palette, followed by the index data if:
+     * - The format is a paletted format
+     * - OES_compressed_paletted_texture is unsupported.
+     *
+     * If OES_compressed_paletted_texture is supported then paletted data is
+     * uploaded directly. If it is not, then we store the paletted_data here
+     * and keep it resident in RAM so we can update the main data if the palette
+     * changes */
+    uint8_t* paletted_data_ = nullptr;
+
     TextureFreeData free_data_mode_ = TEXTURE_FREE_DATA_AFTER_UPLOAD;
 
     MipmapGenerate mipmap_generation_ = MIPMAP_GENERATE_COMPLETE;

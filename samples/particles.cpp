@@ -6,8 +6,8 @@ public:
     MainScene(smlt::Window* window):
         smlt::Scene<MainScene>(window) {}
 
-    void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+    void load() override {
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
@@ -82,8 +82,14 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Particles";
     config.fullscreen = false;
-    config.width = 1024;
-    config.height = 768;
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
+    config.width = 1280;
+    config.height = 960;
+#endif
 
     App app(config);
     return app.run(argc, argv);

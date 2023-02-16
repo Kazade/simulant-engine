@@ -25,6 +25,7 @@
 #include "../nodes/ui/label.h"
 #include "../platform.h"
 #include "../application.h"
+#include "../time_keeper.h"
 
 #if defined(__WIN32__)
     #include <windows.h>
@@ -40,18 +41,27 @@ StatsPanel::StatsPanel(Window *window):
 }
 
 bool StatsPanel::init() {
-    stage_ = window_->new_stage(smlt::PARTITIONER_NULL);
+    if(!Panel::init()) {
+        return false;
+    }
+
     ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
     pipeline_ = window_->compositor->render(
-        stage_, ui_camera_
+        stage_.get(), ui_camera_
     )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     pipeline_->set_name("stats_pipeline");
     pipeline_->deactivate();
 
+    /* If the pipeline is destroyed, make sure
+     * we don't keep a reference around */
+    pipeline_->signal_destroyed().connect([&]() {
+        pipeline_ = nullptr;
+    });
+
     auto overlay = stage_;
 
     auto hw = 32;
-    float label_width = window_->width() * 0.5f;
+    auto label_width = ui::Px(window_->width() * 0.5f);
 
     const float diff = 32;
     float vheight = window_->height() - diff;
@@ -86,7 +96,6 @@ bool StatsPanel::init() {
 
     stage_node_pool_size_ = overlay->ui->new_widget_as_label("", label_width);
     stage_node_pool_size_->move_to(hw, vheight);
-    vheight -= diff;
 
     graph_material_ = stage_->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
@@ -98,7 +107,7 @@ bool StatsPanel::init() {
     low_mem_ = overlay->ui->new_widget_as_label("0M");
     high_mem_ = overlay->ui->new_widget_as_label("0M");
 
-    frame_started_ = window_->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
+    frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 
     return true;
 }
@@ -111,10 +120,7 @@ void StatsPanel::clean_up() {
         pipeline_ = nullptr;
     }
 
-    if(stage_) {
-        stage_->destroy();
-        stage_ = nullptr;
-    }
+    Panel::clean_up();
 
     fps_ = nullptr;
     frame_time_ = nullptr;
@@ -136,11 +142,13 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
     return bytes_to_megabytes(get_app()->ram_usage_in_bytes());
 }
 
-#define RAM_SAMPLES 25
-
+#ifndef __DREAMCAST__
 static unsigned int round(unsigned int value, unsigned int multiple){
     return ((value-1u) & ~(multiple-1u)) + multiple;
 }
+#endif
+
+#define RAM_SAMPLES 25
 
 void StatsPanel::rebuild_ram_graph() {
     smlt::Colour colour = smlt::Colour::BLUE;
@@ -170,7 +178,7 @@ void StatsPanel::rebuild_ram_graph() {
         return;
     }
 
-    auto submesh = ram_graph_mesh_->new_submesh_with_material("ram-usage", graph_material_, MESH_ARRANGEMENT_QUADS);
+    auto submesh = ram_graph_mesh_->new_submesh("ram-usage", graph_material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
     auto& vdata = ram_graph_mesh_->vertex_data;
     auto& idata = submesh->index_data;
 
@@ -257,13 +265,13 @@ void StatsPanel::rebuild_ram_graph() {
 }
 
 void StatsPanel::update() {
-    last_update_ += window_->time_keeper->delta_time();
+    last_update_ += get_app()->time_keeper->delta_time();
 
     if(first_update_ || last_update_ >= 1.0f) {
         auto mem_usage = get_memory_usage_in_megabytes();
         auto tot_mem = bytes_to_megabytes(get_platform()->total_ram_in_bytes());
         auto vram_usage = bytes_to_megabytes(get_platform()->available_vram_in_bytes());
-        auto actors_rendered = window_->stats->subactors_rendered();
+        auto actors_rendered = get_app()->stats->subactors_rendered();
 
         free_ram_history_.push_back(mem_usage);
         if(free_ram_history_.size() > RAM_SAMPLES) {
@@ -272,13 +280,13 @@ void StatsPanel::update() {
 
         rebuild_ram_graph();
 
-        fps_->set_text(_F("FPS: {0}").format(window_->stats->frames_per_second()));
-        frame_time_->set_text(_F("Frame Time: {0}ms").format(window_->stats->frame_time()));
+        fps_->set_text(_F("FPS: {0}").format(get_app()->stats->frames_per_second()));
+        frame_time_->set_text(_F("Frame Time: {0}ms").format(get_app()->stats->frame_time()));
         ram_usage_->set_text(_F("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
         vram_usage_->set_text(_F("VRAM Free: {0} MB").format(vram_usage));
         actors_rendered_->set_text(_F("Renderables Visible: {0}").format(actors_rendered));
-        polygons_rendered_->set_text(_F("Polygons Rendered: {0}").format(window_->stats->polygons_rendered()));
-        stage_node_pool_size_->set_text(_F("Node pool size: {0}kb").format(window_->stage_node_pool_capacity_in_bytes() / 1024));
+        polygons_rendered_->set_text(_F("Polygons Rendered: {0}").format(get_app()->stats->polygons_rendered()));
+        stage_node_pool_size_->set_text(_F("Node pool size: {0}kb").format(get_app()->stage_node_pool_capacity_in_bytes() / 1024));
 
         last_update_ = 0.0f;
         first_update_ = false;

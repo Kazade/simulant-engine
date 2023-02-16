@@ -32,8 +32,8 @@ class VBO;
 
 struct GPUBuffer {
     /* Slot into the VBO */
-    VBO* vertex_vbo;
-    VBO* index_vbo;
+    VBO* vertex_vbo = nullptr;
+    VBO* index_vbo = nullptr;
 
     VBOSlot vertex_vbo_slot;
     VBOSlot index_vbo_slot;

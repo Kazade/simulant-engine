@@ -2,8 +2,19 @@
 #include "input_manager.h"
 #include "input_state.h"
 #include "../macros.h"
+#include "keyboard_mappings.h"
+#include "../application.h"
+#include "../window.h"
+#include "../pipeline.h"
+#include "../nodes/ui/keyboard.h"
+#include "../stage.h"
+#include "../scenes/scene_manager.h"
+#include "../compositor.h"
+#include "../nodes/ui/ui_manager.h"
 
 namespace smlt {
+
+const static float DEADZONE = 0.2f;
 
 InputManager::InputManager(InputState *controller):
     controller_(controller) {
@@ -19,6 +30,7 @@ InputManager::InputManager(InputState *controller):
     auto horizontal_js = new_axis("Horizontal");
     horizontal_js->set_type(AXIS_TYPE_JOYSTICK_AXIS);
     horizontal_js->set_joystick_axis(JOYSTICK_AXIS_X);
+    horizontal_js->set_dead_zone(DEADZONE);
 
     auto vertical = new_axis("Vertical");
     vertical->set_positive_keyboard_key(KEYBOARD_CODE_W);
@@ -31,6 +43,7 @@ InputManager::InputManager(InputState *controller):
     auto vertical_js = new_axis("Vertical");
     vertical_js->set_type(AXIS_TYPE_JOYSTICK_AXIS);
     vertical_js->set_joystick_axis(JOYSTICK_AXIS_Y);
+    vertical_js->set_dead_zone(DEADZONE);
 
     auto fire1 = new_axis("Fire1");
     fire1->set_positive_keyboard_key(KEYBOARD_CODE_LCTRL);
@@ -39,12 +52,18 @@ InputManager::InputManager(InputState *controller):
     fire1_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
     fire1_js->set_positive_joystick_button(JOYSTICK_BUTTON_A);
 
+    auto fire1_ms = new_axis("Fire1");
+    fire1_ms->set_positive_mouse_button(MouseButtonID(0));
+
     auto fire2 = new_axis("Fire2");
-    fire2->set_positive_keyboard_key(KEYBOARD_CODE_LALT);
+    fire2->set_positive_keyboard_key(KEYBOARD_CODE_RALT);
 
     auto fire2_js = new_axis("Fire2");
     fire2_js->set_type(AXIS_TYPE_JOYSTICK_BUTTON);
     fire2_js->set_positive_joystick_button(JOYSTICK_BUTTON_B);
+
+    auto fire2_ms = new_axis("Fire2");
+    fire2_ms->set_positive_mouse_button(MouseButtonID(1));
 
     auto start = new_axis("Start");
     start->set_positive_keyboard_key(KEYBOARD_CODE_RETURN);
@@ -62,57 +81,66 @@ InputManager::InputManager(InputState *controller):
     mouse_y->set_mouse_axis(MOUSE_AXIS_1);
 }
 
+InputManager::~InputManager() {
+    scene_deactivated_conn_.disconnect();
+}
+
 InputAxis* InputManager::new_axis(const std::string& name) {
     auto axis = InputAxis::create(name);
-    axises_.push_back(axis);
+    axises_.insert(std::make_pair(name, axis));
     return axis.get();
 }
 
-AxisList InputManager::axises(const std::string& name) const {
+AxisList InputManager::axises(const std::string& name) {
     AxisList result;
-    for(auto& axis: axises_) {
-        if(axis->name() == name) {
-            result.push_back(axis.get());
-        }
+
+    auto it1 = axises_.lower_bound(name);
+    auto it2 = axises_.upper_bound(name);
+
+    while(it1 != it2) {
+        result.push_back(it1->second.get());
+        ++it1;
     }
+
     return result;
 }
 
 void InputManager::each_axis(EachAxisCallback callback) {
     for(auto& axis: axises_) {
-        callback(axis.get());
+        callback(axis.second.get());
     }
 }
 
 void InputManager::destroy_axises(const std::string& name) {
-    axises_.erase(
-        std::remove_if(axises_.begin(), axises_.end(),
-            [&name](InputAxis::ptr axis) -> bool {
-                return axis->name() == name;
-            }
-        ), axises_.end()
-    );
+    axises_.erase(name);
 }
 
 void InputManager::destroy_axis(InputAxis* axis) {
-    axises_.erase(
-        std::remove_if(axises_.begin(), axises_.end(),
-            [axis](InputAxis::ptr ax) -> bool {
-                return ax.get() == axis;
-            }
-        ), axises_.end()
-    );
+    for(auto it = axises_.begin(), last = axises_.end(); it != last; ) {
+        if(it->second.get() == axis) {
+            it = axises_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 std::size_t InputManager::axis_count(const std::string &name) const {
-    return std::count_if(axises_.begin(), axises_.end(), [&name](std::shared_ptr<InputAxis> axis) -> bool {
-        return axis->name() == name;
-    });
+    return axises_.count(name);
 }
 
-float sgn(float v) {
-    if(v > 0) { return 1.0f; }
-    else { return -1.0f; }
+inline static float sgn(float v) {
+    return (v > 0) ? 1.0f : -1.0f;
+}
+
+void InputManager::_process_mouse(int8_t id, int8_t pbtn, int8_t nbtn, bool *positive_pressed, bool *negative_pressed) {
+    if(pbtn != -1 && controller_->mouse_button_state(id, pbtn)) {
+        *positive_pressed = true;
+    }
+
+    if(nbtn != -1 && controller_->mouse_button_state(id, nbtn)) {
+        *negative_pressed = true;
+    }
 }
 
 bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
@@ -124,26 +152,16 @@ bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     bool positive_pressed = false;
     bool negative_pressed = false;
 
-    auto process_mouse = [this, pbtn, nbtn, &positive_pressed, &negative_pressed](MouseID id) {
-        if(pbtn != -1 && controller_->mouse_button_state(id, pbtn)) {
-            positive_pressed = true;
-        }
-
-        if(nbtn != -1 && controller_->mouse_button_state(id, nbtn)) {
-            negative_pressed = true;
-        }
-    };
-
     // If the user requested input from all mice, do that
     if(axis->mouse_source() == ALL_MICE) {
         for(std::size_t i = 0; i < controller_->mouse_count(); ++i) {
             MouseID id = (MouseID) i;
-            process_mouse(id);
+            _process_mouse(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
         }
     } else {
         // Otherwise just check the one they asked for
         MouseID id = axis->mouse_source();
-        process_mouse(id);
+        _process_mouse(id, pbtn, nbtn, &positive_pressed, &negative_pressed);
     }
 
     // If either positive or negative were pressed, adjust the value
@@ -166,6 +184,20 @@ bool InputManager::_update_mouse_button_axis(InputAxis* axis, float dt) {
     return negative_pressed || positive_pressed;
 }
 
+void InputManager::_process_game_controller(GameController* controller, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed) {
+    if(!controller) {
+        return;
+    }
+
+    if(pbtn != -1 && controller->button_state(pbtn)) {
+        *positive_pressed = true;
+    }
+
+    if(nbtn != -1 && controller->button_state(nbtn)) {
+        *negative_pressed = true;
+    }
+};
+
 bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     float new_value = axis->value_;
 
@@ -175,26 +207,21 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     bool positive_pressed = false;
     bool negative_pressed = false;
 
-    auto process_joystick = [this, pbtn, nbtn, &positive_pressed, &negative_pressed](JoystickID id) {
-        if(pbtn != -1 && controller_->joystick_button_state(id, pbtn)) {
-            positive_pressed = true;
-        }
-
-        if(nbtn != -1 && controller_->joystick_button_state(id, nbtn)) {
-            negative_pressed = true;
-        }
-    };
-
-    // If the user requested input from all mice, do that
-    if(axis->joystick_source() == ALL_JOYSTICKS) {
-        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
-            JoystickID id = (JoystickID) i;
-            process_joystick(id);
+    // If the user requested input from all game controllers, do that
+    if(axis->joystick_source() == ALL_GAME_CONTROLLERS) {
+        for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
+            auto controller = state->game_controller(GameControllerIndex(i));
+            if(controller) {
+                _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
+            }
         }
     } else {
         // Otherwise just check the one they asked for
-        JoystickID id = axis->joystick_source();
-        process_joystick(id);
+        GameControllerIndex id = axis->joystick_source();
+        auto controller = state->game_controller(id);
+        if(controller) {
+            _process_game_controller(controller, pbtn, nbtn, &positive_pressed, &negative_pressed);
+        }
     }
 
     // If either positive or negative were pressed, adjust the value
@@ -215,6 +242,29 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     axis->value_ = new_value;
 
     return negative_pressed || positive_pressed;
+}
+
+void InputManager::_process_keyboard(int8_t id, KeyboardCode pkey, KeyboardCode nkey, bool *positive_pressed, bool *negative_pressed) {
+    if(pkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
+        *positive_pressed = true;
+    }
+
+    if(nkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, nkey)) {
+        *negative_pressed = true;
+    }
+}
+
+void InputManager::on_scene_deactivated(std::string, SceneBase*) {
+    if(keyboard_) {
+        keyboard_->destroy();
+        keyboard_pipeline_->destroy();
+        keyboard_stage_->destroy();
+
+        keyboard_stage_ = nullptr;
+        keyboard_ = nullptr;
+        keyboard_camera_ = nullptr;
+        keyboard_pipeline_ = nullptr;
+    }
 }
 
 bool InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
@@ -226,26 +276,16 @@ bool InputManager::_update_keyboard_axis(InputAxis* axis, float dt) {
     bool positive_pressed = false;
     bool negative_pressed = false;
 
-    auto process_keyboard = [this, pkey, nkey, &positive_pressed, &negative_pressed](KeyboardID id) {
-        if(pkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
-            positive_pressed = true;
-        }
-
-        if(nkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, nkey)) {
-            negative_pressed = true;
-        }
-    };
-
     // If the user requested input from all keyboards, do that
     if(axis->keyboard_source() == ALL_KEYBOARDS) {
         for(std::size_t i = 0; i < controller_->keyboard_count(); ++i) {
             KeyboardID id = (KeyboardID) i;
-            process_keyboard(id);
+            _process_keyboard(id, pkey, nkey, &positive_pressed, &negative_pressed);
         }
     } else {
         // Otherwise just check the one they asked for
         KeyboardID id = axis->keyboard_source();
-        process_keyboard(id);
+        _process_keyboard(id, pkey, nkey, &positive_pressed, &negative_pressed);
     }
 
     // If either positive or negative were pressed, adjust the value
@@ -277,13 +317,13 @@ void InputManager::update(float dt) {
         it.second = false;
     }
 
-    for(auto axis: axises_) {
-        const auto& name = axis->name();
+    for(auto& axis: axises_) {
+        const auto& name = axis.first;
 
         bool new_state = false;
+        auto axis_ptr = axis.second.get();
+        auto type = axis_ptr->type();
 
-        auto type = axis->type();
-        auto axis_ptr = axis.get();
         if(type == AXIS_TYPE_KEYBOARD_KEY) {
             new_state |= _update_keyboard_axis(axis_ptr, dt);
         } else if(type == AXIS_TYPE_MOUSE_BUTTON) {
@@ -300,7 +340,7 @@ void InputManager::update(float dt) {
 
         /* We may have already set this axis name once this frame, we only
          * want to set to true, never reset back to false here */
-        axis_states_[name] = axis_states_[name] | new_state;
+        axis_states_[name] = axis_states_[name] || new_state;
     }
 }
 
@@ -335,19 +375,25 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
 
     float new_value = 0.0f;
 
-    auto process_joystick = [this, axis](JoystickID joystick_id) {
-        return controller_->joystick_axis_state(joystick_id, axis->joystick_axis_);
+    auto process_joystick = [this, axis](GameControllerIndex joystick_id) -> float {
+        auto controller = controller_->game_controller(joystick_id);
+        if(!controller) {
+            return 0.0f;
+        }
+
+        return controller->axis_state(axis->joystick_axis_);
     };
 
-    JoystickID joystick_used = axis->joystick_source();
+    GameControllerIndex joystick_used = axis->joystick_source();
 
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
-    if(axis->joystick_source() == ALL_JOYSTICKS) {
-        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
-            auto this_value = process_joystick((JoystickID) i);
-            if(std::abs(this_value) > std::abs(new_value)) {
+    if(axis->joystick_source() == ALL_GAME_CONTROLLERS) {
+        for(uint8_t i = 0; i < controller_->game_controller_count(); ++i) {
+            GameControllerIndex index(i);
+            auto this_value = process_joystick(index);
+            if(std::abs(this_value) >= std::abs(new_value)) {
                 new_value = this_value;
-                joystick_used = i;
+                joystick_used = index;
             }
         }
     } else {
@@ -355,14 +401,29 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
     }
 
     axis->value_ = new_value;
+    axis->linked_value_ = 0.0f;
 
     /* FIXME: Code some API to find the "linked_axis" for an axis and use
      * that if there is one. This currently will only work on the first joystick */
-    auto linked_axis = controller_->linked_axis(joystick_used, axis->joystick_axis_);
-    if(linked_axis != JOYSTICK_AXIS_INVALID) {
-        axis->linked_value_ = controller_->joystick_axis_state(joystick_used, linked_axis);
-    } else {
-        axis->linked_value_ = 0;
+    auto linked_axis = controller_->linked_axis(GameControllerID(), axis->joystick_axis_);    
+    if(linked_axis != JOYSTICK_AXIS_INVALID) {        
+        if(joystick_used == ALL_GAME_CONTROLLERS) {
+            /* Use the greatest value for the linked axis */
+            for(uint8_t i = 0; i < controller_->game_controller_count(); ++i) {
+                auto controller = controller_->game_controller(joystick_used);
+                if(controller) {
+                    auto value = controller->axis_state(linked_axis);
+                    if(std::abs(value) >= std::abs(axis->linked_value_)) {
+                        axis->linked_value_ = value;
+                    }
+                }
+            }
+        } else {
+            auto controller = controller_->game_controller(joystick_used);
+            if(controller) {
+                axis->linked_value_ = controller->axis_state(linked_axis);
+            }
+        }
     }
 
     /* Anything in the deadzone returns 0.0f exactly */
@@ -374,8 +435,13 @@ bool InputManager::_update_joystick_axis_axis(InputAxis* axis, float dt) {
 bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     float new_value = 0.0f;
 
-    auto process_joystick = [this, axis](JoystickID joystick_id) {
-        auto state = controller_->joystick_hat_state(joystick_id, axis->joystick_hat_);
+    auto process_joystick = [this, axis](GameControllerIndex joystick_id) -> float {
+        auto controller = controller_->game_controller(joystick_id);
+        if(!controller) {
+            return 0.0f;
+        }
+
+        auto state = controller->hat_state(axis->joystick_hat_);
 
         if(axis->joystick_hat_axis_ == JOYSTICK_HAT_AXIS_X) {
             switch(state) {
@@ -405,9 +471,9 @@ bool InputManager::_update_joystick_hat_axis(InputAxis* axis, float dt) {
     };
 
     // If the source is *all* joysticks, store the strongest axis (whether positive or negative)
-    if(axis->joystick_source() == ALL_JOYSTICKS) {
-        for(std::size_t i = 0; i < controller_->joystick_count(); ++i) {
-            auto this_value = process_joystick((JoystickID) i);
+    if(axis->joystick_source() == ALL_GAME_CONTROLLERS) {
+        for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
+            auto this_value = process_joystick(GameControllerIndex(i));
             if(std::abs(this_value) > std::abs(new_value)) {
                 new_value = this_value;
             }
@@ -442,13 +508,19 @@ int8_t InputManager::axis_value_hard(const std::string& name) const {
 
 float InputManager::axis_value(const std::string& name) const {
     auto f = 0.0f;
-    for(auto axis: axises(name)) {
-        auto v = axis->value();
+
+    auto it1 = axises_.lower_bound(name);
+    auto it2 = axises_.upper_bound(name);
+
+    while(it1 != it2) {
+        auto v = it1->second->value();
 
         // Return the result with the greatest overall value (positive or negative)
         if(std::abs(v) > std::abs(f)) {
             f = v;
         }
+
+        ++it1;
     }
 
     return f;
@@ -472,6 +544,153 @@ bool InputManager::axis_was_released(const std::string& name) const {
     bool b_active = (b != axis_states_.end()) && b->second;
 
     return a_active && !b_active;
+}
+
+bool InputManager::start_text_input(bool force_onscreen) {
+    if(text_input_enabled_) {
+        return false;
+    }
+
+    text_input_enabled_ = true;
+
+    if(!force_onscreen && controller_->keyboard_count()) {
+        /* Attach the keyboard listener */
+        smlt::get_app()->window->register_event_listener(&event_listener_);
+        return false;
+    }
+
+    assert(!keyboard_);
+
+    auto active_scene = smlt::get_app()->scenes->active_scene();
+    if(!active_scene) {
+        S_ERROR("Couldn't activate the on-screen keyboard because there is no active scene");
+        return false;
+    }
+
+    auto& window = smlt::get_app()->window;
+
+    /* Build our camera and make it render with the highest priority */
+    keyboard_stage_ = active_scene->new_stage();
+    keyboard_camera_ = keyboard_stage_->new_camera_for_ui();
+    keyboard_pipeline_ = window->compositor->render(
+        keyboard_stage_, keyboard_camera_
+    );
+    keyboard_pipeline_->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
+    keyboard_pipeline_->activate();
+
+    keyboard_ = keyboard_stage_->ui->new_widget_as_keyboard();
+    keyboard_->set_anchor_point(0.5f, 0.0f);
+    keyboard_->move_to(window->width() / 2, window->height() * 0.1f);
+    keyboard_->set_keyboard_integration_enabled(true);
+
+    /* This forward virtual keypresses to the text input received signal */
+    keyboard_->signal_key_pressed().connect([=](ui::SoftKeyPressedEvent& evt) {
+        TextInputEvent ctrl;
+
+        switch(evt.code) {
+        case KEYBOARD_CODE_BACKSPACE:
+            case KEYBOARD_CODE_DELETE:
+            case KEYBOARD_CODE_RETURN:
+            case KEYBOARD_CODE_SPACE:  // Space is sent as a character, but we send anyway */
+            case KEYBOARD_CODE_LEFT:
+            case KEYBOARD_CODE_RIGHT:
+            case KEYBOARD_CODE_UP:
+            case KEYBOARD_CODE_DOWN:
+            case KEYBOARD_CODE_HOME:
+            case KEYBOARD_CODE_END:
+            ctrl.keyboard_code = evt.code;
+            break;
+        default:
+            break;
+        }
+
+        signal_text_input_received_(unicode(1, evt.chr), ctrl);
+        if(ctrl.cancelled) {
+            evt.cancel();
+        }
+    });
+
+    if(!scene_deactivated_conn_) {
+        /* We need to watch for when scenes deactivate so we can destroy
+         * the onscreen keyboard */
+        scene_deactivated_conn_ = smlt::get_app()->scenes->signal_scene_deactivated().connect(
+            std::bind(
+                &InputManager::on_scene_deactivated,
+                this, std::placeholders::_1, std::placeholders::_2
+            )
+        );
+    }
+
+    return true;
+}
+
+unicode InputManager::stop_text_input() {
+    unicode ret;
+
+    if(!text_input_enabled_) {
+        return ret;
+    }
+
+    text_input_enabled_ = false;
+
+    smlt::get_app()->window->unregister_event_listener(&event_listener_);
+
+    if(keyboard_) {
+        assert(keyboard_stage_);
+
+        ret = keyboard_->text();
+
+        keyboard_stage_->destroy();
+        keyboard_pipeline_->destroy();
+        keyboard_stage_ = nullptr;
+        keyboard_pipeline_ = nullptr;
+        keyboard_ = nullptr;
+    }
+
+    return ret;
+}
+
+/* This watches for keyboard inputs while text input is active - we map keyboard codes to characters
+ * depending on the keyboard layout */
+void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
+    if(self_->onscreen_keyboard_active()) {
+        /* This signal would be triggered by the onscreen keyboard instead */
+        return;
+    }
+
+    char16_t chr = character_for_keyboard_code(
+        KEYBOARD_LAYOUT_UK,
+        evt.keyboard_code,
+        evt.modifiers.lshift || evt.modifiers.rshift
+    );
+
+    if(chr == 0) {
+        switch(evt.keyboard_code) {
+        case KEYBOARD_CODE_BACKSPACE:
+            case KEYBOARD_CODE_DELETE:
+            case KEYBOARD_CODE_RETURN:
+            case KEYBOARD_CODE_SPACE:  // Space is sent as a character, but we send anyway */
+            case KEYBOARD_CODE_LEFT:
+            case KEYBOARD_CODE_RIGHT:
+            case KEYBOARD_CODE_UP:
+            case KEYBOARD_CODE_DOWN:
+            case KEYBOARD_CODE_HOME:
+            case KEYBOARD_CODE_END:
+            break;
+        default:
+            return;
+        }
+    }
+
+    /* FIXME: Do this better. This isn't suitable for true CJK languages at all */
+    TextInputEvent ctrl;
+    ctrl.keyboard_code = evt.keyboard_code;
+    self_->signal_text_input_received_(unicode(1, chr), ctrl);
+
+    if(ctrl.cancelled) {
+        /* FIXME: Tell on-screen keyboard to ignore */
+        S_WARN("FIXME: Signal_text_input_received doesn't handle return values");
+    }
 }
 
 }

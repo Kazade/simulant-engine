@@ -40,8 +40,8 @@ typedef smlt::OSXPlatform ThisPlatform;
 namespace smlt {
 
 Platform* get_platform()  {
-    static ThisPlatform platform;
-    return &platform;
+    static auto platform = std::make_shared<ThisPlatform>();
+    return platform.get();
 }
 
 }

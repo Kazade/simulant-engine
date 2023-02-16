@@ -33,10 +33,10 @@ namespace scenes {
 
 void Loading::load() {
     //Create a stage
-    stage_ = window->new_stage();
+    stage_ = new_stage();
 
     progress_bar_ = stage_->ui->new_widget_as_progress_bar();
-    progress_bar_->resize(window->width() * 0.5f, 8);
+    progress_bar_->resize(ui::Px(window->width() * 0.5f), ui::Px(8));
     progress_bar_->set_anchor_point(0.5f, 0.5f);
     progress_bar_->move_to(window->coordinate_from_normalized(0.5, 0.5));
     progress_bar_->set_pulse_step(progress_bar_->requested_width());
@@ -61,7 +61,7 @@ void Loading::load() {
 void Loading::unload() {
     //Clean up
     pipeline_->deactivate();
-    window->destroy_stage(stage_->id());
+    destroy_stage(stage_->id());
 }
 
 void Loading::activate() {

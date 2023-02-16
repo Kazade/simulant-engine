@@ -6,32 +6,34 @@
 
 namespace smlt {
 
-enum PolygonMode {
+typedef int32_t EnumType;
+
+enum PolygonMode : EnumType {
     POLYGON_MODE_FILL,
     POLYGON_MODE_LINE,
     POLYGON_MODE_POINT
 };
 
-enum ShadeModel {
+enum ShadeModel : EnumType {
     SHADE_MODEL_SMOOTH,
     SHADE_MODEL_FLAT
 };
 
-enum ColourMaterial {
+enum ColourMaterial : EnumType {
     COLOUR_MATERIAL_NONE,
     COLOUR_MATERIAL_AMBIENT,
     COLOUR_MATERIAL_DIFFUSE,
     COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE
 };
 
-enum CullMode {
+enum CullMode : EnumType {
     CULL_MODE_NONE,
     CULL_MODE_BACK_FACE,
     CULL_MODE_FRONT_FACE,
     CULL_MODE_FRONT_AND_BACK_FACE
 };
 
-enum BlendType {
+enum BlendType : EnumType {
     BLEND_NONE,
     BLEND_ADD,
     BLEND_MODULATE,
@@ -40,7 +42,7 @@ enum BlendType {
     BLEND_ONE_ONE_MINUS_ALPHA
 };
 
-enum DepthFunc {
+enum DepthFunc : EnumType {
     DEPTH_FUNC_NEVER,
     DEPTH_FUNC_LESS,
     DEPTH_FUNC_LEQUAL,
@@ -50,14 +52,14 @@ enum DepthFunc {
     DEPTH_FUNC_ALWAYS
 };
 
-enum FogMode {
+enum FogMode : EnumType {
     FOG_MODE_NONE,
     FOG_MODE_LINEAR,
     FOG_MODE_EXP,
     FOG_MODE_EXP2
 };
 
-enum EnabledTexture {
+enum EnabledTexture : EnumType {
     DIFFUSE_MAP_ENABLED = 1,
     LIGHT_MAP_ENABLED = 2,
     NORMAL_MAP_ENABLED = 4,

@@ -12,11 +12,11 @@ class WidgetTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
     }
 
     void tear_down() {
-        window->destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 
@@ -28,8 +28,22 @@ public:
         assert_true(label->height() > label2->height());
     }
 
+    void test_materials_freed() {
+        auto mc = stage_->assets->material_count();
+
+        auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
+        label->set_background_image(stage_->assets->new_texture(16, 16));
+        label->set_foreground_image(stage_->assets->new_texture(16, 16));
+        assert_equal(stage_->assets->material_count(), mc + 2);  /* background, foreground */
+
+        label->destroy();
+        application->run_frame();
+
+        assert_equal(stage_->assets->material_count(), mc); /* Destroyed */
+    }
+
     void test_foreground_and_background_images_differ() {
-        auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
 
         auto t1 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
         auto t2 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
@@ -42,7 +56,7 @@ public:
     }
 
     void test_render_priority() {
-        auto button = stage_->ui->new_widget_as_button("Button", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
         assert_equal(button->render_priority(), RENDER_PRIORITY_MAIN);
         button->set_render_priority(RENDER_PRIORITY_NEAR);
         assert_equal(button->render_priority(), RENDER_PRIORITY_NEAR);
@@ -58,7 +72,10 @@ public:
          * at the bottom left initially
          */
 
-        auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
+        button->set_padding(0);
+        button->set_border_width(0);
+
         assert_equal(button->aabb().min().x, 0); // By default, the bounds should start at zero
         assert_equal(button->aabb().min().y, 0);
         button->set_anchor_point(1.0, 0.0); // Bottom-right
@@ -71,11 +88,11 @@ public:
     }
 
     void test_button_creation() {
-        auto button = stage_->ui->new_widget_as_button("Test", 100, 20);
+        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
 
         assert_equal(_u("Test"), button->text());
-        assert_equal(100, button->requested_width());
-        assert_equal(20, button->requested_height());
+        assert_equal(ui::Px(100), button->requested_width());
+        assert_equal(ui::Px(20), button->requested_height());
     }
 
     void test_focus_chain() {
@@ -101,17 +118,38 @@ private:
     StagePtr stage_;
 };
 
+class TextEntryTests : public smlt::test::SimulantTestCase {
+public:
+    void set_up() {
+        SimulantTestCase::set_up();
+
+        stage_ = scene->new_stage();
+    }
+
+    void tear_down() {
+        scene->destroy_stage(stage_->id());
+        SimulantTestCase::tear_down();
+    }
+
+    void test_set_text() {
+        auto entry = stage_->ui->new_widget_as_text_entry("Hello");
+        assert_equal(entry->text(), "Hello");
+    }
+
+private:
+    StagePtr stage_;
+};
 
 class ProgressBarTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
     }
 
     void tear_down() {
-        window->destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 
@@ -139,11 +177,11 @@ class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = window->new_stage();
+        stage_ = scene->new_stage();
     }
 
     void tear_down() {
-        window->destroy_stage(stage_->id());
+        scene->destroy_stage(stage_->id());
         SimulantTestCase::tear_down();
     }
 
@@ -162,7 +200,7 @@ public:
         auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
         auto image = stage_->ui->new_widget_as_image(texture);
 
-        image->set_source_rect(smlt::ui::UICoord(0, 0), smlt::ui::UICoord(128, 128));
+        image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));
 
         assert_equal(image->width(), 128);
         assert_equal(image->height(), 128);
@@ -172,5 +210,112 @@ private:
     StagePtr stage_;
 
 };
+
+class FrameTests : public smlt::test::SimulantTestCase {
+public:
+    void set_up() {
+        SimulantTestCase::set_up();
+
+        stage_ = scene->new_stage();
+    }
+
+    void tear_down() {
+        scene->destroy_stage(stage_->id());
+        SimulantTestCase::tear_down();
+    }
+
+    void test_add_child() {
+        _setup_frame();
+    }
+
+    void test_remove_child() {
+        smlt::ui::Frame* frame = _setup_frame();
+
+        auto first_child = frame->packed_children().front();
+        assert_equal(frame->packed_children().size(), 2u);
+        frame->unpack_child(first_child);
+        assert_equal(frame->packed_children().size(), 1u);
+
+        auto p = frame->padding();
+        auto b = frame->border_width();
+
+        first_child = frame->packed_children().front();
+        assert_equal(
+            frame->outer_height(),
+            first_child->outer_height() + p.top + p.bottom + (b * 2)
+        );
+    }
+
+    void test_frame_set_layout_direction() {
+        smlt::ui::Frame* frame = _setup_frame();
+        frame->set_layout_direction(smlt::ui::LAYOUT_DIRECTION_LEFT_TO_RIGHT);
+
+        auto p = frame->padding();
+        auto b = frame->border_width();
+
+        smlt::ui::Px expected_width = p.left + p.right + (b * 2);
+        for(auto& child: frame->packed_children()) {
+            expected_width += child->outer_width();
+        }
+
+        expected_width += (frame->space_between() * int(frame->packed_children().size() - 1));
+
+        assert_equal(frame->outer_width(), expected_width);
+    }
+
+    void test_widgets_are_reparented() {
+        smlt::ui::Frame* frame = _setup_frame();
+        auto& children = frame->packed_children();
+
+        for(auto& child: children) {
+            assert_equal(child->parent(), frame);
+        }
+
+        auto child1 = children[0];
+        frame->unpack_child(child1, smlt::ui::CHILD_CLEANUP_RETAIN);
+
+        /* Child parent should be the stage */
+        assert_true(child1->parent_is_stage());
+    }
+
+private:
+    smlt::ui::Frame* _setup_frame() {
+        smlt::ui::Frame* frame = stage_->ui->new_widget_as_frame("");
+        smlt::ui::Button* button = stage_->ui->new_widget_as_button("Button 1");
+        smlt::ui::Label* label = stage_->ui->new_widget_as_label("Test Label");
+
+        /* Can pack a child once, but not itself */
+        assert_true(frame->pack_child(button));
+        assert_false(frame->pack_child(button));
+        assert_false(frame->pack_child(frame));
+
+        /* By default, the frame would resize to contain the button */
+        auto p = frame->padding();
+        auto b = frame->border_width();
+
+        auto fw = frame->outer_width();
+        auto fh = frame->outer_height();
+        auto bw = button->outer_width();
+        auto bh = button->outer_height();
+        assert_equal(fw, bw + p.left + p.right + (b * 2));
+        assert_equal(fh, bh + p.top + p.bottom + (b * 2));
+
+        assert_true(frame->pack_child(label));
+
+        auto max_width = std::max(button->outer_width(), label->outer_width());
+        auto child_height = button->outer_height() + label->outer_height();
+        auto spacing = frame->space_between();
+
+        fw = frame->outer_width();
+        fh = frame->outer_height();
+
+        assert_equal(fw, max_width + p.left + p.right + (b * 2));
+        assert_equal(fh, child_height + spacing + p.top + p.bottom + (b * 2));
+        return frame;
+    }
+
+    StagePtr stage_;
+};
+
 
 }

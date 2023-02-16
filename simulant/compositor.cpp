@@ -29,6 +29,7 @@
 #include "window.h"
 #include "partitioner.h"
 #include "loader.h"
+#include "application.h"
 
 namespace smlt {
 
@@ -36,11 +37,6 @@ Compositor::Compositor(Window *window):
     window_(window),
     renderer_(window->renderer.get()) {
 
-    //Set up the default render options
-    render_options.wireframe_enabled = false;
-    render_options.texture_enabled = true;
-    render_options.backface_culling_enabled = true;
-    render_options.point_size = 1;
 }
 
 Compositor::~Compositor() {
@@ -49,8 +45,9 @@ Compositor::~Compositor() {
 }
 
 PipelinePtr Compositor::render(StagePtr stage, CameraPtr camera) {
-    // This is a common enough requirement to provide a nice shortcut
-    return render(stage->id(), camera->id());
+    static int32_t counter = 0;
+    std::string name = _F("{0}").format(counter++);
+    return new_pipeline(name, stage, camera);
 }
 
 PipelinePtr Compositor::find_pipeline(const std::string &name) {
@@ -80,6 +77,7 @@ bool Compositor::destroy_pipeline(const std::string& name) {
      * anyway on the next render, this just makes sure that the stage for example
      * doesn't think it's part of an active pipeline until then */
     pip->deactivate();
+    pip->destroy();
 
     return true;
 }
@@ -87,6 +85,7 @@ bool Compositor::destroy_pipeline(const std::string& name) {
 void Compositor::destroy_pipeline_immediately(const std::string& name) {
     auto pip = find_pipeline(name);
     pip->deactivate();
+    pip->destroy();
 
     queued_for_destruction_.erase(pip);
     ordered_pipelines_.remove(pip);
@@ -96,14 +95,21 @@ void Compositor::destroy_pipeline_immediately(const std::string& name) {
     });
 }
 
-void Compositor::clean_up() {
+void Compositor::clean_destroyed_pipelines() {
     for(auto pip: queued_for_destruction_) {
         pip->deactivate();
-        ordered_pipelines_.remove(pip);
 
-        auto name = pip->name();
-        pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
-            return pip->name() == name;
+#ifndef NDEBUG
+        auto c = ordered_pipelines_.size();
+#endif
+        ordered_pipelines_.remove(pip);
+#ifndef NDEBUG
+        assert(ordered_pipelines_.size() < c);
+#endif
+
+        auto id = pip->id_;
+        pool_.remove_if([id](const Pipeline::ptr& pip) -> bool {
+            return pip->id_ == id;
         });
     }
     queued_for_destruction_.clear();
@@ -132,8 +138,13 @@ void Compositor::sort_pipelines() {
 }
 
 PipelinePtr Compositor::new_pipeline(
-    const std::string& name, StageID stage, CameraID camera,
+    const std::string& name, StagePtr stage, CameraPtr camera,
     const Viewport& viewport, TextureID target, int32_t priority) {
+
+    if(has_pipeline(name)) {
+        S_WARN("Tried to create a duplicate pipeline");
+        return PipelinePtr();
+    }
 
     auto pipeline = Pipeline::create(
         this, name, stage, camera
@@ -160,7 +171,7 @@ void Compositor::set_renderer(Renderer* renderer) {
 }
 
 void Compositor::run() {
-    clean_up();  /* Clean up any destroyed pipelines before rendering */
+    clean_destroyed_pipelines();  /* Clean up any destroyed pipelines before rendering */
 
     targets_rendered_this_frame_.clear();
 
@@ -172,7 +183,7 @@ void Compositor::run() {
         run_pipeline(pipeline, actors_rendered);
     }
 
-    window->stats->set_subactors_rendered(actors_rendered);
+    get_app()->stats->set_subactors_rendered(actors_rendered);
 }
 
 
@@ -197,14 +208,14 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
         return;
     }
 
-    auto stage = pipeline_stage->stage();
-    auto camera = pipeline_stage->camera();
-
-    if(!stage || !camera) {
+    if(!pipeline_stage->is_complete()) {
         S_DEBUG("Stage or camera has been destroyed, disabling pipeline");
         pipeline_stage->deactivate();
         return;
     }
+
+    auto stage = pipeline_stage->stage();
+    auto camera = pipeline_stage->camera();
 
     RenderTarget& target = *window_; //FIXME: Should be window or texture
 
@@ -269,8 +280,6 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
             // Filter by whether or not the renderable bounds intersects the light bounds
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
                 return true;
-            } else if(light->type() == LIGHT_TYPE_SPOT_LIGHT) {
-                return node->transformed_aabb().intersects_aabb(light->transformed_aabb());
             } else {
                 return node->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
             }
@@ -322,7 +331,6 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
             );
 
             assert(renderable->material);
-            assert(renderable->index_data);
             assert(renderable->vertex_data);
 
             renderable->light_count = renderable_lights.size();

@@ -44,3 +44,14 @@ An `InputAxis` can be given a `dead_zone` value to help handle the problem that 
     auto axial = axis->value(DEAD_ZONE_BEHAVIOUR_AXIAL);
     auto no_dead_zone = axis->value(DEAD_ZONE_BEHAVIOUR_NONE);
 ```
+
+## Triggering Rumble Effects
+
+Rumble support is available for game controllers and can be triggered via the `input_state` interface:
+
+```
+auto controller = input_state->game_controller(0);
+controller->start_rumble(0xFFFF, 0, smlt::Seconds(1.0f));
+```
+
+The ranges for `low_hz` and `high_hz` are 0-0xFFFF. On some platforms only low_hz has an effect (e.g. Dreamcast).

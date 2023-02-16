@@ -55,12 +55,30 @@ public:
         z(0.0f) {
     }
 
+    Vec3(float xyz):
+        x(xyz), y(xyz), z(xyz) {}
+
+    Vec3(float x, float y):
+        x(x), y(y), z(0) {}
+
     Vec3(float x, float y, float z):
         x(x), y(y), z(z) {
     }
 
     Vec3(const Vec2& v2, float z);
-    Vec3(const Vec3& v) = default;
+    Vec3(const Vec3& v):
+        x(v.x), y(v.y), z(v.z) {}
+
+    Vec3& operator=(const Vec3& rhs) {
+        if(&rhs == this) {
+            return *this;
+        }
+
+        x = rhs.x;
+        y = rhs.y;
+        z = rhs.z;
+        return *this;
+    }
 
     Vec3 operator+(const Vec3& rhs) const {
         return Vec3(x + rhs.x, y + rhs.y, z + rhs.z);
@@ -87,12 +105,6 @@ public:
     Vec3 operator*(float rhs) const {
         Vec3 result(x * rhs, y * rhs, z * rhs);
         return result;
-    }
-
-    Vec3 operator*(const Quaternion& rhs) const;
-    Vec3& operator*=(const Quaternion& rhs) {
-        *this = *this * rhs;
-        return *this;
     }
 
     Vec3& operator*=(float rhs) {
@@ -169,7 +181,16 @@ public:
     #endif
     }
 
-    Vec3 lerp(const Vec3& end, float t) const;
+    Vec3 lerp(const Vec3& end, float t) const {
+        t = std::min(t, 1.0f);
+        t = std::max(t, 0.0f);
+
+        return Vec3(
+            fmaf((end.x - x), t, x),
+            fmaf((end.y - y), t, y),
+            fmaf((end.z - z), t, z)
+        );
+    }
 
     Vec3 rotated_by(const Quaternion& q) const;
 
@@ -208,11 +229,19 @@ public:
     }
 
     Vec3 cross(const Vec3& rhs) const {
-        return Vec3(
-            (y * rhs.z) - (z * rhs.y),
-            (z * rhs.x) - (x * rhs.z),
-            (x * rhs.y) - (y * rhs.x)
-        );
+        Vec3 ret;
+
+        float a = (z * rhs.y);  // fmul
+        float b = (x * rhs.z);  // fmul
+        a = -a;  // fneg
+        float c = (y * rhs.x);  // fmul
+        b = -b;  // fneg
+        ret.x = ::fmaf(y, rhs.z, a);  // fmac
+        c = -c;  // fneg
+        ret.y = ::fmaf(z, rhs.x, b); // fmac
+        ret.z = ::fmaf(x, rhs.y, c);  // fmac
+
+        return ret;
     }
 
     Vec3 limit(float l) {
@@ -268,6 +297,14 @@ public:
     /* Returns the Quaternion rotation between this vector
      * and `dir` */
     Quaternion rotation_to(const Vec3& dir) const;
+
+    static Vec3 min(const Vec3& a, const Vec3& b) {
+        return Vec3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
+    }
+
+    static Vec3 max(const Vec3& a, const Vec3& b) {
+        return Vec3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec);

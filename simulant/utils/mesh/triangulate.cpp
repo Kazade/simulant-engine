@@ -11,8 +11,29 @@ std::vector<uint32_t> triangles_to_triangles(SubMesh* submesh) {
 }
 
 std::vector<uint32_t> triangle_strip_to_triangles(SubMesh* submesh) {
-    assert(0 && "Not implemented");
-    return std::vector<uint32_t>();
+    std::vector<uint32_t> ret;
+
+    auto c = submesh->index_data->count();
+    if(c < 3) {
+        return ret;
+    }
+
+    uint32_t tri_index[3];
+    tri_index[1] = submesh->index_data->at(1);
+    tri_index[2] = submesh->index_data->at(0);
+
+    for(std::size_t i = 2; i < c; ++i) {
+        // Shift and reverse
+        tri_index[0] = tri_index[2];
+        tri_index[1] = tri_index[1];
+
+        // Add new
+        tri_index[2] = submesh->index_data->at(i);
+
+        ret.insert(ret.end(), tri_index, tri_index + 3);
+    }
+
+    return ret;
 }
 
 std::vector<uint32_t> triangle_fan_to_triangles(SubMesh* submeshes) {

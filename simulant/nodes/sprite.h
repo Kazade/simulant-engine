@@ -42,6 +42,7 @@ struct SpritesheetAttrs {
 };
 
 class Sprite :
+    public TypedDestroyableObject<Sprite, SpriteManager>,
     public ContainerNode,
     public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
@@ -55,8 +56,8 @@ public:
     void clean_up() override;
     void update(float dt) override;
 
-    void destroy() override;
-    void destroy_immediately() override;
+    bool destroy() override;
+    bool destroy_immediately() override;
 
     Sprite(SpriteManager *manager, SoundDriver *sound_driver);
 
@@ -83,6 +84,10 @@ public:
 
     const AABB& aabb() const override;
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     SpriteManager* manager_;
 
     float frame_width_ = 0;

@@ -1,4 +1,4 @@
-
+#include "ui_manager.h"
 #include "progress_bar.h"
 #include "../../stage.h"
 #include "../../window.h"
@@ -7,13 +7,15 @@ namespace smlt {
 namespace ui {
 
 
-ProgressBar::ProgressBar(UIManager* owner, UIConfig* config):
-    Widget(owner, config) {
+ProgressBar::ProgressBar(UIManager* owner, UIConfig* config, Stage* stage):
+    Widget(owner, config, stage) {
 
     set_background_colour(config->progress_bar_background_colour_);
     set_foreground_colour(config->progress_bar_foreground_colour_);
     set_border_colour(config->progress_bar_border_colour_);
     set_border_width(config->progress_bar_border_width_);
+    set_text_colour(config->progress_bar_text_colour_);
+
     resize(config->progress_bar_width_, config->progress_bar_height_);
 }
 
@@ -26,8 +28,10 @@ void ProgressBar::set_pulse_fraction(float value) {
 }
 
 void ProgressBar::refresh_pulse(float dt) {
-    pulse_width_ = this->content_width() * pulse_fraction_;
-    float pulse_range = (this->content_width() - pulse_width_);
+    Px bar_width = outer_width() - (border_width() * 2);
+
+    pulse_width_ = bar_width.value * pulse_fraction_;
+    float pulse_range = (bar_width.value - pulse_width_);
     float pulse_max = pulse_range / 2.0f;
     float pulse_min = -pulse_range / 2.0f;
 
@@ -72,13 +76,14 @@ void ProgressBar::refresh_bar(float dt) {
     }
 }
 
-Widget::WidgetBounds ProgressBar::calculate_foreground_size(float content_width, float content_height) const {
-    WidgetBounds result = Widget::calculate_foreground_size(content_width, content_height);
+Widget::WidgetBounds ProgressBar::calculate_foreground_size(const UIDim& content_dimensions) const {
+    WidgetBounds result = Widget::calculate_foreground_size(content_dimensions);
+
     if(mode_ == PROGRESS_BAR_MODE_PULSE) {
-        result.min.x = pulse_position_ - (pulse_width_ / 2);
-        result.max.x = pulse_position_ + (pulse_width_ / 2);
+        result.min.x = Px(pulse_position_ - (pulse_width_ / 2));
+        result.max.x = Px(pulse_position_ + (pulse_width_ / 2));
     } else {
-        result.max.x = result.min.x + ((result.max.x - result.min.x) * fraction_);
+        result.max.x = result.min.x + int(float((result.max.x - result.min.x).value) * fraction_);
     }
     return result;
 }
@@ -88,8 +93,8 @@ void ProgressBar::pulse() {
     needs_refresh_ = true;
 }
 
-void ProgressBar::set_pulse_step(float value) {
-    pulse_step_ = std::fabs(value);
+void ProgressBar::set_pulse_step(Px value) {
+    pulse_step_ = std::abs(value.value);
 }
 
 void ProgressBar::set_range(float min, float max) {

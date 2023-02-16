@@ -386,7 +386,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             continue;
         }
 
-        submeshes_by_material[material] = mesh->new_submesh_with_material(_F("{0}").format(i++), material);
+        submeshes_by_material[material] = mesh->new_submesh(_F("{0}").format(i++), material, INDEX_TYPE_16_BIT);
         if(material) {
             material.fetch()->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC); // Re-enable GC now the material has been applied
         }
@@ -538,13 +538,19 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     mesh->vertex_data->done();
 
+    std::vector<std::string> to_destroy;
+
     for(auto submesh: mesh->each_submesh()) {
         //Delete empty submeshes
         if(!submesh->index_data->count()) {
-            mesh->destroy_submesh(submesh->name());
+            to_destroy.push_back(submesh->name());
             continue;
         }
         submesh->index_data->done();
+    }
+
+    for(auto& sm: to_destroy) {
+        mesh->destroy_submesh(sm);
     }
 
     //FIXME: mark mesh as uncollected

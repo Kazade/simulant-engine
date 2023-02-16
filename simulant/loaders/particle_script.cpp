@@ -23,6 +23,8 @@
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"
 #include "../assets/particles/colour_fader.h"
+#include "../assets/particles/direction_manipulator.h"
+
 #include "../vfs.h"
 
 #include "../utils/json.h"
@@ -69,29 +71,29 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, JSONIterato
     return m.get();
 }
 
-static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
-    auto parse_colour = [](const std::string& colour) -> smlt::Colour {
-        auto parts = unicode(colour).split(" ");
-        if(parts.size() == 3) {
-            return smlt::Colour(
-                parts[0].to_float(),
-                parts[1].to_float(),
-                parts[2].to_float(),
-                1.0f
-            );
-        } else if(parts.size() == 4) {
-            return smlt::Colour(
-                parts[0].to_float(),
-                parts[1].to_float(),
-                parts[2].to_float(),
-                parts[3].to_float()
-            );
-        } else {
-            S_WARN("Invalid number of colour components to colour fader");
-            return smlt::Colour::WHITE;
-        }
-    };
+static auto parse_colour = [](const std::string& colour) -> smlt::Colour {
+    auto parts = unicode(colour).split(" ");
+    if(parts.size() == 3) {
+        return smlt::Colour(
+            parts[0].to_float(),
+            parts[1].to_float(),
+            parts[2].to_float(),
+            1.0f
+        );
+    } else if(parts.size() == 4) {
+        return smlt::Colour(
+            parts[0].to_float(),
+            parts[1].to_float(),
+            parts[2].to_float(),
+            parts[3].to_float()
+        );
+    } else {
+        S_WARN("Invalid number of colour components to colour fader");
+        return smlt::Colour::WHITE;
+    }
+};
 
+static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
     std::vector<smlt::Colour> colours;
 
     auto colour_array = js["colours"];
@@ -107,6 +109,27 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSO
     return m.get();
 }
 
+static smlt::Manipulator* spawn_direction_manipulator(ParticleScript* ps, JSONIterator& js) {
+    auto parse_vec3 = [](const std::string& dir) -> smlt::Vec3 {
+        auto parts = unicode(dir).split(" ");
+        if(parts.size() == 3) {
+            return smlt::Vec3(
+                parts[0].to_float(),
+                parts[1].to_float(),
+                parts[2].to_float()
+            );
+        } else {
+            S_WARN("Invalid number of vector components to direction manipulator");
+            return smlt::Vec3();
+        }
+    };
+
+    auto dir = (js->has_key("force") ? parse_vec3(js["force"]->to_str().value_or("")) : smlt::Vec3());
+
+    auto m = std::make_shared<DirectionManipulator>(ps, dir);
+    ps->add_manipulator(m);
+    return m.get();
+}
 
 void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options) {
     _S_UNUSED(options);
@@ -262,10 +285,15 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             }
 
             if(emitter->has_key("colour")) {
-                auto parts = unicode(emitter["colour"]->to_str().value_or("0 0 0 0")).split(" ");
-                new_emitter.colour = smlt::Colour(
-                    parts.at(0).to_float(), parts.at(1).to_float(), parts.at(2).to_float(), parts.at(3).to_float()
-                );
+                auto colour = parse_colour(emitter["colour"]->to_str().value_or("0 0 0 0"));
+                new_emitter.colours = {colour};
+            } else if(emitter->has_key("colours")) {
+                auto colours = emitter["colours"];
+                new_emitter.colours.clear();
+                for(int c = 0; c < colours->size(); ++c) {
+                    auto colour = parse_colour(colours[c]->to_str().value_or("0 0 0 0"));
+                    new_emitter.colours.push_back(colour);
+                }
             }
 
             if(emitter->has_key("emission_rate")) {
@@ -284,6 +312,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                     spawn_size_manipulator(ps, manipulator);
                 } else if(manipulator["type"]->to_str().value() == "colour_fader") {
                     spawn_colour_fader_manipulator(ps, manipulator);
+                } else if(manipulator["type"]->to_str().value() == "direction") {
+                    spawn_direction_manipulator(ps, manipulator);
                 }
             }
         }

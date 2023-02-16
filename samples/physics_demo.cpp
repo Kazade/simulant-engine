@@ -11,7 +11,7 @@ public:
         smlt::PhysicsScene<GameScene>(window) {}
 
     void load() {
-        stage_ = window->new_stage(smlt::PARTITIONER_NULL);
+        stage_ = new_stage(smlt::PARTITIONER_NULL);
         camera_ = stage_->new_camera();
         pipeline_ = compositor->render(
             stage_, camera_
@@ -31,17 +31,17 @@ public:
             stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
         }
 
-        smlt::TextureID crate = window->shared_assets->new_texture_from_file("sample_data/crate.png");
-        smlt::MaterialID mat = window->shared_assets->new_material_from_texture(crate);
+        smlt::TextureID crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");
+        smlt::MaterialID mat = app->shared_assets->new_material_from_texture(crate);
 
-        auto box_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
+        auto box_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->new_submesh_as_cube("cube", mat, 5);
         box_mesh_id_ = box_mesh;
 
-        smlt::TextureID grass = window->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
-        auto ground_mesh = window->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        smlt::TextureID grass = app->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
+        auto ground_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         ground_mesh->new_submesh_as_box(
-            "ground", window->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000
+            "ground", app->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000
         ); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
 
         ground_mesh_id_ = ground_mesh;
@@ -115,6 +115,15 @@ int main(int argc, char* argv[]) {
 
     smlt::AppConfig config;
     config.title = "Physics Sample";
+
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
+    config.width = 1280;
+    config.height = 960;
+    config.fullscreen = false;
+#endif
 
     PhysicsDemo app(config);
     return app.run();

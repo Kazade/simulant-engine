@@ -29,6 +29,7 @@
 
 #include "application.h"
 #include "window.h"
+#include "asset_manager.h"
 
 #define assert_equal(expected, actual) _assert_equal((expected), (actual), __FILE__, __LINE__)
 #define assert_not_equal(expected, actual) _assert_not_equal((expected), (actual), __FILE__, __LINE__)
@@ -448,6 +449,14 @@ private:
 };
 
 
+class TestScene : public smlt::Scene<TestScene> {
+public:
+    TestScene(Window* window):
+        smlt::Scene<TestScene>(window) {}
+
+    void load() override {}
+};
+
 class TestApp: public smlt::Application {
 public:
     TestApp(const AppConfig& config):
@@ -456,13 +465,14 @@ public:
 
 private:
     bool init() {
+        scenes->register_scene<TestScene>("main");
         return true;
     }
 };
 
-class SimulantTestCase : public TestCase {
+class SimulantTestCase: public TestCase {
 private:
-    void set_app_and_window(std::shared_ptr<Application>* app, Window** window) {
+    void set_app_and_window(std::shared_ptr<Application>* app, Window** window, SceneBase** scene) {
         static std::shared_ptr<Application> application;
 
         if(!application) {
@@ -470,32 +480,51 @@ private:
             config.width = 640;
             config.height = 480;
             config.fullscreen = false;
+            config.log_level = LOG_LEVEL_WARN;
 
             // FIXME: This is a bit simulant-specific, you wouldn't necessarily want this
             // path on user apps.
             config.search_paths.push_back("assets");
             config.search_paths.push_back("sample_data");
+
+#if defined(__DREAMCAST__)
+            config.search_paths.push_back("/cd");
             config.search_paths.push_back("/cd/assets");
             config.search_paths.push_back("/cd/sample_data");
+            config.search_paths.push_back("/pc");
+            config.search_paths.push_back("/pc/assets");
+            config.search_paths.push_back("/pc/sample_data");
+#endif
 
             application.reset(new TestApp(config));
+            application->run_frame();
         } else {
+            application->scenes->unload("main");
+            application->stop_all_coroutines();
+            application->update_coroutines();
             application->window->reset();
+
+            application->scenes->activate("main");
+
+            /* We have to run a frame as activate doesn't kick in
+             * until late_update */
+            application->run_frame();
         }
 
         *app = application;
         *window = (*app)->window;
+        *scene = (*app)->scenes->active_scene().get();
     }
 
 protected:
     Window* window;
+    SceneBase* scene;
     std::shared_ptr<Application> application;
 
 public:
     virtual void set_up() {
         TestCase::set_up();
-
-        set_app_and_window(&application, &window);
+        set_app_and_window(&application, &window, &scene);
     }
 };
 

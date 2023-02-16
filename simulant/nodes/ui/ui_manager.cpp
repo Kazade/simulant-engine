@@ -17,24 +17,30 @@
 #include "label.h"
 #include "progress_bar.h"
 #include "image.h"
+#include "frame.h"
+#include "keyboard.h"
+
 #include "../../stage.h"
 #include "../camera.h"
 #include "../../window.h"
 #include "../stage_node_manager.h"
 #include "../../viewport.h"
+#include "../../application.h"
+#include "../../vfs.h"
 
 namespace smlt {
 namespace ui {
 
 using namespace std::placeholders;
 
-UIManager::UIManager(Stage *stage, StageNodePool *pool):
+UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
     stage_(stage),
-    window_(stage->window.get()){
+    config_(config) {    
 
     manager_.reset(new WidgetManager(pool));
 
-    window_->register_event_listener(this);
+    auto window = get_app()->window.get();
+    window->register_event_listener(this);
 
     /* Each time the stage is rendered with a camera and viewport, we need to process any queued events
      * so that (for example) we can interact with the same widget rendered to different viewports */
@@ -43,9 +49,29 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool):
     });
 
     /* We clear queued events at the end of each frame */
-    frame_finished_connection_ = window_->signal_frame_finished().connect([this]() {
+    frame_finished_connection_ = get_app()->signal_frame_finished().connect([this]() {
         this->clear_event_queue();
     });
+
+    auto new_material = [&]() -> smlt::MaterialPtr {
+        auto material = stage_->asset_manager_->new_material_from_file(
+            Material::BuiltIns::TEXTURE_ONLY
+        );
+
+        if(!material) {
+            S_ERROR("[CRITICAL] Unable to load the material for widgets!");
+            return smlt::MaterialPtr();
+        }
+
+        material->set_blend_func(BLEND_ALPHA);
+        material->set_depth_test_enabled(false);
+        material->set_cull_mode(CULL_MODE_NONE);
+        return material;
+    };
+
+    global_background_material_ = new_material();
+    global_foreground_material_ = new_material();
+    global_border_material_ = new_material();
 }
 
 UIManager::~UIManager() {
@@ -54,11 +80,34 @@ UIManager::~UIManager() {
 
     pre_render_connection_.disconnect();
     frame_finished_connection_.disconnect();
-    window_->unregister_event_listener(this);
+
+    auto app = get_app();
+    if(app) {
+        auto window = app->window.get();
+
+        if(window) {
+            window->unregister_event_listener(this);
+        }
+    }
 }
 
-Button* UIManager::new_widget_as_button(const unicode &text, float width, float height) {
-    auto button = manager_->make_as<Button>(this, &config_);
+Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const unicode &initial_text) {
+    auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, mode, initial_text);
+    stage_->add_child(keyboard);
+    return keyboard;
+}
+
+Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, const Px& height) {
+    auto frame = manager_->make_as<Frame>(this, &config_, stage_);
+    frame->set_text(title);
+    frame->resize(width, height);
+    stage_->add_child(frame);
+
+    return frame;
+}
+
+Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height, std::shared_ptr<WidgetStyle> shared_style) {
+    auto button = manager_->make_as<Button>(this, &config_, stage_, shared_style);
     button->set_text(text);
     button->resize(width, height);
     stage_->add_child(button);
@@ -66,8 +115,18 @@ Button* UIManager::new_widget_as_button(const unicode &text, float width, float 
     return button;
 }
 
-Label* UIManager::new_widget_as_label(const unicode &text, float width, float height) {
-    auto label = (Label*) &(*manager_->make_as<Label>(this, &config_));
+TextEntry* UIManager::new_widget_as_text_entry(const unicode &text, Px width, Px height) {
+    auto label = (TextEntry*) &(*manager_->make_as<TextEntry>(this, &config_, stage_));
+    label->set_text(text);
+    label->resize(width, height);
+
+    stage_->add_child(label);
+
+    return label;
+}
+
+Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) {
+    auto label = (Label*) &(*manager_->make_as<Label>(this, &config_, stage_));
     label->set_text(text);
     label->resize(width, height);
 
@@ -77,7 +136,7 @@ Label* UIManager::new_widget_as_label(const unicode &text, float width, float he
 }
 
 Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
-    auto image = (Image*) &(*manager_->make_as<Image>(this, &config_));
+    auto image = (Image*) &(*manager_->make_as<Image>(this, &config_, stage_));
     image->set_texture(texture);
 
     stage_->add_child(image);
@@ -90,7 +149,7 @@ Widget* UIManager::widget(WidgetID widget_id) {
 }
 
 ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
-    auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_));
+    auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_, stage_));
 
     pg->set_range(min, max);
     pg->set_value(value);
@@ -144,16 +203,17 @@ void UIManager::on_touch_move(const TouchEvent &evt) {
 
 void UIManager::queue_event(const TouchEvent& e) {
     UIEvent evt(e);
-    queued_events_.push(evt);
+    queued_events_.push_back(evt);
 }
 
 void UIManager::process_event_queue(const Camera* camera, const Viewport &viewport) const {
+    if(queued_events_.empty()) {
+        return;
+    }
+
     auto queued_events = queued_events_; // Copy the queue
 
-    while(!queued_events.empty()) {
-        auto evt = queued_events.front();
-        queued_events.pop();
-
+    for(auto& evt: queued_events) {
         switch(evt.type) {
             case UI_EVENT_TYPE_TOUCH: {
                 auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y));
@@ -192,18 +252,20 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
 }
 
 void UIManager::clear_event_queue() {
-    queued_events_ = std::queue<UIEvent>();
+    queued_events_.clear();
 }
 
 WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
     WidgetPtr result = nullptr;
+
+    auto window = get_app()->window.get();
 
     for(auto widget: *manager_) {
         auto aabb = widget->transformed_aabb();
         std::vector<Vec3> ss_points;
 
         for(auto& corner: aabb.corners()) {
-            ss_points.push_back(camera->project_point(*window_, viewport, corner).value());
+            ss_points.push_back(camera->project_point(*window, viewport, corner).value());
         }
 
         AABB ss_aabb(&ss_points[0], ss_points.size());
@@ -215,6 +277,69 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     };
 
     return result;
+}
+
+FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style) {
+    return _load_or_get_font(
+        stage_->assets, get_app()->shared_assets.get(),
+        family, size, weight, style
+    );
+}
+
+FontPtr UIManager::_load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
+        const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style) {
+
+    /* Apply defaults if that's what was asked */
+    std::string family = familyc;
+    if(family == DEFAULT_FONT_FAMILY) {
+        family = get_app()->config->ui.font_family;
+    }
+
+    Px size = sizec;
+    if(size == DEFAULT_FONT_SIZE) {
+        size = Px(get_app()->config->ui.font_size);
+    }
+
+    std::string alias = Font::generate_name(family, size.value, weight, style);
+
+    /* See if the font is already loaded, first look at the stage
+     * level, but fallback to the window level (in case it was pre-loaded
+     * globally) */
+    FontPtr fnt;
+    if(assets) {
+        fnt = assets->find_font(alias);
+    }
+
+    if(!fnt && shared_assets) {
+        fnt = shared_assets->find_font(alias);
+    }
+
+    /* We already loaded it, all is well! */
+    if(fnt) {
+        return fnt;
+    }
+
+    FontFlags flags;
+    flags.size = size.value;
+    flags.weight = weight;
+    flags.style = style;
+
+    fnt = assets->new_font_from_family(family, flags);
+    if(fnt) {
+        fnt->set_name(alias);
+    }
+
+    return fnt;
+}
+
+MaterialPtr UIManager::clone_global_background_material() {
+    assert(global_background_material_);
+    return stage_->asset_manager_->clone_material(global_background_material_);
+}
+
+MaterialPtr UIManager::clone_global_foreground_material() {
+    assert(global_foreground_material_);
+    return stage_->asset_manager_->clone_material(global_foreground_material_);
 }
 
 }

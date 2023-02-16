@@ -12,7 +12,7 @@ public:
         smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Colour::RED);
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Colour::GREEN);
 
-        auto stage = window->new_stage();
+        auto stage = new_stage();
 
         auto cube = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube->new_submesh_as_cube("cube", stage->assets->new_material(), 1.0);
@@ -48,11 +48,20 @@ public:
 
 
 int main(int argc, char* argv[]) {
+    _S_UNUSED(argc);
+    _S_UNUSED(argv);
+
     smlt::AppConfig config;
     config.title = "Viewport Sample";
     config.fullscreen = false;
+    
+#ifdef __DREAMCAST__
+    config.width = 640;
+    config.height = 480;
+#else
     config.width = 1280;
     config.height = 960;
+#endif
 
     ViewportSample app(config);
     return app.run();

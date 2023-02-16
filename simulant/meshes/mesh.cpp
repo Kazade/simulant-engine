@@ -143,23 +143,16 @@ void Mesh::rebuild_aabb() {
         return;
     }
 
-    float max = std::numeric_limits<float>::max();
-    float min = std::numeric_limits<float>::lowest();
-
-    result.set_min(smlt::Vec3(max, max, max));
-    result.set_max(smlt::Vec3(min, min, min));
+    bool first = true;
+    result = AABB();
 
     for(auto sm: submeshes_) {
-        auto sm_min = sm->bounds_.min();
-        auto sm_max = sm->bounds_.max();
-
-        if(sm_min.x < result.min().x) result.set_min_x(sm_min.x);
-        if(sm_min.y < result.min().y) result.set_min_y(sm_min.y);
-        if(sm_min.z < result.min().z) result.set_min_z(sm_min.z);
-
-        if(sm_max.x > result.max().x) result.set_max_x(sm_max.x);
-        if(sm_max.y > result.max().y) result.set_max_y(sm_max.y);
-        if(sm_max.z > result.max().z) result.set_max_z(sm_max.z);
+        if(first) {
+            result = sm->bounds_;
+            first = false;
+        } else {
+            result.encapsulate(sm->bounds_);
+        }
     }
 }
 
@@ -183,18 +176,19 @@ const AABB &Mesh::aabb() const {
     return aabb_;
 }
 
-SubMesh* Mesh::new_submesh_with_material(
+SubMesh* Mesh::new_submesh(
     const std::string& name,
     MaterialID material,
-    MeshArrangement arrangement, IndexType index_type) {
+    IndexType index_type,
+    MeshArrangement arrangement) {
 
-    return new_submesh_with_material(
+    return new_submesh(
         name, material,
         std::make_shared<IndexData>(index_type), arrangement
     );
 }
 
-SubMesh* Mesh::new_submesh_with_material(
+SubMesh* Mesh::new_submesh(
     const std::string& name,
     MaterialID material,
     IndexDataPtr index_data,
@@ -219,33 +213,30 @@ SubMesh* Mesh::new_submesh_with_material(
 
 SubMesh* Mesh::new_submesh(
     const std::string& name,
-    MeshArrangement arrangement, IndexType index_type) {
-
-    return new_submesh_with_material(
-        name,
-        asset_manager().clone_default_material(),
-        arrangement,
-        index_type
-    );
-}
-
-SubMesh* Mesh::new_submesh(
-    const std::string& name,
-    IndexDataPtr index_data,
+    MaterialID material,
     MeshArrangement arrangement) {
 
-    return new_submesh_with_material(
-        name,
-        asset_manager().clone_default_material(),
-        index_data,
-        arrangement
+    if(has_submesh(name)) {
+        throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
+    }
+
+    auto mat = asset_manager().material(material);
+    assert(mat);
+
+    auto new_submesh = SubMesh::create(
+        this, name, mat, arrangement
     );
+    submeshes_.push_back(new_submesh);
+
+    signal_submesh_created_(id(), new_submesh.get());
+
+    return new_submesh.get();
 }
 
 SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
     MaterialID material, float diameter, std::size_t slices, std::size_t stacks) {
 
-    SubMesh* sm = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);
+    SubMesh* sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::sphere(sm, diameter, slices, stacks);
 
@@ -257,7 +248,7 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
     MaterialID material, float diameter, float length,
     std::size_t segment_count, std::size_t vertical_segment_count, std::size_t ring_count) {
 
-    SubMesh* submesh = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);
+    SubMesh* submesh = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     float radius = diameter * 0.5f;
 
@@ -405,7 +396,7 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
 }
 
 SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID material, float diameter, uint32_t subdivisions) {
-    SubMeshPtr sm = new_submesh_with_material(name, material, MESH_ARRANGEMENT_TRIANGLES);
+    SubMeshPtr sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::icosphere(sm, diameter, subdivisions);
 
@@ -421,9 +412,9 @@ bool Mesh::has_submesh(const std::string& name) const {
 }
 
 SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, float width, float height, float depth, const Vec3& offset) {
-    SubMesh* sm = new_submesh_with_material(
+    SubMesh* sm = new_submesh(
         name,
-        material,
+        material, INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
     );
 
@@ -588,9 +579,9 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
 }
 
 SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID material, float width, float height, const smlt::Vec3& offset) {
-    SubMesh* sm = new_submesh_with_material(
+    SubMesh* sm = new_submesh(
         name,
-        material,
+        material, INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
     );
 
@@ -689,7 +680,7 @@ void Mesh::transform_vertices(const smlt::Mat4& transform) {
     vertex_data->done();
 }
 
-SubMeshIteratorPair Mesh::each_submesh() const {
+SubMeshIteratorPair Mesh::each_submesh() {
     return SubMeshIteratorPair(submeshes_);
 }
 
@@ -727,6 +718,38 @@ SubMesh* Mesh::find_submesh(const std::string& name) const {
     }
 
     return nullptr;
+}
+
+SubMesh* Mesh::find_submesh_with_material(const MaterialPtr& mat) const {
+    auto it = std::find_if(submeshes_.begin(), submeshes_.end(), [&mat](const std::shared_ptr<SubMesh>& i) {
+        return i->material()->id() == mat->id();
+    });
+
+    if(it != submeshes_.end()) {
+        return it->get();
+    }
+
+    return nullptr;
+}
+
+std::vector<SubMeshPtr> Mesh::find_all_submeshes(const std::string& name) const {
+    std::vector<SubMeshPtr> ret;
+    for(auto& sm: submeshes_) {
+        if(sm->name() == name) {
+            ret.push_back(sm.get());
+        }
+    }
+    return ret;
+}
+
+std::vector<SubMeshPtr> Mesh::find_all_submeshes_with_material(const MaterialPtr& mat) const {
+    std::vector<SubMeshPtr> ret;
+    for(auto& sm: submeshes_) {
+        if(sm->material() == mat) {
+            ret.push_back(sm.get());
+        }
+    }
+    return ret;
 }
 
 void Mesh::generate_adjacency_info() {

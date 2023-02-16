@@ -1,6 +1,7 @@
 #include "../stage.h"
 #include "camera.h"
 #include "../window.h"
+#include "../application.h"
 
 namespace smlt {
 
@@ -77,19 +78,30 @@ Mat4 StageNode::absolute_transformation() const {
         return absolute_transformation_;
     }
 
-    Mat4 scale;
-    Mat4 trans;
-    Mat4 rot(absolute_rotation_);
+    auto c0 = smlt::Vec4(absolute_rotation_ * smlt::Vec3(absolute_scale_.x, 0, 0), 0);
+    auto c1 = smlt::Vec4(absolute_rotation_ * smlt::Vec3(0, absolute_scale_.y, 0), 0);
+    auto c2 = smlt::Vec4(absolute_rotation_ * smlt::Vec3(0, 0, absolute_scale_.z), 0);
 
-    scale[0] = absolute_scale_.x;
-    scale[5] = absolute_scale_.y;
-    scale[10] = absolute_scale_.z;
+    absolute_transformation_[0] = c0.x;
+    absolute_transformation_[1] = c0.y;
+    absolute_transformation_[2] = c0.z;
+    absolute_transformation_[3] = 0.0f;
 
-    trans[12] = absolute_position_.x;
-    trans[13] = absolute_position_.y;
-    trans[14] = absolute_position_.z;
+    absolute_transformation_[4] = c1.x;
+    absolute_transformation_[5] = c1.y;
+    absolute_transformation_[6] = c1.z;
+    absolute_transformation_[7] = 0.0f;
 
-    absolute_transformation_ = trans * rot * scale;
+    absolute_transformation_[8] = c2.x;
+    absolute_transformation_[9] = c2.y;
+    absolute_transformation_[10] = c2.z;
+    absolute_transformation_[11] = 0.0f;
+
+    absolute_transformation_[12] = absolute_position_.x;
+    absolute_transformation_[13] = absolute_position_.y;
+    absolute_transformation_[14] = absolute_position_.z;
+    absolute_transformation_[15] = 1.0f;
+
     absolute_transformation_is_dirty_ = false;
     return absolute_transformation_;
 }
@@ -133,10 +145,35 @@ void StageNode::set_parent(TreeNode* node) {
     recalc_visibility();
 }
 
-void StageNode::destroy_after(const Seconds& seconds) {
-    stage_->window->idle->add_timeout_once(
-        seconds, std::bind(&StageNode::destroy, this)
-    );
+smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
+    std::weak_ptr<bool> alive = alive_marker_;
+
+    auto conn = std::make_shared<sig::connection>();
+    auto counter = std::make_shared<float>(0.0f);
+
+    auto p = Promise<void>::create();
+
+    *conn = smlt::get_app()->signal_update().connect([=] (float dt) mutable {
+        *counter += dt;
+
+        if(*counter < seconds.to_float()) {
+            return;
+        }
+
+        /* Detect whether the object was already destroyed. This avoids a weird
+         * bug where the wrong object can be destroyed if the original was replaced
+         * in the stage node pool before this code runs */
+        if(alive.lock()) {
+            if(!is_destroyed()) {
+                destroy();
+            }
+        }
+
+        conn->disconnect();
+        p.fulfill();
+    });
+
+    return p;
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
@@ -203,9 +240,12 @@ void StageNode::update_transformation_from_parent() {
 void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
     _S_UNUSED(oldp);
 
-    parent_stage_node_ = dynamic_cast<StageNode*>(newp);
-    assert(parent_stage_node_);
+    if(!newp) {
+        return;
+    }
 
+    assert(dynamic_cast<StageNode*>(newp));
+    parent_stage_node_ = (StageNode*) (newp);
     update_transformation_from_parent();
 }
 
@@ -282,7 +322,7 @@ void StageNode::fixed_update(float step) {
 }
 
 bool StageNode::parent_is_stage() const {
-    return bool(dynamic_cast<Stage*>(parent_));
+    return parent_ == stage_;
 }
 
 }

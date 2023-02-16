@@ -1,5 +1,4 @@
 #include "helpers.h"
-#include "../window.h"
 #include "../application.h"
 
 namespace smlt {
@@ -8,18 +7,38 @@ void _trigger_coroutine(std::function<void ()> func) {
     Application* app = get_app();
 
     if(app) {
-        auto window = app->window.get();
-        window->start_coroutine(func);
+        app->start_coroutine(func);
     }
 }
 
 void cr_yield() {
-    cort::yield_coroutine();
+    if(cort::within_coroutine()) {
+        cort::yield_coroutine();
+    } else {
+        auto app = get_app();
+        if(thread::this_thread_id() == app->thread_id()) {
+            /* Main thread, just update the coroutines */
+            get_app()->update_coroutines();
+        }
+    }
+}
+
+void cr_yield_for(const smlt::Seconds& seconds) {
+    cort::yield_coroutine(seconds);
+}
+
+void cr_run_main(std::function<void ()> func) {
+    if(cort::within_coroutine()) {
+        get_app()->cr_synced_function_ = func;
+        cr_yield();
+    } else {
+        /* Already in the main thread */
+        func();
+    }
 }
 
 void _trigger_idle_updates() {
-    Window* window = get_app()->window.get();
-    window->update_idle_tasks_and_coroutines();
+    get_app()->update_coroutines();
 }
 
 }

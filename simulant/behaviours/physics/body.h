@@ -17,7 +17,7 @@ struct b3Hull;
 struct b3Mesh;
 struct b3MeshTriangle;
 struct b3Vec3;
-struct b3Shape;
+struct b3Fixture;
 
 namespace smlt {
 
@@ -28,6 +28,8 @@ namespace utils {
 class StageNode;
 
 namespace behaviours {
+
+class Fixture;
 
 namespace impl {
 class Body;
@@ -78,30 +80,41 @@ public:
     void add_box_collider(
         const Vec3& size,
         const PhysicsMaterial& properties,
+        uint16_t kind=0,
         const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
     );
 
     void add_sphere_collider(const float diameter,
         const PhysicsMaterial& properties,
+        uint16_t kind=0,
         const Vec3& offset=Vec3()
+    );
+
+    void add_capsule_collider(
+        float height,
+        const float diameter,
+        const PhysicsMaterial& properties,
+        uint16_t kind=0
+    );
+
+    void add_triangle_collider(
+        const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
+        const PhysicsMaterial& properties,
+        uint16_t kind=0
     );
 
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 
-    RigidBodySimulation* _simulation_ptr() const {
-        if(auto ret = simulation_.lock()) {
-            return ret.get();
-        } else {
-            return nullptr;
-        }
-    }
+    Quaternion rotation() const;
+    Vec3 position() const;
 
 protected:
     friend class smlt::behaviours::RigidBodySimulation;
+    friend class smlt::behaviours::Fixture;
 
     b3Body* body_ = nullptr;
-    std::weak_ptr<RigidBodySimulation> simulation_;
+    RigidBodySimulation* simulation_ = nullptr;
 
     std::pair<Vec3, Quaternion> last_state_;
 
@@ -110,14 +123,16 @@ protected:
     struct ColliderDetails {
         PhysicsMaterial material;
         std::string name;
+        uint16_t kind = 0;
     };
 
-    void store_collider(b3Shape* shape, const PhysicsMaterial& material);
+    void store_collider(b3Fixture* fixture, const PhysicsMaterial& material, uint16_t kind);
 
-    std::unordered_map<b3Shape*, ColliderDetails> collider_details_;
+    std::unordered_map<b3Fixture*, ColliderDetails> collider_details_;
 
 private:
     virtual bool is_dynamic() const { return true; }
+    virtual bool is_kinematic() const { return false; }
 
     sig::connection simulation_stepped_connection_;
     std::vector<std::shared_ptr<b3Hull>> hulls_;

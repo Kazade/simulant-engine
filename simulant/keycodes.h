@@ -1,5 +1,4 @@
-#ifndef KEYCODES_H
-#define KEYCODES_H
+#pragma once
 
 #ifdef __DREAMCAST__
     #include "kos_keycodes.h"
@@ -10,5 +9,3 @@
 #else
     #include "sdl2_keycodes.h"
 #endif
-
-#endif // KEYCODES_H

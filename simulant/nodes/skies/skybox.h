@@ -32,7 +32,8 @@ public:
 
 class SkyManager;
 
-class Skybox :
+class Skybox:
+    public TypedDestroyableObject<Skybox, SkyManager>,
     public generic::Identifiable<SkyID>,
     public ContainerNode,
     public ChainNameable<Skybox> {
@@ -58,8 +59,8 @@ public:
         const TextureFlags& flags
     );
 
-    void destroy() override;
-    void destroy_immediately() override;
+    bool destroy() override;
+    bool destroy_immediately() override;
 
     const AABB& aabb() const override;
 
@@ -68,6 +69,10 @@ public:
     }
 
 private:
+    UniqueIDKey make_key() const override {
+        return make_unique_id_key(id());
+    }
+
     friend class SkyManager;
 
     SkyManager* manager_ = nullptr;

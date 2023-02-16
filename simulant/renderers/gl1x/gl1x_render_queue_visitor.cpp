@@ -17,6 +17,7 @@
 #include "../../nodes/light.h"
 #include "../../utils/gl_error.h"
 #include "../../window.h"
+#include "../../application.h"
 
 namespace smlt {
 
@@ -61,11 +62,11 @@ void GL1RenderQueueVisitor::change_render_group(const batcher::RenderGroup *prev
 }
 
 _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex, const Mat4& mat) {
-    auto id = (tex) ? tex->_renderer_specific_id() : 0;
-
-    if(!id) {
+    if(!tex) {
         return false;
     }
+
+    auto id = tex->_renderer_specific_id();
 
     if(which >= _S_GL_MAX_TEXTURE_UNITS) {
         return false;
@@ -428,35 +429,19 @@ void GL1RenderQueueVisitor::disable_texcoord_array(uint8_t which, bool force) {
     textures_enabled_[which] = false;
 }
 
-static GLenum convert_arrangement(MeshArrangement arrangement) {
-    switch(arrangement) {
-    case MESH_ARRANGEMENT_LINES:
-        return GL_LINES;
-    case MESH_ARRANGEMENT_LINE_STRIP:
-        return GL_LINE_STRIP;
-    case MESH_ARRANGEMENT_TRIANGLES:
-        return GL_TRIANGLES;
-    case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-        return GL_TRIANGLE_STRIP;
-    case MESH_ARRANGEMENT_TRIANGLE_FAN:
-        return GL_TRIANGLE_FAN;
-    case MESH_ARRANGEMENT_QUADS:
-        return GL_QUADS;
-    default:
-        assert(0 && "Invalid mesh arrangement");
-        return GL_TRIANGLES;
-    }
+static constexpr GLenum convert_arrangement(MeshArrangement arrangement) {
+    return (arrangement == MESH_ARRANGEMENT_LINES) ? GL_LINES :
+           (arrangement == MESH_ARRANGEMENT_LINE_STRIP) ? GL_LINE_STRIP :
+           (arrangement == MESH_ARRANGEMENT_TRIANGLES) ? GL_TRIANGLES :
+           (arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) ? GL_TRIANGLE_STRIP :
+           (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_STRIP :
+           (arrangement == MESH_ARRANGEMENT_QUADS) ? GL_QUADS : GL_TRIANGLES;
 }
 
-static GLenum convert_index_type(IndexType type) {
-    switch(type) {
-    case INDEX_TYPE_8_BIT: return GL_UNSIGNED_BYTE;
-    case INDEX_TYPE_16_BIT: return GL_UNSIGNED_SHORT;
-    case INDEX_TYPE_32_BIT: return GL_UNSIGNED_INT;
-    default:
-        assert(0 && "Invalid index type");
-        return GL_UNSIGNED_SHORT;
-    }
+static constexpr GLenum convert_index_type(IndexType type) {
+    return (type == INDEX_TYPE_8_BIT) ? GL_UNSIGNED_BYTE :
+           (type == INDEX_TYPE_16_BIT) ? GL_UNSIGNED_SHORT :
+           GL_UNSIGNED_INT;
 }
 
 void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
@@ -464,12 +449,13 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     _S_UNUSED(iteration);
 
     auto element_count = renderable->index_element_count;
+    auto vertex_range_count = renderable->vertex_range_count;
     // Don't bother doing *anything* if there is nothing to render
-    if(!element_count) {
+    if(!element_count && !vertex_range_count) {
         return;
     }
 
-    const Mat4 model = renderable->final_transformation;
+    const Mat4& model = renderable->final_transformation;
     const Mat4& view = camera_->view_matrix();
     const Mat4& projection = camera_->projection_matrix();
 
@@ -487,10 +473,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     renderer_->prepare_to_render(renderable);
 
     const auto vertex_data = renderable->vertex_data->data();
-    const auto index_data = renderable->index_data->data();
-
     assert(vertex_data);
-    assert(index_data);
 
     const auto has_positions = spec.has_positions();
     if(has_positions) {
@@ -570,20 +553,40 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         }
     }
 
-    assert(element_count);
-
-    auto index_type = convert_index_type(renderable->index_data->index_type());
     auto arrangement = convert_arrangement(renderable->arrangement);
 
-    GLCheck(
-        glDrawElements,
-        arrangement,
-        element_count,
-        index_type,
-        (const void*) index_data
-    );
+    if(element_count) {
+        /* Indexed renderable */
+        const auto index_data = renderable->index_data->data();
+        auto index_type = convert_index_type(renderable->index_data->index_type());
 
-    renderer_->window->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+        GLCheck(
+            glDrawElements,
+            arrangement,
+            element_count,
+            index_type,
+            (const void*) index_data
+        );
+
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, element_count);
+    } else {
+        /* Range-based renderable */
+        assert(renderable->vertex_ranges);
+        assert(renderable->vertex_range_count);
+
+        auto range = renderable->vertex_ranges;
+        auto total = 0;
+        for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
+            GLCheck(
+                glDrawArrays,
+                arrangement, range->start, range->count
+            );
+
+            total += range->count;
+        }
+
+        get_app()->stats->increment_polygons_rendered(renderable->arrangement, total);
+    }
 }
 
 }
