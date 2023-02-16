@@ -43,7 +43,7 @@ Quaternion::Quaternion(const Degrees &pitch, const Degrees &yaw, const Degrees &
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
-    auto half_rad = fast_divide(Radians(degrees).value, 2.0f);
+    auto half_rad = Radians(degrees).value * 0.5f;
     float factor = 0.0f;
     fast_sincos(half_rad, &factor, &w);
 
