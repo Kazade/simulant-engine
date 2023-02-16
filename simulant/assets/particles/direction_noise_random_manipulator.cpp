@@ -20,8 +20,7 @@ void DirectionNoiseRandomManipulator::do_manipulate(ParticleSystem *system, Part
         auto final_dir = dir_ + noise;
         it->position += final_dir * dt;
 
-        auto rot = Quaternion::look_rotation(final_dir);
-        it->rotation = rot * dt;
+        /* Make sure the particles are rotated properly according to their direction */
 
         ++it;
     }
