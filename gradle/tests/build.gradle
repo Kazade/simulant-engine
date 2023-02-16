@@ -1,30 +1,38 @@
 apply plugin: 'com.android.application'
 
 android {
-	compileSdkVersion 29
+	compileSdkVersion 32
 
 	defaultConfig {
-	    minSdkVersion 14
-	    targetSdkVersion 29
-	    externalNativeBuild {
-	        cmake {
-	            targets 'simulant_tests'
-	            arguments "-DANDROID_STL=c++_shared"
-	        }
-	    }
-	    
+	    minSdkVersion 30
+	    targetSdkVersion 32
+
 	    ndk {
+			def ABI_FILTERS = System.getenv("ABI_FILTERS") ?: "x86;x86_64;armeabi-v7a;arm64-v8a"
 			abiFilters = []
 			abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
 	    }
 	}
-	
+
+	externalNativeBuild {
+		cmake {
+			path "../../CMakeLists.txt"
+		}
+	}
+
+	sourceSets {
+		main {
+		    manifest.srcFile './AndroidManifest.xml'
+		    res.srcDirs = ['../../platforms/android/res']
+	    }
+	}
+
 	buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'),
                     'proguard-rules.pro'
-                    
+
             externalNativeBuild{
                 cmake{
                     arguments "-DCMAKE_BUILD_TYPE=Release"
@@ -32,19 +40,6 @@ android {
             }
         }
     }
-	
-	externalNativeBuild {
-		cmake {
-			path "../../CMakeLists.txt"
-		}
-	}
-	
-	sourceSets {
-		main {
-		    manifest.srcFile './AndroidManifest.xml'
-		    res.srcDirs = ['../../platforms/android/res']
-	    }
-	}
 }
 
 
