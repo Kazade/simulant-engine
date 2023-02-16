@@ -147,7 +147,7 @@ float Vec3::distance_to(const AABB& aabb) const {
     return fast_sqrt(MATH_Sum_of_Squares(dx, dy, dz, 0));
 #else
     Vec3 d = Vec3(dx, dy, dz);
-    return fast_sqrt(dot(d));
+    return fast_sqrt(d.dot(d));
 #endif
 }
 
