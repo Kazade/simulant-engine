@@ -46,7 +46,7 @@ public:
 
     float length_squared() const {
 #ifdef __DREAMCAST__
-        return MATH_fipr(x, y, 0.0f, 0.0f, x, y, 0.0f, 0.0f);
+        return x * x + y * y;
 #else
         return dot(*this);
 #endif
@@ -116,11 +116,7 @@ public:
     }
 
     float dot(const Vec2& rhs) const {       
-#ifdef __DREAMCAST__
-        return MATH_fipr(x, y, 0.0f, 0.0f, rhs.x, rhs.y, 0.0f, 0.0f);
-#else
         return x * rhs.x + y * rhs.y;
-#endif
     }
 
     Vec3 xyz(float z = 0.0f) const;
