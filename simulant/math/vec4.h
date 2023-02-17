@@ -64,7 +64,7 @@ struct Vec4 {
 
     float length_squared() const {
 #ifdef __DREAMCAST__
-        return MATH_fipr(x, y, z, w, x, y, z, w);
+        return MATH_Sum_of_Squares(x, y, z, w);
 #else
         return dot(*this);
 #endif
