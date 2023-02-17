@@ -144,7 +144,7 @@ public:
 
     float length_squared() const {
 #ifdef __DREAMCAST__
-        return MATH_Sum_of_Squares(x, y, z, 0.0f);
+        return MATH_fipr(x, y, z, 0.0f, x, y, z, 0.0f);
 #else
         return dot(*this);
 #endif
