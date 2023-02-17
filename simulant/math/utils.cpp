@@ -99,7 +99,7 @@ float fast_inverse_sqrt(float n) {
 #ifdef __DREAMCAST__
     return MATH_fsrra(n);
 #else
-    return 1 / __builtin_sqrtf(n);
+    return 1 / std::sqrt(n);
 #endif
 }
 
