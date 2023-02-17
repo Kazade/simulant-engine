@@ -27,7 +27,7 @@ __attribute__((optimize("O3", "fast-math")))
 float fast_divide(float d, float n) {
 #ifdef __DREAMCAST__
     const float sgn = ((*(unsigned int*)&n)>>31)*2+1;
-    return sgn * (1.f / __builtin_sqrtf(n * n)) * d;
+    return sgn * (1.0f / __builtin_sqrtf(n * n)) * d;
 #else
     return d / n;
 #endif
@@ -96,11 +96,7 @@ float fast_max(float a, float b) {
 
 __attribute__((optimize("O3", "fast-math")))
 float fast_inverse_sqrt(float n) {
-#ifdef __DREAMCAST__
-    return MATH_fsrra(n);
-#else
-    return 1 / __builtin_sqrtf(n);
-#endif
+    return 1.0f / __builtin_sqrtf(n);
 }
 
 }
