@@ -141,7 +141,7 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
         # FIXME: Use OpenAL on PSP
         # sound_drivers/openal_sound_driver.cpp
         # sound_drivers/al_error.cpp
-        sound_drivers/null_sound_driver.cpp
+        sound/drivers/null_sound_driver.cpp
     )
 ELSE()
 

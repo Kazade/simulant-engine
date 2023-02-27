@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
+	namespace "dev.simulant.simulant_tests"
+
 	compileSdkVersion 32
 
 	defaultConfig {
@@ -36,6 +38,7 @@ android {
             externalNativeBuild{
                 cmake{
                     arguments "-DCMAKE_BUILD_TYPE=Release"
+					targets "simulant_tests"
                 }
             }
         }

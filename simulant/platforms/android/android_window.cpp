@@ -4,8 +4,9 @@
 
 #include "android_window.h"
 
-#include "../../sound_drivers/null_sound_driver.h"
+#include "../../sound/drivers/null_sound_driver.h"
 #include "../../renderers/renderer_config.h"
+#include "../../application.h"
 
 /* Working with Android is a bit different to other platforms
  * this is the main entry point of the native activity
@@ -114,7 +115,7 @@ void AndroidWindow::destroy_window() {
 
 void AndroidWindow::check_events() {
     if(ANDROID_APP->destroyRequested) {
-        stop_running();
+        get_app()->stop_running();
         return;
     }
 
@@ -138,10 +139,10 @@ void AndroidWindow::check_events() {
                     set_has_context(true);
                 }
                 //FIXME: Reload textures and shaders
-                set_paused(false);
+                set_has_focus(true);
                 break;
             case APP_CMD_LOST_FOCUS:
-                set_paused(true);
+                set_has_focus(false);
                 {
                     //See Window::context_lock_ for details
                     thread::Lock<thread::Mutex> context_lock(this->context_lock());

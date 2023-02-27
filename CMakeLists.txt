@@ -128,16 +128,20 @@ IF(NOT PLATFORM_DREAMCAST)
             ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
         )
 
+        link_libraries(android)
+
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
         IF(SIMULANT_USE_ALDC)
 
         ELSE()
-            SET(OPENAL_LIBRARY openal)
-            SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/.android/openal/OpenAL/include)
+
         ENDIF()
 
-        FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
+        SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on Android
+        SET(SDL2_LIBRARIES "")
+
+        SET(OPENGL_LIBRARIES GLESv2 EGL)
         FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
     ELSEIF(PLATFORM_PSP)
         SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP

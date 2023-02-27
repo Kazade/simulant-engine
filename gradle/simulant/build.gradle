@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
+	namespace "dev.simulant.simulant"
+
 	compileSdkVersion 32
 
 	defaultConfig {
