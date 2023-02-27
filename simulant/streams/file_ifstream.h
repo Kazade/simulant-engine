@@ -47,6 +47,8 @@ public:
 private:
     FILE* filein_ = nullptr;
     char buffer_[BUFFER_SIZE];
+    char fbuffer_[BUFFER_SIZE];
+
     uint32_t last_read_pos_ = 0;
 };
 
