@@ -76,7 +76,7 @@ class SceneManager :
 
     template<typename... Args>
     void do_activate(
-        const std::string& route,
+        std::string route,
         ActivateBehaviour behaviour,
         Args&&... args
     ) {
