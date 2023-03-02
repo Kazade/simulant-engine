@@ -10,7 +10,7 @@ RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/ko
 RUN cd /opt/toolchains/dc/kos && git fetch && git checkout 55f142357f1a6ceaa9f0b0a997bd7c4097b4ae83 && cd -
 RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolchains/dc/kos-ports
 
-RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp config.mk.stable.sample config.mk 
+RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp config.mk.testing.sample config.mk 
 
 # Speed up compilation
 RUN sed -i 's/makejobs=-j2/makejobs=-j8/' /opt/toolchains/dc/kos/utils/dc-chain/config.mk
