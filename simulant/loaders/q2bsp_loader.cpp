@@ -41,6 +41,44 @@
 namespace smlt  {
 namespace loaders {
 
+namespace Q2 {
+    enum LumpType {
+        ENTITIES = 0,
+        PLANES,
+        VERTICES,
+        VISIBILITY,
+        NODES,
+        TEXTURE_INFO,
+        FACES,
+        LIGHTMAPS,
+        LEAVES,
+        LEAF_FACE_TABLE,
+        LEAF_BRUSH_TABLE,
+        EDGES,
+        FACE_EDGE_TABLE,
+        MODELS,
+        BRUSHES,
+        BRUSH_SIDES,
+        POP,
+        AREAS,
+        AREA_PORTALS,
+        MAX_LUMPS
+    };
+
+    struct Lump {
+        uint32_t offset;
+        uint32_t length;
+    };
+
+    struct Header {
+        uint8_t magic[4];
+        uint32_t version;
+
+        Lump lumps[MAX_LUMPS];
+    };
+
+}
+
 const int LIGHTMAP_DIMENSION = 512; // Should be enough for anybody...
 const bool LIGHTMAPS_ENABLED = false;
 
