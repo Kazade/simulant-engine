@@ -50,7 +50,7 @@ struct Quaternion {
 
     AxisAngle to_axis_angle() const;
 
-    float length_squared() const {
+    float length_squared() const __attribute__((always_inline)) {
 #ifdef __DREAMCAST__
         return MATH_Sum_of_Squares(x, y, z, w);
 #else
@@ -58,11 +58,11 @@ struct Quaternion {
 #endif
     }
 
-    float length() const {
+    float length() const __attribute__((always_inline)) {
         return fast_sqrt(length_squared());
     }
 
-    void normalize() {
+    void normalize() __attribute__((always_inline)) {
         float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
@@ -80,7 +80,7 @@ struct Quaternion {
         return Quaternion(-x, -y, -z, w);
     }
 
-    float dot(const Quaternion& rhs) const {
+    float dot(const Quaternion& rhs) const __attribute__((always_inline)) {
 #ifdef __DREAMCAST__
         return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
 #else
@@ -88,7 +88,7 @@ struct Quaternion {
 #endif
     }
 
-    void inverse() {
+    void inverse() __attribute__((always_inline)) {
         float d = dot(*this);
         *this = conjugated() / d;
     }
@@ -167,7 +167,7 @@ struct Quaternion {
     }
 
     Radians angle() const {
-        return Radians(std::acos(w) * 2.0f);
+        return Radians(__builtin_acosf(w) * 2.0f);
     }
 
     Quaternion operator-() const {
@@ -216,28 +216,28 @@ struct Quaternion {
                 lerp(this->w, z.w, t)
             ).normalized();
         } else {
-            auto theta_0 = std::acos(cos_theta);
+            auto theta_0 = __builtin_acosf(cos_theta);
             auto theta = theta_0 * t;
-            auto sin_theta = std::sin(theta);
-            auto sin_theta_0 = std::sin(theta_0);
+            auto sin_theta = __builtin_sinf(theta);
+            auto sin_theta_0 = __builtin_sinf(theta_0);
 
             auto s1 = sin_theta / sin_theta_0;
-            auto s0 = std::cos(theta) - cos_theta * s1;
+            auto s0 = __builtin_acosf(theta) - cos_theta * s1;
 
             return ((*this) * s0) + (z * s1);
         }
     }
 
     const Degrees pitch() const {
-        return Radians(std::atan2(-2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
+        return Radians(__builtin_atan2f(-2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
     }
 
     const Degrees yaw() const {
-        return Radians(std::asin(clamp(-2.0f * (x * z - w * y), -1.0f, 1.0f)));
+        return Radians(__builtin_asinf(clamp(-2.0f * (x * z - w * y), -1.0f, 1.0f)));
     }
 
     const Degrees roll() const {
-        return Radians(std::atan2(2.0f * (x * y + w * z), w * w + x * x - y * y - z * z));
+        return Radians(__builtin_atan2f(2.0f * (x * y + w * z), w * w + x * x - y * y - z * z));
     }
 
     Vec3 forward() const {

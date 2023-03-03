@@ -142,7 +142,7 @@ public:
         this->z = z;
     }
 
-    float length_squared() const {
+    float length_squared() const __attribute__((always_inline)) {
 #ifdef __DREAMCAST__
         return MATH_Sum_of_Squares(x, y, z, 0.0f);
 #else
@@ -150,11 +150,11 @@ public:
 #endif
     }
 
-    float length() const {
+    float length() const __attribute__((always_inline)) {
         return fast_sqrt(length_squared());
     }
 
-    void normalize() {
+    void normalize() __attribute__((always_inline)) {
         float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
@@ -204,7 +204,7 @@ public:
         return unitV;
     }
 
-    float dot(const Vec3& rhs) const {
+    float dot(const Vec3& rhs) const __attribute__((always_inline)) {
 #ifdef __DREAMCAST__
         return MATH_fipr(x, y, z, 0.0f, rhs.x, rhs.y, rhs.z, 0.0f);
 #else
@@ -212,7 +212,7 @@ public:
 #endif
     }
 
-    Vec3 cross(const Vec3& rhs) const {
+    Vec3 cross(const Vec3& rhs) const __attribute__((always_inline)) {
         Vec3 ret;
 
         float a = (z * rhs.y);  // fmul
