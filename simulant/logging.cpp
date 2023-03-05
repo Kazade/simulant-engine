@@ -12,8 +12,10 @@
 namespace smlt {
 
 std::string to_string(const DateTime& time) {
-    std::time_t t = std::chrono::system_clock::to_time_t(time);
-    return std::ctime(&t);
+    auto duration = time.time_since_epoch();
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
+
+    return _F("{0}").format(seconds.count());
 }
 
 void Handler::write_message(Logger* logger,
