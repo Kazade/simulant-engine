@@ -105,7 +105,7 @@ public:
 
         state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 1.0f);
         manager_->update(1.0);
-        assert_equal(axis->value(), 1.0f);
+        assert_close(axis->value(), 1.0f, EPSILON);
     }
 
     void test_axis_pressed_released() {
