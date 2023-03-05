@@ -71,12 +71,23 @@ float fast_inverse_sqrt(float n);
 
 
 /** Clamps x between l and h*/
+__attribute__((optimize("O3", "fast-math")))
 inline float clamp(const float x, const float l, const float h) {
+#ifdef __DREAMCAST__
+    return __builtin_fminf(__builtin_fmaxf(x, l), h);
+#else
     return fast_min(fast_max(x, l), h);
+#endif
 }
 
 /** Linear interpolation from x to y with factor t, where t can be any value between 0 and 1 */
+__attribute__((optimize("O3", "fast-math")))
 inline float lerp(const float x, const float y, const float t) {
+#ifdef __DREAMCAST__
+    return __builtin_fmaf((y - x), t, x);
+#else
     return fast_fmaf((y - x), t, x);
+#endif
 }
+
 }
