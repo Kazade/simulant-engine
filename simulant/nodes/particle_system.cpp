@@ -172,10 +172,6 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uint8_t* dif = dif_ptr;
         float* uv = (float*) uv_ptr;
 
-
-        float hw = p.dimensions.x * 0.5f * right.x;
-        float hh = p.dimensions.y * 0.5f * up.y;
-
         uint8_t a = smlt::clamp(p.colour.a * 255.0f, 0, 255);
         uint8_t r = smlt::clamp(p.colour.r * 255.0f, 0, 255);
         uint8_t g = smlt::clamp(p.colour.g * 255.0f, 0, 255);
