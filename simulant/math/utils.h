@@ -5,6 +5,10 @@
 #include <cstdint>
 #include <algorithm>
 
+#ifdef __DREAMCAST__
+#include "../utils/sh4_math.h"
+#endif
+
 namespace smlt {
 
 const float PI = std::acos(-1.0f);
@@ -12,14 +16,6 @@ const float TWO_PI = PI * 2.0f;
 const float PI_OVER_180 = PI / 180.0f;
 const float PI_UNDER_180 = 180.0f / PI;
 const float EPSILON = std::numeric_limits<float>::epsilon();
-
-inline float clamp(const float x, const float l, const float h) {
-    return std::min(std::max(x, l), h);
-}
-
-inline float lerp(const float x, const float y, const float t) {
-    return fmaf((y - x), t, x);
-}
 
 float smoothstep(const float e0, const float e1, float x);
 float smootherstep(const float e0, const float e1, float x);
@@ -45,7 +41,53 @@ uint32_t next_power_of_two(uint32_t x);
 
 /** Approximate divide which is faster on some platforms */
 float fast_divide(float x, float y);
+
+/** Fast square root */
 float fast_sqrt(float n);
+
+/** Fast sine cosine (double) */
 void fast_sincos(double v, double* s, double* c);
+
+/** Fast sine cosine */
+void fast_sincos(float v, float* s, float* c);
+
+/** Fast absolute*/
+float fast_abs(float x);
+
+/** Returns a*b+c */
+float fast_fmaf(float a, float b, float c);
+
+/** Same as fminf */
+float fast_min(float a, float b);
+
+/** Same as fmaxf */
+float fast_max(float a, float b);
+
+/** Returns the inverse square root: 1 / sqrt(n) */
+float fast_inverse_sqrt(float n);
+
+/** Returns the inner (dot) product (x1 * x2) + (y1 * y2) + (z1 * z2) * (w1 * w2) */
+//float fipr(float x1, float y1, float z1, float w1, float x2, float y2, float z2, float w2);
+
+
+/** Clamps x between l and h*/
+__attribute__((optimize("O3", "fast-math")))
+inline float clamp(const float x, const float l, const float h) {
+#ifdef __DREAMCAST__
+    return __builtin_fminf(__builtin_fmaxf(x, l), h);
+#else
+    return fast_min(fast_max(x, l), h);
+#endif
+}
+
+/** Linear interpolation from x to y with factor t, where t can be any value between 0 and 1 */
+__attribute__((optimize("O3", "fast-math")))
+inline float lerp(const float x, const float y, const float t) {
+#ifdef __DREAMCAST__
+    return __builtin_fmaf((y - x), t, x);
+#else
+    return fast_fmaf((y - x), t, x);
+#endif
+}
 
 }

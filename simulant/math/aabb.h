@@ -64,11 +64,11 @@ public:
     }
 
     float max_dimension() const {
-        return std::max(width(), std::max(height(), depth()));
+        return fast_max(width(), fast_max(height(), depth()));
     }
 
     float min_dimension() const {
-        return std::min(width(), std::min(height(), depth()));
+        return fast_min(width(), fast_min(height(), depth()));
     }
 
     bool intersects_aabb(const AABB& other) const;

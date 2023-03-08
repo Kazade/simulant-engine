@@ -21,8 +21,9 @@ const Vec2 Vec2::ZERO = Vec2();                 //Shorthand for writing Vec2(0, 
 
 Vec2 Vec2::rotated_by(const Degrees& degrees) const {
     float r = Radians(degrees).value;
-    float cosR = cos(r);
-    float sinR = sin(r);
+    float cosR = 0.0f;
+    float sinR = 0.0f;
+    fast_sincos(r, &sinR, &cosR);
 
     return Vec2(
         x * cosR - y * sinR,

@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <ostream>
+#include "utils.h"
 
 namespace smlt {
 
@@ -40,6 +41,10 @@ struct Vec4 {
         return (x != rhs.x) || (y != rhs.y) || (z != rhs.z) || (w != rhs.w);
     }
 
+    Vec4 operator+(const Vec4& rhs) const {
+        return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
+    }
+
     Vec4 operator-(const Vec4& rhs) const {
         return Vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
     }
@@ -53,30 +58,38 @@ struct Vec4 {
         );
     }
 
-    float length() const {
-        return sqrtf(length_squared());
+    float length() const __attribute__((always_inline)) {
+        return fast_sqrt(length_squared());
     }
 
-    float length_squared() const {
-        return x * x + y * y + z * z + w * w;
+    float length_squared() const __attribute__((always_inline)) {
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, z, w);
+#else
+        return dot(*this);
+#endif
     }
 
-    void normalize() {
-        float l = 1.0f / length();
+    void normalize() __attribute__((always_inline)) {
+        float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
         z *= l;
         w *= l;
     }
 
+    float dot(const Vec4& rhs) const __attribute__((always_inline)) {
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
+#else
+        return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
+#endif
+    }
+
     const smlt::Vec4 normalized() const {
         smlt::Vec4 result = *this;
         result.normalize();
         return result;
-    }
-
-    Vec4 operator+(const Vec4& rhs) const {
-        return Vec4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
     }
 
     Vec3 xyz() const;

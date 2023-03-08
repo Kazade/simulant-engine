@@ -2,8 +2,8 @@
 
 #include <cmath>
 #include "../utils/unicode.h"
-#include "utils.h"
 #include "../utils/formatter.h"
+#include "utils.h"
 
 #ifdef __DREAMCAST__
 #include <kos.h>
@@ -113,12 +113,14 @@ public:
     }
 
     Vec3& operator/=(float rhs) {
-        *this = *this / rhs;
+        float l = fast_divide(1.0f, rhs);
+        *this *= l;
         return *this;
     }
 
     Vec3 operator/(float rhs) const {
-        Vec3 result(x / rhs, y / rhs, z / rhs);
+        float l = fast_divide(1.0f, rhs);
+        Vec3 result(x * l, y * l, z * l);
         return result;
     }
 
@@ -140,55 +142,39 @@ public:
         this->z = z;
     }
 
-    float length() const {
-    #ifdef __DREAMCAST__
-        float r;
-        vec3f_length(x, y, z, r);
-        return r;
-    #else
-        return sqrtf(length_squared());
-    #endif
+    float length_squared() const __attribute__((always_inline)) {
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, z, 0.0f);
+#else
+        return dot(*this);
+#endif
     }
 
-    float length_squared() const {
-        return x * x + y * y + z * z;
+    float length() const __attribute__((always_inline)) {
+        return fast_sqrt(length_squared());
     }
 
-    const Vec3 normalized() const {
-    #ifdef __DREAMCAST__
-        Vec3 ret(x, y, z);
-        vec3f_normalize(ret.x, ret.y, ret.z);
-        return ret;
-    #else
-        float l = 1.0f / length();
-        return Vec3(
-            x * l,
-            y * l,
-            z * l
-        );
-    #endif
-    }
-
-    void normalize() {
-    #ifdef __DREAMCAST__
-        vec3f_normalize(x, y, z);
-    #else
-        float l = 1.0f / length();
-
+    void normalize() __attribute__((always_inline)) {
+        float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
         z *= l;
-    #endif
+    }
+
+    const Vec3 normalized() const {
+        Vec3 result = *this;
+        result.normalize();
+        return result;
     }
 
     Vec3 lerp(const Vec3& end, float t) const {
-        t = std::min(t, 1.0f);
-        t = std::max(t, 0.0f);
+        t = fast_min(t, 1.0f);
+        t = fast_max(t, 0.0f);
 
         return Vec3(
-            fmaf((end.x - x), t, x),
-            fmaf((end.y - y), t, y),
-            fmaf((end.z - z), t, z)
+            fast_fmaf((end.x - x), t, x),
+            fast_fmaf((end.y - y), t, y),
+            fast_fmaf((end.z - z), t, z)
         );
     }
 
@@ -218,17 +204,15 @@ public:
         return unitV;
     }
 
-    float dot(const Vec3& rhs) const {
-    #ifdef __DREAMCAST__
-        float r;
-        vec3f_dot(x, y, z, rhs.x, rhs.y, rhs.z, r);
-        return r;
-    #else
+    float dot(const Vec3& rhs) const __attribute__((always_inline)) {
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, z, 0.0f, rhs.x, rhs.y, rhs.z, 0.0f);
+#else
         return x * rhs.x + y * rhs.y + z * rhs.z;
-    #endif
+#endif
     }
 
-    Vec3 cross(const Vec3& rhs) const {
+    Vec3 cross(const Vec3& rhs) const __attribute__((always_inline)) {
         Vec3 ret;
 
         float a = (z * rhs.y);  // fmul
@@ -236,10 +220,10 @@ public:
         a = -a;  // fneg
         float c = (y * rhs.x);  // fmul
         b = -b;  // fneg
-        ret.x = ::fmaf(y, rhs.z, a);  // fmac
+        ret.x = fast_fmaf(y, rhs.z, a);  // fmac
         c = -c;  // fneg
-        ret.y = ::fmaf(z, rhs.x, b); // fmac
-        ret.z = ::fmaf(x, rhs.y, c);  // fmac
+        ret.y = fast_fmaf(z, rhs.x, b); // fmac
+        ret.z = fast_fmaf(x, rhs.y, c);  // fmac
 
         return ret;
     }
@@ -299,11 +283,11 @@ public:
     Quaternion rotation_to(const Vec3& dir) const;
 
     static Vec3 min(const Vec3& a, const Vec3& b) {
-        return Vec3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
+        return Vec3(fast_min(a.x, b.x), fast_min(a.y, b.y), fast_min(a.z, b.z));
     }
 
     static Vec3 max(const Vec3& a, const Vec3& b) {
-        return Vec3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
+        return Vec3(fast_max(a.x, b.x), fast_max(a.y, b.y), fast_max(a.z, b.z));
     }
 };
 
