@@ -66,10 +66,6 @@ float fast_max(float a, float b);
 /** Returns the inverse square root: 1 / sqrt(n) */
 float fast_inverse_sqrt(float n);
 
-/** Returns the inner (dot) product (x1 * x2) + (y1 * y2) + (z1 * z2) * (w1 * w2) */
-//float fipr(float x1, float y1, float z1, float w1, float x2, float y2, float z2, float w2);
-
-
 /** Clamps x between l and h*/
 __attribute__((optimize("O3", "fast-math")))
 inline float clamp(const float x, const float l, const float h) {
@@ -88,6 +84,73 @@ inline float lerp(const float x, const float y, const float t) {
 #else
     return fast_fmaf((y - x), t, x);
 #endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_divide(float d, float n) {
+#ifdef __DREAMCAST__
+    const float sgn = ((*(unsigned int*)&n)>>31)*2+1;
+    return sgn * (1.f / __builtin_sqrtf(n * n)) * d;
+#else
+    return d / n;
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_sqrt(float n) {
+    return __builtin_sqrtf(n);
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline void fast_sincos(float v, float* s, float* c) {
+#ifdef __DREAMCAST__
+    __builtin_sincosf(v, s, c);
+#else
+    *s = sinf(v);
+    *c = cosf(v);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_abs(float x) {
+#ifdef __DREAMCAST__
+    return __builtin_fabsf(x);
+#else
+    return std::abs(x);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_fmaf(float a, float b, float c) {
+#ifdef __DREAMCAST__
+    return __builtin_fmaf(a, b, c);
+#else
+    return fmaf(a, b, c);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_min(float a, float b) {
+#ifdef __DREAMCAST__
+    return __builtin_fminf(a, b);
+#else
+    return std::min(a, b);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_max(float a, float b) {
+#ifdef __DREAMCAST__
+    return __builtin_fmaxf(a, b);
+#else
+    return std::max(a, b);
+#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_inverse_sqrt(float n) {
+    /* On Dreamcast this is enough to optimise to fsrra */
+    return 1 / std::sqrt(n);
 }
 
 }

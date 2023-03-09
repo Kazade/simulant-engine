@@ -300,7 +300,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             } else if(emitter->has_key("colours")) {
                 auto colours = emitter["colours"];
                 new_emitter.colours.clear();
-                for(int c = 0; c < colours->size(); ++c) {
+                for(std::size_t c = 0; c < colours->size(); ++c) {
                     auto colour = parse_colour(colours[c]->to_str().value_or("0 0 0 0"));
                     new_emitter.colours.push_back(colour);
                 }
