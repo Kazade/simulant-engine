@@ -142,7 +142,7 @@ public:
         this->z = z;
     }
 
-    float length_squared() const __attribute__((always_inline)) {
+    float length_squared() const {
 #ifdef __DREAMCAST__
         return MATH_Sum_of_Squares(x, y, z, 0.0f);
 #else
@@ -150,11 +150,11 @@ public:
 #endif
     }
 
-    float length() const __attribute__((always_inline)) {
+    float length() const {
         return fast_sqrt(length_squared());
     }
 
-    void normalize() __attribute__((always_inline)) {
+    void normalize() {
         float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;

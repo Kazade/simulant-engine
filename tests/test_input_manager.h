@@ -209,13 +209,21 @@ public:
         assert_false(backspace);
 
         window->on_key_down(KEYBOARD_CODE_BACKSPACE, ModifierKeyState());
-        assert_true(backspace);
+
+        try {
+            assert_true(backspace);
+        } catch(...) {
+            input->stop_text_input();
+            conn.disconnect();
+            throw;
+        }
 
         input->stop_text_input();
         conn.disconnect();
     }
 
     void test_start_text_input() {
+
         auto& input = window->input;
         auto ret = input->start_text_input();
 
@@ -223,7 +231,7 @@ public:
             /* We have a physical keyboard, so start_text_input should return false */
             assert_false(ret);
             assert_false(input->onscreen_keyboard_active());
-        } else {            
+        } else {
             /* On screen keyboard! */
             assert_true(ret);
             assert_true(input->onscreen_keyboard_active());
@@ -242,17 +250,22 @@ public:
             }
         );
 
-        window->on_key_down(smlt::KEYBOARD_CODE_A, smlt::ModifierKeyState());
-        assert_equal(text, "a");
+        try {
+            window->on_key_down(smlt::KEYBOARD_CODE_A, smlt::ModifierKeyState());
+            assert_equal(text, "a");
 
-        auto modifier = ModifierKeyState();
-        modifier.lshift = true;
-        text = "";
+            auto modifier = ModifierKeyState();
+            modifier.lshift = true;
+            text = "";
 
-        window->on_key_down(smlt::KEYBOARD_CODE_APOSTROPHE, modifier);
-        assert_equal(text, "@");
+            window->on_key_down(smlt::KEYBOARD_CODE_APOSTROPHE, modifier);
+            assert_equal(text, "@");
 
-        conn.disconnect();
+            conn.disconnect();
+        } catch(...) {
+            conn.disconnect();
+            throw;
+        }
     }
 
 private:

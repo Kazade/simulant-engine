@@ -39,14 +39,25 @@ bool almost_gequal(const T& lhs, const T& rhs, const T& epsilon) {
 
 uint32_t next_power_of_two(uint32_t x);
 
+
+/** Clamps x between l and h*/
+inline float clamp(const float x, const float l, const float h) {
+    return std::min(std::max(x, l), h);
+}
+
+/** Linear interpolation from x to y with factor t, where t can be any value between 0 and 1 */
+inline float lerp(const float x, const float y, const float t) {
+    return ::fmaf((y - x), t, x);
+}
+
+/* fast_ prefixed versions of functions allow of loss of precision over speed */
+float fast_clamp(const float x, const float l, const float h);
+
 /** Approximate divide which is faster on some platforms */
 float fast_divide(float x, float y);
 
 /** Fast square root */
 float fast_sqrt(float n);
-
-/** Fast sine cosine (double) */
-void fast_sincos(double v, double* s, double* c);
 
 /** Fast sine cosine */
 void fast_sincos(float v, float* s, float* c);
@@ -66,31 +77,17 @@ float fast_max(float a, float b);
 /** Returns the inverse square root: 1 / sqrt(n) */
 float fast_inverse_sqrt(float n);
 
-/** Clamps x between l and h*/
-__attribute__((optimize("O3", "fast-math")))
-inline float clamp(const float x, const float l, const float h) {
-#ifdef __DREAMCAST__
-    return __builtin_fminf(__builtin_fmaxf(x, l), h);
-#else
-    return fast_min(fast_max(x, l), h);
-#endif
-}
-
-/** Linear interpolation from x to y with factor t, where t can be any value between 0 and 1 */
-__attribute__((optimize("O3", "fast-math")))
-inline float lerp(const float x, const float y, const float t) {
-#ifdef __DREAMCAST__
-    return __builtin_fmaf((y - x), t, x);
-#else
-    return fast_fmaf((y - x), t, x);
-#endif
-}
-
 __attribute__((optimize("O3", "fast-math")))
 inline float fast_divide(float d, float n) {
 #ifdef __DREAMCAST__
-    const float sgn = ((*(unsigned int*)&n)>>31)*2+1;
-    return sgn * (1.f / __builtin_sqrtf(n * n)) * d;
+    union {
+        float f;
+        uint32_t i;
+    } c;
+    c.f = n;
+    const float r = (1.f / std::sqrt(c.f * c.f)) * d;
+    const uint32_t sgn = (c.i >> 31) * 2 + 1;
+    return r * sgn;
 #else
     return d / n;
 #endif
@@ -98,7 +95,7 @@ inline float fast_divide(float d, float n) {
 
 __attribute__((optimize("O3", "fast-math")))
 inline float fast_sqrt(float n) {
-    return __builtin_sqrtf(n);
+    return std::sqrt(n);
 }
 
 __attribute__((optimize("O3", "fast-math")))
@@ -113,38 +110,27 @@ inline void fast_sincos(float v, float* s, float* c) {
 
 __attribute__((optimize("O3", "fast-math")))
 inline float fast_abs(float x) {
-#ifdef __DREAMCAST__
-    return __builtin_fabsf(x);
-#else
     return std::abs(x);
-#endif
 }
 
 __attribute__((optimize("O3", "fast-math")))
 inline float fast_fmaf(float a, float b, float c) {
-#ifdef __DREAMCAST__
-    return __builtin_fmaf(a, b, c);
-#else
-    return fmaf(a, b, c);
-#endif
+    return ::fmaf(a, b, c);
 }
 
 __attribute__((optimize("O3", "fast-math")))
 inline float fast_min(float a, float b) {
-#ifdef __DREAMCAST__
-    return __builtin_fminf(a, b);
-#else
     return std::min(a, b);
-#endif
 }
 
 __attribute__((optimize("O3", "fast-math")))
 inline float fast_max(float a, float b) {
-#ifdef __DREAMCAST__
-    return __builtin_fmaxf(a, b);
-#else
     return std::max(a, b);
-#endif
+}
+
+__attribute__((optimize("O3", "fast-math")))
+inline float fast_clamp(const float x, const float l, const float h) {
+    return std::min(std::max(x, l), h);
 }
 
 __attribute__((optimize("O3", "fast-math")))
