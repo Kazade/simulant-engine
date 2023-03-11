@@ -34,7 +34,7 @@ public:
 
         auto euler = q.to_euler();
 
-        assert_true(smlt::Degrees(90) == euler.x);
+        assert_close(smlt::Degrees(90).value, euler.x.value, 0.000001f);
         assert_true(smlt::Degrees(0) == euler.y);
         assert_true(smlt::Degrees(0) == euler.z);
     }

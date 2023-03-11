@@ -140,7 +140,7 @@ void KOSWindow::check_events() {
     };
 
     static uint32_t previous_controller_button_state[MAX_CONTROLLERS] = {0};
-    static uint8_t previous_key_state[256] = {0}; // value-initialize to zero
+    static uint8_t previous_key_state[MAX_KEYBOARD_CODES] = {0}; // value-initialize to zero
 
     struct ControllerState {
         int8_t joyx = 0;
@@ -234,8 +234,15 @@ void KOSWindow::check_events() {
         if(device) {
             auto state = (kbd_state_t*) maple_dev_status(device);
 
-            auto get_modifiers = []() -> ModifierKeyState {
+            auto get_modifiers = [&state]() -> ModifierKeyState {
                 ModifierKeyState mod_state;
+                mod_state.lctrl = state->shift_keys & KBD_MOD_LCTRL;
+                mod_state.rctrl = state->shift_keys & KBD_MOD_RCTRL;
+                mod_state.rshift = state->shift_keys & KBD_MOD_RSHIFT;
+                mod_state.lshift = state->shift_keys & KBD_MOD_LSHIFT;
+                mod_state.ralt = state->shift_keys & KBD_MOD_RALT;
+                mod_state.lalt = state->shift_keys & KBD_MOD_LALT;
+
                 //FIXME:!
                 return mod_state;
             };
@@ -243,7 +250,7 @@ void KOSWindow::check_events() {
             if(state) {
                 const uint8_t* key_state = state->matrix;
 
-                for(uint32_t j = 0; j < 256; ++j) {
+                for(uint32_t j = 0; j < MAX_KEYBOARD_CODES; ++j) {
                     if(key_state[j] && !previous_key_state[j]) {
                         // Key down
                         input_state->_handle_key_down(
@@ -261,7 +268,7 @@ void KOSWindow::check_events() {
                     }
                 }
 
-                std::copy(key_state, key_state + 256, previous_key_state);
+                std::copy(key_state, key_state + MAX_KEYBOARD_CODES, previous_key_state);
             }
         }
     }
@@ -319,7 +326,7 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
             std::strncpy(info.name, device->info.product_name, sizeof(info.name));
             info.button_count = 5;
             info.axis_count = 4; //2 triggers, 2 for analog
-            info.hat_count = 1; // 1 D-pad            
+            info.hat_count = 1; // 1 D-pad
             info.has_rumble = false;
 
             for(int j = 1; j < MAX_DEVICES_PER_PORT; ++j) {

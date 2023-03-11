@@ -18,6 +18,10 @@ public:
         state_->_update_keyboard_devices({KeyboardDeviceInfo{0}});
         state_->_update_game_controllers({GameControllerInfo{GameControllerID(0), "test", 1, 1, 0, false, {0}}});
         manager_.reset(new InputManager(state_.get()));
+
+        if(!window->input_state->keyboard_count()) {
+            window->input_state->_update_keyboard_devices({KeyboardDeviceInfo{0}});
+        }
     }
 
     void test_axis_force() {
@@ -182,12 +186,18 @@ public:
             }
         );
 
-        input->onscreen_keyboard->cursor_to_char('1');
-        input->onscreen_keyboard->activate();
-        assert_equal(text, "1");
+        try {
+            input->onscreen_keyboard->cursor_to_char('1');
+            input->onscreen_keyboard->activate();
+            assert_equal(text, "1");
 
-        auto final_text = input->stop_text_input();
-        assert_equal(text, final_text);
+            auto final_text = input->stop_text_input();
+            assert_equal(text, final_text);
+        } catch(...) {
+            conn.disconnect();
+            throw;
+        }
+
         conn.disconnect();
     }
 
@@ -205,12 +215,11 @@ public:
             }
         );
 
-        window->on_key_down(KEYBOARD_CODE_SPACE, ModifierKeyState());
-        assert_false(backspace);
-
-        window->on_key_down(KEYBOARD_CODE_BACKSPACE, ModifierKeyState());
-
         try {
+            window->on_key_down(KEYBOARD_CODE_SPACE, ModifierKeyState());
+            assert_false(backspace);
+
+            window->on_key_down(KEYBOARD_CODE_BACKSPACE, ModifierKeyState());
             assert_true(backspace);
         } catch(...) {
             input->stop_text_input();

@@ -327,11 +327,7 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
         assert(0 && "Invalid plane index");
     }
 
-#ifdef __DREAMCAST__
-    t = MATH_Sum_of_Squares(out.n.x, out.n.y, out.n.z, 0.0f);
-#else
     t = out.n.dot(out.n);
-#endif
 
     const float inv_sqrt_t = fast_inverse_sqrt(t);
     out.n *= inv_sqrt_t;

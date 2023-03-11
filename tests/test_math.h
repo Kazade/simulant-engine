@@ -33,6 +33,11 @@ public:
         assert_close(120.0f, smlt::lerp(b, a, 1.1f), 0.0001f);
         assert_close(-120.0f, smlt::lerp(a, b, 1.1f), 0.0001f);
     }
+
+    void test_fast_divide() {
+        assert_close(1.0f / 100.0f, fast_divide(1.0f, 100.0f), 0.00001f);
+        assert_close(1000.0f / 2.5f, fast_divide(1000.0f, 2.5f), 0.00001f);
+    }
 };
 
 #endif // TEST_MATH_H
