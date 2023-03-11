@@ -40,11 +40,11 @@ public:
 
     Vec2 rotated_by(const Degrees& degrees) const;
 
-    float length() const  __attribute__((always_inline)) {
+    float length() const  {
         return fast_sqrt(x * x + y * y);
     }
 
-    float length_squared() const __attribute__((always_inline)) {
+    float length_squared() const {
 #ifdef __DREAMCAST__
         return MATH_Sum_of_Squares(x, y, 0.0f, 0.0f);
 #else
@@ -52,7 +52,7 @@ public:
 #endif
     }
 
-    void normalize() __attribute__((always_inline)) {
+    void normalize() {
         float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
@@ -115,7 +115,7 @@ public:
         return Vec2(x - rhs.x, y - rhs.y);
     }
 
-    float dot(const Vec2& rhs) const __attribute__((always_inline)) {       
+    float dot(const Vec2& rhs) const {
 #ifdef __DREAMCAST__
         return MATH_fipr(x, y, 0.0f, 0.0f, rhs.x, rhs.y, 0.0f, 0.0f);
 #else

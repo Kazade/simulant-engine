@@ -50,7 +50,7 @@ struct Quaternion {
 
     AxisAngle to_axis_angle() const;
 
-    float length_squared() const __attribute__((always_inline)) {
+    float length_squared() const {
 #ifdef __DREAMCAST__
         return MATH_Sum_of_Squares(x, y, z, w);
 #else
@@ -58,11 +58,11 @@ struct Quaternion {
 #endif
     }
 
-    float length() const __attribute__((always_inline)) {
+    float length() const {
         return fast_sqrt(length_squared());
     }
 
-    void normalize() __attribute__((always_inline)) {
+    void normalize() {
         float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
@@ -80,7 +80,7 @@ struct Quaternion {
         return Quaternion(-x, -y, -z, w);
     }
 
-    float dot(const Quaternion& rhs) const __attribute__((always_inline)) {
+    float dot(const Quaternion& rhs) const {
 #ifdef __DREAMCAST__
         return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
 #else
@@ -88,7 +88,7 @@ struct Quaternion {
 #endif
     }
 
-    void inverse() __attribute__((always_inline)) {
+    void inverse() {
         float d = dot(*this);
         *this = conjugated() / d;
     }
