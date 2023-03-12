@@ -103,8 +103,8 @@ inline void fast_sincos(float v, float* s, float* c) {
 #ifdef __DREAMCAST__
     __builtin_sincosf(v, s, c);
 #else
-    *s = sinf(v);
-    *c = cosf(v);
+    *s = std::sin(v);
+    *c = std::cos(v);
 #endif
 }
 

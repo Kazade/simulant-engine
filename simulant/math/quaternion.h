@@ -51,11 +51,7 @@ struct Quaternion {
     AxisAngle to_axis_angle() const;
 
     float length_squared() const {
-#ifdef __DREAMCAST__
-        return MATH_Sum_of_Squares(x, y, z, w);
-#else
         return dot(*this);
-#endif
     }
 
     float length() const {
@@ -221,8 +217,8 @@ struct Quaternion {
             auto sin_theta = std::sin(theta);
             auto sin_theta_0 = std::sin(theta_0);
 
-            auto s1 = sin_theta / sin_theta_0;
-            auto s0 = std::acos(theta) - cos_theta * s1;
+            auto s1 = fast_divide(sin_theta, sin_theta_0);
+            auto s0 = std::cos(theta) - cos_theta * s1;
 
             return ((*this) * s0) + (z * s1);
         }
