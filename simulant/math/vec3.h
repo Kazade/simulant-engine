@@ -204,7 +204,7 @@ public:
         return unitV;
     }
 
-    float dot(const Vec3& rhs) const __attribute__((always_inline)) {
+    float dot(const Vec3& rhs) const {
 #ifdef __DREAMCAST__
         return MATH_fipr(x, y, z, 0.0f, rhs.x, rhs.y, rhs.z, 0.0f);
 #else
@@ -212,7 +212,7 @@ public:
 #endif
     }
 
-    Vec3 cross(const Vec3& rhs) const __attribute__((always_inline)) {
+    Vec3 cross(const Vec3& rhs) const {
         Vec3 ret;
 
         float a = (z * rhs.y);  // fmul
