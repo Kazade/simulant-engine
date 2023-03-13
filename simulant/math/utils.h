@@ -50,36 +50,16 @@ inline float lerp(const float x, const float y, const float t) {
     return ::fmaf((y - x), t, x);
 }
 
-/* fast_ prefixed versions of functions allow of loss of precision over speed */
-float fast_clamp(const float x, const float l, const float h);
-
-/** Approximate divide which is faster on some platforms */
-float fast_divide(float x, float y);
-
-/** Fast square root */
-float fast_sqrt(float n);
-
-/** Fast sine cosine */
-void fast_sincos(float v, float* s, float* c);
-
-/** Fast absolute*/
-float fast_abs(float x);
-
-/** Returns a*b+c */
-float fast_fmaf(float a, float b, float c);
-
-/** Same as fminf */
-float fast_min(float a, float b);
-
-/** Same as fmaxf */
-float fast_max(float a, float b);
-
-/** Returns the inverse square root: 1 / sqrt(n) */
-float fast_inverse_sqrt(float n);
-
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_divide(float d, float n) {
+/* fast_ prefixed versions of functions allow of loss of precision over speed. IT IS IMPORTANT
+ THAT THESE ARE USED WHEN COMPILED WITH -O3 -ffast-math or these will be drastically slower */
+static inline float fast_divide(float d, float n) {
 #ifdef __DREAMCAST__
+#ifndef NDEBUG
+    /* Non release builds use d / n because the alternative is soooo much slower if you're
+     * compiling without optimisations */
+    return d / n;
+#else
+    /* On Dreamcast this is enough to optimise to fsrra and some bitshifts */
     union {
         float f;
         uint32_t i;
@@ -88,18 +68,18 @@ inline float fast_divide(float d, float n) {
     const float r = (1.f / std::sqrt(c.f * c.f)) * d;
     const uint32_t sgn = (c.i >> 31) * 2 + 1;
     return r * sgn;
+#endif
+
 #else
     return d / n;
 #endif
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_sqrt(float n) {
+static inline float fast_sqrt(float n) {
     return std::sqrt(n);
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline void fast_sincos(float v, float* s, float* c) {
+static inline void fast_sincos(float v, float* s, float* c) {
 #ifdef __DREAMCAST__
     __builtin_sincosf(v, s, c);
 #else
@@ -108,33 +88,27 @@ inline void fast_sincos(float v, float* s, float* c) {
 #endif
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_abs(float x) {
+static inline float fast_abs(float x) {
     return std::abs(x);
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_fmaf(float a, float b, float c) {
+static inline float fast_fmaf(float a, float b, float c) {
     return ::fmaf(a, b, c);
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_min(float a, float b) {
+static inline float fast_min(float a, float b) {
     return std::min(a, b);
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_max(float a, float b) {
+static inline float fast_max(float a, float b) {
     return std::max(a, b);
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_clamp(const float x, const float l, const float h) {
+static inline float fast_clamp(const float x, const float l, const float h) {
     return std::min(std::max(x, l), h);
 }
 
-__attribute__((optimize("O3", "fast-math")))
-inline float fast_inverse_sqrt(float n) {
+static inline float fast_inverse_sqrt(float n) {
     /* On Dreamcast this is enough to optimise to fsrra */
     return 1 / std::sqrt(n);
 }
