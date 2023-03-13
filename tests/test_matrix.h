@@ -1,8 +1,11 @@
-#ifndef TEST_MAT3_H
-#define TEST_MAT3_H
+#pragma once
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
+
+namespace {
+
+using namespace smlt;
 
 class Mat4Test : public smlt::test::TestCase {
 public:
@@ -97,4 +100,5 @@ public:
     }
 };
 
-#endif // TEST_MAT3_H
+}
+
