@@ -29,6 +29,19 @@ public:
         assert_equal(q.w, 4);
     }
 
+    void test_slerp() {
+        Quaternion q0(smlt::Degrees(-90), smlt::Degrees(0), smlt::Degrees(0));
+        Quaternion q1(smlt::Degrees(90), smlt::Degrees(0), smlt::Degrees(0));
+
+        Quaternion q2 = q0.slerp(q1, 0.0f);
+
+        assert_equal(q0, q2);
+
+        q2 = q0.slerp(q1, 1.0f);
+
+        assert_equal(q1, q2);
+    }
+
     void test_to_from_euler() {
         Quaternion q(smlt::Degrees(90), smlt::Degrees(0), smlt::Degrees(0));
 

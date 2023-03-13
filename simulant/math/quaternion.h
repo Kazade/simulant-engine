@@ -190,38 +190,33 @@ struct Quaternion {
     }
 
     Quaternion slerp(const Quaternion& rhs, float t) const {
-        auto z = rhs;
-
-        auto cos_theta = this->dot(rhs);
-
-        // negate to avoid interpolation taking long way around
-        if (cos_theta < 0.0f) {
-            z = -rhs;
-            cos_theta = -cos_theta;
-        }
-
         const constexpr float DOT_THRESHOLD = 0.9995f;
+        const Quaternion& v0 = *this;
+        const Quaternion& v1 = rhs;
 
-        // Lerp to avoid side effect of sin(angle) becoming a zero denominator
-        if(cos_theta > DOT_THRESHOLD) {
-            // Linear interpolation
+        auto dot = v0.dot(v1);
+
+        if (dot > DOT_THRESHOLD) {
             return Quaternion(
-                lerp(this->x, z.x, t),
-                lerp(this->y, z.y, t),
-                lerp(this->z, z.z, t),
-                lerp(this->w, z.w, t)
+                lerp(v0.x, v1.x, t),
+                lerp(v0.y, v1.y, t),
+                lerp(v0.z, v1.z, t),
+                lerp(v0.w, v1.w, t)
             ).normalized();
-        } else {
-            auto theta_0 = std::acos(cos_theta);
-            auto theta = theta_0 * t;
-            auto sin_theta = std::sin(theta);
-            auto sin_theta_0 = std::sin(theta_0);
-
-            auto s1 = sin_theta / sin_theta_0;
-            auto s0 = std::cos(theta) - cos_theta * s1;
-
-            return ((*this) * s0) + (z * s1);
         }
+
+        dot = clamp(dot, -1, 1);
+        float theta_0 = std::acos(dot);
+        float theta = theta_0 * t;
+
+        auto v2 = Quaternion(
+            v1.x - v0.x * dot,
+            v1.y - v0.y * dot,
+            v1.z - v0.z * dot,
+            v1.w - v0.w * dot
+        ).normalized();
+
+        return v0 * std::cos(theta) + v2 * std::sin(theta);
     }
 
     const Degrees pitch() const {
