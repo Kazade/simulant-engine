@@ -25,7 +25,7 @@
 #include "generic/managed.h"
 #include "generic/uniquely_identifiable.h"
 #include "generic/notifies_destruction.h"
-
+#include "core/aligned_vector.h"
 #include "colour.h"
 #include "types.h"
 
@@ -220,7 +220,7 @@ public:
 
 private:
     VertexSpecification vertex_specification_;
-    std::vector<uint8_t> data_;
+    smlt::aligned_vector<uint8_t, 32> data_;
     uint32_t vertex_count_ = 0;
     uint32_t stride_ = 0;
     int32_t cursor_position_ = 0;
