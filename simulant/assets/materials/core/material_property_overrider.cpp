@@ -192,7 +192,7 @@ void MaterialPropertyOverrider::set_property_value(const char* name, const Textu
 }
 
 template<typename T, typename Map>
-bool fetcher(const MaterialPropertyOverrider* const __restrict__ _this, const MaterialPropertyOverrider* const __restrict__ parent, const Map& map, MaterialPropertyNameHash hsh, const T*& out) {
+static inline bool fetcher(const MaterialPropertyOverrider* const __restrict__ _this, const MaterialPropertyOverrider* const __restrict__ parent, const Map& map, MaterialPropertyNameHash hsh, const T*& out) {
     auto& lookup = _this->*map;
 
     auto s = lookup.size();
