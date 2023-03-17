@@ -143,11 +143,7 @@ public:
     }
 
     float length_squared() const {
-#ifdef __DREAMCAST__
-        return MATH_Sum_of_Squares(x, y, z, 0.0f);
-#else
         return dot(*this);
-#endif
     }
 
     float length() const {
@@ -205,11 +201,7 @@ public:
     }
 
     float dot(const Vec3& rhs) const {
-#ifdef __DREAMCAST__
-        return MATH_fipr(x, y, z, 0.0f, rhs.x, rhs.y, rhs.z, 0.0f);
-#else
         return x * rhs.x + y * rhs.y + z * rhs.z;
-#endif
     }
 
     Vec3 cross(const Vec3& rhs) const {
