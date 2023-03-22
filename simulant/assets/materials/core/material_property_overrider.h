@@ -26,26 +26,46 @@ public:
         parent_(parent) {}
 
     template<typename T>
-    void set_property_value(const char* name, const T& value) {
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name, const T& value) {
+        if(auto v = find_core_property(hsh)) {
+            v->set(value);
+        } else {
+            clear_override(hsh);
+
+            properties_.insert(std::make_pair(hsh, PropertyValue<void>(value)));
+            on_override(hsh, name, _impl::material_property_lookup<T>::type);
+        }
+
+        return true;
+    }
+
+    template<typename T>
+    bool set_property_value(const char* name, const T& value) {
         if(!valid_name(name)) {
             S_WARN("Ignoring invalid property name: {0}", name);
-            return;
+            return false;
         }
 
         if(parent_ && !parent_->check_existance(name)) {
             S_WARN("Ignoring unknown property override for {0}", name);
-            return;
+            return false;
         }
 
-        auto hsh = material_property_hash(name);
-        clear_override(hsh);
-
-        properties_.insert(std::make_pair(hsh, PropertyValue<void>(value)));
-        on_override(hsh, name, _impl::material_property_lookup<T>::type);
+        return set_property_value(material_property_hash(name), name, value);
     }
 
-    void set_property_value(const char* name, const Colour& value) {
-        set_property_value(name, (const Vec4&) value);
+    bool set_property_value(const char* name, const Colour& value) {
+        if(!valid_name(name)) {
+            S_WARN("Ignoring invalid property name: {0}", name);
+            return false;
+        }
+
+        if(parent_ && !parent_->check_existance(name)) {
+            S_WARN("Ignoring unknown property override for {0}", name);
+            return false;
+        }
+
+        return set_property_value(material_property_hash(name), name, (const Vec4&) value);
     }
 
     template<typename T>
@@ -55,7 +75,7 @@ public:
          * list (which is for non-core properties) */
         if(is_core_property(hsh)) {
             auto v = find_core_property(hsh);
-            if(v) {
+            if(v && v->has_value()) {
                 out = v->get<T>();
                 return true;
             } else {
@@ -138,64 +158,68 @@ protected:
     PropertyValue<float> fog_end_property_;
     PropertyValue<int32_t> fog_mode_property_;
 
+    BasePropertyValue* find_core_property(const MaterialPropertyNameHash hsh) {
+        return const_cast<BasePropertyValue*>(static_cast<const MaterialPropertyOverrider*>(this)->find_core_property(hsh));
+    }
+
     const BasePropertyValue* find_core_property(const MaterialPropertyNameHash hsh) const {
         switch(hsh) {
             case DIFFUSE_PROPERTY_HASH:
-                return diffuse_property_.has_value() ? &diffuse_property_ : nullptr;
+                return &diffuse_property_;
             case AMBIENT_PROPERTY_HASH:
-                return ambient_property_.has_value() ? &ambient_property_ : nullptr;
+                return &ambient_property_;
             case EMISSION_PROPERTY_HASH:
-                return emission_property_.has_value() ? &emission_property_ : nullptr;
+                return &emission_property_;
             case SPECULAR_PROPERTY_HASH:
-                return specular_property_.has_value() ? &specular_property_ : nullptr;
+                return &specular_property_;
             case SHININESS_PROPERTY_HASH:
-                return shininess_property_.has_value() ? &shininess_property_ : nullptr;
+                return &shininess_property_;
             case POINT_SIZE_PROPERTY_HASH:
-                return point_size_property_.has_value() ? &point_size_property_ : nullptr;
+                return &point_size_property_;
             case DEPTH_WRITE_ENABLED_PROPERTY_HASH:
-                return depth_write_enabled_property_.has_value() ? &depth_write_enabled_property_ : nullptr;
+                return &depth_write_enabled_property_;
             case DEPTH_TEST_ENABLED_PROPERTY_HASH:
-                return depth_test_enabled_property_.has_value() ? &depth_test_enabled_property_ : nullptr;
+                return &depth_test_enabled_property_;
             case LIGHTING_ENABLED_PROPERTY_HASH:
-                return lighting_enabled_property_.has_value() ? &lighting_enabled_property_ : nullptr;
+                return &lighting_enabled_property_;
             case TEXTURES_ENABLED_PROPERTY_HASH:
-                return textures_enabled_property_.has_value() ? &textures_enabled_property_ : nullptr;
+                return &textures_enabled_property_;
             case DIFFUSE_MAP_PROPERTY_HASH:
-                return diffuse_map_property_.has_value() ? &diffuse_map_property_ : nullptr;
+                return &diffuse_map_property_;
             case SPECULAR_MAP_PROPERTY_HASH:
-                return specular_map_property_.has_value() ? &specular_map_property_ : nullptr;
+                return &specular_map_property_;
             case LIGHT_MAP_PROPERTY_HASH:
-                return light_map_property_.has_value() ? &light_map_property_ : nullptr;
+                return &light_map_property_;
             case NORMAL_MAP_PROPERTY_HASH:
-                return normal_map_property_.has_value() ? &normal_map_property_ : nullptr;
+                return &normal_map_property_;
             case DIFFUSE_MAP_MATRIX_PROPERTY_HASH:
-                return diffuse_map_matrix_property_.has_value() ? &diffuse_map_matrix_property_ : nullptr;
+                return &diffuse_map_matrix_property_;
             case SPECULAR_MAP_MATRIX_PROPERTY_HASH:
-                return specular_map_matrix_property_.has_value() ? &specular_map_matrix_property_ : nullptr;
+                return &specular_map_matrix_property_;
             case LIGHT_MAP_MATRIX_PROPERTY_HASH:
-                return light_map_matrix_property_.has_value() ? &light_map_matrix_property_ : nullptr;
+                return &light_map_matrix_property_;
             case NORMAL_MAP_MATRIX_PROPERTY_HASH:
-                return normal_map_matrix_property_.has_value() ? &normal_map_matrix_property_ : nullptr;
+                return &normal_map_matrix_property_;
             case BLEND_FUNC_PROPERTY_HASH:
-                return blend_func_property_.has_value() ? &blend_func_property_ : nullptr;
+                return &blend_func_property_;
             case POLYGON_MODE_PROPERTY_HASH:
-                return polygon_mode_property_.has_value() ? &polygon_mode_property_ : nullptr;
+                return &polygon_mode_property_;
             case SHADE_MODEL_PROPERTY_HASH:
-                return shade_model_property_.has_value() ? &shade_model_property_ : nullptr;
+                return &shade_model_property_;
             case COLOUR_MATERIAL_PROPERTY_HASH:
-                return colour_material_property_.has_value() ? &colour_material_property_ : nullptr;
+                return &colour_material_property_;
             case CULL_MODE_PROPERTY_HASH:
-                return cull_mode_property_.has_value() ? &cull_mode_property_ : nullptr;
+                return &cull_mode_property_;
             case FOG_COLOUR_PROPERTY_HASH:
-                return fog_colour_property_.has_value() ? &fog_colour_property_ : nullptr;
+                return &fog_colour_property_;
             case FOG_DENSITY_PROPERTY_HASH:
-                return fog_density_property_.has_value() ? &fog_density_property_ : nullptr;
+                return &fog_density_property_;
             case FOG_START_PROPERTY_HASH:
-                return fog_start_property_.has_value() ? &fog_start_property_ : nullptr;
+                return &fog_start_property_;
             case FOG_END_PROPERTY_HASH:
-                return fog_end_property_.has_value() ? &fog_end_property_ : nullptr;
+                return &fog_end_property_;
             case FOG_MODE_PROPERTY_HASH:
-                return fog_mode_property_.has_value() ? &fog_mode_property_ : nullptr;
+                return &fog_mode_property_;
             default:
                 return nullptr;
         }

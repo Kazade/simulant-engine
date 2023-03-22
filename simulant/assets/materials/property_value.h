@@ -79,9 +79,14 @@ template<typename T = void> struct PropertyValue;
 struct BasePropertyValue {
     template<typename T>
     T* get() const {
-        T* result = nullptr;
+        T* result;
         do_get(&result);
         return result;
+    }
+
+    template<typename T>
+    bool set(const T& value) {
+        return do_set(value);
     }
 
     virtual bool has_value() const = 0;
@@ -97,9 +102,21 @@ private:
     virtual void do_get(Mat4** result) const { *result = nullptr; }
     virtual void do_get(TexturePtr** result) const { *result = nullptr; }
 
+    virtual bool do_set(const bool& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const int32_t& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const float& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const Vec2& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const Vec3& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const Vec4& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const Mat3& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const Mat4& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const TexturePtr& value) { _S_UNUSED(value); return false; }
+
     void do_get(Colour** result) const {
         do_get((Vec4**) result);
     }
+
+    bool do_set(const Colour& value) { return do_set((const Vec4&) value); }
 };
 
 template<typename T>
@@ -119,11 +136,6 @@ struct PropertyValue : public BasePropertyValue {
 
     PropertyValue& operator=(const PropertyValue& ) = default;
 
-    void set(const T& value) {
-        data = value;
-        is_set_ = true;
-    }
-
     void clear() {
         is_set_ = false;
     }
@@ -134,6 +146,12 @@ struct PropertyValue : public BasePropertyValue {
 private:
     void do_get(T** result) const override {
         *result = (T*) &data;
+    }
+
+    bool do_set(const T& value) override {
+        data = value;
+        is_set_ = true;
+        return true;
     }
 };
 
@@ -238,16 +256,6 @@ struct PropertyValue<void> : public BasePropertyValue {
     }
 
     template<typename T>
-    void set(T value) {
-        clear();
-
-        data = (uint8_t*) smlt::aligned_alloc(alignof(T), sizeof(T));
-        assert(data);
-        new (data) T(value);
-        type = _impl::material_property_lookup<T>::type;
-    }
-
-    template<typename T>
     T* get() const {
         return (T*) data;
     }
@@ -263,6 +271,28 @@ struct PropertyValue<void> : public BasePropertyValue {
         return bool(data);
     }
 private:
+    template<typename T>
+    bool _set(const T& value) {
+        clear();
+
+        data = (uint8_t*) smlt::aligned_alloc(alignof(T), sizeof(T));
+        assert(data);
+        new (data) T(value);
+        type = _impl::material_property_lookup<T>::type;
+
+        return true;
+    }
+
+    bool do_set(const bool& value) override { return _set(value); }
+    bool do_set(const int32_t& value) override { return _set(value); }
+    bool do_set(const float& value) override { return _set(value); }
+    bool do_set(const Vec2& value) override { return _set(value); }
+    bool do_set(const Vec3& value) override { return _set(value); }
+    bool do_set(const Vec4& value) override { return _set(value); }
+    bool do_set(const Mat3& value) override { return _set(value); }
+    bool do_set(const Mat4& value) override { return _set(value); }
+    bool do_set(const TexturePtr& value) override { return _set(value); }
+
     void do_get(bool** result) const override { *result = (type == MATERIAL_PROPERTY_TYPE_BOOL) ? (bool*) data : nullptr; }
     void do_get(int32_t** result) const override { *result = (type == MATERIAL_PROPERTY_TYPE_INT) ? (int32_t*) data : nullptr; }
     void do_get(float** result) const override { *result = (type == MATERIAL_PROPERTY_TYPE_FLOAT) ? (float*) data : nullptr; }
