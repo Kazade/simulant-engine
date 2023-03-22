@@ -242,6 +242,7 @@ struct PropertyValue<void> : public BasePropertyValue {
         clear();
 
         data = (uint8_t*) smlt::aligned_alloc(alignof(T), sizeof(T));
+        assert(data);
         new (data) T(value);
         type = _impl::material_property_lookup<T>::type;
     }
