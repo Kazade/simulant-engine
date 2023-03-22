@@ -48,6 +48,41 @@ constexpr const MaterialPropertyNameHash FOG_START_PROPERTY_HASH = material_prop
 constexpr const MaterialPropertyNameHash FOG_END_PROPERTY_HASH = material_property_hash(FOG_END_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash FOG_COLOUR_PROPERTY_HASH = material_property_hash(FOG_COLOUR_PROPERTY_NAME);
 
+inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
+    switch(hsh) {
+        case DIFFUSE_PROPERTY_HASH:
+        case AMBIENT_PROPERTY_HASH:
+        case EMISSION_PROPERTY_HASH:
+        case SPECULAR_PROPERTY_HASH:
+        case SHININESS_PROPERTY_HASH:
+        case POINT_SIZE_PROPERTY_HASH:
+        case DEPTH_WRITE_ENABLED_PROPERTY_HASH:
+        case DEPTH_TEST_ENABLED_PROPERTY_HASH:
+        case LIGHTING_ENABLED_PROPERTY_HASH:
+        case TEXTURES_ENABLED_PROPERTY_HASH:
+        case DIFFUSE_MAP_PROPERTY_HASH:
+        case SPECULAR_MAP_PROPERTY_HASH:
+        case LIGHT_MAP_PROPERTY_HASH:
+        case NORMAL_MAP_PROPERTY_HASH:
+        case DIFFUSE_MAP_MATRIX_PROPERTY_HASH:
+        case SPECULAR_MAP_MATRIX_PROPERTY_HASH:
+        case LIGHT_MAP_MATRIX_PROPERTY_HASH:
+        case NORMAL_MAP_MATRIX_PROPERTY_HASH:
+        case BLEND_FUNC_PROPERTY_HASH:
+        case POLYGON_MODE_PROPERTY_HASH:
+        case SHADE_MODEL_PROPERTY_HASH:
+        case COLOUR_MATERIAL_PROPERTY_HASH:
+        case CULL_MODE_PROPERTY_HASH:
+        case FOG_COLOUR_PROPERTY_HASH:
+        case FOG_DENSITY_PROPERTY_HASH:
+        case FOG_START_PROPERTY_HASH:
+        case FOG_END_PROPERTY_HASH:
+        case FOG_MODE_PROPERTY_HASH:
+            return true;
+        default:
+            return false;
+    }
+}
 
 struct CoreMaterial {
     const Colour diffuse = Colour(1, 1, 1, 1);
@@ -96,7 +131,6 @@ typedef std::vector<std::pair<std::string, MaterialPropertyType>> PropertyList;
 const PropertyList &core_properties();
 
 bool is_core_property(const char* name);
-bool is_core_property(const MaterialPropertyNameHash hsh);
 
 bool core_property_type(const char* name, MaterialPropertyType* type);
 bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type);

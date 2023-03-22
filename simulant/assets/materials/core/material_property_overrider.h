@@ -50,24 +50,32 @@ public:
 
     template<typename T>
     bool property_value(const MaterialPropertyNameHash hsh, const T*& out) const {
-        /* First, see if we have a core property override */
-        auto v = find_core_property(hsh);
-        if(v) {
-            out = v->get<T>();
-            return true;
+        /* Core property fast-path. If it's a core property, check locally
+         * then check the parent without doing a hash lookup on the properties
+         * list (which is for non-core properties) */
+        if(is_core_property(hsh)) {
+            auto v = find_core_property(hsh);
+            if(v) {
+                out = v->get<T>();
+                return true;
+            } else {
+                if(parent_) {
+                    return parent_->property_value(hsh, out);
+                } else {
+                    return core_material_property_value(hsh, out);
+                }
+            }
+        } else {
+            auto it = properties_.find(hsh);
+            if(it != properties_.end()) {
+                out = it->second.get<T>();
+                return true;
+            } else if(parent_) {
+                return parent_->property_value(hsh, out);
+            }
         }
 
-        auto it = properties_.find(hsh);
-        if(it != properties_.end()) {
-            out = it->second.get<T>();
-            return true;
-        } else if(parent_) {
-            return parent_->property_value(hsh, out);
-        } else if(is_core_property(hsh)) {
-            return core_material_property_value(hsh, out);
-        } else {
-            return false;
-        }
+        return false;
     }
 
     /* Helpers for std::string */
