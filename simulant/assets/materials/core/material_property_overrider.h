@@ -5,6 +5,7 @@
 #include <string>
 
 #include "core_material.h"
+#include "../../../generic/containers/contiguous_map.h"
 
 namespace smlt {
 
@@ -15,6 +16,57 @@ namespace smlt {
  * 2. Adding additional property values (e.g. shader uniforms)
  */
 
+namespace _impl {
+    template<typename T>
+    struct material_property_lookup;
+
+    template<>
+    struct material_property_lookup<bool> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_BOOL;
+    };
+
+    template<>
+    struct material_property_lookup<int32_t> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_INT;
+    };
+
+    template<>
+    struct material_property_lookup<float> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_FLOAT;
+    };
+
+    template<>
+    struct material_property_lookup<Vec2> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC2;
+    };
+
+    template<>
+    struct material_property_lookup<Vec3> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC3;
+    };
+
+    template<>
+    struct material_property_lookup<Vec4> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_VEC4;
+    };
+
+    template<>
+    struct material_property_lookup<Mat3> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_MAT3;
+    };
+
+    template<>
+    struct material_property_lookup<Mat4> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_MAT4;
+    };
+
+    template<>
+    struct material_property_lookup<TexturePtr> {
+        const static MaterialPropertyType type = MATERIAL_PROPERTY_TYPE_TEXTURE;
+    };
+}
+
+bool valid_name(const char* name);
 
 class MaterialPropertyOverrider {
 public:
@@ -22,30 +74,43 @@ public:
     MaterialPropertyOverrider(const MaterialPropertyOverrider* parent):
         parent_(parent) {}
 
-    void set_property_value(const char* name, const bool& value);
-    void set_property_value(const char* name, const float& value);
-    void set_property_value(const char* name, const int32_t& value);
-    void set_property_value(const char* name, const Colour& value);
-    void set_property_value(const char* name, const Vec4& value);
-    void set_property_value(const char* name, const Vec3& value);
-    void set_property_value(const char* name, const Vec2& value);
-    void set_property_value(const char* name, const Mat3& value);
-    void set_property_value(const char* name, const Mat4& value);
-    void set_property_value(const char* name, const TexturePtr& value);
+    template<typename T>
+    void set_property_value(const char* name, const T& value) {
+        if(!valid_name(name)) {
+            S_WARN("Ignoring invalid property name: {0}", name);
+            return;
+        }
 
-    bool property_value(const MaterialPropertyNameHash hsh, const bool*& out) const;
-    bool property_value(const MaterialPropertyNameHash hsh, const float*& out) const;
-    bool property_value(const MaterialPropertyNameHash hsh, const int32_t *&out) const;
+        if(parent_ && !parent_->check_existance(name)) {
+            S_WARN("Ignoring unknown property override for {0}", name);
+            return;
+        }
 
-    bool property_value(const MaterialPropertyNameHash hsh, const Colour*& out) const;
-    bool property_value(const MaterialPropertyNameHash hsh, const Vec2*& out) const;
-    bool property_value(const MaterialPropertyNameHash hsh, const Vec3*& out) const;
+        auto hsh = material_property_hash(name);
+        clear_override(hsh);
 
-    bool property_value(const MaterialPropertyNameHash hsh, const Vec4*& out) const;
+        properties_.insert(std::make_pair(hsh, PropertyValue(value)));
+        on_override(hsh, name, _impl::material_property_lookup<T>::type);
+    }
 
-    bool property_value(const MaterialPropertyNameHash hsh, const Mat3*& out) const;
-    bool property_value(const MaterialPropertyNameHash hsh, const Mat4*& out) const;
-    bool property_value(const MaterialPropertyNameHash hsh, const TexturePtr*& out) const;
+    void set_property_value(const char* name, const Colour& value) {
+        set_property_value(name, (const Vec4&) value);
+    }
+
+    template<typename T>
+    bool property_value(const MaterialPropertyNameHash hsh, const T*& out) const {
+        auto it = properties_.find(hsh);
+        if(it != properties_.end()) {
+            out = it->second.get<T>();
+            return true;
+        } else if(parent_) {
+            return parent_->property_value(hsh, out);
+        } else if(is_core_property(hsh)) {
+            return core_material_property_value(hsh, out);
+        } else {
+            return false;
+        }
+    }
 
     /* Helpers for std::string */
     template<typename T>
@@ -70,14 +135,115 @@ public:
 
     bool property_type(const char* property_name, MaterialPropertyType* type) const;
 
-    template<typename T>
     struct PropertyValue {
-        MaterialPropertyNameHash hsh;
-        T value;
+        MaterialPropertyType type;
+        uint8_t* data = nullptr;
 
         PropertyValue() = default;
-        PropertyValue(MaterialPropertyNameHash hsh, T value):
-            hsh(hsh), value(value) {}
+
+        template<typename T>
+        PropertyValue(T value) {
+            set(value);
+        }
+
+        PropertyValue(const PropertyValue& rhs) {
+            switch(rhs.type) {
+                case MATERIAL_PROPERTY_TYPE_BOOL:
+                    set(*rhs.get<bool>());
+                break;
+                    case MATERIAL_PROPERTY_TYPE_INT:
+                    set(*rhs.get<int32_t>());
+                break;
+                    case MATERIAL_PROPERTY_TYPE_FLOAT:
+                    set(*rhs.get<float>());
+                break;
+                case MATERIAL_PROPERTY_TYPE_VEC2:
+                    set(*rhs.get<Vec2>());
+                break;
+                case MATERIAL_PROPERTY_TYPE_VEC3:
+                    set(*rhs.get<Vec3>());
+                break;
+                case MATERIAL_PROPERTY_TYPE_VEC4:
+                    set(*rhs.get<Vec4>());
+                break;
+                case MATERIAL_PROPERTY_TYPE_MAT3:
+                    set(*rhs.get<Mat3>());
+                break;
+                case MATERIAL_PROPERTY_TYPE_MAT4:
+                    set(*rhs.get<Mat4>());
+                break;
+                case MATERIAL_PROPERTY_TYPE_TEXTURE:
+                    set(*rhs.get<TexturePtr>());
+                break;
+            }
+        }
+
+        PropertyValue& operator=(const PropertyValue& rhs) = delete;
+
+        ~PropertyValue() {
+            if(data) {
+                clear();
+            }
+        }
+
+        void clear() {
+            if(!data) {
+                return;
+            }
+
+            switch(type) {
+                case MATERIAL_PROPERTY_TYPE_BOOL:
+                    unset<bool>();
+                break;
+                    case MATERIAL_PROPERTY_TYPE_INT:
+                    unset<int32_t>();
+                break;
+                    case MATERIAL_PROPERTY_TYPE_FLOAT:
+                    unset<float>();
+                break;
+                case MATERIAL_PROPERTY_TYPE_VEC2:
+                    unset<Vec2>();
+                break;
+                case MATERIAL_PROPERTY_TYPE_VEC3:
+                    unset<Vec3>();
+                break;
+                case MATERIAL_PROPERTY_TYPE_VEC4:
+                    unset<Vec4>();
+                break;
+                case MATERIAL_PROPERTY_TYPE_MAT3:
+                    unset<Mat3>();
+                break;
+                case MATERIAL_PROPERTY_TYPE_MAT4:
+                    unset<Mat4>();
+                break;
+                case MATERIAL_PROPERTY_TYPE_TEXTURE:
+                    unset<TexturePtr>();
+                break;
+            }
+
+            data = nullptr;
+        }
+
+        template<typename T>
+        void set(T value) {
+            clear();
+
+            data = (uint8_t*) aligned_alloc(alignof(T), sizeof(T));
+            new (data) T(value);
+            type = _impl::material_property_lookup<T>::type;
+        }
+
+        template<typename T>
+        T* get() const {
+            return (T*) data;
+        }
+
+        template<typename T>
+        void unset() {
+            ((T*) data)->~T();
+            free(data);
+            data = nullptr;
+        }
     };
 protected:
     virtual void on_override(
@@ -100,17 +266,7 @@ protected:
 
     const MaterialPropertyOverrider* parent_ = nullptr;
 
-    std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType> all_overrides_;
-
-    std::vector<PropertyValue<int32_t>> int_properties_;
-    std::vector<PropertyValue<float>> float_properties_;
-    std::vector<PropertyValue<bool>> bool_properties_;
-    std::vector<PropertyValue<Vec2>> vec2_properties_;
-    std::vector<PropertyValue<Vec3>> vec3_properties_;
-    std::vector<PropertyValue<Vec4>> vec4_properties_;
-    std::vector<PropertyValue<Mat3>> mat3_properties_;
-    std::vector<PropertyValue<Mat4>> mat4_properties_;
-    std::vector<PropertyValue<TexturePtr>> texture_properties_;
+    std::unordered_map<MaterialPropertyNameHash, PropertyValue> properties_;
 };
 
 }
