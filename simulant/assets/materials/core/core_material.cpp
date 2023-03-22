@@ -231,29 +231,29 @@ bool core_material_property_value(const char* name, const TexturePtr*& out) {
 
 bool is_core_property(const MaterialPropertyNameHash hsh) {
     switch(hsh) {
-        case material_property_hash(DIFFUSE_PROPERTY_NAME):
-        case material_property_hash(AMBIENT_PROPERTY_NAME):
-        case material_property_hash(EMISSION_PROPERTY_NAME):
-        case material_property_hash(SPECULAR_PROPERTY_NAME):
-        case material_property_hash(SHININESS_PROPERTY_NAME):
-        case material_property_hash(POINT_SIZE_PROPERTY_NAME):
-        case material_property_hash(DEPTH_WRITE_ENABLED_PROPERTY_NAME):
-        case material_property_hash(DEPTH_TEST_ENABLED_PROPERTY_NAME):
-        case material_property_hash(LIGHTING_ENABLED_PROPERTY_NAME):
-        case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
-        case material_property_hash(DIFFUSE_MAP_PROPERTY_NAME):
-        case material_property_hash(SPECULAR_MAP_PROPERTY_NAME):
-        case material_property_hash(LIGHT_MAP_PROPERTY_NAME):
-        case material_property_hash(NORMAL_MAP_PROPERTY_NAME):
-        case material_property_hash(DIFFUSE_MAP_MATRIX_PROPERTY_NAME):
-        case material_property_hash(SPECULAR_MAP_MATRIX_PROPERTY_NAME):
-        case material_property_hash(LIGHT_MAP_MATRIX_PROPERTY_NAME):
-        case material_property_hash(NORMAL_MAP_MATRIX_PROPERTY_NAME):
-        case material_property_hash(BLEND_FUNC_PROPERTY_NAME):
-        case material_property_hash(POLYGON_MODE_PROPERTY_NAME):
-        case material_property_hash(SHADE_MODEL_PROPERTY_NAME):
-        case material_property_hash(COLOUR_MATERIAL_PROPERTY_NAME):
-        case material_property_hash(CULL_MODE_PROPERTY_NAME):
+        case DIFFUSE_PROPERTY_HASH:
+        case AMBIENT_PROPERTY_HASH:
+        case EMISSION_PROPERTY_HASH:
+        case SPECULAR_PROPERTY_HASH:
+        case SHININESS_PROPERTY_HASH:
+        case POINT_SIZE_PROPERTY_HASH:
+        case DEPTH_WRITE_ENABLED_PROPERTY_HASH:
+        case DEPTH_TEST_ENABLED_PROPERTY_HASH:
+        case LIGHTING_ENABLED_PROPERTY_HASH:
+        case TEXTURES_ENABLED_PROPERTY_HASH:
+        case DIFFUSE_MAP_PROPERTY_HASH:
+        case SPECULAR_MAP_PROPERTY_HASH:
+        case LIGHT_MAP_PROPERTY_HASH:
+        case NORMAL_MAP_PROPERTY_HASH:
+        case DIFFUSE_MAP_MATRIX_PROPERTY_HASH:
+        case SPECULAR_MAP_MATRIX_PROPERTY_HASH:
+        case LIGHT_MAP_MATRIX_PROPERTY_HASH:
+        case NORMAL_MAP_MATRIX_PROPERTY_HASH:
+        case BLEND_FUNC_PROPERTY_HASH:
+        case POLYGON_MODE_PROPERTY_HASH:
+        case SHADE_MODEL_PROPERTY_HASH:
+        case COLOUR_MATERIAL_PROPERTY_HASH:
+        case CULL_MODE_PROPERTY_HASH:
         case FOG_COLOUR_PROPERTY_HASH:
         case FOG_DENSITY_PROPERTY_HASH:
         case FOG_START_PROPERTY_HASH:
