@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../constants.h"
+#include "../property_value.h"
 
 namespace smlt {
 
@@ -47,18 +48,6 @@ constexpr const MaterialPropertyNameHash FOG_START_PROPERTY_HASH = material_prop
 constexpr const MaterialPropertyNameHash FOG_END_PROPERTY_HASH = material_property_hash(FOG_END_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash FOG_COLOUR_PROPERTY_HASH = material_property_hash(FOG_COLOUR_PROPERTY_NAME);
 
-
-enum MaterialPropertyType {
-    MATERIAL_PROPERTY_TYPE_BOOL,
-    MATERIAL_PROPERTY_TYPE_INT,
-    MATERIAL_PROPERTY_TYPE_FLOAT,
-    MATERIAL_PROPERTY_TYPE_VEC2,
-    MATERIAL_PROPERTY_TYPE_VEC3,
-    MATERIAL_PROPERTY_TYPE_VEC4,
-    MATERIAL_PROPERTY_TYPE_MAT3,
-    MATERIAL_PROPERTY_TYPE_MAT4,
-    MATERIAL_PROPERTY_TYPE_TEXTURE
-};
 
 struct CoreMaterial {
     const Colour diffuse = Colour(1, 1, 1, 1);
