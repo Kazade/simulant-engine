@@ -79,7 +79,7 @@ template<typename T = void> struct PropertyValue;
 struct BasePropertyValue {
     template<typename T>
     T* get() const {
-        T* result;
+        T* result = nullptr;
         do_get(&result);
         return result;
     }
