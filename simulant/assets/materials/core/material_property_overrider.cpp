@@ -56,6 +56,12 @@ bool MaterialPropertyOverrider::check_existance(const char* property_name) const
 }
 
 bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
+    auto v = find_core_property(hsh);
+    if(v) {
+        v->clear();
+        return true;
+    }
+
     auto it = properties_.find(hsh);
     if(it != properties_.end()) {
         properties_.erase(it);
