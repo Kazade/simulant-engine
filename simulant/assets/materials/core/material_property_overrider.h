@@ -73,17 +73,15 @@ public:
         /* Core property fast-path. If it's a core property, check locally
          * then check the parent without doing a hash lookup on the properties
          * list (which is for non-core properties) */
-        if(is_core_property(hsh)) {
-            auto v = find_core_property(hsh);
-            if(v && v->has_value()) {
+        auto v = find_core_property(hsh);
+        if(v) {
+            if(v->has_value()) {
                 out = v->get<T>();
                 return true;
+            } else if(parent_) {
+                return parent_->property_value(hsh, out);
             } else {
-                if(parent_) {
-                    return parent_->property_value(hsh, out);
-                } else {
-                    return core_material_property_value(hsh, out);
-                }
+                return core_material_property_value(hsh, out);
             }
         } else {
             auto it = properties_.find(hsh);
@@ -158,11 +156,11 @@ protected:
     PropertyValue<float> fog_end_property_;
     PropertyValue<int32_t> fog_mode_property_;
 
-    BasePropertyValue* find_core_property(const MaterialPropertyNameHash hsh) {
+    BasePropertyValue* find_core_property(const MaterialPropertyNameHash& hsh) {
         return const_cast<BasePropertyValue*>(static_cast<const MaterialPropertyOverrider*>(this)->find_core_property(hsh));
     }
 
-    const BasePropertyValue* find_core_property(const MaterialPropertyNameHash hsh) const {
+    const BasePropertyValue* find_core_property(const MaterialPropertyNameHash& hsh) const {
         switch(hsh) {
             case DIFFUSE_PROPERTY_HASH:
                 return &diffuse_property_;

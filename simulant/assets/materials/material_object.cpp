@@ -94,17 +94,25 @@ const TexturePtr& MaterialObject::normal_map() const {
 
 const TexturePtr& MaterialObject::specular_map() const {
     const TexturePtr* ptr = nullptr;
+#ifndef NDEBUG
     bool ok = property_value(SPECULAR_MAP_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
+#else
+    property_value(SPECULAR_MAP_PROPERTY_HASH, ptr);
+#endif
     return *ptr;
 }
 
 const Mat4& MaterialObject::diffuse_map_matrix() const {
     const Mat4* ptr = nullptr;
+#ifndef NDEBUG
     bool ok = property_value(DIFFUSE_MAP_MATRIX_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
+#else
+    property_value(DIFFUSE_MAP_MATRIX_PROPERTY_HASH, ptr);
+#endif
     return *ptr;
 }
 
@@ -292,9 +300,13 @@ void MaterialObject::set_depth_test_enabled(bool v) {
 
 bool MaterialObject::is_depth_test_enabled() const {
     const bool* ptr = nullptr;
+#ifndef NDEBUG
     bool ok = property_value(DEPTH_TEST_ENABLED_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
+#else
+    property_value(DEPTH_TEST_ENABLED_PROPERTY_HASH, ptr);
+#endif
     return *ptr;
 }
 
