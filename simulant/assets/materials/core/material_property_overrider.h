@@ -138,7 +138,7 @@ protected:
     PropertyValue<bool> depth_write_enabled_property_;
     PropertyValue<bool> depth_test_enabled_property_;
     PropertyValue<bool> lighting_enabled_property_;
-    PropertyValue<bool> textures_enabled_property_;
+    PropertyValue<int32_t> textures_enabled_property_;
     PropertyValue<TexturePtr> diffuse_map_property_;
     PropertyValue<TexturePtr> specular_map_property_;
     PropertyValue<TexturePtr> light_map_property_;

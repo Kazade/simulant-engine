@@ -90,6 +90,7 @@ struct BasePropertyValue {
     }
 
     virtual bool has_value() const = 0;
+    virtual void clear() = 0;
 
 private:
     virtual void do_get(bool** result) const { *result = nullptr; }
@@ -102,21 +103,31 @@ private:
     virtual void do_get(Mat4** result) const { *result = nullptr; }
     virtual void do_get(TexturePtr** result) const { *result = nullptr; }
 
-    virtual bool do_set(const bool& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const int32_t& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const float& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const Vec2& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const Vec3& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const Vec4& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const Mat3& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const Mat4& value) { _S_UNUSED(value); return false; }
-    virtual bool do_set(const TexturePtr& value) { _S_UNUSED(value); return false; }
+    virtual bool do_set(const bool& value) { S_WARN("Invalid value for property: {0}", value); return false; }
+    virtual bool do_set(const int32_t& value) { S_WARN("Invalid value for property: {0}", value); return false; }
+    virtual bool do_set(const float& value) { S_WARN("Invalid value for property: {0}", value); return false; }
+    virtual bool do_set(const Vec2& value) { S_WARN("Invalid value for property: {0}", value); return false; }
+    virtual bool do_set(const Vec3& value) { S_WARN("Invalid value for property: {0}", value); return false; }
+    virtual bool do_set(const Vec4& value) { S_WARN("Invalid value for property: {0}", value); return false; }
+    virtual bool do_set(const Mat3& value) { S_WARN("Invalid value for property: {0}", value); return false; }
+    virtual bool do_set(const Mat4& value) { _S_UNUSED(value); S_WARN("Invalid value for property"); return false; }
+    virtual bool do_set(const TexturePtr& value) { S_WARN("Invalid value for property: {0}", value); return false; }
 
     void do_get(Colour** result) const {
         do_get((Vec4**) result);
     }
 
+    void do_get(uint32_t** result) const {
+        do_get((int32_t**) result);
+    }
+
     bool do_set(const Colour& value) { return do_set((const Vec4&) value); }
+
+    /* FIXME: Support these types properly */
+    bool do_set(const int16_t& value) { return do_set((int32_t) value); }
+    bool do_set(const uint32_t& value) { return do_set((int32_t) value); }
+    bool do_set(const uint16_t& value) { return do_set((int32_t) value); }
+
 };
 
 template<typename T>
@@ -136,7 +147,7 @@ struct PropertyValue : public BasePropertyValue {
 
     PropertyValue& operator=(const PropertyValue& ) = default;
 
-    void clear() {
+    void clear() override {
         is_set_ = false;
     }
 
@@ -217,7 +228,7 @@ struct PropertyValue<void> : public BasePropertyValue {
         }
     }
 
-    void clear() {
+    void clear() override {
         if(!data) {
             return;
         }
