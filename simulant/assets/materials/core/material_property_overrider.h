@@ -27,7 +27,7 @@ public:
 
     template<typename T>
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name, const T& value) {
-        if(auto v = find_core_property(hsh)) {
+        if(auto v = find_core_property_value(hsh)) {
             v->set(value);
         } else {
             clear_override(hsh);
@@ -73,13 +73,16 @@ public:
         /* Core property fast-path. If it's a core property, check locally
          * then check the parent without doing a hash lookup on the properties
          * list (which is for non-core properties) */
-        auto v = find_core_property(hsh);
-        if(v) {
+        auto mem_ptr = find_core_property(hsh);
+        if(mem_ptr) {
+            auto v = &(this->*mem_ptr);
+            auto p = (parent_) ? &(parent_->*mem_ptr) : nullptr;
             if(v->has_value()) {
                 out = v->get<T>();
                 return true;
-            } else if(parent_) {
-                return parent_->property_value(hsh, out);
+            } else if(p && p->has_value()) {
+                out = p->get<T>();
+                return true;
             } else {
                 return core_material_property_value(hsh, out);
             }
@@ -156,71 +159,82 @@ protected:
     PropertyValue<float> fog_end_property_;
     PropertyValue<int32_t> fog_mode_property_;
 
-    BasePropertyValue* find_core_property(const MaterialPropertyNameHash& hsh) {
-        return const_cast<BasePropertyValue*>(static_cast<const MaterialPropertyOverrider*>(this)->find_core_property(hsh));
+    BasePropertyValue* find_core_property_value(const MaterialPropertyNameHash& hsh) {
+        return const_cast<BasePropertyValue*>(static_cast<const MaterialPropertyOverrider*>(this)->find_core_property_value(hsh));
     }
 
-    const BasePropertyValue* find_core_property(const MaterialPropertyNameHash& hsh) const {
+    typedef BasePropertyValue MaterialPropertyOverrider::* PropertyValueMemberPtr;
+
+    PropertyValueMemberPtr find_core_property(const MaterialPropertyNameHash& hsh) const {
         switch(hsh) {
             case DIFFUSE_PROPERTY_HASH:
-                return &diffuse_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_property_;
             case AMBIENT_PROPERTY_HASH:
-                return &ambient_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::ambient_property_;
             case EMISSION_PROPERTY_HASH:
-                return &emission_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::emission_property_;
             case SPECULAR_PROPERTY_HASH:
-                return &specular_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_property_;
             case SHININESS_PROPERTY_HASH:
-                return &shininess_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::shininess_property_;
             case POINT_SIZE_PROPERTY_HASH:
-                return &point_size_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::point_size_property_;
             case DEPTH_WRITE_ENABLED_PROPERTY_HASH:
-                return &depth_write_enabled_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_write_enabled_property_;
             case DEPTH_TEST_ENABLED_PROPERTY_HASH:
-                return &depth_test_enabled_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_test_enabled_property_;
             case LIGHTING_ENABLED_PROPERTY_HASH:
-                return &lighting_enabled_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::lighting_enabled_property_;
             case TEXTURES_ENABLED_PROPERTY_HASH:
-                return &textures_enabled_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::textures_enabled_property_;
             case DIFFUSE_MAP_PROPERTY_HASH:
-                return &diffuse_map_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_map_property_;
             case SPECULAR_MAP_PROPERTY_HASH:
-                return &specular_map_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_map_property_;
             case LIGHT_MAP_PROPERTY_HASH:
-                return &light_map_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::light_map_property_;
             case NORMAL_MAP_PROPERTY_HASH:
-                return &normal_map_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::normal_map_property_;
             case DIFFUSE_MAP_MATRIX_PROPERTY_HASH:
-                return &diffuse_map_matrix_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_map_matrix_property_;
             case SPECULAR_MAP_MATRIX_PROPERTY_HASH:
-                return &specular_map_matrix_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_map_matrix_property_;
             case LIGHT_MAP_MATRIX_PROPERTY_HASH:
-                return &light_map_matrix_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::light_map_matrix_property_;
             case NORMAL_MAP_MATRIX_PROPERTY_HASH:
-                return &normal_map_matrix_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::normal_map_matrix_property_;
             case BLEND_FUNC_PROPERTY_HASH:
-                return &blend_func_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::blend_func_property_;
             case POLYGON_MODE_PROPERTY_HASH:
-                return &polygon_mode_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::polygon_mode_property_;
             case SHADE_MODEL_PROPERTY_HASH:
-                return &shade_model_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::shade_model_property_;
             case COLOUR_MATERIAL_PROPERTY_HASH:
-                return &colour_material_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::colour_material_property_;
             case CULL_MODE_PROPERTY_HASH:
-                return &cull_mode_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::cull_mode_property_;
             case FOG_COLOUR_PROPERTY_HASH:
-                return &fog_colour_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_colour_property_;
             case FOG_DENSITY_PROPERTY_HASH:
-                return &fog_density_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_density_property_;
             case FOG_START_PROPERTY_HASH:
-                return &fog_start_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_start_property_;
             case FOG_END_PROPERTY_HASH:
-                return &fog_end_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_end_property_;
             case FOG_MODE_PROPERTY_HASH:
-                return &fog_mode_property_;
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_mode_property_;
             default:
                 return nullptr;
         }
+    }
+
+    const BasePropertyValue* find_core_property_value(const MaterialPropertyNameHash& hsh) const {
+        auto ptr = find_core_property(hsh);
+        if(!ptr) {
+            return nullptr;
+        }
+
+        return &(this->*ptr);
     }
 
 
