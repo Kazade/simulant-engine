@@ -35,7 +35,7 @@ void Camera::update_transformation_from_parent() {
 
 void Camera::update_frustum() {
     //Recalculate the view matrix
-    view_matrix_ = Mat4::as_look_at(absolute_position(), absolute_position() + forward(), smlt::Vec3::POSITIVE_Y);
+    view_matrix_ = Mat4::as_look_at(absolute_position(), absolute_position() + absolute_rotation().forward(), smlt::Vec3::POSITIVE_Y);
 
     Mat4 mvp = projection_matrix_ * view_matrix_;
 
