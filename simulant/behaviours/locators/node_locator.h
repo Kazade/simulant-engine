@@ -41,6 +41,11 @@ public:
         behaviour_(std::get<1>(finder)) {
     }
 
+    ~FindResult() {
+        if(on_destroy_.is_connected())
+            on_destroy_.disconnect();
+    }
+
     bool operator==(const StageNode* other) const {
         return get() == other;
     }
