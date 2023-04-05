@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include "../../nodes/stage_node.h"
 
@@ -15,15 +16,41 @@ class StageNodeFinders {
 
         return nullptr;
     }
+
+    static StageNode* find_ancestor(const char* name, StageNode* organism){
+        auto parent = (StageNode*) organism->parent();
+        while(parent) {
+            if(parent->name() == name) {
+                return parent;
+            }
+
+            parent = (StageNode*) parent->parent();
+        }
+
+        return parent;
+    }
 };
 
+typedef std::function<StageNode* (StageNode*)> NodeFinder;
+
 template<typename T>
-class StageNodeResult {
+class FindResult {
 public:
-    template<typename Func>
-    StageNodeResult(Func&& finder, Behaviour* behaviour):
-        finder_(finder),
-        behaviour_(behaviour) {
+    FindResult(const std::tuple<NodeFinder, Behaviour*>& finder):
+        finder_(std::get<0>(finder)),
+        behaviour_(std::get<1>(finder)) {
+    }
+
+    bool operator==(const StageNode* other) const {
+        return get() == other;
+    }
+
+    bool operator!=(const StageNode* other) const {
+        return get() != other;
+    }
+
+    operator bool() const {
+        return bool(this->operator ->());
     }
 
     bool operator==(nullptr_t) const {
@@ -34,12 +61,20 @@ public:
         return this->operator ->();
     }
 
+    bool is_cached() {
+        return bool(found_);
+    }
+
     T* get() {
         return this->operator ->();
     }
 
+    const T* get() const {
+        return this->operator ->();
+    }
+
     T* operator->() {
-        return const_cast<T*>(static_cast<const StageNodeResult*>(this)->operator ->());
+        return const_cast<T*>(static_cast<const FindResult*>(this)->operator ->());
     }
 
     const T* operator->() const {
@@ -83,7 +118,18 @@ private:
     mutable sig::connection on_destroy_;
 };
 
-#define S_FIND_DESCENDENT(name) \
-    { std::bind(&StageNodeFinders::find_descendent, (name), std::placeholders::_1), this }
+std::tuple<NodeFinder, Behaviour*> FindAncestor(const char* name, Behaviour* behaviour) {
+    return {
+        std::bind(&StageNodeFinders::find_ancestor, name, std::placeholders::_1),
+        behaviour
+    };
+}
+
+std::tuple<NodeFinder, Behaviour*> FindDescendent(const char* name, Behaviour* behaviour) {
+    return {
+        std::bind(&StageNodeFinders::find_descendent, name, std::placeholders::_1),
+        behaviour
+    };
+}
 
 }
