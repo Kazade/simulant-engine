@@ -29,22 +29,6 @@ public:
         return *this;
     }
 
-    bool operator==(const default_init_ptr<T>& other) {
-        return ptr_ == other.ptr_;
-    }
-
-    bool operator!=(const default_init_ptr<T>& other) {
-        return ptr_ != other.ptr_;
-    }
-
-    bool operator==(const T* other) const {
-        return ptr_ == other;
-    }
-
-    bool operator!=(const T* other) const {
-        return ptr_ != other;
-    }
-
     default_init_ptr(T* p):
         ptr_(p) {}
 
