@@ -58,7 +58,7 @@ public:
         return bool(this->operator ->());
     }
 
-    bool operator==(nullptr_t) const {
+    bool operator==(std::nullptr_t) const {
         return !this->operator ->();
     }
 
