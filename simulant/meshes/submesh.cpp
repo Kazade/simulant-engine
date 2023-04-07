@@ -458,12 +458,12 @@ void SubMesh::set_material_at_slot(MaterialSlot var, const MaterialPtr &mat) {
     );
 }
 
-MaterialPtr SubMesh::material() const {
+const MaterialPtr& SubMesh::material() const {
     return materials_[MATERIAL_SLOT0];
 }
 
-MaterialPtr SubMesh::material_at_slot(MaterialSlot var, bool fallback) const {
-    auto ret = materials_[var];
+const MaterialPtr& SubMesh::material_at_slot(MaterialSlot var, bool fallback) const {
+    const auto& ret = materials_[var];
     if(!ret && fallback) {
         return materials_[MATERIAL_SLOT0];
     } else {

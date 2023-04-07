@@ -87,212 +87,169 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex, co
 void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const MaterialPass* next) {
     pass_ = next;
 
-    if(!prev || prev->diffuse() != next->diffuse()) {
-        auto diffuse = next->diffuse();
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &diffuse.r);
+    const auto& diffuse = next->diffuse();
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &diffuse.r);
+
+    const auto& ambient = next->ambient();
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
+
+    const auto& emission = next->emission();
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &emission.r);
+
+    const auto& specular = next->specular();
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
+    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
+
+    if(next->is_depth_test_enabled()) {
+        GLCheck(glEnable, GL_DEPTH_TEST);
+    } else {
+        GLCheck(glDisable, GL_DEPTH_TEST);
     }
 
-    if(!prev || prev->ambient() != next->ambient()) {
-        auto ambient = next->ambient();
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
-    }
-
-    if(!prev || prev->emission() != next->emission()) {
-        auto emission = next->emission();
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &emission.r);
-    }
-
-    if(!prev || prev->specular() != next->specular()) {
-        auto specular = next->specular();
-        GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
-    }
-
-    if(!prev || prev->shininess() != next->shininess()) {
-        GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
-    }
-
-    if(!prev || prev->is_depth_test_enabled() != next->is_depth_test_enabled()) {
-        if(next->is_depth_test_enabled()) {
-            GLCheck(glEnable, GL_DEPTH_TEST);
-        } else {
-            GLCheck(glDisable, GL_DEPTH_TEST);
-        }
-    }
-
-    if(!prev || prev->is_depth_write_enabled() != next->is_depth_write_enabled()) {
-        if(next->is_depth_write_enabled()) {
-            GLCheck(glDepthMask, GL_TRUE);
-        } else {
-            GLCheck(glDepthMask, GL_FALSE);
-        }
+    if(next->is_depth_write_enabled()) {
+        GLCheck(glDepthMask, GL_TRUE);
+    } else {
+        GLCheck(glDepthMask, GL_FALSE);
     }
 
     /* Enable lighting on the pass appropriately */
-    if(!prev || prev->is_lighting_enabled() != next->is_lighting_enabled()) {
-        if(next->is_lighting_enabled()) {
-            GLCheck(glEnable, GL_LIGHTING);
-        } else {
-            GLCheck(glDisable, GL_LIGHTING);
-        }
+    if(next->is_lighting_enabled()) {
+        GLCheck(glEnable, GL_LIGHTING);
+    } else {
+        GLCheck(glDisable, GL_LIGHTING);
     }
 
     auto enabled = next->textures_enabled();
 
-    for(uint32_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
-#if _S_GL_SUPPORTS_MULTITEXTURE
-        GLCheck(glActiveTexture, GL_TEXTURE0 + i);
+#if !_S_GL_SUPPORTS_MULTITEXTURE
+    auto glActiveTexture = [](GLenum) {};
 #endif
-        if(enabled & (1 << i)) {
-            GLCheck(glEnable, GL_TEXTURE_2D);
-        } else {
-            GLCheck(glDisable, GL_TEXTURE_2D);
-            continue;
-        }
 
-        switch(i) {
-            case 0:
-                bind_texture(0, next->diffuse_map(), next->diffuse_map_matrix());
-            break;
-            case 1:
-                bind_texture(1, next->light_map(), next->light_map_matrix());
-            break;
-            case 2:
-                bind_texture(2, next->normal_map(), next->normal_map_matrix());
-            break;
-            case 3:
-                bind_texture(3, next->specular_map(), next->specular_map_matrix());
-            break;
-            default:
-                break;
-        }
+#define CAT_I(a, b) a##b
+#define CAT(a,b) CAT_I(a, b)
+
+#define SET_LIGHT(i, map) \
+    if(_S_GL_MAX_TEXTURE_UNITS > (i) && (enabled & (1 << (i)))) { \
+        GLCheck(glActiveTexture, GL_TEXTURE0 + (i)); \
+        GLCheck(glEnable, GL_TEXTURE_2D); \
+        bind_texture((i), next->CAT(map, _map)(), next->CAT(map, _map_matrix)()); \
+    } else if(_S_GL_MAX_TEXTURE_UNITS > (i)) { \
+        GLCheck(glActiveTexture, GL_TEXTURE0 + (i)); \
+        GLCheck(glDisable, GL_TEXTURE_2D); \
     }
 
+    SET_LIGHT(0, diffuse);
+    SET_LIGHT(1, light);
+    SET_LIGHT(2, normal);
+    SET_LIGHT(3, specular);
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {
         glPointSize(next->point_size());
     }
 
-    if(!prev || prev->polygon_mode() != next->polygon_mode()) {
-        switch((PolygonMode) next->polygon_mode()) {
-            case POLYGON_MODE_POINT:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-            break;
-            case POLYGON_MODE_LINE:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            break;
-            default:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
+    switch((PolygonMode) next->polygon_mode()) {
+        case POLYGON_MODE_POINT:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+        break;
+        case POLYGON_MODE_LINE:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        break;
+        default:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 #endif
 
-    if(!prev || prev->cull_mode() != next->cull_mode()) {
-        if(next->cull_mode() != CULL_MODE_NONE) {
+    switch(next->cull_mode()) {
+        case CULL_MODE_NONE:
+            glDisable(GL_CULL_FACE);
+        break;
+        case CULL_MODE_FRONT_FACE:
             glEnable(GL_CULL_FACE);
-        }
-
-        switch(next->cull_mode()) {
-            case CULL_MODE_NONE:
-                glDisable(GL_CULL_FACE);
-            break;
-            case CULL_MODE_FRONT_FACE:
-                glCullFace(GL_FRONT);
-            break;
-            case CULL_MODE_BACK_FACE:
-                glCullFace(GL_BACK);
-            break;
-            case CULL_MODE_FRONT_AND_BACK_FACE:
-                glCullFace(GL_FRONT_AND_BACK);
-            break;
-        }
+            glCullFace(GL_FRONT);
+        break;
+        case CULL_MODE_BACK_FACE:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+        break;
+        case CULL_MODE_FRONT_AND_BACK_FACE:
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT_AND_BACK);
+        break;
     }
 
-    auto set_blending_mode = [](BlendType type) {
-        if(type == BLEND_NONE) {
-            GLCheck(glDisable, GL_BLEND);
-            return;
-        }
-
-        GLCheck(glEnable, GL_BLEND);
-        switch(type) {
-            case BLEND_ADD: GLCheck(glBlendFunc, GL_ONE, GL_ONE);
-            break;
-            case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-            case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-            break;
-            case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
-            break;
-            case BLEND_ONE_ONE_MINUS_ALPHA: GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-        default:
-            throw std::logic_error("Invalid blend type specified");
-        }
-    };
-
-    if(!prev || prev->blend_func() != next->blend_func()) {
-        set_blending_mode(next->blend_func());
+    GLCheck(glEnable, GL_BLEND);
+    switch(next->blend_func()) {
+        case BLEND_NONE: GLCheck(glDisable, GL_BLEND);
+        break;
+        case BLEND_ADD: GLCheck(glBlendFunc, GL_ONE, GL_ONE);
+        break;
+        case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+        case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        break;
+        case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
+        break;
+        case BLEND_ONE_ONE_MINUS_ALPHA: GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+    default:
+        break;
     }
 
-    if(!prev || prev->shade_model() != next->shade_model()) {
-        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
-            GLCheck(glShadeModel, GL_SMOOTH);
-        } else {
-            GLCheck(glShadeModel, GL_FLAT);
-        }
+    if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+        GLCheck(glShadeModel, GL_SMOOTH);
+    } else {
+        GLCheck(glShadeModel, GL_FLAT);
     }
 
 #if _S_GL_SUPPORTS_COLOR_MATERIAL
-    if(!prev || prev->colour_material() != next->colour_material()) {
-        if(next->colour_material() == COLOUR_MATERIAL_NONE) {
-            GLCheck(glDisable, GL_COLOR_MATERIAL);
-        } else {
-            switch(next->colour_material()) {
-            case COLOUR_MATERIAL_AMBIENT:
-                GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
-            break;
-            case COLOUR_MATERIAL_DIFFUSE:
-                GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
-            break;
-            case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
-                GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-            break;
-            default:
-                break;
-            }
-
-            GLCheck(glEnable, GL_COLOR_MATERIAL);
-        }
+    switch(next->colour_material()) {
+    case COLOUR_MATERIAL_NONE:
+        GLCheck(glDisable, GL_COLOR_MATERIAL);
+    break;
+    case COLOUR_MATERIAL_AMBIENT:
+        GLCheck(glEnable, GL_COLOR_MATERIAL);
+        GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
+    break;
+    case COLOUR_MATERIAL_DIFFUSE:
+        GLCheck(glEnable, GL_COLOR_MATERIAL);
+        GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
+    break;
+    case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
+        GLCheck(glEnable, GL_COLOR_MATERIAL);
+        GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+    break;
+    default:
+        break;
     }
 #endif
 
-    if(!prev || prev->fog_mode() != next->fog_mode()) {
-        auto next_mode = next->fog_mode();
-        if(next_mode == FOG_MODE_NONE) {
+    auto next_mode = next->fog_mode();
+
+    switch(next_mode) {
+        case FOG_MODE_NONE: {
             GLCheck(glDisable, GL_FOG);
-        } else {
+        } break;
+        case FOG_MODE_EXP: {
             GLCheck(glEnable, GL_FOG);
-
-            switch(next_mode) {
-                case FOG_MODE_EXP: {
-                    GLCheck(glFogi, GL_FOG_MODE, GL_EXP);
-                    GLCheck(glFogf, GL_FOG_DENSITY, next->fog_density());
-                } break;
-                case FOG_MODE_EXP2: {
-                    GLCheck(glFogi, GL_FOG_MODE, GL_EXP2);
-                    GLCheck(glFogf, GL_FOG_DENSITY, next->fog_density());
-                } break;
-                case FOG_MODE_LINEAR:
-                default: {
-                    GLCheck(glFogi, GL_FOG_MODE, GL_LINEAR);
-                    GLCheck(glFogf, GL_FOG_START, next->fog_start());
-                    GLCheck(glFogf, GL_FOG_END, next->fog_end());
-                } break;
-            }
-
+            GLCheck(glFogi, GL_FOG_MODE, GL_EXP);
+            GLCheck(glFogf, GL_FOG_DENSITY, next->fog_density());
             GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_colour().r);
-        }
+        } break;
+        case FOG_MODE_EXP2: {
+            GLCheck(glEnable, GL_FOG);
+            GLCheck(glFogi, GL_FOG_MODE, GL_EXP2);
+            GLCheck(glFogf, GL_FOG_DENSITY, next->fog_density());
+            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_colour().r);
+        } break;
+        case FOG_MODE_LINEAR:
+        default: {
+            GLCheck(glEnable, GL_FOG);
+            GLCheck(glFogi, GL_FOG_MODE, GL_LINEAR);
+            GLCheck(glFogf, GL_FOG_START, next->fog_start());
+            GLCheck(glFogf, GL_FOG_END, next->fog_end());
+            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_colour().r);
+        } break;
     }
 }
 

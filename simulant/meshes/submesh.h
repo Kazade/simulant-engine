@@ -83,8 +83,8 @@ public:
     void set_material(const MaterialPtr &material);
     void set_material_at_slot(MaterialSlot var, const MaterialPtr& material);
 
-    MaterialPtr material() const;
-    MaterialPtr material_at_slot(MaterialSlot var, bool fallback=false) const;
+    const MaterialPtr& material() const;
+    const MaterialPtr& material_at_slot(MaterialSlot var, bool fallback=false) const;
 
     MeshArrangement arrangement() const { return arrangement_; }
 

@@ -59,15 +59,9 @@ static inline float fast_divide(float d, float n) {
      * compiling without optimisations */
     return d / n;
 #else
-    /* On Dreamcast this is enough to optimise to fsrra and some bitshifts */
-    union {
-        float f;
-        uint32_t i;
-    } c;
-    c.f = n;
-    const float r = (1.f / std::sqrt(c.f * c.f)) * d;
-    const uint32_t sgn = (c.i >> 31) * 2 + 1;
-    return r * sgn;
+    /* On Dreamcast this is enough to optimise to fsrra  */
+    const float r = (1.f / sqrtf(n * n)) * d;
+    return (n < 0) ? -r : r;
 #endif
 
 #else

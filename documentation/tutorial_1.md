@@ -155,7 +155,7 @@ You control rendering in Simulant via `Pipelines`. A `Pipeline` combines the fol
 Creating a pipeline is easy:
 
 ```
-auto stage = window->new_stage();  // Create a stage
+auto stage = new_stage();  // Create a stage
 auto camera = stage->new_camera();  // Create a camera within the stage
 auto pipeline = compositor->render(stage, camera);  // Create your pipeline
 ```
