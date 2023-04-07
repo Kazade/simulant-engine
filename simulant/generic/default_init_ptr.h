@@ -55,4 +55,14 @@ public:
 };
 
 
+template<typename T>
+bool operator==(const default_init_ptr<T>& lhs, const default_init_ptr<T>& rhs) {
+    return ((T*) lhs) == ((T*) rhs);
+}
+
+template<typename T>
+bool operator!=(const default_init_ptr<T>& lhs, const default_init_ptr<T>& rhs) {
+    return ((T*) lhs) != ((T*) rhs);
+}
+
 }

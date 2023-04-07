@@ -35,7 +35,7 @@ using namespace std::placeholders;
 
 UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
     stage_(stage),
-    config_(config) {    
+    config_(config) {
 
     manager_.reset(new WidgetManager(pool));
 
