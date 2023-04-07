@@ -54,14 +54,15 @@ public:
     }
 };
 
+
 template<typename T>
-bool operator==(const T* lhs, const default_init_ptr<T>& rhs) {
-    return lhs == (T*) rhs;
+bool operator==(const default_init_ptr<T>& lhs, const default_init_ptr<T>& rhs) {
+    return ((T*) lhs) == ((T*) rhs);
 }
 
 template<typename T>
-bool operator!=(const T* lhs, const default_init_ptr<T>& rhs) {
-    return lhs != (T*) rhs;
+bool operator!=(const default_init_ptr<T>& lhs, const default_init_ptr<T>& rhs) {
+    return ((T*) lhs) != ((T*) rhs);
 }
 
 }
