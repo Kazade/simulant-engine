@@ -6,7 +6,7 @@ namespace utils {
 
 smlt::optional<std::vector<uint8_t>> vmu_lcd_image_from_texture(TexturePtr tex, VMUImageGenerationMode mode) {
     if(tex->format() != smlt::TEXTURE_FORMAT_RGBA_4UB_8888) {
-        S_ERROR("Attempted to convert a texture that wasn't RGBA8888");
+        S_ERROR("Attempted to convert a texture that wasn't RGBA8888 (was {0})", tex->format());
         return smlt::optional<std::vector<uint8_t>>();
     }
 
@@ -35,7 +35,7 @@ smlt::optional<std::vector<uint8_t>> vmu_lcd_image_from_texture(TexturePtr tex, 
             }
         }
     } else {
-        S_ERROR("Unsupported");
+        S_ERROR("Unsupported vmu icon generation mode: {0}", mode);
         return smlt::optional<std::vector<uint8_t>>();
     }
 
