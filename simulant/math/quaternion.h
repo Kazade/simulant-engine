@@ -192,32 +192,34 @@ struct Quaternion {
     Quaternion slerp(const Quaternion& rhs, float t) const {
         const constexpr float DOT_THRESHOLD = 0.9995f;
         const Quaternion& v0 = *this;
-        const Quaternion& v1 = rhs;
+        Quaternion v1 = rhs;
+        t = smlt::clamp(t, 0.0f, 1.0f);
 
         auto dot = v0.dot(v1);
 
-        if (dot > DOT_THRESHOLD) {
-            return Quaternion(
-                lerp(v0.x, v1.x, t),
-                lerp(v0.y, v1.y, t),
-                lerp(v0.z, v1.z, t),
-                lerp(v0.w, v1.w, t)
-            ).normalized();
+        if(dot < 0.0f) {
+            dot = -dot;
+            v1 = -v1;
         }
 
-        dot = clamp(dot, -1, 1);
-        float theta_0 = std::acos(dot);
-        float theta = theta_0 * t;
+        if (dot > DOT_THRESHOLD) {
+            return nlerp(v1, t);
+        } else {
+            dot = clamp(dot, -1, 1);
+            float theta_0 = std::acos(dot);
+            float theta = theta_0 * t;
 
-        auto v2 = Quaternion(
-            v1.x - v0.x * dot,
-            v1.y - v0.y * dot,
-            v1.z - v0.z * dot,
-            v1.w - v0.w * dot
-        ).normalized();
+            auto v2 = Quaternion(
+                v1.x - v0.x * dot,
+                v1.y - v0.y * dot,
+                v1.z - v0.z * dot,
+                v1.w - v0.w * dot
+            ).normalized();
 
-        return v0 * std::cos(theta) + v2 * std::sin(theta);
+            return v0 * std::cos(theta) + v2 * std::sin(theta);
+        }
     }
+
 
     const Degrees pitch() const {
         return Radians(std::atan2(-2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));

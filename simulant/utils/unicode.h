@@ -19,6 +19,7 @@
 #ifndef UNICODE_H
 #define UNICODE_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <sstream>
