@@ -556,7 +556,12 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data, int row_stri
 }
 
 void SDL2Window::game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const Seconds &duration) {
-    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(controller->id().to_int8_t()), low_rumble * float(0xFFFF), high_rumble * float(0xFFFF), duration.to_float());
+    SDL_GameControllerRumble(
+        SDL_GameControllerFromInstanceID(controller->id().to_int8_t()),
+        low_rumble * float(0xFFFF),
+        high_rumble * float(0xFFFF),
+        duration.to_float() * 1000
+    );
 }
 
 void SDL2Window::game_controller_stop_rumble(GameController *controller) {
