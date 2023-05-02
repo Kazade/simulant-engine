@@ -381,8 +381,6 @@ void KOSWindow::game_controller_start_rumble(GameController* controller, RangeVa
     const float M = 4;
 
     if(controller && controller->has_rumble_effect()) {
-        state.current_rumble_remaining_ = duration;
-
         const uint8_t* pdata = controller->platform_data();
         auto purupuru_unit = pdata[0];
 
@@ -400,6 +398,7 @@ void KOSWindow::game_controller_start_rumble(GameController* controller, RangeVa
             if(!retries) {
                 S_WARN("PURUPURU FAILED: {0} {1} -> {2}", device->port, device->unit, intensity);
             } else {
+                state.current_rumble_remaining_ = duration;
                 S_DEBUG("PURUPURU: {0} {1} -> {2}", device->port, device->unit, intensity);
             }
         } else {
