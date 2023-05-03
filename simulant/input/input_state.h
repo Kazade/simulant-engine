@@ -187,6 +187,8 @@ public:
         return id_;
     }
 
+    GameControllerIndex index() const;
+
     bool has_rumble_effect() const;
 
     /**

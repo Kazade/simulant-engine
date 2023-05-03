@@ -387,7 +387,7 @@ void KOSWindow::game_controller_start_rumble(GameController* controller, RangeVa
         int intensity = smlt::clamp(low_rumble * 7, 0, 7);
         uint8_t length = std::max(std::min(duration.to_float() * M, 255.0f), 4.0f);
 
-        auto device = maple_enum_dev(controller->id().to_int8_t(), purupuru_unit);
+        auto device = maple_enum_dev(controller->index().to_int8_t(), purupuru_unit);
         if(device && (device->info.functions & MAPLE_FUNC_PURUPURU)) {
             purupuru_effect_t effect;
             effect.duration = length;
@@ -413,16 +413,23 @@ void KOSWindow::game_controller_stop_rumble(GameController *controller) {
 
         const uint8_t* pdata = controller->platform_data();
         auto purupuru_unit = pdata[0];
-        auto device = maple_enum_dev(controller->id().to_int8_t(), purupuru_unit);
+        auto device = maple_enum_dev(controller->index().to_int8_t(), purupuru_unit);
+        if(device && (device->info.functions & MAPLE_FUNC_PURUPURU)) {
+            purupuru_effect_t effect;
+            effect.duration = 0x00;
+            effect.effect2 = 0x00;
+            effect.effect1 = 0x00;
+            effect.special = PURUPURU_SPECIAL_MOTOR1;
+            int retries = 5;
+            while(--retries && purupuru_rumble(device, &effect) == MAPLE_EAGAIN) {}
+            if(!retries) {
+                S_WARN("PURUPURU STOP FAILED: {0} {1}", device->port, device->unit);
+            } else {
+                S_DEBUG("Stopped PURUPURU");
+            }
 
-        purupuru_effect_t effect;
-        effect.duration = 0x00;
-        effect.effect2 = 0x00;
-        effect.effect1 = 0x00;
-        effect.special = PURUPURU_SPECIAL_MOTOR1;
-        purupuru_rumble(device, &effect);
-        S_DEBUG("Stopped PURPURU");
-        state.current_rumble_remaining_ = Seconds(0.0f);
+            state.current_rumble_remaining_ = Seconds(0.0f);
+        }
     }
 }
 

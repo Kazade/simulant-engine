@@ -238,6 +238,10 @@ JoystickAxis InputState::linked_axis(GameControllerID id, JoystickAxis axis) {
     return JOYSTICK_AXIS_INVALID;
 }
 
+GameControllerIndex GameController::index() const {
+    return parent_->game_controller_index_from_id(id_);
+}
+
 bool GameController::has_rumble_effect() const {
     return has_rumble_;
 }
