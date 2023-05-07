@@ -27,7 +27,16 @@ public:
         stage_->new_light_as_directional();
         stage_->set_ambient_light(smlt::Colour(0.3, 0.3, 0.3, 1.0));
 
-        auto mesh = stage_->assets->new_mesh_from_file("sample_data/autumn_house/autumn_house.dcm");
+        MeshLoadOptions opts;
+#ifdef __DREAMCAST__
+        opts.override_texture_extension = ".dtex";
+#endif
+
+        auto mesh = stage_->assets->new_mesh_from_file(
+            "sample_data/autumn_house/autumn_house.dcm",
+            VertexSpecification::DEFAULT,
+            opts
+        );
 
         actor_ = stage_->new_actor_with_mesh(mesh); // Create an instance of it
         actor_->move_to(0.0f, -0.05f, -1.0f);
@@ -39,7 +48,19 @@ public:
     }
 
     void update(float dt) override {
-        actor_->rotate_global_y_by(smlt::Degrees(1.0f * dt));
+        if(actor_) {
+            actor_->rotate_global_y_by(smlt::Degrees(1.0f * dt));
+        }
+
+        if(input->axis_was_pressed("Fire1")) {
+            for(int8_t i = 0; i < (int8_t) input->state->game_controller_count(); ++i) {
+                input->state->game_controller(GameControllerIndex(i))->start_rumble(1.0f, 1.0f, Seconds(1));
+            }
+        } else if(input->axis_was_released("Fire1")) {
+            for(int8_t i = 0; i < (int8_t) input->state->game_controller_count(); ++i) {
+                input->state->game_controller(GameControllerIndex(i))->stop_rumble();
+            }
+        }
     }
 
 private:
@@ -58,8 +79,7 @@ public:
 
 private:
     bool init() {
-        scenes->register_scene<GameScene>("ingame");
-        scenes->register_scene<smlt::scenes::Splash>("main", "ingame");
+        scenes->register_scene<GameScene>("main");
         return true;
     }
 };
