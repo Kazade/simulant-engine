@@ -77,7 +77,6 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex, co
 #endif
 
     GLCheck(glBindTexture, GL_TEXTURE_2D, id);
-
     GLCheck(glMatrixMode, GL_TEXTURE);
     GLCheck(glLoadMatrixf, mat.data());
 
@@ -128,20 +127,23 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 #define CAT_I(a, b) a##b
 #define CAT(a,b) CAT_I(a, b)
 
-#define SET_LIGHT(i, map) \
-    if(_S_GL_MAX_TEXTURE_UNITS > (i) && (enabled & (1 << (i)))) { \
-        GLCheck(glActiveTexture, GL_TEXTURE0 + (i)); \
-        GLCheck(glEnable, GL_TEXTURE_2D); \
-        bind_texture((i), next->CAT(map, _map)(), next->CAT(map, _map_matrix)()); \
-    } else if(_S_GL_MAX_TEXTURE_UNITS > (i)) { \
-        GLCheck(glActiveTexture, GL_TEXTURE0 + (i)); \
-        GLCheck(glDisable, GL_TEXTURE_2D); \
+#define ENABLE_TEXTURE(i, map) \
+    if(_S_GL_MAX_TEXTURE_UNITS > (i)) { \
+        if(enabled & (1 << (i))) { \
+            GLCheck(glActiveTexture, GL_TEXTURE0 + (i)); \
+            GLCheck(glEnable, GL_TEXTURE_2D); \
+            bind_texture((i), next->CAT(map, _map)(), next->CAT(map, _map_matrix)()); \
+        } else { \
+            GLCheck(glActiveTexture, GL_TEXTURE0 + (i)); \
+            GLCheck(glBindTexture, GL_TEXTURE_2D, 0); \
+            GLCheck(glDisable, GL_TEXTURE_2D); \
+        } \
     }
 
-    SET_LIGHT(0, diffuse);
-    SET_LIGHT(1, light);
-    SET_LIGHT(2, normal);
-    SET_LIGHT(3, specular);
+    ENABLE_TEXTURE(0, diffuse);
+    ENABLE_TEXTURE(1, light);
+    ENABLE_TEXTURE(2, normal);
+    ENABLE_TEXTURE(3, specular);
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {

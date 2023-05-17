@@ -47,7 +47,9 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
         GLCheck(glGenTextures, 1, &gl_tex);
     });
 
-    S_DEBUG("Setting the GL texture ID");
+    assert(gl_tex); // If we got back zero... bad things
+
+    S_INFO("Setting the GL texture ID for a new texture to: {0}", gl_tex);
     texture->_set_renderer_specific_id(gl_tex);
 }
 
@@ -161,6 +163,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
     /* Only upload data if it's enabled on the texture */
     if(texture->_data_dirty() && texture->auto_upload()) {
         // Upload
+        S_DEBUG("Uploading texture data to texture: {0}", +target);
 
         auto f = texture->format();
         auto format = convert_format(f);

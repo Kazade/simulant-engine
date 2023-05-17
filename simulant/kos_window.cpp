@@ -146,10 +146,9 @@ void KOSWindow::check_events() {
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
-        auto id = GameControllerID(i);
-
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
+            auto id = GameControllerID(device->port);
             auto state = (cont_state_t*) maple_dev_status(device);
             if(state) {
                 auto port = device->port;
