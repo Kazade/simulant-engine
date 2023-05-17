@@ -83,6 +83,25 @@ VirtualFileSystem::VirtualFileSystem() {
     }
 }
 
+bool VirtualFileSystem::insert_search_path(uint32_t index, const Path& path) {
+    Path new_path(kfs::path::abs_path(path.str()));
+
+    if(path.str().empty() || path.str() == "/") {
+        return false;
+    }
+
+    if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
+        return false;
+    }
+
+    /* If someone passed in value gte than the length of the list, then we insert at the end, else
+     * we insert at the appropriate position */
+    auto it = (index >= resource_path_.size()) ? resource_path_.end() : std::next(resource_path_.begin(), index);
+    resource_path_.insert(it, path);
+    clear_location_cache();
+    return true;
+}
+
 bool VirtualFileSystem::add_search_path(const Path& path) {
     Path new_path(kfs::path::abs_path(path.str()));
 

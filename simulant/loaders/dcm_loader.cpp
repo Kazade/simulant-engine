@@ -62,7 +62,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<::smlt::MaterialPtr> materials;
 
     /* Add the parent directory to the search path so we can load textures */
-    auto added = smlt::get_app()->vfs->add_search_path(filename_.parent());
+    auto added = smlt::get_app()->vfs->insert_search_path(0, filename_.parent());
 
     for(int i = 0; i < fheader.material_count; ++i) {
         ::Material mat;

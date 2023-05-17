@@ -47,7 +47,7 @@ class VirtualFileSystem :
 public:
     VirtualFileSystem();
 
-    std::list<Path>& search_path() { return resource_path_; }
+    const std::list<Path>& search_path() { return resource_path_; }
 
     optional<Path> locate_file(
         const Path& filename,
@@ -59,7 +59,10 @@ public:
     std::vector<std::string> read_file_lines(const Path& filename);
 
     bool add_search_path(const Path& path);
+    bool insert_search_path(uint32_t index, const Path& path);
     void remove_search_path(const Path& path);
+
+    std::size_t search_path_size() const { return resource_path_.size(); }
 
     /* Returns the number of entries in the location cache */
     std::size_t location_cache_size() const;
