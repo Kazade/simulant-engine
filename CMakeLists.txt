@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
@@ -51,6 +51,9 @@ IF(${HAS_PTHREAD_YIELD})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 ENDIF()
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT FLTO_SUPPORTED OUTPUT FLTO_ERROR)
 
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars

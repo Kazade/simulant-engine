@@ -8,6 +8,7 @@
 #define STBTT_memcpy memcpy
 #define STBTT_memset memset
 
+#include "deps/stb_rect_pack/stb_rect_pack.h"
 #include "deps/stb_truetype/stb_truetype.h"
 
 namespace smlt {

@@ -26,7 +26,7 @@ namespace loaders {
 #pragma pack(1)
 
 /* PCX header */
-struct Header {
+struct PCXHeader {
     uint8_t manufacturer;
     uint8_t version;
     uint8_t encoding;
@@ -56,8 +56,8 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     int size = stream->tellg();
     stream->seekg(0, std::ios::beg);
 
-    Header header;
-    stream->read((char*) &header, sizeof(Header));
+    PCXHeader header;
+    stream->read((char*) &header, sizeof(PCXHeader));
 
     if(header.manufacturer != 0x0a) {
         throw std::runtime_error("Unsupported PCX manufacturer");
