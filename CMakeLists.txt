@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
@@ -52,8 +52,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 ENDIF()
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT FLTO_SUPPORTED OUTPUT FLTO_ERROR)
+#include(CheckIPOSupported)
+#check_ipo_supported(RESULT FLTO_SUPPORTED OUTPUT FLTO_ERROR)
 
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
@@ -123,63 +123,32 @@ IF(USE_GLAD_FOR_OPENGL)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_USE_GLAD")
 ENDIF()
 
-IF(NOT PLATFORM_DREAMCAST)
-    IF(ANDROID)
-        LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/sdl/build/libs/${ANDROID_ABI})
-        LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/openal/build/libs/${ANDROID_ABI})
+IF(ANDROID)
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/sdl/build/libs/${ANDROID_ABI})
+    LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/.android/openal/build/libs/${ANDROID_ABI})
 
-        SET(SDL2_LIBRARIES SDL2)
-        SET(SDL2_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/.android/sdl/include)
+    SET(SDL2_LIBRARIES SDL2)
+    SET(SDL2_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/.android/sdl/include)
 
-        IF(SIMULANT_USE_ALDC)
+    IF(SIMULANT_USE_ALDC)
 
-        ELSE()
-            SET(OPENAL_LIBRARY openal)
-            SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/.android/openal/OpenAL/include)
-        ENDIF()
-
-        FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
-        FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
-    ELSEIF(PLATFORM_PSP)
-        SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
-        SET(SDL2_LIBRARIES "")
     ELSE()
-        FIND_PACKAGE(SDL2)  # Try cmake modules first
-        IF(NOT SDL2_FOUND)
-            # Fall back to pkg-config
-            FIND_PACKAGE(PkgConfig REQUIRED)
-            PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
-        ENDIF()
-
-        IF(WIN32)
-            IF(NOT SDL2_FOUND)
-                SET(SDL2_INCLUDE_DIR $ENV{SDL2DIR}/include)
-                SET(SDL2_LIBRARY $ENV{SDL2DIR}/lib/x64/SDL2.lib)
-                FIND_PACKAGE(SDL2 REQUIRED)
-            ENDIF()
-
-            IF(NOT SIMULANT_USE_ALDC)
-                SET(OPENAL_INCLUDE_DIR $ENV{OPENALDIR}/include)
-                SET(OPENAL_INCLUDE_DIRS $ENV{OPENALDIR}/include)
-            ENDIF()
-        ENDIF()
-
-        IF(SIMULANT_USE_ALDC)
-            SET(OPENAL_INCLUDE_DIRS "")
-            SET(OPENAL_LIBRARY "")
-        ELSE()
-            FIND_PACKAGE(OpenAL REQUIRED)
-        ENDIF()
-
-        FIND_PACKAGE(OpenGL REQUIRED)
+        SET(OPENAL_LIBRARY openal)
+        SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/.android/openal/OpenAL/include)
     ENDIF()
 
-    IF(NOT PLATFORM_PSP)
-        set(THREADS_PREFER_PTHREAD_FLAG ON)
-        find_package(Threads REQUIRED)
-        link_libraries(Threads::Threads)
-    ENDIF()
-ELSE()
+    FIND_LIBRARY(OPENGL_LIBRARIES NAMES GLESv2)
+    FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
+ELSEIF(PLATFORM_PSP)
+    SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
+    SET(SDL2_LIBRARIES "")
+ELSEIF(MINGW)
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
+    PKG_CHECK_MODULES(OPENAL REQUIRED openal)
+    LINK_LIBRARIES(psapi userenv)
+    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+ELSEIF(PLATFORM_DREAMCAST)
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast.")
 
     SET(OPENAL_INCLUDE_DIRS "")
@@ -198,18 +167,52 @@ ELSE()
     add_definitions(-DBACKEND_KOSPVR)
 
     FILE(GENERATE OUTPUT ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.h CONTENT "#pragma once\n#define GLDC_VERSION \"1.1-custom\"\n")
+ELSE()
+    FIND_PACKAGE(SDL2)  # Try cmake modules first
+    IF(NOT SDL2_FOUND)
+        # Fall back to pkg-config
+        FIND_PACKAGE(PkgConfig REQUIRED)
+        PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
+    ENDIF()
+
+    IF(SIMULANT_USE_ALDC)
+        SET(OPENAL_INCLUDE_DIRS "")
+        SET(OPENAL_LIBRARY "")
+    ELSE()
+        FIND_PACKAGE(OpenAL REQUIRED)
+    ENDIF()
+
+    FIND_PACKAGE(OpenGL REQUIRED)
 ENDIF()
+
+IF(NOT PLATFORM_PSP AND NOT PLATFORM_DREAMCAST)
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    link_libraries(Threads::Threads)
+ENDIF()
+
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/simulant)
 
 INCLUDE_DIRECTORIES(
     ${SDL2_INCLUDE_DIR}
+    ${SDL2_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIRS}
     ${OPENAL_INCLUDE_DIRS}
 )
 
-LINK_LIBRARIES(${SDL2_LIBRARIES} ${SDL2_LIBRARY} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES})
+LINK_DIRECTORIES(
+    ${OPENAL_LIBRARY_DIRS}
+    ${SDL2_LIBRARY_DIRS}
+)
+
+LINK_LIBRARIES(
+    ${SDL2_LIBRARY}
+    ${SDL2_LIBRARIES}
+    ${OPENAL_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 LINK_LIBRARIES(rt)

@@ -44,6 +44,7 @@ typedef uint32_t Mode;
     typedef uint32_t nlink_t;
     typedef uint32_t uid_t;
     typedef uint32_t gid_t;
+    typedef uint32_t mode_t;
 #endif
 
 struct Stat {
