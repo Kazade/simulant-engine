@@ -167,6 +167,8 @@ ENDIF()
 if(FLTO_SUPPORTED)
     message(STATUS "IPO / LTO enabled")
     set_property(TARGET simulant PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(STATUS "IPO / LTO DISABLED")
 endif()
 
 SET_TARGET_PROPERTIES(simulant

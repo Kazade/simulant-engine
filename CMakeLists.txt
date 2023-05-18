@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
@@ -52,8 +52,14 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 ENDIF()
 
-#include(CheckIPOSupported)
-#check_ipo_supported(RESULT FLTO_SUPPORTED OUTPUT FLTO_ERROR)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT FLTO_SUPPORTED OUTPUT FLTO_ERROR)
+
+# Mingw has a bug that stops us compiling using LTO
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94271
+IF(MINGW)
+    SET(FLTO_SUPPORTED False)
+ENDIF()
 
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
@@ -62,23 +68,16 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ff
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
 
 IF(PLATFORM_DREAMCAST)
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math -ffp-contract=fast -finline-functions")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math -ffp-contract=fast -finline-functions")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math -ffp-contract=fast -finline-functions")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math -ffp-contract=fast -finline-functions")
 ENDIF()
 
 IF(NOT PLATFORM_PSP)
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 ENDIF()
 
-IF(NOT PLATFORM_DREAMCAST)
-# There's a bug in GCC 4.7.4 that causes an internal compiler error
-# on some template code if you have -Wextra enabled
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
-ELSE()
-# On the Dreamcast, force a frame pointer when debugging
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
-ENDIF()
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -Wextra")
 
 IF(SIMULANT_ENABLE_ASAN)
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
