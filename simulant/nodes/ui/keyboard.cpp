@@ -1247,6 +1247,7 @@ void Keyboard::activate() {
     if(focused->displayed_character) {
         SoftKeyPressedEvent evt;
         evt.chr = focused->displayed_character;
+        evt.code = (smlt::KeyboardCode) 0; // FIXME!
         signal_key_pressed_(evt);
         if(!evt.cancelled) {
             entry_->insert_character(evt.chr);

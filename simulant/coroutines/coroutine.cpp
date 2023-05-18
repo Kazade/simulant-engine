@@ -17,7 +17,7 @@ struct Context {
     bool is_finished = false;
     bool is_terminating = false;
 
-    thread::Thread* thread = nullptr;
+    std::shared_ptr<thread::Thread> thread;
     std::function<void ()> func;
 
     thread::Mutex mutex;
@@ -144,7 +144,7 @@ COResult resume_coroutine(CoroutineID id) {
     routine->is_running = true;
     if(!routine->is_started) {
         /* Start the coroutine running */
-        routine->thread = new thread::Thread(&run_coroutine, routine);
+        routine->thread = std::make_shared<thread::Thread>(&run_coroutine, routine);
         routine->is_started = true;
         while(routine->is_running) {
             routine->cond.wait(routine->mutex);
@@ -224,8 +224,7 @@ void stop_coroutine(CoroutineID id) {
 
             context.thread->join();
 
-            delete context.thread;
-            context.thread = nullptr;
+            context.thread.reset();
             S_DEBUG("Coroutine {0} destroyed", id);
         }
 
