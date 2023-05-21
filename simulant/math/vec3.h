@@ -190,14 +190,8 @@ public:
     Vec3 transformed_by(const Mat4& trans) const;
 
     Vec3 project_onto_vec3(const Vec3& projection_target) const {
-        Vec3 unitW = this->normalized();
-        Vec3 unitV = projection_target.normalized();
-
-        float cos0 = unitW.dot(unitV);
-
-        unitV *= (this->length() * cos0);
-
-        return unitV;
+        Vec3 n = projection_target.normalized();
+        return n * dot(n);
     }
 
     float dot(const Vec3& rhs) const {
