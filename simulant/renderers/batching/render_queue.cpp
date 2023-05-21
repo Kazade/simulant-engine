@@ -113,7 +113,6 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     }
 }
 
-
 void RenderQueue::clear() {
     thread::Lock<thread::Mutex> lock(queue_lock_);
     for(auto& queue: priority_queues_) {

@@ -24,7 +24,7 @@ constexpr const char* const INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY = "s_inv
 
 #ifdef __DREAMCAST__
 // The Dreamcast only supports 2 multitexture units
-#define _S_GL_MAX_TEXTURE_UNITS 2
+#define _S_GL_MAX_TEXTURE_UNITS 1
 #elif defined(__PSP__)
 // PSPGL doesn't support multitexturing at all (!)
 #define _S_GL_MAX_TEXTURE_UNITS 1
