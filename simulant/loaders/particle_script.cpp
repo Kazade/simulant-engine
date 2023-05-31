@@ -244,6 +244,18 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             if(emitter->has_key("velocity")) {
                 float x = emitter["velocity"]->to_float().value();
                 new_emitter.velocity_range = std::make_pair(x, x);
+            } else {
+                float vel_min = new_emitter.velocity_range.first;
+                float vel_max = new_emitter.velocity_range.second;
+                if(emitter->has_key("velocity_min")) {
+                    vel_min = emitter["velocity_min"]->to_float().value();
+                }
+
+                if(emitter->has_key("velocity_max")) {
+                    vel_max = emitter["velocity_max"]->to_float().value();
+                }
+
+                new_emitter.velocity_range = std::make_pair(vel_min, vel_max);
             }
 
             if(emitter->has_key("width")) {
