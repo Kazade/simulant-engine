@@ -408,7 +408,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         Vec3 dir = emitter->direction;
         if(emitter->angle.value != 0) {
             Radians ang(emitter->angle); //Convert from degress to radians
-            ang.value *= random_.float_in_range(0, 1); //Multiply by a random unit float
+            ang.value *= random_.float_in_range(-1, 1); //Multiply by a random unit float
             dir = dir.random_deviant(ang).normalized();
         }
 

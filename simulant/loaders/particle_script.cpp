@@ -22,6 +22,7 @@
 #include "../stage.h"
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"
+#include "../assets/particles/alpha_fader.h"
 #include "../assets/particles/colour_fader.h"
 #include "../assets/particles/direction_manipulator.h"
 #include "../assets/particles/direction_noise_random_manipulator.h"
@@ -120,6 +121,22 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSO
     bool interpolate = js["interpolate"]->to_bool().value_or(true);
 
     auto m = std::make_shared<ColourFader>(ps, colours, interpolate);
+    ps->add_manipulator(m);
+    return m.get();
+}
+
+static smlt::Manipulator* spawn_alpha_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
+    std::vector<float> alphas;
+
+    auto colour_array = js["alphas"];
+    for(auto i = 0u; i < colour_array->size(); ++i) {
+        float alpha = colour_array[(uint32_t) i]->to_float().value();
+        alphas.push_back(alpha);
+    }
+
+    bool interpolate = js["interpolate"]->to_bool().value_or(true);
+
+    auto m = std::make_shared<AlphaFader>(ps, alphas, interpolate);
     ps->add_manipulator(m);
     return m.get();
 }
@@ -338,6 +355,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                     spawn_direction_manipulator(ps, manipulator);
                 } else if(manipulator["type"]->to_str().value() == "direction_noise_random") {
                     spawn_direction_noise_random_manipulator(ps, manipulator);
+                } else if(manipulator["type"]->to_str().value() == "alpha_fader") {
+                    spawn_alpha_fader_manipulator(ps, manipulator);
                 }
             }
         }
