@@ -772,6 +772,8 @@ bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* la
             }
 
             unicode source_text(source_text_maybe.value(), "utf-8");
+            source_text = source_text.replace("\\n", "\n");
+
             new_translations.insert(std::make_pair(source_text, id_to_translation.at(id)));
             id_to_translation.erase(id);
         } else {
@@ -782,6 +784,8 @@ bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* la
             }
 
             unicode translated_text(trans_maybe.value(), "utf-8");
+            translated_text = translated_text.replace("\\n", "\n");
+
             id_to_translation.insert(std::make_pair(key, translated_text));
         }
    }
