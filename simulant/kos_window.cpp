@@ -139,9 +139,6 @@ void KOSWindow::check_events() {
         CONT_DPAD2_UP, CONT_DPAD2_DOWN, CONT_DPAD2_LEFT, CONT_DPAD2_RIGHT
     };
 
-    static uint32_t previous_controller_button_state[MAX_CONTROLLERS] = {0};
-    static uint8_t previous_key_state[MAX_KEYBOARD_CODES] = {0}; // value-initialize to zero
-
     auto& previous = previous_controller_state_;
 
     /* Check controller states */
@@ -153,7 +150,7 @@ void KOSWindow::check_events() {
             if(state) {
                 auto port = device->port;
                 auto button_state = state->buttons;
-                auto prev_state = previous_controller_button_state[port];
+                auto prev_state = previous_controller_button_state_[port];
                 auto joyx_state = state->joyx;
                 auto joyy_state = state->joyy;
                 auto joyx2_state = state->joy2x;
@@ -218,7 +215,10 @@ void KOSWindow::check_events() {
                     }
                 }
 
-                previous_controller_button_state[port] = button_state;
+                previous_controller_button_state_[port] = button_state;
+            } else {
+                previous_controller_state_[device->port] = ControllerState();
+                previous_controller_button_state_[device->port] = 0;
             }
         }
     }
@@ -228,6 +228,13 @@ void KOSWindow::check_events() {
     for(int8_t i = 0; i < 1; ++i) {
         auto device = maple_enum_type(i, MAPLE_FUNC_KEYBOARD);
         if(device) {
+            /* Make sure we update that there's a keyboard available. We
+             * only support 1 for now! */
+
+            KeyboardDeviceInfo keyboard;
+            keyboard.id = 0;
+            input_state->_update_keyboard_devices({keyboard});
+
             auto state = (kbd_state_t*) maple_dev_status(device);
 
             auto get_modifiers = [&state]() -> ModifierKeyState {
@@ -247,14 +254,14 @@ void KOSWindow::check_events() {
                 const uint8_t* key_state = state->matrix;
 
                 for(uint32_t j = 0; j < MAX_KEYBOARD_CODES; ++j) {
-                    if(key_state[j] && !previous_key_state[j]) {
+                    if(key_state[j] && !previous_key_state_[j]) {
                         // Key down
                         input_state->_handle_key_down(
                             i, KeyboardCode(j)
                         );
                         on_key_down((KeyboardCode) j, get_modifiers());
                     }
-                    if(!key_state[j] && previous_key_state[j]) {
+                    if(!key_state[j] && previous_key_state_[j]) {
                         // Key up
                         input_state->_handle_key_up(
                             i, KeyboardCode(j)
@@ -264,8 +271,11 @@ void KOSWindow::check_events() {
                     }
                 }
 
-                std::copy(key_state, key_state + MAX_KEYBOARD_CODES, previous_key_state);
+                std::copy(key_state, key_state + MAX_KEYBOARD_CODES, previous_key_state_);
             }
+        } else {
+            input_state->_update_keyboard_devices({});
+            std::fill(previous_key_state_, previous_key_state_ + MAX_KEYBOARD_CODES, 0);
         }
     }
 

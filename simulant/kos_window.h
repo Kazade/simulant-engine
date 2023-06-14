@@ -59,6 +59,8 @@ private:
     };
 
     ControllerState previous_controller_state_[4] = {0};
+    uint32_t previous_controller_button_state_[4] = {0};
+    uint8_t previous_key_state_[MAX_KEYBOARD_CODES] = {0}; // value-initialize to zero
 
     virtual void game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) override;
     virtual void game_controller_stop_rumble(GameController *controller) override;
