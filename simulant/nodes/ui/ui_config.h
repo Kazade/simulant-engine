@@ -26,6 +26,11 @@ enum ResizeMode : uint8_t {
     RESIZE_MODE_FIT_CONTENT // Will fit the text, newlines affect the height
 };
 
+enum WrapMode : uint8_t {
+    WRAP_MODE_CHAR,
+    WRAP_MODE_WORD
+};
+
 enum ChangeFocusBehaviour : uint8_t {
     FOCUS_THIS_IF_NONE_FOCUSED = 0x1,
     FOCUS_NONE_IF_NONE_FOCUSED = 0x2

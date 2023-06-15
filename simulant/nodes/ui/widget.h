@@ -151,6 +151,8 @@ public:
     virtual bool set_resize_mode(ResizeMode resize_mode);
 
     ResizeMode resize_mode() const;
+    WrapMode wrap_mode() const { return wrap_mode_; }
+    void set_wrap_mode(WrapMode mode) { wrap_mode_ = mode; }
 
     bool has_background_image() const;
 
@@ -252,6 +254,7 @@ protected:
     std::shared_ptr<WidgetStyle> style_;
 
     ResizeMode resize_mode_ = RESIZE_MODE_FIT_CONTENT;
+    WrapMode wrap_mode_ = WRAP_MODE_WORD;
 
     Px text_width_ = Px(0);
     Px text_height_ = Px(0);

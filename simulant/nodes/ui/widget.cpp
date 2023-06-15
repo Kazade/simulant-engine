@@ -209,7 +209,9 @@ void Widget::render_text() {
 
         /* FIXME: This seems wrong.. if advance *should be* a float then we should probably
          * not do this cast here */
-        Px ch_advance = (uint16_t) font_->character_advance(ch, text_ptr[i + 1]);
+        Px ch_advance = (uint16_t) font_->character_advance(
+            ch, (i < text_length - 1) ? text_ptr[i + 1] : ' '
+        );
 
         auto right = left + ch_width;
         auto next_left = left + ch_advance;
@@ -230,8 +232,30 @@ void Widget::render_text() {
         bool break_line = ch == '\n';
 
         if(resize_mode() == RESIZE_MODE_FIXED || resize_mode() == RESIZE_MODE_FIXED_WIDTH) {
-            if(right >= right_bound && ch_width < right_bound) {
-                break_line = true;
+            if(wrap_mode() == WRAP_MODE_CHAR) {
+                if(right >= right_bound && ch_width < right_bound) {
+                    break_line = true;
+                }
+            } else if((ch == ' ' || ch == '\t') && i < text_length - 1) {
+                // FIXME: is_whitespace()
+
+                /* OK this is a whitespace character, and there are characters
+                 * following it. So let's see how big the next word is */
+                Px l = 0;
+
+                for(std::size_t j = i + 1; j < text_length; ++j) {
+                    auto wchr = text_ptr[j];
+                    if((wchr == ' ' || wchr == '\t')) {
+                        break;
+                    }
+                    // FIXME: Pass in the next char, not ' '
+                    l += (uint16_t) font_->character_advance(wchr, ' ');
+                }
+
+                /* The next word will be beyond the bounds so let's break here */
+                if(right + l >= right_bound) {
+                    break_line = true;
+                }
             }
         }
 
