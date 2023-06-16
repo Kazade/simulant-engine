@@ -232,11 +232,15 @@ void Widget::render_text() {
         bool break_line = ch == '\n';
 
         if(resize_mode() == RESIZE_MODE_FIXED || resize_mode() == RESIZE_MODE_FIXED_WIDTH) {
-            if(wrap_mode() == WRAP_MODE_CHAR) {
-                if(right >= right_bound && ch_width < right_bound) {
-                    break_line = true;
-                }
-            } else if((ch == ' ' || ch == '\t') && i < text_length - 1) {
+
+            // We always break if we're going beyond the bounds, that's true of
+            // word or char wrapping. Word wrapping should detect this early unless
+            // there's a super long word.
+            if(right >= right_bound && ch_width < right_bound) {
+                break_line = true;
+            }
+
+            if(wrap_mode() == WRAP_MODE_WORD && (ch == ' ' || ch == '\t') && i < text_length - 1) {
                 // FIXME: is_whitespace()
 
                 /* OK this is a whitespace character, and there are characters
@@ -264,9 +268,9 @@ void Widget::render_text() {
              * actually processing this character, then rewind one step */
             finalize_line();
 
-            /* We replay the character if it's not a newline
+            /* We replay the character if it's not a newline or whitespace
              * (e.g. we're wrapping width, not newline) */
-            if(ch != '\n') i--;
+            if(ch != '\n' && ch != ' ' && ch != '\t') i--;
             continue;
         }
 
