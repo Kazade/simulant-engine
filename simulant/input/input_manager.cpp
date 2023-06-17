@@ -79,9 +79,13 @@ InputManager::InputManager(InputState *controller):
     auto mouse_y = new_axis("MouseY");
     mouse_y->set_type(AXIS_TYPE_MOUSE_AXIS);
     mouse_y->set_mouse_axis(MOUSE_AXIS_1);
+
+    smlt::get_app()->window->register_event_listener(&event_listener_);
 }
 
 InputManager::~InputManager() {
+    smlt::get_app()->window->unregister_event_listener(&event_listener_);
+
     scene_deactivated_conn_.disconnect();
 }
 
@@ -553,13 +557,11 @@ bool InputManager::start_text_input(bool force_onscreen) {
 
     text_input_enabled_ = true;
 
-    if(!force_onscreen && controller_->keyboard_count()) {
-        /* Attach the keyboard listener */
-        smlt::get_app()->window->register_event_listener(&event_listener_);
+    assert(!keyboard_);
+
+    if(keyboard_) {
         return false;
     }
-
-    assert(!keyboard_);
 
     auto active_scene = smlt::get_app()->scenes->active_scene();
     if(!active_scene) {
@@ -653,6 +655,11 @@ unicode InputManager::stop_text_input() {
 /* This watches for keyboard inputs while text input is active - we map keyboard codes to characters
  * depending on the keyboard layout */
 void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
+    /* We attach this handler globally, we only do anything if text input is active */
+    if(!self_->text_input_active()) {
+        return;
+    }
+
     if(self_->onscreen_keyboard_active()) {
         /* This signal would be triggered by the onscreen keyboard instead */
         return;
