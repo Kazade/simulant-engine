@@ -557,6 +557,12 @@ bool InputManager::start_text_input(bool force_onscreen) {
 
     text_input_enabled_ = true;
 
+    /* If we have a physical keyboard, and we're not forcing an onscreen
+     * one, then we're done */
+    if(controller_->keyboard_count() && !force_onscreen) {
+        return false;
+    }
+
     assert(!keyboard_);
 
     if(keyboard_) {
@@ -584,6 +590,9 @@ bool InputManager::start_text_input(bool force_onscreen) {
     keyboard_->set_anchor_point(0.5f, 0.0f);
     keyboard_->move_to(window->width() / 2, window->height() * 0.1f);
     keyboard_->set_keyboard_integration_enabled(true);
+    keyboard_stage_->signal_destroyed().connect([=]() {
+        keyboard_ = nullptr;
+    });
 
     /* This forward virtual keypresses to the text input received signal */
     keyboard_->signal_key_pressed().connect([=](ui::SoftKeyPressedEvent& evt) {
@@ -635,8 +644,6 @@ unicode InputManager::stop_text_input() {
 
     text_input_enabled_ = false;
 
-    smlt::get_app()->window->unregister_event_listener(&event_listener_);
-
     if(keyboard_) {
         assert(keyboard_stage_);
 
@@ -673,7 +680,7 @@ void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
 
     if(chr == 0) {
         switch(evt.keyboard_code) {
-        case KEYBOARD_CODE_BACKSPACE:
+            case KEYBOARD_CODE_BACKSPACE:
             case KEYBOARD_CODE_DELETE:
             case KEYBOARD_CODE_RETURN:
             case KEYBOARD_CODE_SPACE:  // Space is sent as a character, but we send anyway */
@@ -683,6 +690,7 @@ void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
             case KEYBOARD_CODE_DOWN:
             case KEYBOARD_CODE_HOME:
             case KEYBOARD_CODE_END:
+            case KEYBOARD_CODE_ESCAPE:
             break;
         default:
             return;
