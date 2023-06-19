@@ -84,7 +84,10 @@ InputManager::InputManager(InputState *controller):
 }
 
 InputManager::~InputManager() {
-    smlt::get_app()->window->unregister_event_listener(&event_listener_);
+    auto app = smlt::get_app();
+    if(app && app->window.get()) {
+        app->window->unregister_event_listener(&event_listener_);
+    }
 
     scene_deactivated_conn_.disconnect();
 }
