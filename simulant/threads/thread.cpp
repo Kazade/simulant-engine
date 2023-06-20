@@ -157,7 +157,8 @@ ThreadID this_thread_id() {
 #ifdef __PSP__
     return (ThreadID) sceKernelGetThreadId();
 #elif defined(__DREAMCAST__)
-    return (ThreadID) thd_get_current();
+    auto thd = thd_get_current();
+    return (ThreadID) (thd ? thd->tid : 0);
 #else
     auto ret = pthread_self();
     return (ThreadID) ret;
