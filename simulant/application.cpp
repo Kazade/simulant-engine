@@ -158,19 +158,6 @@ Application::Application(const AppConfig &config):
     register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DCMLoaderType>());
-
-    try {
-        construct_window(config);
-    } catch(std::runtime_error&) {
-        S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
-        exit(1);
-    }
-
-    /* We can't do this in the initialiser as we need a valid
-     * window before doing things like creating textures */
-    asset_manager_ = SharedAssetManager::create();
-
-    preload_default_font();
 }
 
 Application::~Application() {
@@ -328,6 +315,19 @@ void Application::construct_window(const AppConfig& config) {
 
 bool Application::_call_init() {
     S_DEBUG("Initializing the application");
+
+    try {
+        construct_window(config);
+    } catch(std::runtime_error&) {
+        S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
+        exit(1);
+    }
+
+    /* We can't do this in the initialiser as we need a valid
+     * window before doing things like creating textures */
+    asset_manager_ = SharedAssetManager::create();
+
+    preload_default_font();
 
     sound_driver_ = window->create_sound_driver(config_.development.force_sound_driver);
     sound_driver_->startup();
