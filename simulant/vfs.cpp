@@ -146,23 +146,24 @@ optional<Path> VirtualFileSystem::locate_file(
 
     const Path DOES_NOT_EXIST = "";
 
-    /**
-      Locates a file on one of the resource paths, throws an IOError if the file
-      cannot be found
-    */
-
     S_DEBUG("Locating file: {0}", filename);
 
-    // FIXME: Don't use unicode!
-    Path final_name(unicode(filename.str()).replace(
-        "${RENDERER}",
-        get_app()->window->renderer->name()
-    ).replace(
-        "${PLATFORM}",
-        get_platform()->name()
-    ).encode());
+    /* Replace any placeholders */
 
-    final_name = kfs::path::norm_path(final_name.str());
+    auto window = get_app()->window.get();
+
+    unicode tmp_name = filename.str();
+
+    if(window && window->renderer.get()) {
+        tmp_name = tmp_name.replace("${RENDERER}", window->renderer->name());
+    }
+
+    auto platform = get_platform();
+    if(platform) {
+        tmp_name = tmp_name.replace("${PLATFORM}", platform->name());
+    }
+
+    Path final_name = Path(kfs::path::norm_path(tmp_name.encode()));
 
 #ifdef __ANDROID__
     //On Android we use SDL_RWops which reads from the APK
