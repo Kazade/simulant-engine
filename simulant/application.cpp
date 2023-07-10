@@ -316,6 +316,11 @@ void Application::construct_window(const AppConfig& config) {
 bool Application::_call_init() {
     S_DEBUG("Initializing the application");
 
+    if(!pre_init()) {
+        S_ERROR("Application pre-initialisation failed");
+        return false;
+    }
+
     try {
         construct_window(config);
     } catch(std::runtime_error&) {
