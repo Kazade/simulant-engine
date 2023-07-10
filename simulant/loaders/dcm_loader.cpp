@@ -82,7 +82,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         int enabled_textures = 0;
 
         if(mat.diffuse_map[0]) {
-            Path final = Path(std::string(mat.diffuse_map, 32));
+            Path final = Path(std::string(mat.diffuse_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
