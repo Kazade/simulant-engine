@@ -147,6 +147,7 @@ ELSEIF(MINGW)
     PKG_CHECK_MODULES(OPENAL REQUIRED openal)
     LINK_LIBRARIES(psapi userenv)
     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    add_definitions(-D_WIN32_WINNT=0x0601 -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 ELSEIF(PLATFORM_DREAMCAST)
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast.")
 
