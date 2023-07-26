@@ -295,7 +295,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 S_DEBUG("Generating mipmaps. W: {0}, H:{1}",
                     texture->width(), texture->height()
                 );
-                GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
+                GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
                 texture->_set_has_mipmaps(true);
                 S_DEBUG("Mipmaps generated");
 #endif

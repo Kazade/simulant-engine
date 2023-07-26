@@ -56,7 +56,7 @@ void check_and_log_error(const char *function_name) {
         case GL_INVALID_OPERATION:
             error_string = "GL_INVALID_OPERATION";
             break;
-        case GL_INVALID_FRAMEBUFFER_OPERATION_EXT:
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
             error_string = "GL_INVALID_FRAMEBUFFER_OPERATION";
             break;
         case GL_OUT_OF_MEMORY:
