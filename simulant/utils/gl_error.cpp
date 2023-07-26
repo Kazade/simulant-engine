@@ -42,6 +42,10 @@ void end_of_frame_check() {
 
 }
 
+#ifdef __PSP__
+#define GL_INVALID_FRAMEBUFFER_OPERATION GL_INVALID_FRAMEBUFFER_OPERATION_EXT
+#endif
+
 void check_and_log_error(const char *function_name) {
     GLuint error = glGetError();
     if(error != GL_NO_ERROR) {
