@@ -247,6 +247,12 @@ public:
     void activate_panel(uint8_t id);
     void deactivate_panel(uint8_t id);
     bool panel_is_active(uint8_t id);
+
+protected:
+    InputState* get_input_state() {
+        return input_state_.get();
+    }
+
 private:
     Application* application_ = nullptr;
 
