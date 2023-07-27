@@ -460,6 +460,7 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
     mouse.axis_count = 2; // X + Y FIXME: Add scrollwheels
 
     KeyboardDeviceInfo keyboard;
+    keyboard.id = 0;
 
     auto joypads = detect_game_controllers();
 

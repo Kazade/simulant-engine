@@ -295,9 +295,18 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 S_DEBUG("Generating mipmaps. W: {0}, H:{1}",
                     texture->width(), texture->height()
                 );
-                GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
-                texture->_set_has_mipmaps(true);
-                S_DEBUG("Mipmaps generated");
+
+                if(glGenerateMipmap) {
+                    GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
+                    texture->_set_has_mipmaps(true);
+                    S_DEBUG("Mipmaps generated");
+                } else if(glGenerateMipmapEXT) {
+                    GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
+                    texture->_set_has_mipmaps(true);
+                    S_DEBUG("Mipmaps generated");
+                } else {
+                    S_ERROR("Failed to generate mipmaps as glGenerateMipmap not available");
+                }
 #endif
 
 #ifdef __DREAMCAST__
