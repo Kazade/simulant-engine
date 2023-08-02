@@ -197,7 +197,7 @@ public:
         auto count = stage->sprites->sprite_count();
 
         auto sprite = stage->sprites->new_sprite();
-        assert_equal(sprite->node_type(), STAGE_NODE_TYPE_OTHER);
+        assert_equal(sprite->node_type(), STAGE_NODE_TYPE_SPRITE);
 
         assert_true(stage->sprites->sprite_count() >= count + 1);
 

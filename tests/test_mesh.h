@@ -189,7 +189,6 @@ public:
         auto actor = stage_->new_actor();
 
         this->assert_true(actor->id()); //Make sure we set an id for the mesh
-        this->assert_true(actor->auto_id() != 0); //Make sure we set a unique ID for the object
         this->assert_true(!actor->data->exists("data"));
         actor->data->stash((int)0xDEADBEEF, "data");
         this->assert_true(actor->data->exists("data"));

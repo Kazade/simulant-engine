@@ -61,7 +61,6 @@ public:
 private:
     friend class StageNode;
 
-    ChildIterator(StageNode* parent);
     ChildIterator(StageNode* parent, StageNode* start);
 
     StageNode* parent_ = nullptr;

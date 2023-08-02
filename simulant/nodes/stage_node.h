@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./tree_node.h"
 #include "../interfaces/nameable.h"
 #include "../interfaces/printable.h"
 #include "../interfaces/transformable.h"
@@ -46,25 +45,107 @@ enum StageNodeType {
     STAGE_NODE_TYPE_PARTICLE_SYSTEM,
     STAGE_NODE_TYPE_GEOM,
     STAGE_NODE_TYPE_MESH_INSTANCER,
-    STAGE_NODE_TYPE_OTHER
+    STAGE_NODE_TYPE_SKYBOX,
+    STAGE_NODE_TYPE_SPRITE,
+    STAGE_NODE_TYPE_WIDGET,
+    STAGE_NODE_TYPE_USER_BASE = 1000
 };
 
 class StageNode:
     public virtual DestroyableObject,
-    public TreeNode,
     public virtual Nameable,
     public Printable,
     public Transformable,
     public Updateable,
-    public virtual BoundableEntity,
     public Organism,
-    public HasAutoID<StageNode>,
+    public virtual BoundableEntity,
     public virtual TwoPhaseConstructed {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
+    DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up); // Fired when the node is cleaned up later, following destroy
 
-    // Fired when the node is cleaned up later, following destroy
-    DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up);
+
+private:
+    /* Heirarchy */
+
+    friend class DescendentIterator<false>;
+    friend class DescendentIterator<true>;
+
+    StageNode* parent_ = nullptr;
+    StageNode* next_ = nullptr;
+    StageNode* prev_ = nullptr;
+    StageNode* first_child_ = nullptr;
+    StageNode* last_child_ = nullptr;
+
+    virtual void on_parent_set(StageNode* oldp, StageNode* newp) {
+        _S_UNUSED(oldp);
+
+        if(!newp) {
+            return;
+        }
+
+        update_transformation_from_parent();
+        recalc_visibility();
+    }
+
+public:
+    bool is_root() const {
+        return !has_parent();
+    }
+
+    StageNode* first_sibling() {
+        return parent_->first_child_;
+    }
+
+    const StageNode* first_sibling() const {
+        return parent_->first_child_;
+    }
+
+    StageNode* next_sibling() {
+        return next_;
+    }
+
+    const StageNode* next_sibling() const {
+        return next_;
+    }
+
+    StageNode* parent() {
+        return parent_;
+    }
+
+    const StageNode* parent() const {
+        return parent_;
+    }
+
+    StageNode* first_child() {
+        return first_child_;
+    }
+
+    const StageNode* first_child() const {
+        return first_child_;
+    }
+
+    StageNode* last_child() {
+        return last_child_;
+    }
+
+    const StageNode* last_child() const {
+        return last_child_;
+    }
+
+    const StageNode* child_at(std::size_t i) const;
+
+    std::size_t child_count() const;
+
+    bool has_parent() const {
+        return parent_;
+    }
+
+    void remove_from_parent();
+    void set_parent(StageNode* new_parent);
+    void append_child(StageNode* new_child) {
+        new_child->set_parent(this);
+    }
 
 private:
     /* This is ugly, but it's here for performance to avoid
@@ -84,7 +165,14 @@ public:
 
     public:
         SiblingIterator<false> begin() {
-            return SiblingIterator<false>(root_);
+            if(!root_->parent()) {
+                return SiblingIterator<false>(root_, nullptr);
+            }
+
+            return SiblingIterator<false>(
+                root_,
+                (root_->next_sibling()) ? root_->next_sibling() : root_->parent_->first_child()
+            );
         }
 
         SiblingIterator<false> end() {
@@ -102,7 +190,7 @@ public:
 
     public:
         ChildIterator<false> begin() {
-            return ChildIterator<false>((StageNode*) root_);
+            return ChildIterator<false>(root_, root_->first_child_);
         }
 
         ChildIterator<false> end() {
@@ -204,8 +292,6 @@ public:
         set_parent(id.fetch());
     }
 
-    void set_parent(TreeNode* node);
-
     smlt::Promise<void> destroy_after(const Seconds& seconds);
 
     void update(float dt) override;
@@ -252,7 +338,6 @@ protected:
     Stage* get_stage() const { return stage_; }
 
     void on_transformation_changed() override;
-    void on_parent_set(TreeNode* oldp, TreeNode* newp) override;
 
     virtual void update_transformation_from_parent();
 
@@ -264,7 +349,6 @@ private:
     AABB calculate_transformed_aabb() const;
 
     Stage* stage_ = nullptr;
-    StageNode* parent_stage_node_ = nullptr;
 
     StageNodeType node_type_ = STAGE_NODE_TYPE_ACTOR;
 

@@ -5,8 +5,113 @@
 
 namespace smlt {
 
+
+
+const StageNode* StageNode::child_at(std::size_t i) const {
+    std::size_t j = 0;
+
+    auto it = first_child_;
+    while(it) {
+        if(j++ == i) {
+            return it;
+        }
+
+        it = it->next_;
+    }
+
+    return nullptr;
+}
+
+std::size_t StageNode::child_count() const {
+    std::size_t i = 0;
+    auto it = first_child_;
+    while(it) {
+        ++i;
+        it = it->next_;
+    }
+
+    return i;
+}
+
+void StageNode::remove_from_parent() {
+    if(!parent_) {
+        return;
+    }
+
+    /* Remove from sibling list */
+    if(parent_->first_child_ == this) {
+        parent_->first_child_ = next_;
+        if(parent_->first_child_) {
+            parent_->first_child_->prev_ = nullptr;
+        }
+    }
+
+    if(parent_->last_child_ == this) {
+        parent_->last_child_ = prev_;
+        if(parent_->last_child_) {
+            parent_->last_child_->next_ = nullptr;
+        }
+    }
+
+    if(next_) next_->prev_ = prev_;
+    if(prev_) prev_->next_ = next_;
+
+    parent_ = nullptr;
+    next_ = prev_ = nullptr;
+
+    assert(first_child_ != this);
+    assert(last_child_ != this);
+    assert(next_ != this);
+    assert(prev_ != this);
+
+    on_parent_set(parent_, nullptr);
+}
+
+void StageNode::set_parent(StageNode* new_parent) {
+    if(new_parent == parent_ || new_parent == this) {
+        return;
+    }
+
+    auto old_parent = parent_;
+
+    remove_from_parent();
+    parent_ = new_parent;
+
+    // FIXME: DELETE THIS! It ensures that nodes are always attached to the
+    // stage, but we want to move away from that
+    if(!parent_) {
+        parent_ = stage_;
+    }
+
+    if(parent_->first_child_) {
+        /* New parent already had children, so find the last
+         * one and attach there */
+        auto it = parent_->last_child();
+        assert(it);
+        assert(!it->next_);
+
+        it->next_ = this;
+        prev_ = it;
+        next_ = nullptr;
+        parent_->last_child_ = this;
+    } else {
+        assert(!parent_->last_child_);
+
+        parent_->first_child_ = this;
+        parent_->last_child_ = this;
+        next_ = nullptr;
+        prev_ = nullptr;
+    }
+
+    assert(first_child_ != this);
+    assert(last_child_ != this);
+    assert(next_ != this);
+    assert(prev_ != this);
+
+    on_parent_set(old_parent, parent_);
+}
+
 StageNode::StageNode(Stage *stage, smlt::StageNodeType node_type):
-    TreeNode(),
     stage_(stage),
     node_type_(node_type) {
 
@@ -56,7 +161,7 @@ void StageNode::clean_up() {
         stage_node->destroy_immediately();
     }
 
-    detach(); // Make sure we're not connected to anything
+    remove_from_parent(); // Make sure we're not connected to anything
 
     TwoPhaseConstructed::clean_up();
 }
@@ -107,15 +212,11 @@ Mat4 StageNode::absolute_transformation() const {
 }
 
 void StageNode::recalc_visibility() {
-    // Debug check to make sure the parent is always a stage node. If we have a parent
-    // the dynamic cast should return something truthy, if there's no parent just return true
-    assert(parent_ ? (bool) parent_stage_node_ : true);
-
     bool previously_visible = self_and_parents_visible_;
 
     // If this isn't visible, then fast-out, else return whether the parent is visible until
     // there are no more parents
-    self_and_parents_visible_ = is_visible_ && ((parent_stage_node_) ? parent_stage_node_->is_visible() : true);
+    self_and_parents_visible_ = is_visible_ && ((parent_) ? parent_->is_visible() : true);
 
     if(previously_visible != self_and_parents_visible_) {
         /* Recurse through children to update */
@@ -131,21 +232,6 @@ bool StageNode::is_visible() const {
 
 void StageNode::set_visible(bool visible) {
     is_visible_ = visible;
-    recalc_visibility();
-}
-
-void StageNode::set_parent(TreeNode* node) {
-    if(node == this) {
-        return;
-    }
-
-    if(!node) {
-        /* If someone passes null, we reattach to the stage */
-        TreeNode::set_parent(stage_);
-    } else {
-        TreeNode::set_parent(node);
-    }
-
     recalc_visibility();
 }
 
@@ -184,11 +270,11 @@ void StageNode::move_to_absolute(const Vec3& position) {
     if(parent_is_stage()) {
         move_to(position);
     } else {
-        assert(parent_stage_node_);
+        assert(parent_);
 
         // The stage itself is immovable so, we only bother with this if this isn't he stage
         // could also use if(!parent()->is_root())
-        Vec3 ppos = parent_stage_node_->absolute_position();
+        Vec3 ppos = parent_->absolute_position();
         move_to(position - ppos);
     }
 }
@@ -199,7 +285,7 @@ void StageNode::move_to_absolute(float x, float y, float z) {
 
 void StageNode::rotate_to_absolute(const Quaternion& rotation) {
     if(!parent_is_stage()) {
-        auto prot = parent_stage_node_->absolute_rotation();
+        auto prot = parent_->absolute_rotation();
         prot.inverse();
 
         rotate_to((prot * rotation).normalized());
@@ -217,7 +303,7 @@ void StageNode::on_transformation_changed() {
 }
 
 void StageNode::update_transformation_from_parent() {
-    StageNode* parent = parent_stage_node_;
+    StageNode* parent = parent_;
 
     if(!parent || parent_is_stage()) {
         absolute_rotation_ = rotation_;
@@ -239,18 +325,6 @@ void StageNode::update_transformation_from_parent() {
     for(auto& node: each_child()) {
         node.update_transformation_from_parent();
     }
-}
-
-void StageNode::on_parent_set(TreeNode* oldp, TreeNode* newp) {
-    _S_UNUSED(oldp);
-
-    if(!newp) {
-        return;
-    }
-
-    assert(dynamic_cast<StageNode*>(newp));
-    parent_stage_node_ = (StageNode*) (newp);
-    update_transformation_from_parent();
 }
 
 AABB StageNode::calculate_transformed_aabb() const {

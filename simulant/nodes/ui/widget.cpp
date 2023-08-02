@@ -14,7 +14,7 @@ namespace ui {
 
 Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style):
     TypedDestroyableObject<Widget, UIManager>(owner),
-    ContainerNode(stage, STAGE_NODE_TYPE_OTHER),
+    ContainerNode(stage, STAGE_NODE_TYPE_WIDGET),
     owner_(owner),
     theme_(defaults),
     style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {

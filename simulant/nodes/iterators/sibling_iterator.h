@@ -60,7 +60,7 @@ public:
 
 private:
     friend class StageNode;
-    SiblingIterator(StageNode* start);
+
     SiblingIterator(StageNode* start, StageNode* current);
 
     StageNode* start_ = nullptr;

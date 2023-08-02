@@ -10,20 +10,13 @@ class SiblingIterator;
 
 template<bool IsConst>
 SiblingIterator<IsConst>& SiblingIterator<IsConst>::operator++() {
-    if(current_ && current_->next_node() != start_) {
-        current_ = (StageNode*) current_->next_node();
+    if(current_ && current_->next_sibling() != start_) {
+        current_ = (StageNode*) current_->next_sibling();
     } else {
         current_ = nullptr;
     }
 
     return *this;
-}
-
-template<bool IsConst>
-SiblingIterator<IsConst>::SiblingIterator(StageNode *start):
-    start_(start),
-    current_((start->next_node() == start) ? nullptr : (StageNode*) start->next_node()) {
-
 }
 
 template<bool IsConst>

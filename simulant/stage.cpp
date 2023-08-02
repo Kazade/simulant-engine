@@ -95,7 +95,10 @@ void Stage::clean_up() {
     debug_.reset();
 
     //Recurse through the tree, destroying all children
-    for(auto& stage_node: each_descendent()) {
+    auto pair = each_descendent();
+
+    for(auto it = pair.begin(); it != pair.end(); ++it) {
+        auto& stage_node = *it;
         stage_node.destroy();
     }
 

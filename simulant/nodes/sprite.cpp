@@ -30,7 +30,7 @@ using namespace smlt;
 
 Sprite::Sprite(SpriteManager *manager, SoundDriver* sound_driver):
     TypedDestroyableObject<Sprite, SpriteManager>(manager),
-    ContainerNode(manager->stage.get(), STAGE_NODE_TYPE_OTHER),
+    ContainerNode(manager->stage.get(), STAGE_NODE_TYPE_SPRITE),
     AudioSource(manager->stage, this, sound_driver),
     manager_(manager) {
 

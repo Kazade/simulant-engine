@@ -93,7 +93,7 @@ UIManager::~UIManager() {
 
 Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const unicode &initial_text) {
     auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, mode, initial_text);
-    stage_->add_child(keyboard);
+    stage_->append_child(keyboard);
     return keyboard;
 }
 
@@ -101,7 +101,7 @@ Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, con
     auto frame = manager_->make_as<Frame>(this, &config_, stage_);
     frame->set_text(title);
     frame->resize(width, height);
-    stage_->add_child(frame);
+    stage_->append_child(frame);
 
     return frame;
 }
@@ -110,7 +110,7 @@ Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height
     auto button = manager_->make_as<Button>(this, &config_, stage_, shared_style);
     button->set_text(text);
     button->resize(width, height);
-    stage_->add_child(button);
+    stage_->append_child(button);
 
     return button;
 }
@@ -120,7 +120,7 @@ TextEntry* UIManager::new_widget_as_text_entry(const unicode &text, Px width, Px
     label->set_text(text);
     label->resize(width, height);
 
-    stage_->add_child(label);
+    stage_->append_child(label);
 
     return label;
 }
@@ -130,7 +130,7 @@ Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) 
     label->set_text(text);
     label->resize(width, height);
 
-    stage_->add_child(label);
+    stage_->append_child(label);
 
     return label;
 }
@@ -139,7 +139,7 @@ Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
     auto image = (Image*) &(*manager_->make_as<Image>(this, &config_, stage_));
     image->set_texture(texture);
 
-    stage_->add_child(image);
+    stage_->append_child(image);
 
     return image;
 }
@@ -154,7 +154,7 @@ ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float v
     pg->set_range(min, max);
     pg->set_value(value);
 
-    stage_->add_child(pg);
+    stage_->append_child(pg);
 
     return pg;
 }
