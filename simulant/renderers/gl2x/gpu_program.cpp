@@ -49,10 +49,10 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
 
     /* Make sure we always rebind the currently bound gpu program when
      * we leave this function */
-    auto current = renderer_->current_gpu_program_id();
+    auto current = renderer_->current_gpu_program();
     raii::Finally then([&]() {
-        if(current && current != id()) {
-            auto program = renderer_->gpu_program(current);
+        if(current && current->id() != id()) {
+            auto program = current;
             if(program) {
                 program->activate();
             } else {
@@ -64,7 +64,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
         }
     });
 
-    if(current != id()) {
+    if(current->id() != id()) {
         activate();
     }
 

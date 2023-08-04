@@ -16,7 +16,7 @@ public:
         auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
-        std::set<ActorID> destroyed_ids;
+        std::set<StageNodeID> destroyed_ids;
         sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
             assert_equal(type, STAGE_NODE_TYPE_ACTOR);
             destroyed_count++;
@@ -44,7 +44,7 @@ public:
         auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
-        std::set<CameraID> destroyed_ids;
+        std::set<StageNodeID> destroyed_ids;
         sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](smlt::StageNode* node, StageNodeType type) {
             assert_equal(type, STAGE_NODE_TYPE_CAMERA);
             destroyed_count++;
@@ -73,7 +73,7 @@ public:
         auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
-        std::set<ParticleSystemID> destroyed_ids;
+        std::set<StageNodeID> destroyed_ids;
         sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
           assert_equal(type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
           destroyed_count++;

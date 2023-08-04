@@ -25,7 +25,7 @@ struct TriangleData {
 };
 
 struct CullerNodeData {
-    std::unordered_map<MaterialID, TriangleData> triangles;
+    std::unordered_map<AssetID, TriangleData> triangles;
 };
 
 

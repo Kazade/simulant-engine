@@ -67,8 +67,8 @@ void AudioSource::source_update_thread() {
 }
 
 
-Sound::Sound(SoundID id, AssetManager *asset_manager, SoundDriver *sound_driver):
-    generic::Identifiable<SoundID>(id),
+Sound::Sound(AssetID id, AssetManager *asset_manager, SoundDriver *sound_driver):
+    generic::Identifiable<AssetID>(id),
     Asset(asset_manager),
     driver_(sound_driver) {
 
@@ -179,7 +179,7 @@ PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dist
     return PlayingSoundPtr(new_source);
 }
 
-bool AudioSource::stop_sound(PlayingSoundID sound_id) {
+bool AudioSource::stop_sound(PlayingAssetID sound_id) {
     thread::Lock<thread::Mutex> lock(mutex_);
 
     for(auto it = instances_.begin(); it != instances_.end();) {

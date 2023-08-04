@@ -63,11 +63,10 @@ void StaticBody::b3MeshGenerator::append_vertex(const Vec3 &v) {
     mesh_->vertexCount = vertices_.size();
 }
 
-void StaticBody::add_mesh_collider(const MeshID &mesh_id, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation) {
+void StaticBody::add_mesh_collider(const MeshPtr &mesh, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation) {
     assert(simulation_);
 
     auto bmesh = std::make_shared<b3MeshGenerator>();
-    auto mesh = mesh_id.fetch();
 
     std::vector<utils::Triangle> triangles;
 

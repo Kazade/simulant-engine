@@ -286,12 +286,12 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
             skin_name
         };
 
-        smlt::TextureID tex_id;
+        smlt::TexturePtr tex;
         bool found = false;
         for(auto& texture_path: possible_paths) {
             auto p = vfs->locate_file(texture_path);
             if(p.has_value()) {
-                tex_id = asset_manager->new_texture_from_file(p.value());
+                tex = asset_manager->new_texture_from_file(p.value());
                 found = true;
                 break;
             } else {
@@ -304,7 +304,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         }
 
         auto material = asset_manager->clone_default_material();
-        material->set_diffuse_map(asset_manager->texture(tex_id));
+        material->set_diffuse_map(tex);
 
         if(i == 0) {
             submesh->set_material(material);

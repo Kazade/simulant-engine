@@ -55,23 +55,23 @@ bool PartitionerPanel::init() {
         }
 
         debug_actors_[stage->id()] = stage->new_actor_with_mesh(
-            stage->partitioner->debug_mesh_id()
+            stage->partitioner->debug_mesh()
         );
 
         debug_actors_[stage->id()]->set_cullable(false);
     }
 
-    stage_added_ = scene->signal_stage_added().connect([=](StageID stage_id) {
+    stage_added_ = scene->signal_stage_added().connect([=](StageNodeID stage_id) {
         auto stage = scene->stage(stage_id);
 
         debug_actors_[stage->id()] = stage->new_actor_with_mesh(
-            stage->partitioner->debug_mesh_id()
+            stage->partitioner->debug_mesh()
         );
 
         debug_actors_[stage->id()]->set_cullable(false);
     });
 
-    stage_removed_ = scene->signal_stage_removed().connect([=](StageID stage_id) {
+    stage_removed_ = scene->signal_stage_removed().connect([=](StageNodeID stage_id) {
         debug_actors_.erase(stage_id);
     });
 

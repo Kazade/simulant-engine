@@ -132,7 +132,7 @@ public:
     MaterialChangeWatcher(RenderQueue* queue):
         queue_(queue) {}
 
-    void watch(MaterialID material_id, Renderable* renderable);
+    void watch(AssetID material_id, Renderable* renderable);
     void unwatch(Renderable* renderable);
 
 private:
@@ -141,15 +141,15 @@ private:
     /*
      * We store a list of all the renderables that need to be reinserted if a material changes
      */
-    std::unordered_map<MaterialID, std::set<Renderable*>> renderables_by_material_;
+    std::unordered_map<AssetID, std::set<Renderable*>> renderables_by_material_;
 
     /*
      * We store connections to material update signals, when all renderables are removed
      * for a particular material, we disconnect the signal
      */
-    std::unordered_map<MaterialID, sig::connection> material_update_conections_;
+    std::unordered_map<AssetID, sig::connection> material_update_conections_;
 
-    void on_material_changed(MaterialID material);
+    void on_material_changed(AssetID material);
 };
 
 
@@ -175,7 +175,7 @@ public:
     }
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
-    // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
+    // minimize GL state changes (e.g. if a RenderGroupImpl orders by AssetID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
     typedef ContiguousMultiMap<RenderGroup, std::size_t> SortedRenderables;

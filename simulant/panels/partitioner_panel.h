@@ -43,7 +43,7 @@ private:
     void do_activate() override;
     void do_deactivate() override;
 
-    std::unordered_map<StageID, ActorPtr> debug_actors_;
+    std::unordered_map<StageNodeID, ActorPtr> debug_actors_;
 
     sig::connection stage_added_;
     sig::connection stage_removed_;

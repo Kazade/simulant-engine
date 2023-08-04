@@ -86,9 +86,9 @@ std::size_t texture_format_channels(TextureFormat format) {
     }
 }
 
-Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
+Texture::Texture(AssetID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
     Asset(asset_manager),
-    generic::Identifiable<TextureID>(id),
+    generic::Identifiable<AssetID>(id),
     width_(width),
     height_(height) {
 

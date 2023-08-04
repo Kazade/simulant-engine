@@ -146,7 +146,7 @@ public:
 
         auto actor2 = stage_->new_actor();
 
-        actor2->set_parent(actor->id());
+        actor2->set_parent(actor);
 
         assert_equal(actor2->absolute_rotation(), actor->absolute_rotation());
 
@@ -175,7 +175,7 @@ public:
 
         auto actor2 = stage_->new_actor();
 
-        actor2->set_parent(actor->id());
+        actor2->set_parent(actor);
 
         //Should be the same as its parent
         assert_equal(actor2->absolute_position(), actor->absolute_position());
@@ -201,7 +201,7 @@ public:
 
         auto actor2 = stage_->new_actor();
 
-        actor2->set_parent(actor->id());
+        actor2->set_parent(actor);
 
         actor2->move_to(smlt::Vec3(10, 0, 0));
 

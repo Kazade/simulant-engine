@@ -63,12 +63,12 @@ std::size_t StageManager::stage_count() const {
  * @return A shared_ptr to the stage
  */
 
-StagePtr StageManager::stage(StageID s) {
-    return manager_->get(s.value());
+StagePtr StageManager::stage(StageNodeID s) {
+    return manager_->get(s);
 }
 
-StagePtr StageManager::destroy_stage(StageID s) {
-    manager_->destroy(s.value());
+StagePtr StageManager::destroy_stage(StageNodeID s) {
+    manager_->destroy(s);
     signal_stage_removed_(s);
     return nullptr;
 }
@@ -123,7 +123,7 @@ void StageManager::clean_destroyed_stages() {
     manager_->clean_up();
 }
 
-bool StageManager::has_stage(StageID stage_id) const {
+bool StageManager::has_stage(StageNodeID stage_id) const {
     return manager_->contains(stage_id);
 }
 

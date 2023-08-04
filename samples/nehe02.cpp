@@ -20,7 +20,7 @@ public:
         smlt::MeshPtr square = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         square->new_submesh_as_rectangle("rect", stage_->assets->new_material(), 1.0, 1.0);
 
-        auto actor = stage_->new_actor_with_mesh(square->id());
+        auto actor = stage_->new_actor_with_mesh(square);
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
         S_DEBUG("Scene loaded");

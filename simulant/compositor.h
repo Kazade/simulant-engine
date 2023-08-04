@@ -45,7 +45,7 @@ public:
         StagePtr stage,
         CameraPtr camera,
         const Viewport& viewport=Viewport(),
-        TextureID target=TextureID(),
+        TexturePtr target=nullptr,
         int32_t priority=0
     );
 

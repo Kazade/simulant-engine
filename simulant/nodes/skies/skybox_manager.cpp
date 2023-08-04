@@ -141,11 +141,11 @@ SkyboxPtr SkyManager::new_skybox_from_files(
     return sb;
 }
 
-SkyboxPtr SkyManager::skybox(SkyID skybox_id) {
+SkyboxPtr SkyManager::skybox(StageNodeID skybox_id) {
     return sky_manager_->get(skybox_id);
 }
 
-bool SkyManager::destroy_skybox(SkyID skybox_id) {
+bool SkyManager::destroy_skybox(StageNodeID skybox_id) {
     return sky_manager_->destroy(skybox_id);
 }
 

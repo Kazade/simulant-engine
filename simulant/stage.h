@@ -56,25 +56,24 @@ class Partitioner;
 class Debug;
 class Sprite;
 
-typedef StageNodeManager<StageNodePool, ActorID, Actor> ActorManager;
-typedef StageNodeManager<StageNodePool, GeomID, Geom> GeomManager;
-typedef StageNodeManager<StageNodePool, LightID, Light> LightManager;
-typedef StageNodeManager<StageNodePool, ParticleSystemID, ParticleSystem> ParticleSystemManager;
-typedef StageNodeManager<StageNodePool, CameraID, Camera> CameraManager;
-typedef StageNodeManager<StageNodePool, MeshInstancerID, MeshInstancer> MeshInstancerManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, Actor> ActorManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, Geom> GeomManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, Light> LightManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, ParticleSystem> ParticleSystemManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, Camera> CameraManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, MeshInstancer> MeshInstancerManager;
 
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
 
-typedef sig::signal<void (CameraID, Viewport)> StagePreRenderSignal;
-typedef sig::signal<void (CameraID, Viewport)> StagePostRenderSignal;
+typedef sig::signal<void (CameraPtr, Viewport)> StagePreRenderSignal;
+typedef sig::signal<void (CameraPtr, Viewport)> StagePostRenderSignal;
 
 extern const Colour DEFAULT_LIGHT_COLOUR;
 
 class Stage:
     public TypedDestroyableObject<Stage, StageManager>,
     public ContainerNode,
-    public generic::Identifiable<StageID>,
     public Loadable,
     public ChainNameable<Stage>,
     public RefCounted<Stage> {
@@ -100,16 +99,16 @@ public:
     ActorPtr new_actor();
     ActorPtr new_actor_with_name(const std::string& name);
 
-    ActorPtr new_actor_with_mesh(MeshID mid);
-    ActorPtr new_actor_with_name_and_mesh(const std::string& name, MeshID mid);
+    ActorPtr new_actor_with_mesh(MeshPtr mesh);
+    ActorPtr new_actor_with_name_and_mesh(const std::string& name, MeshPtr mesh);
 
-    ActorPtr new_actor_with_parent(ActorID parent);
-    ActorPtr new_actor_with_parent_and_mesh(ActorID parent, MeshID mid);
-    ActorPtr new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid);
-    ActorPtr actor(ActorID e);
-    ActorPtr actor(ActorID e) const;
-    bool has_actor(ActorID e) const;
-    void destroy_actor(ActorID e);
+    ActorPtr new_actor_with_parent(StageNodePtr parent);
+    ActorPtr new_actor_with_parent_and_mesh(StageNodePtr parent, const MeshPtr& mesh);
+
+    ActorPtr actor(StageNodeID e);
+    ActorPtr actor(StageNodeID e) const;
+    bool has_actor(StageNodeID e) const;
+    void destroy_actor(StageNodeID e);
     std::size_t actor_count() const;
 
     /**
@@ -118,21 +117,21 @@ public:
      * @param mid The ID of the mesh this instancer will be able to spawn
      * @return a pointer to the new mesh instancer, or a null pointer on failure
      */
-    MeshInstancerPtr new_mesh_instancer(MeshID mid);
+    MeshInstancerPtr new_mesh_instancer(MeshPtr mid);
 
     /**
      * @brief Destroys a MeshInstancer by its ID.
      * @param The ID of the MeshInstancer to destroy.
-     * @return true on success, false if the MeshInstancerID was invalid.
+     * @return true on success, false if the StageNodeID was invalid.
      */
-    bool destroy_mesh_instancer(MeshInstancerID mid);
+    bool destroy_mesh_instancer(StageNodeID mid);
 
     /**
      * @brief Returns the MeshInstancerPtr associated with the ID
      * @param mid - the id of the MeshInstancer to retrieve
      * @return a valid MeshInstancerPtr if the ID was valid, or null
      */
-    MeshInstancerPtr mesh_instancer(MeshInstancerID mid);
+    MeshInstancerPtr mesh_instancer(StageNodeID mid);
 
     /**
      * @brief Returns the number of MeshInstancers in the stage
@@ -145,42 +144,42 @@ public:
      * @param mid
      * @return true if it exists, false otherwise
      */
-    bool has_mesh_instancer(MeshInstancerID mid) const;
+    bool has_mesh_instancer(StageNodeID mid) const;
 
     CameraPtr new_camera();
     CameraPtr new_camera_with_orthographic_projection(double left=0, double right=0, double bottom=0, double top=0, double near=-1.0, double far=1.0);
     CameraPtr new_camera_for_ui();
     CameraPtr new_camera_for_viewport(const Viewport& vp);
-    CameraPtr camera(CameraID c);
-    void destroy_camera(CameraID cid);
+    CameraPtr camera(StageNodeID c);
+    void destroy_camera(StageNodeID cid);
     uint32_t camera_count() const;
-    bool has_camera(CameraID id) const;
+    bool has_camera(StageNodeID id) const;
     void destroy_all_cameras();
 
-    GeomPtr new_geom_with_mesh(MeshID mid, const GeomCullerOptions& culler_options=GeomCullerOptions());
+    GeomPtr new_geom_with_mesh(MeshPtr mid, const GeomCullerOptions& culler_options=GeomCullerOptions());
     GeomPtr new_geom_with_mesh_at_position(
-        MeshID mid, const Vec3& position,
+        MeshPtr mid, const Vec3& position,
         const Quaternion& rotation=Quaternion(),
         const Vec3& scale=Vec3(1, 1, 1),
         const GeomCullerOptions& culler_options=GeomCullerOptions()
     );
-    GeomPtr geom(const GeomID gid) const;
-    bool has_geom(GeomID geom_id) const;
-    void destroy_geom(GeomID geom_id);
+    GeomPtr geom(const StageNodeID gid) const;
+    bool has_geom(StageNodeID geom_id) const;
+    void destroy_geom(StageNodeID geom_id);
     std::size_t geom_count() const;
 
-    ParticleSystemPtr new_particle_system(ParticleScriptID particle_script);
-    ParticleSystemPtr new_particle_system_with_parent(ParticleScriptID particle_script, ActorID parent);
-    ParticleSystemPtr particle_system(ParticleSystemID pid);
-    bool has_particle_system(ParticleSystemID pid) const;
-    void destroy_particle_system(ParticleSystemID pid);
+    ParticleSystemPtr new_particle_system(ParticleScriptPtr particle_script);
+    ParticleSystemPtr new_particle_system_with_parent(ParticleScriptPtr particle_script, StageNode* parent);
+    ParticleSystemPtr particle_system(StageNodeID pid);
+    bool has_particle_system(StageNodeID pid) const;
+    void destroy_particle_system(StageNodeID pid);
     std::size_t particle_system_count() const;
 
     LightPtr new_light_as_directional(const Vec3& direction=Vec3(1, -0.5, 0), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
     LightPtr new_light_as_point(const Vec3& position=Vec3(), const smlt::Colour& colour=DEFAULT_LIGHT_COLOUR);
 
-    LightPtr light(LightID light);
-    void destroy_light(LightID light_id);
+    LightPtr light(StageNodeID light);
+    void destroy_light(StageNodeID light_id);
     std::size_t light_count() const;
 
     smlt::Colour ambient_light() const { return ambient_light_; }
@@ -226,10 +225,6 @@ public:
     }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     StageNodePool* node_pool_ = nullptr;
 
     AABB aabb_;
@@ -266,8 +261,8 @@ private:
 private:
     friend class StageManager;
 
-    void on_actor_created(ActorID actor_id);
-    void on_actor_destroyed(ActorID actor_id);
+    void on_actor_created(StageNodeID actor_id);
+    void on_actor_destroyed(StageNodeID actor_id);
 
     void clean_up_dead_objects();
 

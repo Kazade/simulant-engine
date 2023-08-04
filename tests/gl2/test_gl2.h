@@ -124,7 +124,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo_manager_->dedicated_buffer_count(), 0u);
 
-        auto actor = stage_->new_actor_with_mesh(mesh_->id());
+        auto actor = stage_->new_actor_with_mesh(mesh_);
 
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera_);

@@ -42,7 +42,7 @@ public:
         assert_equal(window->audio_listener(), actor);
         assert_true(window->has_explicit_audio_listener());
 
-        stage_->destroy_actor(actor);
+        stage_->destroy_actor(actor->id());
         application->run_frame(); // actually destroy
 
         assert_equal(window->audio_listener(), camera_);
@@ -132,7 +132,7 @@ public:
 
         assert_true(a->is_sound_playing());
 
-        application->shared_assets->destroy_sound(sound);
+        application->shared_assets->destroy_sound(sound->id());
         sound.reset();
 
         application->shared_assets->run_garbage_collection();

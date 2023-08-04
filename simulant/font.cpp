@@ -13,9 +13,9 @@
 
 namespace smlt {
 
-Font::Font(FontID id, AssetManager *asset_manager):
+Font::Font(AssetID id, AssetManager *asset_manager):
     Asset(asset_manager),
-    generic::Identifiable<FontID>(id) {
+    generic::Identifiable<AssetID>(id) {
 
 }
 

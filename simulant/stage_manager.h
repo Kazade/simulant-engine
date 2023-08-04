@@ -32,8 +32,8 @@ namespace smlt {
 
 class StageNode;
 
-typedef sig::signal<void (StageID)> StageAddedSignal;
-typedef sig::signal<void (StageID)> StageRemovedSignal;
+typedef sig::signal<void (StageNodeID)> StageAddedSignal;
+typedef sig::signal<void (StageNodeID)> StageRemovedSignal;
 
 template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
 class StageNodeManager;
@@ -66,10 +66,10 @@ public:
     virtual ~StageManager();
 
     StagePtr new_stage(AvailablePartitioner partitioner=PARTITIONER_FRUSTUM);
-    StagePtr stage(StageID s);
-    StagePtr destroy_stage(StageID s);
+    StagePtr stage(StageNodeID s);
+    StagePtr destroy_stage(StageNodeID s);
     std::size_t stage_count() const;
-    bool has_stage(StageID stage_id) const;
+    bool has_stage(StageNodeID stage_id) const;
 
     void fixed_update(float dt) override;
     void update(float dt) override;
@@ -87,7 +87,7 @@ protected:
     void clean_destroyed_stages();
 
     typedef Polylist<StageNode, Stage> StagePool;
-    typedef StageNodeManager<StagePool, StageID, Stage> StageList;
+    typedef StageNodeManager<StagePool, StageNodeID, Stage> StageList;
 
     StagePool* pool_ = nullptr;
     StageList* manager_ = nullptr;

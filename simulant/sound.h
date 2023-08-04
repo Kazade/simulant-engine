@@ -43,13 +43,13 @@ class PlayingSound;
 
 class Sound :
     public RefCounted<Sound>,
-    public generic::Identifiable<SoundID>,
+    public generic::Identifiable<AssetID>,
     public Asset,
     public Loadable,
     public ChainNameable<Sound> {
 
 public:
-    Sound(SoundID id, AssetManager* asset_manager, SoundDriver* sound_driver);
+    Sound(AssetID id, AssetManager* asset_manager, SoundDriver* sound_driver);
 
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }
@@ -117,7 +117,7 @@ public:
         DistanceModel model=DISTANCE_MODEL_DEFAULT
     );
 
-    bool stop_sound(PlayingSoundID sound_id);
+    bool stop_sound(PlayingAssetID sound_id);
 
     /* The number of sounds this source is currently playing */
     uint8_t playing_sound_count() const;

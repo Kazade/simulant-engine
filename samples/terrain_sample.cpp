@@ -82,21 +82,20 @@ public:
             "sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER
         );
 
-        terrain_material_id_ = terrain_material;
+        terrain_material_ = terrain_material;
 
         smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
-        terrain_mesh_id_ = stage_->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
-        auto terrain_mesh = stage_->assets->mesh(terrain_mesh_id_);
+        terrain_mesh_ = stage_->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
 
-        auto terrain_data = terrain_mesh->data->get<smlt::TerrainData>("terrain_data");
+        auto terrain_data = terrain_mesh_->data->get<smlt::TerrainData>("terrain_data");
         auto terrain_splatmap = stage_->assets->new_texture(terrain_data.x_size, terrain_data.z_size);
         calculate_splat_map(
             terrain_data.x_size,
             terrain_data.z_size,
             terrain_splatmap,
-            terrain_mesh->vertex_data
+            terrain_mesh_->vertex_data
         );
 
         terrain_material->pass(0)->set_property_value(
@@ -104,11 +103,11 @@ public:
             terrain_splatmap
         );
 
-        terrain_mesh->set_material(terrain_material);
+        terrain_mesh_->set_material(terrain_material);
 
         GeomCullerOptions opts;
         opts.type = GEOM_CULLER_TYPE_QUADTREE;
-        terrain_actor_ = stage_->new_geom_with_mesh(terrain_mesh_id_, opts);
+        terrain_actor_ = stage_->new_geom_with_mesh(terrain_mesh_, opts);
 
         *done = true;
     }
@@ -120,11 +119,10 @@ private:
     StagePtr stage_;
     CameraPtr camera_;
 
-    MeshID terrain_mesh_id_;
+    MeshPtr terrain_mesh_;
     GeomPtr terrain_actor_;
-    MaterialID terrain_material_id_;
-
-    TextureID terrain_textures_[4];
+    MaterialPtr terrain_material_;
+    TexturePtr terrain_textures_[4];
 };
 
 

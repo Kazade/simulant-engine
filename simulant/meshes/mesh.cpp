@@ -36,20 +36,20 @@ namespace smlt {
 
 
 Mesh::Mesh(
-    MeshID id,
+    AssetID id,
     AssetManager* asset_manager,
     VertexDataPtr vertex_data):
     Asset(asset_manager),
-    generic::Identifiable<MeshID>(id) {
+    generic::Identifiable<AssetID>(id) {
 
     reset(vertex_data);
 }
 
-Mesh::Mesh(MeshID id,
+Mesh::Mesh(AssetID id,
     AssetManager *asset_manager,
     VertexSpecification vertex_specification):
         Asset(asset_manager),
-        generic::Identifiable<MeshID>(id) {
+        generic::Identifiable<AssetID>(id) {
 
     reset(vertex_specification);
 }
@@ -178,7 +178,7 @@ const AABB &Mesh::aabb() const {
 
 SubMesh* Mesh::new_submesh(
     const std::string& name,
-    MaterialID material,
+    MaterialPtr material,
     IndexType index_type,
     MeshArrangement arrangement) {
 
@@ -190,7 +190,7 @@ SubMesh* Mesh::new_submesh(
 
 SubMesh* Mesh::new_submesh(
     const std::string& name,
-    MaterialID material,
+    MaterialPtr material,
     IndexDataPtr index_data,
     MeshArrangement arrangement) {
 
@@ -198,11 +198,10 @@ SubMesh* Mesh::new_submesh(
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
-    auto mat = asset_manager().material(material);
-    assert(mat);
+    assert(material);
 
     auto new_submesh = SubMesh::create(
-        this, name, mat, index_data, arrangement
+        this, name, material, index_data, arrangement
     );
     submeshes_.push_back(new_submesh);
 
@@ -213,18 +212,17 @@ SubMesh* Mesh::new_submesh(
 
 SubMesh* Mesh::new_submesh(
     const std::string& name,
-    MaterialID material,
+    MaterialPtr material,
     MeshArrangement arrangement) {
 
     if(has_submesh(name)) {
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
-    auto mat = asset_manager().material(material);
-    assert(mat);
+    assert(material);
 
     auto new_submesh = SubMesh::create(
-        this, name, mat, arrangement
+        this, name, material, arrangement
     );
     submeshes_.push_back(new_submesh);
 
@@ -234,7 +232,7 @@ SubMesh* Mesh::new_submesh(
 }
 
 SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
-    MaterialID material, float diameter, std::size_t slices, std::size_t stacks) {
+    MaterialPtr material, float diameter, std::size_t slices, std::size_t stacks) {
 
     SubMesh* sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
@@ -245,7 +243,7 @@ SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
 
 SubMeshPtr Mesh::new_submesh_as_capsule(
     const std::string& name,
-    MaterialID material, float diameter, float length,
+    MaterialPtr material, float diameter, float length,
     std::size_t segment_count, std::size_t vertical_segment_count, std::size_t ring_count) {
 
     SubMesh* submesh = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
@@ -395,7 +393,7 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
     return submesh;
 }
 
-SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID material, float diameter, uint32_t subdivisions) {
+SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialPtr material, float diameter, uint32_t subdivisions) {
     SubMeshPtr sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::icosphere(sm, diameter, subdivisions);
@@ -403,7 +401,7 @@ SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID ma
     return sm;
 }
 
-SubMeshPtr Mesh::new_submesh_as_cube(const std::string& name, MaterialID material, float size) {
+SubMeshPtr Mesh::new_submesh_as_cube(const std::string& name, MaterialPtr material, float size) {
     return new_submesh_as_box(name, material, size, size, size);
 }
 
@@ -411,7 +409,7 @@ bool Mesh::has_submesh(const std::string& name) const {
     return bool(find_submesh(name));
 }
 
-SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, float width, float height, float depth, const Vec3& offset) {
+SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialPtr material, float width, float height, float depth, const Vec3& offset) {
     SubMesh* sm = new_submesh(
         name,
         material, INDEX_TYPE_16_BIT,
@@ -578,7 +576,7 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
     return sm;
 }
 
-SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID material, float width, float height, const smlt::Vec3& offset) {
+SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialPtr material, float width, float height, const smlt::Vec3& offset) {
     SubMesh* sm = new_submesh(
         name,
         material, INDEX_TYPE_16_BIT,

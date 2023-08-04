@@ -62,7 +62,7 @@ typedef std::function<void (float height, const Vec3&, float& weight1, float& we
 
 void recalculate_terrain_normals(smlt::MeshPtr terrain);
 void smooth_terrain(smlt::MeshPtr terrain, uint32_t iterations=20);
-TextureID generate_alphamap(smlt::MeshPtr terrain, AlphaMapWeightFunc func);
+AssetID generate_alphamap(smlt::MeshPtr terrain, AlphaMapWeightFunc func);
 
 }
 

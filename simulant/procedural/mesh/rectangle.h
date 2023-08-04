@@ -28,24 +28,22 @@ class Mesh;
 namespace procedural {
 namespace mesh {
 
-SubMesh* new_rectangle_submesh(
-    MeshPtr& mesh,
+SubMesh* new_rectangle_submesh(MeshPtr mesh, MaterialPtr mat,
     float width,
     float height,
-    float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
-    MaterialID material_id=MaterialID()
-);
+    float x_offset=0.0, float y_offset=0.0, float z_offset=0.0);
 
-SubMesh* rectangle(MeshPtr mesh,
+SubMesh* rectangle(MeshPtr mesh, MaterialPtr material,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
-    bool clear=true, smlt::MaterialID material=smlt::MaterialID());
+    bool clear=true);
 
 smlt::SubMesh *rectangle_outline(
     MeshPtr mesh,
+    MaterialPtr material,
     float width, float height,
     float x_offset=0.0, float y_offset=0.0, float z_offset=0.0,
-    bool clear=true, smlt::MaterialID material=smlt::MaterialID());
+    bool clear=true);
 
 }
 }

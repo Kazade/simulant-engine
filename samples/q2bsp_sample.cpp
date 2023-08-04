@@ -21,7 +21,7 @@ public:
         app->vfs->add_search_path("sample_data/quake2/textures");
 
         auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/demo1.bsp");
-        stage_->new_geom_with_mesh(mesh->id());
+        stage_->new_geom_with_mesh(mesh);
 
         cr_yield();
 
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Quake 2 Mesh Loader";
     config.fullscreen = false;
-    
+
 #ifdef __DREAMCAST__
     config.width = 640;
     config.height = 480;

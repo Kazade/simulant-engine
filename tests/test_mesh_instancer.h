@@ -35,7 +35,7 @@ public:
         auto instancer = stage_->new_mesh_instancer(mesh_);
         assert_equal(stage_->mesh_instancer_count(), 1u);
 
-        ret = stage_->destroy_mesh_instancer(instancer);
+        ret = stage_->destroy_mesh_instancer(instancer->id());
         assert_true(ret);
 
         application->run_frame();
@@ -139,7 +139,7 @@ public:
     }
 
     void test_null_mesh_returns_no_renderables() {
-        auto instancer = stage_->new_mesh_instancer(smlt::MeshID());
+        auto instancer = stage_->new_mesh_instancer(nullptr);
         instancer->new_mesh_instance(Vec3());
 
         auto camera = stage_->new_camera();

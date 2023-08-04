@@ -140,7 +140,7 @@ ActorPtr Stage::new_actor_with_name(const std::string& name) {
     return a;
 }
 
-ActorPtr Stage::new_actor_with_mesh(MeshID mid) {
+ActorPtr Stage::new_actor_with_mesh(MeshPtr mesh) {
     using namespace std::placeholders;
 
     auto a = actor_manager_->make(this, sound_driver());
@@ -161,50 +161,44 @@ ActorPtr Stage::new_actor_with_mesh(MeshID mid) {
     });
 
     //If a mesh was specified, set it
-    if(mid) {
-        a->set_mesh(mid);
+    if(mesh) {
+        a->set_mesh(mesh);
     }
 
     return a;
 }
 
-ActorPtr Stage::new_actor_with_name_and_mesh(const std::string& name, MeshID mid) {
-    auto a = new_actor_with_mesh(mid);
+ActorPtr Stage::new_actor_with_name_and_mesh(const std::string& name, MeshPtr mesh) {
+    auto a = new_actor_with_mesh(mesh);
     a->set_name(name);
     return a;
 }
 
-ActorPtr Stage::new_actor_with_parent(ActorID parent) {
+ActorPtr Stage::new_actor_with_parent(StageNodePtr parent) {
     auto a = new_actor();
     a->set_parent(parent);
     return a;
 }
 
-ActorPtr Stage::new_actor_with_parent_and_mesh(SpriteID parent, MeshID mid) {
-    auto a = new_actor_with_mesh(mid);
+ActorPtr Stage::new_actor_with_parent_and_mesh(StageNodePtr parent, const MeshPtr& mesh) {
+    auto a = new_actor_with_mesh(mesh);
     a->set_parent(parent);
     return a;
 }
 
-ActorPtr Stage::new_actor_with_parent_and_mesh(ActorID parent, MeshID mid) {
-    auto a = new_actor_with_mesh(mid);
-    a->set_parent(parent);
-    return a;
-}
-
-bool Stage::has_actor(ActorID m) const {
+bool Stage::has_actor(StageNodeID m) const {
     return actor_manager_->contains(m);
 }
 
-ActorPtr Stage::actor(ActorID e) {
+ActorPtr Stage::actor(StageNodeID e) {
     return actor_manager_->get(e);
 }
 
-ActorPtr Stage::actor(ActorID e) const {
+ActorPtr Stage::actor(StageNodeID e) const {
     return actor_manager_->get(e);
 }
 
-void Stage::destroy_actor(ActorID e) {
+void Stage::destroy_actor(StageNodeID e) {
     auto a = actor(e);
     if(a) {
         a->destroy();
@@ -216,9 +210,7 @@ std::size_t Stage::actor_count() const {
 }
 
 
-MeshInstancerPtr Stage::new_mesh_instancer(MeshID mid) {
-    auto mesh = asset_manager_->mesh(mid);
-
+MeshInstancerPtr Stage::new_mesh_instancer(MeshPtr mesh) {
     auto instance = mesh_instancer_manager_->make(
         this, sound_driver(), mesh
     );
@@ -237,7 +229,7 @@ MeshInstancerPtr Stage::new_mesh_instancer(MeshID mid) {
     return instance;
 }
 
-bool Stage::destroy_mesh_instancer(MeshInstancerID mid) {
+bool Stage::destroy_mesh_instancer(StageNodeID mid) {
     auto instance = mesh_instancer(mid);
     if(instance) {
         instance->destroy();
@@ -247,7 +239,7 @@ bool Stage::destroy_mesh_instancer(MeshInstancerID mid) {
     return false;
 }
 
-MeshInstancerPtr Stage::mesh_instancer(MeshInstancerID mid) {
+MeshInstancerPtr Stage::mesh_instancer(StageNodeID mid) {
     return mesh_instancer_manager_->get(mid);
 }
 
@@ -255,7 +247,7 @@ std::size_t Stage::mesh_instancer_count() const {
     return mesh_instancer_manager_->size();
 }
 
-bool Stage::has_mesh_instancer(MeshInstancerID mid) const {
+bool Stage::has_mesh_instancer(StageNodeID mid) const {
     return mesh_instancer_manager_->contains(mid);
 }
 
@@ -307,11 +299,11 @@ CameraPtr Stage::new_camera_for_ui() {
     );
 }
 
-CameraPtr Stage::camera(CameraID c) {
+CameraPtr Stage::camera(StageNodeID c) {
     return camera_manager_->get(c);
 }
 
-void Stage::destroy_camera(CameraID cid) {
+void Stage::destroy_camera(StageNodeID cid) {
     auto c = camera(cid);
     if(c) {
         c->destroy();
@@ -322,7 +314,7 @@ uint32_t Stage::camera_count() const {
     return camera_manager_->size();
 }
 
-bool Stage::has_camera(CameraID id) const {
+bool Stage::has_camera(StageNodeID id) const {
     return camera_manager_->contains(id);
 }
 
@@ -332,15 +324,15 @@ void Stage::destroy_all_cameras() {
 
 //=============== GEOMS =====================
 
-GeomPtr Stage::new_geom_with_mesh(MeshID mid, const GeomCullerOptions& culler_options) {
-    return new_geom_with_mesh_at_position(mid, smlt::Vec3(), smlt::Quaternion(), smlt::Vec3(1, 1, 1), culler_options);
+GeomPtr Stage::new_geom_with_mesh(MeshPtr mesh, const GeomCullerOptions& culler_options) {
+    return new_geom_with_mesh_at_position(mesh, smlt::Vec3(), smlt::Quaternion(), smlt::Vec3(1, 1, 1), culler_options);
 }
 
-GeomPtr Stage::geom(const GeomID gid) const {
+GeomPtr Stage::geom(const StageNodeID gid) const {
     return geom_manager_->get(gid);
 }
 
-GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, const Quaternion& rotation, const Vec3& scale, const GeomCullerOptions& culler_options) {
+GeomPtr Stage::new_geom_with_mesh_at_position(MeshPtr mid, const Vec3& position, const Quaternion& rotation, const Vec3& scale, const GeomCullerOptions& culler_options) {
     auto gid = geom_manager_->make(
         this, sound_driver(),
         mid, position, rotation, scale,
@@ -356,11 +348,11 @@ GeomPtr Stage::new_geom_with_mesh_at_position(MeshID mid, const Vec3& position, 
     return gid;
 }
 
-bool Stage::has_geom(GeomID geom_id) const {
+bool Stage::has_geom(StageNodeID geom_id) const {
     return geom_manager_->contains(geom_id);
 }
 
-void Stage::destroy_geom(GeomID geom_id) {
+void Stage::destroy_geom(StageNodeID geom_id) {
     auto g = geom(geom_id);
     if(g) {
         g->destroy();
@@ -373,11 +365,11 @@ std::size_t Stage::geom_count() const {
 
 //=============== PARTICLES =================
 
-ParticleSystemPtr Stage::new_particle_system(ParticleScriptID particle_script) {
+ParticleSystemPtr Stage::new_particle_system(ParticleScriptPtr particle_script) {
     auto p = particle_system_manager_->make(
         this,
         sound_driver(),
-        assets->particle_script(particle_script)
+        particle_script
     );
 
     /* Whenever the particle system moves, we need to tell the stage's partitioner */
@@ -396,21 +388,21 @@ ParticleSystemPtr Stage::new_particle_system(ParticleScriptID particle_script) {
 }
 
 
-ParticleSystemPtr Stage::new_particle_system_with_parent(ParticleScriptID particle_script, ActorID parent) {
+ParticleSystemPtr Stage::new_particle_system_with_parent(ParticleScriptPtr particle_script, StageNode* parent) {
     auto p = new_particle_system(particle_script);
     p->set_parent(parent);
     return p;
 }
 
-ParticleSystemPtr Stage::particle_system(ParticleSystemID pid) {
+ParticleSystemPtr Stage::particle_system(StageNodeID pid) {
     return particle_system_manager_->get(pid);
 }
 
-bool Stage::has_particle_system(ParticleSystemID pid) const {
+bool Stage::has_particle_system(StageNodeID pid) const {
     return particle_system_manager_->contains(pid);
 }
 
-void Stage::destroy_particle_system(ParticleSystemID pid) {
+void Stage::destroy_particle_system(StageNodeID pid) {
     auto p = particle_system(pid);
     if(p) {
         p->destroy();
@@ -461,11 +453,11 @@ LightPtr Stage::new_light_as_point(const Vec3& position, const smlt::Colour& col
     return light;
 }
 
-LightPtr Stage::light(LightID light_id) {
+LightPtr Stage::light(StageNodeID light_id) {
     return light_manager_->get(light_id);
 }
 
-void Stage::destroy_light(LightID light_id) {
+void Stage::destroy_light(StageNodeID light_id) {
     auto l = light(light_id);
     if(l) {
         l->destroy();
@@ -590,11 +582,11 @@ void Stage::destroy_object_immediately(MeshInstancer *object) {
     mesh_instancer_manager_->destroy_immediately(id);
 }
 
-void Stage::on_actor_created(ActorID actor_id) {
+void Stage::on_actor_created(StageNodeID actor_id) {
     _S_UNUSED(actor_id);
 }
 
-void Stage::on_actor_destroyed(ActorID actor_id) {
+void Stage::on_actor_destroyed(StageNodeID actor_id) {
     _S_UNUSED(actor_id);
 }
 

@@ -36,7 +36,7 @@ Actor::Actor(Stage* stage, SoundDriver* sound_driver):
 
 }
 
-Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
+Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshPtr mesh):
     TypedDestroyableObject<Actor, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_ACTOR),
     AudioSource(stage, this, sound_driver) {
@@ -61,7 +61,7 @@ bool Actor::has_multiple_meshes() const {
     return false;
 }
 
-void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
+void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
     /* Do nothing if we don't have a base mesh. You need at least a base mesh at all times */
     if(detail_level != DETAIL_LEVEL_NEAREST && !has_any_mesh()) {
         S_ERROR(
@@ -79,7 +79,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     }
 
     // Do nothing if already set
-    if(meshes_[detail_level] && meshes_[detail_level]->id() == mesh) {
+    if(meshes_[detail_level] && meshes_[detail_level] == mesh) {
         return;
     }
 
@@ -99,16 +99,8 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
         return;
     }
 
-    auto meshptr = stage->assets->mesh(mesh);
-
-    if(!meshptr) {
-        S_ERROR("Unable to locate mesh with the ID: {0}", mesh);
-        return;
-    }
-
     //Increment the ref-count on this mesh
-    meshes_[detail_level] = meshptr;
-    meshptr.reset();
+    meshes_[detail_level] = mesh;
 
     /* Only the nearest detail level is animated */
     has_animated_mesh_ = meshes_[DETAIL_LEVEL_NEAREST]->is_animated();
@@ -206,9 +198,9 @@ const AABB &Actor::aabb() const {
     return aabb;
 }
 
-MeshID Actor::mesh_id(DetailLevel detail_level) const {
+AssetID Actor::mesh_id(DetailLevel detail_level) const {
     auto& mesh = meshes_[detail_level];
-    return (mesh) ? mesh->id() : MeshID(0);
+    return (mesh) ? mesh->id() : AssetID(0);
 }
 
 const MeshPtr &Actor::best_mesh(DetailLevel detail_level) const {

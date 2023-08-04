@@ -44,8 +44,8 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
 
     /* Each time the stage is rendered with a camera and viewport, we need to process any queued events
      * so that (for example) we can interact with the same widget rendered to different viewports */
-    pre_render_connection_ = stage_->signal_stage_pre_render().connect([this](CameraID cam_id, Viewport viewport) {
-        this->process_event_queue(cam_id.fetch(), viewport);
+    pre_render_connection_ = stage_->signal_stage_pre_render().connect([this](CameraPtr camera, Viewport viewport) {
+        this->process_event_queue(camera, viewport);
     });
 
     /* We clear queued events at the end of each frame */
@@ -144,7 +144,7 @@ Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
     return image;
 }
 
-Widget* UIManager::widget(WidgetID widget_id) {
+Widget* UIManager::widget(StageNodeID widget_id) {
     return manager_->get(widget_id);
 }
 
@@ -159,7 +159,7 @@ ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float v
     return pg;
 }
 
-void UIManager::destroy_widget(WidgetID widget_id) {
+void UIManager::destroy_widget(StageNodeID widget_id) {
     if(!widget_id) {
         return;
     }
@@ -334,12 +334,12 @@ FontPtr UIManager::_load_or_get_font(AssetManager* assets, AssetManager* shared_
 
 MaterialPtr UIManager::clone_global_background_material() {
     assert(global_background_material_);
-    return stage_->asset_manager_->clone_material(global_background_material_);
+    return stage_->asset_manager_->clone_material(global_background_material_->id());
 }
 
 MaterialPtr UIManager::clone_global_foreground_material() {
     assert(global_foreground_material_);
-    return stage_->asset_manager_->clone_material(global_foreground_material_);
+    return stage_->asset_manager_->clone_material(global_foreground_material_->id());
 }
 
 }

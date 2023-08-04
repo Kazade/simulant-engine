@@ -88,16 +88,16 @@ public:
     void _apply_writes();
 
     virtual void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID>& lights_out,
+        StageNodeID camera_id,
+        std::vector<StageNodeID>& lights_out,
         std::vector<StageNode*>& geom_out
     ) = 0;
 
-    virtual MeshID debug_mesh_id() { return MeshID(); }
+    virtual MeshPtr debug_mesh() { return MeshPtr(); }
 protected:
     Stage* get_stage() const { return stage_; }
 
-    virtual void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) = 0;
+    virtual void apply_staged_write(const StageNodeID& key, const StagedWrite& write) = 0;
 
     void stage_write(StageNode* node, const StagedWrite& op);
 
@@ -107,7 +107,7 @@ private:
     thread::Mutex staging_lock_;
 
     std::vector<StageNode*> staged_writes_;
-    std::unordered_map<StageNode*, UniqueIDKey> removed_nodes_;
+    std::unordered_map<StageNode*, StageNodeID> removed_nodes_;
 
 protected:
     Property<decltype(&Partitioner::stage_)> stage = { this, &Partitioner::stage_ };

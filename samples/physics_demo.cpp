@@ -31,21 +31,21 @@ public:
             stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
         }
 
-        smlt::TextureID crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");
-        smlt::MaterialID mat = app->shared_assets->new_material_from_texture(crate);
+        auto crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");
+        auto mat = app->shared_assets->new_material_from_texture(crate);
 
         auto box_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->new_submesh_as_cube("cube", mat, 5);
-        box_mesh_id_ = box_mesh;
+        box_mesh_ = box_mesh;
 
-        smlt::TextureID grass = app->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
+        auto grass = app->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
         auto ground_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         ground_mesh->new_submesh_as_box(
             "ground", app->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000
         ); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
 
-        ground_mesh_id_ = ground_mesh;
-        ground_ = stage_->new_actor_with_mesh(ground_mesh_id_);
+        ground_mesh_ = ground_mesh;
+        ground_ = stage_->new_actor_with_mesh(ground_mesh_);
 
         // Make the ground a staticbody
         auto c = ground_->new_behaviour<behaviours::StaticBody>(physics);
@@ -56,7 +56,7 @@ public:
 
     void spawn_box() {
         boxes_.push_back(
-            stage_->new_actor_with_mesh(box_mesh_id_)
+            stage_->new_actor_with_mesh(box_mesh_)
         );
 
         auto box = boxes_.back();
@@ -83,9 +83,9 @@ private:
     StagePtr stage_;
     CameraPtr camera_;
 
-    MeshID box_mesh_id_;
+    MeshPtr box_mesh_;
 
-    MeshID ground_mesh_id_;
+    MeshPtr ground_mesh_;
     ActorPtr ground_;
 
     float counter = 0.0f;

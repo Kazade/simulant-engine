@@ -205,11 +205,11 @@ MeshPtr AssetManager::new_mesh(VertexDataPtr vertex_data, GarbageCollectMethod g
     NEW_X(Mesh, mesh, mesh_manager_, vertex_data);
 }
 
-MeshPtr AssetManager::mesh(MeshID id) {
+MeshPtr AssetManager::mesh(AssetID id) {
     GET_X(Mesh, mesh, mesh_manager_);
 }
 
-const MeshPtr AssetManager::mesh(MeshID id) const {
+const MeshPtr AssetManager::mesh(AssetID id) const {
     GET_X(Mesh, mesh, mesh_manager_);
 }
 
@@ -299,54 +299,16 @@ MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const Heig
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_from_heightmap(const TextureID& texture_id, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::new_mesh_from_heightmap(const TexturePtr& texture, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
-    loaders::HeightmapLoader loader(texture(texture_id));
+    loaders::HeightmapLoader loader(texture);
 
     loader.into(*mesh, {
         {"spec", spec},
     });
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
-    return mesh;
-}
-
-
-MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec2> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
-    auto mesh = new_mesh(vertex_specification, GARBAGE_COLLECT_NEVER);
-    auto submesh = mesh->new_submesh(submesh_name, arrangement);
-    int i = 0;
-    for(auto v: vertices) {
-        mesh->vertex_data->position(v);
-        mesh->vertex_data->move_next();
-        submesh->index_data->index(i++);
-    }
-
-    mesh->vertex_data->done();
-    submesh->index_data->done();
-
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
-
-    return mesh;
-}
-
-MeshPtr AssetManager::new_mesh_from_vertices(VertexSpecification vertex_specification, const std::string& submesh_name, const std::vector<Vec3> &vertices, MeshArrangement arrangement, GarbageCollectMethod garbage_collect) {
-    //FIXME: THis is literally a copy/paste of the function above, we can templatize this
-    auto mesh = new_mesh(vertex_specification, GARBAGE_COLLECT_NEVER);
-
-    auto submesh = mesh->new_submesh(submesh_name, arrangement);
-    int i = 0;
-    for(auto v: vertices) {
-        mesh->vertex_data->position(v);
-        mesh->vertex_data->move_next();
-        submesh->index_data->index(i++);
-    }
-
-    mesh->vertex_data->done();
-    submesh->index_data->done();
-
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
     return mesh;
 }
 
@@ -364,11 +326,11 @@ MeshPtr AssetManager::find_mesh(const std::string& name) {
     return mesh_manager_.find_object(name);
 }
 
-void AssetManager::destroy_mesh(MeshID m) {
+void AssetManager::destroy_mesh(AssetID m) {
     mesh_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
-bool AssetManager::has_mesh(MeshID m) const {
+bool AssetManager::has_mesh(AssetID m) const {
     return mesh_manager_.contains(m);
 }
 
@@ -380,108 +342,46 @@ MaterialPtr AssetManager::new_material(GarbageCollectMethod garbage_collect) {
     NEW_X(Material, material, material_manager_);
 }
 
-void AssetManager::destroy_material(const MaterialID& m) {
+void AssetManager::destroy_material(const AssetID& m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
-MaterialPtr AssetManager::get_template_material(const Path& path) {
-    /*
-     * We keep a cache of the materials we've loaded from file, this massively improves performance
-     * and allows sharing of the GPU program during rendering
-     * We have to lock access to the templates otherwise bad things happen in multithreaded land.
-     */
-
-
-    // Only load template materials into the base resource manager, to avoid duplication
-    if(base_manager() != this) {
-        return base_manager()->get_template_material(path);
-    }
-
-
-    MaterialID template_id;
-
-    /* We must load the material outside the lock, because loading the material
-     * in thread B might cause a coroutine which will block and deadlock
-     * as it will be holding the template_material_lock_ and the thread A
-     * will hanging waiting on it.
-     */
-
-    bool load_material = false;
-    {
-        thread::Lock<thread::Mutex> lock(template_material_lock_);
-        if(!template_materials_.count(path)) {
-            template_materials_[path] = template_id = new_material(GARBAGE_COLLECT_NEVER);
-            materials_loading_.insert(template_id);
-            load_material = true; //We need to load the material from file
-        } else {
-            template_id = template_materials_.at(path);
-        }
-    }
-
-    // Blocking loop while we wait for either this thread or another thread to load the material
-    while(materials_loading_.count(template_id)) { // Not really threadsafe...
-        if(!load_material && GLThreadCheck::is_current()) {
-            /* If we aren't loading the material in this thread, but this is the main thread and the material is loading
-             * in another thread we *must* run the coroutine tasks while we wait for it to finish. Otherwise it will deadlock
-             * on a run_sync call */
-
-            smlt::cr_yield();
-
-        } else if(load_material) {
-            /* Otherwise, if we're loading the material, we load it, then remove it from the list */
-            S_INFO("Loading material {0} into {1}", path, template_id);
-            auto mat = material(template_id);
-            if(!mat) {
-                S_ERROR("Tried to fetch material with template_id ({0}). But it didn't exist", template_id);
-                materials_loading_.erase(template_id);
-                S_ERROR("Error loading file: {0}", path);
-                return MaterialPtr();
-            }
-
-            S_DEBUG("Locating loader for {0}", path);
-            auto loader = get_app()->loader_for(path);
-            if(!loader) {
-                S_ERROR("Unable to find loader for {0}", path);
-                materials_loading_.erase(template_id);
-                return MaterialPtr();
-            }
-
-            S_DEBUG("Loading...");
-            loader->into(mat);
-            materials_loading_.erase(template_id);
-            S_DEBUG("Material {0} loaded", mat->id());
-        }
-    }
-
-    return template_id.fetch();
-}
-
 MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
-    auto template_mat = get_template_material(path);
+    auto existing = template_materials_.get(path);
+    if(existing) {
+        /* Templates are always created in the base manager, we clone from the base manager into this
+         * manager (which might be the same manager) */
+        auto new_mat = material_manager_.clone(
+            existing.value()->id(),
+            &this->material_manager_
+        );
 
-    assert(template_mat);
-    if(!template_mat) {
-        return MaterialPtr();
+        new_mat->manager_ = this;
+
+        S_DEBUG("Cloned material {0} into {1}", existing.value()->id(), new_mat->id());
+        material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
+
+        return new_mat;
+    } else {
+        auto new_mat = new_material();
+        auto loader = get_app()->loader_for(path);
+        if(!loader) {
+            S_ERROR("Unable to find loader for {0}", path);
+            return MaterialPtr();
+        }
+
+        loader->into(new_mat);
+        material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
+        template_materials_.insert(path, new_mat);
+        return new_mat;
     }
-
-    /* Templates are always created in the base manager, we clone from the base manager into this
-     * manager (which might be the same manager) */
-    auto new_mat = base_manager()->material_manager_.clone(template_mat, &this->material_manager_);
-    new_mat->manager_ = this;
-
-    auto new_mat_id = new_mat->id();
-
-    S_DEBUG("Cloned material {0} into {1}", template_mat->id(), new_mat_id);
-
-    material_manager_.set_garbage_collection_method(new_mat_id, garbage_collect);
-    return new_mat;
 }
 
-MaterialPtr AssetManager::new_material_from_texture(TextureID texture_id, GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::new_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect) {
     auto m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    m->set_diffuse_map(texture(texture_id));
+    m->set_diffuse_map(texture);
 
     material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
@@ -491,15 +391,15 @@ MaterialPtr AssetManager::find_material(const std::string& name) {
     return material_manager_.find_object(name);
 }
 
-MaterialPtr AssetManager::material(const MaterialID& id) {
+MaterialPtr AssetManager::material(const AssetID& id) {
     GET_X(Material, material, material_manager_);
 }
 
-const MaterialPtr AssetManager::material(const MaterialID& id) const {
+const MaterialPtr AssetManager::material(const AssetID& id) const {
     GET_X(Material, material, material_manager_);
 }
 
-bool AssetManager::has_material(const MaterialID& m) const {
+bool AssetManager::has_material(const AssetID& m) const {
     return material_manager_.contains(m);
 }
 
@@ -546,7 +446,7 @@ TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags fl
     return tex;
 }
 
-void AssetManager::destroy_texture(TextureID t) {
+void AssetManager::destroy_texture(AssetID t) {
     texture_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
@@ -554,15 +454,15 @@ TexturePtr AssetManager::find_texture(const std::string& name) {
     return texture_manager_.find_object(name);
 }
 
-TexturePtr AssetManager::texture(TextureID id) {
+TexturePtr AssetManager::texture(AssetID id) {
     GET_X(Texture, texture, texture_manager_);
 }
 
-const TexturePtr AssetManager::texture(TextureID id) const {
+const TexturePtr AssetManager::texture(AssetID id) const {
     GET_X(Texture, texture, texture_manager_);
 }
 
-bool AssetManager::has_texture(TextureID t) const {
+bool AssetManager::has_texture(AssetID t) const {
     return texture_manager_.contains(t);
 }
 
@@ -595,11 +495,11 @@ SoundPtr AssetManager::find_sound(const std::string &name) {
     return sound_manager_.find_object(name);
 }
 
-SoundPtr AssetManager::sound(SoundID id) {
+SoundPtr AssetManager::sound(AssetID id) {
     GET_X(Sound, sound, sound_manager_);
 }
 
-const SoundPtr AssetManager::sound(SoundID id) const {
+const SoundPtr AssetManager::sound(AssetID id) const {
     GET_X(Sound, sound, sound_manager_);
 }
 
@@ -607,11 +507,11 @@ std::size_t AssetManager::sound_count() const {
     return sound_manager_.count();
 }
 
-bool AssetManager::has_sound(SoundID s) const {
+bool AssetManager::has_sound(AssetID s) const {
     return sound_manager_.contains(s);
 }
 
-void AssetManager::destroy_sound(SoundID t) {
+void AssetManager::destroy_sound(AssetID t) {
     sound_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
@@ -634,7 +534,7 @@ BinaryPtr AssetManager::new_binary_from_file(const Path& filename, GarbageCollec
     return bin;
 }
 
-BinaryPtr AssetManager::binary(BinaryID id) const {
+BinaryPtr AssetManager::binary(AssetID id) const {
     GET_X(Binary, binary, binary_manager_);
 }
 
@@ -642,7 +542,7 @@ std::size_t AssetManager::binary_count() const {
     return binary_manager_.count();
 }
 
-bool AssetManager::has_binary(BinaryID id) const {
+bool AssetManager::has_binary(AssetID id) const {
     return binary_manager_.contains(id);
 }
 
@@ -650,11 +550,11 @@ BinaryPtr AssetManager::find_binary(const std::string& name) {
     return binary_manager_.find_object(name);
 }
 
-void AssetManager::destroy_binary(BinaryID id) {
+void AssetManager::destroy_binary(AssetID id) {
     binary_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
 }
 
-MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::clone_material(const AssetID& mat_id, GarbageCollectMethod garbage_collect) {
     assert(mat_id && "No default material, called to early?");
 
     auto manager = &material_manager_;
@@ -662,15 +562,15 @@ MaterialPtr AssetManager::clone_material(const MaterialID& mat_id, GarbageCollec
         manager = &parent_->material_manager_;
     }
 
-    auto new_mat_id = manager->clone(mat_id);
-    manager->set_garbage_collection_method(new_mat_id, garbage_collect);
+    auto new_mat = manager->clone(mat_id);
+    assert(new_mat);
 
-    assert(new_mat_id);
-    return material(new_mat_id);
+    manager->set_garbage_collection_method(new_mat->id(), garbage_collect);
+    return new_mat;
 }
 
 MaterialPtr AssetManager::clone_default_material(GarbageCollectMethod garbage_collect) {
-    return clone_material(base_manager()->default_material(), garbage_collect);
+    return clone_material(base_manager()->default_material()->id(), garbage_collect);
 }
 
 AssetManager* AssetManager::base_manager() const {
@@ -769,15 +669,15 @@ FontPtr AssetManager::find_font(const std::string& name) {
     return font_manager_.find_object(name);
 }
 
-void AssetManager::destroy_font(FontID f) {
+void AssetManager::destroy_font(AssetID f) {
     font_manager_.set_garbage_collection_method(f, GARBAGE_COLLECT_PERIODIC);
 }
 
-FontPtr AssetManager::font(FontID id) {
+FontPtr AssetManager::font(AssetID id) {
     GET_X(Font, font, font_manager_);
 }
 
-const FontPtr AssetManager::font(FontID id) const {
+const FontPtr AssetManager::font(AssetID id) const {
     GET_X(Font, font, font_manager_);
 }
 
@@ -785,7 +685,7 @@ std::size_t AssetManager::font_count() const {
     return font_manager_.count();
 }
 
-bool AssetManager::has_font(FontID f) const {
+bool AssetManager::has_font(AssetID f) const {
     return font_manager_.contains(f);
 }
 
@@ -810,11 +710,11 @@ ParticleScriptPtr AssetManager::find_particle_script(const std::string& name) {
     return particle_script_manager_.find_object(name);
 }
 
-void AssetManager::destroy_particle_script(ParticleScriptID id) {
+void AssetManager::destroy_particle_script(AssetID id) {
     particle_script_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
 }
 
-ParticleScriptPtr AssetManager::particle_script(ParticleScriptID id) {
+ParticleScriptPtr AssetManager::particle_script(AssetID id) {
     GET_X(ParticleScript, particle_script, particle_script_manager_);
 }
 
@@ -822,7 +722,7 @@ std::size_t AssetManager::particle_script_count() const {
     return particle_script_manager_.count();
 }
 
-bool AssetManager::has_particle_script(ParticleScriptID id) const {
+bool AssetManager::has_particle_script(AssetID id) const {
     return particle_script_manager_.contains(id);
 }
 

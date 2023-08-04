@@ -29,7 +29,7 @@ public:
         square->vertex_data->move_to_end();
         square->vertex_data->done();
 
-        auto actor = stage_->new_actor_with_mesh(square->id());
+        auto actor = stage_->new_actor_with_mesh(square);
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
 

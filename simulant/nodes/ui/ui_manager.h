@@ -33,7 +33,7 @@ class TextEntry;
 
 typedef ::smlt::StageNodeManager<
     ::smlt::StageNodePool,
-    WidgetID, Widget, Button, Label, ProgressBar, Image, Frame, Keyboard, TextEntry
+    StageNodeID, Widget, Button, Label, ProgressBar, Image, Frame, Keyboard, TextEntry
 > WidgetManager;
 
 enum UIEventType {
@@ -73,9 +73,9 @@ public:
     Keyboard* new_widget_as_keyboard(const KeyboardMode& mode=KEYBOARD_MODE_UPPERCASE, const unicode& initial_text="");
     TextEntry* new_widget_as_text_entry(const unicode& text="", Px width=Px(-1), Px height=Px(-1));
 
-    Widget* widget(WidgetID widget_id);
+    Widget* widget(StageNodeID widget_id);
 
-    void destroy_widget(WidgetID widget);
+    void destroy_widget(StageNodeID widget);
 
     Stage* stage() const { return stage_; }
 

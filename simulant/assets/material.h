@@ -62,12 +62,8 @@ public:
 
     GPUProgramID gpu_program_id() const;
 
-    void set_gpu_program(GPUProgramID program) {
-        // If the renderer doesn't support GPU programs then this
-        // will be an empty ID
-        if(program) {
-            program_ = program.fetch();
-        }
+    void set_gpu_program(GPUProgramPtr program) {
+        program_ = program;
     }
 
     uint8_t max_iterations() const {
@@ -88,7 +84,7 @@ typedef uint8_t PropertyIndex;
 class Material:
     public Asset,
     public Loadable,
-    public generic::Identifiable<MaterialID>,
+    public generic::Identifiable<AssetID>,
     public RefCounted<Material>,
     public Updateable,
     public MaterialObject,
@@ -105,7 +101,7 @@ public:
 
     static const std::unordered_map<std::string, std::string> BUILT_IN_NAMES;
 
-    Material(MaterialID id, AssetManager *asset_manager);
+    Material(AssetID id, AssetManager *asset_manager);
     virtual ~Material();
 
 // ---------- Passes ------------------------
@@ -233,7 +229,7 @@ protected:
      */
 
     friend class _object_manager_impl::ObjectManagerBase<
-        MaterialID, Material, std::shared_ptr<smlt::Material>,
+        AssetID, Material, std::shared_ptr<smlt::Material>,
         _object_manager_impl::ToSharedPtr<smlt::Material>
     >;
 

@@ -8,10 +8,10 @@
 
 namespace smlt {
 
-typedef StageNodeManager<StageNodePool, SpriteID, Sprite> TemplatedSpriteManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, Sprite> TemplatedSpriteManager;
 
-typedef sig::signal<void (SpriteID)> SpriteCreatedSignal;
-typedef sig::signal<void (SpriteID)> SpriteDestroyedSignal;
+typedef sig::signal<void (StageNodeID)> SpriteCreatedSignal;
+typedef sig::signal<void (StageNodeID)> SpriteDestroyedSignal;
 
 class SpriteManager {
 
@@ -30,14 +30,14 @@ public:
         const SpritesheetAttrs &attrs=SpritesheetAttrs()
     );
 
-    SpritePtr new_sprite_from_texture(TextureID texture_id,
+    SpritePtr new_sprite_from_texture(TexturePtr texture,
         uint32_t frame_width, uint32_t frame_height,
         const SpritesheetAttrs &attrs=SpritesheetAttrs()
     );
 
-    SpritePtr sprite(SpriteID s);
-    bool has_sprite(SpriteID s) const;
-    SpritePtr destroy_sprite(SpriteID s);
+    SpritePtr sprite(StageNodeID s);
+    bool has_sprite(StageNodeID s) const;
+    SpritePtr destroy_sprite(StageNodeID s);
     std::size_t sprite_count() const;
     void destroy_all();
 

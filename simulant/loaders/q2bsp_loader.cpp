@@ -167,7 +167,7 @@ bool has_bitflag(uint32_t val, uint32_t flag) {
 void Q2BSPLoader::generate_materials(
     AssetManager* assets,
     const std::vector<Q2::TextureInfo>& texture_infos,
-    std::vector<MaterialID>& materials,
+    std::vector<MaterialPtr>& materials,
     std::vector<Q2::TexDimension>& dimensions,
     TexturePtr lightmap_texture) {
 
@@ -183,7 +183,7 @@ void Q2BSPLoader::generate_materials(
         uses_lightmap = uses_lightmap && LIGHTMAPS_ENABLED;
 
         if(is_invisible) {
-            materials.push_back(MaterialID()); // Just push a null material for invisible surfaces
+            materials.push_back(AssetID()); // Just push a null material for invisible surfaces
             dimensions.push_back(Q2::TexDimension(0, 0));
             continue;
         }
@@ -212,7 +212,7 @@ void Q2BSPLoader::generate_materials(
             mat->set_light_map(lightmap_texture);
         }
 
-        materials.push_back(mat->id());
+        materials.push_back(mat);
         dimensions.push_back(Q2::TexDimension(tex->width(), tex->height()));
     }
 }
@@ -389,7 +389,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
      *  Load the textures and generate materials
      */
 
-    std::vector<MaterialID> materials;
+    std::vector<MaterialPtr> materials;
     std::vector<Q2::TexDimension> dimensions;
 
     auto lightmap_texture = assets->new_texture(
@@ -417,16 +417,16 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         tex.v_axis.z = v_axis.z;
     }
 
-    std::unordered_map<MaterialID, SubMesh*> submeshes_by_material;
+    std::unordered_map<AssetID, SubMesh*> submeshes_by_material;
     uint32_t i = 0;
     for(auto& material: materials) {
         if(!material) {
             continue;
         }
 
-        submeshes_by_material[material] = mesh->new_submesh(_F("{0}").format(i++), material, INDEX_TYPE_16_BIT);
+        submeshes_by_material[material->id()] = mesh->new_submesh(_F("{0}").format(i++), material, INDEX_TYPE_16_BIT);
         if(material) {
-            material.fetch()->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC); // Re-enable GC now the material has been applied
+            material->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC); // Re-enable GC now the material has been applied
         }
     }
 
@@ -439,8 +439,8 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
         FaceUVLimits uv_limit;
 
         auto& tex = textures[f.texture_info];
-        auto material_id = materials.at(f.texture_info);
-        if(!material_id) {
+        auto material = materials.at(f.texture_info);
+        if(!material) {
             // Must be an invisible surface
             uv_limits.push_back(uv_limit);
             continue;
@@ -463,7 +463,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             }
         }
 
-        SubMesh* sm = submeshes_by_material.at(material_id);
+        SubMesh* sm = submeshes_by_material.at(material->id());
 
         /*
          *  A unique vertex is defined by a combination of the position ID and the

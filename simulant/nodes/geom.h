@@ -58,7 +58,6 @@ class Geom :
     public TypedDestroyableObject<Geom, Stage>,
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<GeomID>,
     public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Geom>  {
@@ -67,7 +66,7 @@ public:
     Geom(
         Stage* stage,
         SoundDriver *sound_driver,
-        MeshID mesh,
+        MeshPtr mesh,
         const Vec3& position=Vec3(),
         const Quaternion rotation=Quaternion(),
         const Vec3& scale=Vec3(1, 1, 1),
@@ -85,11 +84,7 @@ public:
     void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
-    MeshID mesh_id_;
+    MeshPtr mesh_;
     GeomCullerOptions culler_options_;
     Vec3 desired_transform;
     Quaternion desired_rotation;

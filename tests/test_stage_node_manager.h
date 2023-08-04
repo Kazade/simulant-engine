@@ -1,6 +1,5 @@
 #pragma once
 
-#include "simulant/generic/unique_id.h"
 #include "simulant/stage.h"
 #include "simulant/test.h"
 #include "simulant/nodes/camera.h"
@@ -14,9 +13,9 @@ using namespace smlt;
 class MyObject;
 
 typedef smlt::default_init_ptr<MyObject> MyObjectPtr;
-typedef smlt::UniqueID<MyObjectPtr> MyObjectID;
+typedef StageNodeID MyObjectID;
 
-typedef smlt::StageNodeManager<StageNodePool, ActorID, Actor> MyObjectManager;
+typedef smlt::StageNodeManager<StageNodePool, StageNodeID, Actor> MyObjectManager;
 
 class StageNodeManagerTests : public smlt::test::SimulantTestCase {
 public:
@@ -60,7 +59,7 @@ public:
         assert_equal(actor->node_type(), STAGE_NODE_TYPE_ACTOR);
         assert_equal(stage->actor_count(), count + 1);
 
-        stage->destroy_actor(actor);
+        stage->destroy_actor(actor->id());
 
         // Should be the same, the original actor is still lingering
         assert_equal(stage->actor_count(), count + 1);
@@ -80,7 +79,7 @@ public:
         assert_equal(light->node_type(), STAGE_NODE_TYPE_LIGHT);
         assert_equal(stage->light_count(), count + 1);
 
-        stage->destroy_light(light);
+        stage->destroy_light(light->id());
 
         assert_equal(stage->light_count(), count + 1);
 
@@ -103,7 +102,7 @@ public:
 
         assert_equal(stage->particle_system_count(), count + 1);
 
-        stage->destroy_particle_system(particle_system);
+        stage->destroy_particle_system(particle_system->id());
 
         assert_equal(stage->particle_system_count(), count + 1);
 
@@ -124,7 +123,7 @@ public:
         assert_equal(geom->node_type(), STAGE_NODE_TYPE_GEOM);
         assert_equal(stage->geom_count(), count + 1);
 
-        stage->destroy_geom(geom);
+        stage->destroy_geom(geom->id());
 
         assert_equal(stage->geom_count(), count + 1);
 
@@ -142,7 +141,7 @@ public:
         assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);
 
         assert_equal(stage->camera_count(), count + 1);
-        stage->destroy_camera(camera);
+        stage->destroy_camera(camera->id());
 
         assert_equal(stage->camera_count(), count + 1);
 
@@ -170,7 +169,7 @@ public:
 
         assert_equal(scene->stage_count(), count + 1);
 
-        scene->destroy_stage(stage);
+        scene->destroy_stage(stage->id());
 
         assert_true(stage->is_destroyed());
         assert_equal(scene->stage_count(), count + 1);
@@ -201,7 +200,7 @@ public:
 
         assert_true(stage->sprites->sprite_count() >= count + 1);
 
-        stage->sprites->destroy_sprite(sprite);
+        stage->sprites->destroy_sprite(sprite->id());
 
         assert_true(stage->sprites->sprite_count() >= count + 1);
 

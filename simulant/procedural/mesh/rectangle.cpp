@@ -26,13 +26,13 @@ namespace procedural {
 namespace mesh {
 
 SubMesh* new_rectangle_submesh(
-    MeshPtr& mesh, float width, float height,
-    float x_offset, float y_offset, float z_offset, MaterialID material_id) {
+    MeshPtr mesh, smlt::MaterialPtr mat, float width, float height,
+    float x_offset, float y_offset, float z_offset) {
 
     //Create a submesh
     SubMesh* submesh = mesh->new_submesh(
         "rectangle",
-        (material_id) ? material_id : mesh->asset_manager().clone_default_material(),
+        mat,
         INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
     );
@@ -92,9 +92,10 @@ SubMesh* new_rectangle_submesh(
 
 SubMesh *rectangle(
         MeshPtr mesh,
+        MaterialPtr material,
         float width, float height,
         float x_offset, float y_offset, float z_offset,
-        bool clear, smlt::MaterialID material) {
+        bool clear) {
 
     if(clear) {
         mesh->reset(mesh->vertex_data->vertex_specification());
@@ -134,10 +135,6 @@ SubMesh *rectangle(
     mesh->vertex_data->move_next();
     mesh->vertex_data->done();
 
-    if(!material) {
-        material = mesh->asset_manager().clone_default_material();
-    }
-
     //Create a submesh that uses the shared data
     SubMesh* submesh = mesh->new_submesh(
         "rectangle",
@@ -158,10 +155,11 @@ SubMesh *rectangle(
 }
 
 SubMesh* rectangle_outline(
-        MeshPtr mesh,
-        float width, float height,
-        float x_offset, float y_offset, float z_offset,
-        bool clear, smlt::MaterialID material) {
+    MeshPtr mesh,
+    MaterialPtr material,
+    float width, float height,
+    float x_offset, float y_offset, float z_offset,
+    bool clear) {
 
     if(clear) {
         mesh->reset(mesh->vertex_data->vertex_specification());
@@ -194,9 +192,6 @@ SubMesh* rectangle_outline(
     mesh->vertex_data->move_next();
     mesh->vertex_data->done();
 
-    if(!material) {
-        material = mesh->asset_manager().clone_default_material();
-    }
     SubMesh* submesh = mesh->new_submesh(
         "rectangle_outline",
         material,

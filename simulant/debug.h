@@ -100,10 +100,10 @@ private:
     SubMesh* points_without_depth_ = nullptr;
     SubMesh* points_with_depth_ = nullptr;
 
-    MeshID mesh_;
+    MeshPtr mesh_;
     ActorPtr actor_ = nullptr;
-    MaterialID material_;
-    MaterialID material_no_depth_;
+    MaterialPtr material_;
+    MaterialPtr material_no_depth_;
     float current_point_size_ = 0.001f;
 
     sig::Connection frame_finished_connection_;

@@ -13,7 +13,7 @@ using namespace smlt;
 class MaterialTest : public smlt::test::SimulantTestCase {
 public:
     void test_material_initialization() {
-        auto mat = application->shared_assets->material(application->shared_assets->new_material());
+        auto mat = application->shared_assets->new_material();
 
         mat->set_pass_count(1);
 
@@ -25,11 +25,10 @@ public:
     }
 
     void test_material_applies_to_mesh() {
-        smlt::MaterialID mid = application->shared_assets->new_material();
-        smlt::MeshID mesh_id = application->shared_assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
-        auto mesh = application->shared_assets->mesh(mesh_id);
-        smlt::SubMesh* sm = mesh->new_submesh("test", mid);
-        this->assert_equal(mid, (smlt::MaterialID) sm->material());
+        auto mat = application->shared_assets->new_material();
+        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
+        smlt::SubMesh* sm = mesh->new_submesh("test", mat);
+        this->assert_equal(mat->id(), sm->material()->id());
     }
 
     void test_property_heirarchy() {
@@ -65,7 +64,7 @@ public:
         mat1->set_pass_count(2);
         assert_equal(mat1->pass_count(), 2);
 
-        auto mat2 = application->shared_assets->clone_material(mat1);
+        auto mat2 = application->shared_assets->clone_material(mat1->id());
 
         assert_equal(mat2->pass_count(), 2);
     }
@@ -80,7 +79,7 @@ public:
         mat1->set_pass_count(2);
         mat1->pass(0)->set_diffuse(smlt::Colour::BLUE);
 
-        auto mat2 = application->shared_assets->clone_material(mat1);
+        auto mat2 = application->shared_assets->clone_material(mat1->id());
 
         assert_not_equal(mat1->id(), mat2->id());
 
@@ -220,7 +219,7 @@ public:
 
         assert_equal(c1, c0 + 1);
 
-        auto mat2 = application->shared_assets->clone_material(mat);
+        auto mat2 = application->shared_assets->clone_material(mat->id());
 
         auto c2 = Material::_name_refcount("test");
 

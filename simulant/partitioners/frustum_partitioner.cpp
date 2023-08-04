@@ -29,7 +29,7 @@
 namespace smlt {
 
 void FrustumPartitioner::lights_and_geometry_visible_from(
-        CameraID camera_id, std::vector<LightID> &lights_out,
+        StageNodeID camera_id, std::vector<StageNodeID> &lights_out,
         std::vector<StageNode*> &geom_out) {
 
     _apply_writes();
@@ -62,7 +62,7 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
     }
 }
 
-void FrustumPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
+void FrustumPartitioner::apply_staged_write(const StageNodeID& key, const StagedWrite &write) {
     _S_UNUSED(key);
     _S_UNUSED(write);
     // Do nothing, we don't need to!

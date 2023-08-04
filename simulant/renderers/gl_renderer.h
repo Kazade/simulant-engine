@@ -52,8 +52,8 @@ protected:
     GLRenderer(Window* window):
         Renderer(window) {}
 
-    void on_texture_register(TextureID tex_id, Texture *texture) override;
-    void on_texture_unregister(TextureID tex_id, Texture* texture) override;
+    void on_texture_register(AssetID tex_id, Texture *texture) override;
+    void on_texture_unregister(AssetID tex_id, Texture* texture) override;
     void on_texture_prepare(Texture* texture) override;
     bool texture_format_is_native(TextureFormat fmt) override;
 
@@ -61,7 +61,7 @@ protected:
     uint32_t convert_type(TextureFormat format);
 
     thread::Mutex texture_object_mutex_;
-    std::unordered_map<TextureID, uint32_t> texture_objects_;
+    std::unordered_map<AssetID, uint32_t> texture_objects_;
 
 };
 

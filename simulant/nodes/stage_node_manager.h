@@ -47,7 +47,6 @@ public:
         assert(derived);
 
         derived->_overwrite_id(IDType(pair.second));
-        derived->_bind_id_pointer(derived);
 
         if(!derived->init()) {
             derived->clean_up();
@@ -66,12 +65,12 @@ public:
     }
 
     bool contains(const IDType& id) const {
-        StageNode* node = (*pool_)[id.value()];
+        StageNode* node = (*pool_)[id];
         return bool(dynamic_cast<T*>(node));
     }
 
     T* get(const IDType& id) const {
-        StageNode* node = (*pool_)[id.value()];
+        StageNode* node = (*pool_)[id];
         T* result = dynamic_cast<T*>(node);
 #if STAGE_NODE_MANAGER_DEBUG
         assert((node && result) || (!node && !result));
@@ -85,7 +84,7 @@ public:
     }
 
     bool destroy(const IDType& id) {
-        auto it = pool_->find(id.value());
+        auto it = pool_->find(id);
         if(it != pool_->end()) {
             /* Ensure we fire the destroyed signal */
             if(!(*it)->destroyed_) {
@@ -110,7 +109,7 @@ public:
     }
 
     bool destroy_immediately(const IDType& id) {
-        auto it = pool_->find(id.value());
+        auto it = pool_->find(id);
         if(it != pool_->end()) {
             StageNode* node = *it;
 
@@ -139,7 +138,7 @@ public:
             destroy_all_next_clean_ = false;
             for(auto ptr: objects_) {
                 ptr->clean_up();
-                pool_->erase(pool_->find(ptr->id().value()));
+                pool_->erase(pool_->find(ptr->id()));
             }
             objects_.clear();
         } else {
