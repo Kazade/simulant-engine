@@ -125,8 +125,8 @@ AudioSource::AudioSource(Window *window):
     ACTIVE_SOURCES.push_back(this);
 }
 
-AudioSource::AudioSource(Stage *stage, StageNode* this_as_node, SoundDriver* driver):
-    stage_(stage),
+AudioSource::AudioSource(Scene* scene, StageNode* this_as_node, SoundDriver* driver):
+    scene_(scene),
     window_(nullptr),
     driver_(driver),
     node_(this_as_node) {

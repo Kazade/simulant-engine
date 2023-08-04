@@ -29,8 +29,8 @@
 
 namespace smlt {
 
-Debug::Debug(Stage &stage):
-    stage_(stage) {
+Debug::Debug(Scene* owner):
+    StageNode(owner, STAGE_NODE_TYPE_DEBUG) {
 
     frame_finished_connection_ = get_app()->signal_frame_finished().connect(
         std::bind(&Debug::frame_finished, this)
@@ -68,7 +68,7 @@ void Debug::frame_finished() {
     }
 }
 
-void Debug::update(float dt) {
+void Debug::on_update(float dt) {
     _S_UNUSED(dt);
 
     auto mesh = mesh_.fetch();

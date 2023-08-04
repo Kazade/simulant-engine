@@ -33,11 +33,11 @@ namespace smlt {
 namespace scenes {
 
 class Loading:
-    public Scene<Loading> {
+    public Scene {
 
 public:
     Loading(Window* window):
-        Scene<Loading>(window) {}
+        Scene(window) {}
 
 private:
     void activate() override;

@@ -16,18 +16,18 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DEBUG_H
-#define DEBUG_H
+#pragma once
 
 #include "types.h"
 #include "generic/managed.h"
 #include "meshes/mesh.h"
+#include "nodes/stage_node.h"
 
 namespace smlt {
 
-class Debug : public RefCounted<Debug> {
+class Debug : public StageNode {
 public:
-    Debug(Stage& stage);
+    Debug(Scene* owner);
     virtual ~Debug();
 
     void draw_ray(
@@ -60,7 +60,7 @@ public:
 
     float point_size() const;
 
-    void update(float dt);
+    void on_update(float dt);
 
     void set_transform(const Mat4& mat);
     Mat4 transform() const;
@@ -73,9 +73,6 @@ private:
     bool initialized_ = false;
 
     void initialize_actor();
-
-
-    Stage& stage_;
 
     enum DebugElementType {
         DET_LINE,
@@ -110,5 +107,3 @@ private:
 };
 
 }
-
-#endif // DEBUG_H

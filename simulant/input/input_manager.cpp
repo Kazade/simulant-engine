@@ -581,7 +581,7 @@ bool InputManager::start_text_input(bool force_onscreen) {
     auto& window = smlt::get_app()->window;
 
     /* Build our camera and make it render with the highest priority */
-    keyboard_stage_ = active_scene->new_stage();
+    keyboard_stage_ = active_scene->create_node<Stage>();
     keyboard_camera_ = keyboard_stage_->new_camera_for_ui();
     keyboard_pipeline_ = window->compositor->render(
         keyboard_stage_, keyboard_camera_

@@ -39,7 +39,6 @@ class KeyFrameAnimationState;
 class Rig;
 
 class Actor :
-    public TypedDestroyableObject<Actor, Stage>,
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<ActorID>,
@@ -48,8 +47,7 @@ class Actor :
     public ChainNameable<Actor> {
 
 public:
-    Actor(Stage* stage, SoundDriver *sound_driver);
-    Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh);
+    Actor(Scene* owner, SoundDriver *sound_driver, MeshPtr mesh);
     virtual ~Actor();
 
     const AABB& aabb() const override;
@@ -63,7 +61,7 @@ public:
     bool has_any_mesh() const;
     bool has_multiple_meshes() const;
 
-    void set_mesh(MeshID mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
+    void set_mesh(MeshPtr mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
 
     typedef sig::signal<void (ActorID)> MeshChangedCallback;
 
@@ -78,7 +76,7 @@ public:
         StageNode::clean_up();
     }
 
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    void get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
 
     void use_material_slot(MaterialSlot var) {
         material_slot_ = var;
@@ -126,7 +124,7 @@ private:
 
     MaterialSlot material_slot_ = MATERIAL_SLOT0;
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 
     sig::connection submesh_created_connection_;
     sig::connection submesh_destroyed_connection_;

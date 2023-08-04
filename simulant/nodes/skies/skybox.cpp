@@ -10,7 +10,6 @@
 namespace smlt {
 
 Skybox::Skybox(SkyManager* manager):
-    TypedDestroyableObject<Skybox, SkyManager>(manager),
     ContainerNode(&(Stage&)manager->stage, STAGE_NODE_TYPE_SKYBOX),
     manager_(manager) {
 
@@ -24,11 +23,13 @@ void Skybox::clean_up() {
 }
 
 bool Skybox::destroy() {
-    return manager_->destroy_skybox(id());
+    manager_->destroy_skybox(id());
+    return true;
 }
 
 bool Skybox::destroy_immediately() {
-    return manager_->sky_manager_->destroy_immediately(id());
+    manager_->sky_manager_->destroy_immediately(id());
+    return true;
 }
 
 const AABB &Skybox::aabb() const {

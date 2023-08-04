@@ -14,14 +14,52 @@ public:
     template<typename PolyType, typename IDType, typename T, typename ...SubTypes>
     friend class StageNodeManager;
 
-protected:
+private:
     bool destroyed_ = false;
 
+    /*
+     * Called when destroy() is called, if the object hasn't already
+     * been destroyed. Return false to cancel destruction */
+    virtual bool on_destroy() = 0;
+
+    /*
+     * Called when destroy_immediately() is called, if the object hasn't
+     * already been destroyed. Return false to cancel destruction */
+    virtual bool on_destroy_immediately() = 0;
+
+    /* Private functions, do not override */
+    virtual void _destroy() {}
+    virtual void _destroy_immediately() {}
 public:
     virtual ~DestroyableObject() {}
 
-    virtual bool destroy() = 0;
-    virtual bool destroy_immediately() = 0;
+    bool destroy() {
+        if(destroyed_) {
+            return false;
+        }
+
+        destroyed_ = on_destroy();
+        if(destroyed_) {
+            signal_destroyed()();
+            _destroy();
+        }
+
+        return destroyed_;
+    }
+
+    bool destroy_immediately() {
+        if(destroyed_) {
+            return false;
+        }
+
+        destroyed_ = on_destroy_immediately();
+        if(destroyed_) {
+            signal_destroyed()();
+            _destroy_immediately();
+        }
+
+        return destroyed_;
+    }
 
     bool is_destroyed() const {
         return destroyed_;
@@ -44,20 +82,19 @@ public:
         }
     }
 
-    bool destroy() override {
-        if(!destroyed_ && owner_) {
+private:
+    bool on_destroy() override {
+        if(owner_) {
             signal_destroyed()();
-            destroyed_ = true;
             owner_->destroy_object((T*) this);
             return true;
         }
         return false;
     }
 
-    bool destroy_immediately() override {
-        if(!destroyed_ && owner_) {
+    bool on_destroy_immediately() override {
+        if(owner_) {
             signal_destroyed()();
-            destroyed_ = true;
             owner_->destroy_object_immediately((T*) this);
             return true;
         }
@@ -65,7 +102,6 @@ public:
         return false;
     }
 
-private:
     Owner* owner_ = nullptr;
 };
 

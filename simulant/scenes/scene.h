@@ -48,6 +48,7 @@
 #include "../interfaces.h"
 #include "../stage_manager.h"
 #include "../generic/any/any.h"
+#include "../nodes/stage_node.h"
 
 namespace smlt {
 
@@ -60,18 +61,23 @@ class SceneLoadException : public std::runtime_error {};
 
 typedef sig::signal<void ()> SceneOnActivatedSignal;
 typedef sig::signal<void ()> SceneOnDeactivatedSignal;
+typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
+typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
 
-class SceneBase:
-    public StageManager {
+class Scene:
+    public StageNode {
 
     DEFINE_SIGNAL(SceneOnActivatedSignal, signal_activated);
     DEFINE_SIGNAL(SceneOnDeactivatedSignal, signal_deactivated);
 
+    DEFINE_SIGNAL(StageNodeCreatedSignal, signal_stage_node_created);
+    DEFINE_SIGNAL(StageNodeDestroyedSignal, signal_stage_node_destroyed);
+
 public:
     typedef std::shared_ptr<SceneBase> ptr;
 
-    SceneBase(Window* window);
-    virtual ~SceneBase();
+    Scene(Window* window);
+    virtual ~Scene();
 
     void _call_load();
     void _call_unload();
@@ -120,6 +126,7 @@ protected:
 
     void _update_thunk(float dt) override;
     void _fixed_update_thunk(float dt) override;
+
 private:
     std::set<std::string> linked_pipelines_;
 
@@ -144,6 +151,10 @@ private:
 
     std::vector<any> load_args;
 
+    void clean_up() override {
+        _call_unload();
+    }
+
 protected:
     /* Returns the number of arguments passed when loading */
     std::size_t load_arg_count() const;
@@ -154,23 +165,14 @@ protected:
     }
 
 public:
-    S_DEFINE_PROPERTY(window, &SceneBase::window_);
-    S_DEFINE_PROPERTY(app, &SceneBase::app_);
-    S_DEFINE_PROPERTY(input, &SceneBase::input_);
-    S_DEFINE_PROPERTY(scenes, &SceneBase::scene_manager_);
-    S_DEFINE_PROPERTY(compositor, &SceneBase::compositor_);
+    S_DEFINE_PROPERTY(window, &Scene::window_);
+    S_DEFINE_PROPERTY(app, &Scene::app_);
+    S_DEFINE_PROPERTY(input, &Scene::input_);
+    S_DEFINE_PROPERTY(scenes, &Scene::scene_manager_);
+    S_DEFINE_PROPERTY(compositor, &Scene::compositor_);
 };
 
-template<typename T>
-class Scene : public SceneBase, public RefCounted<T> {
-public:
-    Scene(Window* window):
-        SceneBase(window) {}
 
-    void clean_up() override {
-        _call_unload();
-    }
-};
 
 }
 

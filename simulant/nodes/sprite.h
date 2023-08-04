@@ -42,7 +42,6 @@ struct SpritesheetAttrs {
 };
 
 class Sprite :
-    public TypedDestroyableObject<Sprite, SpriteManager>,
     public ContainerNode,
     public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
@@ -50,14 +49,12 @@ class Sprite :
     public ChainNameable<Sprite> {
 
 public:
-    using ContainerNode::_get_renderables;
-
     bool init() override;
     void clean_up() override;
-    void update(float dt) override;
+    void on_update(float dt) override;
 
-    bool destroy() override;
-    bool destroy_immediately() override;
+    bool on_destroy() override;
+    bool on_destroy_immediately() override;
 
     Sprite(SpriteManager *manager, SoundDriver *sound_driver);
 

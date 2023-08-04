@@ -51,7 +51,6 @@ static inline SoundDriver* sound_driver() {
 }
 
 Stage::Stage(StageManager *parent, StageNodePool *node_pool, AvailablePartitioner partitioner):
-    TypedDestroyableObject<Stage, StageManager>(parent),
     ContainerNode(this, STAGE_NODE_TYPE_STAGE),
     node_pool_(node_pool),
     asset_manager_(LocalAssetManager::create(get_app()->shared_assets.get())),

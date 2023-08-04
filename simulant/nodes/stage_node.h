@@ -18,10 +18,13 @@
 #include "iterators/descendent_iterator.h"
 #include "iterators/ancestor_iterator.h"
 
+#include "builtins.h"
+
 namespace smlt {
 
 class RenderableFactory;
 class Seconds;
+class Scene;
 
 typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
 typedef sig::signal<void ()> CleanedUpSignal;
@@ -37,27 +40,12 @@ enum DetailLevel {
     DETAIL_LEVEL_MAX
 };
 
-enum StageNodeType {
-    STAGE_NODE_TYPE_STAGE,
-    STAGE_NODE_TYPE_CAMERA,
-    STAGE_NODE_TYPE_ACTOR,
-    STAGE_NODE_TYPE_LIGHT,
-    STAGE_NODE_TYPE_PARTICLE_SYSTEM,
-    STAGE_NODE_TYPE_GEOM,
-    STAGE_NODE_TYPE_MESH_INSTANCER,
-    STAGE_NODE_TYPE_SKYBOX,
-    STAGE_NODE_TYPE_SPRITE,
-    STAGE_NODE_TYPE_WIDGET,
-    STAGE_NODE_TYPE_USER_BASE = 1000
-};
-
 class StageNode:
-    public virtual DestroyableObject,
+    public DestroyableObject,
     public virtual Nameable,
     public Printable,
     public Transformable,
     public Updateable,
-    public Organism,
     public virtual BoundableEntity,
     public virtual TwoPhaseConstructed {
 
@@ -146,6 +134,29 @@ public:
     void append_child(StageNode* new_child) {
         new_child->set_parent(this);
     }
+
+private:
+    void update(float dt) override final;
+    void late_update(float dt) override final;
+    void fixed_update(float step) override final;
+
+    virtual bool on_create(void* params) = 0;
+    virtual bool on_destroy() { return true; }
+    virtual bool on_destroy_immediately() { return true; }
+
+    virtual void on_update(float dt) { _S_UNUSED(dt); }
+    virtual void on_fixed_update(float step) { _S_UNUSED(step); }
+    virtual void on_late_update(float dt) { _S_UNUSED(dt); }
+
+    /* Return a list of renderables to pass into the render queue */
+    virtual void get_renderables(
+        batcher::RenderQueue* render_queue,
+        const CameraPtr camera,
+        const DetailLevel detail_level
+    ) = 0;
+
+    virtual void _destroy() final;
+    virtual void _destroy_immediately() final;
 
 private:
     /* This is ugly, but it's here for performance to avoid
@@ -254,7 +265,7 @@ public:
         return name();
     }
 
-    StageNode(Stage* stage, StageNodeType node_type);
+    StageNode(Scene* owner, StageNodeType node_type);
 
     virtual ~StageNode();
 
@@ -285,7 +296,7 @@ public:
     void set_visible(bool visible);
 
     Property<generic::DataCarrier StageNode::*> data = { this, &StageNode::data_ };
-    Property<Stage* StageNode::*> stage = { this, &StageNode::stage_ };
+    Property<Scene* StageNode::*> scene = { this, &StageNode::owner_ };
 
     template<typename T>
     void set_parent(const UniqueID<T>& id) {
@@ -293,10 +304,6 @@ public:
     }
 
     smlt::Promise<void> destroy_after(const Seconds& seconds);
-
-    void update(float dt) override;
-    void late_update(float dt) override;
-    void fixed_update(float step) override;
 
     bool parent_is_stage() const;
 
@@ -315,12 +322,7 @@ public:
 
     StageNode* find_descendent_with_name(const std::string& name);
 
-    /* Return a list of renderables to pass into the render queue */
-    virtual void _get_renderables(
-        batcher::RenderQueue* render_queue,
-        const CameraPtr camera,
-        const DetailLevel detail_level
-    ) = 0;
+
 
     void set_cullable(bool v);
     bool is_cullable() const;
@@ -335,7 +337,7 @@ protected:
     virtual UniqueIDKey make_key() const = 0;
 
     // Faster than properties, useful for subclasses where a clean API isn't as important
-    Stage* get_stage() const { return stage_; }
+    Scene* get_scene() const { return owner_; }
 
     void on_transformation_changed() override;
 
@@ -347,9 +349,7 @@ protected:
     void mark_absolute_transformation_dirty();
 private:
     AABB calculate_transformed_aabb() const;
-
-    Stage* stage_ = nullptr;
-
+    Scene* owner_ = nullptr;
     StageNodeType node_type_ = STAGE_NODE_TYPE_ACTOR;
 
     generic::DataCarrier data_;
@@ -387,13 +387,11 @@ private:
 
 class ContainerNode : public StageNode {
 public:
-    ContainerNode(Stage* stage, StageNodeType node_type):
-        StageNode(stage, node_type) {}
+    ContainerNode(Scene* scene, StageNodeType node_type):
+        StageNode(scene, node_type) {}
 
     /* Containers don't directly have renderables, but their children do */
-    void _get_renderables(batcher::RenderQueue*, const CameraPtr, const DetailLevel) override {
-
-    }
+    void get_renderables(batcher::RenderQueue*, const CameraPtr, const DetailLevel) override {}
 
     virtual ~ContainerNode() {}
 };

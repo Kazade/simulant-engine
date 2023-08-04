@@ -35,7 +35,6 @@ typedef std::size_t MeshInstanceID;
  * Spawning animated meshes is currently unsupported.
  */
 class MeshInstancer:
-    public TypedDestroyableObject<MeshInstancer, Stage>,
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<MeshInstancerID>,
@@ -83,7 +82,7 @@ public:
      */
     bool hide_mesh_instance(MeshInstanceID mid);
 
-    void _get_renderables(
+    void get_renderables(
         batcher::RenderQueue* render_queue,
         const CameraPtr camera,
         const DetailLevel detail_level

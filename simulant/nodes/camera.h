@@ -13,7 +13,6 @@ namespace smlt {
 class RenderTarget;
 
 class Camera:
-    public TypedDestroyableObject<Camera, Stage>,
     public ContainerNode,
     public generic::Identifiable<CameraID>,
     public ChainNameable<Camera>,
@@ -21,9 +20,9 @@ class Camera:
     public RefCounted<Camera> {
 
 public:
-    using ContainerNode::_get_renderables;
+    using ContainerNode::get_renderables;
 
-    Camera(Stage* stage, SoundDriver* sound_driver);
+    Camera(Scene* owner, SoundDriver* sound_driver);
     virtual ~Camera();
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
@@ -38,8 +37,6 @@ public:
     void clean_up() override {
         StageNode::clean_up();
     }
-
-    void update(float dt) override;
 
     // Converts an OpenGL unit to window space
     smlt::optional<Vec3> project_point(const RenderTarget& target, const Viewport& viewport, const Vec3& point) const;

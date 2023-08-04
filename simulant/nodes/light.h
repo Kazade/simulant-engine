@@ -29,7 +29,6 @@
 namespace smlt {
 
 class Light :
-    public TypedDestroyableObject<Light, Stage>,
     public ContainerNode,
     public generic::Identifiable<LightID>,
     public ChainNameable<Light> {
@@ -37,7 +36,7 @@ class Light :
 public:
     typedef std::shared_ptr<Light> ptr;
 
-    Light(Stage* stage);
+    Light(Scene* owner);
 
     void set_type(LightType type);
 
@@ -95,14 +94,6 @@ public:
 
     const AABB& aabb() const override {
         return bounds_;
-    }
-
-    void update(float step) override {
-        _S_UNUSED(step);
-    }
-
-    void clean_up() override {
-        StageNode::clean_up();
     }
 
 private:

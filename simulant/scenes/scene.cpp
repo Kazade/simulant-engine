@@ -28,37 +28,33 @@
 
 namespace smlt {
 
-SceneBase::SceneBase(Window *window):
-    StageManager(),
+Scene::Scene(Window *window):
     window_(window),
     input_(window->input.get()),
     app_(window->application),
     compositor_(window->compositor) {
 }
 
-SceneBase::~SceneBase() {
+Scene::~Scene() {
 
 }
 
-void SceneBase::_update_thunk(float dt) {
+void Scene::_update_thunk(float dt) {
     if(!window->has_focus()) {
         // if paused, send deltatime as 0.0.
         // it's still accessible through window->time_keeper if the user needs it
         dt = 0.0;
     }
 
-    StageManager::update(dt);
     update(dt);
 }
 
-void SceneBase::_fixed_update_thunk(float dt) {
+void Scene::_fixed_update_thunk(float dt) {
     if(!window->has_focus()) return;
-
-    StageManager::fixed_update(dt);
     fixed_update(dt);
 }
 
-std::size_t SceneBase::load_arg_count() const {
+std::size_t Scene::load_arg_count() const {
     return load_args.size();
 }
 
@@ -86,7 +82,7 @@ static void print_asset_stats() {
 }
 
 
-void SceneBase::_call_load() {
+void Scene::_call_load() {
     if(is_loaded_) {
         return;
     }
@@ -117,7 +113,7 @@ void SceneBase::_call_load() {
     is_loaded_ = true;
 }
 
-void SceneBase::_call_unload() {
+void Scene::_call_unload() {
     if(!is_loaded_) {
         return;
     }
@@ -131,10 +127,6 @@ void SceneBase::_call_unload() {
     is_loaded_ = false;
     unload();
     post_unload();
-
-    /* Make sure all stages have been destroyed */
-    destroy_all_stages();       
-    clean_destroyed_stages();
 
     smlt::get_app()->shared_assets->run_garbage_collection();
 
@@ -154,7 +146,7 @@ void SceneBase::_call_unload() {
     }
 }
 
-void SceneBase::_call_activate() {
+void Scene::_call_activate() {
     if(is_active_) {
         return;
     }
@@ -168,7 +160,7 @@ void SceneBase::_call_activate() {
     }
 }
 
-void SceneBase::_call_deactivate() {
+void Scene::_call_deactivate() {
     if(!is_active_) {
         return;
     }
@@ -183,19 +175,19 @@ void SceneBase::_call_deactivate() {
     signal_deactivated_();
 }
 
-void SceneBase::link_pipeline(const std::string &name) {
+void Scene::link_pipeline(const std::string &name) {
     linked_pipelines_.insert(name);
 }
 
-void SceneBase::unlink_pipeline(const std::string &name) {
+void Scene::unlink_pipeline(const std::string &name) {
     linked_pipelines_.insert(name);
 }
 
-void SceneBase::link_pipeline(PipelinePtr pipeline) {
+void Scene::link_pipeline(PipelinePtr pipeline) {
     link_pipeline(pipeline->name());
 }
 
-void SceneBase::unlink_pipeline(PipelinePtr pipeline) {
+void Scene::unlink_pipeline(PipelinePtr pipeline) {
     unlink_pipeline(pipeline->name());
 }
 

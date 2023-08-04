@@ -40,6 +40,7 @@ namespace smlt {
 class StageNode;
 class AudioSource;
 class PlayingSound;
+class Scene;
 
 class Sound :
     public RefCounted<Sound>,
@@ -82,6 +83,7 @@ public:
     }
 
     SoundDriver* _driver() const { return driver_; }
+
 private:
     void init_source(PlayingSound& source);
 
@@ -108,7 +110,7 @@ class AudioSource {
 
 public:
     AudioSource(Window* window);
-    AudioSource(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
+    AudioSource(Scene* owner, StageNode* this_as_node, SoundDriver *driver);
     virtual ~AudioSource();
 
     PlayingSoundPtr play_sound(
@@ -135,7 +137,7 @@ protected:
     SoundDriver* _sound_driver() const;
 
 public:
-    Stage* stage_ = nullptr;
+    Scene* scene_ = nullptr;
     Window* window_ = nullptr;
     SoundDriver* driver_ = nullptr;
     StageNode* node_ = nullptr;

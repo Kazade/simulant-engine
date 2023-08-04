@@ -35,11 +35,11 @@ namespace smlt {
 
 class Application;
 
-typedef std::shared_ptr<SceneBase> SceneBasePtr;
-typedef std::function<SceneBasePtr (Window*)> SceneFactory;
+typedef std::shared_ptr<Scene> ScenePtr;
+typedef std::function<ScenePtr (Window*)> SceneFactory;
 
-typedef sig::signal<void (std::string, SceneBase*)> SceneActivatedSignal;
-typedef sig::signal<void (std::string, SceneBase*)> SceneDeactivatedSignal;
+typedef sig::signal<void (std::string, Scene*)> SceneActivatedSignal;
+typedef sig::signal<void (std::string, Scene*)> SceneDeactivatedSignal;
 
 
 enum ActivateBehaviour {
@@ -133,7 +133,7 @@ public:
     ~SceneManager();
 
     bool has_scene(const std::string& route) const;
-    SceneBasePtr resolve_scene(const std::string& route);
+    ScenePtr resolve_scene(const std::string& route);
 
     template<typename... Args>
     void activate(
@@ -166,7 +166,7 @@ public:
     }
 
     template<typename ...Args>
-    void _preload_in_background(SceneBasePtr scene, Args&& ...args) {
+    void _preload_in_background(ScenePtr scene, Args&& ...args) {
         if(scene->is_loaded()) {
             return;
         }
@@ -202,7 +202,7 @@ public:
     bool is_loaded(const std::string& route) const;
     void reset();
 
-    SceneBasePtr active_scene() const;
+    ScenePtr active_scene() const;
 
     bool scene_queued_for_activation() const;
 
@@ -213,7 +213,7 @@ public:
             std::placeholders::_1, std::forward<Args>(args)...
         );
 
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
+        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
             auto ret = func(window);
             ret->set_name(name);
             ret->scene_manager_ = this;
@@ -223,7 +223,7 @@ public:
 
     template<typename T>
     void register_scene(const std::string& name) {
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
+        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
             auto ret = T::create(window);
             ret->set_name(name);
             ret->scene_manager_ = this;
@@ -243,10 +243,10 @@ private:
     Window* window_;
 
     std::unordered_map<std::string, SceneFactory> scene_factories_;
-    std::unordered_map<std::string, SceneBasePtr> routes_;
+    std::unordered_map<std::string, ScenePtr> routes_;
 
-    SceneBasePtr current_scene_;
-    SceneBasePtr get_or_create_route(const std::string& route);
+    ScenePtr current_scene_;
+    ScenePtr get_or_create_route(const std::string& route);
 
     struct BackgroundTask {
         std::string route;

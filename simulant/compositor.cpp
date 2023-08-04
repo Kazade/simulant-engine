@@ -44,10 +44,10 @@ Compositor::~Compositor() {
     destroy_all_pipelines();
 }
 
-PipelinePtr Compositor::render(StagePtr stage, CameraPtr camera) {
+PipelinePtr Compositor::render(StageNode* subtree, CameraPtr camera) {
     static int32_t counter = 0;
     std::string name = _F("{0}").format(counter++);
-    return new_pipeline(name, stage, camera);
+    return new_pipeline(name, subtree, camera);
 }
 
 PipelinePtr Compositor::find_pipeline(const std::string &name) {
@@ -138,7 +138,7 @@ void Compositor::sort_pipelines() {
 }
 
 PipelinePtr Compositor::new_pipeline(
-    const std::string& name, StagePtr stage, CameraPtr camera,
+    const std::string& name, StageNode* subtree, CameraPtr camera,
     const Viewport& viewport, TextureID target, int32_t priority) {
 
     if(has_pipeline(name)) {
@@ -147,7 +147,7 @@ PipelinePtr Compositor::new_pipeline(
     }
 
     auto pipeline = Pipeline::create(
-        this, name, stage, camera
+        this, name, subtree, camera
     );
 
     /* New pipelines should always start deactivated to avoid the attached stage
@@ -214,7 +214,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
         return;
     }
 
-    auto stage = pipeline_stage->stage();
+    auto stage = pipeline_stage->stage_node();
     auto camera = pipeline_stage->camera();
 
     RenderTarget& target = *window_; //FIXME: Should be window or texture
@@ -313,9 +313,9 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
 
         /* Push any renderables for this node */
         auto initial = render_queue_.renderable_count();
-        node->_get_renderables(&render_queue_, camera, level);
+        node->get_renderables(&render_queue_, camera, level);
 
-        // FIXME: Change _get_renderables to return the number inserted
+        // FIXME: Change get_renderables to return the number inserted
         auto count = render_queue_.renderable_count() - initial;
 
         for(auto i = initial; i < initial + count; ++i) {

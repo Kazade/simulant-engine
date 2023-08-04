@@ -24,13 +24,13 @@ public:
     Pipeline(
         Compositor* render_sequence,
         const std::string& name,
-        StagePtr stage, CameraPtr camera
+        StageNode* subtree, CameraPtr camera
     );
 
     virtual ~Pipeline();
 
     CameraPtr camera() const;
-    StagePtr stage() const;
+    StageNode* stage_node() const;
     TexturePtr target() const;
     uint32_t clear_flags() const;
 

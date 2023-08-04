@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../particle_script.h"
+#include "../../nodes/particles/particle.h"
+
 #include "curves.h"
 
 namespace smlt {

@@ -22,7 +22,6 @@ const static VertexSpecification PS_VERTEX_SPEC(
 );
 
 ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
-    TypedDestroyableObject<ParticleSystem, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
     AudioSource(stage, this, sound_driver),
     script_(script),
@@ -267,7 +266,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     vertex_data_->done();
 }
 
-void ParticleSystem::update(float dt) {
+void ParticleSystem::on_update(float dt) {
     /* Don't update anything at all if we're hidden */
     if(!is_visible() && !update_when_hidden()) {
         return;

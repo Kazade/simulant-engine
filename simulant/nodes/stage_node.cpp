@@ -111,8 +111,8 @@ void StageNode::set_parent(StageNode* new_parent) {
     on_parent_set(old_parent, parent_);
 }
 
-StageNode::StageNode(Stage *stage, smlt::StageNodeType node_type):
-    stage_(stage),
+StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type):
+    owner_(owner),
     node_type_(node_type) {
 
 }
@@ -223,6 +223,18 @@ void StageNode::recalc_visibility() {
         for(auto& node: each_child()) {
             node.recalc_visibility();
         }
+    }
+}
+
+void StageNode::_destroy() {
+    if(owner_) {
+        owner_->destroy_node(this);
+    }
+}
+
+void StageNode::_destroy_immediately() {
+    if(owner_) {
+        owner_->destroy_node_immediately(this);
     }
 }
 
@@ -384,11 +396,11 @@ void StageNode::mark_absolute_transformation_dirty() {
 }
 
 void StageNode::update(float dt) {
-    update_behaviours(dt);
+    on_update(dt);
 }
 
 void StageNode::late_update(float dt) {
-    late_update_behaviours(dt);
+    on_late_update(dt);
 
     if(linked_position_node_) {
         move_to_absolute(linked_position_node_->absolute_position());
@@ -396,7 +408,7 @@ void StageNode::late_update(float dt) {
 }
 
 void StageNode::fixed_update(float step) {
-    fixed_update_behaviours(step);
+    on_fixed_update(dt);
 }
 
 bool StageNode::parent_is_stage() const {

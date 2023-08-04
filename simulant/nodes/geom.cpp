@@ -25,10 +25,9 @@
 
 namespace smlt {
 
-Geom::Geom(Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, const Vec3 &scale, GeomCullerOptions culler_options):
-    TypedDestroyableObject<Geom, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_GEOM),
-    AudioSource(stage, this, sound_driver),
+Geom::Geom(Scene* owner, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, const Vec3 &scale, GeomCullerOptions culler_options):
+    StageNode(owner, STAGE_NODE_TYPE_GEOM),
+    AudioSource(owner, this, sound_driver),
     mesh_id_(mesh),
     culler_options_(culler_options),
     desired_transform(position),
@@ -64,7 +63,7 @@ const AABB &Geom::aabb() const {
     return aabb_;
 }
 
-void Geom::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+void Geom::get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
     _S_UNUSED(detail_level);
 
     culler_->renderables_visible(camera->frustum(), render_queue);

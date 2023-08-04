@@ -9,10 +9,9 @@
 namespace smlt {
 
 
-Camera::Camera(Stage *stage, SoundDriver* sound_driver):
-    TypedDestroyableObject<Camera, Stage>(stage),
-    ContainerNode(stage, STAGE_NODE_TYPE_CAMERA),
-    AudioSource(stage, this, sound_driver){
+Camera::Camera(Scene *owner, SoundDriver* sound_driver):
+    ContainerNode(owner, STAGE_NODE_TYPE_CAMERA),
+    AudioSource(owner, this, sound_driver){
 
     assert(stage);
 
@@ -21,10 +20,6 @@ Camera::Camera(Stage *stage, SoundDriver* sound_driver):
 
 Camera::~Camera() {
 
-}
-
-void Camera::update(float dt) {
-    StageNode::update(dt);
 }
 
 void Camera::update_transformation_from_parent() {

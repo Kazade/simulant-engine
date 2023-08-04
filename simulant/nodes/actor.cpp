@@ -24,22 +24,15 @@
 #include "../animation.h"
 #include "../renderers/renderer.h"
 #include "../assets/meshes/rig.h"
+#include "../scenes/scene.h"
 
 #define DEBUG_ANIMATION 0  /* If enabled, will show debug animation overlay */
 
 namespace smlt {
 
-Actor::Actor(Stage* stage, SoundDriver* sound_driver):
-    TypedDestroyableObject<Actor, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    AudioSource(stage, this, sound_driver) {
-
-}
-
-Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
-    TypedDestroyableObject<Actor, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    AudioSource(stage, this, sound_driver) {
+Actor::Actor(Scene* owner, SoundDriver *sound_driver, MeshPtr mesh):
+    StageNode(owner, STAGE_NODE_TYPE_ACTOR),
+    AudioSource(owner, this, sound_driver) {
 
     set_mesh(mesh);
 }
@@ -61,7 +54,7 @@ bool Actor::has_multiple_meshes() const {
     return false;
 }
 
-void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
+void Actor::set_mesh(MeshPtr mesh, DetailLevel detail_level) {
     /* Do nothing if we don't have a base mesh. You need at least a base mesh at all times */
     if(detail_level != DETAIL_LEVEL_NEAREST && !has_any_mesh()) {
         S_ERROR(
@@ -99,7 +92,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
         return;
     }
 
-    auto meshptr = stage->assets->mesh(mesh);
+    auto meshptr = mesh;
 
     if(!meshptr) {
         S_ERROR("Unable to locate mesh with the ID: {0}", mesh);
@@ -154,9 +147,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     signal_mesh_changed_(id());
 }
 
-void Actor::update(float dt) {
-    StageNode::update(dt);
-
+void Actor::on_update(float dt) {
     if(animation_state_) {
         animation_state_->update(dt);
     }
@@ -168,19 +159,25 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
     assert(base_mesh && base_mesh->is_animated());
 
 #ifdef DEBUG_ANIMATION
-    stage->enable_debug();
-    stage->debug->set_transform(absolute_transformation());
+    auto debug = find_descendent_with_name("Debug");
+    if(!debug) {
+        debug = scene->create_node<Debug>();
+        debug->set_name("Debug");
+        debug->set_parent(this);
+    }
+
+    debug->set_transform(absolute_transformation());
 #endif
 
     base_mesh->animated_frame_data_->prepare_unpack(
         current_frame, next_frame, interp, rig_.get()
 #if DEBUG_ANIMATION
-        ,stage->debug
+        , debug
 #endif
     );
 
 #ifdef DEBUG_ANIMATION
-    stage->debug->set_transform(Mat4());
+    debug->set_transform(Mat4());
 #endif
 }
 
@@ -232,7 +229,7 @@ bool Actor::has_mesh(DetailLevel detail_level) const {
     return bool(meshes_[detail_level].get());
 }
 
-void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+void Actor::get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
     _S_UNUSED(camera);
 
     auto mesh = find_mesh(detail_level);
@@ -241,6 +238,15 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
     }
 
     if(mesh->is_animated()) {
+#ifdef DEBUG_ANIMATION
+        auto debug = find_descendent_with_name("Debug");
+        if(!debug) {
+            debug = scene->create_node<Debug>();
+            debug->set_name("Debug");
+            debug->set_parent(this);
+        }
+#endif
+
         /*
          * Update the vertices for the animated base mesh if that's the
          * detail level we're using - if this is a skeletal animation then
@@ -253,7 +259,7 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
             rig_.get(),
             interpolated_vertex_data_.get()
     #if DEBUG_ANIMATION
-            , stage->debug
+            , debug
     #endif
         );
     }

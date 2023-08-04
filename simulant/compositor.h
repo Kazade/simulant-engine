@@ -42,14 +42,14 @@ public:
     virtual ~Compositor();
 
     PipelinePtr new_pipeline(const std::string& name,
-        StagePtr stage,
+        StageNode* subtree,
         CameraPtr camera,
         const Viewport& viewport=Viewport(),
         TextureID target=TextureID(),
         int32_t priority=0
     );
 
-    PipelinePtr render(StagePtr stage, CameraPtr camera);
+    PipelinePtr render(StageNode* subtree, CameraPtr camera);
 
     std::list<PipelinePtr>::iterator begin() {
         return ordered_pipelines_.begin();

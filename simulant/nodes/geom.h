@@ -55,7 +55,6 @@ struct GeomCullerOptions {
  * Also unlike an actor, a mesh is a requirement.
  */
 class Geom :
-    public TypedDestroyableObject<Geom, Stage>,
     public StageNode,
     public virtual Boundable,
     public generic::Identifiable<GeomID>,
@@ -65,7 +64,7 @@ class Geom :
 
 public:
     Geom(
-        Stage* stage,
+        Scene* owner,
         SoundDriver *sound_driver,
         MeshID mesh,
         const Vec3& position=Vec3(),
@@ -82,7 +81,7 @@ public:
 
     bool init() override;
 
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    void get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
 
 private:
     UniqueIDKey make_key() const override {

@@ -7,7 +7,6 @@ namespace smlt {
 uint32_t MeshInstancer::id_counter_ = 0;
 
 MeshInstancer::MeshInstancer(Stage *stage, SoundDriver *sound_driver, MeshPtr mesh):
-    TypedDestroyableObject<MeshInstancer, Stage>(stage),
     StageNode(stage, STAGE_NODE_TYPE_MESH_INSTANCER),
     AudioSource(stage, this, sound_driver) {
 
@@ -110,7 +109,7 @@ void MeshInstancer::on_transformation_changed() {
     }
 }
 
-void MeshInstancer::_get_renderables(
+void MeshInstancer::get_renderables(
         batcher::RenderQueue* render_queue,
         const CameraPtr camera,
         const DetailLevel detail_level) {

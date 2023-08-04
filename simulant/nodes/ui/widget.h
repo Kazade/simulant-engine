@@ -78,7 +78,6 @@ struct WidgetStyle {
  */
 
 class Widget:
-    public TypedDestroyableObject<Widget, UIManager>,
     public ContainerNode,
     public generic::Identifiable<WidgetID>,
     public HasMutableRenderPriority,

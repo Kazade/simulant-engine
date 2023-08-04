@@ -624,12 +624,6 @@ void Application::run_coroutines_and_late_update() {
     _call_late_update(dt);
 
     signal_post_late_update();
-
-    // House keeping
-    auto s = scenes->active_scene();
-    if(s) {
-        s->clean_destroyed_stages();
-    }
 }
 
 void Application::_call_clean_up() {

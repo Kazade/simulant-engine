@@ -8,7 +8,7 @@ namespace smlt {
 static uint32_t PIPELINE_COUNTER = 0;
 
 Pipeline::Pipeline(Compositor* render_sequence,
-    const std::string &name, StagePtr stage, CameraPtr camera):
+    const std::string &name, StageNode* subtree, CameraPtr camera):
         TypedDestroyableObject<Pipeline, Compositor>(render_sequence),
         id_(++PIPELINE_COUNTER),
         sequence_(render_sequence),
@@ -20,7 +20,7 @@ Pipeline::Pipeline(Compositor* render_sequence,
     }
 
     set_name(name);
-    set_stage(stage);
+    set_stage(subtree);
     set_camera(camera);
 
     /* Set sane defaults for detail ranges */
@@ -89,7 +89,7 @@ CameraPtr Pipeline::camera() const {
     return camera_;
 }
 
-StagePtr Pipeline::stage() const {
+StageNode* Pipeline::stage_node() const {
     return stage_;
 }
 

@@ -34,7 +34,6 @@ class ParticleSystem;
 typedef sig::signal<void (ParticleSystem*, MaterialID, MaterialID)> ParticleSystemMaterialChangedSignal;
 
 class ParticleSystem :
-    public TypedDestroyableObject<ParticleSystem, Stage>,
     public StageNode,
     public generic::Identifiable<ParticleSystemID>,
     public AudioSource,
@@ -76,13 +75,13 @@ public:
         StageNode::clean_up();
     }
 
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    void get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
 
     ParticleScript* script() const {
         return script_.get();
     }
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 
     std::size_t particle_count() const {
         return particle_count_;
