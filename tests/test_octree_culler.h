@@ -51,7 +51,7 @@ public:
 
         batcher::RenderQueue queue;
         queue.reset(stage, window->renderer.get(), camera);
-        auto geom = stage->new_geom_with_mesh(mesh->id());
+        auto geom = stage->new_geom_with_mesh(mesh);
         geom->culler->renderables_visible(camera->frustum(), &queue);
 
         std::vector<Renderable*> result;

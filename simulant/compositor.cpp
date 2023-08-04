@@ -139,7 +139,7 @@ void Compositor::sort_pipelines() {
 
 PipelinePtr Compositor::new_pipeline(
     const std::string& name, StageNode* subtree, CameraPtr camera,
-    const Viewport& viewport, TextureID target, int32_t priority) {
+    const Viewport& viewport, TexturePtr target, int32_t priority) {
 
     if(has_pipeline(name)) {
         S_WARN("Tried to create a duplicate pipeline");
@@ -245,12 +245,12 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     signal_pipeline_started_(*pipeline_stage);
 
     // Trigger a signal to indicate the stage is about to be rendered
-    stage->signal_stage_pre_render()(camera->id(), viewport);
+    stage->signal_stage_pre_render()(camera, viewport);
 
     // Apply any outstanding writes to the partitioner
     stage->partitioner->_apply_writes();
 
-    static std::vector<LightID> light_ids;
+    static std::vector<StageNodeID> light_ids;
     static std::vector<StageNode*> nodes_visible;
 
     /* Empty out, but leave capacity to prevent constant allocations */
@@ -262,7 +262,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
 
     // Get the actual lights from the IDs
     auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
-        light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
+        light_ids, [&](const StageNodeID& light_id) -> LightPtr { return stage->light(light_id); }
     );
 
     // Reset it, ready for this pipeline
@@ -350,7 +350,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     render_queue_.traverse(visitor.get(), frame_id);
 
     // Trigger a signal to indicate the stage has been rendered
-    stage->signal_stage_post_render()(camera->id(), viewport);
+    stage->signal_stage_post_render()(camera, viewport);
 
     signal_pipeline_finished_(*pipeline_stage);
     render_queue_.clear();

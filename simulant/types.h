@@ -44,7 +44,9 @@
 #include "math/operators.h"
 
 #include "generic/object_manager.h"
-#include "generic/unique_id.h"
+#include "core/stage_node_id.h"
+#include "core/asset_id.h"
+
 #include "generic/default_init_ptr.h"
 
 #include "utils/unicode.h"
@@ -490,26 +492,8 @@ typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 class Skybox;
 typedef default_init_ptr<Skybox> SkyboxPtr;
 
-typedef UniqueID<MeshPtr> MeshID;
-typedef UniqueID<TexturePtr> TextureID;
-typedef UniqueID<FontPtr> FontID;
-typedef UniqueID<CameraPtr> CameraID;
-typedef UniqueID<MaterialPtr> MaterialID;
-typedef UniqueID<ParticleScriptPtr> ParticleScriptID;
-typedef UniqueID<BinaryPtr> BinaryID;
+typedef uint32_t GPUProgramID;
 
-typedef UniqueID<LightPtr> LightID;
-typedef UniqueID<StagePtr> StageID;
-typedef UniqueID<ActorPtr> ActorID;
-typedef UniqueID<GeomPtr> GeomID;
-typedef UniqueID<MeshInstancerPtr> MeshInstancerID;
-typedef UniqueID<SoundPtr> SoundID;
-typedef UniqueID<SpritePtr> SpriteID;
-typedef UniqueID<BackgroundPtr> BackgroundID;
-typedef UniqueID<ParticleSystemPtr> ParticleSystemID;
-typedef UniqueID<SkyboxPtr> SkyID;
-typedef UniqueID<GPUProgramPtr> GPUProgramID;
-typedef UniqueID<ui::WidgetPtr> WidgetID;
 
 #ifdef __WIN32__
 typedef unsigned long DWORD;

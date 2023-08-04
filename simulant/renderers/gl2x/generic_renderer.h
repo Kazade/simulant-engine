@@ -91,12 +91,12 @@ public:
 
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) override;
 
-    GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source) override;
+    GPUProgramPtr new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source) override;
 
     GPUProgramPtr gpu_program(const GPUProgramID& program_id) const override;
-    GPUProgramID current_gpu_program_id() const override;
+    GPUProgramPtr current_gpu_program() const override;
     bool supports_gpu_programs() const override { return true; }
-    GPUProgramID default_gpu_program_id() const override;
+    GPUProgramPtr default_gpu_program() const override;
 
     std::string name() const override {
         return "gl2x";
@@ -105,7 +105,7 @@ public:
     void prepare_to_render(const Renderable* renderable) override;
 private:
     GPUProgramManager program_manager_;
-    GPUProgramID default_gpu_program_id_ = 0;
+    GPUProgramPtr default_gpu_program_ = 0;
 
     std::shared_ptr<VBOManager> buffer_manager_;
 

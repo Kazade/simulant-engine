@@ -41,7 +41,6 @@ class Rig;
 class Actor :
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<ActorID>,
     public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Actor> {
@@ -52,7 +51,7 @@ public:
 
     const AABB& aabb() const override;
 
-    MeshID mesh_id(DetailLevel detail_level) const;
+    AssetID mesh_id(DetailLevel detail_level) const;
     const MeshPtr &mesh(DetailLevel detail_level) const;
     const MeshPtr& best_mesh(DetailLevel detail_level) const;
     const MeshPtr &base_mesh() const;
@@ -61,9 +60,9 @@ public:
     bool has_any_mesh() const;
     bool has_multiple_meshes() const;
 
-    void set_mesh(MeshPtr mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
+    void set_mesh(const MeshPtr& mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
 
-    typedef sig::signal<void (ActorID)> MeshChangedCallback;
+    typedef sig::signal<void (StageNodeID)> MeshChangedCallback;
 
     MeshChangedCallback& signal_mesh_changed() { return signal_mesh_changed_; }
 
@@ -95,9 +94,6 @@ public:
     }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
 
     const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards

@@ -8,7 +8,7 @@ namespace smlt {
 
 const static int BUFFER_COUNT = 4;
 
-PlayingSoundID PlayingSound::counter_ = 0;
+PlayingAssetID PlayingSound::counter_ = 0;
 
 PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
     id_(++PlayingSound::counter_),

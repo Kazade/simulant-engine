@@ -29,7 +29,7 @@
 namespace smlt {
 
 void NullPartitioner::lights_and_geometry_visible_from(
-        CameraID camera_id, std::vector<LightID> &lights_out,
+        StageNodeID camera_id, std::vector<StageNodeID> &lights_out,
         std::vector<StageNode*> &geom_out) {
 
     _S_UNUSED(camera_id);
@@ -47,12 +47,12 @@ void NullPartitioner::lights_and_geometry_visible_from(
     }
 }
 
-void NullPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
+void NullPartitioner::apply_staged_write(const StageNodeID& key, const StagedWrite &write) {
     if(write.operation == WRITE_OPERATION_ADD) {
-        if(key.first == typeid(Light)) {
+        if(stage_node_id_matches_type(key, STAGE_NODE_TYPE_LIGHT)) {
             assert(write.node);
             lights_.insert(std::make_pair(key, (Light*) write.node));
-        } else if(key.first == typeid(Camera)) {
+        } else if(stage_node_id_matches_type(key, STAGE_NODE_TYPE_CAMERA)) {
             // Skip cameras
         } else {
             assert(write.node);

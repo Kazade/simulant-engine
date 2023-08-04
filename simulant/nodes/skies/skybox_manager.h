@@ -34,7 +34,7 @@ namespace smlt {
 
 class Stage;
 
-typedef StageNodeManager<StageNodePool, SkyID, Skybox> TemplatedSkyboxManager;
+typedef StageNodeManager<StageNodePool, StageNodeID, Skybox> TemplatedSkyboxManager;
 
 class SkyManager {
     friend class Skybox;
@@ -60,8 +60,8 @@ public:
         const TextureFlags &flags=TextureFlags()
     );
 
-    SkyboxPtr skybox(SkyID skybox_id);
-    bool destroy_skybox(SkyID skybox_id);
+    SkyboxPtr skybox(StageNodeID skybox_id);
+    bool destroy_skybox(StageNodeID skybox_id);
 
     Property<Stage* SkyManager::*> stage = { this, &SkyManager::stage_ };
 

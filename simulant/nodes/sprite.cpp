@@ -50,11 +50,11 @@ bool Sprite::init() {
     auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
     mesh->new_submesh_as_rectangle("sprite", stage->assets->new_material(), 1.0, 1.0f);
 
-    mesh_id_ = mesh;
+    mesh_ = mesh;
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns
-    actor_ = stage->new_actor_with_mesh(mesh_id_);
+    actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
 
     actor_id_ = actor_->id();
@@ -74,7 +74,7 @@ void Sprite::clean_up() {
     if(actor_ && stage->has_actor(actor_id_)) {
         stage->destroy_actor(actor_id_);
         actor_ = nullptr;
-        actor_id_ = ActorID();
+        actor_id_ = StageNodeID();
     }
 
     StageNode::clean_up();
@@ -146,40 +146,38 @@ void Sprite::update_texture_coordinates() {
     }
 
     {
-        auto mesh = stage->assets->mesh(mesh_id_);
+        mesh_->vertex_data->move_to_start();
+        mesh_->vertex_data->tex_coord0(x0, y0);
 
-        mesh->vertex_data->move_to_start();
-        mesh->vertex_data->tex_coord0(x0, y0);
+        mesh_->vertex_data->move_next();
+        mesh_->vertex_data->tex_coord0(x1, y0);
 
-        mesh->vertex_data->move_next();
-        mesh->vertex_data->tex_coord0(x1, y0);
+        mesh_->vertex_data->move_next();
+        mesh_->vertex_data->tex_coord0(x1, y1);
 
-        mesh->vertex_data->move_next();
-        mesh->vertex_data->tex_coord0(x1, y1);
+        mesh_->vertex_data->move_next();
+        mesh_->vertex_data->tex_coord0(x0, y1);
 
-        mesh->vertex_data->move_next();
-        mesh->vertex_data->tex_coord0(x0, y1);
-
-        mesh->vertex_data->done();
+        mesh_->vertex_data->done();
     }
 }
 
-void Sprite::set_spritesheet(TextureID texture_id, uint32_t frame_width, uint32_t frame_height, SpritesheetAttrs attrs) {
+void Sprite::set_spritesheet(TexturePtr texture, uint32_t frame_width, uint32_t frame_height, SpritesheetAttrs attrs) {
     frame_width_ = frame_width;
     frame_height_ = frame_height;
     sprite_sheet_margin_ = attrs.margin;
     sprite_sheet_spacing_ = attrs.spacing;
     sprite_sheet_padding_ = std::make_pair(attrs.padding_horizontal, attrs.padding_vertical);
 
-    image_width_ = stage->assets->texture(texture_id)->width();
-    image_height_ = stage->assets->texture(texture_id)->height();
+    image_width_ = texture->width();
+    image_height_ = texture->height();
 
     //Hold a reference to the new material
-    auto mat = stage->assets->new_material_from_texture(texture_id);
+    auto mat = stage->assets->new_material_from_texture(texture);
     mat->set_blend_func(smlt::BLEND_ALPHA);
 
-    material_id_ = mat;
-    stage->assets->mesh(mesh_id_)->set_material(mat);
+    material_ = mat;
+    mesh_->set_material(mat);
 
     update_texture_coordinates();
 }
@@ -194,8 +192,7 @@ void Sprite::set_render_priority(RenderPriority priority) {
 
 void Sprite::set_alpha(float alpha) {
     alpha_ = alpha;
-    auto mesh = mesh_id_.fetch();
-    mesh->set_diffuse(smlt::Colour(1.0f, 1.0f, 1.0f, alpha_));
+    mesh_->set_diffuse(smlt::Colour(1.0f, 1.0f, 1.0f, alpha_));
 }
 
 void Sprite::set_render_dimensions_from_width(float width) {
@@ -223,19 +220,17 @@ void Sprite::set_render_dimensions(float width, float height) {
     render_height_ = height;
 
     //Rebuild the mesh
-    auto mesh = stage->assets->mesh(mesh_id_);
+    mesh_->vertex_data->move_to_start();
+    mesh_->vertex_data->position((-width / 2.0f), (-height / 2.0f), 0);
 
-    mesh->vertex_data->move_to_start();
-    mesh->vertex_data->position((-width / 2.0f), (-height / 2.0f), 0);
+    mesh_->vertex_data->move_next();
+    mesh_->vertex_data->position((width / 2.0f), (-height / 2.0f), 0);
 
-    mesh->vertex_data->move_next();
-    mesh->vertex_data->position((width / 2.0f), (-height / 2.0f), 0);
+    mesh_->vertex_data->move_next();
+    mesh_->vertex_data->position((width / 2.0f),  (height / 2.0f), 0);
 
-    mesh->vertex_data->move_next();
-    mesh->vertex_data->position((width / 2.0f),  (height / 2.0f), 0);
+    mesh_->vertex_data->move_next();
+    mesh_->vertex_data->position((-width / 2.0f),  (height / 2.0f), 0);
 
-    mesh->vertex_data->move_next();
-    mesh->vertex_data->position((-width / 2.0f),  (height / 2.0f), 0);
-
-    mesh->vertex_data->done();
+    mesh_->vertex_data->done();
 }

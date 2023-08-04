@@ -30,13 +30,13 @@ public:
         Partitioner(ss) {}
 
     void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID> &lights_out,
+        StageNodeID camera_id,
+        std::vector<StageNodeID> &lights_out,
         std::vector<StageNode*> &geom_out
     );
 
 private:
-    void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write);
+    void apply_staged_write(const StageNodeID& key, const StagedWrite& write);
 };
 
 }

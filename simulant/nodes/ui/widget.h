@@ -79,7 +79,6 @@ struct WidgetStyle {
 
 class Widget:
     public ContainerNode,
-    public generic::Identifiable<WidgetID>,
     public HasMutableRenderPriority,
     public ChainNameable<Widget>  {
 
@@ -157,7 +156,7 @@ public:
 
     bool has_foreground_image() const;
 
-    /** Set the background image, pass TextureID() to clear */
+    /** Set the background image, pass AssetID() to clear */
     void set_background_image(TexturePtr texture);
 
     /** Set the background to a region of its image. Coordinates are in texels */
@@ -166,7 +165,7 @@ public:
     void set_background_colour(const Colour& colour);
     void set_foreground_colour(const Colour& colour);
 
-    /** Set the foreground image, pass TextureID() to clear */
+    /** Set the foreground image, pass AssetID() to clear */
     void set_foreground_image(TexturePtr texture);
 
     /** Set the foreground to a region of its image. Coordinates are in texels */
@@ -222,10 +221,6 @@ public:
     MaterialPtr foreground_material() const { return style_->materials_[2]; }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     virtual const unicode& calc_text() const {
         return text_;
     }

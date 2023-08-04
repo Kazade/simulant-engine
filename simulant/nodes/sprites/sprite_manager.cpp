@@ -27,13 +27,13 @@ void SpriteManager::destroy_all() {
 
 SpritePtr SpriteManager::new_sprite() {
     auto s = sprite_manager_->make(this, get_app()->sound_driver);
-    s->set_parent(stage_->id());
+    s->set_parent(stage_);
     signal_sprite_created_(s->id());
     return s;
 }
 
 SpritePtr SpriteManager::new_sprite_from_file(const Path &filename, uint32_t frame_Width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
-    TextureID t = stage_->assets->new_texture_from_file(
+    auto t = stage_->assets->new_texture_from_file(
         filename,
         TextureFlags(MIPMAP_GENERATE_NONE, TEXTURE_WRAP_CLAMP_TO_EDGE, TEXTURE_FILTER_POINT)
     );
@@ -41,11 +41,11 @@ SpritePtr SpriteManager::new_sprite_from_file(const Path &filename, uint32_t fra
     return new_sprite_from_texture(t, frame_Width, frame_height, attrs);
 }
 
-SpritePtr SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t frame_width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
+SpritePtr SpriteManager::new_sprite_from_texture(TexturePtr texture, uint32_t frame_width, uint32_t frame_height, const SpritesheetAttrs& attrs) {
     SpritePtr s = new_sprite();
 
     try {
-        s->set_spritesheet(texture_id, frame_width, frame_height, attrs);
+        s->set_spritesheet(texture, frame_width, frame_height, attrs);
 
         // Set the render dimensions to match the image size by default
         s->set_render_dimensions(frame_width, frame_height);
@@ -57,15 +57,15 @@ SpritePtr SpriteManager::new_sprite_from_texture(TextureID texture_id, uint32_t 
     return s;
 }
 
-SpritePtr SpriteManager::sprite(SpriteID s) {
+SpritePtr SpriteManager::sprite(StageNodeID s) {
     return sprite_manager_->get(s);
 }
 
-bool SpriteManager::has_sprite(SpriteID s) const {
+bool SpriteManager::has_sprite(StageNodeID s) const {
     return sprite_manager_->contains(s);
 }
 
-SpritePtr SpriteManager::destroy_sprite(SpriteID s) {
+SpritePtr SpriteManager::destroy_sprite(StageNodeID s) {
     sprite_manager_->destroy(s);
     return nullptr;
 }

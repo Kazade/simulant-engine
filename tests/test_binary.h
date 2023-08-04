@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simulant/simulant.h"
+#include "simulant/test.h"
 
 namespace  {
 
@@ -23,7 +24,7 @@ public:
 
         assert_equal(application->shared_assets->binary_count(), 1u);
 
-        application->shared_assets->destroy_binary(bin);
+        application->shared_assets->destroy_binary(bin->id());
         bin.reset();
         other.reset();
         application->shared_assets->run_garbage_collection();

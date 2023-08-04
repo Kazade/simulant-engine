@@ -53,11 +53,10 @@ void Skybox::generate(
         actor_->move_to(0, 0, 0);
     }
 
-    if(!mesh_id_) {
-        mesh_id_ = stage->assets->new_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE, smlt::GARBAGE_COLLECT_NEVER);
+    if(!mesh_) {
+        mesh_ = stage->assets->new_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE);
 
-
-        auto mesh = mesh_id_.fetch();
+        auto mesh = mesh_;
         mesh->reverse_winding();
 
         // Set the skybox material on all submeshes
@@ -95,7 +94,7 @@ void Skybox::generate(
         set_texture(mesh->find_submesh("back"), stage->assets->new_texture_from_file(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
     }
 
-    actor_->set_mesh(mesh_id_);
+    actor_->set_mesh(mesh_);
     actor_->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
     actor_->set_cullable(false);
 }

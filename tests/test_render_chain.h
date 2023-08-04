@@ -15,7 +15,7 @@ public:
         Viewport view;
         auto stage = scene->new_stage();
         auto cam = stage->new_camera();
-        TextureID tex = application->shared_assets->new_texture(256, 256);
+        auto tex = application->shared_assets->new_texture(256, 256);
 
         PipelinePtr pipeline1 = window->compositor->render(stage, cam);
         PipelinePtr pipeline2 = window->compositor->render(stage, cam)->set_target(tex);
@@ -29,7 +29,7 @@ public:
 
         assert_equal(cam->id(), pipeline2->camera()->id());
         assert_equal(stage->id(), pipeline2->stage()->id());
-        assert_equal(tex, pipeline2->target()->id());
+        assert_equal(tex->id(), pipeline2->target()->id());
         assert_equal(RENDER_PRIORITY_MAIN, pipeline2->priority());
 
         assert_equal(cam->id(), pipeline3->camera()->id());

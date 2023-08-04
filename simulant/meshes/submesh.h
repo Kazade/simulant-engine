@@ -119,7 +119,7 @@ public:
     const AABB& aabb() const;
 
 public:
-    typedef sig::signal<void (SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> MaterialChangedCallback;
+    typedef sig::signal<void (SubMeshPtr, MaterialSlot, AssetID, AssetID)> MaterialChangedCallback;
 
     MaterialChangedCallback& signal_material_changed() {
         return signal_material_changed_;

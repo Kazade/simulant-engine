@@ -59,7 +59,7 @@ private:
     smlt::StagePtr stage_;
     smlt::CameraPtr camera_;
     smlt::ParticleSystemPtr ps_;
-    smlt::ParticleScriptID script_;
+    smlt::ParticleScriptPtr script_;
 };
 
 class App : public smlt::Application {

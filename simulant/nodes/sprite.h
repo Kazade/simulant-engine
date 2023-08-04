@@ -43,7 +43,6 @@ struct SpritesheetAttrs {
 
 class Sprite :
     public ContainerNode,
-    public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
     public AudioSource,
     public ChainNameable<Sprite> {
@@ -67,10 +66,9 @@ public:
     void set_alpha(float alpha);
 
     float alpha() const { return alpha_; }
-    MaterialID material_id() const { return material_id_; }
+    MaterialPtr material() const { return material_; }
 
-    void set_spritesheet(
-        TextureID texture_id,
+    void set_spritesheet(TexturePtr texture,
         uint32_t frame_width,
         uint32_t frame_height,
         SpritesheetAttrs attrs=SpritesheetAttrs()
@@ -81,10 +79,6 @@ public:
 
     const AABB& aabb() const override;
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     SpriteManager* manager_;
 
     float frame_width_ = 0;
@@ -96,10 +90,10 @@ private:
     float render_height_ = 1.0;
 
     ActorPtr actor_ = nullptr;
-    ActorID actor_id_;
+    StageNodeID actor_id_;
 
-    MeshID mesh_id_;
-    MaterialID material_id_;
+    MeshPtr mesh_;
+    MaterialPtr material_;
 
     float image_width_ = 0;
     float image_height_ = 0;

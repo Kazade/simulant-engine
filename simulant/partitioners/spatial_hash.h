@@ -7,39 +7,13 @@
 
 namespace smlt {
 
-enum PartitionerEntryType {
-    PARTITIONER_ENTRY_TYPE_LIGHT,
-    PARTITIONER_ENTRY_TYPE_ACTOR,
-    PARTITIONER_ENTRY_TYPE_GEOM,
-    PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM
-};
-
 struct PartitionerEntry : public SpatialHashEntry {
-    PartitionerEntry(ActorID actor_id):
-        type(PARTITIONER_ENTRY_TYPE_ACTOR),
-        actor_id(actor_id) {}
-
-    PartitionerEntry(LightID light_id):
-        type(PARTITIONER_ENTRY_TYPE_LIGHT),
-        light_id(light_id) {}
-
-    PartitionerEntry(GeomID geom_id):
-        type(PARTITIONER_ENTRY_TYPE_GEOM),
-        geom_id(geom_id) {}
-
-    PartitionerEntry(ParticleSystemID ps_id):
-        type(PARTITIONER_ENTRY_TYPE_PARTICLE_SYSTEM),
-        particle_system_id(ps_id) {}
+    PartitionerEntry(StageNode* node):
+        node_(node) {}
 
     virtual ~PartitionerEntry() {}
 
-    PartitionerEntryType type;
-    union {
-        ActorID actor_id;
-        LightID light_id;
-        GeomID geom_id;
-        ParticleSystemID particle_system_id;
-    };
+    StageNode* node_;
 };
 
 class SpatialHashPartitioner : public Partitioner {
@@ -48,42 +22,23 @@ public:
     virtual ~SpatialHashPartitioner();
 
     void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID> &lights_out,
+        StageNodeID camera_id,
+        std::vector<StageNodeID> &lights_out,
         std::vector<StageNode*> &geom_out
-    );
+    ) override;
 
 private:
-    void stage_add_actor(ActorID obj);
-    void stage_remove_actor(ActorID obj);
-
-    void stage_add_geom(GeomID geom_id);
-    void stage_remove_geom(GeomID geom_id);
-
-    void stage_add_light(LightID obj);
-    void stage_remove_light(LightID obj);
-
-    void stage_add_particle_system(ParticleSystemID ps);
-    void stage_remove_particle_system(ParticleSystemID ps);
-
-    void _update_actor(const AABB& bounds, ActorID actor);
-    void _update_particle_system(const AABB& bounds, ParticleSystemID ps);
-    void _update_light(const AABB& bounds, LightID light);
-
-    void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) override;
+    void stage_add_node(StageNode* obj);
+    void stage_remove_node(StageNodeID node_id);
+    void _update_node(const AABB& bounds, StageNodeID node_id);
+    void apply_staged_write(const StageNodeID& key, const StagedWrite& write) override;
 
     SpatialHash* hash_ = nullptr;
 
     typedef std::shared_ptr<PartitionerEntry> PartitionerEntryPtr;
 
-    std::unordered_map<ActorID, PartitionerEntryPtr> actor_entries_;
-    std::unordered_map<LightID, PartitionerEntryPtr> light_entries_;
-    std::unordered_map<ParticleSystemID, PartitionerEntryPtr> particle_system_entries_;
-    std::unordered_map<GeomID, PartitionerEntryPtr> geom_entries_;
-
-    std::unordered_set<LightID> directional_lights_;
-
-    thread::SharedMutex lock_;
+    std::unordered_map<StageNodeID, PartitionerEntryPtr> node_entries_;
+    std::unordered_set<StageNodeID> directional_lights_;
 };
 
 }

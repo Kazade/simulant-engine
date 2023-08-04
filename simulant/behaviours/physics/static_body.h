@@ -22,7 +22,7 @@ public:
     const char* name() const override { return "Static Body"; }
 
     void add_mesh_collider(
-        const MeshID& mesh,
+        const MeshPtr& mesh,
         const PhysicsMaterial& properties,
         uint16_t kind=0,
         const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()

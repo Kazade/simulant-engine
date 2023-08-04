@@ -52,15 +52,15 @@ public:
     virtual void init_context() = 0;
     // virtual void upload_texture(Texture* texture) = 0;
 
-    virtual GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader, const std::string& fragment_shader) {
+    virtual GPUProgramPtr new_or_existing_gpu_program(const std::string& vertex_shader, const std::string& fragment_shader) {
         _S_UNUSED(vertex_shader);
         _S_UNUSED(fragment_shader);
-        return GPUProgramID();
+        return GPUProgramPtr();
     }
 
-    virtual GPUProgramID current_gpu_program_id() const { return GPUProgramID(); }
+    virtual GPUProgramPtr current_gpu_program() const { return GPUProgramPtr(); }
     virtual GPUProgramPtr gpu_program(const GPUProgramID&) const { return GPUProgramPtr(); }
-    virtual GPUProgramID default_gpu_program_id() const { return GPUProgramID(); }
+    virtual GPUProgramPtr default_gpu_program() const { return GPUProgramPtr(); }
 
     virtual std::string name() const = 0;
 
@@ -101,7 +101,7 @@ public:
     /*
      * Returns true if the texture has been allocated, false otherwise.
      */
-    bool is_texture_registered(TextureID texture_id) const;
+    bool is_texture_registered(AssetID texture_id) const;
     void pre_render();
     void prepare_texture(Texture *texture);
     void prepare_material(Material* material);
@@ -109,8 +109,8 @@ public:
 private:
     friend class Texture;
 
-    void register_texture(TextureID tex_id, Texture *texture);
-    void unregister_texture(TextureID texture_id, Texture* texture);
+    void register_texture(AssetID tex_id, Texture *texture);
+    void unregister_texture(AssetID texture_id, Texture* texture);
 
     bool convert_if_necessary(Texture* tex);
 
@@ -126,7 +126,7 @@ private:
      * This will be called when a render group (which uses textures) is created, which
      * means it can be called from any thread and should be thread-safe.
      */
-    virtual void on_texture_register(TextureID tex_id, Texture* texture) {
+    virtual void on_texture_register(AssetID tex_id, Texture* texture) {
         _S_UNUSED(tex_id);
         _S_UNUSED(texture);
     }
@@ -138,7 +138,7 @@ private:
      * This will be called when all render groups sharing the texture are destroyed
      * and so can be called from any thread and should be thread-safe
      */
-    virtual void on_texture_unregister(TextureID tex_id, Texture* texture) {
+    virtual void on_texture_unregister(AssetID tex_id, Texture* texture) {
         _S_UNUSED(tex_id);
         _S_UNUSED(texture);
     }
@@ -164,7 +164,7 @@ private:
     }
 
     mutable thread::Mutex texture_registry_mutex_;
-    std::unordered_map<TextureID, Texture*> texture_registry_;
+    std::unordered_map<AssetID, Texture*> texture_registry_;
 };
 
 }

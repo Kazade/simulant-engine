@@ -433,7 +433,7 @@ void SubMesh::set_material(const MaterialPtr& material) {
 }
 
 void SubMesh::set_material_at_slot(MaterialSlot var, const MaterialPtr &mat) {
-    auto old_material_id = (materials_[var]) ? materials_[var]->id() : MaterialID();
+    auto old_material_id = (materials_[var]) ? materials_[var]->id() : AssetID();
 
     if(old_material_id == mat->id()) {
         // Don't do anything, don't fire the changed signal

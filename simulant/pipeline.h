@@ -46,7 +46,7 @@ public:
         return this;
     }
 
-    PipelinePtr set_target(TextureID t) {
+    PipelinePtr set_target(TexturePtr t) {
         target_ = t;
         return this;
     }
@@ -93,7 +93,7 @@ private:
     StagePtr stage_;
     CameraPtr camera_;
 
-    TextureID target_;
+    TexturePtr target_;
     Viewport viewport_;
 
     uint32_t clear_mask_ = 0;

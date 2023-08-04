@@ -31,11 +31,10 @@ struct Particle {
 
 class ParticleSystem;
 
-typedef sig::signal<void (ParticleSystem*, MaterialID, MaterialID)> ParticleSystemMaterialChangedSignal;
+typedef sig::signal<void (ParticleSystem*, AssetID, AssetID)> ParticleSystemMaterialChangedSignal;
 
 class ParticleSystem :
     public StageNode,
-    public generic::Identifiable<ParticleSystemID>,
     public AudioSource,
     public Loadable,
     public HasMutableRenderPriority,
@@ -92,9 +91,6 @@ public:
     }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
 
     struct EmitterState {
         bool is_active = true;

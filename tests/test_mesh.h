@@ -24,12 +24,10 @@ public:
         scene->destroy_stage(stage_->id());
     }
 
-    smlt::MeshID generate_test_mesh(smlt::StagePtr stage) {
+    smlt::MeshPtr generate_test_mesh(smlt::StagePtr stage) {
         _S_UNUSED(stage);
 
-        smlt::MeshID mid = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
-        auto mesh = stage_->assets->mesh(mid);
-
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
         auto& data = mesh->vertex_data;
 
         data->position(-1.0, -1.0, 0.0);
@@ -81,22 +79,21 @@ public:
 
         mesh->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
 
-        return mid;
+        return mesh;
     }
 
     void test_create_mesh_from_submesh() {
-        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
+        auto mesh = generate_test_mesh(stage_);
         auto submesh = mesh->first_submesh();
 
-        auto second_mesh_id = stage_->assets->new_mesh_from_submesh(submesh);
-        auto second_mesh = stage_->assets->mesh(second_mesh_id);
+        auto second_mesh = stage_->assets->new_mesh_from_submesh(submesh);
 
         assert_equal(second_mesh->first_submesh()->index_data->count(), submesh->index_data->count());
         assert_equal(second_mesh->first_submesh()->arrangement(), submesh->arrangement());
     }
 
     void test_skeleton() {
-        auto mesh1 = generate_test_mesh(stage_).fetch();
+        auto mesh1 = generate_test_mesh(stage_);
 
         bool added = mesh1->add_skeleton(3);
 
@@ -120,6 +117,8 @@ public:
 
         auto actor = stage_->new_actor_with_mesh(mesh1);
         actor->set_mesh(mesh2);
+        mesh1.reset();
+        mesh2.reset();
 
         stage_->assets->run_garbage_collection();
         assert_false(stage_->is_destroyed());
@@ -178,7 +177,7 @@ public:
          *  size relative to other models
          */
 
-        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
+        auto mesh = generate_test_mesh(stage_);
 
         assert_close(2.0f, mesh->diameter(), 0.00001f);
         mesh->normalize();
@@ -203,8 +202,8 @@ public:
 
     void test_deleting_entities_deletes_children() {
         auto m = stage_->new_actor(); //Create the root mesh
-        auto c1 = stage_->new_actor_with_parent(m->id()); //Create a child
-        auto c2 = stage_->new_actor_with_parent(c1->id()); //Create a child of the child
+        auto c1 = stage_->new_actor_with_parent(m); //Create a child
+        auto c2 = stage_->new_actor_with_parent(c1); //Create a child of the child
 
         auto mid = m->id();
         auto cid1 = c1->id();
@@ -223,7 +222,7 @@ public:
     }
 
     void test_basic_usage() {
-        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
+        auto mesh = generate_test_mesh(stage_);
 
         auto& data = mesh->vertex_data;
 
@@ -241,13 +240,13 @@ public:
     }
 
     void test_actor_from_mesh() {
-        auto mesh = stage_->assets->mesh(generate_test_mesh(stage_));
+        auto mesh = generate_test_mesh(stage_);
 
         auto actor = stage_->new_actor();
 
         assert_true(!actor->has_any_mesh());
 
-        actor->set_mesh(mesh->id());
+        actor->set_mesh(mesh);
 
         assert_true(actor->has_any_mesh());
         assert_true(actor->has_mesh(DETAIL_LEVEL_NEAREST));
@@ -264,10 +263,10 @@ public:
     }
 
     void test_scene_methods() {
-        smlt::MeshID mesh_id = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
-        auto actor = stage_->new_actor_with_mesh(mesh_id);
+        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
+        auto actor = stage_->new_actor_with_mesh(mesh);
 
-        assert_true(mesh_id == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
+        assert_true(mesh->id() == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
     }
 
     void test_material_slots() {
@@ -308,9 +307,9 @@ public:
     void X_test_cubic_texture_generation() {
         auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_box("cubic", stage_->assets->new_material(), 10.0f, 10.0f, 10.0f);
-        stage_->assets->mesh(mesh)->first_submesh()->generate_texture_coordinates_cube();
+        mesh->first_submesh()->generate_texture_coordinates_cube();
 
-        auto& vd = *stage_->assets->mesh(mesh)->vertex_data.get();
+        auto& vd = *mesh->vertex_data.get();
 
         // Neg Z
         assert_equal(smlt::Vec2((1.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(0));

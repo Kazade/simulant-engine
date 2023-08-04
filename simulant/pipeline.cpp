@@ -94,7 +94,7 @@ StageNode* Pipeline::stage_node() const {
 }
 
 TexturePtr Pipeline::target() const {
-    return stage()->assets->texture(target_);
+    return target_;
 }
 
 uint32_t Pipeline::clear_flags() const {

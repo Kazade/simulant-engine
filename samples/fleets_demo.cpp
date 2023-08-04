@@ -18,7 +18,7 @@ public:
         pipeline->viewport->set_colour(smlt::Colour::BLACK);
 
         camera_->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
-        ship_mesh_id_ = app->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
+        ship_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         generate_ships();
 
         stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
@@ -32,7 +32,7 @@ public:
         for(auto ship: ships_) {
             auto pos = ship->position();
             avg += pos;
-            ship->move_to_absolute(pos + (speed * dt * (0.01 * ship->id().value())));
+            ship->move_to_absolute(pos + (speed * dt * (0.01 * ship->id())));
         }
 
         avg /= ships_.size();
@@ -44,7 +44,7 @@ private:
     StagePtr stage_;
     CameraPtr camera_;
 
-    MeshID ship_mesh_id_;
+    MeshPtr ship_mesh_;
     std::vector<ActorPtr> ships_;
 
     void generate_ships() {
@@ -63,10 +63,10 @@ private:
                 rgen.float_in_range(-100, 100)
             ).normalized() * rgen.float_in_range(100.0f, 150.0f));
 
-            ships_.push_back(stage_->new_actor_with_mesh(ship_mesh_id_));
+            ships_.push_back(stage_->new_actor_with_mesh(ship_mesh_));
             ships_.back()->move_to_absolute(pos);
 
-            auto ps = stage_->new_particle_system_with_parent(pscript, ships_.back()->id());
+            auto ps = stage_->new_particle_system_with_parent(pscript, ships_.back());
             ps->move_to(0, 0, 0);
         }
     }

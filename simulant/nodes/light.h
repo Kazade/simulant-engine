@@ -30,7 +30,6 @@ namespace smlt {
 
 class Light :
     public ContainerNode,
-    public generic::Identifiable<LightID>,
     public ChainNameable<Light> {
 
 public:
@@ -97,10 +96,6 @@ public:
     }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     LightType type_;
 
     smlt::Colour ambient_;

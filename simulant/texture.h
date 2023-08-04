@@ -151,7 +151,7 @@ typedef std::array<TextureChannel, 4> TextureChannelSet;
 class Texture :
     public Asset,
     public Loadable,
-    public generic::Identifiable<TextureID>,
+    public generic::Identifiable<AssetID>,
     public RefCounted<Texture>,
     public Updateable,
     public RenderTarget,
@@ -168,7 +168,7 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
+    Texture(AssetID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
     ~Texture();
 
 

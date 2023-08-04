@@ -37,7 +37,6 @@ typedef std::size_t MeshInstanceID;
 class MeshInstancer:
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<MeshInstancerID>,
     public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<MeshInstancer> {
@@ -89,18 +88,14 @@ public:
     ) override;
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     MeshPtr mesh_;
 
     /* The axis-aligned box containing all mesh instances */
     AABB aabb_;
 
-    void recalc_aabb();    
+    void recalc_aabb();
 
-    void on_transformation_changed();
+    void on_transformation_changed() override;
 
     struct MeshInstance {
         uint32_t id = 0;

@@ -19,7 +19,7 @@ typedef uint32_t AudioSourceID;
 
 typedef std::function<int32_t (AudioBufferID)> StreamFunc;
 
-typedef std::size_t PlayingSoundID;
+typedef std::size_t PlayingAssetID;
 
 enum AudioRepeat {
     AUDIO_REPEAT_NONE,
@@ -38,9 +38,9 @@ class PlayingSound:
     friend class AudioSource;
 
 private:
-    static PlayingSoundID counter_;
+    static PlayingAssetID counter_;
 
-    PlayingSoundID id_;
+    PlayingAssetID id_;
 
     AudioSource& parent_;
 
@@ -63,7 +63,7 @@ public:
     PlayingSound(AudioSource& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~PlayingSound();
 
-    PlayingSoundID id() const {
+    PlayingAssetID id() const {
         return id_;
     }
 

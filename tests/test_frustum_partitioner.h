@@ -35,12 +35,12 @@ public:
         a1->move_to(791, 58, -810);
         a2->move_to(791, 58, -810);
 
-        std::vector<LightID> lights;
+        std::vector<StageNodeID> lights;
         std::vector<StageNode*> nodes;
         FrustumPartitioner partitioner(stage_);
 
         partitioner.lights_and_geometry_visible_from(
-            camera, lights, nodes
+            camera->id(), lights, nodes
         );
 
         assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
@@ -62,12 +62,12 @@ public:
 
         assert_false(a1->transformed_aabb().has_zero_area());
 
-        std::vector<LightID> lights;
+        std::vector<StageNodeID> lights;
         std::vector<StageNode*> nodes;
         FrustumPartitioner partitioner(stage_);
 
         partitioner.lights_and_geometry_visible_from(
-            camera, lights, nodes
+            camera->id(), lights, nodes
         );
 
         assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
@@ -80,12 +80,12 @@ public:
 
         a1->move_to(0, 0, 100);
 
-        std::vector<LightID> lights;
+        std::vector<StageNodeID> lights;
         std::vector<StageNode*> nodes;
         FrustumPartitioner partitioner(stage);
 
         partitioner.lights_and_geometry_visible_from(
-            camera, lights, nodes
+            camera->id(), lights, nodes
         );
 
         /* Not visible */
@@ -94,7 +94,7 @@ public:
         a1->set_cullable(false);
 
         partitioner.lights_and_geometry_visible_from(
-            camera, lights, nodes
+            camera->id(), lights, nodes
         );
 
         /* Now visible */
@@ -112,13 +112,13 @@ public:
         a2->move_to(0, 0, -5);
         a3->move_to(0, 0, -5);
 
-        std::vector<LightID> lights;
+        std::vector<StageNodeID> lights;
         std::vector<StageNode*> nodes;
 
         FrustumPartitioner partitioner(stage_);
 
         partitioner.lights_and_geometry_visible_from(
-            camera, lights, nodes
+            camera->id(), lights, nodes
         );
 
         assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
@@ -131,7 +131,7 @@ public:
         nodes.clear();
 
         partitioner.lights_and_geometry_visible_from(
-            camera, lights, nodes
+            camera->id(), lights, nodes
         );
 
         assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());

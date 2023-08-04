@@ -33,7 +33,6 @@ public:
 class SkyManager;
 
 class Skybox:
-    public generic::Identifiable<SkyID>,
     public ContainerNode,
     public ChainNameable<Skybox> {
 
@@ -64,20 +63,15 @@ public:
     const AABB& aabb() const override;
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     friend class SkyManager;
 
     SkyManager* manager_ = nullptr;
 
-    CameraID follow_camera_;
+    StageNodeID follow_camera_;
 
     ActorPtr actor_ = nullptr;
-    MeshID mesh_id_;
-
-    MaterialID materials_[SKYBOX_FACE_MAX];
+    MeshPtr mesh_;
+    MaterialPtr materials_[SKYBOX_FACE_MAX];
 
     float width_;
 };

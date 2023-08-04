@@ -61,8 +61,8 @@ struct GL2RenderGroupImpl {
     GPUProgramID shader_id;
 };
 
-GPUProgramID GenericRenderer::default_gpu_program_id() const {
-    return default_gpu_program_id_;
+GPUProgramPtr GenericRenderer::default_gpu_program() const {
+    return default_gpu_program_;
 }
 
 GenericRenderer::GenericRenderer(Window *window):
@@ -349,7 +349,7 @@ std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_v
     return std::make_shared<GL2RenderQueueVisitor>(this, camera);
 }
 
-smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
+smlt::GPUProgramPtr smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
     /* FIXME: This doesn't do what the function implies... it should either be called new_gpu_program, or it should try to return an existing progra
      * if the source matches */
 
@@ -362,7 +362,7 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
         program->build();
     });
 
-    return program->id();
+    return program;
 }
 
 smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) const {
@@ -666,15 +666,15 @@ static GLenum convert_arrangement(MeshArrangement arrangement) {
     }
 }
 
-GPUProgramID GenericRenderer::current_gpu_program_id() const {
+GPUProgramPtr GenericRenderer::current_gpu_program() const {
     GLint id;
     GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &id);
 
-    GPUProgramID ret;
+    GPUProgramPtr ret;
 
     program_manager_.each([&](uint32_t, GPUProgramPtr program) {
         if(program->program_object() == (GLuint) id) {
-            ret = program->id();
+            ret = program;
         }
     });
 
@@ -731,8 +731,10 @@ void GenericRenderer::init_context() {
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
 
-    if(!default_gpu_program_id_) {
-        default_gpu_program_id_ = new_or_existing_gpu_program(default_vertex_shader, default_fragment_shader);
+    if(!default_gpu_program_) {
+        default_gpu_program_ = new_or_existing_gpu_program(
+            default_vertex_shader, default_fragment_shader
+        );
     }
 }
 

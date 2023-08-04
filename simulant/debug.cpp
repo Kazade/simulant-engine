@@ -41,16 +41,6 @@ Debug::~Debug() {
     // Make sure we disconnect otherwise crashes happen
     frame_finished_connection_.disconnect();
 
-    if(mesh_) {
-        auto mesh = mesh_.fetch();
-        if(mesh) {
-            // Enable GC
-            mesh->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
-        }
-
-        mesh_ = MeshID();
-    }
-
     if(actor_) {
         actor_->destroy();
     }
@@ -71,9 +61,7 @@ void Debug::frame_finished() {
 void Debug::on_update(float dt) {
     _S_UNUSED(dt);
 
-    auto mesh = mesh_.fetch();
-
-    mesh->vertex_data->clear();
+    mesh_->vertex_data->clear();
     lines_without_depth_->index_data->clear();
     lines_with_depth_->index_data->clear();
     points_without_depth_->index_data->clear();
@@ -82,14 +70,14 @@ void Debug::on_update(float dt) {
     for(auto& element: elements_) {
         if(element.type == DET_LINE) {
             auto& array = (element.depth_test) ? lines_with_depth_->index_data : lines_without_depth_->index_data;
-            auto i = mesh->vertex_data->count();
-            mesh->vertex_data->position(element.points[0]);
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            auto i = mesh_->vertex_data->count();
+            mesh_->vertex_data->position(element.points[0]);
+            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[1]);
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[1]);
+            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->move_next();
 
             array->index(i);
             array->index(i + 1);
@@ -102,22 +90,22 @@ void Debug::on_update(float dt) {
 
             float hs = element.size / 2.0f;
             auto& array = (element.depth_test) ? points_with_depth_->index_data : points_without_depth_->index_data;
-            auto i = mesh->vertex_data->count();
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(-hs, hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            auto i = mesh_->vertex_data->count();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, hs, 0));
+            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(-hs, -hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, -hs, 0));
+            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(hs, -hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, -hs, 0));
+            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(hs, hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, hs, 0));
+            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->move_next();
 
             array->index(i);
             array->index(i + 1);
@@ -129,7 +117,7 @@ void Debug::on_update(float dt) {
         }
     }
 
-    mesh->vertex_data->done();
+    mesh_->vertex_data->done();
     lines_without_depth_->index_data->done();
     lines_with_depth_->index_data->done();
     points_without_depth_->index_data->done();
@@ -170,29 +158,25 @@ void Debug::initialize_actor() {
 }
 
 bool Debug::init() {
-    mesh_ = stage_.assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE, GARBAGE_COLLECT_NEVER);
+    mesh_ = stage_.assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
-    material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
+    material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
 
-    auto mat = material_.fetch();
-
-    mat->set_cull_mode(CULL_MODE_NONE);
+    material_->set_cull_mode(CULL_MODE_NONE);
 
     // Never write to the depth buffer with debug stuff
-    mat->set_depth_write_enabled(false);
+    material_->set_depth_write_enabled(false);
 
-    material_no_depth_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
-    material_no_depth_.fetch()->set_depth_write_enabled(false);
-    material_no_depth_.fetch()->set_depth_test_enabled(false);
-    material_no_depth_.fetch()->set_cull_mode(CULL_MODE_NONE);
+    material_no_depth_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    material_no_depth_->set_depth_write_enabled(false);
+    material_no_depth_->set_depth_test_enabled(false);
+    material_no_depth_->set_cull_mode(CULL_MODE_NONE);
 
-    auto mesh = mesh_.fetch();
-
-    lines_with_depth_ = mesh->new_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    lines_without_depth_ = mesh->new_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    points_with_depth_ = mesh->new_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
-    points_without_depth_ = mesh->new_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    lines_with_depth_ = mesh_->new_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    lines_without_depth_ = mesh_->new_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    points_with_depth_ = mesh_->new_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    points_without_depth_ = mesh_->new_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     return true;
 }

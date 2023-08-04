@@ -13,15 +13,14 @@ class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_loading_without_texture_coords() {
         //Shouldn't throw
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj");
+        application->shared_assets->new_mesh_from_file("cube.obj");
     }
 
     void test_culling_method_applied() {
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
-        smlt::MeshPtr m = mid.fetch();
+        auto m = application->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
 
         assert_equal(m->submesh_count(), 1u);
         assert_true(m->first_submesh()->material());
