@@ -347,34 +347,16 @@ void AssetManager::destroy_material(const AssetID& m) {
 }
 
 MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
-    auto existing = template_materials_.get(path);
-    if(existing) {
-        /* Templates are always created in the base manager, we clone from the base manager into this
-         * manager (which might be the same manager) */
-        auto new_mat = material_manager_.clone(
-            existing.value()->id(),
-            &this->material_manager_
-        );
-
-        new_mat->manager_ = this;
-
-        S_DEBUG("Cloned material {0} into {1}", existing.value()->id(), new_mat->id());
-        material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
-
-        return new_mat;
-    } else {
-        auto new_mat = new_material();
-        auto loader = get_app()->loader_for(path);
-        if(!loader) {
-            S_ERROR("Unable to find loader for {0}", path);
-            return MaterialPtr();
-        }
-
-        loader->into(new_mat);
-        material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
-        template_materials_.insert(path, new_mat);
-        return new_mat;
+    auto new_mat = new_material();
+    auto loader = get_app()->loader_for(path);
+    if(!loader) {
+        S_ERROR("Unable to find loader for {0}", path);
+        return MaterialPtr();
     }
+
+    loader->into(new_mat);
+    material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
+    return new_mat;
 }
 
 MaterialPtr AssetManager::new_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect) {

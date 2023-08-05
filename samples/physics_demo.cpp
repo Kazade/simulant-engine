@@ -123,6 +123,7 @@ int main(int argc, char* argv[]) {
     config.width = 1280;
     config.height = 960;
     config.fullscreen = false;
+    config.log_level = LOG_LEVEL_DEBUG;
 #endif
 
     PhysicsDemo app(config);

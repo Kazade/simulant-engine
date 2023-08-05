@@ -257,8 +257,6 @@ private:
     ParticleScriptManager particle_script_manager_;
     BinaryManager binary_manager_;
 
-    LRUCache<Path, MaterialPtr> template_materials_;
-
     std::vector<AssetManager*> children_;
     void register_child(AssetManager* child) {
         children_.push_back(child);
