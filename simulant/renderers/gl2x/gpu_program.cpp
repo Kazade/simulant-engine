@@ -64,7 +64,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
         }
     });
 
-    if(current->id() != id()) {
+    if(!current || current->id() != id()) {
         activate();
     }
 
