@@ -28,6 +28,15 @@ struct StageParams {};
  *  it exists solely to umbrella other nodes underneath it.
  *  It's useful to use stages to group things for rendering by render pipelines
 */
+
+class Stage;
+
+template<>
+struct stage_node_traits<Stage> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_STAGE;
+    typedef StageParams params_type;
+};
+
 class Stage : public StageNode {
 public:
     typedef StageParams params_type;

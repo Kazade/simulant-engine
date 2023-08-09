@@ -40,6 +40,19 @@ enum DetailLevel {
     DETAIL_LEVEL_MAX
 };
 
+
+/* Must be implemented as follows for each node type
+ *
+ * template<>
+ * struct stage_node_traits<MyNode> {
+ *      const static StageNodeType stage_node_type = X;
+ *      typedef MyNodeParams params_type;
+ * };
+ */
+template<typename T>
+struct stage_node_traits;
+
+
 class StageNode:
     public DestroyableObject,
     public virtual Nameable,
@@ -269,7 +282,7 @@ public:
 
     virtual ~StageNode();
 
-    StageNodeType node_type() const;
+    StageNodeType type() const;
 
     /** Link the position of this `StageNode` to another
      * stage node. This is effectively the same behaviour

@@ -1,172 +1,118 @@
 #pragma once
 
-#include "../generic/containers/polylist.h"
-
-#include "actor.h"
-#include "camera.h"
-#include "geom.h"
-#include "light.h"
-#include "particle_system.h"
-#include "sprite.h"
-#include "ui/button.h"
-#include "ui/image.h"
-#include "ui/label.h"
-#include "ui/progress_bar.h"
-#include "ui/frame.h"
-#include "ui/keyboard.h"
-#include "ui/text_entry.h"
-
-#define STAGE_NODE_MANAGER_DEBUG 0
+#include "stage_node.h"
+#include "../core/memory.h"
 
 namespace smlt {
 
+typedef StageNode* (*StageNodeConstructFunction) (void*);
+typedef void (*StageNodeDestructFunction) (StageNode*);
 
-template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
+
+struct StageNodeTypeInfo {
+    StageNodeType type;
+    std::size_t size_in_bytes;
+    std::size_t alignment;
+
+    StageNodeConstructFunction constructor;
+    StageNodeDestructFunction destructor;
+};
+
+
 class StageNodeManager {
+private:
+    template<typename T>
+    static StageNode* standard_new(void* mem) {
+        return new (mem) T();
+    }
+
+    template<typename T>
+    static void standard_delete(StageNode *mem) {
+        ((T*) mem)->~T();
+    }
+
+    std::unordered_map<StageNodeType, StageNodeTypeInfo> registered_nodes_;
+
 public:
-    typedef StageNodeManager<PoolType, IDType, T, Subtypes...> this_type;
-
-    StageNodeManager(PoolType* pool):
-        pool_(pool) {}
-
-    ~StageNodeManager() {
-        clear();
-    }
-
-    const PoolType* pool() const {
-        return pool_;
-    }
-
-    template<typename Derived, typename... Args>
-    Derived* make_as(Args&&... args) {
-        auto pair = pool_->template create<Derived>(
-            std::forward<Args>(args)...
-        );
-
-        Derived* derived = pair.first;
-        assert(derived);
-
-        derived->_overwrite_id(IDType(pair.second));
-
-        if(!derived->init()) {
-            derived->clean_up();
-            pool_->erase(pool_->find(pair.second));
-            throw InstanceInitializationError();
+    /* Non-template API does the work for easier binding with other languages */
+    StageNode* create_node(StageNodeType type, void* params) {
+        auto info = registered_nodes_.find(type);
+        if(info == registered_nodes_.end()) {
+            S_ERROR("Unable to find registered node: {0}", type);
+            return nullptr;
         }
 
-        objects_.push_back(derived);
+        /* Allocate aligned memory. This is temporary, in future we'll do some
+         * chunked allocation depending on the node size */
+        void* mem = smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
+        StageNode* node = info->second.constructor(mem);
+        if(!node->on_create(params)) {
+            info->second.destructor(node);
+            free(node);
+            return nullptr;
+        }
 
-        return derived;
+        S_DEBUG("Created new node of type {0} at address {1}", node->type(), node);
+        return node;
     }
 
-    template<typename... Args>
-    T* make(Args&&... args) {
-        return make_as<T>(std::forward<Args>(args)...);
-    }
-
-    bool contains(const IDType& id) const {
-        StageNode* node = (*pool_)[id];
-        return bool(dynamic_cast<T*>(node));
-    }
-
-    T* get(const IDType& id) const {
-        StageNode* node = (*pool_)[id];
-        T* result = dynamic_cast<T*>(node);
-#if STAGE_NODE_MANAGER_DEBUG
-        assert((node && result) || (!node && !result));
-#endif
-        return result;
-    }
-
-    T* clone(const IDType& id, this_type* target_manager=nullptr) {
-        T* source = get(id);
-        return target_manager->make(*source);
-    }
-
-    bool destroy(const IDType& id) {
-        auto it = pool_->find(id);
-        if(it != pool_->end()) {
-            /* Ensure we fire the destroyed signal */
-            if(!(*it)->destroyed_) {
-                (*it)->signal_destroyed()();
-                (*it)->destroyed_ = true;
-            }
-
-            queued_for_destruction_.insert(id);
-            return true;
-        } else {
+    bool destroy_node(StageNode* node) {
+        auto type = node->type();
+        auto it = registered_nodes_.find(type);
+        if(it == registered_nodes_.end()) {
+            S_ERROR(
+                "Tried to destroy an unknown type of node: {0} at address {1}",
+                type, node
+            );
             return false;
         }
-    }
 
-    void clear() {
-        destroy_all();
-        clean_up();
-    }
-
-    void destroy_all() {
-        destroy_all_next_clean_ = true;
-    }
-
-    bool destroy_immediately(const IDType& id) {
-        auto it = pool_->find(id);
-        if(it != pool_->end()) {
-            StageNode* node = *it;
-
-            /* Ensure we fire the destroyed signal */
-            if(!(*it)->destroyed_) {
-                (*it)->signal_destroyed()();
-                (*it)->destroyed_ = true;
-            }
-
-            assert(dynamic_cast<T*>(node));
-            T* a = (T*) node;
-            assert((node && a) || (!node && !a));
-
-            a->clean_up();
-
-            objects_.remove(a);
-            pool_->erase(it);
-            queued_for_destruction_.erase(id);
+        if(node->on_destroy()) {
+            it->second.destructor(node);
+            free(node);
+            S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
             return true;
         }
+
         return false;
     }
 
-    void clean_up() {
-        if(destroy_all_next_clean_) {
-            destroy_all_next_clean_ = false;
-            for(auto ptr: objects_) {
-                ptr->clean_up();
-                pool_->erase(pool_->find(ptr->id()));
-            }
-            objects_.clear();
-        } else {
-            auto queued = queued_for_destruction_;
-            for(auto i: queued) {
-                destroy_immediately(i);
-            }
+    template<typename T, typename... Args>
+    T* create_node(Args&&... args) {
+        auto params = typename stage_node_traits<T>::params_type(std::forward<Args>(args)...);
+        return (T*) create_node(stage_node_traits<T>::node_type, &params);
+    }
+
+    bool register_stage_node(
+        StageNodeType type,
+        std::size_t size_in_bytes,
+        std::size_t alignment,
+        StageNodeConstructFunction construct_func,
+        StageNodeDestructFunction destruct_func) {
+
+        if(registered_nodes_.find(type) != registered_nodes_.end()) {
+            S_WARN("Attempted to register duplicate node: {0}", type);
+            return false;
         }
-        queued_for_destruction_.clear();
+
+        StageNodeTypeInfo info = {
+            type, size_in_bytes, alignment, construct_func, destruct_func
+        };
+
+        registered_nodes_.insert(std::make_pair(type, info));
+        S_DEBUG("Registered new stage node type: {0}", type);
+        return true;
     }
 
-    std::size_t size() const {
-        return objects_.size();
+    template<typename T>
+    bool register_stage_node() {
+        return register_stage_node(
+            stage_node_traits<T>::node_type,
+            sizeof(T), alignof(T),
+            &StageNodeManager::standard_new<T>,
+            &StageNodeManager::standard_delete<T>
+        );
     }
-
-    typename std::list<T*>::iterator begin() {
-        return objects_.begin();
-    }
-
-    typename std::list<T*>::iterator end() {
-        return objects_.end();
-    }
-
-private:
-    PoolType* pool_ = nullptr;
-    std::list<T*> objects_;
-    std::set<IDType> queued_for_destruction_;
-    bool destroy_all_next_clean_ = false;
 };
 
 }

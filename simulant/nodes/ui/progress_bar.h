@@ -34,7 +34,7 @@ public:
 
     ProgressBarMode current_mode() const { return mode_; }
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 private:
     ProgressBarMode mode_ = PROGRESS_BAR_MODE_FRACTION;
 

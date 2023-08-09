@@ -129,7 +129,7 @@ float ProgressBar::max() const {
     return max_;
 }
 
-void ProgressBar::update(float dt) {
+void ProgressBar::on_update(float dt) {
     refresh_bar(dt);
 }
 

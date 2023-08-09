@@ -11,7 +11,6 @@ public:
     // Fired when destroy() is called
     DEFINE_SIGNAL(DestroyedSignal, signal_destroyed);
 
-    template<typename PolyType, typename IDType, typename T, typename ...SubTypes>
     friend class StageNodeManager;
 
 private:

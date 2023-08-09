@@ -46,9 +46,8 @@
 #include "../interfaces/nameable.h"
 #include "../interfaces/updateable.h"
 #include "../interfaces.h"
-#include "../stage_manager.h"
 #include "../generic/any/any.h"
-#include "../nodes/stage_node.h"
+#include "../nodes/stage_node_manager.h"
 
 namespace smlt {
 
@@ -65,7 +64,8 @@ typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
 
 class Scene:
-    public StageNode {
+    public StageNode,
+    public StageNodeManager {
 
     DEFINE_SIGNAL(SceneOnActivatedSignal, signal_activated);
     DEFINE_SIGNAL(SceneOnDeactivatedSignal, signal_deactivated);
@@ -74,7 +74,7 @@ class Scene:
     DEFINE_SIGNAL(StageNodeDestroyedSignal, signal_stage_node_destroyed);
 
 public:
-    typedef std::shared_ptr<SceneBase> ptr;
+    typedef std::shared_ptr<Scene> ptr;
 
     Scene(Window* window);
     virtual ~Scene();

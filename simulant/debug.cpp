@@ -144,9 +144,7 @@ void Debug::initialize_actor() {
         return;
     }
 
-    actor_ = stage_.new_actor_with_mesh(
-        mesh_
-    );
+    actor_ = scene->create_node<Actor>(mesh_);
 
     // Important. Debug stuff shouldn't be culled
     actor_->set_cullable(false);
@@ -158,7 +156,7 @@ void Debug::initialize_actor() {
 }
 
 bool Debug::init() {
-    mesh_ = stage_.assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+    mesh_ = scene->assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
     material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
