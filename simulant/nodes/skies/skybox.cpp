@@ -6,6 +6,7 @@
 #include "../../window.h"
 #include "../../application.h"
 #include "../../vfs.h"
+#include "../actor.h"
 
 namespace smlt {
 

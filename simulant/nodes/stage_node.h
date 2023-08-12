@@ -149,6 +149,15 @@ public:
     }
 
 private:
+    friend class StageNodeManager;
+
+    // NVI idiom
+    bool _create(void* params) {
+        return on_create(params);
+    }
+
+    void _destroy() override final;
+
     void update(float dt) override final;
     void late_update(float dt) override final;
     void fixed_update(float step) override final;
@@ -168,7 +177,6 @@ private:
         const DetailLevel detail_level
     ) = 0;
 
-    virtual void _destroy() final;
     virtual void _destroy_immediately() final;
 
 private:

@@ -42,7 +42,7 @@ class MeshInstancer:
     public ChainNameable<MeshInstancer> {
 
 public:
-    MeshInstancer(Stage* stage, SoundDriver* sound_driver, MeshPtr mesh);
+    MeshInstancer(Scene* owner, SoundDriver* sound_driver, MeshPtr mesh);
     virtual ~MeshInstancer();
 
     const AABB& aabb() const override;

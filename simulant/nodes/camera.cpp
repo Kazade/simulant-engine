@@ -13,7 +13,7 @@ Camera::Camera(Scene *owner, SoundDriver* sound_driver):
     ContainerNode(owner, STAGE_NODE_TYPE_CAMERA),
     AudioSource(owner, this, sound_driver){
 
-    assert(stage);
+    assert(owner);
 
     set_perspective_projection(smlt::Degrees(45.0f), get_app()->window->aspect_ratio());
 }

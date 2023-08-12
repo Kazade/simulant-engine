@@ -6,9 +6,9 @@ namespace smlt {
 
 uint32_t MeshInstancer::id_counter_ = 0;
 
-MeshInstancer::MeshInstancer(Stage *stage, SoundDriver *sound_driver, MeshPtr mesh):
-    StageNode(stage, STAGE_NODE_TYPE_MESH_INSTANCER),
-    AudioSource(stage, this, sound_driver) {
+MeshInstancer::MeshInstancer(Scene *owner, SoundDriver *sound_driver, MeshPtr mesh):
+    StageNode(owner, STAGE_NODE_TYPE_MESH_INSTANCER),
+    AudioSource(owner, this, sound_driver) {
 
     set_mesh(mesh);
 }

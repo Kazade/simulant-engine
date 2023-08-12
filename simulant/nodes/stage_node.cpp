@@ -111,6 +111,23 @@ void StageNode::set_parent(StageNode* new_parent) {
     on_parent_set(old_parent, parent_);
 }
 
+/* Right this is a bit confusing.
+ *
+ * StageNode inherits DestroyableObject which provides
+ * destroy() which calls on_destroy() and then if that
+ * returns true, it calls _destroy().
+ *
+ * In the case that someone calls destroy(),
+ * we want to essentially delay actual destruction until after
+ * late_update. So we override _destroy here to tell the scene
+ * that this node needs proper destroying
+ */
+void StageNode::_destroy() {
+    if(owner_) {
+        owner_->queue_clean_up(this);
+    }
+}
+
 StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type):
     owner_(owner),
     node_type_(node_type) {
@@ -223,12 +240,6 @@ void StageNode::recalc_visibility() {
         for(auto& node: each_child()) {
             node.recalc_visibility();
         }
-    }
-}
-
-void StageNode::_destroy() {
-    if(owner_) {
-        owner_->destroy_node(this);
     }
 }
 

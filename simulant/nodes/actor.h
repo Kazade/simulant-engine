@@ -38,6 +38,16 @@ namespace smlt {
 class KeyFrameAnimationState;
 class Rig;
 
+struct ActorParams {
+    MeshPtr mesh;
+};
+
+template<>
+struct stage_node_traits<Actor> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_ACTOR;
+    typedef ActorParams params_type;
+};
+
 class Actor :
     public StageNode,
     public virtual Boundable,

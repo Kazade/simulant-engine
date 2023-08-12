@@ -19,7 +19,7 @@ private:
     void do_manipulate(ParticleSystem*, Particle* particles, std::size_t particle_count, float) const {
         auto size = (float) alphas_.size();
         float fsize = float(size);
-        auto particle = particles;
+        Particle* particle = particles;
         for(auto i = 0u; i < particle_count; ++i, ++particle) {
             const float e = (particle->lifetime - particle->ttl);
             const float n = smlt::fast_divide(e, particle->lifetime);

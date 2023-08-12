@@ -33,6 +33,29 @@ private:
 
     std::unordered_map<StageNodeType, StageNodeTypeInfo> registered_nodes_;
 
+protected:
+    bool clean_up_node(StageNode* node) {
+        if(!node->is_destroyed()) {
+            S_ERROR("Attempted to cleanup node which has not been destroyed");
+            return false;
+        }
+
+        auto type = node->type();
+        auto it = registered_nodes_.find(type);
+        if(it == registered_nodes_.end()) {
+            S_ERROR(
+                "Tried to destroy an unknown type of node: {0} at address {1}",
+                type, node
+                );
+            return false;
+        }
+
+        it->second.destructor(node);
+        free(node);
+        S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
+        return true;
+    }
+
 public:
     /* Non-template API does the work for easier binding with other languages */
     StageNode* create_node(StageNodeType type, void* params) {
@@ -46,7 +69,7 @@ public:
          * chunked allocation depending on the node size */
         void* mem = smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
         StageNode* node = info->second.constructor(mem);
-        if(!node->on_create(params)) {
+        if(!node->_create(params)) {
             info->second.destructor(node);
             free(node);
             return nullptr;
@@ -54,27 +77,6 @@ public:
 
         S_DEBUG("Created new node of type {0} at address {1}", node->type(), node);
         return node;
-    }
-
-    bool destroy_node(StageNode* node) {
-        auto type = node->type();
-        auto it = registered_nodes_.find(type);
-        if(it == registered_nodes_.end()) {
-            S_ERROR(
-                "Tried to destroy an unknown type of node: {0} at address {1}",
-                type, node
-            );
-            return false;
-        }
-
-        if(node->on_destroy()) {
-            it->second.destructor(node);
-            free(node);
-            S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
-            return true;
-        }
-
-        return false;
     }
 
     template<typename T, typename... Args>

@@ -63,6 +63,18 @@ typedef sig::signal<void ()> SceneOnDeactivatedSignal;
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
 
+
+class LightingSettings {
+public:
+    smlt::Colour ambient_light() const {
+        return ambient_light_;
+    }
+
+private:
+    smlt::Colour ambient_light_;
+};
+
+
 class Scene:
     public StageNode,
     public StageNodeManager {
@@ -126,6 +138,7 @@ protected:
 
     void _update_thunk(float dt) override;
     void _fixed_update_thunk(float dt) override;
+    void _late_update_thunk(float dt) override;
 
 private:
     std::set<std::string> linked_pipelines_;
@@ -155,6 +168,11 @@ private:
         _call_unload();
     }
 
+    void clean_up_destroyed_objects();
+    void queue_clean_up(StageNode* node);
+    std::list<StageNode*> queued_for_clean_up_;
+
+    LightingSettings lighting_;
 protected:
     /* Returns the number of arguments passed when loading */
     std::size_t load_arg_count() const;
@@ -170,6 +188,7 @@ public:
     S_DEFINE_PROPERTY(input, &Scene::input_);
     S_DEFINE_PROPERTY(scenes, &Scene::scene_manager_);
     S_DEFINE_PROPERTY(compositor, &Scene::compositor_);
+    S_DEFINE_PROPERTY(lighting, &Scene::lighting_);
 };
 
 

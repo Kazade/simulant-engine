@@ -159,14 +159,14 @@ bool Debug::init() {
     mesh_ = scene->assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
-    material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    material_ = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
 
     material_->set_cull_mode(CULL_MODE_NONE);
 
     // Never write to the depth buffer with debug stuff
     material_->set_depth_write_enabled(false);
 
-    material_no_depth_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    material_no_depth_ = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
     material_no_depth_->set_depth_write_enabled(false);
     material_no_depth_->set_depth_test_enabled(false);
     material_no_depth_->set_cull_mode(CULL_MODE_NONE);

@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../stage.h"
+#include "../scenes/scene.h"
 #include "light.h"
 
 namespace smlt {
@@ -40,7 +40,7 @@ void Light::set_type(LightType type) {
     set_cullable(type_ != LIGHT_TYPE_DIRECTIONAL);
 }
 
-Colour Light::global_ambient() const { return stage->ambient_light(); }
+Colour Light::global_ambient() const { return scene->lighting->ambient_light(); }
 
 /**
     Sets the attenuation and the range of the light. The range doesn't have any

@@ -25,6 +25,11 @@
 
 namespace smlt {
 
+template<>
+struct stage_node_traits<Debug> {
+
+};
+
 class Debug : public StageNode {
 public:
     Debug(Scene* owner);

@@ -13,9 +13,6 @@
 
 namespace smlt {
 
-template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
-class StageNodeManager;
-
 class Application;
 class VirtualFileSystem;
 class SharedAssetManager;
@@ -31,10 +28,6 @@ class Frame;
 class Keyboard;
 class TextEntry;
 
-typedef ::smlt::StageNodeManager<
-    ::smlt::StageNodePool,
-    StageNodeID, Widget, Button, Label, ProgressBar, Image, Frame, Keyboard, TextEntry
-> WidgetManager;
 
 enum UIEventType {
     UI_EVENT_TYPE_TOUCH

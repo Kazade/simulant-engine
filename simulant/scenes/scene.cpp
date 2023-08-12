@@ -54,6 +54,34 @@ void Scene::_fixed_update_thunk(float dt) {
     fixed_update(dt);
 }
 
+void _late_update_thunk(float dt) {
+    if(!window->has_focus()) return;
+    late_update(dt);
+
+    /* Anything destroyed must now be *really* destroyed */
+    clean_up_destroyed_objects();
+}
+
+void Scene::clean_up_destroyed_objects() {
+    for(auto it = queued_for_clean_up_.begin(); it != queued_for_clean_up_.end();) {
+        if(clean_up_node((*it))) {
+            it = queued_for_clean_up_.erase(it);
+        } else {
+            S_ERROR("Unable to release node that has not been destroyed");
+            ++it;
+        }
+    }
+}
+
+void Scene::queue_clean_up(StageNode* node) {
+    if(node == this) {
+        // You can't destroy the scene, only the scene manager can do that
+        return;
+    }
+
+    queued_for_clean_up_.push_back(node);
+}
+
 std::size_t Scene::load_arg_count() const {
     return load_args.size();
 }
