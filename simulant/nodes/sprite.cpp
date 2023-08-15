@@ -20,44 +20,28 @@
 #include <functional>
 #include "sprite.h"
 #include "actor.h"
-
-#include "../stage.h"
+#include "../scenes/scene.h"
 #include "../window.h"
 #include "../animation.h"
-#include "sprites/sprite_manager.h"
 
 using namespace smlt;
 
-Sprite::Sprite(SpriteManager *manager, SoundDriver* sound_driver):
-    ContainerNode(manager->stage.get(), STAGE_NODE_TYPE_SPRITE),
-    AudioSource(manager->stage, this, sound_driver),
-    manager_(manager) {
+Sprite::Sprite(Scene *owner, SoundDriver* sound_driver):
+    ContainerNode(owner, STAGE_NODE_TYPE_SPRITE),
+    AudioSource(owner, this, sound_driver) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
-bool Sprite::on_destroy() {
-    manager_->destroy_sprite(id());
-    return true;
-}
 
-bool Sprite::on_destroy_immediately() {
-    manager_->sprite_manager_->destroy_immediately(id());
-    return true;
-}
-
-bool Sprite::init() {
-    auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-    mesh->new_submesh_as_rectangle("sprite", stage->assets->new_material(), 1.0, 1.0f);
-
-    mesh_ = mesh;
+bool Sprite::on_create(void* params) {
+    mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+    mesh_->new_submesh_as_rectangle("sprite", scene->assets->new_material(), 1.0, 1.0f);
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns
-    actor_ = stage->new_actor_with_mesh(mesh_);
+    actor_ = scene->create_node<Actor>(mesh_);
     actor_->set_parent(this);
-
-    actor_id_ = actor_->id();
 
     set_render_dimensions(1.0f, 1.0f);
 
@@ -70,14 +54,13 @@ bool Sprite::init() {
     return true;
 }
 
-void Sprite::clean_up() {
-    if(actor_ && stage->has_actor(actor_id_)) {
-        stage->destroy_actor(actor_id_);
+bool Sprite::on_destroy() {
+    if(actor_) {
+        actor_->destroy();
         actor_ = nullptr;
-        actor_id_ = StageNodeID();
     }
 
-    StageNode::clean_up();
+    return true;
 }
 
 void Sprite::on_update(float dt) {
@@ -173,7 +156,7 @@ void Sprite::set_spritesheet(TexturePtr texture, uint32_t frame_width, uint32_t 
     image_height_ = texture->height();
 
     //Hold a reference to the new material
-    auto mat = stage->assets->new_material_from_texture(texture);
+    auto mat = scene->assets->new_material_from_texture(texture);
     mat->set_blend_func(smlt::BLEND_ALPHA);
 
     material_ = mat;

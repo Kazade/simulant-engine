@@ -33,11 +33,9 @@ namespace ui {
 
 using namespace std::placeholders;
 
-UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
-    stage_(stage),
+UIManager::UIManager(Scene *owner, UIConfig config):
+    StageNode(owner, STAGE_NODE_TYPE_UI_MANAGER),
     config_(config) {
-
-    manager_.reset(new WidgetManager(pool));
 
     auto window = get_app()->window.get();
     window->register_event_listener(this);
@@ -75,9 +73,6 @@ UIManager::UIManager(Stage *stage, StageNodePool *pool, UIConfig config):
 }
 
 UIManager::~UIManager() {
-    manager_->clear();
-    manager_.reset();
-
     pre_render_connection_.disconnect();
     frame_finished_connection_.disconnect();
 
@@ -91,103 +86,103 @@ UIManager::~UIManager() {
     }
 }
 
-Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const unicode &initial_text) {
-    auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, mode, initial_text);
-    stage_->append_child(keyboard);
-    return keyboard;
-}
+//Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const unicode &initial_text) {
+//    auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, mode, initial_text);
+//    stage_->append_child(keyboard);
+//    return keyboard;
+//}
 
-Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, const Px& height) {
-    auto frame = manager_->make_as<Frame>(this, &config_, stage_);
-    frame->set_text(title);
-    frame->resize(width, height);
-    stage_->append_child(frame);
+//Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width, const Px& height) {
+//    auto frame = manager_->make_as<Frame>(this, &config_, stage_);
+//    frame->set_text(title);
+//    frame->resize(width, height);
+//    stage_->append_child(frame);
 
-    return frame;
-}
+//    return frame;
+//}
 
-Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height, std::shared_ptr<WidgetStyle> shared_style) {
-    auto button = manager_->make_as<Button>(this, &config_, stage_, shared_style);
-    button->set_text(text);
-    button->resize(width, height);
-    stage_->append_child(button);
+//Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px height, std::shared_ptr<WidgetStyle> shared_style) {
+//    auto button = manager_->make_as<Button>(this, &config_, stage_, shared_style);
+//    button->set_text(text);
+//    button->resize(width, height);
+//    stage_->append_child(button);
 
-    return button;
-}
+//    return button;
+//}
 
-TextEntry* UIManager::new_widget_as_text_entry(const unicode &text, Px width, Px height) {
-    auto label = (TextEntry*) &(*manager_->make_as<TextEntry>(this, &config_, stage_));
-    label->set_text(text);
-    label->resize(width, height);
+//TextEntry* UIManager::new_widget_as_text_entry(const unicode &text, Px width, Px height) {
+//    auto label = (TextEntry*) &(*manager_->make_as<TextEntry>(this, &config_, stage_));
+//    label->set_text(text);
+//    label->resize(width, height);
 
-    stage_->append_child(label);
+//    stage_->append_child(label);
 
-    return label;
-}
+//    return label;
+//}
 
-Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) {
-    auto label = (Label*) &(*manager_->make_as<Label>(this, &config_, stage_));
-    label->set_text(text);
-    label->resize(width, height);
+//Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px height) {
+//    auto label = (Label*) &(*manager_->make_as<Label>(this, &config_, stage_));
+//    label->set_text(text);
+//    label->resize(width, height);
 
-    stage_->append_child(label);
+//    stage_->append_child(label);
 
-    return label;
-}
+//    return label;
+//}
 
-Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
-    auto image = (Image*) &(*manager_->make_as<Image>(this, &config_, stage_));
-    image->set_texture(texture);
+//Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
+//    auto image = (Image*) &(*manager_->make_as<Image>(this, &config_, stage_));
+//    image->set_texture(texture);
 
-    stage_->append_child(image);
+//    stage_->append_child(image);
 
-    return image;
-}
+//    return image;
+//}
 
-Widget* UIManager::widget(StageNodeID widget_id) {
-    return manager_->get(widget_id);
-}
+//Widget* UIManager::widget(StageNodeID widget_id) {
+//    return manager_->get(widget_id);
+//}
 
-ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
-    auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_, stage_));
+//ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max, float value) {
+//    auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this, &config_, stage_));
 
-    pg->set_range(min, max);
-    pg->set_value(value);
+//    pg->set_range(min, max);
+//    pg->set_value(value);
 
-    stage_->append_child(pg);
+//    stage_->append_child(pg);
 
-    return pg;
-}
+//    return pg;
+//}
 
-void UIManager::destroy_widget(StageNodeID widget_id) {
-    if(!widget_id) {
-        return;
-    }
+//void UIManager::destroy_widget(StageNodeID widget_id) {
+//    if(!widget_id) {
+//        return;
+//    }
 
-    auto w = widget(widget_id);
-    if(!w) {
-        return;
-    }
+//    auto w = widget(widget_id);
+//    if(!w) {
+//        return;
+//    }
 
-    // Release any presses on the widget
-    w->force_release();
+//    // Release any presses on the widget
+//    w->force_release();
 
-    // Queue for destruction
-    manager_->destroy(widget_id);
-}
+//    // Queue for destruction
+//    manager_->destroy(widget_id);
+//}
 
-void UIManager::destroy_object(Widget* object) {
-    // Release any presses on the widget
-    object->force_release();
+//void UIManager::destroy_object(Widget* object) {
+//    // Release any presses on the widget
+//    object->force_release();
 
-    // Queue for destruction
-    manager_->destroy(object->id());
-}
+//    // Queue for destruction
+//    manager_->destroy(object->id());
+//}
 
-void UIManager::destroy_object_immediately(Widget* object) {
-    object->force_release();
-    manager_->destroy_immediately(object->id());
-}
+//void UIManager::destroy_object_immediately(Widget* object) {
+//    object->force_release();
+//    manager_->destroy_immediately(object->id());
+//}
 
 void UIManager::on_touch_begin(const TouchEvent &evt) {
     queue_event(evt);

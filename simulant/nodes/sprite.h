@@ -48,14 +48,11 @@ class Sprite :
     public ChainNameable<Sprite> {
 
 public:
-    bool init() override;
-    void clean_up() override;
+    bool on_create(void* params) override;
+    bool on_destroy() override;
     void on_update(float dt) override;
 
-    bool on_destroy() override;
-    bool on_destroy_immediately() override;
-
-    Sprite(SpriteManager *manager, SoundDriver *sound_driver);
+    Sprite(Scene* owner, SoundDriver *sound_driver);
 
     void set_render_dimensions(float width, float height);
     void set_render_dimensions_from_width(float width);
@@ -78,9 +75,8 @@ public:
     void flip_horizontally(bool value=true);
 
     const AABB& aabb() const override;
-private:
-    SpriteManager* manager_;
 
+private:
     float frame_width_ = 0;
     float frame_height_ = 0;
     float sprite_sheet_margin_ = 0;
@@ -90,8 +86,6 @@ private:
     float render_height_ = 1.0;
 
     ActorPtr actor_ = nullptr;
-    StageNodeID actor_id_;
-
     MeshPtr mesh_;
     MaterialPtr material_;
 

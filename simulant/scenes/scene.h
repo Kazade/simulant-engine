@@ -48,6 +48,7 @@
 #include "../interfaces.h"
 #include "../generic/any/any.h"
 #include "../nodes/stage_node_manager.h"
+#include "../asset_manager.h"
 
 namespace smlt {
 
@@ -160,6 +161,8 @@ private:
     SceneManager* scene_manager_ = nullptr;
     Compositor* compositor_ = nullptr;
 
+    AssetManager assets_;
+
     friend class SceneManager;
 
     std::vector<any> load_args;
@@ -168,11 +171,33 @@ private:
         _call_unload();
     }
 
+    // So that stage nodes can call queue_clean_up
+    friend class StageNode;
+
     void clean_up_destroyed_objects();
     void queue_clean_up(StageNode* node);
     std::list<StageNode*> queued_for_clean_up_;
 
     LightingSettings lighting_;
+
+    /* Don't allow overriding on_create in subclasses, currently
+     * the hook for that is init + load */
+    bool on_create(void*) override final {
+        return true;
+    }
+
+    void _generate_renderables(
+        batcher::RenderQueue*,
+        const CameraPtr &, const DetailLevel) override final {
+        /* Do nothing, Scenes don't create renderables.. for now */
+    }
+
+    /* Scenes don't care about AABBs */
+    const AABB& aabb() const override final {
+        static AABB ret;
+        return ret;
+    }
+
 protected:
     /* Returns the number of arguments passed when loading */
     std::size_t load_arg_count() const;
@@ -189,6 +214,7 @@ public:
     S_DEFINE_PROPERTY(scenes, &Scene::scene_manager_);
     S_DEFINE_PROPERTY(compositor, &Scene::compositor_);
     S_DEFINE_PROPERTY(lighting, &Scene::lighting_);
+    S_DEFINE_PROPERTY(assets, &Scene::assets_);
 };
 
 

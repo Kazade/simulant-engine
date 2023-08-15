@@ -43,7 +43,10 @@ public:
     const static uint32_t node_type = STAGE_NODE_TYPE_STAGE;
 
 private:
-    bool on_create(void *params) override { return true; }
+    bool on_create(void *params) override {
+        _S_UNUSED(params);
+        return true;
+    }
 };
 
 

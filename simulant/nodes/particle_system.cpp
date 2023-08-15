@@ -3,6 +3,7 @@
 #include "../frustum.h"
 #include "../stage.h"
 #include "../types.h"
+#include "../meshes/submesh.h"
 #include "camera.h"
 
 namespace smlt {
@@ -21,9 +22,9 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
 );
 
-ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
-    StageNode(stage, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
-    AudioSource(stage, this, sound_driver),
+ParticleSystem::ParticleSystem(Scene* owner, SoundDriver* sound_driver, ParticleScriptPtr script):
+    StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
+    AudioSource(owner, this, sound_driver),
     script_(script),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)) {
 
@@ -117,7 +118,7 @@ void ParticleSystem::set_update_when_hidden(bool value) {
     update_when_hidden_ = value;
 }
 
-void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+void ParticleSystem::_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) {
     _S_UNUSED(detail_level);
 
     if(!is_visible()) {

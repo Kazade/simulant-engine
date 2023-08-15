@@ -44,37 +44,22 @@ struct UIEvent {
     };
 };
 
+
+struct UIManagerParams {
+    UIConfig config;
+};
+
+
+
 class UIManager:
-    public EventListener {
+    public EventListener,
+    public StageNode {
 
     friend class Widget;
 
 public:
-    UIManager(Stage* stage, StageNodePool* pool, UIConfig config=UIConfig());
+    UIManager(Scene* owner, UIConfig config=UIConfig());
     virtual ~UIManager();
-
-    Button* new_widget_as_button(
-        const unicode& text,
-        Px width=Px(-1), Px height=Px(-1),
-        std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>()
-    );
-
-    Label* new_widget_as_label(const unicode& text, Px width=Px(-1), Px height=Px(-1));
-    ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
-    Image* new_widget_as_image(const TexturePtr& texture);
-    Frame* new_widget_as_frame(const unicode& title, const Px& width=Px(-1), const Px& height=Px(-1));
-    Keyboard* new_widget_as_keyboard(const KeyboardMode& mode=KEYBOARD_MODE_UPPERCASE, const unicode& initial_text="");
-    TextEntry* new_widget_as_text_entry(const unicode& text="", Px width=Px(-1), Px height=Px(-1));
-
-    Widget* widget(StageNodeID widget_id);
-
-    void destroy_widget(StageNodeID widget);
-
-    Stage* stage() const { return stage_; }
-
-    /* Implementation for TypedDestroyableObject (INTERNAL) */
-    void destroy_object(Widget* object);
-    void destroy_object_immediately(Widget* object);
 
     const UIConfig* config() const {
         return &config_;
@@ -85,11 +70,6 @@ public:
     );
 
 private:
-    friend class ::smlt::Stage;
-
-    Stage* stage_ = nullptr;
-
-    std::shared_ptr<WidgetManager> manager_;
     UIConfig config_;
 
     void on_touch_begin(const TouchEvent &evt) override;
@@ -122,4 +102,11 @@ private:
 };
 
 }
+
+template<>
+struct stage_node_traits<ui::UIManager> {
+    typedef ui::UIManagerParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_UI_MANAGER;
+};
+
 }

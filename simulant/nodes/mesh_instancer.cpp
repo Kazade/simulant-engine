@@ -109,9 +109,9 @@ void MeshInstancer::on_transformation_changed() {
     }
 }
 
-void MeshInstancer::get_renderables(
+void MeshInstancer::_generate_renderables(
         batcher::RenderQueue* render_queue,
-        const CameraPtr camera,
+        const CameraPtr& camera,
         const DetailLevel detail_level) {
 
     /* No instances or mesh, no renderables */

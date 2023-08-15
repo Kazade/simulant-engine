@@ -75,7 +75,7 @@ public:
         specular_ = colour;
     }
 
-    LightType type() const { return type_; }
+    LightType node_type() const { return type_; }
     const smlt::Colour& ambient() const { return ambient_; }
     const smlt::Colour& diffuse() const { return diffuse_; }
     const smlt::Colour& specular() const { return specular_; }

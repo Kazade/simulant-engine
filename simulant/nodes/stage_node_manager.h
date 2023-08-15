@@ -40,7 +40,7 @@ protected:
             return false;
         }
 
-        auto type = node->type();
+        auto type = node->node_type();
         auto it = registered_nodes_.find(type);
         if(it == registered_nodes_.end()) {
             S_ERROR(
@@ -75,13 +75,13 @@ public:
             return nullptr;
         }
 
-        S_DEBUG("Created new node of type {0} at address {1}", node->type(), node);
+        S_DEBUG("Created new node of type {0} at address {1}", node->node_type(), node);
         return node;
     }
 
     template<typename T, typename... Args>
     T* create_node(Args&&... args) {
-        auto params = typename stage_node_traits<T>::params_type(std::forward<Args>(args)...);
+        auto params = typename stage_node_traits<T>::params_type{std::forward<Args>(args)...};
         return (T*) create_node(stage_node_traits<T>::node_type, &params);
     }
 

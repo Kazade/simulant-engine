@@ -41,6 +41,8 @@ enum KeyboardMode {
 
 class KeyboardPanel;
 
+struct KeyboardParams {};
+
 /* A keyboard is combined of a TextInput and a KeyboardPanel */
 class Keyboard:
     public Widget {
@@ -52,7 +54,7 @@ public:
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
-    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardMode mode, const unicode& initial_text="");
+    Keyboard(Scene* owner, UIConfig* config, KeyboardMode mode, const unicode& initial_text="");
     ~Keyboard();
 
     void cursor_up();
@@ -105,4 +107,12 @@ private:
 };
 
 }
+
+template<>
+struct stage_node_traits<ui::Keyboard> {
+    typedef ui::KeyboardParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD;
+};
+
+
 }

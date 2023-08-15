@@ -39,10 +39,7 @@ class Skybox:
 public:
     constexpr static float DEFAULT_SIZE = 128.0f;
 
-    Skybox(SkyManager* manager);
-
-    bool init() override;
-    void clean_up() override;
+    Skybox(Scene* owner);
 
     void set_size(float size) { width_ = size; }
     float size() const { return width_; }

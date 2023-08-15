@@ -610,7 +610,7 @@ public:
         }
 
         auto load_icon = [=](const char* name, Icon* icon, int w, int h, int bpp, const uint8_t* data, TextureFormat fmt=TEXTURE_FORMAT_RGB_1US_565) {
-            icon->tex = stage->assets->new_texture(w, h, fmt);
+            icon->tex = scene->assets->new_texture(w, h, fmt);
             icon->tex->set_data(data, w * h * bpp);
             icon->tex->convert(
                 TEXTURE_FORMAT_RGBA_4UB_8888,
@@ -619,7 +619,7 @@ public:
             icon->tex->flip_vertically();
             icon->tex->flush();
 
-            icon->material = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+            icon->material = scene->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
             icon->material->set_blend_func(BLEND_ALPHA);
             icon->material->set_depth_test_enabled(false);
             icon->material->set_cull_mode(CULL_MODE_NONE);
@@ -1155,7 +1155,7 @@ private:
     }
 };
 
-Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMode mode, const unicode &initial_text):
+Keyboard::Keyboard(Scene *owner, UIConfig *config, KeyboardMode mode, const unicode &initial_text):
     Widget(owner, config, stage) {
 
     resize(-1, -1);
@@ -1172,14 +1172,14 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     main_frame_->set_border_colour(config->background_colour_);
     main_frame_->set_foreground_colour(smlt::Colour::NONE);
 
-    panel_ = KeyboardPanel::create(config, stage);
+    panel_ = scene->create_node<KeyboardPanel>(config);
 
     panel_->set_background_colour(config->background_colour_);
     panel_->set_border_colour(config->background_colour_);
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    entry_ = TextEntry::create(nullptr, config, stage);
+    entry_ = scene->create_node<TextEntry>(config);
     entry_->set_text(initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
@@ -1189,20 +1189,20 @@ Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMod
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
     entry_->set_padding(Px(4));
 
-    info_row_ = Frame::create(nullptr, config, stage);
+    info_row_ = scene->create_node<Frame>(config);
     info_row_->set_border_colour(config->foreground_colour_);
     info_row_->set_border_width(2);
     info_row_->set_background_colour(style_->foreground_colour_);
     info_row_->set_foreground_colour(style_->foreground_colour_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
-    auto x_button = Label::create(nullptr, config, stage);
+    auto x_button = scene->create_node<Label>(config);
     x_button->set_text("X");
     x_button->set_text_colour(smlt::Colour::WHITE);
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
-    auto x_label = Label::create(nullptr, config, stage);
+    auto x_label = scene->create_node<Label>(config);
     x_label->set_background_colour(smlt::Colour::RED);
     x_label->set_text(_T("Cancel"));
     x_label->set_text_colour(smlt::Colour::WHITE);

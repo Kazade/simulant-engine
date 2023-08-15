@@ -33,7 +33,8 @@ namespace smlt {
 namespace scenes {
 
 class Loading:
-    public Scene {
+    public Scene,
+    public RefCounted<Loading> {
 
 public:
     Loading(Window* window):

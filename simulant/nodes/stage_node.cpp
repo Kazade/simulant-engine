@@ -78,9 +78,9 @@ void StageNode::set_parent(StageNode* new_parent) {
     parent_ = new_parent;
 
     // FIXME: DELETE THIS! It ensures that nodes are always attached to the
-    // stage, but we want to move away from that
+    // scene, but we want to move away from that
     if(!parent_) {
-        parent_ = stage_;
+        parent_ = scene.get();
     }
 
     if(parent_->first_child_) {
@@ -109,6 +109,10 @@ void StageNode::set_parent(StageNode* new_parent) {
     assert(prev_ != this);
 
     on_parent_set(old_parent, parent_);
+}
+
+void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) {
+    _generate_renderables(render_queue, camera, detail_level);
 }
 
 /* Right this is a bit confusing.
@@ -245,7 +249,7 @@ void StageNode::recalc_visibility() {
 
 void StageNode::_destroy_immediately() {
     if(owner_) {
-        owner_->destroy_node_immediately(this);
+        owner_->clean_up_node_immediately(this);
     }
 }
 
@@ -290,7 +294,7 @@ smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
-    if(parent_is_stage()) {
+    if(parent_is_scene()) {
         move_to(position);
     } else {
         assert(parent_);
@@ -307,7 +311,7 @@ void StageNode::move_to_absolute(float x, float y, float z) {
 }
 
 void StageNode::rotate_to_absolute(const Quaternion& rotation) {
-    if(!parent_is_stage()) {
+    if(!parent_is_scene()) {
         auto prot = parent_->absolute_rotation();
         prot.inverse();
 
@@ -328,7 +332,7 @@ void StageNode::on_transformation_changed() {
 void StageNode::update_transformation_from_parent() {
     StageNode* parent = parent_;
 
-    if(!parent || parent_is_stage()) {
+    if(!parent || parent_is_scene()) {
         absolute_rotation_ = rotation_;
         absolute_position_ = position_;
         absolute_scale_ = scaling_;
@@ -419,11 +423,11 @@ void StageNode::late_update(float dt) {
 }
 
 void StageNode::fixed_update(float step) {
-    on_fixed_update(dt);
+    on_fixed_update(step);
 }
 
-bool StageNode::parent_is_stage() const {
-    return parent_ == stage_;
+bool StageNode::parent_is_scene() const {
+    return parent_ == scene.get();
 }
 
 }

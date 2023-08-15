@@ -12,6 +12,14 @@ namespace smlt {
 
 class RenderTarget;
 
+class CameraParams {};
+
+template<>
+struct stage_node_traits<Camera> {
+    typedef CameraParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_CAMERA;
+};
+
 class Camera:
     public ContainerNode,
     public ChainNameable<Camera>,
@@ -19,7 +27,7 @@ class Camera:
     public RefCounted<Camera> {
 
 public:
-    using ContainerNode::get_renderables;
+    using ContainerNode::_generate_renderables;
 
     Camera(Scene* owner, SoundDriver* sound_driver);
     virtual ~Camera();

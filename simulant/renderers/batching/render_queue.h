@@ -33,6 +33,7 @@ class MaterialPass;
 class Renderer;
 struct Renderable;
 class Light;
+class StageNode;
 
 namespace batcher {
 
@@ -159,7 +160,7 @@ public:
 
     RenderQueue();
 
-    void reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
+    void reset(StageNode* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
     void insert_renderable(Renderable&& renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
@@ -180,7 +181,7 @@ private:
     // texture doesn't change even if the shader does
     typedef ContiguousMultiMap<RenderGroup, std::size_t> SortedRenderables;
 
-    Stage* stage_ = nullptr;
+    StageNode* stage_node_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 

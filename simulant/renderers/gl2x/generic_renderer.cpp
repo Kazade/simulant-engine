@@ -99,7 +99,7 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
     auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
     if(pos_loc > -1) {
         auto pos = (light) ? light->absolute_position() : Vec3();
-        auto vec = (light) ? Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
+        auto vec = (light) ? Vec4(pos, (light->node_type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
         program->set_uniform_vec4(pos_loc, vec);
     }
 

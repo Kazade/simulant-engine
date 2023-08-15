@@ -30,6 +30,7 @@
 #include "renderers/renderer.h"
 #include "types.h"
 #include "interfaces.h"
+#include "nodes/stage_node.h"
 
 namespace smlt {
 
@@ -52,7 +53,8 @@ struct StagedWrite {
 #define MAX_STAGED_WRITES 1024
 
 class Partitioner:
-    public RefCounted<Partitioner> {
+    public RefCounted<Partitioner>,
+    public StageNode {
 
 public:
     struct WriteSlots {
@@ -60,8 +62,8 @@ public:
         uint8_t bits = 0;
     };
 
-    Partitioner(Stage* ss):
-        stage_(ss) {}
+    Partitioner(Scene* owner, StageNodeType node_type):
+        StageNode(owner, node_type) {}
 
     void add_stage_node(StageNode* node) {
         StagedWrite write;
@@ -87,31 +89,22 @@ public:
 
     void _apply_writes();
 
-    virtual void lights_and_geometry_visible_from(
-        StageNodeID camera_id,
-        std::vector<StageNodeID>& lights_out,
-        std::vector<StageNode*>& geom_out
-    ) = 0;
-
-    virtual MeshPtr debug_mesh() { return MeshPtr(); }
 protected:
-    Stage* get_stage() const { return stage_; }
-
     virtual void apply_staged_write(const StageNodeID& key, const StagedWrite& write) = 0;
 
     void stage_write(StageNode* node, const StagedWrite& op);
 
-private:
-    Stage* stage_;
+    /* Partitioners take over the responsibility of deciding which
+     * of their children gets rendered */
+    bool _generates_renderables_for_descendents() const override {
+        return true;
+    }
 
+private:
     thread::Mutex staging_lock_;
 
     std::vector<StageNode*> staged_writes_;
     std::unordered_map<StageNode*, StageNodeID> removed_nodes_;
-
-protected:
-    Property<decltype(&Partitioner::stage_)> stage = { this, &Partitioner::stage_ };
-
 };
 
 }

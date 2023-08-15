@@ -1,5 +1,7 @@
 #pragma once
 
+#include <queue>
+
 #include "../interfaces/nameable.h"
 #include "../interfaces/printable.h"
 #include "../interfaces/transformable.h"
@@ -11,7 +13,6 @@
 #include "../shadows.h"
 #include "../generic/manual_object.h"
 #include "../coroutines/helpers.h"
-#include "../partitioner.h"
 
 #include "iterators/sibling_iterator.h"
 #include "iterators/child_iterator.h"
@@ -28,6 +29,9 @@ class Scene;
 
 typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
 typedef sig::signal<void ()> CleanedUpSignal;
+
+typedef sig::signal<void (CameraPtr, Viewport*)> PipelineStartedSignal;
+typedef sig::signal<void (CameraPtr, Viewport*)> PipelineFinishedSignal;
 
 /* Used for multiple levels of detail when rendering stage nodes */
 
@@ -52,8 +56,8 @@ enum DetailLevel {
 template<typename T>
 struct stage_node_traits;
 
-
 class StageNode:
+    public generic::Identifiable<StageNodeID>,
     public DestroyableObject,
     public virtual Nameable,
     public Printable,
@@ -64,7 +68,8 @@ class StageNode:
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up); // Fired when the node is cleaned up later, following destroy
-
+    DEFINE_SIGNAL(PipelineStartedSignal, signal_pipeline_started);
+    DEFINE_SIGNAL(PipelineFinishedSignal, signal_pipeline_finished);
 
 private:
     /* Heirarchy */
@@ -90,6 +95,16 @@ private:
     }
 
 public:
+    StageNode* find_descendent_with_id(StageNodeID id) {
+        for(auto& it: each_descendent()) {
+            if(it.id() == id) {
+                return &it;
+            }
+        }
+
+        return nullptr;
+    }
+
     bool is_root() const {
         return !has_parent();
     }
@@ -148,6 +163,21 @@ public:
         new_child->set_parent(this);
     }
 
+    /** If this returns true, then generate_renderables will not be called on
+     *  descendents of this node. It is assumed that this node generates
+     *  renderables for all its children. */
+    bool generates_renderables_for_descendents() const {
+        return _generates_renderables_for_descendents();
+    }
+
+    /** Populates the render queue with a list of renderables to send to be
+     *  rendered by the render pipelines */
+    void generate_renderables(
+        batcher::RenderQueue* render_queue,
+        const CameraPtr& camera,
+        const DetailLevel detail_level
+    );
+
 private:
     friend class StageNodeManager;
 
@@ -170,10 +200,14 @@ private:
     virtual void on_fixed_update(float step) { _S_UNUSED(step); }
     virtual void on_late_update(float dt) { _S_UNUSED(dt); }
 
+    virtual bool _generates_renderables_for_descendents() const {
+        return false;
+    }
+
     /* Return a list of renderables to pass into the render queue */
-    virtual void get_renderables(
+    virtual void _generate_renderables(
         batcher::RenderQueue* render_queue,
-        const CameraPtr camera,
+        const CameraPtr& camera,
         const DetailLevel detail_level
     ) = 0;
 
@@ -290,7 +324,7 @@ public:
 
     virtual ~StageNode();
 
-    StageNodeType type() const;
+    StageNodeType node_type() const;
 
     /** Link the position of this `StageNode` to another
      * stage node. This is effectively the same behaviour
@@ -322,7 +356,7 @@ public:
 
     smlt::Promise<void> destroy_after(const Seconds& seconds);
 
-    bool parent_is_stage() const;
+    bool parent_is_scene() const;
 
     void clean_up() override;
 
@@ -393,13 +427,42 @@ private:
 };
 
 
+class StageNodeVisitorBFS {
+public:
+    template<typename Func>
+    StageNodeVisitorBFS(StageNode* start, Func&& callback):
+        callback_(callback) {
+
+        queue_.push(start);
+    }
+
+    bool call_next() {
+        StageNode* it = queue_.front();
+        queue_.pop();
+
+        for(auto& node: it->each_child()) {
+            queue_.push(&node);
+        }
+
+        callback_(it);
+
+        return !queue_.empty();
+    }
+
+private:
+    std::function<void (StageNode*)> callback_;
+    StageNode* it_ = nullptr;
+    std::queue<StageNode*> queue_;
+};
+
+
 class ContainerNode : public StageNode {
 public:
     ContainerNode(Scene* scene, StageNodeType node_type):
         StageNode(scene, node_type) {}
 
     /* Containers don't directly have renderables, but their children do */
-    void get_renderables(batcher::RenderQueue*, const CameraPtr, const DetailLevel) override {}
+    void _generate_renderables(batcher::RenderQueue*, const CameraPtr&, const DetailLevel) override {}
 
     virtual ~ContainerNode() {}
 };

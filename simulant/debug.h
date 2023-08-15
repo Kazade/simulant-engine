@@ -25,9 +25,12 @@
 
 namespace smlt {
 
+struct DebugParams {};
+
 template<>
 struct stage_node_traits<Debug> {
-
+    typedef DebugParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_DEBUG;
 };
 
 class Debug : public StageNode {

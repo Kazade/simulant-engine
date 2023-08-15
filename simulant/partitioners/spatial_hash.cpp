@@ -26,7 +26,7 @@ void SpatialHashPartitioner::stage_add_node(StageNode* obj) {
     }
 
     if(auto light = dynamic_cast<Light*>(obj)) {
-        if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
+        if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
             // Directional lights are always visible, no need to add them to the hash
             directional_lights_.insert(light->id());
         }

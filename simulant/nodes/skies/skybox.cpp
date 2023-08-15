@@ -1,6 +1,6 @@
 
 #include "skybox.h"
-#include "skybox_manager.h"
+
 #include "../../stage.h"
 #include "../../assets/material.h"
 #include "../../window.h"
@@ -10,28 +10,11 @@
 
 namespace smlt {
 
-Skybox::Skybox(SkyManager* manager):
-    ContainerNode(&(Stage&)manager->stage, STAGE_NODE_TYPE_SKYBOX),
-    manager_(manager) {
+Skybox::Skybox(Scene* owner):
+    ContainerNode(owner, STAGE_NODE_TYPE_SKYBOX) {
 
 }
 
-bool Skybox::init() {
-    return true;
-}
-
-void Skybox::clean_up() {
-}
-
-bool Skybox::destroy() {
-    manager_->destroy_skybox(id());
-    return true;
-}
-
-bool Skybox::destroy_immediately() {
-    manager_->sky_manager_->destroy_immediately(id());
-    return true;
-}
 
 const AABB &Skybox::aabb() const {
     return actor_->aabb();
@@ -46,23 +29,22 @@ void Skybox::generate(
     const Path& back,
     const TextureFlags& flags
 ) {
-    auto stage = manager_->stage.get();
-
     if(!actor_) {
-        actor_ = stage->new_actor();
+        actor_ = scene->create_node<Actor>();
         actor_->set_parent(this);
         actor_->move_to(0, 0, 0);
     }
 
     if(!mesh_) {
-        mesh_ = stage->assets->new_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE);
+        auto& assets = scene->assets;
+        mesh_ = assets->new_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE);
 
         auto mesh = mesh_;
         mesh->reverse_winding();
 
         // Set the skybox material on all submeshes
         for(auto sm: mesh->each_submesh()) {
-            auto mat = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+            auto mat = assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
 
             // Disable depth writes and depth testing, but otherwise use the default texture_only material
             mat->set_depth_write_enabled(false);
@@ -87,12 +69,12 @@ void Skybox::generate(
             sm->material()->set_diffuse_map(tex);
         };
 
-        set_texture(mesh->find_submesh("top"), stage->assets->new_texture_from_file(up_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-        set_texture(mesh->find_submesh("bottom"), stage->assets->new_texture_from_file(down_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-        set_texture(mesh->find_submesh("left"), stage->assets->new_texture_from_file(left_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-        set_texture(mesh->find_submesh("right"), stage->assets->new_texture_from_file(right_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-        set_texture(mesh->find_submesh("front"), stage->assets->new_texture_from_file(front_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-        set_texture(mesh->find_submesh("back"), stage->assets->new_texture_from_file(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("top"), assets->new_texture_from_file(up_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("bottom"), assets->new_texture_from_file(down_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("left"), assets->new_texture_from_file(left_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("right"), assets->new_texture_from_file(right_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("front"), assets->new_texture_from_file(front_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+        set_texture(mesh->find_submesh("back"), assets->new_texture_from_file(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
     }
 
     actor_->set_mesh(mesh_);

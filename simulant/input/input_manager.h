@@ -12,7 +12,7 @@
 
 namespace smlt {
 
-class SceneBase;
+class Scene;
 class InputState;
 class InputAxis;
 class GameController;
@@ -141,7 +141,7 @@ private:
     ui::Keyboard* keyboard_ = nullptr;
 
     sig::connection scene_deactivated_conn_;
-    void on_scene_deactivated(std::string, SceneBase* scene);
+    void on_scene_deactivated(std::string, Scene* scene);
 
 public:
     S_DEFINE_PROPERTY(state, &InputManager::controller_);

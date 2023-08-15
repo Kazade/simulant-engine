@@ -19,14 +19,13 @@
 
 #include "particle_script.h"
 #include "../assets/material.h"
-#include "../stage.h"
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"
 #include "../assets/particles/alpha_fader.h"
 #include "../assets/particles/colour_fader.h"
 #include "../assets/particles/direction_manipulator.h"
 #include "../assets/particles/direction_noise_random_manipulator.h"
-
+#include "../asset_manager.h"
 #include "../vfs.h"
 
 #include "../utils/json.h"
