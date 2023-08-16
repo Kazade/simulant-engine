@@ -62,7 +62,7 @@ public:
         bool depth_test=true
     );
 
-    bool init() override;
+    bool on_init() override;
 
     void set_point_size(float ps);
 

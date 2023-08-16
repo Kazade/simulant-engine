@@ -26,13 +26,13 @@ uint64_t TimeKeeper::now_in_us() {
 #endif
 }
 
-bool TimeKeeper::init() {
+bool TimeKeeper::on_init() {
     time_scale_ = 1.0f;
     last_update_ = now_in_us();
     return true;
 }
 
-void TimeKeeper::clean_up() {
+void TimeKeeper::on_clean_up() {
 
 }
 

@@ -167,7 +167,7 @@ private:
 
     std::vector<any> load_args;
 
-    void clean_up() override {
+    void on_clean_up() override {
         _call_unload();
     }
 

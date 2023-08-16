@@ -48,7 +48,7 @@ Widget::~Widget() {
     style_.reset();
 }
 
-bool Widget::init() {
+bool Widget::on_init() {
     VertexSpecification spec = VertexSpecification::DEFAULT;
 
     /* We don't need normals or multiple texcoords */
@@ -76,13 +76,11 @@ bool Widget::init() {
     return true;
 }
 
-void Widget::clean_up() {
+void Widget::on_clean_up() {
     // Make sure we fire any outstanding events when the widget
     // is destroyed. If any buttons are held, then they should fire
     // released signals.
     force_release();
-
-    StageNode::clean_up();
 }
 
 void Widget::set_font(const std::string& family, Rem size, FontWeight weight, FontStyle style) {

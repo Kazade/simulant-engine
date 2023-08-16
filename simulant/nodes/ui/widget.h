@@ -94,8 +94,8 @@ public:
     Widget(UIManager* owner, UIConfig* defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
     virtual ~Widget();
 
-    virtual bool init() override;
-    virtual void clean_up() override;
+    virtual bool on_init() override;
+    virtual void on_clean_up() override;
 
     void resize(Rem width, Px height);
     void resize(Px width, Rem height);

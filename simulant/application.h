@@ -345,7 +345,7 @@ private:
     AppConfig config_;
     StageNodePool* node_pool_ = nullptr;
 
-    void construct_window(const AppConfig& config);
+    bool construct_window(const AppConfig& config);
 
     ArgParser args_;
 

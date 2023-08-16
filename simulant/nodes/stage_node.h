@@ -364,7 +364,7 @@ public:
 
     bool parent_is_scene() const;
 
-    void clean_up() override;
+    void on_clean_up() override;
 
     const AABB transformed_aabb() const override;
 

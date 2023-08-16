@@ -81,10 +81,6 @@ public:
         return has_animated_mesh_;
     }
 
-    void clean_up() override {
-        StageNode::clean_up();
-    }
-
     void do_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) override;
 
     void use_material_slot(MaterialSlot var) {

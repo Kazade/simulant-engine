@@ -54,9 +54,6 @@ public:
         const TextureFlags& flags
     );
 
-    bool on_destroy() override;
-    bool on_destroy_immediately() override;
-
     const AABB& aabb() const override;
 
 private:

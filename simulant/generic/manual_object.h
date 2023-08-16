@@ -19,7 +19,7 @@ private:
     /*
      * Called when destroy() is called, if the object hasn't already
      * been destroyed. Return false to cancel destruction */
-    virtual bool on_destroy() = 0;
+    virtual bool on_destroy() { return true; }
 
     /* Private functions, do not override */
     virtual void finalize_destroy() {}
@@ -77,23 +77,16 @@ public:
     }
 
 private:
-    bool on_destroy() override {
+    void finalize_destroy() override {
         if(owner_) {
-            signal_destroyed()();
             owner_->destroy_object((T*) this);
-            return true;
         }
-        return false;
     }
 
-    bool on_destroy_immediately() override {
+    void finalize_destroy_immediately() override {
         if(owner_) {
-            signal_destroyed()();
             owner_->destroy_object_immediately((T*) this);
-            return true;
         }
-
-        return false;
     }
 
     Owner* owner_ = nullptr;

@@ -168,7 +168,7 @@ void StageNode::link_position(StageNode *other) {
     }
 }
 
-void StageNode::clean_up() {
+void StageNode::on_clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
 
     // Go through the subnodes and ask each for destruction in-turn
@@ -183,8 +183,6 @@ void StageNode::clean_up() {
     }
 
     remove_from_parent(); // Make sure we're not connected to anything
-
-    TwoPhaseConstructed::clean_up();
 }
 
 Vec3 StageNode::absolute_position() const {

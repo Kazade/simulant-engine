@@ -155,7 +155,7 @@ void Debug::initialize_actor() {
     initialized_ = true;
 }
 
-bool Debug::init() {
+bool Debug::on_init() {
     mesh_ = scene->assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh

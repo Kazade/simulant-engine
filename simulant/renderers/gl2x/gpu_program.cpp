@@ -262,11 +262,11 @@ void GPUProgram::prepare_program() {
     S_DEBUG("Created program {0}", program_object_);
 }
 
-bool GPUProgram::init() {
+bool GPUProgram::on_init() {
     return true;
 }
 
-void GPUProgram::clean_up()  {
+void GPUProgram::on_clean_up()  {
     if(GLThreadCheck::is_current() && program_object_) {
         S_DEBUG("Destroying GPU program: {0}", program_object_);
 

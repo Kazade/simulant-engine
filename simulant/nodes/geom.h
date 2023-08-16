@@ -74,11 +74,7 @@ public:
 
     const AABB& aabb() const override;
 
-    void clean_up() override {
-        StageNode::clean_up();
-    }
-
-    bool init() override;
+    bool on_init() override;
 
     void do_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) override;
 

@@ -204,7 +204,7 @@ std::vector<std::string> Application::generate_potential_codes(const std::string
     return codes;
 }
 
-void Application::construct_window(const AppConfig& config) {
+bool Application::construct_window(const AppConfig& config) {
     /* Copy to remove const */
     AppConfig config_copy = config;
 
@@ -253,7 +253,7 @@ void Application::construct_window(const AppConfig& config) {
        config_copy.enable_vsync)
     ) {
         S_ERROR("[FATAL] There was an error creating the window");
-        return;
+        return false;
     }
 
     if(!config_copy.show_cursor) {
@@ -289,7 +289,8 @@ void Application::construct_window(const AppConfig& config) {
     S_DEBUG("Search paths added successfully");
 
     if(!window_->initialize_assets_and_devices()) {
-        throw InstanceInitializationError("Unable to create window");
+        S_ERROR("Unable to create window");
+        return false;
     }
 
     window_->set_title(config.title.encode());
@@ -310,7 +311,7 @@ void Application::construct_window(const AppConfig& config) {
         }
     }
 #endif
-
+    return true;
 }
 
 bool Application::_call_init() {
@@ -321,9 +322,7 @@ bool Application::_call_init() {
         return false;
     }
 
-    try {
-        construct_window(config);
-    } catch(std::runtime_error&) {
+    if(!construct_window(config)) {
         S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
         exit(1);
     }

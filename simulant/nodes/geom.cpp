@@ -35,7 +35,7 @@ Geom::Geom(Scene* owner, SoundDriver* sound_driver, MeshPtr mesh, const Vec3 &po
     desired_scale(scale) {
 }
 
-bool Geom::init() {
+bool Geom::on_init() {
     auto mesh_ptr = mesh_;
     assert(mesh_ptr);
 

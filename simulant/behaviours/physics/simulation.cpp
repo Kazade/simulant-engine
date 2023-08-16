@@ -211,7 +211,7 @@ void RigidBodySimulation::set_gravity(const Vec3& gravity) {
     scene_->SetGravity(g);
 }
 
-bool RigidBodySimulation::init() {
+bool RigidBodySimulation::on_init() {
     contact_listener_ = std::make_shared<impl::ContactListener>(this);
     contact_filter_ = std::make_shared<impl::PrivateContactFilter>(this);
 
@@ -220,7 +220,7 @@ bool RigidBodySimulation::init() {
     return true;
 }
 
-void RigidBodySimulation::clean_up() {
+void RigidBodySimulation::on_clean_up() {
     // Disconnect the contact listener
     scene_->SetContactListener(nullptr);
     scene_->SetContactFilter(nullptr);

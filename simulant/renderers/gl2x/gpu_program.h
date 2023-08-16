@@ -75,8 +75,8 @@ public:
     GPUProgram(const GPUProgram&) = delete;
     GPUProgram& operator=(const GPUProgram&) = delete;
 
-    bool init() override;
-    void clean_up() override;
+    bool on_init() override;
+    void on_clean_up() override;
 
     bool is_current() const;
     void activate();

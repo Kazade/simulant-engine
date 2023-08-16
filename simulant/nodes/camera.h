@@ -23,8 +23,7 @@ struct stage_node_traits<Camera> {
 class Camera:
     public ContainerNode,
     public ChainNameable<Camera>,
-    public AudioSource,
-    public RefCounted<Camera> {
+    public AudioSource {
 
 public:
     using ContainerNode::do_generate_renderables;
@@ -39,10 +38,6 @@ public:
 
     const AABB transformed_aabb() const override {
         return AABB(position(), position());
-    }
-
-    void clean_up() override {
-        StageNode::clean_up();
     }
 
     // Converts an OpenGL unit to window space
