@@ -21,14 +21,9 @@ private:
      * been destroyed. Return false to cancel destruction */
     virtual bool on_destroy() = 0;
 
-    /*
-     * Called when destroy_immediately() is called, if the object hasn't
-     * already been destroyed. Return false to cancel destruction */
-    virtual bool on_destroy_immediately() = 0;
-
     /* Private functions, do not override */
-    virtual void _destroy() {}
-    virtual void _destroy_immediately() {}
+    virtual void finalize_destroy() {}
+    virtual void finalize_destroy_immediately() {}
 public:
     virtual ~DestroyableObject() {}
 
@@ -40,7 +35,7 @@ public:
         destroyed_ = on_destroy();
         if(destroyed_) {
             signal_destroyed()();
-            _destroy();
+            finalize_destroy();
         }
 
         return destroyed_;
@@ -51,10 +46,10 @@ public:
             return false;
         }
 
-        destroyed_ = on_destroy_immediately();
+        destroyed_ = on_destroy();
         if(destroyed_) {
             signal_destroyed()();
-            _destroy_immediately();
+            finalize_destroy_immediately();
         }
 
         return destroyed_;

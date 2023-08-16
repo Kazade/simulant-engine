@@ -118,7 +118,7 @@ void ParticleSystem::set_update_when_hidden(bool value) {
     update_when_hidden_ = value;
 }
 
-void ParticleSystem::_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) {
+void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) {
     _S_UNUSED(detail_level);
 
     if(!is_visible()) {

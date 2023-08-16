@@ -27,7 +27,7 @@ class Camera:
     public RefCounted<Camera> {
 
 public:
-    using ContainerNode::_generate_renderables;
+    using ContainerNode::do_generate_renderables;
 
     Camera(Scene* owner, SoundDriver* sound_driver);
     virtual ~Camera();

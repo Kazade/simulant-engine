@@ -109,7 +109,7 @@ void MeshInstancer::on_transformation_changed() {
     }
 }
 
-void MeshInstancer::_generate_renderables(
+void MeshInstancer::do_generate_renderables(
         batcher::RenderQueue* render_queue,
         const CameraPtr& camera,
         const DetailLevel detail_level) {

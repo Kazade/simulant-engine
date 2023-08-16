@@ -56,6 +56,16 @@ enum DetailLevel {
 template<typename T>
 struct stage_node_traits;
 
+/* Order of things:
+ *
+ * 1. constructor
+ * 2. init() -> on_init()
+ * 3. create(params) -> on_create(params)
+ * 4. destroy() -> on_destroy()
+ * 5. clean_up() -> on_clean_up()
+ * 6. destructor
+ */
+
 class StageNode:
     public generic::Identifiable<StageNodeID>,
     public DestroyableObject,
@@ -167,7 +177,7 @@ public:
      *  descendents of this node. It is assumed that this node generates
      *  renderables for all its children. */
     bool generates_renderables_for_descendents() const {
-        return _generates_renderables_for_descendents();
+        return do_generates_renderables_for_descendents();
     }
 
     /** Populates the render queue with a list of renderables to send to be
@@ -186,33 +196,29 @@ private:
         return on_create(params);
     }
 
-    void _destroy() override final;
-
     void update(float dt) override final;
     void late_update(float dt) override final;
     void fixed_update(float step) override final;
 
     virtual bool on_create(void* params) = 0;
     virtual bool on_destroy() { return true; }
-    virtual bool on_destroy_immediately() { return true; }
-
     virtual void on_update(float dt) { _S_UNUSED(dt); }
     virtual void on_fixed_update(float step) { _S_UNUSED(step); }
     virtual void on_late_update(float dt) { _S_UNUSED(dt); }
 
-    virtual bool _generates_renderables_for_descendents() const {
+    virtual bool do_generates_renderables_for_descendents() const {
         return false;
     }
 
     /* Return a list of renderables to pass into the render queue */
-    virtual void _generate_renderables(
+    virtual void do_generate_renderables(
         batcher::RenderQueue* render_queue,
         const CameraPtr& camera,
         const DetailLevel detail_level
     ) = 0;
 
-    virtual void _destroy_immediately() final;
-
+    virtual void finalize_destroy() override final;
+    virtual void finalize_destroy_immediately() final;
 private:
     /* This is ugly, but it's here for performance to avoid
      * a map lookup when staging writes to the partitioner */
@@ -462,7 +468,7 @@ public:
         StageNode(scene, node_type) {}
 
     /* Containers don't directly have renderables, but their children do */
-    void _generate_renderables(batcher::RenderQueue*, const CameraPtr&, const DetailLevel) override {}
+    void do_generate_renderables(batcher::RenderQueue*, const CameraPtr&, const DetailLevel) override {}
 
     virtual ~ContainerNode() {}
 };

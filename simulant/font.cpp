@@ -27,8 +27,7 @@ MaterialPtr Font::material() const {
     return material_;
 }
 
-bool Font::init() {
-
+bool Font::on_init() {
     return true;
 }
 

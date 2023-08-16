@@ -41,7 +41,11 @@ enum KeyboardMode {
 
 class KeyboardPanel;
 
-struct KeyboardParams {};
+struct KeyboardParams {
+    UIConfig config;
+    KeyboardMode mode = KEYBOARD_MODE_UPPERCASE;
+    unicode initial_text = "";
+};
 
 /* A keyboard is combined of a TextInput and a KeyboardPanel */
 class Keyboard:
@@ -54,7 +58,7 @@ public:
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
-    Keyboard(Scene* owner, UIConfig* config, KeyboardMode mode, const unicode& initial_text="");
+    Keyboard(Scene* owner, const KeyboardParams* params);
     ~Keyboard();
 
     void cursor_up();

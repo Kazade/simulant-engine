@@ -112,7 +112,7 @@ void StageNode::set_parent(StageNode* new_parent) {
 }
 
 void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) {
-    _generate_renderables(render_queue, camera, detail_level);
+    do_generate_renderables(render_queue, camera, detail_level);
 }
 
 /* Right this is a bit confusing.
@@ -126,7 +126,7 @@ void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const C
  * late_update. So we override _destroy here to tell the scene
  * that this node needs proper destroying
  */
-void StageNode::_destroy() {
+void StageNode::finalize_destroy() {
     if(owner_) {
         owner_->queue_clean_up(this);
     }
@@ -247,7 +247,7 @@ void StageNode::recalc_visibility() {
     }
 }
 
-void StageNode::_destroy_immediately() {
+void StageNode::finalize_destroy_immediately() {
     if(owner_) {
         owner_->clean_up_node_immediately(this);
     }

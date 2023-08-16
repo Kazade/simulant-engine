@@ -318,8 +318,8 @@ public:
     TextureFreeData free_data_mode() const;
 
     /** These are overridden to notify the renderer of texture changes */
-    bool init() override;
-    void clean_up() override;
+    bool on_init() override;
+    void on_clean_up() override;
     void update(float dt) override;
 
     /** Returns true if the format contains mipmap data, or mipmaps

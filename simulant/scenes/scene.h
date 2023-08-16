@@ -186,7 +186,7 @@ private:
         return true;
     }
 
-    void _generate_renderables(
+    void do_generate_renderables(
         batcher::RenderQueue*,
         const CameraPtr &, const DetailLevel) override final {
         /* Do nothing, Scenes don't create renderables.. for now */

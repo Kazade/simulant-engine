@@ -1155,8 +1155,8 @@ private:
     }
 };
 
-Keyboard::Keyboard(Scene *owner, UIConfig *config, KeyboardMode mode, const unicode &initial_text):
-    Widget(owner, config, stage) {
+Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
+    Widget(owner, params->config) {
 
     resize(-1, -1);
     set_background_colour(smlt::Colour::NONE);
@@ -1164,7 +1164,9 @@ Keyboard::Keyboard(Scene *owner, UIConfig *config, KeyboardMode mode, const unic
     set_border_colour(smlt::Colour::NONE);
     set_text_colour(smlt::Colour::NONE);
 
-    main_frame_ = owner->new_widget_as_frame("");
+    auto config = &params->config;
+
+    main_frame_ = owner->create_node<Frame>("");
     main_frame_->set_parent(this);
     main_frame_->set_space_between(0);
     main_frame_->set_border_width(0);
@@ -1219,7 +1221,7 @@ Keyboard::Keyboard(Scene *owner, UIConfig *config, KeyboardMode mode, const unic
     main_frame_->pack_child(info_row_.get());
     main_frame_->rebuild();
 
-    set_mode(mode);
+    set_mode(params);
 }
 
 Keyboard::~Keyboard() {

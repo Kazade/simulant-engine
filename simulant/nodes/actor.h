@@ -85,7 +85,7 @@ public:
         StageNode::clean_up();
     }
 
-    void _generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) override;
+    void do_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) override;
 
     void use_material_slot(MaterialSlot var) {
         material_slot_ = var;

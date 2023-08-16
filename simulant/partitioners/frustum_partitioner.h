@@ -26,8 +26,8 @@ class SubActor;
 
 class FrustumPartitioner : public Partitioner {
 public:
-    FrustumPartitioner(Stage* ss):
-        Partitioner(ss) {}
+    FrustumPartitioner(Scene* owner):
+        Partitioner(owner, STAGE_NODE_TYPE_PARTITIONER_FRUSTUM) {}
 
     void lights_and_geometry_visible_from(
         StageNodeID camera_id,

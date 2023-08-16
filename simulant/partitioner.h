@@ -96,7 +96,7 @@ protected:
 
     /* Partitioners take over the responsibility of deciding which
      * of their children gets rendered */
-    bool _generates_renderables_for_descendents() const override {
+    bool do_generates_renderables_for_descendents() const override {
         return true;
     }
 

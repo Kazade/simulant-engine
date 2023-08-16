@@ -748,14 +748,14 @@ void Texture::resize_data(uint32_t byte_size) {
     data_dirty_ = true;
 }
 
-bool Texture::init() {
+bool Texture::on_init() {
     // Tell the renderer about the texture
     S_DEBUG("Registering texture with the renderer: {0}", renderer_);
     renderer_->register_texture(id(), this);
     return true;
 }
 
-void Texture::clean_up() {
+void Texture::on_clean_up() {
     // Tell the renderer to forget the texture
     renderer_->unregister_texture(id(), this);
 }

@@ -60,7 +60,7 @@ public:
 
     Font(AssetID id, AssetManager* asset_manager);
 
-    bool init() override;
+    bool on_init() override;
 
     bool is_valid() const { return bool(info_) && texture_; }
     TexturePtr texture() const;

@@ -24,6 +24,10 @@ enum ChildCleanup {
     CHILD_CLEANUP_RETAIN
 };
 
+struct FrameParams {
+    UIConfig config;
+};
+
 class Frame:
     public Widget,
     public RefCounted<Frame> {
@@ -59,6 +63,12 @@ private:
     virtual void finalize_build() override;
 };
 
-
 }
+
+template<>
+struct stage_node_traits<ui::Frame> {
+    typedef ui::FrameParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_FRAME;
+};
+
 }
