@@ -158,7 +158,7 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
         debug->set_parent(this);
     }
 
-    debug->set_transform(absolute_transformation());
+    debug->transform_to(absolute_transformation());
 #endif
 
     base_mesh->animated_frame_data_->prepare_unpack(
@@ -169,7 +169,7 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
     );
 
 #ifdef DEBUG_ANIMATION
-    debug->set_transform(Mat4());
+    debug->transform_to(Mat4());
 #endif
 }
 

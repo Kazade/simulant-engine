@@ -4,6 +4,7 @@
 #include "button.h"
 #include "frame.h"
 #include "text_entry.h"
+#include "label.h"
 
 #include "../../window.h"
 #include "../../stage.h"
@@ -11,6 +12,28 @@
 #include "../../event_listener.h"
 
 namespace smlt {
+namespace ui {
+
+class KeyboardPanel;
+
+struct KeyboardPanelParams {
+    KeyboardPanelParams(const UIConfig& config):
+        config(config) {}
+
+    UIConfig config;
+};
+
+}
+}
+
+namespace smlt {
+
+template<>
+struct stage_node_traits<ui::KeyboardPanel> {
+    typedef ui::KeyboardPanelParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_LABEL;
+};
+
 namespace ui {
 
 
@@ -603,7 +626,7 @@ public:
     KeyboardPanel(UIConfig* config, Stage* stage):
         Widget(nullptr, config, stage) {}
 
-    bool init() override {
+    bool on_init() override {
         auto ret = Widget::init();
         if(!ret) {
             return ret;
@@ -1182,7 +1205,7 @@ Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
     panel_->rebuild();
 
     entry_ = scene->create_node<TextEntry>(config);
-    entry_->set_text(initial_text);
+    entry_->set_text(params->initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
     entry_->set_background_colour(smlt::Colour::WHITE);
@@ -1211,26 +1234,26 @@ Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
     x_label->resize(-1, panel_->key_height());
     x_label->rebuild();
 
-    info_row_->pack_child(x_button.get());
-    info_row_->pack_child(x_label.get());
+    info_row_->pack_child(x_button);
+    info_row_->pack_child(x_label);
     info_row_->resize(panel_->content_width(), -1);
     info_row_->rebuild();
 
-    main_frame_->pack_child(entry_.get());
-    main_frame_->pack_child(panel_.get());
-    main_frame_->pack_child(info_row_.get());
+    main_frame_->pack_child(entry_);
+    main_frame_->pack_child(panel_);
+    main_frame_->pack_child(info_row_);
     main_frame_->rebuild();
 
-    set_mode(params);
+    set_mode(params->mode);
 }
 
 Keyboard::~Keyboard() {
-    main_frame_->unpack_child(entry_.get(), CHILD_CLEANUP_RETAIN);
-    main_frame_->unpack_child(panel_.get(), CHILD_CLEANUP_RETAIN);
-    main_frame_->unpack_child(info_row_.get(), CHILD_CLEANUP_RETAIN);
-    panel_.reset();
-    entry_.reset();
-    info_row_.reset();
+    main_frame_->unpack_child(entry_, CHILD_CLEANUP_RETAIN);
+    main_frame_->unpack_child(panel_, CHILD_CLEANUP_RETAIN);
+    main_frame_->unpack_child(info_row_, CHILD_CLEANUP_RETAIN);
+    panel_ = nullptr;
+    entry_= nullptr;
+    info_row_ = nullptr;
 }
 
 void Keyboard::cancel() {

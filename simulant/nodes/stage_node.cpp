@@ -247,7 +247,7 @@ void StageNode::recalc_visibility() {
 
 void StageNode::finalize_destroy_immediately() {
     if(owner_) {
-        owner_->clean_up_node_immediately(this);
+        owner_->clean_up_node(this);
     }
 }
 

@@ -26,6 +26,8 @@ public:
     smlt::Quaternion rotation() const { return rotation_; }
     smlt::Vec3 scale() const { return scaling_; }
 
+    virtual void transform_to(const smlt::Mat4& transform);
+
     virtual void move_to(const smlt::Vec3& pos);
     virtual void move_to(const smlt::Vec2& pos);
     virtual void move_to(float x, float y, float z);
@@ -55,6 +57,8 @@ public:
     virtual void scale_z_by(const float scale);
     virtual void scale_by(float x);
     virtual void scale_by(const Vec3& x);
+
+    virtual void scale_to(const Vec3& x);
     virtual void scale_to(const float x, const float y, const float z);
 
     virtual void rotate_around(const smlt::Vec3& axis, const smlt::Degrees& degrees);

@@ -90,16 +90,16 @@ public:
     void set_font(FontPtr font) override;
 
     TextEntry* entry() {
-        return entry_.get();
+        return entry_;
     }
 private:
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
-    std::shared_ptr<KeyboardPanel> panel_;
-    std::shared_ptr<TextEntry> entry_;
-    std::shared_ptr<Frame> info_row_;
+    KeyboardPanel* panel_;
+    TextEntry* entry_;
+    Frame* info_row_;
 
     Frame* main_frame_ = nullptr;
 

@@ -40,6 +40,19 @@ void Transformable::move_by(float x, float y) {
     move_by(Vec2(x, y));
 }
 
+void Transformable::transform_to(const smlt::Mat4& transform) {
+    Quaternion rot;
+    Vec3 trns;
+    transform.extract_rotation_and_translation(rot, trns);
+    Vec3 scale = {
+        transform[0], transform[5], transform[10]
+    };
+
+    rotate_to(rot);
+    move_to(trns);
+    scale_to(scale);
+}
+
 void Transformable::rotate_to(const smlt::Degrees& angle, float axis_x, float axis_y, float axis_z) {
     rotate_to(angle, Vec3(axis_x, axis_y, axis_z));
 }
@@ -95,6 +108,10 @@ void Transformable::scale_by(const Vec3& x) {
     scale_x_by(x.x);
     scale_y_by(x.y);
     scale_z_by(x.z);
+}
+
+void Transformable::scale_to(const Vec3& x) {
+    set_scaling(x);
 }
 
 void Transformable::scale_to(const float x, const float y, const float z) {

@@ -6,6 +6,11 @@
 namespace smlt {
 namespace ui {
 
+struct TextEntryParams {
+    UIConfig config;
+};
+
+
 class TextEntry:
     public Widget,
     public RefCounted<TextEntry> {
@@ -53,4 +58,12 @@ private:
 };
 
 }
+
+template<>
+struct stage_node_traits<ui::TextEntry> {
+    typedef ui::TextEntryParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY;
+};
+
+
 }
