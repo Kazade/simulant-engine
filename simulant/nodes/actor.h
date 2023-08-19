@@ -39,6 +39,9 @@ class KeyFrameAnimationState;
 class Rig;
 
 struct ActorParams {
+    ActorParams(MeshPtr mesh):
+        mesh(mesh) {}
+
     MeshPtr mesh;
 };
 

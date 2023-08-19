@@ -5,12 +5,10 @@
 namespace smlt {
 namespace ui {
 
-TextEntry::TextEntry(
-    UIManager* owner,
-    UIConfig* config,
-    Stage* stage,
+TextEntry::TextEntry(Scene *owner,
+    UIConfig config,
     std::shared_ptr<WidgetStyle> shared_style
-): Widget(owner, config, stage, shared_style) {
+): Widget(owner, config, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY, shared_style) {
 
 
 }

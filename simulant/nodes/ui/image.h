@@ -17,10 +17,7 @@ class Image:
     void clear_layers();
 
 public:
-    using Widget::init; // Pull in init to satisfy Managed<Image>
-    using Widget::clean_up;
-
-    Image(UIManager* owner, UIConfig* config, Stage *stage);
+    Image(Scene *owner, UIConfig config);
     virtual ~Image() {}
 
     /* Set the texture of the Image. By default the image will be sized to the

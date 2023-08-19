@@ -25,7 +25,14 @@ enum ChildCleanup {
 };
 
 struct FrameParams {
+    unicode text;
     UIConfig config;
+
+    FrameParams(const unicode& text):
+        text(text) {}
+
+    FrameParams(const UIConfig& config):
+        config(config) {}
 };
 
 class Frame:
@@ -36,7 +43,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
 
-    Frame(UIManager* owner, UIConfig* config, Stage* stage);
+    Frame(Scene *owner, UIConfig config);
 
     bool pack_child(Widget* widget);
 

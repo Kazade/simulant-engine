@@ -91,7 +91,7 @@ class Widget:
 public:
     typedef std::shared_ptr<Widget> ptr;
 
-    Widget(UIManager* owner, UIConfig* defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
+    Widget(Scene* owner, UIConfig defaults, StageNodeType type, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
     virtual ~Widget();
 
     virtual bool on_init() override;

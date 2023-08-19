@@ -8,6 +8,9 @@ namespace ui {
 
 struct TextEntryParams {
     UIConfig config;
+
+    TextEntryParams(const UIConfig& config):
+        config(config) {}
 };
 
 
@@ -20,9 +23,8 @@ public:
     using Widget::clean_up;
 
     TextEntry(
-        UIManager* owner,
-        UIConfig* config,
-        Stage* stage,
+        Scene* owner,
+        UIConfig config,
         std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>()
     );
 

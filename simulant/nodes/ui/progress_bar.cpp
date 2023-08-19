@@ -7,16 +7,16 @@ namespace smlt {
 namespace ui {
 
 
-ProgressBar::ProgressBar(UIManager* owner, UIConfig* config, Stage* stage):
-    Widget(owner, config, stage) {
+ProgressBar::ProgressBar(Scene* owner, const UIConfig& config):
+    Widget(owner, config, STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR) {
 
-    set_background_colour(config->progress_bar_background_colour_);
-    set_foreground_colour(config->progress_bar_foreground_colour_);
-    set_border_colour(config->progress_bar_border_colour_);
-    set_border_width(config->progress_bar_border_width_);
-    set_text_colour(config->progress_bar_text_colour_);
+    set_background_colour(config.progress_bar_background_colour_);
+    set_foreground_colour(config.progress_bar_foreground_colour_);
+    set_border_colour(config.progress_bar_border_colour_);
+    set_border_width(config.progress_bar_border_width_);
+    set_text_colour(config.progress_bar_text_colour_);
 
-    resize(config->progress_bar_width_, config->progress_bar_height_);
+    resize(config.progress_bar_width_, config.progress_bar_height_);
 }
 
 ProgressBar::~ProgressBar() {

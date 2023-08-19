@@ -12,8 +12,8 @@ namespace smlt {
 namespace ui {
 
 
-Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style):
-    ContainerNode(stage, STAGE_NODE_TYPE_WIDGET),
+Widget::Widget(Scene *owner, UIConfig defaults, StageNodeType type, std::shared_ptr<WidgetStyle> shared_style):
+    ContainerNode(owner, type),
     owner_(owner),
     theme_(defaults),
     style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {

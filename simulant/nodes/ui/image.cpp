@@ -6,22 +6,22 @@
 namespace smlt {
 namespace ui {
 
-Image::Image(UIManager* owner, UIConfig* config, Stage* stage):
-    Widget(owner, config, stage) {
+Image::Image(Scene* owner, UIConfig config):
+    Widget(owner, config, STAGE_NODE_TYPE_WIDGET_IMAGE) {
 
     /* By default, images don't have a border */
-    set_border_width(config->image_border_width_);
+    set_border_width(config.image_border_width_);
     set_border_colour(smlt::Colour::NONE);
 
-    set_background_colour(config->image_background_colour_);
+    set_background_colour(config.image_background_colour_);
     set_padding(
-        config->image_padding_.left,
-        config->image_padding_.right,
-        config->image_padding_.bottom,
-        config->image_padding_.top
+        config.image_padding_.left,
+        config.image_padding_.right,
+        config.image_padding_.bottom,
+        config.image_padding_.top
     );
 
-    set_foreground_colour(config->image_foreground_colour_);
+    set_foreground_colour(config.image_foreground_colour_);
 
     if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
         // Rebuild if the resize mode didn't change

@@ -17,7 +17,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Button>
     using Widget::clean_up;
 
-    ProgressBar(UIManager* owner, UIConfig* config, Stage *stage);
+    ProgressBar(Scene *owner, const UIConfig &config);
     virtual ~ProgressBar();
 
     void pulse();

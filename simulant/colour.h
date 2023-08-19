@@ -148,7 +148,7 @@ public:
         return !(*this == rhs);
     }
 
-    operator Colour() {
+    operator Colour() const {
         Colour c(rf(), gf(), bf(), af());
         return c;
     }

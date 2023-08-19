@@ -5,14 +5,14 @@
 namespace smlt {
 namespace ui {
 
-Frame::Frame(UIManager *owner, UIConfig *config, Stage* stage):
-    Widget(owner, config, stage) {
+Frame::Frame(Scene *owner, UIConfig config):
+    Widget(owner, config, STAGE_NODE_TYPE_WIDGET_FRAME) {
 
-    set_background_colour(config->frame_background_colour_);
-    set_foreground_colour(config->frame_titlebar_colour_);
-    set_text_colour(config->frame_text_colour_);
-    set_border_width(config->frame_border_width_);
-    set_border_colour(config->frame_border_colour_);
+    set_background_colour(config.frame_background_colour_);
+    set_foreground_colour(config.frame_titlebar_colour_);
+    set_text_colour(config.frame_text_colour_);
+    set_border_width(config.frame_border_width_);
+    set_border_colour(config.frame_border_colour_);
 }
 
 void Frame::finalize_build() {

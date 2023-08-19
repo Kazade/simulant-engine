@@ -8,6 +8,12 @@ namespace ui {
 struct LabelParams {
     UIConfig config;
     unicode text;
+
+    LabelParams(const unicode& text):
+        text(text) {}
+
+    LabelParams(const UIConfig& config):
+        config(config) {}
 };
 
 class Label:
@@ -15,7 +21,7 @@ class Label:
     public RefCounted<Label> {
 
 public:
-    Label(UIManager* owner, UIConfig* config, Stage* stage);
+    Label(Scene* owner, const UIConfig& config);
 };
 
 }

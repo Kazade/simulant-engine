@@ -623,8 +623,8 @@ class KeyboardPanel:
     friend class Keyboard;
 
 public:
-    KeyboardPanel(UIConfig* config, Stage* stage):
-        Widget(nullptr, config, stage) {}
+    KeyboardPanel(Scene* owner, UIConfig config):
+        Widget(owner, config, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
 
     bool on_init() override {
         auto ret = Widget::init();
@@ -1179,7 +1179,7 @@ private:
 };
 
 Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
-    Widget(owner, params->config) {
+    Widget(owner, params->config, (StageNodeType) STAGE_NODE_TYPE_WIDGET_KEYBOARD) {
 
     resize(-1, -1);
     set_background_colour(smlt::Colour::NONE);
@@ -1197,14 +1197,14 @@ Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
     main_frame_->set_border_colour(config->background_colour_);
     main_frame_->set_foreground_colour(smlt::Colour::NONE);
 
-    panel_ = scene->create_node<KeyboardPanel>(config);
+    panel_ = scene->create_node<KeyboardPanel>(*config);
 
     panel_->set_background_colour(config->background_colour_);
     panel_->set_border_colour(config->background_colour_);
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    entry_ = scene->create_node<TextEntry>(config);
+    entry_ = scene->create_node<TextEntry>(*config);
     entry_->set_text(params->initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
@@ -1214,20 +1214,20 @@ Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
     entry_->set_padding(Px(4));
 
-    info_row_ = scene->create_node<Frame>(config);
+    info_row_ = scene->create_node<Frame>(*config);
     info_row_->set_border_colour(config->foreground_colour_);
     info_row_->set_border_width(2);
     info_row_->set_background_colour(style_->foreground_colour_);
     info_row_->set_foreground_colour(style_->foreground_colour_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
-    auto x_button = scene->create_node<Label>(config);
+    auto x_button = scene->create_node<Label>(*config);
     x_button->set_text("X");
     x_button->set_text_colour(smlt::Colour::WHITE);
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
-    auto x_label = scene->create_node<Label>(config);
+    auto x_label = scene->create_node<Label>(*config);
     x_label->set_background_colour(smlt::Colour::RED);
     x_label->set_text(_T("Cancel"));
     x_label->set_text_colour(smlt::Colour::WHITE);
