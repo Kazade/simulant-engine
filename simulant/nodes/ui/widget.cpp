@@ -14,23 +14,22 @@ namespace ui {
 
 Widget::Widget(Scene *owner, UIConfig defaults, StageNodeType type, std::shared_ptr<WidgetStyle> shared_style):
     ContainerNode(owner, type),
-    owner_(owner),
     theme_(defaults),
     style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {
 
     if(!shared_style) {
-        set_foreground_colour(defaults->foreground_colour_);
-        set_background_colour(defaults->background_colour_);
-        set_text_colour(defaults->text_colour_);
+        set_foreground_colour(defaults.foreground_colour_);
+        set_background_colour(defaults.background_colour_);
+        set_text_colour(defaults.text_colour_);
     }
 
-    std::string family = (defaults->font_family_.empty()) ?
-        get_app()->config->ui.font_family : defaults->font_family_;
+    std::string family = (defaults.font_family_.empty()) ?
+        get_app()->config->ui.font_family : defaults.font_family_;
 
-    Px size = (defaults->font_size_ == Px(0)) ?
-        Px(get_app()->config->ui.font_size) : Px(defaults->font_size_);
+    Px size = (defaults.font_size_ == Px(0)) ?
+        Px(get_app()->config->ui.font_size) : Px(defaults.font_size_);
 
-    auto font = stage->ui->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
+    auto font = load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
     assert(font);
 
     set_font(font);
@@ -55,8 +54,8 @@ bool Widget::on_init() {
     spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
     spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
 
-    mesh_ = stage->assets->new_mesh(spec);
-    actor_ = stage->new_actor_with_mesh(mesh_);
+    mesh_ = scene->assets->new_mesh(spec);
+    actor_ = scene->create_node<Actor>(mesh_);
     actor_->set_parent(this);
 
     /* Use the global materials until we can't anymore! */
@@ -679,6 +678,58 @@ void Widget::rebuild() {
 
     anchor_point_dirty_ = false;
     finalize_build();
+}
+
+FontPtr Widget::load_or_get_font(const std::string &family, const Px &size, const FontWeight &weight, const FontStyle &style) {
+    return _load_or_get_font(
+        scene->assets, get_app()->shared_assets.get(),
+        family, size, weight, style
+        );
+}
+
+FontPtr Widget::_load_or_get_font(AssetManager *assets, AssetManager *shared_assets, const std::string &familyc, const Px &sizec, const FontWeight &weight, const FontStyle &style) {
+
+    /* Apply defaults if that's what was asked */
+    std::string family = familyc;
+    if(family == DEFAULT_FONT_FAMILY) {
+        family = get_app()->config->ui.font_family;
+    }
+
+    Px size = sizec;
+    if(size == DEFAULT_FONT_SIZE) {
+        size = Px(get_app()->config->ui.font_size);
+    }
+
+    std::string alias = Font::generate_name(family, size.value, weight, style);
+
+    /* See if the font is already loaded, first look at the stage
+     * level, but fallback to the window level (in case it was pre-loaded
+     * globally) */
+    FontPtr fnt;
+    if(assets) {
+        fnt = assets->find_font(alias);
+    }
+
+    if(!fnt && shared_assets) {
+        fnt = shared_assets->find_font(alias);
+    }
+
+    /* We already loaded it, all is well! */
+    if(fnt) {
+        return fnt;
+    }
+
+    FontFlags flags;
+    flags.size = size.value;
+    flags.weight = weight;
+    flags.style = style;
+
+    fnt = assets->new_font_from_family(family, flags);
+    if(fnt) {
+        fnt->set_name(alias);
+    }
+
+    return fnt;
 }
 
 Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dimensions) const {

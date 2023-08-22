@@ -61,8 +61,12 @@ class SceneLoadException : public std::runtime_error {};
 
 typedef sig::signal<void ()> SceneOnActivatedSignal;
 typedef sig::signal<void ()> SceneOnDeactivatedSignal;
+
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
+
+typedef sig::signal<void (Camera*, Viewport*, StageNode*)> PipelineStartedSignal;
+typedef sig::signal<void (Camera*, Viewport*, StageNode*)> PipelineFinishedSignal;
 
 
 class LightingSettings {
@@ -86,6 +90,8 @@ class Scene:
     DEFINE_SIGNAL(StageNodeCreatedSignal, signal_stage_node_created);
     DEFINE_SIGNAL(StageNodeDestroyedSignal, signal_stage_node_destroyed);
 
+    DEFINE_SIGNAL(PipelineStartedSignal, signal_pipeline_started);
+    DEFINE_SIGNAL(PipelineFinishedSignal, signal_pipeline_finished);
 public:
     typedef std::shared_ptr<Scene> ptr;
 
@@ -188,7 +194,7 @@ private:
 
     void do_generate_renderables(
         batcher::RenderQueue*,
-        const CameraPtr &, const DetailLevel) override final {
+        const Camera*, const Viewport*, const DetailLevel) override final {
         /* Do nothing, Scenes don't create renderables.. for now */
     }
 

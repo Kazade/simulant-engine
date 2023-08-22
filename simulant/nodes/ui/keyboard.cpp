@@ -770,7 +770,7 @@ private:
 
     void focus_key(int x, int y) {
         auto fg_color = calc_foreground_colour();
-        auto highlight_colour = theme_->highlight_colour_;
+        auto highlight_colour = theme_.highlight_colour_;
 
         auto key = find_key(x, y);
         if(key) {

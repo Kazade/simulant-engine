@@ -20,7 +20,7 @@ SiblingIterator<IsConst>& SiblingIterator<IsConst>::operator++() {
 }
 
 template<bool IsConst>
-SiblingIterator<IsConst>::SiblingIterator(StageNode *start, StageNode* current):
+SiblingIterator<IsConst>::SiblingIterator(const StageNode *start, const StageNode* current):
     start_(start),
     current_(current) {
 

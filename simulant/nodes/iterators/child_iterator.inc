@@ -18,9 +18,9 @@ ChildIterator<IsConst>& ChildIterator<IsConst>::operator++() {
 }
 
 template<bool IsConst>
-ChildIterator<IsConst>::ChildIterator(StageNode *parent, StageNode* start):
+ChildIterator<IsConst>::ChildIterator(const StageNode *parent, const StageNode* start):
     parent_(parent),
-    current_(start) {
+    current_(const_cast<StageNode*>(start)) {
 
     assert(!current_ || current_->parent() == parent);
 }

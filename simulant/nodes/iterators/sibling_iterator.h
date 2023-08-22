@@ -61,10 +61,10 @@ public:
 private:
     friend class StageNode;
 
-    SiblingIterator(StageNode* start, StageNode* current);
+    SiblingIterator(const StageNode* start, const StageNode* current);
 
-    StageNode* start_ = nullptr;
-    StageNode* current_ = nullptr;
+    const StageNode* start_ = nullptr;
+    const StageNode* current_ = nullptr;
 };
 
 }

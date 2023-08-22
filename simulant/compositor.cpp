@@ -230,8 +230,9 @@ static bool build_renderables(
     auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
 
     /* Push any renderables for this node */
+    auto viewport = pipeline_stage->viewport.get();
     auto initial = render_queue_->renderable_count();
-    node->generate_renderables(render_queue_, camera, level);
+    node->generate_renderables(render_queue_, camera, viewport, level);
 
     // FIXME: Change get_renderables to return the number inserted
     auto count = render_queue_->renderable_count() - initial;
@@ -313,7 +314,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     signal_pipeline_started_(*pipeline_stage);
 
     // Trigger a signal to indicate the stage is about to be rendered
-    stage_node->signal_pipeline_started()(camera, viewport);
+    stage_node->scene->signal_pipeline_started()(camera, viewport, stage_node);
 
     static std::vector<Light*> lights_visible;
 
@@ -356,7 +357,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     render_queue_.traverse(visitor.get(), frame_id);
 
     // Trigger a signal to indicate the stage has been rendered
-    stage_node->signal_pipeline_finished()(camera, viewport);
+    stage_node->scene->signal_pipeline_finished()(camera, viewport, stage_node);
 
     signal_pipeline_finished_(*pipeline_stage);
     render_queue_.clear();

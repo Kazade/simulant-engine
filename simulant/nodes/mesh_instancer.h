@@ -82,9 +82,8 @@ public:
     bool hide_mesh_instance(MeshInstanceID mid);
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
-        const CameraPtr& camera,
-        const DetailLevel detail_level
-    ) override;
+        const Camera*camera, const Viewport* viewport, const DetailLevel
+    detail_level) override;
 
 private:
     MeshPtr mesh_;

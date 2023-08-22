@@ -61,10 +61,10 @@ public:
 private:
     friend class StageNode;
 
-    ChildIterator(StageNode* parent, StageNode* start);
+    ChildIterator(const StageNode* parent, const StageNode* start);
 
-    StageNode* parent_ = nullptr;
-    StageNode* current_ = nullptr;
+    const StageNode* parent_ = nullptr;
+    pointer current_ = nullptr;
 };
 
 }

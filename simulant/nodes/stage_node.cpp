@@ -5,7 +5,17 @@
 
 namespace smlt {
 
+std::vector<StageNode *> StageNode::find_descendents_by_types(std::initializer_list<StageNodeType> type_list) const {
+    std::set<StageNodeType> types(type_list);
+    std::vector<StageNode*> nodes;
+    for(auto& node: each_descendent()) {
+        if(types.count(node.node_type())) {
+            nodes.push_back(&node);
+        }
+    }
 
+    return nodes;
+}
 
 const StageNode* StageNode::child_at(std::size_t i) const {
     std::size_t j = 0;
@@ -111,8 +121,8 @@ void StageNode::set_parent(StageNode* new_parent) {
     on_parent_set(old_parent, parent_);
 }
 
-void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) {
-    do_generate_renderables(render_queue, camera, detail_level);
+void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const smlt::Camera* camera, const smlt::Viewport *viewport, const DetailLevel detail_level) {
+    do_generate_renderables(render_queue, camera, viewport, detail_level);
 }
 
 /* Right this is a bit confusing.

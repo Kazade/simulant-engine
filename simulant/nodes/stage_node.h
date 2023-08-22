@@ -30,9 +30,6 @@ class Scene;
 typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
 typedef sig::signal<void ()> CleanedUpSignal;
 
-typedef sig::signal<void (CameraPtr, Viewport*)> PipelineStartedSignal;
-typedef sig::signal<void (CameraPtr, Viewport*)> PipelineFinishedSignal;
-
 /* Used for multiple levels of detail when rendering stage nodes */
 
 enum DetailLevel {
@@ -78,8 +75,6 @@ class StageNode:
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up); // Fired when the node is cleaned up later, following destroy
-    DEFINE_SIGNAL(PipelineStartedSignal, signal_pipeline_started);
-    DEFINE_SIGNAL(PipelineFinishedSignal, signal_pipeline_finished);
 
 private:
     /* Heirarchy */
@@ -105,7 +100,19 @@ private:
     }
 
 public:
+    std::vector<StageNode*> find_descendents_by_types(std::initializer_list<StageNodeType> type_list) const;
+
     StageNode* find_descendent_with_id(StageNodeID id) {
+        for(auto& it: each_descendent()) {
+            if(it.id() == id) {
+                return &it;
+            }
+        }
+
+        return nullptr;
+    }
+
+    const StageNode* find_descendent_with_id(StageNodeID id) const {
         for(auto& it: each_descendent()) {
             if(it.id() == id) {
                 return &it;
@@ -184,7 +191,7 @@ public:
      *  rendered by the render pipelines */
     void generate_renderables(
         batcher::RenderQueue* render_queue,
-        const CameraPtr& camera,
+        const Camera*, const Viewport* viewport,
         const DetailLevel detail_level
     );
 
@@ -213,7 +220,7 @@ private:
     /* Return a list of renderables to pass into the render queue */
     virtual void do_generate_renderables(
         batcher::RenderQueue* render_queue,
-        const CameraPtr& camera,
+        const Camera*, const Viewport* viewport,
         const DetailLevel detail_level
     ) = 0;
 
@@ -230,10 +237,10 @@ public:
     class SiblingIteratorPair {
         friend class StageNode;
 
-        SiblingIteratorPair(StageNode* root):
+        SiblingIteratorPair(const StageNode* root):
             root_(root) {}
 
-        StageNode* root_;
+        const StageNode* root_;
 
     public:
         SiblingIterator<false> begin() {
@@ -255,17 +262,17 @@ public:
     class ChildIteratorPair {
         friend class StageNode;
 
-        ChildIteratorPair(StageNode* root):
+        ChildIteratorPair(const StageNode* root):
             root_(root) {}
 
-        StageNode* root_;
+        const StageNode* root_;
 
     public:
-        ChildIterator<false> begin() {
+        ChildIterator<false> begin() const {
             return ChildIterator<false>(root_, root_->first_child_);
         }
 
-        ChildIterator<false> end() {
+        ChildIterator<false> end() const {
             return ChildIterator<false>(root_, nullptr);
         }
     };
@@ -273,17 +280,17 @@ public:
     class DescendentIteratorPair {
         friend class StageNode;
 
-        DescendentIteratorPair(StageNode* root):
+        DescendentIteratorPair(const StageNode* root):
             root_(root) {}
 
-        StageNode* root_;
+        const StageNode* root_;
 
     public:
-        DescendentIterator<false> begin() {
-            return DescendentIterator<false>((StageNode*) root_);
+        DescendentIterator<false> begin() const {
+            return DescendentIterator<false>(root_);
         }
 
-        DescendentIterator<false> end() {
+        DescendentIterator<false> end() const {
             return DescendentIterator<false>(root_, nullptr);
         }
     };
@@ -291,14 +298,14 @@ public:
     class AncestorIteratorPair {
         friend class StageNode;
 
-        AncestorIteratorPair(StageNode* root):
+        AncestorIteratorPair(const StageNode* root):
             root_(root) {}
 
-        StageNode* root_;
+        const StageNode* root_;
 
     public:
         AncestorIterator<false> begin() {
-            return AncestorIterator<false>((StageNode*) root_);
+            return AncestorIterator<false>(root_);
         }
 
         AncestorIterator<false> end() {
@@ -314,11 +321,19 @@ public:
         return DescendentIteratorPair(this);
     }
 
+    DescendentIteratorPair each_descendent() const {
+        return DescendentIteratorPair(this);
+    }
+
     SiblingIteratorPair each_sibling() {
         return SiblingIteratorPair(this);
     }
 
     ChildIteratorPair each_child() {
+        return ChildIteratorPair(this);
+    }
+
+    ChildIteratorPair each_child() const {
         return ChildIteratorPair(this);
     }
 
@@ -468,7 +483,7 @@ public:
         StageNode(scene, node_type) {}
 
     /* Containers don't directly have renderables, but their children do */
-    void do_generate_renderables(batcher::RenderQueue*, const CameraPtr&, const DetailLevel) override {}
+    void do_generate_renderables(batcher::RenderQueue*, const Camera*, const Viewport*, const DetailLevel) override {}
 
     virtual ~ContainerNode() {}
 };

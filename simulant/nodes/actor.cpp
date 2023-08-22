@@ -221,7 +221,7 @@ bool Actor::has_mesh(DetailLevel detail_level) const {
     return bool(meshes_[detail_level].get());
 }
 
-void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) {
+void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Camera* camera, const Viewport*, const DetailLevel detail_level) {
     _S_UNUSED(camera);
 
     auto mesh = find_mesh(detail_level);

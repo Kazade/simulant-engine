@@ -65,10 +65,6 @@ public:
         return &config_;
     }
 
-    FontPtr load_or_get_font(
-        const std::string& family, const Px& size, const FontWeight &weight, const FontStyle& style
-    );
-
 private:
     UIConfig config_;
 
@@ -77,21 +73,26 @@ private:
     void on_touch_move(const TouchEvent &evt) override;
 
     void queue_event(const TouchEvent& evt);
-    void process_event_queue(const Camera *camera, const Viewport& viewport) const;
+    void process_event_queue(
+        const Camera* camera,
+        const Viewport* viewport
+    ) const;
     void clear_event_queue();
 
     std::vector<UIEvent> queued_events_;
 
-    WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport& viewport, const Vec2& window_coord) const;
+    WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport *viewport, const Vec2& window_coord) const;
 
     sig::connection frame_finished_connection_;
     sig::connection pre_render_connection_;
 
+    virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
+        const Camera*camera, const Viewport* viewport,
+        const DetailLevel detail_level
+    ) override;
+
 private:
     friend class ::smlt::Application;
-    static FontPtr _load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
-        const std::string& family, const Px& size, const FontWeight &weight
-    , const FontStyle &style);
 
     MaterialPtr global_background_material_;
     MaterialPtr global_foreground_material_;
@@ -99,6 +100,8 @@ private:
 
     MaterialPtr clone_global_background_material();
     MaterialPtr clone_global_foreground_material();
+
+    std::vector<Widget*> find_child_widgets() const;
 };
 
 }

@@ -40,11 +40,6 @@ UIManager::UIManager(Scene *owner, UIConfig config):
     auto window = get_app()->window.get();
     window->register_event_listener(this);
 
-    /* Each time the stage is rendered with a camera and viewport, we need to process any queued events
-     * so that (for example) we can interact with the same widget rendered to different viewports */
-    pre_render_connection_ = stage_->signal_stage_pre_render().connect([this](CameraPtr camera, Viewport viewport) {
-        this->process_event_queue(camera, viewport);
-    });
 
     /* We clear queued events at the end of each frame */
     frame_finished_connection_ = get_app()->signal_frame_finished().connect([this]() {
@@ -52,7 +47,7 @@ UIManager::UIManager(Scene *owner, UIConfig config):
     });
 
     auto new_material = [&]() -> smlt::MaterialPtr {
-        auto material = stage_->asset_manager_->new_material_from_file(
+        auto material = scene->assets->new_material_from_file(
             Material::BuiltIns::TEXTURE_ONLY
         );
 
@@ -201,7 +196,10 @@ void UIManager::queue_event(const TouchEvent& e) {
     queued_events_.push_back(evt);
 }
 
-void UIManager::process_event_queue(const Camera* camera, const Viewport &viewport) const {
+void UIManager::process_event_queue(
+    const Camera* camera,
+    const Viewport* viewport) const {
+
     if(queued_events_.empty()) {
         return;
     }
@@ -211,7 +209,10 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
     for(auto& evt: queued_events) {
         switch(evt.type) {
             case UI_EVENT_TYPE_TOUCH: {
-                auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y));
+                auto widget = find_widget_at_window_coordinate(
+                    camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y)
+                );
+
                 if(widget) {
                     if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_DOWN) {
                         widget->fingerdown(evt.touch.touch_id);
@@ -232,7 +233,7 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
                 if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_MOVE || evt.touch.type == TOUCH_EVENT_TYPE_FINGER_UP) {
                     // Go through all the widgets, if one is being pressed and it's different
                     // than the one above, then trigger a fingerleave event
-                    for(auto iter: *manager_) {
+                    for(auto iter: find_child_widgets()) {
                         if(iter->is_pressed_by_finger(evt.touch.touch_id) && iter != widget) {
                             iter->fingerleave(evt.touch.touch_id);
                         }
@@ -250,17 +251,38 @@ void UIManager::clear_event_queue() {
     queued_events_.clear();
 }
 
-WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport &viewport, const Vec2 &window_coord) const {
+std::vector<Widget*> UIManager::find_child_widgets() const {
+    auto nodes = find_descendents_by_types({
+        STAGE_NODE_TYPE_WIDGET_BUTTON,
+        STAGE_NODE_TYPE_WIDGET_FRAME,
+        STAGE_NODE_TYPE_WIDGET_IMAGE,
+        STAGE_NODE_TYPE_WIDGET_KEYBOARD,
+        STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL,
+        STAGE_NODE_TYPE_WIDGET_LABEL,
+        STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR,
+        STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY,
+    });
+
+    std::vector<Widget*> widgets;
+    widgets.reserve(nodes.size());
+    for(auto& node: nodes) {
+        widgets.push_back(static_cast<Widget*>(node));
+    }
+
+    return widgets;
+}
+
+WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, const Viewport* viewport, const Vec2 &window_coord) const {
     WidgetPtr result = nullptr;
 
     auto window = get_app()->window.get();
 
-    for(auto widget: *manager_) {
+    for(auto widget: find_child_widgets()) {
         auto aabb = widget->transformed_aabb();
         std::vector<Vec3> ss_points;
 
         for(auto& corner: aabb.corners()) {
-            ss_points.push_back(camera->project_point(*window, viewport, corner).value());
+            ss_points.push_back(camera->project_point(*window, *viewport, corner).value());
         }
 
         AABB ss_aabb(&ss_points[0], ss_points.size());
@@ -274,67 +296,23 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     return result;
 }
 
-FontPtr UIManager::load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style) {
-    return _load_or_get_font(
-        stage_->assets, get_app()->shared_assets.get(),
-        family, size, weight, style
-    );
+void UIManager::do_generate_renderables(batcher::RenderQueue *render_queue, const Camera* camera, const Viewport *viewport, const DetailLevel detail_level) {
+    /* Each time the scene is rendered with a camera and viewport, we need to process any queued events
+     * so that (for example) we can interact with the same widget rendered to different viewports */
+    process_event_queue(camera, viewport);
 }
 
-FontPtr UIManager::_load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
-        const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style) {
 
-    /* Apply defaults if that's what was asked */
-    std::string family = familyc;
-    if(family == DEFAULT_FONT_FAMILY) {
-        family = get_app()->config->ui.font_family;
-    }
 
-    Px size = sizec;
-    if(size == DEFAULT_FONT_SIZE) {
-        size = Px(get_app()->config->ui.font_size);
-    }
-
-    std::string alias = Font::generate_name(family, size.value, weight, style);
-
-    /* See if the font is already loaded, first look at the stage
-     * level, but fallback to the window level (in case it was pre-loaded
-     * globally) */
-    FontPtr fnt;
-    if(assets) {
-        fnt = assets->find_font(alias);
-    }
-
-    if(!fnt && shared_assets) {
-        fnt = shared_assets->find_font(alias);
-    }
-
-    /* We already loaded it, all is well! */
-    if(fnt) {
-        return fnt;
-    }
-
-    FontFlags flags;
-    flags.size = size.value;
-    flags.weight = weight;
-    flags.style = style;
-
-    fnt = assets->new_font_from_family(family, flags);
-    if(fnt) {
-        fnt->set_name(alias);
-    }
-
-    return fnt;
-}
 
 MaterialPtr UIManager::clone_global_background_material() {
     assert(global_background_material_);
-    return stage_->asset_manager_->clone_material(global_background_material_->id());
+    return scene->assets->clone_material(global_background_material_->id());
 }
 
 MaterialPtr UIManager::clone_global_foreground_material() {
     assert(global_foreground_material_);
-    return stage_->asset_manager_->clone_material(global_foreground_material_->id());
+    return scene->assets->clone_material(global_foreground_material_->id());
 }
 
 }

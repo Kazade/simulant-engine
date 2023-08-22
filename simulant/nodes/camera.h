@@ -50,6 +50,7 @@ public:
     const Mat4& projection_matrix() const { return projection_matrix_; }
 
     Frustum& frustum() { return frustum_; }
+    const Frustum& frustum() const { return frustum_; }
 
     void set_perspective_projection(const Degrees &fov, float aspect, float near=1.0f, float far=1000.0f);
     void set_orthographic_projection(float left, float right, float bottom, float top, float near=-1.0, float far=1.0);

@@ -70,7 +70,10 @@ public:
         return vertex_data_;
     }
 
-    void do_generate_renderables(batcher::RenderQueue* render_queue, const CameraPtr& camera, const DetailLevel detail_level) override;
+    void do_generate_renderables(
+        batcher::RenderQueue* render_queue,
+        const Camera*, const Viewport* viewport, const DetailLevel
+    ) override;
 
     ParticleScript* script() const {
         return script_.get();

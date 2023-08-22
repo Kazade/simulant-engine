@@ -241,8 +241,7 @@ protected:
 
     friend class Keyboard; // For set_font calls on child widgets
 
-    UIManager* owner_ = nullptr;
-    UIConfig* theme_ = nullptr;
+    UIConfig theme_;
     FontPtr font_ = nullptr;
 
     std::shared_ptr<WidgetStyle> style_;
@@ -333,6 +332,13 @@ protected:
     virtual void finalize_render() {}
     virtual void finalize_build() {}
     virtual bool pre_set_text(const unicode&) { return true; }
+
+    FontPtr load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style);
+
+private:
+    FontPtr _load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
+            const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style);
+
 };
 
 }
