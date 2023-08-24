@@ -24,6 +24,66 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS | INIT_NET);
 #define SCREEN_DEPTH 32
 
 
+struct KOSWindowPrivate {
+    /* VMU LCD update queue (OK it's not really a queue...)
+     *
+     * Basically updating a VMU screen is a blocking operation, and if we do that in the main
+     * thread we're in for bad times.
+     *
+     * So instead we use a long-running thread which literally sits waiting for something to appear
+     * in this map, and then uploads the data to the appropriate VMU, then removes it from the map.
+     *
+     * The key of the map is (port << 4 | unit) where port and unit are the things passed to
+     * maple_enum_dev to identify the target VMU.
+     */
+    std::unordered_map<uint8_t, std::vector<uint8_t>> vmu_lcd_update_queue_;
+    smlt::thread::Atomic<bool> lcd_updates_running_ = true;
+
+    /* Name, to port/unit combo. This only includes VMUs we've seen during the last probe */
+    thread::Mutex vmu_mutex_;
+    std::unordered_map<std::string, std::pair<int, int>> vmu_lookup_;
+};
+
+static void vmu_lcd_update_thread(KOSWindowPrivate* self) {
+    S_DEBUG("Starting LCD update thread");
+
+    while(self->lcd_updates_running_) {
+        do {
+            smlt::thread::sleep(10);
+            {
+                thread::Lock<thread::Mutex> g(self->vmu_mutex_);
+                if(!self->vmu_lcd_update_queue_.empty()) {
+                    break;
+                }
+            }
+        } while(self->lcd_updates_running_);
+
+        thread::Lock<thread::Mutex> g(self->vmu_mutex_);
+        for(auto& p: self->vmu_lcd_update_queue_) {
+            auto unit = p.first & 0xF;
+            auto port = p.first >> 4;
+
+            auto device = maple_enum_dev(port, unit);
+            if(device) {
+                int err = vmu_draw_lcd(device, (uint8_t*) &p.second[0]);
+                if(err < 0) {
+                    S_ERROR("There was an error updating the VMU LCD: {0}", err);
+                }
+            }
+        }
+        self->vmu_lcd_update_queue_.clear();
+    }
+
+    S_DEBUG("Ended LCD update thread");
+}
+
+KOSWindow::KOSWindow():
+    private_(new KOSWindowPrivate()) {
+
+    /* Run the lcd update thread async */
+    smlt::thread::async(&vmu_lcd_update_thread, private_);
+}
+
 void KOSWindow::swap_buffers() {
     glKosSwapBuffers();
 }
@@ -53,7 +113,8 @@ bool KOSWindow::_init_renderer(Renderer* renderer) {
 }
 
 void KOSWindow::destroy_window() {
-
+    /* Stop the update thread */
+    private_->lcd_updates_running_ = false;
 }
 
 static std::string vmu_port(int number) {

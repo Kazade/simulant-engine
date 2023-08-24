@@ -11,13 +11,15 @@
 
 namespace smlt {
 
+struct KOSWindowPrivate;
+
 class KOSWindow : public Window {
 public:
     static Window::ptr create(Application* app) {
         return Window::create<KOSWindow>(app);
     }
 
-    KOSWindow() = default;
+    KOSWindow();
 
     void set_title(const std::string&) override {} // No-op
     void cursor_position(int32_t&, int32_t&) override {} // No-op
@@ -40,11 +42,6 @@ private:
 
     void render_screen(Screen* screen, const uint8_t* data, int row_stride) override;
 
-    /* Name, to port/unit combo. This only includes VMUs we've seen during the last probe */
-
-    thread::Mutex vmu_mutex_;
-    std::unordered_map<std::string, std::pair<int, int>> vmu_lookup_;
-
     float time_since_last_controller_update_ = 0.0f;
 
     struct ControllerState {
@@ -64,6 +61,9 @@ private:
 
     virtual void game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) override;
     virtual void game_controller_stop_rumble(GameController *controller) override;
+
+    friend struct KOSWindowPrivate;
+    std::shared_ptr<KOSWindowPrivate> private_;
 };
 
 }
