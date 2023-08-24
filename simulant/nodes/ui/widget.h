@@ -336,6 +336,9 @@ protected:
     FontPtr load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style);
 
 private:
+    MaterialPtr find_or_create_material(const char* name);
+
+
     FontPtr _load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
             const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style);
 

@@ -46,25 +46,6 @@ UIManager::UIManager(Scene *owner, UIConfig config):
         this->clear_event_queue();
     });
 
-    auto new_material = [&]() -> smlt::MaterialPtr {
-        auto material = scene->assets->new_material_from_file(
-            Material::BuiltIns::TEXTURE_ONLY
-        );
-
-        if(!material) {
-            S_ERROR("[CRITICAL] Unable to load the material for widgets!");
-            return smlt::MaterialPtr();
-        }
-
-        material->set_blend_func(BLEND_ALPHA);
-        material->set_depth_test_enabled(false);
-        material->set_cull_mode(CULL_MODE_NONE);
-        return material;
-    };
-
-    global_background_material_ = new_material();
-    global_foreground_material_ = new_material();
-    global_border_material_ = new_material();
 }
 
 UIManager::~UIManager() {
@@ -300,19 +281,6 @@ void UIManager::do_generate_renderables(batcher::RenderQueue *render_queue, cons
     /* Each time the scene is rendered with a camera and viewport, we need to process any queued events
      * so that (for example) we can interact with the same widget rendered to different viewports */
     process_event_queue(camera, viewport);
-}
-
-
-
-
-MaterialPtr UIManager::clone_global_background_material() {
-    assert(global_background_material_);
-    return scene->assets->clone_material(global_background_material_->id());
-}
-
-MaterialPtr UIManager::clone_global_foreground_material() {
-    assert(global_foreground_material_);
-    return scene->assets->clone_material(global_foreground_material_->id());
 }
 
 }

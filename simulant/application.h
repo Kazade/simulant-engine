@@ -358,6 +358,8 @@ private:
 
     std::string active_language_ = DEFAULT_LANGUAGE_CODE;
     std::map<unicode, unicode> active_translations_;
+
+    std::shared_ptr<Scene> overlay_scene_;
 public:
     S_DEFINE_PROPERTY(window, &Application::window_);
     S_DEFINE_PROPERTY(data, &Application::data_carrier_);
@@ -370,6 +372,12 @@ public:
     S_DEFINE_PROPERTY(stats, &Application::stats_);
     S_DEFINE_PROPERTY(vfs, &Application::vfs_);
     S_DEFINE_PROPERTY(sound_driver, &Application::sound_driver_);
+
+    /** The overlay is a global scene that is always rendered with the highest
+     *  priority over everything. It's used for adding things like FPS counters
+     *  or performance graphs or persistent game version text etc. */
+    S_DEFINE_PROPERTY(overlay, &Application::overlay_scene_);
+
 private:
     friend Application* get_app();
     static Application* global_app;

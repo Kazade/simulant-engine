@@ -149,7 +149,6 @@ public:
     bool has_material(const AssetID& id) const;
     MaterialPtr find_material(const std::string& name);
 
-
     /* Sound API */
     SoundPtr new_sound_from_file(
         const Path& filename,

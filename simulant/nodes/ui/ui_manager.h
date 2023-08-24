@@ -94,13 +94,6 @@ private:
 private:
     friend class ::smlt::Application;
 
-    MaterialPtr global_background_material_;
-    MaterialPtr global_foreground_material_;
-    MaterialPtr global_border_material_;
-
-    MaterialPtr clone_global_background_material();
-    MaterialPtr clone_global_foreground_material();
-
     std::vector<Widget*> find_child_widgets() const;
 };
 

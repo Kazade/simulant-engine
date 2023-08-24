@@ -47,6 +47,30 @@ Widget::~Widget() {
     style_.reset();
 }
 
+MaterialPtr Widget::find_or_create_material(const char* name) {
+    auto material = scene->assets->find_material(name);
+    if(!material) {
+        material = scene->assets->new_material_from_file(
+            Material::BuiltIns::TEXTURE_ONLY
+        );
+        material->set_name(name);
+    }
+
+    if(!material) {
+        S_ERROR("[CRITICAL] Unable to load the material for widgets!");
+        return smlt::MaterialPtr();
+    }
+
+    material->set_blend_func(BLEND_ALPHA);
+    material->set_depth_test_enabled(false);
+    material->set_cull_mode(CULL_MODE_NONE);
+    return material;
+}
+
+static const char* GLOBAL_BORDER_NAME = "__global_border";
+static const char* GLOBAL_BACKGROUND_NAME = "__global_background";
+static const char* GLOBAL_FOREGROUND_NAME = "__global_foreground";
+
 bool Widget::on_init() {
     VertexSpecification spec = VertexSpecification::DEFAULT;
 
@@ -59,9 +83,9 @@ bool Widget::on_init() {
     actor_->set_parent(this);
 
     /* Use the global materials until we can't anymore! */
-    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = find_or_create_material(GLOBAL_BORDER_NAME);
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = find_or_create_material(GLOBAL_BACKGROUND_NAME);
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = find_or_create_material(GLOBAL_FOREGROUND_NAME);
 
     /* Now we must create the submeshes in the order we want them rendered */
     mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
@@ -83,14 +107,12 @@ void Widget::on_clean_up() {
 }
 
 void Widget::set_font(const std::string& family, Rem size, FontWeight weight, FontStyle style) {
-    Px final = owner_->config()->font_size_ * size;
+    Px final = theme_.font_size_ * size;
     set_font(family, final, weight, style);
 }
 
 void Widget::set_font(const std::string& family, Px size, FontWeight weight, FontStyle style) {
-    if(owner_) {
-        set_font(owner_->load_or_get_font(family, size, weight, style));
-    }
+    set_font(load_or_get_font(family, size, weight, style));
 }
 
 void Widget::set_font(FontPtr font) {
@@ -868,11 +890,11 @@ void Widget::set_background_image(TexturePtr texture) {
         return;
     }
 
-    assert(owner_->global_background_material_);
-
-    if(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] == owner_->global_background_material_) {
+    if(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->name() == std::string(GLOBAL_BACKGROUND_NAME)) {
         /* We need to switch to an independent material and can't use the global one anymore */
-        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = owner_->clone_global_background_material();
+        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = scene->assets->clone_material(
+            style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->id()
+        );
         mesh_->find_submesh("background")->set_material(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]);
     }
 
@@ -903,11 +925,11 @@ void Widget::set_foreground_image(TexturePtr texture) {
         return;
     }
 
-    assert(owner_->global_foreground_material_);
-
-    if(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] == owner_->global_foreground_material_) {
+    if(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->name() == std::string(GLOBAL_FOREGROUND_NAME)) {
         /* We need to switch to an independent material and can't use the global one anymore */
-        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->clone_global_foreground_material();
+        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = scene->assets->clone_material(
+            style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->id()
+        );
         mesh_->find_submesh("foreground")->set_material(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]);
     }
 

@@ -33,10 +33,10 @@ class StatsPanel:
     public RefCounted<StatsPanel> {
 
 public:
-    StatsPanel(Window* window);
+    StatsPanel(Scene* owner);
 
-    bool init() override;
-    void clean_up() override;
+    bool on_init() override;
+    void on_clean_up() override;
 private:
     Window* window_ = nullptr;
 

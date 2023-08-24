@@ -48,6 +48,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "asset_manager.h"
 #include "application.h"
 #include "scenes/loading.h"
+#include "scenes/scene.h"
 #include "input/input_state.h"
 #include "platform.h"
 #include "time_keeper.h"
@@ -338,6 +339,14 @@ bool Application::_call_init() {
 
     S_DEBUG("Sound driver started");
 
+    class OverlayScene : public Scene {
+    public:
+        OverlayScene(Window* window):
+            Scene(window) {}
+        void load() override {}
+    };
+
+    overlay_scene_.reset(new OverlayScene(window_.get()));
     scene_manager_.reset(new SceneManager(window_.get()));
 
     // Add some useful scenes by default, these can be overridden in init if the

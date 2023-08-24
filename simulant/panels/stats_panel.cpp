@@ -21,6 +21,8 @@
 #include "../window.h"
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
+#include "../nodes/camera.h"
+#include "../nodes/actor.h"
 #include "../compositor.h"
 #include "../nodes/ui/label.h"
 #include "../platform.h"
@@ -35,28 +37,15 @@
 
 namespace smlt {
 
-StatsPanel::StatsPanel(Window *window):
-    window_(window) {
+StatsPanel::StatsPanel(Scene *owner):
+    Panel(owner, STAGE_NODE_TYPE_STATS_PANEL) {
 
 }
 
-bool StatsPanel::init() {
-    if(!Panel::init()) {
+bool StatsPanel::on_init() {
+    if(!Panel::on_init()) {
         return false;
     }
-
-    ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
-    pipeline_ = window_->compositor->render(
-        stage_.get(), ui_camera_
-    )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
-    pipeline_->set_name("stats_pipeline");
-    pipeline_->deactivate();
-
-    /* If the pipeline is destroyed, make sure
-     * we don't keep a reference around */
-    pipeline_->signal_destroyed().connect([&]() {
-        pipeline_ = nullptr;
-    });
 
     auto overlay = stage_;
 
@@ -112,7 +101,7 @@ bool StatsPanel::init() {
     return true;
 }
 
-void StatsPanel::clean_up() {
+void StatsPanel::on_clean_up() {
     frame_started_.disconnect();
 
     if(pipeline_) {
@@ -120,7 +109,7 @@ void StatsPanel::clean_up() {
         pipeline_ = nullptr;
     }
 
-    Panel::clean_up();
+    Panel::on_clean_up();
 
     fps_ = nullptr;
     frame_time_ = nullptr;
