@@ -7,14 +7,14 @@
 namespace smlt {
 namespace loaders {
     void TTFLoader::into(Loadable& resource, const LoaderOptions& options) {
-        const uint32_t TEXTURE_WIDTH = 512;
-        const uint32_t TEXTURE_HEIGHT = 512;
-
         Font* font = loadable_to<Font>(resource);
 
         CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
         uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
         std::size_t blur = smlt::any_cast<std::size_t>(options.at("blur_radius"));
+
+        const uint32_t TEXTURE_WIDTH = (font_size > 32) ? 1024 : 512;
+        const uint32_t TEXTURE_HEIGHT = (font_size > 32) ? 1024 : 512;
 
         font->info_.reset(new stbtt_fontinfo());
         font->font_size_ = font_size;
@@ -72,7 +72,7 @@ namespace loaders {
             );
 
             if(ret < 0) {
-                S_ERROR("{0} characters didn't fit the font texture!", -ret);
+                S_ERROR("{0} characters didn't fit the font texture! ({1} {2}px)", -ret, this->filename_, font_size);
             }
         });
 
