@@ -64,12 +64,16 @@ namespace loaders {
         tmp_texture->set_auto_upload(false);
 
         tmp_texture->mutate_data([&](uint8_t* tex_data, uint16_t w, uint16_t h, TextureFormat) {
-            stbtt_BakeFontBitmap(
+            int ret = stbtt_BakeFontBitmap(
                 &buffer[0], 0, font_size, tex_data,
                 w, h,
                 first_char, char_count,
                 (stbtt_bakedchar*) &font->char_data_[0]
             );
+
+            if(ret < 0) {
+                S_ERROR("{0} characters didn't fit the font texture!", -ret);
+            }
         });
 
         /* We don't need the file data anymore */
