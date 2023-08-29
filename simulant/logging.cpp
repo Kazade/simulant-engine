@@ -76,6 +76,10 @@ void StdIOHandler::do_write_message(Logger*,
     }
 }
 
+void verbose(const std::string& text, const std::string& file, int32_t line) {
+    get_logger("/")->verbose(text, file, line);
+}
+
 void debug(const std::string& text, const std::string& file, int32_t line) {
     get_logger("/")->debug(text, file, line);
 }

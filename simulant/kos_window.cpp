@@ -24,6 +24,7 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS | INIT_NET);
 #define SCREEN_DEPTH 32
 
 
+/* pimpl to avoid exposing implementation */
 struct KOSWindowPrivate {
     /* VMU LCD update queue (OK it's not really a queue...)
      *
@@ -37,7 +38,8 @@ struct KOSWindowPrivate {
      * maple_enum_dev to identify the target VMU.
      */
     std::unordered_map<uint8_t, std::vector<uint8_t>> vmu_lcd_update_queue_;
-    smlt::thread::Atomic<bool> lcd_updates_running_ = true;
+    smlt::thread::Atomic<bool> lcd_updates_running_ = {true};
+    smlt::thread::Future<void> update_future_;
 
     /* Name, to port/unit combo. This only includes VMUs we've seen during the last probe */
     thread::Mutex vmu_mutex_;
@@ -48,6 +50,7 @@ static void vmu_lcd_update_thread(KOSWindowPrivate* self) {
     S_DEBUG("Starting LCD update thread");
 
     while(self->lcd_updates_running_) {
+        /* Check for updates */
         do {
             smlt::thread::sleep(10);
             {
@@ -58,6 +61,12 @@ static void vmu_lcd_update_thread(KOSWindowPrivate* self) {
             }
         } while(self->lcd_updates_running_);
 
+        /* Did we break the above loop because we're quitting? */
+        if(!self->lcd_updates_running_) {
+            break;
+        }
+
+        /* Update the vmur devices */
         thread::Lock<thread::Mutex> g(self->vmu_mutex_);
         for(auto& p: self->vmu_lcd_update_queue_) {
             auto unit = p.first & 0xF;
@@ -81,7 +90,16 @@ KOSWindow::KOSWindow():
     private_(new KOSWindowPrivate()) {
 
     /* Run the lcd update thread async */
-    smlt::thread::async(&vmu_lcd_update_thread, private_);
+    private_->update_future_ = smlt::thread::async(
+        &vmu_lcd_update_thread, private_.get()
+    );
+}
+
+KOSWindow::~KOSWindow() {
+    if(private_) {
+        private_->lcd_updates_running_ = false;
+        private_->update_future_.wait();
+    }
 }
 
 void KOSWindow::swap_buffers() {
@@ -128,7 +146,7 @@ static std::string vmu_port(int number) {
 void KOSWindow::probe_vmus() {
     const static int MAX_VMUS = 8;  // Four ports, two slots in each
 
-    thread::Lock<thread::Mutex> g(vmu_mutex_);
+    thread::Lock<thread::Mutex> g(private_->vmu_mutex_);
 
     std::unordered_map<std::string, std::pair<int, int>> new_lookup;
 
@@ -143,7 +161,7 @@ void KOSWindow::probe_vmus() {
         }
     }
 
-    for(auto& p: vmu_lookup_) {
+    for(auto& p: private_->vmu_lookup_) {
         if(new_lookup.find(p.first) == new_lookup.end()) {
             /* Delete the screen */
             _destroy_screen(p.first);
@@ -151,14 +169,14 @@ void KOSWindow::probe_vmus() {
     }
 
     for(auto& p: new_lookup) {
-        if(vmu_lookup_.find(p.first) == vmu_lookup_.end()) {
+        if(private_->vmu_lookup_.find(p.first) == private_->vmu_lookup_.end()) {
             /* Create a screen */
             _create_screen(p.first, 48, 32, SCREEN_FORMAT_G1, 5);
             S_DEBUG("Creating screen for VMU: {0}", p.first);
         }
     }
 
-    vmu_lookup_ = new_lookup;
+    private_->vmu_lookup_ = new_lookup;
 }
 
 static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button) {
@@ -423,11 +441,11 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
 }
 
 void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_stride) {
-    thread::Lock<thread::Mutex> g(vmu_mutex_);
+    thread::Lock<thread::Mutex> g(private_->vmu_mutex_);
 
-    auto it = vmu_lookup_.find(screen->name());
+    auto it = private_->vmu_lookup_.find(screen->name());
 
-    if(it == vmu_lookup_.end()) {
+    if(it == private_->vmu_lookup_.end()) {
         S_WARN("Tried to render to VMU that has been removed");
         return;
     }
@@ -436,13 +454,9 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_strid
 
     std::vector<uint8_t> rw_data(data, data + 192);
 
-    auto device = maple_enum_dev(vmu.first, vmu.second);
-    if(device) {
-        int err = vmu_draw_lcd(device, (uint8_t*) &rw_data[0]);
-        if(err < 0) {
-            S_ERROR("There was an error updating the VMU LCD: {0}", err);
-        }
-    }
+    uint8_t id = vmu.first << 4 | (vmu.second & 0xF);
+    private_->vmu_lcd_update_queue_.insert(std::make_pair(id, std::move(rw_data)));
+    S_VERBOSE("Pushed VMU update to queue for device {0}", id);
 }
 
 void KOSWindow::game_controller_start_rumble(GameController* controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {

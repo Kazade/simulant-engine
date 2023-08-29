@@ -25,7 +25,8 @@ enum LogLevel {
     LOG_LEVEL_ERROR = 1,
     LOG_LEVEL_WARN = 2,
     LOG_LEVEL_INFO = 3,
-    LOG_LEVEL_DEBUG = 4
+    LOG_LEVEL_DEBUG = 4,
+    LOG_LEVEL_VERBOSE = 5
 };
 
 class Logger;
@@ -93,6 +94,12 @@ public:
         handlers_.push_back(handler);
     }
 
+    void verbose(const std::string& text, const std::string& file="None", int32_t line=-1) {
+        if(level_ < LOG_LEVEL_VERBOSE) return;
+
+        write_message("VERBOSE", "\x1b[97m" + text + "\x1b[0m", file, line);
+    }
+
     void debug(const std::string& text, const std::string& file="None", int32_t line=-1) {
         if(level_ < LOG_LEVEL_DEBUG) return;
 
@@ -147,6 +154,7 @@ private:
 
 Logger* get_logger(const std::string& name);
 
+void verbose(const std::string& text, const std::string& file="None", int32_t line=-1);
 void debug(const std::string& text, const std::string& file="None", int32_t line=-1);
 void info(const std::string& text, const std::string& file="None", int32_t line=-1);
 void warn(const std::string& text, const std::string& file="None", int32_t line=-1);
@@ -173,6 +181,9 @@ private:
 
 #ifndef NDEBUG
 
+#define S_VERBOSE(str, ...) \
+    smlt::verbose(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
+
 #define S_DEBUG(str, ...) \
     smlt::debug(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
@@ -198,6 +209,9 @@ private:
     do { static char _done = 0; if(!_done++) smlt::error(_F(str).format(__VA_ARGS__)); } while(0)
 
 #else
+
+#define S_VERBOSE(str, ...) \
+    smlt::verbose(_F(str).format(__VA_ARGS__))
 
 #define S_DEBUG(str, ...) \
     smlt::debug(_F(str).format(__VA_ARGS__))

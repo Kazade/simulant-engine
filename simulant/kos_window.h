@@ -20,6 +20,7 @@ public:
     }
 
     KOSWindow();
+    virtual ~KOSWindow();
 
     void set_title(const std::string&) override {} // No-op
     void cursor_position(int32_t&, int32_t&) override {} // No-op
