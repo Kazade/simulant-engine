@@ -993,7 +993,7 @@ private:
 
                 Px ch_width = font_->character_width(ch);
                 Px ch_height = font_->character_height(ch);
-                auto min_max = font_->texture_coordinates_for_character(ch);
+                auto min_max = font_->char_texcoords(ch);
 
                 auto info = find_key(x, y);
                 if(info) {
@@ -1005,10 +1005,10 @@ private:
                     bounds.max.y = info->center.y + (ch_height / 2);
 
                     const smlt::Vec2 uvs [] = {
-                        smlt::Vec2(min_max.first.x, min_max.second.y),
-                        smlt::Vec2(min_max.second.x, min_max.second.y),
                         smlt::Vec2(min_max.first.x, min_max.first.y),
-                        smlt::Vec2(min_max.second.x, min_max.first.y)
+                        smlt::Vec2(min_max.second.x, min_max.first.y),
+                        smlt::Vec2(min_max.first.x, min_max.second.y),
+                        smlt::Vec2(min_max.second.x, min_max.second.y)
                     };
 
                     sm = new_rectangle("text", bounds, c, 0, uvs);
