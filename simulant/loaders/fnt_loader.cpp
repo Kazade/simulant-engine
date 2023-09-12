@@ -19,7 +19,7 @@ struct OptionsBitField {
 };
 
 struct InfoBlock {
-    uint16_t font_size;
+    uint16_t font_size = 0;
     OptionsBitField flags;
     uint8_t charset;
     uint16_t stretch_h;
@@ -145,21 +145,18 @@ void FNTLoader::read_text(Font* font, std::istream& data, const LoaderOptions &o
         } else if(type == "chars") {
 
         } else if(type == "char") {
-            auto id = smlt::stoi(line_settings["id"]) - 32;
+            auto id = smlt::stoi(line_settings["id"]);
             if(id >= 0) {
                 CharInfo c;
-                c.x0 = smlt::stof(line_settings["x"]);
-                c.x1 = c.x0 + smlt::stoi(line_settings["width"]);
-                c.y0 = smlt::stof(line_settings["y"]);
-                c.y1 = c.y0 + smlt::stoi(line_settings["height"]);
+                c.xy0.x = smlt::stof(line_settings["x"]);
+                c.xy1.x = c.xy0.x + smlt::stoi(line_settings["width"]);
+                c.xy0.y = smlt::stof(line_settings["y"]);
+                c.xy1.y = c.xy0.y + smlt::stoi(line_settings["height"]);
 
-                c.xoff = smlt::stoi(line_settings["xoffset"]);
-                c.yoff = smlt::stoi(line_settings["yoffset"]);
+                c.off.x = smlt::stoi(line_settings["xoffset"]);
+                c.off.y = smlt::stoi(line_settings["yoffset"]);
                 c.xadvance = smlt::stoi(line_settings["xadvance"]);
 
-                // Make sure we can contain this character and
-                // assign to the right place
-                font->char_data_.resize(id + 1);
                 font->char_data_[id] = c;
             }
         } else if(type == "kernings") {
@@ -249,20 +246,17 @@ void FNTLoader::read_binary(Font* font, std::istream& data, const LoaderOptions&
     }
 
     font->line_gap_ = common.line_height;
-    font->char_data_.resize(chars.size());
     font->font_size_ = info.font_size;
 
-    uint32_t i = 0;;
     for(auto& ch: chars) {
-        auto& dst = font->char_data_[i];
-        dst.x0 = ch.x;
-        dst.x1 = ch.x + ch.width;
-        dst.y0 = ch.y;
-        dst.y1 = ch.y + ch.height;
-        dst.xoff = ch.xoffset;
-        dst.yoff = ch.yoffset;
+        auto& dst = font->char_data_[ch.id];
+        dst.xy0.x = ch.x;
+        dst.xy1.x = ch.x + ch.width;
+        dst.xy0.y = ch.y;
+        dst.xy1.y = ch.y + ch.height;
+        dst.off.x = ch.xoffset;
+        dst.off.y = ch.yoffset;
         dst.xadvance = ch.xadvance;
-        ++i;
     }
 
     prepare_texture(font, pages[0]);
