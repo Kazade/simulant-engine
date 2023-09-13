@@ -63,7 +63,10 @@ prepare:linux-x64-gcc:
       - if: $CI_PIPELINE_SOURCE == "merge_request_event"
         changes:
           - .gitlab-ci.yml
-
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+        changes:
+          - .gitlab-ci.yml
+          
 prepare:linux-x64-gcc11:
   stage: prepare
   image: docker:latest
@@ -85,6 +88,9 @@ prepare:linux-x64-gcc11:
      - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc11
   rules:
       - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        changes:
+          - .gitlab-ci.yml
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
         changes:
           - .gitlab-ci.yml
 
@@ -112,6 +118,9 @@ prepare:windows-x64-mingw:
       - if: $CI_PIPELINE_SOURCE == "merge_request_event"
         changes:
           - .gitlab-ci.yml
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+        changes:
+          - .gitlab-ci.yml
 
 prepare:deploy:
   stage: prepare
@@ -134,6 +143,9 @@ prepare:deploy:
      - docker push $CI_REGISTRY_IMAGE:deploy
   rules:
       - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        changes:
+          - .gitlab-ci.yml
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
         changes:
           - .gitlab-ci.yml
 
