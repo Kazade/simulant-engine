@@ -47,7 +47,6 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 #include "asset_manager.h"
 #include "application.h"
-#include "scenes/loading.h"
 #include "scenes/scene.h"
 #include "input/input_state.h"
 #include "platform.h"

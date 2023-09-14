@@ -28,19 +28,16 @@ void Splash::load() {
     TextureFlags flags;
     flags.mipmap = smlt::MIPMAP_GENERATE_NONE;
 
-    //Create a stage
-    stage_ = new_stage();
-
     auto text_file = (window->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
     auto logo_file = (window->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
 
-    auto text_texture = stage_->assets->new_texture_from_file(text_file, flags);
-    text_ = stage_->ui->new_widget_as_image(text_texture);
+    auto text_texture = assets->new_texture_from_file(text_file, flags);
+    text_ = create_node<ui::Image>(text_texture);
 
-    auto texture = stage_->assets->new_texture_from_file(logo_file, flags);
-    image_ = stage_->ui->new_widget_as_image(texture);
+    auto texture = assets->new_texture_from_file(logo_file, flags);
+    image_ = create_node<ui::Image>(texture);
 
-    sound_ = stage_->assets->new_sound_from_file(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
+    sound_ = assets->new_sound_from_file(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
 
     image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);
@@ -51,8 +48,7 @@ void Splash::load() {
     text_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
 
     //Create an orthographic camera
-    camera_ = stage_->new_camera();
-
+    camera_ = create_node<Camera>();
     camera_->set_orthographic_projection(
         0, window->width(), 0, window->height()
     );
@@ -65,7 +61,6 @@ void Splash::load() {
 void Splash::unload() {
     //Clean up
     pipeline_->destroy();
-    stage_->destroy();
 }
 
 void Splash::activate() {

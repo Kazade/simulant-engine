@@ -28,7 +28,7 @@ GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr c
 
 }
 
-void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, StageNode* stage) {
     _S_UNUSED(queue);
     _S_UNUSED(frame_id);
 
@@ -43,7 +43,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
         disable_texcoord_array(i, true);
     }
 
-    global_ambient_ = stage->ambient_light();
+    global_ambient_ = stage->scene->ambient_light();
     GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
@@ -51,7 +51,7 @@ void GL1RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
     do_visit(renderable, pass, iteration);
 }
 
-void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
+void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, StageNode *stage) {
     _S_UNUSED(queue);
     _S_UNUSED(stage);
 }

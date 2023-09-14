@@ -29,20 +29,14 @@ public:
     FrustumPartitioner(Scene* owner):
         Partitioner(owner, STAGE_NODE_TYPE_PARTITIONER_FRUSTUM) {}
 
-    void lights_and_geometry_visible_from(
-        StageNodeID camera_id,
-        std::vector<StageNodeID> &lights_out,
-        std::vector<StageNode*> &geom_out
-    );
-
-    void generate_renderables(
+private:
+    void do_generate_renderables(
         batcher::RenderQueue* render_queue,
         const Camera*, const Viewport* viewport,
         const DetailLevel detail_level
     ) override;
 
 
-private:
     void apply_staged_write(const StageNodeID& key, const StagedWrite& write);
 };
 

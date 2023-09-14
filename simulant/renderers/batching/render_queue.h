@@ -116,7 +116,7 @@ class RenderQueueVisitor {
 public:
     virtual ~RenderQueueVisitor() {}
 
-    virtual void start_traversal(const RenderQueue& queue, uint64_t frame_id, Stage* stage) = 0;
+    virtual void start_traversal(const RenderQueue& queue, uint64_t frame_id, StageNode* stage) = 0;
 
     virtual void change_render_group(const RenderGroup* prev, const RenderGroup* next) = 0;
 
@@ -124,7 +124,7 @@ public:
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
 
     virtual void visit(const Renderable*, const MaterialPass*, Iteration) = 0;
-    virtual void end_traversal(const RenderQueue& queue, Stage* stage) = 0;
+    virtual void end_traversal(const RenderQueue& queue, StageNode* stage) = 0;
 };
 
 

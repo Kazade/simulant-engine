@@ -78,19 +78,19 @@ public:
 
     /** Returns true if the pipeline has a valid stage and camera */
     bool is_complete() const {
-        return stage_ && camera_;
+        return node_ && camera_;
     }
 private:
     uint32_t id_ = 0;
 
-    void set_stage(StagePtr s);
+    void set_stage_node(StageNode* s);
 
     sig::Connection stage_destroy_;
     sig::Connection camera_destroy_;
 
     Compositor* sequence_ = nullptr;
     int32_t priority_ = 0;
-    StagePtr stage_;
+    StageNode* node_;
     CameraPtr camera_;
 
     TexturePtr target_;

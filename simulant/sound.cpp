@@ -106,7 +106,6 @@ void Sound::init_source(PlayingSound& source) {
 
 
 AudioSource::AudioSource(Window *window):
-    stage_(nullptr),
     window_(window) {
 
     /* Start the source update thread if we didn't already */

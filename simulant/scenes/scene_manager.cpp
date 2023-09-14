@@ -77,7 +77,7 @@ void SceneManager::fixed_update(float dt) {
     }
 }
 
-SceneBase::ptr SceneManager::get_or_create_route(const std::string& route) {
+ScenePtr SceneManager::get_or_create_route(const std::string& route) {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         auto factory = scene_factories_.find(route);
@@ -91,7 +91,7 @@ SceneBase::ptr SceneManager::get_or_create_route(const std::string& route) {
     return it->second;
 }
 
-SceneBase::ptr SceneManager::active_scene() const {
+ScenePtr SceneManager::active_scene() const {
     return current_scene_;
 }
 
@@ -102,7 +102,7 @@ bool SceneManager::scene_queued_for_activation() const {
 void SceneManager::unload(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
-        std::shared_ptr<SceneBase> scene = it->second;
+        std::shared_ptr<Scene> scene = it->second;
         scene->_call_unload();
         scene->load_args.clear();
 
@@ -129,7 +129,7 @@ bool SceneManager::has_scene(const std::string& route) const {
     return scene_factories_.find(route) != scene_factories_.end();
 }
 
-SceneBase::ptr SceneManager::resolve_scene(const std::string& route) {
+ScenePtr SceneManager::resolve_scene(const std::string& route) {
     return get_or_create_route(route);
 }
 

@@ -379,7 +379,7 @@ void GL2RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
     do_visit(renderable, material_pass, iteration);
 }
 
-void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, StageNode* stage) {
     _S_UNUSED(queue);
     _S_UNUSED(frame_id);
     _S_UNUSED(stage);
@@ -387,7 +387,7 @@ void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     global_ambient_ = stage->ambient_light();
 }
 
-void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
+void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, StageNode *stage) {
     _S_UNUSED(queue);
     _S_UNUSED(stage);
 }

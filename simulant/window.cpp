@@ -31,12 +31,10 @@
 #include "asset_manager.h"
 #include "renderers/renderer_config.h"
 #include "compositor.h"
-#include "scenes/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
 
 #include "panels/stats_panel.h"
-#include "panels/partitioner_panel.h"
 
 #include "vfs.h"
 

@@ -22,9 +22,9 @@ class GL1RenderQueueVisitor : public batcher::RenderQueueVisitor {
 public:
     GL1RenderQueueVisitor(GL1XRenderer* renderer, CameraPtr camera);
 
-    void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage);
+    void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, StageNode *stage);
     void visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration);
-    void end_traversal(const batcher::RenderQueue &queue, Stage* stage);
+    void end_traversal(const batcher::RenderQueue &queue, StageNode* stage);
 
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
     void change_material_pass(const MaterialPass* prev, const MaterialPass* next);

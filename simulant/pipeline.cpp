@@ -2,6 +2,7 @@
 #include "stage.h"
 #include "compositor.h"
 #include "pipeline.h"
+#include "nodes/camera.h"
 
 namespace smlt {
 
@@ -20,7 +21,7 @@ Pipeline::Pipeline(Compositor* render_sequence,
     }
 
     set_name(name);
-    set_stage(subtree);
+    set_stage_node(subtree);
     set_camera(camera);
 
     /* Set sane defaults for detail ranges */
@@ -90,7 +91,7 @@ CameraPtr Pipeline::camera() const {
 }
 
 StageNode* Pipeline::stage_node() const {
-    return stage_;
+    return node_;
 }
 
 TexturePtr Pipeline::target() const {
@@ -110,8 +111,8 @@ void Pipeline::deactivate() {
 
     is_active_ = false;
 
-    if(stage_) {
-        stage_->active_pipeline_count_--;
+    if(node_) {
+        node_->active_pipeline_count_--;
     }
 }
 
@@ -120,28 +121,28 @@ void Pipeline::activate() {
 
     is_active_ = true;
 
-    if(stage_) {
-        stage_->active_pipeline_count_++;
+    if(node_) {
+        node_->active_pipeline_count_++;
     }
 }
 
-void Pipeline::set_stage(StagePtr stage) {
-    if(stage_ && is_active()) {
-        stage_->active_pipeline_count_--;
+void Pipeline::set_stage_node(StageNode* node) {
+    if(node_ && is_active()) {
+        node_->active_pipeline_count_--;
     }
 
     stage_destroy_.disconnect();
 
-    stage_ = stage;
+    node_ = node;
 
-    if(stage_) {
-        stage_destroy_ = stage->signal_destroyed().connect([&]() {
-            stage_ = nullptr;
+    if(node_) {
+        stage_destroy_ = node_->signal_destroyed().connect([&]() {
+            node_ = nullptr;
             stage_destroy_.disconnect();
         });
 
         if(is_active()) {
-            stage_->active_pipeline_count_++;
+            node_->active_pipeline_count_++;
         }
     }
 }

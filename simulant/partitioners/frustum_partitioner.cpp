@@ -28,35 +28,24 @@
 
 namespace smlt {
 
-void FrustumPartitioner::lights_and_geometry_visible_from(
-        StageNodeID camera_id, std::vector<StageNodeID> &lights_out,
-        std::vector<StageNode*> &geom_out) {
+void FrustumPartitioner::do_generate_renderables(
+    batcher::RenderQueue* render_queue,
+    const Camera* camera, const Viewport* viewport,
+    const DetailLevel detail_level) {
 
     _apply_writes();
 
-    auto frustum = stage->camera(camera_id)->frustum();
+    auto& frustum = camera->frustum();
 
-    for(auto& node: stage->each_descendent()) {
+    for(StageNode& node: each_descendent()) {
         /* Check that the node is supposed to
          * be visible (otherwise we could end up doing work for nothing) */
         if(node.is_visible() && !node.is_destroyed()) {
             auto aabb = node.transformed_aabb();
             auto centre = aabb.centre();
 
-            if(node.node_type() == STAGE_NODE_TYPE_LIGHT) {
-                auto light = dynamic_cast<Light*>(&node);
-                assert(light);
-
-                if(!light->is_cullable() ||
-                    frustum.intersects_sphere(centre, aabb.max_dimension())
-                ) {
-                    lights_out.push_back(light->id());
-                }
-            } else if(!node.is_cullable()) {
-                /* If the culling mode is NEVER then we always return */
-                geom_out.push_back(&node);
-            } else if(frustum.intersects_aabb(aabb)) {
-                geom_out.push_back(&node);
+            if(!node.is_cullable() || frustum.intersects_aabb(aabb)) {
+                node.generate_renderables(render_queue, camera, viewport, detail_level);
             }
         }
     }

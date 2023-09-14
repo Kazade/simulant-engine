@@ -37,7 +37,6 @@
 
 #include "loader.h"
 
-#include "partitioners/null_partitioner.h"
 #include "partitioners/frustum_partitioner.h"
 
 namespace smlt {
