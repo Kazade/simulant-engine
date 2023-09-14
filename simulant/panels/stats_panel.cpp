@@ -47,54 +47,52 @@ bool StatsPanel::on_init() {
         return false;
     }
 
-    auto overlay = stage_;
-
     auto hw = 32;
     auto label_width = ui::Px(window_->width() * 0.5f);
 
     const float diff = 32;
     float vheight = window_->height() - diff;
 
-    auto heading1 = overlay->ui->new_widget_as_label("Performance", label_width);
+    auto heading1 = scene->create_node<ui::Label>("Performance", label_width);
     heading1->move_to(hw, vheight);
     vheight -= diff;
 
-    fps_ = overlay->ui->new_widget_as_label("FPS: 0", label_width);
+    fps_ = scene->create_node<ui::Label>("FPS: 0", label_width);
     fps_->move_to(hw, vheight);
     vheight -= diff;
 
-    frame_time_ = overlay->ui->new_widget_as_label("Frame Time: 0ms", label_width);
+    frame_time_ = scene->create_node<ui::Label>("Frame Time: 0ms", label_width);
     frame_time_->move_to(hw, vheight);
     vheight -= diff;
 
-    ram_usage_ = overlay->ui->new_widget_as_label("RAM Used: 0", label_width);
+    ram_usage_ = scene->create_node<ui::Label>("RAM Used: 0", label_width);
     ram_usage_->move_to(hw, vheight);
     vheight -= diff;
 
-    vram_usage_ = overlay->ui->new_widget_as_label("VRAM Used: 0", label_width);
+    vram_usage_ = scene->create_node<ui::Label>("VRAM Used: 0", label_width);
     vram_usage_->move_to(hw, vheight);
     vheight -= diff;
 
-    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0", label_width);
+    actors_rendered_ = scene->create_node<ui::Label>("Renderables visible: 0", label_width);
     actors_rendered_->move_to(hw, vheight);
     vheight -= diff;
 
-    polygons_rendered_ = overlay->ui->new_widget_as_label("Polygons Rendered: 0", label_width);
+    polygons_rendered_ = scene->create_node<ui::Label>("Polygons Rendered: 0", label_width);
     polygons_rendered_->move_to(hw, vheight);
     vheight -= diff;
 
-    stage_node_pool_size_ = overlay->ui->new_widget_as_label("", label_width);
+    stage_node_pool_size_ = scene->create_node<ui::Label>("", label_width);
     stage_node_pool_size_->move_to(hw, vheight);
 
-    graph_material_ = stage_->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    graph_material_ = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
-    ram_graph_mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-    ram_graph_ = stage_->new_actor_with_mesh(ram_graph_mesh_);
+    ram_graph_mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+    ram_graph_ = scene->create_node<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
 
-    low_mem_ = overlay->ui->new_widget_as_label("0M");
-    high_mem_ = overlay->ui->new_widget_as_label("0M");
+    low_mem_ = scene->create_node<ui::Label>("0M");
+    high_mem_ = scene->create_node<ui::Label>("0M");
 
     frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
 

@@ -8,9 +8,13 @@ namespace ui {
 struct LabelParams {
     UIConfig config;
     unicode text;
+    Px width;
+    Px height;
 
-    LabelParams(const unicode& text):
-        text(text) {}
+    LabelParams(const unicode& text, const Px& width=-1, const Px& height=-1):
+        text(text),
+        width(width),
+        height(height) {}
 
     LabelParams(const UIConfig& config):
         config(config) {}
