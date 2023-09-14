@@ -2,20 +2,20 @@ apply plugin: 'com.android.library'
 
 android {
 	namespace "dev.simulant.simulant"
+    ndkVersion '23.1.7779620'
+    compileSdkVersion 32
+    
+    defaultConfig {
+        minSdkVersion 28
+        targetSdkVersion 28
 
-	compileSdkVersion 32
-
-	defaultConfig {
-	    minSdkVersion 30
-	    targetSdkVersion 32
-
-	    ndk {
-			def ABI_FILTERS = System.getenv("ABI_FILTERS") ?: "x86;x86_64;armeabi-v7a;arm64-v8a"
-			abiFilters = []
-			abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
-	    }
-	}
-
+        ndk {
+		    def ABI_FILTERS = System.getenv("ABI_FILTERS") ?: "x86;x86_64;armeabi-v7a;arm64-v8a"
+		    abiFilters = []
+		    abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
+        }
+    }    
+    
 	externalNativeBuild {
 		cmake {
 			path "../../CMakeLists.txt"
@@ -46,8 +46,8 @@ android {
 
 
 dependencies {
-   	implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.0.2'
-	implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 }
 
