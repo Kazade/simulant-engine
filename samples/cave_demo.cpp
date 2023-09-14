@@ -23,10 +23,15 @@ public:
         camera_->set_perspective_projection(Degrees(60.0), float(window->width()) / float(window->height()), 0.01f, 1000.0f);
         camera_->rotate_global_y_by(Degrees(180 - 90));
 
+        smlt::MeshLoadOptions opts;
+#ifdef __DREAMCAST__
+        opts.override_texture_extension = ".dtex";
+#endif
+
         // Meshes
-        cave_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj");
-        godray_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj");
-        fairy_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj");
+        cave_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj", VertexSpecification::DEFAULT, opts);
+        godray_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj", VertexSpecification::DEFAULT, opts);
+        fairy_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj", VertexSpecification::DEFAULT, opts);
 
         // Materials + Textures
         for(auto submesh : cave_mesh_->each_submesh())

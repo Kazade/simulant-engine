@@ -1,13 +1,21 @@
 include:
-  - template: Dependency-Scanning.gitlab-ci.yml
-  - template: Security/License-Scanning.gitlab-ci.yml
-  - template: Security/SAST.gitlab-ci.yml
-  - template: Code-Quality.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.latest.gitlab-ci.yml
+  - template: Jobs/SAST.latest.gitlab-ci.yml
+  - template: Jobs/License-Scanning.latest.gitlab-ci.yml
+  - template: Jobs/Code-Quality.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.latest.gitlab-ci.yml
 
 code_quality:
   artifacts:
     paths: [gl-code-quality-report.json]
 
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_REF_NAME == "next"'
+    - if: '$CI_COMMIT_TAG'
+    
 stages:
  - prepare
  - check
@@ -51,7 +59,14 @@ prepare:linux-x64-gcc:
      - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc -t $CI_REGISTRY_IMAGE:linux-x64-gcc .
      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
      - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc
-
+  rules:
+      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        changes:
+          - .gitlab-ci.yml
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+        changes:
+          - .gitlab-ci.yml
+          
 prepare:linux-x64-gcc11:
   stage: prepare
   image: docker:latest
@@ -60,7 +75,7 @@ prepare:linux-x64-gcc11:
   variables:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
-      FROM fedora:34\n
+      FROM fedora:33\n
       RUN dnf update -y && dnf clean all\n
       RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
   before_script:  # Put the variable into a Dockerfile
@@ -71,6 +86,13 @@ prepare:linux-x64-gcc11:
      - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc11 -t $CI_REGISTRY_IMAGE:linux-x64-gcc11 .
      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
      - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc11
+  rules:
+      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        changes:
+          - .gitlab-ci.yml
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+        changes:
+          - .gitlab-ci.yml
 
 prepare:windows-x64-mingw:
   stage: prepare
@@ -80,8 +102,8 @@ prepare:windows-x64-mingw:
   variables:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
-      FROM fedora:34\n
-      RUN dnf install -y 'dnf-command(config-manager)'\n
+      FROM fedora:38\n
+      RUN dnf upgrade --refresh -y\n
       RUN dnf install -y mingw64-gcc-c++ mingw64-SDL2 mingw64-openal-soft mingw64-zlib cmake make gcc-c++ python wine winetricks wine-pulseaudio\n
       RUN wine64 wineboot\n
   before_script:  # Put the variable into a Dockerfile
@@ -92,6 +114,13 @@ prepare:windows-x64-mingw:
      - docker build --cache-from $CI_REGISTRY_IMAGE:windows-x64-mingw -t $CI_REGISTRY_IMAGE:windows-x64-mingw .
      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
      - docker push $CI_REGISTRY_IMAGE:windows-x64-mingw
+  rules:
+      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        changes:
+          - .gitlab-ci.yml
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+        changes:
+          - .gitlab-ci.yml
 
 prepare:deploy:
   stage: prepare
@@ -101,7 +130,7 @@ prepare:deploy:
   variables:
     GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
-      FROM fedora:34\n
+      FROM fedora:33\n
       RUN dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync zip\n
       RUN pip install gsutil\n
   before_script:  # Put the variable into a Dockerfile
@@ -112,6 +141,13 @@ prepare:deploy:
      - docker build --cache-from $CI_REGISTRY_IMAGE:deploy -t $CI_REGISTRY_IMAGE:deploy .
      - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
      - docker push $CI_REGISTRY_IMAGE:deploy
+  rules:
+      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+        changes:
+          - .gitlab-ci.yml
+      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+        changes:
+          - .gitlab-ci.yml
 
 check:thread-usage:
   stage: check
@@ -284,8 +320,8 @@ build:windows-x64-mingw:release:
     TARGET: windows-x64-mingw
   script:
    - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cd ${TARGET}/release   
+   - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
    - cp $MINGW_BIN_DIR/SDL2.dll simulant/
@@ -307,7 +343,7 @@ build:windows-x64-mingw:debug:
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
    - cp $MINGW_BIN_DIR/SDL2.dll simulant/
@@ -334,7 +370,7 @@ test:windows-x64-mingw:
    - build:windows-x64-mingw:debug
    - build:windows-x64-mingw:release
   before_script:
-   - dnf install -y pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
+   - dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
    - sleep 3
    - export LIBGL_ALWAYS_SOFTWARE=1

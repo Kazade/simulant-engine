@@ -120,7 +120,7 @@ static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button)
 }
 
 void KOSWindow::check_events() {
-    time_since_last_rumble_ += application->time_keeper->delta_time();
+    float dt = application->time_keeper->delta_time();
 
     /* Regularly recheck the controller state */
     time_since_last_controller_update_ += application->time_keeper->delta_time();
@@ -139,30 +139,18 @@ void KOSWindow::check_events() {
         CONT_DPAD2_UP, CONT_DPAD2_DOWN, CONT_DPAD2_LEFT, CONT_DPAD2_RIGHT
     };
 
-    static uint32_t previous_controller_button_state[MAX_CONTROLLERS] = {0};
-    static uint8_t previous_key_state[256] = {0}; // value-initialize to zero
-
-    struct ControllerState {
-        int8_t joyx = 0;
-        int8_t joyy = 0;
-        int8_t joyx2 = 0;
-        int8_t joyy2 = 0;
-        uint8_t ltrig = 0;
-        uint8_t rtrig = 0;
-    };
-
-    static ControllerState previous[MAX_CONTROLLERS];
+    auto& previous = previous_controller_state_;
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
-        auto id = GameControllerID(i);
-
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
+            auto id = GameControllerID(device->port);
             auto state = (cont_state_t*) maple_dev_status(device);
             if(state) {
+                auto port = device->port;
                 auto button_state = state->buttons;
-                auto prev_state = previous_controller_button_state[i];
+                auto prev_state = previous_controller_button_state_[port];
                 auto joyx_state = state->joyx;
                 auto joyy_state = state->joyy;
                 auto joyx2_state = state->joy2x;
@@ -191,12 +179,17 @@ void KOSWindow::check_events() {
                     return current;
                 };
 
-                previous[i].joyx = handle_joystick_axis(previous[i].joyx, joyx_state, id, JOYSTICK_AXIS_X);
-                previous[i].joyy = handle_joystick_axis(previous[i].joyy, joyy_state, id, JOYSTICK_AXIS_Y);
-                previous[i].joyx2 = handle_joystick_axis(previous[i].joyx2, joyx2_state, id, JOYSTICK_AXIS_2);
-                previous[i].joyy2 = handle_joystick_axis(previous[i].joyy2, joyy2_state, id, JOYSTICK_AXIS_3);
-                previous[i].ltrig = handle_joystick_axis(previous[i].ltrig, ltrig_state, id, JOYSTICK_AXIS_4, 255.0f);
-                previous[i].rtrig = handle_joystick_axis(previous[i].rtrig, rtrig_state, id, JOYSTICK_AXIS_5, 255.0f);
+                previous[port].joyx = handle_joystick_axis(previous[port].joyx, joyx_state, id, JOYSTICK_AXIS_X);
+                previous[port].joyy = handle_joystick_axis(previous[port].joyy, joyy_state, id, JOYSTICK_AXIS_Y);
+                previous[port].joyx2 = handle_joystick_axis(previous[port].joyx2, joyx2_state, id, JOYSTICK_AXIS_2);
+                previous[port].joyy2 = handle_joystick_axis(previous[port].joyy2, joyy2_state, id, JOYSTICK_AXIS_3);
+                previous[port].ltrig = handle_joystick_axis(previous[port].ltrig, ltrig_state, id, JOYSTICK_AXIS_4, 255.0f);
+                previous[port].rtrig = handle_joystick_axis(previous[port].rtrig, rtrig_state, id, JOYSTICK_AXIS_5, 255.0f);
+
+                /* Reduce the current rumble remaining if necessary */
+                previous[port].current_rumble_remaining_ = Seconds(
+                    std::max(previous[port].current_rumble_remaining_.to_float() - dt, 0.0f)
+                );
 
                 // Check the current button state against the previous one
                 // and update the input controller appropriately
@@ -222,7 +215,10 @@ void KOSWindow::check_events() {
                     }
                 }
 
-                previous_controller_button_state[i] = button_state;
+                previous_controller_button_state_[port] = button_state;
+            } else {
+                previous_controller_state_[device->port] = ControllerState();
+                previous_controller_button_state_[device->port] = 0;
             }
         }
     }
@@ -232,10 +228,24 @@ void KOSWindow::check_events() {
     for(int8_t i = 0; i < 1; ++i) {
         auto device = maple_enum_type(i, MAPLE_FUNC_KEYBOARD);
         if(device) {
+            /* Make sure we update that there's a keyboard available. We
+             * only support 1 for now! */
+
+            KeyboardDeviceInfo keyboard;
+            keyboard.id = 0;
+            input_state->_update_keyboard_devices({keyboard});
+
             auto state = (kbd_state_t*) maple_dev_status(device);
 
-            auto get_modifiers = []() -> ModifierKeyState {
+            auto get_modifiers = [&state]() -> ModifierKeyState {
                 ModifierKeyState mod_state;
+                mod_state.lctrl = state->shift_keys & KBD_MOD_LCTRL;
+                mod_state.rctrl = state->shift_keys & KBD_MOD_RCTRL;
+                mod_state.rshift = state->shift_keys & KBD_MOD_RSHIFT;
+                mod_state.lshift = state->shift_keys & KBD_MOD_LSHIFT;
+                mod_state.ralt = state->shift_keys & KBD_MOD_RALT;
+                mod_state.lalt = state->shift_keys & KBD_MOD_LALT;
+
                 //FIXME:!
                 return mod_state;
             };
@@ -243,15 +253,15 @@ void KOSWindow::check_events() {
             if(state) {
                 const uint8_t* key_state = state->matrix;
 
-                for(uint32_t j = 0; j < 256; ++j) {
-                    if(key_state[j] && !previous_key_state[j]) {
+                for(uint32_t j = 0; j < MAX_KEYBOARD_CODES; ++j) {
+                    if(key_state[j] && !previous_key_state_[j]) {
                         // Key down
                         input_state->_handle_key_down(
                             i, KeyboardCode(j)
                         );
                         on_key_down((KeyboardCode) j, get_modifiers());
                     }
-                    if(!key_state[j] && previous_key_state[j]) {
+                    if(!key_state[j] && previous_key_state_[j]) {
                         // Key up
                         input_state->_handle_key_up(
                             i, KeyboardCode(j)
@@ -261,8 +271,11 @@ void KOSWindow::check_events() {
                     }
                 }
 
-                std::copy(key_state, key_state + 256, previous_key_state);
+                std::copy(key_state, key_state + MAX_KEYBOARD_CODES, previous_key_state_);
             }
+        } else {
+            input_state->_update_keyboard_devices({});
+            std::fill(previous_key_state_, previous_key_state_ + MAX_KEYBOARD_CODES, 0);
         }
     }
 
@@ -285,6 +298,9 @@ std::shared_ptr<SoundDriver> KOSWindow::create_sound_driver(const std::string& f
         return std::make_shared<OpenALSoundDriver>(this);
     }
 }
+
+#define PLATFORM_DATA_PORT 0
+#define PLATFORM_DATA_PURUPURU 1
 
 void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
     std::vector<GameControllerInfo> joypads;
@@ -319,16 +335,18 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
             std::strncpy(info.name, device->info.product_name, sizeof(info.name));
             info.button_count = 5;
             info.axis_count = 4; //2 triggers, 2 for analog
-            info.hat_count = 1; // 1 D-pad            
+            info.hat_count = 1; // 1 D-pad
             info.has_rumble = false;
+
+            info.platform_data.b[PLATFORM_DATA_PORT] = device->port;
 
             for(int j = 1; j < MAX_DEVICES_PER_PORT; ++j) {
                 auto purupuru = maple_enum_dev(device->port, j);
                 if(purupuru && (purupuru->info.functions & MAPLE_FUNC_PURUPURU)) {
                     info.has_rumble = true;
                     /* Store the unit in the platform data */
-                    info.platform_data.b[0] = purupuru->unit;
-                    S_DEBUG("Found rumble at port {0} unit {1}", purupuru->port, purupuru->unit);
+                    info.platform_data.b[PLATFORM_DATA_PURUPURU] = j;
+                    S_DEBUG("Found rumble at port {0} unit {1}", purupuru->port, j);
                     break;
                 }
             }
@@ -367,33 +385,39 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_strid
 }
 
 void KOSWindow::game_controller_start_rumble(GameController* controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {
-    _S_UNUSED(high_rumble);
+    const uint8_t* pdata = controller->platform_data();
+    auto port = pdata[PLATFORM_DATA_PORT];
 
-    /* The Maple bus struggles if we spam the rumble pak, so this
-     * just throttles it back to avoid that */
-    if(time_since_last_rumble_ <= 0.35f) {
+    /* Don't resend rumble if we're still rumbling (matches SDL) */
+    auto& state = previous_controller_state_[port];
+    if(state.current_rumble_remaining_.to_float() > 0.0f) {
         return;
     }
 
     const float M = 4;
 
     if(controller && controller->has_rumble_effect()) {
-        time_since_last_rumble_ = 0.0f;
-
-        const uint8_t* pdata = controller->platform_data();
-        auto purupuru_unit = pdata[0];
-
-        int intensity = smlt::clamp(low_rumble * 7, 0, 7);
+        /* DC doesn't generally have two motors, so we average the input of the two values */
+        int intensity = smlt::clamp((((float) low_rumble + (float) high_rumble) * 0.5f) * 7, 0, 7);
         uint8_t length = std::max(std::min(duration.to_float() * M, 255.0f), 4.0f);
+        auto purupuru_unit = pdata[PLATFORM_DATA_PURUPURU];
 
-        auto device = maple_enum_dev(controller->id().to_int8_t(), purupuru_unit);
+        auto device = maple_enum_dev(port, purupuru_unit);
         if(device && (device->info.functions & MAPLE_FUNC_PURUPURU)) {
             purupuru_effect_t effect;
             effect.duration = length;
             effect.effect1 = PURUPURU_EFFECT1_INTENSITY(intensity) | PURUPURU_EFFECT1_PULSE;
+            effect.effect2 = PURUPURU_EFFECT2_LINTENSITY(7) | PURUPURU_EFFECT2_PULSE;
             effect.special = PURUPURU_SPECIAL_MOTOR1;
-            while(purupuru_rumble(device, &effect) == MAPLE_EAGAIN) {}
-            S_DEBUG("PURUPURU: {0} {1} -> {2}", device->port, device->unit, intensity);
+            auto ret = purupuru_rumble(device, &effect);
+
+            if(ret != MAPLE_EOK) {
+                state.current_rumble_remaining_ = Seconds(0.0f);
+                S_DEBUG("PURUPURU FAILED: {0} {1} -> {2} for {3}", device->port, device->unit, intensity, +length);
+            } else {
+                state.current_rumble_remaining_ = duration;
+                S_DEBUG("PURUPURU: {0} {1} -> {2} for {3}", device->port, device->unit, intensity, +length);
+            }
         } else {
             S_WARN("Failed to start rumble - couldn't find PURUPURU");
         }
@@ -403,16 +427,32 @@ void KOSWindow::game_controller_start_rumble(GameController* controller, RangeVa
 void KOSWindow::game_controller_stop_rumble(GameController *controller) {
     if(controller && controller->has_rumble_effect()) {
         const uint8_t* pdata = controller->platform_data();
-        auto purupuru_unit = pdata[0];
-        auto device = maple_enum_dev(controller->id().to_int8_t(), purupuru_unit);
+        auto port = pdata[PLATFORM_DATA_PORT];
+        auto& state = previous_controller_state_[port];
 
-        purupuru_effect_t effect;
-        effect.duration = 0x00;
-        effect.effect2 = 0x00;
-        effect.effect1 = 0x00;
-        effect.special = PURUPURU_SPECIAL_MOTOR1;
-        purupuru_rumble(device, &effect);
-        S_DEBUG("Stopped PURPURU");
+        /* We're not rumbling, don't send */
+        if(state.current_rumble_remaining_.to_float() <= 0.0f) {
+            return;
+        }
+
+        auto purupuru_unit = pdata[PLATFORM_DATA_PURUPURU];
+
+        auto device = maple_enum_dev(port, purupuru_unit);
+        if(device && (device->info.functions & MAPLE_FUNC_PURUPURU)) {
+            purupuru_effect_t effect;
+            effect.duration = 0x00;
+            effect.effect2 = 0x00;
+            effect.effect1 = 0x00;
+            effect.special = PURUPURU_SPECIAL_MOTOR1;
+            auto ret = purupuru_rumble(device, &effect);
+
+            if(ret != MAPLE_EOK) {
+                S_DEBUG("PURUPURU STOP FAILED: {0} {1} ({2})", device->port, device->unit, ret);
+            } else {
+                state.current_rumble_remaining_ = Seconds(0.0f);
+                S_DEBUG("Stopped PURUPURU");
+            }            
+        }
     }
 }
 

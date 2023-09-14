@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
@@ -30,7 +30,7 @@ ENDIF()
 SET(OpenGL_GL_PREFERENCE "LEGACY")
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -DTIXML_USE_STL -Wdouble-promotion")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -DTIXML_USE_STL -Wdouble-promotion")
 
 if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new")
@@ -52,6 +52,15 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 ENDIF()
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT FLTO_SUPPORTED OUTPUT FLTO_ERROR)
+
+# Mingw has a bug that stops us compiling using LTO
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94271
+IF(MINGW)
+    SET(FLTO_SUPPORTED False)
+ENDIF()
+
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 # Fast-math is important on DC!
@@ -59,23 +68,16 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ff
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
 
 IF(PLATFORM_DREAMCAST)
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math -ffp-contract=fast -finline-functions")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -mfsrra -mfsca -ffast-math -ffp-contract=fast -finline-functions")
 ENDIF()
 
 IF(NOT PLATFORM_PSP)
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 ENDIF()
 
-IF(NOT PLATFORM_DREAMCAST)
-# There's a bug in GCC 4.7.4 that causes an internal compiler error
-# on some template code if you have -Wextra enabled
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
-ELSE()
-# On the Dreamcast, force a frame pointer when debugging
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
-ENDIF()
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -Wextra")
 
 IF(SIMULANT_ENABLE_ASAN)
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -120,69 +122,29 @@ IF(USE_GLAD_FOR_OPENGL)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_USE_GLAD")
 ENDIF()
 
-IF(NOT PLATFORM_DREAMCAST)
-    IF(ANDROID)
-        include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
-        add_library(
-            native_app_glue STATIC
-            ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
-        )
+IF(ANDROID)
+    include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
+    add_library(
+        native_app_glue STATIC
+        ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
+    )
+    link_libraries(android)
 
-        link_libraries(android)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
+    SET(OPENGL_LIBRARIES GLESv2 EGL)
+    FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
 
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
-
-        IF(SIMULANT_USE_ALDC)
-
-        ELSE()
-
-        ENDIF()
-
-        SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on Android
-        SET(SDL2_LIBRARIES "")
-
-        SET(OPENGL_LIBRARIES GLESv2 EGL)
-        FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
-    ELSEIF(PLATFORM_PSP)
-        SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
-        SET(SDL2_LIBRARIES "")
-    ELSE()
-        FIND_PACKAGE(SDL2)  # Try cmake modules first
-        IF(NOT SDL2_FOUND)
-            # Fall back to pkg-config
-            FIND_PACKAGE(PkgConfig REQUIRED)
-            PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
-        ENDIF()
-
-        IF(WIN32)
-            IF(NOT SDL2_FOUND)
-                SET(SDL2_INCLUDE_DIR $ENV{SDL2DIR}/include)
-                SET(SDL2_LIBRARY $ENV{SDL2DIR}/lib/x64/SDL2.lib)
-                FIND_PACKAGE(SDL2 REQUIRED)
-            ENDIF()
-
-            IF(NOT SIMULANT_USE_ALDC)
-                SET(OPENAL_INCLUDE_DIR $ENV{OPENALDIR}/include)
-                SET(OPENAL_INCLUDE_DIRS $ENV{OPENALDIR}/include)
-            ENDIF()
-        ENDIF()
-
-        IF(SIMULANT_USE_ALDC)
-            SET(OPENAL_INCLUDE_DIRS "")
-            SET(OPENAL_LIBRARY "")
-        ELSE()
-            FIND_PACKAGE(OpenAL REQUIRED)
-        ENDIF()
-
-        FIND_PACKAGE(OpenGL REQUIRED)
-    ENDIF()
-
-    IF(NOT PLATFORM_PSP)
-        set(THREADS_PREFER_PTHREAD_FLAG ON)
-        find_package(Threads REQUIRED)
-        link_libraries(Threads::Threads)
-    ENDIF()
-ELSE()
+ELSEIF(PLATFORM_PSP)
+    SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
+    SET(SDL2_LIBRARIES "")
+ELSEIF(MINGW)
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
+    PKG_CHECK_MODULES(OPENAL REQUIRED openal)
+    LINK_LIBRARIES(psapi userenv)
+    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    add_definitions(-D_WIN32_WINNT=0x0601 -D_WINSOCK_DEPRECATED_NO_WARNINGS)
+ELSEIF(PLATFORM_DREAMCAST)
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast.")
 
     SET(OPENAL_INCLUDE_DIRS "")
@@ -201,18 +163,53 @@ ELSE()
     add_definitions(-DBACKEND_KOSPVR)
 
     FILE(GENERATE OUTPUT ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.h CONTENT "#pragma once\n#define GLDC_VERSION \"1.1-custom\"\n")
+ELSE()
+    FIND_PACKAGE(SDL2)  # Try cmake modules first
+    IF(NOT SDL2_FOUND)
+        # Fall back to pkg-config
+        FIND_PACKAGE(PkgConfig REQUIRED)
+        PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
+    ENDIF()
+
+    IF(SIMULANT_USE_ALDC)
+        SET(OPENAL_INCLUDE_DIRS "")
+        SET(OPENAL_LIBRARY "")
+    ELSE()
+        FIND_PACKAGE(OpenAL REQUIRED)
+    ENDIF()
+
+    FIND_PACKAGE(OpenGL REQUIRED)
 ENDIF()
+
+IF(NOT PLATFORM_PSP AND NOT PLATFORM_DREAMCAST)
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    link_libraries(Threads::Threads)
+ENDIF()
+
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/materials DESTINATION ${CMAKE_BINARY_DIR}/simulant)
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/simulant)
 
 INCLUDE_DIRECTORIES(
     ${SDL2_INCLUDE_DIR}
+    ${SDL2_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIRS}
     ${OPENAL_INCLUDE_DIRS}
 )
 
-LINK_LIBRARIES(${SDL2_LIBRARIES} ${SDL2_LIBRARY} ${OPENAL_LIBRARY} ${OPENGL_LIBRARIES})
+LINK_DIRECTORIES(
+    ${OPENAL_LIBRARY_DIRS}
+    ${SDL2_LIBRARY_DIRS}
+)
+
+LINK_LIBRARIES(
+    ${SDL2_LIBRARY}
+    ${SDL2_LIBRARIES}
+    ${OPENAL_LIBRARY}
+    ${OPENAL_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 LINK_LIBRARIES(rt)

@@ -161,19 +161,6 @@ Application::Application(const AppConfig &config):
     register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DCMLoaderType>());
-
-    try {
-        construct_window(config);
-    } catch(std::runtime_error&) {
-        S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
-        exit(1);
-    }
-
-    /* We can't do this in the initialiser as we need a valid
-     * window before doing things like creating textures */
-    asset_manager_ = SharedAssetManager::create();
-
-    preload_default_font();
 }
 
 Application::~Application() {
@@ -331,6 +318,24 @@ void Application::construct_window(const AppConfig& config) {
 
 bool Application::_call_init() {
     S_DEBUG("Initializing the application");
+
+    if(!pre_init()) {
+        S_ERROR("Application pre-initialisation failed");
+        return false;
+    }
+
+    try {
+        construct_window(config);
+    } catch(std::runtime_error&) {
+        S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
+        exit(1);
+    }
+
+    /* We can't do this in the initialiser as we need a valid
+     * window before doing things like creating textures */
+    asset_manager_ = SharedAssetManager::create();
+
+    preload_default_font();
 
     sound_driver_ = window->create_sound_driver(config_.development.force_sound_driver);
     sound_driver_->startup();
@@ -775,6 +780,8 @@ bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* la
             }
 
             unicode source_text(source_text_maybe.value(), "utf-8");
+            source_text = source_text.replace("\\n", "\n");
+
             new_translations.insert(std::make_pair(source_text, id_to_translation.at(id)));
             id_to_translation.erase(id);
         } else {
@@ -785,6 +792,8 @@ bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* la
             }
 
             unicode translated_text(trans_maybe.value(), "utf-8");
+            translated_text = translated_text.replace("\\n", "\n");
+
             id_to_translation.insert(std::make_pair(key, translated_text));
         }
    }

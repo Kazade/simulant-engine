@@ -4,6 +4,10 @@
 #include <cstring>
 #include <cstdint>
 
+#ifdef __DREAMCAST__
+#include "../utils/sh4_math.h"
+#endif
+
 namespace smlt {
 
 struct Quaternion;
@@ -41,6 +45,27 @@ public:
         Mat4 result;
         const float *m1 = &this->m[0], *m2 = &rhs.m[0];
 
+#ifdef __DREAMCAST__
+        result.m[0] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[0], m2[1], m2[2], m2[3]);
+        result.m[1] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[0], m2[1], m2[2], m2[3]);
+        result.m[2] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[0], m2[1], m2[2], m2[3]);
+        result.m[3] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[0], m2[1], m2[2], m2[3]);
+
+        result.m[4] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[4], m2[5], m2[6], m2[7]);
+        result.m[5] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[4], m2[5], m2[6], m2[7]);
+        result.m[6] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[4], m2[5], m2[6], m2[7]);
+        result.m[7] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[4], m2[5], m2[6], m2[7]);
+
+        result.m[8] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[8], m2[9], m2[10], m2[11]);
+        result.m[9] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[8], m2[9], m2[10], m2[11]);
+        result.m[10] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[8], m2[9], m2[10], m2[11]);
+        result.m[11] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[8], m2[9], m2[10], m2[11]);
+
+        result.m[12] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[12], m2[13], m2[14], m2[15]);
+        result.m[13] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[12], m2[13], m2[14], m2[15]);
+        result.m[14] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[12], m2[13], m2[14], m2[15]);
+        result.m[15] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[12], m2[13], m2[14], m2[15]);
+#else
         result.m[0] = m1[0] * m2[0] + m1[4] * m2[1] + m1[8] * m2[2] + m1[12] * m2[3];
         result.m[1] = m1[1] * m2[0] + m1[5] * m2[1] + m1[9] * m2[2] + m1[13] * m2[3];
         result.m[2] = m1[2] * m2[0] + m1[6] * m2[1] + m1[10] * m2[2] + m1[14] * m2[3];
@@ -60,17 +85,19 @@ public:
         result.m[13] = m1[1] * m2[12] + m1[5] * m2[13] + m1[9] * m2[14] + m1[13] * m2[15];
         result.m[14] = m1[2] * m2[12] + m1[6] * m2[13] + m1[10] * m2[14] + m1[14] * m2[15];
         result.m[15] = m1[3] * m2[12] + m1[7] * m2[13] + m1[11] * m2[14] + m1[15] * m2[15];
-
+#endif
         return result;
     }
 
     Vec4 operator*(const Vec4& rhs) const;
+    Vec3 operator*(const Vec3& rhs) const;
 
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);
     static Mat4 as_rotation_y(const Degrees& angle);
     static Mat4 as_rotation_z(const Degrees& angle);
+    static Mat4 as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y, const Degrees& angle_z);
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
     static Mat4 as_scaling(float s);
     static Mat4 from_pos_rot_scale(const Vec3& pos, const Quaternion& rot, const Vec3& scale);

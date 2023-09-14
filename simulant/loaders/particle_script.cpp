@@ -22,8 +22,10 @@
 #include "../stage.h"
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"
+#include "../assets/particles/alpha_fader.h"
 #include "../assets/particles/colour_fader.h"
 #include "../assets/particles/direction_manipulator.h"
+#include "../assets/particles/direction_noise_random_manipulator.h"
 
 #include "../vfs.h"
 
@@ -93,6 +95,20 @@ static auto parse_colour = [](const std::string& colour) -> smlt::Colour {
     }
 };
 
+static auto parse_vec3 = [](const std::string& dir) -> smlt::Vec3 {
+    auto parts = unicode(dir).split(" ");
+    if(parts.size() == 3) {
+        return smlt::Vec3(
+            parts[0].to_float(),
+            parts[1].to_float(),
+            parts[2].to_float()
+        );
+    } else {
+        S_WARN("Invalid number of vector components to direction manipulator");
+        return smlt::Vec3();
+    }
+};
+
 static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
     std::vector<smlt::Colour> colours;
 
@@ -109,24 +125,35 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSO
     return m.get();
 }
 
-static smlt::Manipulator* spawn_direction_manipulator(ParticleScript* ps, JSONIterator& js) {
-    auto parse_vec3 = [](const std::string& dir) -> smlt::Vec3 {
-        auto parts = unicode(dir).split(" ");
-        if(parts.size() == 3) {
-            return smlt::Vec3(
-                parts[0].to_float(),
-                parts[1].to_float(),
-                parts[2].to_float()
-            );
-        } else {
-            S_WARN("Invalid number of vector components to direction manipulator");
-            return smlt::Vec3();
-        }
-    };
+static smlt::Manipulator* spawn_alpha_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
+    std::vector<float> alphas;
 
+    auto colour_array = js["alphas"];
+    for(auto i = 0u; i < colour_array->size(); ++i) {
+        float alpha = colour_array[(uint32_t) i]->to_float().value();
+        alphas.push_back(alpha);
+    }
+
+    bool interpolate = js["interpolate"]->to_bool().value_or(true);
+
+    auto m = std::make_shared<AlphaFader>(ps, alphas, interpolate);
+    ps->add_manipulator(m);
+    return m.get();
+}
+
+static smlt::Manipulator* spawn_direction_manipulator(ParticleScript* ps, JSONIterator& js) {
     auto dir = (js->has_key("force") ? parse_vec3(js["force"]->to_str().value_or("")) : smlt::Vec3());
 
     auto m = std::make_shared<DirectionManipulator>(ps, dir);
+    ps->add_manipulator(m);
+    return m.get();
+}
+
+static smlt::Manipulator* spawn_direction_noise_random_manipulator(ParticleScript* ps, JSONIterator& js) {
+    auto dir = (js->has_key("force") ? parse_vec3(js["force"]->to_str().value_or("")) : smlt::Vec3());
+    auto noise_amount = (js->has_key("noise_amount") ? parse_vec3(js["noise_amount"]->to_str().value_or("")) : smlt::Vec3());
+
+    auto m = std::make_shared<DirectionNoiseRandomManipulator>(ps, dir, noise_amount);
     ps->add_manipulator(m);
     return m.get();
 }
@@ -234,6 +261,18 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             if(emitter->has_key("velocity")) {
                 float x = emitter["velocity"]->to_float().value();
                 new_emitter.velocity_range = std::make_pair(x, x);
+            } else {
+                float vel_min = new_emitter.velocity_range.first;
+                float vel_max = new_emitter.velocity_range.second;
+                if(emitter->has_key("velocity_min")) {
+                    vel_min = emitter["velocity_min"]->to_float().value();
+                }
+
+                if(emitter->has_key("velocity_max")) {
+                    vel_max = emitter["velocity_max"]->to_float().value();
+                }
+
+                new_emitter.velocity_range = std::make_pair(vel_min, vel_max);
             }
 
             if(emitter->has_key("width")) {
@@ -290,7 +329,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             } else if(emitter->has_key("colours")) {
                 auto colours = emitter["colours"];
                 new_emitter.colours.clear();
-                for(int c = 0; c < colours->size(); ++c) {
+                for(std::size_t c = 0; c < colours->size(); ++c) {
                     auto colour = parse_colour(colours[c]->to_str().value_or("0 0 0 0"));
                     new_emitter.colours.push_back(colour);
                 }
@@ -314,6 +353,10 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                     spawn_colour_fader_manipulator(ps, manipulator);
                 } else if(manipulator["type"]->to_str().value() == "direction") {
                     spawn_direction_manipulator(ps, manipulator);
+                } else if(manipulator["type"]->to_str().value() == "direction_noise_random") {
+                    spawn_direction_noise_random_manipulator(ps, manipulator);
+                } else if(manipulator["type"]->to_str().value() == "alpha_fader") {
+                    spawn_alpha_fader_manipulator(ps, manipulator);
                 }
             }
         }

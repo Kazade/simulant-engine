@@ -159,40 +159,103 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         return;
     }
 
+    uint8_t* pos_ptr = vertex_data_->data();
+    uint8_t* dif_ptr = pos_ptr + vertex_data_->vertex_specification().diffuse_offset(false);
+    uint8_t* uv_ptr = pos_ptr + vertex_data_->vertex_specification().texcoord0_offset(false);
+
+    auto stride = vertex_data_->vertex_specification().stride();
+
     for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
 
-        auto scaled_up = up * p.dimensions.y;
-        auto scaled_right = right * p.dimensions.x;
-        auto half_up = scaled_up * 0.5f;
-        auto half_right = scaled_right * 0.5f;
+        Vec3* pos = (Vec3*) pos_ptr;
+        uint8_t* dif = dif_ptr;
+        float* uv = (float*) uv_ptr;
 
-        auto pos = p.position;
-        pos += -half_up;
-        pos += -half_right;
+        uint8_t a = smlt::clamp(p.colour.a * 255.0f, 0, 255);
+        uint8_t r = smlt::clamp(p.colour.r * 255.0f, 0, 255);
+        uint8_t g = smlt::clamp(p.colour.g * 255.0f, 0, 255);
+        uint8_t b = smlt::clamp(p.colour.b * 255.0f, 0, 255);
 
-        vertex_data_->position(pos);
-        vertex_data_->diffuse(p.colour);
-        vertex_data_->tex_coord0(0, 0);
-        vertex_data_->move_next();
+        *(pos) =
+            p.position
+            + right * p.dimensions.x * -0.5f
+            + up * p.dimensions.y * -0.5f;
 
-        pos += scaled_right;
-        vertex_data_->position(pos);
-        vertex_data_->diffuse(p.colour);
-        vertex_data_->tex_coord0(1, 0);
-        vertex_data_->move_next();
+        dif[0] = b;
+        dif[1] = g;
+        dif[2] = r;
+        dif[3] = a;
 
-        pos += scaled_up;
-        vertex_data_->position(pos);
-        vertex_data_->diffuse(p.colour);
-        vertex_data_->tex_coord0(1, 1);
-        vertex_data_->move_next();
+        uv[0] = 0.0f;
+        uv[1] = 0.0f;
 
-        pos += -scaled_right;
-        vertex_data_->position(pos);
-        vertex_data_->diffuse(p.colour);
-        vertex_data_->tex_coord0(0, 1);
-        vertex_data_->move_next();
+        pos_ptr += stride;
+        dif_ptr += stride;
+        uv_ptr += stride;
+
+        pos = (Vec3*) pos_ptr;
+        dif = dif_ptr;
+        uv = (float*) uv_ptr;
+
+        *(pos) =
+            p.position
+            + right * p.dimensions.x * +0.5f
+            + up * p.dimensions.y * -0.5f;
+
+        dif[0] = b;
+        dif[1] = g;
+        dif[2] = r;
+        dif[3] = a;
+
+        uv[0] = 1.0f;
+        uv[1] = 0.0f;
+
+        pos_ptr += stride;
+        dif_ptr += stride;
+        uv_ptr += stride;
+
+        pos = (Vec3*) pos_ptr;
+        dif = dif_ptr;
+        uv = (float*) uv_ptr;
+
+        *(pos) =
+            p.position
+            + right * p.dimensions.x * +0.5f
+            + up * p.dimensions.y * +0.5f;
+
+        dif[0] = b;
+        dif[1] = g;
+        dif[2] = r;
+        dif[3] = a;
+
+        uv[0] = 1.0f;
+        uv[1] = 1.0f;
+
+        pos_ptr += stride;
+        dif_ptr += stride;
+        uv_ptr += stride;
+
+        pos = (Vec3*) pos_ptr;
+        dif = dif_ptr;
+        uv = (float*) uv_ptr;
+
+        *(pos) =
+            p.position
+            + right * p.dimensions.x * -0.5f
+            + up * p.dimensions.y * +0.5f;
+
+        dif[0] = b;
+        dif[1] = g;
+        dif[2] = r;
+        dif[3] = a;
+
+        uv[0] = 0.0f;
+        uv[1] = 1.0f;
+
+        pos_ptr += stride;
+        dif_ptr += stride;
+        uv_ptr += stride;
     }
 
     /* Use one giant vertex range of quads (glDrawArrays) */
@@ -345,7 +408,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         Vec3 dir = emitter->direction;
         if(emitter->angle.value != 0) {
             Radians ang(emitter->angle); //Convert from degress to radians
-            ang.value *= random_.float_in_range(0, 1); //Multiply by a random unit float
+            ang.value *= random_.float_in_range(-1, 1); //Multiply by a random unit float
             dir = dir.random_deviant(ang).normalized();
         }
 

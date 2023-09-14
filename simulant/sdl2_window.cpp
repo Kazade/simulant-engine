@@ -175,7 +175,20 @@ void SDL2Window::check_events() {
             case SDL_QUIT:
                 get_app()->stop_running();
                 break;
-
+            case SDL_CONTROLLERDEVICEADDED:
+            case SDL_CONTROLLERDEVICEREMOVED: {
+                /* If a controller is added or removed, we need to update the
+                 * InputState with the new list */
+                auto input = get_input_state();
+                if(input) {
+                    auto controllers = detect_game_controllers();
+                    S_DEBUG(
+                        "Updating game controller list with {0} controllers",
+                        controllers.size()
+                    );
+                    input->_update_game_controllers(controllers);
+                }
+            } break;
             case SDL_CONTROLLERAXISMOTION: {
                 auto value = float(event.caxis.value);
                 if(event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT || event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
@@ -419,16 +432,8 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
     return true;
 }
 
-void SDL2Window::initialize_input_controller(InputState &controller) {
+std::vector<GameControllerInfo> SDL2Window::detect_game_controllers() {
     std::vector<GameControllerInfo> joypads;
-
-    MouseDeviceInfo mouse;
-    mouse.id = 0;
-    mouse.button_count = 3; // FIXME: Not always true
-    mouse.axis_count = 2; // X + Y FIXME: Add scrollwheels
-
-    KeyboardDeviceInfo keyboard;
-
     for(uint16_t i = 0; i < SDL_NumJoysticks(); i++) {
         SDL_Joystick* joystick = SDL_JoystickOpen(i);
         open_joysticks_.push_back(joystick);
@@ -441,8 +446,23 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
         info.hat_count = SDL_JoystickNumHats(joystick);
         info.has_rumble = SDL_JoystickIsHaptic(joystick);
 
-        joypads.push_back(info);        
+        joypads.push_back(info);
     }
+
+    return joypads;
+}
+
+void SDL2Window::initialize_input_controller(InputState &controller) {
+
+    MouseDeviceInfo mouse;
+    mouse.id = 0;
+    mouse.button_count = 3; // FIXME: Not always true
+    mouse.axis_count = 2; // X + Y FIXME: Add scrollwheels
+
+    KeyboardDeviceInfo keyboard;
+    keyboard.id = 0;
+
+    auto joypads = detect_game_controllers();
 
     controller._update_keyboard_devices({keyboard});
     controller._update_mouse_devices({mouse});
@@ -556,7 +576,12 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data, int row_stri
 }
 
 void SDL2Window::game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const Seconds &duration) {
-    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(controller->id().to_int8_t()), low_rumble * float(0xFFFF), high_rumble * float(0xFFFF), duration.to_float());
+    SDL_GameControllerRumble(
+        SDL_GameControllerFromInstanceID(controller->id().to_int8_t()),
+        low_rumble * float(0xFFFF),
+        high_rumble * float(0xFFFF),
+        duration.to_float() * 1000
+    );
 }
 
 void SDL2Window::game_controller_stop_rumble(GameController *controller) {

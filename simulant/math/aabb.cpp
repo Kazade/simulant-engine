@@ -85,10 +85,10 @@ AABB::AABB(const Vec3 *vertices, const std::size_t count) {
 }
 
 bool AABB::intersects_aabb(const AABB &bounds) const {
-    auto lmin = min();
-    auto rmin = bounds.min();
-    auto lmax = max();
-    auto rmax = bounds.max();
+    const Vec3 lmin = min();
+    const Vec3 rmin = bounds.min();
+    const Vec3 lmax = max();
+    const Vec3 rmax = bounds.max();
 
     return (lmin.x <= rmax.x) && (lmax.x >= rmin.x) &&
         (lmin.y <= rmax.y) && (lmax.y >= rmin.y) &&
@@ -98,13 +98,20 @@ bool AABB::intersects_aabb(const AABB &bounds) const {
 }
 
 bool AABB::intersects_sphere(const smlt::Vec3& center, float diameter) const {
-    float radius = diameter * 0.5f;
+    const float radius = diameter * 0.5f;
 
-    auto ex = std::max(min().x - center.x, 0.0f) + std::max(center.x - max().x, 0.0f);
-    auto ey = std::max(min().y - center.y, 0.0f) + std::max(center.y - max().y, 0.0f);
-    auto ez = std::max(min().z - center.z, 0.0f) + std::max(center.z - max().z, 0.0f);
+    const float ex = fast_max(min().x - center.x, 0.0f) + fast_max(center.x - max().x, 0.0f);
+    const float ey = fast_max(min().y - center.y, 0.0f) + fast_max(center.y - max().y, 0.0f);
+    const float ez = fast_max(min().z - center.z, 0.0f) + fast_max(center.z - max().z, 0.0f);
 
-    return (ex < radius) && (ey < radius) && (ez < radius) && (ex * ex + ey * ey + ez * ez < radius * radius);
+#ifdef __DREAMCAST__
+    const bool sqrad = MATH_Sum_of_Squares(ex, ey, ez, 0.0f) < (radius * radius);
+#else
+    Vec3 sum = Vec3(ex, ey, ez);
+    const bool sqrad = sum.dot(sum) < (radius * radius);
+#endif
+
+    return (ex < radius) && (ey < radius) && (ez < radius) && sqrad;
 }
 
 void AABB::encapsulate(const AABB &bounds) {

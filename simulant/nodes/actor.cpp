@@ -273,7 +273,6 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         new_renderable.index_element_count = (new_renderable.index_data) ? new_renderable.index_data->count() : 0;
         new_renderable.vertex_ranges = submesh->vertex_ranges();
         new_renderable.vertex_range_count = submesh->vertex_range_count();
-        new_renderable.index_element_count = (new_renderable.index_data) ? new_renderable.index_data->count() : 0;
         new_renderable.material = submesh->material_at_slot(material_slot_, true).get();
         new_renderable.centre = transformed_aabb().centre();
 

@@ -187,7 +187,17 @@ public:
         return id_;
     }
 
+    GameControllerIndex index() const;
+
     bool has_rumble_effect() const;
+
+    /**
+     * @brief Start a rumble effect on the controller
+     * @param A normalized value (0.0f - 1.0f) of the intensity of the low motor
+     * @param A normalized value (0.0f - 1.0f) of the intensity of the high motor
+     * @param The time in seconds to rumble for
+     * @return True on success, false otherwise
+     */
     bool start_rumble(float low_rumble, float high_rumble, const smlt::Seconds& duration);
     void stop_rumble();
 

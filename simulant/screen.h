@@ -78,9 +78,10 @@ private:
     uint16_t height_ = 0;
     uint16_t row_stride_ = 0;
     ScreenFormat format_ = SCREEN_FORMAT_G1;
-    uint16_t refresh_rate_ = 60;    
+    uint16_t refresh_rate_ = 15;
     uint8_t integer_scale_ = 1;
     float time_till_next_refresh_ = 0.0f;
+    bool buffer_dirty_ = false;
 
     std::vector<uint8_t> buffer_;
     thread::Mutex buffer_mutex_;

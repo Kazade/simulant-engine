@@ -82,8 +82,7 @@ float InputAxis::value(DeadZoneBehaviour dead_zone_behaviour) const {
             if(input.length_squared() < dead_zone_squared) {
                 return 0.0f;
             } else {
-                /* FIXME: Costly divide */
-                input = input.normalized() * ((input.length() - dead_zone_) / (1.0f - dead_zone_));
+                input = input.normalized() * ((input.length() - dead_zone_) * dead_zone_reciprocal_);
                 return input.x * inversion;
             }
         }

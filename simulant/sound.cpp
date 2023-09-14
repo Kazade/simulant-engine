@@ -56,7 +56,7 @@ void AudioSource::source_update_thread() {
         {
             thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
             for(auto src: ACTIVE_SOURCES) {
-                src->update_source(dt);
+                src->update_source(dt * get_app()->time_keeper->time_scale());
             }
         }
 

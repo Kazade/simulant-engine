@@ -24,5 +24,4 @@ public:
 template<typename T>
 uint64_t HasAutoID<T>::counter = 0;
 
-
 }

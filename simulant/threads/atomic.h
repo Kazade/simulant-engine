@@ -10,7 +10,7 @@ template<typename T>
 class Atomic {
 private:
     mutable thread::Mutex m_;
-    T v_;
+    volatile T v_;
 public:
     Atomic():
         v_{0} {}

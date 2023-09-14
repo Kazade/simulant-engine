@@ -7,6 +7,7 @@
 #endif
 
 #include "generic/managed.h"
+#include "threads/atomic.h"
 
 namespace smlt {
 
@@ -57,7 +58,7 @@ private:
     float total_time_ = 0.0f;
     float delta_time_ = 0.0f;
     float fixed_step_ = 0.0f;
-    float time_scale_ = 1.0f;
+    thread::Atomic<float> time_scale_;
 };
 
 }

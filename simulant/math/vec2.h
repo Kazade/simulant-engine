@@ -3,6 +3,7 @@
 #include <cmath>
 #include "../utils/unicode.h"
 #include "../utils/formatter.h"
+#include "utils.h"
 
 namespace smlt {
 
@@ -39,16 +40,20 @@ public:
 
     Vec2 rotated_by(const Degrees& degrees) const;
 
-    float length() const {
-        return sqrtf(x * x + y * y);
+    float length() const  {
+        return fast_sqrt(x * x + y * y);
     }
 
     float length_squared() const {
-        return x * x + y * y;
+#ifdef __DREAMCAST__
+        return MATH_Sum_of_Squares(x, y, 0.0f, 0.0f);
+#else
+        return dot(*this);
+#endif
     }
 
     void normalize() {
-        float l = 1.0f / length();
+        float l = fast_inverse_sqrt(length_squared());
         x *= l;
         y *= l;
     }
@@ -91,12 +96,14 @@ public:
     }
 
     Vec2& operator/=(float rhs) {
-        *this = *this / rhs;
+        float l = fast_divide(1.0f, rhs);
+        *this *= l;
         return *this;
     }
 
     Vec2 operator/(float rhs) const {
-        Vec2 result(x / rhs, y / rhs);
+        float l = fast_divide(1.0f, rhs);
+        Vec2 result(x * l, y * l);
         return result;
     }
 
@@ -109,7 +116,11 @@ public:
     }
 
     float dot(const Vec2& rhs) const {
+#ifdef __DREAMCAST__
+        return MATH_fipr(x, y, 0.0f, 0.0f, rhs.x, rhs.y, 0.0f, 0.0f);
+#else
         return x * rhs.x + y * rhs.y;
+#endif
     }
 
     Vec3 xyz(float z = 0.0f) const;

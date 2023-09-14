@@ -27,6 +27,7 @@ uint64_t TimeKeeper::now_in_us() {
 }
 
 bool TimeKeeper::init() {
+    time_scale_ = 1.0f;
     last_update_ = now_in_us();
     return true;
 }
@@ -74,7 +75,7 @@ void TimeKeeper::set_time_scale(float value) {
 
 bool TimeKeeper::use_fixed_step() {
     /* Don't run updates if the timescale is 0.0f */
-    if(almost_equal(time_scale_, 0.0f)) {
+    if(almost_equal((float) time_scale_, 0.0f)) {
         return false;
     }
 

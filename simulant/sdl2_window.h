@@ -67,6 +67,7 @@ private:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string &from_config) override;
 
     void initialize_input_controller(InputState &controller) override;
+    std::vector<GameControllerInfo> detect_game_controllers();
 
     /* This is for testing mainly. If you set config.desktop.enable_virtual_screen = true */
     void initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale);

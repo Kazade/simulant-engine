@@ -1,8 +1,11 @@
-#ifndef TEST_MAT3_H
-#define TEST_MAT3_H
+#pragma once
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
+
+namespace {
+
+using namespace smlt;
 
 class Mat4Test : public smlt::test::TestCase {
 public:
@@ -56,6 +59,14 @@ public:
             assert_equal(a[i], i);
         }
     }
+
+    void test_as_scaling() {
+        Mat4 a = Mat4::as_scaling(1.0f);
+        assert_close(a[0], 1.0f, 0.00001f);
+        assert_close(a[5], 1.0f, 0.00001f);
+        assert_close(a[10], 1.0f, 0.00001f);
+        assert_close(a[15], 1.0f, 0.00001f);
+    }
 };
 
 
@@ -89,4 +100,5 @@ public:
     }
 };
 
-#endif // TEST_MAT3_H
+}
+

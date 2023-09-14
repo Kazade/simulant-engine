@@ -146,7 +146,7 @@ void Mesh::rebuild_aabb() {
     bool first = true;
     result = AABB();
 
-    for(auto sm: submeshes_) {
+    for(auto& sm: submeshes_) {
         if(first) {
             result = sm->bounds_;
             first = false;

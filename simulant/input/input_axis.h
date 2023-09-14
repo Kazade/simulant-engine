@@ -70,7 +70,7 @@ public:
 
     float value(DeadZoneBehaviour dead_zone_behaviour=DEAD_ZONE_BEHAVIOUR_RADIAL) const;
 
-    void set_dead_zone(float v) { dead_zone_ = v; }
+    void set_dead_zone(float v) { dead_zone_ = v; dead_zone_reciprocal_ = 1.0f / (1.0f - dead_zone_); }
     float dead_zone() const { return dead_zone_; }
 
     void set_inversed(bool value=true);
@@ -103,6 +103,7 @@ private:
 
     float value_ = 0.0f;
     float dead_zone_ = 0.001f;
+    float dead_zone_reciprocal_ = 1.0f / (1.0f - dead_zone_);
 
     bool inversed_ = false;
 

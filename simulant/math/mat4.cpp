@@ -1,6 +1,7 @@
 #include "mat4.h"
 #include "mat3.h"
 #include "../types.h"
+#include "utils.h"
 
 namespace smlt {
 
@@ -50,6 +51,14 @@ Vec4 Mat4::operator*(const Vec4 &v) const {
     return ret;
 }
 
+Vec3 Mat4::operator*(const Vec3 &v) const {
+    Vec3 ret;
+    ret.x = m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12];
+    ret.y = m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13];
+    ret.z = m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14];
+    return ret;
+}
+
 void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const {
     Mat3 rot(*this);
     rotation = Quaternion(rot);
@@ -71,6 +80,11 @@ Mat4 Mat4::as_rotation_y(const Degrees &angle) {
 
 Mat4 Mat4::as_rotation_z(const Degrees &angle) {
     Quaternion rot(Degrees(), Degrees(), angle);
+    return Mat4(rot);
+}
+
+Mat4 Mat4::as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y, const Degrees& angle_z) {
+    Quaternion rot(angle_x, angle_y, angle_z);
     return Mat4(rot);
 }
 
@@ -261,7 +275,7 @@ void Mat4::inverse() {
         return;
     }
 
-    det = 1.0f / det;
+    det = fast_divide(1.0f, det);
 
     for (uint8_t i = 0; i < 16; i++) {
         m[i] = tmp.m[i] * det;
@@ -313,13 +327,11 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
         assert(0 && "Invalid plane index");
     }
 
-    t = sqrtf(out.n.x * out.n.x +
-              out.n.y * out.n.y +
-              out.n.z * out.n.z);
-    out.n.x /= t;
-    out.n.y /= t;
-    out.n.z /= t;
-    out.d /= t;
+    t = out.n.dot(out.n);
+
+    const float inv_sqrt_t = fast_inverse_sqrt(t);
+    out.n *= inv_sqrt_t;
+    out.d *= inv_sqrt_t;
 
     return out;
 }
@@ -329,7 +341,6 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
 
     float d = up.dot((target - eye));
     auto tu = (almost_equal(d * d, 1.0f)) ? Vec3(up.x, up.z, up.y) : up;
-
 
     Vec3 f = (target - eye).normalized();
     Vec3 s = f.cross(tu).normalized();
@@ -359,6 +370,5 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
 
     return ret;
 }
-
 
 }

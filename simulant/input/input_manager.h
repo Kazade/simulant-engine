@@ -54,6 +54,10 @@ class InputManager:
     DEFINE_SIGNAL(TextInputReceivedSignal, signal_text_input_received);
 
 public:
+    // You can't copy input managers
+    InputManager(const InputManager&) = delete;
+    InputManager& operator=(const InputManager&) = delete;
+
     InputManager(InputState* controller);
     ~InputManager();
 

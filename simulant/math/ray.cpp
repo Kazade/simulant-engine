@@ -6,7 +6,7 @@ namespace smlt {
 bool Ray::intersects_aabb(const AABB &aabb) const {
     //http://gamedev.stackexchange.com/a/18459/15125
     const Vec3 rdir = this->dir.normalized();
-    const Vec3 dirfrac(1.0f / rdir.x, 1.0f / rdir.y, 1.0f / rdir.z);
+    const Vec3 dirfrac(fast_divide(1.0f, rdir.x), fast_divide(1.0f, rdir.y), fast_divide(1.0f, rdir.z));
 
     const float t1 = (aabb.min().x - start.x) * dirfrac.x;
     const float t2 = (aabb.max().x - start.x) * dirfrac.x;
@@ -15,8 +15,8 @@ bool Ray::intersects_aabb(const AABB &aabb) const {
     const float t5 = (aabb.min().z - start.z) * dirfrac.z;
     const float t6 = (aabb.max().z - start.z) * dirfrac.z;
 
-    const float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
-    const float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
+    const float tmin = fast_max(fast_max(fast_min(t1, t2), fast_min(t3, t4)), fast_min(t5, t6));
+    const float tmax = fast_min(fast_min(fast_max(t1, t2), fast_max(t3, t4)), fast_max(t5, t6));
 
     // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behind us
     if(tmax < 0) {
@@ -47,20 +47,20 @@ bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Ve
         return false;
     }
 
-    inv_det = 1.f / det;
+    inv_det = fast_divide(1.0f, det);
 
     T = start - v1;
     u = T.dot(P) * inv_det;
 
     //The intersection lies outside of the triangle
-    if(u < 0.f || u > 1.f) {
+    if(u < 0.0f || u > 1.0f) {
         return false;
     }
 
     Q = T.cross(e1);
     v = dir.dot(Q) * inv_det;
 
-    if(v < 0.f || u + v  > 1.f) {
+    if(v < 0.0f || u + v  > 1.0f) {
         return false;
     }
 
@@ -97,7 +97,7 @@ bool Ray::intersects_sphere(const Vec3& center, const float radius, Vec3 *inters
 
     if(d2 > r2) return false;
 
-    const float thc = sqrt(r2 - d2);
+    const float thc = smlt::fast_sqrt(r2 - d2);
     t0 = tca - thc;
     t1 = tca + thc;
 

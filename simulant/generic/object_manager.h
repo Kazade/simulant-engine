@@ -158,14 +158,14 @@ protected:
 
 template<typename T>
 struct ToSharedPtr {
-    static std::shared_ptr<T> convert(std::shared_ptr<T> ptr) {
+    static std::shared_ptr<T> convert(const std::shared_ptr<T>& ptr) {
         return ptr;
     }
 };
 
 template<typename T>
 struct ToDefaultInitPtr {
-    static default_init_ptr<T> convert(std::shared_ptr<T> ptr) {
+    static default_init_ptr<T> convert(const std::shared_ptr<T>& ptr) {
         return ptr.get();
     }
 };

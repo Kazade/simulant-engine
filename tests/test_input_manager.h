@@ -18,6 +18,10 @@ public:
         state_->_update_keyboard_devices({KeyboardDeviceInfo{0}});
         state_->_update_game_controllers({GameControllerInfo{GameControllerID(0), "test", 1, 1, 0, false, {0}}});
         manager_.reset(new InputManager(state_.get()));
+
+        if(!window->input_state->keyboard_count()) {
+            window->input_state->_update_keyboard_devices({KeyboardDeviceInfo{0}});
+        }
     }
 
     void test_axis_force() {
@@ -105,7 +109,7 @@ public:
 
         state_->_handle_joystick_axis_motion(GameControllerID(0), JOYSTICK_AXIS_0, 1.0f);
         manager_->update(1.0);
-        assert_equal(axis->value(), 1.0f);
+        assert_close(axis->value(), 1.0f, EPSILON);
     }
 
     void test_axis_pressed_released() {
@@ -182,12 +186,18 @@ public:
             }
         );
 
-        input->onscreen_keyboard->cursor_to_char('1');
-        input->onscreen_keyboard->activate();
-        assert_equal(text, "1");
+        try {
+            input->onscreen_keyboard->cursor_to_char('1');
+            input->onscreen_keyboard->activate();
+            assert_equal(text, "1");
 
-        auto final_text = input->stop_text_input();
-        assert_equal(text, final_text);
+            auto final_text = input->stop_text_input();
+            assert_equal(text, final_text);
+        } catch(...) {
+            conn.disconnect();
+            throw;
+        }
+
         conn.disconnect();
     }
 
@@ -205,17 +215,24 @@ public:
             }
         );
 
-        window->on_key_down(KEYBOARD_CODE_SPACE, ModifierKeyState());
-        assert_false(backspace);
+        try {
+            window->on_key_down(KEYBOARD_CODE_SPACE, ModifierKeyState());
+            assert_false(backspace);
 
-        window->on_key_down(KEYBOARD_CODE_BACKSPACE, ModifierKeyState());
-        assert_true(backspace);
+            window->on_key_down(KEYBOARD_CODE_BACKSPACE, ModifierKeyState());
+            assert_true(backspace);
+        } catch(...) {
+            input->stop_text_input();
+            conn.disconnect();
+            throw;
+        }
 
         input->stop_text_input();
         conn.disconnect();
     }
 
     void test_start_text_input() {
+
         auto& input = window->input;
         auto ret = input->start_text_input();
 
@@ -223,7 +240,7 @@ public:
             /* We have a physical keyboard, so start_text_input should return false */
             assert_false(ret);
             assert_false(input->onscreen_keyboard_active());
-        } else {            
+        } else {
             /* On screen keyboard! */
             assert_true(ret);
             assert_true(input->onscreen_keyboard_active());
@@ -242,17 +259,22 @@ public:
             }
         );
 
-        window->on_key_down(smlt::KEYBOARD_CODE_A, smlt::ModifierKeyState());
-        assert_equal(text, "a");
+        try {
+            window->on_key_down(smlt::KEYBOARD_CODE_A, smlt::ModifierKeyState());
+            assert_equal(text, "a");
 
-        auto modifier = ModifierKeyState();
-        modifier.lshift = true;
-        text = "";
+            auto modifier = ModifierKeyState();
+            modifier.lshift = true;
+            text = "";
 
-        window->on_key_down(smlt::KEYBOARD_CODE_APOSTROPHE, modifier);
-        assert_equal(text, "@");
+            window->on_key_down(smlt::KEYBOARD_CODE_APOSTROPHE, modifier);
+            assert_equal(text, "@");
 
-        conn.disconnect();
+            conn.disconnect();
+        } catch(...) {
+            conn.disconnect();
+            throw;
+        }
     }
 
 private:

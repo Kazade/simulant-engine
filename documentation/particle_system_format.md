@@ -31,7 +31,11 @@ The JSON file should have a root dictionary which defines the particle system, i
 
 ## Manipulator properties 
 
- - type (string): The type of the affector, valid options are: `size`, `colour_fader`.
+ - type (string): The type of the affector, valid options are: 
+ `size`, 
+ `colour_fader`,
+ `direction`,
+ `direction_noise_random`
  
 Additional properties depend on the type of the affector
 
@@ -48,4 +52,9 @@ Additional properties depend on the type of the affector
 ### Direction
 
  - force (string): A vector described in the format "X Y Z" which defines the force per second to be applied to each particle's position
+
+### Direction Noise Random
+
+- force (string): A vector described in the format "X Y Z" which defines the force per second to be applied to each particle's position
+- noise_amount (string): A vector described in the format "X Y Z" which defines how much noise per second is added to each particle's direction
 

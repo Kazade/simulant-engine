@@ -315,6 +315,17 @@ private:
     }
 
     virtual bool init() = 0;
+
+    /**
+     * @brief pre_init is called before window construction. It's useful for
+     * manipulating the AppConfig before the window is created (e.g. setting
+     * the window config from a configuration file). Note that at this point
+     * nothing from the AppConfig will have been actioned, for example
+     * search_paths will not have been applied.
+     * @return returning false from this function will end the application.
+     */
+    virtual bool pre_init() { return true; }
+
     virtual void fixed_update(float dt) {
         _S_UNUSED(dt);
     }

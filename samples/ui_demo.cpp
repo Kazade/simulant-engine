@@ -68,9 +68,9 @@ public:
 
         //stage_->ui->transform_input_with_camera(camera_);
 
-        auto fixed_width = stage_->ui->new_widget_as_label("This is some text with a fixed width.\n See it works!");
+        auto fixed_width = stage_->ui->new_widget_as_label("This is some long text with a fixed width.\n See it works!");
         fixed_width->resize(200, -1);
-        fixed_width->move_to(100, 200);
+        fixed_width->move_to(400, 500);
         fixed_width->set_background_colour(smlt::Colour::PURPLE);
         fixed_width->set_border_radius(smlt::ui::Px(10));
         fixed_width->set_padding(10);

@@ -73,11 +73,11 @@ void AssetManager::destroy_all() {
 }
 
 void AssetManager::update(float dt) {
-    material_manager_.each([dt](uint32_t, MaterialPtr mat) {
+    material_manager_.each([dt](uint32_t, const MaterialPtr& mat) {
         mat->update(dt);
     });
 
-    texture_manager_.each([dt](uint32_t, TexturePtr tex) {
+    texture_manager_.each([dt](uint32_t, const TexturePtr& tex) {
         tex->update(dt);
     });
 }

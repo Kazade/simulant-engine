@@ -178,21 +178,12 @@ ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES})
 ENDIF()
 
-IF(MINGW)
-
-    FIND_LIBRARY(OPENAL_LIB NAMES OpenAL32.lib PATHS $ENV{OPENALDIR}/libs/Win64)
-    message(${OPENAL_LIB})
-
-    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ ")
-
-    IF(OPENAL_LIB)
-        TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 psapi $ENV{SDL2DIR}/lib/x64/SDL2.lib $ENV{OPENALDIR}/libs/Win64/OpenAL32.lib $ENV{ZLIBDIR}/lib_release/zlib.lib userenv)
-    ELSE()
-        SET(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
-        SET(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++ ")
-        TARGET_LINK_LIBRARIES(simulant LINK_PUBLIC opengl32 glu32 mingw32 psapi SDL2main SDL2 OpenAL32 userenv)
-    ENDIF()
-ENDIF()
+if(FLTO_SUPPORTED)
+    message(STATUS "IPO / LTO enabled")
+    set_property(TARGET simulant PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(STATUS "IPO / LTO DISABLED")
+endif()
 
 SET_TARGET_PROPERTIES(simulant
                       PROPERTIES

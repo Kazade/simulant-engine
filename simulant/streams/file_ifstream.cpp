@@ -8,23 +8,31 @@ uint32_t FileStreamBuf::open_file_counter = 0;
 FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
     ++open_file_counter;
     filein_ = fopen(name.c_str(), mode.c_str());
-    assert(filein_);
 
-    if(open_file_counter == FILE_OPEN_WARN_COUNT) {
-        S_WARN(
-            "{0} files are concurrently open, this may cause issues on some platforms",
-            open_file_counter
-        );
+    if(!filein_) {
+        if(open_file_counter == FILE_OPEN_WARN_COUNT) {
+            S_WARN(
+                "{0} files are concurrently open, this may cause issues on some platforms",
+                open_file_counter
+            );
+        }
+        setvbuf(filein_, fbuffer_, _IOFBF, sizeof(fbuffer_));
+        setg(buffer_, buffer_, buffer_);
     }
-    setg(buffer_, buffer_, buffer_);
 }
 
 FileStreamBuf::~FileStreamBuf() {
-    fclose(filein_);
-    --open_file_counter;
+    if(filein_) {
+        fclose(filein_);
+        --open_file_counter;
+    }
 }
 
 FileStreamBuf::int_type FileStreamBuf::underflow() {
+    if(!filein_) {
+        return traits_type::eof();
+    }
+
     auto old_read_pos = last_read_pos_;
     last_read_pos_ = ftell(filein_);
     assert(!ferror(filein_));
@@ -40,6 +48,10 @@ FileStreamBuf::int_type FileStreamBuf::underflow() {
 }
 
 std::streampos FileStreamBuf::seekpos(std::streampos sp, std::ios_base::openmode which) {
+    if(!filein_) {
+        return -1;
+    }
+
     _S_UNUSED(which);
     assert(which & std::ios_base::in);
 
@@ -52,6 +64,10 @@ std::streampos FileStreamBuf::seekpos(std::streampos sp, std::ios_base::openmode
 }
 
 std::streampos FileStreamBuf::seekoff(std::streamoff off, std::ios_base::seekdir way, std::ios_base::openmode which) {
+    if(!filein_) {
+        return -1;
+    }
+
     _S_UNUSED(which);
     assert(which & std::ios_base::in);
 
@@ -104,6 +120,10 @@ std::streampos FileStreamBuf::seekoff(std::streamoff off, std::ios_base::seekdir
 }
 
 FileStreamBuf::int_type FileStreamBuf::pbackfail(FileStreamBuf::int_type c) {
+    if(!filein_) {
+        return traits_type::eof();
+    }
+
     /* This is called in the event that someone calls unget() or whatever, and there's
      * no buffer space left to put back. */
 

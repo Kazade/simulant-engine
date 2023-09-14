@@ -32,8 +32,6 @@ Vec3::Vec3(const Vec2 &v2, float z):
 
 }
 
-
-
 Vec3 Vec3::rotated_by(const Quaternion &q) const {
     return q * (*this);
 }
@@ -50,8 +48,8 @@ Vec3 operator*(float lhs, const Vec3& rhs) {
 
 Vec3 operator/(float lhs, const Vec3& rhs) {
     smlt::Vec3 result = rhs;
-    result /= lhs;
-    return result;
+    float l = fast_divide(1.0f, lhs);
+    return result * l;
 }
 
 Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
@@ -82,14 +80,14 @@ Quaternion Vec3::rotation_to(const Vec3 &dir) const {
        return Quaternion();
     } else if(d < (EPSILON - 1.0f)) {
        Vec3 axis = Vec3::POSITIVE_X.cross(*this);
-       if(std::abs(axis.length_squared()) < EPSILON) {
+       if(fast_abs(axis.length_squared()) < EPSILON) {
            axis = Vec3::POSITIVE_Y.cross(*this);
        }
        axis.normalize();
        return smlt::Quaternion(axis, smlt::Radians(smlt::PI));
     } else {
-        float s = std::sqrt((1.0f + d) * 2.0f);
-        float inv = 1.0f / s;
+        float s = fast_sqrt((1.0f + d) * 2.0f);
+        float inv = fast_divide(1.0f, s);
         Vec3 c = cross(dir);
         return Quaternion(
             c.x * inv,
@@ -141,11 +139,16 @@ smlt::Vec3 operator-(const smlt::Vec3& vec) {
 float Vec3::distance_to(const AABB& aabb) const {
     Vec3 centre = aabb.centre();
 
-    float dx = std::max(std::abs(x - centre.x) - (aabb.width() * 0.5f), 0.0f);
-    float dy = std::max(std::abs(y - centre.y) - (aabb.height() * 0.5f), 0.0f);
-    float dz = std::max(std::abs(z - centre.z) - (aabb.depth() * 0.5f), 0.0f);
+    float dx = fast_max(fast_abs(x - centre.x) - (aabb.width() * 0.5f), 0.0f);
+    float dy = fast_max(fast_abs(y - centre.y) - (aabb.height() * 0.5f), 0.0f);
+    float dz = fast_max(fast_abs(z - centre.z) - (aabb.depth() * 0.5f), 0.0f);
 
-    return std::sqrt(dx * dx + dy * dy + dz * dz);
+#ifdef __DREAMCAST__
+    return fast_sqrt(MATH_Sum_of_Squares(dx, dy, dz, 0));
+#else
+    Vec3 d = Vec3(dx, dy, dz);
+    return fast_sqrt(d.dot(d));
+#endif
 }
 
 }

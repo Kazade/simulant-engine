@@ -13,17 +13,15 @@ void Screen::render(const uint8_t *data) {
 
     std::copy(data, data + buffer_.size(), &buffer_[0]);
 
-    time_till_next_refresh_ = 0.0f;
+    buffer_dirty_ = true;
 }
 
 void Screen::update(float dt) {
     time_till_next_refresh_ -= dt;
-    if(time_till_next_refresh_ <= 0.0f) {
+    if(buffer_dirty_ && time_till_next_refresh_ <= 0.0f) {
         time_till_next_refresh_ = smlt::fast_divide(1.0f, refresh_rate_);
-
-        /* Now if this blocks, it doesn't matter. The main thread
-         * can continue to update buffer_ without waiting */
         window_->render_screen(this, &buffer_[0], row_stride_);
+        buffer_dirty_ = false;
     }
 }
 
@@ -34,7 +32,8 @@ Screen::Screen(Window *window, const std::string &name, uint16_t w, uint16_t h, 
     width_(w),
     height_(h),
     format_(format),
-    refresh_rate_(refresh) {
+    refresh_rate_(refresh),
+    buffer_dirty_(true) {
 
     buffer_.resize((w * h) / 8, 0);
 }

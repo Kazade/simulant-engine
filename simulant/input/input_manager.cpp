@@ -79,9 +79,16 @@ InputManager::InputManager(InputState *controller):
     auto mouse_y = new_axis("MouseY");
     mouse_y->set_type(AXIS_TYPE_MOUSE_AXIS);
     mouse_y->set_mouse_axis(MOUSE_AXIS_1);
+
+    smlt::get_app()->window->register_event_listener(&event_listener_);
 }
 
 InputManager::~InputManager() {
+    auto app = smlt::get_app();
+    if(app && app->window.get()) {
+        app->window->unregister_event_listener(&event_listener_);
+    }
+
     scene_deactivated_conn_.disconnect();
 }
 
@@ -553,13 +560,17 @@ bool InputManager::start_text_input(bool force_onscreen) {
 
     text_input_enabled_ = true;
 
-    if(!force_onscreen && controller_->keyboard_count()) {
-        /* Attach the keyboard listener */
-        smlt::get_app()->window->register_event_listener(&event_listener_);
+    /* If we have a physical keyboard, and we're not forcing an onscreen
+     * one, then we're done */
+    if(controller_->keyboard_count() && !force_onscreen) {
         return false;
     }
 
     assert(!keyboard_);
+
+    if(keyboard_) {
+        return false;
+    }
 
     auto active_scene = smlt::get_app()->scenes->active_scene();
     if(!active_scene) {
@@ -582,6 +593,9 @@ bool InputManager::start_text_input(bool force_onscreen) {
     keyboard_->set_anchor_point(0.5f, 0.0f);
     keyboard_->move_to(window->width() / 2, window->height() * 0.1f);
     keyboard_->set_keyboard_integration_enabled(true);
+    keyboard_stage_->signal_destroyed().connect([=]() {
+        keyboard_ = nullptr;
+    });
 
     /* This forward virtual keypresses to the text input received signal */
     keyboard_->signal_key_pressed().connect([=](ui::SoftKeyPressedEvent& evt) {
@@ -633,8 +647,6 @@ unicode InputManager::stop_text_input() {
 
     text_input_enabled_ = false;
 
-    smlt::get_app()->window->unregister_event_listener(&event_listener_);
-
     if(keyboard_) {
         assert(keyboard_stage_);
 
@@ -653,6 +665,11 @@ unicode InputManager::stop_text_input() {
 /* This watches for keyboard inputs while text input is active - we map keyboard codes to characters
  * depending on the keyboard layout */
 void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
+    /* We attach this handler globally, we only do anything if text input is active */
+    if(!self_->text_input_active()) {
+        return;
+    }
+
     if(self_->onscreen_keyboard_active()) {
         /* This signal would be triggered by the onscreen keyboard instead */
         return;
@@ -666,7 +683,7 @@ void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
 
     if(chr == 0) {
         switch(evt.keyboard_code) {
-        case KEYBOARD_CODE_BACKSPACE:
+            case KEYBOARD_CODE_BACKSPACE:
             case KEYBOARD_CODE_DELETE:
             case KEYBOARD_CODE_RETURN:
             case KEYBOARD_CODE_SPACE:  // Space is sent as a character, but we send anyway */
@@ -676,6 +693,7 @@ void InputManager::TextInputHandler::on_key_down(const KeyEvent& evt) {
             case KEYBOARD_CODE_DOWN:
             case KEYBOARD_CODE_HOME:
             case KEYBOARD_CODE_END:
+            case KEYBOARD_CODE_ESCAPE:
             break;
         default:
             return;

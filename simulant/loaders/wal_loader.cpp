@@ -22,7 +22,7 @@
 namespace smlt {
 namespace loaders {
 
-struct Header {
+struct WALHeader {
     char name[32];
     uint32_t width;
     uint32_t height;
@@ -85,8 +85,8 @@ TextureLoadResult WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     // The file starts with the header, so we can just cast directly to a pointer
     // and read the memory directly
-    Header header;
-    stream->read((char*) &header, sizeof(Header));
+    WALHeader header;
+    stream->read((char*) &header, sizeof(WALHeader));
 
     result.width = header.width;
     result.height = header.height;

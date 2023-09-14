@@ -62,7 +62,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<::smlt::MaterialPtr> materials;
 
     /* Add the parent directory to the search path so we can load textures */
-    auto added = smlt::get_app()->vfs->add_search_path(filename_.parent());
+    auto added = smlt::get_app()->vfs->insert_search_path(0, filename_.parent());
 
     for(int i = 0; i < fheader.material_count; ++i) {
         ::Material mat;
@@ -82,7 +82,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         int enabled_textures = 0;
 
         if(mat.diffuse_map[0]) {
-            Path final = Path(std::string(mat.diffuse_map, 32));
+            Path final = Path(std::string(mat.diffuse_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
