@@ -300,22 +300,23 @@ void Widget::render_text() {
             // properly manipulate the position when we process the lines later
             auto off = font_->character_offset(ch);
 
-            auto top = -off.second;
+            auto top = -off.y;
             auto bottom = top - ch_height.value;
 
             top -= font_->ascent();
             bottom -= font_->ascent();
 
-            corners[0].xyz = smlt::Vec3((left + off.first).value, bottom, 0);
-            corners[1].xyz = smlt::Vec3((right + off.first).value, bottom, 0);
-            corners[2].xyz = smlt::Vec3((right + off.first).value, top, 0);
-            corners[3].xyz = smlt::Vec3((left + off.first).value, top, 0);
+            auto c = font_->char_corners(ch);
+            corners[0].xyz = smlt::Vec3((left.value + c.first.x), c.first.y, 0);
+            corners[1].xyz = smlt::Vec3((left.value + c.second.x), c.first.y, 0);
+            corners[2].xyz = smlt::Vec3((left.value + c.second.x), c.second.y, 0);
+            corners[3].xyz = smlt::Vec3((left.value + c.first.x), c.second.y, 0);
 
-            auto min_max = font_->texture_coordinates_for_character(ch);
-            corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
-            corners[1].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
-            corners[2].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
-            corners[3].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+            auto min_max = font_->char_texcoords(ch);
+            corners[0].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+            corners[1].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
+            corners[2].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
+            corners[3].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
 
             vertices.push_back(corners[0]);
             vertices.push_back(corners[1]);

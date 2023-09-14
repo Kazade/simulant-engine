@@ -31,89 +31,60 @@ bool Font::on_init() {
     return true;
 }
 
-std::pair<Vec2, Vec2> Font::texture_coordinates_for_character(char32_t ch) {
-    /* If we're out of range, just display a '?' */
-    /* FIXME: Deal with unicode properly! */
-    if(ch < 32) {
-        ch = '?';
-    } else {
-        ch -= 32;
-    }
-
-    if(ch >= char_data_.size()) {
+std::pair<Vec2, Vec2> Font::char_texcoords(char32_t ch) const {
+    if(!char_data_.count(ch)) {
         ch = '?';
     }
 
     if(info_) {
-        stbtt_aligned_quad q;
-        float x = 0, y = 0;
-
-        stbtt_bakedchar* tmp = (stbtt_bakedchar*) &char_data_[0];
-
-        stbtt_GetBakedQuad(tmp, texture_->width(), texture_->height(), ch, &x, &y, &q, 1);
-
+        CharInfo q = char_data_.at(ch);
         return std::make_pair(
-            Vec2(q.s0, q.t0),
-            Vec2(q.s1, q.t1)
+            q.st0,
+            q.st1
         );
     } else {
-        auto data = char_data_[ch];
+        auto data = char_data_.at(ch);
         auto pw = float(page_width(ch));
         auto ph = float(page_height(ch));
 
         return std::make_pair(
-            Vec2(float(data.x0) / pw, float(ph - data.y0) / ph),
-            Vec2(float(data.x1) / pw, float(ph - data.y1) / ph)
+            Vec2(float(data.xy0.x) / pw, float(ph - data.xy0.y) / ph),
+            Vec2(float(data.xy1.x) / pw, float(ph - data.xy1.y) / ph)
         );
     }
 }
 
-uint16_t Font::character_width(char32_t ch) {
-    if(ch < 32) {
-        return 0;
+std::pair<Vec2, Vec2> Font::char_corners(char32_t ch) const {
+    if(!char_data_.count(ch)) {
+        ch = '?';
     }
 
-    ch -= 32;
+    CharInfo q = char_data_.at(ch);
+    return std::make_pair(q.xy0, q.xy1);
+}
 
-    /* If we're out of range, just display a '?' */
-    /* FIXME: Deal with unicode properly! */
-    if(ch >= char_data_.size()) {
+uint16_t Font::character_width(char32_t ch) {
+    if(!char_data_.count(ch)) {
         ch = '?';
     }
 
     auto *b = &char_data_.at(ch);
-    return std::abs(b->x1 - b->x0);
+    return std::abs(b->xy1.x - b->xy0.x);
 }
 
 uint16_t Font::character_height(char32_t ch) {
-    if(ch < 32) {
-        return this->size();
-    }
-
-    ch -= 32;
-
-    /* If we're out of range, just display a '?' */
-    /* FIXME: Deal with unicode properly! */
-    if(ch >= char_data_.size()) {
+    if(!char_data_.count(ch)) {
         ch = '?';
     }
 
     auto *b = &char_data_.at(ch);
-    return std::abs(b->y1 - b->y0);
+    return std::abs(b->xy1.y - b->xy0.y);
 }
 
 float Font::character_advance(char32_t ch, char32_t next) {
     _S_UNUSED(next); // FIXME: Kerning!
 
-    if(ch < 32) {
-        return 0;
-    }
-
-    ch -= 32;
-
-    /* If we're out of range, just display a '?' */
-    /* FIXME: Deal with unicode properly! */
-    if(ch >= char_data_.size()) {
+    if(!char_data_.count(ch)) {
         ch = '?';
     }
 
@@ -121,25 +92,13 @@ float Font::character_advance(char32_t ch, char32_t next) {
     return b->xadvance;
 }
 
-std::pair<int16_t, int16_t> Font::character_offset(char32_t ch) {
-    if(ch < 32) {
-        return std::make_pair(0, 0);
-    }
-
-    ch -= 32;
-
-    /* If we're out of range, just display a '?' */
-    /* FIXME: Deal with unicode properly! */
-    if(ch >= char_data_.size()) {
+Vec2 Font::character_offset(char32_t ch) {
+    if(!char_data_.count(ch)) {
         ch = '?';
     }
 
-    auto *b = &char_data_.at(ch);
-
-    return std::make_pair(
-        (int16_t) b->xoff,
-        (int16_t) b->yoff
-    );
+    auto *b = &char_data_.at(ch);    
+    return b->off;
 }
 
 int16_t Font::ascent() const {
@@ -154,14 +113,14 @@ int16_t Font::line_gap() const {
     return line_gap_;
 }
 
-uint16_t Font::page_width(char ch) {
+uint16_t Font::page_width(char ch) const {
     _S_UNUSED(ch);
 
     // FIXME: This will need to change when we support multiple pages
     return page_width_;
 }
 
-uint16_t Font::page_height(char ch) {
+uint16_t Font::page_height(char ch) const {
     _S_UNUSED(ch);
 
     return page_height_;
