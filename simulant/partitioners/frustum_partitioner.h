@@ -35,6 +35,13 @@ public:
         std::vector<StageNode*> &geom_out
     );
 
+    void generate_renderables(
+        batcher::RenderQueue* render_queue,
+        const Camera*, const Viewport* viewport,
+        const DetailLevel detail_level
+    ) override;
+
+
 private:
     void apply_staged_write(const StageNodeID& key, const StagedWrite& write);
 };
