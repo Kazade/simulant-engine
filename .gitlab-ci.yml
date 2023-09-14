@@ -313,7 +313,7 @@ build:windows-x64-mingw:release:
   script:
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release   
-   - sleep 1 && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
    - cp $MINGW_BIN_DIR/SDL2.dll simulant/
@@ -335,7 +335,7 @@ build:windows-x64-mingw:debug:
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - sleep 1 && mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
    - cp $MINGW_BIN_DIR/SDL2.dll simulant/
