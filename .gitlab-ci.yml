@@ -199,7 +199,7 @@ build:android-armeabiv7a-clang:release:
     ABI: armeabi-v7a
     TARGET: android-armeabiv7a-clang
     BUILD_TYPE: release
-    BUILD_JOB: buildCMakeRelease
+    BUILD_JOB: assembleRelease
     
 build:android-armeabiv7a-clang:debug:
   extends: .build:android
@@ -207,7 +207,7 @@ build:android-armeabiv7a-clang:debug:
     ABI: armeabi-v7a
     TARGET: android-armeabiv7a-clang
     BUILD_TYPE: debug
-    BUILD_JOB: buildCMakeDebug     
+    BUILD_JOB: assembleDebug
     
 build:android-x86_64-clang:release:
   extends: .build:android
@@ -215,7 +215,7 @@ build:android-x86_64-clang:release:
     ABI: x86_64
     TARGET: android-x86_64-clang
     BUILD_TYPE: release
-    BUILD_JOB: buildCMakeRelease
+    BUILD_JOB: assembleRelease
 
 build:android-x86_64-clang:debug:
   extends: .build:android
@@ -223,7 +223,7 @@ build:android-x86_64-clang:debug:
     ABI: x86_64
     TARGET: android-x86_64-clang
     BUILD_TYPE: debug
-    BUILD_JOB: buildCMakeDebug    
+    BUILD_JOB: assembleDebug
       
 build:psp-mips-gcc:debug:
   stage: build
