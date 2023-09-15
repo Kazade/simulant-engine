@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cassert>
 #include <stdexcept>
+#include <string>
 
 namespace smlt {
 

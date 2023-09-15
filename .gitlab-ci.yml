@@ -170,48 +170,61 @@ check:stream-usage:
     reports:
       metrics: metrics.txt
 
-build:android-armeabiv7a-gcc:debug:
+.build:android:
   stage: build
   image: kazade/android-sdk
-  allow_failure: true
-  variables:
-   APPLICATIONMK: >-
-     APP_PLATFORM := android-31\n
-     APP_ABI := armeabi-v7a\n
   before_script:
-   - dnf upgrade -y
-   - dnf install -y file
-   - echo ${PATH}
+    - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
-   - mkdir ${CI_PROJECT_DIR}/build
+   - cd gradle
+   - export ABI_FILTERS=${ABI}
+   - gradle ${BUILD_JOB} --parallel --build-cache
+   - cd ..
+   - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
+   - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/${BUILD_TYPE}/simulant
+   - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
+   - cp gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
+  artifacts:
+    paths:
+      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/tests/
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+      
+build:android-armeabiv7a-clang:release:
+  extends: .build:android
+  variables:
+    ABI: armeabi-v7a
+    TARGET: android-armeabiv7a-clang
+    BUILD_TYPE: release
+    BUILD_JOB: assembleRelease
+    
+build:android-armeabiv7a-clang:debug:
+  extends: .build:android
+  variables:
+    ABI: armeabi-v7a
+    TARGET: android-armeabiv7a-clang
+    BUILD_TYPE: debug
+    BUILD_JOB: assembleDebug
+    
+build:android-x86_64-clang:release:
+  extends: .build:android
+  variables:
+    ABI: x86_64
+    TARGET: android-x86_64-clang
+    BUILD_TYPE: release
+    BUILD_JOB: assembleRelease
 
-   # Download SDL and OpenAL-soft
-   - python ./platforms/android/prepare.py
-
-   # Build SDL
-   - mkdir -p .android/sdl/build/jni
-   - cd .android/sdl/build/jni
-   - ln -s ../../Android.mk
-   - ln -s ../../src
-   - ln -s ../../include
-   - echo -e $APPLICATIONMK > Application.mk
-   - ndk-build
-
-   - cd ${CI_PROJECT_DIR}
-
-   # Now OpenAL
-   - mkdir -p .android/openal/build/jni
-   - cd .android/openal/build/jni
-   - ln -s ../../Android.mk
-   - ln -s ../../OpenAL
-   - echo -e $APPLICATIONMK > Application.mk
-   - ndk-build
-
-   # Finally Simulant
-   - cd ${CI_PROJECT_DIR}/build
-   - cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a ..
-   - make
-
+build:android-x86_64-clang:debug:
+  extends: .build:android
+  variables:
+    ABI: x86_64
+    TARGET: android-x86_64-clang
+    BUILD_TYPE: debug
+    BUILD_JOB: assembleDebug
+      
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev

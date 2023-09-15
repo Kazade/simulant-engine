@@ -101,7 +101,7 @@ private:
 
     bool pre_set_text(const unicode& text) override;
 
-    const unicode& calc_text() const;
+    const unicode& calc_text() const override;
 };
 
 }

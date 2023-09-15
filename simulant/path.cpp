@@ -1,3 +1,5 @@
+#include <ostream>
+
 #include "path.h"
 #include "utils/kfs.h"
 

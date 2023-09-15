@@ -49,7 +49,7 @@ private:
      * and the text */
     virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
 
-    virtual bool pre_set_text(const unicode&);
+    virtual bool pre_set_text(const unicode&) override;
 };
 
 }
