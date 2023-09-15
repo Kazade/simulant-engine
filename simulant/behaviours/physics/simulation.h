@@ -12,7 +12,7 @@ struct b3Vec3;
 struct b3Mat33;
 struct b3Quat;
 struct b3Body;
-class b3Fixture;
+struct b3Fixture;
 
 namespace smlt {
 

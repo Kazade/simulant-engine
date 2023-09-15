@@ -3,11 +3,12 @@ apply plugin: 'com.android.application'
 android {
 	namespace "dev.simulant.simulant_tests"
 
-	compileSdkVersion 32
-
-	defaultConfig {
-	    minSdkVersion 30
-	    targetSdkVersion 32
+    ndkVersion '23.1.7779620'
+    compileSdkVersion 32
+    
+    defaultConfig {
+        minSdkVersion 28
+        targetSdkVersion 28
 
 	    ndk {
 			def ABI_FILTERS = System.getenv("ABI_FILTERS") ?: "x86;x86_64;armeabi-v7a;arm64-v8a"
@@ -42,6 +43,19 @@ android {
                 }
             }
         }
+        
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+
+            externalNativeBuild{
+                cmake{
+                    arguments "-DCMAKE_BUILD_TYPE=Debug"
+					targets "simulant_tests"
+                }
+            }
+        }        
     }
 }
 

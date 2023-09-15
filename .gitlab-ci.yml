@@ -170,56 +170,61 @@ check:stream-usage:
     reports:
       metrics: metrics.txt
 
-build:android-armeabiv7a-clang:
+.build:android
   stage: build
   image: kazade/android-sdk
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script:
+   - cd gradle
+   - export ABI_FILTERS=${ABI}
+   - gradle ${BUILD_JOB} --parallel --build-cache
+   - cd ..
+   - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
+   - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/${BUILD_TYPE}/simulant
+   - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
+   - cp gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
+  artifacts:
+    paths:
+      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/tests/
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+      
+build:android-armeabiv7a-clang:release:
+  extends .build:android
   variables:
     ABI: armeabi-v7a
     TARGET: android-armeabiv7a-clang
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-  script:
-   - cd gradle
-   - gradle build -PABI_FILTERS=${ABI}
-   - cd ..
-   - mkdir -p ${TARGET}/debug/simulant
-   - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/debug/simulant
-   - mkdir -p ${TARGET}/debug/tests
-   - cp gradle/tests/build/outputs/apk/debug/* ${TARGET}/debug/tests
-  artifacts:
-    paths:
-      - ${TARGET}/debug/simulant/
-      - ${TARGET}/debug/tests/
-  cache:
-    paths:
-      - .gradle/wrapper
-      - .gradle/caches
+    BUILD_TYPE: release
+    BUILD_JOB: buildCMakeRelease
     
-build:android-x86-clang:
-  stage: build
-  image: kazade/android-sdk
+build:android-armeabiv7a-clang:debug:
+  extends .build:android
   variables:
-    ABI: x86
-    TARGET: android-x86-clang
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-  script:
-   - cd gradle
-   - gradle build -PABI_FILTERS=${ABI}
-   - cd ..
-   - mkdir -p ${TARGET}/debug/simulant
-   - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/debug/simulant
-   - mkdir -p ${TARGET}/debug/tests
-   - cp gradle/tests/build/outputs/apk/debug/* ${TARGET}/debug/tests   
-  artifacts:
-    paths:
-      - ${TARGET}/debug/simulant/
-      - ${TARGET}/debug/tests/
-  cache:
-    paths:
-      - .gradle/wrapper
-      - .gradle/caches
+    ABI: armeabi-v7a
+    TARGET: android-armeabiv7a-clang
+    BUILD_TYPE: debug
+    BUILD_JOB: buildCMakeDebug     
+    
+build:android-x86_64-clang:release:
+  extends .build:android
+  variables:
+    ABI: x86_64
+    TARGET: android-x86_64-clang
+    BUILD_TYPE: release
+    BUILD_JOB: buildCMakeRelease
 
+build:android-x86_64-clang:debug:
+  extends .build:android
+  variables:
+    ABI: x86_64
+    TARGET: android-x86_64-clang
+    BUILD_TYPE: debug
+    BUILD_JOB: buildCMakeDebug    
+      
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
