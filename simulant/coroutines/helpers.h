@@ -101,7 +101,7 @@ public:
         /* Copy the smart pointer and pass to the callback */
         auto state = state_;
 
-        auto cb = [this, func, state]() -> typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type {
+        auto cb = [func, state]() -> typename promise_impl::func_traits<typename std::decay<Func>::type>::result_type {
             while(!state->value) {
                 cr_yield();
             }

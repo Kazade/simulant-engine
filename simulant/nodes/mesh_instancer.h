@@ -101,7 +101,7 @@ private:
 
     void recalc_aabb();    
 
-    void on_transformation_changed();
+    void on_transformation_changed() override;
 
     struct MeshInstance {
         uint32_t id = 0;
