@@ -170,7 +170,7 @@ check:stream-usage:
     reports:
       metrics: metrics.txt
 
-.build:android
+.build:android:
   stage: build
   image: kazade/android-sdk
   before_script:
@@ -194,7 +194,7 @@ check:stream-usage:
       - .gradle/caches
       
 build:android-armeabiv7a-clang:release:
-  extends .build:android
+  extends: .build:android
   variables:
     ABI: armeabi-v7a
     TARGET: android-armeabiv7a-clang
@@ -202,7 +202,7 @@ build:android-armeabiv7a-clang:release:
     BUILD_JOB: buildCMakeRelease
     
 build:android-armeabiv7a-clang:debug:
-  extends .build:android
+  extends: .build:android
   variables:
     ABI: armeabi-v7a
     TARGET: android-armeabiv7a-clang
@@ -210,7 +210,7 @@ build:android-armeabiv7a-clang:debug:
     BUILD_JOB: buildCMakeDebug     
     
 build:android-x86_64-clang:release:
-  extends .build:android
+  extends: .build:android
   variables:
     ABI: x86_64
     TARGET: android-x86_64-clang
@@ -218,7 +218,7 @@ build:android-x86_64-clang:release:
     BUILD_JOB: buildCMakeRelease
 
 build:android-x86_64-clang:debug:
-  extends .build:android
+  extends: .build:android
   variables:
     ABI: x86_64
     TARGET: android-x86_64-clang
