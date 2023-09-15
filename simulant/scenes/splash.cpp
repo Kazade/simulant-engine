@@ -11,6 +11,7 @@
 #include "../application.h"
 #include "../time_keeper.h"
 #include "../scenes/scene_manager.h"
+#include "../nodes/ui/image.h"
 #include "splash.h"
 
 #define SIMULANT_TEXT_512 "textures/simulant-text-512.png"
@@ -54,7 +55,7 @@ void Splash::load() {
     );
 
     //Create an inactive pipeline
-    pipeline_ = compositor->render(stage_, camera_);
+    pipeline_ = compositor->render(this, camera_);
     link_pipeline(pipeline_);
 }
 
@@ -77,7 +78,7 @@ void Splash::deactivate() {
 
 }
 
-void Splash::update(float dt) {
+void Splash::on_update(float dt) {
     /* We can't use dt as we load the scene in the main thread, and
      * by the time we hit update dt will be large and we'll
      * we'll immediately start loading the next scene */

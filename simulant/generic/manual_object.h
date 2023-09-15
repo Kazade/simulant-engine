@@ -25,7 +25,11 @@ private:
     virtual void finalize_destroy() {}
     virtual void finalize_destroy_immediately() {}
 public:
-    virtual ~DestroyableObject() {}
+    virtual ~DestroyableObject() {
+        if(!destroyed_) {
+            signal_destroyed()();
+        }
+    }
 
     bool destroy() {
         if(destroyed_) {
@@ -69,12 +73,6 @@ public:
 
     TypedDestroyableObject(Owner* owner):
         owner_(owner) {}
-
-    virtual ~TypedDestroyableObject() {
-        if(!destroyed_) {
-            signal_destroyed()();
-        }
-    }
 
 private:
     void finalize_destroy() override {

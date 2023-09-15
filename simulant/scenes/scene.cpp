@@ -29,6 +29,7 @@
 namespace smlt {
 
 Scene::Scene(Window *window):
+    StageNode(nullptr, STAGE_NODE_TYPE_SCENE),
     window_(window),
     input_(window->input.get()),
     app_(window->application),
@@ -37,29 +38,6 @@ Scene::Scene(Window *window):
 
 Scene::~Scene() {
 
-}
-
-void Scene::_update_thunk(float dt) {
-    if(!window->has_focus()) {
-        // if paused, send deltatime as 0.0.
-        // it's still accessible through window->time_keeper if the user needs it
-        dt = 0.0;
-    }
-
-    update(dt);
-}
-
-void Scene::_fixed_update_thunk(float dt) {
-    if(!window->has_focus()) return;
-    fixed_update(dt);
-}
-
-void _late_update_thunk(float dt) {
-    if(!window->has_focus()) return;
-    late_update(dt);
-
-    /* Anything destroyed must now be *really* destroyed */
-    clean_up_destroyed_objects();
 }
 
 void Scene::clean_up_destroyed_objects() {
@@ -116,25 +94,13 @@ void Scene::_call_load() {
     }
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
-    auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
-    auto stage_node_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
 
     pre_load();
     load();
 
     auto used = smlt::get_app()->ram_usage_in_bytes();
-    auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
-    auto used_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
     if(smlt::get_app()->config->development.additional_memory_logging) {
         S_INFO("Loading scene {0} Memory usage {1} (before) vs {2} (after)", name(), memory_usage, used);
-        S_INFO("Stage node count: {0}", smlt::get_app()->stage_node_pool->size());
-        if(used_nodes != stage_node_capacity) {
-            S_INFO(
-                "Stage node pool capacity change from {0} ({1} bytes) to {2} ({3} bytes)",
-                stage_node_capacity, stage_node_bytes, used_nodes, used_bytes
-            );
-        }
-
         print_asset_stats();
     }
 
@@ -149,8 +115,6 @@ void Scene::_call_unload() {
     _call_deactivate();
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
-    auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
-    auto stage_node_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
 
     is_loaded_ = false;
     unload();
@@ -160,17 +124,9 @@ void Scene::_call_unload() {
 
     auto n = name();
     auto used = smlt::get_app()->ram_usage_in_bytes();
-    auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
-    auto used_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
+
     if(smlt::get_app()->config->development.additional_memory_logging) {
         S_INFO("Unloading scene {0} Memory usage {1} (before) vs {2} (after)", n, memory_usage, used);
-        S_INFO("Stage node count: {0}", smlt::get_app()->stage_node_pool->size());
-        if(used_nodes != stage_node_capacity) {
-            S_INFO(
-                "Stage node pool capacity change from {0} ({1} bytes) to {2} ({3} bytes)",
-                stage_node_capacity, stage_node_bytes, used_nodes, used_bytes
-            );
-        }
     }
 }
 

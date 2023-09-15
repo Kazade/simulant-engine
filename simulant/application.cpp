@@ -112,8 +112,7 @@ Application::Application(const AppConfig &config):
     time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
     vfs_(VirtualFileSystem::create()),
-    config_(config),
-    node_pool_(new StageNodePool(config_.general.stage_node_pool_size)) {
+    config_(config) {
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
 
@@ -348,11 +347,7 @@ bool Application::_call_init() {
     overlay_scene_.reset(new OverlayScene(window_.get()));
     scene_manager_.reset(new SceneManager(window_.get()));
 
-    // Add some useful scenes by default, these can be overridden in init if the
-    // user so wishes
-    scenes->register_scene<scenes::Loading>("_loading");
-
-    S_DEBUG("Loading scene registered");
+    S_DEBUG("Scene manager initialized");
 
     initialized_ = init();
 
@@ -604,14 +599,6 @@ Application* Application::global_app = nullptr;
 /* Global access to the application */
 Application* get_app() {
     return Application::global_app;
-}
-
-uint32_t Application::stage_node_pool_capacity() const {
-    return node_pool_->capacity();
-}
-
-uint32_t Application::stage_node_pool_capacity_in_bytes() const {
-    return stage_node_pool_capacity() * node_pool_->entry_size;
 }
 
 void Application::start_coroutine(std::function<void ()> func) {

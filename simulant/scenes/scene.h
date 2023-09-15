@@ -143,10 +143,6 @@ protected:
     void link_pipeline(PipelinePtr pipeline);
     void unlink_pipeline(PipelinePtr pipeline);
 
-    void _update_thunk(float dt) override;
-    void _fixed_update_thunk(float dt) override;
-    void _late_update_thunk(float dt) override;
-
 private:
     std::set<std::string> linked_pipelines_;
 

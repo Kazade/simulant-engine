@@ -5,6 +5,12 @@
 namespace smlt {
 namespace ui {
 
+struct ImageParams {
+    UIConfig config;
+
+    ImageParams(const UIConfig& config):
+        config(config) {}
+};
 
 /* An Image widget, useful for health indicators etc.
  *
@@ -31,4 +37,12 @@ public:
 };
 
 }
+
+template<>
+struct stage_node_traits<ui::Image> {
+    typedef ui::ImageParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_IMAGE;
+};
+
+
 }

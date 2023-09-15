@@ -195,6 +195,10 @@ public:
         const DetailLevel detail_level
     );
 
+    void update(float dt) override final;
+    void late_update(float dt) override final;
+    void fixed_update(float step) override final;
+
 private:
     friend class StageNodeManager;
 
@@ -202,10 +206,6 @@ private:
     bool _create(void* params) {
         return on_create(params);
     }
-
-    void update(float dt) override final;
-    void late_update(float dt) override final;
-    void fixed_update(float step) override final;
 
     virtual bool on_create(void* params) = 0;
     virtual bool on_destroy() { return true; }
@@ -347,12 +347,6 @@ public:
 
     StageNodeType node_type() const;
 
-    /** Link the position of this `StageNode` to another
-     * stage node. This is effectively the same behaviour
-     * as calling set_absolute_position(other->absolute_position())
-     * in late_update() */
-    void link_position(StageNode* other);
-
     /* Without a parent, these are the same as move_to/rotate_to. With a parent
      * this applies a relative position / rotation to the parent position / rotation
      * so the node appears where you want */
@@ -411,14 +405,16 @@ protected:
 
     void mark_absolute_transformation_dirty();
 private:
+    friend class Pipeline;
+
     AABB calculate_transformed_aabb() const;
     Scene* owner_ = nullptr;
     StageNodeType node_type_ = STAGE_NODE_TYPE_ACTOR;
 
     generic::DataCarrier data_;
 
-    StageNode* linked_position_node_ = nullptr;
-    sig::connection linked_position_node_destroyed_;
+    /* How many pipelines is this node the root of? */
+    uint16_t active_pipeline_count_ = 0;
 
     bool is_visible_ = true;
     bool self_and_parents_visible_ = true;

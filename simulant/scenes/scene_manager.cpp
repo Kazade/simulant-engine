@@ -44,8 +44,17 @@ void SceneManager::destroy_all() {
 }
 
 void SceneManager::late_update(float dt) {
+    if(!get_app()->window->has_focus()) {
+        // if paused, send deltatime as 0.0.
+        // it's still accessible through window->time_keeper if the user needs it
+        dt = 0.0;
+    }
+
     if(active_scene()) {
-        active_scene()->_late_update_thunk(dt);
+        active_scene()->late_update(dt);
+
+        /* Anything destroyed must now be *really* destroyed */
+        active_scene()->clean_up_destroyed_objects();
     }
 
     /* Destroy any scenes that have been queued */
@@ -66,14 +75,26 @@ void SceneManager::late_update(float dt) {
 }
 
 void SceneManager::update(float dt) {
+    if(!get_app()->window->has_focus()) {
+        // if paused, send deltatime as 0.0.
+        // it's still accessible through window->time_keeper if the user needs it
+        dt = 0.0;
+    }
+
     if(active_scene()) {
-        active_scene()->_update_thunk(dt);
+        active_scene()->update(dt);
     }
 }
 
 void SceneManager::fixed_update(float dt) {
+    if(!get_app()->window->has_focus()) {
+        // if paused, send deltatime as 0.0.
+        // it's still accessible through window->time_keeper if the user needs it
+        dt = 0.0;
+    }
+
     if(active_scene()) {
-        active_scene()->_fixed_update_thunk(dt);
+        active_scene()->fixed_update(dt);
     }
 }
 

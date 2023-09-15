@@ -3,6 +3,7 @@
 namespace smlt {
 
 enum BuiltInStageNodeType {
+    STAGE_NODE_TYPE_SCENE,
     STAGE_NODE_TYPE_STAGE,
     STAGE_NODE_TYPE_CAMERA,
     STAGE_NODE_TYPE_ACTOR,

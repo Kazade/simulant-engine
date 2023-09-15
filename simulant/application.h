@@ -37,8 +37,6 @@
 #include "logging.h"
 #include "path.h"
 #include "loader.h"
-#include "nodes/stage_node_pool.h"
-
 
 #define DEFAULT_LANGUAGE_CODE "en-us"
 
@@ -343,7 +341,6 @@ private:
     generic::DataCarrier data_carrier_;
 
     AppConfig config_;
-    StageNodePool* node_pool_ = nullptr;
 
     bool construct_window(const AppConfig& config);
 
@@ -366,7 +363,6 @@ public:
     S_DEFINE_PROPERTY(scenes, &Application::scene_manager_);
     S_DEFINE_PROPERTY(args, &Application::args_);
     S_DEFINE_PROPERTY(config, &Application::config_);
-    S_DEFINE_PROPERTY(stage_node_pool, &Application::node_pool_);
     S_DEFINE_PROPERTY(shared_assets, &Application::asset_manager_);
     S_DEFINE_PROPERTY(time_keeper, &Application::time_keeper_);
     S_DEFINE_PROPERTY(stats, &Application::stats_);

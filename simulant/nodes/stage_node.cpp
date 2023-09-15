@@ -156,28 +156,6 @@ StageNodeType StageNode::node_type() const {
     return node_type_;
 }
 
-void StageNode::link_position(StageNode *other) {
-    if(linked_position_node_) {
-        linked_position_node_destroyed_.disconnect();
-        linked_position_node_ = nullptr;
-    }
-
-    if(other) {
-        assert(other);
-
-        linked_position_node_ = other;
-        linked_position_node_destroyed_ = other->signal_destroyed().connect([this]{
-            linked_position_node_ = nullptr;
-            linked_position_node_destroyed_.disconnect();
-        });
-
-        assert(linked_position_node_);
-
-        // Initialize the position to whatever we linked to
-        move_to_absolute(linked_position_node_->absolute_position());
-    }
-}
-
 void StageNode::on_clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
 
@@ -420,18 +398,26 @@ void StageNode::mark_absolute_transformation_dirty() {
 
 void StageNode::update(float dt) {
     on_update(dt);
+
+    for(auto& child: each_child()) {
+        child.update(dt);
+    }
 }
 
 void StageNode::late_update(float dt) {
     on_late_update(dt);
 
-    if(linked_position_node_) {
-        move_to_absolute(linked_position_node_->absolute_position());
+    for(auto& child: each_child()) {
+        child.late_update(dt);
     }
 }
 
 void StageNode::fixed_update(float step) {
     on_fixed_update(step);
+
+    for(auto& child: each_child()) {
+        child.fixed_update(step);
+    }
 }
 
 bool StageNode::parent_is_scene() const {
