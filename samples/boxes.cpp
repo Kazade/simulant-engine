@@ -27,7 +27,7 @@ public:
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
-            stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
+            create_node<SkyBox>("sample_data/skyboxes/TropicalSunnyDay");
         }
 
         auto crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");
@@ -44,10 +44,11 @@ public:
         ); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
 
         ground_mesh_ = ground_mesh;
-        ground_ = stage_->new_actor_with_mesh(ground_mesh_);
+        ground_ = create_node<smlt::Actor>(ground_mesh_);
 
         // Make the ground a staticbody
-        auto c = ground_->new_behaviour<behaviours::StaticBody>(physics);
+        auto c = create_node<smlt::StaticBody>(physics);
+        c->set_parent(ground_); // FIXME: Convert to mixin
         c->add_box_collider(ground_->aabb().dimensions(), behaviours::PhysicsMaterial::STONE);
 
         srand(time(nullptr));
@@ -67,7 +68,7 @@ public:
         );
     }
 
-    void update(float dt) {
+    void on_update(float dt) {
         counter += dt;
         if(counter > 1.0f) {
             counter = 0;

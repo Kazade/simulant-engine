@@ -1,19 +1,18 @@
 
 #include <simulant/simulant.h>
 
-class MainScene:
-    public smlt::Scene<MainScene> {
+class MainScene: public smlt::Scene {
 
 public:
     MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() {
-        stage_ = new_stage();
-        camera_ = stage_->new_camera_with_orthographic_projection(0, window->width(), 0, window->height());
+        camera_ = create_node<smlt::Camera>();
+        camera_->set_orthographic_projection(0, window->width(), 0, window->height());
 
         auto pipeline = compositor->render(
-            stage_, camera_
+            this, camera_
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
         pipeline->viewport->set_colour(smlt::Colour::GREY);
 
@@ -115,7 +114,7 @@ public:
     }
 
     void activate() override {
-        auto entry = stage_->ui->new_widget_as_label("");
+        auto entry = create_node<smlt::ui::Label>("");
 
         if(!input->start_text_input(true)) {
             /* No on-screen keyboard, so show a dialog */

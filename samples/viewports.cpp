@@ -2,21 +2,19 @@
 #include "simulant/shortcuts.h"
 
 
-class MainScene : public smlt::Scene<MainScene> {
+class MainScene : public smlt::Scene {
 public:
     MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() {
         // Create two viewports for the left and right hand side of the screen, set different clear colours
         smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Colour::RED);
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Colour::GREEN);
 
-        auto stage = new_stage();
-
-        auto cube = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        cube->new_submesh_as_cube("cube", stage->assets->new_material(), 1.0);
-        smlt::ActorPtr actor = stage->new_actor_with_mesh(cube);
+        auto cube = assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        cube->new_submesh_as_cube("cube", assets->new_material(), 1.0);
+        smlt::ActorPtr actor = create_node<smlt::Actor>(cube);
 
         actor->move_to(0, 0, -5);
 

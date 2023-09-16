@@ -75,10 +75,6 @@
 #include "input/input_manager.h"
 #include "input/input_axis.h"
 
-#include "behaviours/fly.h"
-#include "behaviours/builtin.h"
-#include "behaviours/stage_node_behaviour.h"
-
 #include "renderers/renderer_config.h"
 
 #include "loaders/q2bsp_loader.h"
