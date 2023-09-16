@@ -193,12 +193,6 @@ public:
      * or not supported on the platform */
     int64_t ram_usage_in_bytes() const;
 
-    /** Capacity of the global stagenode pool. This is a
-     * memory buffer where all stage nodes (across all stages)
-     * are stored/released */
-    uint32_t stage_node_pool_capacity() const;
-    uint32_t stage_node_pool_capacity_in_bytes() const;
-
     /** Runs a single frame of the application. You likely
      * don't want to call this! */
     bool run_frame();

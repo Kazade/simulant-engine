@@ -69,7 +69,6 @@
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"
 #include "scenes/physics_scene.h"
-#include "scenes/loading.h"
 #include "scenes/splash.h"
 
 #include "input/input_state.h"

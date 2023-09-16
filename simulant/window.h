@@ -197,11 +197,6 @@ public:
         has_focus_ = v;
     }
 
-    /** Recreates the debugging panels (e.g stats) */
-    void create_panels();
-
-    /** Destroys the panels */
-    void destroy_panels();
 protected:
     std::shared_ptr<Renderer> renderer_;
 
@@ -240,14 +235,6 @@ public:
     void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
     bool escape_to_quit_enabled() const { return escape_to_quit_; }
 
-    // Panels
-    void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
-    void unregister_panel(uint8_t function_key);
-    void toggle_panel(uint8_t id);
-    void activate_panel(uint8_t id);
-    void deactivate_panel(uint8_t id);
-    bool panel_is_active(uint8_t id);
-
 protected:
     InputState* get_input_state() {
         return input_state_.get();
@@ -273,12 +260,6 @@ private:
 
     bool has_context_ = false;
     bool has_focus_ = false;
-
-    struct PanelEntry {
-        std::shared_ptr<Panel> panel;
-    };
-
-    std::unordered_map<uint8_t, PanelEntry> panels_;
 
     /*
      *  Sometimes we need to destroy or recreate the GL context, if that happens while we are rendering in the

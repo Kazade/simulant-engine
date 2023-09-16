@@ -75,6 +75,10 @@ public:
         return ambient_light_;
     }
 
+    void set_ambient_light(const smlt::Colour& c) {
+        ambient_light_ = c;
+    }
+
 private:
     smlt::Colour ambient_light_;
 };

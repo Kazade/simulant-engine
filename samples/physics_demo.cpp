@@ -5,14 +5,13 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::PhysicsScene<GameScene> {
+class GameScene : public smlt::PhysicsScene {
 public:
     GameScene(smlt::Window* window):
-        smlt::PhysicsScene<GameScene>(window) {}
+        smlt::PhysicsScene(window) {}
 
     void load() {
-        stage_ = new_stage(smlt::PARTITIONER_NULL);
-        camera_ = stage_->new_camera();
+        camera_ = create_node<smlt::Camera>();
         pipeline_ = compositor->render(
             stage_, camera_
         );

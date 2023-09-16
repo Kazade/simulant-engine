@@ -33,9 +33,6 @@
 #include "compositor.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
-
-#include "panels/stats_panel.h"
-
 #include "vfs.h"
 
 
@@ -96,12 +93,6 @@ void Window::_clean_up() {
         _destroy_screen(screen.first);
     }
 
-    auto panels = panels_;
-    for(auto p: panels) {
-        unregister_panel(p.first);
-    }
-    panels.clear();
-
     compositor_.reset();
 
     destroy_window();
@@ -151,7 +142,6 @@ bool Window::initialize_assets_and_devices() {
         S_INFO("Initializing the default resources");
 
         create_defaults();
-        create_panels();
 
         initialized_ = true;
     }
@@ -159,41 +149,6 @@ bool Window::initialize_assets_and_devices() {
     S_DEBUG("Initialization finished");
 
     return true;
-}
-
-void Window::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
-    PanelEntry entry;
-    entry.panel = panel;
-
-    panel->set_activation_key((KeyboardCode) (int(KEYBOARD_CODE_F1) + (function_key - 1)));
-
-    panels_[function_key] = entry;
-    register_event_listener(panel.get());
-}
-
-void Window::unregister_panel(uint8_t function_key) {
-    unregister_event_listener(panels_[function_key].panel.get());
-    panels_.erase(function_key);
-}
-
-void Window::toggle_panel(uint8_t id) {
-    if(panels_[id].panel->is_active()) {
-        panels_[id].panel->deactivate();
-    } else {
-        panels_[id].panel->activate();
-    }
-}
-
-void Window::activate_panel(uint8_t id) {
-    panels_[id].panel->activate();
-}
-
-void Window::deactivate_panel(uint8_t id) {
-    panels_[id].panel->deactivate();
-}
-
-bool Window::panel_is_active(uint8_t id) {
-    return panels_[id].panel->is_active();
 }
 
 void Window::set_logging_level(LogLevel level) {
@@ -248,22 +203,6 @@ void Window::set_has_context(bool value) {
     has_context_ = value;
 }
 
-void Window::create_panels() {
-    destroy_panels();
-
-    S_DEBUG("Recreating panels");
-    register_panel(1, StatsPanel::create(this));
-    // register_panel(2, PartitionerPanel::create(this));
-}
-
-void Window::destroy_panels() {
-    auto panels = panels_;
-    for(auto p: panels) {
-        unregister_panel(p.first);
-    }
-    panels.clear();
-}
-
 /**
  * @brief Window::reset
  *
@@ -281,7 +220,6 @@ void Window::reset() {
 
     S_DEBUG("Recreating defaults");
     create_defaults();
-    create_panels();
 }
 
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {

@@ -163,7 +163,6 @@ Application::~Application() {
     stop_running();
     shutdown();
 
-    window_->destroy_panels();
     scene_manager_->destroy_all();
 
     /* This cleans up the destroyed scenes
@@ -173,8 +172,6 @@ Application::~Application() {
 
     scene_manager_.reset();
     asset_manager_.reset();
-
-    delete node_pool_;
 }
 
 void Application::preload_default_font() {

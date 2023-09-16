@@ -2,14 +2,13 @@
 #include <simulant/simulant.h>
 #include <simulant/utils/dreamcast.h>
 
-class MainScene : public smlt::Scene<MainScene> {
+class MainScene : public smlt::Scene {
 public:
     MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() override {
-        stage_ = new_stage(smlt::PARTITIONER_NULL);
-        camera_ = stage_->new_camera();
+        camera_ = create_node<smlt::Camera>();
         auto pipeline = compositor->render(
             stage_, camera_
         );
@@ -17,16 +16,16 @@ public:
 
         pipeline->viewport->set_colour(smlt::Colour::RED);
 
-        smlt::MeshPtr square = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        square->new_submesh_as_rectangle("rect", stage_->assets->new_material(), 1.0, 1.0);
+        smlt::MeshPtr square = assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        square->new_submesh_as_rectangle("rect", assets->new_material(), 1.0, 1.0);
 
-        auto actor = stage_->new_actor_with_mesh(square);
+        auto actor = create_node<smlt::Actor>(square);
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
         S_DEBUG("Scene loaded");
 
 
-        auto tex = stage_->assets->new_texture_from_file("simulant/textures/icons/simulant-icon-vmu.png");
+        auto tex = assets->new_texture_from_file("simulant/textures/icons/simulant-icon-vmu.png");
         tex->convert(smlt::TEXTURE_FORMAT_RGBA_4UB_8888, {smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED});
         auto data_maybe = smlt::utils::vmu_lcd_image_from_texture(tex, smlt::utils::VMU_IMAGE_GENERATION_MODE_ALPHA);
         data = data_maybe.value();
@@ -34,7 +33,7 @@ public:
         /* Render the simulant icon to the VMU */
     }
 
-    void update(float dt) override {
+    void on_update(float dt) override {
         _S_UNUSED(dt);
 
         window->each_screen([=](std::string, smlt::Screen* screen) {

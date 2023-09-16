@@ -2,14 +2,14 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::Scene<GameScene> {
+class GameScene : public smlt::Scene {
 public:
     GameScene(smlt::Window* window):
-        smlt::Scene<GameScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() {
-        stage_ = new_stage(smlt::PARTITIONER_NULL);
-        camera_ = stage_->new_camera();
+        stage_ = create_node<Stage>();
+        camera_ = create_node<Camera>();
         auto pipeline = compositor->render(
             stage_, camera_
         );
@@ -21,11 +21,11 @@ public:
         ship_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
         generate_ships();
 
-        stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
-        stage_->new_light_as_directional();
+        lighting->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
+        auto light = create_node<Light>();
     }
 
-    void fixed_update(float dt) override {
+    void on_fixed_update(float dt) override {
         Vec3 speed(-250, 0, 0.0);
         Vec3 avg;
 
@@ -52,7 +52,7 @@ private:
 
         auto rgen = smlt::RandomGenerator();
 
-        auto pscript = stage_->assets->new_particle_script_from_file(
+        auto pscript = assets->new_particle_script_from_file(
             "simulant/particles/pixel_trail.kglp"
         );
 
@@ -63,10 +63,11 @@ private:
                 rgen.float_in_range(-100, 100)
             ).normalized() * rgen.float_in_range(100.0f, 150.0f));
 
-            ships_.push_back(stage_->new_actor_with_mesh(ship_mesh_));
+            ships_.push_back(create_node<Actor>(ship_mesh_));
             ships_.back()->move_to_absolute(pos);
 
-            auto ps = stage_->new_particle_system_with_parent(pscript, ships_.back());
+            auto ps = create_node<ParticleSystem>(pscript);
+            ps->set_parent(ships_.back());
             ps->move_to(0, 0, 0);
         }
     }

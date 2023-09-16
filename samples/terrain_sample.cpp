@@ -1,5 +1,4 @@
 #include "simulant/simulant.h"
-#include "simulant/scenes/loading.h"
 
 using namespace smlt;
 
@@ -31,34 +30,14 @@ void calculate_splat_map(int width, int length, TexturePtr texture, VertexData& 
     });
 }
 
-class Gamescene : public smlt::Scene<Gamescene> {
+class Gamescene : public smlt::Scene {
 public:
     Gamescene(smlt::Window* window):
-        smlt::Scene<Gamescene>(window) {}
+        smlt::Scene(window) {}
 
     void load() override {
-        auto loading = scenes->resolve_scene_as<scenes::Loading>("_loading");
-        assert(loading);
-
-        auto done = std::make_shared<bool>(false);
-
-        // While we're loading, continually pulse the progress bar to show that stuff is happening
-        cr_async([this, loading, done]() {
-            if(!scenes->has_scene("_loading")) {
-                return;
-            }
-
-            while(!(*done)) {
-                if(loading->is_loaded() && loading->progress_bar) {
-                    loading->progress_bar->pulse();
-                }
-
-                cr_yield();
-            }
-        });
-
-        stage_ = new_stage(smlt::PARTITIONER_NULL);
-        camera_ = stage_->new_camera();
+        stage_ = create_node<smlt::Stage>();
+        camera_ = create_node<smlt::Camera>();
         pipeline_ = compositor->render(
             stage_, camera_
         )->set_clear_flags(
@@ -76,9 +55,10 @@ public:
         cam->move_to(0, 50, 700);
         cam->look_at(0, 0, 0);
 
-        cam->new_behaviour<smlt::behaviours::Fly>(window);
+        auto fly_node = create_node<smlt::FlyController>();
+        cam->set_parent(fly_node);
 
-        auto terrain_material = stage_->assets->new_material_from_file(
+        auto terrain_material = assets->new_material_from_file(
             "sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER
         );
 
@@ -87,10 +67,10 @@ public:
         smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
-        terrain_mesh_ = stage_->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
+        terrain_mesh_ = assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
 
         auto terrain_data = terrain_mesh_->data->get<smlt::TerrainData>("terrain_data");
-        auto terrain_splatmap = stage_->assets->new_texture(terrain_data.x_size, terrain_data.z_size);
+        auto terrain_splatmap = assets->new_texture(terrain_data.x_size, terrain_data.z_size);
         calculate_splat_map(
             terrain_data.x_size,
             terrain_data.z_size,
@@ -107,12 +87,10 @@ public:
 
         GeomCullerOptions opts;
         opts.type = GEOM_CULLER_TYPE_QUADTREE;
-        terrain_actor_ = stage_->new_geom_with_mesh(terrain_mesh_, opts);
-
-        *done = true;
+        terrain_actor_ = create_node<smlt::Geom>(terrain_mesh_, opts);
     }
 
-    void fixed_update(float) override {}
+    void on_fixed_update(float) override {}
 
 private:
     PipelinePtr pipeline_;

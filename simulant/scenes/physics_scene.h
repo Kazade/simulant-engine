@@ -6,20 +6,15 @@
 
 namespace smlt {
 
-template<typename T>
-class PhysicsScene:
-    public Scene<T> {
-
+class PhysicsScene: public Scene {
 protected:
     PhysicsScene(Window* window):
-        Scene<T>(window) {}
+        Scene(window) {}
 
-    virtual void _fixed_update_thunk(float step) {
+    virtual void on_fixed_update(float step) {
         if(physics_) {
             physics_->fixed_update(step);
         }
-
-        Scene<T>::_fixed_update_thunk(step);
     }
 
 private:

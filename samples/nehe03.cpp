@@ -1,19 +1,18 @@
 
 #include <simulant/simulant.h>
 
-class MainScene : public smlt::Scene<MainScene> {
+class MainScene : public smlt::Scene {
 public:
     MainScene(smlt::Window* window):
-        smlt::Scene<MainScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() {
-        stage_ = new_stage();
-        camera_ = stage_->new_camera();
-        auto pipeline = compositor->render(stage_, camera_);
+        camera_ = create_node<smlt::Camera>();
+        auto pipeline = compositor->render(this, camera_);
         link_pipeline(pipeline);
 
-        smlt::MeshPtr square = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        square->new_submesh_as_rectangle("rect", stage_->assets->new_material(), 1.0, 1.0);
+        smlt::MeshPtr square = assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        square->new_submesh_as_rectangle("rect", assets->new_material(), 1.0, 1.0);
 
         square->vertex_data->move_to(0);
         square->vertex_data->diffuse(smlt::Colour::RED);
@@ -29,7 +28,7 @@ public:
         square->vertex_data->move_to_end();
         square->vertex_data->done();
 
-        auto actor = stage_->new_actor_with_mesh(square);
+        auto actor = create_node<smlt::Actor>(square);
         actor->move_to(0, 0, -5);
         actor->scale_by(2.0);
 

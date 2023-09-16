@@ -43,7 +43,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
         disable_texcoord_array(i, true);
     }
 
-    global_ambient_ = stage->scene->ambient_light();
+    global_ambient_ = stage->scene->lighting->ambient_light();
     GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 

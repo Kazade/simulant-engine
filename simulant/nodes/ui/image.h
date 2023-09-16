@@ -7,9 +7,13 @@ namespace ui {
 
 struct ImageParams {
     UIConfig config;
+    TexturePtr texture;
 
     ImageParams(const UIConfig& config):
         config(config) {}
+
+    ImageParams(const TexturePtr& texture):
+        texture(texture) {}
 };
 
 /* An Image widget, useful for health indicators etc.

@@ -6,14 +6,13 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::Scene<GameScene> {
+class GameScene : public smlt::Scene {
 public:
     GameScene(Window* window):
-        smlt::Scene<GameScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() {
-        stage_ = new_stage(smlt::PARTITIONER_NULL);
-        camera_ = stage_->new_camera();
+        camera_ = create_node<smlt::Camera>();
         auto pipeline = compositor->render(stage_, camera_);
         link_pipeline(pipeline);
 
@@ -26,15 +25,15 @@ public:
 
         stage_->set_ambient_light(smlt::Colour(0.25f, 0.25f, 0.25f, 1.0f));
 
-        texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
+        texture_ = assets->new_texture_from_file("sample_data/crate.png");
         texture_->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
-        material_ = stage_->assets->new_material_from_texture(texture_);
+        material_ = assets->new_material_from_texture(texture_);
         material_->pass(0)->set_lighting_enabled(true);
 
-        auto cube = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto cube = assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube->new_submesh_as_cube("rect", material_, 2.0);
-        actor_ = stage_->new_actor_with_mesh(cube);
+        actor_ = create_node<smlt::Actor>(cube);
         actor_->move_to(0.0, 0.0, -5.0);
 
         // Test Camera::look_at function

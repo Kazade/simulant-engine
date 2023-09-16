@@ -384,7 +384,7 @@ void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     _S_UNUSED(frame_id);
     _S_UNUSED(stage);
 
-    global_ambient_ = stage->ambient_light();
+    global_ambient_ = stage->scene->lighting->ambient_light();
 }
 
 void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, StageNode *stage) {

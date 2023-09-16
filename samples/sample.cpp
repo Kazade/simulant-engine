@@ -3,13 +3,13 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::Scene<GameScene> {
+class GameScene : public smlt::Scene {
 public:
     GameScene(Window* window):
-        smlt::Scene<GameScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() {
-        stage_ = new_stage(smlt::PARTITIONER_FRUSTUM);
+        stage_ = create_node<Stage>();
         camera_ = stage_->new_camera();
         auto pipeline = compositor->render(stage_, camera_);
         pipeline->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
@@ -47,7 +47,7 @@ public:
         b->set_speed(1.0f);
     }
 
-    void update(float dt) override {
+    void on_update(float dt) override {
         if(actor_) {
             actor_->rotate_global_y_by(smlt::Degrees(1.0f * dt));
         }

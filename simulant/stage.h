@@ -42,6 +42,7 @@ public:
     typedef StageParams params_type;
     const static uint32_t node_type = STAGE_NODE_TYPE_STAGE;
 
+    Stage(Scene* owner);
 private:
     bool on_create(void *params) override {
         _S_UNUSED(params);
