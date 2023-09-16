@@ -109,5 +109,18 @@ private:
     float quadratic_attenuation_;
 };
 
+
+class DirectionalLight : public Light {
+public:
+    DirectionalLight(Scene* owner):
+        Light(owner) {}
+};
+
+
+class PointLight : public Light {
+    PointLight(Scene* owner):
+        Light(owner) {}
+};
+
 }
 #endif

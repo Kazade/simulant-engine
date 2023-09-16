@@ -4,15 +4,14 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::Scene<GameScene> {
+class GameScene : public smlt::Scene {
 public:
     GameScene(smlt::Window* window):
-        smlt::Scene<GameScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() {
-        stage_ = new_stage(smlt::PARTITIONER_FRUSTUM);
-        camera_ = stage_->new_camera();
-        pipeline_ = compositor->render(stage_, camera_);
+        camera_ = create_node<smlt::Camera>();
+        pipeline_ = compositor->render(this, camera_);
 
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
         pipeline_->viewport->set_colour(smlt::Colour::GREY);
@@ -20,8 +19,8 @@ public:
 
         app->vfs->add_search_path("sample_data/quake2/textures");
 
-        auto mesh = stage_->assets->new_mesh_from_file("sample_data/quake2/maps/demo1.bsp");
-        stage_->new_geom_with_mesh(mesh);
+        auto mesh = assets->new_mesh_from_file("sample_data/quake2/maps/demo1.bsp");
+        create_node<smlt::Geom>(mesh);
 
         cr_yield();
 
@@ -50,8 +49,8 @@ public:
             cr_yield();
         });
 
-        // Add a fly controller to the camera for user input
-        camera_->new_behaviour<behaviours::Fly>(window);
+        auto fly = create_node<smlt::FlyController>();
+        camera_->set_parent(fly);
 
         camera_->set_perspective_projection(
             Degrees(45.0),
@@ -60,12 +59,11 @@ public:
             1500.0
         );
 
-        stage_->new_light_as_directional();
+        create_node<smlt::Light>();
         cr_yield();
     }
 
 private:
-    StagePtr stage_;
     CameraPtr camera_;
     PipelinePtr pipeline_;
 };

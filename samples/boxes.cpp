@@ -27,7 +27,7 @@ public:
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
-            create_node<SkyBox>("sample_data/skyboxes/TropicalSunnyDay");
+            create_node<Skybox>("sample_data/skyboxes/TropicalSunnyDay");
         }
 
         auto crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");
@@ -56,7 +56,7 @@ public:
 
     void spawn_box() {
         boxes_.push_back(
-            stage_->new_actor_with_mesh(box_mesh_)
+            create_node<smlt::Actor>(box_mesh_)
         );
 
         auto box = boxes_.back();

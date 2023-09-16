@@ -24,28 +24,28 @@ public:
         smlt::ui::Px spacing = 10;
         int column = window->coordinate_from_normalized(0.25, 0).x;
 
-        auto frame = stage_->ui->new_widget_as_frame("UI Demo");
+        auto frame = create_node<smlt::ui::Frame>("UI Demo");
         frame->set_anchor_point(0.0f, 1.0f);
         frame->move_to(x, y);
         frame->set_padding(spacing);
         frame->set_space_between(spacing);
 
-        auto label = stage_->ui->new_widget_as_label("Label");
+        auto label = create_node<smlt::ui::Label>("Label");
         label->resize(column, -1);
         label->set_background_colour(smlt::ui::UIConfig().foreground_colour_);
         frame->pack_child(label);
 
-        auto button = stage_->ui->new_widget_as_button("Button");
+        auto button = create_node<smlt::ui::Button>("Button");
         button->resize(column, -1);
         frame->pack_child(button);
 
-        pg1_ = stage_->ui->new_widget_as_progress_bar();
+        pg1_ = create_node<smlt::ui::ProgressBar>();
         pg1_->set_text("Progress Bar (pulse)");
         pg1_->resize(column, -1);
         pg1_->set_opacity(0.2f);
         frame->pack_child(pg1_);
 
-        pg2_ = stage_->ui->new_widget_as_progress_bar();
+        pg2_ = create_node<smlt::ui::ProgressBar>();
         pg2_->set_text("Progress Bar (percent)");
         pg2_->resize(column, -1);
         frame->pack_child(pg2_);
@@ -53,38 +53,38 @@ public:
         smlt::FontFlags flags;
         flags.blur_radius = 1;
         flags.size = 32;
-        auto blurred_font = stage_->assets->new_font_from_file("fonts/Orbitron/Orbitron-Regular.ttf", flags);
+        auto blurred_font = assets->new_font_from_file("fonts/Orbitron/Orbitron-Regular.ttf", flags);
 
-        auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
+        auto big_label = create_node<smlt::ui::Label>("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font(blurred_font);
         frame->pack_child(big_label);
 
-        auto simulant_logo = stage_->assets->new_texture_from_file("textures/simulant-icon.png");
-        auto icon = stage_->ui->new_widget_as_image(simulant_logo);
+        auto simulant_logo = assets->new_texture_from_file("textures/simulant-icon.png");
+        auto icon = create_node<smlt::ui::Image>(simulant_logo);
         icon->set_anchor_point(1, 1);
         icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
 
         //stage_->ui->transform_input_with_camera(camera_);
 
-        auto fixed_width = stage_->ui->new_widget_as_label("This is some long text with a fixed width.\n See it works!");
+        auto fixed_width = create_node<smlt::ui::Label>("This is some long text with a fixed width.\n See it works!");
         fixed_width->resize(200, -1);
         fixed_width->move_to(400, 500);
         fixed_width->set_background_colour(smlt::Colour::PURPLE);
         fixed_width->set_border_radius(smlt::ui::Px(10));
         fixed_width->set_padding(10);
 
-        auto fixed_height = stage_->ui->new_widget_as_label("This is some text with a fixed height.\n See it works!");
+        auto fixed_height = create_node<smlt::ui::Label>("This is some text with a fixed height.\n See it works!");
         fixed_height->resize(-1, 200);
         fixed_height->move_to(300, 200);
         fixed_height->set_background_colour(smlt::Colour::PURPLE);
 
-        auto fit_content = stage_->ui->new_widget_as_label("This widget fits its text content. See it works!");
+        auto fit_content = create_node<smlt::ui::Label>("This widget fits its text content. See it works!");
         fit_content->resize(-1, -1);
         fit_content->move_to(700, 200);
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
-        auto pl = stage_->ui->new_widget_as_label("PL");
+        auto pl = create_node<smlt::ui::Label>("PL");
         pl->set_padding(10, 0, 0, 0);
         //pl->resize(80, -1);
         pl->set_background_colour(smlt::Colour::GREY);
@@ -92,9 +92,9 @@ public:
         pl->move_to(window->coordinate_from_normalized(0.75f, 0.75f));
 
 
-        auto left_label = stage_->ui->new_widget_as_label("This label has left alignment");
-        auto middle_label = stage_->ui->new_widget_as_label("This label has center alignment");
-        auto right_label = stage_->ui->new_widget_as_label("This label has right alignment");
+        auto left_label = create_node<smlt::ui::Label>("This label has left alignment");
+        auto middle_label = create_node<smlt::ui::Label>("This label has center alignment");
+        auto right_label = create_node<smlt::ui::Label>("This label has right alignment");
 
         left_label->set_text_alignment(smlt::ui::TEXT_ALIGNMENT_LEFT);
         middle_label->set_text_alignment(smlt::ui::TEXT_ALIGNMENT_CENTER);
@@ -105,7 +105,7 @@ public:
         middle_label->resize(max + 128, -1);
         right_label->resize(max + 128, -1);
 
-        auto align_frame = stage_->ui->new_widget_as_frame("");
+        auto align_frame = create_node<smlt::ui::Frame>("");
         align_frame->pack_child(left_label);
         align_frame->pack_child(middle_label);
         align_frame->pack_child(right_label);
@@ -118,7 +118,7 @@ public:
 
         if(!input->start_text_input(true)) {
             /* No on-screen keyboard, so show a dialog */
-            auto dialog = stage_->ui->new_widget_as_frame("Please enter some text");
+            auto dialog = create_node<smlt::ui::Frame>("Please enter some text");
             dialog->pack_child(entry);
             dialog->move_to(window->width() / 2, window->height() / 2);
         } else {
@@ -132,7 +132,7 @@ public:
         });
     }
 
-    void update(float dt) {
+    void on_update(float dt) {
         percent += (increasing) ? 100.0f * dt : -100.0f * dt;
         if(percent >= 100.0f) {
             increasing = false;
@@ -149,7 +149,6 @@ public:
     }
 
 private:
-    smlt::StagePtr stage_;
     smlt::CameraPtr camera_;
     smlt::ui::ProgressBar* pg1_;
     smlt::ui::ProgressBar* pg2_;

@@ -3,16 +3,16 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::Scene<GameScene> {
+class GameScene : public smlt::Scene {
 public:
     GameScene(smlt::Window* window):
-        smlt::Scene<GameScene>(window) {}
+        smlt::Scene(window) {}
 
     void load() override {
-        stage_ = new_stage(smlt::PARTITIONER_NULL);
-            camera_ = stage_->new_camera();
-            auto pipeline = compositor->render(
-            stage_, camera_
+
+        camera_ = create_node<smlt::Camera>();
+        auto pipeline = compositor->render(
+            this, camera_
         );
 
         link_pipeline(pipeline);
@@ -50,20 +50,20 @@ public:
         fairy_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
-        cave_geom_ = stage_->new_geom_with_mesh(cave_mesh_);
-        fairy_actor_ = stage_->new_actor_with_mesh(fairy_mesh_);
-        godray_geom_ = stage_->new_geom_with_mesh(godray_mesh_);
+        cave_geom_ = create_node<smlt::Geom>(cave_mesh_);
+        fairy_actor_ = create_node<smlt::Actor>(fairy_mesh_);
+        godray_geom_ = create_node<smlt::Geom>(godray_mesh_);
         fairy_actor_->set_render_priority(10);
 
         // Lights
-        stage_->set_ambient_light(smlt::Colour(0.25f, 0.25f, 0.25f, 1.0f));
-        stage_->new_light_as_directional(Vec3(-120, -90, 0), Colour(1, 0.6822482f, 0.3915094f, 1) * 0.5f);
+        lighting->set_ambient_light(smlt::Colour(0.25f, 0.25f, 0.25f, 1.0f));
+        create_node<smlt::DirectionalLight>(Vec3(-120, -90, 0), Colour(1, 0.6822482f, 0.3915094f, 1) * 0.5f);
 
         Colour lightCol = Colour(1, 0.6822482f, 0.3915094f, 1.0f);
-        auto rock_light = stage_->new_light_as_point(Vec3(-12.15f, -0.67f, 0.73f), lightCol * 23.0f);
+        auto rock_light = create_node<smlt::PointLight>(Vec3(-12.15f, -0.67f, 0.73f), lightCol * 23.0f);
         rock_light->set_attenuation(4.31f, 0.01f, 0.25f, 0.75);
 
-        auto fairy_light = stage_->new_light_as_point(Vec3(), Colour(0.5f, 0.85f, 1, 1) * 10);
+        auto fairy_light = create_node<smlt::PointLight>(Vec3(), Colour(0.5f, 0.85f, 1, 1) * 10);
         fairy_light->set_attenuation(5, 0.01f, 0.25f, 0.75f);
         fairy_light->set_parent(fairy_actor_);
 
@@ -79,7 +79,7 @@ public:
         fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(0));
     }
 
-    void update(float dt) override {
+    void on_update(float dt) override {
         _S_UNUSED(dt);
 
         if(input->axis_value_hard("Start") == 1) {
@@ -87,7 +87,7 @@ public:
         }
     }
 
-    void fixed_update(float dt) override {
+    void on_fixed_update(float dt) override {
 
         // Move the camera between two points
         camera_->move_to(camera_->position() + Vec3::LEFT * cameraSpeed_ * dt);
