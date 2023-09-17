@@ -14,21 +14,22 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
-        camera_ = stage_->new_camera();
+        stage_ = scene->create_node<smlt::Stage>();
+        camera_ = scene->create_node<smlt::Camera>();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
+        camera_->destroy();
     }
 
     void test_move_to_origin() {
-        window->compositor->render(stage_, camera_);
+        window->compositor->render(scene, camera_);
 
         // A bug was reported that this caused a crash (see #219)
         auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_cube("cube", stage_->assets->new_material(), 50.0f);
+        mesh->new_submesh_as_cube("cube", scene->assets->new_material(), 50.0f);
 
         auto actor = stage_->new_actor_with_mesh(mesh);
         actor->move_to(0, 0, 0);

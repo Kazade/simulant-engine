@@ -80,7 +80,7 @@ public:
           destroyed_ids.insert(dynamic_cast<ParticleSystem*>(node)->id());
         });
 
-        auto script = stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);
+        auto script = scene->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);
         auto a1 = stage->new_particle_system(script);
 
         auto a2 = stage->new_particle_system(script);

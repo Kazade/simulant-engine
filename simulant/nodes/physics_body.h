@@ -7,6 +7,8 @@
 
 namespace smlt {
 
+class StageNode;
+
 struct PhysicsMaterial {
     PhysicsMaterial() = default;
     PhysicsMaterial(float density, float friction, float bounciness):
@@ -63,7 +65,6 @@ struct Collision {
 };
 
 class CollisionListener;
-class StageNode;
 
 class PhysicsBody {
 public:

@@ -91,7 +91,7 @@ public:
     void test_particle_systems_are_freed() {
         auto stage = scene->new_stage();
 
-        auto script = stage->assets->new_particle_script_from_file(
+        auto script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
 
@@ -114,7 +114,7 @@ public:
     void test_geoms_are_freed() {
         auto stage = scene->new_stage();
 
-        auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
         auto count = stage->geom_count();
 

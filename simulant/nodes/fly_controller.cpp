@@ -1,4 +1,5 @@
 #include "fly_controller.h"
+#include "../scenes/scene.h"
 
 namespace smlt {
 

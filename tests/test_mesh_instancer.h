@@ -13,16 +13,16 @@ public:
     void set_up() {
         smlt::test::SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
-        mesh_ = stage_->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
+        stage_ = scene->create_node<smlt::Stage>();
+        mesh_ = scene->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
     void test_mesh_instancer_creation() {
-        stage_->new_mesh_instancer(mesh_);
-        assert_equal(stage_->mesh_instancer_count(), 1u);
+        scene->create_node<smlt::MeshInstancer>(mesh_);
+        assert_equal(scene->count_nodes_by_type<smlt::MeshInstancer>(), 1u);
 
-        stage_->new_mesh_instancer(mesh_);
-        assert_equal(stage_->mesh_instancer_count(), 2u);
+        scene->create_node<smlt::MeshInstancer>(mesh_);
+        assert_equal(scene->count_nodes_by_type<smlt::MeshInstancer>(), 2u);
     }
 
     void test_mesh_instancer_destruction() {

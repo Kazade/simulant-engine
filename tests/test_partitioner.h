@@ -139,7 +139,7 @@ public:
 
         StagePtr stage = scene->new_stage();
         auto ps = stage->new_particle_system(
-            stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
+            scene->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
         );
 
         MockPartitioner partitioner(stage, test);
@@ -156,7 +156,7 @@ public:
 
         StagePtr stage = scene->new_stage();
         auto ps = stage->new_particle_system(
-            stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
+            scene->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
         );
 
         MockPartitioner partitioner(stage, test);

@@ -10,6 +10,8 @@ enum ProgressBarMode {
     PROGRESS_BAR_MODE_FRACTION
 };
 
+struct ProgressBarParams {};
+
 class ProgressBar:
     public Widget {
 
@@ -59,4 +61,11 @@ private:
 };
 
 }
+
+template<>
+struct stage_node_traits<ui::ProgressBar> {
+    typedef ui::ProgressBarParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR;
+};
+
 }

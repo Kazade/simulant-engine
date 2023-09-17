@@ -43,6 +43,12 @@ struct GeomCullerOptions {
     uint8_t quadtree_max_depth = 4;
 };
 
+struct GeomParams {
+    MeshPtr mesh;
+    GeomParams(const MeshPtr& mesh):
+        mesh(mesh) {}
+};
+
 /**
  * @brief The Geom class
  *
@@ -94,6 +100,12 @@ private:
 public:
     Property<decltype(&Geom::culler_)> culler = {this, &Geom::culler_};
 
+};
+
+template<>
+struct stage_node_traits<Geom> {
+    typedef GeomParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_GEOM;
 };
 
 }

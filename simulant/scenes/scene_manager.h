@@ -224,9 +224,15 @@ public:
     template<typename T>
     void register_scene(const std::string& name) {
         _store_scene_factory(name, [=](Window* window) -> ScenePtr {
-            auto ret = T::create(window);
+            auto ret = std::make_shared<T>(window);
             ret->set_name(name);
             ret->scene_manager_ = this;
+
+            if(!ret->init()) {
+                S_ERROR("Failed to initialize the Scene");
+                return ScenePtr();
+            }
+
             return ret;
         });
     }

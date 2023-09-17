@@ -199,6 +199,20 @@ public:
     void late_update(float dt) override final;
     void fixed_update(float step) override final;
 
+    /** This is a very-slow utility function that calls
+     *  dynamic_cast on the entire subtree. Use for testing
+     *  *only*. */
+    template<typename T>
+    size_t count_nodes_by_type() const {
+        size_t ret = 0;
+        for(auto& node: each_descendent()) {
+            if(dynamic_cast<T*>(&node)) {
+                ++ret;
+            }
+        }
+        return ret;
+    }
+
 private:
     friend class StageNodeManager;
 

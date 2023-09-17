@@ -186,8 +186,8 @@ public:
     }
 
     void test_mesh_collider_addition() {
-        auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_box("mesh", stage->assets->new_material(), 1.0, 1.0, 1.0);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_box("mesh", scene->assets->new_material(), 1.0, 1.0, 1.0);
         auto actor1 = stage->new_actor();
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
         body->add_mesh_collider(mesh, behaviours::PhysicsMaterial::WOOD);
@@ -278,7 +278,7 @@ public:
     }
 
     void test_add_mesh_collider() {
-        auto mesh = stage->assets->new_mesh_as_cube_with_submesh_per_face(10.0f);
+        auto mesh = scene->assets->new_mesh_as_cube_with_submesh_per_face(10.0f);
         auto actor1 = stage->new_actor();
         auto body = actor1->new_behaviour<behaviours::StaticBody>(physics.get());
         body->add_mesh_collider(mesh, behaviours::PhysicsMaterial::WOOD);

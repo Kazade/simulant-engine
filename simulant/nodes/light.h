@@ -110,16 +110,30 @@ private:
 };
 
 
+class PointLight : public Light {
+    PointLight(Scene* owner):
+        Light(owner) {}
+};
+
+struct DirectionalLightParams {
+    Vec3 direction;
+    Colour color;
+
+    DirectionalLightParams(const Vec3& direction, const Colour& color):
+        direction(direction),
+        color(color) {}
+};
+
 class DirectionalLight : public Light {
 public:
     DirectionalLight(Scene* owner):
         Light(owner) {}
 };
 
-
-class PointLight : public Light {
-    PointLight(Scene* owner):
-        Light(owner) {}
+template<>
+class stage_node_traits<DirectionalLight> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_DIRECTIONAL_LIGHT;
+    typedef DirectionalLightParams params_type;
 };
 
 }

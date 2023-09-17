@@ -13,7 +13,7 @@ class ParticleSystemTests : public test::SimulantTestCase {
 public:
     void test_destroy_signal() {
         auto stage = scene->new_stage();
-        ParticleScriptPtr script = stage->assets->new_particle_script_from_file(
+        ParticleScriptPtr script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
         ParticleSystemPtr system = stage->new_particle_system(script);
@@ -30,7 +30,7 @@ public:
 
     void test_emitter_duration() {
         auto stage = scene->new_stage();
-        ParticleScriptPtr script = stage->assets->new_particle_script_from_file(
+        ParticleScriptPtr script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
 
@@ -55,7 +55,7 @@ public:
 
     void test_direction_manipulator() {
         auto stage = scene->new_stage();
-        ParticleScriptPtr script = stage->assets->new_particle_script_from_file(
+        ParticleScriptPtr script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
 

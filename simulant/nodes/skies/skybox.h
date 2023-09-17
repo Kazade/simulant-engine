@@ -33,12 +33,6 @@ public:
 
 struct SkyboxParams {};
 
-template<>
-class stage_node_traits<Skybox> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
-    typedef SkyboxParams params_type;
-};
-
 class Skybox:
     public ContainerNode,
     public ChainNameable<Skybox> {
@@ -74,5 +68,13 @@ private:
 
     float width_;
 };
+
+
+template<>
+class stage_node_traits<Skybox> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
+    typedef SkyboxParams params_type;
+};
+
 
 }
