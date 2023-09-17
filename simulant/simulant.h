@@ -36,6 +36,11 @@
 #include "nodes/actor.h"
 #include "nodes/geom.h"
 
+#include "nodes/static_body.h"
+#include "nodes/rigid_body.h"
+
+#include "nodes/fly_controller.h"
+
 #include "nodes/ui/ui_manager.h"
 #include "nodes/ui/button.h"
 #include "nodes/ui/label.h"

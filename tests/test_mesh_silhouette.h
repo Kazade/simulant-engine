@@ -3,6 +3,7 @@
 
 #include "../simulant/shadows.h"
 #include "../simulant/stage.h"
+#include "../simulant/nodes/light.h"
 
 namespace {
 
@@ -11,12 +12,10 @@ using namespace smlt;
 class MeshSilhouetteTests : public smlt::test::SimulantTestCase {
 public:
     void test_directional_silhouette_generation() {
-        auto stage = scene->new_stage();
-
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
 
-        auto light = stage->new_light_as_directional();
+        auto light = scene->create_node<DirectionalLight>();
         light->move_to(0, 0, -10);
 
         MeshSilhouette silhouette(mesh, Mat4(), light);
@@ -24,12 +23,10 @@ public:
     }
 
     void test_point_silhouette_generation() {
-        auto stage = scene->new_stage();
-
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
 
-        auto light = stage->new_light_as_point();
+        auto light = scene->create_node<PointLight>();
         light->move_to(0, 0, -10);
 
         MeshSilhouette silhouette(mesh, Mat4(), light);
@@ -37,12 +34,10 @@ public:
     }
 
     void test_out_of_range_generates_none() {
-        auto stage = scene->new_stage();
-
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
 
-        auto light = stage->new_light_as_point();
+        auto light = scene->create_node<PointLight>();
         light->move_to(0, 0, -10);
         light->set_attenuation_from_range(5.0);
 

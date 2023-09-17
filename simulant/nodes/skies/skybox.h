@@ -30,7 +30,14 @@ public:
         std::runtime_error(what) {}
 };
 
-class SkyManager;
+
+struct SkyboxParams {};
+
+template<>
+class stage_node_traits<Skybox> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
+    typedef SkyboxParams params_type;
+};
 
 class Skybox:
     public ContainerNode,
@@ -58,8 +65,6 @@ public:
 
 private:
     friend class SkyManager;
-
-    SkyManager* manager_ = nullptr;
 
     StageNodeID follow_camera_;
 

@@ -69,4 +69,8 @@ private:
     void update_transformation_from_parent() override;
 };
 
+
+class Camera2D : public Camera {};
+class Camera3D : public Camera {};
+
 }

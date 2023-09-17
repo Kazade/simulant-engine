@@ -21,10 +21,10 @@ public:
     }
 };
 
-class TestScene : public Scene<TestScene> {
+class TestScene : public Scene {
 public:
     TestScene(Window* window):
-        Scene<TestScene>(window) {}
+        Scene(window) {}
 
     void load() override { load_called = true; }
     void unload() override { unload_called = true; }

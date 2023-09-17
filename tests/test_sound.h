@@ -16,13 +16,14 @@ public:
 
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
-        camera_ = stage_->new_camera();
+        stage_ = scene->create_node<smlt::Stage>();
+        camera_ = scene->create_node<smlt::Camera3D>();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
+        camera_->destroy();
     }
 
     void test_audio_listener() {
