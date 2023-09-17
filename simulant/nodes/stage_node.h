@@ -206,7 +206,7 @@ public:
     size_t count_nodes_by_type() const {
         size_t ret = 0;
         for(auto& node: each_descendent()) {
-            if(dynamic_cast<T*>(&node)) {
+            if(dynamic_cast<T*>(node)) {
                 ++ret;
             }
         }

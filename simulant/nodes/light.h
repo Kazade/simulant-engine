@@ -131,7 +131,7 @@ public:
 };
 
 template<>
-class stage_node_traits<DirectionalLight> {
+struct stage_node_traits<DirectionalLight> {
     const static StageNodeType node_type = STAGE_NODE_TYPE_DIRECTIONAL_LIGHT;
     typedef DirectionalLightParams params_type;
 };
