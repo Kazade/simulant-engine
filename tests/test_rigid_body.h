@@ -7,8 +7,8 @@
 class RigidBodyTest : public smlt::test::SimulantTestCase {
 public:
     void test_adding_to_stage_node_inherits_location() {
-        smlt::StagePtr stage = scene->new_stage();
-        smlt::ActorPtr actor = stage->new_actor();
+        auto stage = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_node<smlt::Stage>();
 
         actor->move_to(10, 0, 0);
         actor->rotate_x_by(smlt::Degrees(90));
@@ -20,19 +20,15 @@ public:
         assert_equal(controller->position().y, 0.0f);
         assert_equal(controller->position().z, 0.0f);
 
-        scene->destroy_stage(stage->id());
+        stage->destroy();
     }
 
     void test_set_mass() {
-        smlt::StagePtr stage = scene->new_stage();
-        smlt::ActorPtr actor = stage->new_actor();
-
-        auto simulation = smlt::behaviours::RigidBodySimulation::create(application->time_keeper);
-        auto controller = actor->new_behaviour<smlt::behaviours::RigidBody>(simulation.get());
+        auto controller = scene->create_node<smlt::RigidBody>();
 
         assert_equal(controller->mass(), 1.0f);
 
-        controller->add_box_collider(smlt::Vec3(10.0f), smlt::behaviours::PhysicsMaterial::IRON);
+        controller->add_box_collider(smlt::Vec3(10.0f), smlt::PhysicsMaterial::IRON);
         assert_true(controller->mass() > 1.0f);
 
         controller->set_mass(100.0f);

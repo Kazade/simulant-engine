@@ -11,7 +11,7 @@ class RigTests : public test::SimulantTestCase {
 public:
     void set_up() {
         test::SimulantTestCase::set_up();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
     }
 
     void tear_down() {
@@ -20,7 +20,7 @@ public:
     }
 
     void test_actor_is_rigged() {
-        auto m = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
         auto a1 = stage_->new_actor_with_mesh(m);
 
         assert_false(a1->is_rigged());
@@ -30,7 +30,7 @@ public:
         assert_true(m->has_skeleton());
         assert_true(a1->is_rigged());
 
-        auto m2 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m2 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
 
         a1->set_mesh(m2);
 
@@ -39,7 +39,7 @@ public:
     }
 
     void test_rig_joint_count() {
-        auto m = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
         m->add_skeleton(5);
 
         auto a1 = stage_->new_actor_with_mesh(m);

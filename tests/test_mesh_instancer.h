@@ -75,7 +75,7 @@ public:
     void test_spawn_instances_updates_renderables() {
         auto instancer = stage_->new_mesh_instancer(mesh_);
 
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -99,7 +99,7 @@ public:
     void test_hidden_instances_arent_in_renderables() {
         auto instancer = stage_->new_mesh_instancer(mesh_);
 
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -124,7 +124,7 @@ public:
 
     void test_set_mesh_changes_aabb() {
         /* Create a bigger cube */
-        auto mesh2 = stage_->assets->new_mesh_as_cube_with_submesh_per_face(2.0f);
+        auto mesh2 = scene->assets->new_mesh_as_cube_with_submesh_per_face(2.0f);
 
         assert_not_equal(mesh_->aabb(), mesh2->aabb());
 
@@ -142,7 +142,7 @@ public:
         auto instancer = stage_->new_mesh_instancer(nullptr);
         instancer->new_mesh_instance(Vec3());
 
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -173,7 +173,7 @@ public:
         instancer->move_to(10, 0, 0);
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(10, 0, 0));
 
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 

@@ -13,8 +13,8 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = scene->new_stage();
-        camera = stage->new_camera();
+        stage = scene->create_node<smlt::Stage>();
+        camera = scene->create_node<smlt::Camera>();
 
         pipeline = window->compositor->render(stage, camera);
     }
@@ -91,7 +91,7 @@ public:
 
     void test_changing_camera() {
         auto p = window->compositor->render(stage, camera);
-        p = p->set_camera(stage->new_camera());
+        p = p->set_camera(scene->create_node<smlt::Camera>());
 
         assert_not_equal(p->camera(), camera);
     }

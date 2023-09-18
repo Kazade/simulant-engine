@@ -13,8 +13,8 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = scene->new_stage();
-        actor = stage->new_actor();
+        stage = scene->create_node<smlt::Stage>();
+        actor = scene->create_node<smlt::Stage>();
     }
 
     void tear_down() {
@@ -29,7 +29,7 @@ public:
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_sphere("sphere", scene->assets->new_material(), 10, 5, 5);
         auto sphere = stage->new_actor_with_mesh(mesh);
-        auto camera = stage->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
         follow->set_target(sphere);
         follow->set_follow_distance(15.f);
@@ -42,7 +42,7 @@ public:
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_sphere("sphere", scene->assets->new_material(), 10, 5, 5);
         auto sphere = stage->new_actor_with_mesh(mesh);
-        auto camera = stage->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
         follow->set_target(sphere);
 
@@ -56,7 +56,7 @@ public:
     }
 
     void test_half_turn() {
-        auto follower = stage->new_actor();
+        auto follower = scene->create_node<smlt::Stage>();
         auto controller = follower->new_behaviour<smlt::behaviours::SmoothFollow>();
         controller->set_target(actor);
         controller->set_follow_height(0);

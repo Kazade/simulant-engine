@@ -183,6 +183,163 @@ public:
         SceneManager manager(window);
         manager.register_scene<SceneWithArgs>("test", "arg");
     }
+
+    void test_actors_are_freed() {
+        auto stage = scene->create_node<smlt::Stage>();
+
+        auto count = scene->count_nodes_by_type<smlt::Stage>();
+        auto actor = scene->create_node<smlt::Stage>();
+        assert_equal(actor->node_type(), STAGE_NODE_TYPE_STAGE);
+        assert_equal(scene->count_nodes_by_type<smlt::Stage>(), count + 1);
+
+        actor->destroy();
+        // Should be the same, the original actor is still lingering
+        assert_equal(scene->count_nodes_by_type<smlt::Stage>(), count + 1);
+
+        application->run_frame();
+
+        // Back to where we were
+        assert_equal(scene->count_nodes_by_type<smlt::Stage>(), count);
+    }
+
+    void test_lights_are_freed() {
+        auto stage = scene->create_node<smlt::Stage>();
+
+        auto count = stage->light_count();
+
+        auto light = stage->new_light_as_directional();
+        assert_equal(light->node_type(), STAGE_NODE_TYPE_LIGHT);
+        assert_equal(stage->light_count(), count + 1);
+
+        stage->destroy_light(light->id());
+
+        assert_equal(stage->light_count(), count + 1);
+
+        application->run_frame();
+
+        assert_equal(stage->light_count(), count);
+    }
+
+    void test_particle_systems_are_freed() {
+        auto stage = scene->create_node<smlt::Stage>();
+
+        auto script = scene->assets->new_particle_script_from_file(
+            ParticleScript::BuiltIns::FIRE
+            );
+
+        auto count = stage->particle_system_count();
+
+        auto particle_system = stage->new_particle_system(script);
+        assert_equal(particle_system->node_type(), STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+
+        assert_equal(stage->particle_system_count(), count + 1);
+
+        stage->destroy_particle_system(particle_system->id());
+
+        assert_equal(stage->particle_system_count(), count + 1);
+
+        application->run_frame();
+
+        assert_equal(stage->particle_system_count(), count);
+    }
+
+    void test_geoms_are_freed() {
+        auto stage = scene->create_node<smlt::Stage>();
+
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+
+        auto count = stage->geom_count();
+
+        auto geom = stage->new_geom_with_mesh(mesh);
+
+        assert_equal(geom->node_type(), STAGE_NODE_TYPE_GEOM);
+        assert_equal(stage->geom_count(), count + 1);
+
+        stage->destroy_geom(geom->id());
+
+        assert_equal(stage->geom_count(), count + 1);
+
+        application->run_frame();
+
+        assert_equal(stage->geom_count(), count);
+    }
+
+    void test_cameras_are_freed() {
+        auto stage = scene->create_node<smlt::Stage>();
+
+        auto count = stage->camera_count();
+
+        auto camera = scene->create_node<smlt::Camera>();
+        assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);
+
+        assert_equal(stage->camera_count(), count + 1);
+        stage->destroy_camera(camera->id());
+
+        assert_equal(stage->camera_count(), count + 1);
+
+        application->run_frame();
+
+        assert_equal(stage->camera_count(), count);
+    }
+
+    void test_pipelines_are_freed() {
+        auto stage = scene->create_node<smlt::Stage>();
+        auto pipeline = window->compositor->render(stage, scene->create_node<smlt::Camera>());
+
+        auto name = pipeline->name();
+        pipeline->destroy();
+        assert_true(window->compositor->has_pipeline(name));
+
+        application->run_frame();
+        assert_false(window->compositor->has_pipeline(name));
+    }
+
+    void test_stages_are_freed() {
+        auto count = scene->stage_count();
+
+        auto stage = scene->create_node<smlt::Stage>();
+
+        assert_equal(scene->stage_count(), count + 1);
+
+        scene->destroy_stage(stage->id());
+
+        assert_true(stage->is_destroyed());
+        assert_equal(scene->stage_count(), count + 1);
+        application->run_frame();
+
+        assert_equal(scene->stage_count(), count);
+    }
+
+    void test_backgrounds_are_freed() {
+
+    }
+
+    void test_skyboxes_are_freed() {
+
+    }
+
+    void test_widgets_are_freed() {
+
+    }
+
+    void test_sprites_are_freed() {
+        auto stage = scene->create_node<smlt::Stage>();
+
+        auto count = stage->sprites->sprite_count();
+
+        auto sprite = stage->sprites->new_sprite();
+        assert_equal(sprite->node_type(), STAGE_NODE_TYPE_SPRITE);
+
+        assert_true(stage->sprites->sprite_count() >= count + 1);
+
+        stage->sprites->destroy_sprite(sprite->id());
+
+        assert_true(stage->sprites->sprite_count() >= count + 1);
+
+        application->run_frame();
+
+        assert_equal(stage->sprites->sprite_count(), count);
+    }
 };
 
 

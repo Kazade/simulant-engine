@@ -206,7 +206,7 @@ public:
     size_t count_nodes_by_type() const {
         size_t ret = 0;
         for(auto& node: each_descendent()) {
-            if(dynamic_cast<T*>(node)) {
+            if(dynamic_cast<const T*>(&node)) {
                 ++ret;
             }
         }
@@ -331,6 +331,10 @@ public:
         return AncestorIteratorPair(this);
     }
 
+    AncestorIteratorPair each_ancestor() const {
+        return AncestorIteratorPair(this);
+    }
+
     DescendentIteratorPair each_descendent() {
         return DescendentIteratorPair(this);
     }
@@ -340,6 +344,10 @@ public:
     }
 
     SiblingIteratorPair each_sibling() {
+        return SiblingIteratorPair(this);
+    }
+
+    SiblingIteratorPair each_sibling() const {
         return SiblingIteratorPair(this);
     }
 

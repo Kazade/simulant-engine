@@ -35,11 +35,14 @@
 #include "assets/material.h"
 #include "nodes/actor.h"
 #include "nodes/geom.h"
+#include "nodes/mesh_instancer.h"
 
 #include "nodes/static_body.h"
 #include "nodes/rigid_body.h"
 
 #include "nodes/fly_controller.h"
+
+#include "nodes/skies/skybox.h"
 
 #include "nodes/ui/ui_manager.h"
 #include "nodes/ui/button.h"
@@ -49,6 +52,9 @@
 #include "nodes/ui/frame.h"
 #include "nodes/ui/keyboard.h"
 #include "nodes/ui/text_entry.h"
+#include "nodes/sprite.h"
+#include "nodes/particle_system.h"
+#include "nodes/camera.h"
 
 #include "sound.h"
 #include "utils/random.h"
@@ -62,9 +68,7 @@
 #include "application.h"
 #include "assets/binary_data.h"
 #include "debug.h"
-#include "nodes/sprite.h"
-#include "nodes/particle_system.h"
-#include "nodes/camera.h"
+
 #include "platform.h"
 #include "vfs.h"
 

@@ -14,8 +14,8 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
-        camera_ = stage_->new_camera();
+        stage_ = scene->create_node<smlt::Stage>();
+        camera_ = scene->create_node<smlt::Camera>();
     }
 
     void tear_down() {
@@ -27,7 +27,7 @@ public:
     smlt::MeshPtr generate_test_mesh(smlt::StagePtr stage) {
         _S_UNUSED(stage);
 
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
         auto& data = mesh->vertex_data;
 
         data->position(-1.0, -1.0, 0.0);
@@ -44,7 +44,7 @@ public:
 
         data->done();
 
-        auto mat = stage_->assets->clone_default_material();
+        auto mat = scene->assets->clone_default_material();
         first_mesh_ = mesh->new_submesh("test", mat, INDEX_TYPE_16_BIT);
 
         assert_equal(mesh->find_submesh_with_material(mat), first_mesh_);
@@ -63,7 +63,7 @@ public:
         submesh->index_data->done();
 
         //Draw a line between the first two vertices
-        smlt::SubMesh* sm = mesh->new_submesh("test2", stage_->assets->clone_default_material(), INDEX_TYPE_16_BIT, smlt::MESH_ARRANGEMENT_LINES);
+        smlt::SubMesh* sm = mesh->new_submesh("test2", scene->assets->clone_default_material(), INDEX_TYPE_16_BIT, smlt::MESH_ARRANGEMENT_LINES);
         sm->index_data->index(0);
         sm->index_data->index(1);
         sm->index_data->done();
@@ -86,7 +86,7 @@ public:
         auto mesh = generate_test_mesh(stage_);
         auto submesh = mesh->first_submesh();
 
-        auto second_mesh = stage_->assets->new_mesh_from_submesh(submesh);
+        auto second_mesh = scene->assets->new_mesh_from_submesh(submesh);
 
         assert_equal(second_mesh->first_submesh()->index_data->count(), submesh->index_data->count());
         assert_equal(second_mesh->first_submesh()->arrangement(), submesh->arrangement());
@@ -110,7 +110,7 @@ public:
     void test_mesh_garbage_collection() {
         assert_false(stage_->is_destroyed());
 
-        auto initial = stage_->assets->mesh_count();
+        auto initial = scene->assets->mesh_count();
 
         auto mesh1 = generate_test_mesh(stage_);
         auto mesh2 = generate_test_mesh(stage_);
@@ -120,26 +120,27 @@ public:
         mesh1.reset();
         mesh2.reset();
 
-        stage_->assets->run_garbage_collection();
+        scene->assets->run_garbage_collection();
         assert_false(stage_->is_destroyed());
 
-        assert_equal(stage_->assets->mesh_count(), initial + 1);
+        assert_equal(scene->assets->mesh_count(), initial + 1);
 
         stage_->destroy_actor(actor->id());
         assert_false(stage_->is_destroyed());
 
         application->run_frame();
 
-        stage_->assets->run_garbage_collection();
+        scene->assets->run_garbage_collection();
 
-        assert_equal(stage_->assets->mesh_count(), initial + 0);
+        assert_equal(scene->assets->mesh_count(), initial + 0);
     }
 
     void test_set_mesh_detail_level() {
-        auto actor = stage_->new_actor();
+        auto mesh = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto actor = scene->create_node<smlt::Actor>(mesh);
 
-        auto m1 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
-        auto m2 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m1 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m2 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
 
         actor->set_mesh(m1);
         actor->set_mesh(m2, DETAIL_LEVEL_MID);
@@ -155,11 +156,11 @@ public:
         /* Check that index_data->done() fires signals without crashing */
         auto index_data = std::make_shared<IndexData>(INDEX_TYPE_16_BIT);
 
-        auto m1 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m1 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
         m1->vertex_data->position(0, 0, 0);
         m1->vertex_data->done();
 
-        auto mat = stage_->assets->new_material();
+        auto mat = scene->assets->new_material();
         m1->new_submesh("sm1", mat, index_data);
         m1->new_submesh("sm2", mat, index_data);
         m1->new_submesh("sm3", mat, INDEX_TYPE_16_BIT);
@@ -185,7 +186,7 @@ public:
     }
 
     void test_user_data_works() {
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_node<smlt::Stage>();
 
         this->assert_true(actor->id()); //Make sure we set an id for the mesh
         this->assert_true(!actor->data->exists("data"));
@@ -201,7 +202,7 @@ public:
     }
 
     void test_deleting_entities_deletes_children() {
-        auto m = stage_->new_actor(); //Create the root mesh
+        auto m = scene->create_node<smlt::Stage>(); //Create the root mesh
         auto c1 = stage_->new_actor_with_parent(m); //Create a child
         auto c2 = stage_->new_actor_with_parent(c1); //Create a child of the child
 
@@ -242,7 +243,7 @@ public:
     void test_actor_from_mesh() {
         auto mesh = generate_test_mesh(stage_);
 
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_node<smlt::Stage>();
 
         assert_true(!actor->has_any_mesh());
 
@@ -263,17 +264,17 @@ public:
     }
 
     void test_scene_methods() {
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
         auto actor = stage_->new_actor_with_mesh(mesh);
 
         assert_true(mesh->id() == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
     }
 
     void test_material_slots() {
-        auto mat1 = stage_->assets->new_material();
-        auto mat2 = stage_->assets->new_material();
+        auto mat1 = scene->assets->new_material();
+        auto mat2 = scene->assets->new_material();
 
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
         auto submesh = mesh->new_submesh_as_cube("cube", mat1, 1.0f);
         submesh->set_material_at_slot(MATERIAL_SLOT1, mat2);
@@ -285,7 +286,7 @@ public:
         actor2->use_material_slot(MATERIAL_SLOT1);
         actor3->use_material_slot(MATERIAL_SLOT7);
 
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -305,8 +306,8 @@ public:
 
     // Skipped, currently fails
     void X_test_cubic_texture_generation() {
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_box("cubic", stage_->assets->new_material(), 10.0f, 10.0f, 10.0f);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->new_submesh_as_box("cubic", scene->assets->new_material(), 10.0f, 10.0f, 10.0f);
         mesh->first_submesh()->generate_texture_coordinates_cube();
 
         auto& vd = *mesh->vertex_data.get();
@@ -349,9 +350,9 @@ public:
     }
 
     void test_mesh_aabb_generated_correctly() {
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_box(
-            "test", stage_->assets->default_material(),
+            "test", scene->assets->default_material(),
             1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
         );
 
@@ -365,9 +366,9 @@ public:
     }
 
     void test_submesh_aabb_generated_correctly() {
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         auto submesh = mesh->new_submesh_as_box(
-            "test", stage_->assets->default_material(),
+            "test", scene->assets->default_material(),
             1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
         );
 
@@ -381,10 +382,10 @@ public:
     }
 
     void test_new_submesh_as_capsule() {
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_capsule(
             "capsule",
-            stage_->assets->new_material(),
+            scene->assets->new_material(),
             2.0f, 5.0f, 10, 1, 10
         );
 
@@ -396,12 +397,12 @@ public:
     }
 
     void test_find_mesh() {
-        auto mesh = stage_->assets->new_mesh(VertexSpecification::DEFAULT)->set_name_and_get("Mesh 1");
-        stage_->assets->new_mesh(VertexSpecification::DEFAULT)->set_name("Mesh 2");
+        auto mesh = scene->assets->new_mesh(VertexSpecification::DEFAULT)->set_name_and_get("Mesh 1");
+        scene->assets->new_mesh(VertexSpecification::DEFAULT)->set_name("Mesh 2");
 
-        assert_equal(mesh->id(), stage_->assets->find_mesh("Mesh 1")->id());
-        assert_is_not_null(stage_->assets->find_mesh("Mesh 2").get());
-        assert_not_equal(mesh->id(), stage_->assets->find_mesh("Mesh 2")->id());
+        assert_equal(mesh->id(), scene->assets->find_mesh("Mesh 1")->id());
+        assert_is_not_null(scene->assets->find_mesh("Mesh 2").get());
+        assert_not_equal(mesh->id(), scene->assets->find_mesh("Mesh 2")->id());
     }
 
 private:

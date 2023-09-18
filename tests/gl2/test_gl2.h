@@ -21,12 +21,12 @@ public:
         smlt::test::SimulantTestCase::set_up();
 
         vbo_manager_ = VBOManager::create();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
 
-        mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh_->new_submesh_as_cube("cube", stage_->assets->new_material(), 1.0f);
+        mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh_->new_submesh_as_cube("cube", scene->assets->new_material(), 1.0f);
 
-        camera_ = stage_->new_camera();
+        camera_ = scene->create_node<smlt::Camera>();
     }
 
     void test_shared_vertex_vbo() {
@@ -35,8 +35,8 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh2->new_submesh_as_cube("cube", stage_->assets->new_material(), 1.0f);
+        auto mesh2 = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh2->new_submesh_as_cube("cube", scene->assets->new_material(), 1.0f);
 
         auto ret3 = vbo_manager_->allocate_slot(mesh2->vertex_data);
         assert_equal(ret1.first, ret3.first);
@@ -45,9 +45,9 @@ public:
         assert_equal(vbo->used_slot_count(), 2u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 2);
 
-        stage_->assets->destroy_mesh(mesh2->id());
+        scene->assets->destroy_mesh(mesh2->id());
         mesh2.reset(); // Remove refcount
-        stage_->assets->run_garbage_collection();
+        scene->assets->run_garbage_collection();
 
         // Slot should've been freed
         assert_equal(vbo->used_slot_count(), 1u);
@@ -60,8 +60,8 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh2->new_submesh_as_cube("cube", stage_->assets->new_material(), 1.0f);
+        auto mesh2 = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh2->new_submesh_as_cube("cube", scene->assets->new_material(), 1.0f);
 
         auto ret3 = vbo_manager_->allocate_slot(mesh2->first_submesh()->index_data);
         assert_equal(ret1.first, ret3.first);
@@ -70,9 +70,9 @@ public:
         assert_equal(vbo->used_slot_count(), 2u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 2);
 
-        stage_->assets->destroy_mesh(mesh2->id());
+        scene->assets->destroy_mesh(mesh2->id());
         mesh2.reset(); // Remove refcount
-        stage_->assets->run_garbage_collection();
+        scene->assets->run_garbage_collection();
 
         // Slot should've been freed
         assert_equal(vbo->used_slot_count(), 1u);
@@ -85,7 +85,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = stage_->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto mesh2 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
 
         /* 50000 verts should tip over 512k always */
         for(auto i = 0; i < 50000; ++i) {
@@ -101,9 +101,9 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), 0u); // No free slots in a dedicated one
 
-        stage_->assets->destroy_mesh(mesh2->id());
+        scene->assets->destroy_mesh(mesh2->id());
         mesh2.reset(); // Remove refcount
-        stage_->assets->run_garbage_collection();
+        scene->assets->run_garbage_collection();
 
         assert_equal(vbo_manager_->dedicated_buffer_count(), 0u);
     }

@@ -5,6 +5,7 @@
 #include "../../generic/identifiable.h"
 #include "../../path.h"
 #include "../../asset_manager.h"
+#include "../../path.h"
 
 namespace smlt {
 
@@ -31,7 +32,12 @@ public:
 };
 
 
-struct SkyboxParams {};
+struct SkyboxParams {
+    Path source_directory;
+
+    SkyboxParams(const Path& directory):
+        source_directory(directory) {}
+};
 
 class Skybox:
     public ContainerNode,
@@ -71,7 +77,7 @@ private:
 
 
 template<>
-class stage_node_traits<Skybox> {
+struct stage_node_traits<Skybox> {
     const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
     typedef SkyboxParams params_type;
 };

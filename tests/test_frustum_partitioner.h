@@ -13,7 +13,7 @@ public:
     void set_up() override {
         test::SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
         box_ = application->shared_assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
@@ -24,10 +24,10 @@ public:
     }
 
     void test_only_renders_correct_stage() {
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         camera->move_to(784, 58, -775);
 
-        auto stage2 = scene->new_stage();
+        auto stage2 = scene->create_node<smlt::Stage>();
 
         auto a1 = stage_->new_actor_with_mesh(box_);
         auto a2 = stage2->new_actor_with_mesh(box_);
@@ -50,7 +50,7 @@ public:
     }
 
     void test_visibility() {
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
         camera->move_to(784, 58, -775);
 
         auto a1 = stage_->new_actor_with_mesh(box_);
@@ -74,8 +74,8 @@ public:
     }
 
     void test_nodes_returned_if_never_culled() {
-        auto stage = scene->new_stage();
-        auto camera = stage->new_camera();
+        auto stage = scene->create_node<smlt::Stage>();
+        auto camera = scene->create_node<smlt::Camera>();
         auto a1 = stage->new_actor_with_mesh(box_);
 
         a1->move_to(0, 0, 100);
@@ -102,7 +102,7 @@ public:
     }
 
     void test_destroyed_nodes_not_returned() {
-        auto camera = stage_->new_camera();
+        auto camera = scene->create_node<smlt::Camera>();
 
         auto a1 = stage_->new_actor_with_mesh(box_);
         auto a2 = stage_->new_actor_with_mesh(box_);

@@ -28,8 +28,8 @@ class BehaviourTests : public smlt::test::SimulantTestCase {
 public:
     void test_behaviour_first_update() {
 
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
+        auto stage = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_node<smlt::Stage>();
 
         auto behaviour = actor->new_behaviour<TestBehaviour>();
 

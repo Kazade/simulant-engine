@@ -47,7 +47,7 @@ public:
         ground_ = create_node<smlt::Actor>(ground_mesh_);
 
         // Make the ground a staticbody
-        auto c = create_node<smlt::StaticBody>(physics);
+        auto c = create_node<smlt::StaticBody>();
         c->set_parent(ground_); // FIXME: Convert to mixin
         c->add_box_collider(ground_->aabb().dimensions(), PhysicsMaterial::STONE);
 

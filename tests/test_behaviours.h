@@ -11,7 +11,7 @@ namespace {
 
 using namespace smlt;
 
-class BehaviourWithLookups : public Behaviour, public RefCounted<BehaviourWithLookups> {
+class NodeWithLookups : public StageNode {
 public:
     FindResult<Actor> child_one = FindDescendent("Child 1", this);
     FindResult<ParticleSystem> invalid_child = FindDescendent("Child 1", this);
@@ -26,14 +26,18 @@ public:
 
 class BehaviourLookupTests : public test::SimulantTestCase {
 public:
+    void set_up() {
+        test::SimulantTestCase::set_up();
+        scene->register_stage_node<NodeWithLookups>();
+    }
+
     void test_ancestor_lookups() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto b = actor->new_behaviour<BehaviourWithLookups>();
+        auto actor = scene->create_node<smlt::Actor>();
+        auto b = scene->create_node<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->parent.get());
 
-        auto parent = stage->new_actor();
+        auto parent = scene->create_node<smlt::Actor>();
         parent->set_name("Some Parent");
         actor->set_parent(parent);
 
@@ -41,16 +45,16 @@ public:
     }
 
     void test_descendent_lookups() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto camera = stage->new_camera();
+        auto actor = scene->create_node<smlt::Actor>();
+        auto camera = scene->create_node<smlt::Camera>();
 
-        auto b = actor->new_behaviour<BehaviourWithLookups>();
+        auto b = scene->create_node<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->child_one);
         assert_is_null((StageNode*) b->invalid_child);
 
-        auto child_one = stage->new_actor_with_name("Child 1");
+        auto child_one = scene->create_node<smlt::Stage>();
+        child_one->set_name("Child 1");
         child_one->set_parent(actor);
 
         camera->set_parent(child_one);
@@ -73,9 +77,9 @@ public:
 class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto camera = stage->new_camera();
+        auto stage = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_node<smlt::Stage>();
+        auto camera = scene->create_node<smlt::Camera>();
 
         auto pipeline = window->compositor->render(stage, camera);
         pipeline->activate();
@@ -105,9 +109,9 @@ class SphericalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto camera = stage->new_camera();
+        auto stage = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_node<smlt::Stage>();
+        auto camera = scene->create_node<smlt::Camera>();
 
         auto pipeline = window->compositor->render(stage, camera);
         pipeline->activate();

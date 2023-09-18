@@ -12,7 +12,7 @@ class WidgetTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
     }
 
     void tear_down() {
@@ -29,24 +29,24 @@ public:
     }
 
     void test_materials_freed() {
-        auto mc = stage_->assets->material_count();
+        auto mc = scene->assets->material_count();
 
         auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
-        label->set_background_image(stage_->assets->new_texture(16, 16));
-        label->set_foreground_image(stage_->assets->new_texture(16, 16));
-        assert_equal(stage_->assets->material_count(), mc + 2);  /* background, foreground */
+        label->set_background_image(scene->assets->new_texture(16, 16));
+        label->set_foreground_image(scene->assets->new_texture(16, 16));
+        assert_equal(scene->assets->material_count(), mc + 2);  /* background, foreground */
 
         label->destroy();
         application->run_frame();
 
-        assert_equal(stage_->assets->material_count(), mc); /* Destroyed */
+        assert_equal(scene->assets->material_count(), mc); /* Destroyed */
     }
 
     void test_foreground_and_background_images_differ() {
         auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
 
-        auto t1 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
-        auto t2 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+        auto t1 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+        auto t2 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
 
         button->set_foreground_image(t1);
         button->set_background_image(t2);
@@ -123,7 +123,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
     }
 
     void tear_down() {
@@ -145,7 +145,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
     }
 
     void tear_down() {
@@ -177,7 +177,7 @@ class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
     }
 
     void tear_down() {
@@ -186,7 +186,7 @@ public:
     }
 
     void test_image_creation() {
-        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
+        auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
         auto image = stage_->ui->new_widget_as_image(texture);
 
         assert_equal(image->width(), texture->width());
@@ -197,7 +197,7 @@ public:
     }
 
     void test_set_source_rect() {
-        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
+        auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
         auto image = stage_->ui->new_widget_as_image(texture);
 
         image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));
@@ -216,7 +216,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
+        stage_ = scene->create_node<smlt::Stage>();
     }
 
     void tear_down() {

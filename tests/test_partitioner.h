@@ -55,8 +55,8 @@ public:
             }
         };
 
-        StagePtr stage = scene->new_stage();
-        ActorPtr actor = stage->new_actor();
+        StagePtr stage = scene->create_node<smlt::Stage>();
+        ActorPtr actor = scene->create_node<smlt::Stage>();
 
         MockPartitioner partitioner(stage, test);
         partitioner.remove_stage_node(actor);
@@ -77,8 +77,8 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
-        StagePtr stage = scene->new_stage();
-        ActorPtr actor = stage->new_actor();
+        StagePtr stage = scene->create_node<smlt::Stage>();
+        ActorPtr actor = scene->create_node<smlt::Stage>();
 
         MockPartitioner partitioner(stage, test);
         partitioner.add_stage_node(actor);
@@ -92,8 +92,8 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
-        StagePtr stage = scene->new_stage();
-        ActorPtr actor = stage->new_actor();
+        StagePtr stage = scene->create_node<smlt::Stage>();
+        ActorPtr actor = scene->create_node<smlt::Stage>();
 
         MockPartitioner partitioner(stage, test);
         partitioner.remove_stage_node(actor);
@@ -107,7 +107,7 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
-        StagePtr stage = scene->new_stage();
+        StagePtr stage = scene->create_node<smlt::Stage>();
         auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
@@ -122,7 +122,7 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
-        StagePtr stage = scene->new_stage();
+        StagePtr stage = scene->create_node<smlt::Stage>();
         auto light = stage->new_light_as_point();
 
         MockPartitioner partitioner(stage, test);
@@ -137,7 +137,7 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_ADD);
         };
 
-        StagePtr stage = scene->new_stage();
+        StagePtr stage = scene->create_node<smlt::Stage>();
         auto ps = stage->new_particle_system(
             scene->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
         );
@@ -154,7 +154,7 @@ public:
             assert_equal(write.operation, WRITE_OPERATION_REMOVE);
         };
 
-        StagePtr stage = scene->new_stage();
+        StagePtr stage = scene->create_node<smlt::Stage>();
         auto ps = stage->new_particle_system(
             scene->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE)
         );

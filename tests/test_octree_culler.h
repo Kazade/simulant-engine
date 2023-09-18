@@ -36,8 +36,8 @@ public:
     }
 
     void test_basic_visibility() {
-        auto stage = scene->new_stage();
-        auto camera = stage->new_camera(); // Looking down -Z
+        auto stage = scene->create_node<smlt::Stage>();
+        auto camera = scene->create_node<smlt::Camera>(); // Looking down -Z
 
         // Guarantee 2 renderables by using different materials
         auto mat1 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);

@@ -12,7 +12,7 @@ using namespace smlt;
 class ParticleSystemTests : public test::SimulantTestCase {
 public:
     void test_destroy_signal() {
-        auto stage = scene->new_stage();
+        auto stage = scene->create_node<smlt::Stage>();
         ParticleScriptPtr script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
@@ -29,7 +29,7 @@ public:
     }
 
     void test_emitter_duration() {
-        auto stage = scene->new_stage();
+        auto stage = scene->create_node<smlt::Stage>();
         ParticleScriptPtr script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
@@ -54,7 +54,7 @@ public:
     }
 
     void test_direction_manipulator() {
-        auto stage = scene->new_stage();
+        auto stage = scene->create_node<smlt::Stage>();
         ParticleScriptPtr script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
