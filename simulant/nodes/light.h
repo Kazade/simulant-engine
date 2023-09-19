@@ -28,6 +28,12 @@
 
 namespace smlt {
 
+struct LightParams {
+    LightType type;
+    Vec3 position_or_direction;
+    Colour color;
+};
+
 class Light :
     public ContainerNode,
     public ChainNameable<Light> {
@@ -114,6 +120,7 @@ class PointLightParams {
     Vec3 position;
     Colour color;
 
+public:
     PointLightParams(const Vec3& position, const Colour& color):
         position(position),
         color(color) {}
@@ -140,6 +147,12 @@ public:
 };
 
 template<>
+struct stage_node_traits<Light> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_LIGHT;
+    typedef LightParams params_type;
+};
+
+template<>
 struct stage_node_traits<DirectionalLight> {
     const static StageNodeType node_type = STAGE_NODE_TYPE_DIRECTIONAL_LIGHT;
     typedef DirectionalLightParams params_type;
@@ -150,7 +163,6 @@ struct stage_node_traits<PointLight> {
     const static StageNodeType node_type = STAGE_NODE_TYPE_POINT_LIGHT;
     typedef PointLightParams params_type;
 };
-
 
 }
 #endif
