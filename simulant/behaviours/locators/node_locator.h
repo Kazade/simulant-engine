@@ -36,9 +36,9 @@ typedef std::function<StageNode* (StageNode*)> NodeFinder;
 template<typename T>
 class FindResult {
 public:
-    FindResult(const std::tuple<NodeFinder, Behaviour*>& finder):
+    FindResult(const std::tuple<NodeFinder, StageNode*>& finder):
         finder_(std::get<0>(finder)),
-        behaviour_(std::get<1>(finder)) {
+        node_(std::get<1>(finder)) {
     }
 
     ~FindResult() {
@@ -87,16 +87,12 @@ public:
             return found_;
         } else {
             if(!organism_) {
-                /* Only dynamic cast in debug mode. In release just blindly cast
-                 * and expect it'll work */
+                organism_ = node_;
 #ifndef NDEBUG
-                organism_ = dynamic_cast<StageNode*>(behaviour_->organism.get());
                 assert(organism_);
-#else
-                organism_ = (StageNode*) behaviour_->organism.get();
 #endif
                 if(!organism_) {
-                    S_WARN("Couldn't locate node because behaviour is not attached");
+                    S_WARN("Couldn't locate node");
                     return nullptr;
                 }
             }
@@ -114,7 +110,7 @@ public:
 
 private:
     std::function<StageNode* (StageNode*)> finder_;
-    Behaviour* behaviour_ = nullptr;
+    StageNode* node_ = nullptr;
 
     /* Mutable, because these are only populated on first-access and that
      * first access might be const */
@@ -123,14 +119,14 @@ private:
     mutable sig::connection on_destroy_;
 };
 
-std::tuple<NodeFinder, Behaviour*> FindAncestor(const char* name, Behaviour* behaviour) {
+std::tuple<NodeFinder, StageNode*> FindAncestor(const char* name, StageNode* behaviour) {
     return {
         std::bind(&StageNodeFinders::find_ancestor, name, std::placeholders::_1),
         behaviour
     };
 }
 
-std::tuple<NodeFinder, Behaviour*> FindDescendent(const char* name, Behaviour* behaviour) {
+std::tuple<NodeFinder, StageNode*> FindDescendent(const char* name, StageNode* behaviour) {
     return {
         std::bind(&StageNodeFinders::find_descendent, name, std::placeholders::_1),
         behaviour

@@ -76,7 +76,7 @@ public:
     void test_nodes_returned_if_never_culled() {
         auto stage = scene->create_node<smlt::Stage>();
         auto camera = scene->create_node<smlt::Camera>();
-        auto a1 = stage->new_actor_with_mesh(box_);
+        auto a1 = scene->create_node<smlt::Actor>(box_);
 
         a1->move_to(0, 0, 100);
 

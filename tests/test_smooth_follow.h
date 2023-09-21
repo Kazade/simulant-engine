@@ -20,7 +20,7 @@ public:
     void tear_down() {
         SimulantTestCase::tear_down();
 
-        scene->destroy_stage(stage->id());
+        stage->destroy();
     }
 
     void test_origin_bug() {
@@ -28,7 +28,7 @@ public:
 
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_sphere("sphere", scene->assets->new_material(), 10, 5, 5);
-        auto sphere = stage->new_actor_with_mesh(mesh);
+        auto sphere = scene->create_node<smlt::Actor>(mesh);
         auto camera = scene->create_node<smlt::Camera>();
         auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
         follow->set_target(sphere);
@@ -41,7 +41,7 @@ public:
     void test_target_reset_on_destroy() {
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_sphere("sphere", scene->assets->new_material(), 10, 5, 5);
-        auto sphere = stage->new_actor_with_mesh(mesh);
+        auto sphere = scene->create_node<smlt::Actor>(mesh);
         auto camera = scene->create_node<smlt::Camera>();
         auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
         follow->set_target(sphere);

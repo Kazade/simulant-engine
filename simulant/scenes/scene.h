@@ -56,6 +56,7 @@ class Application;
 class Window;
 class InputManager;
 class SceneManager;
+class Service;
 
 class SceneLoadException : public std::runtime_error {};
 
@@ -135,6 +136,27 @@ public:
         unload_on_deactivate_ = v;
     }
 
+    template<typename T>
+    bool start_service() {
+        auto service = std::make_shared<T>();
+        auto name = service->name();
+        if(services_.count(name)) {
+            return false;
+        }
+
+        services_.insert(std::make_pair(name, service));
+        return true;
+    }
+
+    Service* find_service(const std::string& name) const {
+        auto it = services_.find(name);
+        if(it != services_.end()) {
+            return it->second.get();
+        }
+
+        return nullptr;
+    }
+
 protected:
     virtual void load() = 0;
     virtual void unload() {}
@@ -148,6 +170,7 @@ protected:
     void unlink_pipeline(PipelinePtr pipeline);
 
 private:
+    std::unordered_map<std::string, std::shared_ptr<Service>> services_;
     std::set<std::string> linked_pipelines_;
 
     virtual void pre_load() {}

@@ -1,4 +1,8 @@
 #include "physics_body.h"
+#include "bounce/bounce.h"
+#include "../services/physics.h"
+#include "stage_node.h"
+#include "../scenes/scene.h"
 
 namespace smlt {
 
@@ -32,96 +36,43 @@ const PhysicsMaterial PhysicsMaterial::STONE_75(s.density * 0.75f, s.friction, s
 void PhysicsBody::add_box_collider(
     const Vec3 &size, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation
 ) {
-    assert(simulation_);
+    auto simulation = get_simulation();
+    if(!simulation) {
+        return;
+    }
 
-    b3Vec3 p;
-    b3Quat q;
-    to_b3vec3(offset, p);
-    to_b3quat(rotation, q);
-    b3Transform tx(p, q);
-
-    // Apply scaling
-    b3Vec3 s;
-    s.x = s.y = s.z = 1.0f;
-
-    auto def = std::make_shared<b3BoxHull>(
-        size.x * 0.5f, size.y * 0.5f, size.z * 0.5f
-        );
-
-    def->Transform(tx, s);
-    hulls_.push_back(def);
-
-    b3HullShape hsdef;
-    hsdef.m_hull = def.get();
-
-    b3FixtureDef sdef;
-    sdef.shape = &hsdef;
-    sdef.userData = this;
-    sdef.density = properties.density;
-    sdef.friction = properties.friction;
-    sdef.restitution = properties.bounciness;
-
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
+    simulation->add_box_collider(this, size, properties, kind, offset, rotation);
 }
 
 void PhysicsBody::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset) {
-    assert(simulation_);
+    auto simulation = get_simulation();
+    if(!simulation) {
+        return;
+    }
 
-    b3SphereShape sphere;
-    to_b3vec3(offset, sphere.m_center);
-    sphere.m_radius = diameter * 0.5f;
-
-    b3FixtureDef sdef;
-    sdef.shape = &sphere;
-    sdef.density = properties.density;
-    sdef.friction = properties.friction;
-    sdef.restitution = properties.bounciness;
-
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
+    simulation->add_sphere_collider(this, diameter, properties, kind, offset);
 }
 
 void PhysicsBody::add_triangle_collider(
     const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
     const PhysicsMaterial& properties, uint16_t kind
     ) {
-    assert(simulation_);
 
-    b3Vec3 bv1, bv2, bv3;
-    to_b3vec3(v1, bv1);
-    to_b3vec3(v2, bv2);
-    to_b3vec3(v3, bv3);
+    auto simulation = get_simulation();
+    if(!simulation) {
+        return;
+    }
 
-    b3TriangleShape tri;
-    tri.Set(bv1, bv2, bv3);
-
-    b3FixtureDef sdef;
-    sdef.shape = &tri;
-    sdef.density = properties.density;
-    sdef.friction = properties.friction;
-    sdef.restitution = properties.bounciness;
-
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
+    simulation->add_triangle_collider(this, v1, v2, v3, properties, kind);
 }
 
 void PhysicsBody::add_capsule_collider(float height, const float diameter, const PhysicsMaterial& properties, uint16_t kind) {
-    assert(simulation_);
+    auto simulation = get_simulation();
+    if(!simulation) {
+        return;
+    }
 
-    float off = (height - (diameter * 0.5f)) * 0.5f;
-    b3Vec3 v1(0.0f, off, 0.0f);
-    b3Vec3 v2(0.0f, -off, 0.0f);
-
-    b3CapsuleShape capsule;
-    capsule.m_vertex1 = v1;
-    capsule.m_vertex2 = v2;
-    capsule.m_radius = diameter * 0.5f;
-
-    b3FixtureDef sdef;
-    sdef.shape = &capsule;
-    sdef.density = properties.density;
-    sdef.friction = properties.friction;
-    sdef.restitution = properties.bounciness;
-
-    store_collider(simulation_->bodies_.at(this)->CreateFixture(sdef), properties, kind);
+    return simulation->add_capsule_collider(this, height, diameter, properties, kind);
 }
 
 void PhysicsBody::register_collision_listener(CollisionListener *listener) {
@@ -132,6 +83,29 @@ void PhysicsBody::register_collision_listener(CollisionListener *listener) {
 void PhysicsBody::unregister_collision_listener(CollisionListener *listener) {
     listener->watching_.erase(this);
     listeners_.erase(listener);
+}
+
+void PhysicsBody::contact_started(const Collision &collision) {
+    for(auto listener: listeners_) {
+        listener->on_collision_enter(collision);
+    }
+}
+
+void PhysicsBody::contact_finished(const Collision& collision) {
+    for(auto listener: listeners_) {
+        listener->on_collision_exit(collision);
+    }
+}
+
+PhysicsService* PhysicsBody::get_simulation() {
+    /* Caches the PhysicsService for perf */
+    if(!simulation_) {
+        /* FIXME: If the physics service is destroyed, we need
+             * to wipe this out for every physics body */
+        simulation_ = dynamic_cast<PhysicsService*>(self_->scene->find_service("Physics"));
+    }
+
+    return simulation_;
 }
 
 }

@@ -20,7 +20,7 @@ public:
     }
 
     void tear_down() {
-        scene->destroy_stage(stage->id());
+        stage->destroy();
         pipeline->destroy();
     }
 

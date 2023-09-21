@@ -43,7 +43,7 @@ public:
     }
 
     void test_foreground_and_background_images_differ() {
-        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
+        auto button = scene->create_node<ui::Button>("Button", ui::Px(100), ui::Px(20));
 
         auto t1 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
         auto t2 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
@@ -56,7 +56,7 @@ public:
     }
 
     void test_render_priority() {
-        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
+        auto button = scene->create_node<ui::Button>("Button", ui::Px(100), ui::Px(20));
         assert_equal(button->render_priority(), RENDER_PRIORITY_MAIN);
         button->set_render_priority(RENDER_PRIORITY_NEAR);
         assert_equal(button->render_priority(), RENDER_PRIORITY_NEAR);
@@ -72,7 +72,7 @@ public:
          * at the bottom left initially
          */
 
-        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
+        auto button = scene->create_node<ui::Button>("Test", ui::Px(100), ui::Px(20));
         button->set_padding(0);
         button->set_border_width(0);
 
@@ -88,7 +88,7 @@ public:
     }
 
     void test_button_creation() {
-        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
+        auto button = scene->create_node<ui::Button>("Test", ui::Px(100), ui::Px(20));
 
         assert_equal(_u("Test"), button->text());
         assert_equal(ui::Px(100), button->requested_width());
@@ -281,7 +281,7 @@ public:
 private:
     smlt::ui::Frame* _setup_frame() {
         smlt::ui::Frame* frame = stage_->ui->new_widget_as_frame("");
-        smlt::ui::Button* button = stage_->ui->new_widget_as_button("Button 1");
+        smlt::ui::Button* button = scene->create_node<ui::Button>("Button 1");
         smlt::ui::Label* label = stage_->ui->new_widget_as_label("Test Label");
 
         /* Can pack a child once, but not itself */

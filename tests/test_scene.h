@@ -301,7 +301,7 @@ public:
 
         assert_equal(scene->stage_count(), count + 1);
 
-        scene->destroy_stage(stage->id());
+        stage->destroy();
 
         assert_true(stage->is_destroyed());
         assert_equal(scene->stage_count(), count + 1);

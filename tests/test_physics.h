@@ -7,14 +7,14 @@ namespace {
 
 using namespace smlt;
 
-class Listener : public behaviours::CollisionListener {
+class Listener : public CollisionListener {
 public:
     Listener(bool* enter_called, uint32_t* stay_count, bool* leave_called):
         enter_called(enter_called),
         stay_count(stay_count),
         leave_called(leave_called) {}
 
-    void on_collision_enter(const behaviours::Collision& collision) override {
+    void on_collision_enter(const Collision& collision) override {
         _S_UNUSED(collision);
 
         if(enter_called) {
@@ -28,7 +28,7 @@ public:
         }
     }
 
-    void on_collision_exit(const behaviours::Collision& collision) override {
+    void on_collision_exit(const Collision& collision) override {
         _S_UNUSED(collision);
 
         if(leave_called) {

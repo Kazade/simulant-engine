@@ -2,12 +2,14 @@
 
 #include <vector>
 #include <unordered_map>
+#include <set>
 
 #include "../types.h"
 
 namespace smlt {
 
 class StageNode;
+class PhysicsService;
 
 struct PhysicsMaterial {
     PhysicsMaterial() = default;
@@ -55,21 +57,26 @@ struct ContactPoint {
 struct Collision {
     PhysicsBody* other_body = nullptr; ///< Body which owns the collider we hit
     std::string other_collider_name; ///< Name of the collider we hit
-    StageNode* other_stage_node = nullptr; ///< Pointer to the owning stage node of the other body
 
     PhysicsBody* this_body = nullptr; ///< This body
     std::string this_collider_name; ///< The collider on this body which was hit
-    StageNode* this_stage_node = nullptr; ///< The owning stage node of this body
 
     std::vector<ContactPoint> contact_points; ///< List of contact points found during this collision
 };
 
 class CollisionListener;
 
+enum PhysicsBodyType {
+    PHYSICS_BODY_TYPE_STATIC,
+    PHYSICS_BODY_TYPE_DYNAMIC,
+    PHYSICS_BODY_TYPE_KINEMATIC,
+};
+
 class PhysicsBody {
 public:
-    PhysicsBody(StageNode* self):
-        self_(self) {}
+    PhysicsBody(StageNode* self, PhysicsBodyType type):
+        self_(self),
+        type_(type) {}
 
     void add_box_collider(
         const Vec3& size,
@@ -101,8 +108,22 @@ public:
     void register_collision_listener(CollisionListener* listener);
     void unregister_collision_listener(CollisionListener* listener);
 
+    PhysicsBodyType type() const {
+        return type_;
+    }
+
 private:
+    friend class ContactListener;
+
     StageNode* self_ = nullptr;
+    PhysicsService* simulation_;
+    PhysicsService* get_simulation();
+
+    PhysicsBodyType type_;
+    std::set<CollisionListener*> listeners_;
+
+    void contact_started(const Collision& collision);
+    void contact_finished(const Collision &collision);
 };
 
 class CollisionListener {
@@ -115,6 +136,8 @@ public:
     }
 
 private:
+    friend class PhysicsBody;
+
     virtual void on_collision_enter(const Collision& collision) {
         _S_UNUSED(collision);
     }
