@@ -22,13 +22,12 @@ struct stage_node_traits<Camera> {
 
 class Camera:
     public ContainerNode,
-    public ChainNameable<Camera>,
-    public AudioSource {
+    public ChainNameable<Camera> {
 
 public:
     using ContainerNode::do_generate_renderables;
 
-    Camera(Scene* owner, SoundDriver* sound_driver);
+    Camera(Scene* owner);
     virtual ~Camera();
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */

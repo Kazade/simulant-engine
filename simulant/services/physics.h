@@ -97,6 +97,12 @@ private:
         PhysicsBody* self,
         float height, const float diameter, const PhysicsMaterial& properties, uint16_t kind
     );
+
+    void add_mesh_collider(
+        PhysicsBody* self,
+        const MeshPtr& mesh, const PhysicsMaterial& properties,
+        uint16_t kind, const Vec3& offset, const Quaternion& rotation
+    );
 };
 
 }

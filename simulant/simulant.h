@@ -29,6 +29,7 @@
 #include "sdl2_window.h"
 #endif
 
+#include "time_keeper.h"
 #include "stage.h"
 #include "viewport.h"
 #include "frustum.h"
@@ -37,10 +38,14 @@
 #include "nodes/geom.h"
 #include "nodes/mesh_instancer.h"
 #include "nodes/rigid_body.h"
+#include "nodes/kinematic_body.h"
 #include "services/physics.h"
 
 #include "nodes/static_body.h"
 #include "nodes/rigid_body.h"
+#include "nodes/smooth_follow.h"
+#include "nodes/cylindrical_billboard.h"
+#include "nodes/spherical_billboard.h"
 
 #include "nodes/fly_controller.h"
 

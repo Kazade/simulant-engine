@@ -31,8 +31,7 @@ public:
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_sphere("sphere", scene->assets->new_material(), 10, 5, 5);
         auto sphere = scene->create_node<smlt::Actor>(mesh);
-        auto camera = scene->create_node<smlt::Camera>();
-        auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
+        auto follow = scene->create_node<smlt::SmoothFollow>();
         follow->set_target(sphere);
         follow->set_follow_distance(15.f);
         follow->set_follow_height(10.f);
@@ -44,8 +43,7 @@ public:
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_sphere("sphere", scene->assets->new_material(), 10, 5, 5);
         auto sphere = scene->create_node<smlt::Actor>(mesh);
-        auto camera = scene->create_node<smlt::Camera>();
-        auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
+        auto follow = scene->create_node<smlt::SmoothFollow>();
         follow->set_target(sphere);
 
         assert_true(follow->has_target());
@@ -58,10 +56,9 @@ public:
     }
 
     void test_half_turn() {
-        auto follower = scene->create_node<smlt::Stage>();
-        auto controller = follower->new_behaviour<smlt::behaviours::SmoothFollow>();
-        controller->set_target(actor);
-        controller->set_follow_height(0);
+        auto follower = scene->create_node<smlt::SmoothFollow>();
+        follower->set_target(actor);
+        follower->set_follow_height(0);
 
         float step = 1.0f / 60.0f;
         int seconds = 5;
@@ -71,7 +68,7 @@ public:
 
         // Run 5 seconds of updates at 1/60
         for(int32_t i = 0; i < seconds * 60; ++i) {
-            controller->_late_update_thunk(step);
+            follower->late_update(step);
         }
 
         // Follower should now be facing negative Z
@@ -85,7 +82,7 @@ public:
 
         // Run 3 seconds of updates at 1/60
         for(int32_t i = 0; i < seconds * 60; ++i) {
-            controller->_late_update_thunk(step);
+            follower->late_update(step);
         }
 
         // Follower should now be facing positive Z

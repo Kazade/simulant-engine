@@ -1,20 +1,25 @@
 #include <set>
 #include "bounce/bounce.h"
+#include "bounce/collision/shapes/mesh_shape.h"
 #include "physics.h"
 #include "../time_keeper.h"
 #include "../nodes/physics_body.h"
+#include "../utils/mesh/triangulate.h"
+#include "../meshes/mesh.h"
 
 namespace smlt {
 
 class ContactListener;
 class PrivateContactListener;
 class PrivateContactFilter;
+class b3MeshGenerator;
 
 struct FixtureData {
     b3Fixture* fixture = nullptr;
     PhysicsMaterial material;
     std::string name;
     uint16_t kind = 0;
+    std::shared_ptr<b3MeshGenerator> mesh;
 };
 
 struct BodyData {
@@ -193,6 +198,66 @@ private:
     PhysicsService* simulation_;
 };
 
+class b3MeshGenerator {
+private:
+    std::vector<b3Vec3> vertices_;
+    std::vector<b3MeshTriangle> triangles_;
+    std::shared_ptr<b3Mesh> mesh_;
+
+public:
+    b3MeshGenerator():
+        mesh_(new b3Mesh()) {
+
+    }
+
+    void reserve_vertices(std::size_t count) {
+        vertices_.reserve(count);
+    }
+
+    template<typename InputIterator>
+    void insert_vertices(InputIterator first, InputIterator last) {
+        auto count = std::distance(first, last);
+        vertices_.reserve(vertices_.size() + count);
+
+        for(auto it = first; it != last; ++it) {
+            append_vertex((*it));
+        }
+    }
+
+    void insert_triangles(
+        const std::vector<utils::Triangle>::iterator first,
+        const std::vector<utils::Triangle>::iterator last
+    ) {
+
+        b3MeshTriangle btri;
+
+        auto count = std::distance(first, last);
+        triangles_.reserve(triangles_.size() + count);
+
+        for(auto it = first; it != last; ++it) {
+            utils::Triangle& tri = (*it);
+
+            btri.v1 = tri.idx[0];
+            btri.v2 = tri.idx[1];
+            btri.v3 = tri.idx[2];
+
+            triangles_.push_back(btri);
+            mesh_->triangles = &triangles_[0];
+            mesh_->triangleCount = triangles_.size();
+        }
+    }
+
+    void append_vertex(const Vec3& v) {
+        b3Vec3 bv(v.x, v.y, v.z);
+        vertices_.push_back(bv);
+
+        mesh_->vertices = &vertices_[0];
+        mesh_->vertexCount = vertices_.size();
+    }
+
+    b3Mesh* get_mesh() const { return mesh_.get(); }
+};
+
 bool PhysicsService::body_exists(const PhysicsBody* body) const {
     return pimpl_->bodies_.count((PhysicsBody*) body);
 }
@@ -363,6 +428,64 @@ void PhysicsService::add_capsule_collider(
     fdata.fixture->SetUserData(self);
     fdata.material = properties;
     fdata.kind = kind;
+
+    data.fixtures.push_back(fdata);
+}
+
+void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset, const Quaternion& rotation) {
+    BodyData& data = pimpl_->bodies_.at(self);
+
+    auto bmesh = std::make_shared<b3MeshGenerator>();
+
+    std::vector<utils::Triangle> triangles;
+
+    bmesh->reserve_vertices(mesh->vertex_data->count());
+
+    uint8_t* pos = mesh->vertex_data->data();
+    auto stride = mesh->vertex_data->vertex_specification().stride();
+
+    Mat4 tx(rotation, offset, Vec3(1));
+
+    for(std::size_t i = 0; i < mesh->vertex_data->count(); ++i, pos += stride) {
+        auto p = tx * Vec4(*((Vec3*) pos), 1);
+        bmesh->append_vertex(Vec3(p.x, p.y, p.z));
+    }
+
+    for(auto& submesh: mesh->each_submesh()) {
+        submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
+            utils::Triangle tri;
+            tri.idx[0] = c;
+            tri.idx[1] = b;
+            tri.idx[2] = a;
+            triangles.push_back(tri);
+        });
+    }
+
+    // Add them to our b3Mesh generator
+    bmesh->insert_triangles(triangles.begin(), triangles.end());
+
+    // Build mesh AABB tree and mesh adjacency
+    bmesh->get_mesh()->BuildTree();
+    bmesh->get_mesh()->BuildAdjacency();
+
+    // Grab the b3Mesh from the generator
+    b3Mesh* genMesh = bmesh->get_mesh();
+
+    b3MeshShape shape;
+    shape.m_mesh = genMesh;
+
+    b3FixtureDef sdef;
+    sdef.shape = &shape;
+    sdef.density = properties.density;
+    sdef.friction = properties.friction;
+    sdef.restitution = properties.bounciness;
+
+    FixtureData fdata;
+    fdata.fixture = data.body->CreateFixture(sdef);
+    fdata.fixture->SetUserData(self);
+    fdata.material = properties;
+    fdata.kind = kind;
+    fdata.mesh = bmesh;
 
     data.fixtures.push_back(fdata);
 }

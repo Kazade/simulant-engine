@@ -22,9 +22,8 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
 );
 
-ParticleSystem::ParticleSystem(Scene* owner, SoundDriver* sound_driver, ParticleScriptPtr script):
+ParticleSystem::ParticleSystem(Scene* owner, ParticleScriptPtr script):
     StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
-    AudioSource(owner, this, sound_driver),
     script_(script),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)) {
 

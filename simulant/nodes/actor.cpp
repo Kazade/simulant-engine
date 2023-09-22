@@ -30,9 +30,8 @@
 
 namespace smlt {
 
-Actor::Actor(Scene* owner, SoundDriver *sound_driver, MeshPtr mesh):
-    StageNode(owner, STAGE_NODE_TYPE_ACTOR),
-    AudioSource(owner, this, sound_driver) {
+Actor::Actor(Scene* owner, MeshPtr mesh):
+    StageNode(owner, STAGE_NODE_TYPE_ACTOR) {
 
     set_mesh(mesh);
 }

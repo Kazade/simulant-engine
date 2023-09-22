@@ -54,12 +54,11 @@ struct stage_node_traits<Actor> {
 class Actor :
     public StageNode,
     public virtual Boundable,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Actor> {
 
 public:
-    Actor(Scene* owner, SoundDriver *sound_driver, MeshPtr mesh);
+    Actor(Scene* owner, MeshPtr mesh);
     virtual ~Actor();
 
     const AABB& aabb() const override;

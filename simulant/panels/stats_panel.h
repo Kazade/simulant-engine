@@ -46,7 +46,7 @@ private:
     CameraPtr ui_camera_;
     PipelinePtr pipeline_;
 
-    void update();
+    void update_stats();
 
     int32_t get_memory_usage_in_megabytes();
 

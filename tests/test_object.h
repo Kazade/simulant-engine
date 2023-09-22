@@ -265,23 +265,25 @@ public:
     }
 
     void test_light_findable() {
-        auto l1 = stage_->new_light_as_point()->set_name_and_get("Light 1");
-        assert_equal(l1, stage_->find_descendent_with_name("Light 1"));
+        auto l1 = scene->create_node<PointLight>();
+        l1->set_name("Light 1");
+        assert_equal(l1, scene->find_descendent_with_name("Light 1"));
     }
 
     void test_destroy_after() {
-        auto a1 = scene->create_node<smlt::Stage>()->set_name_and_get("test");
+        auto a1 = scene->create_node<smlt::Stage>();
+        a1->set_name("test");
         auto p = a1->destroy_after(smlt::Seconds(0.1));
 
         assert_false(p.is_ready());
-        assert_is_not_null(stage_->find_descendent_with_name("test"));
+        assert_is_not_null(scene->find_descendent_with_name("test"));
 
         auto t = application->time_keeper->now_in_us();
         while((application->time_keeper->now_in_us() - t) < 150000) {
             application->run_frame();
         }
 
-        assert_is_null(stage_->find_descendent_with_name("test"));
+        assert_is_null(scene->find_descendent_with_name("test"));
         assert_true(p.is_ready());
     }
 

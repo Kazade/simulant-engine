@@ -41,10 +41,11 @@ struct SpritesheetAttrs {
     uint32_t padding_horizontal = 0;
 };
 
+struct SpriteParams {};
+
 class Sprite :
     public ContainerNode,
     public KeyFrameAnimated,
-    public AudioSource,
     public ChainNameable<Sprite> {
 
 public:
@@ -52,7 +53,7 @@ public:
     bool on_destroy() override;
     void on_update(float dt) override;
 
-    Sprite(Scene* owner, SoundDriver *sound_driver);
+    Sprite(Scene* owner);
 
     void set_render_dimensions(float width, float height);
     void set_render_dimensions_from_width(float width);
@@ -113,6 +114,14 @@ public:
     Property<ActorPtr Sprite::*> actor = {this, &Sprite::actor_};
     Property<decltype(&Sprite::animation_state_)> animations = {this, &Sprite::animation_state_};
 };
+
+template<>
+struct stage_node_traits<Sprite> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_SPRITE;
+    typedef SpriteParams params_type;
+};
+
+
 
 }
 #endif // SPRITE_H

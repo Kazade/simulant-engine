@@ -25,6 +25,9 @@ typedef sig::signal<void (ParticleSystem*, AssetID, AssetID)> ParticleSystemMate
 
 struct ParticleSystemParams {
     ParticleScriptPtr script;
+
+    ParticleSystemParams(const ParticleScriptPtr& script):
+        script(script) {}
 };
 
 template<>
@@ -35,7 +38,6 @@ struct stage_node_traits<ParticleSystem> {
 
 class ParticleSystem :
     public StageNode,
-    public AudioSource,
     public Loadable,
     public HasMutableRenderPriority,
     public ChainNameable<ParticleSystem>  {
@@ -43,7 +45,7 @@ class ParticleSystem :
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
-    ParticleSystem(Scene* owner, SoundDriver *sound_driver, ParticleScriptPtr script);
+    ParticleSystem(Scene* owner, ParticleScriptPtr script);
     virtual ~ParticleSystem();
 
     const AABB& aabb() const override;

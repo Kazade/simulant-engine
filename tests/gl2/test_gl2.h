@@ -109,6 +109,8 @@ public:
     }
 
     void test_promotion_to_dedicated() {
+        Viewport viewport;
+
         auto ret1 = vbo_manager_->allocate_slot(mesh_->vertex_data);
         VBO* vbo = ret1.first;
         assert_equal(vbo->used_slot_count(), 1u);
@@ -124,12 +126,12 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo_manager_->dedicated_buffer_count(), 0u);
 
-        auto actor = stage_->new_actor_with_mesh(mesh_);
+        auto actor = scene->create_node<Actor>(mesh_);
 
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera_);
 
-        actor->_get_renderables(&queue, camera_, DETAIL_LEVEL_NEAREST);
+        actor->generate_renderables(&queue, camera_, &viewport, DETAIL_LEVEL_NEAREST);
 
         std::vector<Renderable*> result;
         for(auto i = 0u; i < queue.renderable_count(); ++i) {

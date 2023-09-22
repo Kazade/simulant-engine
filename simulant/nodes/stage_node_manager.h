@@ -32,6 +32,7 @@ private:
     }
 
     std::unordered_map<StageNodeType, StageNodeTypeInfo> registered_nodes_;
+    std::unordered_map<StageNodeID, StageNode*> all_nodes_;
 
 protected:
     bool clean_up_node(StageNode* node) {
@@ -46,17 +47,28 @@ protected:
             S_ERROR(
                 "Tried to destroy an unknown type of node: {0} at address {1}",
                 type, node
-                );
+            );
             return false;
         }
 
-        it->second.destructor(node);
+        all_nodes_.erase(node->id());
+        it->second.destructor(node);        
         free(node);
         S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
         return true;
     }
 
 public:
+    /* Constant-time node lookup by ID */
+    StageNode* get_node(StageNodeID id) const {
+        return all_nodes_.at(id);
+    }
+
+    /* Constant-time node existence check */
+    bool has_node(StageNodeID id) const {
+        return all_nodes_.count(id) > 0;
+    }
+
     /* Non-template API does the work for easier binding with other languages */
     StageNode* create_node(StageNodeType type, void* params) {
         auto info = registered_nodes_.find(type);
@@ -76,6 +88,7 @@ public:
         }
 
         S_DEBUG("Created new node of type {0} at address {1}", node->node_type(), node);
+        all_nodes_.insert(std::make_pair(node->id(), node));
         return node;
     }
 
@@ -89,8 +102,7 @@ public:
         StageNodeType type,
         std::size_t size_in_bytes,
         std::size_t alignment,
-        StageNodeConstructFunction construct_func,
-        StageNodeDestructFunction destruct_func) {
+        StageNodeConstructFunction construct_func, StageNodeDestructFunction destruct_func) {
 
         if(registered_nodes_.find(type) != registered_nodes_.end()) {
             S_WARN("Attempted to register duplicate node: {0}", type);

@@ -29,8 +29,11 @@ public:
 
         auto stage2 = scene->create_node<smlt::Stage>();
 
-        auto a1 = stage_->new_actor_with_mesh(box_);
-        auto a2 = stage2->new_actor_with_mesh(box_);
+        auto a1 = scene->create_node<smlt::Actor>(box_);
+        a1->set_parent(stage_);
+
+        auto a2 = scene->create_node<smlt::Actor>(box_);
+        a2->set_parent(stage2);
 
         a1->move_to(791, 58, -810);
         a2->move_to(791, 58, -810);
@@ -53,7 +56,7 @@ public:
         auto camera = scene->create_node<smlt::Camera>();
         camera->move_to(784, 58, -775);
 
-        auto a1 = stage_->new_actor_with_mesh(box_);
+        auto a1 = scene->create_node<smlt::Actor>(box_);
 
         assert_true(a1->has_any_mesh());
         assert_close(a1->aabb().max_dimension(), 1.0f, 0.0001f);
@@ -104,9 +107,9 @@ public:
     void test_destroyed_nodes_not_returned() {
         auto camera = scene->create_node<smlt::Camera>();
 
-        auto a1 = stage_->new_actor_with_mesh(box_);
-        auto a2 = stage_->new_actor_with_mesh(box_);
-        auto a3 = stage_->new_actor_with_mesh(box_);
+        auto a1 = scene->create_node<smlt::Actor>(box_);
+        auto a2 = scene->create_node<smlt::Actor>(box_);
+        auto a3 = scene->create_node<smlt::Actor>(box_);
 
         a1->move_to(0, 0, -5);
         a2->move_to(0, 0, -5);

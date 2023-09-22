@@ -127,12 +127,12 @@ public:
     }
 
     void tear_down() {
-        stage->destroy();
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_set_text() {
-        auto entry = stage_->ui->new_widget_as_text_entry("Hello");
+        auto entry = scene->create_node<ui::TextEntry>("Hello");
         assert_equal(entry->text(), "Hello");
     }
 
@@ -149,12 +149,12 @@ public:
     }
 
     void tear_down() {
-        stage->destroy();
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_set_value() {
-        auto progress_bar = stage_->ui->new_widget_as_progress_bar(0, 100, 50);
+        auto progress_bar = scene->create_node<ui::ProgressBar>(0, 100, 50);
 
         assert_equal(progress_bar->value(), 50);
         assert_equal(progress_bar->min(), 0);
@@ -181,13 +181,13 @@ public:
     }
 
     void tear_down() {
-        stage->destroy();
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_image_creation() {
         auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
-        auto image = stage_->ui->new_widget_as_image(texture);
+        auto image = scene->create_node<ui::Image>(texture);
 
         assert_equal(image->width(), texture->width());
         assert_equal(image->height(), texture->height());
@@ -198,7 +198,7 @@ public:
 
     void test_set_source_rect() {
         auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
-        auto image = stage_->ui->new_widget_as_image(texture);
+        auto image = scene->create_node<ui::Image>(texture);
 
         image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));
 
@@ -220,7 +220,7 @@ public:
     }
 
     void tear_down() {
-        stage->destroy();
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
@@ -275,12 +275,12 @@ public:
         frame->unpack_child(child1, smlt::ui::CHILD_CLEANUP_RETAIN);
 
         /* Child parent should be the stage */
-        assert_true(child1->parent_is_stage());
+        assert_true(child1->parent_is_scene());
     }
 
 private:
     smlt::ui::Frame* _setup_frame() {
-        smlt::ui::Frame* frame = stage_->ui->new_widget_as_frame("");
+        smlt::ui::Frame* frame = scene->create_node<ui::Frame>("");
         smlt::ui::Button* button = scene->create_node<ui::Button>("Button 1");
         smlt::ui::Label* label = scene->create_node<ui::Label>("Test Label");
 

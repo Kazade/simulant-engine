@@ -39,9 +39,6 @@ struct stage_node_traits<Stage> {
 
 class Stage : public StageNode {
 public:
-    typedef StageParams params_type;
-    const static uint32_t node_type = STAGE_NODE_TYPE_STAGE;
-
     Stage(Scene* owner);
 private:
     bool on_create(void *params) override {

@@ -137,21 +137,39 @@ public:
     }
 
     template<typename T>
-    bool start_service() {
+    T* start_service() {
+        size_t info = typeid(T).hash_code();
+        if(services_.count(info)) {
+            return static_cast<T*>(services_.at(info).get());
+        }
+
         auto service = std::make_shared<T>();
-        auto name = service->name();
-        if(services_.count(name)) {
+
+        // FIXME: start signal
+
+        services_.insert(std::make_pair(info, service));
+        return service.get();
+    }
+
+    template<typename T>
+    bool stop_service() {
+        size_t info = typeid(T).hash_code();
+        auto it = services_.find(info);
+        if(it != services_.end()) {
             return false;
         }
 
-        services_.insert(std::make_pair(name, service));
+        // FIXME: Stop signal
+        services_.erase(it);
         return true;
     }
 
-    Service* find_service(const std::string& name) const {
-        auto it = services_.find(name);
+    template<typename T>
+    T* find_service() const {
+        auto info = typeid(T).hash_code();
+        auto it = services_.find(info);
         if(it != services_.end()) {
-            return it->second.get();
+            return static_cast<T*>(it->second.get());
         }
 
         return nullptr;
@@ -170,7 +188,8 @@ protected:
     void unlink_pipeline(PipelinePtr pipeline);
 
 private:
-    std::unordered_map<std::string, std::shared_ptr<Service>> services_;
+    std::unordered_map<size_t, std::shared_ptr<Service>> services_;
+
     std::set<std::string> linked_pipelines_;
 
     virtual void pre_load() {}

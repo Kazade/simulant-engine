@@ -9,9 +9,9 @@ namespace smlt {
 MeshSilhouette::MeshSilhouette(MeshPtr mesh, const Mat4& mesh_transformation, const LightPtr light):
     mesh_(mesh),
     light_direction_or_position_(
-        (light->node_type() == LIGHT_TYPE_DIRECTIONAL) ? light->direction() : light->absolute_position()
+        (light->light_type() == LIGHT_TYPE_DIRECTIONAL) ? light->direction() : light->absolute_position()
     ),
-    light_type_(light->node_type()) {
+    light_type_(light->light_type()) {
 
     mesh_transformation.extract_rotation_and_translation(inverse_mesh_rotation_, inverse_mesh_position_);
     inverse_mesh_rotation_.inverse();

@@ -84,7 +84,8 @@ public:
         auto pipeline = window->compositor->render(stage, camera);
         pipeline->activate();
 
-        actor->new_behaviour<behaviours::CylindricalBillboard>(camera);
+        auto billboard = scene->create_node<CylindricalBillboard>();
+        billboard->set_target(camera);
 
         camera->move_to(0, 0, 100);
 
@@ -116,7 +117,8 @@ public:
         auto pipeline = window->compositor->render(stage, camera);
         pipeline->activate();
 
-        actor->new_behaviour<behaviours::SphericalBillboard>(camera);
+        auto billboard = scene->create_node<SphericalBillboard>();
+        billboard->set_target(camera);
 
         camera->move_to(0, 0, 100);
 

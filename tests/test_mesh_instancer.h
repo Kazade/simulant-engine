@@ -65,44 +65,47 @@ public:
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        Viewport viewport;
+        instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         /* Nothing there yet! */
         assert_equal(queue.renderable_count(), 0u);
 
         instancer->new_mesh_instance(smlt::Vec3());
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         assert_equal(queue.renderable_count(), mesh_->submesh_count());
         queue.clear();
 
         instancer->new_mesh_instance(smlt::Vec3(100));
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         assert_equal(queue.renderable_count(), mesh_->submesh_count() * 2);
     }
 
     void test_hidden_instances_arent_in_renderables() {
+        Viewport viewport;
+
         auto instancer = scene->create_node<MeshInstancer>(mesh_);
 
         auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         /* Nothing there yet! */
         assert_equal(queue.renderable_count(), 0u);
 
         auto iid = instancer->new_mesh_instance(smlt::Vec3());
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         assert_equal(queue.renderable_count(), mesh_->submesh_count());
         queue.clear();
 
         /* Hide the only instance */
         instancer->hide_mesh_instance(iid);
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        instancer->generate_renderables(&queue, camera, &viewport,DETAIL_LEVEL_NEAREST);
 
         /* Not returned */
         assert_equal(queue.renderable_count(), 0u);
@@ -125,6 +128,7 @@ public:
     }
 
     void test_null_mesh_returns_no_renderables() {
+        Viewport viewport;
         auto instancer = scene->create_node<MeshInstancer>(nullptr);
         instancer->new_mesh_instance(Vec3());
 
@@ -132,7 +136,7 @@ public:
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
         assert_equal(queue.renderable_count(), 0u);
     }
 
@@ -152,6 +156,7 @@ public:
     }
 
     void test_transform_is_relative() {
+        Viewport viewport;
         auto instancer = scene->create_node<MeshInstancer>(mesh_);
         instancer->new_mesh_instance(Vec3());
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(0, 0, 0));
@@ -163,7 +168,7 @@ public:
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
-        instancer->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         assert_close(queue.renderable(0)->final_transformation[12], 10.0f, 0.0001f);
     }

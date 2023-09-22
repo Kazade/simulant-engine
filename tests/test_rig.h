@@ -21,7 +21,7 @@ public:
 
     void test_actor_is_rigged() {
         auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
-        auto a1 = stage_->new_actor_with_mesh(m);
+        auto a1 = scene->create_node<Actor>(m);
 
         assert_false(a1->is_rigged());
 
@@ -42,7 +42,7 @@ public:
         auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
         m->add_skeleton(5);
 
-        auto a1 = stage_->new_actor_with_mesh(m);
+        auto a1 = scene->create_node<Actor>(m);
 
         assert_true(a1->is_rigged());
 

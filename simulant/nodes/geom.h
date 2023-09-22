@@ -63,14 +63,12 @@ struct GeomParams {
 class Geom :
     public StageNode,
     public virtual Boundable,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Geom>  {
 
 public:
     Geom(
         Scene* owner,
-        SoundDriver *sound_driver,
         MeshPtr mesh,
         const Vec3& position=Vec3(),
         const Quaternion rotation=Quaternion(),

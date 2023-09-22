@@ -102,7 +102,7 @@ PhysicsService* PhysicsBody::get_simulation() {
     if(!simulation_) {
         /* FIXME: If the physics service is destroyed, we need
              * to wipe this out for every physics body */
-        simulation_ = dynamic_cast<PhysicsService*>(self_->scene->find_service("Physics"));
+        simulation_ = self_->scene->find_service<PhysicsService>();
     }
 
     return simulation_;

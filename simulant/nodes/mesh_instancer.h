@@ -12,6 +12,13 @@
 
 namespace smlt {
 
+struct MeshInstancerParams {
+    MeshPtr mesh;
+
+    MeshInstancerParams(const MeshPtr& mesh):
+        mesh(mesh) {}
+};
+
 typedef std::size_t MeshInstanceID;
 
 /**
@@ -37,12 +44,11 @@ typedef std::size_t MeshInstanceID;
 class MeshInstancer:
     public StageNode,
     public virtual Boundable,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<MeshInstancer> {
 
 public:
-    MeshInstancer(Scene* owner, SoundDriver* sound_driver, MeshPtr mesh);
+    MeshInstancer(Scene* owner, MeshPtr mesh);
     virtual ~MeshInstancer();
 
     const AABB& aabb() const override;
@@ -93,6 +99,8 @@ private:
 
     void recalc_aabb();
 
+    bool on_create(void* params) override;
+
     void on_transformation_changed() override;
 
     struct MeshInstance {
@@ -110,6 +118,12 @@ private:
 
     /* FIXME: Convert to ContiguousMap when it has erase... */
     std::unordered_map<uint32_t, MeshInstance> instances_;
+};
+
+template<>
+struct stage_node_traits<MeshInstancer> {
+    const static StageNodeType node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+    typedef MeshInstancerParams params_type;
 };
 
 

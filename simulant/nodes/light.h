@@ -81,7 +81,7 @@ public:
         specular_ = colour;
     }
 
-    LightType node_type() const { return type_; }
+    LightType light_type() const { return type_; }
     const smlt::Colour& ambient() const { return ambient_; }
     const smlt::Colour& diffuse() const { return diffuse_; }
     const smlt::Colour& specular() const { return specular_; }
@@ -115,12 +115,16 @@ private:
     float quadratic_attenuation_;
 };
 
+extern const Colour DEFAULT_LIGHT_COLOUR;
 
 class PointLightParams {
     Vec3 position;
     Colour color;
 
 public:
+    PointLightParams():
+        PointLightParams(Vec3(), DEFAULT_LIGHT_COLOUR) {}
+
     PointLightParams(const Vec3& position, const Colour& color):
         position(position),
         color(color) {}
@@ -134,6 +138,9 @@ class PointLight : public Light {
 struct DirectionalLightParams {
     Vec3 direction;
     Colour color;
+
+    DirectionalLightParams():
+        DirectionalLightParams(Vec3(1, -0.5, 0), DEFAULT_LIGHT_COLOUR) {}
 
     DirectionalLightParams(const Vec3& direction, const Colour& color):
         direction(direction),

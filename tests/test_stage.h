@@ -22,8 +22,9 @@ public:
             destroyed_ids.insert(dynamic_cast<Actor*>(node)->id());
         });
 
-        auto a1 = scene->create_node<smlt::Actor>();
-        auto a2 = scene->create_node<smlt::Actor>();
+        auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto a1 = scene->create_node<smlt::Actor>(m);
+        auto a2 = scene->create_node<smlt::Actor>(m);
         a2->set_parent(a1);
 
         scene->create_node<smlt::Actor>()->set_parent(a2);

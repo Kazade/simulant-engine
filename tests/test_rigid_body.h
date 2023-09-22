@@ -3,6 +3,9 @@
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 
+namespace {
+
+using namespace smlt;
 
 class RigidBodyTest : public smlt::test::SimulantTestCase {
 public:
@@ -38,3 +41,5 @@ public:
         assert_equal(controller->mass(), 50.0f);
     }
 };
+
+}

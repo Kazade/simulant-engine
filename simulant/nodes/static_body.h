@@ -11,6 +11,13 @@ class StaticBody:
     public StageNode,
     public PhysicsBody {
 
+public:
+    void add_mesh_collider(
+        const MeshPtr& mesh,
+        const PhysicsMaterial& properties,
+        uint16_t kind=0,
+        const Vec3& offset=Vec3(), const Quaternion& rotation=Quaternion()
+    );
 };
 
 template<>

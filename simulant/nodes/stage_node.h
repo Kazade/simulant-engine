@@ -13,6 +13,7 @@
 #include "../shadows.h"
 #include "../generic/manual_object.h"
 #include "../coroutines/helpers.h"
+#include "../sound.h"
 
 #include "iterators/sibling_iterator.h"
 #include "iterators/child_iterator.h"
@@ -71,7 +72,8 @@ class StageNode:
     public Transformable,
     public Updateable,
     public virtual BoundableEntity,
-    public virtual TwoPhaseConstructed {
+    public virtual TwoPhaseConstructed,
+    public AudioSource {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up); // Fired when the node is cleaned up later, following destroy
@@ -213,6 +215,9 @@ public:
         return ret;
     }
 
+    bool is_part_of_active_pipeline() const {
+        return active_pipeline_count_ > 0;
+    }
 private:
     friend class StageNodeManager;
 
@@ -240,6 +245,7 @@ private:
 
     virtual void finalize_destroy() override final;
     virtual void finalize_destroy_immediately() final;
+
 private:
     /* This is ugly, but it's here for performance to avoid
      * a map lookup when staging writes to the partitioner */

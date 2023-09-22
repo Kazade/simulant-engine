@@ -6,9 +6,8 @@ namespace smlt {
 
 uint32_t MeshInstancer::id_counter_ = 0;
 
-MeshInstancer::MeshInstancer(Scene *owner, SoundDriver *sound_driver, MeshPtr mesh):
-    StageNode(owner, STAGE_NODE_TYPE_MESH_INSTANCER),
-    AudioSource(owner, this, sound_driver) {
+MeshInstancer::MeshInstancer(Scene *owner, MeshPtr mesh):
+    StageNode(owner, STAGE_NODE_TYPE_MESH_INSTANCER) {
 
     set_mesh(mesh);
 }
@@ -94,6 +93,12 @@ void MeshInstancer::recalc_aabb() {
     }
 
     std::swap(aabb_, new_aabb);
+}
+
+bool MeshInstancer::on_create(void* params) {
+    MeshInstancerParams* args = (MeshInstancerParams*) params;
+    set_mesh(args->mesh);
+    return true;
 }
 
 void MeshInstancer::on_transformation_changed() {

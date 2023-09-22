@@ -26,15 +26,17 @@
 
 using namespace smlt;
 
-Sprite::Sprite(Scene *owner, SoundDriver* sound_driver):
-    ContainerNode(owner, STAGE_NODE_TYPE_SPRITE),
-    AudioSource(owner, this, sound_driver) {
+Sprite::Sprite(Scene *owner):
+    ContainerNode(owner, STAGE_NODE_TYPE_SPRITE) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
 
 bool Sprite::on_create(void* params) {
+    SpriteParams* args = (SpriteParams*) params;
+    _S_UNUSED(args);
+
     mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
     mesh_->new_submesh_as_rectangle("sprite", scene->assets->new_material(), 1.0, 1.0f);
 

@@ -115,7 +115,7 @@ public:
         auto mesh1 = generate_test_mesh(stage_);
         auto mesh2 = generate_test_mesh(stage_);
 
-        auto actor = stage_->new_actor_with_mesh(mesh1);
+        auto actor = scene->create_node<Actor>(mesh1);
         actor->set_mesh(mesh2);
         mesh1.reset();
         mesh2.reset();
@@ -125,7 +125,7 @@ public:
 
         assert_equal(scene->assets->mesh_count(), initial + 1);
 
-        stage_->destroy_actor(actor->id());
+        actor->destroy();
         assert_false(stage_->is_destroyed());
 
         application->run_frame();
@@ -195,16 +195,19 @@ public:
         this->assert_equal((int)0xDEADBEEF, actor->data->get<int>("data"));
 
         auto id = actor->id();
-        stage_->destroy_actor(actor->id());
+        actor->destroy();
         application->run_frame();
 
-        this->assert_true(!stage_->has_actor(id));
+        this->assert_true(!scene->has_node(id));
     }
 
     void test_deleting_entities_deletes_children() {
         auto m = scene->create_node<smlt::Stage>(); //Create the root mesh
-        auto c1 = stage_->new_actor_with_parent(m); //Create a child
-        auto c2 = stage_->new_actor_with_parent(c1); //Create a child of the child
+        auto c1 = scene->create_node<smlt::Stage>(); //Create a child
+        c1->set_parent(m);
+
+        auto c2 = scene->create_node<smlt::Stage>(); //Create a child of the child
+        c2->set_parent(c1);
 
         auto mid = m->id();
         auto cid1 = c1->id();
@@ -214,12 +217,12 @@ public:
         this->assert_equal((uint32_t)1, c1->child_count());
         this->assert_equal((uint32_t)0, c2->child_count());
 
-        stage_->destroy_actor(mid);
+        m->destroy();
         application->run_frame();
 
-        this->assert_true(!stage_->has_actor(mid));
-        this->assert_true(!stage_->has_actor(cid1));
-        this->assert_true(!stage_->has_actor(cid2));
+        this->assert_true(!scene->has_node(mid));
+        this->assert_true(!scene->has_node(cid1));
+        this->assert_true(!scene->has_node(cid2));
     }
 
     void test_basic_usage() {
@@ -243,11 +246,7 @@ public:
     void test_actor_from_mesh() {
         auto mesh = generate_test_mesh(stage_);
 
-        auto actor = scene->create_node<smlt::Stage>();
-
-        assert_true(!actor->has_any_mesh());
-
-        actor->set_mesh(mesh);
+        auto actor = scene->create_node<smlt::Actor>(mesh);
 
         assert_true(actor->has_any_mesh());
         assert_true(actor->has_mesh(DETAIL_LEVEL_NEAREST));
@@ -265,12 +264,14 @@ public:
 
     void test_scene_methods() {
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
-        auto actor = stage_->new_actor_with_mesh(mesh);
+        auto actor = scene->create_node<Actor>(mesh);
 
         assert_true(mesh->id() == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
     }
 
     void test_material_slots() {
+        Viewport viewport;
+
         auto mat1 = scene->assets->new_material();
         auto mat2 = scene->assets->new_material();
 
@@ -279,9 +280,9 @@ public:
         auto submesh = mesh->new_submesh_as_cube("cube", mat1, 1.0f);
         submesh->set_material_at_slot(MATERIAL_SLOT1, mat2);
 
-        auto actor1 = stage_->new_actor_with_mesh(mesh);
-        auto actor2 = stage_->new_actor_with_mesh(mesh);
-        auto actor3 = stage_->new_actor_with_mesh(mesh);
+        auto actor1 = scene->create_node<Actor>(mesh);
+        auto actor2 = scene->create_node<Actor>(mesh);
+        auto actor3 = scene->create_node<Actor>(mesh);
 
         actor2->use_material_slot(MATERIAL_SLOT1);
         actor3->use_material_slot(MATERIAL_SLOT7);
@@ -290,9 +291,9 @@ public:
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
-        actor1->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
-        actor2->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
-        actor3->_get_renderables(&queue, camera, DETAIL_LEVEL_NEAREST);
+        actor1->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        actor2->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        actor3->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         std::vector<Renderable> renderables;
         for(auto i = 0u; i < queue.renderable_count(); ++i) {

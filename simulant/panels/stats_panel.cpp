@@ -91,7 +91,7 @@ bool StatsPanel::on_init() {
     low_mem_ = scene->create_node<ui::Label>("0M");
     high_mem_ = scene->create_node<ui::Label>("0M");
 
-    frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
+    frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update_stats, this));
 
     return true;
 }
@@ -248,7 +248,7 @@ void StatsPanel::rebuild_ram_graph() {
     idata->done();
 }
 
-void StatsPanel::update() {
+void StatsPanel::update_stats() {
     last_update_ += get_app()->time_keeper->delta_time();
 
     if(first_update_ || last_update_ >= 1.0f) {

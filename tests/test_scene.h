@@ -40,7 +40,7 @@ public:
 class PreloadArgsScene : public Scene {
 public:
     PreloadArgsScene(Window* window):
-        Scene<PreloadArgsScene>(window) {}
+        Scene(window) {}
 
     void load() override {
         int arg0 = get_load_arg<int>(0);
@@ -59,11 +59,11 @@ public:
     volatile bool deactivate_called = false;
 };
 
-class SceneWithArgs : public Scene<SceneWithArgs> {
+class SceneWithArgs : public Scene {
 public:
     // Boilerplate
     SceneWithArgs(smlt::Window* window, const std::string& some_arg):
-        smlt::Scene<SceneWithArgs>(window) {
+        smlt::Scene(window) {
 
         _S_UNUSED(some_arg);
     }
@@ -205,47 +205,43 @@ public:
     void test_lights_are_freed() {
         auto stage = scene->create_node<smlt::Stage>();
 
-        auto count = stage->light_count();
+        auto count = scene->count_nodes_by_type<Light>();
 
-        auto light = stage->new_light_as_directional();
+        auto light = scene->create_node<DirectionalLight>();
         assert_equal(light->node_type(), STAGE_NODE_TYPE_LIGHT);
-        assert_equal(stage->light_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Light>(), count + 1);
 
-        stage->destroy_light(light->id());
+        light->destroy();
 
-        assert_equal(stage->light_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Light>(), count + 1);
 
         application->run_frame();
 
-        assert_equal(stage->light_count(), count);
+        assert_equal(scene->count_nodes_by_type<Light>(), count);
     }
 
     void test_particle_systems_are_freed() {
-        auto stage = scene->create_node<smlt::Stage>();
-
         auto script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
-            );
+        );
 
-        auto count = stage->particle_system_count();
+        auto count = scene->count_nodes_by_type<ParticleSystem>();
 
-        auto particle_system = stage->new_particle_system(script);
+        auto particle_system = scene->create_node<ParticleSystem>(script);
         assert_equal(particle_system->node_type(), STAGE_NODE_TYPE_PARTICLE_SYSTEM);
 
-        assert_equal(stage->particle_system_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<ParticleSystem>(), count + 1);
 
-        stage->destroy_particle_system(particle_system->id());
+        particle_system->destroy();
 
-        assert_equal(stage->particle_system_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<ParticleSystem>(), count + 1);
 
         application->run_frame();
 
-        assert_equal(stage->particle_system_count(), count);
+        assert_equal(scene->count_nodes_by_type<ParticleSystem>(), count);
     }
 
     void test_geoms_are_freed() {
-        auto stage = scene->create_node<smlt::Stage>();
-
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
         auto count = scene->count_nodes_by_type<Geom>();
@@ -272,14 +268,14 @@ public:
         auto camera = scene->create_node<smlt::Camera>();
         assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);
 
-        assert_equal(stage->camera_count(), count + 1);
-        stage->destroy_camera(camera->id());
+        assert_equal(scene->count_nodes_by_type<Camera>(), count + 1);
+        camera->destroy();
 
-        assert_equal(stage->camera_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Camera>(), count + 1);
 
         application->run_frame();
 
-        assert_equal(stage->camera_count(), count);
+        assert_equal(scene->count_nodes_by_type<Camera>(), count);
     }
 
     void test_pipelines_are_freed() {
@@ -295,19 +291,19 @@ public:
     }
 
     void test_stages_are_freed() {
-        auto count = scene->stage_count();
+        auto count = scene->count_nodes_by_type<Stage>();
 
         auto stage = scene->create_node<smlt::Stage>();
 
-        assert_equal(scene->stage_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Stage>(), count + 1);
 
         stage->destroy();
 
         assert_true(stage->is_destroyed());
-        assert_equal(scene->stage_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Stage>(), count + 1);
         application->run_frame();
 
-        assert_equal(scene->stage_count(), count);
+        assert_equal(scene->count_nodes_by_type<Stage>(), count);
     }
 
     void test_backgrounds_are_freed() {
@@ -323,22 +319,20 @@ public:
     }
 
     void test_sprites_are_freed() {
-        auto stage = scene->create_node<smlt::Stage>();
+        auto count = scene->count_nodes_by_type<Sprite>();
 
-        auto count = stage->sprites->sprite_count();
-
-        auto sprite = stage->sprites->new_sprite();
+        auto sprite = scene->create_node<Sprite>();
         assert_equal(sprite->node_type(), STAGE_NODE_TYPE_SPRITE);
 
-        assert_true(stage->sprites->sprite_count() >= count + 1);
+        assert_true(scene->count_nodes_by_type<Sprite>() >= count + 1);
 
-        stage->sprites->destroy_sprite(sprite->id());
+        sprite->destroy();
 
-        assert_true(stage->sprites->sprite_count() >= count + 1);
+        assert_true(scene->count_nodes_by_type<Sprite>() >= count + 1);
 
         application->run_frame();
 
-        assert_equal(stage->sprites->sprite_count(), count);
+        assert_equal(scene->count_nodes_by_type<Sprite>(), count);
     }
 };
 

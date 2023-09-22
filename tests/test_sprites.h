@@ -4,11 +4,12 @@
 
 namespace {
 
+using namespace smlt;
+
 class SpriteTests : public smlt::test::SimulantTestCase {
 public:
     void test_set_alpha() {
-        auto stage = scene->create_node<smlt::Stage>();
-        auto sprite = stage->sprites->new_sprite();
+        auto sprite = scene->create_node<Sprite>();
 
         sprite->set_alpha(0.5f);
 

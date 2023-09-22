@@ -9,9 +9,8 @@
 namespace smlt {
 
 
-Camera::Camera(Scene *owner, SoundDriver* sound_driver):
-    ContainerNode(owner, STAGE_NODE_TYPE_CAMERA),
-    AudioSource(owner, this, sound_driver){
+Camera::Camera(Scene *owner):
+    ContainerNode(owner, STAGE_NODE_TYPE_CAMERA) {
 
     assert(owner);
 
