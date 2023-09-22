@@ -37,7 +37,7 @@ public:
     volatile bool deactivate_called = false;
 };
 
-class PreloadArgsScene : public Scene<PreloadArgsScene> {
+class PreloadArgsScene : public Scene {
 public:
     PreloadArgsScene(Window* window):
         Scene<PreloadArgsScene>(window) {}
@@ -248,26 +248,26 @@ public:
 
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
 
-        auto count = stage->geom_count();
+        auto count = scene->count_nodes_by_type<Geom>();
 
-        auto geom = stage->new_geom_with_mesh(mesh);
+        auto geom = scene->create_node<Geom>(mesh);
 
         assert_equal(geom->node_type(), STAGE_NODE_TYPE_GEOM);
-        assert_equal(stage->geom_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Geom>(), count + 1);
 
-        stage->destroy_geom(geom->id());
+        geom->destroy();
 
-        assert_equal(stage->geom_count(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Geom>(), count + 1);
 
         application->run_frame();
 
-        assert_equal(stage->geom_count(), count);
+        assert_equal(scene->count_nodes_by_type<Geom>(), count);
     }
 
     void test_cameras_are_freed() {
         auto stage = scene->create_node<smlt::Stage>();
 
-        auto count = stage->camera_count();
+        auto count = scene->count_nodes_by_type<Camera>();
 
         auto camera = scene->create_node<smlt::Camera>();
         assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);

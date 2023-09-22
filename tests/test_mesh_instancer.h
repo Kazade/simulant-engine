@@ -26,31 +26,17 @@ public:
     }
 
     void test_mesh_instancer_destruction() {
-        bool ret = stage_->destroy_mesh_instancer(0);
-        assert_false(ret);
-
-        ret = stage_->destroy_mesh_instancer(1);
-        assert_false(ret);
-
-        auto instancer = stage_->new_mesh_instancer(mesh_);
-        assert_equal(stage_->mesh_instancer_count(), 1u);
-
-        ret = stage_->destroy_mesh_instancer(instancer->id());
-        assert_true(ret);
-
-        application->run_frame();
-
-        instancer = stage_->new_mesh_instancer(mesh_);
-        assert_equal(stage_->mesh_instancer_count(), 1u);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        assert_equal(scene->count_nodes_by_type<MeshInstancer>(), 1u);
 
         instancer->destroy();
         application->run_frame();
 
-        assert_equal(stage_->mesh_instancer_count(), 0u);
+        assert_equal(scene->count_nodes_by_type<MeshInstancer>(), 0u);
     }
 
     void test_find_mesh_instancer() {
-        auto instancer = stage_->new_mesh_instancer(mesh_);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
         assert_true(instancer->name().empty());
 
         instancer->set_name("instancer");
@@ -61,7 +47,7 @@ public:
     }
 
     void test_spawn_instances_changes_aabb() {
-        auto instancer = stage_->new_mesh_instancer(mesh_);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
         assert_true(instancer->aabb().has_zero_area());
 
         instancer->new_mesh_instance(smlt::Vec3());
@@ -73,7 +59,7 @@ public:
     }
 
     void test_spawn_instances_updates_renderables() {
-        auto instancer = stage_->new_mesh_instancer(mesh_);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
 
         auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
@@ -97,7 +83,7 @@ public:
     }
 
     void test_hidden_instances_arent_in_renderables() {
-        auto instancer = stage_->new_mesh_instancer(mesh_);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
 
         auto camera = scene->create_node<smlt::Camera>();
         batcher::RenderQueue queue;
@@ -128,7 +114,7 @@ public:
 
         assert_not_equal(mesh_->aabb(), mesh2->aabb());
 
-        auto instancer = stage_->new_mesh_instancer(mesh_);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
         instancer->new_mesh_instance(Vec3());
 
         assert_equal(instancer->aabb(), mesh_->aabb());
@@ -139,7 +125,7 @@ public:
     }
 
     void test_null_mesh_returns_no_renderables() {
-        auto instancer = stage_->new_mesh_instancer(nullptr);
+        auto instancer = scene->create_node<MeshInstancer>(nullptr);
         instancer->new_mesh_instance(Vec3());
 
         auto camera = scene->create_node<smlt::Camera>();
@@ -151,7 +137,7 @@ public:
     }
 
     void test_mesh_instance_id_different() {
-        auto instancer = stage_->new_mesh_instancer(mesh_);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
         auto iid1 = instancer->new_mesh_instance(Vec3());
         auto iid2 = instancer->new_mesh_instance(Vec3());
         auto iid3 = instancer->new_mesh_instance(Vec3());
@@ -166,7 +152,7 @@ public:
     }
 
     void test_transform_is_relative() {
-        auto instancer = stage_->new_mesh_instancer(mesh_);
+        auto instancer = scene->create_node<MeshInstancer>(mesh_);
         instancer->new_mesh_instance(Vec3());
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(0, 0, 0));
 

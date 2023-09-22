@@ -16,13 +16,13 @@ public:
     }
 
     void tear_down() {
-        stage->destroy();
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_set_text_with_newline() {
-        auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
-        auto label2 = stage_->ui->new_widget_as_label("This is");
+        auto label = scene->create_node<ui::Label>("This is\na\nnew\nline");
+        auto label2 = scene->create_node<ui::Label>("This is");
 
         assert_equal(label->content_width(), label2->content_width());
         assert_true(label->height() > label2->height());
@@ -31,7 +31,7 @@ public:
     void test_materials_freed() {
         auto mc = scene->assets->material_count();
 
-        auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
+        auto label = scene->create_node<ui::Label>("This is\na\nnew\nline");
         label->set_background_image(scene->assets->new_texture(16, 16));
         label->set_foreground_image(scene->assets->new_texture(16, 16));
         assert_equal(scene->assets->material_count(), mc + 2);  /* background, foreground */
@@ -96,8 +96,8 @@ public:
     }
 
     void test_focus_chain() {
-        auto widget1 = stage_->ui->new_widget_as_label("label1");
-        auto widget2 = stage_->ui->new_widget_as_label("label2");
+        auto widget1 = scene->create_node<ui::Label>("label1");
+        auto widget2 = scene->create_node<ui::Label>("label2");
 
         assert_is_null((ui::Widget*) widget1->focused_in_chain());
 
@@ -282,7 +282,7 @@ private:
     smlt::ui::Frame* _setup_frame() {
         smlt::ui::Frame* frame = stage_->ui->new_widget_as_frame("");
         smlt::ui::Button* button = scene->create_node<ui::Button>("Button 1");
-        smlt::ui::Label* label = stage_->ui->new_widget_as_label("Test Label");
+        smlt::ui::Label* label = scene->create_node<ui::Label>("Test Label");
 
         /* Can pack a child once, but not itself */
         assert_true(frame->pack_child(button));
