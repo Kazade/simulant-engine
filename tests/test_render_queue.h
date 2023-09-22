@@ -17,7 +17,7 @@ public:
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
     }
 
     void test_render_group_insertion() {

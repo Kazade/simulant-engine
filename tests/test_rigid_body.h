@@ -13,8 +13,8 @@ public:
         actor->move_to(10, 0, 0);
         actor->rotate_x_by(smlt::Degrees(90));
 
-        auto simulation = smlt::behaviours::RigidBodySimulation::create(application->time_keeper);
-        auto controller = actor->new_behaviour<smlt::behaviours::RigidBody>(simulation.get());
+        scene->start_service<PhysicsService>();
+        auto controller = scene->create_node<RigidBody>();
 
         assert_equal(controller->position().x, 10.0f);
         assert_equal(controller->position().y, 0.0f);

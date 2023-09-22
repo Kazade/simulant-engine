@@ -36,6 +36,8 @@
 #include "nodes/actor.h"
 #include "nodes/geom.h"
 #include "nodes/mesh_instancer.h"
+#include "nodes/rigid_body.h"
+#include "services/physics.h"
 
 #include "nodes/static_body.h"
 #include "nodes/rigid_body.h"

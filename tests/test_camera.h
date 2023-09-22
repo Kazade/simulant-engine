@@ -19,8 +19,8 @@ public:
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        stage_->destroy_camera(camera_->id());
-        scene->destroy_stage(stage_->id());
+        camera_->destroy();
+        stage_->destroy();
     }
 
     void test_project_point() {

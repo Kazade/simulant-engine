@@ -43,7 +43,7 @@ public:
         assert_equal(window->audio_listener(), actor);
         assert_true(window->has_explicit_audio_listener());
 
-        stage_->destroy_actor(actor->id());
+        actor->destroy();
         application->run_frame(); // actually destroy
 
         assert_equal(window->audio_listener(), camera_);

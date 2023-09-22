@@ -14,7 +14,9 @@ public:
         SimulantTestCase::set_up();
 
         stage = scene->create_node<smlt::Stage>();
-        actor = scene->create_node<smlt::Stage>();
+        actor = scene->create_node<smlt::Actor>(
+            scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT)
+        );
     }
 
     void tear_down() {

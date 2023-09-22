@@ -16,7 +16,7 @@ public:
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage->destroy();
         SimulantTestCase::tear_down();
     }
 
@@ -127,7 +127,7 @@ public:
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage->destroy();
         SimulantTestCase::tear_down();
     }
 
@@ -149,7 +149,7 @@ public:
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage->destroy();
         SimulantTestCase::tear_down();
     }
 
@@ -181,7 +181,7 @@ public:
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage->destroy();
         SimulantTestCase::tear_down();
     }
 
@@ -220,7 +220,7 @@ public:
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage->destroy();
         SimulantTestCase::tear_down();
     }
 

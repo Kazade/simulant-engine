@@ -23,22 +23,22 @@ public:
         PipelinePtr pipeline4 = window->compositor->render(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
 
         assert_equal(cam->id(), pipeline1->camera()->id());
-        assert_equal(stage->id(), pipeline1->stage()->id());
+        assert_equal(stage->id(), pipeline1->stage_node()->id());
         assert_equal(TexturePtr(), pipeline1->target());
         assert_equal(RENDER_PRIORITY_MAIN, pipeline1->priority());
 
         assert_equal(cam->id(), pipeline2->camera()->id());
-        assert_equal(stage->id(), pipeline2->stage()->id());
+        assert_equal(stage->id(), pipeline2->stage_node()->id());
         assert_equal(tex->id(), pipeline2->target()->id());
         assert_equal(RENDER_PRIORITY_MAIN, pipeline2->priority());
 
         assert_equal(cam->id(), pipeline3->camera()->id());
-        assert_equal(stage->id(), pipeline3->stage()->id());
+        assert_equal(stage->id(), pipeline3->stage_node()->id());
         assert_equal(TexturePtr(), pipeline1->target());
         assert_equal(RENDER_PRIORITY_MAIN, pipeline3->priority());
 
         assert_equal(cam->id(), pipeline4->camera()->id());
-        assert_equal(stage->id(), pipeline4->stage()->id());
+        assert_equal(stage->id(), pipeline4->stage_node()->id());
         assert_equal(TexturePtr(), pipeline1->target());
         assert_equal(RENDER_PRIORITY_FOREGROUND, pipeline4->priority());
 
