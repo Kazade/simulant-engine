@@ -30,6 +30,7 @@ namespace smlt {
 
 Scene::Scene(Window *window):
     StageNode(nullptr, STAGE_NODE_TYPE_SCENE),
+    StageNodeManager(this),
     window_(window),
     input_(window->input.get()),
     app_(window->application),

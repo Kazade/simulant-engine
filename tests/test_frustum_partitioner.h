@@ -23,40 +23,15 @@ public:
         stage_->destroy();
     }
 
-    void test_only_renders_correct_stage() {
-        auto camera = scene->create_node<smlt::Camera>();
-        camera->move_to(784, 58, -775);
-
-        auto stage2 = scene->create_node<smlt::Stage>();
-
-        auto a1 = scene->create_node<smlt::Actor>(box_);
-        a1->set_parent(stage_);
-
-        auto a2 = scene->create_node<smlt::Actor>(box_);
-        a2->set_parent(stage2);
-
-        a1->move_to(791, 58, -810);
-        a2->move_to(791, 58, -810);
-
-        std::vector<StageNodeID> lights;
-        std::vector<StageNode*> nodes;
-        FrustumPartitioner partitioner(stage_);
-
-        partitioner.lights_and_geometry_visible_from(
-            camera->id(), lights, nodes
-        );
-
-        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
-        assert_true(std::find(nodes.begin(), nodes.end(), a2) == nodes.end());
-
-        stage2->destroy();
-    }
-
     void test_visibility() {
+        FrustumPartitioner* partitioner = scene->create_node<FrustumPartitioner>();
+
         auto camera = scene->create_node<smlt::Camera>();
+        camera->set_parent(partitioner);
         camera->move_to(784, 58, -775);
 
         auto a1 = scene->create_node<smlt::Actor>(box_);
+        a1->set_parent(partitioner);
 
         assert_true(a1->has_any_mesh());
         assert_close(a1->aabb().max_dimension(), 1.0f, 0.0001f);
@@ -65,46 +40,40 @@ public:
 
         assert_false(a1->transformed_aabb().has_zero_area());
 
-        std::vector<StageNodeID> lights;
-        std::vector<StageNode*> nodes;
-        FrustumPartitioner partitioner(stage_);
+        batcher::RenderQueue queue;
+        Viewport viewport;
+        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
-        partitioner.lights_and_geometry_visible_from(
-            camera->id(), lights, nodes
-        );
-
-        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
+        assert_true(queue.renderable_count() > 0);
     }
 
     void test_nodes_returned_if_never_culled() {
-        auto stage = scene->create_node<smlt::Stage>();
+        FrustumPartitioner* partitioner = scene->create_node<FrustumPartitioner>();
+
         auto camera = scene->create_node<smlt::Camera>();
         auto a1 = scene->create_node<smlt::Actor>(box_);
+        a1->set_parent(partitioner);
 
         a1->move_to(0, 0, 100);
 
-        std::vector<StageNodeID> lights;
-        std::vector<StageNode*> nodes;
-        FrustumPartitioner partitioner(stage);
-
-        partitioner.lights_and_geometry_visible_from(
-            camera->id(), lights, nodes
-        );
+        batcher::RenderQueue queue;
+        Viewport viewport;
+        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         /* Not visible */
-        assert_true(std::find(nodes.begin(), nodes.end(), a1) == nodes.end());
+        assert_equal(queue.renderable_count(), 0);
 
         a1->set_cullable(false);
 
-        partitioner.lights_and_geometry_visible_from(
-            camera->id(), lights, nodes
-        );
+        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         /* Now visible */
-        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
+        assert_true(queue.renderable_count() > 0);
     }
 
     void test_destroyed_nodes_not_returned() {
+        FrustumPartitioner* partitioner = scene->create_node<FrustumPartitioner>();
+
         auto camera = scene->create_node<smlt::Camera>();
 
         auto a1 = scene->create_node<smlt::Actor>(box_);
@@ -115,31 +84,19 @@ public:
         a2->move_to(0, 0, -5);
         a3->move_to(0, 0, -5);
 
-        std::vector<StageNodeID> lights;
-        std::vector<StageNode*> nodes;
+        batcher::RenderQueue queue;
+        Viewport viewport;
+        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
-        FrustumPartitioner partitioner(stage_);
+        auto all_visible_count = queue.renderable_count();
 
-        partitioner.lights_and_geometry_visible_from(
-            camera->id(), lights, nodes
-        );
-
-        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
-        assert_true(std::find(nodes.begin(), nodes.end(), a2) != nodes.end());
-        assert_true(std::find(nodes.begin(), nodes.end(), a3) != nodes.end());
+        queue.clear();
 
         a2->destroy();
 
-        lights.clear();
-        nodes.clear();
+        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
-        partitioner.lights_and_geometry_visible_from(
-            camera->id(), lights, nodes
-        );
-
-        assert_true(std::find(nodes.begin(), nodes.end(), a1) != nodes.end());
-        assert_true(std::find(nodes.begin(), nodes.end(), a2) == nodes.end());
-        assert_true(std::find(nodes.begin(), nodes.end(), a3) != nodes.end());
+        assert_true(queue.renderable_count() < all_visible_count);
     }
 
 private:

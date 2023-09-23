@@ -4,10 +4,17 @@
 
 namespace smlt {
 
+struct SphericalBillboardParams {};
+
 class SphericalBillboard:
     public StageNode {
 
 public:
+    class Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_SPHERICAL_BILLBOARD;
+        typedef SphericalBillboardParams params_type;
+    };
+
     void set_target(StageNode* target) {
         target_ = target;
     }

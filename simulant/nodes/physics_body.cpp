@@ -97,7 +97,7 @@ void PhysicsBody::contact_finished(const Collision& collision) {
     }
 }
 
-PhysicsService* PhysicsBody::get_simulation() {
+PhysicsService* PhysicsBody::get_simulation() const {
     /* Caches the PhysicsService for perf */
     if(!simulation_) {
         /* FIXME: If the physics service is destroyed, we need

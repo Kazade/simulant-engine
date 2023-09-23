@@ -209,12 +209,16 @@ public:
     template<typename T, typename... Args>
     void register_scene(const std::string& name, Args&&... args) {
         SceneFactory func = std::bind(
-            &T::template create<Window*, typename std::decay<Args>::type&...>,
+            &std::make_shared<T, Window*, typename std::decay<Args>::type&...>,
             std::placeholders::_1, std::forward<Args>(args)...
         );
 
         _store_scene_factory(name, [=](Window* window) -> ScenePtr {
             auto ret = func(window);
+            if(!ret->init()) {
+                return ScenePtr();
+            }
+
             ret->set_name(name);
             ret->scene_manager_ = this;
             return ret;

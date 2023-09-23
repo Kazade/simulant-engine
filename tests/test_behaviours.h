@@ -11,25 +11,30 @@ namespace {
 
 using namespace smlt;
 
+struct NodeWithLookupsParams {};
+
 class NodeWithLookups : public StageNode {
 public:
+    struct Meta {
+        const static StageNodeType node_type = (STAGE_NODE_TYPE_USER_BASE + 1);
+        typedef NodeWithLookupsParams params_type;
+    };
+
+    NodeWithLookups(Scene* owner):
+        StageNode(owner, STAGE_NODE_TYPE_USER_BASE + 1) {}
+
     FindResult<Actor> child_one = FindDescendent("Child 1", this);
     FindResult<ParticleSystem> invalid_child = FindDescendent("Child 1", this);
     FindResult<Camera> camera = FindDescendent("Camera", this);
 
     FindResult<Actor> parent = FindAncestor("Some Parent", this);
 
-    const char* name() const {
-        return "lookups";
+    bool on_create(void*) { return true; }
+    void do_generate_renderables(batcher::RenderQueue *, const Camera *, const Viewport *, const DetailLevel) override {}
+    const AABB& aabb() const {
+        static AABB aabb;
+        return aabb;
     }
-};
-
-struct NodeWithLookupsParams {};
-
-template<>
-struct stage_node_traits<NodeWithLookups> {
-    const static StageNodeType node_type = (STAGE_NODE_TYPE_USER_BASE + 1);
-    typedef NodeWithLookupsParams params_type;
 };
 
 class BehaviourLookupTests : public test::SimulantTestCase {

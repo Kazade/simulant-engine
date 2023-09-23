@@ -113,13 +113,13 @@ public:
     }
 
 protected:
-    PhysicsService* get_simulation();
+    PhysicsService* get_simulation() const;
 
 private:
     friend class ContactListener;
 
     StageNode* self_ = nullptr;
-    PhysicsService* simulation_;
+    mutable PhysicsService* simulation_;
 
     PhysicsBodyType type_;
     std::set<CollisionListener*> listeners_;

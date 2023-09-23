@@ -70,6 +70,7 @@ private:
     friend class PhysicsBody;
     friend class StaticBody;
     friend class ContactListener;
+    friend class DynamicPhysicsBody;
 
     std::shared_ptr<PhysicsData> pimpl_;
 
@@ -104,6 +105,9 @@ private:
         const MeshPtr& mesh, const PhysicsMaterial& properties,
         uint16_t kind, const Vec3& offset, const Quaternion& rotation
     );
+
+    Vec3 body_position(const PhysicsBody* self) const;
+    Quaternion body_rotation(const PhysicsBody* self) const;
 };
 
 }

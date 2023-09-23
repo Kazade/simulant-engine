@@ -4,8 +4,15 @@
 
 namespace smlt {
 
+struct SmoothFollowParams {};
+
 class SmoothFollow : public StageNode {
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_SMOOTH_FOLLOW;
+        typedef SmoothFollowParams params_type;
+    };
+
     SmoothFollow(Scene* owner);
     ~SmoothFollow();
 

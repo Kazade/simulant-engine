@@ -42,7 +42,7 @@ public:
     template<bool _IsConst=IsConst>
     typename std::enable_if<!_IsConst, reference>::type
     operator*() {
-        return *current_;
+        return const_cast<reference>(*current_);
     }
 
     /* Const versions */

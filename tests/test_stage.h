@@ -99,7 +99,8 @@ public:
     }
 
     void test_stage_node_clean_up_signals() {
-        auto actor = scene->create_node<smlt::Actor>();
+        auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto actor = scene->create_node<smlt::Actor>(m);
 
         bool cleaned_up = false;
         bool destroyed = false;

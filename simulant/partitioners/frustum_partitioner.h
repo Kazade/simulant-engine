@@ -24,8 +24,15 @@ namespace smlt {
 
 class SubActor;
 
+struct FrustumPartitionerParams {};
+
 class FrustumPartitioner : public Partitioner {
 public:
+    class Meta {
+        typedef FrustumPartitionerParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_PARTITIONER_FRUSTUM;
+    };
+
     FrustumPartitioner(Scene* owner):
         Partitioner(owner, STAGE_NODE_TYPE_PARTITIONER_FRUSTUM) {}
 

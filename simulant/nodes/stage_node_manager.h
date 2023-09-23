@@ -1,12 +1,14 @@
 #pragma once
 
+#include <functional>
+
 #include "stage_node.h"
 #include "../core/memory.h"
 
 namespace smlt {
 
-typedef StageNode* (*StageNodeConstructFunction) (void*);
-typedef void (*StageNodeDestructFunction) (StageNode*);
+typedef std::function<StageNode* (void*)> StageNodeConstructFunction;
+typedef std::function<void (StageNode*)> StageNodeDestructFunction;
 
 
 struct StageNodeTypeInfo {
@@ -18,12 +20,13 @@ struct StageNodeTypeInfo {
     StageNodeDestructFunction destructor;
 };
 
+class Scene;
 
 class StageNodeManager {
 private:
     template<typename T>
-    static StageNode* standard_new(void* mem) {
-        return new (mem) T();
+    static StageNode* standard_new(Scene* scene, void* mem) {
+        return new (mem) T(scene);
     }
 
     template<typename T>
@@ -58,7 +61,11 @@ protected:
         return true;
     }
 
+    Scene* scene_;
 public:
+    StageNodeManager(Scene* scene):
+        scene_(scene) {}
+
     /* Constant-time node lookup by ID */
     StageNode* get_node(StageNodeID id) const {
         return all_nodes_.at(id);
@@ -121,9 +128,9 @@ public:
     template<typename T>
     bool register_stage_node() {
         return register_stage_node(
-            stage_node_traits<T>::node_type,
+            T::Meta::node_type,
             sizeof(T), alignof(T),
-            &StageNodeManager::standard_new<T>,
+            std::bind(&StageNodeManager::standard_new<T>, scene_, std::placeholders::_1),
             &StageNodeManager::standard_delete<T>
         );
     }

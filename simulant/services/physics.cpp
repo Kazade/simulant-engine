@@ -54,6 +54,14 @@ struct _PhysicsData {
 
         return nullptr;
     }
+
+    BodyData* get_body(const PhysicsBody* body) {
+        return &bodies_.at(const_cast<PhysicsBody*>(body));
+    }
+
+    b3Body* get_b3body(const PhysicsBody* body) {
+        return get_body(body)->body;
+    }
 };
 
 class PrivateContactFilter : public b3ContactFilter {
@@ -488,6 +496,20 @@ void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, c
     fdata.mesh = bmesh;
 
     data.fixtures.push_back(fdata);
+}
+
+Vec3 PhysicsService::body_position(const PhysicsBody* self) const {
+    auto vec = pimpl_->get_b3body(self)->GetTransform().translation;
+    return Vec3(
+        vec.x, vec.y, vec.z
+    );
+}
+
+Quaternion PhysicsService::body_rotation(const PhysicsBody* self) const {
+    auto vec = pimpl_->get_b3body(self)->GetTransform().rotation;
+    return Quaternion(
+        vec.v.x, vec.v.y, vec.v.z, vec.s
+    );
 }
 
 
