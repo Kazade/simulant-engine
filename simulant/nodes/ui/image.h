@@ -27,6 +27,11 @@ class Image:
     void clear_layers();
 
 public:
+    struct Meta {
+        typedef ui::ImageParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_IMAGE;
+    };
+
     Image(Scene *owner, UIConfig config);
     virtual ~Image() {}
 
@@ -41,12 +46,4 @@ public:
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::Image> {
-    typedef ui::ImageParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_IMAGE;
-};
-
-
 }

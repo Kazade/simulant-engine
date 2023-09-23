@@ -68,6 +68,7 @@ public:
 
 private:
     friend class PhysicsBody;
+    friend class StaticBody;
     friend class ContactListener;
 
     std::shared_ptr<PhysicsData> pimpl_;

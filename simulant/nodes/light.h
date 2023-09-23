@@ -39,6 +39,11 @@ class Light :
     public ChainNameable<Light> {
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_LIGHT;
+        typedef LightParams params_type;
+    };
+
     typedef std::shared_ptr<Light> ptr;
 
     Light(Scene* owner);
@@ -131,6 +136,12 @@ public:
 };
 
 class PointLight : public Light {
+public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_POINT_LIGHT;
+        typedef PointLightParams params_type;
+    };
+
     PointLight(Scene* owner):
         Light(owner) {}
 };
@@ -149,26 +160,13 @@ struct DirectionalLightParams {
 
 class DirectionalLight : public Light {
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_DIRECTIONAL_LIGHT;
+        typedef DirectionalLightParams params_type;
+    };
+
     DirectionalLight(Scene* owner):
         Light(owner) {}
-};
-
-template<>
-struct stage_node_traits<Light> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_LIGHT;
-    typedef LightParams params_type;
-};
-
-template<>
-struct stage_node_traits<DirectionalLight> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_DIRECTIONAL_LIGHT;
-    typedef DirectionalLightParams params_type;
-};
-
-template<>
-struct stage_node_traits<PointLight> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_POINT_LIGHT;
-    typedef PointLightParams params_type;
 };
 
 }

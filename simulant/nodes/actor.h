@@ -45,12 +45,6 @@ struct ActorParams {
     MeshPtr mesh;
 };
 
-template<>
-struct stage_node_traits<Actor> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_ACTOR;
-    typedef ActorParams params_type;
-};
-
 class Actor :
     public StageNode,
     public virtual Boundable,
@@ -58,6 +52,11 @@ class Actor :
     public ChainNameable<Actor> {
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_ACTOR;
+        typedef ActorParams params_type;
+    };
+
     Actor(Scene* owner, MeshPtr mesh);
     virtual ~Actor();
 

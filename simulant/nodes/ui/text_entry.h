@@ -8,9 +8,10 @@ namespace ui {
 
 struct TextEntryParams {
     UIConfig config;
+    unicode text;
 
-    TextEntryParams(const UIConfig& config):
-        config(config) {}
+    TextEntryParams(const unicode& text):
+        text(text) {}
 };
 
 
@@ -19,6 +20,11 @@ class TextEntry:
     public RefCounted<TextEntry> {
 
 public:
+    struct Meta {
+        typedef ui::TextEntryParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY;
+    };
+
     using Widget::init; // Pull in init to satisfy Managed<TextEntry>
     using Widget::clean_up;
 
@@ -60,12 +66,4 @@ private:
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::TextEntry> {
-    typedef ui::TextEntryParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY;
-};
-
-
 }

@@ -24,6 +24,14 @@ public:
     }
 };
 
+struct NodeWithLookupsParams {};
+
+template<>
+struct stage_node_traits<NodeWithLookups> {
+    const static StageNodeType node_type = (STAGE_NODE_TYPE_USER_BASE + 1);
+    typedef NodeWithLookupsParams params_type;
+};
+
 class BehaviourLookupTests : public test::SimulantTestCase {
 public:
     void set_up() {
@@ -32,12 +40,13 @@ public:
     }
 
     void test_ancestor_lookups() {
-        auto actor = scene->create_node<smlt::Actor>();
+        auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto actor = scene->create_node<smlt::Actor>(m);
         auto b = scene->create_node<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->parent.get());
 
-        auto parent = scene->create_node<smlt::Actor>();
+        auto parent = scene->create_node<smlt::Actor>(m);
         parent->set_name("Some Parent");
         actor->set_parent(parent);
 
@@ -45,7 +54,8 @@ public:
     }
 
     void test_descendent_lookups() {
-        auto actor = scene->create_node<smlt::Actor>();
+        auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto actor = scene->create_node<smlt::Actor>(m);
         auto camera = scene->create_node<smlt::Camera>();
 
         auto b = scene->create_node<NodeWithLookups>();

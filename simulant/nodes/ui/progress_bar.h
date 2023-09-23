@@ -10,12 +10,24 @@ enum ProgressBarMode {
     PROGRESS_BAR_MODE_FRACTION
 };
 
-struct ProgressBarParams {};
+struct ProgressBarParams {
+    float min = 0.0f;
+    float max = 100.0f;
+    float value = 0.0f;
+
+    ProgressBarParams(float min=0.0f, float max=100.0f, float value=0.0f):
+        min(min), max(max), value(value) {}
+};
 
 class ProgressBar:
     public Widget {
 
 public:
+    struct Meta {
+        typedef ui::ProgressBarParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR;
+    };
+
     using Widget::init; // Pull in init to satisfy Managed<Button>
     using Widget::clean_up;
 
@@ -61,11 +73,4 @@ private:
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::ProgressBar> {
-    typedef ui::ProgressBarParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR;
-};
-
 }

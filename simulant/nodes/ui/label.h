@@ -6,7 +6,6 @@ namespace smlt {
 namespace ui {
 
 struct LabelParams {
-    UIConfig config;
     unicode text;
     Px width;
     Px height;
@@ -15,9 +14,6 @@ struct LabelParams {
         text(text),
         width(width),
         height(height) {}
-
-    LabelParams(const UIConfig& config):
-        config(config) {}
 };
 
 class Label:
@@ -25,15 +21,13 @@ class Label:
     public RefCounted<Label> {
 
 public:
+    struct Meta {
+        typedef ui::LabelParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_LABEL;
+    };
+
     Label(Scene* owner, const UIConfig& config);
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::Label> {
-    typedef ui::LabelParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_LABEL;
-};
-
 }

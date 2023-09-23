@@ -112,12 +112,14 @@ public:
         return type_;
     }
 
+protected:
+    PhysicsService* get_simulation();
+
 private:
     friend class ContactListener;
 
     StageNode* self_ = nullptr;
     PhysicsService* simulation_;
-    PhysicsService* get_simulation();
 
     PhysicsBodyType type_;
     std::set<CollisionListener*> listeners_;

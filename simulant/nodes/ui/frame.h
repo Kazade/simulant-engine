@@ -40,6 +40,11 @@ class Frame:
     public RefCounted<Frame> {
 
 public:
+    struct Meta {
+        typedef ui::FrameParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_FRAME;
+    };
+
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
 
@@ -71,11 +76,5 @@ private:
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::Frame> {
-    typedef ui::FrameParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_FRAME;
-};
 
 }

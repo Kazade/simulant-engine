@@ -11,20 +11,18 @@
 namespace smlt {
 
 class RenderTarget;
-
 class CameraParams {};
-
-template<>
-struct stage_node_traits<Camera> {
-    typedef CameraParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_CAMERA;
-};
 
 class Camera:
     public ContainerNode,
     public ChainNameable<Camera> {
 
 public:
+    struct Meta {
+        typedef CameraParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_CAMERA;
+    };
+
     using ContainerNode::do_generate_renderables;
 
     Camera(Scene* owner);

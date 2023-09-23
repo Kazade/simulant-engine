@@ -27,7 +27,7 @@ public:
         auto a2 = scene->create_node<smlt::Actor>(m);
         a2->set_parent(a1);
 
-        scene->create_node<smlt::Actor>()->set_parent(a2);
+        scene->create_node<smlt::Actor>(m)->set_parent(a2);
 
         auto a2id = a2->id();
         a2->destroy();

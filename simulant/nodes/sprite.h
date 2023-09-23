@@ -49,6 +49,11 @@ class Sprite :
     public ChainNameable<Sprite> {
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_SPRITE;
+        typedef SpriteParams params_type;
+    };
+
     bool on_create(void* params) override;
     bool on_destroy() override;
     void on_update(float dt) override;
@@ -113,12 +118,6 @@ private:
 public:
     Property<ActorPtr Sprite::*> actor = {this, &Sprite::actor_};
     Property<decltype(&Sprite::animation_state_)> animations = {this, &Sprite::animation_state_};
-};
-
-template<>
-struct stage_node_traits<Sprite> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_SPRITE;
-    typedef SpriteParams params_type;
 };
 
 

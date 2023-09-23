@@ -31,14 +31,13 @@ struct StageParams {};
 
 class Stage;
 
-template<>
-struct stage_node_traits<Stage> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_STAGE;
-    typedef StageParams params_type;
-};
-
 class Stage : public StageNode {
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_STAGE;
+        typedef StageParams params_type;
+    };
+
     Stage(Scene* owner);
 private:
     bool on_create(void *params) override {

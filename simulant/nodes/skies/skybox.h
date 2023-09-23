@@ -44,6 +44,11 @@ class Skybox:
     public ChainNameable<Skybox> {
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
+        typedef SkyboxParams params_type;
+    };
+
     constexpr static float DEFAULT_SIZE = 128.0f;
 
     Skybox(Scene* owner);
@@ -73,13 +78,6 @@ private:
     MaterialPtr materials_[SKYBOX_FACE_MAX];
 
     float width_;
-};
-
-
-template<>
-struct stage_node_traits<Skybox> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
-    typedef SkyboxParams params_type;
 };
 
 

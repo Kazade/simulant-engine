@@ -55,6 +55,11 @@ class Keyboard:
     DEFINE_SIGNAL(KeyboardDoneSignal, signal_done);
     DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
 public:
+    struct Meta {
+        typedef ui::KeyboardParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD;
+    };
+
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
@@ -111,12 +116,6 @@ private:
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::Keyboard> {
-    typedef ui::KeyboardParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD;
-};
 
 
 }

@@ -8,17 +8,17 @@ class FlyController;
 
 struct FlyControllerParams {};
 
-template<>
-struct stage_node_traits<FlyController> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_FLY_CONTROLLER;
-    typedef FlyControllerParams params_type;
-};
 
 class FlyController : public StageNode {
 private:
     float speed_ = 600.0f;
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_FLY_CONTROLLER;
+        typedef FlyControllerParams params_type;
+    };
+
     FlyController(Scene* owner):
         StageNode(owner, STAGE_NODE_TYPE_FLY_CONTROLLER) {
 

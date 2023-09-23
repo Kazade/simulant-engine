@@ -1,4 +1,5 @@
 #include "static_body.h"
+#include "../services/physics.h"
 
 namespace smlt {
 

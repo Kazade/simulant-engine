@@ -22,6 +22,11 @@ class Button:
     public Widget {
 
 public:
+    struct Meta {
+        typedef ui::ButtonParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_BUTTON;
+    };
+
     Button(Scene *owner,
         UIConfig config,
         std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>()
@@ -29,11 +34,4 @@ public:
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::Button> {
-    typedef ui::ButtonParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_BUTTON;
-};
-
 }

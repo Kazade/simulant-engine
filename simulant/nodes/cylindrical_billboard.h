@@ -4,10 +4,17 @@
 
 namespace smlt {
 
+struct CylindricalBillboardParams {};
+
 class CylindricalBillboard:
     public StageNode {
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD;
+        typedef CylindricalBillboardParams params_type;
+    };
+
     CylindricalBillboard(Scene* owner):
         StageNode(owner, STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD) {}
 

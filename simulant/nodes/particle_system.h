@@ -30,12 +30,6 @@ struct ParticleSystemParams {
         script(script) {}
 };
 
-template<>
-struct stage_node_traits<ParticleSystem> {
-    typedef ParticleSystemParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-};
-
 class ParticleSystem :
     public StageNode,
     public Loadable,
@@ -45,6 +39,11 @@ class ParticleSystem :
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
+    struct Meta {
+        typedef ParticleSystemParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
+    };
+
     ParticleSystem(Scene* owner, ParticleScriptPtr script);
     virtual ~ParticleSystem();
 

@@ -7,6 +7,9 @@ namespace smlt {
 
 class DynamicPhysicsBody : public PhysicsBody {
 public:
+    DynamicPhysicsBody(StageNode* self, PhysicsBodyType type):
+        PhysicsBody(self, type) {}
+
     float mass() const;
     void set_mass(float m);
     void set_center_of_mass(const smlt::Vec3& com);
@@ -40,27 +43,16 @@ public:
     Vec3 angular_velocity() const;
     void set_angular_velocity(const Vec3& vel);
 
-    Vec3 position() const;
-    Quaternion rotation() const;
-
-    Vec3 forward() {
-        Quaternion rot = rotation();
-        return Vec3::NEGATIVE_Z * rot;
-    }
-
-    Vec3 right() {
-        Quaternion rot = rotation();
-        return Vec3::POSITIVE_X * rot;
-    }
-
-    Vec3 up() {
-        Quaternion rot = rotation();
-        return Vec3::POSITIVE_Y * rot;
-    }
+    Vec3 forward();
+    Vec3 right();
+    Vec3 up();
 
     bool is_awake() const;
 
     void lock_rotation(bool x, bool y, bool z);
+
+    Vec3 simulated_position() const;
+    Quaternion simulated_rotation() const;
 };
 
 }

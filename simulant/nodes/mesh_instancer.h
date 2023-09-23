@@ -48,6 +48,11 @@ class MeshInstancer:
     public ChainNameable<MeshInstancer> {
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+        typedef MeshInstancerParams params_type;
+    };
+
     MeshInstancer(Scene* owner, MeshPtr mesh);
     virtual ~MeshInstancer();
 
@@ -119,12 +124,5 @@ private:
     /* FIXME: Convert to ContiguousMap when it has erase... */
     std::unordered_map<uint32_t, MeshInstance> instances_;
 };
-
-template<>
-struct stage_node_traits<MeshInstancer> {
-    const static StageNodeType node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
-    typedef MeshInstancerParams params_type;
-};
-
 
 }

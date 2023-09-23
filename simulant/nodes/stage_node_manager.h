@@ -94,8 +94,8 @@ public:
 
     template<typename T, typename... Args>
     T* create_node(Args&&... args) {
-        auto params = typename stage_node_traits<T>::params_type(std::forward<Args>(args)...);
-        return (T*) create_node(stage_node_traits<T>::node_type, &params);
+        auto params = typename T::Meta::params_type(std::forward<Args>(args)...);
+        return (T*) create_node(T::Meta::node_type, &params);
     }
 
     bool register_stage_node(
