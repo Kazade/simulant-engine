@@ -110,6 +110,16 @@ public:
         return true;
     }
 
+    Vec3 closest_point(const Vec3& p) const {
+        Vec3 closest;
+
+        closest.x = fast_max(min().x, fast_min(p.x, max().x));
+        closest.y = fast_max(min().y, fast_min(p.y, max().y));
+        closest.z = fast_max(min().z, fast_min(p.z, max().z));
+
+        return closest;
+    }
+
     bool contains_points(const std::vector<Vec3>& points) const {
         return contains_points(&points[0], points.size());
     }
