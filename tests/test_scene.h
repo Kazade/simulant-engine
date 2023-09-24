@@ -185,8 +185,6 @@ public:
     }
 
     void test_actors_are_freed() {
-        auto stage = scene->create_node<smlt::Stage>();
-
         auto count = scene->count_nodes_by_type<smlt::Stage>();
         auto actor = scene->create_node<smlt::Stage>();
         assert_equal(actor->node_type(), STAGE_NODE_TYPE_STAGE);
@@ -203,8 +201,6 @@ public:
     }
 
     void test_lights_are_freed() {
-        auto stage = scene->create_node<smlt::Stage>();
-
         auto count = scene->count_nodes_by_type<Light>();
 
         auto light = scene->create_node<DirectionalLight>();
@@ -261,8 +257,6 @@ public:
     }
 
     void test_cameras_are_freed() {
-        auto stage = scene->create_node<smlt::Stage>();
-
         auto count = scene->count_nodes_by_type<Camera>();
 
         auto camera = scene->create_node<smlt::Camera>();

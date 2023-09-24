@@ -13,8 +13,6 @@ using namespace smlt;
 class OctreeCullerTests : public smlt::test::SimulantTestCase {
 public:
     void test_octree_bounds() {
-        auto stage = scene->create_node<smlt::Stage>();
-
         // Guarantee 2 renderables by using different materials
         auto mat1 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
         auto mat2 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);

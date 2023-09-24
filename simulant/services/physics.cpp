@@ -512,5 +512,46 @@ Quaternion PhysicsService::body_rotation(const PhysicsBody* self) const {
     );
 }
 
+void* PhysicsService::private_body(const PhysicsBody* body) const {
+    return pimpl_->get_b3body(body);
+}
+
+void PhysicsService::set_gravity(const Vec3& gravity) {
+    b3Vec3 g(gravity.x, gravity.y, gravity.z);
+    pimpl_->scene_->SetGravity(g);
+}
+
+smlt::optional<RayCastResult> PhysicsService::ray_cast(const Vec3& start, const Vec3& direction, float max_distance) {
+    b3RayCastSingleOutput result;
+    b3Vec3 s(start.x, start.y, start.z);
+    b3Vec3 d(direction.x, direction.y, direction.z);
+
+    d *= max_distance;
+    d += s;
+
+    struct AlwaysCast : public b3RayCastFilter {
+        bool ShouldRayCast(b3Fixture*) override {
+            return true;
+        }
+    };
+
+    AlwaysCast filter;
+
+    bool hit = pimpl_->scene_->RayCastSingle(&result, &filter, s, d);
+
+    float closest = std::numeric_limits<float>::max();
+
+    if(hit) {
+        RayCastResult ret;
+        ret.other_body = (PhysicsBody*) (result.fixture->GetBody()->GetUserData());
+        ret.impact_point = Vec3(result.point.x, result.point.y, result.point.z);
+        closest = (ret.impact_point - start).length();
+        ret.normal = Vec3(result.normal.x, result.normal.y, result.normal.z);
+        ret.distance = closest;
+        return smlt::optional<RayCastResult>(ret);
+    }
+
+    return smlt::optional<RayCastResult>();
+}
 
 }

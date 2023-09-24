@@ -76,6 +76,10 @@ private:
 
     /* Accessible to PhysicsBody */
 
+    /* Return the internal representaiton of a PhysicsBody. This
+     * is a void* to avoid leaking the implementation */
+    void* private_body(const PhysicsBody* body) const;
+
     void register_body(PhysicsBody* body);
     void unregister_body(PhysicsBody* body);
 

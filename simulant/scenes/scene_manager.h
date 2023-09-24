@@ -128,6 +128,18 @@ class SceneManager :
             signal_scene_activated_(route, new_scene.get());
         }
     }
+
+    template<typename D, typename T, typename...Args>
+    static ScenePtr make_scene(const D& deleter, Args&&... args) {
+        return std::shared_ptr<T>(new T(std::forward<Args>(args)...), deleter);
+    }
+
+    template<typename T>
+    static void deleter(T* obj) {
+        obj->clean_up();
+        delete obj;
+    }
+
 public:
     SceneManager(Window* window);
     ~SceneManager();
@@ -209,13 +221,14 @@ public:
     template<typename T, typename... Args>
     void register_scene(const std::string& name, Args&&... args) {
         SceneFactory func = std::bind(
-            &std::make_shared<T, Window*, typename std::decay<Args>::type&...>,
-            std::placeholders::_1, std::forward<Args>(args)...
+            &SceneManager::make_scene<decltype(&SceneManager::deleter<T>), T, Window*, typename std::decay<Args>::type&...>,
+            &SceneManager::deleter<T>, std::placeholders::_1, std::forward<Args>(args)...
         );
 
         _store_scene_factory(name, [=](Window* window) -> ScenePtr {
             auto ret = func(window);
             if(!ret->init()) {
+                S_ERROR("Failed to initialize the Scene");
                 return ScenePtr();
             }
 
@@ -228,7 +241,7 @@ public:
     template<typename T>
     void register_scene(const std::string& name) {
         _store_scene_factory(name, [=](Window* window) -> ScenePtr {
-            auto ret = std::make_shared<T>(window);
+            auto ret = SceneManager::make_scene<decltype(&SceneManager::deleter<T>), T>(&SceneManager::deleter, window);
             ret->set_name(name);
             ret->scene_manager_ = this;
 

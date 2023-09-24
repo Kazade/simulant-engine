@@ -188,6 +188,7 @@ protected:
     void unlink_pipeline(PipelinePtr pipeline);
 
 private:
+    void register_builtin_nodes();
     std::unordered_map<size_t, std::shared_ptr<Service>> services_;
 
     std::set<std::string> linked_pipelines_;

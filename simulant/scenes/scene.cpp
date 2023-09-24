@@ -25,20 +25,30 @@
 #include "../application.h"
 #include "../platform.h"
 #include "../asset_manager.h"
+#include "../nodes/actor.h"
+#include "../nodes/geom.h"
 
 namespace smlt {
 
 Scene::Scene(Window *window):
-    StageNode(nullptr, STAGE_NODE_TYPE_SCENE),
+    StageNode(this, STAGE_NODE_TYPE_SCENE),
     StageNodeManager(this),
     window_(window),
     input_(window->input.get()),
     app_(window->application),
     compositor_(window->compositor) {
+
+    register_builtin_nodes();
 }
 
 Scene::~Scene() {
 
+}
+
+void Scene::register_builtin_nodes() {
+    register_stage_node<Stage>();
+    register_stage_node<Actor>();
+    register_stage_node<Geom>();
 }
 
 void Scene::clean_up_destroyed_objects() {

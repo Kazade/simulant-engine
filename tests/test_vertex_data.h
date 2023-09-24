@@ -29,7 +29,7 @@ public:
             smlt::VERTEX_ATTRIBUTE_2F
         };
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
 
         assert_equal(0, (int32_t) data->vertex_specification().position_offset());
         assert_equal(sizeof(float) * 3, (uint32_t) data->vertex_specification().texcoord0_offset());
@@ -43,7 +43,7 @@ public:
         smlt::VertexSpecification spec;
         spec.position_attribute = VERTEX_ATTRIBUTE_4F;
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
 
         data->position(smlt::Vec2(9.0f, 8.0f));
         data->move_next();
@@ -67,7 +67,7 @@ public:
         assert_equal((uint32_t) spec.normal_offset(), (sizeof(float) * 5u) + sizeof(uint32_t));
         assert_equal((uint32_t) spec.texcoord1_offset(), (sizeof(float) * 5u) + (sizeof(uint32_t) * 2));
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(smlt::Vec3());
         data->diffuse(smlt::Colour(0, 0, 0, 0));
         data->normal(smlt::Vec3::POSITIVE_Y);
@@ -106,7 +106,7 @@ public:
 
         spec.diffuse_attribute = smlt::VERTEX_ATTRIBUTE_4UB;
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(0, 0, 0);
         data->diffuse(smlt::Colour(1.1, 1.1, 1.1, 1.1));
         data->move_next();
@@ -126,7 +126,7 @@ public:
             smlt::VERTEX_ATTRIBUTE_2F
         };
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         auto stride = data->stride();
 
         data->position(0, 0, 0);

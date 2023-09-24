@@ -52,11 +52,12 @@ enum VertexAttributeType {
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
 
 class VertexData :
-    public RefCounted<VertexData>,
     public UniquelyIdentifiable<VertexData>,
     public NotifiesDestruction<VertexData> {
 
 public:
+    typedef std::shared_ptr<VertexData> ptr;
+
     VertexData(VertexSpecification vertex_specification);
     virtual ~VertexData();
 
@@ -329,12 +330,13 @@ private:
 
 
 class IndexData:
-    public RefCounted<IndexData>,
     public UniquelyIdentifiable<IndexData>,
     public NotifiesDestruction<IndexData> {
 
     friend class IndexDataIterator;
 public:
+    typedef std::shared_ptr<IndexData> ptr;
+
     IndexData(IndexType type);
 
     IndexDataIterator begin() const {
@@ -446,6 +448,6 @@ private:
     uint32_t max_index_ = 0;
 };
 
-typedef std::shared_ptr<IndexData> IndexDataPtr;
+typedef IndexData::ptr IndexDataPtr;
 
 }

@@ -11,7 +11,6 @@ using namespace smlt;
 class GeomTests : public smlt::test::SimulantTestCase {
 public:
     void test_can_set_render_priority() {
-        auto stage = scene->create_node<smlt::Stage>();
         auto mesh = scene->assets->new_mesh(VertexSpecification::DEFAULT);
         auto geom = scene->create_node<Geom>(mesh);
 

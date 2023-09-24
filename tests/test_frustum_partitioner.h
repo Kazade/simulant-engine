@@ -61,7 +61,7 @@ public:
         partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         /* Not visible */
-        assert_equal(queue.renderable_count(), 0);
+        assert_equal(queue.renderable_count(), 0u);
 
         a1->set_cullable(false);
 

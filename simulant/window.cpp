@@ -130,6 +130,10 @@ bool Window::initialize_assets_and_devices() {
 
     // Initialize the render_sequence once we have a renderer
     compositor_ = std::make_shared<Compositor>(this);
+    if(!compositor_->init()) {
+        S_ERROR("Failed to initialize the compositor");
+        return false;
+    }
 
     if(!initialized_) {
         /* Swap buffers immediately after creation, this makes sure that
@@ -217,6 +221,9 @@ void Window::reset() {
 
     compositor_->destroy_all_pipelines();
     compositor_->clean_up();
+    compositor_.reset();
+    compositor_ = std::make_shared<Compositor>(this);
+    compositor_->init();
 
     S_DEBUG("Recreating defaults");
     create_defaults();
