@@ -57,7 +57,7 @@ public:
         typedef ActorParams params_type;
     };
 
-    Actor(Scene* owner, MeshPtr mesh);
+    Actor(Scene* owner);
     virtual ~Actor();
 
     const AABB& aabb() const override;
@@ -103,6 +103,7 @@ public:
     }
 
 private:
+    bool on_create(void *params) override;
 
     const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards

@@ -25,13 +25,9 @@
 
 namespace smlt {
 
-Geom::Geom(Scene* owner, MeshPtr mesh, const Vec3 &position, const Quaternion rotation, const Vec3 &scale, GeomCullerOptions culler_options):
-    StageNode(owner, STAGE_NODE_TYPE_GEOM),
-    mesh_(mesh),
-    culler_options_(culler_options),
-    desired_transform(position),
-    desired_rotation(rotation),
-    desired_scale(scale) {
+Geom::Geom(Scene* owner):
+    StageNode(owner, STAGE_NODE_TYPE_GEOM) {
+
 }
 
 bool Geom::on_init() {
@@ -64,6 +60,21 @@ void Geom::do_generate_renderables(batcher::RenderQueue* render_queue, const Cam
     _S_UNUSED(detail_level);
 
     culler_->renderables_visible(camera->frustum(), render_queue);
+}
+
+bool Geom::on_create(void *params) {
+    GeomParams* args = (GeomParams*) params;
+
+    if(!args->mesh) {
+        return false;
+    }
+
+    desired_transform = args->position;
+    desired_rotation = args->rotation;
+    desired_scale = args->scale;
+    culler_options_ = args->options;
+
+    return true;
 }
 
 

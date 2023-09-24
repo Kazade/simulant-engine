@@ -241,7 +241,11 @@ private:
         batcher::RenderQueue* render_queue,
         const Camera*, const Viewport* viewport,
         const DetailLevel detail_level
-    ) = 0;
+    ) {
+        _S_UNUSED(render_queue);
+        _S_UNUSED(viewport);
+        _S_UNUSED(detail_level);
+    }
 
     virtual void finalize_destroy() override final;
     virtual void finalize_destroy_immediately() final;

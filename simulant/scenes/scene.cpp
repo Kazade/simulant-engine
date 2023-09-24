@@ -27,6 +27,10 @@
 #include "../asset_manager.h"
 #include "../nodes/actor.h"
 #include "../nodes/geom.h"
+#include "../nodes/camera.h"
+#include "../nodes/cylindrical_billboard.h"
+#include "../nodes/spherical_billboard.h"
+#include "../partitioners/frustum_partitioner.h"
 
 namespace smlt {
 
@@ -49,6 +53,10 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Stage>();
     register_stage_node<Actor>();
     register_stage_node<Geom>();
+    register_stage_node<Camera>();
+    register_stage_node<FrustumPartitioner>();
+    register_stage_node<CylindricalBillboard>();
+    register_stage_node<SphericalBillboard>();
 }
 
 void Scene::clean_up_destroyed_objects() {

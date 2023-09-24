@@ -45,8 +45,22 @@ struct GeomCullerOptions {
 
 struct GeomParams {
     MeshPtr mesh;
-    GeomParams(const MeshPtr& mesh):
-        mesh(mesh) {}
+    Vec3 position = Vec3();
+    Quaternion rotation = Quaternion();
+    Vec3 scale = Vec3(1);
+    GeomCullerOptions options = GeomCullerOptions();
+
+    GeomParams(
+        const MeshPtr& mesh,
+        const Vec3& pos=Vec3(),
+        const Quaternion& rot=Quaternion(),
+        const Vec3& scale=Vec3(1),
+        const GeomCullerOptions& opts=GeomCullerOptions()):
+        mesh(mesh),
+        position(pos),
+        rotation(rot),
+        scale(scale),
+        options(opts) {}
 };
 
 /**
@@ -72,14 +86,7 @@ public:
         const static StageNodeType node_type = STAGE_NODE_TYPE_GEOM;
     };
 
-    Geom(
-        Scene* owner,
-        MeshPtr mesh,
-        const Vec3& position=Vec3(),
-        const Quaternion rotation=Quaternion(),
-        const Vec3& scale=Vec3(1, 1, 1),
-        GeomCullerOptions culler_options=GeomCullerOptions()
-    );
+    Geom(Scene* owner);
 
     const AABB& aabb() const override;
 
@@ -88,6 +95,8 @@ public:
     void do_generate_renderables(batcher::RenderQueue* render_queue,
         const Camera*, const Viewport* viewport, const DetailLevel detail_level
     ) override;
+
+    bool on_create(void *params);
 
 private:
     MeshPtr mesh_;

@@ -55,6 +55,13 @@ protected:
         }
 
         all_nodes_.erase(node->id());
+
+        try {
+            node->clean_up();
+        } catch(...) {
+            S_ERROR("Exception calling node clean_up");
+        }
+
         it->second.destructor(node);        
         free(node);
         S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
@@ -88,7 +95,8 @@ public:
          * chunked allocation depending on the node size */
         void* mem = smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
         StageNode* node = info->second.constructor(mem);
-        if(!node->_create(params)) {
+        if(!node->init() || !node->_create(params)) {
+            S_ERROR("Failed to initialize node");
             info->second.destructor(node);
             free(node);
             return nullptr;

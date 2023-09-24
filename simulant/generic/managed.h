@@ -46,6 +46,7 @@ public:
     }
 
     void clean_up() {
+        assert(construction_state_ < 2 && "clean_up called multiple times");
         assert(construction_state_++ == 1 && "init was not called, but clean_up was");
         return on_clean_up();
     }

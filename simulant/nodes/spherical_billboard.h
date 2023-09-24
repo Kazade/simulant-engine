@@ -10,16 +10,27 @@ class SphericalBillboard:
     public StageNode {
 
 public:
-    class Meta {
+    struct Meta {
         const static StageNodeType node_type = STAGE_NODE_TYPE_SPHERICAL_BILLBOARD;
         typedef SphericalBillboardParams params_type;
     };
+
+    SphericalBillboard(Scene* owner):
+        StageNode(owner, STAGE_NODE_TYPE_SPHERICAL_BILLBOARD) {}
 
     void set_target(StageNode* target) {
         target_ = target;
     }
 
+    const AABB& aabb() const {
+        static AABB aabb;
+        return aabb;
+    }
 private:
+    bool on_create(void*) {
+        return true;
+    }
+
     StageNode* target_ = nullptr;
     Vec3 forward_;
 

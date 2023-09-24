@@ -30,10 +30,9 @@
 
 namespace smlt {
 
-Actor::Actor(Scene* owner, MeshPtr mesh):
+Actor::Actor(Scene* owner):
     StageNode(owner, STAGE_NODE_TYPE_ACTOR) {
 
-    set_mesh(mesh);
 }
 
 Actor::~Actor() {
@@ -275,6 +274,16 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Ca
 
         render_queue->insert_renderable(std::move(new_renderable));
     }
+}
+
+bool Actor::on_create(void *params) {
+    ActorParams* args = (ActorParams*) params;
+    if(!args->mesh) {
+        return false;
+    }
+
+    set_mesh(args->mesh);
+    return true;
 }
 
 void Actor::recalc_effective_meshes() {

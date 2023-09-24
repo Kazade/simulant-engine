@@ -39,10 +39,22 @@ public:
     };
 
     Stage(Scene* owner);
+
+    const AABB& aabb() const {
+        static AABB aabb;
+        return aabb;
+    }
 private:
     bool on_create(void *params) override {
         _S_UNUSED(params);
         return true;
+    }
+
+    void do_generate_renderables(
+        batcher::RenderQueue*,
+        const Camera*,
+        const Viewport*, DetailLevel) {
+
     }
 };
 

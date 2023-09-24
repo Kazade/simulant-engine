@@ -22,9 +22,17 @@ public:
         target_ = target;
     }
 
+    const AABB& aabb() const {
+        static AABB aabb;
+        return aabb;
+    }
 private:
     StageNode* target_ = nullptr;
     Vec3 forward_;
+
+    bool on_create(void*) {
+        return true;
+    }
 
     void on_late_update(float dt) override {
         _S_UNUSED(dt);
