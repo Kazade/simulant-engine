@@ -41,6 +41,8 @@ public:
         assert_false(a1->transformed_aabb().has_zero_area());
 
         batcher::RenderQueue queue;
+        queue.reset(partitioner, window->renderer.get(), camera);
+
         Viewport viewport;
         partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
@@ -57,6 +59,8 @@ public:
         a1->move_to(0, 0, 100);
 
         batcher::RenderQueue queue;
+        queue.reset(partitioner, window->renderer.get(), camera);
+
         Viewport viewport;
         partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
@@ -85,6 +89,8 @@ public:
         a3->move_to(0, 0, -5);
 
         batcher::RenderQueue queue;
+        queue.reset(partitioner, window->renderer.get(), camera);
+
         Viewport viewport;
         partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 

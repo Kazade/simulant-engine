@@ -90,21 +90,13 @@ public:
 
     const AABB& aabb() const override;
 
-    bool on_init() override;
-
     void do_generate_renderables(batcher::RenderQueue* render_queue,
         const Camera*, const Viewport* viewport, const DetailLevel detail_level
     ) override;
 
-    bool on_create(void *params);
+    bool on_create(void *params) override;
 
 private:
-    MeshPtr mesh_;
-    GeomCullerOptions culler_options_;
-    Vec3 desired_transform;
-    Quaternion desired_rotation;
-    Vec3 desired_scale;
-
     std::shared_ptr<GeomCuller> culler_;
 
     AABB aabb_;

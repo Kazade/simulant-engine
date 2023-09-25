@@ -30,25 +30,27 @@ Geom::Geom(Scene* owner):
 
 }
 
-bool Geom::on_init() {
-    auto mesh_ptr = mesh_;
+bool Geom::on_create(void* params) {
+    GeomParams* args = (GeomParams*) params;
+
+    auto mesh_ptr = args->mesh;
     assert(mesh_ptr);
 
     if(!mesh_ptr) {
         return false;
     }
 
-    if(culler_options_.type == GEOM_CULLER_TYPE_QUADTREE) {
-        culler_.reset(new QuadtreeCuller(this, mesh_ptr, culler_options_.quadtree_max_depth));
+    if(args->options.type == GEOM_CULLER_TYPE_QUADTREE) {
+        culler_.reset(new QuadtreeCuller(this, mesh_ptr, args->options.quadtree_max_depth));
     } else {
-        assert(culler_options_.type == GEOM_CULLER_TYPE_OCTREE);
-        culler_.reset(new OctreeCuller(this, mesh_ptr, culler_options_.octree_max_depth));
+        assert(args->options.type == GEOM_CULLER_TYPE_OCTREE);
+        culler_.reset(new OctreeCuller(this, mesh_ptr, args->options.octree_max_depth));
     }
 
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    culler_->compile(desired_transform, desired_rotation, desired_scale);
+    culler_->compile(args->position, args->rotation, args->scale);
     return true;
 }
 
@@ -61,21 +63,5 @@ void Geom::do_generate_renderables(batcher::RenderQueue* render_queue, const Cam
 
     culler_->renderables_visible(camera->frustum(), render_queue);
 }
-
-bool Geom::on_create(void *params) {
-    GeomParams* args = (GeomParams*) params;
-
-    if(!args->mesh) {
-        return false;
-    }
-
-    desired_transform = args->position;
-    desired_rotation = args->rotation;
-    desired_scale = args->scale;
-    culler_options_ = args->options;
-
-    return true;
-}
-
 
 }
