@@ -5,12 +5,24 @@
 namespace smlt {
 namespace ui {
 
-TextEntry::TextEntry(Scene *owner,
-    UIConfig config,
-    std::shared_ptr<WidgetStyle> shared_style
-): Widget(owner, config, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY, shared_style) {
+TextEntry::TextEntry(Scene *owner):
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {
 
 
+}
+
+bool TextEntry::on_create(void* params) {
+    if(!Widget::on_create(params)) {
+        return false;
+    }
+
+    TextEntryParams* args = (TextEntryParams*) params;
+
+    set_text(args->text);
+    set_resize_mode(RESIZE_MODE_FIXED_WIDTH);
+    resize(args->width, args->height);
+
+    return true;
 }
 
 void TextEntry::insert_character(uint16_t c) {

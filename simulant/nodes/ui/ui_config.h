@@ -225,6 +225,8 @@ struct Rem {
     Rem() = default;
     explicit Rem(float r):
         value(r) {}
+
+    operator Px() const;
 };
 
 /* 100th of the viewport width */
@@ -258,14 +260,10 @@ struct UIConfig {
 
     ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     ResizeMode button_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
-    ResizeMode progress_bar_resize_mode_ = RESIZE_MODE_FIXED;
 
     uint8_t scrollbar_width_ = 16;
     Colour scrollbar_background_colour_ = background_colour_;
     Colour scrollbar_foreground_colour_ = foreground_colour_;
-
-    uint16_t button_height_ = 36;
-    uint16_t button_width_ = 0; // Fit content
 
     UInt4 label_padding_ = { Px(4), Px(4), Px(4), Px(4) };
     PackedColour4444 label_background_colour_ = Colour::NONE;
@@ -293,8 +291,6 @@ struct UIConfig {
     PackedColour4444 progress_bar_border_colour_ = foreground_colour_;
     PackedColour4444 progress_bar_text_colour_ = text_colour_;
     Px progress_bar_border_width_ = Px(2);
-    Px progress_bar_width_ = Px(100);
-    Rem progress_bar_height_ = Rem(1.5f);
 
     PackedColour4444 frame_background_colour_ = background_colour_;
     PackedColour4444 frame_titlebar_colour_ = foreground_colour_;

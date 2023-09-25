@@ -12,27 +12,8 @@ namespace smlt {
 namespace ui {
 
 
-Widget::Widget(Scene *owner, UIConfig defaults, StageNodeType type, std::shared_ptr<WidgetStyle> shared_style):
-    ContainerNode(owner, type),
-    theme_(defaults),
-    style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {
-
-    if(!shared_style) {
-        set_foreground_colour(defaults.foreground_colour_);
-        set_background_colour(defaults.background_colour_);
-        set_text_colour(defaults.text_colour_);
-    }
-
-    std::string family = (defaults.font_family_.empty()) ?
-        get_app()->config->ui.font_family : defaults.font_family_;
-
-    Px size = (defaults.font_size_ == Px(0)) ?
-        Px(get_app()->config->ui.font_size) : Px(defaults.font_size_);
-
-    auto font = load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
-    assert(font);
-
-    set_font(font);
+Widget::Widget(Scene *owner, StageNodeType type):
+    ContainerNode(owner, type) {
 }
 
 Widget::~Widget() {
@@ -104,6 +85,37 @@ void Widget::on_clean_up() {
     // is destroyed. If any buttons are held, then they should fire
     // released signals.
     force_release();
+}
+
+bool Widget::on_create(void* params) {
+    uint32_t* check = (uint32_t*) params;
+    if(*check != 0xDEADBEEF) {
+        S_ERROR("Widget params type codes not subclass WidgetParams");
+        return false;
+    }
+
+    WidgetParams* args = (WidgetParams*) params;
+    if(!args->shared_style) {
+        set_foreground_colour(args->theme.foreground_colour_);
+        set_background_colour(args->theme.background_colour_);
+        set_text_colour(args->theme.text_colour_);
+    }
+
+    std::string family = (args->theme.font_family_.empty()) ?
+        get_app()->config->ui.font_family : args->theme.font_family_;
+
+    Px size = (args->theme.font_size_ == Px(0)) ?
+        Px(get_app()->config->ui.font_size) :
+        Px(args->theme.font_size_);
+
+    auto font = load_or_get_font(
+        family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
+    );
+    assert(font);
+
+    set_font(font);
+
+    return true;
 }
 
 void Widget::set_font(const std::string& family, Rem size, FontWeight weight, FontStyle style) {

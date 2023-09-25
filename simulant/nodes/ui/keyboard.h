@@ -41,10 +41,18 @@ enum KeyboardMode {
 
 class KeyboardPanel;
 
-struct KeyboardParams {
-    UIConfig config;
+struct KeyboardParams : public WidgetParams {
     KeyboardMode mode = KEYBOARD_MODE_UPPERCASE;
     unicode initial_text = "";
+
+    KeyboardParams(
+        KeyboardMode mode=KEYBOARD_MODE_UPPERCASE,
+        const unicode& initial_text="",
+        const UIConfig& theme=UIConfig(),
+        WidgetStylePtr shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(theme, shared_style),
+        mode(mode), initial_text(initial_text) {}
 };
 
 /* A keyboard is combined of a TextInput and a KeyboardPanel */
@@ -63,7 +71,7 @@ public:
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
-    Keyboard(Scene* owner, const KeyboardParams* params);
+    Keyboard(Scene* owner);
     ~Keyboard();
 
     void cursor_up();
@@ -98,6 +106,7 @@ public:
         return entry_;
     }
 private:
+    bool on_create(void *params) override;
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;

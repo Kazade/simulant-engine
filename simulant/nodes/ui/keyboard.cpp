@@ -16,7 +16,7 @@ namespace ui {
 
 class KeyboardPanel;
 
-struct KeyboardPanelParams {
+struct KeyboardPanelParams : public WidgetParams {
     KeyboardPanelParams(const UIConfig& config):
         config(config) {}
 
@@ -621,8 +621,8 @@ public:
         const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_LABEL;
     };
 
-    KeyboardPanel(Scene* owner, UIConfig config):
-        Widget(owner, config, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
+    KeyboardPanel(Scene* owner):
+        Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
 
     bool on_init() override {
         auto ret = Widget::init();
@@ -657,6 +657,10 @@ public:
         load_icon("accent", &accent_, ACCENT_ICON.width, ACCENT_ICON.height, ACCENT_ICON.bytes_per_pixel, ACCENT_ICON.pixel_data);
 
         return true;
+    }
+
+    bool on_create(void *params) override {
+
     }
 
 private:
@@ -1176,18 +1180,31 @@ private:
     }
 };
 
-Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
-    Widget(owner, params->config, (StageNodeType) STAGE_NODE_TYPE_WIDGET_KEYBOARD) {
+Keyboard::Keyboard(Scene *owner):
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD) {
+
+
+}
+
+bool Keyboard::on_create(void *params) {
+    if(!Widget::on_create(params)) {
+        return false;
+    }
+
+    KeyboardParams* args = (KeyboardParams*) params;
+
+    if(!args->shared_style) {
+        set_background_colour(smlt::Colour::NONE);
+        set_foreground_colour(smlt::Colour::NONE);
+        set_border_colour(smlt::Colour::NONE);
+        set_text_colour(smlt::Colour::NONE);
+    }
+
+    auto config = &args->theme;
 
     resize(-1, -1);
-    set_background_colour(smlt::Colour::NONE);
-    set_foreground_colour(smlt::Colour::NONE);
-    set_border_colour(smlt::Colour::NONE);
-    set_text_colour(smlt::Colour::NONE);
 
-    auto config = &params->config;
-
-    main_frame_ = owner->create_node<Frame>("");
+    main_frame_ = scene->create_node<Frame>("");
     main_frame_->set_parent(this);
     main_frame_->set_space_between(0);
     main_frame_->set_border_width(0);
@@ -1202,8 +1219,7 @@ Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    entry_ = scene->create_node<TextEntry>("");
-    entry_->set_text(params->initial_text);
+    entry_ = scene->create_node<TextEntry>(args->initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
     entry_->set_background_colour(smlt::Colour::WHITE);
@@ -1212,7 +1228,7 @@ Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
     entry_->set_padding(Px(4));
 
-    info_row_ = scene->create_node<Frame>(*config);
+    info_row_ = scene->create_node<Frame>();
     info_row_->set_border_colour(config->foreground_colour_);
     info_row_->set_border_width(2);
     info_row_->set_background_colour(style_->foreground_colour_);
@@ -1242,7 +1258,9 @@ Keyboard::Keyboard(Scene *owner, const KeyboardParams* params):
     main_frame_->pack_child(info_row_);
     main_frame_->rebuild();
 
-    set_mode(params->mode);
+    set_mode(args->mode);
+
+    return true;
 }
 
 Keyboard::~Keyboard() {

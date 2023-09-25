@@ -60,6 +60,7 @@ struct WidgetStyle {
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 };
 
+typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
 
 /* Sizing:
  *
@@ -77,6 +78,20 @@ struct WidgetStyle {
  *   specified and then this would be the requested size without padding or border
  */
 
+struct WidgetParams {
+    /* We need to ensure that all subclass params objects inherit this one, but
+     * because we pass void* we can't dynamic cast to check. So we ensure that
+     * the first 4-bytes matches this. See on_create() for more. */
+    uint32_t magic_check = 0xDEADBEEF;
+
+    UIConfig theme;
+    WidgetStylePtr shared_style;
+
+    WidgetParams(const UIConfig& theme, const WidgetStylePtr& shared_style):
+        theme(theme),
+        shared_style(shared_style) {}
+};
+
 class Widget:
     public ContainerNode,
     public HasMutableRenderPriority,
@@ -91,11 +106,13 @@ class Widget:
 public:
     typedef std::shared_ptr<Widget> ptr;
 
-    Widget(Scene* owner, UIConfig defaults, StageNodeType type, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
+    Widget(Scene* owner, StageNodeType type);
     virtual ~Widget();
 
     virtual bool on_init() override;
     virtual void on_clean_up() override;
+
+    bool on_create(void* params) override;
 
     void resize(Rem width, Px height);
     void resize(Px width, Rem height);

@@ -5,14 +5,15 @@
 namespace smlt {
 namespace ui {
 
-struct ImageParams {
-    UIConfig config;
+struct ImageParams : public WidgetParams {
     TexturePtr texture;
 
-    ImageParams(const UIConfig& config):
-        config(config) {}
-
-    ImageParams(const TexturePtr& texture):
+    ImageParams(
+        const TexturePtr& texture,
+        const UIConfig& theme=UIConfig(),
+        WidgetStylePtr shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(theme, shared_style),
         texture(texture) {}
 };
 
@@ -32,7 +33,7 @@ public:
         const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_IMAGE;
     };
 
-    Image(Scene *owner, UIConfig config);
+    Image(Scene *owner);
     virtual ~Image() {}
 
     /* Set the texture of the Image. By default the image will be sized to the
@@ -43,6 +44,8 @@ public:
     void set_source_rect(const UICoord& bottom_left, const UICoord& size);
 
     bool set_resize_mode(ResizeMode resize_mode) override;
+
+    bool on_create(void* params) override;
 };
 
 }

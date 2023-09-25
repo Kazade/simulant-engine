@@ -28,6 +28,15 @@
 #include "../nodes/actor.h"
 #include "../nodes/geom.h"
 #include "../nodes/camera.h"
+
+#include "../nodes/ui/image.h"
+#include "../nodes/ui/label.h"
+#include "../nodes/ui/button.h"
+#include "../nodes/ui/frame.h"
+#include "../nodes/ui/keyboard.h"
+#include "../nodes/ui/text_entry.h"
+#include "../nodes/ui/progress_bar.h"
+
 #include "../nodes/cylindrical_billboard.h"
 #include "../nodes/spherical_billboard.h"
 #include "../partitioners/frustum_partitioner.h"
@@ -40,7 +49,8 @@ Scene::Scene(Window *window):
     window_(window),
     input_(window->input.get()),
     app_(window->application),
-    compositor_(window->compositor) {
+    compositor_(window->compositor),
+    assets_(window->application->shared_assets.get()) {
 
     register_builtin_nodes();
 }
@@ -57,6 +67,14 @@ void Scene::register_builtin_nodes() {
     register_stage_node<FrustumPartitioner>();
     register_stage_node<CylindricalBillboard>();
     register_stage_node<SphericalBillboard>();
+
+    register_stage_node<ui::Label>();
+    register_stage_node<ui::Image>();
+    register_stage_node<ui::ProgressBar>();
+    register_stage_node<ui::Frame>();
+    register_stage_node<ui::Button>();
+    register_stage_node<ui::TextEntry>();
+    register_stage_node<ui::Keyboard>();
 }
 
 void Scene::clean_up_destroyed_objects() {

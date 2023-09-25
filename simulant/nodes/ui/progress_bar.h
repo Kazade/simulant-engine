@@ -10,13 +10,23 @@ enum ProgressBarMode {
     PROGRESS_BAR_MODE_FRACTION
 };
 
-struct ProgressBarParams {
+struct ProgressBarParams : public WidgetParams {
     float min = 0.0f;
     float max = 100.0f;
     float value = 0.0f;
 
-    ProgressBarParams(float min=0.0f, float max=100.0f, float value=0.0f):
-        min(min), max(max), value(value) {}
+    Px width;
+    Px height;
+
+    ProgressBarParams(
+        float min=0.0f, float max=100.0f, float value=0.0f,
+        Px width = Px(250),
+        Px height = Rem(1.5f),
+        const UIConfig& theme=UIConfig(),
+        WidgetStylePtr shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(theme, shared_style),
+        min(min), max(max), value(value), width(width), height(height) {}
 };
 
 class ProgressBar:
@@ -31,7 +41,7 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Button>
     using Widget::clean_up;
 
-    ProgressBar(Scene *owner, const UIConfig &config);
+    ProgressBar(Scene *owner);
     virtual ~ProgressBar();
 
     void pulse();
@@ -50,6 +60,8 @@ public:
 
     void on_update(float dt) override;
 private:
+    bool on_create(void *params) override;
+
     ProgressBarMode mode_ = PROGRESS_BAR_MODE_FRACTION;
 
     float value_ = 0.0f;

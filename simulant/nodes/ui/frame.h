@@ -24,15 +24,16 @@ enum ChildCleanup {
     CHILD_CLEANUP_RETAIN
 };
 
-struct FrameParams {
+struct FrameParams : public WidgetParams {
     unicode text;
-    UIConfig config;
 
-    FrameParams(const unicode& text):
+    FrameParams(
+        const unicode& text="",
+        const UIConfig& theme=UIConfig(),
+        WidgetStylePtr shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(theme, shared_style),
         text(text) {}
-
-    FrameParams(const UIConfig& config):
-        config(config) {}
 };
 
 class Frame:
@@ -48,10 +49,11 @@ public:
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
 
-    Frame(Scene *owner, UIConfig config);
+    Frame(Scene *owner);
+
+    bool on_create(void *params) override;
 
     bool pack_child(Widget* widget);
-
     bool unpack_child(Widget* widget, ChildCleanup clean_up=CHILD_CLEANUP_DESTROY);
 
     const std::vector<smlt::ui::Widget*>& packed_children() const;
