@@ -6,15 +6,6 @@
 #include "../../nodes/stage_node.h"
 #include "../../macros.h"
 
-/* Need for bounce */
-void b3BeginProfileScope(const char* name) {
-    _S_UNUSED(name);
-}
-
-void b3EndProfileScope() {
-
-}
-
 namespace smlt{
 namespace behaviours {
 

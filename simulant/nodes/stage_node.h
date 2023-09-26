@@ -173,7 +173,7 @@ public:
     std::size_t child_count() const;
 
     bool has_parent() const {
-        return parent_;
+        return parent_ && parent_ != this;
     }
 
     void remove_from_parent();
@@ -516,7 +516,7 @@ public:
     virtual ~ContainerNode() {}
 };
 
-typedef StageNode* StageNodePtr;
+typedef default_init_ptr<StageNode> StageNodePtr;
 
 }
 

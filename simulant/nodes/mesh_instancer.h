@@ -53,7 +53,7 @@ public:
         typedef MeshInstancerParams params_type;
     };
 
-    MeshInstancer(Scene* owner, MeshPtr mesh);
+    MeshInstancer(Scene* owner);
     virtual ~MeshInstancer();
 
     const AABB& aabb() const override;

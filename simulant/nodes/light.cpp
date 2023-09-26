@@ -30,11 +30,7 @@ Light::Light(Scene* owner):
     ContainerNode(owner, STAGE_NODE_TYPE_LIGHT),
     type_(LIGHT_TYPE_POINT) {
 
-    set_range(100.0f);
-    set_ambient(smlt::Colour(0.3f, 0.3f, 0.3f, 1.0f));
-    set_diffuse(smlt::Colour(0.9f, 0.9f, 1.0f, 1.0f));
-    set_specular(smlt::Colour(0.01f, 0.01f, 0.01f, 1.0f));
-    set_attenuation_from_range(100.0);
+
 }
 
 void Light::set_type(LightType type) {
@@ -74,6 +70,18 @@ void Light::set_attenuation_from_range(float range) {
     const_attenuation_ = 1.0f;
     linear_attenuation_ = 4.5f / range;
     quadratic_attenuation_ = 75.0f / (range * range);
+}
+
+bool Light::on_create(void* params) {
+    LightParams* args = (LightParams*) params;
+
+    set_range(100.0f);
+    set_attenuation_from_range(100.0);
+    set_ambient(args->color);
+    set_diffuse(args->color);
+    set_specular(args->color);
+
+    return true;
 }
 
 

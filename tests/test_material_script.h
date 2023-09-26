@@ -46,6 +46,7 @@ public:
         (*stream) << text;
 
         smlt::MaterialScript script(stream, "some/path");
+        script.init();
         script.generate(*mat);
 
         assert_equal(mat->pass_count(), 1);
@@ -56,6 +57,8 @@ public:
         assert_equal(mat->pass(0)->iteration_type(), smlt::ITERATION_TYPE_ONCE);
         assert_equal(mat->diffuse(), smlt::Colour(1, 0, 1, 0));
         assert_equal(mat->ambient(), smlt::Colour(1, 1, 1, 1));
+
+        script.clean_up();
     }
 };
 

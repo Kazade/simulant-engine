@@ -619,7 +619,7 @@ class KeyboardPanel:
 public:
     struct Meta {
         typedef ui::KeyboardPanelParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_LABEL;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL;
     };
 
     KeyboardPanel(Scene* owner):
@@ -1212,6 +1212,10 @@ bool Keyboard::on_create(void *params) {
     main_frame_->set_background_colour(config->background_colour_);
     main_frame_->set_border_colour(config->background_colour_);
     main_frame_->set_foreground_colour(smlt::Colour::NONE);
+
+    /* FIXME: Registration here is ugly. KeyboardPanel should either be a publically
+     * accessible node, or, not be a node */
+    scene->register_stage_node<KeyboardPanel>();
 
     panel_ = scene->create_node<KeyboardPanel>(*config);
 

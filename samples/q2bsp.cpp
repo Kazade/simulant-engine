@@ -59,7 +59,7 @@ public:
             1500.0
         );
 
-        create_node<smlt::Light>();
+        create_node<smlt::DirectionalLight>();
         cr_yield();
     }
 

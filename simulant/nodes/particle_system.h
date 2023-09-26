@@ -44,7 +44,7 @@ public:
         const static StageNodeType node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
     };
 
-    ParticleSystem(Scene* owner, ParticleScriptPtr script);
+    ParticleSystem(Scene* owner);
     virtual ~ParticleSystem();
 
     const AABB& aabb() const override;
@@ -91,6 +91,7 @@ public:
     }
 
 private:
+    bool on_create(void* params) override;
 
     struct EmitterState {
         bool is_active = true;

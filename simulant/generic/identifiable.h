@@ -19,6 +19,8 @@
 #ifndef IDENTIFIABLE_H
 #define IDENTIFIABLE_H
 
+#include <cassert>
+
 namespace smlt {
 namespace generic {
 
@@ -28,7 +30,10 @@ public:
     typedef IDType id_type;
 
     Identifiable(IDType id):
-        id_(id) {}
+        id_(id) {
+
+        assert(id > 0);
+    }
 
     virtual ~Identifiable() {}
 
@@ -49,7 +54,7 @@ public:
     }
 
 private:
-    IDType id_;
+    IDType id_ = 0;
 };
 
 }

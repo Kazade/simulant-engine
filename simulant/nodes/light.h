@@ -28,11 +28,27 @@
 
 namespace smlt {
 
+extern const Colour DEFAULT_LIGHT_COLOUR;
+
 struct LightParams {
-    LightType type;
     Vec3 position_or_direction;
     Colour color;
+
+    LightParams(const Vec3& p, const Colour& color):
+        position_or_direction(p),
+        color(color) {}
 };
+
+struct PointLightParams : public LightParams {
+    PointLightParams(const Vec3& position=Vec3(), const Colour& color=DEFAULT_LIGHT_COLOUR):
+        LightParams(position, color) {}
+};
+
+struct DirectionalLightParams : public LightParams {
+    DirectionalLightParams(const Vec3& direction=Vec3(1, -0.5, 0), const Colour& color=DEFAULT_LIGHT_COLOUR):
+        LightParams(direction, color) {}
+};
+
 
 class Light :
     public ContainerNode,
@@ -106,6 +122,9 @@ public:
         return bounds_;
     }
 
+protected:
+    bool on_create(void* params) override;
+
 private:
     LightType type_;
 
@@ -120,20 +139,6 @@ private:
     float quadratic_attenuation_;
 };
 
-extern const Colour DEFAULT_LIGHT_COLOUR;
-
-class PointLightParams {
-    Vec3 position;
-    Colour color;
-
-public:
-    PointLightParams():
-        PointLightParams(Vec3(), DEFAULT_LIGHT_COLOUR) {}
-
-    PointLightParams(const Vec3& position, const Colour& color):
-        position(position),
-        color(color) {}
-};
 
 class PointLight : public Light {
 public:
@@ -144,18 +149,19 @@ public:
 
     PointLight(Scene* owner):
         Light(owner) {}
-};
 
-struct DirectionalLightParams {
-    Vec3 direction;
-    Colour color;
+private:
+    bool on_create(void* params) override {
+        if(!Light::on_create(params)) {
+            return false;
+        }
 
-    DirectionalLightParams():
-        DirectionalLightParams(Vec3(1, -0.5, 0), DEFAULT_LIGHT_COLOUR) {}
+        PointLightParams* args = (PointLightParams*) params;
 
-    DirectionalLightParams(const Vec3& direction, const Colour& color):
-        direction(direction),
-        color(color) {}
+        set_type(LIGHT_TYPE_POINT);
+        move_to(args->position_or_direction);
+        return true;
+    }
 };
 
 class DirectionalLight : public Light {
@@ -167,6 +173,18 @@ public:
 
     DirectionalLight(Scene* owner):
         Light(owner) {}
+
+    bool on_create(void* params) override {
+        if(!Light::on_create(params)) {
+            return false;
+        }
+
+        DirectionalLightParams* args = (DirectionalLightParams*) params;
+
+        set_type(LIGHT_TYPE_DIRECTIONAL);
+        set_direction(args->position_or_direction);
+        return true;
+    }
 };
 
 }

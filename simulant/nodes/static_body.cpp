@@ -15,4 +15,8 @@ void StaticBody::add_mesh_collider(
     return simulation->add_mesh_collider(this, mesh, properties, kind, offset, rotation);
 }
 
+bool StaticBody::on_create(void* params) {
+    return true;
+}
+
 }

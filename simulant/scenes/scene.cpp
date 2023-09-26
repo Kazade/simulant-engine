@@ -28,7 +28,12 @@
 #include "../nodes/actor.h"
 #include "../nodes/geom.h"
 #include "../nodes/camera.h"
-
+#include "../nodes/light.h"
+#include "../nodes/mesh_instancer.h"
+#include "../nodes/particle_system.h"
+#include "../nodes/rigid_body.h"
+#include "../nodes/static_body.h"
+#include "../nodes/kinematic_body.h"
 #include "../nodes/ui/image.h"
 #include "../nodes/ui/label.h"
 #include "../nodes/ui/button.h"
@@ -64,9 +69,17 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Actor>();
     register_stage_node<Geom>();
     register_stage_node<Camera>();
+    register_stage_node<DirectionalLight>();
+    register_stage_node<PointLight>();
+    register_stage_node<MeshInstancer>();
     register_stage_node<FrustumPartitioner>();
     register_stage_node<CylindricalBillboard>();
     register_stage_node<SphericalBillboard>();
+    register_stage_node<ParticleSystem>();
+
+    register_stage_node<StaticBody>();
+    register_stage_node<RigidBody>();
+    register_stage_node<KinematicBody>();
 
     register_stage_node<ui::Label>();
     register_stage_node<ui::Image>();

@@ -22,20 +22,11 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
 );
 
-ParticleSystem::ParticleSystem(Scene* owner, ParticleScriptPtr script):
+ParticleSystem::ParticleSystem(Scene* owner):
     StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
-    script_(script),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)) {
 
-    // Initialize the emitter states
-    for(auto i = 0u; i < script_->emitter_count(); ++i) {
-        auto emitter = script_->emitter(i);
-        emitter_states_[i].current_duration = random_.float_in_range(
-            emitter->duration_range.first, emitter->duration_range.second
-        );
 
-        emitter_states_[i].emission_accumulator = 0.0f;
-    }
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -331,6 +322,23 @@ void ParticleSystem::on_update(float dt) {
             destroy();
         }
     }
+}
+
+bool ParticleSystem::on_create(void* params) {
+    ParticleSystemParams* args = (ParticleSystemParams*) params;
+    script_ = args->script;
+
+    // Initialize the emitter states
+    for(auto i = 0u; i < script_->emitter_count(); ++i) {
+        auto emitter = script_->emitter(i);
+        emitter_states_[i].current_duration = random_.float_in_range(
+            emitter->duration_range.first, emitter->duration_range.second
+            );
+
+        emitter_states_[i].emission_accumulator = 0.0f;
+    }
+
+    return true;
 }
 
 void ParticleSystem::update_active_state(uint16_t e, float dt) {

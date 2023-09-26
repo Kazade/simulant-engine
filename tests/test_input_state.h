@@ -14,10 +14,12 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
         controller_ = new InputState(window);
+        controller_->init();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
+        controller_->clean_up();
         delete controller_;
         controller_ = nullptr;
     }

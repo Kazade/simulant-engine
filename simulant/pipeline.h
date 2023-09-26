@@ -90,7 +90,7 @@ private:
 
     Compositor* sequence_ = nullptr;
     int32_t priority_ = 0;
-    StageNode* node_;
+    StageNodePtr node_ = nullptr;
     CameraPtr camera_;
 
     TexturePtr target_;

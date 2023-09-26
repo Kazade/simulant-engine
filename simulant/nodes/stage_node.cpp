@@ -281,7 +281,7 @@ smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
 }
 
 void StageNode::move_to_absolute(const Vec3& position) {
-    if(parent_is_scene()) {
+    if(!has_parent()) {
         move_to(position);
     } else {
         assert(parent_);
@@ -298,7 +298,7 @@ void StageNode::move_to_absolute(float x, float y, float z) {
 }
 
 void StageNode::rotate_to_absolute(const Quaternion& rotation) {
-    if(!parent_is_scene()) {
+    if(has_parent()) {
         auto prot = parent_->absolute_rotation();
         prot.inverse();
 

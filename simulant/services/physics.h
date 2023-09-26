@@ -54,6 +54,8 @@ class PhysicsService:
     public Service {
 
 public:
+    PhysicsService();
+
     smlt::optional<RayCastResult> ray_cast(
         const Vec3& start,
         const Vec3& direction,

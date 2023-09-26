@@ -7,6 +7,16 @@
 #include "../utils/mesh/triangulate.h"
 #include "../meshes/mesh.h"
 
+/* Need for bounce */
+void b3BeginProfileScope(const char* name) {
+    _S_UNUSED(name);
+}
+
+void b3EndProfileScope() {
+
+}
+
+
 namespace smlt {
 
 class ContactListener;
@@ -519,6 +529,13 @@ void* PhysicsService::private_body(const PhysicsBody* body) const {
 void PhysicsService::set_gravity(const Vec3& gravity) {
     b3Vec3 g(gravity.x, gravity.y, gravity.z);
     pimpl_->scene_->SetGravity(g);
+}
+
+PhysicsService::PhysicsService():
+    pimpl_(std::make_shared<PhysicsData>()) {
+
+    pimpl_->scene_ = std::make_shared<b3World>();
+    pimpl_->scene_->SetGravity(b3Vec3(0, -9.81, 0));
 }
 
 smlt::optional<RayCastResult> PhysicsService::ray_cast(const Vec3& start, const Vec3& direction, float max_distance) {
