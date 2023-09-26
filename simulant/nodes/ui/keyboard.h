@@ -111,9 +111,9 @@ private:
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
-    KeyboardPanel* panel_;
-    TextEntry* entry_;
-    Frame* info_row_;
+    KeyboardPanel* panel_ = nullptr;
+    TextEntry* entry_ = nullptr;
+    Frame* info_row_ = nullptr;
 
     Frame* main_frame_ = nullptr;
 

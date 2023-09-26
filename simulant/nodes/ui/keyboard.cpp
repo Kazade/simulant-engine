@@ -17,10 +17,11 @@ namespace ui {
 class KeyboardPanel;
 
 struct KeyboardPanelParams : public WidgetParams {
-    KeyboardPanelParams(const UIConfig& config):
-        config(config) {}
-
-    UIConfig config;
+    KeyboardPanelParams(
+        const UIConfig& config=UIConfig(),
+        const WidgetStylePtr& shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(config, shared_style) {}
 };
 
 }
@@ -624,10 +625,9 @@ public:
     KeyboardPanel(Scene* owner):
         Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
 
-    bool on_init() override {
-        auto ret = Widget::init();
-        if(!ret) {
-            return ret;
+    bool on_create(void *params) override {
+        if(!Widget::on_create(params)) {
+            return false;
         }
 
         auto load_icon = [=](const char* name, Icon* icon, int w, int h, int bpp, const uint8_t* data, TextureFormat fmt=TEXTURE_FORMAT_RGB_1US_565) {
@@ -636,7 +636,7 @@ public:
             icon->tex->convert(
                 TEXTURE_FORMAT_RGBA_4UB_8888,
                 {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
-            );
+                );
             icon->tex->flip_vertically();
             icon->tex->flush();
 
@@ -656,11 +656,8 @@ public:
         load_icon("digits", &digits_, DIGITS_ICON.width, DIGITS_ICON.height, DIGITS_ICON.bytes_per_pixel, DIGITS_ICON.pixel_data);
         load_icon("accent", &accent_, ACCENT_ICON.width, ACCENT_ICON.height, ACCENT_ICON.bytes_per_pixel, ACCENT_ICON.pixel_data);
 
+        focused_key_ = nullptr;
         return true;
-    }
-
-    bool on_create(void *params) override {
-
     }
 
 private:
@@ -777,7 +774,11 @@ private:
         auto key = find_key(x, y);
         if(key) {
             if(focused_key_) {
-                mesh_->vertex_data->move_to(focused_key_->first_vertex_index);
+                assert(mesh_);
+
+                auto idx = focused_key_->first_vertex_index;
+                mesh_->vertex_data->move_to(idx);
+
                 for(int i = 0; i < 4; ++i) {
                     mesh_->vertex_data->diffuse(fg_color);
                     mesh_->vertex_data->move_next();
@@ -1341,6 +1342,8 @@ void Keyboard::set_keyboard_integration_enabled(bool value) {
 }
 
 void Keyboard::set_font(FontPtr font) {
+    Widget::set_font(font);
+
     /*panel_->set_font(font);
     panel_->rebuild();
     entry_->set_font(font);
@@ -1350,9 +1353,7 @@ void Keyboard::set_font(FontPtr font) {
     info_row_->rebuild();
 
     main_frame_->set_font(font);
-    main_frame_->rebuild();
-
-    Widget::set_font(font);*/
+    main_frame_->rebuild(); */
 }
 
 void Keyboard::on_transformation_change_attempted() {
@@ -1387,6 +1388,8 @@ const unicode &Keyboard::calc_text() const {
 }
 
 void Keyboard::cursor_to_space() {
+    assert(panel_);
+
     for(auto& k: panel_->keys_) {
         if(k.is_space_key()) {
             panel_->focus_key(k.x, k.y);

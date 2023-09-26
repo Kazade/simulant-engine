@@ -53,6 +53,50 @@ static const char* GLOBAL_BACKGROUND_NAME = "__global_background";
 static const char* GLOBAL_FOREGROUND_NAME = "__global_foreground";
 
 bool Widget::on_init() {
+
+    return true;
+}
+
+void Widget::on_clean_up() {
+    // Make sure we fire any outstanding events when the widget
+    // is destroyed. If any buttons are held, then they should fire
+    // released signals.
+    force_release();
+}
+
+bool Widget::on_create(void* params) {
+    uint32_t* check = (uint32_t*) params;
+    if(*check != 0xDEADBEEF) {
+        S_ERROR("Widget params type codes not subclass WidgetParams");
+        return false;
+    }
+
+    WidgetParams* args = (WidgetParams*) params;
+    if(!args->shared_style) {
+        style_ = std::make_shared<WidgetStyle>();
+
+
+        set_foreground_colour(args->theme.foreground_colour_);
+        set_background_colour(args->theme.background_colour_);
+        set_text_colour(args->theme.text_colour_);
+    } else {
+        style_ = args->shared_style;
+    }
+
+    std::string family = (args->theme.font_family_.empty()) ?
+                             get_app()->config->ui.font_family : args->theme.font_family_;
+
+    Px size = (args->theme.font_size_ == Px(0)) ?
+                  Px(get_app()->config->ui.font_size) :
+                  Px(args->theme.font_size_);
+
+    auto font = load_or_get_font(
+        family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
+    );
+    assert(font);
+
+    set_font(font);
+
     VertexSpecification spec = VertexSpecification::DEFAULT;
 
     /* We don't need normals or multiple texcoords */
@@ -77,43 +121,6 @@ bool Widget::on_init() {
     rebuild();
 
     initialized_ = true;
-    return true;
-}
-
-void Widget::on_clean_up() {
-    // Make sure we fire any outstanding events when the widget
-    // is destroyed. If any buttons are held, then they should fire
-    // released signals.
-    force_release();
-}
-
-bool Widget::on_create(void* params) {
-    uint32_t* check = (uint32_t*) params;
-    if(*check != 0xDEADBEEF) {
-        S_ERROR("Widget params type codes not subclass WidgetParams");
-        return false;
-    }
-
-    WidgetParams* args = (WidgetParams*) params;
-    if(!args->shared_style) {
-        set_foreground_colour(args->theme.foreground_colour_);
-        set_background_colour(args->theme.background_colour_);
-        set_text_colour(args->theme.text_colour_);
-    }
-
-    std::string family = (args->theme.font_family_.empty()) ?
-        get_app()->config->ui.font_family : args->theme.font_family_;
-
-    Px size = (args->theme.font_size_ == Px(0)) ?
-        Px(get_app()->config->ui.font_size) :
-        Px(args->theme.font_size_);
-
-    auto font = load_or_get_font(
-        family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
-    );
-    assert(font);
-
-    set_font(font);
 
     return true;
 }
