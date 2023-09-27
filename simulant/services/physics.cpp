@@ -330,7 +330,16 @@ void PhysicsService::add_box_collider(PhysicsBody* self, const Vec3& size,
     const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation
 ) {
 
-    BodyData& data = pimpl_->bodies_.at(self);
+    assert(pimpl_);
+    assert(pimpl_->bodies_.find(self) != pimpl_->bodies_.end());
+
+    auto it = pimpl_->bodies_.find(self);
+    if(it == pimpl_->bodies_.end()) {
+        S_ERROR("Attempted to add collider to unregistered body");
+        return;
+    }
+
+    BodyData& data = it->second;
 
     b3Vec3 p(offset.x, offset.y, offset.z);
     b3Quat q(rotation.x, rotation.y, rotation.z, rotation.w);

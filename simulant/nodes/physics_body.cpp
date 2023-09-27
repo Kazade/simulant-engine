@@ -33,9 +33,28 @@ const PhysicsMaterial PhysicsMaterial::STONE_25(s.density * 0.25f, s.friction, s
 const PhysicsMaterial PhysicsMaterial::STONE_50(s.density * 0.50f, s.friction, s.bounciness);
 const PhysicsMaterial PhysicsMaterial::STONE_75(s.density * 0.75f, s.friction, s.bounciness);
 
+PhysicsBody::PhysicsBody(StageNode *self, PhysicsBodyType type):
+    self_(self),
+    type_(type) {
+
+    auto sim = get_simulation();
+    if(sim) {
+        sim->register_body(this);
+    } else {
+        S_WARN("PhysicsBody added without an active PhysicsService");
+    }
+}
+
+PhysicsBody::~PhysicsBody() {
+    auto sim = get_simulation();
+    if(sim) {
+        sim->unregister_body(this);
+    }
+}
+
 void PhysicsBody::add_box_collider(
     const Vec3 &size, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation
-) {
+    ) {
     auto simulation = get_simulation();
     if(!simulation) {
         return;

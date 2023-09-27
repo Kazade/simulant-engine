@@ -74,9 +74,9 @@ enum PhysicsBodyType {
 
 class PhysicsBody {
 public:
-    PhysicsBody(StageNode* self, PhysicsBodyType type):
-        self_(self),
-        type_(type) {}
+    PhysicsBody(StageNode* self, PhysicsBodyType type);
+
+    virtual ~PhysicsBody();
 
     void add_box_collider(
         const Vec3& size,
@@ -119,7 +119,7 @@ private:
     friend class ContactListener;
 
     StageNode* self_ = nullptr;
-    mutable PhysicsService* simulation_;
+    mutable PhysicsService* simulation_ = nullptr;
 
     PhysicsBodyType type_;
     std::set<CollisionListener*> listeners_;
