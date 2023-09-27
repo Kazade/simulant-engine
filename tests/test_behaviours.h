@@ -44,21 +44,19 @@ public:
 
     void test_ancestor_lookups() {
         auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        auto actor = scene->create_node<smlt::Actor>(m);
         auto b = scene->create_node<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->parent.get());
 
         auto parent = scene->create_node<smlt::Actor>(m);
         parent->set_name("Some Parent");
-        actor->set_parent(parent);
+        b->set_parent(parent);
 
         assert_equal((StageNode*) b->parent.get(), (StageNode*) parent);
     }
 
     void test_descendent_lookups() {
         auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        auto actor = scene->create_node<smlt::Actor>(m);
         auto camera = scene->create_node<smlt::Camera>();
 
         auto b = scene->create_node<NodeWithLookups>();
@@ -66,9 +64,9 @@ public:
         assert_is_null((StageNode*) b->child_one);
         assert_is_null((StageNode*) b->invalid_child);
 
-        auto child_one = scene->create_node<smlt::Stage>();
+        auto child_one = scene->create_node<Actor>(m);
         child_one->set_name("Child 1");
-        child_one->set_parent(actor);
+        child_one->set_parent(b);
 
         camera->set_parent(child_one);
         camera->set_name("Camera");

@@ -17,7 +17,7 @@ class StageNodeFinders {
         return nullptr;
     }
 
-    static StageNode* find_ancestor(const char* name, StageNode* organism){
+    static StageNode* find_ancestor(const char* name, StageNode* organism) {
         auto parent = (StageNode*) organism->parent();
         while(parent) {
             if(parent->name() == name) {

@@ -152,6 +152,8 @@ bool PhysicsBody::on_create(void* params) {
     } else {
         S_WARN("PhysicsBody added without an active PhysicsService");
     }
+
+    return true;
 }
 
 void PhysicsBody::on_update(float dt) {

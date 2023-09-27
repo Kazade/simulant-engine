@@ -50,7 +50,7 @@ public:
 
         // Make the ground a staticbody
         auto c = create_node<smlt::StaticBody>();
-        c->set_parent(ground_); // FIXME: Convert to mixin
+        c->adopt_children(ground_); // FIXME: Convert to mixin
         c->add_box_collider(ground_->aabb().dimensions(), PhysicsMaterial::STONE);
 
         srand(time(nullptr));
@@ -62,13 +62,14 @@ public:
         );
 
         auto box = boxes_.back();
-        auto controller = create_node<smlt::RigidBody>();
-        box->set_parent(controller);
-        controller->add_box_collider(box->aabb().dimensions(), PhysicsMaterial::WOOD);
-        controller->move_to(Vec3(
-            ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
-            20, 0)
+        auto pos = Vec3(
+            ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f, 20, 0
         );
+
+        auto controller = create_node<smlt::RigidBody>(pos);
+        controller->add_box_collider(box->aabb().dimensions(), PhysicsMaterial::WOOD);
+
+        box->set_parent(controller);
     }
 
     void on_update(float dt) override {

@@ -41,7 +41,7 @@ public:
 
         instancer->set_name("instancer");
 
-        auto found = stage_->find_descendent_with_name("instancer");
+        auto found = scene->find_descendent_with_name("instancer");
         assert_true(found);
         assert_equal(found, instancer);
     }

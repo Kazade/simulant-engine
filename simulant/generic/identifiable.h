@@ -47,12 +47,6 @@ public:
         return id() < rhs.id();
     }
 
-    /* INTERNAL USE ONLY */
-    Identifiable() = default;
-    void _overwrite_id(IDType new_id) {
-        id_ = new_id;
-    }
-
 private:
     IDType id_ = 0;
 };
