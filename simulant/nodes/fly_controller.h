@@ -6,7 +6,11 @@ namespace smlt {
 
 class FlyController;
 
-struct FlyControllerParams {};
+struct FlyControllerParams {
+    float speed;
+    FlyControllerParams(float speed=600.0f):
+        speed(speed) {}
+};
 
 
 class FlyController : public StageNode {
@@ -33,6 +37,17 @@ public:
     }
 
     void on_late_update(float dt) override;
+
+    const AABB& aabb() const override {
+        return AABB::ZERO;
+    }
+
+private:
+    bool on_create(void *params) override {
+        FlyControllerParams* args = (FlyControllerParams*) params;
+        set_speed(args->speed);
+        return true;
+    }
 };
 
 }

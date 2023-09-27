@@ -79,6 +79,12 @@ void SmoothFollow::set_following_enabled(bool v) {
     following_enabled_ = v;
 }
 
+bool SmoothFollow::on_create(void* params) {
+    SmoothFollowParams* args = (SmoothFollowParams*) params;
+    set_target(args->target);
+    return true;
+}
+
 bool SmoothFollow::has_target() const {
     return bool(target_);
 }

@@ -3,8 +3,6 @@
 #include <simulant/test.h>
 #include <simulant/simulant.h>
 
-#include "../simulant/behaviours/movement/cylindrical_billboard.h"
-#include "../simulant/behaviours/movement/spherical_billboard.h"
 #include "../simulant/behaviours/locators/node_locator.h"
 
 namespace {

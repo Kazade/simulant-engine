@@ -31,6 +31,10 @@ bool Image::on_create(void* params) {
 
         set_foreground_colour(args->theme.image_foreground_colour_);
 
+        if(args->texture) {
+            set_texture(args->texture);
+        }
+
         if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
             // Rebuild if the resize mode didn't change
             rebuild();

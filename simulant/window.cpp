@@ -93,6 +93,7 @@ void Window::_clean_up() {
         _destroy_screen(screen.first);
     }
 
+    compositor_->clean_up();
     compositor_.reset();
 
     destroy_window();

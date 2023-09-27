@@ -6,12 +6,20 @@ namespace smlt {
 
 float DynamicPhysicsBody::mass() const {
     auto sim = get_simulation();
+    if(!sim) {
+        return 0.0f;
+    }
+
     b3Body* b = (b3Body*) sim->private_body(this);
     return b->GetMass();
 }
 
 void DynamicPhysicsBody::set_mass(float m) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     b3Body* b = (b3Body*) sim->private_body(this);
     b3MassData data;
     b->GetMassData(&data);
@@ -22,6 +30,10 @@ void DynamicPhysicsBody::set_mass(float m) {
 
 void DynamicPhysicsBody::set_center_of_mass(const Vec3 &com) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     b3Body* b = (b3Body*) sim->private_body(this);
     b3MassData md;
     b3Vec3 new_center(com.x, com.y, com.z);
@@ -42,6 +54,10 @@ void DynamicPhysicsBody::set_center_of_mass(const Vec3 &com) {
 
 Vec3 DynamicPhysicsBody::center_of_mass() const {
     auto sim = get_simulation();
+    if(!sim) {
+        return Vec3();
+    }
+
     b3Body* b = (b3Body*) sim->private_body(this);
     b3MassData data;
     b->GetMassData(&data);
@@ -52,6 +68,10 @@ Vec3 DynamicPhysicsBody::center_of_mass() const {
 
 Vec3 DynamicPhysicsBody::absolute_center_of_mass() const {
     auto sim = get_simulation();
+    if(!sim) {
+        return Vec3();
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b3Vec3 center = b->GetWorldCenter();
     smlt::Vec3 ret(center.x, center.y, center.z);
@@ -60,6 +80,10 @@ Vec3 DynamicPhysicsBody::absolute_center_of_mass() const {
 
 void DynamicPhysicsBody::add_force(const Vec3 &force) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     b3Vec3 v(force.x, force.y, force.z);
@@ -68,6 +92,10 @@ void DynamicPhysicsBody::add_force(const Vec3 &force) {
 
 void DynamicPhysicsBody::add_force_at_position(const Vec3 &force, const Vec3 &position) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b3Vec3 f(force.x, force.y, force.z);
     b3Vec3 p(position.x, position.y, position.z);
@@ -76,6 +104,10 @@ void DynamicPhysicsBody::add_force_at_position(const Vec3 &force, const Vec3 &po
 
 void DynamicPhysicsBody::add_relative_force(const Vec3 &force) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     b3Vec3 v(force.x, force.y, force.z);
@@ -85,6 +117,10 @@ void DynamicPhysicsBody::add_relative_force(const Vec3 &force) {
 
 void DynamicPhysicsBody::add_torque(const Vec3 &torque) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     b3Vec3 t(torque.x, torque.y, torque.z);
@@ -93,6 +129,10 @@ void DynamicPhysicsBody::add_torque(const Vec3 &torque) {
 
 void DynamicPhysicsBody::add_relative_torque(const Vec3 &torque) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     b3Vec3 t(torque.x, torque.y, torque.z);
@@ -102,6 +142,10 @@ void DynamicPhysicsBody::add_relative_torque(const Vec3 &torque) {
 
 void DynamicPhysicsBody::add_impulse(const Vec3 &impulse) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b3Vec3 v(impulse.x, impulse.y, impulse.z);
     b->ApplyLinearImpulse(v, b->GetPosition(), true);
@@ -109,6 +153,10 @@ void DynamicPhysicsBody::add_impulse(const Vec3 &impulse) {
 
 void DynamicPhysicsBody::add_impulse_at_position(const Vec3 &impulse, const Vec3 &position) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b3Vec3 i(impulse.x, impulse.y, impulse.z);
     b3Vec3 p(position.x, position.y, position.z);
@@ -117,6 +165,10 @@ void DynamicPhysicsBody::add_impulse_at_position(const Vec3 &impulse, const Vec3
 
 void DynamicPhysicsBody::set_linear_damping(const float d) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     b3Vec3 v(d, d, d);
@@ -125,6 +177,10 @@ void DynamicPhysicsBody::set_linear_damping(const float d) {
 
 void DynamicPhysicsBody::set_angular_damping(const Vec3 &d) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     b3Vec3 v(d.x, d.y, d.z);
@@ -133,12 +189,20 @@ void DynamicPhysicsBody::set_angular_damping(const Vec3 &d) {
 
 void DynamicPhysicsBody::set_angular_sleep_tolerance(float x) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b->SetAngularSleepTolerance(x);
 }
 
 Vec3 DynamicPhysicsBody::linear_velocity() const {
     auto sim = get_simulation();
+    if(!sim) {
+        return Vec3();
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     auto v = b->GetLinearVelocity();
@@ -147,6 +211,10 @@ Vec3 DynamicPhysicsBody::linear_velocity() const {
 
 Vec3 DynamicPhysicsBody::linear_velocity_at(const Vec3 &position) const {
     auto sim = get_simulation();
+    if(!sim) {
+        return {};
+    }
+
     auto b = (b3Body*) sim->private_body(this);
 
     b3Vec3 bv(position.x, position.y, position.z);
@@ -159,6 +227,10 @@ Vec3 DynamicPhysicsBody::linear_velocity_at(const Vec3 &position) const {
 
 void DynamicPhysicsBody::set_linear_velocity(const Vec3 &vel) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b3Vec3 v(vel.x, vel.y, vel.z);
     b->SetLinearVelocity(v);
@@ -166,6 +238,10 @@ void DynamicPhysicsBody::set_linear_velocity(const Vec3 &vel) {
 
 Vec3 DynamicPhysicsBody::angular_velocity() const {
     auto sim = get_simulation();
+    if(!sim) {
+        return Vec3();
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     auto v = b->GetAngularVelocity();
     return Vec3(v.x, v.y, v.z);
@@ -173,6 +249,10 @@ Vec3 DynamicPhysicsBody::angular_velocity() const {
 
 void DynamicPhysicsBody::set_angular_velocity(const Vec3 &vel) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b3Vec3 v(vel.x, vel.y, vel.z);
     b->SetAngularVelocity(v);
@@ -195,26 +275,23 @@ Vec3 DynamicPhysicsBody::up() {
 
 bool DynamicPhysicsBody::is_awake() const {
     auto sim = get_simulation();
+    if(!sim) {
+        return false;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     return b->IsAwake();
 }
 
 void DynamicPhysicsBody::lock_rotation(bool x, bool y, bool z) {
     auto sim = get_simulation();
+    if(!sim) {
+        return;
+    }
+
     auto b = (b3Body*) sim->private_body(this);
     b->SetFixedRotation(x, y, z);
 }
 
-Vec3 DynamicPhysicsBody::simulated_position() const {
-    auto sim = get_simulation();
-    assert(sim);
-    return sim->body_position(this);
-}
-
-Quaternion DynamicPhysicsBody::simulated_rotation() const {
-    auto sim = get_simulation();
-    assert(sim);
-    return sim->body_rotation(this);
-}
 
 }

@@ -25,6 +25,7 @@
 #include "../application.h"
 #include "../platform.h"
 #include "../asset_manager.h"
+#include "../services/service.h"
 #include "../nodes/actor.h"
 #include "../nodes/geom.h"
 #include "../nodes/camera.h"
@@ -34,6 +35,10 @@
 #include "../nodes/rigid_body.h"
 #include "../nodes/static_body.h"
 #include "../nodes/kinematic_body.h"
+#include "../nodes/sprite.h"
+#include "../nodes/smooth_follow.h"
+#include "../nodes/fly_controller.h"
+#include "../nodes/skies/skybox.h"
 #include "../nodes/ui/image.h"
 #include "../nodes/ui/label.h"
 #include "../nodes/ui/button.h"
@@ -76,6 +81,10 @@ void Scene::register_builtin_nodes() {
     register_stage_node<CylindricalBillboard>();
     register_stage_node<SphericalBillboard>();
     register_stage_node<ParticleSystem>();
+    register_stage_node<Sprite>();
+    register_stage_node<Skybox>();
+    register_stage_node<SmoothFollow>();
+    register_stage_node<FlyController>();
 
     register_stage_node<StaticBody>();
     register_stage_node<RigidBody>();
@@ -223,6 +232,15 @@ void Scene::link_pipeline(PipelinePtr pipeline) {
 
 void Scene::unlink_pipeline(PipelinePtr pipeline) {
     unlink_pipeline(pipeline->name());
+}
+
+void Scene::on_fixed_update(float step) {
+    /* Update services, before moving onto the scene tree */
+    for(auto& service: services_) {
+        service.second->fixed_update(step);
+    }
+
+    StageNode::on_fixed_update(step);
 }
 
 

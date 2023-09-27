@@ -3,6 +3,8 @@
 #include "../services/physics.h"
 #include "stage_node.h"
 #include "../scenes/scene.h"
+#include "../application.h"
+#include "../time_keeper.h"
 
 namespace smlt {
 
@@ -33,16 +35,11 @@ const PhysicsMaterial PhysicsMaterial::STONE_25(s.density * 0.25f, s.friction, s
 const PhysicsMaterial PhysicsMaterial::STONE_50(s.density * 0.50f, s.friction, s.bounciness);
 const PhysicsMaterial PhysicsMaterial::STONE_75(s.density * 0.75f, s.friction, s.bounciness);
 
-PhysicsBody::PhysicsBody(StageNode *self, PhysicsBodyType type):
-    self_(self),
+PhysicsBody::PhysicsBody(Scene *owner, StageNodeType node_type, PhysicsBodyType type):
+    StageNode(owner, node_type),
     type_(type) {
 
-    auto sim = get_simulation();
-    if(sim) {
-        sim->register_body(this);
-    } else {
-        S_WARN("PhysicsBody added without an active PhysicsService");
-    }
+
 }
 
 PhysicsBody::~PhysicsBody() {
@@ -104,6 +101,25 @@ void PhysicsBody::unregister_collision_listener(CollisionListener *listener) {
     listeners_.erase(listener);
 }
 
+Vec3 PhysicsBody::simulated_position() const {
+    auto sim = get_simulation();
+    if(!sim) {
+        return {};
+    }
+    assert(sim);
+    return sim->body_position(this);
+}
+
+Quaternion PhysicsBody::simulated_rotation() const {
+    auto sim = get_simulation();
+    if(!sim) {
+        return {};
+    }
+
+    assert(sim);
+    return sim->body_rotation(this);
+}
+
 void PhysicsBody::contact_started(const Collision &collision) {
     for(auto listener: listeners_) {
         listener->on_collision_enter(collision);
@@ -121,10 +137,46 @@ PhysicsService* PhysicsBody::get_simulation() const {
     if(!simulation_) {
         /* FIXME: If the physics service is destroyed, we need
              * to wipe this out for every physics body */
-        simulation_ = self_->scene->find_service<PhysicsService>();
+        simulation_ = scene->find_service<PhysicsService>();
     }
 
     return simulation_;
+}
+
+bool PhysicsBody::on_create(void* params) {
+    PhysicsBodyParams* args = (PhysicsBodyParams*) params;
+
+    auto sim = get_simulation();
+    if(sim) {
+        sim->register_body(this, args->initial_position, args->initial_rotation);
+    } else {
+        S_WARN("PhysicsBody added without an active PhysicsService");
+    }
+}
+
+void PhysicsBody::on_update(float dt) {
+    static const bool INTERPOLATION_ENABLED = true;
+
+    if(INTERPOLATION_ENABLED) {
+        auto prev_state = last_state_; // This is set by the signal connected in Body::Body()
+        auto next_state = std::make_pair(
+            simulated_position(),
+            simulated_rotation()
+        );
+
+        // Prevent a divide by zero.
+        float r = get_app()->time_keeper->fixed_step_remainder();
+        float t = (dt == 0.0f) ? 0.0f : smlt::fast_divide(r, dt);
+
+        auto new_pos = prev_state.first.lerp(next_state.first, t);
+        auto new_rot = prev_state.second.slerp(next_state.second, t);
+
+        move_to_absolute(new_pos);
+        rotate_to_absolute(new_rot);
+    } else {
+        move_to_absolute(simulated_position());
+        rotate_to_absolute(simulated_rotation());
+    }
 }
 
 }

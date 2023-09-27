@@ -6,10 +6,12 @@
 namespace smlt {
 
 class Scene;
-struct RigidBodyParams {};
+struct RigidBodyParams : public PhysicsBodyParams {
+    RigidBodyParams(const Vec3& position=Vec3(), const Quaternion& rotation=Quaternion()):
+        PhysicsBodyParams(position, rotation) {}
+};
 
 class RigidBody:
-    public StageNode,
     public DynamicPhysicsBody {
 
 public:
@@ -19,8 +21,7 @@ public:
     };
 
     RigidBody(Scene* owner):
-        StageNode(owner, STAGE_NODE_TYPE_PHYSICS_RIGID_BODY),
-        DynamicPhysicsBody(owner, PHYSICS_BODY_TYPE_DYNAMIC) {}
+        DynamicPhysicsBody(owner, STAGE_NODE_TYPE_PHYSICS_RIGID_BODY, PHYSICS_BODY_TYPE_DYNAMIC) {}
 
     const AABB& aabb() const override {
         static AABB aabb;
@@ -29,7 +30,7 @@ public:
 
 private:
     bool on_create(void* params) override {
-        return true;
+        return PhysicsBody::on_create(params);
     }
 };
 

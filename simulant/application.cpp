@@ -170,8 +170,13 @@ Application::~Application() {
      * pool. */
     run_coroutines_and_late_update();
 
+    scene_manager_->clean_up();
     scene_manager_.reset();
+
     asset_manager_.reset();
+
+    overlay_scene_->clean_up();
+    overlay_scene_.reset();
 }
 
 void Application::preload_default_font() {
@@ -342,7 +347,10 @@ bool Application::_call_init() {
     };
 
     overlay_scene_.reset(new OverlayScene(window_.get()));
+    overlay_scene_->init();
+
     scene_manager_.reset(new SceneManager(window_.get()));
+    scene_manager_->init();
 
     S_DEBUG("Scene manager initialized");
 

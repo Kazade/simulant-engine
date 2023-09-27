@@ -4,7 +4,11 @@
 
 namespace smlt {
 
-struct SmoothFollowParams {};
+struct SmoothFollowParams {
+    StageNode* target;
+    SmoothFollowParams(StageNode* target=nullptr):
+        target(target) {}
+};
 
 class SmoothFollow : public StageNode {
 public:
@@ -31,8 +35,14 @@ public:
      * on the target, but movement will stop */
     void set_following_enabled(bool v);
 
+    const AABB& aabb() const {
+        return AABB::ZERO;
+    }
+
 private:
     StageNode* target_ = nullptr;
+
+    bool on_create(void *params) override;
 
     bool following_enabled_ = true;
 

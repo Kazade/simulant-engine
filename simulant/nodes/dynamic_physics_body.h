@@ -7,8 +7,8 @@ namespace smlt {
 
 class DynamicPhysicsBody : public PhysicsBody {
 public:
-    DynamicPhysicsBody(StageNode* self, PhysicsBodyType type):
-        PhysicsBody(self, type) {}
+    DynamicPhysicsBody(Scene* owner, StageNodeType node_type, PhysicsBodyType type):
+        PhysicsBody(owner, node_type, type) {}
 
     float mass() const;
     void set_mass(float m);
@@ -52,8 +52,6 @@ public:
     Vec3 up();
     bool is_awake() const;
     void lock_rotation(bool x, bool y, bool z);
-    Vec3 simulated_position() const;
-    Quaternion simulated_rotation() const;
 };
 
 }

@@ -188,6 +188,8 @@ protected:
     void unlink_pipeline(PipelinePtr pipeline);
 
 private:
+    void on_fixed_update(float step) override;
+
     void register_builtin_nodes();
     std::unordered_map<size_t, std::shared_ptr<Service>> services_;
 

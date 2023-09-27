@@ -1,3 +1,4 @@
+#include <map>
 
 #include "skybox.h"
 
@@ -18,6 +19,88 @@ Skybox::Skybox(Scene* owner):
 
 const AABB &Skybox::aabb() const {
     return actor_->aabb();
+}
+
+typedef std::map<SkyboxFace, Path> SkyboxImageDict;
+
+optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
+    SkyboxImageDict files;
+
+    auto path = get_app()->vfs->locate_file(folder);
+
+    if(!path.has_value()) {
+        return SkyboxImageDict();
+    }
+
+    for(auto& file: kfs::path::list_dir(path.value().str())) {
+        SkyboxFace face;
+
+        // Case-insensitive detection
+        unicode file_lower = unicode(file).lower();
+
+        if(file_lower.contains("top") || file_lower.contains("up")) {
+            face = SKYBOX_FACE_TOP;
+        } else if(file_lower.contains("bottom") || file_lower.contains("down")) {
+            face = SKYBOX_FACE_BOTTOM;
+        } else if(file_lower.contains("left")) {
+            face = SKYBOX_FACE_LEFT;
+        } else if(file_lower.contains("right")) {
+            face = SKYBOX_FACE_RIGHT;
+        } else if(file_lower.contains("front")) {
+            face = SKYBOX_FACE_FRONT;
+        } else if(file_lower.contains("back")) {
+            face = SKYBOX_FACE_BACK;
+        } else {
+            // Not a filename worth paying attention to
+            continue;
+        }
+
+        auto full_path = kfs::path::join(folder.str(), file);
+
+        // Make sure this is a supported texture file
+        if(!get_app()->loader_type("texture")->supports(full_path)) {
+            continue;
+        }
+
+        // If we already have found this face, then throw an error
+        if(files.count(face)) {
+            throw SkyboxImageDuplicateError("Found multiple potential images for face");
+        }
+
+        // Store the relative path, rather than the absolute one
+        files[face] = full_path;
+    }
+
+    if(files.size() != 6) {
+        return SkyboxImageDict();
+    }
+
+    return files;
+}
+
+bool Skybox::on_create(void* params) {
+    SkyboxParams* args = (SkyboxParams*) params;
+
+    if(!args->source_directory.str().empty()) {
+        auto maybe_files = discover_files_from_directory(args->source_directory);
+        if(maybe_files) {
+            auto files = maybe_files.value();
+            generate(
+                files.at(SKYBOX_FACE_TOP),
+                files.at(SKYBOX_FACE_BOTTOM),
+                files.at(SKYBOX_FACE_LEFT),
+                files.at(SKYBOX_FACE_RIGHT),
+                files.at(SKYBOX_FACE_FRONT),
+                files.at(SKYBOX_FACE_BACK),
+                args->flags
+            );
+        } else {
+            S_ERROR("Couldn't determine all skybox images");
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void Skybox::generate(

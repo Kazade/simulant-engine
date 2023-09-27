@@ -55,7 +55,6 @@ public:
         auto camera = scene->create_node<smlt::Camera>();
         auto a1 = scene->create_node<smlt::Actor>(box_);
         a1->set_parent(partitioner);
-
         a1->move_to(0, 0, 100);
 
         batcher::RenderQueue queue;
@@ -87,6 +86,8 @@ public:
         a1->move_to(0, 0, -5);
         a2->move_to(0, 0, -5);
         a3->move_to(0, 0, -5);
+
+        partitioner->adopt_children(a1, a2, a3);
 
         batcher::RenderQueue queue;
         queue.reset(partitioner, window->renderer.get(), camera);

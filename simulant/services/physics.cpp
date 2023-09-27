@@ -288,7 +288,7 @@ void PhysicsService::set_contact_filter(ContactFilter* filter) {
     pimpl_->filter_ = filter;
 }
 
-void PhysicsService::register_body(PhysicsBody* body) {
+void PhysicsService::register_body(PhysicsBody* body, const Vec3& pos, const Quaternion& rot) {
     b3BodyDef def;
 
     auto type = body->type();
@@ -313,6 +313,8 @@ void PhysicsService::register_body(PhysicsBody* body) {
 
     def.gravityScale = v;
     def.userData = body;
+    def.position = b3Vec3(pos.x, pos.y, pos.z);
+    def.orientation = b3Quat(rot.x, rot.y, rot.z, rot.w);
 
     BodyData data;
     data.body = pimpl_->scene_->CreateBody(def);
@@ -529,6 +531,12 @@ Quaternion PhysicsService::body_rotation(const PhysicsBody* self) const {
     return Quaternion(
         vec.v.x, vec.v.y, vec.v.z, vec.s
     );
+}
+
+void PhysicsService::on_fixed_update(float step) {
+    uint32_t velocity_iterations = 8;
+    uint32_t position_iterations = 2;
+    pimpl_->scene_->Step(step, velocity_iterations, position_iterations);
 }
 
 void* PhysicsService::private_body(const PhysicsBody* body) const {

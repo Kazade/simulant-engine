@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <set>
 
+#include "stage_node.h"
 #include "../types.h"
 
 namespace smlt {
@@ -72,9 +73,20 @@ enum PhysicsBodyType {
     PHYSICS_BODY_TYPE_KINEMATIC,
 };
 
-class PhysicsBody {
+class Scene;
+
+struct PhysicsBodyParams {
+    Vec3 initial_position;
+    Quaternion initial_rotation;
+
+    PhysicsBodyParams(const Vec3& position=Vec3(), const Quaternion& rotation=Quaternion()):
+        initial_position(position),
+        initial_rotation(rotation) {}
+};
+
+class PhysicsBody : public StageNode {
 public:
-    PhysicsBody(StageNode* self, PhysicsBodyType type);
+    PhysicsBody(Scene* owner, StageNodeType node_type, PhysicsBodyType type);
 
     virtual ~PhysicsBody();
 
@@ -112,13 +124,19 @@ public:
         return type_;
     }
 
+    Vec3 simulated_position() const;
+    Quaternion simulated_rotation() const;
+
 protected:
     PhysicsService* get_simulation() const;
 
+    bool on_create(void *params) override;
 private:
     friend class ContactListener;
 
-    StageNode* self_ = nullptr;
+    std::pair<Vec3, Quaternion> last_state_;
+    void on_update(float dt) override;
+
     mutable PhysicsService* simulation_ = nullptr;
 
     PhysicsBodyType type_;

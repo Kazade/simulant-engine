@@ -7,10 +7,12 @@
 
 namespace smlt {
 
-class StaticBodyParams {};
+struct StaticBodyParams : public PhysicsBodyParams {
+    StaticBodyParams(const Vec3& position=Vec3(), const Quaternion& rotation=Quaternion()):
+        PhysicsBodyParams(position, rotation) {}
+};
 
 class StaticBody:
-    public StageNode,
     public PhysicsBody {
 
 public:
@@ -20,8 +22,7 @@ public:
     };
 
     StaticBody(Scene* owner):
-        StageNode(owner, STAGE_NODE_TYPE_PHYSICS_STATIC_BODY),
-        PhysicsBody(owner, PHYSICS_BODY_TYPE_STATIC) {}
+        PhysicsBody(owner, STAGE_NODE_TYPE_PHYSICS_STATIC_BODY, PHYSICS_BODY_TYPE_STATIC) {}
 
     void add_mesh_collider(
         const MeshPtr& mesh,

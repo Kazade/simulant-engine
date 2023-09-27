@@ -16,7 +16,7 @@ void StaticBody::add_mesh_collider(
 }
 
 bool StaticBody::on_create(void* params) {
-    return true;
+    return PhysicsBody::on_create(params);
 }
 
 }

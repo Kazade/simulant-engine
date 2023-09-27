@@ -82,7 +82,7 @@ private:
      * is a void* to avoid leaking the implementation */
     void* private_body(const PhysicsBody* body) const;
 
-    void register_body(PhysicsBody* body);
+    void register_body(PhysicsBody* body, const Vec3& pos, const Quaternion& rot);
     void unregister_body(PhysicsBody* body);
 
     void add_box_collider(
@@ -114,6 +114,8 @@ private:
 
     Vec3 body_position(const PhysicsBody* self) const;
     Quaternion body_rotation(const PhysicsBody* self) const;
+
+    void on_fixed_update(float step) override;
 };
 
 }

@@ -81,6 +81,12 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
         manager_ = std::make_shared<SceneManager>(window);
+        manager_->init();
+    }
+
+    void tear_down() {
+        manager_->clean_up();
+        manager_.reset();
     }
 
     void test_route() {
@@ -181,7 +187,10 @@ public:
 
     void test_register_scene() {
         SceneManager manager(window);
+        manager.init();
         manager.register_scene<SceneWithArgs>("test", "arg");
+
+        manager.clean_up();
     }
 
     void test_actors_are_freed() {

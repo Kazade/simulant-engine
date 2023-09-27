@@ -5,15 +5,17 @@
 
 using namespace smlt;
 
-class GameScene : public smlt::PhysicsScene {
+class GameScene : public smlt::Scene {
 public:
     GameScene(smlt::Window* window):
-        smlt::PhysicsScene(window) {}
+        smlt::Scene(window) {}
 
     void load() {
+        start_service<PhysicsService>();
+
         camera_ = create_node<smlt::Camera>();
         pipeline_ = compositor->render(
-            stage_, camera_
+            this, camera_
         );
         link_pipeline(pipeline_);
 
@@ -69,7 +71,7 @@ public:
         );
     }
 
-    void on_update(float dt) {
+    void on_update(float dt) override {
         counter += dt;
         if(counter > 1.0f) {
             counter = 0;

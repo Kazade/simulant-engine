@@ -34,9 +34,11 @@ public:
 
 struct SkyboxParams {
     Path source_directory;
+    TextureFlags flags;
 
-    SkyboxParams(const Path& directory):
-        source_directory(directory) {}
+    SkyboxParams(const Path& directory, const TextureFlags& flags=TextureFlags()):
+        source_directory(directory),
+        flags(flags) {}
 };
 
 class Skybox:
@@ -70,6 +72,8 @@ public:
 
 private:
     friend class SkyManager;
+
+    bool on_create(void* params) override;
 
     StageNodeID follow_camera_;
 

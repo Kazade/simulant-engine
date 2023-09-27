@@ -182,6 +182,16 @@ public:
         new_child->set_parent(this);
     }
 
+    void adopt_children(StageNode* node) {
+        node->set_parent(this);
+    }
+
+    template<typename... Args>
+    void adopt_children(StageNode* node, Args... args) {
+        node->set_parent(this);
+        adopt_children(args...);
+    }
+
     /** If this returns true, then generate_renderables will not be called on
      *  descendents of this node. It is assumed that this node generates
      *  renderables for all its children. */
@@ -218,6 +228,14 @@ public:
     bool is_part_of_active_pipeline() const {
         return active_pipeline_count_ > 0;
     }
+
+protected:
+    virtual bool on_create(void* params) = 0;
+    virtual bool on_destroy() { return true; }
+    virtual void on_update(float dt) { _S_UNUSED(dt); }
+    virtual void on_fixed_update(float step) { _S_UNUSED(step); }
+    virtual void on_late_update(float dt) { _S_UNUSED(dt); }
+
 private:
     friend class StageNodeManager;
 
@@ -226,11 +244,6 @@ private:
         return on_create(params);
     }
 
-    virtual bool on_create(void* params) = 0;
-    virtual bool on_destroy() { return true; }
-    virtual void on_update(float dt) { _S_UNUSED(dt); }
-    virtual void on_fixed_update(float step) { _S_UNUSED(step); }
-    virtual void on_late_update(float dt) { _S_UNUSED(dt); }
 
     virtual bool do_generates_renderables_for_descendents() const {
         return false;

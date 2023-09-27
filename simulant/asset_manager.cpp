@@ -55,6 +55,10 @@ AssetManager::~AssetManager() {
     } else {
         if(!children_.empty()) {
             S_WARN("Destroyed base manager while children remain");
+
+            for(auto& child: children_) {
+                child->parent_ = nullptr;
+            }
         }
 
         S_DEBUG("Destroyed base manager: {0}", this);
@@ -122,7 +126,7 @@ static TexturePtr create_texture_with_colour(AssetManager* manager, const Colour
 }
 
 
-bool SharedAssetManager::init() {
+bool SharedAssetManager::on_init() {
     S_DEBUG("Initalizing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
 

@@ -310,16 +310,14 @@ class SharedAssetManager:
 public:
     SharedAssetManager() = default;
 
-    bool init();
-
-    void cleanup() {}
-
     virtual MaterialPtr default_material() const;
 
     void set_default_material_filename(const Path &filename);
     Path default_material_filename() const;
 
 private:
+    bool on_init() override;
+
     mutable MaterialPtr default_material_;
     Path default_material_filename_;
 
