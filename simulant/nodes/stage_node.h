@@ -417,7 +417,6 @@ public:
     Property<generic::DataCarrier StageNode::*> data = { this, &StageNode::data_ };
     Property<Scene* StageNode::*> scene = { this, &StageNode::owner_ };
 
-
     smlt::Promise<void> destroy_after(const Seconds& seconds);
 
     bool parent_is_scene() const;

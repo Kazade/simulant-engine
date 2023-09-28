@@ -19,7 +19,7 @@ public:
         sig::scoped_connection conn = scene->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
             assert_equal(type, STAGE_NODE_TYPE_ACTOR);
             destroyed_count++;
-            destroyed_ids.insert(dynamic_cast<Actor*>(node)->id());
+            destroyed_ids.insert(node->id());
         });
 
         auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
@@ -127,11 +127,6 @@ public:
     void test_iteration_types() {
         auto stage = scene->create_node<smlt::Stage>();
 
-        for(auto& node: stage->each_child()) {
-            node.destroy();
-        }
-        application->run_frame();
-
         /*
             stage-> o
                    / \
@@ -148,6 +143,8 @@ public:
         auto c2 = scene->create_node<smlt::Stage>();
         auto c3 = scene->create_node<smlt::Stage>();
         auto c4 = scene->create_node<smlt::Stage>();
+        a1->set_parent(stage);
+        a2->set_parent(stage);
         c1->set_parent(a1);
         c2->set_parent(c1);
         c3->set_parent(c1);
@@ -246,6 +243,7 @@ public:
         expected.insert(c1);
         expected.insert(a1);
         expected.insert(stage);
+        expected.insert(scene);
 
         assert_items_equal(found, expected);
     }

@@ -24,6 +24,7 @@ struct RayCastResult {
 
 class Fixture {
 private:
+    // FIXME: b3Fixture is leaking the implementation!
     Fixture(PhysicsService* sim, b3Fixture* fixture);
 
     PhysicsBody* body_ = nullptr;
@@ -73,6 +74,7 @@ private:
     friend class StaticBody;
     friend class ContactListener;
     friend class DynamicPhysicsBody;
+    friend class Fixture;
 
     std::shared_ptr<PhysicsData> pimpl_;
 

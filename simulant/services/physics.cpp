@@ -276,6 +276,11 @@ public:
     b3Mesh* get_mesh() const { return mesh_.get(); }
 };
 
+Fixture::Fixture(PhysicsService* sim, b3Fixture* fixture) {
+    body_ = (PhysicsBody*) (fixture->GetBody()->GetUserData());
+    kind_ = sim->pimpl_->find_fixture(body_, fixture)->kind;
+}
+
 bool PhysicsService::body_exists(const PhysicsBody* body) const {
     return pimpl_->bodies_.count((PhysicsBody*) body);
 }
@@ -553,6 +558,12 @@ PhysicsService::PhysicsService():
 
     pimpl_->scene_ = std::make_shared<b3World>();
     pimpl_->scene_->SetGravity(b3Vec3(0, -9.81, 0));
+
+    pimpl_->contact_listener_ = std::make_shared<ContactListener>(this);
+    pimpl_->contact_filter_ = std::make_shared<PrivateContactFilter>(this);
+
+    pimpl_->scene_->SetContactListener(pimpl_->contact_listener_.get());
+    pimpl_->scene_->SetContactFilter(pimpl_->contact_filter_.get());
 }
 
 smlt::optional<RayCastResult> PhysicsService::ray_cast(const Vec3& start, const Vec3& direction, float max_distance) {

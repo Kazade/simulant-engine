@@ -20,7 +20,7 @@ MeshSilhouette::MeshSilhouette(MeshPtr mesh, const Mat4& mesh_transformation, co
     // Directional lights are always in range
     auto within_range = true;
 
-    if(light->node_type() == LIGHT_TYPE_POINT) {
+    if(light->light_type() == LIGHT_TYPE_POINT) {
         // If it's a point light, we see if the meshes aabb intersects the
         // radius of the light
         // FIXME: Do we need to rotate the light position based on the mesh rotation?
@@ -30,7 +30,7 @@ MeshSilhouette::MeshSilhouette(MeshPtr mesh, const Mat4& mesh_transformation, co
             light_direction_or_position_ + inverse_mesh_position_,
             light->range() * 2.0f // Range is radius, intersects_sphere takes diameter
         );
-    } else if(light->node_type() == LIGHT_TYPE_SPOT_LIGHT) {
+    } else if(light->light_type() == LIGHT_TYPE_SPOT_LIGHT) {
         // FIXME: need to check spotlight cone for AABB intersection
         assert(0 && "Not Implemented");
     }

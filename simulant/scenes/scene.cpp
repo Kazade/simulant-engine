@@ -116,6 +116,7 @@ void Scene::queue_clean_up(StageNode* node) {
         return;
     }
 
+    signal_stage_node_destroyed_(node, node->node_type());
     queued_for_clean_up_.push_back(node);
 }
 

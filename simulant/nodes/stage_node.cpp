@@ -139,6 +139,11 @@ void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const s
 void StageNode::finalize_destroy() {
     if(owner_) {
         owner_->queue_clean_up(this);
+
+        // Go through the subnodes and ask each for destruction in-turn
+        for(auto& stage_node: each_child()) {
+            stage_node.destroy();
+        };
     }
 }
 
@@ -160,18 +165,6 @@ StageNodeType StageNode::node_type() const {
 
 void StageNode::on_clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
-
-    // Go through the subnodes and ask each for destruction in-turn
-    std::vector<StageNode*> to_destroy;
-    for(auto& stage_node: each_child()) {
-        to_destroy.push_back(&stage_node);
-    };
-
-    for(auto stage_node: to_destroy) {
-        // Don't wait for the next frame, just destroy now
-        stage_node->destroy_immediately();
-    }
-
     remove_from_parent(); // Make sure we're not connected to anything
 }
 
@@ -249,7 +242,15 @@ void StageNode::recalc_visibility() {
 
 void StageNode::finalize_destroy_immediately() {
     if(owner_) {
+        std::vector<StageNode*> to_destroy;
+
+        for(auto& child: each_child()) {
+            to_destroy.push_back(&child);
+        }
+
         owner_->clean_up_node(this);
+
+        std::for_each(to_destroy.begin(), to_destroy.end(), [](StageNode* n) { n->destroy_immediately(); });
     }
 }
 

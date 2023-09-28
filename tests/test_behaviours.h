@@ -84,7 +84,6 @@ public:
 };
 
 
-
 class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
