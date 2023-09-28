@@ -323,7 +323,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
 
     /* Gather lights */
     StageNodeVisitorBFS light_finder(stage_node, [&](StageNode* node) {
-        if(node->node_type() == STAGE_NODE_TYPE_LIGHT) {
+        if(node->node_type() == STAGE_NODE_TYPE_DIRECTIONAL_LIGHT || node->node_type() == STAGE_NODE_TYPE_POINT_LIGHT) {
             Light* light = (Light*) node;
             if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
                 lights_visible.push_back(light);

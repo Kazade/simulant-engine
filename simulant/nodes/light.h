@@ -55,14 +55,9 @@ class Light :
     public ChainNameable<Light> {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_LIGHT;
-        typedef LightParams params_type;
-    };
-
     typedef std::shared_ptr<Light> ptr;
 
-    Light(Scene* owner);
+    Light(Scene* owner, StageNodeType type);
 
     void set_type(LightType type);
 
@@ -148,7 +143,7 @@ public:
     };
 
     PointLight(Scene* owner):
-        Light(owner) {}
+        Light(owner, STAGE_NODE_TYPE_POINT_LIGHT) {}
 
 private:
     bool on_create(void* params) override {
@@ -172,7 +167,7 @@ public:
     };
 
     DirectionalLight(Scene* owner):
-        Light(owner) {}
+        Light(owner, STAGE_NODE_TYPE_DIRECTIONAL_LIGHT) {}
 
     bool on_create(void* params) override {
         if(!Light::on_create(params)) {

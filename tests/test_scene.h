@@ -210,19 +210,19 @@ public:
     }
 
     void test_lights_are_freed() {
-        auto count = scene->count_nodes_by_type<Light>();
+        auto count = scene->count_nodes_by_type<DirectionalLight>();
 
         auto light = scene->create_node<DirectionalLight>();
-        assert_equal(light->node_type(), STAGE_NODE_TYPE_LIGHT);
-        assert_equal(scene->count_nodes_by_type<Light>(), count + 1);
+        assert_equal(light->node_type(), STAGE_NODE_TYPE_DIRECTIONAL_LIGHT);
+        assert_equal(scene->count_nodes_by_type<DirectionalLight>(), count + 1);
 
         light->destroy();
 
-        assert_equal(scene->count_nodes_by_type<Light>(), count + 1);
+        assert_equal(scene->count_nodes_by_type<DirectionalLight>(), count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Light>(), count);
+        assert_equal(scene->count_nodes_by_type<DirectionalLight>(), count);
     }
 
     void test_particle_systems_are_freed() {

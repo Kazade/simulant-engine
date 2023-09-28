@@ -26,8 +26,8 @@ namespace smlt {
 const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 
-Light::Light(Scene* owner):
-    ContainerNode(owner, STAGE_NODE_TYPE_LIGHT),
+Light::Light(Scene* owner, StageNodeType type):
+    ContainerNode(owner, type),
     type_(LIGHT_TYPE_POINT) {
 
 
