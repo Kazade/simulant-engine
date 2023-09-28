@@ -4,7 +4,11 @@
 
 namespace smlt {
 
-struct SphericalBillboardParams {};
+struct SphericalBillboardParams {
+    Vec3 forward;
+    SphericalBillboardParams(const Vec3& forward=Vec3::NEGATIVE_Z):
+        forward(forward) {}
+};
 
 class SphericalBillboard:
     public StageNode {
@@ -27,7 +31,9 @@ public:
         return aabb;
     }
 private:
-    bool on_create(void*) {
+    bool on_create(void* params) {
+        SphericalBillboardParams* args = (SphericalBillboardParams*) params;
+        forward_ = args->forward;
         return true;
     }
 
@@ -42,7 +48,7 @@ private:
                 target_->absolute_position() - absolute_position()
             ).normalized();
 
-            auto rot = smlt::Vec3::NEGATIVE_Z.rotation_to(dir);
+            auto rot = forward_.rotation_to(dir);
             rotate_to_absolute(rot);
         }
     }

@@ -88,32 +88,32 @@ public:
 class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto stage = scene->create_node<smlt::Stage>();
         auto actor = scene->create_node<smlt::Stage>();
         auto camera = scene->create_node<smlt::Camera>();
 
-        auto pipeline = window->compositor->render(stage, camera);
+        auto pipeline = window->compositor->render(scene, camera);
         pipeline->activate();
 
         auto billboard = scene->create_node<CylindricalBillboard>();
         billboard->set_target(camera);
+        billboard->adopt_children(actor);
 
         camera->move_to(0, 0, 100);
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(0, 0, 1));
+        assert_equal(actor->absolute_forward(), Vec3(0, 0, 1));
 
         camera->move_to(0, 100, 0);
 
         application->run_frame();
 
         // Default to negative Z
-        assert_equal(actor->forward(), Vec3(0, 0, -1));
+        assert_equal(actor->absolute_forward(), Vec3(0, 0, -1));
 
         camera->move_to(100, 0, 0);
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(1, 0, 0));
+        assert_equal(actor->absolute_forward(), Vec3(1, 0, 0));
     }
 };
 
@@ -121,30 +121,30 @@ class SphericalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto stage = scene->create_node<smlt::Stage>();
         auto actor = scene->create_node<smlt::Stage>();
         auto camera = scene->create_node<smlt::Camera>();
 
-        auto pipeline = window->compositor->render(stage, camera);
+        auto pipeline = window->compositor->render(scene, camera);
         pipeline->activate();
 
         auto billboard = scene->create_node<SphericalBillboard>();
         billboard->set_target(camera);
+        billboard->adopt_children(actor);
 
         camera->move_to(0, 0, 100);
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(0, 0, 1));
+        assert_equal(actor->absolute_forward(), Vec3(0, 0, 1));
 
         camera->move_to(0, 100, 0);
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(0, 1, 0));
+        assert_equal(actor->absolute_forward(), Vec3(0, 1, 0));
 
         camera->move_to(100, 0, 0);
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(1, 0, 0));
+        assert_equal(actor->absolute_forward(), Vec3(1, 0, 0));
     }
 };
 

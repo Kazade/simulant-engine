@@ -220,6 +220,18 @@ Mat4 StageNode::absolute_transformation() const {
     return absolute_transformation_;
 }
 
+Vec3 StageNode::absolute_forward() const {
+    return absolute_rotation_.forward();
+}
+
+Vec3 StageNode::absolute_right() const {
+    return absolute_rotation_.right();
+}
+
+Vec3 StageNode::absolute_up() const {
+    return absolute_rotation_.up();
+}
+
 void StageNode::recalc_visibility() {
     bool previously_visible = self_and_parents_visible_;
 

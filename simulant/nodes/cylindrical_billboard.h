@@ -4,7 +4,11 @@
 
 namespace smlt {
 
-struct CylindricalBillboardParams {};
+struct CylindricalBillboardParams {
+    Vec3 forward;
+    CylindricalBillboardParams(const Vec3& forward=Vec3::NEGATIVE_Z):
+        forward(forward) {}
+};
 
 class CylindricalBillboard:
     public StageNode {
@@ -30,7 +34,9 @@ private:
     StageNode* target_ = nullptr;
     Vec3 forward_;
 
-    bool on_create(void*) {
+    bool on_create(void* params) {
+        CylindricalBillboardParams* args = (CylindricalBillboardParams*) params;
+        forward_ = args->forward;
         return true;
     }
 

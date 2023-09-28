@@ -405,6 +405,10 @@ public:
     Vec3 absolute_scaling() const;
     Mat4 absolute_transformation() const;
 
+    Vec3 absolute_forward() const;
+    Vec3 absolute_right() const;
+    Vec3 absolute_up() const;
+
     bool is_visible() const;
 
     bool is_intended_visible() const { return is_visible_; }
