@@ -34,7 +34,7 @@ public:
     }
 
     const AABB transformed_aabb() const override {
-        return AABB(position(), position());
+        return AABB(transform->position(), transform->position());
     }
 
     // Converts an OpenGL unit to window space

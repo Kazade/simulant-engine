@@ -25,7 +25,7 @@ void SizeManipulator::do_manipulate(ParticleSystem* system, Particle* particles,
 
 
     /* We have to only respect X scale here, no other option! */
-    auto curve = create_scaled_curve(system->scale().x);
+    auto curve = create_scaled_curve(system->transform->scale_factor().x);
 
     Particle* particle = particles;
     for(auto i = 0u; i < particle_count; ++i) {

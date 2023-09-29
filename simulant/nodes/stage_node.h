@@ -73,7 +73,8 @@ class StageNode:
     public Updateable,
     public virtual BoundableEntity,
     public virtual TwoPhaseConstructed,
-    public AudioSource {
+    public AudioSource,
+    public TransformListener {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up); // Fired when the node is cleaned up later, following destroy
@@ -93,13 +94,23 @@ private:
     virtual void on_parent_set(StageNode* oldp, StageNode* newp) {
         _S_UNUSED(oldp);
 
-        if(!newp) {
-            return;
-        }
+        assert(newp); // We don't allow orphan nodes
+
+        transform->set_parent(newp->transform);
 
         update_transformation_from_parent();
         recalc_visibility();
     }
+
+    void on_transformation_changed() override {
+        /* If this node's transform changes in some way, we need
+         * to trigger updates on child transforms too */
+        for(auto& child: each_child()) {
+            child.transform->update_transformation_from_parent();
+        }
+    }
+
+    void on_transformation_change_attempted() override {}
 
 public:
     std::vector<StageNode*> find_descendents_by_types(std::initializer_list<StageNodeType> type_list) const;
@@ -392,23 +403,6 @@ public:
 
     StageNodeType node_type() const;
 
-    /* Without a parent, these are the same as move_to/rotate_to. With a parent
-     * this applies a relative position / rotation to the parent position / rotation
-     * so the node appears where you want */
-    void move_to_absolute(const Vec3& position);
-    void move_to_absolute(float x, float y, float z);
-    void rotate_to_absolute(const Quaternion& rotation);
-    void rotate_to_absolute(const Degrees& degrees, float x, float y, float z);
-
-    Vec3 absolute_position() const;
-    Quaternion absolute_rotation() const;
-    Vec3 absolute_scaling() const;
-    Mat4 absolute_transformation() const;
-
-    Vec3 absolute_forward() const;
-    Vec3 absolute_right() const;
-    Vec3 absolute_up() const;
-
     bool is_visible() const;
 
     bool is_intended_visible() const { return is_visible_; }
@@ -443,8 +437,6 @@ public:
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Scene* get_scene() const { return owner_; }
-
-    void on_transformation_changed() override;
 
     virtual void update_transformation_from_parent();
 

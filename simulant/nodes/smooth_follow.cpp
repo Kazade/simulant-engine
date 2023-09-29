@@ -33,7 +33,7 @@ void SmoothFollow::on_late_update(float dt) {
 
         // Keep within 0.0 - 1.0f;
         auto damping_to_apply = std::max(std::min(damping_ * dt, 1.0f), 0.0f);
-        move_to_absolute(
+        transform->set_position(
             absolute_position().lerp(wanted_position, damping_to_apply)
         );
 

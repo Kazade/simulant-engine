@@ -153,10 +153,11 @@ StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type):
     owner_(owner),
     node_type_(node_type) {
 
+    transform->add_listener(this);
 }
 
 StageNode::~StageNode() {
-
+    transform->remove_listener(this);
 }
 
 StageNodeType StageNode::node_type() const {
@@ -294,19 +295,6 @@ smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
     return p;
 }
 
-void StageNode::move_to_absolute(const Vec3& position) {
-    if(!has_parent()) {
-        move_to(position);
-    } else {
-        assert(parent_);
-
-        // The stage itself is immovable so, we only bother with this if this isn't he stage
-        // could also use if(!parent()->is_root())
-        Vec3 ppos = parent_->absolute_position();
-        move_to(position - ppos);
-    }
-}
-
 void StageNode::move_to_absolute(float x, float y, float z) {
     move_to_absolute(Vec3(x, y, z));
 }
@@ -324,10 +312,6 @@ void StageNode::rotate_to_absolute(const Quaternion& rotation) {
 
 void StageNode::rotate_to_absolute(const Degrees& degrees, float x, float y, float z) {
     rotate_to_absolute(Quaternion(Vec3(x, y, z), degrees));
-}
-
-void StageNode::on_transformation_changed() {
-    update_transformation_from_parent();
 }
 
 void StageNode::update_transformation_from_parent() {
@@ -357,7 +341,7 @@ void StageNode::update_transformation_from_parent() {
 
 AABB StageNode::calculate_transformed_aabb() const {
     auto corners = aabb().corners();
-    auto transform = absolute_transformation();
+    auto transform = transform->world_space_matrix();
 
     for(auto& corner: corners) {
         corner = corner.transformed_by(transform);

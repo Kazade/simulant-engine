@@ -157,9 +157,7 @@ bool PhysicsBody::on_create(void* params) {
 }
 
 void PhysicsBody::on_update(float dt) {
-    static const bool INTERPOLATION_ENABLED = true;
-
-    if(INTERPOLATION_ENABLED) {
+    if(transform->smoothing_mode() == TRANSFORM_SMOOTHING_EXTRAPOLATE) {
         auto prev_state = last_state_; // This is set by the signal connected in Body::Body()
         auto next_state = std::make_pair(
             simulated_position(),
@@ -173,11 +171,11 @@ void PhysicsBody::on_update(float dt) {
         auto new_pos = prev_state.first.lerp(next_state.first, t);
         auto new_rot = prev_state.second.slerp(next_state.second, t);
 
-        move_to_absolute(new_pos);
-        rotate_to_absolute(new_rot);
+        transform->set_position(new_pos);
+        transform->set_orientation(new_rot);
     } else {
-        move_to_absolute(simulated_position());
-        rotate_to_absolute(simulated_rotation());
+        transform->set_position(simulated_position());
+        transform->set_orientation(simulated_rotation());
     }
 }
 

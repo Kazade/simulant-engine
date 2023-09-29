@@ -155,7 +155,7 @@ void Skybox::generate(
     if(!actor_) {
         actor_ = scene->create_node<Actor>(mesh_);
         actor_->set_parent(this);
-        actor_->move_to(0, 0, 0);
+        actor_->transform->set_position(Vec3());
         actor_->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
         actor_->set_cullable(false);
     } else {

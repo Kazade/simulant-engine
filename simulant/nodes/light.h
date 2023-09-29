@@ -68,7 +68,7 @@ public:
      *  Direction is stored reversed in the position.
      */
     Vec3 direction() const {
-        return absolute_position();
+        return transform->position();
     }
 
     void set_direction(float x, float y, float z) {
@@ -82,7 +82,7 @@ public:
 
     void set_direction(const Vec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        move_to(-dir.x, -dir.y, -dir.z);
+        transform->set_position(Vec3(-dir.x, -dir.y, -dir.z));
     }
 
     void set_diffuse(const smlt::Colour& colour) {
@@ -154,7 +154,7 @@ private:
         PointLightParams* args = (PointLightParams*) params;
 
         set_type(LIGHT_TYPE_POINT);
-        move_to(args->position_or_direction);
+        transform->set_position(args->position_or_direction);
         return true;
     }
 };
