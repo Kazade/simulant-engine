@@ -62,7 +62,7 @@ private:
     AABB bounds_;
     Frustum frustum_;
 
-    smlt::Mat4 transform_;
+    smlt::Mat4 trans_;
     Mat4 view_matrix_;
     Mat4 projection_matrix_;
 
