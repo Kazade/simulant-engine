@@ -6,10 +6,10 @@ namespace smlt {
 void FlyController::on_late_update(float dt) {
     auto& input = scene->input;
 
-    move_forward_by(input->axis_value("Vertical") * speed_ * dt);
-    rotate_global_y_by(Degrees(input->axis_value("Horizontal") * -50.0f * dt));
-    rotate_global_y_by(Degrees(input->axis_value("MouseX") * -50.0f * dt));
-    rotate_x_by(Degrees(input->axis_value("MouseY") * -50.0f * dt));
+    transform->translate(transform->forward() * (input->axis_value("Vertical") * speed_ * dt));
+    transform->rotate(smlt::Vec3::POSITIVE_Y, Degrees(input->axis_value("Horizontal") * -50.0f * dt));
+    transform->rotate(smlt::Vec3::POSITIVE_Y, Degrees(input->axis_value("MouseX") * -50.0f * dt));
+    transform->rotate(smlt::Vec3::POSITIVE_X, Degrees(input->axis_value("MouseY") * -50.0f * dt));
 }
 
 }

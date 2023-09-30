@@ -123,7 +123,7 @@ void ParticleSystem::do_generate_renderables(
     }
 
     /* Rebuild the vertex data with the current camera direction */
-    rebuild_vertex_data(camera->up(), camera->right());
+    rebuild_vertex_data(camera->transform->up(), camera->transform->right());
 
     Renderable new_renderable;
     new_renderable.arrangement = MESH_ARRANGEMENT_QUADS;
@@ -394,16 +394,16 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     /* FIXME: Add smlt::fast_inverse() and use that */
     float decrement = smlt::fast_divide(1.0f, float(emitter->emission_rate)); //Work out how often to emit per second
 
-    auto scale = absolute_scaling();
+    auto scale = transform->scale_factor();
 
     uint32_t to_emit = max;
     while(state.emission_accumulator >= decrement) {
         //EMIT THE PARTICLE!
         Particle p;
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            p.position = absolute_position() + emitter->relative_position;
+            p.position = transform->position() + emitter->relative_position;
         } else {
-            p.position = absolute_position() + emitter->relative_position;
+            p.position = transform->position() + emitter->relative_position;
 
             float hw = emitter->dimensions.x * 0.5f * scale.x;
             float hh = emitter->dimensions.y * 0.5f * scale.y;
@@ -425,7 +425,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
 
         //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
         //when that entity rotates we want the velocity to stay pointing relative to the entity
-        auto rot = absolute_rotation();
+        auto rot = transform->orientation();
 
         p.velocity *= rot;
 

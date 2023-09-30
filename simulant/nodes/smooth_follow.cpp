@@ -20,9 +20,9 @@ void SmoothFollow::on_late_update(float dt) {
         return;
     }
 
-    auto target_rotation = target->absolute_rotation();
-    auto target_position = target->absolute_position();
-    auto dir = target_position - absolute_position();
+    auto target_rotation = target->transform->orientation();
+    auto target_position = target->transform->position();
+    auto dir = target_position - transform->position();
 
     /* We only move the camera if following is enabled, otherwise we
      * just change the rotation */
@@ -34,7 +34,7 @@ void SmoothFollow::on_late_update(float dt) {
         // Keep within 0.0 - 1.0f;
         auto damping_to_apply = std::max(std::min(damping_ * dt, 1.0f), 0.0f);
         transform->set_position(
-            absolute_position().lerp(wanted_position, damping_to_apply)
+            transform->position().lerp(wanted_position, damping_to_apply)
         );
 
         if(smlt::almost_equal(dir.length_squared(), 0.0f)) {
@@ -48,8 +48,8 @@ void SmoothFollow::on_late_update(float dt) {
 
     // Keep within 0.0 - 1.0f;
     auto rot_damping_to_apply = std::max(std::min(rotation_damping_ * dt, 1.0f), 0.0f);
-    rotate_to_absolute(
-        absolute_rotation().slerp(wanted_rotation, rot_damping_to_apply)
+    transform->set_orientation(
+        transform->orientation().slerp(wanted_rotation, rot_damping_to_apply)
     );
 }
 

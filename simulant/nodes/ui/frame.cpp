@@ -43,7 +43,7 @@ void Frame::finalize_build() {
         Px width = -(ow / 2);
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.0f, 0.5f);
-            child->move_to(cx + width.value, cy);
+            child->transform->set_translation_2d(Vec2(cx + width.value, cy));
             width += child->outer_width();
             width += space_between_;
         }
@@ -57,7 +57,7 @@ void Frame::finalize_build() {
 
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.5f, 1.0f);
-            child->move_to(cx, cy + height.value);
+            child->transform->set_translation_2d(Vec2(cx, cy + height.value));
             height -= child->outer_height();
             height -= space_between_;
         }

@@ -218,13 +218,13 @@ static bool build_renderables(
                 return false;
             }
 
-            float lhs_dist = (node->centre() - lhs->position()).length_squared();
-            float rhs_dist = (node->centre() - rhs->position()).length_squared();
+            float lhs_dist = (node->centre() - lhs->transform->position()).length_squared();
+            float rhs_dist = (node->centre() - rhs->transform->position()).length_squared();
             return lhs_dist < rhs_dist;
         }
     );
 
-    float distance_to_camera = camera->absolute_position().distance_to(node->transformed_aabb());
+    float distance_to_camera = camera->transform->position().distance_to(node->transformed_aabb());
 
     /* Find the ideal detail level at this distance from the camera */
     auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);

@@ -39,7 +39,7 @@ MeshInstanceID MeshInstancer::new_mesh_instance(const Vec3 &position, const Quat
     MeshInstance i;
     i.id = ++MeshInstancer::id_counter_;
     i.transformation = Mat4::from_pos_rot_scale(position, rotation, Vec3(1));
-    i.abs_transformation = absolute_transformation() * i.transformation;
+    i.abs_transformation = transform->world_space_matrix() * i.transformation;
     i.recalc_aabb(mesh_);
 
     instances_.insert(std::make_pair(i.id, i));
@@ -108,7 +108,7 @@ void MeshInstancer::on_transformation_changed() {
 
     for(auto& instance: instances_) {
         instance.second.abs_transformation = (
-            absolute_transformation() * instance.second.transformation
+            transform->world_space_matrix() * instance.second.transformation
         );
     }
 }

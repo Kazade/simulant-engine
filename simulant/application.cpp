@@ -462,8 +462,8 @@ bool Application::run_frame() {
     auto listener = window_->audio_listener();
     if(listener) {
         sound_driver_->set_listener_properties(
-            listener->absolute_position(),
-            listener->absolute_rotation(),
+            listener->transform->position(),
+            listener->transform->rotation(),
             smlt::Vec3() // FIXME: Where do we get velocity?
         );
     }

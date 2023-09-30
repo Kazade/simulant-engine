@@ -103,8 +103,8 @@ public:
      * Enabling this may be costly depending on the node doing the updating
      * so the default is no smoothing. Returns true if the smoothing mode was
      * changed. */
-    bool set_transform_smoothing_mode(TransformSmoothing mode);
-    TransformSmoothing transform_smoothing_mode() const;
+    bool set_smoothing_mode(TransformSmoothing mode);
+    TransformSmoothing smoothing_mode() const;
 
     bool add_listener(TransformListener* listener);
     bool remove_listener(TransformListener* listener);
