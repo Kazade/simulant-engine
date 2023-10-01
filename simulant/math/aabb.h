@@ -59,6 +59,10 @@ public:
         return extents_.z * 2.0f;
     }
 
+    const Vec3 half_dimensions() const {
+        return extents_;
+    }
+
     const Vec3 dimensions() const {
         return Vec3(width(), height(), depth());
     }
