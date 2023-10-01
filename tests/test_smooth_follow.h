@@ -64,7 +64,7 @@ public:
         int seconds = 5;
 
         // Rotate the target 90 degrees
-        actor->rotate_to_absolute(Quaternion(Vec3(0, 1, 0), Degrees(90)));
+        actor->transform->set_orientation(Quaternion(Vec3(0, 1, 0), Degrees(90)));
 
         // Run 5 seconds of updates at 1/60
         for(int32_t i = 0; i < seconds * 60; ++i) {
@@ -73,12 +73,12 @@ public:
 
         // Follower should now be facing negative Z
         assert_close(
-            follower->absolute_rotation().forward().x,
+            follower->transform->orientation().forward().x,
             -1.0f, 0.0001f
         );
 
         // Rotate the target 180 degrees
-        actor->rotate_to_absolute(Quaternion(Vec3(0, 1, 0), Degrees(180)));
+        actor->transform->set_orientation(Quaternion(Vec3(0, 1, 0), Degrees(180)));
 
         // Run 3 seconds of updates at 1/60
         for(int32_t i = 0; i < seconds * 60; ++i) {
@@ -87,7 +87,7 @@ public:
 
         // Follower should now be facing positive Z
         assert_close(
-            follower->absolute_rotation().forward().z,
+            follower->transform->forward().z,
             1.0f, 0.0001f
         );
 

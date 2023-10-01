@@ -598,7 +598,9 @@ bool InputManager::start_text_input(bool force_onscreen) {
 
     keyboard_ = active_scene->create_node<ui::Keyboard>();
     keyboard_->set_anchor_point(0.5f, 0.0f);
-    keyboard_->transform->set_position(window->width() / 2, window->height() * 0.1f);
+    keyboard_->transform->set_position_2d(
+        Vec2(window->width() / 2, window->height() * 0.1f)
+    );
     keyboard_->set_keyboard_integration_enabled(true);
     keyboard_->set_parent(keyboard_stage_);
 

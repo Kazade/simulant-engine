@@ -97,8 +97,6 @@ private:
         assert(newp); // We don't allow orphan nodes
 
         transform->set_parent(newp->transform);
-
-        update_transformation_from_parent();
         recalc_visibility();
     }
 
@@ -243,6 +241,8 @@ protected:
         for(auto& child: each_child()) {
             child.transform->update_transformation_from_parent();
         }
+
+        mark_transformed_aabb_dirty();
     }
 
     void on_transformation_change_attempted() override {}
@@ -438,12 +438,8 @@ protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Scene* get_scene() const { return owner_; }
 
-    virtual void update_transformation_from_parent();
-
     void recalc_bounds_if_necessary() const;
     void mark_transformed_aabb_dirty();
-
-    void mark_absolute_transformation_dirty();
 private:
     friend class Pipeline;
 
@@ -459,13 +455,6 @@ private:
     bool is_visible_ = true;
     bool self_and_parents_visible_ = true;
     void recalc_visibility();
-
-    Vec3 absolute_position_;
-    Quaternion absolute_rotation_;
-    Vec3 absolute_scale_ = Vec3(1, 1, 1);
-
-    mutable Mat4 absolute_transformation_;
-    mutable bool absolute_transformation_is_dirty_ = true;
 
     /* Mutable so that AABB accesses can be const, but we delay
      * calculation until access */

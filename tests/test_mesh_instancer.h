@@ -161,7 +161,7 @@ public:
         instancer->new_mesh_instance(Vec3());
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(0, 0, 0));
 
-        instancer->move_to(10, 0, 0);
+        instancer->transform->set_translation(Vec3(10, 0, 0));
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(10, 0, 0));
 
         auto camera = scene->create_node<smlt::Camera>();

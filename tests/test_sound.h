@@ -107,7 +107,7 @@ public:
         smlt::SoundPtr sound = scene->assets->new_sound_from_file("test_sound.ogg");
 
         auto actor = scene->create_node<smlt::Stage>();
-        actor->move_to(10, 0, 0);
+        actor->transform->set_translation(smlt::Vec3(10, 0, 0));
 
         assert_false(actor->playing_sound_count());
 

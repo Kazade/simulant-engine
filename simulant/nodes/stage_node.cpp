@@ -169,63 +169,6 @@ void StageNode::on_clean_up() {
     remove_from_parent(); // Make sure we're not connected to anything
 }
 
-Vec3 StageNode::absolute_position() const {
-    return absolute_position_;
-}
-
-Quaternion StageNode::absolute_rotation() const {
-    return absolute_rotation_;
-}
-
-Vec3 StageNode::absolute_scaling() const {
-    return absolute_scale_;
-}
-
-Mat4 StageNode::absolute_transformation() const {
-    if(!absolute_transformation_is_dirty_) {
-        return absolute_transformation_;
-    }
-
-    auto c0 = smlt::Vec4(absolute_rotation_ * smlt::Vec3(absolute_scale_.x, 0, 0), 0);
-    auto c1 = smlt::Vec4(absolute_rotation_ * smlt::Vec3(0, absolute_scale_.y, 0), 0);
-    auto c2 = smlt::Vec4(absolute_rotation_ * smlt::Vec3(0, 0, absolute_scale_.z), 0);
-
-    absolute_transformation_[0] = c0.x;
-    absolute_transformation_[1] = c0.y;
-    absolute_transformation_[2] = c0.z;
-    absolute_transformation_[3] = 0.0f;
-
-    absolute_transformation_[4] = c1.x;
-    absolute_transformation_[5] = c1.y;
-    absolute_transformation_[6] = c1.z;
-    absolute_transformation_[7] = 0.0f;
-
-    absolute_transformation_[8] = c2.x;
-    absolute_transformation_[9] = c2.y;
-    absolute_transformation_[10] = c2.z;
-    absolute_transformation_[11] = 0.0f;
-
-    absolute_transformation_[12] = absolute_position_.x;
-    absolute_transformation_[13] = absolute_position_.y;
-    absolute_transformation_[14] = absolute_position_.z;
-    absolute_transformation_[15] = 1.0f;
-
-    absolute_transformation_is_dirty_ = false;
-    return absolute_transformation_;
-}
-
-Vec3 StageNode::absolute_forward() const {
-    return absolute_rotation_.forward();
-}
-
-Vec3 StageNode::absolute_right() const {
-    return absolute_rotation_.right();
-}
-
-Vec3 StageNode::absolute_up() const {
-    return absolute_rotation_.up();
-}
-
 void StageNode::recalc_visibility() {
     bool previously_visible = self_and_parents_visible_;
 
@@ -295,56 +238,12 @@ smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
     return p;
 }
 
-void StageNode::move_to_absolute(float x, float y, float z) {
-    move_to_absolute(Vec3(x, y, z));
-}
-
-void StageNode::rotate_to_absolute(const Quaternion& rotation) {
-    if(has_parent()) {
-        auto prot = parent_->absolute_rotation();
-        prot.inverse();
-
-        rotate_to((prot * rotation).normalized());
-    } else {
-        rotate_to(rotation);
-    }
-}
-
-void StageNode::rotate_to_absolute(const Degrees& degrees, float x, float y, float z) {
-    rotate_to_absolute(Quaternion(Vec3(x, y, z), degrees));
-}
-
-void StageNode::update_transformation_from_parent() {
-    StageNode* parent = parent_;
-
-    if(!parent || parent_is_scene()) {
-        absolute_rotation_ = rotation_;
-        absolute_position_ = position_;
-        absolute_scale_ = scaling_;
-    } else {
-        auto parent_pos = parent->absolute_position();
-        auto parent_rot = parent->absolute_rotation();
-        auto parent_scale = parent->absolute_scaling();
-
-        absolute_rotation_ = parent_rot * rotation_;
-        absolute_position_ = parent_pos + parent_rot * position_;
-        absolute_scale_ = parent_scale * scaling_;
-    }
-
-    mark_transformed_aabb_dirty();
-    mark_absolute_transformation_dirty();
-
-    for(auto& node: each_child()) {
-        node.update_transformation_from_parent();
-    }
-}
-
 AABB StageNode::calculate_transformed_aabb() const {
     auto corners = aabb().corners();
-    auto transform = transform->world_space_matrix();
+    auto mat = transform->world_space_matrix();
 
     for(auto& corner: corners) {
-        corner = corner.transformed_by(transform);
+        corner = corner.transformed_by(mat);
     }
 
     return AABB(corners.data(), corners.size());
@@ -389,10 +288,6 @@ void StageNode::recalc_bounds_if_necessary() const {
 
 void StageNode::mark_transformed_aabb_dirty() {
     transformed_aabb_dirty_ = true;
-}
-
-void StageNode::mark_absolute_transformation_dirty() {
-    absolute_transformation_is_dirty_ = true;
 }
 
 void StageNode::update(float dt) {

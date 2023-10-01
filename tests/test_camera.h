@@ -41,20 +41,20 @@ public:
     void test_look_at() {
         Vec3 pos(0, 0, -1);
 
-        camera_->look_at(pos);
+        camera_->transform->look_at(pos);
 
-        Quaternion q = camera_->absolute_rotation();
+        Quaternion q = camera_->transform->orientation();
         assert_true(q == Quaternion());
 
         pos = Vec3(0, -1, 0);
-        camera_->look_at(pos, Vec3(0, 0, -1));
+        camera_->transform->look_at(pos, Vec3(0, 0, -1));
 
-        auto f = camera_->forward();
+        auto f = camera_->transform->forward();
         assert_close(0.0f, f.x, 0.000001f);
         assert_close(-1.0f, f.y, 0.000001f);
         assert_close(0.0f, f.z, 0.000001f);
 
-        auto res = camera_->up();
+        auto res = camera_->transform->up();
         assert_close(res.x, 0.0f, 0.000001f);
         assert_close(res.y, 0.0f, 0.000001f);
         assert_close(res.z, -1.0f, 0.000001f);
@@ -66,11 +66,11 @@ public:
 
         auto od = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
 
-        camera->move_to(0, 0, 10.0f);
+        camera->transform->set_translation(Vec3(0, 0, 10.0f));
         camera->set_parent(actor);
 
-        actor->move_to(0, 0, -10.0f);
-        assert_close(camera->absolute_position().z, 0.0f, 0.00001f);
+        actor->transform->set_translation(Vec3(0, 0, -10.0f));
+        assert_close(camera->transform->translation().z, 0.0f, 0.00001f);
 
         auto d = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
         assert_close(d, od, 0.00001f);

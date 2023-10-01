@@ -54,31 +54,31 @@ bool StatsPanel::on_init() {
     float vheight = window_->height() - diff;
 
     auto heading1 = scene->create_node<ui::Label>("Performance", label_width);
-    heading1->move_to(hw, vheight);
+    heading1->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     fps_ = scene->create_node<ui::Label>("FPS: 0", label_width);
-    fps_->move_to(hw, vheight);
+    fps_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     frame_time_ = scene->create_node<ui::Label>("Frame Time: 0ms", label_width);
-    frame_time_->move_to(hw, vheight);
+    frame_time_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     ram_usage_ = scene->create_node<ui::Label>("RAM Used: 0", label_width);
-    ram_usage_->move_to(hw, vheight);
+    ram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     vram_usage_ = scene->create_node<ui::Label>("VRAM Used: 0", label_width);
-    vram_usage_->move_to(hw, vheight);
+    vram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     actors_rendered_ = scene->create_node<ui::Label>("Renderables visible: 0", label_width);
-    actors_rendered_->move_to(hw, vheight);
+    actors_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     polygons_rendered_ = scene->create_node<ui::Label>("Polygons Rendered: 0", label_width);
-    polygons_rendered_->move_to(hw, vheight);
+    polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     graph_material_ = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
@@ -239,10 +239,10 @@ void StatsPanel::rebuild_ram_graph() {
     }
 
     low_mem_->set_text(_F("{0}M").format(lowest_mem));
-    low_mem_->move_to(lowest_x, lowest_y + 10);
+    low_mem_->transform->set_position_2d(Vec2(lowest_x, lowest_y + 10));
 
     high_mem_->set_text(_F("{0}M").format(highest_mem));
-    high_mem_->move_to(highest_x, highest_y + 10);
+    high_mem_->transform->set_position_2d(Vec2(highest_x, highest_y + 10));
 
     vdata->done();
     idata->done();

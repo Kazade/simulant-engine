@@ -43,7 +43,7 @@ public:
                 );
 
                 pos = pos.rotated_by(rotation);
-                camera_->move_to_absolute(pos);
+                camera_->transform->set_position(pos);
             }
 
             cr_yield();

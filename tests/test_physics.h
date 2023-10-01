@@ -157,7 +157,7 @@ public:
         assert_true(enter_called);
 
         // Move away (should still not call anything)
-        body2->move_to(Vec3(0, 10, 0));
+        body2->transform->set_translation(Vec3(0, 10, 0));
 
         physics->fixed_update(1.0f / 60.0f);
         assert_true(leave_called);
@@ -166,7 +166,7 @@ public:
         physics->set_contact_filter(&filter2);
 
         // Move back
-        body2->move_to(Vec3(0, 0, 0));
+        body2->transform->set_translation(Vec3(0, 0, 0));
         physics->fixed_update(1.0f / 60.0f);
 
         /* Should *not* collide, because the contact filter says that the two
@@ -215,14 +215,14 @@ public:
         assert_false(leave_called);
 
         // Move away (should still not call anything)
-        body2->move_to(Vec3(0, 10, 0));
+        body2->transform->set_translation(Vec3(0, 10, 0));
 
         physics->fixed_update(1.0f / 60.0f);
         assert_false(enter_called);
         assert_true(leave_called);
 
         // Move back, should now call
-        body2->move_to(Vec3(0, 0, 0));
+        body2->transform->set_translation(Vec3(0, 0, 0));
         body2->set_linear_velocity(Vec3(0, 0, 0));
 
         /* The first step new contacts will be created, but new signals won't fire until the next step */

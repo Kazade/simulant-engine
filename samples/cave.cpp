@@ -21,7 +21,7 @@ public:
 
         // Camera
         camera_->set_perspective_projection(Degrees(60.0), float(window->width()) / float(window->height()), 0.01f, 1000.0f);
-        camera_->rotate_global_y_by(Degrees(180 - 90));
+        camera_->transform->rotate(smlt::Vec3::UP, Degrees(180 - 90));
 
         smlt::MeshLoadOptions opts;
 #ifdef __DREAMCAST__
@@ -76,7 +76,7 @@ public:
         fairyPath_ = new BezierCurve(p0, p1, p2, p3);
 
         // Fairy
-        fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(0));
+        fairy_actor_->transform->set_position(fairyPath_->calc_bezier_point(0));
     }
 
     void on_update(float dt) override {
@@ -90,32 +90,32 @@ public:
     void on_fixed_update(float dt) override {
 
         // Move the camera between two points
-        camera_->move_to(camera_->position() + Vec3::LEFT * cameraSpeed_ * dt);
-        if(camera_->absolute_position().x > 0 || camera_->absolute_position().x < -15)
+        camera_->transform->set_position(camera_->transform->position() + Vec3::LEFT * cameraSpeed_ * dt);
+        if(camera_->transform->position().x > 0 || camera_->transform->position().x < -15)
             cameraSpeed_ *= -1;
 
         // Always look at the fairy
-        camera_->look_at(fairy_actor_->position());
+        camera_->transform->look_at(fairy_actor_->transform->position());
 
         // Also make sure the fairy is always at the camera (billboard)
-        Vec3 dir = (camera_->position() - fairy_actor_->position()).normalized();
+        Vec3 dir = (camera_->transform->position() - fairy_actor_->transform->position()).normalized();
         Quaternion rot = smlt::Vec3::NEGATIVE_Z.rotation_to(dir);
 
         // Offset the rotation on the UP axis by 90 degrees
-        fairy_actor_->rotate_to(rot * Quaternion(Vec3::UP, Degrees(90)));
+        fairy_actor_->transform->set_orientation(rot * Quaternion(Vec3::UP, Degrees(90)));
 
         // Make sure the fairy loops the path (t ranges from 0 to 1)
         if(fairyPathTime_ >= 1)
             fairyPathTime_ = 0;
 
         // Get the last position for the upcoming step size calculation
-        Vec3 prevFairyPos = fairy_actor_->absolute_position();
+        Vec3 prevFairyPos = fairy_actor_->transform->position();
 
         // Move the fairy across the path to the new position
-        fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(fairyPathTime_));
+        fairy_actor_->transform->set_position(fairyPath_->calc_bezier_point(fairyPathTime_));
 
         // Make sure the fairy moves at a constant speed
-        lastFairyPathStepSize = fairy_actor_->absolute_position().sqr_distance(fairy_actor_->absolute_position(), prevFairyPos);
+        lastFairyPathStepSize = fairy_actor_->transform->position().sqr_distance(fairy_actor_->transform->position(), prevFairyPos);
 
         if(lastFairyPathStepSize < fairyPathStepSize_) {
             fairyPathSpeedFactor_ *= 1.1f;

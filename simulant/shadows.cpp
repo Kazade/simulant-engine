@@ -9,7 +9,7 @@ namespace smlt {
 MeshSilhouette::MeshSilhouette(MeshPtr mesh, const Mat4& mesh_transformation, const LightPtr light):
     mesh_(mesh),
     light_direction_or_position_(
-        (light->light_type() == LIGHT_TYPE_DIRECTIONAL) ? light->direction() : light->absolute_position()
+          (light->light_type() == LIGHT_TYPE_DIRECTIONAL) ? light->direction() : light->transform->position()
     ),
     light_type_(light->light_type()) {
 

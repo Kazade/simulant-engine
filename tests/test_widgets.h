@@ -82,7 +82,7 @@ public:
 
         assert_equal(button->aabb().min().x, 0); // No change
         assert_equal(button->aabb().min().y, 0);
-        button->move_to(0, 0);
+        button->transform->set_translation_2d(Vec2(0, 0));
         assert_equal(button->aabb().min().x, -button->aabb().width()); // Should've changed now
         assert_equal(button->aabb().min().y, 0);
     }

@@ -104,7 +104,7 @@ void PlayingSound::update(float dt) {
 
     // Update the position of the source if this is attached to a stagenode
     if(parent_.node_) {
-        auto pos = parent_.node_->absolute_position();
+        auto pos = parent_.node_->transform->position();
         driver->set_source_properties(
             source_,
             pos,

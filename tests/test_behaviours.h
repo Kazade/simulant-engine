@@ -97,22 +97,22 @@ public:
         billboard->set_target(camera);
         billboard->adopt_children(actor);
 
-        camera->move_to(0, 0, 100);
+        camera->transform->set_translation(Vec3(0, 0, 100));
 
         application->run_frame();
-        assert_equal(actor->absolute_forward(), Vec3(0, 0, 1));
+        assert_equal(actor->transform->forward(), Vec3(0, 0, 1));
 
-        camera->move_to(0, 100, 0);
+        camera->transform->set_translation(Vec3(0, 100, 0));
 
         application->run_frame();
 
         // Default to negative Z
-        assert_equal(actor->absolute_forward(), Vec3(0, 0, -1));
+        assert_equal(actor->transform->forward(), Vec3(0, 0, -1));
 
-        camera->move_to(100, 0, 0);
+        camera->transform->set_translation(Vec3(100, 0, 0));
 
         application->run_frame();
-        assert_equal(actor->absolute_forward(), Vec3(1, 0, 0));
+        assert_equal(actor->transform->forward(), Vec3(1, 0, 0));
     }
 };
 
@@ -130,20 +130,20 @@ public:
         billboard->set_target(camera);
         billboard->adopt_children(actor);
 
-        camera->move_to(0, 0, 100);
+        camera->transform->set_translation(Vec3(0, 0, 100));
 
         application->run_frame();
-        assert_equal(actor->absolute_forward(), Vec3(0, 0, 1));
+        assert_equal(actor->transform->forward(), Vec3(0, 0, 1));
 
-        camera->move_to(0, 100, 0);
-
-        application->run_frame();
-        assert_equal(actor->absolute_forward(), Vec3(0, 1, 0));
-
-        camera->move_to(100, 0, 0);
+        camera->transform->set_translation(Vec3(0, 100, 0));
 
         application->run_frame();
-        assert_equal(actor->absolute_forward(), Vec3(1, 0, 0));
+        assert_equal(actor->transform->forward(), Vec3(0, 1, 0));
+
+        camera->transform->set_translation(Vec3(100, 0, 0));
+
+        application->run_frame();
+        assert_equal(actor->transform->forward(), Vec3(1, 0, 0));
     }
 };
 

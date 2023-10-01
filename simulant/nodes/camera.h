@@ -68,7 +68,7 @@ private:
 
     void update_frustum();
 
-    void update_transformation_from_parent() override;
+    void on_transformation_changed() override;
 };
 
 

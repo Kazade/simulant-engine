@@ -45,8 +45,8 @@ void Splash::load() {
 
     text_->set_anchor_point(0.5, 1.0);
 
-    image_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
-    text_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
+    image_->transform->set_position_2d(window->coordinate_from_normalized(0.5f, 0.4f));
+    text_->transform->set_position_2d(window->coordinate_from_normalized(0.5f, 0.4f));
 
     //Create an orthographic camera
     camera_ = create_node<Camera>();

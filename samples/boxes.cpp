@@ -25,7 +25,7 @@ public:
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
         );
 
-        camera_->move_to(0, 10, 50);
+        camera_->transform->set_position(Vec3(0, 10, 50));
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {

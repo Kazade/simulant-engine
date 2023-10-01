@@ -45,7 +45,7 @@ private:
 
         if(target_) {
             auto dir = (
-                target_->absolute_position() - absolute_position()
+                target_->transform->position() - transform->position()
             ).normalized();
 
             smlt::Plane up_plane(smlt::Vec3::POSITIVE_Y, 0);
@@ -60,7 +60,7 @@ private:
             dir = up_plane.project(dir).normalized();
 
             auto rot = forward_.rotation_to(dir);
-            rotate_to_absolute(rot);
+            transform->set_orientation(rot);
         }
     }
 

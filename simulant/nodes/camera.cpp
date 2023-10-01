@@ -21,8 +21,8 @@ Camera::~Camera() {
 
 }
 
-void Camera::update_transformation_from_parent() {
-    StageNode::update_transformation_from_parent();
+void Camera::on_transformation_changed() {
+    StageNode::on_transformation_changed();
     trans_ = transform->world_space_matrix();
     update_frustum();
 }

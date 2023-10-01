@@ -156,7 +156,7 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
         debug->set_parent(this);
     }
 
-    debug->transform_to(absolute_transformation());
+    debug->transform->sync(transform);
 #endif
 
     base_mesh->animated_frame_data_->prepare_unpack(
@@ -167,7 +167,9 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
     );
 
 #ifdef DEBUG_ANIMATION
-    debug->transform_to(Mat4());
+    debug->transform->set_translation(Vec3());
+    debug->transform->set_rotation(Quaternion());
+    debug->transform->set_scale_factor(Vec3());
 #endif
 }
 
@@ -260,7 +262,7 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Ca
 
     for(auto submesh: mesh->each_submesh()) {
         Renderable new_renderable;
-        new_renderable.final_transformation = absolute_transformation();
+        new_renderable.final_transformation = transform->world_space_matrix();
         new_renderable.render_priority = render_priority();
         new_renderable.is_visible = is_visible();
         new_renderable.arrangement = submesh->arrangement();

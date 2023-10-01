@@ -26,7 +26,7 @@ public:
 
         auto frame = create_node<smlt::ui::Frame>("UI Demo");
         frame->set_anchor_point(0.0f, 1.0f);
-        frame->move_to(x, y);
+        frame->transform->set_position_2d(smlt::Vec2(x, y));
         frame->set_padding(spacing);
         frame->set_space_between(spacing);
 
@@ -63,25 +63,27 @@ public:
         auto simulant_logo = assets->new_texture_from_file("textures/simulant-icon.png");
         auto icon = create_node<smlt::ui::Image>(simulant_logo);
         icon->set_anchor_point(1, 1);
-        icon->move_to(window->coordinate_from_normalized(0.95, 0.95));
+        icon->transform->set_position_2d(
+            smlt::Vec2(window->coordinate_from_normalized(0.95, 0.95))
+        );
 
         //stage_->ui->transform_input_with_camera(camera_);
 
         auto fixed_width = create_node<smlt::ui::Label>("This is some long text with a fixed width.\n See it works!");
         fixed_width->resize(200, -1);
-        fixed_width->move_to(400, 500);
+        fixed_width->transform->set_position_2d(smlt::Vec2(400, 500));
         fixed_width->set_background_colour(smlt::Colour::PURPLE);
         fixed_width->set_border_radius(smlt::ui::Px(10));
         fixed_width->set_padding(10);
 
         auto fixed_height = create_node<smlt::ui::Label>("This is some text with a fixed height.\n See it works!");
         fixed_height->resize(-1, 200);
-        fixed_height->move_to(300, 200);
+        fixed_height->transform->set_position_2d(smlt::Vec2(300, 200));
         fixed_height->set_background_colour(smlt::Colour::PURPLE);
 
         auto fit_content = create_node<smlt::ui::Label>("This widget fits its text content. See it works!");
         fit_content->resize(-1, -1);
-        fit_content->move_to(700, 200);
+        fit_content->transform->set_position_2d(smlt::Vec2(700, 200));
         fit_content->set_background_colour(smlt::Colour::PURPLE);
 
         auto pl = create_node<smlt::ui::Label>("PL");
@@ -89,7 +91,7 @@ public:
         //pl->resize(80, -1);
         pl->set_background_colour(smlt::Colour::GREY);
         pl->set_anchor_point(1.0f, 1.0f);
-        pl->move_to(window->coordinate_from_normalized(0.75f, 0.75f));
+        pl->transform->set_position_2d(window->coordinate_from_normalized(0.75f, 0.75f));
 
 
         auto left_label = create_node<smlt::ui::Label>("This label has left alignment");
@@ -110,7 +112,7 @@ public:
         align_frame->pack_child(middle_label);
         align_frame->pack_child(right_label);
         align_frame->set_anchor_point(1.0f, 1.0f);
-        align_frame->move_to(window->width() - 16, window->height() - 16);
+        align_frame->transform->set_position_2d(smlt::Vec2(window->width() - 16, window->height() - 16));
     }
 
     void activate() override {
@@ -120,9 +122,9 @@ public:
             /* No on-screen keyboard, so show a dialog */
             auto dialog = create_node<smlt::ui::Frame>("Please enter some text");
             dialog->pack_child(entry);
-            dialog->move_to(window->width() / 2, window->height() / 2);
+            dialog->transform->set_position_2d(smlt::Vec2(window->width() / 2, window->height() / 2));
         } else {
-            entry->move_to(window->width() / 2, window->height() / 2);
+            entry->transform->set_position_2d(smlt::Vec2(window->width() / 2, window->height() / 2));
         }
 
         input->signal_text_input_received().connect([=](const unicode& chr, smlt::TextInputEvent&) -> bool {

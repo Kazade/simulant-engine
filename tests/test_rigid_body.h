@@ -23,16 +23,16 @@ public:
         auto stage = scene->create_node<smlt::Stage>();
         auto actor = scene->create_node<smlt::Stage>();
 
-        actor->move_to(10, 0, 0);
-        actor->rotate_x_by(smlt::Degrees(90));
+        actor->transform->set_translation(Vec3(10, 0, 0));
+        actor->transform->rotate(smlt::Vec3::POSITIVE_X, smlt::Degrees(90));
 
         scene->start_service<PhysicsService>();
         auto controller = scene->create_node<RigidBody>();
         controller->set_parent(actor);
 
-        assert_equal(controller->position().x, 10.0f);
-        assert_equal(controller->position().y, 0.0f);
-        assert_equal(controller->position().z, 0.0f);
+        assert_equal(controller->transform->translation().x, 10.0f);
+        assert_equal(controller->transform->translation().y, 0.0f);
+        assert_equal(controller->transform->translation().z, 0.0f);
 
         stage->destroy();
     }

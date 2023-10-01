@@ -31,12 +31,27 @@ private:
 
 class Transform {
 public:
-    const Vec3& position() const; // WS position
-    const Quaternion& orientation() const; // WS-position
+    const Vec3& position() const {
+        return position_;
+    }
 
-    const Vec3& translation() const; // Local position
-    const Quaternion& rotation() const; // Local rotation
-    const Vec3& scale_factor() const; // Local scale factor
+    const Quaternion& orientation() const {
+        return orientation_;
+    }
+
+    const Vec3& translation() const {
+        return translation_;
+    }
+
+    // Local rotation
+    const Quaternion& rotation() const {
+        return rotation_;
+    }
+
+    // Local scale factor
+    const Vec3& scale_factor() const {
+        return scale_factor_;
+    }
 
     /* Set the absolute world-space position of the object */
     void set_position(const Vec3& position);
@@ -51,14 +66,20 @@ public:
     void set_rotation(const Quaternion& rotation);
 
     /* Set scale-factor relative to parent */
-    void set_scale_factor(const Vec3& scale);
+    void set_scale_factor(const Vec3& scale) {
+        scale_factor_ = scale;
+        signal_change();
+    }
 
-    /* Change the relative translation by v. If movement type is local
-       then v will represent movement along the local x, y, z */
-    void translate(const Vec3& v, MovementType movement=MOVEMENT_TYPE_GLOBAL);
+    /* Change the relative translation by v */
+    void translate(const Vec3& v) {
+        translation_ += v;
+        signal_change();
+    }
 
     /* Change the relative rotation by q */
     void rotate(const Quaternion& q);
+
     void rotate(const Vec3& axis, const Degrees& amount, MovementType movement=MOVEMENT_TYPE_GLOBAL);
     void rotate(const Degrees& x, const Degrees& y, const Degrees& z, MovementType movement=MOVEMENT_TYPE_GLOBAL);
 
@@ -88,12 +109,25 @@ public:
     void translate_2d(const Vec2& xy);
     void rotate_2d(const smlt::Degrees& rot);
 
-    Vec3 forward() const;
-    Vec3 up() const;
-    Vec3 right() const;
+    Vec3 forward() const {
+        return orientation_.forward();
+    }
 
-    Vec2 up_2d() const;
-    Vec2 right_2d() const;
+    Vec3 up() const {
+        return orientation_.up();
+    }
+
+    Vec3 right() const {
+        return orientation_.right();
+    }
+
+    Vec2 up_2d() const {
+        return up().xy();
+    }
+
+    Vec2 right_2d() const {
+        return right().xy();
+    }
 
     /* Sets the transform smoothing mode. This is a hint to nodes and
      * services which manipulate the position on whether they should be
@@ -103,14 +137,24 @@ public:
      * Enabling this may be costly depending on the node doing the updating
      * so the default is no smoothing. Returns true if the smoothing mode was
      * changed. */
-    bool set_smoothing_mode(TransformSmoothing mode);
-    TransformSmoothing smoothing_mode() const;
+    bool set_smoothing_mode(TransformSmoothing mode) {
+        bool ret = mode != smoothing_;
+        smoothing_ = mode;
+        return ret;
+    }
+
+    TransformSmoothing smoothing_mode() const {
+        return smoothing_;
+    }
 
     bool add_listener(TransformListener* listener);
     bool remove_listener(TransformListener* listener);
 
     void update_transformation_from_parent();
 
+    void sync(const Transform* other);
+
+    void look_at(const Vec3& location, const Vec3& up=Vec3::POSITIVE_Y);
 private:
     /* THis is for access to set_parent primarily */
     friend class StageNode;
@@ -134,6 +178,9 @@ private:
     Vec3 translation_;
     Quaternion rotation_;
     Vec3 scale_factor_;
+
+    mutable Mat4 absolute_transformation_;
+    mutable bool absolute_transformation_is_dirty_ = false;
 };
 
 }

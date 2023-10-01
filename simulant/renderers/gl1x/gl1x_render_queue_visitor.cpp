@@ -271,7 +271,7 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
         auto state = (current) ? LightState(
             true,
-            Vec4(current->absolute_position(), (current->node_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
+            Vec4(current->transform->position(), (current->node_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
             current->diffuse(),
             current->ambient(),
             current->specular(),

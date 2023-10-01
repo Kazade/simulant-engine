@@ -45,11 +45,11 @@ private:
 
         if(target_) {
             auto dir = (
-                target_->absolute_position() - absolute_position()
+                target_->transform->position() - transform->position()
             ).normalized();
 
             auto rot = forward_.rotation_to(dir);
-            rotate_to_absolute(rot);
+            transform->set_orientation(rot);
         }
     }
 };

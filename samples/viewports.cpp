@@ -16,7 +16,7 @@ public:
         cube->new_submesh_as_cube("cube", assets->new_material(), 1.0);
         smlt::ActorPtr actor = create_node<smlt::Actor>(cube);
 
-        actor->move_to(0, 0, -5);
+        actor->transform->set_position(smlt::Vec3(0, 0, -5));
 
         auto camera1 = create_node<smlt::Camera>();
         auto camera2 = create_node<smlt::Camera>();

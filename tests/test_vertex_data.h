@@ -139,7 +139,7 @@ public:
         assert_equal(data->cursor_position(), 3);
         assert_equal(data->cursor_offset(), 3 * (int32_t) stride);
 
-        data->move_to(1);
+        data->position(1);
 
         assert_equal(data->cursor_position(), 1);
         assert_equal(data->cursor_offset(), 1 * (int32_t) stride);

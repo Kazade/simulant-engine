@@ -28,7 +28,7 @@ public:
 
         auto camera = scene->create_node<smlt::Camera>();
         camera->set_parent(partitioner);
-        camera->move_to(784, 58, -775);
+        camera->transform->set_translation(Vec3(784, 58, -775));
 
         auto a1 = scene->create_node<smlt::Actor>(box_);
         a1->set_parent(partitioner);
@@ -36,7 +36,7 @@ public:
         assert_true(a1->has_any_mesh());
         assert_close(a1->aabb().max_dimension(), 1.0f, 0.0001f);
 
-        a1->move_to(791, 58, -810);
+        a1->transform->set_translation(Vec3(791, 58, -810));
 
         assert_false(a1->transformed_aabb().has_zero_area());
 
@@ -55,7 +55,7 @@ public:
         auto camera = scene->create_node<smlt::Camera>();
         auto a1 = scene->create_node<smlt::Actor>(box_);
         a1->set_parent(partitioner);
-        a1->move_to(0, 0, 100);
+        a1->transform->set_translation(Vec3(0, 0, 100));
 
         batcher::RenderQueue queue;
         queue.reset(partitioner, window->renderer.get(), camera);
@@ -83,9 +83,9 @@ public:
         auto a2 = scene->create_node<smlt::Actor>(box_);
         auto a3 = scene->create_node<smlt::Actor>(box_);
 
-        a1->move_to(0, 0, -5);
-        a2->move_to(0, 0, -5);
-        a3->move_to(0, 0, -5);
+        a1->transform->set_translation(Vec3(0, 0, -5));
+        a2->transform->set_translation(Vec3(0, 0, -5));
+        a3->transform->set_translation(Vec3(0, 0, -5));
 
         partitioner->adopt_children(a1, a2, a3);
 
