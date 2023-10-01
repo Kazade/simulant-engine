@@ -78,7 +78,7 @@ public:
 
         actor1->transform->set_translation(Vec3(0, 10, 0));
 
-        assert_equal(Vec3(0, 10, 0), actor2->transform->translation());
+        assert_equal(Vec3(0, 10, 0), actor2->transform->position());
         assert_equal(Vec3(), actor2->transform->translation());
 
         actor1->transform->set_rotation(Quaternion(Degrees(0), Degrees(90), Degrees(0)));
@@ -114,17 +114,17 @@ public:
         actor1->transform->set_translation(smlt::Vec3(0, 0, -5));
         actor1->transform->set_rotation(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
 
-        assert_close(actor2->transform->translation().x, -5.0f, 0.00001f);
-        assert_close(actor2->transform->translation().y,  0.0f, 0.00001f);
-        assert_close(actor2->transform->translation().z, -5.0f, 0.00001f);
+        assert_close(actor2->transform->position().x, -5.0f, 0.00001f);
+        assert_close(actor2->transform->position().y,  0.0f, 0.00001f);
+        assert_close(actor2->transform->position().z, -5.0f, 0.00001f);
     }
 
     void test_set_absolute_rotation() {
         auto actor = scene->create_node<smlt::Stage>();
 
-        actor->transform->set_orientation(smlt::Degrees(10), 0, 0, 1);
+        actor->transform->set_orientation(smlt::Quaternion(smlt::Vec3(0, 0, 1), smlt::Degrees(10)));
 
-        assert_equal(actor->transform->orientation(), actor->transform->orientation());
+        assert_equal(actor->transform->rotation(), actor->transform->orientation());
 
         auto actor2 = scene->create_node<smlt::Stage>();
 
@@ -132,7 +132,7 @@ public:
 
         assert_equal(actor2->transform->orientation(), actor->transform->orientation());
 
-        actor2->transform->set_orientation(smlt::Degrees(20), 0, 0, 1);
+        actor2->transform->set_orientation(smlt::Quaternion(smlt::Vec3(0, 0, 1), smlt::Degrees(20)));
 
         smlt::Quaternion expected_rel(smlt::Vec3::POSITIVE_Z, smlt::Degrees(10));
         smlt::Quaternion expected_abs(smlt::Vec3::POSITIVE_Z, smlt::Degrees(20));
@@ -142,10 +142,10 @@ public:
         assert_close(expected_abs.z, actor2->transform->orientation().z, 0.000001f);
         assert_close(expected_abs.w, actor2->transform->orientation().w, 0.000001f);
 
-        assert_close(expected_rel.x, actor2->transform->orientation().x, 0.000001f);
-        assert_close(expected_rel.y, actor2->transform->orientation().y, 0.000001f);
-        assert_close(expected_rel.z, actor2->transform->orientation().z, 0.000001f);
-        assert_close(expected_rel.w, actor2->transform->orientation().w, 0.000001f);
+        assert_close(expected_rel.x, actor2->transform->rotation().x, 0.000001f);
+        assert_close(expected_rel.y, actor2->transform->rotation().y, 0.000001f);
+        assert_close(expected_rel.z, actor2->transform->rotation().z, 0.000001f);
+        assert_close(expected_rel.w, actor2->transform->rotation().w, 0.000001f);
     }
 
     void test_set_absolute_position() {
@@ -160,16 +160,16 @@ public:
         actor2->set_parent(actor);
 
         //Should be the same as its parent
-        assert_equal(actor2->transform->translation(), actor->transform->translation());
+        assert_equal(actor2->transform->position(), actor->transform->position());
 
         //Make sure relative position is correctly calculated
         actor2->transform->set_position(Vec3(20, 10, 10));
         assert_equal(smlt::Vec3(10, 0, 0), actor2->transform->translation());
-        assert_equal(smlt::Vec3(20, 10, 10), actor2->transform->translation());
+        assert_equal(smlt::Vec3(20, 10, 10), actor2->transform->position());
 
         //Make sure setting by vec3 works
         actor2->transform->set_position(smlt::Vec3(0, 0, 0));
-        assert_equal(smlt::Vec3(), actor2->transform->translation());
+        assert_equal(smlt::Vec3(), actor2->transform->position());
     }
 
     void test_set_relative_position() {
@@ -179,7 +179,7 @@ public:
 
         //No parent, both should be the same
         assert_equal(smlt::Vec3(10, 10, 10), actor->transform->translation());
-        assert_equal(smlt::Vec3(10, 10, 10), actor->transform->translation());
+        assert_equal(smlt::Vec3(10, 10, 10), actor->transform->position());
 
         auto actor2 = scene->create_node<smlt::Stage>();
 
@@ -187,7 +187,7 @@ public:
 
         actor2->transform->set_translation(smlt::Vec3(10, 0, 0));
 
-        assert_equal(smlt::Vec3(20, 10, 10), actor2->transform->translation());
+        assert_equal(smlt::Vec3(20, 10, 10), actor2->transform->position());
         assert_equal(smlt::Vec3(10, 0, 0), actor2->transform->translation());
     }
 

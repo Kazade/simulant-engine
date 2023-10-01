@@ -91,12 +91,15 @@ private:
     StageNode* first_child_ = nullptr;
     StageNode* last_child_ = nullptr;
 
-    virtual void on_parent_set(StageNode* oldp, StageNode* newp) {
+    virtual void on_parent_set(StageNode* oldp, StageNode* newp, TransformRetainMode transform_retain) {
         _S_UNUSED(oldp);
 
-        assert(newp); // We don't allow orphan nodes
+        if(newp) {
+            transform->set_parent(newp->transform, transform_retain);
+        } else {
+            transform->set_parent(nullptr);
+        }
 
-        transform->set_parent(newp->transform);
         recalc_visibility();
     }
 
@@ -176,7 +179,11 @@ public:
     }
 
     void remove_from_parent();
-    void set_parent(StageNode* new_parent);
+    void set_parent(
+        StageNode* new_parent,
+        TransformRetainMode transform_retain=TRANSFORM_RETAIN_MODE_LOSE
+    );
+
     void append_child(StageNode* new_child) {
         new_child->set_parent(this);
     }

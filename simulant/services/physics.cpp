@@ -41,12 +41,14 @@ struct BodyData {
 
 struct _PhysicsData {
     ContactFilter* filter_ = nullptr;
+    std::weak_ptr<bool> filter_alive_;
 
     TimeKeeper* time_keeper_ = nullptr;
 
     std::shared_ptr<b3World> scene_;
     std::shared_ptr<ContactListener> contact_listener_;
-    std::shared_ptr<PrivateContactFilter> contact_filter_;
+
+    std::shared_ptr<PrivateContactFilter> contact_filter_;    
 
     std::unordered_map<PhysicsBody*, BodyData> bodies_;
 
@@ -286,11 +288,22 @@ bool PhysicsService::body_exists(const PhysicsBody* body) const {
 }
 
 const ContactFilter* PhysicsService::contact_filter() const {
+    if(!pimpl_->filter_) {
+        return nullptr;
+    }
+
+    /* Did the contact filter get destroyed? */
+    if(!pimpl_->filter_alive_.lock()) {
+        pimpl_->filter_alive_.reset();
+        pimpl_->filter_ = nullptr;
+    }
+
     return pimpl_->filter_;
 }
 
 void PhysicsService::set_contact_filter(ContactFilter* filter) {
     pimpl_->filter_ = filter;
+    pimpl_->filter_alive_ = filter->alive_marker_;
 }
 
 void PhysicsService::register_body(PhysicsBody* body, const Vec3& pos, const Quaternion& rot) {

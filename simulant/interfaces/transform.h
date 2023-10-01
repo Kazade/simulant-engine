@@ -16,6 +16,11 @@ enum MovementType {
     MOVEMENT_TYPE_GLOBAL
 };
 
+enum TransformRetainMode {
+    TRANSFORM_RETAIN_MODE_KEEP,
+    TRANSFORM_RETAIN_MODE_LOSE,
+};
+
 class TransformListener {
 public:
     virtual void on_transformation_changed() = 0;
@@ -80,8 +85,9 @@ public:
     /* Change the relative rotation by q */
     void rotate(const Quaternion& q);
 
-    void rotate(const Vec3& axis, const Degrees& amount, MovementType movement=MOVEMENT_TYPE_GLOBAL);
-    void rotate(const Degrees& x, const Degrees& y, const Degrees& z, MovementType movement=MOVEMENT_TYPE_GLOBAL);
+    void rotate(const Vec3& axis, const Degrees& amount);
+
+    void rotate(const Degrees& x, const Degrees& y, const Degrees& z);
 
     /* Change the relative scale */
     void scale_by(const Vec3& v);
@@ -151,16 +157,15 @@ public:
     bool remove_listener(TransformListener* listener);
 
     void update_transformation_from_parent();
-
     void sync(const Transform* other);
+    void look_at(const Vec3& target, const Vec3& up=Vec3::POSITIVE_Y);
 
-    void look_at(const Vec3& location, const Vec3& up=Vec3::POSITIVE_Y);
 private:
     /* THis is for access to set_parent primarily */
     friend class StageNode;
 
     bool has_parent() const { return parent_ != nullptr; }
-    void set_parent(Transform* new_parent);
+    void set_parent(Transform* new_parent, TransformRetainMode retain_mode=TRANSFORM_RETAIN_MODE_LOSE);
 
     std::vector<TransformListener*> listeners_;
 

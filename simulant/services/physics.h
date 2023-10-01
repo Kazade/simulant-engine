@@ -49,6 +49,10 @@ public:
         _S_UNUSED(rhs);
         return true;
     }
+
+private:
+    friend class PhysicsService;
+    std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>();
 };
 
 class PhysicsService:

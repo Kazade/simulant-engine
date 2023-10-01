@@ -45,7 +45,7 @@ public:
         mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -20.0));
         mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 20.0));
 
-        camera->look_at(0, 0, -1); // Looking up -Z
+        camera->transform->look_at(smlt::Vec3(0, 0, -1)); // Looking up -Z
 
         batcher::RenderQueue queue;
         queue.reset(stage, window->renderer.get(), camera);
@@ -64,7 +64,7 @@ public:
 
         auto ret1 = *result[0];
 
-        camera->look_at(0, 0, 1); // Looking up +Z
+        camera->transform->look_at(smlt::Vec3(0, 0, 1)); // Looking up +Z
 
         queue.clear();
         result.clear();

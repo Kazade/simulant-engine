@@ -47,6 +47,16 @@ void Transform::rotate(const Quaternion &q) {
     }
 }
 
+void Transform::rotate(const Vec3& axis, const Degrees& amount) {
+    auto q = Quaternion(axis, amount);
+    rotate(q);
+}
+
+void Transform::rotate(const Degrees& x, const Degrees& y, const Degrees& z) {
+    auto q = Quaternion(x, y, z);
+    rotate(q);
+}
+
 Mat4 Transform::world_space_matrix() const {
     if(!absolute_transformation_is_dirty_) {
         return absolute_transformation_;
@@ -88,6 +98,27 @@ void Transform::set_translation_2d(const Vec2 &trans) {
     set_translation(Vec3(trans, 0));
 }
 
+bool Transform::add_listener(TransformListener* listener) {
+    auto it = std::find(listeners_.begin(), listeners_.end(), listener);
+    if(it != listeners_.end()) {
+        return false;
+    }
+
+    listeners_.push_back(listener);
+    return true;
+}
+
+bool Transform::remove_listener(TransformListener* listener) {
+    auto it = std::remove(listeners_.begin(), listeners_.end(), listener);
+    if(it == listeners_.end()) {
+        return false;
+    }
+
+    listeners_.erase(it, listeners_.end());
+
+    return true;
+}
+
 void Transform::update_transformation_from_parent() {
     Transform* parent = parent_;
 
@@ -111,7 +142,16 @@ void Transform::sync(const Transform *other) {
     set_scale_factor(other->scale_factor());
 }
 
-void Transform::set_parent(Transform* new_parent) {
+void Transform::look_at(const Vec3& target, const Vec3& up) {
+    set_orientation(
+        Quaternion::look_rotation(
+            (target - position_).normalized(),
+            up
+        )
+    );
+}
+
+void Transform::set_parent(Transform* new_parent, TransformRetainMode retain_mode) {
     if(parent_ == new_parent) {
         signal_change_attempted();
         return;
@@ -122,7 +162,7 @@ void Transform::set_parent(Transform* new_parent) {
 
     parent_ = new_parent;
 
-    if(parent_) {
+    if(parent_ && retain_mode == TRANSFORM_RETAIN_MODE_KEEP) {
         translation_ = (position_ - new_parent->position_);
         rotation_ = (orientation_ * new_parent->orientation_.inversed());
     }
