@@ -23,7 +23,6 @@ Camera::~Camera() {
 
 void Camera::on_transformation_changed() {
     StageNode::on_transformation_changed();
-    trans_ = transform->world_space_matrix();
     update_frustum();
 }
 

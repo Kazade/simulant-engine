@@ -243,13 +243,13 @@ protected:
     virtual void on_late_update(float dt) { _S_UNUSED(dt); }
 
     void on_transformation_changed() override {
+        mark_transformed_aabb_dirty();
+
         /* If this node's transform changes in some way, we need
          * to trigger updates on child transforms too */
         for(auto& child: each_child()) {
-            child.transform->update_transformation_from_parent();
+            child.transform->signal_change();
         }
-
-        mark_transformed_aabb_dirty();
     }
 
     void on_transformation_change_attempted() override {}

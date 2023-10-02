@@ -70,7 +70,7 @@ public:
         camera->set_parent(actor);
 
         actor->transform->set_translation(Vec3(0, 0, -10.0f));
-        assert_close(camera->transform->translation().z, 0.0f, 0.00001f);
+        assert_close(camera->transform->position().z, 0.0f, 0.00001f);
 
         auto d = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
         assert_close(d, od, 0.00001f);

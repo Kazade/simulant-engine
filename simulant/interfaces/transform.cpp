@@ -4,6 +4,7 @@
 namespace smlt {
 
 void Transform::set_position(const Vec3& position) {
+    signal_change_attempted();
     if(has_parent()) {
         Vec3 ppos = parent_->position();
         set_translation(position - ppos);
@@ -13,6 +14,7 @@ void Transform::set_position(const Vec3& position) {
 }
 
 void Transform::set_orientation(const Quaternion& orientation) {
+    signal_change_attempted();
     if(has_parent()) {
         auto prot = parent_->orientation();
         prot.inverse();
@@ -24,16 +26,20 @@ void Transform::set_orientation(const Quaternion& orientation) {
 }
 
 void Transform::set_translation(const Vec3 &translation) {
+    signal_change_attempted();
     translation_ = translation;
     signal_change();
 }
 
 void Transform::set_rotation(const Quaternion &rotation) {
+    signal_change_attempted();
     rotation_ = rotation;
     signal_change();
 }
 
 void Transform::rotate(const Quaternion &q) {
+    signal_change_attempted();
+
     assert(
         !std::isnan(q.x) &&
         !std::isnan(q.y) &&
@@ -42,7 +48,7 @@ void Transform::rotate(const Quaternion &q) {
     );
 
     if(!q.equals(rotation_)) {
-        rotation_ = q;
+        rotation_ *= q;
         signal_change();
     }
 }
@@ -152,8 +158,9 @@ void Transform::look_at(const Vec3& target, const Vec3& up) {
 }
 
 void Transform::set_parent(Transform* new_parent, TransformRetainMode retain_mode) {
-    if(parent_ == new_parent) {
-        signal_change_attempted();
+    signal_change_attempted();
+
+    if(parent_ == new_parent) {        
         return;
     }
 
@@ -178,6 +185,7 @@ void Transform::signal_change_attempted() {
 
 void Transform::signal_change() {
     update_transformation_from_parent();
+    absolute_transformation_is_dirty_ = true;
     for(auto& listener: listeners_) {
         listener->on_transformation_changed();
     }

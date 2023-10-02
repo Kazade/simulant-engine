@@ -328,8 +328,9 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
             if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
                 lights_visible.push_back(light);
             } else {
-                S_ERROR("NOT IMPLEMENTED: Implement radius / camera check");
-                lights_visible.push_back(light);
+                if(camera->frustum().intersects_sphere(light->transform->position(), light->diameter())) {
+                    lights_visible.push_back(light);
+                }
             }
         }
     });
