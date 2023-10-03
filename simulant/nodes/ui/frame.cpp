@@ -18,11 +18,11 @@ bool Frame::on_create(void *params) {
     FrameParams* args = (FrameParams*) params;
 
     if(!args->shared_style) {
-        set_background_colour(args->theme.frame_background_colour_);
-        set_foreground_colour(args->theme.frame_titlebar_colour_);
-        set_text_colour(args->theme.frame_text_colour_);
+        set_background_color(args->theme.frame_background_color_);
+        set_foreground_color(args->theme.frame_titlebar_color_);
+        set_text_color(args->theme.frame_text_color_);
         set_border_width(args->theme.frame_border_width_);
-        set_border_colour(args->theme.frame_border_colour_);
+        set_border_color(args->theme.frame_border_color_);
     }
 
     return true;

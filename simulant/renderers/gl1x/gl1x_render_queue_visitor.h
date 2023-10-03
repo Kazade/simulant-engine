@@ -33,7 +33,7 @@ public:
 private:
     GL1XRenderer* renderer_;
     CameraPtr camera_;
-    Colour global_ambient_;
+    Color global_ambient_;
 
     const MaterialPass* pass_ = nullptr;
     LightPtr light_;
@@ -48,14 +48,14 @@ private:
     void enable_normal_arrays(bool force=false);
     void disable_normal_arrays(bool force=false);
 
-    void enable_colour_arrays(bool force=false);
-    void disable_colour_arrays(bool force=false);
+    void enable_color_arrays(bool force=false);
+    void disable_color_arrays(bool force=false);
 
     void enable_texcoord_array(uint8_t which, bool force=false);
     void disable_texcoord_array(uint8_t which, bool force=false);
 
     bool positions_enabled_ = false;
-    bool colours_enabled_ = false;
+    bool colors_enabled_ = false;
     bool normals_enabled_ = false;
     bool textures_enabled_[_S_GL_MAX_TEXTURE_UNITS] = {0};
 
@@ -65,15 +65,15 @@ private:
         bool initialized = false;
         bool enabled = false;
         Vec4 position;
-        Colour diffuse;
-        Colour ambient;
-        Colour specular;
+        Color diffuse;
+        Color ambient;
+        Color specular;
         float constant_att = 0;
         float linear_att = 0;
         float quadratic_att = 0;
 
         LightState() = default;
-        LightState(bool enabled, Vec4 pos, Colour diffuse, Colour ambient, Colour specular, float constant_att, float linear_att, float quadratic_att):
+        LightState(bool enabled, Vec4 pos, Color diffuse, Color ambient, Color specular, float constant_att, float linear_att, float quadratic_att):
             enabled(enabled),
             position(pos),
             diffuse(diffuse),

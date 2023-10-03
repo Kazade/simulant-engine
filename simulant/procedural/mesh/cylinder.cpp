@@ -49,7 +49,7 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
             smlt::Vec2 new_uv = smlt::Vec2(j / (float) segments, i / (float) stacks);
 
             mesh->vertex_data->position(new_point);
-            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+            mesh->vertex_data->diffuse(smlt::Color::WHITE);
             mesh->vertex_data->normal(new_normal);
             mesh->vertex_data->tex_coord0(new_uv);
             mesh->vertex_data->move_next();

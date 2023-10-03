@@ -40,7 +40,7 @@ public:
     void draw_ray(
         const Vec3& start,
         const Vec3& dir,
-        const Colour& colour=Colour::WHITE,
+        const Color& color=Color::WHITE,
         double duration=0.0,
         bool depth_test=true
     );
@@ -49,14 +49,14 @@ public:
     void draw_line(
         const Vec3& start,
         const Vec3& end,
-        const Colour& colour=Colour::WHITE,
+        const Color& color=Color::WHITE,
         double duration=0.0,
         bool depth_test=true
     );
 
     void draw_point(
         const Vec3& position,
-        const Colour& colour=Colour::WHITE,
+        const Color& color=Color::WHITE,
         double duration=0.0,
         bool depth_test=true
     );
@@ -89,7 +89,7 @@ private:
     struct DebugElement {
         float time_since_created = 0.0;
         DebugElementType type = DET_LINE;
-        Colour colour = Colour::WHITE;
+        Color color = Color::WHITE;
         bool depth_test = true;
         float duration = 0.0;
 

@@ -28,24 +28,24 @@
 
 namespace smlt {
 
-extern const Colour DEFAULT_LIGHT_COLOUR;
+extern const Color DEFAULT_LIGHT_COLOR;
 
 struct LightParams {
     Vec3 position_or_direction;
-    Colour color;
+    Color color;
 
-    LightParams(const Vec3& p, const Colour& color):
+    LightParams(const Vec3& p, const Color& color):
         position_or_direction(p),
         color(color) {}
 };
 
 struct PointLightParams : public LightParams {
-    PointLightParams(const Vec3& position=Vec3(), const Colour& color=DEFAULT_LIGHT_COLOUR):
+    PointLightParams(const Vec3& position=Vec3(), const Color& color=DEFAULT_LIGHT_COLOR):
         LightParams(position, color) {}
 };
 
 struct DirectionalLightParams : public LightParams {
-    DirectionalLightParams(const Vec3& direction=Vec3(1, -0.5, 0), const Colour& color=DEFAULT_LIGHT_COLOUR):
+    DirectionalLightParams(const Vec3& direction=Vec3(1, -0.5, 0), const Color& color=DEFAULT_LIGHT_COLOR):
         LightParams(direction, color) {}
 };
 
@@ -85,25 +85,25 @@ public:
         transform->set_position(Vec3(-dir.x, -dir.y, -dir.z));
     }
 
-    void set_diffuse(const smlt::Colour& colour) {
-        diffuse_ = colour;
+    void set_diffuse(const smlt::Color& color) {
+        diffuse_ = color;
     }
 
-    void set_ambient(const smlt::Colour& colour) {
-        ambient_ = colour;
+    void set_ambient(const smlt::Color& color) {
+        ambient_ = color;
     }
 
-    void set_specular(const smlt::Colour& colour) {
-        specular_ = colour;
+    void set_specular(const smlt::Color& color) {
+        specular_ = color;
     }
 
     LightType light_type() const { return type_; }
-    const smlt::Colour& ambient() const { return ambient_; }
-    const smlt::Colour& diffuse() const { return diffuse_; }
-    const smlt::Colour& specular() const { return specular_; }
+    const smlt::Color& ambient() const { return ambient_; }
+    const smlt::Color& diffuse() const { return diffuse_; }
+    const smlt::Color& specular() const { return specular_; }
 
     /** Returns the owner stage's global ambient value. */
-    smlt::Colour global_ambient() const;
+    smlt::Color global_ambient() const;
 
     void set_attenuation(float range, float constant, float linear, float quadratic);
     void set_attenuation_from_range(float range);
@@ -123,9 +123,9 @@ protected:
 private:
     LightType type_;
 
-    smlt::Colour ambient_;
-    smlt::Colour diffuse_;
-    smlt::Colour specular_;
+    smlt::Color ambient_;
+    smlt::Color diffuse_;
+    smlt::Color specular_;
 
     AABB bounds_;
     float range_;

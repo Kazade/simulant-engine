@@ -768,8 +768,8 @@ private:
     KeyInfo* focused_key_ = nullptr;
 
     void focus_key(int x, int y) {
-        auto fg_color = calc_foreground_colour();
-        auto highlight_colour = theme_.highlight_colour_;
+        auto fg_color = calc_foreground_color();
+        auto highlight_color = theme_.highlight_color_;
 
         auto key = find_key(x, y);
         if(key) {
@@ -787,7 +787,7 @@ private:
 
             mesh_->vertex_data->move_to(key->first_vertex_index);
             for(int i = 0; i < 4; ++i) {
-                mesh_->vertex_data->diffuse(highlight_colour);
+                mesh_->vertex_data->diffuse(highlight_color);
                 mesh_->vertex_data->move_next();
             }
 
@@ -799,8 +799,8 @@ private:
     void finalize_render() override {
         render_key_letters();
 
-        auto colour = smlt::Colour::WHITE;
-        colour.a = (colour.a * style_->opacity_);
+        auto color = smlt::Color::WHITE;
+        color.a = (color.a * style_->opacity_);
 
         /* Space key */
         auto key = find_key(3, 4); /* Forth row, 4th button */
@@ -814,7 +814,7 @@ private:
 
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
-            new_rectangle("space", bounds, colour, 0, nullptr);
+            new_rectangle("space", bounds, color, 0, nullptr);
         }
 
         /* Backspace */
@@ -830,7 +830,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("backspace", bounds, colour, 0, nullptr);
+            new_rectangle("backspace", bounds, color, 0, nullptr);
         }
 
         /* Return key */
@@ -846,7 +846,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("return", bounds, colour, 0, nullptr);
+            new_rectangle("return", bounds, color, 0, nullptr);
         }
 
         /* Accented chars */
@@ -862,7 +862,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("accent", bounds, colour, 0, nullptr);
+            new_rectangle("accent", bounds, color, 0, nullptr);
         }
 
         /* Toggle case */
@@ -878,7 +878,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("case", bounds, colour, 0, nullptr);
+            new_rectangle("case", bounds, color, 0, nullptr);
         }
 
         /* Digits*/
@@ -894,7 +894,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("digits", bounds, colour, 0, nullptr);
+            new_rectangle("digits", bounds, color, 0, nullptr);
         }
 
         /* OK */
@@ -910,7 +910,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("ok", bounds, colour, 0, nullptr);
+            new_rectangle("ok", bounds, color, 0, nullptr);
         }
     }
 
@@ -923,7 +923,7 @@ private:
     void render_text() override {}
 
     void render_key_letters() {
-        auto c = style_->text_colour_;
+        auto c = style_->text_color_;
         c.set_alpha(style_->opacity_);
 
         auto sm = mesh_->find_submesh("text");
@@ -1048,16 +1048,16 @@ private:
         }
     }
 
-    Colour calc_foreground_colour() const {
-        auto colour = style_->foreground_colour_;
-        colour.set_alpha(colour.af() * style_->opacity_);
-        return colour;
+    Color calc_foreground_color() const {
+        auto color = style_->foreground_color_;
+        color.set_alpha(color.af() * style_->opacity_);
+        return color;
     }
 
     void render_foreground(const WidgetBounds& bounds) override {
         _S_UNUSED(bounds);
 
-        auto colour = calc_foreground_colour();
+        auto color = calc_foreground_color();
 
         WidgetBounds total_bounds;
         total_bounds.min.y = total_bounds.min.x = Px(10000);
@@ -1146,7 +1146,7 @@ private:
                 total_bounds.max.x = std::max(new_key.bounds.max.x, total_bounds.max.x);
                 total_bounds.max.y = std::max(new_key.bounds.max.y, total_bounds.max.y);
 
-                new_rectangle("foreground", key_bounds, colour, 0);
+                new_rectangle("foreground", key_bounds, color, 0);
             }
         }
 
@@ -1195,10 +1195,10 @@ bool Keyboard::on_create(void *params) {
     KeyboardParams* args = (KeyboardParams*) params;
 
     if(!args->shared_style) {
-        set_background_colour(smlt::Colour::NONE);
-        set_foreground_colour(smlt::Colour::NONE);
-        set_border_colour(smlt::Colour::NONE);
-        set_text_colour(smlt::Colour::NONE);
+        set_background_color(smlt::Color::NONE);
+        set_foreground_color(smlt::Color::NONE);
+        set_border_color(smlt::Color::NONE);
+        set_text_color(smlt::Color::NONE);
     }
 
     auto config = &args->theme;
@@ -1209,9 +1209,9 @@ bool Keyboard::on_create(void *params) {
     main_frame_->set_parent(this);
     main_frame_->set_space_between(0);
     main_frame_->set_border_width(0);
-    main_frame_->set_background_colour(config->background_colour_);
-    main_frame_->set_border_colour(config->background_colour_);
-    main_frame_->set_foreground_colour(smlt::Colour::NONE);
+    main_frame_->set_background_color(config->background_color_);
+    main_frame_->set_border_color(config->background_color_);
+    main_frame_->set_foreground_color(smlt::Color::NONE);
 
     /* FIXME: Registration here is ugly. KeyboardPanel should either be a publically
      * accessible node, or, not be a node */
@@ -1219,37 +1219,37 @@ bool Keyboard::on_create(void *params) {
 
     panel_ = scene->create_node<KeyboardPanel>(*config);
 
-    panel_->set_background_colour(config->background_colour_);
-    panel_->set_border_colour(config->background_colour_);
+    panel_->set_background_color(config->background_color_);
+    panel_->set_border_color(config->background_color_);
     panel_->set_border_width(2);
     panel_->rebuild();
 
     entry_ = scene->create_node<TextEntry>(args->initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
-    entry_->set_background_colour(smlt::Colour::WHITE);
-    entry_->set_border_colour(config->background_colour_);
-    entry_->set_text_colour(config->foreground_colour_);
+    entry_->set_background_color(smlt::Color::WHITE);
+    entry_->set_border_color(config->background_color_);
+    entry_->set_text_color(config->foreground_color_);
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
     entry_->set_padding(Px(4));
 
     info_row_ = scene->create_node<Frame>();
-    info_row_->set_border_colour(config->foreground_colour_);
+    info_row_->set_border_color(config->foreground_color_);
     info_row_->set_border_width(2);
-    info_row_->set_background_colour(style_->foreground_colour_);
-    info_row_->set_foreground_colour(style_->foreground_colour_);
+    info_row_->set_background_color(style_->foreground_color_);
+    info_row_->set_foreground_color(style_->foreground_color_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
     auto x_button = scene->create_node<Label>("");
     x_button->set_text("X");
-    x_button->set_text_colour(smlt::Colour::WHITE);
+    x_button->set_text_color(smlt::Color::WHITE);
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
     auto x_label = scene->create_node<Label>("");
-    x_label->set_background_colour(smlt::Colour::RED);
+    x_label->set_background_color(smlt::Color::RED);
     x_label->set_text(_T("Cancel"));
-    x_label->set_text_colour(smlt::Colour::WHITE);
+    x_label->set_text_color(smlt::Color::WHITE);
     x_label->resize(-1, panel_->key_height());
     x_label->rebuild();
 

@@ -198,7 +198,7 @@ public:
 
             out->position(v1v + (v2v - v1v) * t);
             out->tex_coord0(v1->st);
-            out->diffuse(smlt::Colour::WHITE);
+            out->diffuse(smlt::Color::WHITE);
             out->normal(n1 + (n2 - n1) * t);
             out->move_next();
 

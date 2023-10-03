@@ -134,11 +134,11 @@ bool ProgressBar::on_create(void* params) {
     ProgressBarParams* args = (ProgressBarParams*) params;
 
     if(!args->shared_style) {
-        set_background_colour(args->theme.progress_bar_background_colour_);
-        set_foreground_colour(args->theme.progress_bar_foreground_colour_);
-        set_border_colour(args->theme.progress_bar_border_colour_);
+        set_background_color(args->theme.progress_bar_background_color_);
+        set_foreground_color(args->theme.progress_bar_foreground_color_);
+        set_border_color(args->theme.progress_bar_border_color_);
         set_border_width(args->theme.progress_bar_border_width_);
-        set_text_colour(args->theme.progress_bar_text_colour_);
+        set_text_color(args->theme.progress_bar_text_color_);
     }
 
     set_range(args->min, args->max);

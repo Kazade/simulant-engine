@@ -14,7 +14,7 @@ public:
         auto pipeline = compositor->render(
             this, camera_
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
-        pipeline->viewport->set_colour(smlt::Colour::GREY);
+        pipeline->viewport->set_color(smlt::Color::GREY);
 
         link_pipeline(pipeline);
 
@@ -32,7 +32,7 @@ public:
 
         auto label = create_node<smlt::ui::Label>("Label");
         label->resize(column, -1);
-        label->set_background_colour(smlt::ui::UIConfig().foreground_colour_);
+        label->set_background_color(smlt::ui::UIConfig().foreground_color_);
         frame->pack_child(label);
 
         auto button = create_node<smlt::ui::Button>("Button");
@@ -72,24 +72,24 @@ public:
         auto fixed_width = create_node<smlt::ui::Label>("This is some long text with a fixed width.\n See it works!");
         fixed_width->resize(200, -1);
         fixed_width->transform->set_position_2d(smlt::Vec2(400, 500));
-        fixed_width->set_background_colour(smlt::Colour::PURPLE);
+        fixed_width->set_background_color(smlt::Color::PURPLE);
         fixed_width->set_border_radius(smlt::ui::Px(10));
         fixed_width->set_padding(10);
 
         auto fixed_height = create_node<smlt::ui::Label>("This is some text with a fixed height.\n See it works!");
         fixed_height->resize(-1, 200);
         fixed_height->transform->set_position_2d(smlt::Vec2(300, 200));
-        fixed_height->set_background_colour(smlt::Colour::PURPLE);
+        fixed_height->set_background_color(smlt::Color::PURPLE);
 
         auto fit_content = create_node<smlt::ui::Label>("This widget fits its text content. See it works!");
         fit_content->resize(-1, -1);
         fit_content->transform->set_position_2d(smlt::Vec2(700, 200));
-        fit_content->set_background_colour(smlt::Colour::PURPLE);
+        fit_content->set_background_color(smlt::Color::PURPLE);
 
         auto pl = create_node<smlt::ui::Label>("PL");
         pl->set_padding(10, 0, 0, 0);
         //pl->resize(80, -1);
-        pl->set_background_colour(smlt::Colour::GREY);
+        pl->set_background_color(smlt::Color::GREY);
         pl->set_anchor_point(1.0f, 1.0f);
         pl->transform->set_position_2d(window->coordinate_from_normalized(0.75f, 0.75f));
 

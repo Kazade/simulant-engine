@@ -177,7 +177,7 @@ void Sprite::set_render_priority(RenderPriority priority) {
 
 void Sprite::set_alpha(float alpha) {
     alpha_ = alpha;
-    mesh_->set_diffuse(smlt::Colour(1.0f, 1.0f, 1.0f, alpha_));
+    mesh_->set_diffuse(smlt::Color(1.0f, 1.0f, 1.0f, alpha_));
 }
 
 void Sprite::set_render_dimensions_from_width(float width) {

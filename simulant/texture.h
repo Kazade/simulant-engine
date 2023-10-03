@@ -198,7 +198,7 @@ public:
      * texture data is empty */
     bool blur(BlurType blur_type, std::size_t radius);
 
-    /* Returns the byte colour data for the specified location. Will return
+    /* Returns the byte color data for the specified location. Will return
      * nothing if the texture data is empty, or it's a compressed texture */
     smlt::optional<Pixel> pixel(std::size_t x, std::size_t y);
 

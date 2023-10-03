@@ -15,7 +15,7 @@ namespace loaders {
 VertexSpecification determine_spec(const FileHeader& header) {
     /* FIXME:
      * - Support short UV format
-     * - Support 3UB colour format
+     * - Support 3UB color format
      */
     VertexSpecification vspec;
     vspec.position_attribute = (header.pos_format == POSITION_FORMAT_2F) ?
@@ -72,10 +72,10 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         new_mat->set_pass_count(1);
         new_mat->set_cull_mode(mesh_opts.cull_mode);
         new_mat->set_blend_func(mesh_opts.blending_enabled ? BLEND_ALPHA : BLEND_NONE);
-        new_mat->set_diffuse(smlt::Colour(mat.diffuse, 4));
-        new_mat->set_ambient(smlt::Colour(mat.ambient, 4));
-        new_mat->set_specular(smlt::Colour(mat.specular, 4));
-        new_mat->set_emission(smlt::Colour(mat.emission, 4));
+        new_mat->set_diffuse(smlt::Color(mat.diffuse, 4));
+        new_mat->set_ambient(smlt::Color(mat.ambient, 4));
+        new_mat->set_specular(smlt::Color(mat.specular, 4));
+        new_mat->set_emission(smlt::Color(mat.emission, 4));
         new_mat->set_shininess(mat.shininess * 128.0f);
         new_mat->set_name(std::string(mat.name, 32).c_str());
 
@@ -189,15 +189,15 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Colour::from_bytes(color[2], color[1], color[0], color[3]));
+            vdata->diffuse(smlt::Color::from_bytes(color[2], color[1], color[0], color[3]));
         } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Colour(color[0], color[1], color[2], color[3]));
+            vdata->diffuse(smlt::Color(color[0], color[1], color[2], color[3]));
         } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) {
             float color[3];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Colour(color[0], color[1], color[2], 1.0f));
+            vdata->diffuse(smlt::Color(color[0], color[1], color[2], 1.0f));
         }
 
         if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {

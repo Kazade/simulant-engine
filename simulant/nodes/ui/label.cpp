@@ -17,10 +17,10 @@ bool Label::on_create(void* params) {
     if(!args->shared_style) {
         auto& config = args->theme;
         set_resize_mode(config.label_resize_mode_);
-        set_background_colour(config.label_background_colour_);
-        set_foreground_colour(config.label_foreground_colour_);
-        set_text_colour(config.label_text_colour_);
-        set_border_colour(config.label_border_colour_);
+        set_background_color(config.label_background_color_);
+        set_foreground_color(config.label_foreground_color_);
+        set_text_color(config.label_text_color_);
+        set_border_color(config.label_border_color_);
 
         set_text(args->text);
         resize(args->width, args->height);

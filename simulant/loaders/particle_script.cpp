@@ -22,7 +22,7 @@
 #include "../assets/particle_script.h"
 #include "../assets/particles/size_manipulator.h"
 #include "../assets/particles/alpha_fader.h"
-#include "../assets/particles/colour_fader.h"
+#include "../assets/particles/color_fader.h"
 #include "../assets/particles/direction_manipulator.h"
 #include "../assets/particles/direction_noise_random_manipulator.h"
 #include "../asset_manager.h"
@@ -72,25 +72,25 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, JSONIterato
     return m.get();
 }
 
-static auto parse_colour = [](const std::string& colour) -> smlt::Colour {
-    auto parts = unicode(colour).split(" ");
+static auto parse_color = [](const std::string& color) -> smlt::Color {
+    auto parts = unicode(color).split(" ");
     if(parts.size() == 3) {
-        return smlt::Colour(
+        return smlt::Color(
             parts[0].to_float(),
             parts[1].to_float(),
             parts[2].to_float(),
             1.0f
         );
     } else if(parts.size() == 4) {
-        return smlt::Colour(
+        return smlt::Color(
             parts[0].to_float(),
             parts[1].to_float(),
             parts[2].to_float(),
             parts[3].to_float()
         );
     } else {
-        S_WARN("Invalid number of colour components to colour fader");
-        return smlt::Colour::WHITE;
+        S_WARN("Invalid number of color components to color fader");
+        return smlt::Color::WHITE;
     }
 };
 
@@ -108,18 +108,18 @@ static auto parse_vec3 = [](const std::string& dir) -> smlt::Vec3 {
     }
 };
 
-static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
-    std::vector<smlt::Colour> colours;
+static smlt::Manipulator* spawn_color_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
+    std::vector<smlt::Color> colors;
 
-    auto colour_array = js["colours"];
-    for(auto i = 0u; i < colour_array->size(); ++i) {
-        std::string colour = colour_array[(uint32_t) i]->to_str().value();
-        colours.push_back(parse_colour(colour));
+    auto color_array = js["colors"];
+    for(auto i = 0u; i < color_array->size(); ++i) {
+        std::string color = color_array[(uint32_t) i]->to_str().value();
+        colors.push_back(parse_color(color));
     }
 
     bool interpolate = js["interpolate"]->to_bool().value_or(true);
 
-    auto m = std::make_shared<ColourFader>(ps, colours, interpolate);
+    auto m = std::make_shared<ColorFader>(ps, colors, interpolate);
     ps->add_manipulator(m);
     return m.get();
 }
@@ -127,9 +127,9 @@ static smlt::Manipulator* spawn_colour_fader_manipulator(ParticleScript* ps, JSO
 static smlt::Manipulator* spawn_alpha_fader_manipulator(ParticleScript* ps, JSONIterator& js) {
     std::vector<float> alphas;
 
-    auto colour_array = js["alphas"];
-    for(auto i = 0u; i < colour_array->size(); ++i) {
-        float alpha = colour_array[(uint32_t) i]->to_float().value();
+    auto color_array = js["alphas"];
+    for(auto i = 0u; i < color_array->size(); ++i) {
+        float alpha = color_array[(uint32_t) i]->to_float().value();
         alphas.push_back(alpha);
     }
 
@@ -322,15 +322,15 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                 new_emitter.angle = Degrees(emitter["angle"]->to_float().value());
             }
 
-            if(emitter->has_key("colour")) {
-                auto colour = parse_colour(emitter["colour"]->to_str().value_or("0 0 0 0"));
-                new_emitter.colours = {colour};
-            } else if(emitter->has_key("colours")) {
-                auto colours = emitter["colours"];
-                new_emitter.colours.clear();
-                for(std::size_t c = 0; c < colours->size(); ++c) {
-                    auto colour = parse_colour(colours[c]->to_str().value_or("0 0 0 0"));
-                    new_emitter.colours.push_back(colour);
+            if(emitter->has_key("color")) {
+                auto color = parse_color(emitter["color"]->to_str().value_or("0 0 0 0"));
+                new_emitter.colors = {color};
+            } else if(emitter->has_key("colors")) {
+                auto colors = emitter["colors"];
+                new_emitter.colors.clear();
+                for(std::size_t c = 0; c < colors->size(); ++c) {
+                    auto color = parse_color(colors[c]->to_str().value_or("0 0 0 0"));
+                    new_emitter.colors.push_back(color);
                 }
             }
 
@@ -348,8 +348,8 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
 
                 if(manipulator["type"]->to_str().value() == "size") {
                     spawn_size_manipulator(ps, manipulator);
-                } else if(manipulator["type"]->to_str().value() == "colour_fader") {
-                    spawn_colour_fader_manipulator(ps, manipulator);
+                } else if(manipulator["type"]->to_str().value() == "color_fader") {
+                    spawn_color_fader_manipulator(ps, manipulator);
                 } else if(manipulator["type"]->to_str().value() == "direction") {
                     spawn_direction_manipulator(ps, manipulator);
                 } else if(manipulator["type"]->to_str().value() == "direction_noise_random") {

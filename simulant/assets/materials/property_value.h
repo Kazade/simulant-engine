@@ -113,7 +113,7 @@ private:
     virtual bool do_set(const Mat4& value) { _S_UNUSED(value); S_WARN("Invalid value for property"); return false; }
     virtual bool do_set(const TexturePtr& value) { S_WARN("Invalid value for property: {0}", value); return false; }
 
-    void do_get(Colour** result) const {
+    void do_get(Color** result) const {
         do_get((Vec4**) result);
     }
 
@@ -121,7 +121,7 @@ private:
         do_get((int32_t**) result);
     }
 
-    bool do_set(const Colour& value) { return do_set((const Vec4&) value); }
+    bool do_set(const Color& value) { return do_set((const Vec4&) value); }
 
     /* FIXME: Support these types properly */
     bool do_set(const int16_t& value) { return do_set((int32_t) value); }

@@ -164,10 +164,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uint8_t* dif = dif_ptr;
         float* uv = (float*) uv_ptr;
 
-        uint8_t a = smlt::clamp(p.colour.a * 255.0f, 0, 255);
-        uint8_t r = smlt::clamp(p.colour.r * 255.0f, 0, 255);
-        uint8_t g = smlt::clamp(p.colour.g * 255.0f, 0, 255);
-        uint8_t b = smlt::clamp(p.colour.b * 255.0f, 0, 255);
+        uint8_t a = smlt::clamp(p.color.a * 255.0f, 0, 255);
+        uint8_t r = smlt::clamp(p.color.r * 255.0f, 0, 255);
+        uint8_t g = smlt::clamp(p.color.g * 255.0f, 0, 255);
+        uint8_t b = smlt::clamp(p.color.b * 255.0f, 0, 255);
 
         *(pos) =
             p.position
@@ -430,7 +430,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         p.velocity *= rot;
 
         p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first, emitter->ttl_range.second);
-        p.colour = random_.choice(emitter->colours);
+        p.color = random_.choice(emitter->colors);
         p.initial_dimensions = p.dimensions = smlt::Vec2(script_->particle_width() * scale.x, script_->particle_height() * scale.y);
 
         //FIXME: Initialize other properties

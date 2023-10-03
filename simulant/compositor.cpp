@@ -295,7 +295,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
      */
     if(targets_rendered_this_frame_.find(&target) == targets_rendered_this_frame_.end()) {
         if(target.clear_every_frame_flags()) {
-            Viewport view(smlt::VIEWPORT_TYPE_FULL, target.clear_every_frame_colour());
+            Viewport view(smlt::VIEWPORT_TYPE_FULL, target.clear_every_frame_color());
             view.clear(target, target.clear_every_frame_flags());
         }
 

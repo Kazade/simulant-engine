@@ -18,9 +18,9 @@ public:
         mat->set_pass_count(1);
 
         this->assert_equal((uint32_t)1, mat->pass_count()); //Should return the default pass
-        this->assert_true(smlt::Colour::WHITE == mat->pass(0)->diffuse()); //this->assert_true the default pass sets white as the default
-        this->assert_true(smlt::Colour::WHITE == mat->pass(0)->ambient()); //this->assert_true the default pass sets white as the default
-        this->assert_true(smlt::Colour::BLACK == mat->pass(0)->specular()); //this->assert_true the default pass sets black as the default
+        this->assert_true(smlt::Color::WHITE == mat->pass(0)->diffuse()); //this->assert_true the default pass sets white as the default
+        this->assert_true(smlt::Color::WHITE == mat->pass(0)->ambient()); //this->assert_true the default pass sets white as the default
+        this->assert_true(smlt::Color::BLACK == mat->pass(0)->specular()); //this->assert_true the default pass sets black as the default
         this->assert_equal(0.0f, mat->pass(0)->shininess());
     }
 
@@ -34,19 +34,19 @@ public:
     void test_property_heirarchy() {
         auto mat = application->shared_assets->new_material();
 
-        mat->set_diffuse(smlt::Colour::RED);
+        mat->set_diffuse(smlt::Color::RED);
         mat->set_pass_count(2);
 
         auto pass1 = mat->pass(0);
         auto pass2 = mat->pass(1);
 
-        assert_equal(pass1->diffuse(), smlt::Colour::RED);
-        assert_equal(pass2->diffuse(), smlt::Colour::RED);
+        assert_equal(pass1->diffuse(), smlt::Color::RED);
+        assert_equal(pass2->diffuse(), smlt::Color::RED);
 
-        pass1->set_diffuse(smlt::Colour::GREEN);
+        pass1->set_diffuse(smlt::Color::GREEN);
 
-        assert_equal(pass1->diffuse(), smlt::Colour::GREEN);
-        assert_equal(pass2->diffuse(), smlt::Colour::RED);
+        assert_equal(pass1->diffuse(), smlt::Color::GREEN);
+        assert_equal(pass2->diffuse(), smlt::Color::RED);
     }
 
     void test_pass_resizing() {
@@ -73,35 +73,35 @@ public:
         auto mat1 = application->shared_assets->new_material();
         auto tex1 = application->shared_assets->new_texture(8, 8);
 
-        mat1->set_diffuse(smlt::Colour::RED);
+        mat1->set_diffuse(smlt::Color::RED);
         mat1->set_diffuse_map(tex1);
 
         mat1->set_pass_count(2);
-        mat1->pass(0)->set_diffuse(smlt::Colour::BLUE);
+        mat1->pass(0)->set_diffuse(smlt::Color::BLUE);
 
         auto mat2 = application->shared_assets->clone_material(mat1->id());
 
         assert_not_equal(mat1->id(), mat2->id());
 
         assert_equal(mat1->diffuse_map(), tex1);
-        assert_equal(mat1->diffuse(), smlt::Colour::RED);
+        assert_equal(mat1->diffuse(), smlt::Color::RED);
         assert_equal(mat1->pass_count(), 2);
-        assert_equal(mat1->pass(0)->diffuse(), smlt::Colour::BLUE);
-        assert_equal(mat1->pass(1)->diffuse(), smlt::Colour::RED);
+        assert_equal(mat1->pass(0)->diffuse(), smlt::Color::BLUE);
+        assert_equal(mat1->pass(1)->diffuse(), smlt::Color::RED);
         assert_equal(mat1->pass(0)->diffuse_map(), tex1);
 
         // Make sure the passes were copied
         assert_not_equal(mat1->pass(0), mat2->pass(0));
 
         assert_equal(mat2->diffuse_map(), tex1);
-        assert_equal(mat2->diffuse(), smlt::Colour::RED);
+        assert_equal(mat2->diffuse(), smlt::Color::RED);
         assert_equal(mat2->pass_count(), 2);
-        assert_equal(mat2->pass(0)->diffuse(), smlt::Colour::BLUE);
-        assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::RED);
+        assert_equal(mat2->pass(0)->diffuse(), smlt::Color::BLUE);
+        assert_equal(mat2->pass(1)->diffuse(), smlt::Color::RED);
         assert_equal(mat2->pass(0)->diffuse_map(), tex1);
 
-        mat2->set_diffuse(smlt::Colour::GREEN);
-        assert_equal(mat2->pass(1)->diffuse(), smlt::Colour::GREEN);
+        mat2->set_diffuse(smlt::Color::GREEN);
+        assert_equal(mat2->pass(1)->diffuse(), smlt::Color::GREEN);
     }
 
     void test_texture_unit() {

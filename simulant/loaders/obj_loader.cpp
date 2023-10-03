@@ -199,7 +199,7 @@ static bool Ka(LoadInfo* info, std::string, const std::vector<std::string>& part
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_ambient(smlt::Colour(r, g, b, 1.0f));
+    mat->set_ambient(smlt::Color(r, g, b, 1.0f));
 
     return true;
 }
@@ -211,7 +211,7 @@ static bool Kd(LoadInfo* info, std::string, const std::vector<std::string>& part
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_diffuse(smlt::Colour(r, g, b, 1.0f));
+    mat->set_diffuse(smlt::Color(r, g, b, 1.0f));
 
     return true;
 }
@@ -223,7 +223,7 @@ static bool Ks(LoadInfo* info, std::string, const std::vector<std::string>& part
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_specular(smlt::Colour(r, g, b, 1.0f));
+    mat->set_specular(smlt::Color(r, g, b, 1.0f));
     return true;
 }
 
@@ -234,7 +234,7 @@ static bool Ke(LoadInfo* info, std::string, const std::vector<std::string>& part
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_emission(smlt::Colour(r, g, b, 1.0f));
+    mat->set_emission(smlt::Color(r, g, b, 1.0f));
     return true;
 }
 
@@ -331,7 +331,7 @@ static bool apply_material(LoadInfo* info, std::string, const std::vector<std::s
 }
 
 static std::vector<HalfVec3>* VERTICES = nullptr;
-static std::vector<HalfVec3>* COLOURS = nullptr;
+static std::vector<HalfVec3>* COLORS = nullptr;
 static std::vector<HalfVec2>* TEXCOORDS = nullptr;
 static std::vector<HalfVec3>* NORMALS = nullptr;
 
@@ -354,7 +354,7 @@ static bool load_vertex(LoadInfo*, std::string, const std::vector<std::string>& 
 
     parse_floats(parts, xyzrgb, 6);
     VERTICES->push_back(HalfVec3(xyzrgb[0], xyzrgb[1], xyzrgb[2]));
-    COLOURS->push_back(HalfVec3(xyzrgb[3], xyzrgb[4], xyzrgb[5]));
+    COLORS->push_back(HalfVec3(xyzrgb[3], xyzrgb[4], xyzrgb[5]));
     return true;
 }
 
@@ -448,12 +448,12 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
             nindex = (parts[2].empty()) ? -1 : smlt::stoi(parts[2]);
         }
 
-        smlt::Colour diffuse = smlt::Colour::WHITE;
+        smlt::Color diffuse = smlt::Color::WHITE;
         if(vindex == -1) {
             return false;
         } else if((vindex - 1) < (int) VERTICES->size()) {
             Vec3 p = VERTICES->at(vindex - 1);
-            Vec3 c = COLOURS->at(vindex - 1);
+            Vec3 c = COLORS->at(vindex - 1);
 
             diffuse.r = c.x;
             diffuse.g = c.y;
@@ -486,13 +486,13 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
 
 
 void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
-    std::vector<HalfVec3> _vertices, _colours, _normals;
+    std::vector<HalfVec3> _vertices, _colors, _normals;
     std::vector<HalfVec2> _texcoords;
 
     VERTICES = &_vertices;
     TEXCOORDS = &_texcoords;
     NORMALS = &_normals;
-    COLOURS = &_colours;
+    COLORS = &_colors;
 
     Mesh* mesh = loadable_to<Mesh>(resource);
 

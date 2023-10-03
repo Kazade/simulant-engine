@@ -29,7 +29,7 @@ public:
         assert_equal(mat->pass(0)->cull_mode(), opts.cull_mode);
     }
 
-    void test_vertex_colours() {
+    void test_vertex_colors() {
 
         std::string obj_file(R"(
             v 0.0 0.0 0.0 1.0 0.0 0.0
@@ -63,7 +63,7 @@ public:
 #endif
     }
 
-    void test_vertex_colours_default_white() {
+    void test_vertex_colors_default_white() {
 
         std::string obj_file(R"(
             v 0.0 0.0 0.0

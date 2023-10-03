@@ -261,7 +261,7 @@ bool Texture::blur(BlurType blur_type, std::size_t radius) {
 
             float accum [4] = {0};
 
-            // gather the colours from the surrouding box, including the
+            // gather the colors from the surrouding box, including the
             // pixel we care about. If we go outside the bounds of the image
             // then we just assume a border (for now, probably there are better
             // options)

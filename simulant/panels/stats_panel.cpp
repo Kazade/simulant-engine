@@ -135,8 +135,8 @@ static unsigned int round(unsigned int value, unsigned int multiple){
 #define RAM_SAMPLES 25
 
 void StatsPanel::rebuild_ram_graph() {
-    smlt::Colour colour = smlt::Colour::BLUE;
-    colour.a = 0.35;
+    smlt::Color color = smlt::Color::BLUE;
+    color.a = 0.35;
 
     float width = window_->width();
     float height = window_->height() * 0.4f;
@@ -189,12 +189,12 @@ void StatsPanel::rebuild_ram_graph() {
 
         float y = (height / graph_max) * last_sample;
         vdata->position(x, y, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
         vdata->position(x, 0, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
@@ -214,12 +214,12 @@ void StatsPanel::rebuild_ram_graph() {
 
         y = (height / graph_max) * sample;
         vdata->position(x, 0, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
         vdata->position(x, y, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 

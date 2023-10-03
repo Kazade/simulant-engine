@@ -105,22 +105,22 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
 
     auto amb_loc = program->locate_uniform(LIGHT_AMBIENT_PROPERTY, true);
     if(amb_loc > -1) {
-        program->set_uniform_colour(
+        program->set_uniform_color(
             amb_loc,
-            (light) ? light->ambient() : Colour::NONE
+            (light) ? light->ambient() : Color::NONE
         );
     }
 
     auto diff_loc = program->locate_uniform(LIGHT_DIFFUSE_PROPERTY, true);
     if(diff_loc > -1) {
-        auto diffuse = (light) ? light->diffuse() : smlt::Colour::NONE;
-        program->set_uniform_colour(diff_loc, diffuse);
+        auto diffuse = (light) ? light->diffuse() : smlt::Color::NONE;
+        program->set_uniform_color(diff_loc, diffuse);
     }
 
     auto spec_loc = program->locate_uniform(LIGHT_SPECULAR_PROPERTY, true);
     if(spec_loc > -1) {
-        auto specular = (light) ? light->specular() : smlt::Colour::NONE;
-        program->set_uniform_colour(spec_loc, specular);
+        auto specular = (light) ? light->specular() : smlt::Color::NONE;
+        program->set_uniform_color(spec_loc, specular);
     }
 
     auto ca_loc = program->locate_uniform(LIGHT_CONSTANT_ATTENUATION_PROPERTY, true);
@@ -147,17 +147,17 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
 
     auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY_NAME, true);
     if(amb_loc > -1) {
-        program->set_uniform_colour(AMBIENT_PROPERTY_NAME, pass->ambient());
+        program->set_uniform_color(AMBIENT_PROPERTY_NAME, pass->ambient());
     }
 
     auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY_NAME, true);
     if(diff_loc > -1) {
-        program->set_uniform_colour(DIFFUSE_PROPERTY_NAME, pass->diffuse());
+        program->set_uniform_color(DIFFUSE_PROPERTY_NAME, pass->diffuse());
     }
 
     auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
     if(spec_loc > -1) {
-        program->set_uniform_colour(SPECULAR_PROPERTY_NAME, pass->specular());
+        program->set_uniform_color(SPECULAR_PROPERTY_NAME, pass->specular());
     }
 
     auto shin_loc = program->locate_uniform(SHININESS_PROPERTY_NAME, true);
@@ -196,14 +196,14 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
     }
 }
 
-void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
+void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Color &global_ambient) {
     _S_UNUSED(pass);
 
     auto varname = "s_global_ambient";
     auto loc = program->locate_uniform(varname, true);
 
     if(loc > -1) {
-        program->set_uniform_colour(loc, global_ambient);
+        program->set_uniform_color(loc, global_ambient);
     }
 }
 
@@ -333,7 +333,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
         break;
         case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         break;
-        case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        case BLEND_COLOR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
         break;
         case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
         break;

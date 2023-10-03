@@ -20,8 +20,8 @@ bool Image::on_create(void* params) {
     if(!args->shared_style) {
         /* By default, images don't have a border */
         set_border_width(args->theme.image_border_width_);
-        set_border_colour(smlt::Colour::NONE);
-        set_background_colour(args->theme.image_background_colour_);
+        set_border_color(smlt::Color::NONE);
+        set_background_color(args->theme.image_background_color_);
         set_padding(
             args->theme.image_padding_.left,
             args->theme.image_padding_.right,
@@ -29,7 +29,7 @@ bool Image::on_create(void* params) {
             args->theme.image_padding_.top
         );
 
-        set_foreground_colour(args->theme.image_foreground_colour_);
+        set_foreground_color(args->theme.image_foreground_color_);
 
         if(args->texture) {
             set_texture(args->texture);

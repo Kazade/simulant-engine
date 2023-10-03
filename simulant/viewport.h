@@ -47,8 +47,8 @@ public:
     Viewport(const Viewport& rhs) = default;
     Viewport& operator=(const Viewport& rhs) = default;
 
-    Viewport(ViewportType type, const Colour& colour=smlt::Colour::BLACK);
-    Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour& colour=smlt::Colour::BLACK);
+    Viewport(ViewportType type, const Color& color=smlt::Color::BLACK);
+    Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Color& color=smlt::Color::BLACK);
 
     Ratio x() const { return x_; }
     Ratio y() const { return y_; }
@@ -63,7 +63,7 @@ public:
 
     ViewportType type() const { return type_; }
 
-    void set_colour(const smlt::Colour& colour);
+    void set_color(const smlt::Color& color);
 private:
     Ratio x_;
     Ratio y_;
@@ -71,7 +71,7 @@ private:
     Ratio height_;
     
 	ViewportType type_;
-	Colour colour_;
+	Color color_;
 };
 
 }

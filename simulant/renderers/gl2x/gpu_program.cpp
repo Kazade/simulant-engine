@@ -150,11 +150,11 @@ void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& v
     }
 }
 
-void GPUProgram::set_uniform_colour(const int32_t loc, const Colour& values) {
+void GPUProgram::set_uniform_color(const int32_t loc, const Color& values) {
     set_uniform_vec4(loc, Vec4(values.r, values.g, values.b, values.a));
 }
 
-void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {
+void GPUProgram::set_uniform_color(const std::string& uniform_name, const Color& values) {
     Vec4 tmp(values.r, values.g, values.b, values.a);
     set_uniform_vec4(uniform_name, tmp);
 }

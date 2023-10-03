@@ -22,22 +22,22 @@
 #include <iomanip>
 #include <cstdlib>
 
-#include "colour.h"
+#include "color.h"
 
 namespace smlt {
 
-const Colour Colour::BLACK = Colour(0.0, 0.0, 0.0, 1.0);
-const Colour Colour::BLUE = Colour(0.0, 0.0, 1.0, 1.0);
-const Colour Colour::GREEN = Colour(0.0, 1.0, 0.0, 1.0);
-const Colour Colour::RED = Colour(1.0, 0.0, 0.0, 1.0);
-const Colour Colour::WHITE = Colour(1.0, 1.0, 1.0, 1.0);
-const Colour Colour::NONE = Colour(0, 0, 0, 0); // Transparent
-const Colour Colour::YELLOW = Colour(1.0f, 1.0f, 0.0f, 1.0f);
-const Colour Colour::PURPLE = Colour(1.0f, 0.0f, 1.0f, 1.0f);
-const Colour Colour::TURQUOISE = Colour(0.0f, 1.0f, 1.0f, 1.0f);
-const Colour Colour::GREY = Colour(0.5f, 0.5f, 0.5f, 1.0f);
+const Color Color::BLACK = Color(0.0, 0.0, 0.0, 1.0);
+const Color Color::BLUE = Color(0.0, 0.0, 1.0, 1.0);
+const Color Color::GREEN = Color(0.0, 1.0, 0.0, 1.0);
+const Color Color::RED = Color(1.0, 0.0, 0.0, 1.0);
+const Color Color::WHITE = Color(1.0, 1.0, 1.0, 1.0);
+const Color Color::NONE = Color(0, 0, 0, 0); // Transparent
+const Color Color::YELLOW = Color(1.0f, 1.0f, 0.0f, 1.0f);
+const Color Color::PURPLE = Color(1.0f, 0.0f, 1.0f, 1.0f);
+const Color Color::TURQUOISE = Color(0.0f, 1.0f, 1.0f, 1.0f);
+const Color Color::GREY = Color(0.5f, 0.5f, 0.5f, 1.0f);
 
-std::string Colour::to_hex_string() const {
+std::string Color::to_hex_string() const {
     auto rval = int(255.0f * r);
     auto gval = int(255.0f * g);
     auto bval = int(255.0f * b);
@@ -54,13 +54,13 @@ std::string Colour::to_hex_string() const {
     return final;
 }
 
-Colour Colour::from_hex_string(const std::string& hex_string) {
+Color Color::from_hex_string(const std::string& hex_string) {
     std::string rpart(hex_string.begin(), hex_string.begin() + 2);
     std::string gpart(hex_string.begin() + 2, hex_string.begin() + 4);
     std::string bpart(hex_string.begin() + 4, hex_string.begin() + 6);
     std::string apart(hex_string.begin() + 6, hex_string.end());
 
-    return Colour(
+    return Color(
         float(strtoul(rpart.c_str(), nullptr, 16)) / 255.0f,
         float(strtoul(gpart.c_str(), nullptr, 16)) / 255.0f,
         float(strtoul(bpart.c_str(), nullptr, 16)) / 255.0f,
@@ -68,23 +68,23 @@ Colour Colour::from_hex_string(const std::string& hex_string) {
     );
 }
 
-std::ostream& operator<<(std::ostream& stream, const Colour& c) {
+std::ostream& operator<<(std::ostream& stream, const Color& c) {
     stream << "#" << c.to_hex_string();
     return stream;
 }
 
-Colour Colour::lerp(const Colour& end, float t) const {
+Color Color::lerp(const Color& end, float t) const {
     t = std::min(t, 1.0f);
     t = std::max(t, 0.0f);
 
     return *this + ((end - *this) * t);
 }
 
-PackedColour4444::PackedColour4444():
-    colour_(~0) {}
+PackedColor4444::PackedColor4444():
+    color_(~0) {}
 
-PackedColour4444::PackedColour4444(const Colour& c):
-    colour_(
+PackedColor4444::PackedColor4444(const Color& c):
+    color_(
         (uint32_t(15.0f * c.a) << 12) |
         (uint32_t(15.0f * c.r) << 8) |
         (uint32_t(15.0f * c.g) << 4) |
@@ -93,8 +93,8 @@ PackedColour4444::PackedColour4444(const Colour& c):
 
 }
 
-PackedColour4444& PackedColour4444::operator=(const Colour& rhs) {
-    colour_ = (
+PackedColor4444& PackedColor4444::operator=(const Color& rhs) {
+    color_ = (
         (uint32_t(15.0f * rhs.a) << 12) |
         (uint32_t(15.0f * rhs.r) << 8) |
         (uint32_t(15.0f * rhs.g) << 4) |
@@ -104,53 +104,53 @@ PackedColour4444& PackedColour4444::operator=(const Colour& rhs) {
     return *this;
 }
 
-bool PackedColour4444::operator==(const PackedColour4444& rhs) const {
-    return colour_ == rhs.colour_;
+bool PackedColor4444::operator==(const PackedColor4444& rhs) const {
+    return color_ == rhs.color_;
 }
 
-bool PackedColour4444::operator==(const Colour& rhs) const {
-    auto tmp = PackedColour4444(rhs);
+bool PackedColor4444::operator==(const Color& rhs) const {
+    auto tmp = PackedColor4444(rhs);
     return *this == tmp;
 }
 
-void PackedColour4444::set_alpha(NormalizedFloat a) {
-    colour_ &= ~(0xF000);
-    colour_ |= uint32_t(a * 15.0f) << 12;
+void PackedColor4444::set_alpha(NormalizedFloat a) {
+    color_ &= ~(0xF000);
+    color_ |= uint32_t(a * 15.0f) << 12;
 }
 
-uint8_t PackedColour4444::r8() const {
+uint8_t PackedColor4444::r8() const {
     /* Unsure if multiplying by 17 is correct, but
      * 15 * 17 == 255, and 15 is the largest value
      * we can store for a channel so it seems right.. */
-    return ((colour_ & 0x0F00) >> 8) * 17;
+    return ((color_ & 0x0F00) >> 8) * 17;
 }
 
-uint8_t PackedColour4444::g8() const {
-    return ((colour_ & 0x00F0) >> 4) * 17;
+uint8_t PackedColor4444::g8() const {
+    return ((color_ & 0x00F0) >> 4) * 17;
 }
 
-uint8_t PackedColour4444::b8() const {
-    return ((colour_ & 0x000F)) * 17;
+uint8_t PackedColor4444::b8() const {
+    return ((color_ & 0x000F)) * 17;
 }
 
-uint8_t PackedColour4444::a8() const {
-    return ((colour_ & 0xF000) >> 12) * 17;
+uint8_t PackedColor4444::a8() const {
+    return ((color_ & 0xF000) >> 12) * 17;
 }
 
-float PackedColour4444::rf() const {
+float PackedColor4444::rf() const {
     float r = r8();
     return r / 255.0f;
 }
 
-float PackedColour4444::gf() const {
+float PackedColor4444::gf() const {
     return float(g8()) / 255.0f;
 }
 
-float PackedColour4444::bf() const {
+float PackedColor4444::bf() const {
     return float(b8()) / 255.0f;
 }
 
-float PackedColour4444::af() const {
+float PackedColor4444::af() const {
     return float(a8()) / 255.0f;
 }
 

@@ -104,7 +104,7 @@ public:
         assert_equal(tex->data_size(), ((tex->width() * tex->height()) / 2) + tex->palette_size());
 
         uint8_t data [] = {
-            // Palette (2 bytes per colour, 16 colours)
+            // Palette (2 bytes per color, 16 colors)
             0, 0,
             0, 0,
             0, 0,

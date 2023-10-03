@@ -24,7 +24,7 @@
 
 namespace smlt {
 
-typedef std::function<smlt::Colour (const smlt::Vec3&, const smlt::Vec3&, const std::vector<Vec3>&)> HeightmapDiffuseGenerator;
+typedef std::function<smlt::Color (const smlt::Vec3&, const smlt::Vec3&, const std::vector<Vec3>&)> HeightmapDiffuseGenerator;
 
 struct TerrainTriangle {
     uint32_t index[3];

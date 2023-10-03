@@ -72,11 +72,11 @@ void Debug::on_update(float dt) {
             auto& array = (element.depth_test) ? lines_with_depth_->index_data : lines_without_depth_->index_data;
             auto i = mesh_->vertex_data->count();
             mesh_->vertex_data->position(element.points[0]);
-            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
             mesh_->vertex_data->position(element.points[1]);
-            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
             array->index(i);
@@ -92,19 +92,19 @@ void Debug::on_update(float dt) {
             auto& array = (element.depth_test) ? points_with_depth_->index_data : points_without_depth_->index_data;
             auto i = mesh_->vertex_data->count();
             mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, hs, 0));
-            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
             mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, -hs, 0));
-            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
             mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, -hs, 0));
-            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
             mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, hs, 0));
-            mesh_->vertex_data->diffuse(element.colour);
+            mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
             array->index(i);
@@ -187,11 +187,11 @@ float Debug::point_size() const {
     return current_point_size_;
 }
 
-void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, double duration, bool depth_test) {
+void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Color &color, double duration, bool depth_test) {
     initialize_actor();
 
     DebugElement element;
-    element.colour = colour;
+    element.color = color;
     element.duration = duration;
     element.depth_test = depth_test;
     element.points[0] = start.transformed_by(transform_);
@@ -201,17 +201,17 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     elements_.push_back(element);
 }
 
-void Debug::draw_ray(const Vec3 &start, const Vec3 &dir, const Colour &colour, double duration, bool depth_test) {
+void Debug::draw_ray(const Vec3 &start, const Vec3 &dir, const Color &color, double duration, bool depth_test) {
     initialize_actor();
 
-    draw_line(start, start+dir, colour, duration, depth_test);
+    draw_line(start, start+dir, color, duration, depth_test);
 }
 
-void Debug::draw_point(const Vec3 &position, const Colour &colour, double duration, bool depth_test) {
+void Debug::draw_point(const Vec3 &position, const Color &color, double duration, bool depth_test) {
     initialize_actor();
 
     DebugElement element;
-    element.colour = colour;
+    element.color = color;
     element.duration = duration;
     element.depth_test = depth_test;
     element.points[0] = position.transformed_by(transform_);

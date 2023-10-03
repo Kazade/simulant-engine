@@ -22,8 +22,8 @@
 
 namespace smlt {
 
-// Apparently this is the colour of a high noon sun (colour temp 5400 - 255, 255, 251)
-const Colour DEFAULT_LIGHT_COLOUR = Colour(1.0, 1.0, 251.0 / 255.0, 1.0);
+// Apparently this is the color of a high noon sun (color temp 5400 - 255, 255, 251)
+const Color DEFAULT_LIGHT_COLOR = Color(1.0, 1.0, 251.0 / 255.0, 1.0);
 
 
 Light::Light(Scene* owner, StageNodeType type):
@@ -40,7 +40,7 @@ void Light::set_type(LightType type) {
     set_cullable(type_ != LIGHT_TYPE_DIRECTIONAL);
 }
 
-Colour Light::global_ambient() const { return scene->lighting->ambient_light(); }
+Color Light::global_ambient() const { return scene->lighting->ambient_light(); }
 
 /**
     Sets the attenuation and the range of the light. The range doesn't have any

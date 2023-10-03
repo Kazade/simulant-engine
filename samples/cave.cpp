@@ -17,7 +17,7 @@ public:
 
         link_pipeline(pipeline);
 
-        pipeline->viewport->set_colour(smlt::Colour::BLACK);
+        pipeline->viewport->set_color(smlt::Color::BLACK);
 
         // Camera
         camera_->set_perspective_projection(Degrees(60.0), float(window->width()) / float(window->height()), 0.01f, 1000.0f);
@@ -56,14 +56,14 @@ public:
         fairy_actor_->set_render_priority(10);
 
         // Lights
-        lighting->set_ambient_light(smlt::Colour(0.25f, 0.25f, 0.25f, 1.0f));
-        create_node<smlt::DirectionalLight>(Vec3(-120, -90, 0), Colour(1, 0.6822482f, 0.3915094f, 1) * 0.5f);
+        lighting->set_ambient_light(smlt::Color(0.25f, 0.25f, 0.25f, 1.0f));
+        create_node<smlt::DirectionalLight>(Vec3(-120, -90, 0), Color(1, 0.6822482f, 0.3915094f, 1) * 0.5f);
 
-        Colour lightCol = Colour(1, 0.6822482f, 0.3915094f, 1.0f);
+        Color lightCol = Color(1, 0.6822482f, 0.3915094f, 1.0f);
         auto rock_light = create_node<smlt::PointLight>(Vec3(-12.15f, -0.67f, 0.73f), lightCol * 23.0f);
         rock_light->set_attenuation(4.31f, 0.01f, 0.25f, 0.75);
 
-        auto fairy_light = create_node<smlt::PointLight>(Vec3(), Colour(0.5f, 0.85f, 1, 1) * 10);
+        auto fairy_light = create_node<smlt::PointLight>(Vec3(), Color(0.5f, 0.85f, 1, 1) * 10);
         fairy_light->set_attenuation(5, 0.01f, 0.25f, 0.75f);
         fairy_light->set_parent(fairy_actor_);
 

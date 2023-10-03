@@ -8,9 +8,9 @@ public:
         smlt::Scene(window) {}
 
     void load() {
-        // Create two viewports for the left and right hand side of the screen, set different clear colours
-        smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Colour::RED);
-        smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Colour::GREEN);
+        // Create two viewports for the left and right hand side of the screen, set different clear colors
+        smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Color::RED);
+        smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Color::GREEN);
 
         auto cube = assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube->new_submesh_as_cube("cube", assets->new_material(), 1.0);

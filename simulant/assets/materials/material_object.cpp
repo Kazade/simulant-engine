@@ -14,20 +14,20 @@ MaterialObject::~MaterialObject() {
 
 }
 
-void MaterialObject::set_specular(const Colour &colour) {
-    set_property_value(SPECULAR_PROPERTY_NAME, (const Vec4&) colour);
+void MaterialObject::set_specular(const Color &color) {
+    set_property_value(SPECULAR_PROPERTY_NAME, (const Vec4&) color);
 }
 
-void MaterialObject::set_ambient(const Colour &colour) {
-    set_property_value(AMBIENT_PROPERTY_NAME, (const Vec4&) colour);
+void MaterialObject::set_ambient(const Color &color) {
+    set_property_value(AMBIENT_PROPERTY_NAME, (const Vec4&) color);
 }
 
-void MaterialObject::set_emission(const Colour& colour) {
-    set_property_value(EMISSION_PROPERTY_NAME, (const Vec4&) colour);
+void MaterialObject::set_emission(const Color& color) {
+    set_property_value(EMISSION_PROPERTY_NAME, (const Vec4&) color);
 }
 
-void MaterialObject::set_diffuse(const Colour &colour) {
-    set_property_value(DIFFUSE_PROPERTY_NAME, (const Vec4&) colour);
+void MaterialObject::set_diffuse(const Color &color) {
+    set_property_value(DIFFUSE_PROPERTY_NAME, (const Vec4&) color);
 }
 
 void MaterialObject::set_shininess(float shininess) {
@@ -141,33 +141,33 @@ const Mat4& MaterialObject::specular_map_matrix() const {
 }
 
 
-const Colour& MaterialObject::specular() const {
-    // FIXME: Naughty cast from Vec4& -> Colour&
-    const Colour* ptr = nullptr;
+const Color& MaterialObject::specular() const {
+    // FIXME: Naughty cast from Vec4& -> Color&
+    const Color* ptr = nullptr;
     bool ok = property_value(SPECULAR_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
 }
 
-const Colour& MaterialObject::ambient() const {
-    const Colour* ptr = nullptr;
+const Color& MaterialObject::ambient() const {
+    const Color* ptr = nullptr;
     bool ok = property_value(AMBIENT_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
 }
 
-const Colour& MaterialObject::emission() const {
-    const Colour* ptr = nullptr;
+const Color& MaterialObject::emission() const {
+    const Color* ptr = nullptr;
     bool ok = property_value(EMISSION_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
 }
 
-const Colour& MaterialObject::diffuse() const {
-    const Colour* ptr = nullptr;
+const Color& MaterialObject::diffuse() const {
+    const Color* ptr = nullptr;
     bool ok = property_value(DIFFUSE_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
@@ -198,8 +198,8 @@ void MaterialObject::set_fog_mode(FogMode mode) {
     set_property_value(FOG_MODE_PROPERTY_NAME, (EnumType) mode);
 }
 
-void MaterialObject::set_fog_colour(const Colour& colour) {
-    set_property_value(FOG_COLOUR_PROPERTY_NAME, colour);
+void MaterialObject::set_fog_color(const Color& color) {
+    set_property_value(FOG_COLOR_PROPERTY_NAME, color);
 }
 
 float MaterialObject::fog_density() const {
@@ -234,9 +234,9 @@ FogMode MaterialObject::fog_mode() const {
     return *(reinterpret_cast<const FogMode*>(ptr));
 }
 
-const Colour& MaterialObject::fog_colour() const {
-    const Colour* ptr = nullptr;
-    bool ok = property_value(FOG_COLOUR_PROPERTY_HASH, ptr);
+const Color& MaterialObject::fog_color() const {
+    const Color* ptr = nullptr;
+    bool ok = property_value(FOG_COLOR_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -366,16 +366,16 @@ ShadeModel MaterialObject::shade_model() const {
     return *(reinterpret_cast<const ShadeModel*>(ptr));
 }
 
-ColourMaterial MaterialObject::colour_material() const {
+ColorMaterial MaterialObject::color_material() const {
     const EnumType* ptr = nullptr;
-    bool ok = property_value(COLOUR_MATERIAL_PROPERTY_HASH, ptr);
+    bool ok = property_value(COLOR_MATERIAL_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
-    return *(reinterpret_cast<const ColourMaterial*>(ptr));
+    return *(reinterpret_cast<const ColorMaterial*>(ptr));
 }
 
-void MaterialObject::set_colour_material(ColourMaterial cm) {
-    set_property_value(COLOUR_MATERIAL_PROPERTY_NAME, (EnumType) cm);
+void MaterialObject::set_color_material(ColorMaterial cm) {
+    set_property_value(COLOR_MATERIAL_PROPERTY_NAME, (EnumType) cm);
 }
 
 

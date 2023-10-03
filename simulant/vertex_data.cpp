@@ -389,9 +389,9 @@ const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
 }
 
 template<>
-const Colour* VertexData::diffuse_at(const uint32_t idx) const {
+const Color* VertexData::diffuse_at(const uint32_t idx) const {
     assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
-    return ((Colour*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
+    return ((Color*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
 }
 
 template<>
@@ -468,16 +468,16 @@ void VertexData::diffuse(float r, float g, float b, float a) {
     *out = Vec4(r, g, b, a);
 }
 
-void VertexData::diffuse(const Colour& colour) {
+void VertexData::diffuse(const Color& color) {
     if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F) {
-        diffuse(colour.r, colour.g, colour.b, colour.a);
+        diffuse(color.r, color.g, color.b, color.a);
     } else {
         const float s = 255.0f;
         diffuse(
-            (uint8_t) clamp(colour.r * s, 0, 255),
-            (uint8_t) clamp(colour.g * s, 0, 255),
-            (uint8_t) clamp(colour.b * s, 0, 255),
-            (uint8_t) clamp(colour.a * s, 0, 255)
+            (uint8_t) clamp(color.r * s, 0, 255),
+            (uint8_t) clamp(color.g * s, 0, 255),
+            (uint8_t) clamp(color.b * s, 0, 255),
+            (uint8_t) clamp(color.a * s, 0, 255)
         );
     }
 }

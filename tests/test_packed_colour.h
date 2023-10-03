@@ -1,16 +1,16 @@
 #pragma once
 
 #include <simulant/test.h>
-#include <simulant/colour.h>
+#include <simulant/color.h>
 
 namespace {
 
 using namespace smlt;
 
-class PackedColourTests : public smlt::test::SimulantTestCase {
+class PackedColorTests : public smlt::test::SimulantTestCase {
 public:
-    void test_conversion_to_and_from_colour() {
-        PackedColour4444 pc = Colour::YELLOW;
+    void test_conversion_to_and_from_color() {
+        PackedColor4444 pc = Color::YELLOW;
 
         assert_equal(pc.r8(), 255);
         assert_equal(pc.g8(), 255);
@@ -22,9 +22,9 @@ public:
         assert_equal(pc.bf(), 0.0f);
         assert_equal(pc.af(), 1.0f);
 
-        Colour c = pc;
+        Color c = pc;
 
-        assert_equal(c, Colour::YELLOW);
+        assert_equal(c, Color::YELLOW);
     }
 };
 

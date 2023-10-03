@@ -57,7 +57,7 @@ public:
 private:
     GenericRenderer* renderer_;
     CameraPtr camera_;
-    Colour global_ambient_;
+    Color global_ambient_;
 
     GPUProgram* program_ = nullptr;
     const MaterialPass* pass_ = nullptr;
@@ -112,7 +112,7 @@ private:
     void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera);
-    void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);
+    void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Color& global_ambient);
 
     void set_auto_attributes_on_shader(GPUProgram *program, const Renderable* buffer, GPUBuffer* buffers);
     void set_blending_mode(BlendType type);

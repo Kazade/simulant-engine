@@ -524,7 +524,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
                 mesh->vertex_data->position(pos);
                 auto N = planes[f.plane].normal;
                 mesh->vertex_data->normal((f.plane_side == 0) ? N : -N);
-                mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+                mesh->vertex_data->diffuse(smlt::Color::WHITE);
                 mesh->vertex_data->tex_coord0(u / w, v / h);
                 mesh->vertex_data->tex_coord1(u / w, v / h);
                 mesh->vertex_data->move_next();

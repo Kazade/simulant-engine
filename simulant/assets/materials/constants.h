@@ -19,11 +19,11 @@ enum ShadeModel : EnumType {
     SHADE_MODEL_FLAT
 };
 
-enum ColourMaterial : EnumType {
-    COLOUR_MATERIAL_NONE,
-    COLOUR_MATERIAL_AMBIENT,
-    COLOUR_MATERIAL_DIFFUSE,
-    COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE
+enum ColorMaterial : EnumType {
+    COLOR_MATERIAL_NONE,
+    COLOR_MATERIAL_AMBIENT,
+    COLOR_MATERIAL_DIFFUSE,
+    COLOR_MATERIAL_AMBIENT_AND_DIFFUSE
 };
 
 enum CullMode : EnumType {
@@ -37,7 +37,7 @@ enum BlendType : EnumType {
     BLEND_NONE,
     BLEND_ADD,
     BLEND_MODULATE,
-    BLEND_COLOUR,
+    BLEND_COLOR,
     BLEND_ALPHA,
     BLEND_ONE_ONE_MINUS_ALPHA
 };
@@ -70,7 +70,7 @@ typedef int32_t EnabledTextureMask;
 
 PolygonMode polygon_mode_from_name(const char* name);
 ShadeModel shade_model_from_name(const char* name);
-ColourMaterial colour_material_from_name(const char* name);
+ColorMaterial color_material_from_name(const char* name);
 CullMode cull_mode_from_name(const char* name);
 BlendType blend_type_from_name(const char* name);
 DepthFunc depth_func_from_name(const char* name);
@@ -94,7 +94,7 @@ DepthFunc depth_func_from_name(const char* name);
 #define TEXTURES_ENABLED_PROPERTY_NAME "s_textures_enabled"
 #define POINT_SIZE_PROPERTY_NAME "s_point_size"
 #define POLYGON_MODE_PROPERTY_NAME "s_polygon_mode"
-#define COLOUR_MATERIAL_PROPERTY_NAME "s_colour_material"
+#define COLOR_MATERIAL_PROPERTY_NAME "s_color_material"
 #define DIFFUSE_MAP_MATRIX_PROPERTY_NAME "s_diffuse_map_matrix"
 #define LIGHT_MAP_MATRIX_PROPERTY_NAME "s_light_map_matrix"
 #define NORMAL_MAP_MATRIX_PROPERTY_NAME "s_normal_map_matrix"
@@ -104,6 +104,6 @@ DepthFunc depth_func_from_name(const char* name);
 #define FOG_DENSITY_PROPERTY_NAME "s_fog_density"
 #define FOG_START_PROPERTY_NAME "s_fog_start"
 #define FOG_END_PROPERTY_NAME "s_fog_end"
-#define FOG_COLOUR_PROPERTY_NAME "s_fog_colour"
+#define FOG_COLOR_PROPERTY_NAME "s_fog_color"
 
 }

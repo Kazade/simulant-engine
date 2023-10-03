@@ -72,16 +72,16 @@ typedef sig::signal<void (Camera*, Viewport*, StageNode*)> PipelineFinishedSigna
 
 class LightingSettings {
 public:
-    smlt::Colour ambient_light() const {
+    smlt::Color ambient_light() const {
         return ambient_light_;
     }
 
-    void set_ambient_light(const smlt::Colour& c) {
+    void set_ambient_light(const smlt::Color& c) {
         ambient_light_ = c;
     }
 
 private:
-    smlt::Colour ambient_light_;
+    smlt::Color ambient_light_;
 };
 
 

@@ -142,8 +142,8 @@ namespace loaders {
             tmp_texture->blur(BLUR_TYPE_SIMPLE, blur);
         }
 
-        /* We create a 16 colour paletted texture. This is an RGBA texture
-         * where the colour is white with 16 levels of alpha. We then pack
+        /* We create a 16 color paletted texture. This is an RGBA texture
+         * where the color is white with 16 levels of alpha. We then pack
          * into 4bpp data. This means that a 512x512 texture takes up less than
          * 150kb - essential for memory constrained systems. */
 

@@ -76,9 +76,9 @@ bool Widget::on_create(void* params) {
         style_ = std::make_shared<WidgetStyle>();
 
 
-        set_foreground_colour(args->theme.foreground_colour_);
-        set_background_colour(args->theme.background_colour_);
-        set_text_colour(args->theme.text_colour_);
+        set_foreground_color(args->theme.foreground_color_);
+        set_background_color(args->theme.background_color_);
+        set_text_color(args->theme.text_color_);
     } else {
         style_ = args->shared_style;
     }
@@ -455,7 +455,7 @@ void Widget::render_text() {
         }
     }
 
-    auto c = style_->text_colour_;
+    auto c = style_->text_color_;
     c.set_alpha(style_->opacity_);
 
     auto idx = vdata->count();
@@ -499,14 +499,14 @@ void Widget::clear_mesh() {
     }
 }
 
-SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const Px& border_radius, const smlt::Vec2* uvs, float z_offset) {
+SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Color& color, const Px& border_radius, const smlt::Vec2* uvs, float z_offset) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
 
     auto sm = mesh_->find_submesh(name);
     assert(sm);
 
-    sm->set_diffuse(colour);
+    sm->set_diffuse(color);
 
     auto min = bounds.min;
     auto max = bounds.max;
@@ -557,7 +557,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
         for(auto& p: points) {
             mesh_->vertex_data->move_to_end();
             mesh_->vertex_data->position(p);
-            mesh_->vertex_data->diffuse(colour);
+            mesh_->vertex_data->diffuse(color);
             mesh_->vertex_data->tex_coord0(0.0, 0.0f);
             mesh_->vertex_data->normal(0, 0, 1);
             mesh_->vertex_data->move_next();
@@ -567,26 +567,26 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     } else {
         mesh_->vertex_data->move_to_end();
         mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f, (uvs) ? uvs[0].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
         mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f, (uvs) ? uvs[1].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
         mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f, (uvs) ? uvs[2].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
         mesh_->vertex_data->done();
 
         mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[3].x : 1.0f, (uvs) ? uvs[3].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
@@ -631,27 +631,27 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
 }
 
 void Widget::render_border(const WidgetBounds& border_bounds) {
-    auto colour = style_->border_colour_;
-    float a = colour.af() * style_->opacity_;
-    colour.set_alpha(a);
+    auto color = style_->border_color_;
+    float a = color.af() * style_->opacity_;
+    color.set_alpha(a);
     /* FIXME! This should be 4 rectangles or a tri-strip */
-    new_rectangle("border", border_bounds, colour, style_->border_radius_);
+    new_rectangle("border", border_bounds, color, style_->border_radius_);
 }
 
 void Widget::render_background(const WidgetBounds& background_bounds) {
-    auto colour = style_->background_colour_;
-    colour.set_alpha(colour.af() * style_->opacity_);
+    auto color = style_->background_color_;
+    color.set_alpha(color.af() * style_->opacity_);
 
-    auto bg = new_rectangle("background", background_bounds, colour, style_->border_radius_);
+    auto bg = new_rectangle("background", background_bounds, color, style_->border_radius_);
     if(has_background_image()) {
         apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
     }
 }
 
 void Widget::render_foreground(const WidgetBounds& foreground_bounds) {
-    auto colour = style_->foreground_colour_;
-    colour.set_alpha(colour.af() * style_->opacity_);
-    auto fg = new_rectangle("foreground", foreground_bounds, colour, style_->border_radius_);
+    auto color = style_->foreground_color_;
+    color.set_alpha(color.af() * style_->opacity_);
+    auto fg = new_rectangle("foreground", foreground_bounds, color, style_->border_radius_);
     if(has_foreground_image()) {
         apply_image_rect(fg, style_->foreground_image_, style_->foreground_image_rect_);
     }
@@ -836,12 +836,12 @@ Px Widget::border_radius() const {
     return style_->border_radius_;
 }
 
-void Widget::set_border_colour(const Colour &colour) {
-    if(style_->border_colour_ == PackedColour4444(colour)) {
+void Widget::set_border_color(const Color &color) {
+    if(style_->border_color_ == PackedColor4444(color)) {
         return;
     }
 
-    style_->border_colour_ = colour;
+    style_->border_color_ = color;
     _recalc_active_layers();
     rebuild();
 }
@@ -889,10 +889,10 @@ bool Widget::foreground_active() const {
 
 void Widget::_recalc_active_layers() {
     style_->active_layers_ = (
-        (style_->border_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER |
-        (style_->background_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
-        (style_->foreground_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
-        (style_->text_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_TEXT
+        (style_->border_color_ != Color::NONE) << WIDGET_LAYER_INDEX_BORDER |
+        (style_->background_color_ != Color::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
+        (style_->foreground_color_ != Color::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
+        (style_->text_color_ != Color::NONE) << WIDGET_LAYER_INDEX_TEXT
     );
 }
 
@@ -976,39 +976,39 @@ void Widget::set_foreground_image_source_rect(const UICoord& bottom_left, const 
     rebuild();
 }
 
-void Widget::set_background_colour(const Colour& colour) {
+void Widget::set_background_color(const Color& color) {
     assert(style_);
 
-    if(style_->background_colour_ == colour) {
+    if(style_->background_color_ == color) {
         // Nothing to do
         return;
     }
 
-    style_->background_colour_ = colour;
+    style_->background_color_ = color;
 
     _recalc_active_layers();
     rebuild();
 }
 
-void Widget::set_foreground_colour(const Colour& colour) {
-    if(style_->foreground_colour_ == colour) {
+void Widget::set_foreground_color(const Color& color) {
+    if(style_->foreground_color_ == color) {
         // Nothing to do
         return;
     }
 
-    style_->foreground_colour_ = colour;
+    style_->foreground_color_ = color;
 
     _recalc_active_layers();
     rebuild();
 }
 
-void Widget::set_text_colour(const Colour &colour) {
-    if(style_->text_colour_ == colour) {
+void Widget::set_text_color(const Color &color) {
+    if(style_->text_color_ == color) {
         // Nothing to do
         return;
     }
 
-    style_->text_colour_ = colour;
+    style_->text_color_ = color;
     _recalc_active_layers();
     rebuild();
 }

@@ -25,10 +25,10 @@ bool Button::on_create(void* params) {
             args->theme.button_padding_.top
         );
 
-        set_text_colour(args->theme.button_text_colour_);
-        set_background_colour(args->theme.button_background_colour_);
-        set_foreground_colour(args->theme.button_foreground_colour_);
-        set_border_colour(args->theme.button_border_colour_);
+        set_text_color(args->theme.button_text_color_);
+        set_background_color(args->theme.button_background_color_);
+        set_foreground_color(args->theme.button_foreground_color_);
+        set_border_color(args->theme.button_border_color_);
         set_border_width(args->theme.button_border_width_);
     }
 

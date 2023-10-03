@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "../../colour.h"
+#include "../../color.h"
 #include "../../font.h"
 
 namespace smlt {
@@ -244,59 +244,59 @@ extern const char* DEFAULT_FONT_FAMILY;
 extern const Px DEFAULT_FONT_SIZE;
 
 struct UIConfig {
-    static const Colour ALICE_BLUE;
-    static const Colour LIGHT_GREY;
-    static const Colour DODGER_BLUE;
+    static const Color ALICE_BLUE;
+    static const Color LIGHT_GREY;
+    static const Color DODGER_BLUE;
 
     std::string font_family_ = "";  /* Use default */
     Px font_size_ = Px(0); /* Use default */
 
     Rem line_height_ = Rem(1.5f);
 
-    Colour foreground_colour_ = Colour::from_bytes(40, 40, 40, 255);
-    Colour background_colour_ = Colour::from_bytes(53, 53, 53, 255);
-    Colour text_colour_ = Colour::from_bytes(219, 219, 219, 255);
-    Colour highlight_colour_ = Colour::from_bytes(0, 51, 102, 255);
+    Color foreground_color_ = Color::from_bytes(40, 40, 40, 255);
+    Color background_color_ = Color::from_bytes(53, 53, 53, 255);
+    Color text_color_ = Color::from_bytes(219, 219, 219, 255);
+    Color highlight_color_ = Color::from_bytes(0, 51, 102, 255);
 
     ResizeMode label_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
     ResizeMode button_resize_mode_ = RESIZE_MODE_FIT_CONTENT;
 
     uint8_t scrollbar_width_ = 16;
-    Colour scrollbar_background_colour_ = background_colour_;
-    Colour scrollbar_foreground_colour_ = foreground_colour_;
+    Color scrollbar_background_color_ = background_color_;
+    Color scrollbar_foreground_color_ = foreground_color_;
 
     UInt4 label_padding_ = { Px(4), Px(4), Px(4), Px(4) };
-    PackedColour4444 label_background_colour_ = Colour::NONE;
-    PackedColour4444 label_foreground_colour_ = Colour::NONE;
-    PackedColour4444 label_border_colour_ = Colour::NONE;
-    PackedColour4444 label_text_colour_ = text_colour_;
+    PackedColor4444 label_background_color_ = Color::NONE;
+    PackedColor4444 label_foreground_color_ = Color::NONE;
+    PackedColor4444 label_border_color_ = Color::NONE;
+    PackedColor4444 label_text_color_ = text_color_;
 
     UInt4 button_padding_ = { Px(30), Px(30), Px(20), Px(20) };
-    PackedColour4444 button_background_colour_ = highlight_colour_;
-    PackedColour4444 button_foreground_colour_ = Colour::NONE;
-    PackedColour4444 button_text_colour_ = text_colour_;
-    PackedColour4444 button_border_colour_ = Colour::NONE;
+    PackedColor4444 button_background_color_ = highlight_color_;
+    PackedColor4444 button_foreground_color_ = Color::NONE;
+    PackedColor4444 button_text_color_ = text_color_;
+    PackedColor4444 button_border_color_ = Color::NONE;
 
     Px button_border_width_ = Px(0);
     Px button_border_radius_ = Px(4);
 
     UInt4 image_padding_ = {Px(), Px(), Px(), Px()};
     Px image_border_width_ = Px(0);
-    PackedColour4444 image_background_colour_ = smlt::Colour::WHITE;
-    PackedColour4444 image_foreground_colour_ = smlt::Colour::NONE;
-    PackedColour4444 image_text_colour_ = smlt::Colour::NONE;
+    PackedColor4444 image_background_color_ = smlt::Color::WHITE;
+    PackedColor4444 image_foreground_color_ = smlt::Color::NONE;
+    PackedColor4444 image_text_color_ = smlt::Color::NONE;
 
-    PackedColour4444 progress_bar_foreground_colour_ = highlight_colour_;
-    PackedColour4444 progress_bar_background_colour_ = background_colour_;
-    PackedColour4444 progress_bar_border_colour_ = foreground_colour_;
-    PackedColour4444 progress_bar_text_colour_ = text_colour_;
+    PackedColor4444 progress_bar_foreground_color_ = highlight_color_;
+    PackedColor4444 progress_bar_background_color_ = background_color_;
+    PackedColor4444 progress_bar_border_color_ = foreground_color_;
+    PackedColor4444 progress_bar_text_color_ = text_color_;
     Px progress_bar_border_width_ = Px(2);
 
-    PackedColour4444 frame_background_colour_ = background_colour_;
-    PackedColour4444 frame_titlebar_colour_ = foreground_colour_;
-    PackedColour4444 frame_text_colour_ = text_colour_;
+    PackedColor4444 frame_background_color_ = background_color_;
+    PackedColor4444 frame_titlebar_color_ = foreground_color_;
+    PackedColor4444 frame_text_color_ = text_color_;
     Px frame_border_width_ = Px(2);
-    PackedColour4444 frame_border_colour_ = foreground_colour_;
+    PackedColor4444 frame_border_color_ = foreground_color_;
 
     OverflowType default_overflow_ = OVERFLOW_TYPE_HIDDEN;
     ResizeMode default_resize_mode_ = RESIZE_MODE_FIXED;

@@ -106,7 +106,7 @@ MaterialPtr AssetManager::default_material() const {
 }
 
 
-static TexturePtr create_texture_with_colour(AssetManager* manager, const Colour& c) {
+static TexturePtr create_texture_with_color(AssetManager* manager, const Color& c) {
     auto tex = manager->new_texture(8, 8, TEXTURE_FORMAT_RGB_3UB_888, GARBAGE_COLLECT_NEVER);
 
     const uint8_t r = (uint8_t) (c.r * 255.0f);
@@ -130,13 +130,13 @@ bool SharedAssetManager::on_init() {
     S_DEBUG("Initalizing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
 
-    white_tex_ = create_texture_with_colour(this, smlt::Colour::WHITE);
+    white_tex_ = create_texture_with_color(this, smlt::Color::WHITE);
     white_tex_->set_name("s_white_texture");
 
-    black_tex_ = create_texture_with_colour(this, smlt::Colour::BLACK);
+    black_tex_ = create_texture_with_color(this, smlt::Color::BLACK);
     black_tex_->set_name("s_black_texture");
 
-    z_tex_ = create_texture_with_colour(this, smlt::Colour::from_hex_string("#8080FF"));
+    z_tex_ = create_texture_with_color(this, smlt::Color::from_hex_string("#8080FF"));
     z_tex_->set_name("s_znormal_texture");
 
     /* Update the core material */

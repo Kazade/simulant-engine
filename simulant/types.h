@@ -27,7 +27,7 @@
 #include <vector>
 #include <array>
 
-#include "colour.h"
+#include "color.h"
 #include "generic/optional.h"
 
 #include "math/vec2.h"
@@ -367,10 +367,10 @@ enum ProjectionType {
 };
 
 enum BufferClearFlag {
-    BUFFER_CLEAR_COLOUR_BUFFER = 0x1,
+    BUFFER_CLEAR_COLOR_BUFFER = 0x1,
     BUFFER_CLEAR_DEPTH_BUFFER = 0x2,
     BUFFER_CLEAR_STENCIL_BUFFER = 0x4,
-    BUFFER_CLEAR_ALL = BUFFER_CLEAR_COLOUR_BUFFER | BUFFER_CLEAR_DEPTH_BUFFER | BUFFER_CLEAR_STENCIL_BUFFER
+    BUFFER_CLEAR_ALL = BUFFER_CLEAR_COLOR_BUFFER | BUFFER_CLEAR_DEPTH_BUFFER | BUFFER_CLEAR_STENCIL_BUFFER
 };
 
 typedef int32_t RenderPriority;

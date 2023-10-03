@@ -2,7 +2,7 @@
 
 #include "../../math/vec3.h"
 #include "../../math/vec2.h"
-#include "../../colour.h"
+#include "../../color.h"
 
 namespace smlt {
 
@@ -13,7 +13,7 @@ struct Particle {
     smlt::Vec2 initial_dimensions;
     float ttl;
     float lifetime;
-    smlt::Colour colour;
+    smlt::Color color;
 };
 
 }

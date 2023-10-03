@@ -79,7 +79,7 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
             vdata->position(pos);
             vdata->tex_coord0(u, v);
             vdata->normal(n);
-            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->diffuse(smlt::Color::WHITE);
             vdata->move_next();
         }
     }
@@ -89,7 +89,7 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
     vdata->position(pos);
     vdata->tex_coord0(u, v);
-    vdata->diffuse(smlt::Colour::WHITE);
+    vdata->diffuse(smlt::Color::WHITE);
     vdata->move_next();
 
     pos = Vec3(0, -1 * radius, 0);
@@ -99,7 +99,7 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
     vdata->position(pos);
     vdata->tex_coord0(u, v);
-    vdata->diffuse(smlt::Colour::WHITE);
+    vdata->diffuse(smlt::Color::WHITE);
     vdata->move_next();
 
     vdata->done();

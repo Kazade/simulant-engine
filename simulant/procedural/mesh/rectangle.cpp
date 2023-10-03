@@ -42,7 +42,7 @@ SubMesh* new_rectangle_submesh(
 
     //Build some shared vertex data
     mesh->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(0.0, 0.0f);
     mesh->vertex_data->tex_coord1(0.0, 0.0f);
     mesh->vertex_data->tex_coord2(0.0, 0.0f);
@@ -51,7 +51,7 @@ SubMesh* new_rectangle_submesh(
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(1.0, 0.0f);
     mesh->vertex_data->tex_coord1(1.0, 0.0f);
     mesh->vertex_data->tex_coord2(1.0, 0.0f);
@@ -60,7 +60,7 @@ SubMesh* new_rectangle_submesh(
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(1.0, 1.0f);
     mesh->vertex_data->tex_coord1(1.0, 1.0f);
     mesh->vertex_data->tex_coord2(1.0, 1.0f);
@@ -69,7 +69,7 @@ SubMesh* new_rectangle_submesh(
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(0.0, 1.0f);
     mesh->vertex_data->tex_coord1(0.0, 1.0f);
     mesh->vertex_data->tex_coord2(0.0, 1.0f);
@@ -107,28 +107,28 @@ SubMesh *rectangle(
 
     //Build some shared vertex data
     mesh->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(0.0, 0.0f);
     mesh->vertex_data->tex_coord1(0.0, 0.0f);
     mesh->vertex_data->normal(0, 0, 1);
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(1.0, 0.0f);
     mesh->vertex_data->tex_coord1(1.0, 0.0f);
     mesh->vertex_data->normal(0, 0, 1);
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(1.0, 1.0f);
     mesh->vertex_data->tex_coord1(1.0, 1.0f);
     mesh->vertex_data->normal(0, 0, 1);
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(0.0, 1.0f);
     mesh->vertex_data->tex_coord1(0.0, 1.0f);
     mesh->vertex_data->normal(0, 0, 1);
@@ -168,25 +168,25 @@ SubMesh* rectangle_outline(
     uint16_t offset = mesh->vertex_data->count();
 
     mesh->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(0.0, 0.0f);
     mesh->vertex_data->tex_coord1(0.0, 0.0f);
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(1.0, 0.0f);
     mesh->vertex_data->tex_coord1(1.0, 0.0f);
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (width / 2.0f), y_offset + (height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(1.0, 1.0f);
     mesh->vertex_data->tex_coord1(1.0, 1.0f);
     mesh->vertex_data->move_next();
 
     mesh->vertex_data->position(x_offset + (-width / 2.0f), y_offset + (height / 2.0f), z_offset);
-    mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+    mesh->vertex_data->diffuse(smlt::Color::WHITE);
     mesh->vertex_data->tex_coord0(0.0, 1.0f);
     mesh->vertex_data->tex_coord1(0.0, 1.0f);
     mesh->vertex_data->move_next();

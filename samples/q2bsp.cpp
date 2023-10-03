@@ -14,7 +14,7 @@ public:
         pipeline_ = compositor->render(this, camera_);
 
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
-        pipeline_->viewport->set_colour(smlt::Colour::GREY);
+        pipeline_->viewport->set_color(smlt::Color::GREY);
         link_pipeline(pipeline_);
 
         app->vfs->add_search_path("sample_data/quake2/textures");

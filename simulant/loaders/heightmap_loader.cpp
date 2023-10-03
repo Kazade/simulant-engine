@@ -237,7 +237,7 @@ inline float clamp(float x, float a, float b) {
     return x < a ? a : (x > b ? b : x);
 }
 
-smlt::Colour colour_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal, const std::vector<Vec3>& surrounding_points) {
+smlt::Color color_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal, const std::vector<Vec3>& surrounding_points) {
     // FIXME: Replace with some kind of decent ambient occlusion
     float sum = 0.0f;
 
@@ -250,12 +250,12 @@ smlt::Colour colour_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal
 
     // If the average angle > 90 degrees, then we are white
     if(v > 3.142f / 2.0f) {
-        return smlt::Colour::WHITE;
+        return smlt::Color::WHITE;
     } else {
         v /= (3.142f / 2.0f);
     }
 
-    return smlt::Colour(v, v, v, 1.0f);
+    return smlt::Color(v, v, v, 1.0f);
 }
 
 std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int height, uint32_t i) {
@@ -392,7 +392,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             mesh->vertex_data->position(pos);
             mesh->vertex_data->normal(Vec3(0, 1, 0));
 
-            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+            mesh->vertex_data->diffuse(smlt::Color::WHITE);
 
             // First texture coordinate takes into account texture_repeat setting
             mesh->vertex_data->tex_coord0(

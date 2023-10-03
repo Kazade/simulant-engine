@@ -43,10 +43,10 @@ struct MS3DGroup {
 
 struct MS3DMaterial {
     char name[32];
-    smlt::Colour ambient;
-    smlt::Colour diffuse;
-    smlt::Colour specular;
-    smlt::Colour emissive;
+    smlt::Color ambient;
+    smlt::Color diffuse;
+    smlt::Color specular;
+    smlt::Color emissive;
     float shininess;  // 0.0f - 128.0f
     float transparency;   // 0.0f - 1.0f
     uint8_t mode;  // 0, 1, 2 is unused now
@@ -388,7 +388,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 vdata->position(vertices[vert_index].xyz);
                 vdata->tex_coord0(triangle.s[i], 1.0f - triangle.t[i]);
                 vdata->normal(triangle.normals[i]);
-                vdata->diffuse(Colour::WHITE);
+                vdata->diffuse(Color::WHITE);
                 vdata->move_next();
 
                 int8_t bones[4] = {

@@ -25,14 +25,14 @@ private:
             const float n = smlt::fast_divide(e, particle->lifetime);
             const float fsizen = fsize * n;
 
-            uint8_t colour = smlt::clamp(fsizen, 0.0f, fsize);
+            uint8_t color = smlt::clamp(fsizen, 0.0f, fsize);
 
-            particle->colour.a = alphas_[colour];
+            particle->color.a = alphas_[color];
 
             if(interpolate_) {
                 const float f = fsizen - std::floor(fsizen);
-                auto next_alpha = alphas_[std::min((uint32_t) colour + 1, (uint32_t) size - 1)];
-                particle->colour.a = (particle->colour.a * (1.0f - f)) + (next_alpha * f);
+                auto next_alpha = alphas_[std::min((uint32_t) color + 1, (uint32_t) size - 1)];
+                particle->color.a = (particle->color.a * (1.0f - f)) + (next_alpha * f);
             }
         }
     }

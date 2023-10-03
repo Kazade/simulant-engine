@@ -26,7 +26,7 @@
 #include "generic/uniquely_identifiable.h"
 #include "generic/notifies_destruction.h"
 
-#include "colour.h"
+#include "color.h"
 #include "types.h"
 
 namespace smlt {
@@ -135,10 +135,10 @@ public:
 
     void diffuse(float r, float g, float b, float a);
     void diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-    void diffuse(const Colour& colour);
+    void diffuse(const Color& color);
 
     void specular(float r, float g, float b, float a);
-    void specular(const Colour& colour);
+    void specular(const Color& color);
 
     uint32_t count() const { return vertex_count_; }
 
@@ -281,7 +281,7 @@ template<>
 const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 
 template<>
-const Colour* VertexData::diffuse_at(const uint32_t index) const;
+const Color* VertexData::diffuse_at(const uint32_t index) const;
 
 template<>
 const uint8_t* VertexData::diffuse_at(const uint32_t index) const;

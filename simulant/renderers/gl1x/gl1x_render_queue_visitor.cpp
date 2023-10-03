@@ -35,7 +35,7 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, u
     /* Set up default client state before the run. This is necessary
      * so that the boolean flags get correctly set */
     enable_vertex_arrays(true);
-    enable_colour_arrays(true);
+    enable_color_arrays(true);
     enable_normal_arrays(true);
     enable_texcoord_array(0, true);
 
@@ -188,7 +188,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         break;
         case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         break;
-        case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        case BLEND_COLOR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
         break;
         case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
         break;
@@ -205,19 +205,19 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 
 #if _S_GL_SUPPORTS_COLOR_MATERIAL
-    switch(next->colour_material()) {
-    case COLOUR_MATERIAL_NONE:
+    switch(next->color_material()) {
+    case COLOR_MATERIAL_NONE:
         GLCheck(glDisable, GL_COLOR_MATERIAL);
     break;
-    case COLOUR_MATERIAL_AMBIENT:
+    case COLOR_MATERIAL_AMBIENT:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
     break;
-    case COLOUR_MATERIAL_DIFFUSE:
+    case COLOR_MATERIAL_DIFFUSE:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
     break;
-    case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
+    case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
     break;
@@ -236,13 +236,13 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glEnable, GL_FOG);
             GLCheck(glFogi, GL_FOG_MODE, GL_EXP);
             GLCheck(glFogf, GL_FOG_DENSITY, next->fog_density());
-            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_colour().r);
+            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_color().r);
         } break;
         case FOG_MODE_EXP2: {
             GLCheck(glEnable, GL_FOG);
             GLCheck(glFogi, GL_FOG_MODE, GL_EXP2);
             GLCheck(glFogf, GL_FOG_DENSITY, next->fog_density());
-            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_colour().r);
+            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_color().r);
         } break;
         case FOG_MODE_LINEAR:
         default: {
@@ -250,7 +250,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             GLCheck(glFogi, GL_FOG_MODE, GL_LINEAR);
             GLCheck(glFogf, GL_FOG_START, next->fog_start());
             GLCheck(glFogf, GL_FOG_END, next->fog_end());
-            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_colour().r);
+            GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_color().r);
         } break;
     }
 }
@@ -333,17 +333,17 @@ void GL1RenderQueueVisitor::disable_vertex_arrays(bool force) {
     positions_enabled_ = false;
 }
 
-void GL1RenderQueueVisitor::enable_colour_arrays(bool force) {
-    if(!force && colours_enabled_) return;
+void GL1RenderQueueVisitor::enable_color_arrays(bool force) {
+    if(!force && colors_enabled_) return;
     GLCheck(glEnableClientState, GL_COLOR_ARRAY);
-    colours_enabled_ = true;
+    colors_enabled_ = true;
 }
 
-void GL1RenderQueueVisitor::disable_colour_arrays(bool force) {
-    if(!force && !colours_enabled_) return;
+void GL1RenderQueueVisitor::disable_color_arrays(bool force) {
+    if(!force && !colors_enabled_) return;
 
     GLCheck(glDisableClientState, GL_COLOR_ARRAY);
-    colours_enabled_ = false;
+    colors_enabled_ = false;
 }
 
 void GL1RenderQueueVisitor::enable_normal_arrays(bool force) {
@@ -450,7 +450,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     const auto has_diffuse = spec.has_diffuse();
     if(has_diffuse) {
-        enable_colour_arrays();
+        enable_color_arrays();
         GLCheck(
             glColorPointer,
             (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F) ? 2 :
@@ -461,7 +461,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
             ((const uint8_t*) vertex_data) + spec.diffuse_offset(false)
         );
     } else {
-        disable_colour_arrays();
+        disable_color_arrays();
     }
 
     const auto has_normals = spec.has_normals();
