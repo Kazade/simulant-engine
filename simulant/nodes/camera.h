@@ -53,7 +53,7 @@ public:
     void set_orthographic_projection(float left, float right, float bottom, float top, float near=-1.0, float far=1.0);
     float set_orthographic_projection_from_height(float desired_height_in_units, float ratio);
 
-    bool on_create(void* params) {
+    bool on_create(void* params) override {
         _S_UNUSED(params);
         return true;
     }

@@ -184,7 +184,7 @@ void Q2BSPLoader::generate_materials(
         uses_lightmap = uses_lightmap && LIGHTMAPS_ENABLED;
 
         if(is_invisible) {
-            materials.push_back(AssetID()); // Just push a null material for invisible surfaces
+            materials.push_back(MaterialPtr()); // Just push a null material for invisible surfaces
             dimensions.push_back(Q2::TexDimension(0, 0));
             continue;
         }
