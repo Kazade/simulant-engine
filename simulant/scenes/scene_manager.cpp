@@ -44,7 +44,9 @@ void SceneManager::destroy_all() {
 }
 
 void SceneManager::late_update(float dt) {
-    if(!get_app()->window->has_focus()) {
+    auto app = get_app();
+    auto window = (app) ? app->window.get() : nullptr;
+    if(!(window && window->has_focus())) {
         // if paused, send deltatime as 0.0.
         // it's still accessible through window->time_keeper if the user needs it
         dt = 0.0;

@@ -90,7 +90,7 @@ public:
     void on_fixed_update(float dt) override {
 
         // Move the camera between two points
-        camera_->transform->set_translation(camera_->transform->translation() + Vec3::LEFT * cameraSpeed_ * dt);
+        camera_->transform->set_position(camera_->transform->position() + Vec3::LEFT * cameraSpeed_ * dt);
         if(camera_->transform->position().x > 0 || camera_->transform->position().x < -15)
             cameraSpeed_ *= -1;
 
@@ -112,10 +112,11 @@ public:
         Vec3 prevFairyPos = fairy_actor_->transform->position();
 
         // Move the fairy across the path to the new position
-        fairy_actor_->transform->set_position(fairyPath_->calc_bezier_point(fairyPathTime_));
+        auto fairyPos = fairyPath_->calc_bezier_point(fairyPathTime_);
+        fairy_actor_->transform->set_position(fairyPos);
 
         // Make sure the fairy moves at a constant speed
-        lastFairyPathStepSize = fairy_actor_->transform->position().sqr_distance(fairy_actor_->transform->position(), prevFairyPos);
+        lastFairyPathStepSize = Vec3::sqr_distance(fairyPos, prevFairyPos);
 
         if(lastFairyPathStepSize < fairyPathStepSize_) {
             fairyPathSpeedFactor_ *= 1.1f;
@@ -169,6 +170,7 @@ int main(int argc, char* argv[]) {
     AppConfig config;
     config.title = "Cave Demo";
     config.fullscreen = false;
+    config.development.force_renderer = "gl1x";
 
 #ifdef __DREAMCAST__
     config.width = 640;

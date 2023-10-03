@@ -128,11 +128,19 @@ public:
     Quaternion simulated_rotation() const;
 
 protected:
+    friend class PhysicsService;
+
+    void clear_simulation_cache();
     PhysicsService* get_simulation() const;
 
     bool on_create(void *params) override;
+    bool on_destroy() override;
+
+    void on_transformation_changed() override;
 private:
     friend class ContactListener;
+
+    bool updating_body_ = false;
 
     std::pair<Vec3, Quaternion> last_state_;
     void on_update(float dt) override;

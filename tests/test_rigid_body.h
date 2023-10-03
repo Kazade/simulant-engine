@@ -30,9 +30,9 @@ public:
         auto controller = scene->create_node<RigidBody>();
         controller->set_parent(actor);
 
-        assert_equal(controller->transform->translation().x, 10.0f);
-        assert_equal(controller->transform->translation().y, 0.0f);
-        assert_equal(controller->transform->translation().z, 0.0f);
+        assert_equal(controller->transform->position().x, 10.0f);
+        assert_equal(controller->transform->position().y, 0.0f);
+        assert_equal(controller->transform->position().z, 0.0f);
 
         stage->destroy();
     }

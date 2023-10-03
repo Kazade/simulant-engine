@@ -70,6 +70,7 @@ public:
         controller->add_box_collider(box->aabb().dimensions(), PhysicsMaterial::WOOD);
 
         box->set_parent(controller);
+        controller->transform->set_position(pos);
     }
 
     void on_update(float dt) override {

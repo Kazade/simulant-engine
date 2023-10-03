@@ -243,7 +243,6 @@ public:
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
         body->register_collision_listener(&listener);
 
-        auto actor2 = scene->create_node<smlt::Stage>();
         auto body2 = scene->create_node<RigidBody>();
         body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
 
@@ -252,7 +251,7 @@ public:
         assert_true(enter_called);
         assert_false(leave_called);
 
-        actor2->destroy();
+        body2->destroy();
 
         // Run cleanup
         application->run_frame();

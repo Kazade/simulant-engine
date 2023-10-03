@@ -68,11 +68,16 @@ struct _PhysicsData {
     }
 
     BodyData* get_body(const PhysicsBody* body) {
-        return &bodies_.at(const_cast<PhysicsBody*>(body));
+        auto it = bodies_.find(const_cast<PhysicsBody*>(body));
+        if(it == bodies_.end()) {
+            return nullptr;
+        }
+        return &it->second;
     }
 
     b3Body* get_b3body(const PhysicsBody* body) {
-        return get_body(body)->body;
+        auto b = get_body(body);
+        return (b) ? b->body : nullptr;
     }
 };
 
@@ -537,20 +542,6 @@ void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, c
     data.fixtures.push_back(fdata);
 }
 
-Vec3 PhysicsService::body_position(const PhysicsBody* self) const {
-    auto vec = pimpl_->get_b3body(self)->GetTransform().translation;
-    return Vec3(
-        vec.x, vec.y, vec.z
-    );
-}
-
-Quaternion PhysicsService::body_rotation(const PhysicsBody* self) const {
-    auto vec = pimpl_->get_b3body(self)->GetTransform().rotation;
-    return Quaternion(
-        vec.v.x, vec.v.y, vec.v.z, vec.s
-    );
-}
-
 void PhysicsService::on_fixed_update(float step) {
     uint32_t velocity_iterations = 8;
     uint32_t position_iterations = 2;
@@ -577,6 +568,12 @@ PhysicsService::PhysicsService():
 
     pimpl_->scene_->SetContactListener(pimpl_->contact_listener_.get());
     pimpl_->scene_->SetContactFilter(pimpl_->contact_filter_.get());
+}
+
+PhysicsService::~PhysicsService() {
+    for(auto& pair: pimpl_->bodies_) {
+        pair.first->clear_simulation_cache();
+    }
 }
 
 smlt::optional<RayCastResult> PhysicsService::ray_cast(const Vec3& start, const Vec3& direction, float max_distance) {

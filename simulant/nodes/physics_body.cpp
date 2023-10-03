@@ -1,3 +1,4 @@
+#include "../generic/raii.h"
 #include "physics_body.h"
 #include "bounce/bounce.h"
 #include "../services/physics.h"
@@ -43,10 +44,7 @@ PhysicsBody::PhysicsBody(Scene *owner, StageNodeType node_type, PhysicsBodyType 
 }
 
 PhysicsBody::~PhysicsBody() {
-    auto sim = get_simulation();
-    if(sim) {
-        sim->unregister_body(this);
-    }
+    assert(is_destroyed());
 }
 
 void PhysicsBody::add_box_collider(
@@ -106,8 +104,16 @@ Vec3 PhysicsBody::simulated_position() const {
     if(!sim) {
         return {};
     }
-    assert(sim);
-    return sim->body_position(this);
+
+    b3Body* b = (b3Body*) sim->private_body(this);
+    if(b) {
+        auto vec = b->GetTransform().translation;
+        return Vec3(
+            vec.x, vec.y, vec.z
+        );
+    }
+
+    return {};
 }
 
 Quaternion PhysicsBody::simulated_rotation() const {
@@ -116,8 +122,19 @@ Quaternion PhysicsBody::simulated_rotation() const {
         return {};
     }
 
-    assert(sim);
-    return sim->body_rotation(this);
+    b3Body* b = (b3Body*) sim->private_body(this);
+    if(b) {
+        auto vec = b->GetTransform().rotation;
+        return Quaternion(
+            vec.v.x, vec.v.y, vec.v.z, vec.s
+        );
+    }
+
+    return {};
+}
+
+void PhysicsBody::clear_simulation_cache() {
+    simulation_ = nullptr;
 }
 
 void PhysicsBody::contact_started(const Collision &collision) {
@@ -153,10 +170,56 @@ bool PhysicsBody::on_create(void* params) {
         S_WARN("PhysicsBody added without an active PhysicsService");
     }
 
+    /* FIXME: These should probably be create arguments for *all* stage nodes,
+     * not just PhysicsBodies */
+    transform->set_position(args->initial_position);
+    transform->set_orientation(args->initial_rotation);
+
     return true;
 }
 
+bool PhysicsBody::on_destroy() {
+    StageNode::on_destroy();
+
+    auto sim = get_simulation();
+    if(sim) {
+        sim->unregister_body(this);
+    }
+
+    return true;
+}
+
+void PhysicsBody::on_transformation_changed() {
+    StageNode::on_transformation_changed();
+
+    // Ignore any signals that we've caused by us setting
+    // the transform
+    if(updating_body_) {
+        return;
+    }
+
+    // If we're here, then the user called set_position or something
+    // so we need to update the rigid body to where it was intended
+
+    auto sim = get_simulation();
+    b3Body* b = (b3Body*) sim->private_body(this);
+    if(b) {
+        auto o = transform->orientation();
+        auto pos = transform->position();
+        b3Vec3 p(pos.x, pos.y, pos.z);
+        b3Quat r(o.x, o.y, o.z, o.w);
+
+        b->SetTransform(p, r.GetRotationMatrix());
+    }
+}
+
 void PhysicsBody::on_update(float dt) {
+    updating_body_ = true;
+
+    raii::Finally finally([=]() {
+        updating_body_ = false;
+    });
+
     if(transform->smoothing_mode() == TRANSFORM_SMOOTHING_EXTRAPOLATE) {
         auto prev_state = last_state_; // This is set by the signal connected in Body::Body()
         auto next_state = std::make_pair(

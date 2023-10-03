@@ -177,6 +177,10 @@ Application::~Application() {
 
     overlay_scene_->clean_up();
     overlay_scene_.reset();
+
+    if(global_app == this) {
+        global_app = nullptr;
+    }
 }
 
 void Application::preload_default_font() {

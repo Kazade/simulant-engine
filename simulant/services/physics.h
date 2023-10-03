@@ -60,6 +60,7 @@ class PhysicsService:
 
 public:
     PhysicsService();
+    ~PhysicsService();
 
     smlt::optional<RayCastResult> ray_cast(
         const Vec3& start,
@@ -117,9 +118,6 @@ private:
         const MeshPtr& mesh, const PhysicsMaterial& properties,
         uint16_t kind, const Vec3& offset, const Quaternion& rotation
     );
-
-    Vec3 body_position(const PhysicsBody* self) const;
-    Quaternion body_rotation(const PhysicsBody* self) const;
 
     void on_fixed_update(float step) override;
 };
