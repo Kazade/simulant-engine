@@ -291,6 +291,10 @@ void StageNode::mark_transformed_aabb_dirty() {
 }
 
 void StageNode::update(float dt) {
+    if(is_destroyed()) {
+        return;
+    }
+
     on_update(dt);
 
     for(auto& child: each_child()) {
@@ -299,6 +303,10 @@ void StageNode::update(float dt) {
 }
 
 void StageNode::late_update(float dt) {
+    if(is_destroyed()) {
+        return;
+    }
+
     on_late_update(dt);
 
     for(auto& child: each_child()) {
@@ -307,6 +315,10 @@ void StageNode::late_update(float dt) {
 }
 
 void StageNode::fixed_update(float step) {
+    if(is_destroyed()) {
+        return;
+    }
+
     on_fixed_update(step);
 
     for(auto& child: each_child()) {

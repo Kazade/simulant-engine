@@ -29,6 +29,8 @@ public:
     }
 
     void test_materials_freed() {
+        scene->create_node<ui::Label>("Seed the materials");
+
         auto mc = scene->assets->material_count();
 
         auto label = scene->create_node<ui::Label>("This is\na\nnew\nline");
