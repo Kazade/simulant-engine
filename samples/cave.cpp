@@ -90,7 +90,7 @@ public:
     void on_fixed_update(float dt) override {
 
         // Move the camera between two points
-        camera_->transform->set_position(camera_->transform->position() + Vec3::LEFT * cameraSpeed_ * dt);
+        camera_->transform->set_translation(camera_->transform->translation() + Vec3::LEFT * cameraSpeed_ * dt);
         if(camera_->transform->position().x > 0 || camera_->transform->position().x < -15)
             cameraSpeed_ *= -1;
 

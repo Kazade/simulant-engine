@@ -3,13 +3,27 @@
 
 namespace smlt {
 
+void Transform::set_translation_if_necessary(const Vec3& trans) {
+    if(!translation_.equals(trans)) {
+        translation_ = trans;
+        signal_change();
+    }
+}
+
+void Transform::set_rotation_if_necessary(const Quaternion& rot) {
+    if(!rotation_.equals(rot)) {
+        rotation_ = rot;
+        signal_change();
+    }
+}
+
 void Transform::set_position(const Vec3& position) {
     signal_change_attempted();
     if(has_parent()) {
         Vec3 ppos = parent_->position();
-        set_translation(position - ppos);
+        set_translation_if_necessary(position - ppos);
     } else {
-        set_translation(position);
+        set_translation_if_necessary(position);
     }
 }
 
@@ -19,22 +33,20 @@ void Transform::set_orientation(const Quaternion& orientation) {
         auto prot = parent_->orientation();
         prot.inverse();
 
-        rotate((prot * orientation).normalized());
+        set_rotation_if_necessary((prot * orientation).normalized());
     } else {
-        rotate(orientation);
+        set_rotation_if_necessary(orientation);
     }
 }
 
 void Transform::set_translation(const Vec3 &translation) {
     signal_change_attempted();
-    translation_ = translation;
-    signal_change();
+    set_translation_if_necessary(translation);
 }
 
 void Transform::set_rotation(const Quaternion &rotation) {
     signal_change_attempted();
-    rotation_ = rotation;
-    signal_change();
+    set_rotation_if_necessary(rotation);
 }
 
 void Transform::rotate(const Quaternion &q) {
@@ -47,10 +59,7 @@ void Transform::rotate(const Quaternion &q) {
         !std::isnan(q.w)
     );
 
-    if(!q.equals(rotation_)) {
-        rotation_ *= q;
-        signal_change();
-    }
+    set_rotation_if_necessary(q * rotation_);
 }
 
 void Transform::rotate(const Vec3& axis, const Degrees& amount) {

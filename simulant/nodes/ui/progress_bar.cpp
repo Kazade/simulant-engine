@@ -141,6 +141,9 @@ bool ProgressBar::on_create(void* params) {
         set_text_colour(args->theme.progress_bar_text_colour_);
     }
 
+    set_range(args->min, args->max);
+    set_value(args->value);
+
     set_resize_mode(RESIZE_MODE_FIXED);
     resize(args->width, args->height);
     return true;

@@ -186,6 +186,9 @@ private:
 
     mutable Mat4 absolute_transformation_;
     mutable bool absolute_transformation_is_dirty_ = false;
+
+    void set_translation_if_necessary(const Vec3& trans);
+    void set_rotation_if_necessary(const Quaternion& rot);
 };
 
 }

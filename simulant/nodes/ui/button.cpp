@@ -32,7 +32,9 @@ bool Button::on_create(void* params) {
         set_border_width(args->theme.button_border_width_);
     }
 
+    set_text(args->text);
     set_resize_mode(RESIZE_MODE_FIXED_HEIGHT);
+
     resize(args->width, args->height);
 
     return true;
