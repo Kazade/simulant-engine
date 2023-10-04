@@ -3,6 +3,10 @@
 
 namespace smlt {
 
+StageNodeManager::~StageNodeManager() {
+
+}
+
 StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
     auto info = registered_nodes_.find(type);
     if(info == registered_nodes_.end()) {
@@ -15,6 +19,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
     void* mem = smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
     StageNode* node = info->second.constructor(mem);
 
+    fprintf(stderr, "Alloc'd: 0x%x\n", node);
     if(!node->init()) {
         S_ERROR("Failed to initialize node");
         info->second.destructor(node);
@@ -33,7 +38,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
     node->set_parent(scene_);
 
     S_DEBUG("Created new node of type {0} at address {1}", node->node_type(), node);
-    all_nodes_.insert(std::make_pair(node->id(), node));
+    all_nodes_.insert(std::make_pair(node->id(), NodeData(mem, node)));
 
     return node;
 }

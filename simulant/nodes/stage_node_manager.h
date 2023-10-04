@@ -31,11 +31,21 @@ private:
 
     template<typename T>
     static void standard_delete(StageNode *mem) {
-        ((T*) mem)->~T();
+        T* to_delete = dynamic_cast<T*>(mem);
+        to_delete->~T();
     }
 
+    struct NodeData {
+        void* alloc_base;
+        StageNode* ptr;
+
+        NodeData(void* alloc_base, StageNode* ptr):
+            alloc_base(alloc_base),
+            ptr(ptr) {}
+    };
+
     std::unordered_map<StageNodeType, StageNodeTypeInfo> registered_nodes_;
-    std::unordered_map<StageNodeID, StageNode*> all_nodes_;
+    std::unordered_map<StageNodeID, NodeData> all_nodes_;
 
 protected:
     bool clean_up_node(StageNode* node) {
@@ -54,7 +64,11 @@ protected:
             return false;
         }
 
-        all_nodes_.erase(node->id());
+        auto node_data_it = all_nodes_.find(node->id());
+        if(node_data_it == all_nodes_.end()) {
+            S_ERROR("Unable to find node data for {0}", node->id());
+            return false;
+        }
 
         try {
             node->clean_up();
@@ -62,8 +76,10 @@ protected:
             S_ERROR("Exception calling node clean_up");
         }
 
-        it->second.destructor(node);        
-        free(node);
+        it->second.destructor(node);
+        fprintf(stderr, "Freeing: 0x%x\n", node);
+        free(node_data_it->second.alloc_base);
+        all_nodes_.erase(node_data_it);
         S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
         return true;
     }
@@ -73,9 +89,11 @@ public:
     StageNodeManager(Scene* scene):
         scene_(scene) {}
 
+    virtual ~StageNodeManager();
+
     /* Constant-time node lookup by ID */
     StageNode* get_node(StageNodeID id) const {
-        return all_nodes_.at(id);
+        return all_nodes_.at(id).ptr;
     }
 
     /* Constant-time node existence check */

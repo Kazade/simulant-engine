@@ -284,7 +284,7 @@ protected:
     /* A normalized vector representing the relative
      * anchor position for movement (0, 0 == bottom left) */
     smlt::Vec2 anchor_point_;
-    bool anchor_point_dirty_;
+    bool anchor_point_dirty_ = true;
 
     uint16_t fingers_down_ = 0;
 

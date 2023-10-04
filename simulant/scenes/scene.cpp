@@ -66,7 +66,11 @@ Scene::Scene(Window *window):
 }
 
 Scene::~Scene() {
+    for(auto& child: each_descendent()) {
+        child.destroy();
+    }
 
+    clean_up_destroyed_objects();
 }
 
 void Scene::register_builtin_nodes() {

@@ -48,6 +48,8 @@ void StageNode::remove_from_parent() {
         return;
     }
 
+    assert(parent_ != this);
+
     /* Remove from sibling list */
     if(parent_->first_child_ == this) {
         parent_->first_child_ = next_;
@@ -77,6 +79,16 @@ void StageNode::remove_from_parent() {
     on_parent_set(parent_, nullptr, TRANSFORM_RETAIN_MODE_LOSE);
 }
 
+void StageNode::detach() {
+    fprintf(stderr, "Detach 0x%x from parent 0x%x\n", this, parent_);
+    for(auto& child: each_child()) {
+        fprintf(stderr, "Child: 0x%x is being removed\n", &child);
+        child.remove_from_parent();
+        fprintf(stderr, "New child parent is 0x%x\n", child.parent());
+    }
+    remove_from_parent();
+}
+
 void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_retain) {
     if(new_parent == parent_ || new_parent == this) {
         return;
@@ -87,13 +99,13 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     remove_from_parent();
     parent_ = new_parent;
 
-    // FIXME: DELETE THIS! It ensures that nodes are always attached to the
-    // scene, but we want to move away from that
     if(!parent_) {
-        parent_ = scene.get();
+        scene->stray_nodes_.insert(this);
+    } else {
+        scene->stray_nodes_.erase(this);
     }
 
-    if(parent_->first_child_) {
+    if(parent_ && parent_->first_child_) {
         /* New parent already had children, so find the last
          * one and attach there */
         auto it = parent_->last_child();
@@ -104,7 +116,7 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
         prev_ = it;
         next_ = nullptr;
         parent_->last_child_ = this;
-    } else {
+    } else if(parent_) {
         assert(!parent_->last_child_);
 
         parent_->first_child_ = this;
@@ -164,9 +176,9 @@ StageNodeType StageNode::node_type() const {
     return node_type_;
 }
 
-void StageNode::on_clean_up() {
+void StageNode::_clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
-    remove_from_parent(); // Make sure we're not connected to anything
+    detach(); // Make sure we're not connected to anything
 }
 
 void StageNode::recalc_visibility() {

@@ -179,6 +179,8 @@ public:
     }
 
     void remove_from_parent();
+    void detach();
+
     void set_parent(
         StageNode* new_parent,
         TransformRetainMode transform_retain=TRANSFORM_RETAIN_MODE_LOSE
@@ -262,6 +264,7 @@ private:
         return on_create(params);
     }
 
+    void _clean_up() override;
 
     virtual bool do_generates_renderables_for_descendents() const {
         return false;
@@ -421,8 +424,6 @@ public:
     smlt::Promise<void> destroy_after(const Seconds& seconds);
 
     bool parent_is_scene() const;
-
-    void on_clean_up() override;
 
     const AABB transformed_aabb() const override;
 

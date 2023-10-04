@@ -42,18 +42,24 @@ public:
 
     bool init() {
         assert(construction_state_++ == 0 && "double init call?");
+        _init();
         return on_init();
     }
 
     void clean_up() {
         assert(construction_state_ < 2 && "clean_up called multiple times");
         assert(construction_state_++ == 1 && "init was not called, but clean_up was");
+        _clean_up();
         return on_clean_up();
     }
 
 private:
     virtual bool on_init() { return true; }
     virtual void on_clean_up() {}
+
+    /* Private hooks */
+    virtual void _init() {}
+    virtual void _clean_up() {}
 
     // Used to verify that things are working correctly
 #ifndef NDEBUG

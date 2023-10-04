@@ -228,6 +228,7 @@ private:
     void clean_up_destroyed_objects();
     void queue_clean_up(StageNode* node);
     std::list<StageNode*> queued_for_clean_up_;
+    std::set<StageNode*> stray_nodes_;
 
     LightingSettings lighting_;
 
