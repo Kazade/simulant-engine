@@ -68,9 +68,6 @@ StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
         return nullptr;
     }
 
-    /* For now, when we create nodes we always parent them to the scene by default */
-    node->set_parent(scene_);
-
     S_DEBUG("Created new node of type {0} at address {1}", node->node_type(), node);
     all_nodes_.insert(std::make_pair(node->id(), NodeData(mem, node)));
 

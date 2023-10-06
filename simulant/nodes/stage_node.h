@@ -64,6 +64,18 @@ struct stage_node_traits;
  * 6. destructor
  */
 
+namespace impl {
+
+template<typename F, typename T, typename... Args>
+T* child_factory(F& factory, StageNode* parent, Args&&... args) {
+    auto node = factory->template create_node<T>(std::forward(args)...);
+    node->set_parent(parent);
+    return node;
+}
+
+
+}
+
 class StageNode:
     public generic::Identifiable<StageNodeID>,
     public DestroyableObject,
@@ -186,8 +198,9 @@ public:
         TransformRetainMode transform_retain=TRANSFORM_RETAIN_MODE_LOSE
     );
 
-    void append_child(StageNode* new_child) {
-        new_child->set_parent(this);
+    template<typename T, typename... Args>
+    T* create_child(Args&&... args) {
+        return impl::child_factory<T>(scene_, this, std::forward(args)...);
     }
 
     void adopt_children(StageNode* node) {
