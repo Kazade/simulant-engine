@@ -175,6 +175,10 @@ public:
         return nullptr;
     }
 
+    const std::set<StageNode*> stray_nodes() const {
+        return stray_nodes_;
+    }
+
 protected:
     virtual void load() = 0;
     virtual void unload() {}

@@ -179,7 +179,7 @@ public:
     }
 
     void remove_from_parent();
-    void detach();
+    std::list<StageNode*> detach();
 
     void set_parent(
         StageNode* new_parent,

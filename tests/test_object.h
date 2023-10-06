@@ -18,8 +18,8 @@ public:
     }
 
     void tear_down() {
-        SimulantTestCase::tear_down();        
         camera_->destroy();
+        SimulantTestCase::tear_down();
     }
 
     void test_move_to_origin() {
@@ -87,7 +87,7 @@ public:
         assert_close(actor2->transform->orientation().y, actor1->transform->orientation().y, 0.00001f);
     }
 
-    void test_parent_is_stage() {
+    void test_parent_is_scene() {
         auto a1 = scene->create_node<smlt::Stage>();
         auto a2 = scene->create_node<smlt::Stage>();
         auto a3 = scene->create_node<smlt::Stage>();
@@ -101,7 +101,9 @@ public:
 
         a3->set_parent(nullptr);
 
-        assert_true(a3->parent_is_scene());
+        assert_false(a3->parent_is_scene());
+        auto strays = scene->stray_nodes();
+        assert_true(std::find(strays.begin(), strays.end(), a3) != strays.end());
     }
 
     void test_parent_transformation_applied() {

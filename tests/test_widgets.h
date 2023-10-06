@@ -265,7 +265,7 @@ public:
         assert_equal(frame->outer_width(), expected_width);
     }
 
-    void test_widgets_are_reparented() {
+    void test_widgets_are_orphaned_if_retained() {
         smlt::ui::Frame* frame = _setup_frame();
         auto& children = frame->packed_children();
 
@@ -276,8 +276,8 @@ public:
         auto child1 = children[0];
         frame->unpack_child(child1, smlt::ui::CHILD_CLEANUP_RETAIN);
 
-        /* Child parent should be the stage */
-        assert_true(child1->parent_is_scene());
+        assert_false(child1->parent_is_scene());
+        assert_true(scene->stray_nodes().count(child1));
     }
 
 private:

@@ -70,6 +70,10 @@ Scene::~Scene() {
         child.destroy();
     }
 
+    for(auto& node: stray_nodes()) {
+        node->destroy();
+    }
+
     clean_up_destroyed_objects();
 }
 

@@ -3,6 +3,41 @@
 
 namespace smlt {
 
+bool StageNodeManager::clean_up_node(StageNode* node) {
+    if(!node->is_destroyed()) {
+        S_ERROR("Attempted to cleanup node which has not been destroyed");
+        return false;
+    }
+
+    auto type = node->node_type();
+    auto it = registered_nodes_.find(type);
+    if(it == registered_nodes_.end()) {
+        S_ERROR(
+            "Tried to destroy an unknown type of node: {0} at address {1}",
+            type, node
+            );
+        return false;
+    }
+
+    auto node_data_it = all_nodes_.find(node->id());
+    if(node_data_it == all_nodes_.end()) {
+        S_ERROR("Unable to find node data for {0}", node->id());
+        return false;
+    }
+
+    try {
+        node->clean_up();
+    } catch(...) {
+        S_ERROR("Exception calling node clean_up");
+    }
+
+    it->second.destructor(node);
+    free(node_data_it->second.alloc_base);
+    all_nodes_.erase(node_data_it);
+    S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
+    return true;
+}
+
 StageNodeManager::~StageNodeManager() {
 
 }
@@ -19,7 +54,6 @@ StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
     void* mem = smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
     StageNode* node = info->second.constructor(mem);
 
-    fprintf(stderr, "Alloc'd: 0x%x\n", node);
     if(!node->init()) {
         S_ERROR("Failed to initialize node");
         info->second.destructor(node);

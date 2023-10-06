@@ -79,14 +79,26 @@ void StageNode::remove_from_parent() {
     on_parent_set(parent_, nullptr, TRANSFORM_RETAIN_MODE_LOSE);
 }
 
-void StageNode::detach() {
-    fprintf(stderr, "Detach 0x%x from parent 0x%x\n", this, parent_);
-    for(auto& child: each_child()) {
-        fprintf(stderr, "Child: 0x%x is being removed\n", &child);
-        child.remove_from_parent();
-        fprintf(stderr, "New child parent is 0x%x\n", child.parent());
+std::list<StageNode*> StageNode::detach() {
+    std::list<StageNode*> orphaned;
+
+    auto it = first_child_;
+    while(it) {
+        orphaned.push_back(it);
+
+        /* Orphaned nodes need to be added to the stray nodes list */
+        scene_->stray_nodes_.insert(it);
+
+        auto next = it->next_;
+        it->remove_from_parent();
+        it = next;
     }
+
+    first_child_ = nullptr;
+
     remove_from_parent();
+
+    return orphaned;
 }
 
 void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_retain) {
@@ -179,6 +191,7 @@ StageNodeType StageNode::node_type() const {
 void StageNode::_clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
     detach(); // Make sure we're not connected to anything
+    scene_->stray_nodes_.erase(this); // We're not a stray node anymore!
 }
 
 void StageNode::recalc_visibility() {
