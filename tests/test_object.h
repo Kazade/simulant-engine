@@ -14,7 +14,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        camera_ = scene->create_node<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera>();
     }
 
     void tear_down() {
@@ -29,13 +29,13 @@ public:
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_cube("cube", scene->assets->new_material(), 50.0f);
 
-        auto actor = scene->create_node<smlt::Actor>(mesh);
+        auto actor = scene->create_child<smlt::Actor>(mesh);
         actor->transform->set_translation(Vec3(0, 0, 0));
         application->run_frame();
     }
 
     void test_move_forward_by() {
-        auto actor = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_child<smlt::Stage>();
 
         actor->transform->set_rotation(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
         actor->transform->translate(actor->transform->forward() * 200);
@@ -46,7 +46,7 @@ public:
     }
 
     void test_scaling_applies() {
-        auto actor = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_child<smlt::Stage>();
         actor->transform->set_scale_factor(smlt::Vec3(2.0, 1.0, 0.5));
 
         auto transform = actor->transform->world_space_matrix();
@@ -55,7 +55,7 @@ public:
         assert_equal(transform[5], 1.0f);
         assert_equal(transform[10], 0.5f);
 
-        auto actor2 = scene->create_node<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
         actor2->transform->rotate(smlt::Vec3::POSITIVE_Y, smlt::Degrees(1.0));
 
@@ -71,8 +71,8 @@ public:
     }
 
     void test_set_parent() {
-        auto actor1 = scene->create_node<smlt::Stage>();
-        auto actor2 = scene->create_node<smlt::Stage>();
+        auto actor1 = scene->create_child<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
         actor2->set_parent(actor1);
 
@@ -88,9 +88,9 @@ public:
     }
 
     void test_parent_is_scene() {
-        auto a1 = scene->create_node<smlt::Stage>();
-        auto a2 = scene->create_node<smlt::Stage>();
-        auto a3 = scene->create_node<smlt::Stage>();
+        auto a1 = scene->create_child<smlt::Stage>();
+        auto a2 = scene->create_child<smlt::Stage>();
+        auto a3 = scene->create_child<smlt::Stage>();
 
         a2->set_parent(a1);
         a3->set_parent(a2);
@@ -107,8 +107,8 @@ public:
     }
 
     void test_parent_transformation_applied() {
-        auto actor1 = scene->create_node<smlt::Stage>();
-        auto actor2 = scene->create_node<smlt::Stage>();
+        auto actor1 = scene->create_child<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
         actor2->set_parent(actor1);
 
         actor2->transform->set_translation(smlt::Vec3(0, 0, -5));
@@ -122,13 +122,13 @@ public:
     }
 
     void test_set_absolute_rotation() {
-        auto actor = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_child<smlt::Stage>();
 
         actor->transform->set_orientation(smlt::Quaternion(smlt::Vec3(0, 0, 1), smlt::Degrees(10)));
 
         assert_equal(actor->transform->rotation(), actor->transform->orientation());
 
-        auto actor2 = scene->create_node<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
         actor2->set_parent(actor);
 
@@ -151,13 +151,13 @@ public:
     }
 
     void test_set_absolute_position() {
-        auto actor = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_child<smlt::Stage>();
 
         actor->transform->set_position(Vec3(10, 10, 10));
 
         assert_equal(smlt::Vec3(10, 10, 10), actor->transform->translation());
 
-        auto actor2 = scene->create_node<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
         actor2->set_parent(actor);
 
@@ -175,7 +175,7 @@ public:
     }
 
     void test_set_relative_position() {
-        auto actor = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_child<smlt::Stage>();
 
         actor->transform->set_translation(Vec3(10, 10, 10));
 
@@ -183,7 +183,7 @@ public:
         assert_equal(smlt::Vec3(10, 10, 10), actor->transform->translation());
         assert_equal(smlt::Vec3(10, 10, 10), actor->transform->position());
 
-        auto actor2 = scene->create_node<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
         actor2->set_parent(actor);
 
@@ -194,8 +194,8 @@ public:
     }
 
     void test_move_updates_children() {
-        auto actor1 = scene->create_node<smlt::Stage>();
-        auto actor2 = scene->create_node<smlt::Stage>();
+        auto actor1 = scene->create_child<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
         actor2->transform->set_translation(Vec3(0, 0, 10.0f));
         actor2->set_parent(actor1);
@@ -204,7 +204,7 @@ public:
     }
 
     void test_set_parent_to_self_does_nothing() {
-        auto actor1 = scene->create_node<smlt::Stage>();
+        auto actor1 = scene->create_child<smlt::Stage>();
 
         auto original_parent = actor1->parent();
         actor1->set_parent(actor1);
@@ -212,13 +212,13 @@ public:
     }
 
     void test_find_descendent_by_name() {
-        auto actor1 = scene->create_node<smlt::Stage>();
+        auto actor1 = scene->create_child<smlt::Stage>();
         actor1->set_name("actor1");
 
         assert_equal(actor1, scene->find_descendent_with_name("actor1"));
         assert_is_null(scene->find_descendent_with_name("bananas"));
 
-        auto dupe = scene->create_node<smlt::Stage>();
+        auto dupe = scene->create_child<smlt::Stage>();
         dupe->set_name("actor1");
         dupe->set_parent(actor1);
 
@@ -228,11 +228,11 @@ public:
     }
 
     void test_visibility() {
-        auto a1 = scene->create_node<smlt::Stage>();
-        auto a2 = scene->create_node<smlt::Stage>();
+        auto a1 = scene->create_child<smlt::Stage>();
+        auto a2 = scene->create_child<smlt::Stage>();
         a2->set_parent(a1);
 
-        auto a3 = scene->create_node<smlt::Stage>();
+        auto a3 = scene->create_child<smlt::Stage>();
         a3->set_parent(a2);
         a2->set_visible(false);
 
@@ -244,19 +244,19 @@ public:
     }
 
     void test_actor_findable() {
-        auto a1 = scene->create_node<smlt::Stage>();
+        auto a1 = scene->create_child<smlt::Stage>();
         a1->set_name("Actor 1");
         assert_equal(a1, scene->find_descendent_with_name("Actor 1"));
     }
 
     void test_light_findable() {
-        auto l1 = scene->create_node<PointLight>();
+        auto l1 = scene->create_child<PointLight>();
         l1->set_name("Light 1");
         assert_equal(l1, scene->find_descendent_with_name("Light 1"));
     }
 
     void test_destroy_after() {
-        auto a1 = scene->create_node<smlt::Stage>();
+        auto a1 = scene->create_child<smlt::Stage>();
         a1->set_name("test");
         auto p = a1->destroy_after(smlt::Seconds(0.1));
 

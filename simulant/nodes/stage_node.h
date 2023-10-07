@@ -68,7 +68,7 @@ namespace impl {
 
 template<typename F, typename T, typename... Args>
 T* child_factory(F& factory, StageNode* parent, Args&&... args) {
-    auto node = factory->template create_node<T>(std::forward(args)...);
+    auto node = factory->template create_node<T>(std::forward<Args>(args)...);
     node->set_parent(parent);
     return node;
 }
@@ -200,7 +200,7 @@ public:
 
     template<typename T, typename... Args>
     T* create_child(Args&&... args) {
-        return impl::child_factory<T>(scene_, this, std::forward(args)...);
+        return impl::child_factory<decltype(scene_), T, Args...>(scene_, this, std::forward<Args>(args)...);
     }
 
     void adopt_children(StageNode* node) {

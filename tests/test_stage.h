@@ -23,11 +23,11 @@ public:
         });
 
         auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        auto a1 = scene->create_node<smlt::Actor>(m);
-        auto a2 = scene->create_node<smlt::Actor>(m);
+        auto a1 = scene->create_child<smlt::Actor>(m);
+        auto a2 = scene->create_child<smlt::Actor>(m);
         a2->set_parent(a1);
 
-        scene->create_node<smlt::Actor>(m)->set_parent(a2);
+        scene->create_child<smlt::Actor>(m)->set_parent(a2);
 
         auto a2id = a2->id();
         a2->destroy();
@@ -50,11 +50,11 @@ public:
             destroyed_ids.insert(dynamic_cast<Camera*>(node)->id());
         });
 
-        auto a1 = scene->create_node<smlt::Camera>();
-        auto a2 = scene->create_node<smlt::Camera>();
+        auto a1 = scene->create_child<smlt::Camera>();
+        auto a2 = scene->create_child<smlt::Camera>();
         a2->set_parent(a1);
 
-        auto a3 = scene->create_node<smlt::Camera>();
+        auto a3 = scene->create_child<smlt::Camera>();
         a3->set_parent(a2);
 
         auto a2id = a2->id();
@@ -79,12 +79,12 @@ public:
         });
 
         auto script = scene->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);
-        auto a1 = scene->create_node<smlt::ParticleSystem>(script);
+        auto a1 = scene->create_child<smlt::ParticleSystem>(script);
 
-        auto a2 = scene->create_node<smlt::ParticleSystem>(script);
+        auto a2 = scene->create_child<smlt::ParticleSystem>(script);
         a2->set_parent(a1);
 
-        auto a3 = scene->create_node<smlt::ParticleSystem>(script);
+        auto a3 = scene->create_child<smlt::ParticleSystem>(script);
         a3->set_parent(a2);
 
         auto a2id = a2->id();
@@ -100,7 +100,7 @@ public:
 
     void test_stage_node_clean_up_signals() {
         auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
-        auto actor = scene->create_node<smlt::Actor>(m);
+        auto actor = scene->create_child<smlt::Actor>(m);
 
         bool cleaned_up = false;
         bool destroyed = false;
@@ -125,7 +125,7 @@ public:
     }
 
     void test_iteration_types() {
-        auto stage = scene->create_node<smlt::Stage>();
+        auto stage = scene->create_child<smlt::Stage>();
 
         /*
             stage-> o
@@ -137,12 +137,12 @@ public:
           c2  o   o  c3
         */
 
-        auto a1 = scene->create_node<smlt::Stage>();
-        auto a2 = scene->create_node<smlt::Stage>();
-        auto c1 = scene->create_node<smlt::Stage>();
-        auto c2 = scene->create_node<smlt::Stage>();
-        auto c3 = scene->create_node<smlt::Stage>();
-        auto c4 = scene->create_node<smlt::Stage>();
+        auto a1 = scene->create_child<smlt::Stage>();
+        auto a2 = scene->create_child<smlt::Stage>();
+        auto c1 = scene->create_child<smlt::Stage>();
+        auto c2 = scene->create_child<smlt::Stage>();
+        auto c3 = scene->create_child<smlt::Stage>();
+        auto c4 = scene->create_child<smlt::Stage>();
         a1->set_parent(stage);
         a2->set_parent(stage);
         c1->set_parent(a1);

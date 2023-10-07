@@ -21,12 +21,12 @@ public:
         smlt::test::SimulantTestCase::set_up();
 
         vbo_manager_ = VBOManager::create();
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
 
         mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh_->new_submesh_as_cube("cube", scene->assets->new_material(), 1.0f);
 
-        camera_ = scene->create_node<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera>();
     }
 
     void test_shared_vertex_vbo() {
@@ -126,7 +126,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo_manager_->dedicated_buffer_count(), 0u);
 
-        auto actor = scene->create_node<Actor>(mesh_);
+        auto actor = scene->create_child<Actor>(mesh_);
 
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera_);

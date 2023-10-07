@@ -13,8 +13,8 @@ class CameraTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->create_node<smlt::Stage>();
-        camera_ = scene->create_node<smlt::Camera>();
+        stage_ = scene->create_child<smlt::Stage>();
+        camera_ = scene->create_child<smlt::Camera>();
     }
 
     void tear_down() {
@@ -61,8 +61,8 @@ public:
     }
 
     void test_camera_attached_to_parent_moves() {
-        auto actor = scene->create_node<smlt::Stage>();
-        auto camera = scene->create_node<smlt::Camera>();
+        auto actor = scene->create_child<smlt::Stage>();
+        auto camera = scene->create_child<smlt::Camera>();
 
         auto od = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
 

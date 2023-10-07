@@ -48,7 +48,7 @@ public:
 
         physics = scene->start_service<PhysicsService>();
         physics->set_gravity(Vec3());
-        stage = scene->create_node<smlt::Stage>();
+        stage = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
@@ -57,12 +57,12 @@ public:
     }
 
     void test_create_kinematic_body() {
-        auto body = scene->create_node<KinematicBody>();
+        auto body = scene->create_child<KinematicBody>();
         assert_equal(body->type(), PHYSICS_BODY_TYPE_KINEMATIC);
     }
 
     void test_box_collider_addition() {
-        auto body = scene->create_node<RigidBody>();
+        auto body = scene->create_child<RigidBody>();
 
         body->add_box_collider(Vec3(2, 2, 1), PhysicsMaterial::WOOD);
 
@@ -89,7 +89,7 @@ public:
     }
 
     void test_capsule_collider_addition() {
-        auto body = scene->create_node<RigidBody>();
+        auto body = scene->create_child<RigidBody>();
         body->add_capsule_collider(
             2.0f,
             2.0f,
@@ -102,7 +102,7 @@ public:
     }
 
     void test_sphere_collider_addition() {
-        auto body = scene->create_node<RigidBody>();
+        auto body = scene->create_child<RigidBody>();
         body->add_sphere_collider(2.0, PhysicsMaterial::WOOD);
 
         auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0, -1, 0), 2);
@@ -120,13 +120,13 @@ public:
 
         // Create body A
         uint16_t kind_a = 1;
-        auto body = scene->create_node<StaticBody>();
+        auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD, kind_a);
         body->register_collision_listener(&listener); // Register the listener
 
         // Create overlapping body B!
         uint16_t kind_b = 2;
-        auto body2 = scene->create_node<RigidBody>();
+        auto body2 = scene->create_child<RigidBody>();
         body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD, kind_b);
 
         class ContactFilter1 : public smlt::ContactFilter {
@@ -177,7 +177,7 @@ public:
     void test_mesh_collider_addition() {
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_box("mesh", scene->assets->new_material(), 1.0, 1.0, 1.0);
-        auto body = scene->create_node<StaticBody>();
+        auto body = scene->create_child<StaticBody>();
         body->add_mesh_collider(mesh, PhysicsMaterial::WOOD);
 
         auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0.0, -1, 0), 2);
@@ -194,12 +194,12 @@ public:
         Listener listener(&enter_called, nullptr, &leave_called);
 
         // Create body A
-        auto body = scene->create_node<StaticBody>();
+        auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
         body->register_collision_listener(&listener); // Register the listener
 
         // Create overlapping body B!
-        auto body2 = scene->create_node<RigidBody>();
+        auto body2 = scene->create_child<RigidBody>();
         body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
 
         // Run physics
@@ -239,11 +239,11 @@ public:
 
         Listener listener(&enter_called, nullptr, &leave_called);
 
-        auto body = scene->create_node<StaticBody>();
+        auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
         body->register_collision_listener(&listener);
 
-        auto body2 = scene->create_node<RigidBody>();
+        auto body2 = scene->create_child<RigidBody>();
         body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
 
         physics->fixed_update(1.0f / 60.0f);
@@ -263,7 +263,7 @@ public:
 
     void test_add_mesh_collider() {
         auto mesh = scene->assets->new_mesh_as_cube_with_submesh_per_face(10.0f);
-        auto body = scene->create_node<StaticBody>();
+        auto body = scene->create_child<StaticBody>();
         body->add_mesh_collider(mesh, PhysicsMaterial::WOOD);
     }
 
@@ -274,12 +274,12 @@ public:
 
         Listener listener(nullptr, &stay_count, nullptr);
 
-        auto body = scene->create_node<StaticBody>();
+        auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
         body->register_collision_listener(&listener);
 
-        auto actor2 = scene->create_node<smlt::Stage>();
-        auto body2 = scene->create_node<RigidBody>();
+        auto actor2 = scene->create_child<smlt::Stage>();
+        auto body2 = scene->create_child<RigidBody>();
         body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
 
         assert_false(stay_count);

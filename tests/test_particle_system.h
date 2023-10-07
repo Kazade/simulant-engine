@@ -15,7 +15,7 @@ public:
         ParticleScriptPtr script = scene->assets->new_particle_script_from_file(
             ParticleScript::BuiltIns::FIRE
         );
-        ParticleSystemPtr system = scene->create_node<ParticleSystem>(script);
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
 
         bool fired = false;
         system->signal_destroyed().connect([&]() {
@@ -40,7 +40,7 @@ public:
         emitter->duration_range.first = 5.0f;
         emitter->duration_range.second = 5.0f;
 
-        ParticleSystemPtr system = scene->create_node<ParticleSystem>(script);
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
 
         assert_true(system->has_active_emitters());
         system->update(1.0f);
@@ -60,7 +60,7 @@ public:
             std::make_shared<DirectionManipulator>(script.get(), smlt::Vec3::NEGATIVE_Y)
         );
 
-        ParticleSystemPtr system = scene->create_node<ParticleSystem>(script);
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
         system->update(0.1f);
         assert_true(system->particle_count() > 0);
         auto p0 = system->particle(0);

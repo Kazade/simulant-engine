@@ -12,7 +12,7 @@ class WidgetTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
@@ -21,19 +21,19 @@ public:
     }
 
     void test_set_text_with_newline() {
-        auto label = scene->create_node<ui::Label>("This is\na\nnew\nline");
-        auto label2 = scene->create_node<ui::Label>("This is");
+        auto label = scene->create_child<ui::Label>("This is\na\nnew\nline");
+        auto label2 = scene->create_child<ui::Label>("This is");
 
         assert_equal(label->content_width(), label2->content_width());
         assert_true(label->height() > label2->height());
     }
 
     void test_materials_freed() {
-        scene->create_node<ui::Label>("Seed the materials");
+        scene->create_child<ui::Label>("Seed the materials");
 
         auto mc = scene->assets->material_count();
 
-        auto label = scene->create_node<ui::Label>("This is\na\nnew\nline");
+        auto label = scene->create_child<ui::Label>("This is\na\nnew\nline");
         label->set_background_image(scene->assets->new_texture(16, 16));
         label->set_foreground_image(scene->assets->new_texture(16, 16));
         assert_equal(scene->assets->material_count(), mc + 2);  /* background, foreground */
@@ -45,7 +45,7 @@ public:
     }
 
     void test_foreground_and_background_images_differ() {
-        auto button = scene->create_node<ui::Button>("Button", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Button", ui::Px(100), ui::Px(20));
 
         auto t1 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
         auto t2 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
@@ -58,7 +58,7 @@ public:
     }
 
     void test_render_priority() {
-        auto button = scene->create_node<ui::Button>("Button", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Button", ui::Px(100), ui::Px(20));
         assert_equal(button->render_priority(), RENDER_PRIORITY_MAIN);
         button->set_render_priority(RENDER_PRIORITY_NEAR);
         assert_equal(button->render_priority(), RENDER_PRIORITY_NEAR);
@@ -74,7 +74,7 @@ public:
          * at the bottom left initially
          */
 
-        auto button = scene->create_node<ui::Button>("Test", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Test", ui::Px(100), ui::Px(20));
         button->set_padding(0);
         button->set_border_width(0);
 
@@ -90,7 +90,7 @@ public:
     }
 
     void test_button_creation() {
-        auto button = scene->create_node<ui::Button>("Test", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Test", ui::Px(100), ui::Px(20));
 
         assert_equal(_u("Test"), button->text());
         assert_equal(ui::Px(100), button->requested_width());
@@ -98,8 +98,8 @@ public:
     }
 
     void test_focus_chain() {
-        auto widget1 = scene->create_node<ui::Label>("label1");
-        auto widget2 = scene->create_node<ui::Label>("label2");
+        auto widget1 = scene->create_child<ui::Label>("label1");
+        auto widget2 = scene->create_child<ui::Label>("label2");
 
         assert_is_null((ui::Widget*) widget1->focused_in_chain());
 
@@ -125,7 +125,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
@@ -134,7 +134,7 @@ public:
     }
 
     void test_set_text() {
-        auto entry = scene->create_node<ui::TextEntry>("Hello");
+        auto entry = scene->create_child<ui::TextEntry>("Hello");
         assert_equal(entry->text(), "Hello");
     }
 
@@ -147,7 +147,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
@@ -156,7 +156,7 @@ public:
     }
 
     void test_set_value() {
-        auto progress_bar = scene->create_node<ui::ProgressBar>(0, 100, 50);
+        auto progress_bar = scene->create_child<ui::ProgressBar>(0, 100, 50);
 
         assert_equal(progress_bar->value(), 50);
         assert_equal(progress_bar->min(), 0);
@@ -179,7 +179,7 @@ class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
@@ -189,7 +189,7 @@ public:
 
     void test_image_creation() {
         auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
-        auto image = scene->create_node<ui::Image>(texture);
+        auto image = scene->create_child<ui::Image>(texture);
 
         assert_equal(image->width(), texture->width());
         assert_equal(image->height(), texture->height());
@@ -200,7 +200,7 @@ public:
 
     void test_set_source_rect() {
         auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
-        auto image = scene->create_node<ui::Image>(texture);
+        auto image = scene->create_child<ui::Image>(texture);
 
         image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));
 
@@ -218,7 +218,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
@@ -282,9 +282,9 @@ public:
 
 private:
     smlt::ui::Frame* _setup_frame() {
-        smlt::ui::Frame* frame = scene->create_node<ui::Frame>("");
-        smlt::ui::Button* button = scene->create_node<ui::Button>("Button 1");
-        smlt::ui::Label* label = scene->create_node<ui::Label>("Test Label");
+        smlt::ui::Frame* frame = scene->create_child<ui::Frame>("");
+        smlt::ui::Button* button = scene->create_child<ui::Button>("Button 1");
+        smlt::ui::Label* label = scene->create_child<ui::Label>("Test Label");
 
         /* Can pack a child once, but not itself */
         assert_true(frame->pack_child(button));

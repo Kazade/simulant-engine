@@ -13,20 +13,20 @@ public:
     void set_up() {
         smlt::test::SimulantTestCase::set_up();
 
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
         mesh_ = scene->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
     void test_mesh_instancer_creation() {
-        scene->create_node<smlt::MeshInstancer>(mesh_);
+        scene->create_child<smlt::MeshInstancer>(mesh_);
         assert_equal(scene->count_nodes_by_type<smlt::MeshInstancer>(), 1u);
 
-        scene->create_node<smlt::MeshInstancer>(mesh_);
+        scene->create_child<smlt::MeshInstancer>(mesh_);
         assert_equal(scene->count_nodes_by_type<smlt::MeshInstancer>(), 2u);
     }
 
     void test_mesh_instancer_destruction() {
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
         assert_equal(scene->count_nodes_by_type<MeshInstancer>(), 1u);
 
         instancer->destroy();
@@ -36,7 +36,7 @@ public:
     }
 
     void test_find_mesh_instancer() {
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
         assert_true(instancer->name().empty());
 
         instancer->set_name("instancer");
@@ -47,7 +47,7 @@ public:
     }
 
     void test_spawn_instances_changes_aabb() {
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
         assert_true(instancer->aabb().has_zero_area());
 
         instancer->new_mesh_instance(smlt::Vec3());
@@ -59,9 +59,9 @@ public:
     }
 
     void test_spawn_instances_updates_renderables() {
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
 
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -86,9 +86,9 @@ public:
     void test_hidden_instances_arent_in_renderables() {
         Viewport viewport;
 
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
 
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -117,7 +117,7 @@ public:
 
         assert_not_equal(mesh_->aabb(), mesh2->aabb());
 
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
         instancer->new_mesh_instance(Vec3());
 
         assert_equal(instancer->aabb(), mesh_->aabb());
@@ -129,10 +129,10 @@ public:
 
     void test_null_mesh_returns_no_renderables() {
         Viewport viewport;
-        auto instancer = scene->create_node<MeshInstancer>(nullptr);
+        auto instancer = scene->create_child<MeshInstancer>(nullptr);
         instancer->new_mesh_instance(Vec3());
 
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -141,7 +141,7 @@ public:
     }
 
     void test_mesh_instance_id_different() {
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
         auto iid1 = instancer->new_mesh_instance(Vec3());
         auto iid2 = instancer->new_mesh_instance(Vec3());
         auto iid3 = instancer->new_mesh_instance(Vec3());
@@ -157,14 +157,14 @@ public:
 
     void test_transform_is_relative() {
         Viewport viewport;
-        auto instancer = scene->create_node<MeshInstancer>(mesh_);
+        auto instancer = scene->create_child<MeshInstancer>(mesh_);
         instancer->new_mesh_instance(Vec3());
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(0, 0, 0));
 
         instancer->transform->set_translation(Vec3(10, 0, 0));
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(10, 0, 0));
 
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 

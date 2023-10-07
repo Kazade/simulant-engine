@@ -9,7 +9,7 @@ using namespace smlt;
 class SpriteTests : public smlt::test::SimulantTestCase {
 public:
     void test_set_alpha() {
-        auto sprite = scene->create_node<Sprite>();
+        auto sprite = scene->create_child<Sprite>();
 
         sprite->set_alpha(0.5f);
 

@@ -15,7 +15,7 @@ public:
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
 
-        auto light = scene->create_node<DirectionalLight>();
+        auto light = scene->create_child<DirectionalLight>();
         light->transform->set_translation(Vec3(0, 0, -10));
 
         MeshSilhouette silhouette(mesh, Mat4(), light);
@@ -26,7 +26,7 @@ public:
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
 
-        auto light = scene->create_node<PointLight>();
+        auto light = scene->create_child<PointLight>();
         light->transform->set_translation(Vec3(0, 0, -10));
 
         MeshSilhouette silhouette(mesh, Mat4(), light);
@@ -37,7 +37,7 @@ public:
         auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
 
-        auto light = scene->create_node<PointLight>();
+        auto light = scene->create_child<PointLight>();
         light->transform->set_translation(Vec3(0, 0, -10));
         light->set_attenuation_from_range(5.0);
 

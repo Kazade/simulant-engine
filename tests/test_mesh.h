@@ -14,8 +14,8 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->create_node<smlt::Stage>();
-        camera_ = scene->create_node<smlt::Camera>();
+        stage_ = scene->create_child<smlt::Stage>();
+        camera_ = scene->create_child<smlt::Camera>();
     }
 
     void tear_down() {
@@ -115,7 +115,7 @@ public:
         auto mesh1 = generate_test_mesh(stage_);
         auto mesh2 = generate_test_mesh(stage_);
 
-        auto actor = scene->create_node<Actor>(mesh1);
+        auto actor = scene->create_child<Actor>(mesh1);
         actor->set_mesh(mesh2);
         mesh1.reset();
         mesh2.reset();
@@ -137,7 +137,7 @@ public:
 
     void test_set_mesh_detail_level() {
         auto mesh = scene->assets->new_mesh(VertexSpecification::DEFAULT);
-        auto actor = scene->create_node<smlt::Actor>(mesh);
+        auto actor = scene->create_child<smlt::Actor>(mesh);
 
         auto m1 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
         auto m2 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
@@ -186,7 +186,7 @@ public:
     }
 
     void test_user_data_works() {
-        auto actor = scene->create_node<smlt::Stage>();
+        auto actor = scene->create_child<smlt::Stage>();
 
         this->assert_true(actor->id()); //Make sure we set an id for the mesh
         this->assert_true(!actor->data->exists("data"));
@@ -202,11 +202,11 @@ public:
     }
 
     void test_deleting_entities_deletes_children() {
-        auto m = scene->create_node<smlt::Stage>(); //Create the root mesh
-        auto c1 = scene->create_node<smlt::Stage>(); //Create a child
+        auto m = scene->create_child<smlt::Stage>(); //Create the root mesh
+        auto c1 = scene->create_child<smlt::Stage>(); //Create a child
         c1->set_parent(m);
 
-        auto c2 = scene->create_node<smlt::Stage>(); //Create a child of the child
+        auto c2 = scene->create_child<smlt::Stage>(); //Create a child of the child
         c2->set_parent(c1);
 
         auto mid = m->id();
@@ -246,7 +246,7 @@ public:
     void test_actor_from_mesh() {
         auto mesh = generate_test_mesh(stage_);
 
-        auto actor = scene->create_node<smlt::Actor>(mesh);
+        auto actor = scene->create_child<smlt::Actor>(mesh);
 
         assert_true(actor->has_any_mesh());
         assert_true(actor->has_mesh(DETAIL_LEVEL_NEAREST));
@@ -264,7 +264,7 @@ public:
 
     void test_scene_methods() {
         auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
-        auto actor = scene->create_node<Actor>(mesh);
+        auto actor = scene->create_child<Actor>(mesh);
 
         assert_true(mesh->id() == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
     }
@@ -280,14 +280,14 @@ public:
         auto submesh = mesh->new_submesh_as_cube("cube", mat1, 1.0f);
         submesh->set_material_at_slot(MATERIAL_SLOT1, mat2);
 
-        auto actor1 = scene->create_node<Actor>(mesh);
-        auto actor2 = scene->create_node<Actor>(mesh);
-        auto actor3 = scene->create_node<Actor>(mesh);
+        auto actor1 = scene->create_child<Actor>(mesh);
+        auto actor2 = scene->create_child<Actor>(mesh);
+        auto actor3 = scene->create_child<Actor>(mesh);
 
         actor2->use_material_slot(MATERIAL_SLOT1);
         actor3->use_material_slot(MATERIAL_SLOT7);
 
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 

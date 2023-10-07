@@ -34,8 +34,8 @@ public:
     }
 
     void test_basic_visibility() {
-        auto stage = scene->create_node<smlt::Stage>();
-        auto camera = scene->create_node<smlt::Camera>(); // Looking down -Z
+        auto stage = scene->create_child<smlt::Stage>();
+        auto camera = scene->create_child<smlt::Camera>(); // Looking down -Z
 
         // Guarantee 2 renderables by using different materials
         auto mat1 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
@@ -49,7 +49,7 @@ public:
 
         batcher::RenderQueue queue;
         queue.reset(stage, window->renderer.get(), camera);
-        auto geom = scene->create_node<Geom>(mesh);
+        auto geom = scene->create_child<Geom>(mesh);
         geom->culler->renderables_visible(camera->frustum(), &queue);
 
         std::vector<Renderable*> result;

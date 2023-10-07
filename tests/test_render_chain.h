@@ -13,8 +13,8 @@ class RenderChainTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_usage() {
         Viewport view;
-        auto stage = scene->create_node<smlt::Stage>();
-        auto cam = scene->create_node<smlt::Camera>();
+        auto stage = scene->create_child<smlt::Stage>();
+        auto cam = scene->create_child<smlt::Camera>();
         auto tex = application->shared_assets->new_texture(256, 256);
 
         PipelinePtr pipeline1 = window->compositor->render(stage, cam);

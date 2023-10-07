@@ -44,11 +44,11 @@ public:
 
     void test_ancestor_lookups() {
         auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        auto b = scene->create_node<NodeWithLookups>();
+        auto b = scene->create_child<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->parent.get());
 
-        auto parent = scene->create_node<smlt::Actor>(m);
+        auto parent = scene->create_child<smlt::Actor>(m);
         parent->set_name("Some Parent");
         b->set_parent(parent);
 
@@ -57,14 +57,14 @@ public:
 
     void test_descendent_lookups() {
         auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
 
-        auto b = scene->create_node<NodeWithLookups>();
+        auto b = scene->create_child<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->child_one);
         assert_is_null((StageNode*) b->invalid_child);
 
-        auto child_one = scene->create_node<Actor>(m);
+        auto child_one = scene->create_child<Actor>(m);
         child_one->set_name("Child 1");
         child_one->set_parent(b);
 
@@ -87,13 +87,13 @@ public:
 class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto actor = scene->create_node<smlt::Stage>();
-        auto camera = scene->create_node<smlt::Camera>();
+        auto actor = scene->create_child<smlt::Stage>();
+        auto camera = scene->create_child<smlt::Camera>();
 
         auto pipeline = window->compositor->render(scene, camera);
         pipeline->activate();
 
-        auto billboard = scene->create_node<CylindricalBillboard>();
+        auto billboard = scene->create_child<CylindricalBillboard>();
         billboard->set_target(camera);
         billboard->adopt_children(actor);
 
@@ -120,13 +120,13 @@ class SphericalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto actor = scene->create_node<smlt::Stage>();
-        auto camera = scene->create_node<smlt::Camera>();
+        auto actor = scene->create_child<smlt::Stage>();
+        auto camera = scene->create_child<smlt::Camera>();
 
         auto pipeline = window->compositor->render(scene, camera);
         pipeline->activate();
 
-        auto billboard = scene->create_node<SphericalBillboard>();
+        auto billboard = scene->create_child<SphericalBillboard>();
         billboard->set_target(camera);
         billboard->adopt_children(actor);
 

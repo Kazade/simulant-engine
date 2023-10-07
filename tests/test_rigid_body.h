@@ -20,14 +20,14 @@ public:
     }
 
     void test_adding_to_stage_node_inherits_location() {
-        auto stage = scene->create_node<smlt::Stage>();
-        auto actor = scene->create_node<smlt::Stage>();
+        auto stage = scene->create_child<smlt::Stage>();
+        auto actor = scene->create_child<smlt::Stage>();
 
         actor->transform->set_translation(Vec3(10, 0, 0));
         actor->transform->rotate(smlt::Vec3::POSITIVE_X, smlt::Degrees(90));
 
         scene->start_service<PhysicsService>();
-        auto controller = scene->create_node<RigidBody>();
+        auto controller = scene->create_child<RigidBody>();
         controller->set_parent(actor);
 
         assert_equal(controller->transform->position().x, 10.0f);
@@ -38,7 +38,7 @@ public:
     }
 
     void test_set_mass() {
-        auto controller = scene->create_node<smlt::RigidBody>();
+        auto controller = scene->create_child<smlt::RigidBody>();
         assert_equal(controller->mass(), 1.0f);
 
         controller->add_box_collider(smlt::Vec3(10.0f), smlt::PhysicsMaterial::IRON);

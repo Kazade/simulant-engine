@@ -13,7 +13,7 @@ public:
     void set_up() override {
         test::SimulantTestCase::set_up();
 
-        stage_ = scene->create_node<smlt::Stage>();
+        stage_ = scene->create_child<smlt::Stage>();
         box_ = application->shared_assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
@@ -24,13 +24,13 @@ public:
     }
 
     void test_visibility() {
-        FrustumPartitioner* partitioner = scene->create_node<FrustumPartitioner>();
+        FrustumPartitioner* partitioner = scene->create_child<FrustumPartitioner>();
 
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
         camera->set_parent(partitioner);
         camera->transform->set_translation(Vec3(784, 58, -775));
 
-        auto a1 = scene->create_node<smlt::Actor>(box_);
+        auto a1 = scene->create_child<smlt::Actor>(box_);
         a1->set_parent(partitioner);
 
         assert_true(a1->has_any_mesh());
@@ -50,10 +50,10 @@ public:
     }
 
     void test_nodes_returned_if_never_culled() {
-        FrustumPartitioner* partitioner = scene->create_node<FrustumPartitioner>();
+        FrustumPartitioner* partitioner = scene->create_child<FrustumPartitioner>();
 
-        auto camera = scene->create_node<smlt::Camera>();
-        auto a1 = scene->create_node<smlt::Actor>(box_);
+        auto camera = scene->create_child<smlt::Camera>();
+        auto a1 = scene->create_child<smlt::Actor>(box_);
         a1->set_parent(partitioner);
         a1->transform->set_translation(Vec3(0, 0, 100));
 
@@ -75,13 +75,13 @@ public:
     }
 
     void test_destroyed_nodes_not_returned() {
-        FrustumPartitioner* partitioner = scene->create_node<FrustumPartitioner>();
+        FrustumPartitioner* partitioner = scene->create_child<FrustumPartitioner>();
 
-        auto camera = scene->create_node<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera>();
 
-        auto a1 = scene->create_node<smlt::Actor>(box_);
-        auto a2 = scene->create_node<smlt::Actor>(box_);
-        auto a3 = scene->create_node<smlt::Actor>(box_);
+        auto a1 = scene->create_child<smlt::Actor>(box_);
+        auto a2 = scene->create_child<smlt::Actor>(box_);
+        auto a3 = scene->create_child<smlt::Actor>(box_);
 
         a1->transform->set_translation(Vec3(0, 0, -5));
         a2->transform->set_translation(Vec3(0, 0, -5));
