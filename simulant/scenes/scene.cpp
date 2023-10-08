@@ -30,6 +30,7 @@
 #include "../nodes/geom.h"
 #include "../nodes/camera.h"
 #include "../nodes/light.h"
+#include "../nodes/audio_source.h"
 #include "../nodes/mesh_instancer.h"
 #include "../nodes/particle_system.h"
 #include "../nodes/rigid_body.h"
@@ -82,6 +83,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Actor>();
     register_stage_node<Geom>();
     register_stage_node<Camera>();
+    register_stage_node<AudioSource>();
     register_stage_node<DirectionalLight>();
     register_stage_node<PointLight>();
     register_stage_node<MeshInstancer>();

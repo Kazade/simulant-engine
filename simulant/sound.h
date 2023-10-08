@@ -102,55 +102,6 @@ private:
 };
 
 
-typedef sig::signal<void (SoundPtr, AudioRepeat, DistanceModel)> SoundPlayedSignal;
-
-
-class AudioSource {
-    DEFINE_SIGNAL(SoundPlayedSignal, signal_sound_played);
-
-public:
-    AudioSource(Window* window);
-    AudioSource(Scene* owner, StageNode* this_as_node, SoundDriver *driver);
-    virtual ~AudioSource();
-
-    PlayingSoundPtr play_sound(
-        SoundPtr sound_id,
-        AudioRepeat repeat=AUDIO_REPEAT_NONE,
-        DistanceModel model=DISTANCE_MODEL_DEFAULT
-    );
-
-    bool stop_sound(PlayingAssetID sound_id);
-
-    /* The number of sounds this source is currently playing */
-    uint8_t playing_sound_count() const;
-
-    /* The number of sounds that have finished, but aren't yet
-     * destroyed */
-    uint8_t played_sound_count() const;
-
-    bool is_sound_playing() const;
-
-    sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
-
-    void update_source(float dt);
-protected:
-    SoundDriver* _sound_driver() const;
-
-public:
-    Scene* scene_ = nullptr;
-    Window* window_ = nullptr;
-    SoundDriver* driver_ = nullptr;
-    StageNode* node_ = nullptr;
-
-    std::list<PlayingSound::ptr> instances_;
-    sig::signal<void ()> signal_stream_finished_;
-
-    friend class Sound;
-    friend class PlayingSound;
-
-    mutable thread::Mutex mutex_;
-    static void source_update_thread();
-};
 
 }
 #endif // SOUND_H

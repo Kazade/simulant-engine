@@ -36,6 +36,9 @@ private:
     void on_update(float dt) override;
 
     CameraPtr camera_;
+
+    AudioSource* source_;
+
     PipelinePtr pipeline_;
 
     ui::Image* text_ = nullptr;

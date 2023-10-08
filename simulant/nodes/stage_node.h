@@ -85,7 +85,6 @@ class StageNode:
     public Updateable,
     public virtual BoundableEntity,
     public virtual TwoPhaseConstructed,
-    public AudioSource,
     public TransformListener {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
@@ -200,7 +199,7 @@ public:
 
     template<typename T, typename... Args>
     T* create_child(Args&&... args) {
-        return impl::child_factory<decltype(scene_), T, Args...>(scene_, this, std::forward<Args>(args)...);
+        return impl::child_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
     }
 
     void adopt_children(StageNode* node) {

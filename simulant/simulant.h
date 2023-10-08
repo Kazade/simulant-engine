@@ -62,6 +62,7 @@
 #include "nodes/sprite.h"
 #include "nodes/particle_system.h"
 #include "nodes/camera.h"
+#include "nodes/audio_source.h"
 
 #include "sound.h"
 #include "utils/random.h"

@@ -12,6 +12,7 @@
 #include "../time_keeper.h"
 #include "../scenes/scene_manager.h"
 #include "../nodes/ui/image.h"
+#include "../nodes/audio_source.h"
 #include "splash.h"
 
 #define SIMULANT_TEXT_512 "textures/simulant-text-512.png"
@@ -54,6 +55,8 @@ void Splash::load() {
         0, window->width(), 0, window->height()
     );
 
+    source_ = camera_->create_child<AudioSource>();
+
     //Create an inactive pipeline
     pipeline_ = compositor->render(this, camera_);
     link_pipeline(pipeline_);
@@ -66,7 +69,7 @@ void Splash::unload() {
 
 void Splash::activate() {
     start_time_ = app->time_keeper->now_in_us();
-    camera_->play_sound(
+    source_->play_sound(
         sound_,
         AUDIO_REPEAT_NONE,
         DISTANCE_MODEL_AMBIENT

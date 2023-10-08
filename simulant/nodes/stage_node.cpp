@@ -87,7 +87,7 @@ std::list<StageNode*> StageNode::detach() {
         orphaned.push_back(it);
 
         /* Orphaned nodes need to be added to the stray nodes list */
-        scene_->stray_nodes_.insert(it);
+        owner_->stray_nodes_.insert(it);
 
         auto next = it->next_;
         it->remove_from_parent();
@@ -173,7 +173,6 @@ void StageNode::finalize_destroy() {
 
 StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type):
     Identifiable(new_stage_node_id(node_type)),
-    AudioSource(owner, this, get_app()->sound_driver.get()),
     owner_(owner),
     node_type_(node_type) {
 
@@ -191,7 +190,7 @@ StageNodeType StageNode::node_type() const {
 void StageNode::_clean_up() {
     signal_cleaned_up_(); // Tell everyone we're going
     detach(); // Make sure we're not connected to anything
-    scene_->stray_nodes_.erase(this); // We're not a stray node anymore!
+    owner_->stray_nodes_.erase(this); // We're not a stray node anymore!
 }
 
 void StageNode::recalc_visibility() {

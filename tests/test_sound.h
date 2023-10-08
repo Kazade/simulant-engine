@@ -50,19 +50,10 @@ public:
         assert_false(window->has_explicit_audio_listener());
     }
 
-    void test_global_output() {
-        smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
-        auto playing = application->sound_driver->play_sound(sound);
-        assert_true(playing->is_playing());
-        while(playing->is_playing()) {
-            application->run_frame();
-        }
-    }
-
     void test_2d_sound_output() {
         smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
 
-        auto actor = scene->create_child<smlt::Stage>();
+        auto actor = scene->create_child<smlt::AudioSource>();
 
         assert_false(actor->playing_sound_count());
 
@@ -80,7 +71,7 @@ public:
 
         smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
 
-        auto actor = scene->create_child<smlt::Stage>();
+        auto actor = scene->create_child<smlt::AudioSource>();
 
         assert_false(actor->playing_sound_count());
 
@@ -106,7 +97,7 @@ public:
     void test_3d_sound_output() {
         smlt::SoundPtr sound = scene->assets->load_sound("test_sound.ogg");
 
-        auto actor = scene->create_child<smlt::Stage>();
+        auto actor = scene->create_child<smlt::AudioSource>();
         actor->transform->set_translation(smlt::Vec3(10, 0, 0));
 
         assert_false(actor->playing_sound_count());
@@ -126,7 +117,7 @@ public:
 
         auto sid = sound->id();
 
-        auto a = scene->create_child<smlt::Stage>();
+        auto a = scene->create_child<smlt::AudioSource>();
 
         assert_true(application->shared_assets->has_sound(sid));
         a->play_sound(sound);
@@ -147,7 +138,7 @@ public:
 
     void test_sound_stopping() {
         auto sound = application->shared_assets->load_sound("test_sound.ogg");
-        auto a = scene->create_child<smlt::Stage>();
+        auto a = scene->create_child<smlt::AudioSource>();
         smlt::PlayingSoundPtr s = a->play_sound(sound);
 
         assert_true(s);

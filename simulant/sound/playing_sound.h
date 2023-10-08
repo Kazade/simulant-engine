@@ -42,7 +42,7 @@ private:
 
     PlayingAssetID id_;
 
-    AudioSource& parent_;
+    AudioSource* parent_;
 
     AudioSourceID source_;
     std::vector<AudioBufferID> buffers_;
@@ -60,7 +60,7 @@ private:
     void do_stop();
 
 public:
-    PlayingSound(AudioSource& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
+    PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~PlayingSound();
 
     PlayingAssetID id() const {
