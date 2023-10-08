@@ -479,8 +479,8 @@ typedef std::shared_ptr<AssetManager> ResourceManagerPtr;
 class Compositor;
 typedef std::shared_ptr<Compositor> CompositorPtr;
 
-class Pipeline;
-typedef default_init_ptr<Pipeline> PipelinePtr;
+class Layer;
+typedef default_init_ptr<Layer> LayerPtr;
 
 class Frustum;
 class Window;

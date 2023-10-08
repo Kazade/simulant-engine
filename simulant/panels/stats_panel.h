@@ -44,7 +44,7 @@ private:
     void do_deactivate() override;
 
     CameraPtr ui_camera_;
-    PipelinePtr pipeline_;
+    LayerPtr pipeline_;
 
     void update_stats();
 

@@ -44,13 +44,13 @@ Compositor::~Compositor() {
     destroy_all_pipelines();
 }
 
-PipelinePtr Compositor::render(StageNode* subtree, CameraPtr camera) {
+LayerPtr Compositor::render(StageNode* subtree, CameraPtr camera) {
     static int32_t counter = 0;
     std::string name = _F("{0}").format(counter++);
     return new_pipeline(name, subtree, camera);
 }
 
-PipelinePtr Compositor::find_pipeline(const std::string &name) {
+LayerPtr Compositor::find_pipeline(const std::string &name) {
     for(auto& pipeline: ordered_pipelines_) {
         if(pipeline->name() == name) {
             return pipeline;
@@ -90,7 +90,7 @@ void Compositor::destroy_pipeline_immediately(const std::string& name) {
     queued_for_destruction_.erase(pip);
     ordered_pipelines_.remove(pip);
 
-    pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
+    pool_.remove_if([name](const Layer::ptr& pip) -> bool {
         return pip->name() == name;
     });
 }
@@ -108,7 +108,7 @@ void Compositor::clean_destroyed_pipelines() {
 #endif
 
         auto id = pip->id_;
-        pool_.remove_if([id](const Pipeline::ptr& pip) -> bool {
+        pool_.remove_if([id](const Layer::ptr& pip) -> bool {
             return pip->id_ == id;
         });
     }
@@ -130,23 +130,23 @@ bool Compositor::has_pipeline(const std::string& name) {
 void Compositor::sort_pipelines() {
     auto do_sort = [&]() {
         ordered_pipelines_.sort(
-            [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
+            [](LayerPtr lhs, LayerPtr rhs) { return lhs->priority() < rhs->priority(); }
         );
     };
 
     do_sort();
 }
 
-PipelinePtr Compositor::new_pipeline(
+LayerPtr Compositor::new_pipeline(
     const std::string& name, StageNode* subtree, CameraPtr camera,
     const Viewport& viewport, TexturePtr target, int32_t priority) {
 
     if(has_pipeline(name)) {
         S_WARN("Tried to create a duplicate pipeline");
-        return PipelinePtr();
+        return LayerPtr();
     }
 
-    auto pipeline = Pipeline::create(
+    auto pipeline = Layer::create(
         this, name, subtree, camera
     );
 
@@ -194,7 +194,7 @@ uint64_t generate_frame_id() {
 
 static bool build_renderables(
     std::vector<Light*>& lights_visible, batcher::RenderQueue* render_queue_,
-    const smlt::CameraPtr& camera, const smlt::PipelinePtr& pipeline_stage,
+    const smlt::CameraPtr& camera, const smlt::LayerPtr& pipeline_stage,
     StageNode* node
 ) {
     assert(node);
@@ -261,7 +261,7 @@ static bool build_renderables(
     return !(node->generates_renderables_for_descendents());
 }
 
-void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) {
+void Compositor::run_pipeline(LayerPtr pipeline_stage, int &actors_rendered) {
     /*
      * This is where rendering actually happens.
      *
@@ -311,10 +311,10 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
         viewport->apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
     }
 
-    signal_pipeline_started_(*pipeline_stage);
+    signal_layer_render_started_(*pipeline_stage);
 
     // Trigger a signal to indicate the stage is about to be rendered
-    stage_node->scene->signal_pipeline_started()(camera, viewport, stage_node);
+    stage_node->scene->signal_layer_render_started()(camera, viewport, stage_node);
 
     static std::vector<Light*> lights_visible;
 
@@ -359,9 +359,9 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     render_queue_.traverse(visitor.get(), frame_id);
 
     // Trigger a signal to indicate the stage has been rendered
-    stage_node->scene->signal_pipeline_finished()(camera, viewport, stage_node);
+    stage_node->scene->signal_layer_render_finished()(camera, viewport, stage_node);
 
-    signal_pipeline_finished_(*pipeline_stage);
+    signal_layer_render_finished_(*pipeline_stage);
     render_queue_.clear();
 }
 

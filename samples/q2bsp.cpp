@@ -65,7 +65,7 @@ public:
 
 private:
     CameraPtr camera_;
-    PipelinePtr pipeline_;
+    LayerPtr pipeline_;
 };
 
 

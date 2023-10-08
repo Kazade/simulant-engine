@@ -137,7 +137,7 @@ private:
 
     StagePtr keyboard_stage_;
     CameraPtr keyboard_camera_;
-    PipelinePtr keyboard_pipeline_;
+    LayerPtr keyboard_pipeline_;
     ui::Keyboard* keyboard_ = nullptr;
 
     sig::connection scene_deactivated_conn_;

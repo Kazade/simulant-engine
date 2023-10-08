@@ -17,10 +17,10 @@ public:
         auto cam = scene->create_child<smlt::Camera>();
         auto tex = application->shared_assets->create_texture(256, 256);
 
-        PipelinePtr pipeline1 = window->compositor->render(stage, cam);
-        PipelinePtr pipeline2 = window->compositor->render(stage, cam)->set_target(tex);
-        PipelinePtr pipeline3 = window->compositor->render(stage, cam)->set_viewport(view);
-        PipelinePtr pipeline4 = window->compositor->render(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
+        auto pipeline1 = window->compositor->render(stage, cam);
+        auto pipeline2 = window->compositor->render(stage, cam)->set_target(tex);
+        auto pipeline3 = window->compositor->render(stage, cam)->set_viewport(view);
+        auto pipeline4 = window->compositor->render(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
 
         assert_equal(cam->id(), pipeline1->camera()->id());
         assert_equal(stage->id(), pipeline1->stage_node()->id());

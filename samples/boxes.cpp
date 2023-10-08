@@ -84,7 +84,7 @@ public:
 private:
     std::vector<ActorPtr> boxes_;
 
-    PipelinePtr pipeline_;
+    LayerPtr pipeline_;
     StagePtr stage_;
     CameraPtr camera_;
 

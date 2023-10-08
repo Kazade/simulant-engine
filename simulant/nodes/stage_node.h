@@ -461,7 +461,7 @@ protected:
     void recalc_bounds_if_necessary() const;
     void mark_transformed_aabb_dirty();
 private:
-    friend class Pipeline;
+    friend class Layer;
 
     AABB calculate_transformed_aabb() const;
     Scene* owner_ = nullptr;

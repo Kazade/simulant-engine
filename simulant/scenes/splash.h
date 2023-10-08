@@ -39,7 +39,7 @@ private:
 
     AudioSource* source_;
 
-    PipelinePtr pipeline_;
+    LayerPtr pipeline_;
 
     ui::Image* text_ = nullptr;
     ui::Image* image_ = nullptr;

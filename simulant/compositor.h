@@ -25,23 +25,29 @@
 
 #include "generic/managed.h"
 #include "generic/property.h"
-
+#include "signals/signal.h"
 #include "renderers/renderer.h"
 #include "types.h"
 #include "viewport.h"
 #include "partitioner.h"
-#include "pipeline.h"
+#include "layer.h"
 
 namespace smlt {
 
+typedef sig::signal<void (Layer&)> LayerRenderStarted;
+typedef sig::signal<void (Layer&)> LayerRenderFinished;
+
 class Compositor:
     public RefCounted<Compositor> {
+
+    DEFINE_SIGNAL(LayerRenderStarted, signal_layer_render_started);
+    DEFINE_SIGNAL(LayerRenderFinished, signal_layer_render_finished);
 
 public:
     Compositor(Window* window);
     virtual ~Compositor();
 
-    PipelinePtr new_pipeline(const std::string& name,
+    LayerPtr new_pipeline(const std::string& name,
         StageNode* subtree,
         CameraPtr camera,
         const Viewport& viewport=Viewport(),
@@ -49,17 +55,17 @@ public:
         int32_t priority=0
     );
 
-    PipelinePtr render(StageNode* subtree, CameraPtr camera);
+    LayerPtr render(StageNode* subtree, CameraPtr camera);
 
-    std::list<PipelinePtr>::iterator begin() {
+    std::list<LayerPtr>::iterator begin() {
         return ordered_pipelines_.begin();
     }
 
-    std::list<PipelinePtr>::iterator end() {
+    std::list<LayerPtr>::iterator end() {
         return ordered_pipelines_.end();
     }
 
-    PipelinePtr find_pipeline(const std::string& name);
+    LayerPtr find_pipeline(const std::string& name);
     bool destroy_pipeline(const std::string& name);
     void destroy_all_pipelines();
     void destroy_pipeline_immediately(const std::string& name);
@@ -72,34 +78,28 @@ public:
     void run();
     void clean_destroyed_pipelines();
 
-    sig::signal<void (Pipeline&)>& signal_pipeline_started() { return signal_pipeline_started_; }
-    sig::signal<void (Pipeline&)>& signal_pipeline_finished() { return signal_pipeline_finished_; }
-
-    void destroy_object(PipelinePtr pipeline) {
+    void destroy_object(LayerPtr pipeline) {
         destroy_pipeline(pipeline->name());
     }
 
-    void destroy_object_immediately(PipelinePtr pipeline) {
+    void destroy_object_immediately(LayerPtr pipeline) {
         // FIXME: This doesn't destroy immediately
         destroy_pipeline(pipeline->name());
     }
 
 private:
     void sort_pipelines();
-    void run_pipeline(PipelinePtr stage, int& actors_rendered);
+    void run_pipeline(LayerPtr stage, int& actors_rendered);
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
     batcher::RenderQueue render_queue_;
 
-    std::list<std::shared_ptr<Pipeline>> pool_;
-    std::list<PipelinePtr> ordered_pipelines_;
-    std::set<PipelinePtr> queued_for_destruction_;
+    std::list<std::shared_ptr<Layer>> pool_;
+    std::list<LayerPtr> ordered_pipelines_;
+    std::set<LayerPtr> queued_for_destruction_;
 
-    sig::signal<void (Pipeline&)> signal_pipeline_started_;
-    sig::signal<void (Pipeline&)> signal_pipeline_finished_;
-
-    friend class Pipeline;
+    friend class Layer;
 
     std::set<RenderTarget*> targets_rendered_this_frame_;
 

@@ -66,8 +66,8 @@ typedef sig::signal<void ()> SceneOnDeactivatedSignal;
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
 typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
 
-typedef sig::signal<void (Camera*, Viewport*, StageNode*)> PipelineStartedSignal;
-typedef sig::signal<void (Camera*, Viewport*, StageNode*)> PipelineFinishedSignal;
+typedef sig::signal<void (Camera*, Viewport*, StageNode*)> LayerRenderStartedSignal;
+typedef sig::signal<void (Camera*, Viewport*, StageNode*)> LayerRenderFinishedSignal;
 
 
 class LightingSettings {
@@ -95,8 +95,8 @@ class Scene:
     DEFINE_SIGNAL(StageNodeCreatedSignal, signal_stage_node_created);
     DEFINE_SIGNAL(StageNodeDestroyedSignal, signal_stage_node_destroyed);
 
-    DEFINE_SIGNAL(PipelineStartedSignal, signal_pipeline_started);
-    DEFINE_SIGNAL(PipelineFinishedSignal, signal_pipeline_finished);
+    DEFINE_SIGNAL(LayerRenderStartedSignal, signal_layer_render_started);
+    DEFINE_SIGNAL(LayerRenderFinishedSignal, signal_layer_render_finished);
 public:
     typedef std::shared_ptr<Scene> ptr;
 
@@ -188,8 +188,8 @@ protected:
     /* Linked pipelines activate and deactivate with the scene */
     void link_pipeline(const std::string& name);
     void unlink_pipeline(const std::string& name);
-    void link_pipeline(PipelinePtr pipeline);
-    void unlink_pipeline(PipelinePtr pipeline);
+    void link_pipeline(LayerPtr pipeline);
+    void unlink_pipeline(LayerPtr pipeline);
 
 private:
     void on_fixed_update(float step) override;

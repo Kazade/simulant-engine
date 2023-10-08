@@ -21,7 +21,7 @@
 #include "../compositor.h"
 #include "../stage.h"
 #include "../window.h"
-#include "../pipeline.h"
+#include "../layer.h"
 #include "../application.h"
 #include "../platform.h"
 #include "../asset_manager.h"
@@ -237,11 +237,11 @@ void Scene::unlink_pipeline(const std::string &name) {
     linked_pipelines_.insert(name);
 }
 
-void Scene::link_pipeline(PipelinePtr pipeline) {
+void Scene::link_pipeline(LayerPtr pipeline) {
     link_pipeline(pipeline->name());
 }
 
-void Scene::unlink_pipeline(PipelinePtr pipeline) {
+void Scene::unlink_pipeline(LayerPtr pipeline) {
     unlink_pipeline(pipeline->name());
 }
 

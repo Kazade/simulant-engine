@@ -16,18 +16,18 @@ namespace smlt {
 class Compositor;
 class RenderableStore;
 
-class Pipeline:
-    public TypedDestroyableObject<Pipeline, Compositor>,
-    public RefCounted<Pipeline> {
+class Layer:
+    public TypedDestroyableObject<Layer, Compositor>,
+    public RefCounted<Layer> {
 
 public:
-    Pipeline(
+    Layer(
         Compositor* render_sequence,
         const std::string& name,
         StageNode* subtree, CameraPtr camera
     );
 
-    virtual ~Pipeline();
+    virtual ~Layer();
 
     CameraPtr camera() const;
     StageNode* stage_node() const;
@@ -35,28 +35,28 @@ public:
     uint32_t clear_flags() const;
 
     int32_t priority() const;
-    PipelinePtr set_priority(int32_t priority);
+    LayerPtr set_priority(int32_t priority);
 
     void deactivate();
     void activate();
     bool is_active() const { return is_active_; }
 
-    PipelinePtr set_viewport(const Viewport& v) {
+    LayerPtr set_viewport(const Viewport& v) {
         viewport_ = v;
         return this;
     }
 
-    PipelinePtr set_target(TexturePtr t) {
+    LayerPtr set_target(TexturePtr t) {
         target_ = t;
         return this;
     }
 
-    PipelinePtr set_clear_flags(uint32_t viewport_clear_flags) {
+    LayerPtr set_clear_flags(uint32_t viewport_clear_flags) {
         clear_mask_ = viewport_clear_flags;
         return this;
     }
 
-    PipelinePtr set_detail_level_distances(
+    LayerPtr set_detail_level_distances(
         float nearest_cutoff,
         float near_cutoff,
         float mid_cutoff,
@@ -65,7 +65,7 @@ public:
 
     DetailLevel detail_level_at_distance(float dist) const;
 
-    PipelinePtr set_name(const std::string& name) {
+    LayerPtr set_name(const std::string& name) {
         name_ = name;
         return this;
     }
@@ -74,7 +74,7 @@ public:
         return name_;
     }
 
-    PipelinePtr set_camera(CameraPtr c);
+    LayerPtr set_camera(CameraPtr c);
 
     /** Returns true if the pipeline has a valid stage and camera */
     bool is_complete() const {
@@ -105,7 +105,7 @@ private:
     friend class Compositor;
 
 public:
-    Property<decltype(&Pipeline::viewport_)> viewport = { this, &Pipeline::viewport_ };
+    Property<decltype(&Layer::viewport_)> viewport = { this, &Layer::viewport_ };
 };
 
 }

@@ -58,7 +58,7 @@ public:
 
         assert_false(stage->is_part_of_active_pipeline());
 
-        smlt::PipelinePtr pipeline = window->compositor->render(stage, camera);
+        smlt::LayerPtr pipeline = window->compositor->render(stage, camera);
         pipeline->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
@@ -70,7 +70,7 @@ public:
         pipeline = window->compositor->render(stage, camera);
         pipeline->activate();
 
-        smlt::PipelinePtr pipeline2 = window->compositor->render(stage, camera);
+        smlt::LayerPtr pipeline2 = window->compositor->render(stage, camera);
         pipeline2->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
@@ -99,7 +99,7 @@ public:
 private:
     StagePtr stage;
     CameraPtr camera;
-    PipelinePtr pipeline;
+    LayerPtr pipeline;
 };
 
 }
