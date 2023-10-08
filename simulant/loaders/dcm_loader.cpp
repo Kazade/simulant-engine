@@ -87,7 +87,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().new_texture_from_file(final);
+            auto tex = mesh->asset_manager().load_texture(final);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
@@ -104,7 +104,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().new_texture_from_file(final);
+            auto tex = mesh->asset_manager().load_texture(final);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
@@ -121,7 +121,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().new_texture_from_file(final);
+            auto tex = mesh->asset_manager().load_texture(final);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
@@ -138,7 +138,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().new_texture_from_file(final);
+            auto tex = mesh->asset_manager().load_texture(final);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
@@ -221,7 +221,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             MESH_ARRANGEMENT_TRIANGLES : MESH_ARRANGEMENT_TRIANGLE_STRIP;
 
         if(sheader.type == SUB_MESH_TYPE_RANGED) {
-            auto sm = mesh->new_submesh(smlt::to_string(i), materials[sheader.material_id], arrangement);
+            auto sm = mesh->create_submesh(smlt::to_string(i), materials[sheader.material_id], arrangement);
             for(int j = 0; j < sheader.num_ranges_or_indices; ++j) {
                 SubMeshVertexRange range;
                 data_->read((char*) &range.start, sizeof(uint32_t));
@@ -257,7 +257,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 }
             }
 
-            mesh->new_submesh(smlt::to_string(i), materials[sheader.material_id], index_data, arrangement);
+            mesh->create_submesh(smlt::to_string(i), materials[sheader.material_id], index_data, arrangement);
         }
     }
 

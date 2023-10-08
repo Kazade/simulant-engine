@@ -32,18 +32,18 @@ public:
             create_node<Skybox>("sample_data/skyboxes/TropicalSunnyDay");
         }
 
-        auto crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");
-        auto mat = app->shared_assets->new_material_from_texture(crate);
+        auto crate = app->shared_assets->load_texture("sample_data/crate.png");
+        auto mat = app->shared_assets->create_material_from_texture(crate);
 
-        auto box_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
-        box_mesh->new_submesh_as_cube("cube", mat, 5);
+        auto box_mesh = app->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
+        box_mesh->create_submesh_as_cube("cube", mat, 5);
         box_mesh_ = box_mesh;
 
-        auto grass = app->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
-        auto ground_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        ground_mesh->new_submesh_as_box(
-            "ground", app->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000
-        ); //window->shared_assets->new_mesh_from_file("sample_data/playground.obj");
+        auto grass = app->shared_assets->load_texture("sample_data/beach_sand.png");
+        auto ground_mesh = app->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        ground_mesh->create_submesh_as_box(
+            "ground", app->shared_assets->create_material_from_texture(grass), 1000, 2.5, 1000
+        ); //window->shared_assets->load_mesh("sample_data/playground.obj");
 
         ground_mesh_ = ground_mesh;
         ground_ = create_node<smlt::Actor>(ground_mesh_);

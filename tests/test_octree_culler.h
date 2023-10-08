@@ -14,12 +14,12 @@ class OctreeCullerTests : public smlt::test::SimulantTestCase {
 public:
     void test_octree_bounds() {
         // Guarantee 2 renderables by using different materials
-        auto mat1 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
-        auto mat2 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat1 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat2 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = scene->assets->new_mesh(VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(-20, -20, -20.0));
-        mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(20, 20, 20.0));
+        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(-20, -20, -20.0));
+        mesh->create_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(20, 20, 20.0));
 
         OctreeCuller culler(nullptr, mesh, 4);
         culler.compile(Vec3(), Quaternion(), Vec3(1, 1, 1));
@@ -38,12 +38,12 @@ public:
         auto camera = scene->create_child<smlt::Camera>(); // Looking down -Z
 
         // Guarantee 2 renderables by using different materials
-        auto mat1 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
-        auto mat2 = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat1 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat2 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = scene->assets->new_mesh(VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -20.0));
-        mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 20.0));
+        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -20.0));
+        mesh->create_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 20.0));
 
         camera->transform->look_at(smlt::Vec3(0, 0, -1)); // Looking up -Z
 

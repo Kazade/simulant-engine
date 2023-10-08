@@ -31,7 +31,7 @@ Widget::~Widget() {
 MaterialPtr Widget::find_or_create_material(const char* name) {
     auto material = scene->assets->find_material(name);
     if(!material) {
-        material = scene->assets->new_material_from_file(
+        material = scene->assets->load_material(
             Material::BuiltIns::TEXTURE_ONLY
         );
         material->set_name(name);
@@ -103,7 +103,7 @@ bool Widget::on_create(void* params) {
     spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
     spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
 
-    mesh_ = scene->assets->new_mesh(spec);
+    mesh_ = scene->assets->create_mesh(spec);
     actor_ = scene->create_node<Actor>(mesh_);
     actor_->set_parent(this);
 
@@ -113,10 +113,10 @@ bool Widget::on_create(void* params) {
     style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = find_or_create_material(GLOBAL_FOREGROUND_NAME);
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     rebuild();
 
@@ -766,7 +766,7 @@ FontPtr Widget::_load_or_get_font(AssetManager *assets, AssetManager *shared_ass
     flags.weight = weight;
     flags.style = style;
 
-    fnt = assets->new_font_from_family(family, flags);
+    fnt = assets->create_font_from_family(family, flags);
     if(fnt) {
         fnt->set_name(alias);
     }

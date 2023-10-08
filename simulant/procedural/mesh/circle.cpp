@@ -27,7 +27,7 @@ namespace mesh {
 SubMesh* circle(smlt::MeshPtr mesh, smlt::MaterialPtr mat, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMesh* submesh = mesh->new_submesh(
+    SubMesh* submesh = mesh->create_submesh(
         "circle",
         mat,
         MESH_ARRANGEMENT_TRIANGLE_FAN
@@ -74,7 +74,7 @@ SubMesh* circle(smlt::MeshPtr mesh, smlt::MaterialPtr mat, float diameter, int32
 SubMesh* circle_outline(smlt::MeshPtr mesh, smlt::MaterialPtr mat, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMesh* submesh = mesh->new_submesh("circle_outline", mat, MESH_ARRANGEMENT_LINE_STRIP);
+    SubMesh* submesh = mesh->create_submesh("circle_outline", mat, MESH_ARRANGEMENT_LINE_STRIP);
 
     auto offset = mesh->vertex_data->count();
 

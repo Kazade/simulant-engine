@@ -171,7 +171,7 @@ public:
      * @param arrangement
      * @return
      */
-    SubMeshPtr new_submesh(
+    SubMeshPtr create_submesh(
         const std::string& name,
         MaterialPtr material,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
@@ -185,7 +185,7 @@ public:
      * @param arrangement
      * @return
      */
-    SubMeshPtr new_submesh(
+    SubMeshPtr create_submesh(
         const std::string& name,
         MaterialPtr material,
         IndexType index_type,
@@ -200,14 +200,14 @@ public:
      * @param arrangement
      * @return
      */
-    SubMeshPtr new_submesh(
+    SubMeshPtr create_submesh(
         const std::string& name,
         MaterialPtr material,
         IndexDataPtr index_data,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
     );
 
-    SubMeshPtr new_submesh_as_capsule(
+    SubMeshPtr create_submesh_as_capsule(
         const std::string& name,
         MaterialPtr material,
         float diameter,
@@ -217,20 +217,20 @@ public:
         std::size_t ring_count
     );
 
-    SubMeshPtr new_submesh_as_sphere(const std::string& name,
+    SubMeshPtr create_submesh_as_sphere(const std::string& name,
         MaterialPtr material,
         float diameter,
         std::size_t slices,
         std::size_t stacks
     );
 
-    SubMeshPtr new_submesh_as_icosphere(const std::string& name,
+    SubMeshPtr create_submesh_as_icosphere(const std::string& name,
         MaterialPtr material,
         float diameter,
         uint32_t subdivisions
     );
 
-    SubMeshPtr new_submesh_as_rectangle(
+    SubMeshPtr create_submesh_as_rectangle(
         const std::string& name,
         MaterialPtr material,
         float width,
@@ -238,13 +238,13 @@ public:
         const Vec3& offset=Vec3()
     );
 
-    SubMeshPtr new_submesh_as_cube(
+    SubMeshPtr create_submesh_as_cube(
         const std::string& name,
         MaterialPtr material,
         float size
     );
 
-    SubMeshPtr new_submesh_as_box(
+    SubMeshPtr create_submesh_as_box(
         const std::string& name,
         MaterialPtr material,
         float width,

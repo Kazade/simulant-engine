@@ -26,8 +26,8 @@ public:
         window->compositor->render(scene, camera_);
 
         // A bug was reported that this caused a crash (see #219)
-        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_cube("cube", scene->assets->new_material(), 50.0f);
+        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_cube("cube", scene->assets->create_material(), 50.0f);
 
         auto actor = scene->create_child<smlt::Actor>(mesh);
         actor->transform->set_translation(Vec3(0, 0, 0));

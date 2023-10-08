@@ -10,7 +10,7 @@ using namespace smlt;
 class BinaryTests : public smlt::test::SimulantTestCase {
 public:
     void test_loading_binaries() {
-        auto bin = application->shared_assets->new_binary_from_file("textures/4444_vq.dtex");
+        auto bin = application->shared_assets->load_binary("textures/4444_vq.dtex");
         assert_true(bin);
         assert_true(bin->data_size_in_bytes());
 

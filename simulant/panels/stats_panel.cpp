@@ -81,10 +81,10 @@ bool StatsPanel::on_init() {
     polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    graph_material_ = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    graph_material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
-    ram_graph_mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+    ram_graph_mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
     ram_graph_ = scene->create_node<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
 
@@ -162,7 +162,7 @@ void StatsPanel::rebuild_ram_graph() {
         return;
     }
 
-    auto submesh = ram_graph_mesh_->new_submesh("ram-usage", graph_material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
+    auto submesh = ram_graph_mesh_->create_submesh("ram-usage", graph_material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
     auto& vdata = ram_graph_mesh_->vertex_data;
     auto& idata = submesh->index_data;
 

@@ -23,8 +23,8 @@ public:
         vbo_manager_ = VBOManager::create();
         stage_ = scene->create_child<smlt::Stage>();
 
-        mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh_->new_submesh_as_cube("cube", scene->assets->new_material(), 1.0f);
+        mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh_->create_submesh_as_cube("cube", scene->assets->create_material(), 1.0f);
 
         camera_ = scene->create_child<smlt::Camera>();
     }
@@ -35,8 +35,8 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh2->new_submesh_as_cube("cube", scene->assets->new_material(), 1.0f);
+        auto mesh2 = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh2->create_submesh_as_cube("cube", scene->assets->create_material(), 1.0f);
 
         auto ret3 = vbo_manager_->allocate_slot(mesh2->vertex_data);
         assert_equal(ret1.first, ret3.first);
@@ -60,8 +60,8 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh2->new_submesh_as_cube("cube", scene->assets->new_material(), 1.0f);
+        auto mesh2 = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh2->create_submesh_as_cube("cube", scene->assets->create_material(), 1.0f);
 
         auto ret3 = vbo_manager_->allocate_slot(mesh2->first_submesh()->index_data);
         assert_equal(ret1.first, ret3.first);
@@ -85,7 +85,7 @@ public:
         assert_equal(vbo->used_slot_count(), 1u);
         assert_equal(vbo->free_slot_count(), (VBO_SIZE / vbo->slot_size_in_bytes()) - 1);
 
-        auto mesh2 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto mesh2 = scene->assets->create_mesh(VertexSpecification::DEFAULT);
 
         /* 50000 verts should tip over 512k always */
         for(auto i = 0; i < 50000; ++i) {

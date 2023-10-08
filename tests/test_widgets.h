@@ -34,8 +34,8 @@ public:
         auto mc = scene->assets->material_count();
 
         auto label = scene->create_child<ui::Label>("This is\na\nnew\nline");
-        label->set_background_image(scene->assets->new_texture(16, 16));
-        label->set_foreground_image(scene->assets->new_texture(16, 16));
+        label->set_background_image(scene->assets->create_texture(16, 16));
+        label->set_foreground_image(scene->assets->create_texture(16, 16));
         assert_equal(scene->assets->material_count(), mc + 2);  /* background, foreground */
 
         label->destroy();
@@ -47,8 +47,8 @@ public:
     void test_foreground_and_background_images_differ() {
         auto button = scene->create_child<ui::Button>("Button", ui::Px(100), ui::Px(20));
 
-        auto t1 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
-        auto t2 = scene->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+        auto t1 = scene->assets->create_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+        auto t2 = scene->assets->create_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
 
         button->set_foreground_image(t1);
         button->set_background_image(t2);
@@ -188,7 +188,7 @@ public:
     }
 
     void test_image_creation() {
-        auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
+        auto texture = scene->assets->load_texture("simulant-icon.png");
         auto image = scene->create_child<ui::Image>(texture);
 
         assert_equal(image->width(), texture->width());
@@ -199,7 +199,7 @@ public:
     }
 
     void test_set_source_rect() {
-        auto texture = scene->assets->new_texture_from_file("simulant-icon.png");
+        auto texture = scene->assets->load_texture("simulant-icon.png");
         auto image = scene->create_child<ui::Image>(texture);
 
         image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));

@@ -12,8 +12,8 @@ using namespace smlt;
 class MeshSilhouetteTests : public smlt::test::SimulantTestCase {
 public:
     void test_directional_silhouette_generation() {
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_rectangle("rect", application->shared_assets->create_material(), 1.0, 1.0f);
 
         auto light = scene->create_child<DirectionalLight>();
         light->transform->set_translation(Vec3(0, 0, -10));
@@ -23,8 +23,8 @@ public:
     }
 
     void test_point_silhouette_generation() {
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_rectangle("rect", application->shared_assets->create_material(), 1.0, 1.0f);
 
         auto light = scene->create_child<PointLight>();
         light->transform->set_translation(Vec3(0, 0, -10));
@@ -34,8 +34,8 @@ public:
     }
 
     void test_out_of_range_generates_none() {
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_rectangle("rect", application->shared_assets->new_material(), 1.0, 1.0f);
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_rectangle("rect", application->shared_assets->create_material(), 1.0, 1.0f);
 
         auto light = scene->create_child<PointLight>();
         light->transform->set_translation(Vec3(0, 0, -10));

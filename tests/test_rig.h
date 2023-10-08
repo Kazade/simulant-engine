@@ -20,7 +20,7 @@ public:
     }
 
     void test_actor_is_rigged() {
-        auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(VertexSpecification::DEFAULT);
         auto a1 = scene->create_child<Actor>(m);
 
         assert_false(a1->is_rigged());
@@ -30,7 +30,7 @@ public:
         assert_true(m->has_skeleton());
         assert_true(a1->is_rigged());
 
-        auto m2 = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m2 = scene->assets->create_mesh(VertexSpecification::DEFAULT);
 
         a1->set_mesh(m2);
 
@@ -39,7 +39,7 @@ public:
     }
 
     void test_rig_joint_count() {
-        auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(VertexSpecification::DEFAULT);
         m->add_skeleton(5);
 
         auto a1 = scene->create_child<Actor>(m);

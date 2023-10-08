@@ -14,7 +14,7 @@ public:
         smlt::test::SimulantTestCase::set_up();
 
         stage_ = scene->create_child<smlt::Stage>();
-        mesh_ = scene->assets->new_mesh_as_cube_with_submesh_per_face(1.0f);
+        mesh_ = scene->assets->create_mesh_as_cube_with_submesh_per_face(1.0f);
     }
 
     void test_mesh_instancer_creation() {
@@ -50,7 +50,7 @@ public:
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
         assert_true(instancer->aabb().has_zero_area());
 
-        instancer->new_mesh_instance(smlt::Vec3());
+        instancer->create_mesh_instance(smlt::Vec3());
 
         assert_false(instancer->aabb().has_zero_area());
 
@@ -71,13 +71,13 @@ public:
         /* Nothing there yet! */
         assert_equal(queue.renderable_count(), 0u);
 
-        instancer->new_mesh_instance(smlt::Vec3());
+        instancer->create_mesh_instance(smlt::Vec3());
         instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         assert_equal(queue.renderable_count(), mesh_->submesh_count());
         queue.clear();
 
-        instancer->new_mesh_instance(smlt::Vec3(100));
+        instancer->create_mesh_instance(smlt::Vec3(100));
         instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         assert_equal(queue.renderable_count(), mesh_->submesh_count() * 2);
@@ -97,7 +97,7 @@ public:
         /* Nothing there yet! */
         assert_equal(queue.renderable_count(), 0u);
 
-        auto iid = instancer->new_mesh_instance(smlt::Vec3());
+        auto iid = instancer->create_mesh_instance(smlt::Vec3());
         instancer->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
 
         assert_equal(queue.renderable_count(), mesh_->submesh_count());
@@ -113,12 +113,12 @@ public:
 
     void test_set_mesh_changes_aabb() {
         /* Create a bigger cube */
-        auto mesh2 = scene->assets->new_mesh_as_cube_with_submesh_per_face(2.0f);
+        auto mesh2 = scene->assets->create_mesh_as_cube_with_submesh_per_face(2.0f);
 
         assert_not_equal(mesh_->aabb(), mesh2->aabb());
 
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
-        instancer->new_mesh_instance(Vec3());
+        instancer->create_mesh_instance(Vec3());
 
         assert_equal(instancer->aabb(), mesh_->aabb());
 
@@ -130,7 +130,7 @@ public:
     void test_null_mesh_returns_no_renderables() {
         Viewport viewport;
         auto instancer = scene->create_child<MeshInstancer>(nullptr);
-        instancer->new_mesh_instance(Vec3());
+        instancer->create_mesh_instance(Vec3());
 
         auto camera = scene->create_child<smlt::Camera>();
         batcher::RenderQueue queue;
@@ -142,9 +142,9 @@ public:
 
     void test_mesh_instance_id_different() {
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
-        auto iid1 = instancer->new_mesh_instance(Vec3());
-        auto iid2 = instancer->new_mesh_instance(Vec3());
-        auto iid3 = instancer->new_mesh_instance(Vec3());
+        auto iid1 = instancer->create_mesh_instance(Vec3());
+        auto iid2 = instancer->create_mesh_instance(Vec3());
+        auto iid3 = instancer->create_mesh_instance(Vec3());
 
         assert_true(iid1);
         assert_true(iid2);
@@ -158,7 +158,7 @@ public:
     void test_transform_is_relative() {
         Viewport viewport;
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
-        instancer->new_mesh_instance(Vec3());
+        instancer->create_mesh_instance(Vec3());
         assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(0, 0, 0));
 
         instancer->transform->set_translation(Vec3(10, 0, 0));

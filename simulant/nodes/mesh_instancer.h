@@ -65,7 +65,7 @@ public:
      *  Returns a new non-zero MeshInstanceID on success. Returns
      *  0 on failure.
      */
-    MeshInstanceID new_mesh_instance(
+    MeshInstanceID create_mesh_instance(
         const smlt::Vec3& position,
         const smlt::Quaternion& rotation=smlt::Quaternion()
     );

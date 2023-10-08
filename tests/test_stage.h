@@ -22,7 +22,7 @@ public:
             destroyed_ids.insert(node->id());
         });
 
-        auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         auto a1 = scene->create_child<smlt::Actor>(m);
         auto a2 = scene->create_child<smlt::Actor>(m);
         a2->set_parent(a1);
@@ -78,7 +78,7 @@ public:
           destroyed_ids.insert(dynamic_cast<ParticleSystem*>(node)->id());
         });
 
-        auto script = scene->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);
+        auto script = scene->assets->load_particle_script(ParticleScript::BuiltIns::FIRE);
         auto a1 = scene->create_child<smlt::ParticleSystem>(script);
 
         auto a2 = scene->create_child<smlt::ParticleSystem>(script);
@@ -99,7 +99,7 @@ public:
     }
 
     void test_stage_node_clean_up_signals() {
-        auto m = scene->assets->new_mesh(VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(VertexSpecification::DEFAULT);
         auto actor = scene->create_child<smlt::Actor>(m);
 
         bool cleaned_up = false;

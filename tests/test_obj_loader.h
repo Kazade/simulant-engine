@@ -13,14 +13,14 @@ class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_loading_without_texture_coords() {
         //Shouldn't throw
-        application->shared_assets->new_mesh_from_file("cube.obj");
+        application->shared_assets->load_mesh("cube.obj");
     }
 
     void test_culling_method_applied() {
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        auto m = application->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
+        auto m = application->shared_assets->load_mesh("cube.obj", VertexSpecification::DEFAULT, opts);
 
         assert_equal(m->submesh_count(), 1u);
         assert_true(m->first_submesh()->material());
@@ -43,7 +43,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
@@ -77,7 +77,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
@@ -111,7 +111,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh_from_file(
+        auto mesh = application->shared_assets->load_mesh(
             "cube.obj",
             smlt::VertexSpecification::POSITION_ONLY
         );

@@ -125,7 +125,7 @@ namespace loaders {
         // Dreamcast needs 16bpp, so we bake the font bitmap here
         // temporarily and then generate a RGBA texture from it
 
-        auto tmp_texture = font->asset_manager().new_texture(
+        auto tmp_texture = font->asset_manager().create_texture(
             width,
             width,
             TEXTURE_FORMAT_R_1UB_8
@@ -152,7 +152,7 @@ namespace loaders {
         const uint8_t* tmp_buffer = tmp_texture->data();
 
         // Generate a new texture for rendering the font to
-        auto texture = font->texture_ = font->asset_manager().new_texture(
+        auto texture = font->texture_ = font->asset_manager().create_texture(
             width,
             width,
             TEXTURE_FORMAT_RGBA8_PALETTED4
@@ -188,7 +188,7 @@ namespace loaders {
 
         texture->flush();
 
-        font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+        font->material_ = font->asset_manager().load_material(Material::BuiltIns::TEXTURE_ONLY);
         font->material_->set_diffuse_map(font->texture_);
 
         font->material_->set_blend_func(BLEND_ALPHA);

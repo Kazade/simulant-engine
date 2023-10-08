@@ -51,7 +51,7 @@ public:
     }
 
     void test_global_output() {
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
         auto playing = application->sound_driver->play_sound(sound);
         assert_true(playing->is_playing());
         while(playing->is_playing()) {
@@ -60,7 +60,7 @@ public:
     }
 
     void test_2d_sound_output() {
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
 
         auto actor = scene->create_child<smlt::Stage>();
 
@@ -78,7 +78,7 @@ public:
     void test_played_signal() {
         bool played = false;
 
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
 
         auto actor = scene->create_child<smlt::Stage>();
 
@@ -104,7 +104,7 @@ public:
     }
 
     void test_3d_sound_output() {
-        smlt::SoundPtr sound = scene->assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = scene->assets->load_sound("test_sound.ogg");
 
         auto actor = scene->create_child<smlt::Stage>();
         actor->transform->set_translation(smlt::Vec3(10, 0, 0));
@@ -122,7 +122,7 @@ public:
     }
 
     void test_sound_destruction_stops_play() {
-        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->load_sound("test_sound.ogg");
 
         auto sid = sound->id();
 
@@ -146,7 +146,7 @@ public:
     }
 
     void test_sound_stopping() {
-        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->load_sound("test_sound.ogg");
         auto a = scene->create_child<smlt::Stage>();
         smlt::PlayingSoundPtr s = a->play_sound(sound);
 

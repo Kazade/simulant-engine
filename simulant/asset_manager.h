@@ -85,7 +85,7 @@ struct SoundFlags {
  *
  * TEMPLATE="""
     // %(klass)s API
-    %(klass)sPtr new_%(name)s_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    %(klass)sPtr load_%(name)s(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_%(name)s(%(klass)sID id);
     %(klass)sPtr %(name)s(%(klass)sID id);
     const %(klass)sPtr %(name)s (%(klass)sID id) const;
@@ -113,7 +113,7 @@ public:
     // Generated API
 
     /* ParticleScript API */
-    ParticleScriptPtr new_particle_script_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    ParticleScriptPtr load_particle_script(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_particle_script(AssetID id);
     ParticleScriptPtr particle_script(AssetID id);
     const ParticleScriptPtr particle_script (AssetID id) const;
@@ -122,7 +122,7 @@ public:
     ParticleScriptPtr find_particle_script(const std::string& name);
 
     /* Texture API */
-    TexturePtr new_texture_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr load_texture(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_texture(AssetID id);
     TexturePtr texture(AssetID id);
     const TexturePtr texture (AssetID id) const;
@@ -141,7 +141,7 @@ public:
 
 
     /* Material API */
-    MaterialPtr new_material_from_file(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr load_material(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_material(const AssetID& id);
     MaterialPtr material(const AssetID& id);
     const MaterialPtr material (const AssetID& id) const;
@@ -150,7 +150,7 @@ public:
     MaterialPtr find_material(const std::string& name);
 
     /* Sound API */
-    SoundPtr new_sound_from_file(
+    SoundPtr load_sound(
         const Path& filename,
         const SoundFlags& flags=SoundFlags(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
@@ -163,7 +163,7 @@ public:
     SoundPtr find_sound(const std::string& name);
 
     /* Load raw binary data from a file */
-    BinaryPtr new_binary_from_file(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    BinaryPtr load_binary(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     BinaryPtr binary(AssetID id) const;
     std::size_t binary_count() const;
     bool has_binary(AssetID id) const;
@@ -186,8 +186,8 @@ public:
      * $path/fonts/$filename
      * $path/fonts/family/$filename
      */
-    FontPtr new_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr new_font_from_file(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr create_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr load_font(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(AssetID id);
     FontPtr font(AssetID id);
     const FontPtr font (AssetID id) const;
@@ -196,32 +196,32 @@ public:
     FontPtr find_font(const std::string& alias);
 
     // Customisations
-    TexturePtr new_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TexturePtr new_texture_from_file(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr create_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr load_texture(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    MaterialPtr new_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr create_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    MeshPtr new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr new_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr new_mesh_from_file(const Path& path, const VertexSpecification& desired_specification=VertexSpecification::DEFAULT, const MeshLoadOptions& options=MeshLoadOptions(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr load_mesh(const Path& path, const VertexSpecification& desired_specification=VertexSpecification::DEFAULT, const MeshLoadOptions& options=MeshLoadOptions(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     /*
      * Given a submesh, this creates a new mesh with just that single submesh
      */
-    MeshPtr new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
-    MeshPtr new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
+    MeshPtr create_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
 
-    MeshPtr new_mesh_from_heightmap(
+    MeshPtr create_mesh_from_heightmap(
         const TexturePtr& texture,
         const HeightmapSpecification& spec=HeightmapSpecification(),
         GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
     );
 
-    MeshPtr new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialPtr new_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr create_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
 
     void update(float dt);
 

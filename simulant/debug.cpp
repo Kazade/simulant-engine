@@ -156,25 +156,25 @@ void Debug::initialize_actor() {
 }
 
 bool Debug::on_init() {
-    mesh_ = scene->assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+    mesh_ = scene->assets->create_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
-    material_ = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
     material_->set_cull_mode(CULL_MODE_NONE);
 
     // Never write to the depth buffer with debug stuff
     material_->set_depth_write_enabled(false);
 
-    material_no_depth_ = scene->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    material_no_depth_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
     material_no_depth_->set_depth_write_enabled(false);
     material_no_depth_->set_depth_test_enabled(false);
     material_no_depth_->set_cull_mode(CULL_MODE_NONE);
 
-    lines_with_depth_ = mesh_->new_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    lines_without_depth_ = mesh_->new_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    points_with_depth_ = mesh_->new_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
-    points_without_depth_ = mesh_->new_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    lines_with_depth_ = mesh_->create_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    lines_without_depth_ = mesh_->create_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    points_with_depth_ = mesh_->create_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    points_without_depth_ = mesh_->create_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     return true;
 }

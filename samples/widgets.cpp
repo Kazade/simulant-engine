@@ -53,14 +53,14 @@ public:
         smlt::FontFlags flags;
         flags.blur_radius = 1;
         flags.size = 32;
-        auto blurred_font = assets->new_font_from_file("fonts/Orbitron/Orbitron-Regular.ttf", flags);
+        auto blurred_font = assets->load_font("fonts/Orbitron/Orbitron-Regular.ttf", flags);
 
         auto big_label = create_node<smlt::ui::Label>("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font(blurred_font);
         frame->pack_child(big_label);
 
-        auto simulant_logo = assets->new_texture_from_file("textures/simulant-icon.png");
+        auto simulant_logo = assets->load_texture("textures/simulant-icon.png");
         auto icon = create_node<smlt::ui::Image>(simulant_logo);
         icon->set_anchor_point(1, 1);
         icon->transform->set_position_2d(

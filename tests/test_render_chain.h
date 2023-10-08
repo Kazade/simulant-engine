@@ -15,7 +15,7 @@ public:
         Viewport view;
         auto stage = scene->create_child<smlt::Stage>();
         auto cam = scene->create_child<smlt::Camera>();
-        auto tex = application->shared_assets->new_texture(256, 256);
+        auto tex = application->shared_assets->create_texture(256, 256);
 
         PipelinePtr pipeline1 = window->compositor->render(stage, cam);
         PipelinePtr pipeline2 = window->compositor->render(stage, cam)->set_target(tex);

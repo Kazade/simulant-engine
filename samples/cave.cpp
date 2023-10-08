@@ -29,9 +29,9 @@ public:
 #endif
 
         // Meshes
-        cave_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/cave.obj", VertexSpecification::DEFAULT, opts);
-        godray_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/godray.obj", VertexSpecification::DEFAULT, opts);
-        fairy_mesh_ = app->shared_assets->new_mesh_from_file("sample_data/cave/fairy.obj", VertexSpecification::DEFAULT, opts);
+        cave_mesh_ = app->shared_assets->load_mesh("sample_data/cave/cave.obj", VertexSpecification::DEFAULT, opts);
+        godray_mesh_ = app->shared_assets->load_mesh("sample_data/cave/godray.obj", VertexSpecification::DEFAULT, opts);
+        fairy_mesh_ = app->shared_assets->load_mesh("sample_data/cave/fairy.obj", VertexSpecification::DEFAULT, opts);
 
         // Materials + Textures
         for(auto submesh : cave_mesh_->each_submesh())

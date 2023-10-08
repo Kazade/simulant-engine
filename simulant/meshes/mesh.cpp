@@ -176,19 +176,19 @@ const AABB &Mesh::aabb() const {
     return aabb_;
 }
 
-SubMesh* Mesh::new_submesh(
+SubMesh* Mesh::create_submesh(
     const std::string& name,
     MaterialPtr material,
     IndexType index_type,
     MeshArrangement arrangement) {
 
-    return new_submesh(
+    return create_submesh(
         name, material,
         std::make_shared<IndexData>(index_type), arrangement
     );
 }
 
-SubMesh* Mesh::new_submesh(
+SubMesh* Mesh::create_submesh(
     const std::string& name,
     MaterialPtr material,
     IndexDataPtr index_data,
@@ -200,17 +200,17 @@ SubMesh* Mesh::new_submesh(
 
     assert(material);
 
-    auto new_submesh = SubMesh::create(
+    auto create_submesh = SubMesh::create(
         this, name, material, index_data, arrangement
     );
-    submeshes_.push_back(new_submesh);
+    submeshes_.push_back(create_submesh);
 
-    signal_submesh_created_(id(), new_submesh.get());
+    signal_submesh_created_(id(), create_submesh.get());
 
-    return new_submesh.get();
+    return create_submesh.get();
 }
 
-SubMesh* Mesh::new_submesh(
+SubMesh* Mesh::create_submesh(
     const std::string& name,
     MaterialPtr material,
     MeshArrangement arrangement) {
@@ -221,32 +221,32 @@ SubMesh* Mesh::new_submesh(
 
     assert(material);
 
-    auto new_submesh = SubMesh::create(
+    auto create_submesh = SubMesh::create(
         this, name, material, arrangement
     );
-    submeshes_.push_back(new_submesh);
+    submeshes_.push_back(create_submesh);
 
-    signal_submesh_created_(id(), new_submesh.get());
+    signal_submesh_created_(id(), create_submesh.get());
 
-    return new_submesh.get();
+    return create_submesh.get();
 }
 
-SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
+SubMeshPtr Mesh::create_submesh_as_sphere(const std::string& name,
     MaterialPtr material, float diameter, std::size_t slices, std::size_t stacks) {
 
-    SubMesh* sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    SubMesh* sm = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::sphere(sm, diameter, slices, stacks);
 
     return sm;
 }
 
-SubMeshPtr Mesh::new_submesh_as_capsule(
+SubMeshPtr Mesh::create_submesh_as_capsule(
     const std::string& name,
     MaterialPtr material, float diameter, float length,
     std::size_t segment_count, std::size_t vertical_segment_count, std::size_t ring_count) {
 
-    SubMesh* submesh = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    SubMesh* submesh = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     float radius = diameter * 0.5f;
 
@@ -393,24 +393,24 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
     return submesh;
 }
 
-SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialPtr material, float diameter, uint32_t subdivisions) {
-    SubMeshPtr sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+SubMeshPtr Mesh::create_submesh_as_icosphere(const std::string& name, MaterialPtr material, float diameter, uint32_t subdivisions) {
+    SubMeshPtr sm = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::icosphere(sm, diameter, subdivisions);
 
     return sm;
 }
 
-SubMeshPtr Mesh::new_submesh_as_cube(const std::string& name, MaterialPtr material, float size) {
-    return new_submesh_as_box(name, material, size, size, size);
+SubMeshPtr Mesh::create_submesh_as_cube(const std::string& name, MaterialPtr material, float size) {
+    return create_submesh_as_box(name, material, size, size, size);
 }
 
 bool Mesh::has_submesh(const std::string& name) const {
     return bool(find_submesh(name));
 }
 
-SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialPtr material, float width, float height, float depth, const Vec3& offset) {
-    SubMesh* sm = new_submesh(
+SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr material, float width, float height, float depth, const Vec3& offset) {
+    SubMesh* sm = create_submesh(
         name,
         material, INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
@@ -576,8 +576,8 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialPtr material,
     return sm;
 }
 
-SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialPtr material, float width, float height, const smlt::Vec3& offset) {
-    SubMesh* sm = new_submesh(
+SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr material, float width, float height, const smlt::Vec3& offset) {
+    SubMesh* sm = create_submesh(
         name,
         material, INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES

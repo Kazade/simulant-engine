@@ -277,10 +277,10 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     flags.auto_upload = false;
     flags.filter = TEXTURE_FILTER_BILINEAR;
 
-    font->texture_ = font->asset_manager().new_texture_from_file(texture_path, flags);
+    font->texture_ = font->asset_manager().load_texture(texture_path, flags);
     assert(font->texture_);
 
-    font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+    font->material_ = font->asset_manager().load_material(Material::BuiltIns::TEXTURE_ONLY);
     font->material_->set_diffuse_map(font->texture_);
     font->material_->set_cull_mode(CULL_MODE_NONE);
     font->material_->set_depth_test_enabled(false);

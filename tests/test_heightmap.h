@@ -13,12 +13,12 @@ public:
         auto stage = scene->create_child<smlt::Stage>();
 
         /* Invalid path should return NULL */
-        auto test1 = scene->assets->new_mesh_from_heightmap("junk_path", HeightmapSpecification());
+        auto test1 = scene->assets->create_mesh_from_heightmap("junk_path", HeightmapSpecification());
         assert_false(test1);
 
         auto path = "flare.tga";
-        auto tex = scene->assets->new_texture_from_file(path);
-        auto heightmap = scene->assets->new_mesh_from_heightmap(path, HeightmapSpecification());
+        auto tex = scene->assets->load_texture(path);
+        auto heightmap = scene->assets->create_mesh_from_heightmap(path, HeightmapSpecification());
 
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").x_size, tex->width());
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").z_size, tex->height());
@@ -34,10 +34,10 @@ public:
         HeightmapSpecification spec;
         spec.spacing = 75;
 
-        auto tex = scene->assets->new_texture(64, 64, TEXTURE_FORMAT_R_1UB_8);
+        auto tex = scene->assets->create_texture(64, 64, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
         tex->set_data(heightmap_data);
-        auto mesh = scene->assets->new_mesh_from_heightmap(tex, spec);
+        auto mesh = scene->assets->create_mesh_from_heightmap(tex, spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
         assert_equal(data.x_size, 64u);
@@ -60,10 +60,10 @@ public:
 
         auto stage = scene->create_child<smlt::Stage>();
 
-        auto tex = scene->assets->new_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
+        auto tex = scene->assets->create_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
         tex->set_data(heightmap_data, sizeof(heightmap_data));
-        auto mesh = scene->assets->new_mesh_from_heightmap(tex, spec);
+        auto mesh = scene->assets->create_mesh_from_heightmap(tex, spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
         assert_equal(data.x_size, 4u);
@@ -113,10 +113,10 @@ public:
 
         auto stage = scene->create_child<smlt::Stage>();
 
-        auto tex = scene->assets->new_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
+        auto tex = scene->assets->create_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
         tex->set_data(heightmap_data, sizeof(heightmap_data));
-        auto mesh = scene->assets->new_mesh_from_heightmap(tex, spec);
+        auto mesh = scene->assets->create_mesh_from_heightmap(tex, spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
 

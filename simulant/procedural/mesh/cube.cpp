@@ -43,14 +43,14 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
     std::vector<SubMesh*> submeshes;
     submeshes.resize(6);
 
-    auto mat = mesh->asset_manager().new_material();
+    auto mat = mesh->asset_manager().create_material();
 
     if(style == MESH_STYLE_SUBMESH_PER_FACE) {
         for(uint8_t i = 0; i < 6; ++i) {
-            submeshes[i] = mesh->new_submesh(SUBMESH_NAMES.at(i), mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+            submeshes[i] = mesh->create_submesh(SUBMESH_NAMES.at(i), mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
         }
     } else {
-        SubMesh* sm = mesh->new_submesh("box", mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+        SubMesh* sm = mesh->create_submesh("box", mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
         for(uint8_t i = 0; i < 6; ++i) {
             submeshes[i] = sm;

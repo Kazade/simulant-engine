@@ -12,8 +12,8 @@ public:
         smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Color::RED);
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Color::GREEN);
 
-        auto cube = assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        cube->new_submesh_as_cube("cube", assets->new_material(), 1.0);
+        auto cube = assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        cube->create_submesh_as_cube("cube", assets->create_material(), 1.0);
         smlt::ActorPtr actor = create_node<smlt::Actor>(cube);
 
         actor->transform->set_position(smlt::Vec3(0, 0, -5));

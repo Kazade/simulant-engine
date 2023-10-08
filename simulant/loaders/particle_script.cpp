@@ -189,7 +189,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
             material = Material::BUILT_IN_NAMES.at(material);
         }
 
-        auto mat = ps->asset_manager().new_material_from_file(material);
+        auto mat = ps->asset_manager().load_material(material);
         ps->set_material(mat);
 
         /* Apply any specified material properties */
@@ -215,7 +215,7 @@ void ParticleScriptLoader::into(Loadable &resource, const LoaderOptions &options
                         auto dirname = kfs::path::dir_name(filename_.str());
                         /* Add the local directory for image lookups */
                         auto remove = vfs->add_search_path(dirname);
-                        auto tex = ps->asset_manager().new_texture_from_file(js[key]->to_str().value());
+                        auto tex = ps->asset_manager().load_texture(js[key]->to_str().value());
                         mat->set_property_value(property_name.c_str(), tex);
                         if(remove) {
                             // Remove the path if necessary

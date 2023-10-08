@@ -43,7 +43,7 @@ public:
     }
 
     void test_ancestor_lookups() {
-        auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         auto b = scene->create_child<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->parent.get());
@@ -56,7 +56,7 @@ public:
     }
 
     void test_descendent_lookups() {
-        auto m = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         auto camera = scene->create_child<smlt::Camera>();
 
         auto b = scene->create_child<NodeWithLookups>();

@@ -12,7 +12,7 @@ using namespace smlt;
 class TextureTests : public smlt::test::SimulantTestCase {
 public:
     void test_flush() {
-        auto tex = application->shared_assets->new_texture(
+        auto tex = application->shared_assets->create_texture(
             8, 8,
             TEXTURE_FORMAT_RGB_3UB_888
         );
@@ -28,7 +28,7 @@ public:
     }
 
     void test_blur() {
-        TexturePtr tex = application->shared_assets->new_texture(3, 3, smlt::TEXTURE_FORMAT_R_1UB_8);
+        TexturePtr tex = application->shared_assets->create_texture(3, 3, smlt::TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
 
         auto data = tex->data_copy();
@@ -49,7 +49,7 @@ public:
     }
 
     void test_transaction_api() {
-        TexturePtr tex = application->shared_assets->new_texture(8, 8);
+        TexturePtr tex = application->shared_assets->create_texture(8, 8);
 
         application->run_frame();
         assert_false(tex->_data_dirty());
@@ -62,7 +62,7 @@ public:
     }
 
     void test_conversion_from_r8_to_rgba4444() {
-        auto tex = application->shared_assets->new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
+        auto tex = application->shared_assets->create_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
 
         auto data = tex->data_copy();
         data[0] = 255;
@@ -98,7 +98,7 @@ public:
     void test_paletted_textures() {
         skip_if(get_platform()->name() == "dreamcast", "Dreamcast doesn't support tex width < 8");
 
-        auto tex = application->shared_assets->new_texture(2, 2, TEXTURE_FORMAT_RGB565_PALETTED4);
+        auto tex = application->shared_assets->create_texture(2, 2, TEXTURE_FORMAT_RGB565_PALETTED4);
 
         assert_true(tex->is_paletted_format());
         assert_equal(tex->data_size(), ((tex->width() * tex->height()) / 2) + tex->palette_size());

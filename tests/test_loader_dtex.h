@@ -14,7 +14,7 @@ class DTEXLoaderTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_1555_vq() {
-        auto tex = application->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->load_texture(
             "textures/1555_vq.dtex"
         );
 
@@ -37,7 +37,7 @@ public:
     }
 
     void test_4444_vq() {
-        auto tex = application->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->load_texture(
             "textures/4444_vq.dtex"
         );
 
@@ -60,7 +60,7 @@ public:
     }
 
     void test_565_vq() {
-        auto tex = application->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->load_texture(
             "textures/565_vq.dtex"
         );
 
@@ -83,7 +83,7 @@ public:
     }
 
     void test_1555() {
-        auto tex = application->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->load_texture(
             "textures/1555.dtex"
         );
 
@@ -106,7 +106,7 @@ public:
     }
 
     void test_4444() {
-        auto tex = application->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->load_texture(
             "textures/4444.dtex"
         );
 
@@ -130,7 +130,7 @@ public:
     }
 
     void test_565() {
-        auto tex = application->shared_assets->new_texture_from_file(
+        auto tex = application->shared_assets->load_texture(
             "textures/565.dtex"
         );
 

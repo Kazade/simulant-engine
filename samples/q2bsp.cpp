@@ -19,7 +19,7 @@ public:
 
         app->vfs->add_search_path("sample_data/quake2/textures");
 
-        auto mesh = assets->new_mesh_from_file("sample_data/quake2/maps/demo1.bsp");
+        auto mesh = assets->load_mesh("sample_data/quake2/maps/demo1.bsp");
         create_node<smlt::Geom>(mesh);
 
         cr_yield();

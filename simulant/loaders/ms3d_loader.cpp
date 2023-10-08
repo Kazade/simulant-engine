@@ -333,7 +333,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     for(auto& group: groups) {
         auto& material = materials[group.material_index];
-        smlt::MaterialPtr mat = assets->new_material();
+        smlt::MaterialPtr mat = assets->create_material();
 
         mat->set_ambient(material.ambient);
         mat->set_diffuse(material.diffuse);
@@ -350,7 +350,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         auto tex = (loaded_textures.count(texname)) ?
             loaded_textures[texname] :
-            assets->new_texture_from_file(texname);
+            assets->load_texture(texname);
 
         if(!tex) {
             /* Sometimes MS3D files use absolute paths which is no good
@@ -358,7 +358,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
              * current directory */
             std::replace(texname.begin(), texname.end(), '\\', kfs::SEP[0]);
             Path filename = kfs::path::split(texname).second;
-            tex = assets->new_texture_from_file(filename);
+            tex = assets->load_texture(filename);
         }
 
         if(tex) {
@@ -376,7 +376,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             sm = mesh->find_submesh(material.name);
         } else {
             /* Otherwise we create a new one for this material */
-            sm = mesh->new_submesh(material.name, mat, INDEX_TYPE_16_BIT);
+            sm = mesh->create_submesh(material.name, mat, INDEX_TYPE_16_BIT);
         }
 
         auto idata = sm->index_data.get();

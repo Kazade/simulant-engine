@@ -30,7 +30,7 @@ SubMesh* new_rectangle_submesh(
     float x_offset, float y_offset, float z_offset) {
 
     //Create a submesh
-    SubMesh* submesh = mesh->new_submesh(
+    SubMesh* submesh = mesh->create_submesh(
         "rectangle",
         mat,
         INDEX_TYPE_16_BIT,
@@ -136,7 +136,7 @@ SubMesh *rectangle(
     mesh->vertex_data->done();
 
     //Create a submesh that uses the shared data
-    SubMesh* submesh = mesh->new_submesh(
+    SubMesh* submesh = mesh->create_submesh(
         "rectangle",
         material,
         INDEX_TYPE_16_BIT,
@@ -192,7 +192,7 @@ SubMesh* rectangle_outline(
     mesh->vertex_data->move_next();
     mesh->vertex_data->done();
 
-    SubMesh* submesh = mesh->new_submesh(
+    SubMesh* submesh = mesh->create_submesh(
         "rectangle_outline",
         material,
         INDEX_TYPE_16_BIT,

@@ -180,7 +180,7 @@ static bool map_Kd(LoadInfo* info, std::string, const std::vector<std::string>& 
         tex_path = kfs::path::split_ext(tex_path).first + ext;
     }
 
-    auto tex = info->assets->new_texture_from_file(tex_path);
+    auto tex = info->assets->load_texture(tex_path);
     if(!tex) {
         return false;
     }
@@ -549,9 +549,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             auto sm = mesh->find_submesh(batch.material_name);
             if(!sm) {
                 if(batch.material_name == "__default__") {
-                    sm = mesh->new_submesh(batch.material_name, info.default_material);
+                    sm = mesh->create_submesh(batch.material_name, info.default_material);
                 } else {
-                    sm = mesh->new_submesh(batch.material_name, info.materials.at(batch.material_name));
+                    sm = mesh->create_submesh(batch.material_name, info.materials.at(batch.material_name));
                 }
             }
 
@@ -564,9 +564,9 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             auto sm = mesh->find_submesh(sm_name);
             if(!sm) {
                 if(batch.material_name == "__default__") {
-                    sm = mesh->new_submesh(sm_name, info.default_material, MESH_ARRANGEMENT_TRIANGLE_FAN);
+                    sm = mesh->create_submesh(sm_name, info.default_material, MESH_ARRANGEMENT_TRIANGLE_FAN);
                 } else {
-                    sm = mesh->new_submesh(sm_name, info.materials.at(batch.material_name), MESH_ARRANGEMENT_TRIANGLE_FAN);
+                    sm = mesh->create_submesh(sm_name, info.materials.at(batch.material_name), MESH_ARRANGEMENT_TRIANGLE_FAN);
                 }
             }
             auto start = mesh->vertex_data->count();
@@ -596,12 +596,12 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         for(auto& ext: extensions) {
             auto path = this->filename_.replace_ext(ext);
             if(kfs::path::exists(path.str().c_str())) {
-                auto tex = mesh->asset_manager().new_texture_from_file(path);
+                auto tex = mesh->asset_manager().load_texture(path);
                 info.default_material->set_diffuse_map(tex);
             } else {
                 path = kfs::path::split_ext(filename_.str()).first + "_color" + ext;
                 if(kfs::path::exists(path.str().c_str())) {
-                    auto tex = mesh->asset_manager().new_texture_from_file(path);
+                    auto tex = mesh->asset_manager().load_texture(path);
                     info.default_material->set_diffuse_map(tex);
                 }
             }

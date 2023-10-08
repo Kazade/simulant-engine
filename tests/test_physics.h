@@ -175,8 +175,8 @@ public:
     }
 
     void test_mesh_collider_addition() {
-        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_box("mesh", scene->assets->new_material(), 1.0, 1.0, 1.0);
+        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_box("mesh", scene->assets->create_material(), 1.0, 1.0, 1.0);
         auto body = scene->create_child<StaticBody>();
         body->add_mesh_collider(mesh, PhysicsMaterial::WOOD);
 
@@ -262,7 +262,7 @@ public:
     }
 
     void test_add_mesh_collider() {
-        auto mesh = scene->assets->new_mesh_as_cube_with_submesh_per_face(10.0f);
+        auto mesh = scene->assets->create_mesh_as_cube_with_submesh_per_face(10.0f);
         auto body = scene->create_child<StaticBody>();
         body->add_mesh_collider(mesh, PhysicsMaterial::WOOD);
     }

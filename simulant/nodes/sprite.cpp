@@ -37,8 +37,8 @@ bool Sprite::on_create(void* params) {
     SpriteParams* args = (SpriteParams*) params;
     _S_UNUSED(args);
 
-    mesh_ = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-    mesh_->new_submesh_as_rectangle("sprite", scene->assets->new_material(), 1.0, 1.0f);
+    mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+    mesh_->create_submesh_as_rectangle("sprite", scene->assets->create_material(), 1.0, 1.0f);
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns
@@ -158,7 +158,7 @@ void Sprite::set_spritesheet(TexturePtr texture, uint32_t frame_width, uint32_t 
     image_height_ = texture->height();
 
     //Hold a reference to the new material
-    auto mat = scene->assets->new_material_from_texture(texture);
+    auto mat = scene->assets->create_material_from_texture(texture);
     mat->set_blend_func(smlt::BLEND_ALPHA);
 
     material_ = mat;

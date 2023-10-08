@@ -509,7 +509,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     for(Texture& tex: textures) {
         if(texture_name_to_id.count(tex.name)) continue;
 
-        texture_name_to_id[tex.name] = mesh->asset_manager().new_texture(
+        texture_name_to_id[tex.name] = mesh->asset_manager().create_texture(
             tex.width, tex.height,
             (tex.bytes_per_pixel == 3) ? TEXTURE_FORMAT_RGB_3UB_888 : TEXTURE_FORMAT_RGBA_4UB_8888
         );
@@ -518,9 +518,9 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         new_tex->set_data(tex.data);
 
         //Create a submesh for each texture.
-        texture_submesh[tex.name] = mesh->new_submesh(
+        texture_submesh[tex.name] = mesh->create_submesh(
             tex.name,
-            mesh->asset_manager().new_material_from_texture(new_tex),
+            mesh->asset_manager().create_material_from_texture(new_tex),
             INDEX_TYPE_16_BIT,
             MESH_ARRANGEMENT_TRIANGLES
         );

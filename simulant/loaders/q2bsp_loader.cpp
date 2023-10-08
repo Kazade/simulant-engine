@@ -195,14 +195,14 @@ void Q2BSPLoader::generate_materials(
         TexturePtr tex;
         if(!textures.count(texture_name)) {
             Path full_path = locate_texture(vfs, texture_name);
-            tex = assets->new_texture_from_file(full_path);
+            tex = assets->load_texture(full_path);
             textures[texture_name] = tex;
         } else {
             tex = textures.at(texture_name);
         }
 
         // Load the correct material depending on surface flags
-        auto mat = assets->new_material_from_file(
+        auto mat = assets->load_material(
             Material::BuiltIns::DEFAULT,
             smlt::GARBAGE_COLLECT_NEVER // Disable GC for now
         );
@@ -393,7 +393,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
     std::vector<MaterialPtr> materials;
     std::vector<Q2::TexDimension> dimensions;
 
-    auto lightmap_texture = assets->new_texture(
+    auto lightmap_texture = assets->create_texture(
         8, 8,
         TEXTURE_FORMAT_RGBA_4UB_8888,
         smlt::GARBAGE_COLLECT_NEVER
@@ -425,7 +425,7 @@ void Q2BSPLoader::into(Loadable& resource, const LoaderOptions &options) {
             continue;
         }
 
-        submeshes_by_material[material->id()] = mesh->new_submesh(_F("{0}").format(i++), material, INDEX_TYPE_16_BIT);
+        submeshes_by_material[material->id()] = mesh->create_submesh(_F("{0}").format(i++), material, INDEX_TYPE_16_BIT);
         if(material) {
             material->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC); // Re-enable GC now the material has been applied
         }

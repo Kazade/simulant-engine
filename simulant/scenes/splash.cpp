@@ -32,13 +32,13 @@ void Splash::load() {
     auto text_file = (window->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
     auto logo_file = (window->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
 
-    auto text_texture = assets->new_texture_from_file(text_file, flags);
+    auto text_texture = assets->load_texture(text_file, flags);
     text_ = create_node<ui::Image>(text_texture);
 
-    auto texture = assets->new_texture_from_file(logo_file, flags);
+    auto texture = assets->load_texture(logo_file, flags);
     image_ = create_node<ui::Image>(texture);
 
-    sound_ = assets->new_sound_from_file(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
+    sound_ = assets->load_sound(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
 
     image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);

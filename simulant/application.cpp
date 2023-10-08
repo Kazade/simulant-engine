@@ -188,7 +188,7 @@ void Application::preload_default_font() {
 
     FontFlags flags;
     flags.size = ui.font_size;
-    auto fnt = shared_assets->new_font_from_family(ui.font_family, flags);
+    auto fnt = shared_assets->create_font_from_family(ui.font_family, flags);
 
     if(!fnt) {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");

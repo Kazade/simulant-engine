@@ -35,7 +35,7 @@ MeshPtr MeshInstancer::mesh() const {
     return mesh_;
 }
 
-MeshInstanceID MeshInstancer::new_mesh_instance(const Vec3 &position, const Quaternion &rotation) {
+MeshInstanceID MeshInstancer::create_mesh_instance(const Vec3 &position, const Quaternion &rotation) {
     MeshInstance i;
     i.id = ++MeshInstancer::id_counter_;
     i.transformation = Mat4::from_pos_rot_scale(position, rotation, Vec3(1));

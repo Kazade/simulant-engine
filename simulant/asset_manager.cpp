@@ -30,7 +30,7 @@
 
 /** FIXME
  *
- * - Write tests to show that all new_X_from_file methods mark resources as uncollected before returning
+ * - Write tests to show that all load_X methods mark resources as uncollected before returning
  * - Think of better GC logic, perhaps collect on every frame?
  */
 
@@ -107,7 +107,7 @@ MaterialPtr AssetManager::default_material() const {
 
 
 static TexturePtr create_texture_with_color(AssetManager* manager, const Color& c) {
-    auto tex = manager->new_texture(8, 8, TEXTURE_FORMAT_RGB_3UB_888, GARBAGE_COLLECT_NEVER);
+    auto tex = manager->create_texture(8, 8, TEXTURE_FORMAT_RGB_3UB_888, GARBAGE_COLLECT_NEVER);
 
     const uint8_t r = (uint8_t) (c.r * 255.0f);
     const uint8_t g = (uint8_t) (c.g * 255.0f);
@@ -157,7 +157,7 @@ MaterialPtr SharedAssetManager::default_material() const {
     assert(is_base_manager());
 
     if(!default_material_) {
-        default_material_ = const_cast<SharedAssetManager*>(this)->new_material_from_file(
+        default_material_ = const_cast<SharedAssetManager*>(this)->load_material(
             default_material_filename_
         );
     }
@@ -201,11 +201,11 @@ bool AssetManager::is_base_manager() const {
     return manager_name.get(id)
 
 
-MeshPtr AssetManager::new_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::create_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
     NEW_X(Mesh, mesh, mesh_manager_, vertex_specification);
 }
 
-MeshPtr AssetManager::new_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::create_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect) {
     NEW_X(Mesh, mesh, mesh_manager_, vertex_data);
 }
 
@@ -217,7 +217,7 @@ const MeshPtr AssetManager::mesh(AssetID id) const {
     GET_X(Mesh, mesh, mesh_manager_);
 }
 
-MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::create_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect) {
     if(submesh->type() == SUBMESH_TYPE_RANGED) {
         /* FIXME: Implement this! */
         S_ERROR("Ranged submeshes can't currently be turned into meshes");
@@ -228,10 +228,10 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
 
     VertexSpecification spec = source_vdata->vertex_specification();
 
-    auto mesh = new_mesh(spec, garbage_collect);
+    auto mesh = create_mesh(spec, garbage_collect);
     auto target_vdata = mesh->vertex_data.get();
 
-    SubMesh* target = mesh->new_submesh(
+    SubMesh* target = mesh->create_submesh(
         submesh->name(),
         submesh->material(),
         submesh->index_data->index_type(),
@@ -261,13 +261,13 @@ MeshPtr AssetManager::new_mesh_from_submesh(SubMesh* submesh, GarbageCollectMeth
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_from_file(const Path& path,
+MeshPtr AssetManager::load_mesh(const Path& path,
     const VertexSpecification& desired_specification,
     const MeshLoadOptions& options,
     GarbageCollectMethod garbage_collect) {
 
     //Load the material
-    auto mesh = new_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
+    auto mesh = create_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
     auto loader = get_app()->loader_for(path);
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
@@ -285,14 +285,14 @@ MeshPtr AssetManager::new_mesh_from_file(const Path& path,
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::create_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
     auto loader = get_app()->loader_for("heightmap_loader", image_file);
 
     if(!loader) {
         return nullptr;
     }
 
-    auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    auto mesh = create_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     loader->into(mesh, {
         { "spec", spec},
@@ -303,8 +303,8 @@ MeshPtr AssetManager::new_mesh_from_heightmap(const Path& image_file, const Heig
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_from_heightmap(const TexturePtr& texture, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
-    auto mesh = new_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+MeshPtr AssetManager::create_mesh_from_heightmap(const TexturePtr& texture, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
+    auto mesh = create_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     loaders::HeightmapLoader loader(texture);
 
@@ -316,8 +316,8 @@ MeshPtr AssetManager::new_mesh_from_heightmap(const TexturePtr& texture, const H
     return mesh;
 }
 
-MeshPtr AssetManager::new_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect) {
-    auto m = new_mesh(
+MeshPtr AssetManager::create_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect) {
+    auto m = create_mesh(
                 VertexSpecification::DEFAULT,
                 GARBAGE_COLLECT_NEVER
                 );
@@ -342,7 +342,7 @@ std::size_t AssetManager::mesh_count() const {
     return mesh_manager_.count();
 }
 
-MaterialPtr AssetManager::new_material(GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::create_material(GarbageCollectMethod garbage_collect) {
     NEW_X(Material, material, material_manager_);
 }
 
@@ -350,8 +350,8 @@ void AssetManager::destroy_material(const AssetID& m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
-MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
-    auto new_mat = new_material();
+MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod garbage_collect) {
+    auto new_mat = create_material();
     auto loader = get_app()->loader_for(path);
     if(!loader) {
         S_ERROR("Unable to find loader for {0}", path);
@@ -363,8 +363,8 @@ MaterialPtr AssetManager::new_material_from_file(const Path& path, GarbageCollec
     return new_mat;
 }
 
-MaterialPtr AssetManager::new_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect) {
-    auto m = new_material_from_file(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
+MaterialPtr AssetManager::create_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect) {
+    auto m = load_material(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
     m->set_diffuse_map(texture);
@@ -393,18 +393,18 @@ std::size_t AssetManager::material_count() const {
     return material_manager_.count();
 }
 
-TexturePtr AssetManager::new_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
     NEW_X(Texture, texture, texture_manager_, width, height, format);
 }
 
-TexturePtr AssetManager::new_texture_from_file(const Path& path, GarbageCollectMethod garbage_collect) {
-    return new_texture_from_file(path, TextureFlags(), garbage_collect);
+TexturePtr AssetManager::load_texture(const Path& path, GarbageCollectMethod garbage_collect) {
+    return load_texture(path, TextureFlags(), garbage_collect);
 }
 
-TexturePtr AssetManager::new_texture_from_file(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
     //Load the texture
     S_DEBUG("Loading texture from file: {0}", path);
-    smlt::TexturePtr tex = new_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, garbage_collect);
+    smlt::TexturePtr tex = create_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, garbage_collect);
 
     {
         S_DEBUG("Finding loader for: {0}", path);
@@ -456,7 +456,7 @@ std::size_t AssetManager::texture_count() const {
     return texture_manager_.count();
 }
 
-SoundPtr AssetManager::new_sound_from_file(const Path& path, const SoundFlags &flags, GarbageCollectMethod garbage_collect) {
+SoundPtr AssetManager::load_sound(const Path& path, const SoundFlags &flags, GarbageCollectMethod garbage_collect) {
     //Load the sound
     auto snd = sound_manager_.make(this, get_app()->sound_driver);
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
@@ -501,7 +501,7 @@ void AssetManager::destroy_sound(AssetID t) {
     sound_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
-BinaryPtr AssetManager::new_binary_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
+BinaryPtr AssetManager::load_binary(const Path& filename, GarbageCollectMethod garbage_collect) {
 
     auto stream = smlt::get_app()->vfs->read_file(filename);
     if(!stream) {
@@ -576,7 +576,7 @@ AssetManager* AssetManager::base_manager() const {
 
 // ========== FONTS ======================
 
-FontPtr AssetManager::new_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::create_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     uint16_t size = flags.size || get_app()->config->ui.font_size;
     const std::string px_as_string = smlt::to_string(size);
     const std::string weight_string = font_weight_name(flags.weight);
@@ -621,14 +621,14 @@ FontPtr AssetManager::new_font_from_family(const std::string& family, const Font
     }
 
     if(loc) {
-        return new_font_from_file(loc.value(), flags, garbage_collect);
+        return load_font(loc.value(), flags, garbage_collect);
     } else {
         S_WARN("Unable to locate font file with family {0} and size {1}", family, size);
         return FontPtr();
     }
 }
 
-FontPtr AssetManager::new_font_from_file(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
+FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
     font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
@@ -675,7 +675,7 @@ bool AssetManager::has_font(AssetID f) const {
     return font_manager_.contains(f);
 }
 
-ParticleScriptPtr AssetManager::new_particle_script_from_file(const Path& filename, GarbageCollectMethod garbage_collect) {
+ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, GarbageCollectMethod garbage_collect) {
     auto ps = particle_script_manager_.make(this);
     auto ps_id = ps->id();
     particle_script_manager_.set_garbage_collection_method(ps_id, garbage_collect);

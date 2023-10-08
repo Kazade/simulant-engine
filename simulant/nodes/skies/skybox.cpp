@@ -113,14 +113,14 @@ void Skybox::generate(
     const TextureFlags& flags
 ) {
     auto& assets = scene->assets;
-    mesh_ = assets->new_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE);
+    mesh_ = assets->create_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE);
 
     auto mesh = mesh_;
     mesh->reverse_winding();
 
     // Set the skybox material on all submeshes
     for(auto sm: mesh->each_submesh()) {
-        auto mat = assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+        auto mat = assets->load_material(Material::BuiltIns::TEXTURE_ONLY);
 
         // Disable depth writes and depth testing, but otherwise use the default texture_only material
         mat->set_depth_write_enabled(false);
@@ -145,12 +145,12 @@ void Skybox::generate(
         sm->material()->set_diffuse_map(tex);
     };
 
-    set_texture(mesh->find_submesh("top"), assets->new_texture_from_file(up_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("bottom"), assets->new_texture_from_file(down_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("left"), assets->new_texture_from_file(left_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("right"), assets->new_texture_from_file(right_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("front"), assets->new_texture_from_file(front_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("back"), assets->new_texture_from_file(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("top"), assets->load_texture(up_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("bottom"), assets->load_texture(down_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("left"), assets->load_texture(left_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("right"), assets->load_texture(right_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("front"), assets->load_texture(front_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("back"), assets->load_texture(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
 
     if(!actor_) {
         actor_ = scene->create_node<Actor>(mesh_);

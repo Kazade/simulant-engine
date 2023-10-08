@@ -63,7 +63,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& mater
     if(prop->has_key("default") && !prop["default"]->is_null()) {
         std::string def = prop["default"]->to_str().value();
 
-        auto texture = material.asset_manager().new_texture_from_file(def);
+        auto texture = material.asset_manager().load_texture(def);
         material.set_property_value(name, texture);
     } else {
         material.set_property_value(name, TexturePtr());
@@ -147,7 +147,7 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value->to_str().value();
-                auto tex = mat.asset_manager().new_texture_from_file(path);
+                auto tex = mat.asset_manager().load_texture(path);
                 holder.set_property_value(key.c_str(), tex);
             } else {
                 S_ERROR("Unhandled property type");

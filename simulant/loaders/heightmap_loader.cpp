@@ -326,7 +326,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(!tex) {
         // Load the texture using the texture loader
-        tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
+        tex = mesh->asset_manager().create_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
         TextureLoader loader(this->filename_, this->data_);
         loader.into(*tex, {{"auto_upload", false}});
         tex->flip_vertically();
@@ -348,7 +348,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // We divide the heightmap into patches for more efficient rendering
     smlt::MaterialPtr mat = mesh->asset_manager().clone_default_material();
 
-    auto sm = mesh->new_submesh(
+    auto sm = mesh->create_submesh(
         "terrain", mat, index_type, MESH_ARRANGEMENT_TRIANGLES
     );
 

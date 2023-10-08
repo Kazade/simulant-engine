@@ -226,7 +226,7 @@ public:
     }
 
     void test_particle_systems_are_freed() {
-        auto script = scene->assets->new_particle_script_from_file(
+        auto script = scene->assets->load_particle_script(
             ParticleScript::BuiltIns::FIRE
         );
 
@@ -247,7 +247,7 @@ public:
     }
 
     void test_geoms_are_freed() {
-        auto mesh = scene->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
 
         auto count = scene->count_nodes_by_type<Geom>();
 

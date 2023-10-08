@@ -13,7 +13,7 @@ using namespace smlt;
 class MaterialTest : public smlt::test::SimulantTestCase {
 public:
     void test_material_initialization() {
-        auto mat = application->shared_assets->new_material();
+        auto mat = application->shared_assets->create_material();
 
         mat->set_pass_count(1);
 
@@ -25,14 +25,14 @@ public:
     }
 
     void test_material_applies_to_mesh() {
-        auto mat = application->shared_assets->new_material();
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::POSITION_ONLY);
-        smlt::SubMesh* sm = mesh->new_submesh("test", mat);
+        auto mat = application->shared_assets->create_material();
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::POSITION_ONLY);
+        smlt::SubMesh* sm = mesh->create_submesh("test", mat);
         this->assert_equal(mat->id(), sm->material()->id());
     }
 
     void test_property_heirarchy() {
-        auto mat = application->shared_assets->new_material();
+        auto mat = application->shared_assets->create_material();
 
         mat->set_diffuse(smlt::Color::RED);
         mat->set_pass_count(2);
@@ -50,7 +50,7 @@ public:
     }
 
     void test_pass_resizing() {
-        auto mat1 = application->shared_assets->new_material();
+        auto mat1 = application->shared_assets->create_material();
 
         // Materials have a single pass by default, rightly or wrongly...
         assert_equal(mat1->pass_count(), 1);
@@ -70,8 +70,8 @@ public:
     }
 
     void test_material_copies() {
-        auto mat1 = application->shared_assets->new_material();
-        auto tex1 = application->shared_assets->new_texture(8, 8);
+        auto mat1 = application->shared_assets->create_material();
+        auto tex1 = application->shared_assets->create_texture(8, 8);
 
         mat1->set_diffuse(smlt::Color::RED);
         mat1->set_diffuse_map(tex1);
@@ -105,8 +105,8 @@ public:
     }
 
     void test_texture_unit() {
-        auto mat = application->shared_assets->new_material();
-        auto tex = application->shared_assets->new_texture(8, 8);
+        auto mat = application->shared_assets->create_material();
+        auto tex = application->shared_assets->create_texture(8, 8);
 
         mat->set_diffuse_map(tex);
         mat->set_pass_count(2);
@@ -117,7 +117,7 @@ public:
         assert_equal(pass1->diffuse_map(), tex);
         assert_equal(pass2->diffuse_map(), tex);
 
-        auto tex2 = application->shared_assets->new_texture(8, 8);
+        auto tex2 = application->shared_assets->create_texture(8, 8);
 
         pass1->set_diffuse_map(tex2);
 
@@ -132,7 +132,7 @@ public:
     }
 
     void test_textures_enabled() {
-        auto mat = application->shared_assets->new_material();
+        auto mat = application->shared_assets->create_material();
 
         // By default, all units are enabled
         assert_equal(
@@ -150,7 +150,7 @@ public:
          * 0 and 128, this checks that we clamp the value outside that
          * range */
 
-        auto mat = application->shared_assets->new_material();
+        auto mat = application->shared_assets->create_material();
         mat->set_shininess(1000);
         assert_equal(mat->shininess(), 128);
         mat->set_shininess(-100);
@@ -164,10 +164,10 @@ public:
     }
 
     void test_setting_texture_unit_increases_refcount() {
-        auto mat = application->shared_assets->new_material();
+        auto mat = application->shared_assets->create_material();
         mat->set_pass_count(1);
 
-        auto texture = application->shared_assets->new_texture(8, 8);
+        auto texture = application->shared_assets->create_texture(8, 8);
         assert_equal(texture.use_count(), 2);
 
         mat->set_diffuse_map(texture);
@@ -180,7 +180,7 @@ public:
     // FIXME: Restore this
     void test_reflectiveness() {
         /*
-        smlt::MaterialID mid = application->shared_assets->new_material();
+        smlt::MaterialID mid = application->shared_assets->create_material();
         auto mat = application->shared_assets->material(mid);
         mat->set_pass_count(1);
 
@@ -199,7 +199,7 @@ public:
     }
 
     void test_polygon_mode() {
-        smlt::MaterialPtr mat = application->shared_assets->new_material();
+        smlt::MaterialPtr mat = application->shared_assets->create_material();
         mat->set_polygon_mode(smlt::POLYGON_MODE_FILL);
         assert_equal(mat->polygon_mode(), smlt::POLYGON_MODE_FILL);
 
@@ -212,7 +212,7 @@ public:
      * the elements from the map when it's no longer needed */
     void test_property_name_refcounting() {
         auto c0 = 0u;
-        auto mat = application->shared_assets->new_material();
+        auto mat = application->shared_assets->create_material();
         mat->set_property_value("test", (int32_t) 1);
 
         auto c1 = Material::_name_refcount("test");
