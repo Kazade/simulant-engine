@@ -72,7 +72,7 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
 
     has_focus_ = true;
 
-    update_conn_ = application->signal_late_update().connect(std::bind(&Window::update_screens, this, std::placeholders::_1));
+    update_conn_ = app->signal_late_update().connect(std::bind(&Window::update_screens, this, std::placeholders::_1));
 
     return true;
 }
@@ -232,7 +232,7 @@ void Window::reset() {
 
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
-        application->stop_running();
+        app->stop_running();
     }
 
     each_event_listener([=](EventListener* listener) {

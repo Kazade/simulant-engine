@@ -59,9 +59,9 @@ Scene::Scene(Window *window):
     StageNodeManager(this),
     window_(window),
     input_(window->input.get()),
-    app_(window->application),
+    app_(window->app),
     compositor_(window->compositor),
-    assets_(window->application->shared_assets.get()) {
+    assets_(window->app->shared_assets.get()) {
 
     register_builtin_nodes();
 }

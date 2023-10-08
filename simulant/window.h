@@ -316,7 +316,7 @@ protected:
 
 public:
     //Read only properties
-    S_DEFINE_PROPERTY(application, &Window::application_);
+    S_DEFINE_PROPERTY(app, &Window::application_);
     S_DEFINE_PROPERTY(renderer, &Window::renderer_);
     S_DEFINE_PROPERTY(data, &Window::data_carrier_);
     S_DEFINE_PROPERTY(input, &Window::input_manager_);
