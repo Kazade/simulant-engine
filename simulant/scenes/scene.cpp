@@ -60,7 +60,7 @@ Scene::Scene(Window *window):
     window_(window),
     input_(window->input.get()),
     app_(window->app),
-    compositor_(window->compositor),
+    compositor_(this, window->compositor),
     assets_(window->app->shared_assets.get()) {
 
     register_builtin_nodes();
@@ -210,7 +210,7 @@ void Scene::_call_activate() {
     signal_activated_();
 
     for(auto name: linked_pipelines_) {
-        compositor->find_pipeline(name)->activate();
+        compositor->find_layer(name)->activate();
     }
 }
 
@@ -220,7 +220,7 @@ void Scene::_call_deactivate() {
     }
 
     for(auto name: linked_pipelines_) {
-        compositor->find_pipeline(name)->deactivate();
+        compositor->find_layer(name)->deactivate();
     }
     linked_pipelines_.clear();
 

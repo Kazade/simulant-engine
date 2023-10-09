@@ -283,14 +283,15 @@ public:
 
     void test_pipelines_are_freed() {
         auto stage = scene->create_child<smlt::Stage>();
-        auto pipeline = window->compositor->render(stage, scene->create_child<smlt::Camera>());
+        auto pipeline = window->compositor->create_layer(stage, scene->create_child<smlt::Camera>());
+        pipeline->set_name("test");
 
         auto name = pipeline->name();
         pipeline->destroy();
-        assert_true(window->compositor->has_pipeline(name));
+        assert_true(window->compositor->has_layer(name));
 
         application->run_frame();
-        assert_false(window->compositor->has_pipeline(name));
+        assert_false(window->compositor->has_layer(name));
     }
 
     void test_stages_are_freed() {

@@ -9,18 +9,13 @@ namespace smlt {
 static uint32_t PIPELINE_COUNTER = 0;
 
 Layer::Layer(Compositor* render_sequence,
-    const std::string &name, StageNode* subtree, CameraPtr camera):
+    StageNode* subtree, CameraPtr camera):
         TypedDestroyableObject<Layer, Compositor>(render_sequence),
         id_(++PIPELINE_COUNTER),
         sequence_(render_sequence),
         priority_(0),
         is_active_(false) {
 
-    if(name.empty()) {
-        throw std::logic_error("You must specify a name for a pipeline");
-    }
-
-    set_name(name);
     set_stage_node(subtree);
     set_camera(camera);
 
@@ -73,7 +68,7 @@ LayerPtr Layer::set_priority(int32_t priority) {
         priority_ = priority;
 
         /* If the priority changed, we need to update the render sequence */
-        sequence_->sort_pipelines();
+        sequence_->sort_layers();
     }
 
     return this;

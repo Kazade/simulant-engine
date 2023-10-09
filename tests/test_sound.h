@@ -30,7 +30,7 @@ public:
         assert_false(window->has_explicit_audio_listener());
         assert_is_null(window->audio_listener());
 
-        auto p = window->compositor->render(scene, camera_);
+        auto p = window->compositor->create_layer(scene, camera_);
         p->activate();
 
         // Make the first camera of the first pipeline the audio listener

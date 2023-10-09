@@ -22,13 +22,13 @@ public:
         auto camera2 = create_node<smlt::Camera>();
 
         // Render new stages to the framebuffer, using both viewports. Make sure we tell the pipeline to clear
-        compositor->render(
+        compositor->create_layer(
             this, camera1
         )->set_viewport(
             first
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
 
-        compositor->render(
+        compositor->create_layer(
             this, camera2
         )->set_viewport(
             second

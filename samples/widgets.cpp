@@ -11,7 +11,7 @@ public:
         camera_ = create_node<smlt::Camera>();
         camera_->set_orthographic_projection(0, window->width(), 0, window->height());
 
-        auto pipeline = compositor->render(
+        auto pipeline = compositor->create_layer(
             this, camera_
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
         pipeline->viewport->set_color(smlt::Color::GREY);

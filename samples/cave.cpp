@@ -11,7 +11,7 @@ public:
     void load() override {
 
         camera_ = create_node<smlt::Camera>();
-        auto pipeline = compositor->render(
+        auto pipeline = compositor->create_layer(
             this, camera_
         );
 

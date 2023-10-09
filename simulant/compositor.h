@@ -47,15 +47,13 @@ public:
     Compositor(Window* window);
     virtual ~Compositor();
 
-    LayerPtr new_pipeline(const std::string& name,
+    LayerPtr create_layer(
         StageNode* subtree,
         CameraPtr camera,
         const Viewport& viewport=Viewport(),
         TexturePtr target=nullptr,
         int32_t priority=0
     );
-
-    LayerPtr render(StageNode* subtree, CameraPtr camera);
 
     std::list<LayerPtr>::iterator begin() {
         return ordered_pipelines_.begin();
@@ -65,31 +63,40 @@ public:
         return ordered_pipelines_.end();
     }
 
-    LayerPtr find_pipeline(const std::string& name);
-    bool destroy_pipeline(const std::string& name);
-    void destroy_all_pipelines();
-    void destroy_pipeline_immediately(const std::string& name);
+    LayerPtr find_layer(const std::string& name);
+    void destroy_all_layers();
 
-    bool has_pipeline(const std::string& name);
+    bool has_layer(const std::string& name);
 
     //void set_batcher(Batcher::ptr batcher);
     void set_renderer(Renderer *renderer);
 
     void run();
-    void clean_destroyed_pipelines();
+    void clean_destroyed_layers();
 
-    void destroy_object(LayerPtr pipeline) {
-        destroy_pipeline(pipeline->name());
+    void destroy_object(LayerPtr pip) {
+        if(queued_for_destruction_.count(pip)) {
+            return;
+        }
+
+        queued_for_destruction_.insert(pip);
+
+        /* When a user requests destruction, we deactivate immediately
+         * as that's the path of least surprise. The pipeline won't be used
+         * anyway on the next render, this just makes sure that the stage for example
+         * doesn't think it's part of an active pipeline until then */
+        pip->deactivate();
+        pip->destroy();
     }
 
     void destroy_object_immediately(LayerPtr pipeline) {
         // FIXME: This doesn't destroy immediately
-        destroy_pipeline(pipeline->name());
+        destroy_object(pipeline);
     }
 
 private:
-    void sort_pipelines();
-    void run_pipeline(LayerPtr stage, int& actors_rendered);
+    void sort_layers();
+    void run_layer(LayerPtr stage, int& actors_rendered);
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
@@ -106,6 +113,55 @@ private:
     sig::connection clean_up_connection_;
 public:
     S_DEFINE_PROPERTY(window, &Compositor::window_);
+};
+
+
+/**
+ * @brief The SceneCompositor class
+ *
+ * The Compositor class is global, across the whole application. The
+ * SceneCompositor is a scene-local equivalent which ensures that layers do
+ * not outlive the scene.
+ */
+
+class SceneCompositor {
+public:
+    SceneCompositor(Scene* scene, Compositor* global_compositor);
+
+    ~SceneCompositor() {
+        destroy_all_layers();
+    }
+
+    LayerPtr create_layer(StageNode* subtree, Camera* camera, int32_t priority=0) {
+        auto ret = compositor_->create_layer(subtree, camera, Viewport(), nullptr, priority);
+        layers_.push_back(ret);
+        return ret;
+    }
+
+    LayerPtr find_layer(const std::string& name) {
+        for(auto& layer: layers_) {
+            if(layer->name() == name) {
+                return layer;
+            }
+        }
+
+        return LayerPtr();
+    }
+
+    void destroy_all_layers() {
+        for(auto& layer: layers_) {
+            layer->destroy();
+        }
+    }
+
+private:
+    Compositor* compositor_ = nullptr;
+    Scene* scene_ = nullptr;
+
+    std::list<LayerPtr> layers_;
+
+public:
+    S_DEFINE_PROPERTY(global_compositor, &SceneCompositor::compositor_);
 };
 
 }

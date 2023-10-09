@@ -14,7 +14,7 @@ public:
         start_service<PhysicsService>();
 
         camera_ = create_node<smlt::Camera>();
-        pipeline_ = compositor->render(
+        pipeline_ = compositor->create_layer(
             this, camera_
         );
         link_pipeline(pipeline_);

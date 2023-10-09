@@ -590,9 +590,10 @@ bool InputManager::start_text_input(bool force_onscreen) {
     );
     keyboard_camera_->set_parent(keyboard_stage_);
 
-    keyboard_pipeline_ = window->compositor->render(
+    keyboard_pipeline_ = window->compositor->create_layer(
         keyboard_stage_, keyboard_camera_
     );
+
     keyboard_pipeline_->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     keyboard_pipeline_->activate();
 

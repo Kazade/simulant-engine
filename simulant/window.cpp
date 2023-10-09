@@ -220,7 +220,7 @@ void Window::reset() {
     // Make sure we aren't still getting text input
     input->stop_text_input();
 
-    compositor_->destroy_all_pipelines();
+    compositor_->destroy_all_layers();
     compositor_->clean_up();
     compositor_.reset();
     compositor_ = std::make_shared<Compositor>(this);

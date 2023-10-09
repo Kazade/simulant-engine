@@ -90,7 +90,7 @@ public:
         auto actor = scene->create_child<smlt::Stage>();
         auto camera = scene->create_child<smlt::Camera>();
 
-        auto pipeline = window->compositor->render(scene, camera);
+        auto pipeline = window->compositor->create_layer(scene, camera);
         pipeline->activate();
 
         auto billboard = scene->create_child<CylindricalBillboard>();
@@ -123,7 +123,7 @@ public:
         auto actor = scene->create_child<smlt::Stage>();
         auto camera = scene->create_child<smlt::Camera>();
 
-        auto pipeline = window->compositor->render(scene, camera);
+        auto pipeline = window->compositor->create_layer(scene, camera);
         pipeline->activate();
 
         auto billboard = scene->create_child<SphericalBillboard>();

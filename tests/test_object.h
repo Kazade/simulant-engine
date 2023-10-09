@@ -23,7 +23,7 @@ public:
     }
 
     void test_move_to_origin() {
-        window->compositor->render(scene, camera_);
+        window->compositor->create_layer(scene, camera_);
 
         // A bug was reported that this caused a crash (see #219)
         auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);

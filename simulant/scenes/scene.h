@@ -49,6 +49,7 @@
 #include "../generic/any/any.h"
 #include "../nodes/stage_node_manager.h"
 #include "../asset_manager.h"
+#include "../compositor.h"
 
 namespace smlt {
 
@@ -214,7 +215,7 @@ private:
     InputManager* input_;
     Application* app_;
     SceneManager* scene_manager_ = nullptr;
-    Compositor* compositor_ = nullptr;
+    SceneCompositor compositor_;
 
     AssetManager assets_;
 

@@ -16,7 +16,7 @@ public:
         stage = scene->create_child<smlt::Stage>();
         camera = scene->create_child<smlt::Camera>();
 
-        pipeline = window->compositor->render(stage, camera);
+        pipeline = window->compositor->create_layer(stage, camera);
     }
 
     void tear_down() {
@@ -24,17 +24,17 @@ public:
         pipeline->destroy();
     }
 
-    void test_find_pipeline_with_name() {
-        auto p1 = window->compositor->render(stage, camera)->set_name("pipeline1");
-        auto p2 = window->compositor->render(stage, camera)->set_name("pipeline2");
+    void test_find_layer_with_name() {
+        auto p1 = window->compositor->create_layer(stage, camera)->set_name("pipeline1");
+        auto p2 = window->compositor->create_layer(stage, camera)->set_name("pipeline2");
 
-        auto found = window->compositor->find_pipeline("pipeline1");
+        auto found = window->compositor->find_layer("pipeline1");
         assert_equal(p1->name(), found->name());
 
-        found = window->compositor->find_pipeline("pipeline2");
+        found = window->compositor->find_layer("pipeline2");
         assert_equal(p2->name(), found->name());
 
-        found = window->compositor->find_pipeline("bananas");
+        found = window->compositor->find_layer("bananas");
         assert_false(found);
     }
 
@@ -58,7 +58,7 @@ public:
 
         assert_false(stage->is_part_of_active_pipeline());
 
-        smlt::LayerPtr pipeline = window->compositor->render(stage, camera);
+        smlt::LayerPtr pipeline = window->compositor->create_layer(stage, camera);
         pipeline->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
@@ -67,10 +67,10 @@ public:
 
         assert_false(stage->is_part_of_active_pipeline());
 
-        pipeline = window->compositor->render(stage, camera);
+        pipeline = window->compositor->create_layer(stage, camera);
         pipeline->activate();
 
-        smlt::LayerPtr pipeline2 = window->compositor->render(stage, camera);
+        smlt::LayerPtr pipeline2 = window->compositor->create_layer(stage, camera);
         pipeline2->activate();
 
         assert_true(stage->is_part_of_active_pipeline());
@@ -85,12 +85,12 @@ public:
     }
 
     void test_pipeline_starts_deactivated() {
-        auto p = window->compositor->render(stage, camera);
+        auto p = window->compositor->create_layer(stage, camera);
         assert_false(p->is_active());
     }
 
     void test_changing_camera() {
-        auto p = window->compositor->render(stage, camera);
+        auto p = window->compositor->create_layer(stage, camera);
         p = p->set_camera(scene->create_child<smlt::Camera>());
 
         assert_not_equal(p->camera(), camera);

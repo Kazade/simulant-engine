@@ -21,7 +21,6 @@
 
 #include "generic/algorithm.h"
 #include "compositor.h"
-#include "stage.h"
 #include "nodes/actor.h"
 #include "nodes/camera.h"
 #include "nodes/light.h"
@@ -30,6 +29,7 @@
 #include "partitioner.h"
 #include "loader.h"
 #include "application.h"
+#include "scenes/scene.h"
 
 namespace smlt {
 
@@ -41,16 +41,10 @@ Compositor::Compositor(Window *window):
 
 Compositor::~Compositor() {
     clean_up_connection_.disconnect();
-    destroy_all_pipelines();
+    destroy_all_layers();
 }
 
-LayerPtr Compositor::render(StageNode* subtree, CameraPtr camera) {
-    static int32_t counter = 0;
-    std::string name = _F("{0}").format(counter++);
-    return new_pipeline(name, subtree, camera);
-}
-
-LayerPtr Compositor::find_pipeline(const std::string &name) {
+LayerPtr Compositor::find_layer(const std::string &name) {
     for(auto& pipeline: ordered_pipelines_) {
         if(pipeline->name() == name) {
             return pipeline;
@@ -60,42 +54,7 @@ LayerPtr Compositor::find_pipeline(const std::string &name) {
     return nullptr;
 }
 
-bool Compositor::destroy_pipeline(const std::string& name) {
-    auto pip = find_pipeline(name);
-    if(!pip) {
-        return false;
-    }
-
-    if(queued_for_destruction_.count(pip)) {
-        return false;
-    }
-
-    queued_for_destruction_.insert(pip);
-
-    /* When a user requests destruction, we deactivate immediately
-     * as that's the path of least surprise. The pipeline won't be used
-     * anyway on the next render, this just makes sure that the stage for example
-     * doesn't think it's part of an active pipeline until then */
-    pip->deactivate();
-    pip->destroy();
-
-    return true;
-}
-
-void Compositor::destroy_pipeline_immediately(const std::string& name) {
-    auto pip = find_pipeline(name);
-    pip->deactivate();
-    pip->destroy();
-
-    queued_for_destruction_.erase(pip);
-    ordered_pipelines_.remove(pip);
-
-    pool_.remove_if([name](const Layer::ptr& pip) -> bool {
-        return pip->name() == name;
-    });
-}
-
-void Compositor::clean_destroyed_pipelines() {
+void Compositor::clean_destroyed_layers() {
     for(auto pip: queued_for_destruction_) {
         pip->deactivate();
 
@@ -115,19 +74,19 @@ void Compositor::clean_destroyed_pipelines() {
     queued_for_destruction_.clear();
 }
 
-void Compositor::destroy_all_pipelines() {
+void Compositor::destroy_all_layers() {
     auto pipelines = ordered_pipelines_;
     for(auto pip: pipelines) {
         assert(pip);
-        destroy_pipeline(pip->name());
+        destroy_object(pip);
     }
 }
 
-bool Compositor::has_pipeline(const std::string& name) {
-    return bool(find_pipeline(name));
+bool Compositor::has_layer(const std::string& name) {
+    return bool(find_layer(name));
 }
 
-void Compositor::sort_pipelines() {
+void Compositor::sort_layers() {
     auto do_sort = [&]() {
         ordered_pipelines_.sort(
             [](LayerPtr lhs, LayerPtr rhs) { return lhs->priority() < rhs->priority(); }
@@ -137,17 +96,12 @@ void Compositor::sort_pipelines() {
     do_sort();
 }
 
-LayerPtr Compositor::new_pipeline(
-    const std::string& name, StageNode* subtree, CameraPtr camera,
+LayerPtr Compositor::create_layer(
+    StageNode* subtree, CameraPtr camera,
     const Viewport& viewport, TexturePtr target, int32_t priority) {
 
-    if(has_pipeline(name)) {
-        S_WARN("Tried to create a duplicate pipeline");
-        return LayerPtr();
-    }
-
     auto pipeline = Layer::create(
-        this, name, subtree, camera
+        this, subtree, camera
     );
 
     /* New pipelines should always start deactivated to avoid the attached stage
@@ -161,7 +115,7 @@ LayerPtr Compositor::new_pipeline(
     pool_.push_back(pipeline);
 
     ordered_pipelines_.push_back(pipeline.get());
-    sort_pipelines();
+    sort_layers();
 
     return pipeline.get();
 }
@@ -171,7 +125,7 @@ void Compositor::set_renderer(Renderer* renderer) {
 }
 
 void Compositor::run() {
-    clean_destroyed_pipelines();  /* Clean up any destroyed pipelines before rendering */
+    clean_destroyed_layers();  /* Clean up any destroyed pipelines before rendering */
 
     targets_rendered_this_frame_.clear();
 
@@ -180,7 +134,7 @@ void Compositor::run() {
 
     int actors_rendered = 0;
     for(auto& pipeline: ordered_pipelines_) {
-        run_pipeline(pipeline, actors_rendered);
+        run_layer(pipeline, actors_rendered);
     }
 
     get_app()->stats->set_subactors_rendered(actors_rendered);
@@ -261,7 +215,7 @@ static bool build_renderables(
     return !(node->generates_renderables_for_descendents());
 }
 
-void Compositor::run_pipeline(LayerPtr pipeline_stage, int &actors_rendered) {
+void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     /*
      * This is where rendering actually happens.
      *
@@ -363,6 +317,12 @@ void Compositor::run_pipeline(LayerPtr pipeline_stage, int &actors_rendered) {
 
     signal_layer_render_finished_(*pipeline_stage);
     render_queue_.clear();
+}
+
+SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):
+    compositor_(global_compositor),
+    scene_(scene) {
+
 }
 
 }

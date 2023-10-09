@@ -17,10 +17,10 @@ public:
         auto cam = scene->create_child<smlt::Camera>();
         auto tex = application->shared_assets->create_texture(256, 256);
 
-        auto pipeline1 = window->compositor->render(stage, cam);
-        auto pipeline2 = window->compositor->render(stage, cam)->set_target(tex);
-        auto pipeline3 = window->compositor->render(stage, cam)->set_viewport(view);
-        auto pipeline4 = window->compositor->render(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
+        auto pipeline1 = window->compositor->create_layer(stage, cam);
+        auto pipeline2 = window->compositor->create_layer(stage, cam)->set_target(tex);
+        auto pipeline3 = window->compositor->create_layer(stage, cam)->set_viewport(view);
+        auto pipeline4 = window->compositor->create_layer(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
 
         assert_equal(cam->id(), pipeline1->camera()->id());
         assert_equal(stage->id(), pipeline1->stage_node()->id());
@@ -47,10 +47,10 @@ public:
         assert_false(pipeline1->is_active());
 
         auto pid2 = pipeline2->name();
-        window->compositor->destroy_pipeline(pid2);
+        pipeline2->destroy();
         application->run_frame();
 
-        assert_false(window->compositor->has_pipeline(pid2));
+        assert_false(window->compositor->has_layer(pid2));
 
         pipeline1->activate();
         assert_true(pipeline1->is_active());

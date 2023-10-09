@@ -11,7 +11,7 @@ public:
 
     void load() {
         camera_ = create_node<smlt::Camera>();
-        pipeline_ = compositor->render(this, camera_);
+        pipeline_ = compositor->create_layer(this, camera_);
 
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
         pipeline_->viewport->set_color(smlt::Color::GREY);

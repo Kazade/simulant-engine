@@ -21,9 +21,7 @@ class Layer:
     public RefCounted<Layer> {
 
 public:
-    Layer(
-        Compositor* render_sequence,
-        const std::string& name,
+    Layer(Compositor* render_sequence,
         StageNode* subtree, CameraPtr camera
     );
 

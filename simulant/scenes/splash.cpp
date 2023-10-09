@@ -58,7 +58,7 @@ void Splash::load() {
     source_ = camera_->create_child<AudioSource>();
 
     //Create an inactive pipeline
-    pipeline_ = compositor->render(this, camera_);
+    pipeline_ = compositor->create_layer(this, camera_);
     link_pipeline(pipeline_);
 }
 
