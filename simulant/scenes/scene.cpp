@@ -208,10 +208,6 @@ void Scene::_call_activate() {
     activate();
     is_active_ = true;
     signal_activated_();
-
-    for(auto name: linked_pipelines_) {
-        compositor->find_layer(name)->activate();
-    }
 }
 
 void Scene::_call_deactivate() {
@@ -219,30 +215,9 @@ void Scene::_call_deactivate() {
         return;
     }
 
-    for(auto name: linked_pipelines_) {
-        compositor->find_layer(name)->deactivate();
-    }
-    linked_pipelines_.clear();
-
     deactivate();
     is_active_ = false;
     signal_deactivated_();
-}
-
-void Scene::link_pipeline(const std::string &name) {
-    linked_pipelines_.insert(name);
-}
-
-void Scene::unlink_pipeline(const std::string &name) {
-    linked_pipelines_.insert(name);
-}
-
-void Scene::link_pipeline(LayerPtr pipeline) {
-    link_pipeline(pipeline->name());
-}
-
-void Scene::unlink_pipeline(LayerPtr pipeline) {
-    unlink_pipeline(pipeline->name());
 }
 
 void Scene::on_fixed_update(float step) {

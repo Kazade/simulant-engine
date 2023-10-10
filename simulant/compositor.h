@@ -128,9 +128,7 @@ class SceneCompositor {
 public:
     SceneCompositor(Scene* scene, Compositor* global_compositor);
 
-    ~SceneCompositor() {
-        destroy_all_layers();
-    }
+    ~SceneCompositor();
 
     LayerPtr create_layer(StageNode* subtree, Camera* camera, int32_t priority=0) {
         auto ret = compositor_->create_layer(subtree, camera, Viewport(), nullptr, priority);
@@ -159,6 +157,9 @@ private:
     Scene* scene_ = nullptr;
 
     std::list<LayerPtr> layers_;
+
+    sig::Connection activate_connection_;
+    sig::Connection deactivate_connection_;
 
 public:
     S_DEFINE_PROPERTY(global_compositor, &SceneCompositor::compositor_);

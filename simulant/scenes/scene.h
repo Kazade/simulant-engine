@@ -186,19 +186,11 @@ protected:
     virtual void activate() {}
     virtual void deactivate() {}
 
-    /* Linked pipelines activate and deactivate with the scene */
-    void link_pipeline(const std::string& name);
-    void unlink_pipeline(const std::string& name);
-    void link_pipeline(LayerPtr pipeline);
-    void unlink_pipeline(LayerPtr pipeline);
-
 private:
     void on_fixed_update(float step) override;
 
     void register_builtin_nodes();
     std::unordered_map<size_t, std::shared_ptr<Service>> services_;
-
-    std::set<std::string> linked_pipelines_;
 
     virtual void pre_load() {}
     virtual void post_unload() {}

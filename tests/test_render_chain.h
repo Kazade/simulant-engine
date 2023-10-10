@@ -22,6 +22,8 @@ public:
         auto pipeline3 = window->compositor->create_layer(stage, cam)->set_viewport(view);
         auto pipeline4 = window->compositor->create_layer(stage, cam)->set_priority(RENDER_PRIORITY_FOREGROUND);
 
+        pipeline2->set_name("Layer 2");
+
         assert_equal(cam->id(), pipeline1->camera()->id());
         assert_equal(stage->id(), pipeline1->stage_node()->id());
         assert_equal(TexturePtr(), pipeline1->target());

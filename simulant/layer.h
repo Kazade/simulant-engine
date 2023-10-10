@@ -16,6 +16,11 @@ namespace smlt {
 class Compositor;
 class RenderableStore;
 
+enum LayerActivationMode {
+    LAYER_ACTIVATION_MODE_AUTOMATIC,
+    LAYER_ACTIVATION_MODE_MANUAL
+};
+
 class Layer:
     public TypedDestroyableObject<Layer, Compositor>,
     public RefCounted<Layer> {
@@ -78,6 +83,15 @@ public:
     bool is_complete() const {
         return node_ && camera_;
     }
+
+    void set_activation_mode(LayerActivationMode mode) {
+        mode_ = mode;
+    }
+
+    LayerActivationMode activation_mode() const {
+        return mode_;
+    }
+
 private:
     uint32_t id_ = 0;
 
@@ -99,6 +113,8 @@ private:
     std::string name_;
 
     float detail_level_end_distances_[DETAIL_LEVEL_MAX];
+
+    LayerActivationMode mode_ = LAYER_ACTIVATION_MODE_AUTOMATIC;
 
     friend class Compositor;
 

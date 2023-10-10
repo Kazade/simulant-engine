@@ -59,7 +59,6 @@ void Splash::load() {
 
     //Create an inactive pipeline
     pipeline_ = compositor->create_layer(this, camera_);
-    link_pipeline(pipeline_);
 }
 
 void Splash::unload() {

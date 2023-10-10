@@ -323,6 +323,28 @@ SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):
     compositor_(global_compositor),
     scene_(scene) {
 
+    activate_connection_ = scene_->signal_activated().connect([=]() {
+        for(auto& layer: layers_) {
+            if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
+                layer->activate();
+            }
+        }
+    });
+
+    deactivate_connection_ = scene_->signal_deactivated().connect([=]() {
+        for(auto& layer: layers_) {
+            if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
+                layer->deactivate();
+            }
+        }
+    });
+}
+
+SceneCompositor::~SceneCompositor() {
+    activate_connection_.disconnect();
+    deactivate_connection_.disconnect();
+
+    destroy_all_layers();
 }
 
 }
