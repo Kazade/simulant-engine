@@ -14,12 +14,12 @@ public:
 
         auto cube = assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         cube->create_submesh_as_cube("cube", assets->create_material(), 1.0);
-        smlt::ActorPtr actor = create_node<smlt::Actor>(cube);
+        smlt::ActorPtr actor = create_child<smlt::Actor>(cube);
 
         actor->transform->set_position(smlt::Vec3(0, 0, -5));
 
-        auto camera1 = create_node<smlt::Camera>();
-        auto camera2 = create_node<smlt::Camera>();
+        auto camera1 = create_child<smlt::Camera>();
+        auto camera2 = create_child<smlt::Camera>();
 
         // Render new stages to the framebuffer, using both viewports. Make sure we tell the pipeline to clear
         compositor->create_layer(

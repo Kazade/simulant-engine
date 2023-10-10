@@ -10,7 +10,7 @@ public:
         smlt::Scene(window) {}
 
     void load() {
-        camera_ = create_node<smlt::Camera>();
+        camera_ = create_child<smlt::Camera>();
         pipeline_ = compositor->create_layer(this, camera_);
 
         pipeline_->set_clear_flags(BUFFER_CLEAR_ALL);
@@ -21,6 +21,7 @@ public:
 
         auto mesh = assets->load_mesh("sample_data/quake2/maps/demo1.bsp");
         create_node<smlt::Geom>(mesh);
+        create_child<smlt::Geom>(mesh);
 
         cr_yield();
 
@@ -49,7 +50,7 @@ public:
             cr_yield();
         });
 
-        auto fly = create_node<smlt::FlyController>();
+        auto fly = create_child<smlt::FlyController>();
         camera_->set_parent(fly);
 
         camera_->set_perspective_projection(
@@ -59,7 +60,7 @@ public:
             1500.0
         );
 
-        create_node<smlt::DirectionalLight>();
+        create_child<smlt::DirectionalLight>();
         cr_yield();
     }
 
@@ -90,6 +91,7 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "Quake 2 Mesh Loader";
     config.fullscreen = false;
+    config.development.force_renderer = "gl1x";
 
 #ifdef __DREAMCAST__
     config.width = 640;

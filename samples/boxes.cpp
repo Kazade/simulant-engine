@@ -13,11 +13,10 @@ public:
     void load() {
         start_service<PhysicsService>();
 
-        camera_ = create_node<smlt::Camera>();
+        camera_ = create_child<smlt::Camera>();
         pipeline_ = compositor->create_layer(
             this, camera_
         );
-        link_pipeline(pipeline_);
 
         pipeline_->viewport->set_color(smlt::Color::BLUE);
 
@@ -29,7 +28,7 @@ public:
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
-            create_node<Skybox>("sample_data/skyboxes/TropicalSunnyDay");
+            create_child<Skybox>("sample_data/skyboxes/TropicalSunnyDay");
         }
 
         auto crate = app->shared_assets->load_texture("sample_data/crate.png");
@@ -46,10 +45,10 @@ public:
         ); //window->shared_assets->load_mesh("sample_data/playground.obj");
 
         ground_mesh_ = ground_mesh;
-        ground_ = create_node<smlt::Actor>(ground_mesh_);
+        ground_ = create_child<smlt::Actor>(ground_mesh_);
 
         // Make the ground a staticbody
-        auto c = create_node<smlt::StaticBody>();
+        auto c = create_child<smlt::StaticBody>();
         c->adopt_children(ground_); // FIXME: Convert to mixin
         c->add_box_collider(ground_->aabb().dimensions(), PhysicsMaterial::STONE);
 
@@ -58,7 +57,7 @@ public:
 
     void spawn_box() {
         boxes_.push_back(
-            create_node<smlt::Actor>(box_mesh_)
+            create_child<smlt::Actor>(box_mesh_)
         );
 
         auto box = boxes_.back();
@@ -66,7 +65,7 @@ public:
             ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f, 20, 0
         );
 
-        auto controller = create_node<smlt::RigidBody>(pos);
+        auto controller = create_child<smlt::RigidBody>(pos);
         controller->add_box_collider(box->aabb().dimensions(), PhysicsMaterial::WOOD);
 
         box->set_parent(controller);

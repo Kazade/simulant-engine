@@ -10,12 +10,10 @@ public:
 
     void load() override {
 
-        camera_ = create_node<smlt::Camera>();
+        camera_ = create_child<smlt::Camera>();
         auto pipeline = compositor->create_layer(
             this, camera_
         );
-
-        link_pipeline(pipeline);
 
         pipeline->viewport->set_color(smlt::Color::BLACK);
 
@@ -50,20 +48,20 @@ public:
         fairy_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
-        cave_geom_ = create_node<smlt::Geom>(cave_mesh_);
-        fairy_actor_ = create_node<smlt::Actor>(fairy_mesh_);
-        godray_geom_ = create_node<smlt::Geom>(godray_mesh_);
+        cave_geom_ = create_child<smlt::Geom>(cave_mesh_);
+        fairy_actor_ = create_child<smlt::Actor>(fairy_mesh_);
+        godray_geom_ = create_child<smlt::Geom>(godray_mesh_);
         fairy_actor_->set_render_priority(10);
 
         // Lights
         lighting->set_ambient_light(smlt::Color(0.25f, 0.25f, 0.25f, 1.0f));
-        create_node<smlt::DirectionalLight>(Vec3(-120, -90, 0), Color(1, 0.6822482f, 0.3915094f, 1) * 0.5f);
+        create_child<smlt::DirectionalLight>(Vec3(-120, -90, 0), Color(1, 0.6822482f, 0.3915094f, 1) * 0.5f);
 
         Color lightCol = Color(1, 0.6822482f, 0.3915094f, 1.0f);
-        auto rock_light = create_node<smlt::PointLight>(Vec3(-12.15f, -0.67f, 0.73f), lightCol * 23.0f);
+        auto rock_light = create_child<smlt::PointLight>(Vec3(-12.15f, -0.67f, 0.73f), lightCol * 23.0f);
         rock_light->set_attenuation(4.31f, 0.01f, 0.25f, 0.75);
 
-        auto fairy_light = create_node<smlt::PointLight>(Vec3(), Color(0.5f, 0.85f, 1, 1) * 10);
+        auto fairy_light = create_child<smlt::PointLight>(Vec3(), Color(0.5f, 0.85f, 1, 1) * 10);
         fairy_light->set_attenuation(5, 0.01f, 0.25f, 0.75f);
         fairy_light->set_parent(fairy_actor_);
 
