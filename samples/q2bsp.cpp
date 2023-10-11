@@ -25,6 +25,16 @@ public:
 
         auto entities = mesh->data->get<smlt::Q2EntityList>("entities");
 
+        auto fly = create_child<smlt::FlyController>();
+        camera_->set_parent(fly);
+
+        camera_->set_perspective_projection(
+            Degrees(45.0),
+            float(window->width()) / float(window->height()),
+            1.0,
+            1500.0
+        );
+
         std::for_each(entities.begin(), entities.end(), [&](Q2Entity& ent) {
             if(ent["classname"] == "info_player_start") {
                 auto position = ent["origin"];
@@ -42,21 +52,11 @@ public:
                 );
 
                 pos = pos.rotated_by(rotation);
-                camera_->transform->set_position(pos);
+                fly->transform->set_position(pos);
             }
 
             cr_yield();
         });
-
-        auto fly = create_child<smlt::FlyController>();
-        camera_->set_parent(fly);
-
-        camera_->set_perspective_projection(
-            Degrees(45.0),
-            float(window->width()) / float(window->height()),
-            1.0,
-            1500.0
-        );
 
         create_child<smlt::DirectionalLight>();
         cr_yield();
