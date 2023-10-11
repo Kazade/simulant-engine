@@ -73,6 +73,8 @@ T* child_factory(F& factory, StageNode* parent, Args&&... args) {
     return node;
 }
 
+template<typename F, typename T, typename... Args>
+T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 
 }
 
@@ -212,6 +214,29 @@ public:
         adopt_children(args...);
     }
 
+    template<typename T, typename... Args>
+    T* create_mixin(Args&& ... args) {
+        return impl::mixin_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
+    }
+
+    StageNode* find_mixin(const std::string& name) const;
+
+    std::size_t mixin_count() const {
+        return mixins_.size();
+    }
+
+    StageNode* base() {
+        return base_;
+    }
+
+    const StageNode* base() const {
+        return base_;
+    }
+
+    bool is_mixin() const {
+        return base_ != this;
+    }
+
     /** If this returns true, then generate_renderables will not be called on
      *  descendents of this node. It is assumed that this node generates
      *  renderables for all its children. */
@@ -295,6 +320,14 @@ private:
 
     virtual void finalize_destroy() override final;
     virtual void finalize_destroy_immediately() final;
+
+
+private:
+    /* Mixin handling */
+    StageNode* base_ = this;
+    std::unordered_map<StageNodeType, StageNode*> mixins_;
+
+    void add_mixin(StageNode* mixin);
 
 private:
     /* This is ugly, but it's here for performance to avoid
@@ -532,6 +565,30 @@ public:
 
     virtual ~ContainerNode() {}
 };
+
+namespace impl {
+
+template<typename F, typename T, typename... Args>
+T* mixin_factory(F& factory, StageNode* base, Args&&... args) {
+    if(base->is_mixin()) {
+        S_WARN("Tried to create nested mixin");
+        return nullptr;
+    }
+
+    auto type = T::Meta::node_type;
+    if(base->mixins_.count(type)) {
+        S_WARN("Tried to create duplicate mixin");
+        return nullptr;
+    }
+
+    auto node = factory->template create_node<T>(std::forward<Args>(args)...);
+
+    base->add_mixin(node);
+
+    return node;
+}
+
+}
 
 typedef default_init_ptr<StageNode> StageNodePtr;
 

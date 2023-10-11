@@ -102,7 +102,7 @@ std::list<StageNode*> StageNode::detach() {
 }
 
 void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_retain) {
-    if(new_parent == parent_ || new_parent == this) {
+    if(new_parent == parent_ || new_parent == this || is_mixin()) {
         return;
     }
 
@@ -143,6 +143,18 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     assert(prev_ != this);
 
     on_parent_set(old_parent, parent_, transform_retain);
+}
+
+StageNode* StageNode::find_mixin(const std::string& name) const {
+    auto it = std::find_if(mixins_.begin(), mixins_.end(), [&](const std::pair<StageNodeType, StageNode*>& p) -> bool {
+        return p.second->name() == name;
+    });
+
+    if(it != mixins_.end()) {
+        return it->second;
+    }
+
+    return nullptr;
 }
 
 void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const smlt::Camera* camera, const smlt::Viewport *viewport, const DetailLevel detail_level) {
@@ -220,6 +232,16 @@ void StageNode::finalize_destroy_immediately() {
 
         std::for_each(to_destroy.begin(), to_destroy.end(), [](StageNode* n) { n->destroy_immediately(); });
     }
+}
+
+void StageNode::add_mixin(StageNode* mixin) {
+    mixin->base_ = this;
+    mixins_.insert(std::make_pair(mixin->node_type(), mixin));
+
+    mixin->signal_destroyed().connect([=]() {
+        mixin->scene->queue_clean_up(mixin);
+        mixins_.erase(mixin->node_type());
+    });
 }
 
 bool StageNode::is_visible() const {
