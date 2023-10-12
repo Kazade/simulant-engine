@@ -1,8 +1,13 @@
 #pragma once
 
 #include "../macros.h"
+#include "../signals/signal.h"
 
 namespace smlt {
+
+typedef sig::signal<void (float)> UpdatedSignal;
+typedef sig::signal<void (float)> LateUpdatedSignal;
+typedef sig::signal<void (float)> FixedUpdatedSignal;
 
 /**
  * @brief The Updateable class
@@ -11,6 +16,10 @@ namespace smlt {
  *
  */
 class Updateable {
+    DEFINE_SIGNAL(UpdatedSignal, signal_update);
+    DEFINE_SIGNAL(LateUpdatedSignal, signal_late_update);
+    DEFINE_SIGNAL(FixedUpdatedSignal, signal_fixed_update);
+
 public:
     virtual ~Updateable() {}
 
@@ -20,14 +29,17 @@ public:
      */
     virtual void _update_thunk(float dt) {
         update(dt);
+        signal_update_(dt);
     }
 
     virtual void _late_update_thunk(float dt) {
         late_update(dt);
+        signal_late_update_(dt);
     }
 
     virtual void _fixed_update_thunk(float step) {
         fixed_update(step);
+        signal_fixed_update_(step);
     }
 
 private:
