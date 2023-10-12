@@ -30,8 +30,6 @@
 #include "../nodes/light.h"
 #include "../nodes/camera.h"
 #include "../procedural/texture.h"
-#include "../behaviours/material/flowing.h"
-#include "../behaviours/material/warp.h"
 #include "../utils/rect_pack.h"
 #include "../asset_manager.h"
 

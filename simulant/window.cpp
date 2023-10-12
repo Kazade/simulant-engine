@@ -26,6 +26,7 @@
 #include "window.h"
 #include "platform.h"
 #include "input/input_state.h"
+#include "input/input_manager.h"
 #include "nodes/camera.h"
 #include "nodes/ui/ui_manager.h"
 #include "asset_manager.h"

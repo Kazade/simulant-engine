@@ -3,7 +3,7 @@
 #include <simulant/test.h>
 #include <simulant/simulant.h>
 
-#include "../simulant/behaviours/locators/node_locator.h"
+#include "../simulant/nodes/locators/node_locator.h"
 
 namespace {
 
