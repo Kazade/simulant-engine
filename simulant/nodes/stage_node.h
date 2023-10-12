@@ -4,9 +4,9 @@
 
 #include "../interfaces/nameable.h"
 #include "../interfaces/printable.h"
-#include "../interfaces/transformable.h"
 #include "../interfaces/updateable.h"
 #include "../interfaces/boundable.h"
+#include "../interfaces/transform.h"
 #include "../behaviours/behaviour.h"
 #include "../interfaces/has_auto_id.h"
 #include "../generic/data_carrier.h"
@@ -83,7 +83,6 @@ class StageNode:
     public DestroyableObject,
     public virtual Nameable,
     public Printable,
-    public Transformable,
     public Updateable,
     public virtual BoundableEntity,
     public virtual TwoPhaseConstructed,
@@ -295,6 +294,8 @@ protected:
 
 private:
     friend class StageNodeManager;
+
+    Transform transform_;
 
     // NVI idiom
     bool _create(void* params) {
@@ -523,6 +524,9 @@ private:
 
     /* Passed to coroutines and used to detect when the object has been destroyed */
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
+
+public:
+    S_DEFINE_PROPERTY(transform, &StageNode::transform_);
 };
 
 
