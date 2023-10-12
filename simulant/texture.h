@@ -29,7 +29,6 @@
 #include "types.h"
 #include "asset.h"
 #include "interfaces.h"
-#include "interfaces/updateable.h"
 #include "path.h"
 
 namespace smlt {
@@ -153,7 +152,6 @@ class Texture :
     public Loadable,
     public generic::Identifiable<AssetID>,
     public RefCounted<Texture>,
-    public Updateable,
     public RenderTarget,
     public ChainNameable<Texture> {
 
@@ -320,7 +318,6 @@ public:
     /** These are overridden to notify the renderer of texture changes */
     bool on_init() override;
     void on_clean_up() override;
-    void update(float dt) override;
 
     /** Returns true if the format contains mipmap data, or mipmaps
      * have been generated during texture upload */

@@ -760,10 +760,6 @@ void Texture::on_clean_up() {
     renderer_->unregister_texture(id(), this);
 }
 
-void Texture::update(float dt) {
-    _S_UNUSED(dt);
-}
-
 bool Texture::has_mipmaps() const {
     return texture_format_contains_mipmaps(format_) || has_mipmaps_;
 }

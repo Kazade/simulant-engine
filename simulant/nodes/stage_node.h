@@ -275,9 +275,9 @@ public:
 protected:
     virtual bool on_create(void* params) = 0;
     virtual bool on_destroy() { return true; }
-    virtual void on_update(float dt) { _S_UNUSED(dt); }
-    virtual void on_fixed_update(float step) { _S_UNUSED(step); }
-    virtual void on_late_update(float dt) { _S_UNUSED(dt); }
+    virtual void on_update(float dt) override { _S_UNUSED(dt); }
+    virtual void on_fixed_update(float step) override { _S_UNUSED(step); }
+    virtual void on_late_update(float dt) override { _S_UNUSED(dt); }
 
     void on_transformation_changed() override {
         mark_transformed_aabb_dirty();
@@ -525,7 +525,11 @@ private:
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
 
 public:
-    S_DEFINE_PROPERTY(transform, &StageNode::transform_);
+    Transform* get_transform() const {
+        return &base_->transform_;
+    }
+
+    S_DEFINE_PROPERTY(transform, &StageNode::get_transform);
 };
 
 

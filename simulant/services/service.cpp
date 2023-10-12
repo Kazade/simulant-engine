@@ -3,15 +3,15 @@
 namespace smlt {
 
 void Service::update(float dt) {
-    on_update(dt);
+    Updateable::update(dt);
 }
 
 void Service::late_update(float dt) {
-    on_late_update(dt);
+    Updateable::late_update(dt);
 }
 
 void Service::fixed_update(float step) {
-    on_fixed_update(step);
+    Updateable::fixed_update(step);
 }
 
 

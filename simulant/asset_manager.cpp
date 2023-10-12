@@ -77,13 +77,7 @@ void AssetManager::destroy_all() {
 }
 
 void AssetManager::update(float dt) {
-    material_manager_.each([dt](uint32_t, const MaterialPtr& mat) {
-        mat->update(dt);
-    });
-
-    texture_manager_.each([dt](uint32_t, const TexturePtr& tex) {
-        tex->update(dt);
-    });
+    _S_UNUSED(dt);
 }
 
 void SharedAssetManager::set_default_material_filename(const Path& filename) {

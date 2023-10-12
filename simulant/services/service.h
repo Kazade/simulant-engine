@@ -17,9 +17,9 @@ public:
     void fixed_update(float step) override final;
 
 private:
-    virtual void on_update(float dt) { _S_UNUSED(dt); }
-    virtual void on_fixed_update(float step) { _S_UNUSED(step); }
-    virtual void on_late_update(float dt) { _S_UNUSED(dt); }
+    virtual void on_update(float dt) override { _S_UNUSED(dt); }
+    virtual void on_fixed_update(float step) override { _S_UNUSED(step); }
+    virtual void on_late_update(float dt) override { _S_UNUSED(dt); }
 };
 
 }

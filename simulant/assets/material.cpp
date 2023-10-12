@@ -100,10 +100,6 @@ MaterialPass *Material::pass(uint8_t pass) {
     return nullptr;
 }
 
-void Material::update(float dt) {
-    _S_UNUSED(dt);
-}
-
 Material &Material::operator=(const Material &rhs) {
     /* Reduce refcounts for unused properties */
     for(auto& prop: custom_properties()) {

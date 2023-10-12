@@ -27,29 +27,29 @@ public:
      * Non-Virtual Interface. Simulant calls these underscore prefixed
      * functions, and subclasses implement the more nicely named ones
      */
-    virtual void _update_thunk(float dt) {
-        update(dt);
+    virtual void update(float dt) {
+        on_update(dt);
         signal_update_(dt);
     }
 
-    virtual void _late_update_thunk(float dt) {
-        late_update(dt);
+    virtual void late_update(float dt) {
+        on_late_update(dt);
         signal_late_update_(dt);
     }
 
-    virtual void _fixed_update_thunk(float step) {
-        fixed_update(step);
+    virtual void fixed_update(float step) {
+        on_fixed_update(step);
         signal_fixed_update_(step);
     }
 
-private:
-    virtual void update(float dt) {
+protected:
+    virtual void on_update(float dt) {
         _S_UNUSED(dt);
     }
-    virtual void late_update(float dt) {
+    virtual void on_late_update(float dt) {
         _S_UNUSED(dt);
     }
-    virtual void fixed_update(float step) {
+    virtual void on_fixed_update(float step) {
         _S_UNUSED(step);
     }
 };

@@ -28,7 +28,6 @@
 #include "../generic/managed.h"
 #include "../types.h"
 #include "../loadable.h"
-#include "../interfaces/updateable.h"
 
 #include "materials/material_object.h"
 #include "materials/constants.h"
@@ -86,7 +85,6 @@ class Material:
     public Loadable,
     public generic::Identifiable<AssetID>,
     public RefCounted<Material>,
-    public Updateable,
     public MaterialObject,
     public ChainNameable<Material> {
 
@@ -118,8 +116,6 @@ public:
             callback(i, &passes_[i]);
         }
     }
-
-    void update(float dt) override;
 
     const std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType>& custom_properties() const {
         return custom_properties_;

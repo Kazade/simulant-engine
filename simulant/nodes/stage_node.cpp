@@ -343,6 +343,10 @@ void StageNode::update(float dt) {
 
     on_update(dt);
 
+    for(auto& mixin: mixins_) {
+        mixin.second->update(dt);
+    }
+
     for(auto& child: each_child()) {
         child.update(dt);
     }
@@ -355,6 +359,10 @@ void StageNode::late_update(float dt) {
 
     on_late_update(dt);
 
+    for(auto& mixin: mixins_) {
+        mixin.second->late_update(dt);
+    }
+
     for(auto& child: each_child()) {
         child.late_update(dt);
     }
@@ -366,6 +374,10 @@ void StageNode::fixed_update(float step) {
     }
 
     on_fixed_update(step);
+
+    for(auto& mixin: mixins_) {
+        mixin.second->fixed_update(step);
+    }
 
     for(auto& child: each_child()) {
         child.fixed_update(step);
