@@ -321,8 +321,10 @@ private:
     virtual void finalize_destroy() override final;
     virtual void finalize_destroy_immediately() final;
 
-
 private:
+    template<typename F, typename T, typename... Args>
+    friend T* mixin_factory(F& factory, StageNode* base, Args&&... args);
+
     /* Mixin handling */
     StageNode* base_ = this;
 
