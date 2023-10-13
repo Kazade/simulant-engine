@@ -50,7 +50,7 @@
 
 #include "../nodes/cylindrical_billboard.h"
 #include "../nodes/spherical_billboard.h"
-#include "../partitioners/frustum_partitioner.h"
+#include "../nodes/frustum_culler.h"
 
 namespace smlt {
 
@@ -87,7 +87,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<DirectionalLight>();
     register_stage_node<PointLight>();
     register_stage_node<MeshInstancer>();
-    register_stage_node<FrustumPartitioner>();
+    register_stage_node<FrustumCuller>();
     register_stage_node<CylindricalBillboard>();
     register_stage_node<SphericalBillboard>();
     register_stage_node<ParticleSystem>();

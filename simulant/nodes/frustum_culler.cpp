@@ -24,11 +24,11 @@
 #include "../nodes/particle_system.h"
 #include "../nodes/geom.h"
 
-#include "frustum_partitioner.h"
+#include "frustum_culler.h"
 
 namespace smlt {
 
-void FrustumPartitioner::do_generate_renderables(
+void FrustumCuller::do_generate_renderables(
     batcher::RenderQueue* render_queue,
     const Camera* camera, const Viewport* viewport,
     const DetailLevel detail_level) {
@@ -51,7 +51,7 @@ void FrustumPartitioner::do_generate_renderables(
     }
 }
 
-void FrustumPartitioner::apply_staged_write(const StageNodeID& key, const StagedWrite &write) {
+void FrustumCuller::apply_staged_write(const StageNodeID& key, const StagedWrite &write) {
     _S_UNUSED(key);
     _S_UNUSED(write);
     // Do nothing, we don't need to!

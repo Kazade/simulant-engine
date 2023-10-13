@@ -2,13 +2,13 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "simulant/partitioners/frustum_partitioner.h"
+#include "simulant/nodes/frustum_culler.h"
 
 namespace {
 
 using namespace smlt;
 
-class FrustumPartitionerTests : public test::SimulantTestCase {
+class FrustumCullerTests : public test::SimulantTestCase {
 public:
     void set_up() override {
         test::SimulantTestCase::set_up();
@@ -24,7 +24,7 @@ public:
     }
 
     void test_visibility() {
-        FrustumPartitioner* partitioner = scene->create_child<FrustumPartitioner>();
+        FrustumCuller* partitioner = scene->create_child<FrustumCuller>();
 
         auto camera = scene->create_child<smlt::Camera>();
         camera->set_parent(partitioner);
@@ -50,7 +50,7 @@ public:
     }
 
     void test_nodes_returned_if_never_culled() {
-        FrustumPartitioner* partitioner = scene->create_child<FrustumPartitioner>();
+        FrustumCuller* partitioner = scene->create_child<FrustumCuller>();
 
         auto camera = scene->create_child<smlt::Camera>();
         auto a1 = scene->create_child<smlt::Actor>(box_);
@@ -75,7 +75,7 @@ public:
     }
 
     void test_destroyed_nodes_not_returned() {
-        FrustumPartitioner* partitioner = scene->create_child<FrustumPartitioner>();
+        FrustumCuller* partitioner = scene->create_child<FrustumCuller>();
 
         auto camera = scene->create_child<smlt::Camera>();
 

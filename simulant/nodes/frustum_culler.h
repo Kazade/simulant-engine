@@ -26,14 +26,14 @@ class SubActor;
 
 struct FrustumPartitionerParams {};
 
-class FrustumPartitioner : public Partitioner {
+class FrustumCuller : public Partitioner {
 public:
     struct Meta {
         typedef FrustumPartitionerParams params_type;
         const static StageNodeType node_type = STAGE_NODE_TYPE_PARTITIONER_FRUSTUM;
     };
 
-    FrustumPartitioner(Scene* owner):
+    FrustumCuller(Scene* owner):
         Partitioner(owner, STAGE_NODE_TYPE_PARTITIONER_FRUSTUM) {}
 
     const AABB& aabb() const {
