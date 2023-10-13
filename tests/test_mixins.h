@@ -10,7 +10,7 @@ using namespace smlt;
 class MixinTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto node = scene->create_node<Stage>();
+        auto node = scene->create_child<Stage>();
         auto mixin1 = node->create_mixin<FlyController>();
         mixin1->set_name("Mixin");
 
@@ -59,7 +59,17 @@ public:
         assert_is_null(node->find_mixin("Mixin"));
 
         // Can create it now, as the other one was destroyed
-        assert_is_not_null(node->create_mixin<FlyController>());
+        mixin1 = node->create_mixin<FlyController>();
+        assert_is_not_null(mixin1);
+
+        bool destroyed = false;
+        mixin1->signal_destroyed().connect([&]() {
+            destroyed = true;
+        });
+
+        node->destroy();
+
+        assert_true(destroyed);
     }
 };
 

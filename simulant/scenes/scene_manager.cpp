@@ -128,14 +128,14 @@ void SceneManager::unload(const std::string& route) {
         std::shared_ptr<Scene> scene = it->second;
         scene->_call_unload();
         scene->load_args.clear();
+        scene->destroy();
 
-        if(scene->destroy_on_unload()) {
-            /* Destroy the scene once it's been unloaded but do
-             * it after late_update so that any queued destructions
-             * from unload can happen before we destroy the scene
-             */
-            routes_queued_for_destruction_.insert(route);
-        }
+        /* Destroy the scene once it's been unloaded but do
+         * it after late_update so that any queued destructions
+         * from unload can happen before we destroy the scene
+         */
+        routes_queued_for_destruction_.insert(route);
+        current_scene_ = nullptr;
     }
 }
 

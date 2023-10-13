@@ -110,8 +110,16 @@ void Scene::register_builtin_nodes() {
 }
 
 void Scene::clean_up_destroyed_objects() {
+    std::set<StageNode*> cleaned;
     for(auto it = queued_for_clean_up_.begin(); it != queued_for_clean_up_.end();) {
+        if(cleaned.count(*it)) {
+            // Somehow duplicated in the cleanup list, just ignore
+            S_DEBUG("Somehow duplicated a stage node cleanup");
+            continue;
+        }
+
         if(clean_up_node((*it))) {
+            cleaned.insert(*it);
             it = queued_for_clean_up_.erase(it);
         } else {
             S_ERROR("Unable to release node that has not been destroyed");

@@ -121,8 +121,6 @@ public:
 
         assert_true(signal_called);
 
-        scr->set_destroy_on_unload(false); //Don't destroy on unload        
-
         assert_true(scr->load_called);
         assert_true(scr->activate_called);
         assert_false(scr->deactivate_called);

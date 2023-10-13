@@ -146,12 +146,12 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
 }
 
 StageNode* StageNode::find_mixin(const std::string& name) const {
-    auto it = std::find_if(mixins_.begin(), mixins_.end(), [&](const std::pair<StageNodeType, StageNode*>& p) -> bool {
-        return p.second->name() == name;
+    auto it = std::find_if(mixins_.begin(), mixins_.end(), [&](const std::pair<StageNodeType, MixinInfo>& p) -> bool {
+        return p.second.ptr->name() == name;
     });
 
     if(it != mixins_.end()) {
-        return it->second;
+        return it->second.ptr;
     }
 
     return nullptr;
@@ -174,6 +174,12 @@ void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const s
  */
 void StageNode::finalize_destroy() {
     if(owner_) {
+        // Go through the mixins and make sure they're destroyed
+        auto mixins = mixins_; // Avoid removal inside a loop
+        for(auto& stage_node: mixins) {
+            stage_node.second.ptr->destroy();
+        };
+
         owner_->queue_clean_up(this);
 
         // Go through the subnodes and ask each for destruction in-turn
@@ -193,6 +199,10 @@ StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type):
 
 StageNode::~StageNode() {
     transform->remove_listener(this);
+
+    for(auto& mixin: mixins_) {
+        mixin.second.destroy_connection.disconnect();
+    }
 }
 
 StageNodeType StageNode::node_type() const {
@@ -236,12 +246,14 @@ void StageNode::finalize_destroy_immediately() {
 
 void StageNode::add_mixin(StageNode* mixin) {
     mixin->base_ = this;
-    mixins_.insert(std::make_pair(mixin->node_type(), mixin));
 
-    mixin->signal_destroyed().connect([=]() {
-        mixin->scene->queue_clean_up(mixin);
+    MixinInfo info;
+    info.ptr = mixin;
+    info.destroy_connection = mixin->signal_destroyed().connect([=]() {
         mixins_.erase(mixin->node_type());
     });
+
+    mixins_.insert(std::make_pair(mixin->node_type(), info));
 }
 
 bool StageNode::is_visible() const {
@@ -341,10 +353,10 @@ void StageNode::update(float dt) {
         return;
     }
 
-    on_update(dt);
+    Updateable::update(dt);
 
     for(auto& mixin: mixins_) {
-        mixin.second->update(dt);
+        mixin.second.ptr->update(dt);
     }
 
     for(auto& child: each_child()) {
@@ -357,10 +369,10 @@ void StageNode::late_update(float dt) {
         return;
     }
 
-    on_late_update(dt);
+    Updateable::late_update(dt);
 
     for(auto& mixin: mixins_) {
-        mixin.second->late_update(dt);
+        mixin.second.ptr->late_update(dt);
     }
 
     for(auto& child: each_child()) {
@@ -373,10 +385,10 @@ void StageNode::fixed_update(float step) {
         return;
     }
 
-    on_fixed_update(step);
+    Updateable::fixed_update(step);
 
     for(auto& mixin: mixins_) {
-        mixin.second->fixed_update(step);
+        mixin.second.ptr->fixed_update(step);
     }
 
     for(auto& child: each_child()) {
