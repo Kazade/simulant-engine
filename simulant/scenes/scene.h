@@ -104,11 +104,11 @@ public:
     Scene(Window* window);
     virtual ~Scene();
 
-    void _call_load();
-    void _call_unload();
+    void load();
+    void unload();
 
-    void _call_activate();
-    void _call_deactivate();
+    void activate();
+    void deactivate();
 
     bool is_loaded() const { return is_loaded_; }
     bool is_active() const { return is_active_; }
@@ -172,10 +172,10 @@ public:
     }
 
 protected:
-    virtual void load() = 0;
-    virtual void unload() {}
-    virtual void activate() {}
-    virtual void deactivate() {}
+    virtual void on_load() = 0;
+    virtual void on_unload() {}
+    virtual void on_activate() {}
+    virtual void on_deactivate() {}
 
 private:
     void on_fixed_update(float step) override;
@@ -183,8 +183,8 @@ private:
     void register_builtin_nodes();
     std::unordered_map<size_t, std::shared_ptr<Service>> services_;
 
-    virtual void pre_load() {}
-    virtual void post_unload() {}
+    virtual void on_pre_load() {}
+    virtual void on_post_unload() {}
 
     bool is_loaded_ = false;
     bool is_active_ = false;
@@ -205,7 +205,7 @@ private:
     std::vector<any> load_args;
 
     void on_clean_up() override {
-        _call_unload();
+        unload();
     }
 
     // So that stage nodes can call queue_clean_up

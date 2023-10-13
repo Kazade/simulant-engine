@@ -7,7 +7,7 @@ public:
     MainScene(smlt::Window* window):
         smlt::Scene(window) {}
 
-    void load() {
+    void on_load() {
         camera_ = create_child<smlt::Camera>();
         camera_->set_orthographic_projection(0, window->width(), 0, window->height());
 
@@ -113,7 +113,7 @@ public:
         align_frame->transform->set_position_2d(smlt::Vec2(window->width() - 16, window->height() - 16));
     }
 
-    void activate() override {
+    void on_activate() override {
         auto entry = create_child<smlt::ui::Label>("");
 
         if(!input->start_text_input(true)) {

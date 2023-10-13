@@ -461,7 +461,7 @@ public:
     TestScene(Window* window):
         smlt::Scene(window) {}
 
-    void load() override {}
+    void on_load() override {}
 };
 
 class TestApp: public smlt::Application {

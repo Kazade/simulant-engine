@@ -348,7 +348,8 @@ bool Application::_call_init() {
     public:
         OverlayScene(Window* window):
             Scene(window) {}
-        void load() override {}
+
+        void on_load() override {}
     };
 
     overlay_scene_.reset(new OverlayScene(window_.get()));

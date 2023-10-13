@@ -86,18 +86,18 @@ class SceneManager :
                 if(!new_scene->is_loaded()) {
                     new_scene->load_args.clear();
                     unpack(new_scene->load_args, std::forward<Args>(args)...);
-                    new_scene->_call_load();
+                    new_scene->load();
                 }
 
                 auto previous = current_scene_;
 
                 if(previous) {
-                    previous->_call_deactivate();
+                    previous->deactivate();
                     signal_scene_deactivated_(previous->name(), previous.get());
                 }
 
                 std::swap(current_scene_, new_scene);
-                current_scene_->_call_activate();
+                current_scene_->activate();
 
                 if(previous && previous->unload_on_deactivate()) {
                     // If requested, we unload the previous scene once the new on is active
@@ -108,7 +108,7 @@ class SceneManager :
                 auto previous = current_scene_;
 
                 if(previous) {
-                    previous->_call_deactivate();
+                    previous->deactivate();
                     signal_scene_deactivated_(previous->name(), previous.get());
                     if(previous->unload_on_deactivate()) {
                         unload(previous->name());
@@ -118,11 +118,11 @@ class SceneManager :
                 if(!new_scene->is_loaded()) {
                     new_scene->load_args.clear();
                     unpack(new_scene->load_args, std::forward<Args>(args)...);
-                    new_scene->_call_load();
+                    new_scene->load();
                 }
 
                 std::swap(current_scene_, new_scene);
-                current_scene_->_call_activate();
+                current_scene_->activate();
             }
 
             signal_scene_activated_(route, new_scene.get());
@@ -174,7 +174,7 @@ public:
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
 
-        scene->_call_load();
+        scene->load();
     }
 
     template<typename ...Args>
@@ -185,7 +185,7 @@ public:
 
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
-        scene->_call_load();
+        scene->load();
     }
 
     template<typename ...Args>

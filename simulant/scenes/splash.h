@@ -27,11 +27,11 @@ private:
     float time_;
     uint64_t start_time_ = 0;
 
-    void activate() override;
-    void deactivate() override;
+    void on_activate() override;
+    void on_deactivate() override;
 
-    void load() override;
-    void unload() override;
+    void on_load() override;
+    void on_unload() override;
 
     void on_update(float dt) override;
 

@@ -166,15 +166,15 @@ static void print_asset_stats() {
 }
 
 
-void Scene::_call_load() {
+void Scene::load() {
     if(is_loaded_) {
         return;
     }
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
 
-    pre_load();
-    load();
+    on_pre_load();
+    on_load();
 
     auto used = smlt::get_app()->ram_usage_in_bytes();
     if(smlt::get_app()->config->development.additional_memory_logging) {
@@ -185,18 +185,18 @@ void Scene::_call_load() {
     is_loaded_ = true;
 }
 
-void Scene::_call_unload() {
+void Scene::unload() {
     if(!is_loaded_) {
         return;
     }
 
-    _call_deactivate();
+    deactivate();
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
 
     is_loaded_ = false;
-    unload();
-    post_unload();
+    on_unload();
+    on_post_unload();
 
     smlt::get_app()->shared_assets->run_garbage_collection();
 
@@ -208,22 +208,22 @@ void Scene::_call_unload() {
     }
 }
 
-void Scene::_call_activate() {
+void Scene::activate() {
     if(is_active_) {
         return;
     }
 
-    activate();
+    on_activate();
     is_active_ = true;
     signal_activated_();
 }
 
-void Scene::_call_deactivate() {
+void Scene::deactivate() {
     if(!is_active_) {
         return;
     }
 
-    deactivate();
+    on_deactivate();
     is_active_ = false;
     signal_deactivated_();
 }

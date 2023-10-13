@@ -26,7 +26,7 @@
 namespace smlt {
 namespace scenes {
 
-void Splash::load() {
+void Splash::on_load() {
     TextureFlags flags;
     flags.mipmap = smlt::MIPMAP_GENERATE_NONE;
 
@@ -61,12 +61,12 @@ void Splash::load() {
     pipeline_ = compositor->create_layer(this, camera_);
 }
 
-void Splash::unload() {
+void Splash::on_unload() {
     //Clean up
     pipeline_->destroy();
 }
 
-void Splash::activate() {
+void Splash::on_activate() {
     start_time_ = app->time_keeper->now_in_us();
     source_->play_sound(
         sound_,
@@ -75,7 +75,7 @@ void Splash::activate() {
     );
 }
 
-void Splash::deactivate() {
+void Splash::on_deactivate() {
     //Deactivate the Splash pipeline
 
 }

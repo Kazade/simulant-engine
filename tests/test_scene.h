@@ -26,10 +26,10 @@ public:
     TestScene(Window* window):
         Scene(window) {}
 
-    void load() override { load_called = true; }
-    void unload() override { unload_called = true; }
-    void activate() override { activate_called = true; }
-    void deactivate() override { deactivate_called = true; }
+    void on_load() override { load_called = true; }
+    void on_unload() override { unload_called = true; }
+    void on_activate() override { activate_called = true; }
+    void on_deactivate() override { deactivate_called = true; }
 
     volatile bool load_called = false;
     volatile bool unload_called = false;
@@ -42,16 +42,16 @@ public:
     PreloadArgsScene(Window* window):
         Scene(window) {}
 
-    void load() override {
+    void on_load() override {
         int arg0 = get_load_arg<int>(0);
         if(arg0 != 99) {
             throw test::AssertionError("Wrong value");
         }
         load_called = true;
     }
-    void unload() override { unload_called = true; }
-    void activate() override { activate_called = true; }
-    void deactivate() override { deactivate_called = true; }
+    void on_unload() override { unload_called = true; }
+    void on_activate() override { activate_called = true; }
+    void on_deactivate() override { deactivate_called = true; }
 
     volatile bool load_called = false;
     volatile bool unload_called = false;
@@ -68,7 +68,7 @@ public:
         _S_UNUSED(some_arg);
     }
 
-    void load() {}
+    void on_load() {}
 
 };
 

@@ -36,7 +36,7 @@ SceneManager::~SceneManager() {
 void SceneManager::destroy_all() {
     /* Unload all the routes */
     for(auto route: routes_) {
-        route.second->_call_unload();
+        route.second->unload();
 
         auto name = route.first;
         routes_queued_for_destruction_.insert(name);
@@ -126,7 +126,7 @@ void SceneManager::unload(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
         std::shared_ptr<Scene> scene = it->second;
-        scene->_call_unload();
+        scene->unload();
         scene->load_args.clear();
         scene->destroy();
 
@@ -158,7 +158,7 @@ ScenePtr SceneManager::resolve_scene(const std::string& route) {
 
 void SceneManager::reset() {
     for(auto p: routes_) {
-        p.second->_call_unload();
+        p.second->unload();
     }
     routes_.clear();
     scene_factories_.clear();
