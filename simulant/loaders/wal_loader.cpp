@@ -108,7 +108,7 @@ TextureLoadResult WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
         out[j++] = PALETTE[idx+1];
         out[j++] = PALETTE[idx+2];
 
-        // The last colour in the PALETTE is transparent
+        // The last color in the PALETTE is transparent
         if(idx == 255) {
             out[j++] = 0;
         } else {

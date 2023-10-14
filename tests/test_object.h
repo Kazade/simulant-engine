@@ -14,74 +14,56 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
-        camera_ = stage_->new_camera();
+        camera_ = scene->create_child<smlt::Camera>();
     }
 
     void tear_down() {
+        camera_->destroy();
         SimulantTestCase::tear_down();
-        scene->destroy_stage(stage_->id());
     }
 
     void test_move_to_origin() {
-        window->compositor->render(stage_, camera_);
+        window->compositor->create_layer(scene, camera_);
 
         // A bug was reported that this caused a crash (see #219)
-        auto mesh = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_cube("cube", stage_->assets->new_material(), 50.0f);
+        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_cube("cube", scene->assets->create_material(), 50.0f);
 
-        auto actor = stage_->new_actor_with_mesh(mesh);
-        actor->move_to(0, 0, 0);
+        auto actor = scene->create_child<smlt::Actor>(mesh);
+        actor->transform->set_translation(Vec3(0, 0, 0));
         application->run_frame();
     }
 
     void test_move_forward_by() {
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_child<smlt::Stage>();
 
-        actor->rotate_to(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
-        actor->move_forward_by(200);
+        actor->transform->set_rotation(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
+        actor->transform->translate(actor->transform->forward() * 200);
 
-        assert_close(actor->absolute_position().x, -200.0f, 0.0001f);
-        assert_close(actor->absolute_position().y, 0.0f, 0.0001f);
-        assert_close(actor->absolute_position().z, 0.0f, 0.0001f);
-    }
-
-    void test_positional_constraints() {
-        smlt::AABB aabb(Vec3(), 2.0);
-
-        auto actor = stage_->new_actor();
-        actor->move_to(Vec3(2, 0.5, 0.5));
-
-        assert_equal(2, actor->position().x);
-
-        // Applying the constraint should be enough to change the position
-        actor->constrain_to_aabb(aabb);
-        assert_equal(1, actor->position().x);
-
-        // Subsequent moves should be constrained
-        actor->move_to(Vec3(2, 0.5, 0.5));
-        assert_equal(1, actor->position().x);
+        assert_close(actor->transform->translation().x, -200.0f, 0.0001f);
+        assert_close(actor->transform->translation().y, 0.0f, 0.0001f);
+        assert_close(actor->transform->translation().z, 0.0f, 0.0001f);
     }
 
     void test_scaling_applies() {
-        auto actor = stage_->new_actor();
-        actor->scale_by(smlt::Vec3(2.0, 1.0, 0.5));
+        auto actor = scene->create_child<smlt::Stage>();
+        actor->transform->set_scale_factor(smlt::Vec3(2.0, 1.0, 0.5));
 
-        auto transform = actor->absolute_transformation();
+        auto transform = actor->transform->world_space_matrix();
 
         assert_equal(transform[0], 2.0f);
         assert_equal(transform[5], 1.0f);
         assert_equal(transform[10], 0.5f);
 
-        auto actor2 = stage_->new_actor();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
-        actor2->rotate_y_by(smlt::Degrees(1.0));
+        actor2->transform->rotate(smlt::Vec3::POSITIVE_Y, smlt::Degrees(1.0));
 
-        auto first = actor2->absolute_transformation();
+        auto first = actor2->transform->world_space_matrix();
 
-        actor2->scale_by(smlt::Vec3(2.0, 2.0, 2.0));
+        actor2->transform->set_scale_factor(smlt::Vec3(2.0, 2.0, 2.0));
 
-        auto second = actor2->absolute_transformation();
+        auto second = actor2->transform->world_space_matrix();
 
         assert_equal(first[0] * 2, second[0]);
         assert_equal(first[5] * 2, second[5]);
@@ -89,138 +71,140 @@ public:
     }
 
     void test_set_parent() {
-        auto actor1 = stage_->new_actor();
-        auto actor2 = stage_->new_actor();
+        auto actor1 = scene->create_child<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
         actor2->set_parent(actor1);
 
-        actor1->move_to(Vec3(0, 10, 0));
+        actor1->transform->set_translation(Vec3(0, 10, 0));
 
-        assert_equal(Vec3(0, 10, 0), actor2->absolute_position());
-        assert_equal(Vec3(), actor2->position());
+        assert_equal(Vec3(0, 10, 0), actor2->transform->position());
+        assert_equal(Vec3(), actor2->transform->translation());
 
-        actor1->rotate_to(Quaternion(Degrees(0), Degrees(90), Degrees(0)));
+        actor1->transform->set_rotation(Quaternion(Degrees(0), Degrees(90), Degrees(0)));
 
-        assert_close(actor2->absolute_rotation().x, actor1->rotation().x, 0.00001f);
-        assert_close(actor2->absolute_rotation().y, actor1->rotation().y, 0.00001f);
+        assert_close(actor2->transform->orientation().x, actor1->transform->orientation().x, 0.00001f);
+        assert_close(actor2->transform->orientation().y, actor1->transform->orientation().y, 0.00001f);
     }
 
-    void test_parent_is_stage() {
-        auto a1 = stage_->new_actor();
-        auto a2 = stage_->new_actor();
-        auto a3 = stage_->new_actor();
+    void test_parent_is_scene() {
+        auto a1 = scene->create_child<smlt::Stage>();
+        auto a2 = scene->create_child<smlt::Stage>();
+        auto a3 = scene->create_child<smlt::Stage>();
 
         a2->set_parent(a1);
         a3->set_parent(a2);
 
-        assert_true(a1->parent_is_stage());
-        assert_false(a2->parent_is_stage());
-        assert_false(a3->parent_is_stage());
+        assert_true(a1->parent_is_scene());
+        assert_false(a2->parent_is_scene());
+        assert_false(a3->parent_is_scene());
 
         a3->set_parent(nullptr);
 
-        assert_true(a3->parent_is_stage());
+        assert_false(a3->parent_is_scene());
+        auto strays = scene->stray_nodes();
+        assert_true(std::find(strays.begin(), strays.end(), a3) != strays.end());
     }
 
     void test_parent_transformation_applied() {
-        auto actor1 = stage_->new_actor();
-        auto actor2 = stage_->new_actor();
+        auto actor1 = scene->create_child<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
         actor2->set_parent(actor1);
 
-        actor2->move_to(smlt::Vec3(0, 0, -5));
+        actor2->transform->set_translation(smlt::Vec3(0, 0, -5));
 
-        actor1->move_to(smlt::Vec3(0, 0, -5));
-        actor1->rotate_to(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
+        actor1->transform->set_translation(smlt::Vec3(0, 0, -5));
+        actor1->transform->set_rotation(smlt::Quaternion(smlt::Degrees(0), smlt::Degrees(90), smlt::Degrees(0)));
 
-        assert_close(actor2->absolute_position().x, -5.0f, 0.00001f);
-        assert_close(actor2->absolute_position().y,  0.0f, 0.00001f);
-        assert_close(actor2->absolute_position().z, -5.0f, 0.00001f);
+        assert_close(actor2->transform->position().x, -5.0f, 0.00001f);
+        assert_close(actor2->transform->position().y,  0.0f, 0.00001f);
+        assert_close(actor2->transform->position().z, -5.0f, 0.00001f);
     }
 
     void test_set_absolute_rotation() {
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_child<smlt::Stage>();
 
-        actor->rotate_to_absolute(smlt::Degrees(10), 0, 0, 1);
+        actor->transform->set_orientation(smlt::Quaternion(smlt::Vec3(0, 0, 1), smlt::Degrees(10)));
 
-        assert_equal(actor->rotation(), actor->absolute_rotation());
+        assert_equal(actor->transform->rotation(), actor->transform->orientation());
 
-        auto actor2 = stage_->new_actor();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
-        actor2->set_parent(actor->id());
+        actor2->set_parent(actor);
 
-        assert_equal(actor2->absolute_rotation(), actor->absolute_rotation());
+        assert_equal(actor2->transform->orientation(), actor->transform->orientation());
 
-        actor2->rotate_to_absolute(smlt::Degrees(20), 0, 0, 1);
+        actor2->transform->set_orientation(smlt::Quaternion(smlt::Vec3(0, 0, 1), smlt::Degrees(20)));
 
         smlt::Quaternion expected_rel(smlt::Vec3::POSITIVE_Z, smlt::Degrees(10));
         smlt::Quaternion expected_abs(smlt::Vec3::POSITIVE_Z, smlt::Degrees(20));
 
-        assert_close(expected_abs.x, actor2->absolute_rotation().x, 0.000001f);
-        assert_close(expected_abs.y, actor2->absolute_rotation().y, 0.000001f);
-        assert_close(expected_abs.z, actor2->absolute_rotation().z, 0.000001f);
-        assert_close(expected_abs.w, actor2->absolute_rotation().w, 0.000001f);
+        assert_close(expected_abs.x, actor2->transform->orientation().x, 0.000001f);
+        assert_close(expected_abs.y, actor2->transform->orientation().y, 0.000001f);
+        assert_close(expected_abs.z, actor2->transform->orientation().z, 0.000001f);
+        assert_close(expected_abs.w, actor2->transform->orientation().w, 0.000001f);
 
-        assert_close(expected_rel.x, actor2->rotation().x, 0.000001f);
-        assert_close(expected_rel.y, actor2->rotation().y, 0.000001f);
-        assert_close(expected_rel.z, actor2->rotation().z, 0.000001f);
-        assert_close(expected_rel.w, actor2->rotation().w, 0.000001f);
+        assert_close(expected_rel.x, actor2->transform->rotation().x, 0.000001f);
+        assert_close(expected_rel.y, actor2->transform->rotation().y, 0.000001f);
+        assert_close(expected_rel.z, actor2->transform->rotation().z, 0.000001f);
+        assert_close(expected_rel.w, actor2->transform->rotation().w, 0.000001f);
     }
 
     void test_set_absolute_position() {
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_child<smlt::Stage>();
 
-        actor->move_to_absolute(10, 10, 10);
+        actor->transform->set_position(Vec3(10, 10, 10));
 
-        assert_equal(smlt::Vec3(10, 10, 10), actor->absolute_position());
+        assert_equal(smlt::Vec3(10, 10, 10), actor->transform->translation());
 
-        auto actor2 = stage_->new_actor();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
-        actor2->set_parent(actor->id());
+        actor2->set_parent(actor);
 
         //Should be the same as its parent
-        assert_equal(actor2->absolute_position(), actor->absolute_position());
+        assert_equal(actor2->transform->position(), actor->transform->position());
 
         //Make sure relative position is correctly calculated
-        actor2->move_to_absolute(20, 10, 10);
-        assert_equal(smlt::Vec3(10, 0, 0), actor2->position());
-        assert_equal(smlt::Vec3(20, 10, 10), actor2->absolute_position());
+        actor2->transform->set_position(Vec3(20, 10, 10));
+        assert_equal(smlt::Vec3(10, 0, 0), actor2->transform->translation());
+        assert_equal(smlt::Vec3(20, 10, 10), actor2->transform->position());
 
         //Make sure setting by vec3 works
-        actor2->move_to_absolute(smlt::Vec3(0, 0, 0));
-        assert_equal(smlt::Vec3(), actor2->absolute_position());
+        actor2->transform->set_position(smlt::Vec3(0, 0, 0));
+        assert_equal(smlt::Vec3(), actor2->transform->position());
     }
 
     void test_set_relative_position() {
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_child<smlt::Stage>();
 
-        actor->move_to(10, 10, 10);
+        actor->transform->set_translation(Vec3(10, 10, 10));
 
         //No parent, both should be the same
-        assert_equal(smlt::Vec3(10, 10, 10), actor->position());
-        assert_equal(smlt::Vec3(10, 10, 10), actor->absolute_position());
+        assert_equal(smlt::Vec3(10, 10, 10), actor->transform->translation());
+        assert_equal(smlt::Vec3(10, 10, 10), actor->transform->position());
 
-        auto actor2 = stage_->new_actor();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
-        actor2->set_parent(actor->id());
+        actor2->set_parent(actor);
 
-        actor2->move_to(smlt::Vec3(10, 0, 0));
+        actor2->transform->set_translation(smlt::Vec3(10, 0, 0));
 
-        assert_equal(smlt::Vec3(20, 10, 10), actor2->absolute_position());
-        assert_equal(smlt::Vec3(10, 0, 0), actor2->position());
+        assert_equal(smlt::Vec3(20, 10, 10), actor2->transform->position());
+        assert_equal(smlt::Vec3(10, 0, 0), actor2->transform->translation());
     }
 
     void test_move_updates_children() {
-        auto actor1 = stage_->new_actor();
-        auto actor2 = stage_->new_actor();
+        auto actor1 = scene->create_child<smlt::Stage>();
+        auto actor2 = scene->create_child<smlt::Stage>();
 
-        actor2->move_to(0, 0, 10.0f);
+        actor2->transform->set_translation(Vec3(0, 0, 10.0f));
         actor2->set_parent(actor1);
 
-        assert_equal(10.0f, actor2->absolute_position().z);
+        assert_equal(10.0f, actor2->transform->translation().z);
     }
 
     void test_set_parent_to_self_does_nothing() {
-        auto actor1 = stage_->new_actor();
+        auto actor1 = scene->create_child<smlt::Stage>();
 
         auto original_parent = actor1->parent();
         actor1->set_parent(actor1);
@@ -228,24 +212,28 @@ public:
     }
 
     void test_find_descendent_by_name() {
-        auto actor1 = stage_->new_actor_with_name("actor1");
+        auto actor1 = scene->create_child<smlt::Stage>();
+        actor1->set_name("actor1");
 
-        assert_equal(actor1, stage_->find_descendent_with_name("actor1"));
-        assert_is_null(stage_->find_descendent_with_name("bananas"));
+        assert_equal(actor1, scene->find_descendent_with_name("actor1"));
+        assert_is_null(scene->find_descendent_with_name("bananas"));
 
-        auto dupe = stage_->new_actor_with_name("actor1");
+        auto dupe = scene->create_child<smlt::Stage>();
+        dupe->set_name("actor1");
         dupe->set_parent(actor1);
 
         // Find the first one in a leaf-first, left-to-right order
         // (e.g. the dupe)
-        assert_equal(dupe, stage_->find_descendent_with_name("actor1"));
+        assert_equal(dupe, scene->find_descendent_with_name("actor1"));
     }
 
     void test_visibility() {
-        auto a1 = stage_->new_actor();
-        auto a2 = stage_->new_actor_with_parent(a1);
-        auto a3 = stage_->new_actor_with_parent(a2);
+        auto a1 = scene->create_child<smlt::Stage>();
+        auto a2 = scene->create_child<smlt::Stage>();
+        a2->set_parent(a1);
 
+        auto a3 = scene->create_child<smlt::Stage>();
+        a3->set_parent(a2);
         a2->set_visible(false);
 
         assert_true(a1->is_visible());
@@ -256,54 +244,36 @@ public:
     }
 
     void test_actor_findable() {
-        auto a1 = stage_->new_actor()->set_name_and_get("Actor 1");
-        assert_equal(a1, stage_->find_descendent_with_name("Actor 1"));
+        auto a1 = scene->create_child<smlt::Stage>();
+        a1->set_name("Actor 1");
+        assert_equal(a1, scene->find_descendent_with_name("Actor 1"));
     }
 
     void test_light_findable() {
-        auto l1 = stage_->new_light_as_point()->set_name_and_get("Light 1");
-        assert_equal(l1, stage_->find_descendent_with_name("Light 1"));
+        auto l1 = scene->create_child<PointLight>();
+        l1->set_name("Light 1");
+        assert_equal(l1, scene->find_descendent_with_name("Light 1"));
     }
 
     void test_destroy_after() {
-        auto a1 = stage_->new_actor()->set_name_and_get("test");
+        auto a1 = scene->create_child<smlt::Stage>();
+        a1->set_name("test");
         auto p = a1->destroy_after(smlt::Seconds(0.1));
 
         assert_false(p.is_ready());
-        assert_is_not_null(stage_->find_descendent_with_name("test"));
+        assert_is_not_null(scene->find_descendent_with_name("test"));
 
         auto t = application->time_keeper->now_in_us();
         while((application->time_keeper->now_in_us() - t) < 150000) {
             application->run_frame();
         }
 
-        assert_is_null(stage_->find_descendent_with_name("test"));
+        assert_is_null(scene->find_descendent_with_name("test"));
         assert_true(p.is_ready());
     }
 
-    void test_link_position() {
-        auto a1 = stage_->new_actor();
-        auto a2 = stage_->new_actor();
-
-        a1->move_to(-50, 0, 0);
-        a2->link_position(a1);
-
-        // Should've synced position immediately
-        assert_equal(a2->absolute_position(), smlt::Vec3(-50, 0, 0));
-
-        a2->move_to(100, 0, 0);
-        a1->move_to(50, 0, 0);
-
-        assert_equal(a1->absolute_position(), smlt::Vec3(50, 0, 0));
-        assert_equal(a2->absolute_position(), smlt::Vec3(100, 0, 0));
-
-        /* Should sync the position from a1 */
-        a2->late_update(0);
-        assert_equal(a2->absolute_position(), smlt::Vec3(50, 0, 0));
-    }
 private:
     smlt::CameraPtr camera_;
-    smlt::StagePtr stage_;
 };
 
 }

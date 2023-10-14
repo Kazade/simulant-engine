@@ -19,6 +19,8 @@
 #ifndef IDENTIFIABLE_H
 #define IDENTIFIABLE_H
 
+#include <cassert>
+
 namespace smlt {
 namespace generic {
 
@@ -28,7 +30,10 @@ public:
     typedef IDType id_type;
 
     Identifiable(IDType id):
-        id_(id) {}
+        id_(id) {
+
+        assert(id > 0);
+    }
 
     virtual ~Identifiable() {}
 
@@ -42,24 +47,8 @@ public:
         return id() < rhs.id();
     }
 
-    /*
-     * Private, do not use in user code! This exists so we can set the pointer
-     * of this object on the ID after creation
-     */
-
-    template<typename ResourceTypePtr>
-    void _bind_id_pointer(ResourceTypePtr ptr) {
-        id_._bind(ptr);
-    }
-
-    /* INTERNAL USE ONLY */
-    Identifiable() = default;
-    void _overwrite_id(IDType new_id) {
-        id_ = new_id;
-    }
-
 private:
-    IDType id_;
+    IDType id_ = 0;
 };
 
 }

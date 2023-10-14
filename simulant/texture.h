@@ -29,7 +29,6 @@
 #include "types.h"
 #include "asset.h"
 #include "interfaces.h"
-#include "interfaces/updateable.h"
 #include "path.h"
 
 namespace smlt {
@@ -151,9 +150,8 @@ typedef std::array<TextureChannel, 4> TextureChannelSet;
 class Texture :
     public Asset,
     public Loadable,
-    public generic::Identifiable<TextureID>,
+    public generic::Identifiable<AssetID>,
     public RefCounted<Texture>,
-    public Updateable,
     public RenderTarget,
     public ChainNameable<Texture> {
 
@@ -168,7 +166,7 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
+    Texture(AssetID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
     ~Texture();
 
 
@@ -198,7 +196,7 @@ public:
      * texture data is empty */
     bool blur(BlurType blur_type, std::size_t radius);
 
-    /* Returns the byte colour data for the specified location. Will return
+    /* Returns the byte color data for the specified location. Will return
      * nothing if the texture data is empty, or it's a compressed texture */
     smlt::optional<Pixel> pixel(std::size_t x, std::size_t y);
 
@@ -318,9 +316,8 @@ public:
     TextureFreeData free_data_mode() const;
 
     /** These are overridden to notify the renderer of texture changes */
-    bool init() override;
-    void clean_up() override;
-    void update(float dt) override;
+    bool on_init() override;
+    void on_clean_up() override;
 
     /** Returns true if the format contains mipmap data, or mipmaps
      * have been generated during texture upload */

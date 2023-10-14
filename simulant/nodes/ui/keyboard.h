@@ -41,6 +41,20 @@ enum KeyboardMode {
 
 class KeyboardPanel;
 
+struct KeyboardParams : public WidgetParams {
+    KeyboardMode mode = KEYBOARD_MODE_UPPERCASE;
+    unicode initial_text = "";
+
+    KeyboardParams(
+        KeyboardMode mode=KEYBOARD_MODE_UPPERCASE,
+        const unicode& initial_text="",
+        const UIConfig& theme=UIConfig(),
+        WidgetStylePtr shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(theme, shared_style),
+        mode(mode), initial_text(initial_text) {}
+};
+
 /* A keyboard is combined of a TextInput and a KeyboardPanel */
 class Keyboard:
     public Widget {
@@ -49,10 +63,15 @@ class Keyboard:
     DEFINE_SIGNAL(KeyboardDoneSignal, signal_done);
     DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
 public:
+    struct Meta {
+        typedef ui::KeyboardParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD;
+    };
+
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
 
-    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardMode mode, const unicode& initial_text="");
+    Keyboard(Scene* owner);
     ~Keyboard();
 
     void cursor_up();
@@ -84,16 +103,17 @@ public:
     void set_font(FontPtr font) override;
 
     TextEntry* entry() {
-        return entry_.get();
+        return entry_;
     }
 private:
+    bool on_create(void *params) override;
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
-    std::shared_ptr<KeyboardPanel> panel_;
-    std::shared_ptr<TextEntry> entry_;
-    std::shared_ptr<Frame> info_row_;
+    KeyboardPanel* panel_ = nullptr;
+    TextEntry* entry_ = nullptr;
+    Frame* info_row_ = nullptr;
 
     Frame* main_frame_ = nullptr;
 
@@ -105,4 +125,6 @@ private:
 };
 
 }
+
+
 }

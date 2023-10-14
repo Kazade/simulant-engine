@@ -24,24 +24,15 @@
 #include "../animation.h"
 #include "../renderers/renderer.h"
 #include "../assets/meshes/rig.h"
+#include "../scenes/scene.h"
 
 #define DEBUG_ANIMATION 0  /* If enabled, will show debug animation overlay */
 
 namespace smlt {
 
-Actor::Actor(Stage* stage, SoundDriver* sound_driver):
-    TypedDestroyableObject<Actor, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    AudioSource(stage, this, sound_driver) {
+Actor::Actor(Scene* owner):
+    StageNode(owner, STAGE_NODE_TYPE_ACTOR) {
 
-}
-
-Actor::Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh):
-    TypedDestroyableObject<Actor, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_ACTOR),
-    AudioSource(stage, this, sound_driver) {
-
-    set_mesh(mesh);
 }
 
 Actor::~Actor() {
@@ -61,7 +52,7 @@ bool Actor::has_multiple_meshes() const {
     return false;
 }
 
-void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
+void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
     /* Do nothing if we don't have a base mesh. You need at least a base mesh at all times */
     if(detail_level != DETAIL_LEVEL_NEAREST && !has_any_mesh()) {
         S_ERROR(
@@ -79,7 +70,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     }
 
     // Do nothing if already set
-    if(meshes_[detail_level] && meshes_[detail_level]->id() == mesh) {
+    if(meshes_[detail_level] && meshes_[detail_level] == mesh) {
         return;
     }
 
@@ -99,16 +90,8 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
         return;
     }
 
-    auto meshptr = stage->assets->mesh(mesh);
-
-    if(!meshptr) {
-        S_ERROR("Unable to locate mesh with the ID: {0}", mesh);
-        return;
-    }
-
     //Increment the ref-count on this mesh
-    meshes_[detail_level] = meshptr;
-    meshptr.reset();
+    meshes_[detail_level] = mesh;
 
     /* Only the nearest detail level is animated */
     has_animated_mesh_ = meshes_[DETAIL_LEVEL_NEAREST]->is_animated();
@@ -154,9 +137,7 @@ void Actor::set_mesh(MeshID mesh, DetailLevel detail_level) {
     signal_mesh_changed_(id());
 }
 
-void Actor::update(float dt) {
-    StageNode::update(dt);
-
+void Actor::on_update(float dt) {
     if(animation_state_) {
         animation_state_->update(dt);
     }
@@ -168,19 +149,27 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
     assert(base_mesh && base_mesh->is_animated());
 
 #ifdef DEBUG_ANIMATION
-    stage->enable_debug();
-    stage->debug->set_transform(absolute_transformation());
+    auto debug = find_descendent_with_name("Debug");
+    if(!debug) {
+        debug = scene->create_node<Debug>();
+        debug->set_name("Debug");
+        debug->set_parent(this);
+    }
+
+    debug->transform->sync(transform);
 #endif
 
     base_mesh->animated_frame_data_->prepare_unpack(
         current_frame, next_frame, interp, rig_.get()
 #if DEBUG_ANIMATION
-        ,stage->debug
+        , debug
 #endif
     );
 
 #ifdef DEBUG_ANIMATION
-    stage->debug->set_transform(Mat4());
+    debug->transform->set_translation(Vec3());
+    debug->transform->set_rotation(Quaternion());
+    debug->transform->set_scale_factor(Vec3());
 #endif
 }
 
@@ -206,9 +195,9 @@ const AABB &Actor::aabb() const {
     return aabb;
 }
 
-MeshID Actor::mesh_id(DetailLevel detail_level) const {
+AssetID Actor::mesh_id(DetailLevel detail_level) const {
     auto& mesh = meshes_[detail_level];
-    return (mesh) ? mesh->id() : MeshID(0);
+    return (mesh) ? mesh->id() : AssetID(0);
 }
 
 const MeshPtr &Actor::best_mesh(DetailLevel detail_level) const {
@@ -232,7 +221,7 @@ bool Actor::has_mesh(DetailLevel detail_level) const {
     return bool(meshes_[detail_level].get());
 }
 
-void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Camera* camera, const Viewport*, const DetailLevel detail_level) {
     _S_UNUSED(camera);
 
     auto mesh = find_mesh(detail_level);
@@ -241,6 +230,15 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
     }
 
     if(mesh->is_animated()) {
+#ifdef DEBUG_ANIMATION
+        auto debug = find_descendent_with_name("Debug");
+        if(!debug) {
+            debug = scene->create_node<Debug>();
+            debug->set_name("Debug");
+            debug->set_parent(this);
+        }
+#endif
+
         /*
          * Update the vertices for the animated base mesh if that's the
          * detail level we're using - if this is a skeletal animation then
@@ -253,7 +251,7 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
             rig_.get(),
             interpolated_vertex_data_.get()
     #if DEBUG_ANIMATION
-            , stage->debug
+            , debug
     #endif
         );
     }
@@ -264,7 +262,7 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
 
     for(auto submesh: mesh->each_submesh()) {
         Renderable new_renderable;
-        new_renderable.final_transformation = absolute_transformation();
+        new_renderable.final_transformation = transform->world_space_matrix();
         new_renderable.render_priority = render_priority();
         new_renderable.is_visible = is_visible();
         new_renderable.arrangement = submesh->arrangement();
@@ -278,6 +276,16 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
 
         render_queue->insert_renderable(std::move(new_renderable));
     }
+}
+
+bool Actor::on_create(void *params) {
+    ActorParams* args = (ActorParams*) params;
+    if(!args->mesh) {
+        return false;
+    }
+
+    set_mesh(args->mesh);
+    return true;
 }
 
 void Actor::recalc_effective_meshes() {

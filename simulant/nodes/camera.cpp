@@ -9,12 +9,10 @@
 namespace smlt {
 
 
-Camera::Camera(Stage *stage, SoundDriver* sound_driver):
-    TypedDestroyableObject<Camera, Stage>(stage),
-    ContainerNode(stage, STAGE_NODE_TYPE_CAMERA),
-    AudioSource(stage, this, sound_driver){
+Camera::Camera(Scene *owner):
+    ContainerNode(owner, STAGE_NODE_TYPE_CAMERA) {
 
-    assert(stage);
+    assert(owner);
 
     set_perspective_projection(smlt::Degrees(45.0f), get_app()->window->aspect_ratio());
 }
@@ -23,19 +21,18 @@ Camera::~Camera() {
 
 }
 
-void Camera::update(float dt) {
-    StageNode::update(dt);
-}
-
-void Camera::update_transformation_from_parent() {
-    StageNode::update_transformation_from_parent();
-    transform_ = absolute_transformation();
+void Camera::on_transformation_changed() {
+    StageNode::on_transformation_changed();
     update_frustum();
 }
 
 void Camera::update_frustum() {
     //Recalculate the view matrix
-    view_matrix_ = Mat4::as_look_at(absolute_position(), absolute_position() + absolute_rotation().forward(), smlt::Vec3::POSITIVE_Y);
+    view_matrix_ = Mat4::as_look_at(
+        transform->position(),
+        transform->position() + transform->orientation().forward(),
+        smlt::Vec3::POSITIVE_Y
+    );
 
     Mat4 mvp = projection_matrix_ * view_matrix_;
 

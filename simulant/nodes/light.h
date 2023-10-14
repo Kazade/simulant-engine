@@ -28,16 +28,36 @@
 
 namespace smlt {
 
+extern const Color DEFAULT_LIGHT_COLOR;
+
+struct LightParams {
+    Vec3 position_or_direction;
+    Color color;
+
+    LightParams(const Vec3& p, const Color& color):
+        position_or_direction(p),
+        color(color) {}
+};
+
+struct PointLightParams : public LightParams {
+    PointLightParams(const Vec3& position=Vec3(), const Color& color=DEFAULT_LIGHT_COLOR):
+        LightParams(position, color) {}
+};
+
+struct DirectionalLightParams : public LightParams {
+    DirectionalLightParams(const Vec3& direction=Vec3(1, -0.5, 0), const Color& color=DEFAULT_LIGHT_COLOR):
+        LightParams(direction, color) {}
+};
+
+
 class Light :
-    public TypedDestroyableObject<Light, Stage>,
     public ContainerNode,
-    public generic::Identifiable<LightID>,
     public ChainNameable<Light> {
 
 public:
     typedef std::shared_ptr<Light> ptr;
 
-    Light(Stage* stage);
+    Light(Scene* owner, StageNodeType type);
 
     void set_type(LightType type);
 
@@ -48,7 +68,7 @@ public:
      *  Direction is stored reversed in the position.
      */
     Vec3 direction() const {
-        return absolute_position();
+        return transform->position();
     }
 
     void set_direction(float x, float y, float z) {
@@ -62,28 +82,28 @@ public:
 
     void set_direction(const Vec3& dir) {
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        move_to(-dir.x, -dir.y, -dir.z);
+        transform->set_position(Vec3(-dir.x, -dir.y, -dir.z));
     }
 
-    void set_diffuse(const smlt::Colour& colour) {
-        diffuse_ = colour;
+    void set_diffuse(const smlt::Color& color) {
+        diffuse_ = color;
     }
 
-    void set_ambient(const smlt::Colour& colour) {
-        ambient_ = colour;
+    void set_ambient(const smlt::Color& color) {
+        ambient_ = color;
     }
 
-    void set_specular(const smlt::Colour& colour) {
-        specular_ = colour;
+    void set_specular(const smlt::Color& color) {
+        specular_ = color;
     }
 
-    LightType type() const { return type_; }
-    const smlt::Colour& ambient() const { return ambient_; }
-    const smlt::Colour& diffuse() const { return diffuse_; }
-    const smlt::Colour& specular() const { return specular_; }
+    LightType light_type() const { return type_; }
+    const smlt::Color& ambient() const { return ambient_; }
+    const smlt::Color& diffuse() const { return diffuse_; }
+    const smlt::Color& specular() const { return specular_; }
 
     /** Returns the owner stage's global ambient value. */
-    smlt::Colour global_ambient() const;
+    smlt::Color global_ambient() const;
 
     void set_attenuation(float range, float constant, float linear, float quadratic);
     void set_attenuation_from_range(float range);
@@ -97,30 +117,69 @@ public:
         return bounds_;
     }
 
-    void update(float step) override {
-        _S_UNUSED(step);
-    }
-
-    void clean_up() override {
-        StageNode::clean_up();
-    }
+protected:
+    bool on_create(void* params) override;
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     LightType type_;
 
-    smlt::Colour ambient_;
-    smlt::Colour diffuse_;
-    smlt::Colour specular_;
+    smlt::Color ambient_;
+    smlt::Color diffuse_;
+    smlt::Color specular_;
 
     AABB bounds_;
     float range_;
     float const_attenuation_;
     float linear_attenuation_;
     float quadratic_attenuation_;
+};
+
+
+class PointLight : public Light {
+public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_POINT_LIGHT;
+        typedef PointLightParams params_type;
+    };
+
+    PointLight(Scene* owner):
+        Light(owner, STAGE_NODE_TYPE_POINT_LIGHT) {}
+
+private:
+    bool on_create(void* params) override {
+        if(!Light::on_create(params)) {
+            return false;
+        }
+
+        PointLightParams* args = (PointLightParams*) params;
+
+        set_type(LIGHT_TYPE_POINT);
+        transform->set_position(args->position_or_direction);
+        return true;
+    }
+};
+
+class DirectionalLight : public Light {
+public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_DIRECTIONAL_LIGHT;
+        typedef DirectionalLightParams params_type;
+    };
+
+    DirectionalLight(Scene* owner):
+        Light(owner, STAGE_NODE_TYPE_DIRECTIONAL_LIGHT) {}
+
+    bool on_create(void* params) override {
+        if(!Light::on_create(params)) {
+            return false;
+        }
+
+        DirectionalLightParams* args = (DirectionalLightParams*) params;
+
+        set_type(LIGHT_TYPE_DIRECTIONAL);
+        set_direction(args->position_or_direction);
+        return true;
+    }
 };
 
 }

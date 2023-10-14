@@ -6,27 +6,42 @@
 namespace smlt {
 namespace ui {
 
-Image::Image(UIManager* owner, UIConfig* config, Stage* stage):
-    Widget(owner, config, stage) {
+Image::Image(Scene* owner):
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_IMAGE) {
+}
 
-    /* By default, images don't have a border */
-    set_border_width(config->image_border_width_);
-    set_border_colour(smlt::Colour::NONE);
-
-    set_background_colour(config->image_background_colour_);
-    set_padding(
-        config->image_padding_.left,
-        config->image_padding_.right,
-        config->image_padding_.bottom,
-        config->image_padding_.top
-    );
-
-    set_foreground_colour(config->image_foreground_colour_);
-
-    if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
-        // Rebuild if the resize mode didn't change
-        rebuild();
+bool Image::on_create(void* params) {
+    if(!Widget::on_create(params)) {
+        return false;
     }
+
+    ImageParams* args = (ImageParams*) params;
+
+    if(!args->shared_style) {
+        /* By default, images don't have a border */
+        set_border_width(args->theme.image_border_width_);
+        set_border_color(smlt::Color::NONE);
+        set_background_color(args->theme.image_background_color_);
+        set_padding(
+            args->theme.image_padding_.left,
+            args->theme.image_padding_.right,
+            args->theme.image_padding_.bottom,
+            args->theme.image_padding_.top
+        );
+
+        set_foreground_color(args->theme.image_foreground_color_);
+
+        if(args->texture) {
+            set_texture(args->texture);
+        }
+
+        if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
+            // Rebuild if the resize mode didn't change
+            rebuild();
+        }
+    }
+
+    return true;
 }
 
 void Image::clear_layers() {

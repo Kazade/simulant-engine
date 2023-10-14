@@ -5,6 +5,7 @@
 #include "../../generic/identifiable.h"
 #include "../../path.h"
 #include "../../asset_manager.h"
+#include "../../path.h"
 
 namespace smlt {
 
@@ -30,21 +31,29 @@ public:
         std::runtime_error(what) {}
 };
 
-class SkyManager;
+
+struct SkyboxParams {
+    Path source_directory;
+    TextureFlags flags;
+
+    SkyboxParams(const Path& directory, const TextureFlags& flags=TextureFlags()):
+        source_directory(directory),
+        flags(flags) {}
+};
 
 class Skybox:
-    public TypedDestroyableObject<Skybox, SkyManager>,
-    public generic::Identifiable<SkyID>,
     public ContainerNode,
     public ChainNameable<Skybox> {
 
 public:
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
+        typedef SkyboxParams params_type;
+    };
+
     constexpr static float DEFAULT_SIZE = 128.0f;
 
-    Skybox(SkyManager* manager);
-
-    bool init() override;
-    void clean_up() override;
+    Skybox(Scene* owner);
 
     void set_size(float size) { width_ = size; }
     float size() const { return width_; }
@@ -59,32 +68,21 @@ public:
         const TextureFlags& flags
     );
 
-    bool destroy() override;
-    bool destroy_immediately() override;
-
     const AABB& aabb() const override;
 
-    void update(float step) override {
-        _S_UNUSED(step);
-    }
-
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     friend class SkyManager;
 
-    SkyManager* manager_ = nullptr;
+    bool on_create(void* params) override;
 
-    CameraID follow_camera_;
+    StageNodeID follow_camera_;
 
     ActorPtr actor_ = nullptr;
-    MeshID mesh_id_;
-
-    MaterialID materials_[SKYBOX_FACE_MAX];
+    MeshPtr mesh_;
+    MaterialPtr materials_[SKYBOX_FACE_MAX];
 
     float width_;
 };
+
 
 }

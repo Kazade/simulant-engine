@@ -17,21 +17,20 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../stage.h"
+#include "../scenes/scene.h"
 #include "light.h"
 
 namespace smlt {
 
-Light::Light(Stage* stage):
-    TypedDestroyableObject<Light, Stage>(stage),
-    ContainerNode(stage, STAGE_NODE_TYPE_LIGHT),
+// Apparently this is the color of a high noon sun (color temp 5400 - 255, 255, 251)
+const Color DEFAULT_LIGHT_COLOR = Color(1.0, 1.0, 251.0 / 255.0, 1.0);
+
+
+Light::Light(Scene* owner, StageNodeType type):
+    ContainerNode(owner, type),
     type_(LIGHT_TYPE_POINT) {
 
-    set_range(100.0f);
-    set_ambient(smlt::Colour(0.3f, 0.3f, 0.3f, 1.0f));
-    set_diffuse(smlt::Colour(0.9f, 0.9f, 1.0f, 1.0f));
-    set_specular(smlt::Colour(0.01f, 0.01f, 0.01f, 1.0f));
-    set_attenuation_from_range(100.0);
+
 }
 
 void Light::set_type(LightType type) {
@@ -41,7 +40,7 @@ void Light::set_type(LightType type) {
     set_cullable(type_ != LIGHT_TYPE_DIRECTIONAL);
 }
 
-Colour Light::global_ambient() const { return stage->ambient_light(); }
+Color Light::global_ambient() const { return scene->lighting->ambient_light(); }
 
 /**
     Sets the attenuation and the range of the light. The range doesn't have any
@@ -71,6 +70,18 @@ void Light::set_attenuation_from_range(float range) {
     const_attenuation_ = 1.0f;
     linear_attenuation_ = 4.5f / range;
     quadratic_attenuation_ = 75.0f / (range * range);
+}
+
+bool Light::on_create(void* params) {
+    LightParams* args = (LightParams*) params;
+
+    set_range(100.0f);
+    set_attenuation_from_range(100.0);
+    set_ambient(args->color);
+    set_diffuse(args->color);
+    set_specular(args->color);
+
+    return true;
 }
 
 

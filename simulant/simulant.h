@@ -29,12 +29,27 @@
 #include "sdl2_window.h"
 #endif
 
+#include "time_keeper.h"
 #include "stage.h"
 #include "viewport.h"
 #include "frustum.h"
 #include "assets/material.h"
 #include "nodes/actor.h"
 #include "nodes/geom.h"
+#include "nodes/mesh_instancer.h"
+#include "nodes/dynamic_body.h"
+#include "nodes/kinematic_body.h"
+#include "services/physics.h"
+
+#include "nodes/static_body.h"
+#include "nodes/dynamic_body.h"
+#include "nodes/smooth_follow.h"
+#include "nodes/cylindrical_billboard.h"
+#include "nodes/spherical_billboard.h"
+
+#include "nodes/fly_controller.h"
+
+#include "nodes/skies/skybox.h"
 
 #include "nodes/ui/ui_manager.h"
 #include "nodes/ui/button.h"
@@ -44,6 +59,10 @@
 #include "nodes/ui/frame.h"
 #include "nodes/ui/keyboard.h"
 #include "nodes/ui/text_entry.h"
+#include "nodes/sprite.h"
+#include "nodes/particle_system.h"
+#include "nodes/camera.h"
+#include "nodes/audio_source.h"
 
 #include "sound.h"
 #include "utils/random.h"
@@ -57,9 +76,7 @@
 #include "application.h"
 #include "assets/binary_data.h"
 #include "debug.h"
-#include "nodes/sprite.h"
-#include "nodes/particle_system.h"
-#include "nodes/camera.h"
+
 #include "platform.h"
 #include "vfs.h"
 
@@ -68,17 +85,11 @@
 
 #include "scenes/scene_manager.h"
 #include "scenes/scene.h"
-#include "scenes/physics_scene.h"
-#include "scenes/loading.h"
 #include "scenes/splash.h"
 
 #include "input/input_state.h"
 #include "input/input_manager.h"
 #include "input/input_axis.h"
-
-#include "behaviours/fly.h"
-#include "behaviours/builtin.h"
-#include "behaviours/stage_node_behaviour.h"
 
 #include "renderers/renderer_config.h"
 

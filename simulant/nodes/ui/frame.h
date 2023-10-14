@@ -24,18 +24,36 @@ enum ChildCleanup {
     CHILD_CLEANUP_RETAIN
 };
 
+struct FrameParams : public WidgetParams {
+    unicode text;
+
+    FrameParams(
+        const unicode& text="",
+        const UIConfig& theme=UIConfig(),
+        WidgetStylePtr shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(theme, shared_style),
+        text(text) {}
+};
+
 class Frame:
     public Widget,
     public RefCounted<Frame> {
 
 public:
+    struct Meta {
+        typedef ui::FrameParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_FRAME;
+    };
+
     using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
 
-    Frame(UIManager* owner, UIConfig* config, Stage* stage);
+    Frame(Scene *owner);
+
+    bool on_create(void *params) override;
 
     bool pack_child(Widget* widget);
-
     bool unpack_child(Widget* widget, ChildCleanup clean_up=CHILD_CLEANUP_DESTROY);
 
     const std::vector<smlt::ui::Widget*>& packed_children() const;
@@ -59,6 +77,6 @@ private:
     virtual void finalize_build() override;
 };
 
-
 }
+
 }

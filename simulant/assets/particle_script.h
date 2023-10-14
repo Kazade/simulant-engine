@@ -26,7 +26,7 @@ struct Emitter {
     std::pair<float, float> ttl_range = std::make_pair(5.0, 5.0);
 
     Degrees angle;
-    std::vector<Colour> colours = {Colour::WHITE};
+    std::vector<Color> colors = {Color::WHITE};
 
     float emission_rate = 10.0f;
 };
@@ -66,7 +66,7 @@ typedef std::shared_ptr<Manipulator> ManipulatorPtr;
 class ParticleScript:
     public Asset,
     public Loadable,
-    public generic::Identifiable<ParticleScriptID>,
+    public generic::Identifiable<AssetID>,
     public RefCounted<ParticleScript>,
     public ChainNameable<ParticleScript> {
 
@@ -78,7 +78,7 @@ public:
     };
 
 
-    ParticleScript(ParticleScriptID id, AssetManager* asset_manager);
+    ParticleScript(AssetID id, AssetManager* asset_manager);
 
     std::size_t emitter_count() const;
     const Emitter* emitter(std::size_t i) const;

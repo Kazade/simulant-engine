@@ -429,7 +429,7 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
 
         if(data_block_header.type == TEXTURE_OFFSET_BLOCK) {
             //Texture offset blocks look and behave like a normal offset block except they have
-            // normally 4 textures which represent different colours. We just pick one based on the
+            // normally 4 textures which represent different colors. We just pick one based on the
             // team variable
             int8_t team_skin_offset_index = std::min<int8_t>(new_block_offsets.size() - 1, team);
             read_block(file, new_block_offsets[team_skin_offset_index] - global_offset);
@@ -509,18 +509,18 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     for(Texture& tex: textures) {
         if(texture_name_to_id.count(tex.name)) continue;
 
-        texture_name_to_id[tex.name] = mesh->asset_manager().new_texture(
+        texture_name_to_id[tex.name] = mesh->asset_manager().create_texture(
             tex.width, tex.height,
             (tex.bytes_per_pixel == 3) ? TEXTURE_FORMAT_RGB_3UB_888 : TEXTURE_FORMAT_RGBA_4UB_8888
         );
 
-        auto new_tex = mesh->asset_manager().texture(texture_name_to_id[tex.name]);
+        auto new_tex = texture_name_to_id[tex.name];
         new_tex->set_data(tex.data);
 
         //Create a submesh for each texture.
-        texture_submesh[tex.name] = mesh->new_submesh(
+        texture_submesh[tex.name] = mesh->create_submesh(
             tex.name,
-            mesh->asset_manager().new_material_from_texture(new_tex->id()),
+            mesh->asset_manager().create_material_from_texture(new_tex),
             INDEX_TYPE_16_BIT,
             MESH_ARRANGEMENT_TRIANGLES
         );
@@ -556,7 +556,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
             mesh->vertex_data->position(pos.x / 33.3f, pos.y / 33.3f, pos.z / 33.3f);
             mesh->vertex_data->tex_coord0(tex_coord);
             mesh->vertex_data->tex_coord1(tex_coord.x, tex_coord.y);
-            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+            mesh->vertex_data->diffuse(smlt::Color::WHITE);
             mesh->vertex_data->normal(normal.x, normal.y, normal.z);
             mesh->vertex_data->move_next();
 

@@ -12,29 +12,8 @@ namespace smlt {
 namespace ui {
 
 
-Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style):
-    TypedDestroyableObject<Widget, UIManager>(owner),
-    ContainerNode(stage, STAGE_NODE_TYPE_OTHER),
-    owner_(owner),
-    theme_(defaults),
-    style_((shared_style) ? shared_style : std::make_shared<WidgetStyle>()) {
-
-    if(!shared_style) {
-        set_foreground_colour(defaults->foreground_colour_);
-        set_background_colour(defaults->background_colour_);
-        set_text_colour(defaults->text_colour_);
-    }
-
-    std::string family = (defaults->font_family_.empty()) ?
-        get_app()->config->ui.font_family : defaults->font_family_;
-
-    Px size = (defaults->font_size_ == Px(0)) ?
-        Px(get_app()->config->ui.font_size) : Px(defaults->font_size_);
-
-    auto font = stage->ui->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
-    assert(font);
-
-    set_font(font);
+Widget::Widget(Scene *owner, StageNodeType type):
+    ContainerNode(owner, type) {
 }
 
 Widget::~Widget() {
@@ -49,52 +28,110 @@ Widget::~Widget() {
     style_.reset();
 }
 
-bool Widget::init() {
+MaterialPtr Widget::find_or_create_material(const char* name) {
+    auto material = scene->assets->find_material(name);
+    if(!material) {
+        material = scene->assets->load_material(
+            Material::BuiltIns::TEXTURE_ONLY
+        );
+        material->set_name(name);
+    }
+
+    if(!material) {
+        S_ERROR("[CRITICAL] Unable to load the material for widgets!");
+        return smlt::MaterialPtr();
+    }
+
+    material->set_blend_func(BLEND_ALPHA);
+    material->set_depth_test_enabled(false);
+    material->set_cull_mode(CULL_MODE_NONE);
+    return material;
+}
+
+static const char* GLOBAL_BORDER_NAME = "__global_border";
+static const char* GLOBAL_BACKGROUND_NAME = "__global_background";
+static const char* GLOBAL_FOREGROUND_NAME = "__global_foreground";
+
+bool Widget::on_init() {
+
+    return true;
+}
+
+void Widget::on_clean_up() {
+    // Make sure we fire any outstanding events when the widget
+    // is destroyed. If any buttons are held, then they should fire
+    // released signals.
+    force_release();
+}
+
+bool Widget::on_create(void* params) {
+    uint32_t* check = (uint32_t*) params;
+    if(*check != 0xDEADBEEF) {
+        S_ERROR("Widget params type codes not subclass WidgetParams");
+        return false;
+    }
+
+    WidgetParams* args = (WidgetParams*) params;
+    if(!args->shared_style) {
+        style_ = std::make_shared<WidgetStyle>();
+
+
+        set_foreground_color(args->theme.foreground_color_);
+        set_background_color(args->theme.background_color_);
+        set_text_color(args->theme.text_color_);
+    } else {
+        style_ = args->shared_style;
+    }
+
+    std::string family = (args->theme.font_family_.empty()) ?
+                             get_app()->config->ui.font_family : args->theme.font_family_;
+
+    Px size = (args->theme.font_size_ == Px(0)) ?
+                  Px(get_app()->config->ui.font_size) :
+                  Px(args->theme.font_size_);
+
+    auto font = load_or_get_font(
+        family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
+    );
+    assert(font);
+
+    set_font(font);
+
     VertexSpecification spec = VertexSpecification::DEFAULT;
 
     /* We don't need normals or multiple texcoords */
     spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
     spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
 
-    mesh_ = stage->assets->new_mesh(spec);
-    actor_ = stage->new_actor_with_mesh(mesh_);
+    mesh_ = scene->assets->create_mesh(spec);
+    actor_ = scene->create_node<Actor>(mesh_);
     actor_->set_parent(this);
 
     /* Use the global materials until we can't anymore! */
-    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = find_or_create_material(GLOBAL_BORDER_NAME);
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = find_or_create_material(GLOBAL_BACKGROUND_NAME);
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = find_or_create_material(GLOBAL_FOREGROUND_NAME);
 
     /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->create_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     rebuild();
 
     initialized_ = true;
+
     return true;
 }
 
-void Widget::clean_up() {
-    // Make sure we fire any outstanding events when the widget
-    // is destroyed. If any buttons are held, then they should fire
-    // released signals.
-    force_release();
-
-    StageNode::clean_up();
-}
-
 void Widget::set_font(const std::string& family, Rem size, FontWeight weight, FontStyle style) {
-    Px final = owner_->config()->font_size_ * size;
+    Px final = theme_.font_size_ * size;
     set_font(family, final, weight, style);
 }
 
 void Widget::set_font(const std::string& family, Px size, FontWeight weight, FontStyle style) {
-    if(owner_) {
-        set_font(owner_->load_or_get_font(family, size, weight, style));
-    }
+    set_font(load_or_get_font(family, size, weight, style));
 }
 
 void Widget::set_font(FontPtr font) {
@@ -282,22 +319,23 @@ void Widget::render_text() {
             // properly manipulate the position when we process the lines later
             auto off = font_->character_offset(ch);
 
-            auto top = -off.second;
+            auto top = -off.y;
             auto bottom = top - ch_height.value;
 
             top -= font_->ascent();
             bottom -= font_->ascent();
 
-            corners[0].xyz = smlt::Vec3((left + off.first).value, bottom, 0);
-            corners[1].xyz = smlt::Vec3((right + off.first).value, bottom, 0);
-            corners[2].xyz = smlt::Vec3((right + off.first).value, top, 0);
-            corners[3].xyz = smlt::Vec3((left + off.first).value, top, 0);
+            auto c = font_->char_corners(ch);
+            corners[0].xyz = smlt::Vec3((left.value + c.first.x), c.first.y, 0);
+            corners[1].xyz = smlt::Vec3((left.value + c.second.x), c.first.y, 0);
+            corners[2].xyz = smlt::Vec3((left.value + c.second.x), c.second.y, 0);
+            corners[3].xyz = smlt::Vec3((left.value + c.first.x), c.second.y, 0);
 
-            auto min_max = font_->texture_coordinates_for_character(ch);
-            corners[0].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
-            corners[1].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
-            corners[2].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
-            corners[3].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+            auto min_max = font_->char_texcoords(ch);
+            corners[0].uv = smlt::Vec2(min_max.first.x, min_max.first.y);
+            corners[1].uv = smlt::Vec2(min_max.second.x, min_max.first.y);
+            corners[2].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
+            corners[3].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
 
             vertices.push_back(corners[0]);
             vertices.push_back(corners[1]);
@@ -417,7 +455,7 @@ void Widget::render_text() {
         }
     }
 
-    auto c = style_->text_colour_;
+    auto c = style_->text_color_;
     c.set_alpha(style_->opacity_);
 
     auto idx = vdata->count();
@@ -461,14 +499,14 @@ void Widget::clear_mesh() {
     }
 }
 
-SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Colour& colour, const Px& border_radius, const smlt::Vec2* uvs, float z_offset) {
+SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, const smlt::Color& color, const Px& border_radius, const smlt::Vec2* uvs, float z_offset) {
     // Position so that the first rectangle is furthest from the
     // camera. Space for 10 layers (we only have 3 but whatevs.)
 
     auto sm = mesh_->find_submesh(name);
     assert(sm);
 
-    sm->set_diffuse(colour);
+    sm->set_diffuse(color);
 
     auto min = bounds.min;
     auto max = bounds.max;
@@ -519,7 +557,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
         for(auto& p: points) {
             mesh_->vertex_data->move_to_end();
             mesh_->vertex_data->position(p);
-            mesh_->vertex_data->diffuse(colour);
+            mesh_->vertex_data->diffuse(color);
             mesh_->vertex_data->tex_coord0(0.0, 0.0f);
             mesh_->vertex_data->normal(0, 0, 1);
             mesh_->vertex_data->move_next();
@@ -529,26 +567,26 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds, c
     } else {
         mesh_->vertex_data->move_to_end();
         mesh_->vertex_data->position(x_offset + min.x.value, y_offset + min.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f, (uvs) ? uvs[0].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
         mesh_->vertex_data->position(x_offset + max.x.value, y_offset + min.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f, (uvs) ? uvs[1].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
         mesh_->vertex_data->position(x_offset + min.x.value,  y_offset + max.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f, (uvs) ? uvs[2].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
         mesh_->vertex_data->done();
 
         mesh_->vertex_data->position(x_offset + max.x.value,  y_offset + max.y.value, z_offset);
-        mesh_->vertex_data->diffuse(colour);
+        mesh_->vertex_data->diffuse(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[3].x : 1.0f, (uvs) ? uvs[3].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
@@ -593,27 +631,27 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& r
 }
 
 void Widget::render_border(const WidgetBounds& border_bounds) {
-    auto colour = style_->border_colour_;
-    float a = colour.af() * style_->opacity_;
-    colour.set_alpha(a);
+    auto color = style_->border_color_;
+    float a = color.af() * style_->opacity_;
+    color.set_alpha(a);
     /* FIXME! This should be 4 rectangles or a tri-strip */
-    new_rectangle("border", border_bounds, colour, style_->border_radius_);
+    new_rectangle("border", border_bounds, color, style_->border_radius_);
 }
 
 void Widget::render_background(const WidgetBounds& background_bounds) {
-    auto colour = style_->background_colour_;
-    colour.set_alpha(colour.af() * style_->opacity_);
+    auto color = style_->background_color_;
+    color.set_alpha(color.af() * style_->opacity_);
 
-    auto bg = new_rectangle("background", background_bounds, colour, style_->border_radius_);
+    auto bg = new_rectangle("background", background_bounds, color, style_->border_radius_);
     if(has_background_image()) {
         apply_image_rect(bg, style_->background_image_, style_->background_image_rect_);
     }
 }
 
 void Widget::render_foreground(const WidgetBounds& foreground_bounds) {
-    auto colour = style_->foreground_colour_;
-    colour.set_alpha(colour.af() * style_->opacity_);
-    auto fg = new_rectangle("foreground", foreground_bounds, colour, style_->border_radius_);
+    auto color = style_->foreground_color_;
+    color.set_alpha(color.af() * style_->opacity_);
+    auto fg = new_rectangle("foreground", foreground_bounds, color, style_->border_radius_);
     if(has_foreground_image()) {
         apply_image_rect(fg, style_->foreground_image_, style_->foreground_image_rect_);
     }
@@ -684,6 +722,58 @@ void Widget::rebuild() {
     finalize_build();
 }
 
+FontPtr Widget::load_or_get_font(const std::string &family, const Px &size, const FontWeight &weight, const FontStyle &style) {
+    return _load_or_get_font(
+        scene->assets, get_app()->shared_assets.get(),
+        family, size, weight, style
+        );
+}
+
+FontPtr Widget::_load_or_get_font(AssetManager *assets, AssetManager *shared_assets, const std::string &familyc, const Px &sizec, const FontWeight &weight, const FontStyle &style) {
+
+    /* Apply defaults if that's what was asked */
+    std::string family = familyc;
+    if(family == DEFAULT_FONT_FAMILY) {
+        family = get_app()->config->ui.font_family;
+    }
+
+    Px size = sizec;
+    if(size == DEFAULT_FONT_SIZE) {
+        size = Px(get_app()->config->ui.font_size);
+    }
+
+    std::string alias = Font::generate_name(family, size.value, weight, style);
+
+    /* See if the font is already loaded, first look at the stage
+     * level, but fallback to the window level (in case it was pre-loaded
+     * globally) */
+    FontPtr fnt;
+    if(assets) {
+        fnt = assets->find_font(alias);
+    }
+
+    if(!fnt && shared_assets) {
+        fnt = shared_assets->find_font(alias);
+    }
+
+    /* We already loaded it, all is well! */
+    if(fnt) {
+        return fnt;
+    }
+
+    FontFlags flags;
+    flags.size = size.value;
+    flags.weight = weight;
+    flags.style = style;
+
+    fnt = assets->create_font_from_family(family, flags);
+    if(fnt) {
+        fnt->set_name(alias);
+    }
+
+    return fnt;
+}
+
 Widget::WidgetBounds Widget::calculate_background_size(const UIDim& content_dimensions) const {
     Px box_width, box_height;
 
@@ -746,12 +836,12 @@ Px Widget::border_radius() const {
     return style_->border_radius_;
 }
 
-void Widget::set_border_colour(const Colour &colour) {
-    if(style_->border_colour_ == PackedColour4444(colour)) {
+void Widget::set_border_color(const Color &color) {
+    if(style_->border_color_ == PackedColor4444(color)) {
         return;
     }
 
-    style_->border_colour_ = colour;
+    style_->border_color_ = color;
     _recalc_active_layers();
     rebuild();
 }
@@ -799,10 +889,10 @@ bool Widget::foreground_active() const {
 
 void Widget::_recalc_active_layers() {
     style_->active_layers_ = (
-        (style_->border_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BORDER |
-        (style_->background_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
-        (style_->foreground_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
-        (style_->text_colour_ != Colour::NONE) << WIDGET_LAYER_INDEX_TEXT
+        (style_->border_color_ != Color::NONE) << WIDGET_LAYER_INDEX_BORDER |
+        (style_->background_color_ != Color::NONE) << WIDGET_LAYER_INDEX_BACKGROUND |
+        (style_->foreground_color_ != Color::NONE) << WIDGET_LAYER_INDEX_FOREGROUND |
+        (style_->text_color_ != Color::NONE) << WIDGET_LAYER_INDEX_TEXT
     );
 }
 
@@ -820,11 +910,11 @@ void Widget::set_background_image(TexturePtr texture) {
         return;
     }
 
-    assert(owner_->global_background_material_);
-
-    if(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] == owner_->global_background_material_) {
+    if(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->name() == std::string(GLOBAL_BACKGROUND_NAME)) {
         /* We need to switch to an independent material and can't use the global one anymore */
-        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = owner_->clone_global_background_material();
+        style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = scene->assets->clone_material(
+            style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->id()
+        );
         mesh_->find_submesh("background")->set_material(style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]);
     }
 
@@ -855,11 +945,11 @@ void Widget::set_foreground_image(TexturePtr texture) {
         return;
     }
 
-    assert(owner_->global_foreground_material_);
-
-    if(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] == owner_->global_foreground_material_) {
+    if(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->name() == std::string(GLOBAL_FOREGROUND_NAME)) {
         /* We need to switch to an independent material and can't use the global one anymore */
-        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = owner_->clone_global_foreground_material();
+        style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = scene->assets->clone_material(
+            style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->id()
+        );
         mesh_->find_submesh("foreground")->set_material(style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]);
     }
 
@@ -886,39 +976,39 @@ void Widget::set_foreground_image_source_rect(const UICoord& bottom_left, const 
     rebuild();
 }
 
-void Widget::set_background_colour(const Colour& colour) {
+void Widget::set_background_color(const Color& color) {
     assert(style_);
 
-    if(style_->background_colour_ == colour) {
+    if(style_->background_color_ == color) {
         // Nothing to do
         return;
     }
 
-    style_->background_colour_ = colour;
+    style_->background_color_ = color;
 
     _recalc_active_layers();
     rebuild();
 }
 
-void Widget::set_foreground_colour(const Colour& colour) {
-    if(style_->foreground_colour_ == colour) {
+void Widget::set_foreground_color(const Color& color) {
+    if(style_->foreground_color_ == color) {
         // Nothing to do
         return;
     }
 
-    style_->foreground_colour_ = colour;
+    style_->foreground_color_ = color;
 
     _recalc_active_layers();
     rebuild();
 }
 
-void Widget::set_text_colour(const Colour &colour) {
-    if(style_->text_colour_ == colour) {
+void Widget::set_text_color(const Color &color) {
+    if(style_->text_color_ == color) {
         // Nothing to do
         return;
     }
 
-    style_->text_colour_ = colour;
+    style_->text_color_ = color;
     _recalc_active_layers();
     rebuild();
 }

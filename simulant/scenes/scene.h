@@ -46,8 +46,10 @@
 #include "../interfaces/nameable.h"
 #include "../interfaces/updateable.h"
 #include "../interfaces.h"
-#include "../stage_manager.h"
 #include "../generic/any/any.h"
+#include "../nodes/stage_node_manager.h"
+#include "../asset_manager.h"
+#include "../compositor.h"
 
 namespace smlt {
 
@@ -55,29 +57,58 @@ class Application;
 class Window;
 class InputManager;
 class SceneManager;
+class Service;
 
 class SceneLoadException : public std::runtime_error {};
 
 typedef sig::signal<void ()> SceneOnActivatedSignal;
 typedef sig::signal<void ()> SceneOnDeactivatedSignal;
 
-class SceneBase:
-    public StageManager {
+typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
+typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
+
+typedef sig::signal<void (Camera*, Viewport*, StageNode*)> LayerRenderStartedSignal;
+typedef sig::signal<void (Camera*, Viewport*, StageNode*)> LayerRenderFinishedSignal;
+
+
+class LightingSettings {
+public:
+    smlt::Color ambient_light() const {
+        return ambient_light_;
+    }
+
+    void set_ambient_light(const smlt::Color& c) {
+        ambient_light_ = c;
+    }
+
+private:
+    smlt::Color ambient_light_;
+};
+
+
+class Scene:
+    public StageNode,
+    public StageNodeManager {
 
     DEFINE_SIGNAL(SceneOnActivatedSignal, signal_activated);
     DEFINE_SIGNAL(SceneOnDeactivatedSignal, signal_deactivated);
 
+    DEFINE_SIGNAL(StageNodeCreatedSignal, signal_stage_node_created);
+    DEFINE_SIGNAL(StageNodeDestroyedSignal, signal_stage_node_destroyed);
+
+    DEFINE_SIGNAL(LayerRenderStartedSignal, signal_layer_render_started);
+    DEFINE_SIGNAL(LayerRenderFinishedSignal, signal_layer_render_finished);
 public:
-    typedef std::shared_ptr<SceneBase> ptr;
+    typedef std::shared_ptr<Scene> ptr;
 
-    SceneBase(Window* window);
-    virtual ~SceneBase();
+    Scene(Window* window);
+    virtual ~Scene();
 
-    void _call_load();
-    void _call_unload();
+    void load();
+    void unload();
 
-    void _call_activate();
-    void _call_deactivate();
+    void activate();
+    void deactivate();
 
     bool is_loaded() const { return is_loaded_; }
     bool is_active() const { return is_active_; }
@@ -90,15 +121,6 @@ public:
         name_ = name;
     }
 
-    /* Whether or not to destroy the scene when it's been unloaded.
-     * If destroyed, the next time the scene is accessed by name via the scene manager
-     * a new instance will be created.
-     */
-    bool destroy_on_unload() const { return destroy_on_unload_; }
-    void set_destroy_on_unload(bool v) {
-        destroy_on_unload_ = v;
-    }
-
     /* Whether or not the scene should be unloaded when it's deactivated
      * this is the default behaviour */
     bool unload_on_deactivate() const { return unload_on_deactivate_; }
@@ -106,25 +128,63 @@ public:
         unload_on_deactivate_ = v;
     }
 
+    template<typename T>
+    T* start_service() {
+        size_t info = typeid(T).hash_code();
+        if(services_.count(info)) {
+            return static_cast<T*>(services_.at(info).get());
+        }
+
+        auto service = std::make_shared<T>();
+
+        // FIXME: start signal
+
+        services_.insert(std::make_pair(info, service));
+        return service.get();
+    }
+
+    template<typename T>
+    bool stop_service() {
+        size_t info = typeid(T).hash_code();
+        auto it = services_.find(info);
+        if(it != services_.end()) {
+            return false;
+        }
+
+        // FIXME: Stop signal
+        services_.erase(it);
+        return true;
+    }
+
+    template<typename T>
+    T* find_service() const {
+        auto info = typeid(T).hash_code();
+        auto it = services_.find(info);
+        if(it != services_.end()) {
+            return static_cast<T*>(it->second.get());
+        }
+
+        return nullptr;
+    }
+
+    const std::set<StageNode*> stray_nodes() const {
+        return stray_nodes_;
+    }
+
 protected:
-    virtual void load() = 0;
-    virtual void unload() {}
-    virtual void activate() {}
-    virtual void deactivate() {}
+    virtual void on_load() = 0;
+    virtual void on_unload() {}
+    virtual void on_activate() {}
+    virtual void on_deactivate() {}
 
-    /* Linked pipelines activate and deactivate with the scene */
-    void link_pipeline(const std::string& name);
-    void unlink_pipeline(const std::string& name);
-    void link_pipeline(PipelinePtr pipeline);
-    void unlink_pipeline(PipelinePtr pipeline);
-
-    void _update_thunk(float dt) override;
-    void _fixed_update_thunk(float dt) override;
 private:
-    std::set<std::string> linked_pipelines_;
+    void on_fixed_update(float step) override;
 
-    virtual void pre_load() {}
-    virtual void post_unload() {}
+    void register_builtin_nodes();
+    std::unordered_map<size_t, std::shared_ptr<Service>> services_;
+
+    virtual void on_pre_load() {}
+    virtual void on_post_unload() {}
 
     bool is_loaded_ = false;
     bool is_active_ = false;
@@ -132,17 +192,51 @@ private:
 
     std::string name_;
 
-    bool destroy_on_unload_ = true;
-
     Window* window_;
     InputManager* input_;
     Application* app_;
     SceneManager* scene_manager_ = nullptr;
-    Compositor* compositor_ = nullptr;
+    SceneCompositor compositor_;
+
+    AssetManager assets_;
 
     friend class SceneManager;
 
     std::vector<any> load_args;
+
+    void on_clean_up() override {
+        unload();
+    }
+
+    // So that stage nodes can call queue_clean_up
+    friend class StageNode;
+
+    void clean_up_destroyed_objects();
+    void queue_clean_up(StageNode* node);
+    std::list<StageNode*> queued_for_clean_up_;
+    std::set<StageNode*> stray_nodes_;
+
+    LightingSettings lighting_;
+
+    /* Don't allow overriding on_create in subclasses, currently
+     * the hook for that is init + load */
+    bool on_create(void*) override final {
+        return true;
+    }
+
+    void do_generate_renderables(
+        batcher::RenderQueue*,
+        const Camera*, const Viewport*, const DetailLevel) override final {
+        /* Do nothing, Scenes don't create renderables.. for now */
+    }
+
+    /* Scenes don't care about AABBs */
+    const AABB& aabb() const override final {
+        static AABB ret;
+        return ret;
+    }
+
+
 
 protected:
     /* Returns the number of arguments passed when loading */
@@ -154,23 +248,16 @@ protected:
     }
 
 public:
-    S_DEFINE_PROPERTY(window, &SceneBase::window_);
-    S_DEFINE_PROPERTY(app, &SceneBase::app_);
-    S_DEFINE_PROPERTY(input, &SceneBase::input_);
-    S_DEFINE_PROPERTY(scenes, &SceneBase::scene_manager_);
-    S_DEFINE_PROPERTY(compositor, &SceneBase::compositor_);
+    S_DEFINE_PROPERTY(window, &Scene::window_);
+    S_DEFINE_PROPERTY(app, &Scene::app_);
+    S_DEFINE_PROPERTY(input, &Scene::input_);
+    S_DEFINE_PROPERTY(scenes, &Scene::scene_manager_);
+    S_DEFINE_PROPERTY(compositor, &Scene::compositor_);
+    S_DEFINE_PROPERTY(lighting, &Scene::lighting_);
+    S_DEFINE_PROPERTY(assets, &Scene::assets_);
 };
 
-template<typename T>
-class Scene : public SceneBase, public RefCounted<T> {
-public:
-    Scene(Window* window):
-        SceneBase(window) {}
 
-    void clean_up() override {
-        _call_unload();
-    }
-};
 
 }
 

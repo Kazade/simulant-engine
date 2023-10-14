@@ -295,7 +295,14 @@ public:
             std::function<void()> func = std::bind(method, dynamic_cast<T*>(instance.get()));
             tests_.push_back([=]() {
                 instance->set_up();
-                func();
+
+                try {
+                    func();
+                } catch(...) {
+                    instance->tear_down();
+                    throw;
+                }
+
                 instance->tear_down();
             });
         }
@@ -449,12 +456,12 @@ private:
 };
 
 
-class TestScene : public smlt::Scene<TestScene> {
+class TestScene : public smlt::Scene {
 public:
     TestScene(Window* window):
-        smlt::Scene<TestScene>(window) {}
+        smlt::Scene(window) {}
 
-    void load() override {}
+    void on_load() override {}
 };
 
 class TestApp: public smlt::Application {
@@ -472,7 +479,7 @@ private:
 
 class SimulantTestCase: public TestCase {
 private:
-    void set_app_and_window(std::shared_ptr<Application>* app, Window** window, SceneBase** scene) {
+    void set_app_and_window(std::shared_ptr<Application>* app, Window** window, Scene** scene) {
         static std::shared_ptr<Application> application;
 
         if(!application) {
@@ -518,7 +525,7 @@ private:
 
 protected:
     Window* window;
-    SceneBase* scene;
+    Scene* scene;
     std::shared_ptr<Application> application;
 
 public:

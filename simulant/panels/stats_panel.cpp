@@ -21,6 +21,8 @@
 #include "../window.h"
 #include "../stage.h"
 #include "../nodes/ui/ui_manager.h"
+#include "../nodes/camera.h"
+#include "../nodes/actor.h"
 #include "../compositor.h"
 #include "../nodes/ui/label.h"
 #include "../platform.h"
@@ -35,30 +37,15 @@
 
 namespace smlt {
 
-StatsPanel::StatsPanel(Window *window):
-    window_(window) {
+StatsPanel::StatsPanel(Scene *owner):
+    Panel(owner, STAGE_NODE_TYPE_STATS_PANEL) {
 
 }
 
-bool StatsPanel::init() {
-    if(!Panel::init()) {
+bool StatsPanel::on_init() {
+    if(!Panel::on_init()) {
         return false;
     }
-
-    ui_camera_ = stage_->new_camera_with_orthographic_projection(0, window_->width(), 0, window_->height());
-    pipeline_ = window_->compositor->render(
-        stage_.get(), ui_camera_
-    )->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
-    pipeline_->set_name("stats_pipeline");
-    pipeline_->deactivate();
-
-    /* If the pipeline is destroyed, make sure
-     * we don't keep a reference around */
-    pipeline_->signal_destroyed().connect([&]() {
-        pipeline_ = nullptr;
-    });
-
-    auto overlay = stage_;
 
     auto hw = 32;
     auto label_width = ui::Px(window_->width() * 0.5f);
@@ -66,53 +53,50 @@ bool StatsPanel::init() {
     const float diff = 32;
     float vheight = window_->height() - diff;
 
-    auto heading1 = overlay->ui->new_widget_as_label("Performance", label_width);
-    heading1->move_to(hw, vheight);
+    auto heading1 = scene->create_node<ui::Label>("Performance", label_width);
+    heading1->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    fps_ = overlay->ui->new_widget_as_label("FPS: 0", label_width);
-    fps_->move_to(hw, vheight);
+    fps_ = scene->create_node<ui::Label>("FPS: 0", label_width);
+    fps_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    frame_time_ = overlay->ui->new_widget_as_label("Frame Time: 0ms", label_width);
-    frame_time_->move_to(hw, vheight);
+    frame_time_ = scene->create_node<ui::Label>("Frame Time: 0ms", label_width);
+    frame_time_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    ram_usage_ = overlay->ui->new_widget_as_label("RAM Used: 0", label_width);
-    ram_usage_->move_to(hw, vheight);
+    ram_usage_ = scene->create_node<ui::Label>("RAM Used: 0", label_width);
+    ram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    vram_usage_ = overlay->ui->new_widget_as_label("VRAM Used: 0", label_width);
-    vram_usage_->move_to(hw, vheight);
+    vram_usage_ = scene->create_node<ui::Label>("VRAM Used: 0", label_width);
+    vram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    actors_rendered_ = overlay->ui->new_widget_as_label("Renderables visible: 0", label_width);
-    actors_rendered_->move_to(hw, vheight);
+    actors_rendered_ = scene->create_node<ui::Label>("Renderables visible: 0", label_width);
+    actors_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    polygons_rendered_ = overlay->ui->new_widget_as_label("Polygons Rendered: 0", label_width);
-    polygons_rendered_->move_to(hw, vheight);
+    polygons_rendered_ = scene->create_node<ui::Label>("Polygons Rendered: 0", label_width);
+    polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    stage_node_pool_size_ = overlay->ui->new_widget_as_label("", label_width);
-    stage_node_pool_size_->move_to(hw, vheight);
-
-    graph_material_ = stage_->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+    graph_material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
-    ram_graph_mesh_ = stage_->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-    ram_graph_ = stage_->new_actor_with_mesh(ram_graph_mesh_);
+    ram_graph_mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+    ram_graph_ = scene->create_node<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
 
-    low_mem_ = overlay->ui->new_widget_as_label("0M");
-    high_mem_ = overlay->ui->new_widget_as_label("0M");
+    low_mem_ = scene->create_node<ui::Label>("0M");
+    high_mem_ = scene->create_node<ui::Label>("0M");
 
-    frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update, this));
+    frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update_stats, this));
 
     return true;
 }
 
-void StatsPanel::clean_up() {
+void StatsPanel::on_clean_up() {
     frame_started_.disconnect();
 
     if(pipeline_) {
@@ -120,7 +104,7 @@ void StatsPanel::clean_up() {
         pipeline_ = nullptr;
     }
 
-    Panel::clean_up();
+    Panel::on_clean_up();
 
     fps_ = nullptr;
     frame_time_ = nullptr;
@@ -151,8 +135,8 @@ static unsigned int round(unsigned int value, unsigned int multiple){
 #define RAM_SAMPLES 25
 
 void StatsPanel::rebuild_ram_graph() {
-    smlt::Colour colour = smlt::Colour::BLUE;
-    colour.a = 0.35;
+    smlt::Color color = smlt::Color::BLUE;
+    color.a = 0.35;
 
     float width = window_->width();
     float height = window_->height() * 0.4f;
@@ -178,7 +162,7 @@ void StatsPanel::rebuild_ram_graph() {
         return;
     }
 
-    auto submesh = ram_graph_mesh_->new_submesh("ram-usage", graph_material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
+    auto submesh = ram_graph_mesh_->create_submesh("ram-usage", graph_material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
     auto& vdata = ram_graph_mesh_->vertex_data;
     auto& idata = submesh->index_data;
 
@@ -205,12 +189,12 @@ void StatsPanel::rebuild_ram_graph() {
 
         float y = (height / graph_max) * last_sample;
         vdata->position(x, y, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
         vdata->position(x, 0, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
@@ -230,12 +214,12 @@ void StatsPanel::rebuild_ram_graph() {
 
         y = (height / graph_max) * sample;
         vdata->position(x, 0, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
         vdata->position(x, y, -1);
-        vdata->diffuse(colour);
+        vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
@@ -255,16 +239,16 @@ void StatsPanel::rebuild_ram_graph() {
     }
 
     low_mem_->set_text(_F("{0}M").format(lowest_mem));
-    low_mem_->move_to(lowest_x, lowest_y + 10);
+    low_mem_->transform->set_position_2d(Vec2(lowest_x, lowest_y + 10));
 
     high_mem_->set_text(_F("{0}M").format(highest_mem));
-    high_mem_->move_to(highest_x, highest_y + 10);
+    high_mem_->transform->set_position_2d(Vec2(highest_x, highest_y + 10));
 
     vdata->done();
     idata->done();
 }
 
-void StatsPanel::update() {
+void StatsPanel::update_stats() {
     last_update_ += get_app()->time_keeper->delta_time();
 
     if(first_update_ || last_update_ >= 1.0f) {
@@ -286,7 +270,6 @@ void StatsPanel::update() {
         vram_usage_->set_text(_F("VRAM Free: {0} MB").format(vram_usage));
         actors_rendered_->set_text(_F("Renderables Visible: {0}").format(actors_rendered));
         polygons_rendered_->set_text(_F("Polygons Rendered: {0}").format(get_app()->stats->polygons_rendered()));
-        stage_node_pool_size_->set_text(_F("Node pool size: {0}kb").format(get_app()->stage_node_pool_capacity_in_bytes() / 1024));
 
         last_update_ = 0.0f;
         first_update_ = false;

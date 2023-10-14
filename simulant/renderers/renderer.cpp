@@ -22,12 +22,12 @@
 
 namespace smlt {
 
-void Renderer::register_texture(TextureID tex_id, Texture* texture) {
+void Renderer::register_texture(AssetID tex_id, Texture* texture) {
     on_texture_register(tex_id, texture);
     texture_registry_.insert(std::make_pair(tex_id, texture));
 }
 
-void Renderer::unregister_texture(TextureID texture_id, Texture* texture) {
+void Renderer::unregister_texture(AssetID texture_id, Texture* texture) {
     texture_registry_.erase(texture_id);
     on_texture_unregister(texture_id, texture);
 }
@@ -79,7 +79,7 @@ bool Renderer::texture_format_is_usable(TextureFormat fmt) {
     }
 }
 
-bool Renderer::is_texture_registered(TextureID texture_id) const {
+bool Renderer::is_texture_registered(AssetID texture_id) const {
     return texture_registry_.count(texture_id);
 }
 

@@ -67,7 +67,7 @@ private:
     std::string current_texture;
 
     std::map<std::string, SubMesh*> texture_submesh;
-    std::map<std::string, TextureID> texture_name_to_id;
+    std::map<std::string, TexturePtr> texture_name_to_id;
 
     struct Triangle {
         Vec3 positions[3];

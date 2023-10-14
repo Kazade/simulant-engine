@@ -38,23 +38,31 @@ namespace smlt {
 class KeyFrameAnimationState;
 class Rig;
 
+struct ActorParams {
+    ActorParams(MeshPtr mesh):
+        mesh(mesh) {}
+
+    MeshPtr mesh;
+};
+
 class Actor :
-    public TypedDestroyableObject<Actor, Stage>,
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<ActorID>,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Actor> {
 
 public:
-    Actor(Stage* stage, SoundDriver *sound_driver);
-    Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh);
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_ACTOR;
+        typedef ActorParams params_type;
+    };
+
+    Actor(Scene* owner);
     virtual ~Actor();
 
     const AABB& aabb() const override;
 
-    MeshID mesh_id(DetailLevel detail_level) const;
+    AssetID mesh_id(DetailLevel detail_level) const;
     const MeshPtr &mesh(DetailLevel detail_level) const;
     const MeshPtr& best_mesh(DetailLevel detail_level) const;
     const MeshPtr &base_mesh() const;
@@ -63,9 +71,9 @@ public:
     bool has_any_mesh() const;
     bool has_multiple_meshes() const;
 
-    void set_mesh(MeshID mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
+    void set_mesh(const MeshPtr& mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
 
-    typedef sig::signal<void (ActorID)> MeshChangedCallback;
+    typedef sig::signal<void (StageNodeID)> MeshChangedCallback;
 
     MeshChangedCallback& signal_mesh_changed() { return signal_mesh_changed_; }
 
@@ -74,11 +82,9 @@ public:
         return has_animated_mesh_;
     }
 
-    void clean_up() override {
-        StageNode::clean_up();
-    }
-
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+        const Camera*camera, const Viewport* viewport, const DetailLevel detail_level
+    ) override;
 
     void use_material_slot(MaterialSlot var) {
         material_slot_ = var;
@@ -97,9 +103,7 @@ public:
     }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
+    bool on_create(void *params) override;
 
     const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards
@@ -126,7 +130,7 @@ private:
 
     MaterialSlot material_slot_ = MATERIAL_SLOT0;
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 
     sig::connection submesh_created_connection_;
     sig::connection submesh_destroyed_connection_;

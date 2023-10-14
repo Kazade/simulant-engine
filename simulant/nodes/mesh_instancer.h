@@ -12,6 +12,13 @@
 
 namespace smlt {
 
+struct MeshInstancerParams {
+    MeshPtr mesh;
+
+    MeshInstancerParams(const MeshPtr& mesh):
+        mesh(mesh) {}
+};
+
 typedef std::size_t MeshInstanceID;
 
 /**
@@ -35,16 +42,18 @@ typedef std::size_t MeshInstanceID;
  * Spawning animated meshes is currently unsupported.
  */
 class MeshInstancer:
-    public TypedDestroyableObject<MeshInstancer, Stage>,
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<MeshInstancerID>,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<MeshInstancer> {
 
 public:
-    MeshInstancer(Stage* stage, SoundDriver* sound_driver, MeshPtr mesh);
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
+        typedef MeshInstancerParams params_type;
+    };
+
+    MeshInstancer(Scene* owner);
     virtual ~MeshInstancer();
 
     const AABB& aabb() const override;
@@ -56,7 +65,7 @@ public:
      *  Returns a new non-zero MeshInstanceID on success. Returns
      *  0 on failure.
      */
-    MeshInstanceID new_mesh_instance(
+    MeshInstanceID create_mesh_instance(
         const smlt::Vec3& position,
         const smlt::Quaternion& rotation=smlt::Quaternion()
     );
@@ -83,25 +92,21 @@ public:
      */
     bool hide_mesh_instance(MeshInstanceID mid);
 
-    void _get_renderables(
-        batcher::RenderQueue* render_queue,
-        const CameraPtr camera,
-        const DetailLevel detail_level
-    ) override;
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+        const Camera*camera, const Viewport* viewport, const DetailLevel
+    detail_level) override;
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     MeshPtr mesh_;
 
     /* The axis-aligned box containing all mesh instances */
     AABB aabb_;
 
-    void recalc_aabb();    
+    void recalc_aabb();
 
-    void on_transformation_changed();
+    bool on_create(void* params) override;
+
+    void on_transformation_changed() override;
 
     struct MeshInstance {
         uint32_t id = 0;
@@ -119,6 +124,5 @@ private:
     /* FIXME: Convert to ContiguousMap when it has erase... */
     std::unordered_map<uint32_t, MeshInstance> instances_;
 };
-
 
 }

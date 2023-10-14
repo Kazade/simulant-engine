@@ -13,15 +13,14 @@ class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_loading_without_texture_coords() {
         //Shouldn't throw
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj");
+        application->shared_assets->load_mesh("cube.obj");
     }
 
     void test_culling_method_applied() {
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
-        smlt::MeshPtr m = mid.fetch();
+        auto m = application->shared_assets->load_mesh("cube.obj", VertexSpecification::DEFAULT, opts);
 
         assert_equal(m->submesh_count(), 1u);
         assert_true(m->first_submesh()->material());
@@ -30,7 +29,7 @@ public:
         assert_equal(mat->pass(0)->cull_mode(), opts.cull_mode);
     }
 
-    void test_vertex_colours() {
+    void test_vertex_colors() {
 
         std::string obj_file(R"(
             v 0.0 0.0 0.0 1.0 0.0 0.0
@@ -44,7 +43,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
@@ -64,7 +63,7 @@ public:
 #endif
     }
 
-    void test_vertex_colours_default_white() {
+    void test_vertex_colors_default_white() {
 
         std::string obj_file(R"(
             v 0.0 0.0 0.0
@@ -78,7 +77,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
@@ -112,7 +111,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh_from_file(
+        auto mesh = application->shared_assets->load_mesh(
             "cube.obj",
             smlt::VertexSpecification::POSITION_ONLY
         );

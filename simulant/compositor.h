@@ -25,87 +25,144 @@
 
 #include "generic/managed.h"
 #include "generic/property.h"
-
+#include "signals/signal.h"
 #include "renderers/renderer.h"
 #include "types.h"
 #include "viewport.h"
 #include "partitioner.h"
-#include "pipeline.h"
+#include "layer.h"
 
 namespace smlt {
 
+typedef sig::signal<void (Layer&)> LayerRenderStarted;
+typedef sig::signal<void (Layer&)> LayerRenderFinished;
+
 class Compositor:
     public RefCounted<Compositor> {
+
+    DEFINE_SIGNAL(LayerRenderStarted, signal_layer_render_started);
+    DEFINE_SIGNAL(LayerRenderFinished, signal_layer_render_finished);
 
 public:
     Compositor(Window* window);
     virtual ~Compositor();
 
-    PipelinePtr new_pipeline(const std::string& name,
-        StagePtr stage,
+    LayerPtr create_layer(
+        StageNode* subtree,
         CameraPtr camera,
         const Viewport& viewport=Viewport(),
-        TextureID target=TextureID(),
+        TexturePtr target=nullptr,
         int32_t priority=0
     );
 
-    PipelinePtr render(StagePtr stage, CameraPtr camera);
-
-    std::list<PipelinePtr>::iterator begin() {
+    std::list<LayerPtr>::iterator begin() {
         return ordered_pipelines_.begin();
     }
 
-    std::list<PipelinePtr>::iterator end() {
+    std::list<LayerPtr>::iterator end() {
         return ordered_pipelines_.end();
     }
 
-    PipelinePtr find_pipeline(const std::string& name);
-    bool destroy_pipeline(const std::string& name);
-    void destroy_all_pipelines();
-    void destroy_pipeline_immediately(const std::string& name);
+    LayerPtr find_layer(const std::string& name);
+    void destroy_all_layers();
 
-    bool has_pipeline(const std::string& name);
+    bool has_layer(const std::string& name);
 
     //void set_batcher(Batcher::ptr batcher);
     void set_renderer(Renderer *renderer);
 
     void run();
-    void clean_destroyed_pipelines();
+    void clean_destroyed_layers();
 
-    sig::signal<void (Pipeline&)>& signal_pipeline_started() { return signal_pipeline_started_; }
-    sig::signal<void (Pipeline&)>& signal_pipeline_finished() { return signal_pipeline_finished_; }
+    void destroy_object(LayerPtr pip) {
+        if(queued_for_destruction_.count(pip)) {
+            return;
+        }
 
-    void destroy_object(PipelinePtr pipeline) {
-        destroy_pipeline(pipeline->name());
+        queued_for_destruction_.insert(pip);
+
+        /* When a user requests destruction, we deactivate immediately
+         * as that's the path of least surprise. The pipeline won't be used
+         * anyway on the next render, this just makes sure that the stage for example
+         * doesn't think it's part of an active pipeline until then */
+        pip->deactivate();
+        pip->destroy();
     }
 
-    void destroy_object_immediately(PipelinePtr pipeline) {
+    void destroy_object_immediately(LayerPtr pipeline) {
         // FIXME: This doesn't destroy immediately
-        destroy_pipeline(pipeline->name());
+        destroy_object(pipeline);
     }
 
 private:
-    void sort_pipelines();
-    void run_pipeline(PipelinePtr stage, int& actors_rendered);
+    void sort_layers();
+    void run_layer(LayerPtr stage, int& actors_rendered);
 
     Window* window_ = nullptr;
     Renderer* renderer_ = nullptr;
     batcher::RenderQueue render_queue_;
 
-    std::list<std::shared_ptr<Pipeline>> pool_;
-    std::list<PipelinePtr> ordered_pipelines_;
-    std::set<PipelinePtr> queued_for_destruction_;
+    std::list<std::shared_ptr<Layer>> pool_;
+    std::list<LayerPtr> ordered_pipelines_;
+    std::set<LayerPtr> queued_for_destruction_;
 
-    sig::signal<void (Pipeline&)> signal_pipeline_started_;
-    sig::signal<void (Pipeline&)> signal_pipeline_finished_;
-
-    friend class Pipeline;
+    friend class Layer;
 
     std::set<RenderTarget*> targets_rendered_this_frame_;
 
     sig::connection clean_up_connection_;
 public:
     S_DEFINE_PROPERTY(window, &Compositor::window_);
+};
+
+
+/**
+ * @brief The SceneCompositor class
+ *
+ * The Compositor class is global, across the whole application. The
+ * SceneCompositor is a scene-local equivalent which ensures that layers do
+ * not outlive the scene.
+ */
+
+class SceneCompositor {
+public:
+    SceneCompositor(Scene* scene, Compositor* global_compositor);
+
+    ~SceneCompositor();
+
+    LayerPtr create_layer(StageNode* subtree, Camera* camera, int32_t priority=0) {
+        auto ret = compositor_->create_layer(subtree, camera, Viewport(), nullptr, priority);
+        layers_.push_back(ret);
+        return ret;
+    }
+
+    LayerPtr find_layer(const std::string& name) {
+        for(auto& layer: layers_) {
+            if(layer->name() == name) {
+                return layer;
+            }
+        }
+
+        return LayerPtr();
+    }
+
+    void destroy_all_layers() {
+        for(auto& layer: layers_) {
+            layer->destroy();
+        }
+    }
+
+private:
+    Compositor* compositor_ = nullptr;
+    Scene* scene_ = nullptr;
+
+    std::list<LayerPtr> layers_;
+
+    sig::Connection activate_connection_;
+    sig::Connection deactivate_connection_;
+
+public:
+    S_DEFINE_PROPERTY(global_compositor, &SceneCompositor::compositor_);
 };
 
 }

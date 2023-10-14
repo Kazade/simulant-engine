@@ -17,7 +17,7 @@ void Partitioner::_apply_writes() {
             apply_staged_write(it->second, write);
             removed_nodes_.erase(it);
         } else {
-            auto key = p->key();
+            auto key = p->id();
             if(p->partitioner_added_) {
                 StagedWrite write;
                 write.operation = WRITE_OPERATION_ADD;
@@ -50,7 +50,7 @@ void Partitioner::_apply_writes() {
 
 void Partitioner::stage_write(StageNode* node, const StagedWrite& op) {
     if(op.operation == WRITE_OPERATION_REMOVE) {
-        removed_nodes_.insert(std::make_pair(node, node->key()));
+        removed_nodes_.insert(std::make_pair(node, node->id()));
     } else if(!node->partitioner_dirty_ || removed_nodes_.count(node)) {
         if(op.operation == WRITE_OPERATION_ADD) {
             node->partitioner_added_ = true;

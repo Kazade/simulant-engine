@@ -26,16 +26,16 @@ ShadeModel shade_model_from_name(const char* name) {
     }
 }
 
-ColourMaterial colour_material_from_name(const char* name) {
+ColorMaterial color_material_from_name(const char* name) {
     auto hsh = material_property_hash(name);
     switch(hsh) {
-        case material_property_hash("ambient"): return COLOUR_MATERIAL_AMBIENT;
-        case material_property_hash("ambient_and_diffuse"): return COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE;
-        case material_property_hash("diffuse"): return COLOUR_MATERIAL_DIFFUSE;
-        case material_property_hash("none"): return COLOUR_MATERIAL_NONE;
+        case material_property_hash("ambient"): return COLOR_MATERIAL_AMBIENT;
+        case material_property_hash("ambient_and_diffuse"): return COLOR_MATERIAL_AMBIENT_AND_DIFFUSE;
+        case material_property_hash("diffuse"): return COLOR_MATERIAL_DIFFUSE;
+        case material_property_hash("none"): return COLOR_MATERIAL_NONE;
         default:
-            S_WARN("Invalid colour material name: {0}", name);
-            return COLOUR_MATERIAL_NONE;
+            S_WARN("Invalid color material name: {0}", name);
+            return COLOR_MATERIAL_NONE;
     }
 }
 
@@ -57,7 +57,7 @@ BlendType blend_type_from_name(const char* name) {
     switch(hsh) {
         case material_property_hash("add"): return BLEND_ADD;
         case material_property_hash("alpha"): return BLEND_ALPHA;
-        case material_property_hash("colour"): return BLEND_COLOUR;
+        case material_property_hash("color"): return BLEND_COLOR;
         case material_property_hash("modulate"): return BLEND_MODULATE;
         case material_property_hash("one_one_minus_alpha"): return BLEND_ONE_ONE_MINUS_ALPHA;
         case material_property_hash("none"): return BLEND_NONE;

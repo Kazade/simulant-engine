@@ -47,8 +47,9 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 #include "asset_manager.h"
 #include "application.h"
-#include "scenes/loading.h"
+#include "scenes/scene.h"
 #include "input/input_state.h"
+#include "input/input_manager.h"
 #include "platform.h"
 #include "time_keeper.h"
 #include "vfs.h"
@@ -112,8 +113,7 @@ Application::Application(const AppConfig &config):
     time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
     vfs_(VirtualFileSystem::create()),
-    config_(config),
-    node_pool_(new StageNodePool(config_.general.stage_node_pool_size)) {
+    config_(config) {
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
 
@@ -164,7 +164,6 @@ Application::~Application() {
     stop_running();
     shutdown();
 
-    window_->destroy_panels();
     scene_manager_->destroy_all();
 
     /* This cleans up the destroyed scenes
@@ -172,10 +171,17 @@ Application::~Application() {
      * pool. */
     run_coroutines_and_late_update();
 
+    scene_manager_->clean_up();
     scene_manager_.reset();
+
     asset_manager_.reset();
 
-    delete node_pool_;
+    overlay_scene_->clean_up();
+    overlay_scene_.reset();
+
+    if(global_app == this) {
+        global_app = nullptr;
+    }
 }
 
 void Application::preload_default_font() {
@@ -183,7 +189,7 @@ void Application::preload_default_font() {
 
     FontFlags flags;
     flags.size = ui.font_size;
-    auto fnt = shared_assets->new_font_from_family(ui.font_family, flags);
+    auto fnt = shared_assets->create_font_from_family(ui.font_family, flags);
 
     if(!fnt) {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
@@ -204,7 +210,7 @@ std::vector<std::string> Application::generate_potential_codes(const std::string
     return codes;
 }
 
-void Application::construct_window(const AppConfig& config) {
+bool Application::construct_window(const AppConfig& config) {
     /* Copy to remove const */
     AppConfig config_copy = config;
 
@@ -253,7 +259,7 @@ void Application::construct_window(const AppConfig& config) {
        config_copy.enable_vsync)
     ) {
         S_ERROR("[FATAL] There was an error creating the window");
-        return;
+        return false;
     }
 
     if(!config_copy.show_cursor) {
@@ -289,7 +295,8 @@ void Application::construct_window(const AppConfig& config) {
     S_DEBUG("Search paths added successfully");
 
     if(!window_->initialize_assets_and_devices()) {
-        throw InstanceInitializationError("Unable to create window");
+        S_ERROR("Unable to create window");
+        return false;
     }
 
     window_->set_title(config.title.encode());
@@ -310,7 +317,7 @@ void Application::construct_window(const AppConfig& config) {
         }
     }
 #endif
-
+    return true;
 }
 
 bool Application::_call_init() {
@@ -321,9 +328,7 @@ bool Application::_call_init() {
         return false;
     }
 
-    try {
-        construct_window(config);
-    } catch(std::runtime_error&) {
+    if(!construct_window(config)) {
         S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
         exit(1);
     }
@@ -339,13 +344,21 @@ bool Application::_call_init() {
 
     S_DEBUG("Sound driver started");
 
+    class OverlayScene : public Scene {
+    public:
+        OverlayScene(Window* window):
+            Scene(window) {}
+
+        void on_load() override {}
+    };
+
+    overlay_scene_.reset(new OverlayScene(window_.get()));
+    overlay_scene_->init();
+
     scene_manager_.reset(new SceneManager(window_.get()));
+    scene_manager_->init();
 
-    // Add some useful scenes by default, these can be overridden in init if the
-    // user so wishes
-    scenes->register_scene<scenes::Loading>("_loading");
-
-    S_DEBUG("Loading scene registered");
+    S_DEBUG("Scene manager initialized");
 
     initialized_ = init();
 
@@ -455,8 +468,8 @@ bool Application::run_frame() {
     auto listener = window_->audio_listener();
     if(listener) {
         sound_driver_->set_listener_properties(
-            listener->absolute_position(),
-            listener->absolute_rotation(),
+            listener->transform->position(),
+            listener->transform->rotation(),
             smlt::Vec3() // FIXME: Where do we get velocity?
         );
     }
@@ -599,14 +612,6 @@ Application* get_app() {
     return Application::global_app;
 }
 
-uint32_t Application::stage_node_pool_capacity() const {
-    return node_pool_->capacity();
-}
-
-uint32_t Application::stage_node_pool_capacity_in_bytes() const {
-    return stage_node_pool_capacity() * node_pool_->entry_size;
-}
-
 void Application::start_coroutine(std::function<void ()> func) {
     coroutines_.push_back(cort::start_coroutine(func));
 }
@@ -624,12 +629,6 @@ void Application::run_coroutines_and_late_update() {
     _call_late_update(dt);
 
     signal_post_late_update();
-
-    // House keeping
-    auto s = scenes->active_scene();
-    if(s) {
-        s->clean_destroyed_stages();
-    }
 }
 
 void Application::_call_clean_up() {

@@ -1,0 +1,138 @@
+Tuesday 3rd February, 1997
+===========================
+
+Title                   : Borax II
+Filename                : borax2.bsp
+Author                  : Dennis Katsonis
+Email Address           : rotflol@hotmail.com
+Homepage                : The Dk Shrine Home Page.
+                          This is the homepage of the 20 level DOOM II wad I
+                          made, and my other levels, visit it!  
+                          http://www.geocities.com.com/TimesSquare/Ring/5078
+
+Description             : My first Quake II level.  Its a kind of base style 
+                          level like those in the first unit, but it still
+                          somewhat original.
+                          
+
+Additional Credits to   : 
+                         
+
+Beta Testing Crew       : Me I guess
+=================================================================
+FOR QUAKE II
+
+
+Other Levels by Author  : DKSHRINE.WAD (20 level WAD for Doom II)
+                          DMHAUS.BSP
+                          MEDLAB.BSP
+                          ASTRUS.BSP
+                          BORAX.BSP
+
+			These above BSP's are for Quake 1, or Classic Quake as some poeple
+			like to call it.
+
+Watch out for new Quake 2 levels made by me, coming soon!
+
+STORY:
+		After the defeat of Stroggos in the First Earth-Strogg war, the asteriod belt
+was the last fortress, the last retreat for the surviving strogg.  Here they are
+at least able to from some sort of resistance, although any strike against earth is now 
+thankfully impossible.  The government of the Coalition of Man has decided to strip mine the
+mineral rich asteriods, but the strogg must be eradicated first before they can proceed.
+
+	You and your small platoon of 3 were ordered to infiltrate and shut down the 
+Electromagnetic Generator on Asteriod A-342-44F2, containing a facility known only as Borax II.  
+Shutting this down will allow air strikes.  The generator must be shut down to shut down any 
+small scale force fields that may be created using this field.  You were also ordered to 
+capture the Air Strike marker as it could be used by the strogg to controll the Coalition's
+missiles.  By using the Air Strike marker and computer equipment, 
+the strogg may be able to re-direct the missiles.  
+
+	You bring the Viper to a rough landing after a Dog fight with Strogg planes above the
+asteriod.  Bullets had penetraded the glass killing Wills and O'Brien, injuring Falkenberg and
+leaving you the only one able to fight.  You only have a Blaster, Flakenberg has a shotgun,
+but he is now insane.  
+
+	You are on your own, the decision is yours.  You decide to go it alone, and to get
+the shotgun off him by any means possible......
+
+           * Play Information *
+
+Single Player           : Yes
+Cooperative             : Yes, Quite a few starts
+Deathmatch              : Yes, Quite a few starts, but I
+                          didn't design it with deathmatch in mind.  If
+                          you are looking for a good big deathmatch level,
+                          this probably isn't it, but I may be wrong!
+Difficulty Settings     : Yes.  Easy isn't too easy though.
+New Sounds              : No
+New Graphics            : No
+New Music               : No
+Demos Replaced          : None
+
+         * About the level *
+
+Base                    : New level from scratch
+Editor(s) used          : QERadiant
+Build Time              : Don't know.  About 2 months, but I didn't work on it intensely.
+Known Bugs              : You get a message saying that the sound trigger1.wav could not
+			  be loaded.  This does not affect the running of the level in any way.
+                          
+Compile machine         : AMD K5-PR100, 16 MG RAM.
+                          
+QBSP Time                          : 24 minutes
+Light (-extra -bounce 32) Time     : 5719 seconds
+VIS (-level 4) Time                : 3 hours 12 minutes
+                        
+
+Brushes                 : about 1400
+Entities                : ?
+Models                  : ?
+Textures                : ?
+
+* Additional Information *
+
+Have fun plating, ammo is somewhat tight and you may run out if you are careless.
+Don't worry, there is enough, just not load of ammo and grenades.  Personally, I don't like
+balanced weapons.  Having 50 grenades and rockets kinda sucks.  I like Doom's style, where
+rockets were sparse, but powerful.  You only get 5 grenades in the level!  Use them wisely.
+
+I don't have a 3D card (this makes QERadiant difficult to use, but I can still use it), so 
+I don't really know what the coloured lighting is like.  I kept it to a minimum so as not to 
+get ugly colour combo's.  It should look O.K. though, but there is less coloured ligting than
+usual.
+
+* Copyright / Permissions *
+Copyright Notice: 
+
+
+You are free to copy this file for personal use, or to make it available for 
+redistribution in its electronic format, provided that: 
+
+(1) it remains wholly unedited and unmodified, 
+
+(2) no fee or compensation is charged for copies of or access to this
+    file, and
+
+(3) this copyright notice and the following disclaimer remain attached.
+
+Disclaimer: 
+
+I
+
+This file is provided by the author "as is", and any express or implied
+warranties, including, but not limited to, the implied warranties of
+merchantability and fitness for a particular purpose are disclaimed.  In
+absolutely no event shall the authors be liable for any direct, indirect,
+incidental, special, exemplary, or consequential damages (including, but
+not limited to, procurement of substitute goods or services; loss of
+use, data, or profits; or business interruption) however caused and on
+any theory of liability, whether in contract, strict liability, or tort
+(including negligence or otherwise) arising in any way out of the use of
+the information herein contained, even if advised of the possibility of
+such damage.
+
+
+
+Now with all that said and done, Goodbye and happy Quake-ing!

@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "default_init_ptr.h"
-#include "unique_id.h"
+#include "../core/stage_node_id.h"
 
 #include "../logging.h"
 #include "../signals/signal.h"
@@ -69,7 +69,6 @@ public:
 
         S_DEBUG("Creating a new object with ID: {0}", new_id);
         auto obj = T::create(new_id, std::forward<Args>(args)...);
-        obj->_bind_id_pointer(obj);
         objects_.insert(std::make_pair(obj->id(), obj));
         on_make(obj->id());
 

@@ -5,12 +5,13 @@
 #include "keyboard_mappings.h"
 #include "../application.h"
 #include "../window.h"
-#include "../pipeline.h"
+#include "../layer.h"
 #include "../nodes/ui/keyboard.h"
 #include "../stage.h"
 #include "../scenes/scene_manager.h"
 #include "../compositor.h"
 #include "../nodes/ui/ui_manager.h"
+#include "../nodes/camera.h"
 
 namespace smlt {
 
@@ -261,7 +262,7 @@ void InputManager::_process_keyboard(int8_t id, KeyboardCode pkey, KeyboardCode 
     }
 }
 
-void InputManager::on_scene_deactivated(std::string, SceneBase*) {
+void InputManager::on_scene_deactivated(std::string, Scene*) {
     if(keyboard_) {
         keyboard_->destroy();
         keyboard_pipeline_->destroy();
@@ -581,18 +582,29 @@ bool InputManager::start_text_input(bool force_onscreen) {
     auto& window = smlt::get_app()->window;
 
     /* Build our camera and make it render with the highest priority */
-    keyboard_stage_ = active_scene->new_stage();
-    keyboard_camera_ = keyboard_stage_->new_camera_for_ui();
-    keyboard_pipeline_ = window->compositor->render(
+    keyboard_stage_ = active_scene->create_node<Stage>();
+    keyboard_camera_ = active_scene->create_node<Camera>();
+    keyboard_camera_->set_orthographic_projection(
+        0, get_app()->window->width(),
+        0, get_app()->window->height(), -1, 1
+    );
+    keyboard_camera_->set_parent(keyboard_stage_);
+
+    keyboard_pipeline_ = window->compositor->create_layer(
         keyboard_stage_, keyboard_camera_
     );
+
     keyboard_pipeline_->set_priority(smlt::RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
     keyboard_pipeline_->activate();
 
-    keyboard_ = keyboard_stage_->ui->new_widget_as_keyboard();
+    keyboard_ = active_scene->create_node<ui::Keyboard>();
     keyboard_->set_anchor_point(0.5f, 0.0f);
-    keyboard_->move_to(window->width() / 2, window->height() * 0.1f);
+    keyboard_->transform->set_position_2d(
+        Vec2(window->width() / 2, window->height() * 0.1f)
+    );
     keyboard_->set_keyboard_integration_enabled(true);
+    keyboard_->set_parent(keyboard_stage_);
+
     keyboard_stage_->signal_destroyed().connect([=]() {
         keyboard_ = nullptr;
     });

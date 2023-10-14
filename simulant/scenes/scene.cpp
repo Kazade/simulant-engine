@@ -21,44 +21,124 @@
 #include "../compositor.h"
 #include "../stage.h"
 #include "../window.h"
-#include "../pipeline.h"
+#include "../layer.h"
 #include "../application.h"
 #include "../platform.h"
 #include "../asset_manager.h"
+#include "../services/service.h"
+#include "../nodes/actor.h"
+#include "../nodes/geom.h"
+#include "../nodes/camera.h"
+#include "../nodes/light.h"
+#include "../nodes/audio_source.h"
+#include "../nodes/mesh_instancer.h"
+#include "../nodes/particle_system.h"
+#include "../nodes/dynamic_body.h"
+#include "../nodes/static_body.h"
+#include "../nodes/kinematic_body.h"
+#include "../nodes/sprite.h"
+#include "../nodes/smooth_follow.h"
+#include "../nodes/fly_controller.h"
+#include "../nodes/skies/skybox.h"
+#include "../nodes/ui/image.h"
+#include "../nodes/ui/label.h"
+#include "../nodes/ui/button.h"
+#include "../nodes/ui/frame.h"
+#include "../nodes/ui/keyboard.h"
+#include "../nodes/ui/text_entry.h"
+#include "../nodes/ui/progress_bar.h"
+
+#include "../nodes/cylindrical_billboard.h"
+#include "../nodes/spherical_billboard.h"
+#include "../nodes/frustum_culler.h"
 
 namespace smlt {
 
-SceneBase::SceneBase(Window *window):
-    StageManager(),
+Scene::Scene(Window *window):
+    StageNode(this, STAGE_NODE_TYPE_SCENE),
+    StageNodeManager(this),
     window_(window),
     input_(window->input.get()),
-    app_(window->application),
-    compositor_(window->compositor) {
+    app_(window->app),
+    compositor_(this, window->compositor),
+    assets_(window->app->shared_assets.get()) {
+
+    register_builtin_nodes();
 }
 
-SceneBase::~SceneBase() {
-
-}
-
-void SceneBase::_update_thunk(float dt) {
-    if(!window->has_focus()) {
-        // if paused, send deltatime as 0.0.
-        // it's still accessible through window->time_keeper if the user needs it
-        dt = 0.0;
+Scene::~Scene() {
+    for(auto& child: each_descendent()) {
+        child.destroy();
     }
 
-    StageManager::update(dt);
-    update(dt);
+    for(auto& node: stray_nodes()) {
+        node->destroy();
+    }
+
+    clean_up_destroyed_objects();
 }
 
-void SceneBase::_fixed_update_thunk(float dt) {
-    if(!window->has_focus()) return;
+void Scene::register_builtin_nodes() {
+    register_stage_node<Stage>();
+    register_stage_node<Actor>();
+    register_stage_node<Geom>();
+    register_stage_node<Camera>();
+    register_stage_node<AudioSource>();
+    register_stage_node<DirectionalLight>();
+    register_stage_node<PointLight>();
+    register_stage_node<MeshInstancer>();
+    register_stage_node<FrustumCuller>();
+    register_stage_node<CylindricalBillboard>();
+    register_stage_node<SphericalBillboard>();
+    register_stage_node<ParticleSystem>();
+    register_stage_node<Sprite>();
+    register_stage_node<Skybox>();
+    register_stage_node<SmoothFollow>();
+    register_stage_node<FlyController>();
 
-    StageManager::fixed_update(dt);
-    fixed_update(dt);
+    register_stage_node<StaticBody>();
+    register_stage_node<DynamicBody>();
+    register_stage_node<KinematicBody>();
+
+    register_stage_node<ui::Label>();
+    register_stage_node<ui::Image>();
+    register_stage_node<ui::ProgressBar>();
+    register_stage_node<ui::Frame>();
+    register_stage_node<ui::Button>();
+    register_stage_node<ui::TextEntry>();
+    register_stage_node<ui::Keyboard>();
 }
 
-std::size_t SceneBase::load_arg_count() const {
+void Scene::clean_up_destroyed_objects() {
+    std::set<StageNode*> cleaned;
+    for(auto it = queued_for_clean_up_.begin(); it != queued_for_clean_up_.end();) {
+        if(cleaned.count(*it)) {
+            // Somehow duplicated in the cleanup list, just ignore
+            S_DEBUG("Somehow duplicated a stage node cleanup");
+            continue;
+        }
+
+        if(clean_up_node((*it))) {
+            cleaned.insert(*it);
+            it = queued_for_clean_up_.erase(it);
+        } else {
+            S_ERROR("Unable to release node that has not been destroyed");
+            ++it;
+        }
+    }
+}
+
+void Scene::queue_clean_up(StageNode* node) {
+    if(node == this) {
+        // You can't destroy the scene, only the scene manager can do that
+        return;
+    }
+
+    signal_stage_node_destroyed_(node, node->node_type());
+    queued_for_clean_up_.push_back(node);
+}
+
+std::size_t Scene::load_arg_count() const {
     return load_args.size();
 }
 
@@ -86,117 +166,75 @@ static void print_asset_stats() {
 }
 
 
-void SceneBase::_call_load() {
+void Scene::load() {
     if(is_loaded_) {
         return;
     }
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
-    auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
-    auto stage_node_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
 
-    pre_load();
-    load();
+    on_pre_load();
+    on_load();
 
     auto used = smlt::get_app()->ram_usage_in_bytes();
-    auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
-    auto used_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
     if(smlt::get_app()->config->development.additional_memory_logging) {
         S_INFO("Loading scene {0} Memory usage {1} (before) vs {2} (after)", name(), memory_usage, used);
-        S_INFO("Stage node count: {0}", smlt::get_app()->stage_node_pool->size());
-        if(used_nodes != stage_node_capacity) {
-            S_INFO(
-                "Stage node pool capacity change from {0} ({1} bytes) to {2} ({3} bytes)",
-                stage_node_capacity, stage_node_bytes, used_nodes, used_bytes
-            );
-        }
-
         print_asset_stats();
     }
 
     is_loaded_ = true;
 }
 
-void SceneBase::_call_unload() {
+void Scene::unload() {
     if(!is_loaded_) {
         return;
     }
 
-    _call_deactivate();
+    deactivate();
 
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
-    auto stage_node_capacity = smlt::get_app()->stage_node_pool_capacity();
-    auto stage_node_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
 
     is_loaded_ = false;
-    unload();
-    post_unload();
-
-    /* Make sure all stages have been destroyed */
-    destroy_all_stages();       
-    clean_destroyed_stages();
+    on_unload();
+    on_post_unload();
 
     smlt::get_app()->shared_assets->run_garbage_collection();
 
     auto n = name();
     auto used = smlt::get_app()->ram_usage_in_bytes();
-    auto used_nodes = smlt::get_app()->stage_node_pool_capacity();
-    auto used_bytes = smlt::get_app()->stage_node_pool_capacity_in_bytes();
+
     if(smlt::get_app()->config->development.additional_memory_logging) {
         S_INFO("Unloading scene {0} Memory usage {1} (before) vs {2} (after)", n, memory_usage, used);
-        S_INFO("Stage node count: {0}", smlt::get_app()->stage_node_pool->size());
-        if(used_nodes != stage_node_capacity) {
-            S_INFO(
-                "Stage node pool capacity change from {0} ({1} bytes) to {2} ({3} bytes)",
-                stage_node_capacity, stage_node_bytes, used_nodes, used_bytes
-            );
-        }
     }
 }
 
-void SceneBase::_call_activate() {
+void Scene::activate() {
     if(is_active_) {
         return;
     }
 
-    activate();
+    on_activate();
     is_active_ = true;
     signal_activated_();
-
-    for(auto name: linked_pipelines_) {
-        compositor->find_pipeline(name)->activate();
-    }
 }
 
-void SceneBase::_call_deactivate() {
+void Scene::deactivate() {
     if(!is_active_) {
         return;
     }
 
-    for(auto name: linked_pipelines_) {
-        compositor->find_pipeline(name)->deactivate();
-    }
-    linked_pipelines_.clear();
-
-    deactivate();
+    on_deactivate();
     is_active_ = false;
     signal_deactivated_();
 }
 
-void SceneBase::link_pipeline(const std::string &name) {
-    linked_pipelines_.insert(name);
-}
+void Scene::on_fixed_update(float step) {
+    /* Update services, before moving onto the scene tree */
+    for(auto& service: services_) {
+        service.second->fixed_update(step);
+    }
 
-void SceneBase::unlink_pipeline(const std::string &name) {
-    linked_pipelines_.insert(name);
-}
-
-void SceneBase::link_pipeline(PipelinePtr pipeline) {
-    link_pipeline(pipeline->name());
-}
-
-void SceneBase::unlink_pipeline(PipelinePtr pipeline) {
-    unlink_pipeline(pipeline->name());
+    StageNode::on_fixed_update(step);
 }
 
 

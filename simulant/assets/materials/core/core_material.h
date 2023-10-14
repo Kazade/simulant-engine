@@ -38,7 +38,7 @@ constexpr const MaterialPropertyNameHash SPECULAR_MAP_MATRIX_PROPERTY_HASH = mat
 constexpr const MaterialPropertyNameHash BLEND_FUNC_PROPERTY_HASH = material_property_hash(BLEND_FUNC_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash POLYGON_MODE_PROPERTY_HASH = material_property_hash(POLYGON_MODE_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash SHADE_MODEL_PROPERTY_HASH = material_property_hash(SHADE_MODEL_PROPERTY_NAME);
-constexpr const MaterialPropertyNameHash COLOUR_MATERIAL_PROPERTY_HASH = material_property_hash(COLOUR_MATERIAL_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash COLOR_MATERIAL_PROPERTY_HASH = material_property_hash(COLOR_MATERIAL_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash CULL_MODE_PROPERTY_HASH = material_property_hash(CULL_MODE_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash DEPTH_FUNC_PROPERTY_HASH = material_property_hash(DEPTH_FUNC_PROPERTY_NAME);
 
@@ -46,7 +46,7 @@ constexpr const MaterialPropertyNameHash FOG_MODE_PROPERTY_HASH = material_prope
 constexpr const MaterialPropertyNameHash FOG_DENSITY_PROPERTY_HASH = material_property_hash(FOG_DENSITY_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash FOG_START_PROPERTY_HASH = material_property_hash(FOG_START_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash FOG_END_PROPERTY_HASH = material_property_hash(FOG_END_PROPERTY_NAME);
-constexpr const MaterialPropertyNameHash FOG_COLOUR_PROPERTY_HASH = material_property_hash(FOG_COLOUR_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash FOG_COLOR_PROPERTY_HASH = material_property_hash(FOG_COLOR_PROPERTY_NAME);
 
 inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
     switch(hsh) {
@@ -71,9 +71,9 @@ inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
         case BLEND_FUNC_PROPERTY_HASH:
         case POLYGON_MODE_PROPERTY_HASH:
         case SHADE_MODEL_PROPERTY_HASH:
-        case COLOUR_MATERIAL_PROPERTY_HASH:
+        case COLOR_MATERIAL_PROPERTY_HASH:
         case CULL_MODE_PROPERTY_HASH:
-        case FOG_COLOUR_PROPERTY_HASH:
+        case FOG_COLOR_PROPERTY_HASH:
         case FOG_DENSITY_PROPERTY_HASH:
         case FOG_START_PROPERTY_HASH:
         case FOG_END_PROPERTY_HASH:
@@ -85,10 +85,10 @@ inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
 }
 
 struct CoreMaterial {
-    const Colour diffuse = Colour(1, 1, 1, 1);
-    const Colour ambient = Colour(1, 1, 1, 1);
-    const Colour emission = Colour(0, 0, 0, 1);
-    const Colour specular = Colour(0, 0, 0, 1);
+    const Color diffuse = Color(1, 1, 1, 1);
+    const Color ambient = Color(1, 1, 1, 1);
+    const Color emission = Color(0, 0, 0, 1);
+    const Color specular = Color(0, 0, 0, 1);
 
     const float shininess = 0.0f;
     const float point_size = 1.0f;
@@ -112,7 +112,7 @@ struct CoreMaterial {
     const EnumType blend_func = (EnumType) BLEND_NONE;
     const EnumType polygon_mode = (EnumType) POLYGON_MODE_FILL;
     const EnumType shade_model = (EnumType) SHADE_MODEL_SMOOTH;
-    const EnumType colour_material = (EnumType) COLOUR_MATERIAL_NONE;
+    const EnumType color_material = (EnumType) COLOR_MATERIAL_NONE;
     const EnumType cull_mode = (EnumType) CULL_MODE_NONE;
     const EnumType depth_func = (EnumType) DEPTH_FUNC_LEQUAL;
 
@@ -120,7 +120,7 @@ struct CoreMaterial {
     const float fog_density = 1.0f;
     const float fog_start = 100.0f;
     const float fog_end = 1000.0f;
-    const Colour fog_colour = smlt::Colour::WHITE;
+    const Color fog_color = smlt::Color::WHITE;
 };
 
 void init_core_material(const CoreMaterial& base);
@@ -135,8 +135,8 @@ bool is_core_property(const char* name);
 bool core_property_type(const char* name, MaterialPropertyType* type);
 bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type);
 
-bool core_material_property_value(const char* name, const Colour*& out);
-bool core_material_property_value(const MaterialPropertyNameHash hsh, const Colour*& out);
+bool core_material_property_value(const char* name, const Color*& out);
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Color*& out);
 
 bool core_material_property_value(const char* name, const float *&out);
 bool core_material_property_value(const MaterialPropertyNameHash hsh, const float*& out);

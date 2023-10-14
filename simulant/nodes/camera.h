@@ -11,19 +11,21 @@
 namespace smlt {
 
 class RenderTarget;
+class CameraParams {};
 
 class Camera:
-    public TypedDestroyableObject<Camera, Stage>,
     public ContainerNode,
-    public generic::Identifiable<CameraID>,
-    public ChainNameable<Camera>,
-    public AudioSource,
-    public RefCounted<Camera> {
+    public ChainNameable<Camera> {
 
 public:
-    using ContainerNode::_get_renderables;
+    struct Meta {
+        typedef CameraParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_CAMERA;
+    };
 
-    Camera(Stage* stage, SoundDriver* sound_driver);
+    using ContainerNode::do_generate_renderables;
+
+    Camera(Scene* owner);
     virtual ~Camera();
 
     /* Camera Proxies have no mass/body so their AABB is just 0,0,0, or their position */
@@ -32,14 +34,8 @@ public:
     }
 
     const AABB transformed_aabb() const override {
-        return AABB(position(), position());
+        return AABB(transform->position(), transform->position());
     }
-
-    void clean_up() override {
-        StageNode::clean_up();
-    }
-
-    void update(float dt) override;
 
     // Converts an OpenGL unit to window space
     smlt::optional<Vec3> project_point(const RenderTarget& target, const Viewport& viewport, const Vec3& point) const;
@@ -51,26 +47,31 @@ public:
     const Mat4& projection_matrix() const { return projection_matrix_; }
 
     Frustum& frustum() { return frustum_; }
+    const Frustum& frustum() const { return frustum_; }
 
     void set_perspective_projection(const Degrees &fov, float aspect, float near=1.0f, float far=1000.0f);
     void set_orthographic_projection(float left, float right, float bottom, float top, float near=-1.0, float far=1.0);
     float set_orthographic_projection_from_height(float desired_height_in_units, float ratio);
 
-private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
+    bool on_create(void* params) override {
+        _S_UNUSED(params);
+        return true;
     }
 
+private:
     AABB bounds_;
     Frustum frustum_;
 
-    smlt::Mat4 transform_;
     Mat4 view_matrix_;
     Mat4 projection_matrix_;
 
     void update_frustum();
 
-    void update_transformation_from_parent() override;
+    void on_transformation_changed() override;
 };
+
+
+class Camera2D : public Camera {};
+class Camera3D : public Camera {};
 
 }

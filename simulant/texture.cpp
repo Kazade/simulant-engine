@@ -86,9 +86,9 @@ std::size_t texture_format_channels(TextureFormat format) {
     }
 }
 
-Texture::Texture(TextureID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
+Texture::Texture(AssetID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
     Asset(asset_manager),
-    generic::Identifiable<TextureID>(id),
+    generic::Identifiable<AssetID>(id),
     width_(width),
     height_(height) {
 
@@ -261,7 +261,7 @@ bool Texture::blur(BlurType blur_type, std::size_t radius) {
 
             float accum [4] = {0};
 
-            // gather the colours from the surrouding box, including the
+            // gather the colors from the surrouding box, including the
             // pixel we care about. If we go outside the bounds of the image
             // then we just assume a border (for now, probably there are better
             // options)
@@ -748,20 +748,16 @@ void Texture::resize_data(uint32_t byte_size) {
     data_dirty_ = true;
 }
 
-bool Texture::init() {
+bool Texture::on_init() {
     // Tell the renderer about the texture
     S_DEBUG("Registering texture with the renderer: {0}", renderer_);
     renderer_->register_texture(id(), this);
     return true;
 }
 
-void Texture::clean_up() {
+void Texture::on_clean_up() {
     // Tell the renderer to forget the texture
     renderer_->unregister_texture(id(), this);
-}
-
-void Texture::update(float dt) {
-    _S_UNUSED(dt);
 }
 
 bool Texture::has_mipmaps() const {

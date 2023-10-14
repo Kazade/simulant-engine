@@ -46,9 +46,9 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
 
 std::unordered_map<MaterialPropertyNameHash, Material::PropertyName> Material::hashes_to_names_;
 
-Material::Material(MaterialID id, AssetManager* asset_manager):
+Material::Material(AssetID id, AssetManager* asset_manager):
     Asset(asset_manager),
-    generic::Identifiable<MaterialID>(id),
+    generic::Identifiable<AssetID>(id),
     renderer_(get_app()->window->renderer) {
 
     /* The core material has 4 texture properties by default */
@@ -100,10 +100,6 @@ MaterialPass *Material::pass(uint8_t pass) {
     return nullptr;
 }
 
-void Material::update(float dt) {
-    _S_UNUSED(dt);
-}
-
 Material &Material::operator=(const Material &rhs) {
     /* Reduce refcounts for unused properties */
     for(auto& prop: custom_properties()) {
@@ -148,7 +144,7 @@ MaterialPass::MaterialPass(Material *material):
     /* If the renderer supports GPU programs, at least specify *something* */
     auto& renderer = get_app()->window->renderer;
     if(renderer->supports_gpu_programs()) {
-        set_gpu_program(renderer->default_gpu_program_id());
+        set_gpu_program(renderer->default_gpu_program());
     }
 }
 

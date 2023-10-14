@@ -40,16 +40,17 @@ namespace smlt {
 class StageNode;
 class AudioSource;
 class PlayingSound;
+class Scene;
 
 class Sound :
     public RefCounted<Sound>,
-    public generic::Identifiable<SoundID>,
+    public generic::Identifiable<AssetID>,
     public Asset,
     public Loadable,
     public ChainNameable<Sound> {
 
 public:
-    Sound(SoundID id, AssetManager* asset_manager, SoundDriver* sound_driver);
+    Sound(AssetID id, AssetManager* asset_manager, SoundDriver* sound_driver);
 
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }
@@ -82,6 +83,7 @@ public:
     }
 
     SoundDriver* _driver() const { return driver_; }
+
 private:
     void init_source(PlayingSound& source);
 
@@ -100,55 +102,6 @@ private:
 };
 
 
-typedef sig::signal<void (SoundPtr, AudioRepeat, DistanceModel)> SoundPlayedSignal;
-
-
-class AudioSource {
-    DEFINE_SIGNAL(SoundPlayedSignal, signal_sound_played);
-
-public:
-    AudioSource(Window* window);
-    AudioSource(Stage* stage, StageNode* this_as_node, SoundDriver *driver);
-    virtual ~AudioSource();
-
-    PlayingSoundPtr play_sound(
-        SoundPtr sound_id,
-        AudioRepeat repeat=AUDIO_REPEAT_NONE,
-        DistanceModel model=DISTANCE_MODEL_DEFAULT
-    );
-
-    bool stop_sound(PlayingSoundID sound_id);
-
-    /* The number of sounds this source is currently playing */
-    uint8_t playing_sound_count() const;
-
-    /* The number of sounds that have finished, but aren't yet
-     * destroyed */
-    uint8_t played_sound_count() const;
-
-    bool is_sound_playing() const;
-
-    sig::signal<void ()>& signal_stream_finished() { return signal_stream_finished_; }
-
-    void update_source(float dt);
-protected:
-    SoundDriver* _sound_driver() const;
-
-public:
-    Stage* stage_ = nullptr;
-    Window* window_ = nullptr;
-    SoundDriver* driver_ = nullptr;
-    StageNode* node_ = nullptr;
-
-    std::list<PlayingSound::ptr> instances_;
-    sig::signal<void ()> signal_stream_finished_;
-
-    friend class Sound;
-    friend class PlayingSound;
-
-    mutable thread::Mutex mutex_;
-    static void source_update_thread();
-};
 
 }
 #endif // SOUND_H

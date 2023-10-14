@@ -13,15 +13,13 @@ using namespace smlt;
 class OctreeCullerTests : public smlt::test::SimulantTestCase {
 public:
     void test_octree_bounds() {
-        auto stage = scene->new_stage();
-
         // Guarantee 2 renderables by using different materials
-        auto mat1 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
-        auto mat2 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat1 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat2 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = stage->assets->new_mesh(VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(-20, -20, -20.0));
-        mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(20, 20, 20.0));
+        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(-20, -20, -20.0));
+        mesh->create_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(20, 20, 20.0));
 
         OctreeCuller culler(nullptr, mesh, 4);
         culler.compile(Vec3(), Quaternion(), Vec3(1, 1, 1));
@@ -36,22 +34,22 @@ public:
     }
 
     void test_basic_visibility() {
-        auto stage = scene->new_stage();
-        auto camera = stage->new_camera(); // Looking down -Z
+        auto stage = scene->create_child<smlt::Stage>();
+        auto camera = scene->create_child<smlt::Camera>(); // Looking down -Z
 
         // Guarantee 2 renderables by using different materials
-        auto mat1 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
-        auto mat2 = stage->assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat1 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+        auto mat2 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = stage->assets->new_mesh(VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -20.0));
-        mesh->new_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 20.0));
+        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -20.0));
+        mesh->create_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 20.0));
 
-        camera->look_at(0, 0, -1); // Looking up -Z
+        camera->transform->look_at(smlt::Vec3(0, 0, -1)); // Looking up -Z
 
         batcher::RenderQueue queue;
         queue.reset(stage, window->renderer.get(), camera);
-        auto geom = stage->new_geom_with_mesh(mesh->id());
+        auto geom = scene->create_child<Geom>(mesh);
         geom->culler->renderables_visible(camera->frustum(), &queue);
 
         std::vector<Renderable*> result;
@@ -66,7 +64,7 @@ public:
 
         auto ret1 = *result[0];
 
-        camera->look_at(0, 0, 1); // Looking up +Z
+        camera->transform->look_at(smlt::Vec3(0, 0, 1)); // Looking up +Z
 
         queue.clear();
         result.clear();

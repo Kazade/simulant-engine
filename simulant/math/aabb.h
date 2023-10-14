@@ -24,6 +24,8 @@ class AABB {
     Vec3 extents_;
 
 public:
+    const static AABB ZERO;
+
     void set_min_max(const Vec3& min, const Vec3& max) {
         extents_ = (max - min) * 0.5f;
         center_ = min + extents_;

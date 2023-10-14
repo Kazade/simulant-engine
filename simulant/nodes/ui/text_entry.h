@@ -6,20 +6,39 @@
 namespace smlt {
 namespace ui {
 
+struct TextEntryParams : public WidgetParams {
+    unicode text;
+    Px width;
+    Px height;
+
+    TextEntryParams(
+        const unicode& text,
+        const Px& width = Px(320),
+        const Px& height = Px(-1),
+        const UIConfig& theme=UIConfig(),
+        WidgetStylePtr shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(theme, shared_style),
+        text(text),
+        width(width),
+        height(height) {}
+};
+
+
 class TextEntry:
     public Widget,
     public RefCounted<TextEntry> {
 
 public:
+    struct Meta {
+        typedef ui::TextEntryParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY;
+    };
+
     using Widget::init; // Pull in init to satisfy Managed<TextEntry>
     using Widget::clean_up;
 
-    TextEntry(
-        UIManager* owner,
-        UIConfig* config,
-        Stage* stage,
-        std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>()
-    );
+    TextEntry(Scene* owner);
 
     /* Inserts a character at the caret position */
     void insert_character(uint16_t c);
@@ -50,6 +69,8 @@ private:
     virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
 
     virtual bool pre_set_text(const unicode&);
+
+    bool on_create(void* params) override;
 };
 
 }

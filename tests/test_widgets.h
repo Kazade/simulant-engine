@@ -12,41 +12,43 @@ class WidgetTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_set_text_with_newline() {
-        auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
-        auto label2 = stage_->ui->new_widget_as_label("This is");
+        auto label = scene->create_child<ui::Label>("This is\na\nnew\nline");
+        auto label2 = scene->create_child<ui::Label>("This is");
 
         assert_equal(label->content_width(), label2->content_width());
         assert_true(label->height() > label2->height());
     }
 
     void test_materials_freed() {
-        auto mc = stage_->assets->material_count();
+        scene->create_child<ui::Label>("Seed the materials");
 
-        auto label = stage_->ui->new_widget_as_label("This is\na\nnew\nline");
-        label->set_background_image(stage_->assets->new_texture(16, 16));
-        label->set_foreground_image(stage_->assets->new_texture(16, 16));
-        assert_equal(stage_->assets->material_count(), mc + 2);  /* background, foreground */
+        auto mc = scene->assets->material_count();
+
+        auto label = scene->create_child<ui::Label>("This is\na\nnew\nline");
+        label->set_background_image(scene->assets->create_texture(16, 16));
+        label->set_foreground_image(scene->assets->create_texture(16, 16));
+        assert_equal(scene->assets->material_count(), mc + 2);  /* background, foreground */
 
         label->destroy();
         application->run_frame();
 
-        assert_equal(stage_->assets->material_count(), mc); /* Destroyed */
+        assert_equal(scene->assets->material_count(), mc); /* Destroyed */
     }
 
     void test_foreground_and_background_images_differ() {
-        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Button", ui::Px(100), ui::Px(20));
 
-        auto t1 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
-        auto t2 = stage_->assets->new_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+        auto t1 = scene->assets->create_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
+        auto t2 = scene->assets->create_texture(8, 8, smlt::TEXTURE_FORMAT_RGBA_4UB_8888);
 
         button->set_foreground_image(t1);
         button->set_background_image(t2);
@@ -56,7 +58,7 @@ public:
     }
 
     void test_render_priority() {
-        auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Button", ui::Px(100), ui::Px(20));
         assert_equal(button->render_priority(), RENDER_PRIORITY_MAIN);
         button->set_render_priority(RENDER_PRIORITY_NEAR);
         assert_equal(button->render_priority(), RENDER_PRIORITY_NEAR);
@@ -72,7 +74,7 @@ public:
          * at the bottom left initially
          */
 
-        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Test", ui::Px(100), ui::Px(20));
         button->set_padding(0);
         button->set_border_width(0);
 
@@ -82,13 +84,13 @@ public:
 
         assert_equal(button->aabb().min().x, 0); // No change
         assert_equal(button->aabb().min().y, 0);
-        button->move_to(0, 0);
+        button->transform->set_translation_2d(Vec2(0, 0));
         assert_equal(button->aabb().min().x, -button->aabb().width()); // Should've changed now
         assert_equal(button->aabb().min().y, 0);
     }
 
     void test_button_creation() {
-        auto button = stage_->ui->new_widget_as_button("Test", ui::Px(100), ui::Px(20));
+        auto button = scene->create_child<ui::Button>("Test", ui::Px(100), ui::Px(20));
 
         assert_equal(_u("Test"), button->text());
         assert_equal(ui::Px(100), button->requested_width());
@@ -96,8 +98,8 @@ public:
     }
 
     void test_focus_chain() {
-        auto widget1 = stage_->ui->new_widget_as_label("label1");
-        auto widget2 = stage_->ui->new_widget_as_label("label2");
+        auto widget1 = scene->create_child<ui::Label>("label1");
+        auto widget2 = scene->create_child<ui::Label>("label2");
 
         assert_is_null((ui::Widget*) widget1->focused_in_chain());
 
@@ -123,16 +125,16 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_set_text() {
-        auto entry = stage_->ui->new_widget_as_text_entry("Hello");
+        auto entry = scene->create_child<ui::TextEntry>("Hello");
         assert_equal(entry->text(), "Hello");
     }
 
@@ -145,16 +147,16 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_set_value() {
-        auto progress_bar = stage_->ui->new_widget_as_progress_bar(0, 100, 50);
+        auto progress_bar = scene->create_child<ui::ProgressBar>(0, 100, 50);
 
         assert_equal(progress_bar->value(), 50);
         assert_equal(progress_bar->min(), 0);
@@ -177,17 +179,17 @@ class ImageTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
     void test_image_creation() {
-        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
-        auto image = stage_->ui->new_widget_as_image(texture);
+        auto texture = scene->assets->load_texture("simulant-icon.png");
+        auto image = scene->create_child<ui::Image>(texture);
 
         assert_equal(image->width(), texture->width());
         assert_equal(image->height(), texture->height());
@@ -197,8 +199,8 @@ public:
     }
 
     void test_set_source_rect() {
-        auto texture = stage_->assets->new_texture_from_file("simulant-icon.png");
-        auto image = stage_->ui->new_widget_as_image(texture);
+        auto texture = scene->assets->load_texture("simulant-icon.png");
+        auto image = scene->create_child<ui::Image>(texture);
 
         image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));
 
@@ -216,11 +218,11 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
         SimulantTestCase::tear_down();
     }
 
@@ -263,7 +265,7 @@ public:
         assert_equal(frame->outer_width(), expected_width);
     }
 
-    void test_widgets_are_reparented() {
+    void test_widgets_are_orphaned_if_retained() {
         smlt::ui::Frame* frame = _setup_frame();
         auto& children = frame->packed_children();
 
@@ -274,15 +276,15 @@ public:
         auto child1 = children[0];
         frame->unpack_child(child1, smlt::ui::CHILD_CLEANUP_RETAIN);
 
-        /* Child parent should be the stage */
-        assert_true(child1->parent_is_stage());
+        assert_false(child1->parent_is_scene());
+        assert_true(scene->stray_nodes().count(child1));
     }
 
 private:
     smlt::ui::Frame* _setup_frame() {
-        smlt::ui::Frame* frame = stage_->ui->new_widget_as_frame("");
-        smlt::ui::Button* button = stage_->ui->new_widget_as_button("Button 1");
-        smlt::ui::Label* label = stage_->ui->new_widget_as_label("Test Label");
+        smlt::ui::Frame* frame = scene->create_child<ui::Frame>("");
+        smlt::ui::Button* button = scene->create_child<ui::Button>("Button 1");
+        smlt::ui::Label* label = scene->create_child<ui::Label>("Test Label");
 
         /* Can pack a child once, but not itself */
         assert_true(frame->pack_child(button));

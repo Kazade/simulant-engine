@@ -41,25 +41,24 @@ struct SpritesheetAttrs {
     uint32_t padding_horizontal = 0;
 };
 
+struct SpriteParams {};
+
 class Sprite :
-    public TypedDestroyableObject<Sprite, SpriteManager>,
     public ContainerNode,
-    public generic::Identifiable<SpriteID>,
     public KeyFrameAnimated,
-    public AudioSource,
     public ChainNameable<Sprite> {
 
 public:
-    using ContainerNode::_get_renderables;
+    struct Meta {
+        const static StageNodeType node_type = STAGE_NODE_TYPE_SPRITE;
+        typedef SpriteParams params_type;
+    };
 
-    bool init() override;
-    void clean_up() override;
-    void update(float dt) override;
+    bool on_create(void* params) override;
+    bool on_destroy() override;
+    void on_update(float dt) override;
 
-    bool destroy() override;
-    bool destroy_immediately() override;
-
-    Sprite(SpriteManager *manager, SoundDriver *sound_driver);
+    Sprite(Scene* owner);
 
     void set_render_dimensions(float width, float height);
     void set_render_dimensions_from_width(float width);
@@ -70,10 +69,9 @@ public:
     void set_alpha(float alpha);
 
     float alpha() const { return alpha_; }
-    MaterialID material_id() const { return material_id_; }
+    MaterialPtr material() const { return material_; }
 
-    void set_spritesheet(
-        TextureID texture_id,
+    void set_spritesheet(TexturePtr texture,
         uint32_t frame_width,
         uint32_t frame_height,
         SpritesheetAttrs attrs=SpritesheetAttrs()
@@ -83,13 +81,8 @@ public:
     void flip_horizontally(bool value=true);
 
     const AABB& aabb() const override;
+
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
-    SpriteManager* manager_;
-
     float frame_width_ = 0;
     float frame_height_ = 0;
     float sprite_sheet_margin_ = 0;
@@ -99,10 +92,8 @@ private:
     float render_height_ = 1.0;
 
     ActorPtr actor_ = nullptr;
-    ActorID actor_id_;
-
-    MeshID mesh_id_;
-    MaterialID material_id_;
+    MeshPtr mesh_;
+    MaterialPtr material_;
 
     float image_width_ = 0;
     float image_height_ = 0;
@@ -128,6 +119,8 @@ public:
     Property<ActorPtr Sprite::*> actor = {this, &Sprite::actor_};
     Property<decltype(&Sprite::animation_state_)> animations = {this, &Sprite::animation_state_};
 };
+
+
 
 }
 #endif // SPRITE_H

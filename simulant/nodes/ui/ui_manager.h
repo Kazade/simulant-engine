@@ -13,9 +13,6 @@
 
 namespace smlt {
 
-template<typename PoolType, typename IDType, typename T, typename ...Subtypes>
-class StageNodeManager;
-
 class Application;
 class VirtualFileSystem;
 class SharedAssetManager;
@@ -31,10 +28,6 @@ class Frame;
 class Keyboard;
 class TextEntry;
 
-typedef ::smlt::StageNodeManager<
-    ::smlt::StageNodePool,
-    WidgetID, Widget, Button, Label, ProgressBar, Image, Frame, Keyboard, TextEntry
-> WidgetManager;
 
 enum UIEventType {
     UI_EVENT_TYPE_TOUCH
@@ -51,52 +44,28 @@ struct UIEvent {
     };
 };
 
+
+struct UIManagerParams {
+    UIConfig config;
+};
+
+
+
 class UIManager:
-    public EventListener {
+    public EventListener,
+    public StageNode {
 
     friend class Widget;
 
 public:
-    UIManager(Stage* stage, StageNodePool* pool, UIConfig config=UIConfig());
+    UIManager(Scene* owner, UIConfig config=UIConfig());
     virtual ~UIManager();
-
-    Button* new_widget_as_button(
-        const unicode& text,
-        Px width=Px(-1), Px height=Px(-1),
-        std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>()
-    );
-
-    Label* new_widget_as_label(const unicode& text, Px width=Px(-1), Px height=Px(-1));
-    ProgressBar* new_widget_as_progress_bar(float min=.0f, float max=100.0f, float value=.0f);
-    Image* new_widget_as_image(const TexturePtr& texture);
-    Frame* new_widget_as_frame(const unicode& title, const Px& width=Px(-1), const Px& height=Px(-1));
-    Keyboard* new_widget_as_keyboard(const KeyboardMode& mode=KEYBOARD_MODE_UPPERCASE, const unicode& initial_text="");
-    TextEntry* new_widget_as_text_entry(const unicode& text="", Px width=Px(-1), Px height=Px(-1));
-
-    Widget* widget(WidgetID widget_id);
-
-    void destroy_widget(WidgetID widget);
-
-    Stage* stage() const { return stage_; }
-
-    /* Implementation for TypedDestroyableObject (INTERNAL) */
-    void destroy_object(Widget* object);
-    void destroy_object_immediately(Widget* object);
 
     const UIConfig* config() const {
         return &config_;
     }
 
-    FontPtr load_or_get_font(
-        const std::string& family, const Px& size, const FontWeight &weight, const FontStyle& style
-    );
-
 private:
-    friend class ::smlt::Stage;
-
-    Stage* stage_ = nullptr;
-
-    std::shared_ptr<WidgetManager> manager_;
     UIConfig config_;
 
     void on_touch_begin(const TouchEvent &evt) override;
@@ -104,29 +73,36 @@ private:
     void on_touch_move(const TouchEvent &evt) override;
 
     void queue_event(const TouchEvent& evt);
-    void process_event_queue(const Camera *camera, const Viewport& viewport) const;
+    void process_event_queue(
+        const Camera* camera,
+        const Viewport* viewport
+    ) const;
     void clear_event_queue();
 
     std::vector<UIEvent> queued_events_;
 
-    WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport& viewport, const Vec2& window_coord) const;
+    WidgetPtr find_widget_at_window_coordinate(const Camera *camera, const Viewport *viewport, const Vec2& window_coord) const;
 
     sig::connection frame_finished_connection_;
     sig::connection pre_render_connection_;
 
+    virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
+        const Camera*camera, const Viewport* viewport,
+        const DetailLevel detail_level
+    ) override;
+
 private:
     friend class ::smlt::Application;
-    static FontPtr _load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
-        const std::string& family, const Px& size, const FontWeight &weight
-    , const FontStyle &style);
 
-    MaterialPtr global_background_material_;
-    MaterialPtr global_foreground_material_;
-    MaterialPtr global_border_material_;
-
-    MaterialPtr clone_global_background_material();
-    MaterialPtr clone_global_foreground_material();
+    std::vector<Widget*> find_child_widgets() const;
 };
 
 }
+
+template<>
+struct stage_node_traits<ui::UIManager> {
+    typedef ui::UIManagerParams params_type;
+    const static StageNodeType node_type = STAGE_NODE_TYPE_UI_MANAGER;
+};
+
 }

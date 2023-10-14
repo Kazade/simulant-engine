@@ -32,15 +32,15 @@ struct ImageRect {
 
 struct WidgetStyle {
     /* There are 4 layers: Border, background, foreground and text and
-     * by default all are enabled. Setting any of the colours of these
-     * layers to Colour::NONE will deactivate drawing of the layer
+     * by default all are enabled. Setting any of the colors of these
+     * layers to Color::NONE will deactivate drawing of the layer
      * for performance reasons. We track that here */
     uint8_t active_layers_ = ~0;
 
     UInt4 padding_ = {Px(), Px(), Px(), Px()};
     Px border_radius_ = Px(0);
     Px border_width_ = Px(1);
-    PackedColour4444 border_colour_ = Colour::BLACK;
+    PackedColor4444 border_color_ = Color::BLACK;
     TextAlignment text_alignment_ = TEXT_ALIGNMENT_CENTER;
 
     OverflowType overflow_ = OVERFLOW_TYPE_AUTO;
@@ -51,15 +51,16 @@ struct WidgetStyle {
     TexturePtr foreground_image_;
     ImageRect foreground_image_rect_;
 
-    PackedColour4444 background_colour_ = Colour::WHITE;
-    PackedColour4444 foreground_colour_ = Colour::NONE; //Transparent
-    PackedColour4444 text_colour_ = Colour::BLACK;
+    PackedColor4444 background_color_ = Color::WHITE;
+    PackedColor4444 foreground_color_ = Color::NONE; //Transparent
+    PackedColor4444 text_color_ = Color::BLACK;
 
     float opacity_ = 1.0f;
 
     MaterialPtr materials_[3] = {nullptr, nullptr, nullptr};
 };
 
+typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
 
 /* Sizing:
  *
@@ -77,10 +78,22 @@ struct WidgetStyle {
  *   specified and then this would be the requested size without padding or border
  */
 
+struct WidgetParams {
+    /* We need to ensure that all subclass params objects inherit this one, but
+     * because we pass void* we can't dynamic cast to check. So we ensure that
+     * the first 4-bytes matches this. See on_create() for more. */
+    uint32_t magic_check = 0xDEADBEEF;
+
+    UIConfig theme;
+    WidgetStylePtr shared_style;
+
+    WidgetParams(const UIConfig& theme, const WidgetStylePtr& shared_style):
+        theme(theme),
+        shared_style(shared_style) {}
+};
+
 class Widget:
-    public TypedDestroyableObject<Widget, UIManager>,
     public ContainerNode,
-    public generic::Identifiable<WidgetID>,
     public HasMutableRenderPriority,
     public ChainNameable<Widget>  {
 
@@ -93,11 +106,13 @@ class Widget:
 public:
     typedef std::shared_ptr<Widget> ptr;
 
-    Widget(UIManager* owner, UIConfig* defaults, Stage* stage, std::shared_ptr<WidgetStyle> shared_style=std::shared_ptr<WidgetStyle>());
+    Widget(Scene* owner, StageNodeType type);
     virtual ~Widget();
 
-    virtual bool init() override;
-    virtual void clean_up() override;
+    virtual bool on_init() override;
+    virtual void on_clean_up() override;
+
+    bool on_create(void* params) override;
 
     void resize(Rem width, Px height);
     void resize(Px width, Rem height);
@@ -141,7 +156,7 @@ public:
     void set_border_radius(Px x);
     Px border_radius() const;
 
-    void set_border_colour(const Colour& colour);
+    void set_border_color(const Color& color);
     void set_overflow(OverflowType type);
 
     void set_padding(Px x);
@@ -158,22 +173,22 @@ public:
 
     bool has_foreground_image() const;
 
-    /** Set the background image, pass TextureID() to clear */
+    /** Set the background image, pass AssetID() to clear */
     void set_background_image(TexturePtr texture);
 
     /** Set the background to a region of its image. Coordinates are in texels */
     void set_background_image_source_rect(const UICoord& bottom_left, const UICoord& size);
 
-    void set_background_colour(const Colour& colour);
-    void set_foreground_colour(const Colour& colour);
+    void set_background_color(const Color& color);
+    void set_foreground_color(const Color& color);
 
-    /** Set the foreground image, pass TextureID() to clear */
+    /** Set the foreground image, pass AssetID() to clear */
     void set_foreground_image(TexturePtr texture);
 
     /** Set the foreground to a region of its image. Coordinates are in texels */
     void set_foreground_image_source_rect(const UICoord& bottom_left, const UICoord& size);
 
-    void set_text_colour(const Colour& colour);
+    void set_text_color(const Color& color);
 
     Px requested_width() const;
     Px requested_height() const;
@@ -223,10 +238,6 @@ public:
     MaterialPtr foreground_material() const { return style_->materials_[2]; }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     virtual const unicode& calc_text() const {
         return text_;
     }
@@ -247,8 +258,7 @@ protected:
 
     friend class Keyboard; // For set_font calls on child widgets
 
-    UIManager* owner_ = nullptr;
-    UIConfig* theme_ = nullptr;
+    UIConfig theme_;
     FontPtr font_ = nullptr;
 
     std::shared_ptr<WidgetStyle> style_;
@@ -274,7 +284,7 @@ protected:
     /* A normalized vector representing the relative
      * anchor position for movement (0, 0 == bottom left) */
     smlt::Vec2 anchor_point_;
-    bool anchor_point_dirty_;
+    bool anchor_point_dirty_ = true;
 
     uint16_t fingers_down_ = 0;
 
@@ -282,7 +292,7 @@ protected:
 
     /* Only called on construction, it just makes sure that
      * active_layers_ is in sync with whatever the default layer
-     * colours are. If we change a layer colour we manually alter
+     * colors are. If we change a layer color we manually alter
      * the active_layers_ flag from that point on */
     void _recalc_active_layers();
 
@@ -314,7 +324,7 @@ protected:
 
     SubMeshPtr new_rectangle(const std::string& name,
         WidgetBounds bounds,
-        const smlt::Colour& colour,
+        const smlt::Color& color,
         const Px &border_radius,
         const Vec2 *uvs=nullptr, float z_offset=0.0f
     );
@@ -339,6 +349,16 @@ protected:
     virtual void finalize_render() {}
     virtual void finalize_build() {}
     virtual bool pre_set_text(const unicode&) { return true; }
+
+    FontPtr load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style);
+
+private:
+    MaterialPtr find_or_create_material(const char* name);
+
+
+    FontPtr _load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
+            const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style);
+
 };
 
 }

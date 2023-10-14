@@ -70,19 +70,19 @@ void SubMesh::remove_all_vertex_ranges() {
     vertex_ranges_.clear();
 }
 
-void SubMesh::set_diffuse(const smlt::Colour& colour) {
+void SubMesh::set_diffuse(const smlt::Color& color) {
     auto vertex_data = parent_->vertex_data.get();
 
     if(type_ == SUBMESH_TYPE_INDEXED) {
         for(auto i: *index_data) {
             vertex_data->move_to(i);
-            vertex_data->diffuse(colour);
+            vertex_data->diffuse(color);
         };
     } else {
         for(auto& range: vertex_ranges_) {
             for(uint32_t i = range.start; i < range.start + range.count; ++i) {
                 vertex_data->move_to(i);
-                vertex_data->diffuse(colour);
+                vertex_data->diffuse(color);
             };
         }
     }
@@ -433,7 +433,7 @@ void SubMesh::set_material(const MaterialPtr& material) {
 }
 
 void SubMesh::set_material_at_slot(MaterialSlot var, const MaterialPtr &mat) {
-    auto old_material_id = (materials_[var]) ? materials_[var]->id() : MaterialID();
+    auto old_material_id = (materials_[var]) ? materials_[var]->id() : AssetID();
 
     if(old_material_id == mat->id()) {
         // Don't do anything, don't fire the changed signal

@@ -12,12 +12,11 @@ namespace smlt {
 
 namespace scenes {
 
-class Splash:
-    public Scene<Splash> {
+class Splash : public Scene {
 
 public:
     Splash(Window* window, const std::string& target_scene, float time=5.5):
-        Scene<Splash>(window),
+        Scene(window),
         target_(target_scene),
         time_(time) {
 
@@ -28,17 +27,19 @@ private:
     float time_;
     uint64_t start_time_ = 0;
 
-    void activate() override;
-    void deactivate() override;
+    void on_activate() override;
+    void on_deactivate() override;
 
-    void load() override;
-    void unload() override;
+    void on_load() override;
+    void on_unload() override;
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 
-    StagePtr stage_;
     CameraPtr camera_;
-    PipelinePtr pipeline_;
+
+    AudioSource* source_;
+
+    LayerPtr pipeline_;
 
     ui::Image* text_ = nullptr;
     ui::Image* image_ = nullptr;

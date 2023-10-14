@@ -54,7 +54,7 @@ public:
         return set_property_value(material_property_hash(name), name, value);
     }
 
-    bool set_property_value(const char* name, const Colour& value) {
+    bool set_property_value(const char* name, const Color& value) {
         if(!valid_name(name)) {
             S_WARN("Ignoring invalid property name: {0}", name);
             return false;
@@ -151,9 +151,9 @@ protected:
     PropertyValue<int32_t> blend_func_property_;
     PropertyValue<int32_t> polygon_mode_property_;
     PropertyValue<int32_t> shade_model_property_;
-    PropertyValue<bool> colour_material_property_;
+    PropertyValue<bool> color_material_property_;
     PropertyValue<int32_t> cull_mode_property_;
-    PropertyValue<Vec4> fog_colour_property_;
+    PropertyValue<Vec4> fog_color_property_;
     PropertyValue<float> fog_density_property_;
     PropertyValue<float> fog_start_property_;
     PropertyValue<float> fog_end_property_;
@@ -209,12 +209,12 @@ protected:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::polygon_mode_property_;
             case SHADE_MODEL_PROPERTY_HASH:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::shade_model_property_;
-            case COLOUR_MATERIAL_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::colour_material_property_;
+            case COLOR_MATERIAL_PROPERTY_HASH:
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::color_material_property_;
             case CULL_MODE_PROPERTY_HASH:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::cull_mode_property_;
-            case FOG_COLOUR_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_colour_property_;
+            case FOG_COLOR_PROPERTY_HASH:
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_color_property_;
             case FOG_DENSITY_PROPERTY_HASH:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_density_property_;
             case FOG_START_PROPERTY_HASH:

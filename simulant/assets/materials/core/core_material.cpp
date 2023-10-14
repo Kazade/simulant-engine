@@ -2,7 +2,7 @@
 
 namespace smlt {
 
-bool core_material_property_value(const MaterialPropertyNameHash hsh, const Colour *&out) {
+bool core_material_property_value(const MaterialPropertyNameHash hsh, const Color *&out) {
     switch(hsh) {
         case DIFFUSE_PROPERTY_HASH:
             out = &core_material().diffuse;
@@ -23,7 +23,7 @@ bool core_material_property_value(const MaterialPropertyNameHash hsh, const Colo
     return true;
 }
 
-bool core_material_property_value(const char* name, const Colour *&out) {
+bool core_material_property_value(const char* name, const Color *&out) {
     auto hsh = material_property_hash(name);
     return core_material_property_value(hsh, out);
 }
@@ -85,8 +85,8 @@ bool core_material_property_value(const MaterialPropertyNameHash hsh, const int3
         case SHADE_MODEL_PROPERTY_HASH:
             out = &core_material().shade_model;
         break;
-        case COLOUR_MATERIAL_PROPERTY_HASH:
-            out = &core_material().colour_material;
+        case COLOR_MATERIAL_PROPERTY_HASH:
+            out = &core_material().color_material;
         break;
         case CULL_MODE_PROPERTY_HASH:
             out = &core_material().cull_mode;
@@ -245,7 +245,7 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(AMBIENT_PROPERTY_NAME):
         case material_property_hash(EMISSION_PROPERTY_NAME):
         case material_property_hash(SPECULAR_PROPERTY_NAME):
-        case FOG_COLOUR_PROPERTY_HASH:
+        case FOG_COLOR_PROPERTY_HASH:
             *type = MATERIAL_PROPERTY_TYPE_VEC4;
         break;
         case material_property_hash(SHININESS_PROPERTY_NAME):
@@ -275,7 +275,7 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(BLEND_FUNC_PROPERTY_NAME):
         case material_property_hash(POLYGON_MODE_PROPERTY_NAME):
         case material_property_hash(SHADE_MODEL_PROPERTY_NAME):
-        case material_property_hash(COLOUR_MATERIAL_PROPERTY_NAME):
+        case material_property_hash(COLOR_MATERIAL_PROPERTY_NAME):
         case material_property_hash(CULL_MODE_PROPERTY_NAME):
         case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
         case FOG_MODE_PROPERTY_HASH:
@@ -333,7 +333,7 @@ const PropertyList& core_properties() {
         {BLEND_FUNC_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {POLYGON_MODE_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {SHADE_MODEL_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
-        {COLOUR_MATERIAL_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
+        {COLOR_MATERIAL_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {CULL_MODE_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {DEPTH_FUNC_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
 
@@ -341,7 +341,7 @@ const PropertyList& core_properties() {
         {FOG_START_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},
         {FOG_END_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},
         {FOG_DENSITY_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},
-        {FOG_COLOUR_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_VEC4},
+        {FOG_COLOR_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_VEC4},
     };
 
     return core_properties;

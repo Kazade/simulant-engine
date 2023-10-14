@@ -43,10 +43,10 @@ struct MS3DGroup {
 
 struct MS3DMaterial {
     char name[32];
-    smlt::Colour ambient;
-    smlt::Colour diffuse;
-    smlt::Colour specular;
-    smlt::Colour emissive;
+    smlt::Color ambient;
+    smlt::Color diffuse;
+    smlt::Color specular;
+    smlt::Color emissive;
     float shininess;  // 0.0f - 128.0f
     float transparency;   // 0.0f - 1.0f
     uint8_t mode;  // 0, 1, 2 is unused now
@@ -333,7 +333,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     for(auto& group: groups) {
         auto& material = materials[group.material_index];
-        smlt::MaterialPtr mat = assets->new_material();
+        smlt::MaterialPtr mat = assets->create_material();
 
         mat->set_ambient(material.ambient);
         mat->set_diffuse(material.diffuse);
@@ -350,7 +350,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         auto tex = (loaded_textures.count(texname)) ?
             loaded_textures[texname] :
-            assets->new_texture_from_file(texname);
+            assets->load_texture(texname);
 
         if(!tex) {
             /* Sometimes MS3D files use absolute paths which is no good
@@ -358,7 +358,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
              * current directory */
             std::replace(texname.begin(), texname.end(), '\\', kfs::SEP[0]);
             Path filename = kfs::path::split(texname).second;
-            tex = assets->new_texture_from_file(filename);
+            tex = assets->load_texture(filename);
         }
 
         if(tex) {
@@ -376,7 +376,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
             sm = mesh->find_submesh(material.name);
         } else {
             /* Otherwise we create a new one for this material */
-            sm = mesh->new_submesh(material.name, mat, INDEX_TYPE_16_BIT);
+            sm = mesh->create_submesh(material.name, mat, INDEX_TYPE_16_BIT);
         }
 
         auto idata = sm->index_data.get();
@@ -388,7 +388,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 vdata->position(vertices[vert_index].xyz);
                 vdata->tex_coord0(triangle.s[i], 1.0f - triangle.t[i]);
                 vdata->normal(triangle.normals[i]);
-                vdata->diffuse(Colour::WHITE);
+                vdata->diffuse(Color::WHITE);
                 vdata->move_next();
 
                 int8_t bones[4] = {

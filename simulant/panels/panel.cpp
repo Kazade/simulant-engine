@@ -7,15 +7,12 @@
 
 namespace smlt {
 
-bool Panel::init() {
-    auto node_pool = get_app()->stage_node_pool.get();
-    stage_ = Stage::create(nullptr, node_pool, smlt::PARTITIONER_NULL);
+bool Panel::on_init() {
 
     return true;
 }
 
-void Panel::clean_up() {
-    stage_.reset();
+void Panel::on_clean_up() {
 }
 
 void Panel::on_key_down(const KeyEvent &evt) {

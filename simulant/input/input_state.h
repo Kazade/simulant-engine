@@ -32,7 +32,7 @@
 #include "../signals/signal.h"
 #include "../generic/managed.h"
 #include "../generic/identifiable.h"
-#include "../generic/unique_id.h"
+#include "../core/stage_node_id.h"
 
 namespace smlt {
 

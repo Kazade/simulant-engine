@@ -3,6 +3,7 @@
 #include "../frustum.h"
 #include "../stage.h"
 #include "../types.h"
+#include "../meshes/submesh.h"
 #include "camera.h"
 
 namespace smlt {
@@ -21,22 +22,11 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
 );
 
-ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
-    TypedDestroyableObject<ParticleSystem, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
-    AudioSource(stage, this, sound_driver),
-    script_(script),
+ParticleSystem::ParticleSystem(Scene* owner):
+    StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)) {
 
-    // Initialize the emitter states
-    for(auto i = 0u; i < script_->emitter_count(); ++i) {
-        auto emitter = script_->emitter(i);
-        emitter_states_[i].current_duration = random_.float_in_range(
-            emitter->duration_range.first, emitter->duration_range.second
-        );
 
-        emitter_states_[i].emission_accumulator = 0.0f;
-    }
 }
 
 ParticleSystem::~ParticleSystem() {
@@ -118,7 +108,9 @@ void ParticleSystem::set_update_when_hidden(bool value) {
     update_when_hidden_ = value;
 }
 
-void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+void ParticleSystem::do_generate_renderables(
+    batcher::RenderQueue* render_queue, const Camera* camera, const Viewport*, const DetailLevel detail_level
+) {
     _S_UNUSED(detail_level);
 
     if(!is_visible()) {
@@ -131,7 +123,7 @@ void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const 
     }
 
     /* Rebuild the vertex data with the current camera direction */
-    rebuild_vertex_data(camera->up(), camera->right());
+    rebuild_vertex_data(camera->transform->up(), camera->transform->right());
 
     Renderable new_renderable;
     new_renderable.arrangement = MESH_ARRANGEMENT_QUADS;
@@ -172,10 +164,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uint8_t* dif = dif_ptr;
         float* uv = (float*) uv_ptr;
 
-        uint8_t a = smlt::clamp(p.colour.a * 255.0f, 0, 255);
-        uint8_t r = smlt::clamp(p.colour.r * 255.0f, 0, 255);
-        uint8_t g = smlt::clamp(p.colour.g * 255.0f, 0, 255);
-        uint8_t b = smlt::clamp(p.colour.b * 255.0f, 0, 255);
+        uint8_t a = smlt::clamp(p.color.a * 255.0f, 0, 255);
+        uint8_t r = smlt::clamp(p.color.r * 255.0f, 0, 255);
+        uint8_t g = smlt::clamp(p.color.g * 255.0f, 0, 255);
+        uint8_t b = smlt::clamp(p.color.b * 255.0f, 0, 255);
 
         *(pos) =
             p.position
@@ -267,7 +259,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     vertex_data_->done();
 }
 
-void ParticleSystem::update(float dt) {
+void ParticleSystem::on_update(float dt) {
     /* Don't update anything at all if we're hidden */
     if(!is_visible() && !update_when_hidden()) {
         return;
@@ -332,6 +324,23 @@ void ParticleSystem::update(float dt) {
     }
 }
 
+bool ParticleSystem::on_create(void* params) {
+    ParticleSystemParams* args = (ParticleSystemParams*) params;
+    script_ = args->script;
+
+    // Initialize the emitter states
+    for(auto i = 0u; i < script_->emitter_count(); ++i) {
+        auto emitter = script_->emitter(i);
+        emitter_states_[i].current_duration = random_.float_in_range(
+            emitter->duration_range.first, emitter->duration_range.second
+            );
+
+        emitter_states_[i].emission_accumulator = 0.0f;
+    }
+
+    return true;
+}
+
 void ParticleSystem::update_active_state(uint16_t e, float dt) {
     auto& state = emitter_states_[e];
     auto emitter = script_->emitter(e);
@@ -385,16 +394,16 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     /* FIXME: Add smlt::fast_inverse() and use that */
     float decrement = smlt::fast_divide(1.0f, float(emitter->emission_rate)); //Work out how often to emit per second
 
-    auto scale = absolute_scaling();
+    auto scale = transform->scale_factor();
 
     uint32_t to_emit = max;
     while(state.emission_accumulator >= decrement) {
         //EMIT THE PARTICLE!
         Particle p;
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            p.position = absolute_position() + emitter->relative_position;
+            p.position = transform->position() + emitter->relative_position;
         } else {
-            p.position = absolute_position() + emitter->relative_position;
+            p.position = transform->position() + emitter->relative_position;
 
             float hw = emitter->dimensions.x * 0.5f * scale.x;
             float hh = emitter->dimensions.y * 0.5f * scale.y;
@@ -416,12 +425,12 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
 
         //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
         //when that entity rotates we want the velocity to stay pointing relative to the entity
-        auto rot = absolute_rotation();
+        auto rot = transform->orientation();
 
         p.velocity *= rot;
 
         p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first, emitter->ttl_range.second);
-        p.colour = random_.choice(emitter->colours);
+        p.color = random_.choice(emitter->colors);
         p.initial_dimensions = p.dimensions = smlt::Vec2(script_->particle_width() * scale.x, script_->particle_height() * scale.y);
 
         //FIXME: Initialize other properties

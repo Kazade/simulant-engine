@@ -52,6 +52,11 @@ public:
     operator T*() const {
         return ptr_;
     }
+
+    template<typename U>
+    operator default_init_ptr<U>() {
+        return default_init_ptr<U>(ptr_);
+    }
 };
 
 

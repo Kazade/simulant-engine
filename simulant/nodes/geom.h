@@ -43,6 +43,26 @@ struct GeomCullerOptions {
     uint8_t quadtree_max_depth = 4;
 };
 
+struct GeomParams {
+    MeshPtr mesh;
+    Vec3 position = Vec3();
+    Quaternion rotation = Quaternion();
+    Vec3 scale = Vec3(1);
+    GeomCullerOptions options = GeomCullerOptions();
+
+    GeomParams(
+        const MeshPtr& mesh,
+        const Vec3& pos=Vec3(),
+        const Quaternion& rot=Quaternion(),
+        const Vec3& scale=Vec3(1),
+        const GeomCullerOptions& opts=GeomCullerOptions()):
+        mesh(mesh),
+        position(pos),
+        rotation(rot),
+        scale(scale),
+        options(opts) {}
+};
+
 /**
  * @brief The Geom class
  *
@@ -55,46 +75,28 @@ struct GeomCullerOptions {
  * Also unlike an actor, a mesh is a requirement.
  */
 class Geom :
-    public TypedDestroyableObject<Geom, Stage>,
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<GeomID>,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Geom>  {
 
 public:
-    Geom(
-        Stage* stage,
-        SoundDriver *sound_driver,
-        MeshID mesh,
-        const Vec3& position=Vec3(),
-        const Quaternion rotation=Quaternion(),
-        const Vec3& scale=Vec3(1, 1, 1),
-        GeomCullerOptions culler_options=GeomCullerOptions()
-    );
+    struct Meta {
+        typedef GeomParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_GEOM;
+    };
+
+    Geom(Scene* owner);
 
     const AABB& aabb() const override;
 
-    void clean_up() override {
-        StageNode::clean_up();
-    }
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+        const Camera*, const Viewport* viewport, const DetailLevel detail_level
+    ) override;
 
-    bool init() override;
-
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    bool on_create(void *params) override;
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
-    MeshID mesh_id_;
-    GeomCullerOptions culler_options_;
-    Vec3 desired_transform;
-    Quaternion desired_rotation;
-    Vec3 desired_scale;
-
     std::shared_ptr<GeomCuller> culler_;
 
     AABB aabb_;

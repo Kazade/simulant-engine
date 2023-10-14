@@ -5,14 +5,27 @@
 namespace smlt {
 namespace ui {
 
-Frame::Frame(UIManager *owner, UIConfig *config, Stage* stage):
-    Widget(owner, config, stage) {
+Frame::Frame(Scene *owner):
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_FRAME) {
 
-    set_background_colour(config->frame_background_colour_);
-    set_foreground_colour(config->frame_titlebar_colour_);
-    set_text_colour(config->frame_text_colour_);
-    set_border_width(config->frame_border_width_);
-    set_border_colour(config->frame_border_colour_);
+}
+
+bool Frame::on_create(void *params) {
+    if(!Widget::on_create(params)) {
+        return false;
+    }
+
+    FrameParams* args = (FrameParams*) params;
+
+    if(!args->shared_style) {
+        set_background_color(args->theme.frame_background_color_);
+        set_foreground_color(args->theme.frame_titlebar_color_);
+        set_text_color(args->theme.frame_text_color_);
+        set_border_width(args->theme.frame_border_width_);
+        set_border_color(args->theme.frame_border_color_);
+    }
+
+    return true;
 }
 
 void Frame::finalize_build() {
@@ -30,7 +43,7 @@ void Frame::finalize_build() {
         Px width = -(ow / 2);
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.0f, 0.5f);
-            child->move_to(cx + width.value, cy);
+            child->transform->set_translation_2d(Vec2(cx + width.value, cy));
             width += child->outer_width();
             width += space_between_;
         }
@@ -44,7 +57,7 @@ void Frame::finalize_build() {
 
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.5f, 1.0f);
-            child->move_to(cx, cy + height.value);
+            child->transform->set_translation_2d(Vec2(cx, cy + height.value));
             height -= child->outer_height();
             height -= space_between_;
         }

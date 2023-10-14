@@ -61,12 +61,12 @@ public:
 private:
     friend class StageNode;
 
-    DescendentIterator(StageNode* start);
-    DescendentIterator(StageNode* start, StageNode* current);
+    DescendentIterator(const StageNode* start);
+    DescendentIterator(const StageNode* start, pointer current);
 
-    StageNode* start_ = nullptr;
-    StageNode* current_ = nullptr;
-    StageNode* previous_ = nullptr;
+    const StageNode* start_ = nullptr;
+    pointer current_ = nullptr;
+    pointer previous_ = nullptr;
 };
 
 }

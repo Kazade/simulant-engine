@@ -35,11 +35,11 @@ namespace smlt {
 
 class Application;
 
-typedef std::shared_ptr<SceneBase> SceneBasePtr;
-typedef std::function<SceneBasePtr (Window*)> SceneFactory;
+typedef std::shared_ptr<Scene> ScenePtr;
+typedef std::function<ScenePtr (Window*)> SceneFactory;
 
-typedef sig::signal<void (std::string, SceneBase*)> SceneActivatedSignal;
-typedef sig::signal<void (std::string, SceneBase*)> SceneDeactivatedSignal;
+typedef sig::signal<void (std::string, Scene*)> SceneActivatedSignal;
+typedef sig::signal<void (std::string, Scene*)> SceneDeactivatedSignal;
 
 
 enum ActivateBehaviour {
@@ -86,18 +86,18 @@ class SceneManager :
                 if(!new_scene->is_loaded()) {
                     new_scene->load_args.clear();
                     unpack(new_scene->load_args, std::forward<Args>(args)...);
-                    new_scene->_call_load();
+                    new_scene->load();
                 }
 
                 auto previous = current_scene_;
 
                 if(previous) {
-                    previous->_call_deactivate();
+                    previous->deactivate();
                     signal_scene_deactivated_(previous->name(), previous.get());
                 }
 
                 std::swap(current_scene_, new_scene);
-                current_scene_->_call_activate();
+                current_scene_->activate();
 
                 if(previous && previous->unload_on_deactivate()) {
                     // If requested, we unload the previous scene once the new on is active
@@ -108,7 +108,7 @@ class SceneManager :
                 auto previous = current_scene_;
 
                 if(previous) {
-                    previous->_call_deactivate();
+                    previous->deactivate();
                     signal_scene_deactivated_(previous->name(), previous.get());
                     if(previous->unload_on_deactivate()) {
                         unload(previous->name());
@@ -118,22 +118,34 @@ class SceneManager :
                 if(!new_scene->is_loaded()) {
                     new_scene->load_args.clear();
                     unpack(new_scene->load_args, std::forward<Args>(args)...);
-                    new_scene->_call_load();
+                    new_scene->load();
                 }
 
                 std::swap(current_scene_, new_scene);
-                current_scene_->_call_activate();
+                current_scene_->activate();
             }
 
             signal_scene_activated_(route, new_scene.get());
         }
     }
+
+    template<typename D, typename T, typename...Args>
+    static ScenePtr make_scene(const D& deleter, Args&&... args) {
+        return std::shared_ptr<T>(new T(std::forward<Args>(args)...), deleter);
+    }
+
+    template<typename T>
+    static void deleter(T* obj) {
+        obj->clean_up();
+        delete obj;
+    }
+
 public:
     SceneManager(Window* window);
     ~SceneManager();
 
     bool has_scene(const std::string& route) const;
-    SceneBasePtr resolve_scene(const std::string& route);
+    ScenePtr resolve_scene(const std::string& route);
 
     template<typename... Args>
     void activate(
@@ -162,18 +174,18 @@ public:
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
 
-        scene->_call_load();
+        scene->load();
     }
 
     template<typename ...Args>
-    void _preload_in_background(SceneBasePtr scene, Args&& ...args) {
+    void _preload_in_background(ScenePtr scene, Args&& ...args) {
         if(scene->is_loaded()) {
             return;
         }
 
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
-        scene->_call_load();
+        scene->load();
     }
 
     template<typename ...Args>
@@ -202,19 +214,24 @@ public:
     bool is_loaded(const std::string& route) const;
     void reset();
 
-    SceneBasePtr active_scene() const;
+    ScenePtr active_scene() const;
 
     bool scene_queued_for_activation() const;
 
     template<typename T, typename... Args>
     void register_scene(const std::string& name, Args&&... args) {
         SceneFactory func = std::bind(
-            &T::template create<Window*, typename std::decay<Args>::type&...>,
-            std::placeholders::_1, std::forward<Args>(args)...
+            &SceneManager::make_scene<decltype(&SceneManager::deleter<T>), T, Window*, typename std::decay<Args>::type&...>,
+            &SceneManager::deleter<T>, std::placeholders::_1, std::forward<Args>(args)...
         );
 
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
+        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
             auto ret = func(window);
+            if(!ret->init()) {
+                S_ERROR("Failed to initialize the Scene");
+                return ScenePtr();
+            }
+
             ret->set_name(name);
             ret->scene_manager_ = this;
             return ret;
@@ -223,10 +240,16 @@ public:
 
     template<typename T>
     void register_scene(const std::string& name) {
-        _store_scene_factory(name, [=](Window* window) -> SceneBasePtr {
-            auto ret = T::create(window);
+        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
+            auto ret = SceneManager::make_scene<decltype(&SceneManager::deleter<T>), T>(&SceneManager::deleter, window);
             ret->set_name(name);
             ret->scene_manager_ = this;
+
+            if(!ret->init()) {
+                S_ERROR("Failed to initialize the Scene");
+                return ScenePtr();
+            }
+
             return ret;
         });
     }
@@ -243,10 +266,10 @@ private:
     Window* window_;
 
     std::unordered_map<std::string, SceneFactory> scene_factories_;
-    std::unordered_map<std::string, SceneBasePtr> routes_;
+    std::unordered_map<std::string, ScenePtr> routes_;
 
-    SceneBasePtr current_scene_;
-    SceneBasePtr get_or_create_route(const std::string& route);
+    ScenePtr current_scene_;
+    ScenePtr get_or_create_route(const std::string& route);
 
     struct BackgroundTask {
         std::string route;

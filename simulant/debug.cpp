@@ -29,8 +29,8 @@
 
 namespace smlt {
 
-Debug::Debug(Stage &stage):
-    stage_(stage) {
+Debug::Debug(Scene* owner):
+    StageNode(owner, STAGE_NODE_TYPE_DEBUG) {
 
     frame_finished_connection_ = get_app()->signal_frame_finished().connect(
         std::bind(&Debug::frame_finished, this)
@@ -40,16 +40,6 @@ Debug::Debug(Stage &stage):
 Debug::~Debug() {
     // Make sure we disconnect otherwise crashes happen
     frame_finished_connection_.disconnect();
-
-    if(mesh_) {
-        auto mesh = mesh_.fetch();
-        if(mesh) {
-            // Enable GC
-            mesh->set_garbage_collection_method(GARBAGE_COLLECT_PERIODIC);
-        }
-
-        mesh_ = MeshID();
-    }
 
     if(actor_) {
         actor_->destroy();
@@ -68,12 +58,10 @@ void Debug::frame_finished() {
     }
 }
 
-void Debug::update(float dt) {
+void Debug::on_update(float dt) {
     _S_UNUSED(dt);
 
-    auto mesh = mesh_.fetch();
-
-    mesh->vertex_data->clear();
+    mesh_->vertex_data->clear();
     lines_without_depth_->index_data->clear();
     lines_with_depth_->index_data->clear();
     points_without_depth_->index_data->clear();
@@ -82,14 +70,14 @@ void Debug::update(float dt) {
     for(auto& element: elements_) {
         if(element.type == DET_LINE) {
             auto& array = (element.depth_test) ? lines_with_depth_->index_data : lines_without_depth_->index_data;
-            auto i = mesh->vertex_data->count();
-            mesh->vertex_data->position(element.points[0]);
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            auto i = mesh_->vertex_data->count();
+            mesh_->vertex_data->position(element.points[0]);
+            mesh_->vertex_data->diffuse(element.color);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[1]);
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[1]);
+            mesh_->vertex_data->diffuse(element.color);
+            mesh_->vertex_data->move_next();
 
             array->index(i);
             array->index(i + 1);
@@ -102,22 +90,22 @@ void Debug::update(float dt) {
 
             float hs = element.size / 2.0f;
             auto& array = (element.depth_test) ? points_with_depth_->index_data : points_without_depth_->index_data;
-            auto i = mesh->vertex_data->count();
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(-hs, hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            auto i = mesh_->vertex_data->count();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, hs, 0));
+            mesh_->vertex_data->diffuse(element.color);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(-hs, -hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, -hs, 0));
+            mesh_->vertex_data->diffuse(element.color);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(hs, -hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, -hs, 0));
+            mesh_->vertex_data->diffuse(element.color);
+            mesh_->vertex_data->move_next();
 
-            mesh->vertex_data->position(element.points[0] + smlt::Vec3(hs, hs, 0));
-            mesh->vertex_data->diffuse(element.colour);
-            mesh->vertex_data->move_next();
+            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, hs, 0));
+            mesh_->vertex_data->diffuse(element.color);
+            mesh_->vertex_data->move_next();
 
             array->index(i);
             array->index(i + 1);
@@ -129,7 +117,7 @@ void Debug::update(float dt) {
         }
     }
 
-    mesh->vertex_data->done();
+    mesh_->vertex_data->done();
     lines_without_depth_->index_data->done();
     lines_with_depth_->index_data->done();
     points_without_depth_->index_data->done();
@@ -156,9 +144,7 @@ void Debug::initialize_actor() {
         return;
     }
 
-    actor_ = stage_.new_actor_with_mesh(
-        mesh_
-    );
+    actor_ = scene->create_node<Actor>(mesh_);
 
     // Important. Debug stuff shouldn't be culled
     actor_->set_cullable(false);
@@ -169,30 +155,26 @@ void Debug::initialize_actor() {
     initialized_ = true;
 }
 
-bool Debug::init() {
-    mesh_ = stage_.assets->new_mesh(VertexSpecification::POSITION_AND_DIFFUSE, GARBAGE_COLLECT_NEVER);
+bool Debug::on_init() {
+    mesh_ = scene->assets->create_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
 
     //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
-    material_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
+    material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
-    auto mat = material_.fetch();
-
-    mat->set_cull_mode(CULL_MODE_NONE);
+    material_->set_cull_mode(CULL_MODE_NONE);
 
     // Never write to the depth buffer with debug stuff
-    mat->set_depth_write_enabled(false);
+    material_->set_depth_write_enabled(false);
 
-    material_no_depth_ = stage_.assets->new_material_from_file(Material::BuiltIns::DIFFUSE_ONLY, GARBAGE_COLLECT_NEVER);
-    material_no_depth_.fetch()->set_depth_write_enabled(false);
-    material_no_depth_.fetch()->set_depth_test_enabled(false);
-    material_no_depth_.fetch()->set_cull_mode(CULL_MODE_NONE);
+    material_no_depth_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+    material_no_depth_->set_depth_write_enabled(false);
+    material_no_depth_->set_depth_test_enabled(false);
+    material_no_depth_->set_cull_mode(CULL_MODE_NONE);
 
-    auto mesh = mesh_.fetch();
-
-    lines_with_depth_ = mesh->new_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    lines_without_depth_ = mesh->new_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    points_with_depth_ = mesh->new_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
-    points_without_depth_ = mesh->new_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    lines_with_depth_ = mesh_->create_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    lines_without_depth_ = mesh_->create_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    points_with_depth_ = mesh_->create_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    points_without_depth_ = mesh_->create_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     return true;
 }
@@ -205,11 +187,11 @@ float Debug::point_size() const {
     return current_point_size_;
 }
 
-void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, double duration, bool depth_test) {
+void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Color &color, double duration, bool depth_test) {
     initialize_actor();
 
     DebugElement element;
-    element.colour = colour;
+    element.color = color;
     element.duration = duration;
     element.depth_test = depth_test;
     element.points[0] = start.transformed_by(transform_);
@@ -219,17 +201,17 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Colour &colour, 
     elements_.push_back(element);
 }
 
-void Debug::draw_ray(const Vec3 &start, const Vec3 &dir, const Colour &colour, double duration, bool depth_test) {
+void Debug::draw_ray(const Vec3 &start, const Vec3 &dir, const Color &color, double duration, bool depth_test) {
     initialize_actor();
 
-    draw_line(start, start+dir, colour, duration, depth_test);
+    draw_line(start, start+dir, color, duration, depth_test);
 }
 
-void Debug::draw_point(const Vec3 &position, const Colour &colour, double duration, bool depth_test) {
+void Debug::draw_point(const Vec3 &position, const Color &color, double duration, bool depth_test) {
     initialize_actor();
 
     DebugElement element;
-    element.colour = colour;
+    element.color = color;
     element.duration = duration;
     element.depth_test = depth_test;
     element.points[0] = position.transformed_by(transform_);

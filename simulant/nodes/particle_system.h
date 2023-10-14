@@ -15,29 +15,23 @@
 #include "../vertex_data.h"
 #include "../utils/random.h"
 #include "../assets/particle_script.h"
+#include "particles/particle.h"
 
 namespace smlt {
 
-struct Particle {
-    smlt::Vec3 position;
-    smlt::Vec3 velocity;
-    smlt::Vec2 dimensions;
-    smlt::Vec2 initial_dimensions;
-    float ttl;
-    float lifetime;
-    smlt::Colour colour;
-};
-
-
 class ParticleSystem;
 
-typedef sig::signal<void (ParticleSystem*, MaterialID, MaterialID)> ParticleSystemMaterialChangedSignal;
+typedef sig::signal<void (ParticleSystem*, AssetID, AssetID)> ParticleSystemMaterialChangedSignal;
+
+struct ParticleSystemParams {
+    ParticleScriptPtr script;
+
+    ParticleSystemParams(const ParticleScriptPtr& script):
+        script(script) {}
+};
 
 class ParticleSystem :
-    public TypedDestroyableObject<ParticleSystem, Stage>,
     public StageNode,
-    public generic::Identifiable<ParticleSystemID>,
-    public AudioSource,
     public Loadable,
     public HasMutableRenderPriority,
     public ChainNameable<ParticleSystem>  {
@@ -45,7 +39,12 @@ class ParticleSystem :
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
-    ParticleSystem(Stage* stage, SoundDriver *sound_driver, ParticleScriptPtr script);
+    struct Meta {
+        typedef ParticleSystemParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
+    };
+
+    ParticleSystem(Scene* owner);
     virtual ~ParticleSystem();
 
     const AABB& aabb() const override;
@@ -72,17 +71,16 @@ public:
         return vertex_data_;
     }
 
-    void clean_up() override {
-        StageNode::clean_up();
-    }
-
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    void do_generate_renderables(
+        batcher::RenderQueue* render_queue,
+        const Camera*, const Viewport* viewport, const DetailLevel
+    ) override;
 
     ParticleScript* script() const {
         return script_.get();
     }
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 
     std::size_t particle_count() const {
         return particle_count_;
@@ -93,9 +91,7 @@ public:
     }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
+    bool on_create(void* params) override;
 
     struct EmitterState {
         bool is_active = true;

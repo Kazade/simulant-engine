@@ -4,11 +4,28 @@
 #include "button.h"
 #include "frame.h"
 #include "text_entry.h"
+#include "label.h"
 
 #include "../../window.h"
 #include "../../stage.h"
 #include "../../application.h"
 #include "../../event_listener.h"
+
+namespace smlt {
+namespace ui {
+
+class KeyboardPanel;
+
+struct KeyboardPanelParams : public WidgetParams {
+    KeyboardPanelParams(
+        const UIConfig& config=UIConfig(),
+        const WidgetStylePtr& shared_style=WidgetStylePtr()
+    ):
+        WidgetParams(config, shared_style) {}
+};
+
+}
+}
 
 namespace smlt {
 namespace ui {
@@ -600,31 +617,35 @@ class KeyboardPanel:
     friend class Keyboard;
 
 public:
-    KeyboardPanel(UIConfig* config, Stage* stage):
-        Widget(nullptr, config, stage) {}
+    struct Meta {
+        typedef ui::KeyboardPanelParams params_type;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL;
+    };
 
-    bool init() override {
-        auto ret = Widget::init();
-        if(!ret) {
-            return ret;
+    KeyboardPanel(Scene* owner):
+        Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
+
+    bool on_create(void *params) override {
+        if(!Widget::on_create(params)) {
+            return false;
         }
 
         auto load_icon = [=](const char* name, Icon* icon, int w, int h, int bpp, const uint8_t* data, TextureFormat fmt=TEXTURE_FORMAT_RGB_1US_565) {
-            icon->tex = stage->assets->new_texture(w, h, fmt);
+            icon->tex = scene->assets->create_texture(w, h, fmt);
             icon->tex->set_data(data, w * h * bpp);
             icon->tex->convert(
                 TEXTURE_FORMAT_RGBA_4UB_8888,
                 {TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED, TEXTURE_CHANNEL_RED}
-            );
+                );
             icon->tex->flip_vertically();
             icon->tex->flush();
 
-            icon->material = stage->assets->new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+            icon->material = scene->assets->load_material(Material::BuiltIns::TEXTURE_ONLY);
             icon->material->set_blend_func(BLEND_ALPHA);
             icon->material->set_depth_test_enabled(false);
             icon->material->set_cull_mode(CULL_MODE_NONE);
             icon->material->set_diffuse_map(icon->tex);
-            icon->submesh = mesh_->new_submesh(name, icon->material, MESH_ARRANGEMENT_TRIANGLE_STRIP);
+            icon->submesh = mesh_->create_submesh(name, icon->material, MESH_ARRANGEMENT_TRIANGLE_STRIP);
         };
 
         load_icon("space", &space_, SPACE_ICON.width, SPACE_ICON.height, SPACE_ICON.bytes_per_pixel, SPACE_ICON.pixel_data);
@@ -635,6 +656,7 @@ public:
         load_icon("digits", &digits_, DIGITS_ICON.width, DIGITS_ICON.height, DIGITS_ICON.bytes_per_pixel, DIGITS_ICON.pixel_data);
         load_icon("accent", &accent_, ACCENT_ICON.width, ACCENT_ICON.height, ACCENT_ICON.bytes_per_pixel, ACCENT_ICON.pixel_data);
 
+        focused_key_ = nullptr;
         return true;
     }
 
@@ -746,13 +768,17 @@ private:
     KeyInfo* focused_key_ = nullptr;
 
     void focus_key(int x, int y) {
-        auto fg_color = calc_foreground_colour();
-        auto highlight_colour = theme_->highlight_colour_;
+        auto fg_color = calc_foreground_color();
+        auto highlight_color = theme_.highlight_color_;
 
         auto key = find_key(x, y);
         if(key) {
             if(focused_key_) {
-                mesh_->vertex_data->move_to(focused_key_->first_vertex_index);
+                assert(mesh_);
+
+                auto idx = focused_key_->first_vertex_index;
+                mesh_->vertex_data->move_to(idx);
+
                 for(int i = 0; i < 4; ++i) {
                     mesh_->vertex_data->diffuse(fg_color);
                     mesh_->vertex_data->move_next();
@@ -761,7 +787,7 @@ private:
 
             mesh_->vertex_data->move_to(key->first_vertex_index);
             for(int i = 0; i < 4; ++i) {
-                mesh_->vertex_data->diffuse(highlight_colour);
+                mesh_->vertex_data->diffuse(highlight_color);
                 mesh_->vertex_data->move_next();
             }
 
@@ -773,8 +799,8 @@ private:
     void finalize_render() override {
         render_key_letters();
 
-        auto colour = smlt::Colour::WHITE;
-        colour.a = (colour.a * style_->opacity_);
+        auto color = smlt::Color::WHITE;
+        color.a = (color.a * style_->opacity_);
 
         /* Space key */
         auto key = find_key(3, 4); /* Forth row, 4th button */
@@ -788,7 +814,7 @@ private:
 
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
-            new_rectangle("space", bounds, colour, 0, nullptr);
+            new_rectangle("space", bounds, color, 0, nullptr);
         }
 
         /* Backspace */
@@ -804,7 +830,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("backspace", bounds, colour, 0, nullptr);
+            new_rectangle("backspace", bounds, color, 0, nullptr);
         }
 
         /* Return key */
@@ -820,7 +846,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("return", bounds, colour, 0, nullptr);
+            new_rectangle("return", bounds, color, 0, nullptr);
         }
 
         /* Accented chars */
@@ -836,7 +862,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("accent", bounds, colour, 0, nullptr);
+            new_rectangle("accent", bounds, color, 0, nullptr);
         }
 
         /* Toggle case */
@@ -852,7 +878,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("case", bounds, colour, 0, nullptr);
+            new_rectangle("case", bounds, color, 0, nullptr);
         }
 
         /* Digits*/
@@ -868,7 +894,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("digits", bounds, colour, 0, nullptr);
+            new_rectangle("digits", bounds, color, 0, nullptr);
         }
 
         /* OK */
@@ -884,7 +910,7 @@ private:
             bounds.min.y = key->center.y - h;
             bounds.max.y = key->center.y + h;
 
-            new_rectangle("ok", bounds, colour, 0, nullptr);
+            new_rectangle("ok", bounds, color, 0, nullptr);
         }
     }
 
@@ -897,7 +923,7 @@ private:
     void render_text() override {}
 
     void render_key_letters() {
-        auto c = style_->text_colour_;
+        auto c = style_->text_color_;
         c.set_alpha(style_->opacity_);
 
         auto sm = mesh_->find_submesh("text");
@@ -993,7 +1019,7 @@ private:
 
                 Px ch_width = font_->character_width(ch);
                 Px ch_height = font_->character_height(ch);
-                auto min_max = font_->texture_coordinates_for_character(ch);
+                auto min_max = font_->char_texcoords(ch);
 
                 auto info = find_key(x, y);
                 if(info) {
@@ -1005,10 +1031,10 @@ private:
                     bounds.max.y = info->center.y + (ch_height / 2);
 
                     const smlt::Vec2 uvs [] = {
-                        smlt::Vec2(min_max.first.x, min_max.second.y),
-                        smlt::Vec2(min_max.second.x, min_max.second.y),
                         smlt::Vec2(min_max.first.x, min_max.first.y),
-                        smlt::Vec2(min_max.second.x, min_max.first.y)
+                        smlt::Vec2(min_max.second.x, min_max.first.y),
+                        smlt::Vec2(min_max.first.x, min_max.second.y),
+                        smlt::Vec2(min_max.second.x, min_max.second.y)
                     };
 
                     sm = new_rectangle("text", bounds, c, 0, uvs);
@@ -1022,16 +1048,16 @@ private:
         }
     }
 
-    Colour calc_foreground_colour() const {
-        auto colour = style_->foreground_colour_;
-        colour.set_alpha(colour.af() * style_->opacity_);
-        return colour;
+    Color calc_foreground_color() const {
+        auto color = style_->foreground_color_;
+        color.set_alpha(color.af() * style_->opacity_);
+        return color;
     }
 
     void render_foreground(const WidgetBounds& bounds) override {
         _S_UNUSED(bounds);
 
-        auto colour = calc_foreground_colour();
+        auto color = calc_foreground_color();
 
         WidgetBounds total_bounds;
         total_bounds.min.y = total_bounds.min.x = Px(10000);
@@ -1120,7 +1146,7 @@ private:
                 total_bounds.max.x = std::max(new_key.bounds.max.x, total_bounds.max.x);
                 total_bounds.max.y = std::max(new_key.bounds.max.y, total_bounds.max.y);
 
-                new_rectangle("foreground", key_bounds, colour, 0);
+                new_rectangle("foreground", key_bounds, color, 0);
             }
         }
 
@@ -1155,80 +1181,100 @@ private:
     }
 };
 
-Keyboard::Keyboard(UIManager *owner, UIConfig *config, Stage* stage, KeyboardMode mode, const unicode &initial_text):
-    Widget(owner, config, stage) {
+Keyboard::Keyboard(Scene *owner):
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD) {
+
+
+}
+
+bool Keyboard::on_create(void *params) {
+    if(!Widget::on_create(params)) {
+        return false;
+    }
+
+    KeyboardParams* args = (KeyboardParams*) params;
+
+    if(!args->shared_style) {
+        set_background_color(smlt::Color::NONE);
+        set_foreground_color(smlt::Color::NONE);
+        set_border_color(smlt::Color::NONE);
+        set_text_color(smlt::Color::NONE);
+    }
+
+    auto config = &args->theme;
 
     resize(-1, -1);
-    set_background_colour(smlt::Colour::NONE);
-    set_foreground_colour(smlt::Colour::NONE);
-    set_border_colour(smlt::Colour::NONE);
-    set_text_colour(smlt::Colour::NONE);
 
-    main_frame_ = owner->new_widget_as_frame("");
+    main_frame_ = scene->create_node<Frame>("");
     main_frame_->set_parent(this);
     main_frame_->set_space_between(0);
     main_frame_->set_border_width(0);
-    main_frame_->set_background_colour(config->background_colour_);
-    main_frame_->set_border_colour(config->background_colour_);
-    main_frame_->set_foreground_colour(smlt::Colour::NONE);
+    main_frame_->set_background_color(config->background_color_);
+    main_frame_->set_border_color(config->background_color_);
+    main_frame_->set_foreground_color(smlt::Color::NONE);
 
-    panel_ = KeyboardPanel::create(config, stage);
+    /* FIXME: Registration here is ugly. KeyboardPanel should either be a publically
+     * accessible node, or, not be a node */
+    scene->register_stage_node<KeyboardPanel>();
 
-    panel_->set_background_colour(config->background_colour_);
-    panel_->set_border_colour(config->background_colour_);
+    panel_ = scene->create_node<KeyboardPanel>(*config);
+
+    panel_->set_background_color(config->background_color_);
+    panel_->set_border_color(config->background_color_);
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    entry_ = TextEntry::create(nullptr, config, stage);
-    entry_->set_text(initial_text);
+    entry_ = scene->create_node<TextEntry>(args->initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
-    entry_->set_background_colour(smlt::Colour::WHITE);
-    entry_->set_border_colour(config->background_colour_);
-    entry_->set_text_colour(config->foreground_colour_);
+    entry_->set_background_color(smlt::Color::WHITE);
+    entry_->set_border_color(config->background_color_);
+    entry_->set_text_color(config->foreground_color_);
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
     entry_->set_padding(Px(4));
 
-    info_row_ = Frame::create(nullptr, config, stage);
-    info_row_->set_border_colour(config->foreground_colour_);
+    info_row_ = scene->create_node<Frame>();
+    info_row_->set_border_color(config->foreground_color_);
     info_row_->set_border_width(2);
-    info_row_->set_background_colour(style_->foreground_colour_);
-    info_row_->set_foreground_colour(style_->foreground_colour_);
+    info_row_->set_background_color(style_->foreground_color_);
+    info_row_->set_foreground_color(style_->foreground_color_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
-    auto x_button = Label::create(nullptr, config, stage);
+    auto x_button = scene->create_node<Label>("");
     x_button->set_text("X");
-    x_button->set_text_colour(smlt::Colour::WHITE);
+    x_button->set_text_color(smlt::Color::WHITE);
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
-    auto x_label = Label::create(nullptr, config, stage);
-    x_label->set_background_colour(smlt::Colour::RED);
+    auto x_label = scene->create_node<Label>("");
+    x_label->set_background_color(smlt::Color::RED);
     x_label->set_text(_T("Cancel"));
-    x_label->set_text_colour(smlt::Colour::WHITE);
+    x_label->set_text_color(smlt::Color::WHITE);
     x_label->resize(-1, panel_->key_height());
     x_label->rebuild();
 
-    info_row_->pack_child(x_button.get());
-    info_row_->pack_child(x_label.get());
+    info_row_->pack_child(x_button);
+    info_row_->pack_child(x_label);
     info_row_->resize(panel_->content_width(), -1);
     info_row_->rebuild();
 
-    main_frame_->pack_child(entry_.get());
-    main_frame_->pack_child(panel_.get());
-    main_frame_->pack_child(info_row_.get());
+    main_frame_->pack_child(entry_);
+    main_frame_->pack_child(panel_);
+    main_frame_->pack_child(info_row_);
     main_frame_->rebuild();
 
-    set_mode(mode);
+    set_mode(args->mode);
+
+    return true;
 }
 
 Keyboard::~Keyboard() {
-    main_frame_->unpack_child(entry_.get(), CHILD_CLEANUP_RETAIN);
-    main_frame_->unpack_child(panel_.get(), CHILD_CLEANUP_RETAIN);
-    main_frame_->unpack_child(info_row_.get(), CHILD_CLEANUP_RETAIN);
-    panel_.reset();
-    entry_.reset();
-    info_row_.reset();
+    main_frame_->unpack_child(entry_, CHILD_CLEANUP_RETAIN);
+    main_frame_->unpack_child(panel_, CHILD_CLEANUP_RETAIN);
+    main_frame_->unpack_child(info_row_, CHILD_CLEANUP_RETAIN);
+    panel_ = nullptr;
+    entry_= nullptr;
+    info_row_ = nullptr;
 }
 
 void Keyboard::cancel() {
@@ -1300,6 +1346,8 @@ void Keyboard::set_keyboard_integration_enabled(bool value) {
 }
 
 void Keyboard::set_font(FontPtr font) {
+    Widget::set_font(font);
+
     /*panel_->set_font(font);
     panel_->rebuild();
     entry_->set_font(font);
@@ -1309,9 +1357,7 @@ void Keyboard::set_font(FontPtr font) {
     info_row_->rebuild();
 
     main_frame_->set_font(font);
-    main_frame_->rebuild();
-
-    Widget::set_font(font);*/
+    main_frame_->rebuild(); */
 }
 
 void Keyboard::on_transformation_change_attempted() {
@@ -1346,6 +1392,8 @@ const unicode &Keyboard::calc_text() const {
 }
 
 void Keyboard::cursor_to_space() {
+    assert(panel_);
+
     for(auto& k: panel_->keys_) {
         if(k.is_space_key()) {
             panel_->focus_key(k.x, k.y);

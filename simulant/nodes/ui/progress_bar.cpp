@@ -7,16 +7,9 @@ namespace smlt {
 namespace ui {
 
 
-ProgressBar::ProgressBar(UIManager* owner, UIConfig* config, Stage* stage):
-    Widget(owner, config, stage) {
+ProgressBar::ProgressBar(Scene* owner):
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR) {
 
-    set_background_colour(config->progress_bar_background_colour_);
-    set_foreground_colour(config->progress_bar_foreground_colour_);
-    set_border_colour(config->progress_bar_border_colour_);
-    set_border_width(config->progress_bar_border_width_);
-    set_text_colour(config->progress_bar_text_colour_);
-
-    resize(config->progress_bar_width_, config->progress_bar_height_);
 }
 
 ProgressBar::~ProgressBar() {
@@ -129,8 +122,31 @@ float ProgressBar::max() const {
     return max_;
 }
 
-void ProgressBar::update(float dt) {
+void ProgressBar::on_update(float dt) {
     refresh_bar(dt);
+}
+
+bool ProgressBar::on_create(void* params) {
+    if(!Widget::on_create(params)) {
+        return true;
+    }
+
+    ProgressBarParams* args = (ProgressBarParams*) params;
+
+    if(!args->shared_style) {
+        set_background_color(args->theme.progress_bar_background_color_);
+        set_foreground_color(args->theme.progress_bar_foreground_color_);
+        set_border_color(args->theme.progress_bar_border_color_);
+        set_border_width(args->theme.progress_bar_border_width_);
+        set_text_color(args->theme.progress_bar_text_color_);
+    }
+
+    set_range(args->min, args->max);
+    set_value(args->value);
+
+    set_resize_mode(RESIZE_MODE_FIXED);
+    resize(args->width, args->height);
+    return true;
 }
 
 }

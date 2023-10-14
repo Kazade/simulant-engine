@@ -11,6 +11,8 @@
 #include "../application.h"
 #include "../time_keeper.h"
 #include "../scenes/scene_manager.h"
+#include "../nodes/ui/image.h"
+#include "../nodes/audio_source.h"
 #include "splash.h"
 
 #define SIMULANT_TEXT_512 "textures/simulant-text-512.png"
@@ -24,65 +26,61 @@
 namespace smlt {
 namespace scenes {
 
-void Splash::load() {
+void Splash::on_load() {
     TextureFlags flags;
     flags.mipmap = smlt::MIPMAP_GENERATE_NONE;
-
-    //Create a stage
-    stage_ = new_stage();
 
     auto text_file = (window->width() < 1200) ? SIMULANT_TEXT_512 : SIMULANT_TEXT_1024;
     auto logo_file = (window->width() < 1200) ? SIMULANT_LOGO_256 : SIMULANT_LOGO_512;
 
-    auto text_texture = stage_->assets->new_texture_from_file(text_file, flags);
-    text_ = stage_->ui->new_widget_as_image(text_texture);
+    auto text_texture = assets->load_texture(text_file, flags);
+    text_ = create_node<ui::Image>(text_texture);
 
-    auto texture = stage_->assets->new_texture_from_file(logo_file, flags);
-    image_ = stage_->ui->new_widget_as_image(texture);
+    auto texture = assets->load_texture(logo_file, flags);
+    image_ = create_node<ui::Image>(texture);
 
-    sound_ = stage_->assets->new_sound_from_file(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
+    sound_ = assets->load_sound(SIMULANT_SOUND, SoundFlags(), smlt::GARBAGE_COLLECT_NEVER);
 
     image_->set_anchor_point(0.5f, 0.0f);
     image_->set_opacity(0.0f);
 
     text_->set_anchor_point(0.5, 1.0);
 
-    image_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
-    text_->move_to(window->coordinate_from_normalized(0.5f, 0.4f));
+    image_->transform->set_position_2d(window->coordinate_from_normalized(0.5f, 0.4f));
+    text_->transform->set_position_2d(window->coordinate_from_normalized(0.5f, 0.4f));
 
     //Create an orthographic camera
-    camera_ = stage_->new_camera();
-
+    camera_ = create_node<Camera>();
     camera_->set_orthographic_projection(
         0, window->width(), 0, window->height()
     );
 
+    source_ = camera_->create_child<AudioSource>();
+
     //Create an inactive pipeline
-    pipeline_ = compositor->render(stage_, camera_);
-    link_pipeline(pipeline_);
+    pipeline_ = compositor->create_layer(this, camera_);
 }
 
-void Splash::unload() {
+void Splash::on_unload() {
     //Clean up
     pipeline_->destroy();
-    stage_->destroy();
 }
 
-void Splash::activate() {
+void Splash::on_activate() {
     start_time_ = app->time_keeper->now_in_us();
-    camera_->play_sound(
+    source_->play_sound(
         sound_,
         AUDIO_REPEAT_NONE,
         DISTANCE_MODEL_AMBIENT
     );
 }
 
-void Splash::deactivate() {
+void Splash::on_deactivate() {
     //Deactivate the Splash pipeline
 
 }
 
-void Splash::update(float dt) {
+void Splash::on_update(float dt) {
     /* We can't use dt as we load the scene in the main thread, and
      * by the time we hit update dt will be large and we'll
      * we'll immediately start loading the next scene */

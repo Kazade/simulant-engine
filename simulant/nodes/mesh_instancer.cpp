@@ -6,12 +6,9 @@ namespace smlt {
 
 uint32_t MeshInstancer::id_counter_ = 0;
 
-MeshInstancer::MeshInstancer(Stage *stage, SoundDriver *sound_driver, MeshPtr mesh):
-    TypedDestroyableObject<MeshInstancer, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_MESH_INSTANCER),
-    AudioSource(stage, this, sound_driver) {
+MeshInstancer::MeshInstancer(Scene *owner):
+    StageNode(owner, STAGE_NODE_TYPE_MESH_INSTANCER) {
 
-    set_mesh(mesh);
 }
 
 MeshInstancer::~MeshInstancer() {
@@ -38,11 +35,11 @@ MeshPtr MeshInstancer::mesh() const {
     return mesh_;
 }
 
-MeshInstanceID MeshInstancer::new_mesh_instance(const Vec3 &position, const Quaternion &rotation) {
+MeshInstanceID MeshInstancer::create_mesh_instance(const Vec3 &position, const Quaternion &rotation) {
     MeshInstance i;
     i.id = ++MeshInstancer::id_counter_;
     i.transformation = Mat4::from_pos_rot_scale(position, rotation, Vec3(1));
-    i.abs_transformation = absolute_transformation() * i.transformation;
+    i.abs_transformation = transform->world_space_matrix() * i.transformation;
     i.recalc_aabb(mesh_);
 
     instances_.insert(std::make_pair(i.id, i));
@@ -97,6 +94,12 @@ void MeshInstancer::recalc_aabb() {
     std::swap(aabb_, new_aabb);
 }
 
+bool MeshInstancer::on_create(void* params) {
+    MeshInstancerParams* args = (MeshInstancerParams*) params;
+    set_mesh(args->mesh);
+    return true;
+}
+
 void MeshInstancer::on_transformation_changed() {
     StageNode::on_transformation_changed();
 
@@ -105,15 +108,13 @@ void MeshInstancer::on_transformation_changed() {
 
     for(auto& instance: instances_) {
         instance.second.abs_transformation = (
-            absolute_transformation() * instance.second.transformation
+            transform->world_space_matrix() * instance.second.transformation
         );
     }
 }
 
-void MeshInstancer::_get_renderables(
-        batcher::RenderQueue* render_queue,
-        const CameraPtr camera,
-        const DetailLevel detail_level) {
+void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
+        const Camera* camera, const Viewport*, const DetailLevel detail_level) {
 
     /* No instances or mesh, no renderables */
     if(instances_.empty() || !mesh_) {

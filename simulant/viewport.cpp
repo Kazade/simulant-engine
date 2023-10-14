@@ -36,41 +36,41 @@ Viewport::Viewport():
     width_(1),
     height_(1),
     type_(VIEWPORT_TYPE_CUSTOM),
-    colour_(smlt::Colour::BLACK) {
+    color_(smlt::Color::BLACK) {
 
 }
 
-Viewport::Viewport(ViewportType type, const Colour& colour):
+Viewport::Viewport(ViewportType type, const Color& color):
     x_(0),
     y_(0),
     width_(0),
     height_(0),
     type_(type),
-    colour_(colour) {
+    color_(color) {
 
 }
 
-Viewport::Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour &colour):
+Viewport::Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Color &color):
     x_(x),
     y_(y),
     width_(width),
     height_(height),
     type_(VIEWPORT_TYPE_CUSTOM),
-    colour_(colour) {
+    color_(color) {
 
 }
 
-void Viewport::set_colour(const smlt::Colour& colour) {
-    colour_ = colour;
+void Viewport::set_color(const smlt::Color& color) {
+    color_ = color;
 }
 
 void Viewport::clear(const RenderTarget &target, uint32_t clear_flags) {
     apply(target);
 
-    GLCheck(glClearColor, colour_.r, colour_.g, colour_.b, colour_.a);
+    GLCheck(glClearColor, color_.r, color_.g, color_.b, color_.a);
 
     uint32_t gl_clear_flags = 0;
-    if((clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) == BUFFER_CLEAR_COLOUR_BUFFER) {
+    if((clear_flags & BUFFER_CLEAR_COLOR_BUFFER) == BUFFER_CLEAR_COLOR_BUFFER) {
         gl_clear_flags |= GL_COLOR_BUFFER_BIT;
     }
 

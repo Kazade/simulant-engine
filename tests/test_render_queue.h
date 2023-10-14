@@ -13,11 +13,11 @@ class RenderQueueTests : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
     }
 
     void test_render_group_insertion() {

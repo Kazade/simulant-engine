@@ -33,10 +33,10 @@ class StatsPanel:
     public RefCounted<StatsPanel> {
 
 public:
-    StatsPanel(Window* window);
+    StatsPanel(Scene* owner);
 
-    bool init() override;
-    void clean_up() override;
+    bool on_init() override;
+    void on_clean_up() override;
 private:
     Window* window_ = nullptr;
 
@@ -44,9 +44,9 @@ private:
     void do_deactivate() override;
 
     CameraPtr ui_camera_;
-    PipelinePtr pipeline_;
+    LayerPtr pipeline_;
 
-    void update();
+    void update_stats();
 
     int32_t get_memory_usage_in_megabytes();
 
@@ -56,7 +56,6 @@ private:
     ui::WidgetPtr vram_usage_;
     ui::WidgetPtr actors_rendered_;
     ui::WidgetPtr polygons_rendered_;
-    ui::WidgetPtr stage_node_pool_size_;
 
     MaterialPtr graph_material_;
     MeshPtr ram_graph_mesh_;

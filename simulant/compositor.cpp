@@ -21,7 +21,6 @@
 
 #include "generic/algorithm.h"
 #include "compositor.h"
-#include "stage.h"
 #include "nodes/actor.h"
 #include "nodes/camera.h"
 #include "nodes/light.h"
@@ -30,6 +29,7 @@
 #include "partitioner.h"
 #include "loader.h"
 #include "application.h"
+#include "scenes/scene.h"
 
 namespace smlt {
 
@@ -41,16 +41,10 @@ Compositor::Compositor(Window *window):
 
 Compositor::~Compositor() {
     clean_up_connection_.disconnect();
-    destroy_all_pipelines();
+    destroy_all_layers();
 }
 
-PipelinePtr Compositor::render(StagePtr stage, CameraPtr camera) {
-    static int32_t counter = 0;
-    std::string name = _F("{0}").format(counter++);
-    return new_pipeline(name, stage, camera);
-}
-
-PipelinePtr Compositor::find_pipeline(const std::string &name) {
+LayerPtr Compositor::find_layer(const std::string &name) {
     for(auto& pipeline: ordered_pipelines_) {
         if(pipeline->name() == name) {
             return pipeline;
@@ -60,42 +54,7 @@ PipelinePtr Compositor::find_pipeline(const std::string &name) {
     return nullptr;
 }
 
-bool Compositor::destroy_pipeline(const std::string& name) {
-    auto pip = find_pipeline(name);
-    if(!pip) {
-        return false;
-    }
-
-    if(queued_for_destruction_.count(pip)) {
-        return false;
-    }
-
-    queued_for_destruction_.insert(pip);
-
-    /* When a user requests destruction, we deactivate immediately
-     * as that's the path of least surprise. The pipeline won't be used
-     * anyway on the next render, this just makes sure that the stage for example
-     * doesn't think it's part of an active pipeline until then */
-    pip->deactivate();
-    pip->destroy();
-
-    return true;
-}
-
-void Compositor::destroy_pipeline_immediately(const std::string& name) {
-    auto pip = find_pipeline(name);
-    pip->deactivate();
-    pip->destroy();
-
-    queued_for_destruction_.erase(pip);
-    ordered_pipelines_.remove(pip);
-
-    pool_.remove_if([name](const Pipeline::ptr& pip) -> bool {
-        return pip->name() == name;
-    });
-}
-
-void Compositor::clean_destroyed_pipelines() {
+void Compositor::clean_destroyed_layers() {
     for(auto pip: queued_for_destruction_) {
         pip->deactivate();
 
@@ -108,46 +67,41 @@ void Compositor::clean_destroyed_pipelines() {
 #endif
 
         auto id = pip->id_;
-        pool_.remove_if([id](const Pipeline::ptr& pip) -> bool {
+        pool_.remove_if([id](const Layer::ptr& pip) -> bool {
             return pip->id_ == id;
         });
     }
     queued_for_destruction_.clear();
 }
 
-void Compositor::destroy_all_pipelines() {
+void Compositor::destroy_all_layers() {
     auto pipelines = ordered_pipelines_;
     for(auto pip: pipelines) {
         assert(pip);
-        destroy_pipeline(pip->name());
+        destroy_object(pip);
     }
 }
 
-bool Compositor::has_pipeline(const std::string& name) {
-    return bool(find_pipeline(name));
+bool Compositor::has_layer(const std::string& name) {
+    return bool(find_layer(name));
 }
 
-void Compositor::sort_pipelines() {
+void Compositor::sort_layers() {
     auto do_sort = [&]() {
         ordered_pipelines_.sort(
-            [](PipelinePtr lhs, PipelinePtr rhs) { return lhs->priority() < rhs->priority(); }
+            [](LayerPtr lhs, LayerPtr rhs) { return lhs->priority() < rhs->priority(); }
         );
     };
 
     do_sort();
 }
 
-PipelinePtr Compositor::new_pipeline(
-    const std::string& name, StagePtr stage, CameraPtr camera,
-    const Viewport& viewport, TextureID target, int32_t priority) {
+LayerPtr Compositor::create_layer(
+    StageNode* subtree, CameraPtr camera,
+    const Viewport& viewport, TexturePtr target, int32_t priority) {
 
-    if(has_pipeline(name)) {
-        S_WARN("Tried to create a duplicate pipeline");
-        return PipelinePtr();
-    }
-
-    auto pipeline = Pipeline::create(
-        this, name, stage, camera
+    auto pipeline = Layer::create(
+        this, subtree, camera
     );
 
     /* New pipelines should always start deactivated to avoid the attached stage
@@ -161,7 +115,7 @@ PipelinePtr Compositor::new_pipeline(
     pool_.push_back(pipeline);
 
     ordered_pipelines_.push_back(pipeline.get());
-    sort_pipelines();
+    sort_layers();
 
     return pipeline.get();
 }
@@ -171,7 +125,7 @@ void Compositor::set_renderer(Renderer* renderer) {
 }
 
 void Compositor::run() {
-    clean_destroyed_pipelines();  /* Clean up any destroyed pipelines before rendering */
+    clean_destroyed_layers();  /* Clean up any destroyed pipelines before rendering */
 
     targets_rendered_this_frame_.clear();
 
@@ -180,7 +134,7 @@ void Compositor::run() {
 
     int actors_rendered = 0;
     for(auto& pipeline: ordered_pipelines_) {
-        run_pipeline(pipeline, actors_rendered);
+        run_layer(pipeline, actors_rendered);
     }
 
     get_app()->stats->set_subactors_rendered(actors_rendered);
@@ -192,7 +146,76 @@ uint64_t generate_frame_id() {
     return ++frame_id;
 }
 
-void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) {
+static bool build_renderables(
+    std::vector<Light*>& lights_visible, batcher::RenderQueue* render_queue_,
+    const smlt::CameraPtr& camera, const smlt::LayerPtr& pipeline_stage,
+    StageNode* node
+) {
+    assert(node);
+
+    if(!node->is_visible()) {
+        return true;
+    }
+
+    std::partial_sort(
+        lights_visible.begin(),
+        lights_visible.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) lights_visible.size()),
+        lights_visible.end(),
+        [=](LightPtr lhs, LightPtr rhs) {
+            /* FIXME: Sorting by the centre point is problematic. A renderable is made up
+                 * of many polygons, by choosing the light closest to the center you may find that
+                 * that polygons far away from the center aren't affected by lights when they should be.
+                 * This needs more thought, probably. */
+            if(lhs->node_type() == LIGHT_TYPE_DIRECTIONAL && rhs->node_type() != LIGHT_TYPE_DIRECTIONAL) {
+                return true;
+            } else if(rhs->node_type() == LIGHT_TYPE_DIRECTIONAL && lhs->node_type() != LIGHT_TYPE_DIRECTIONAL) {
+                return false;
+            }
+
+            float lhs_dist = (node->centre() - lhs->transform->position()).length_squared();
+            float rhs_dist = (node->centre() - rhs->transform->position()).length_squared();
+            return lhs_dist < rhs_dist;
+        }
+    );
+
+    float distance_to_camera = camera->transform->position().distance_to(node->transformed_aabb());
+
+    /* Find the ideal detail level at this distance from the camera */
+    auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
+
+    /* Push any renderables for this node */
+    auto viewport = pipeline_stage->viewport.get();
+    auto initial = render_queue_->renderable_count();
+    node->generate_renderables(render_queue_, camera, viewport, level);
+
+    // FIXME: Change get_renderables to return the number inserted
+    auto count = render_queue_->renderable_count() - initial;
+
+    for(auto i = initial; i < initial + count; ++i) {
+        auto renderable = render_queue_->renderable(i);
+
+        assert(
+            renderable->arrangement == MESH_ARRANGEMENT_LINES ||
+            renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
+            renderable->arrangement == MESH_ARRANGEMENT_QUADS ||
+            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES ||
+            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN ||
+            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP
+        );
+
+        assert(renderable->material);
+        assert(renderable->vertex_data);
+
+        renderable->light_count = std::min((std::size_t) MAX_LIGHTS_PER_RENDERABLE, lights_visible.size());
+        for(auto i = 0u; i < renderable->light_count; ++i) {
+            renderable->lights_affecting_this_frame[i] = lights_visible[i];
+        }
+    }
+
+    return !(node->generates_renderables_for_descendents());
+}
+
+void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     /*
      * This is where rendering actually happens.
      *
@@ -214,7 +237,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
         return;
     }
 
-    auto stage = pipeline_stage->stage();
+    auto stage_node = pipeline_stage->stage_node();
     auto camera = pipeline_stage->camera();
 
     RenderTarget& target = *window_; //FIXME: Should be window or texture
@@ -226,7 +249,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
      */
     if(targets_rendered_this_frame_.find(&target) == targets_rendered_this_frame_.end()) {
         if(target.clear_every_frame_flags()) {
-            Viewport view(smlt::VIEWPORT_TYPE_FULL, target.clear_every_frame_colour());
+            Viewport view(smlt::VIEWPORT_TYPE_FULL, target.clear_every_frame_color());
             view.clear(target, target.clear_every_frame_flags());
         }
 
@@ -242,103 +265,43 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
         viewport->apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
     }
 
-    signal_pipeline_started_(*pipeline_stage);
+    signal_layer_render_started_(*pipeline_stage);
 
     // Trigger a signal to indicate the stage is about to be rendered
-    stage->signal_stage_pre_render()(camera->id(), viewport);
+    stage_node->scene->signal_layer_render_started()(camera, viewport, stage_node);
 
-    // Apply any outstanding writes to the partitioner
-    stage->partitioner->_apply_writes();
-
-    static std::vector<LightID> light_ids;
-    static std::vector<StageNode*> nodes_visible;
+    static std::vector<Light*> lights_visible;
 
     /* Empty out, but leave capacity to prevent constant allocations */
-    light_ids.resize(0);
-    nodes_visible.resize(0);
+    lights_visible.resize(0);
 
-    // Gather the lights and geometry visible to the camera
-    stage->partitioner->lights_and_geometry_visible_from(camera->id(), light_ids, nodes_visible);
+    /* Gather lights */
+    StageNodeVisitorBFS light_finder(stage_node, [&](StageNode* node) {
+        if(node->node_type() == STAGE_NODE_TYPE_DIRECTIONAL_LIGHT || node->node_type() == STAGE_NODE_TYPE_POINT_LIGHT) {
+            Light* light = (Light*) node;
+            if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
+                lights_visible.push_back(light);
+            } else {
+                if(camera->frustum().intersects_sphere(light->transform->position(), light->diameter())) {
+                    lights_visible.push_back(light);
+                }
+            }
+        }
+    });
 
-    // Get the actual lights from the IDs
-    auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
-        light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
-    );
+    // Traverse the tree in BFS order
+    while(light_finder.call_next()) {}
+
 
     // Reset it, ready for this pipeline
-    render_queue_.reset(stage, window->renderer.get(), camera);
+    render_queue_.reset(stage_node, window->renderer.get(), camera);
 
-    // Mark the visible objects as visible
-    for(auto& node: nodes_visible) {
-        assert(node);
+    StageNodeVisitorBFS node_finder(
+        stage_node,
+        std::bind(build_renderables, lights_visible, &render_queue_, camera, pipeline_stage, std::placeholders::_1)
+    );
 
-        if(!node->is_visible()) {
-            continue;
-        }
-
-        auto renderable_lights = filter(lights_visible, [&node](const LightPtr& light) -> bool {
-            // Filter by whether or not the renderable bounds intersects the light bounds
-            if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
-                return true;
-            } else {
-                return node->transformed_aabb().intersects_sphere(light->absolute_position(), light->range() * 2);
-            }
-        });
-
-        std::partial_sort(
-            renderable_lights.begin(),
-            renderable_lights.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) renderable_lights.size()),
-            renderable_lights.end(),
-            [=](LightPtr lhs, LightPtr rhs) {
-                /* FIXME: Sorting by the centre point is problematic. A renderable is made up
-                 * of many polygons, by choosing the light closest to the center you may find that
-                 * that polygons far away from the center aren't affected by lights when they should be.
-                 * This needs more thought, probably. */
-                if(lhs->type() == LIGHT_TYPE_DIRECTIONAL && rhs->type() != LIGHT_TYPE_DIRECTIONAL) {
-                    return true;
-                } else if(rhs->type() == LIGHT_TYPE_DIRECTIONAL && lhs->type() != LIGHT_TYPE_DIRECTIONAL) {
-                    return false;
-                }
-
-                float lhs_dist = (node->centre() - lhs->position()).length_squared();
-                float rhs_dist = (node->centre() - rhs->position()).length_squared();
-                return lhs_dist < rhs_dist;
-            }
-        );
-
-        float distance_to_camera = camera->absolute_position().distance_to(node->transformed_aabb());
-
-        /* Find the ideal detail level at this distance from the camera */
-        auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
-
-        /* Push any renderables for this node */
-        auto initial = render_queue_.renderable_count();
-        node->_get_renderables(&render_queue_, camera, level);
-
-        // FIXME: Change _get_renderables to return the number inserted
-        auto count = render_queue_.renderable_count() - initial;
-
-        for(auto i = initial; i < initial + count; ++i) {
-            auto renderable = render_queue_.renderable(i);
-
-            assert(
-                renderable->arrangement == MESH_ARRANGEMENT_LINES ||
-                renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
-                renderable->arrangement == MESH_ARRANGEMENT_QUADS ||
-                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES ||
-                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN ||
-                renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP
-            );
-
-            assert(renderable->material);
-            assert(renderable->vertex_data);
-
-            renderable->light_count = renderable_lights.size();
-            for(auto i = 0u; i < renderable->light_count; ++i) {
-                renderable->lights_affecting_this_frame[i] = renderable_lights[i];
-            }
-        }
-    }
+    while(node_finder.call_next()) {}
 
     actors_rendered += render_queue_.renderable_count();
 
@@ -350,10 +313,38 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     render_queue_.traverse(visitor.get(), frame_id);
 
     // Trigger a signal to indicate the stage has been rendered
-    stage->signal_stage_post_render()(camera->id(), viewport);
+    stage_node->scene->signal_layer_render_finished()(camera, viewport, stage_node);
 
-    signal_pipeline_finished_(*pipeline_stage);
+    signal_layer_render_finished_(*pipeline_stage);
     render_queue_.clear();
+}
+
+SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):
+    compositor_(global_compositor),
+    scene_(scene) {
+
+    activate_connection_ = scene_->signal_activated().connect([=]() {
+        for(auto& layer: layers_) {
+            if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
+                layer->activate();
+            }
+        }
+    });
+
+    deactivate_connection_ = scene_->signal_deactivated().connect([=]() {
+        for(auto& layer: layers_) {
+            if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
+                layer->deactivate();
+            }
+        }
+    });
+}
+
+SceneCompositor::~SceneCompositor() {
+    activate_connection_.disconnect();
+    deactivate_connection_.disconnect();
+
+    destroy_all_layers();
 }
 
 }

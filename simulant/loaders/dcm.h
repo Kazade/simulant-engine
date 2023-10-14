@@ -63,8 +63,8 @@ struct FileHeader {
     uint8_t mesh_count;  /* Number of lod-meshes stored in this file */
     uint8_t pos_format; /* Format of the vertex positions */
     uint8_t tex0_format; /* Format of the vertex texture coordinates */
-    uint8_t color_format; /* Format of the vertex colours */
-    uint8_t offset_colour_format;  /* Format of the offset colour */
+    uint8_t color_format; /* Format of the vertex colors */
+    uint8_t offset_color_format;  /* Format of the offset color */
     uint8_t tex1_format; /* Format of the vertex texture coordinates */
     uint8_t normal_format; /* Format of the supplied normals */
     uint8_t vertex_size; /* Can be calculated from the above formats */

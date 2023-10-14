@@ -153,7 +153,7 @@ void SkeletalFrameUnpacker::unpack_frame(
                 debug->draw_line(
                     parent_joint->absolute_translation_,
                     rig->joint(i)->absolute_translation_,
-                    Colour::YELLOW, 0.1f, false
+                    Color::YELLOW, 0.1f, false
                 );
             }
         }
