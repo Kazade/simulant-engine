@@ -120,10 +120,10 @@ static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button)
 }
 
 void KOSWindow::check_events() {
-    float dt = application->time_keeper->delta_time();
+    float dt = app->time_keeper->delta_time();
 
     /* Regularly recheck the controller state */
-    time_since_last_controller_update_ += application->time_keeper->delta_time();
+    time_since_last_controller_update_ += dt;
     if(time_since_last_controller_update_ > 1.0f) {
         time_since_last_controller_update_ = 0.0f;
 
