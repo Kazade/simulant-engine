@@ -7,7 +7,7 @@ namespace {
 
 using namespace smlt;
 
-class RigidBodyTest : public smlt::test::SimulantTestCase {
+class DynamicBodyTest : public smlt::test::SimulantTestCase {
 public:
     void set_up() {
         smlt::test::SimulantTestCase::set_up();
@@ -27,7 +27,7 @@ public:
         actor->transform->rotate(smlt::Vec3::POSITIVE_X, smlt::Degrees(90));
 
         scene->start_service<PhysicsService>();
-        auto controller = scene->create_child<RigidBody>();
+        auto controller = scene->create_child<DynamicBody>();
         controller->set_parent(actor);
 
         assert_equal(controller->transform->position().x, 10.0f);
@@ -38,7 +38,7 @@ public:
     }
 
     void test_set_mass() {
-        auto controller = scene->create_child<smlt::RigidBody>();
+        auto controller = scene->create_child<smlt::DynamicBody>();
         assert_equal(controller->mass(), 1.0f);
 
         controller->add_box_collider(smlt::Vec3(10.0f), smlt::PhysicsMaterial::IRON);

@@ -11,17 +11,17 @@ struct RigidBodyParams : public PhysicsBodyParams {
         PhysicsBodyParams(position, rotation) {}
 };
 
-class RigidBody:
+class DynamicBody:
     public ReactiveBody {
 
 public:
     struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_PHYSICS_RIGID_BODY;
+        const static StageNodeType node_type = STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY;
         typedef RigidBodyParams params_type;
     };
 
-    RigidBody(Scene* owner):
-        ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_RIGID_BODY, PHYSICS_BODY_TYPE_DYNAMIC) {}
+    DynamicBody(Scene* owner):
+        ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY, PHYSICS_BODY_TYPE_DYNAMIC) {}
 
     const AABB& aabb() const override {
         static AABB aabb;

@@ -62,10 +62,12 @@ public:
 
         auto box = boxes_.back();
         auto pos = Vec3(
-            ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f, 20, 0
+            ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
+            20,
+            ((float(rand()) / RAND_MAX) * 10.0f) - 5.0f
         );
 
-        auto controller = create_child<smlt::RigidBody>(pos);
+        auto controller = create_child<smlt::DynamicBody>(pos);
         controller->add_box_collider(box->aabb().dimensions(), PhysicsMaterial::WOOD);
 
         box->set_parent(controller);

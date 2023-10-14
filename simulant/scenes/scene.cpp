@@ -33,7 +33,7 @@
 #include "../nodes/audio_source.h"
 #include "../nodes/mesh_instancer.h"
 #include "../nodes/particle_system.h"
-#include "../nodes/rigid_body.h"
+#include "../nodes/dynamic_body.h"
 #include "../nodes/static_body.h"
 #include "../nodes/kinematic_body.h"
 #include "../nodes/sprite.h"
@@ -97,7 +97,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<FlyController>();
 
     register_stage_node<StaticBody>();
-    register_stage_node<RigidBody>();
+    register_stage_node<DynamicBody>();
     register_stage_node<KinematicBody>();
 
     register_stage_node<ui::Label>();
