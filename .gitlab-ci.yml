@@ -281,6 +281,8 @@ deploy:psp-mips-gcc:
   stage: deploy
   only:
    - master
+   - main
+   - next
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   needs: ["test:psp-mips-gcc"]
@@ -384,6 +386,8 @@ deploy:windows-x64-mingw:
   stage: deploy
   only:
     - master
+    - main
+    - next
     - tags
   image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
@@ -530,6 +534,8 @@ deploy:linux-x64-gcc:
   stage: deploy
   only:
    - master
+   - main
+   - next
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
@@ -557,6 +563,8 @@ deploy:linux-x64-gcc11:
   stage: deploy
   only:
    - master
+   - main
+   - next
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
@@ -632,6 +640,8 @@ deploy:dreamcast-sh4-gcc:
   stage: deploy
   only:
    - master
+   - main
+   - next
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   dependencies:
@@ -658,6 +668,8 @@ deploy:assets:
   stage: deploy
   only:
    - master
+   - main
+   - next
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   script:
@@ -676,6 +688,8 @@ deploy:tools:
   stage: deploy
   only:
    - master
+   - main
+   - next
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   script:
