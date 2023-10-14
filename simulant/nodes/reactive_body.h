@@ -5,9 +5,9 @@
 
 namespace smlt {
 
-class DynamicPhysicsBody : public PhysicsBody {
+class ReactiveBody : public PhysicsBody {
 public:
-    DynamicPhysicsBody(Scene* owner, StageNodeType node_type, PhysicsBodyType type):
+    ReactiveBody(Scene* owner, StageNodeType node_type, PhysicsBodyType type):
         PhysicsBody(owner, node_type, type) {}
 
     float mass() const;

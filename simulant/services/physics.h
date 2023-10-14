@@ -78,7 +78,7 @@ private:
     friend class PhysicsBody;
     friend class StaticBody;
     friend class ContactListener;
-    friend class DynamicPhysicsBody;
+    friend class ReactiveBody;
     friend class Fixture;
 
     std::shared_ptr<PhysicsData> pimpl_;

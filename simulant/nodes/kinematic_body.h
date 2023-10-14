@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dynamic_physics_body.h"
+#include "reactive_body.h"
 #include "../scenes/scene.h"
 
 namespace smlt {
@@ -12,7 +12,7 @@ struct KinematicBodyParams : public PhysicsBodyParams {
 };
 
 class KinematicBody:
-    public DynamicPhysicsBody {
+    public ReactiveBody {
 
 public:
     struct Meta {
@@ -21,7 +21,7 @@ public:
     };
 
     KinematicBody(Scene* owner):
-        DynamicPhysicsBody(owner, STAGE_NODE_TYPE_PHYSICS_KINEMATIC_BODY, PHYSICS_BODY_TYPE_KINEMATIC) {}
+        ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_KINEMATIC_BODY, PHYSICS_BODY_TYPE_KINEMATIC) {}
 
     const AABB& aabb() const override {
         static AABB aabb;
