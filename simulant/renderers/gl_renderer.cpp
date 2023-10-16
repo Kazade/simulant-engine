@@ -100,6 +100,7 @@ uint32_t GLRenderer::convert_format(TextureFormat format) {
             return GL_COMPRESSED_RGB_565_VQ_MIPMAP_TWID_KOS;
 #endif
         default:
+            S_ERROR("Unable to convert format {0}", format);
             assert(0 && "Not implemented");
             return GL_RGBA;
     }

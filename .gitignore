@@ -2,7 +2,7 @@
 */Makefile
 */CMakeFiles*
 *cmake_install*
-build*
+build/*
 dbuild*
 pbuild*
 tests/main.cpp
@@ -14,3 +14,9 @@ tests/main-psp.cpp
 \.android*
 dc-build.sh
 .autosave
+.cxx
+.gradle
+.vscode
+gradle/*/build/*
+.buildconfig
+.flatpak-builder

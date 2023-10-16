@@ -33,6 +33,9 @@ namespace smlt { typedef KOSWindow SysWindow; }
 #include <pspkernel.h>
 #include "platforms/psp/psp_window.h"
 namespace smlt { typedef PSPWindow SysWindow; }
+#elif defined(__ANDROID__)
+#include "platforms/android/android_window.h"
+namespace smlt { typedef AndroidWindow SysWindow; }
 #else
 #include "sdl2_window.h"
 namespace smlt { typedef SDL2Window SysWindow; }

@@ -1,0 +1,65 @@
+apply plugin: 'com.android.library'
+
+android {
+	namespace "dev.simulant.simulant"
+    ndkVersion '23.1.7779620'
+    compileSdkVersion 32
+    
+    defaultConfig {
+        minSdkVersion 28
+        targetSdkVersion 28
+
+        ndk {
+		    def ABI_FILTERS = System.getenv("ABI_FILTERS") ?: "x86;x86_64;armeabi-v7a;arm64-v8a"
+		    abiFilters = []
+		    abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
+        }
+    }    
+    
+	externalNativeBuild {
+		cmake {
+			path "../../CMakeLists.txt"
+		}
+	}
+
+	sourceSets {
+		main {
+		    manifest.srcFile './AndroidManifest.xml'
+		    res.srcDirs = ['../../platforms/android/res']
+	    }
+	}
+
+	buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+
+            externalNativeBuild{
+                cmake{
+                    arguments "-DCMAKE_BUILD_TYPE=Release"
+                }
+            }
+        }
+        
+        debug {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+
+            externalNativeBuild{
+                cmake{
+                    arguments "-DCMAKE_BUILD_TYPE=Debug"
+                }
+            }
+        }
+    }
+}
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+}
+

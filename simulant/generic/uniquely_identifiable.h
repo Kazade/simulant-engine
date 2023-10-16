@@ -16,7 +16,7 @@ public:
     UniquelyIdentifiable():
         uuid_(generate_uuid()) {}
 
-    UniquelyIdentifiable(const UniquelyIdentifiable& rhs):
+    UniquelyIdentifiable(const UniquelyIdentifiable&):
         uuid_(generate_uuid()) {}
 
     UniquelyIdentifiable& operator=(const UniquelyIdentifiable& rhs) {

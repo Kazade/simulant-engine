@@ -28,7 +28,7 @@ bool Ray::intersects_aabb(const AABB &aabb) const {
         return false;
     }
 
-    return false;
+    return true;
 }
 
 bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Vec3 *intersection, Vec3 *normal, float *distance) const {
