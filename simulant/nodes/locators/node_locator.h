@@ -30,6 +30,11 @@ public:
 
         return parent;
     }
+
+    template<typename T>
+    static StageNode* find_mixin(StageNode* node) {
+        return node->find_mixin<T>();
+    }
 };
 
 typedef std::function<StageNode* (StageNode*)> NodeFinder;
@@ -87,18 +92,7 @@ public:
         if(found_) {
             return found_;
         } else {
-            if(!organism_) {
-                organism_ = node_;
-#ifndef NDEBUG
-                assert(organism_);
-#endif
-                if(!organism_) {
-                    S_WARN("Couldn't locate node");
-                    return nullptr;
-                }
-            }
-
-            found_ = dynamic_cast<T*>(finder_(organism_));
+            found_ = dynamic_cast<T*>(finder_(node_));
             if(found_ && !found_->is_destroyed()) {
                 on_destroy_ = found_->signal_destroyed().connect([&]() {
                     found_ = nullptr;
@@ -115,7 +109,6 @@ private:
 
     /* Mutable, because these are only populated on first-access and that
      * first access might be const */
-    mutable StageNode* organism_ = nullptr;
     mutable T* found_ = nullptr;
     mutable sig::connection on_destroy_;
 };
@@ -137,7 +130,7 @@ std::tuple<NodeFinder, StageNode*> FindDescendent(const char* name, StageNode* b
 template<typename T>
 std::tuple<NodeFinder, StageNode*> FindMixin(StageNode* node) {
     return {
-        std::bind(&StageNode::find_mixin<T>, node),
+        std::bind(&StageNodeFinders::find_mixin<T>, std::placeholders::_1),
         node
     };
 }
