@@ -33,7 +33,7 @@ public:
 
     template<typename T>
     static StageNode* find_mixin(StageNode* node) {
-        return node->find_mixin<T>();
+        return node->base()->find_mixin<T>();
     }
 };
 
