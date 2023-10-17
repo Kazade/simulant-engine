@@ -9,7 +9,7 @@ namespace smlt {
 class StageNodeFinders {
 public:
     static StageNode* find_descendent(const char* name, StageNode* organism) {
-        for(auto& node: organism->each_descendent()) {
+        for(auto& node: organism->base()->each_descendent()) {
             if(node.name() == name) {
                 return &node;
             }
@@ -19,7 +19,7 @@ public:
     }
 
     static StageNode* find_ancestor(const char* name, StageNode* organism) {
-        auto parent = (StageNode*) organism->parent();
+        auto parent = (StageNode*) organism->base()->parent();
         while(parent) {
             if(parent->name() == name) {
                 return parent;
