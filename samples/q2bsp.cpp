@@ -9,7 +9,7 @@ public:
     GameScene(smlt::Window* window):
         smlt::Scene(window) {}
 
-    void on_load() {
+    void on_load() override {
         camera_ = create_child<smlt::Camera>();
         pipeline_ = compositor->create_layer(this, camera_);
 

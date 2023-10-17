@@ -7,7 +7,7 @@ public:
     MainScene(smlt::Window* window):
         smlt::Scene(window) {}
 
-    void on_load() {
+    void on_load() override {
         camera_ = create_child<smlt::Camera>();
         camera_->set_orthographic_projection(0, window->width(), 0, window->height());
 

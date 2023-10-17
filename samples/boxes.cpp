@@ -10,7 +10,7 @@ public:
     GameScene(smlt::Window* window):
         smlt::Scene(window) {}
 
-    void on_load() {
+    void on_load() override {
         start_service<PhysicsService>();
 
         camera_ = create_child<smlt::Camera>();

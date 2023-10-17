@@ -7,7 +7,7 @@ public:
     MainScene(smlt::Window* window):
         smlt::Scene(window) {}
 
-    void on_load() {
+    void on_load() override {
         // Create two viewports for the left and right hand side of the screen, set different clear colors
         smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Color::RED);
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Color::GREEN);
