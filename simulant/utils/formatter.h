@@ -45,7 +45,7 @@ private:
             if(str[i] == '{') {
                 std::string id, format;
                 std::string* t = &id;
-                int32_t k = 0;
+                uint32_t k = 0;
                 for(auto j = 1; j < max_token_size; ++j) {
                     k = i + j;
 

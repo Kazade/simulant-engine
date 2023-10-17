@@ -7,6 +7,7 @@
 namespace smlt {
 
 class StageNodeFinders {
+public:
     static StageNode* find_descendent(const char* name, StageNode* organism) {
         for(auto& node: organism->each_descendent()) {
             if(node.name() == name) {
@@ -130,6 +131,14 @@ std::tuple<NodeFinder, StageNode*> FindDescendent(const char* name, StageNode* b
     return {
         std::bind(&StageNodeFinders::find_descendent, name, std::placeholders::_1),
         behaviour
+    };
+}
+
+template<typename T>
+std::tuple<NodeFinder, StageNode*> FindMixin(StageNode* node) {
+    return {
+        std::bind(&StageNode::find_mixin<T>, node),
+        node
     };
 }
 

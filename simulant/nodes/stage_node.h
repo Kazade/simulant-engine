@@ -219,6 +219,17 @@ public:
 
     StageNode* find_mixin(const std::string& name) const;
 
+    template<typename T>
+    T* find_mixin() const {
+        auto type = T::Meta::node_type;
+        auto it = mixins_.find(type);
+        if(it != mixins_.end()) {
+            return static_cast<T*>(it->second.ptr);
+        }
+
+        return nullptr;
+    }
+
     std::size_t mixin_count() const {
         return mixins_.size();
     }

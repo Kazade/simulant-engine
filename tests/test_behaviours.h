@@ -42,6 +42,14 @@ public:
         scene->register_stage_node<NodeWithLookups>();
     }
 
+    void test_mixin_lookups() {
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto node = scene->create_child<Stage>();
+        auto mixin = node->create_mixin<Actor>(m);
+        assert_equal(node->find_mixin<Actor>(), mixin);
+        assert_is_null(node->find_mixin<Stage>());
+    }
+
     void test_ancestor_lookups() {
         auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         auto b = scene->create_child<NodeWithLookups>();
