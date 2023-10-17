@@ -7,8 +7,9 @@
 namespace smlt {
 
 class StageNodeFinders {
+public:
     static StageNode* find_descendent(const char* name, StageNode* organism) {
-        for(auto& node: organism->each_descendent()) {
+        for(auto& node: organism->base()->each_descendent()) {
             if(node.name() == name) {
                 return &node;
             }
@@ -18,7 +19,7 @@ class StageNodeFinders {
     }
 
     static StageNode* find_ancestor(const char* name, StageNode* organism) {
-        auto parent = (StageNode*) organism->parent();
+        auto parent = (StageNode*) organism->base()->parent();
         while(parent) {
             if(parent->name() == name) {
                 return parent;
@@ -28,6 +29,11 @@ class StageNodeFinders {
         }
 
         return parent;
+    }
+
+    template<typename T>
+    static StageNode* find_mixin(StageNode* node) {
+        return node->base()->find_mixin<T>();
     }
 };
 
@@ -86,18 +92,7 @@ public:
         if(found_) {
             return found_;
         } else {
-            if(!organism_) {
-                organism_ = node_;
-#ifndef NDEBUG
-                assert(organism_);
-#endif
-                if(!organism_) {
-                    S_WARN("Couldn't locate node");
-                    return nullptr;
-                }
-            }
-
-            found_ = dynamic_cast<T*>(finder_(organism_));
+            found_ = dynamic_cast<T*>(finder_(node_));
             if(found_ && !found_->is_destroyed()) {
                 on_destroy_ = found_->signal_destroyed().connect([&]() {
                     found_ = nullptr;
@@ -114,7 +109,6 @@ private:
 
     /* Mutable, because these are only populated on first-access and that
      * first access might be const */
-    mutable StageNode* organism_ = nullptr;
     mutable T* found_ = nullptr;
     mutable sig::connection on_destroy_;
 };
@@ -130,6 +124,14 @@ std::tuple<NodeFinder, StageNode*> FindDescendent(const char* name, StageNode* b
     return {
         std::bind(&StageNodeFinders::find_descendent, name, std::placeholders::_1),
         behaviour
+    };
+}
+
+template<typename T>
+std::tuple<NodeFinder, StageNode*> FindMixin(StageNode* node) {
+    return {
+        std::bind(&StageNodeFinders::find_mixin<T>, std::placeholders::_1),
+        node
     };
 }
 

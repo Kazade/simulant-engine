@@ -25,6 +25,9 @@ public:
     FindResult<ParticleSystem> invalid_child = FindDescendent("Child 1", this);
     FindResult<Camera> camera = FindDescendent("Camera", this);
 
+    FindResult<Actor> mixin = FindMixin<Actor>(this);
+    FindResult<Stage> no_mixin = FindMixin<Stage>(this);
+
     FindResult<Actor> parent = FindAncestor("Some Parent", this);
 
     bool on_create(void*) { return true; }
@@ -40,6 +43,17 @@ public:
     void set_up() {
         test::SimulantTestCase::set_up();
         scene->register_stage_node<NodeWithLookups>();
+    }
+
+    void test_mixin_lookups() {
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto node = scene->create_child<NodeWithLookups>();
+        auto mixin = node->create_mixin<Actor>(m);
+        assert_equal(node->find_mixin<Actor>(), mixin);
+        assert_is_null(node->find_mixin<Stage>());
+
+        assert_equal(node->mixin.get(), mixin);
+        assert_is_null(node->no_mixin.get());
     }
 
     void test_ancestor_lookups() {
