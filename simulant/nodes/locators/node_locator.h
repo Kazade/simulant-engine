@@ -113,19 +113,8 @@ private:
     mutable sig::connection on_destroy_;
 };
 
-std::tuple<NodeFinder, StageNode*> FindAncestor(const char* name, StageNode* behaviour) {
-    return {
-        std::bind(&StageNodeFinders::find_ancestor, name, std::placeholders::_1),
-        behaviour
-    };
-}
-
-std::tuple<NodeFinder, StageNode*> FindDescendent(const char* name, StageNode* behaviour) {
-    return {
-        std::bind(&StageNodeFinders::find_descendent, name, std::placeholders::_1),
-        behaviour
-    };
-}
+std::tuple<NodeFinder, StageNode*> FindAncestor(const char* name, StageNode* node);
+std::tuple<NodeFinder, StageNode*> FindDescendent(const char* name, StageNode* node);
 
 template<typename T>
 std::tuple<NodeFinder, StageNode*> FindMixin(StageNode* node) {
