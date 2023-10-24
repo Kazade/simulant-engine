@@ -587,6 +587,8 @@ deploy:linux-x64-gcc:
   needs:
   - build:linux-x64-gcc-debug
   - build:linux-x64-gcc-release    
+  - test:linux-x64-gcc-debug
+  - test:linux-x64-gcc-release  
   dependencies:
   - test:linux-x64-gcc-debug
   - test:linux-x64-gcc-release
@@ -597,6 +599,8 @@ deploy:linux-x64-gcc11:
   extends: .deploy:deploy
   needs:
   - build:linux-x64-gcc11
+  - test:linux-x64-gcc-debug
+  - test:linux-x64-gcc-release
   dependencies:
   - build:linux-x64-gcc11
   - test:linux-x64-gcc-debug
