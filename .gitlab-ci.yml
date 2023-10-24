@@ -181,7 +181,7 @@ check:stream-usage:
    - gradle ${BUILD_JOB} --parallel --build-cache
    - cd ..
    - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
-   - cp gradle/simulant/build/outputs/aar/*.aar ${TARGET}/${BUILD_TYPE}/simulant
+   - cp gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant.aar
    - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
    - cp gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
   artifacts:
