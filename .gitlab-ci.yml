@@ -574,9 +574,12 @@ deploy:windows-x64-mingw:
 
 deploy:linux-x64-gcc:
   extends: .deploy:deploy
-  needs: ["test:linux-x64-gcc"]
+  needs:
+  - test:linux-x64-gcc-debug
+  - test:linux-x64-gcc-release    
   dependencies:
-   - test:linux-x64-gcc  
+  - test:linux-x64-gcc-debug
+  - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
 
