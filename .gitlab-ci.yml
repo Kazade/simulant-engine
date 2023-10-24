@@ -186,8 +186,8 @@ check:stream-usage:
    - cp gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
   artifacts:
     paths:
-      - ${TARGET}/release/simulant/
-      - ${TARGET}/release/tests/
+      - ${TARGET}/${BUILD_TYPE}/simulant/
+      - ${TARGET}/${BUILD_TYPE}/tests/
   cache:
     paths:
       - .gradle/wrapper
@@ -290,35 +290,6 @@ test:psp-mips-gcc:
     - ${TARGET}/debug/simulant/libsimulant.a
     - ${TARGET}/release/simulant/libsimulant.a
 
-deploy:psp-mips-gcc:
-  stage: deploy
-  only:
-   - master
-   - main
-   - next
-   - tags
-  image: $CI_REGISTRY_IMAGE:deploy
-  needs: ["test:psp-mips-gcc"]
-  dependencies:
-   - test:psp-mips-gcc
-  variables:
-   TARGET: psp-mips-gcc
-  script:
-   - mkdir -p ./upload/${TARGET}/lib
-   - mkdir -p ./upload/${TARGET}/lib/debug
-   - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.a ./upload/${TARGET}/lib/
-   - cp ${TARGET}/debug/simulant/libsimulant.a ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
-   - cd upload
-   - zip -r ${TARGET}.zip ${TARGET}/
-   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
-  artifacts:
-   paths:
-    - upload/${TARGET}.zip
-
 build:windows-x64-mingw:release:
   stage: build
   image: $CI_REGISTRY_IMAGE:windows-x64-mingw
@@ -394,34 +365,6 @@ test:windows-x64-mingw:
    paths:
     - ${TARGET}/debug/simulant/*.dll
     - ${TARGET}/release/simulant/*.dll
-
-deploy:windows-x64-mingw:
-  stage: deploy
-  only:
-    - master
-    - main
-    - next
-    - tags
-  image: $CI_REGISTRY_IMAGE:deploy
-  dependencies:
-   - test:windows-x64-mingw
-  variables:
-   TARGET: windows-x64-mingw
-  script:
-   - mkdir -p ./upload/${TARGET}/lib
-   - mkdir -p ./upload/${TARGET}/lib/debug
-   - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/*.dll ./upload/${TARGET}/lib/
-   - cp ${TARGET}/debug/simulant/*.dll ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
-   - cd upload
-   - zip -r ${TARGET}.zip ${TARGET}/
-   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
-  artifacts:
-   paths:
-    - upload/${TARGET}.zip
 
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
@@ -543,65 +486,6 @@ test:linux-x64-gcc-release:
    reports:
       junit: ${TARGET}/release/report.xml
 
-deploy:linux-x64-gcc:
-  stage: deploy
-  only:
-   - master
-   - main
-   - next
-   - tags
-  image: $CI_REGISTRY_IMAGE:deploy
-  dependencies:
-   - test:linux-x64-gcc-debug
-   - test:linux-x64-gcc-release
-  variables:
-   TARGET: linux-x64-gcc
-  script:
-   - mkdir -p ./upload/${TARGET}/lib
-   - mkdir -p ./upload/${TARGET}/lib/debug
-   - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.so* ./upload/${TARGET}/lib/
-   - cp ${TARGET}/debug/simulant/libsimulant.so* ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
-   - cd upload
-   - zip -r ${TARGET}.zip ${TARGET}/
-   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
-  artifacts:
-   paths:
-    - upload/${TARGET}.zip
-
-deploy:linux-x64-gcc11:
-  stage: deploy
-  only:
-   - master
-   - main
-   - next
-   - tags
-  image: $CI_REGISTRY_IMAGE:deploy
-  dependencies:
-   - build:linux-x64-gcc11
-   - test:linux-x64-gcc-debug
-   - test:linux-x64-gcc-release
-  variables:
-   TARGET: linux-x64-gcc11
-  script:
-   - mkdir -p ./upload/${TARGET}/lib
-   - mkdir -p ./upload/${TARGET}/lib/debug
-   - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.so* ./upload/${TARGET}/lib/
-   - cp ${TARGET}/debug/simulant/libsimulant.so* ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
-   - cd upload
-   - zip -r ${TARGET}.zip ${TARGET}/
-   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
-  artifacts:
-   paths:
-    - upload/${TARGET}.zip
-
 build:dreamcast-sh4-gcc:
   stage: build
   image: kazade/dreamcast-sdk
@@ -649,7 +533,7 @@ test:dreamcast-sh4-gcc:
     - ${TARGET}/release/simulant/*.a
     - ${TARGET}/release/*.out
 
-deploy:dreamcast-sh4-gcc:
+.deploy:deploy:
   stage: deploy
   only:
    - master
@@ -657,16 +541,12 @@ deploy:dreamcast-sh4-gcc:
    - next
    - tags
   image: $CI_REGISTRY_IMAGE:deploy
-  dependencies:
-   - test:dreamcast-sh4-gcc
-  variables:
-   TARGET: dreamcast-sh4-gcc
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
    - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.a* ./upload/${TARGET}/lib/
-   - cp ${TARGET}/debug/simulant/libsimulant.a* ./upload/${TARGET}/lib/debug/
+   - cp ${TARGET}/release/simulant/libsimulant.a ./upload/${TARGET}/lib/
+   - cp ${TARGET}/debug/simulant/libsimulant.a ./upload/${TARGET}/lib/debug/
    - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
@@ -676,6 +556,62 @@ deploy:dreamcast-sh4-gcc:
   artifacts:
    paths:
     - upload/${TARGET}.zip
+
+deploy:psp-mips-gcc:
+  extends: .deploy:deploy
+  needs: ["test:psp-mips-gcc"]
+  dependencies:
+   - test:psp-mips-gcc
+  variables:
+   TARGET: psp-mips-gcc
+
+deploy:windows-x64-mingw:
+  extends: .deploy:deploy
+  needs: ["test:windows-x64-mingw"]
+  dependencies:
+   - test:windows-x64-mingw  
+  variables:
+   TARGET: windows-x64-mingw
+
+deploy:linux-x64-gcc:
+  extends: .deploy:deploy
+  needs: ["test:linux-x64-gcc"]
+  dependencies:
+   - test:linux-x64-gcc  
+  variables:
+   TARGET: linux-x64-gcc
+
+deploy:linux-x64-gcc11:
+  extends: .deploy:deploy
+  needs: ["test:linux-x64-gcc11"]
+  dependencies:
+   - test:linux-x64-gcc11
+  variables:
+   TARGET: linux-x64-gcc11
+
+deploy:dreamcast-sh4-gcc:
+  extends: .deploy:deploy
+  needs: ["test:dreamcast-sh4-gcc"]
+  dependencies:
+   - test:dreamcast-sh4-gcc
+  variables:
+   TARGET: dreamcast-sh4-gcc
+
+deploy:android-armeabiv7a-clang:
+  extends: .deploy:deploy
+  needs: ["build:android-armeabiv7a-clang"]
+  dependencies:
+   - build:android-armeabiv7a-clang
+  variables:
+    TARGET: android-armeabiv7a-clang
+    
+deploy:android-x86_64-clang:
+  extends: .deploy:deploy
+  needs: ["build:android-x86_64-clang"]
+  dependencies:
+   - build:android-x86_64-clang
+  variables:
+    TARGET: android-x86_64-clang
 
 deploy:assets:
   stage: deploy
