@@ -606,17 +606,23 @@ deploy:dreamcast-sh4-gcc:
 
 deploy:android-armeabiv7a-clang:
   extends: .deploy:deploy
-  needs: ["build:android-armeabiv7a-clang"]
+  needs:
+   - build:android-armeabiv7a-clang:release
+   - build:android-armeabiv7a-clang:debug
   dependencies:
-   - build:android-armeabiv7a-clang
+   - build:android-armeabiv7a-clang:release
+   - build:android-armeabiv7a-clang:debug
   variables:
     TARGET: android-armeabiv7a-clang
     
 deploy:android-x86_64-clang:
   extends: .deploy:deploy
-  needs: ["build:android-x86_64-clang"]
+  needs:
+   - build:android-x86_64-clang:release
+   - build:android-x86_64-clang:debug    
   dependencies:
-   - build:android-x86_64-clang
+   - build:android-x86_64-clang:release
+   - build:android-x86_64-clang:debug
   variables:
     TARGET: android-x86_64-clang
 
