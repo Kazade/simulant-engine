@@ -592,6 +592,7 @@ deploy:linux-x64-gcc:
   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
+   LIB_EXT: so
 
 deploy:linux-x64-gcc11:
   extends: .deploy:deploy
@@ -605,6 +606,7 @@ deploy:linux-x64-gcc11:
   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc11
+   LIB_EXT: so
 
 deploy:dreamcast-sh4-gcc:
   extends: .deploy:deploy
