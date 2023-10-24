@@ -586,9 +586,12 @@ deploy:linux-x64-gcc:
 
 deploy:linux-x64-gcc11:
   extends: .deploy:deploy
-  needs: ["test:linux-x64-gcc11"]
+  needs:
+  - test:linux-x64-gcc11-debug
+  - test:linux-x64-gcc11-release    
   dependencies:
-   - test:linux-x64-gcc11
+  - test:linux-x64-gcc11-debug
+  - test:linux-x64-gcc11-release
   variables:
    TARGET: linux-x64-gcc11
 
