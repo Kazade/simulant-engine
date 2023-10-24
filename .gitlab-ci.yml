@@ -585,8 +585,8 @@ deploy:windows-x64-mingw:
 deploy:linux-x64-gcc:
   extends: .deploy:deploy
   needs:
-  - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release    
+  - build:linux-x64-gcc-debug
+  - build:linux-x64-gcc-release    
   dependencies:
   - test:linux-x64-gcc-debug
   - test:linux-x64-gcc-release
@@ -597,8 +597,6 @@ deploy:linux-x64-gcc11:
   extends: .deploy:deploy
   needs:
   - build:linux-x64-gcc11
-  - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release    
   dependencies:
   - build:linux-x64-gcc11
   - test:linux-x64-gcc-debug
