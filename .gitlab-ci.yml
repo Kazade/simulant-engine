@@ -483,6 +483,12 @@ test:linux-x64-gcc-release:
    - export SIMULANT_SOUND_DRIVER=null
    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
   artifacts:
+  artifacts:
+   when: always
+   paths:
+    - ${TARGET}/debug/simulant/*.a
+    - ${TARGET}/release/simulant/*.a
+    - ${TARGET}/release/*.out
    reports:
       junit: ${TARGET}/release/report.xml
 
@@ -540,13 +546,15 @@ test:dreamcast-sh4-gcc:
    - main
    - next
    - tags
+  variables:
+    LIB_EXT: a
   image: $CI_REGISTRY_IMAGE:deploy
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
    - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.a ./upload/${TARGET}/lib/
-   - cp ${TARGET}/debug/simulant/libsimulant.a ./upload/${TARGET}/lib/debug/
+   - cp ${TARGET}/release/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/
+   - cp ${TARGET}/debug/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/debug/
    - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
@@ -572,6 +580,7 @@ deploy:windows-x64-mingw:
    - test:windows-x64-mingw  
   variables:
    TARGET: windows-x64-mingw
+   LIB_EXT: dll
 
 deploy:linux-x64-gcc:
   extends: .deploy:deploy
@@ -615,6 +624,7 @@ deploy:android-armeabiv7a-clang:
    - build:android-armeabiv7a-clang:debug
   variables:
     TARGET: android-armeabiv7a-clang
+    LIB_EXT: aar
     
 deploy:android-x86_64-clang:
   extends: .deploy:deploy
@@ -626,6 +636,7 @@ deploy:android-x86_64-clang:
    - build:android-x86_64-clang:debug
   variables:
     TARGET: android-x86_64-clang
+    LIB_EXT: aar
 
 deploy:assets:
   stage: deploy
