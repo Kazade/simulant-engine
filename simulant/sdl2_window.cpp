@@ -62,13 +62,7 @@ SDL2Window::SDL2Window() {
     }
 }
 
-SDL2Window::~SDL2Window() {
-    try {
-        _clean_up();
-    } catch(...) {
-        S_ERROR("There was a problem shutting down the Window. Ignoring.");
-    }
-}
+SDL2Window::~SDL2Window() {}
 
 void SDL2Window::set_title(const std::string& title) {
     if(screen_) {

@@ -94,6 +94,7 @@ void Window::_clean_up() {
         _destroy_screen(screen.first);
     }
 
+    assert(compositor_);
     compositor_->clean_up();
     compositor_.reset();
 
