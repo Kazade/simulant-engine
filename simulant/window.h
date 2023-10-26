@@ -248,7 +248,7 @@ private:
 
     bool can_attach_sound_by_id() const { return false; }
 
-    bool initialized_;
+    bool initialized_ = false;
 
     uint16_t width_ = 0;
     uint16_t height_ = 0;

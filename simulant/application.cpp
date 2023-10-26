@@ -182,6 +182,11 @@ Application::~Application() {
     overlay_scene_->clean_up();
     overlay_scene_.reset();
 
+    if(window_) {
+        window_->_clean_up();
+        window_.reset();
+    }
+
     if(global_app == this) {
         global_app = nullptr;
     }

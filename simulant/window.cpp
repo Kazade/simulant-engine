@@ -88,18 +88,25 @@ void Window::create_defaults() {
 }
 
 void Window::_clean_up() {
+    if(!initialized_) {
+        return;
+    }
+
     update_conn_.disconnect();
     auto screens = screens_;
     for(auto& screen: screens) {
         _destroy_screen(screen.first);
     }
 
-    assert(compositor_);
-    compositor_->clean_up();
-    compositor_.reset();
+    if(compositor_) {
+        assert(compositor_);
+        compositor_->clean_up();
+        compositor_.reset();
+    }
 
     destroy_window();
     GLThreadCheck::clean_up();
+    initialized_ = false;
 }
 
 StageNode* Window::audio_listener()  {
