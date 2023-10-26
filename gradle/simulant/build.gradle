@@ -6,7 +6,13 @@ android {
     compileSdkVersion 32
 
     buildFeatures {
-        prefab true
+        prefabPublishing true
+    }
+
+    prefab {
+        simulant {
+            headers "$buildDir/headers"
+        }
     }
 
     defaultConfig {
@@ -60,6 +66,19 @@ android {
     }
 }
 
+task mkHeadersDirs {
+    mkdir "$buildDir/headers"
+    mkdir "$buildDir/headers/simulant"
+}
+
+task extractHeaders(type: Copy) {
+    from('../../simulant')
+    into("$buildDir/headers/simulant")
+    include('**/*.h')
+}
+
+extractHeaders.dependsOn mkHeadersDirs
+preBuild.dependsOn extractHeaders
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
