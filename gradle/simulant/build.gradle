@@ -2,9 +2,13 @@ apply plugin: 'com.android.library'
 
 android {
 	namespace "dev.simulant.simulant"
-    ndkVersion '23.1.7779620'
+    ndkVersion '25.2.9519653'
     compileSdkVersion 32
-    
+
+    buildFeatures {
+        prefab true
+    }
+
     defaultConfig {
         minSdkVersion 28
         targetSdkVersion 28
@@ -14,8 +18,8 @@ android {
 		    abiFilters = []
 		    abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
         }
-    }    
-    
+    }
+
 	externalNativeBuild {
 		cmake {
 			path "../../CMakeLists.txt"
@@ -41,7 +45,7 @@ android {
                 }
             }
         }
-        
+
         debug {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'),
