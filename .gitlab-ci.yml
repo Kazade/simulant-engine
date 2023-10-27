@@ -181,7 +181,7 @@ check:stream-usage:
    - gradle ${BUILD_JOB} --parallel --build-cache
    - cd ..
    - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
-   - cp gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/libsimulant.aar
+   - cp gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
    - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
    - cp gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
   artifacts:
@@ -554,8 +554,8 @@ test:dreamcast-sh4-gcc:
    - mkdir -p ./upload/${TARGET}/lib/debug
    - mkdir -p ./upload/${TARGET}/lib/release
    - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/release/
-   - cp ${TARGET}/debug/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/debug/
+   - cp ${TARGET}/release/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/release/
+   - cp ${TARGET}/debug/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/debug/
    - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
    - zip -r ${TARGET}.zip ${TARGET}/
