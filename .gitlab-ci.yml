@@ -552,6 +552,7 @@ test:dreamcast-sh4-gcc:
   script:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
+   - mkdir -p ./upload/${TARGET}/lib/release
    - mkdir -p ./upload/${TARGET}/include/simulant
    - cp ${TARGET}/release/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/release/
    - cp ${TARGET}/debug/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/debug/
