@@ -553,7 +553,7 @@ test:dreamcast-sh4-gcc:
    - mkdir -p ./upload/${TARGET}/lib
    - mkdir -p ./upload/${TARGET}/lib/debug
    - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/
+   - cp ${TARGET}/release/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/release/
    - cp ${TARGET}/debug/simulant/libsimulant.${LIB_EXT} ./upload/${TARGET}/lib/debug/
    - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
    - cd upload
