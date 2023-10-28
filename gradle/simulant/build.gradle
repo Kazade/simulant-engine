@@ -82,8 +82,15 @@ task extractHeaders(type: Copy) {
     include('**/*.h')
 }
 
+task extractIncludes(type: Copy) {
+    from('../../simulant')
+    into("$buildDir/headers/simulant")
+    include('**/*.inc')
+}
+
 extractHeaders.dependsOn mkHeadersDirs
-preBuild.dependsOn extractHeaders
+extractIncludes.dependsOn extractHeaders
+preBuild.dependsOn extractIncludes
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
