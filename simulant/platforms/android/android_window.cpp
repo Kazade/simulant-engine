@@ -18,22 +18,8 @@ struct AndroidInputEvent {
     int32_t source;
 };
 
-static android_app* ANDROID_APP = nullptr;
 static std::queue<int32_t> COMMANDS;
 static std::queue<AndroidInputEvent> EVENTS;
-
-int __attribute__((weak)) simulant_main(int argc, char* argv[]) {
-    _S_UNUSED(argc);
-    _S_UNUSED(argv);
-    return 0;
-}
-
-/* Stores the android_app globally and then calls the
- * user-defined main() entrypoint */
-void android_main(struct android_app* state) {
-    ANDROID_APP = state;
-    simulant_main(0, NULL);
-}
 
 namespace smlt {
 
@@ -66,9 +52,14 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
 }
 
 AndroidWindow::AndroidWindow() {
-    ANDROID_APP->userData = this;
-    ANDROID_APP->onAppCmd = android_handle_command;
-    ANDROID_APP->onInputEvent = android_handle_input;
+
+}
+
+void AndroidWindow::on_application_set(Application* app) {
+    android_app* aapp = (android_app*) app->platform_state();
+    aapp->userData = this;
+    aapp->onAppCmd = android_handle_command;
+    aapp->onInputEvent = android_handle_input;
 }
 
 void AndroidWindow::swap_buffers() {

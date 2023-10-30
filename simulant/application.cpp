@@ -111,7 +111,8 @@ namespace smlt {
 
 static bool PROFILING = false;
 
-Application::Application(const AppConfig &config):
+Application::Application(const AppConfig &config, void* platform_state):
+    platform_state_(platform_state),
     main_thread_id_(thread::this_thread_id()),
     time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),

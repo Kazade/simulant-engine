@@ -171,7 +171,7 @@ class Application {
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
 public:
-    Application(const AppConfig& config);
+    Application(const AppConfig& config, void* platform_state=nullptr);
     virtual ~Application();
 
     //Create the window, start do_initialization in a thread, show the loading scene
@@ -263,10 +263,15 @@ public:
         }
     }
 
+    void* platform_state() {
+        return platform_state_;
+    }
+
 protected:
     bool _call_init();
 
 private:
+    void* platform_state_ = nullptr;
     friend void cr_run_main(std::function<void ()> func);
     std::function<void ()> cr_synced_function_;
 
