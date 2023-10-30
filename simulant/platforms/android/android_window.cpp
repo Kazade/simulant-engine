@@ -24,11 +24,10 @@ static std::queue<AndroidInputEvent> EVENTS;
 namespace smlt {
 
 static const EGLint attrib_list [] = {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 0,
-    EGL_DEPTH_SIZE, 0,
     EGL_NONE
 };
 
@@ -67,15 +66,42 @@ void AndroidWindow::swap_buffers() {
 }
 
 bool AndroidWindow::_init_window() {
-    dpy_ = eglGetDisplay(0);
+    dpy_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglInitialize(dpy_, NULL, NULL);
 
-    EGLConfig config;
+    EGLConfig config = nullptr;
     EGLint num_configs;
 
-    eglChooseConfig(dpy_, attrib_list, &config, 1, &num_configs);
-
+    eglChooseConfig(dpy_, attrib_list, nullptr, 0, &num_configs);
     if(!num_configs) {
+        return false;
+    }
+
+    std::vector<EGLConfig> supported_configs(num_configs);
+    eglChooseConfig(
+        dpy_, attrib_list, &supported_configs[0], num_configs,
+        &num_configs
+    );
+
+    for(auto& cfg: supported_configs) {
+        EGLint r, g, b, d;
+        eglGetConfigAttrib(dpy_, cfg, EGL_RED_SIZE, &r);
+        eglGetConfigAttrib(dpy_, cfg, EGL_GREEN_SIZE, &g);
+        eglGetConfigAttrib(dpy_, cfg, EGL_BLUE_SIZE, &b);
+        eglGetConfigAttrib(dpy_, cfg, EGL_DEPTH_SIZE, &d);
+
+        if(r == 8 && g == 8 && b == 8 && d == 0) {
+            config = cfg;
+            break;
+        }
+    }
+
+    if(!config) {
+        config = supported_configs[0];
+    }
+
+    if(!config) {
+        S_ERROR("Unable to find supported EGL config");
         return false;
     }
 
@@ -87,9 +113,14 @@ bool AndroidWindow::_init_window() {
     set_width(width);
     set_height(height);
 
+    android_app* aapp = (android_app*) app->platform_state();
+    surface_ = eglCreateWindowSurface(dpy_, config, aapp->window, NULL);
     ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
-    surface_ = eglCreateWindowSurface(dpy_, config, 0, NULL);
-    eglMakeCurrent(dpy_, surface_, surface_, ctx_);
+    if(eglMakeCurrent(dpy_, surface_, surface_, ctx_) == EGL_FALSE) {
+        S_ERROR("Error making the context current");
+        return false;
+    }
+
     return true;
 }
 
