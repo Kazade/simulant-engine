@@ -105,7 +105,8 @@ void AndroidWindow::destroy_window() {
 }
 
 void AndroidWindow::check_events() {
-    if(ANDROID_APP->destroyRequested) {
+    android_app* aapp = (android_app*) get_app()->platform_state();
+    if(aapp->destroyRequested) {
         get_app()->stop_running();
         return;
     }
