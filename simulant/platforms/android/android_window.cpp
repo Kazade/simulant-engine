@@ -122,6 +122,11 @@ bool AndroidWindow::_init_window() {
 
     android_app* aapp = (android_app*) app->platform_state();
 
+    if(!aapp) {
+        S_ERROR("No platform state?");
+        return false;
+    }
+
     eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
     ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
 

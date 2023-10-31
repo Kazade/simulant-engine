@@ -249,6 +249,7 @@ bool Application::construct_window(const AppConfig& config) {
     }
 
     S_DEBUG("Constructing the window");
+    S_DEBUG("Platform state: {0}", platform_state_);
 
     window_ = SysWindow::create(this);
 
