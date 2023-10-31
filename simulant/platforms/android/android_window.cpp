@@ -24,6 +24,7 @@ static std::queue<AndroidInputEvent> EVENTS;
 namespace smlt {
 
 static const EGLint attrib_list [] = {
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
@@ -67,7 +68,15 @@ void AndroidWindow::swap_buffers() {
 
 bool AndroidWindow::_init_window() {
     dpy_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(dpy_, NULL, NULL);
+    if(dpy_ == EGL_NO_DISPLAY) {
+        S_ERROR("Couldn't get egl display");
+        return false;
+    }
+
+    if(eglInitialize(dpy_, NULL, NULL) == EGL_FALSE) {
+        S_ERROR("Couldn't initialize EGL");
+        return false;
+    }
 
     EGLConfig config = nullptr;
     EGLint num_configs;
@@ -83,14 +92,18 @@ bool AndroidWindow::_init_window() {
         &num_configs
     );
 
+    EGLint max_depth = 0;
     for(auto& cfg: supported_configs) {
-        EGLint r, g, b, d;
+        EGLint r, g, b, a, d;
         eglGetConfigAttrib(dpy_, cfg, EGL_RED_SIZE, &r);
         eglGetConfigAttrib(dpy_, cfg, EGL_GREEN_SIZE, &g);
         eglGetConfigAttrib(dpy_, cfg, EGL_BLUE_SIZE, &b);
+        eglGetConfigAttrib(dpy_, cfg, EGL_ALPHA_SIZE, &a);
         eglGetConfigAttrib(dpy_, cfg, EGL_DEPTH_SIZE, &d);
 
-        if(r == 8 && g == 8 && b == 8 && d == 0) {
+        if(r == 8 && g == 8 && b == 8 && d >= max_depth) {
+            S_DEBUG("Found config: {0}:{1}:{2}:{3} {4}", r, g, b, a, d);
+            max_depth = d;
             config = cfg;
             break;
         }
@@ -105,10 +118,11 @@ bool AndroidWindow::_init_window() {
         return false;
     }
 
-    EGLint width, height;
+    EGLint width, height, format;
 
-    eglGetConfigAttrib(dpy_, config, EGL_WIDTH, &width);
-    eglGetConfigAttrib(dpy_, config, EGL_HEIGHT, &height);
+    eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
+    eglQuerySurface(dpy_, config, EGL_WIDTH, &width);
+    eglQuerySurface(dpy_, config, EGL_HEIGHT, &height);
 
     set_width(width);
     set_height(height);
