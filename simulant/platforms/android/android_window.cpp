@@ -120,7 +120,7 @@ bool AndroidWindow::_init_window() {
 
     EGLint width, height, format;
 
-    eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
+    eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
     eglQuerySurface(dpy_, config, EGL_WIDTH, &width);
     eglQuerySurface(dpy_, config, EGL_HEIGHT, &height);
 
