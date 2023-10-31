@@ -121,14 +121,15 @@ bool AndroidWindow::_init_window() {
     EGLint width, height, format;
 
     eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
-    eglQuerySurface(dpy_, config, EGL_WIDTH, &width);
-    eglQuerySurface(dpy_, config, EGL_HEIGHT, &height);
+
+    android_app* aapp = (android_app*) app->platform_state();
+    surface_ = eglCreateWindowSurface(dpy_, config, aapp->window, NULL);
+    eglQuerySurface(dpy_, surface_, EGL_WIDTH, &width);
+    eglQuerySurface(dpy_, surface_, EGL_HEIGHT, &height);
 
     set_width(width);
     set_height(height);
 
-    android_app* aapp = (android_app*) app->platform_state();
-    surface_ = eglCreateWindowSurface(dpy_, config, aapp->window, NULL);
     ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
     if(eglMakeCurrent(dpy_, surface_, surface_, ctx_) == EGL_FALSE) {
         S_ERROR("Error making the context current");
