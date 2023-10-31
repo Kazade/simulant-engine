@@ -120,9 +120,11 @@ bool AndroidWindow::_init_window() {
 
     EGLint width, height, format;
 
-    eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
-
     android_app* aapp = (android_app*) app->platform_state();
+
+    eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
+    ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
+
     surface_ = eglCreateWindowSurface(dpy_, config, aapp->window, NULL);
     eglQuerySurface(dpy_, surface_, EGL_WIDTH, &width);
     eglQuerySurface(dpy_, surface_, EGL_HEIGHT, &height);
