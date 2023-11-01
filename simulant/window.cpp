@@ -67,9 +67,13 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
         application_->config_.development.force_renderer
     );
 
-    _init_renderer(renderer_.get());
-
-    renderer_->init_context();
+    /* If _init_renderer returns true, we init the context, otherwise
+     * it's up to the platform to init the context later. In the case of Android
+     * we need to wait for an event before we can initialize the renderer and
+     * context */
+    if(_init_renderer(renderer_.get())) {
+        renderer_->init_context();
+    }
 
     has_focus_ = true;
 

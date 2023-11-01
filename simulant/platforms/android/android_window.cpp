@@ -36,6 +36,7 @@ static void android_handle_command(struct android_app* app, int32_t cmd) {
     AndroidWindow* window = (AndroidWindow*) app->userData;
     assert(window);
 
+    S_INFO("Received command: {0}", cmd);
     COMMANDS.push(cmd);
 }
 
@@ -63,7 +64,9 @@ void AndroidWindow::on_application_set(Application* app) {
 }
 
 void AndroidWindow::swap_buffers() {
-    eglSwapBuffers(dpy_, surface_);
+    if(dpy_ != EGL_NO_DISPLAY) {
+        eglSwapBuffers(dpy_, surface_);
+    }
 }
 
 bool AndroidWindow::_init_window() {
@@ -75,7 +78,12 @@ bool AndroidWindow::_init_window() {
     }
 
     if(!aapp->window) {
-        S_DEBUG("Not creating window yet, there is no window");
+        S_DEBUG("No native window yet, so nothing to do!");
+        return true;
+    }
+
+    if(dpy_ != EGL_NO_DISPLAY) {
+        S_DEBUG("Not initializing window, already initialized");
         return false;
     }
 
@@ -148,16 +156,26 @@ bool AndroidWindow::_init_window() {
         return false;
     }
 
+    /* We manually init the context here, rather than letting the Window
+     * do it as with other platforms */
+    if(renderer_) {
+        renderer_->init_context();
+    }
+
     return true;
 }
 
 bool AndroidWindow::_init_renderer(Renderer *renderer) {
     _S_UNUSED(renderer);
-    return true;
+
+    /* We don't want to initialize the context yet, so we
+     * return false to say the renderer wasn't initialized */
+    return false;
 }
 
 void AndroidWindow::destroy_window() {
     eglTerminate(dpy_);
+    dpy_ = EGL_NO_DISPLAY;
 }
 
 void AndroidWindow::check_events() {
