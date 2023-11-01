@@ -67,6 +67,18 @@ void AndroidWindow::swap_buffers() {
 }
 
 bool AndroidWindow::_init_window() {
+    android_app* aapp = (android_app*) app->platform_state();
+
+    if(!aapp) {
+        S_ERROR("No platform state?");
+        return false;
+    }
+
+    if(!aapp->window) {
+        S_DEBUG("Not creating window yet, there is no window");
+        return false;
+    }
+
     dpy_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if(dpy_ == EGL_NO_DISPLAY) {
         S_ERROR("Couldn't get egl display");
@@ -120,13 +132,6 @@ bool AndroidWindow::_init_window() {
 
     EGLint width, height, format;
 
-    android_app* aapp = (android_app*) app->platform_state();
-
-    if(!aapp) {
-        S_ERROR("No platform state?");
-        return false;
-    }
-
     eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
     ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
 
@@ -148,8 +153,6 @@ bool AndroidWindow::_init_window() {
 
 bool AndroidWindow::_init_renderer(Renderer *renderer) {
     _S_UNUSED(renderer);
-
-    set_has_context(true); //Mark that we have a valid GL context
     return true;
 }
 
@@ -173,9 +176,13 @@ void AndroidWindow::check_events() {
                 break;
             case APP_CMD_INIT_WINDOW:
                 // The window is being shown, get it ready.
+                _init_window();
+                set_has_context(true);
                 break;
             case APP_CMD_TERM_WINDOW:
                 // The window is being hidden or closed, clean it up.
+                set_has_context(false);
+                destroy_window();
                 break;
             case APP_CMD_GAINED_FOCUS:
                 {
