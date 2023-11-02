@@ -67,12 +67,9 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
         application_->config_.development.force_renderer
     );
 
-    /* If _init_renderer returns true, we init the context, otherwise
-     * it's up to the platform to init the context later. In the case of Android
-     * we need to wait for an event before we can initialize the renderer and
-     * context */
-    if(_init_renderer(renderer_.get())) {
-        renderer_->init_context();
+    if(!_init_renderer(renderer_.get())) {
+        S_ERROR("Couldn't initialize the renderer");
+        return false;
     }
 
     has_focus_ = true;
@@ -159,8 +156,6 @@ bool Window::initialize_assets_and_devices() {
          * spending time loading anything */
         swap_buffers();
 
-        //watcher_ = Watcher::create(*this);
-
         S_INFO("Initializing the default resources");
 
         create_defaults();
@@ -223,6 +218,16 @@ void Window::set_has_context(bool value) {
     if(value == has_context_) return;
 
     has_context_ = value;
+
+    /* Tell the application we now have, or lost, the context */
+    if(application_) {
+        if(has_context_) {
+            renderer_->init_context();
+            application_->on_render_context_created();
+        } else {
+            application_->on_render_context_destroyed();
+        }
+    }
 }
 
 void Window::set_application(Application* app) {
