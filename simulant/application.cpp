@@ -539,11 +539,12 @@ int32_t Application::run() {
 
     while(run_frame()) {}
 
-    /* Make sure we unload and destroy all scenes */
-    scene_manager_->destroy_all();
-
     /* Run any coroutines before we shut down */
     update_coroutines();
+
+    /* Make sure we unload and destroy all scenes */
+    scene_manager_->destroy_all();
+    scene_manager_->clean_destroyed_scenes();
 
     // Shutdown and clean up the window
     window_->_clean_up();

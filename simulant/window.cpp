@@ -80,6 +80,13 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
 }
 
 void Window::create_defaults() {
+    // Initialize the render_sequence once we have a renderer
+    compositor_ = std::make_shared<Compositor>(this);
+    if(!compositor_->init()) {
+        S_ERROR("Failed to initialize the compositor");
+        return;
+    }
+
     //This needs to happen after SDL or whatever is initialized
     input_state_ = InputState::create(this);
     input_manager_ = InputManager::create(input_state_.get());
@@ -143,12 +150,6 @@ void Window::on_application_set(Application* app) {
 bool Window::initialize_assets_and_devices() {
     S_DEBUG("Starting initialization");
 
-    // Initialize the render_sequence once we have a renderer
-    compositor_ = std::make_shared<Compositor>(this);
-    if(!compositor_->init()) {
-        S_ERROR("Failed to initialize the compositor");
-        return false;
-    }
 
     if(!initialized_) {
         /* Swap buffers immediately after creation, this makes sure that
@@ -248,8 +249,8 @@ void Window::reset() {
     input->stop_text_input();
 
     compositor_->destroy_all_layers();
-    compositor_->clean_up();
-    compositor_.reset();
+    compositor_->clean_destroyed_layers();
+
     compositor_ = std::make_shared<Compositor>(this);
     compositor_->init();
 

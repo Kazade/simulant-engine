@@ -210,6 +210,7 @@ public:
 
     /* Unloads and destroys all scenes */
     void destroy_all();
+    void clean_destroyed_scenes();
 
     bool is_loaded(const std::string& route) const;
     void reset();

@@ -41,6 +41,20 @@ void SceneManager::destroy_all() {
         auto name = route.first;
         routes_queued_for_destruction_.insert(name);
     }
+
+    current_scene_.reset();
+}
+
+void SceneManager::clean_destroyed_scenes() {
+    /* Destroy any scenes that have been queued */
+    for(auto& name: routes_queued_for_destruction_) {
+        auto it = routes_.find(name);
+        if(it != routes_.end()) {
+            routes_.erase(it);
+        }
+    }
+
+    routes_queued_for_destruction_.clear();
 }
 
 void SceneManager::late_update(float dt) {
@@ -59,15 +73,7 @@ void SceneManager::late_update(float dt) {
         active_scene()->clean_up_destroyed_objects();
     }
 
-    /* Destroy any scenes that have been queued */
-    for(auto& name: routes_queued_for_destruction_) {
-        auto it = routes_.find(name);
-        if(it != routes_.end()) {
-            routes_.erase(it);
-        }
-    }
-
-    routes_queued_for_destruction_.clear();
+    clean_destroyed_scenes();
 
     /* Finally, if a scene has been activated, do so! */
     if(scene_activation_trigger_) {
