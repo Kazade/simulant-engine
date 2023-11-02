@@ -420,9 +420,10 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
         return false;
     }
 
-    set_has_context(true); //Mark that we have a valid GL context
+    SDL_GL_MakeCurrent(screen_, context_);
     SDL_GL_SetSwapInterval((vsync_enabled()) ? 1 : 0);
 
+    set_has_context(true); //Mark that we have a valid GL context
     return true;
 }
 

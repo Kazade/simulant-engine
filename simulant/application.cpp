@@ -343,27 +343,10 @@ bool Application::_call_init() {
         exit(1);
     }
 
-    /* We can't do this in the initialiser as we need a valid
-     * window before doing things like creating textures */
-    asset_manager_ = SharedAssetManager::create();
-
-    preload_default_font();
-
     sound_driver_ = window->create_sound_driver(config_.development.force_sound_driver);
     sound_driver_->startup();
 
     S_DEBUG("Sound driver started");
-
-    class OverlayScene : public Scene {
-    public:
-        OverlayScene(Window* window):
-            Scene(window) {}
-
-        void on_load() override {}
-    };
-
-    overlay_scene_.reset(new OverlayScene(window_.get()));
-    overlay_scene_->init();
 
     scene_manager_.reset(new SceneManager(window_.get()));
     scene_manager_->init();
@@ -487,14 +470,24 @@ bool Application::run_frame() {
     window_->input_state->update(dt); // Update input devices
     window_->input->update(dt); // Now update any manager stuff based on the new input state
 
-    run_fixed_updates();
-    run_update(dt);
+    /* Only run scene and asset manager updates if we have a valid context.
+       This is because the asset manager is only created when we get a context and
+       if we don't have an asset manager, we can't run any scene code */
+    {
+        thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
+        if(window_->has_context()) {
+            run_fixed_updates();
+            run_update(dt);
 
-    asset_manager_->update(time_keeper->delta_time());
+            asset_manager_->update(time_keeper->delta_time());
 
-    run_coroutines_and_late_update();
+            run_coroutines_and_late_update();
+        }
+    }
 
-    asset_manager_->run_garbage_collection();
+    if(asset_manager_) {
+        asset_manager_->run_garbage_collection();
+    }
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
@@ -744,6 +737,28 @@ std::string normalize_language_code(const std::string& language_code) {
 bool Application::load_arb_from_file(const smlt::Path& filename) {
     auto stream = vfs->open_file(filename);
     return load_arb(stream);
+}
+
+void Application::on_render_context_created() {
+    /* We can't do this in the initialiser as we need a valid
+     * window before doing things like creating textures */
+    asset_manager_ = SharedAssetManager::create();
+    preload_default_font();
+
+    class OverlayScene : public Scene {
+    public:
+        OverlayScene(Window* window):
+            Scene(window) {}
+
+        void on_load() override {}
+    };
+
+    overlay_scene_.reset(new OverlayScene(window_.get()));
+    overlay_scene_->init();
+}
+
+void Application::on_render_context_destroyed() {
+    asset_manager_.reset();
 }
 
 bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* language_code) {

@@ -382,6 +382,15 @@ private:
     std::vector<std::string> generate_potential_codes(const std::string& language_code);
     bool load_arb(std::shared_ptr<std::istream> stream, std::string* language_code = nullptr);
     bool load_arb_from_file(const smlt::Path& filename);
+
+
+    /* A number of steps in the application initialization depend on a
+     * viable GL context. Some platforms (cough, Android) won't have a
+     * native window at boot time, and will get one later on. This function
+     * is called by the Window when set_has_context(true) happens */
+    void on_render_context_created();
+
+    void on_render_context_destroyed();
 };
 
 Application* get_app();
