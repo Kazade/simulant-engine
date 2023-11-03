@@ -250,9 +250,7 @@ void Window::reset() {
 
     compositor_->destroy_all_layers();
     compositor_->clean_destroyed_layers();
-
-    compositor_ = std::make_shared<Compositor>(this);
-    compositor_->init();
+    compositor_->clean_up();
 
     S_DEBUG("Recreating defaults");
     create_defaults();
