@@ -167,10 +167,7 @@ bool AndroidWindow::_init_window() {
 
 bool AndroidWindow::_init_renderer(Renderer *renderer) {
     _S_UNUSED(renderer);
-
-    /* We don't want to initialize the context yet, so we
-     * return false to say the renderer wasn't initialized */
-    return false;
+    return true;
 }
 
 void AndroidWindow::destroy_window() {
