@@ -156,6 +156,8 @@ bool AndroidWindow::_init_window() {
         return false;
     }
 
+    S_DEBUG("GL initialized, initializing the context");
+
     /* We manually init the context here, rather than letting the Window
      * do it as with other platforms */
     if(renderer_) {
@@ -171,13 +173,24 @@ bool AndroidWindow::_init_renderer(Renderer *renderer) {
 }
 
 void AndroidWindow::destroy_window() {
+    S_DEBUG("Destroying the EGL display");
     eglTerminate(dpy_);
     dpy_ = EGL_NO_DISPLAY;
 }
 
 void AndroidWindow::check_events() {
     android_app* aapp = (android_app*) get_app()->platform_state();
+
+    struct android_poll_source* source;
+    int events = 0;
+    ALooper_pollAll(0, nullptr, &events, (void**) &source);
+
+    if (source != nullptr) {
+        source->process(aapp, source);
+    }
+
     if(aapp->destroyRequested) {
+        S_DEBUG("Destroy request received, shutting down");
         get_app()->stop_running();
         return;
     }
@@ -200,6 +213,7 @@ void AndroidWindow::check_events() {
                 destroy_window();
                 break;
             case APP_CMD_GAINED_FOCUS:
+                S_DEBUG("Focus gained");
                 {
                     //See Window::context_lock_ for details
                     thread::Lock<thread::Mutex> context_lock(this->context_lock());
@@ -209,6 +223,7 @@ void AndroidWindow::check_events() {
                 set_has_focus(true);
                 break;
             case APP_CMD_LOST_FOCUS:
+                S_DEBUG("Focus lost");
                 set_has_focus(false);
                 {
                     //See Window::context_lock_ for details

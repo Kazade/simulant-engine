@@ -28,6 +28,10 @@
 #include "gpu_program.h"
 #include "vbo_manager.h"
 
+#ifdef __ANDROID__
+#include <EGL/egl.h>
+#endif
+
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 #include "../../window.h"
@@ -709,7 +713,12 @@ void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buf
 }
 
 void GenericRenderer::init_context() {
+#ifdef __ANDROID__
+    if(!gladLoadGLES2Loader((GLADloadproc)eglGetProcAddress)) {
+#else
     if(!gladLoadGL()) {
+#endif
+        S_ERROR("Unable to initialize OpenGL");
         throw std::runtime_error("Unable to intialize OpenGL 2.1");
     }
 
@@ -727,11 +736,17 @@ void GenericRenderer::init_context() {
         GL_vendor, GL_renderer, GL_version, GL_extensions
     );
 
+    S_DEBUG("Setting up GL");
+    if(!glEnable) {
+        S_ERROR("glEnable wasn't found??");
+    }
+
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
 
     if(!default_gpu_program_) {
+        S_DEBUG("Creating GPU program");
         default_gpu_program_ = new_or_existing_gpu_program(
             default_vertex_shader, default_fragment_shader
         );
