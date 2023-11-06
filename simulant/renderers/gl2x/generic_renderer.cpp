@@ -46,9 +46,12 @@ namespace smlt {
 
 const std::string default_vertex_shader = R"(
 #version {0}
+
+attribute vec4 s_position;
 void main(void) {
-    gl_Position = ftransform();
+    gl_Position = s_position;
 }
+
 )";
 
 const std::string default_fragment_shader = R"(

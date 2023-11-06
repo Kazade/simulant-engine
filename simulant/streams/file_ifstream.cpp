@@ -1,3 +1,10 @@
+#ifdef __ANDROID__
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+#include <android_native_app_glue.h>
+#include "../application.h"
+#endif
+
 #include "file_ifstream.h"
 #include "../logging.h"
 
@@ -5,9 +12,53 @@ namespace smlt {
 
 uint32_t FileStreamBuf::open_file_counter = 0;
 
+
+#ifdef __ANDROID__
+
+static int android_read(void* cookie, char* buf, int size) {
+    return AAsset_read((AAsset*) cookie, buf, size);
+}
+
+static int android_write(void* cookie, const char* buf, int size) {
+    _S_UNUSED(cookie);
+    _S_UNUSED(buf);
+    _S_UNUSED(size);
+    return EACCES; // read-only
+}
+
+static fpos_t android_seek(void* cookie, fpos_t offset, int whence) {
+    return AAsset_seek((AAsset*) cookie, offset, whence);
+}
+
+static int android_close(void* cookie) {
+    AAsset_close((AAsset*) cookie);
+    return 0;
+}
+
+FILE* android_fopen(const char* fname, const char* mode) {
+    if(mode[0] == 'w') return NULL;
+
+    android_app* pdata = (android_app*) get_app()->platform_state();
+    if(!pdata) {
+        return NULL;
+    }
+
+    AAsset* asset = AAssetManager_open(pdata->activity->assetManager, fname, 0);
+    if(!asset) return NULL;
+
+    return funopen(asset, android_read, android_write, android_seek, android_close);
+}
+
+#endif
+
 FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
     ++open_file_counter;
+
+#ifdef __ANDROID__
+    filein_ = android_fopen(name.c_str(), mode.c_str());
+#else
     filein_ = fopen(name.c_str(), mode.c_str());
+#endif
 
     if(!filein_) {
         if(open_file_counter == FILE_OPEN_WARN_COUNT) {

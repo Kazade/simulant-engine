@@ -8,6 +8,12 @@
 #include <cassert>
 #include <algorithm>
 
+#ifdef __ANDROID__
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
+#include <android_native_app_glue.h>
+#endif
+
 #include "kfs.h"
 
 #ifdef _arch_dreamcast
@@ -40,6 +46,8 @@
 
 
 namespace kfs {
+
+static void* platform_data = nullptr;
 
 static std::string str_replace(const std::string& str, char a, char b) {
     std::string result;
@@ -127,6 +135,10 @@ static std::vector<std::string> common_prefix(const std::vector<std::string>& lh
     return shorter;
 }
 
+void set_platform_data(void* data) {
+    platform_data = data;
+}
+
 // =================== END UTILITY FUNCTIONS ======================================================
 // ================================================================================================
 
@@ -177,6 +189,22 @@ std::pair<Stat, bool> lstat(const Path& path) {
     ret.size = s.st_size;
 
     // FIXME: Other things!
+#elif defined(__ANDROID__)
+    AAssetManager* asset_manager = (AAssetManager*) platform_data;
+    if(asset_manager) {
+        auto asset = AAssetManager_open(asset_manager, path.c_str(), AASSET_MODE_UNKNOWN);
+        if(asset) {
+            AAsset_close(asset);
+
+            // FIXME: Fill out Stat structure
+            std::memset(&ret, 0, sizeof(ret));
+            return std::make_pair(ret, true);
+        } else {
+            return std::make_pair(ret, false);
+        }
+    } else {
+        return std::make_pair(ret, false);
+    }
 #else
     struct ::stat result;
 
@@ -416,6 +444,8 @@ Path exe_path() {
 #elif defined(__PSP__)
     /* FIXME: This isn't ideal, could possibly result in the wrong thing */
     return std::string(get_cwd()) + "/EBOOT.PBP";
+#elif defined(__ANDRIOID__)
+    return "/unknown.java";
 #else
     char buff[1024];
     ssize_t len = ::readlink("/proc/self/exe", buff, sizeof(buff)-1);
@@ -698,12 +728,24 @@ bool is_absolute(const Path& path) {
 }
 
 bool is_dir(const Path& path) {
+#ifdef __ANDROID__
+    AAssetManager* asset_manager = (AAssetManager*) platform_data;
+    if(asset_manager) {
+        auto asset = AAssetManager_openDir(asset_manager, path.c_str());
+        if(asset) {
+            AAssetDir_close(asset);
+        }
+        return false;
+    }
+    return false;
+#else
     auto st = lstat(path);
     if(st.second) {
         return S_ISDIR(st.first.mode);
     } else {
         return false;
     }
+#endif
 }
 
 bool is_file(const Path& path) {
