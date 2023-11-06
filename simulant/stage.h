@@ -40,7 +40,7 @@ public:
 
     Stage(Scene* owner);
 
-    const AABB& aabb() const {
+    const AABB& aabb() const override {
         static AABB aabb;
         return aabb;
     }
@@ -53,7 +53,7 @@ private:
     void do_generate_renderables(
         batcher::RenderQueue*,
         const Camera*,
-        const Viewport*, DetailLevel) {
+        const Viewport*, DetailLevel) override {
 
     }
 };

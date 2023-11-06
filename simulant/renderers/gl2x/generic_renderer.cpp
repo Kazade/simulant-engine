@@ -29,6 +29,7 @@
 #include "vbo_manager.h"
 
 #ifdef __ANDROID__
+#include <dlfcn.h>
 #include <EGL/egl.h>
 #endif
 
@@ -44,14 +45,14 @@ namespace smlt {
  * Material is incomplete (no shaders provided) */
 
 const std::string default_vertex_shader = R"(
-#version 120
+#version {0}
 void main(void) {
     gl_Position = ftransform();
 }
 )";
 
 const std::string default_fragment_shader = R"(
-#version 120
+#version {0}
 
 void main(void) {
     gl_FragColor = vec4(0.4,0.4,0.8,1.0);
@@ -712,9 +713,29 @@ void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buf
     }
 }
 
+#ifdef __ANDROID__
+static GLADloadproc gles_get_proc_address(const char* name) {
+    static void* libhandle = nullptr;
+    if(!libhandle) {
+        libhandle = dlopen("libGLESv2.so", RTLD_NOW);
+        assert(libhandle);
+        if(!libhandle) {
+            return nullptr;
+        }
+    }
+
+    GLADloadproc ret = (GLADloadproc) dlsym(libhandle, name);
+    if(!ret) {
+        ret = (GLADloadproc) eglGetProcAddress(name);
+    }
+
+    return ret;
+}
+#endif
+
 void GenericRenderer::init_context() {
 #ifdef __ANDROID__
-    if(!gladLoadGLES2Loader((GLADloadproc)eglGetProcAddress)) {
+    if(!gladLoadGLES2Loader((GLADloadproc) gles_get_proc_address)) {
 #else
     if(!gladLoadGL()) {
 #endif
@@ -737,10 +758,6 @@ void GenericRenderer::init_context() {
     );
 
     S_DEBUG("Setting up GL");
-    if(!glEnable) {
-        S_ERROR("glEnable wasn't found??");
-    }
-
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);

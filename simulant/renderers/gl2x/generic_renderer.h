@@ -32,7 +32,7 @@ namespace smlt {
 struct GL2RenderGroupImpl;
 class GenericRenderer;
 class VBOManager;
-class GPUBuffer;
+struct GPUBuffer;
 
 struct RenderState {
     Renderable* renderable;

@@ -285,7 +285,7 @@ public:
 
 protected:
     virtual bool on_create(void* params) = 0;
-    virtual bool on_destroy() { return true; }
+    virtual bool on_destroy() override { return true; }
     virtual void on_update(float dt) override { _S_UNUSED(dt); }
     virtual void on_fixed_update(float step) override { _S_UNUSED(step); }
     virtual void on_late_update(float dt) override { _S_UNUSED(dt); }
@@ -575,7 +575,6 @@ public:
 
 private:
     std::function<void (StageNode*)> callback_;
-    StageNode* it_ = nullptr;
     std::queue<StageNode*> queue_;
 };
 

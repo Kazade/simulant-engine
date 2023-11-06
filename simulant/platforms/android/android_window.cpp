@@ -150,7 +150,12 @@ bool AndroidWindow::_init_window() {
     set_width(width);
     set_height(height);
 
-    ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
+    const EGLint context_attribs [] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    ctx_ = eglCreateContext(dpy_, config, NULL, context_attribs);
     if(eglMakeCurrent(dpy_, surface_, surface_, ctx_) == EGL_FALSE) {
         S_ERROR("Error making the context current");
         return false;

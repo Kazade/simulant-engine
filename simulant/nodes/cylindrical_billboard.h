@@ -26,7 +26,7 @@ public:
         target_ = target;
     }
 
-    const AABB& aabb() const {
+    const AABB& aabb() const override {
         static AABB aabb;
         return aabb;
     }
@@ -34,7 +34,7 @@ private:
     StageNode* target_ = nullptr;
     Vec3 forward_;
 
-    bool on_create(void* params) {
+    bool on_create(void* params) override {
         CylindricalBillboardParams* args = (CylindricalBillboardParams*) params;
         forward_ = args->forward;
         return true;

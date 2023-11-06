@@ -12,7 +12,7 @@ typedef struct _PhysicsData PhysicsData;
 
 class PhysicsBody;
 class PhysicsService;
-class PhysicsMaterial;
+struct PhysicsMaterial;
 
 struct RayCastResult {
     PhysicsBody* other_body = nullptr;

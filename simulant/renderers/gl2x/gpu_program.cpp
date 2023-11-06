@@ -302,8 +302,17 @@ void GPUProgram::set_shader_source(ShaderType type, const std::string& source) {
         throw std::logic_error("Tried to set shader source to an empty string");
     }
 
+    /* FIXME: This is a bit hacky! */
+#ifdef __ANDROID__
+    const char* shader_version = "100";
+#else
+    const char* shader_version = "120";
+#endif
+
     ShaderInfo new_shader;
-    new_shader.source = source;
+
+    // FIXME: Named formatting would be much nicer...somehow
+    new_shader.source = _F(source).format(shader_version);
 
     is_linked_ = false; //We're no longer linked
     shaders_[type] = new_shader;
