@@ -162,7 +162,7 @@ static bool build_renderables(
         lights_visible.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) lights_visible.size()),
         lights_visible.end(),
         [=](LightPtr lhs, LightPtr rhs) {
-            /* FIXME: Sorting by the centre point is problematic. A renderable is made up
+            /* FIXME: Sorting by the center point is problematic. A renderable is made up
                  * of many polygons, by choosing the light closest to the center you may find that
                  * that polygons far away from the center aren't affected by lights when they should be.
                  * This needs more thought, probably. */
@@ -172,8 +172,8 @@ static bool build_renderables(
                 return false;
             }
 
-            float lhs_dist = (node->centre() - lhs->transform->position()).length_squared();
-            float rhs_dist = (node->centre() - rhs->transform->position()).length_squared();
+            float lhs_dist = (node->center() - lhs->transform->position()).length_squared();
+            float rhs_dist = (node->center() - rhs->transform->position()).length_squared();
             return lhs_dist < rhs_dist;
         }
     );

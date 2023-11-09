@@ -136,7 +136,7 @@ void ParticleSystem::do_generate_renderables(
     new_renderable.vertex_data = vertex_data_;    
     new_renderable.is_visible = true;
     new_renderable.material = script_->material().get();
-    new_renderable.centre = transformed_aabb().centre();
+    new_renderable.center = transformed_aabb().center();
 
     render_queue->insert_renderable(std::move(new_renderable));
 }

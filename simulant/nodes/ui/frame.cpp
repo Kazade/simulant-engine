@@ -32,7 +32,7 @@ void Frame::finalize_build() {
     float ax = -(anchor_point().x - 0.5f);
     float ay = -(anchor_point().y - 0.5f);
 
-    /* We reposition all the children relative to our centre */
+    /* We reposition all the children relative to our center */
     float cx = ax * outer_width().value;
     float cy = ay * outer_height().value;
 

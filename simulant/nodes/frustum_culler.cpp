@@ -42,7 +42,7 @@ void FrustumCuller::do_generate_renderables(
          * be visible (otherwise we could end up doing work for nothing) */
         if(node.is_visible() && !node.is_destroyed()) {
             auto aabb = node.transformed_aabb();
-            auto centre = aabb.centre();
+            auto center = aabb.center();
 
             if(!node.is_cullable() || frustum.intersects_aabb(aabb)) {
                 node.generate_renderables(render_queue, camera, viewport, detail_level);

@@ -82,7 +82,7 @@ struct alignas(8) Renderable final {
     LightPtr lights_affecting_this_frame[MAX_LIGHTS_PER_RENDERABLE];
     uint8_t light_count = 0;
 
-    smlt::Vec3 centre;
+    smlt::Vec3 center;
 };
 
 typedef std::shared_ptr<Renderable> RenderablePtr;
