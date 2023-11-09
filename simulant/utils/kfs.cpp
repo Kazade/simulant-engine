@@ -8,6 +8,8 @@
 #include <cassert>
 #include <algorithm>
 
+#include "../logging.h"
+
 #ifdef __ANDROID__
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
@@ -48,6 +50,10 @@
 namespace kfs {
 
 static void* platform_data = nullptr;
+
+void set_platform_data(void* data) {
+    platform_data = data;
+}
 
 static std::string str_replace(const std::string& str, char a, char b) {
     std::string result;
@@ -135,9 +141,6 @@ static std::vector<std::string> common_prefix(const std::vector<std::string>& lh
     return shorter;
 }
 
-void set_platform_data(void* data) {
-    platform_data = data;
-}
 
 // =================== END UTILITY FUNCTIONS ======================================================
 // ================================================================================================
@@ -194,15 +197,18 @@ std::pair<Stat, bool> lstat(const Path& path) {
     if(asset_manager) {
         auto asset = AAssetManager_open(asset_manager, path.c_str(), AASSET_MODE_UNKNOWN);
         if(asset) {
+            S_INFO("Found asset!");
             AAsset_close(asset);
 
             // FIXME: Fill out Stat structure
             std::memset(&ret, 0, sizeof(ret));
             return std::make_pair(ret, true);
         } else {
+            S_INFO("Couldn't find {0}!", path);
             return std::make_pair(ret, false);
         }
     } else {
+        S_INFO("No asset manager!");
         return std::make_pair(ret, false);
     }
 #else

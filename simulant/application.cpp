@@ -34,6 +34,7 @@ namespace smlt { typedef KOSWindow SysWindow; }
 #include "platforms/psp/psp_window.h"
 namespace smlt { typedef PSPWindow SysWindow; }
 #elif defined(__ANDROID__)
+#include <android_native_app_glue.h>
 #include "platforms/android/android_window.h"
 namespace smlt { typedef AndroidWindow SysWindow; }
 #else
@@ -116,8 +117,22 @@ Application::Application(const AppConfig &config, void* platform_state):
     main_thread_id_(thread::this_thread_id()),
     time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
-    vfs_(VirtualFileSystem::create()),
     config_(config) {
+
+    /* Start off with debug logging, this might change when the window is constructed */
+    smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
+    smlt::get_logger("/")->set_level(smlt::LOG_LEVEL_DEBUG);
+
+    /* Initialize the VFS after we've got some logging available */
+    vfs_ = VirtualFileSystem::create();
+
+#ifdef __ANDROID__
+    /* Android is horrible, this is so we can actually read paths */
+    android_app* app = (android_app*) platform_state;
+    if(app) {
+        kfs::set_platform_data(app->activity->assetManager);
+    }
+#endif
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
 
@@ -239,7 +254,6 @@ bool Application::construct_window(const AppConfig& config) {
         config_copy.log_level = LOG_LEVEL_DEBUG;
     }
 
-    smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
     smlt::get_logger("/")->set_level(config_copy.log_level);
 
     if(!config_copy.development.log_file.empty()) {

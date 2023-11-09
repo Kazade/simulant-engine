@@ -244,6 +244,7 @@ void MaterialScript::generate(Material& material) {
             std::string fragment_shader_path = pass["fragment_shader"]->to_str().value();
 
             auto parent_dir = Path(kfs::path::dir_name(filename_.str()));
+            S_INFO("Parent: {0}", parent_dir.str());
 
             bool added = false;
 

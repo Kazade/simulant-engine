@@ -206,19 +206,22 @@ void AndroidWindow::check_events() {
 
         switch(cmd) {
             case APP_CMD_SAVE_STATE:
+                S_DEBUG("CMD: Save state");
                 break;
             case APP_CMD_INIT_WINDOW:
+                S_DEBUG("CMD: Init window");
                 // The window is being shown, get it ready.
                 _init_window();
                 set_has_context(true);
                 break;
             case APP_CMD_TERM_WINDOW:
+                S_DEBUG("CMD: Term window");
                 // The window is being hidden or closed, clean it up.
                 set_has_context(false);
                 destroy_window();
                 break;
             case APP_CMD_GAINED_FOCUS:
-                S_DEBUG("Focus gained");
+                S_DEBUG("CMD: Focus gained");
                 {
                     //See Window::context_lock_ for details
                     thread::Lock<thread::Mutex> context_lock(this->context_lock());
@@ -228,7 +231,7 @@ void AndroidWindow::check_events() {
                 set_has_focus(true);
                 break;
             case APP_CMD_LOST_FOCUS:
-                S_DEBUG("Focus lost");
+                S_DEBUG("CMD: Focus lost");
                 set_has_focus(false);
                 {
                     //See Window::context_lock_ for details
