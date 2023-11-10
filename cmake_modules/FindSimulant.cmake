@@ -3,6 +3,12 @@
 # It prioritises architecture-specific paths relative to the CMAKE_SOURCE_DIR, before
 # searching the normal paths that CMake searches
 #
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(PATH_SUFFIX lib/debug/)
+else()
+    set(PATH_SUFFIX lib/release/)
+endif()
+
 IF(ANDROID)
     MESSAGE("Searching: ${CMAKE_SOURCE_DIR}/libraries/android-${ANDROID_ABI}-clang/")
     SET(
@@ -42,14 +48,9 @@ ENDIF()
 
 MESSAGE("${CMAKE_FIND_ROOT_PATH}")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(LIB_SEARCH_PATHS lib lib/debug)
-else()
-    set(LIB_SEARCH_PATHS lib lib/release)
-endif()
 
 FIND_PATH(SIMULANT_INCLUDE_DIR simulant/simulant.h PATH_SUFFIXES include PATHS ${SIMULANT_SEARCH_PATHS})
-FIND_LIBRARY(SIMULANT_LIBRARY NAMES simulant PATH_SUFFIXES ${LIB_SEARCH_PATHS} PATHS ${SIMULANT_SEARCH_PATHS})
+FIND_LIBRARY(SIMULANT_LIBRARY NAMES simulant PATH_SUFFIXES ${PATH_SUFFIX} PATHS ${SIMULANT_SEARCH_PATHS} NO_CACHE)
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Simulant REQUIRED_VARS SIMULANT_LIBRARY SIMULANT_INCLUDE_DIR)
