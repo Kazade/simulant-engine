@@ -68,7 +68,10 @@ void AndroidWindow::on_application_set(Application* app) {
     aapp->activity->vm->AttachCurrentThread(&jni, NULL);
     auto clazz = jni->GetObjectClass(aapp->activity->clazz);
     auto methodID = jni->GetMethodID(clazz, "setRequestedOrientation", "(I)V");
-    jni->CallVoidMethod(app->activity->clazz, methodID, an_orientation);
+
+    const int landscape = 0;
+    // const int portrait = 1;
+    jni->CallVoidMethod(aapp->activity->clazz, methodID, landscape);
     aapp->activity->vm->DetachCurrentThread();
 }
 
