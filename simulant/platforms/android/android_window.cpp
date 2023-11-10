@@ -1,6 +1,7 @@
 #include <android/input.h>
 #include <GLES/gl.h>
 #include <android_native_app_glue.h>
+#include <jni.h>
 
 #include "android_window.h"
 
@@ -61,6 +62,14 @@ void AndroidWindow::on_application_set(Application* app) {
     aapp->userData = this;
     aapp->onAppCmd = android_handle_command;
     aapp->onInputEvent = android_handle_input;
+
+    /* Set the orientation. FIXME: Use the config! */
+    JNIEnv* jni;
+    aapp->activity->vm->AttachCurrentThread(&jni, NULL);
+    auto clazz = jni->GetObjectClass(aapp->activity->clazz);
+    auto methodID = jni->GetMethodID(clazz, "setRequestedOrientation", "(I)V");
+    jni->CallVoidMethod(app->activity->clazz, methodID, an_orientation);
+    aapp->activity->vm->DetachCurrentThread();
 }
 
 void AndroidWindow::swap_buffers() {
