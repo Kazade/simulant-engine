@@ -15,7 +15,7 @@ workflow:
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_REF_NAME == "next"'
     - if: '$CI_COMMIT_TAG'
-    
+
 stages:
  - prepare
  - check
@@ -66,7 +66,7 @@ prepare:linux-x64-gcc:
       - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
         changes:
           - .gitlab-ci.yml
-          
+
 prepare:linux-x64-gcc11:
   stage: prepare
   image: docker:latest
@@ -192,7 +192,7 @@ check:stream-usage:
     paths:
       - .gradle/wrapper
       - .gradle/caches
-      
+
 build:android-armeabiv7a-clang:release:
   extends: .build:android
   variables:
@@ -200,7 +200,7 @@ build:android-armeabiv7a-clang:release:
     TARGET: android-armeabiv7a-clang
     BUILD_TYPE: release
     BUILD_JOB: assembleRelease
-    
+
 build:android-armeabiv7a-clang:debug:
   extends: .build:android
   variables:
@@ -208,7 +208,7 @@ build:android-armeabiv7a-clang:debug:
     TARGET: android-armeabiv7a-clang
     BUILD_TYPE: debug
     BUILD_JOB: assembleDebug
-    
+
 build:android-x86_64-clang:release:
   extends: .build:android
   variables:
@@ -224,7 +224,7 @@ build:android-x86_64-clang:debug:
     TARGET: android-x86_64-clang
     BUILD_TYPE: debug
     BUILD_JOB: assembleDebug
-      
+
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
@@ -298,7 +298,7 @@ build:windows-x64-mingw:release:
     TARGET: windows-x64-mingw
   script:
    - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release   
+   - cd ${TARGET}/release
    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
@@ -578,7 +578,7 @@ deploy:windows-x64-mingw:
   extends: .deploy:deploy
   needs: ["test:windows-x64-mingw"]
   dependencies:
-   - test:windows-x64-mingw  
+   - test:windows-x64-mingw
   variables:
    TARGET: windows-x64-mingw
    LIB_EXT: dll
@@ -588,13 +588,13 @@ deploy:linux-x64-gcc:
   needs:
   - build:linux-x64-gcc
   - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release  
+  - test:linux-x64-gcc-release
   dependencies:
   - test:linux-x64-gcc-debug
   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
-   LIB_EXT: so
+   LIB_EXT: so*
 
 deploy:linux-x64-gcc11:
   extends: .deploy:deploy
@@ -608,7 +608,7 @@ deploy:linux-x64-gcc11:
   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc11
-   LIB_EXT: so
+   LIB_EXT: so*
 
 deploy:dreamcast-sh4-gcc:
   extends: .deploy:deploy
@@ -629,12 +629,12 @@ deploy:android-armeabiv7a-clang:
   variables:
     TARGET: android-armeabiv7a-clang
     LIB_EXT: aar
-    
+
 deploy:android-x86_64-clang:
   extends: .deploy:deploy
   needs:
    - build:android-x86_64-clang:release
-   - build:android-x86_64-clang:debug    
+   - build:android-x86_64-clang:debug
   dependencies:
    - build:android-x86_64-clang:release
    - build:android-x86_64-clang:debug
