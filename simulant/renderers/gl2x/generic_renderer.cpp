@@ -415,8 +415,15 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     // Active the new program, if this render group uses a different one
     if(!prev || prev->gpu_program_id() != next->gpu_program_id()) {
         program_ = this->renderer_->gpu_program(pass_->gpu_program_id()).get();
+        assert(program_);
+
         program_->build();
         program_->activate();
+    }
+
+    if(!program_) {
+        S_ERROR("Failed to find GPU program");
+        return;
     }
 
     /* First we bind any used texture properties to their associated variables */
@@ -429,8 +436,12 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             continue;
         }
 
-        const TexturePtr* tex_prop;
-        pass_->property_value(name, tex_prop);
+        const TexturePtr* tex_prop = nullptr;
+        if(!pass_->property_value(name, tex_prop)) {
+            continue;
+        }
+        assert(tex_prop);
+
         const TexturePtr tex = *tex_prop;
 
         // Do we use this texture property? Then bind the texture appropriately
@@ -469,6 +480,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
+#ifndef __ANDROID__
     if(!prev || prev->point_size() != next->point_size()) {
         glPointSize(next->point_size());
     }
@@ -485,6 +497,15 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
     }
+
+    if(!prev || prev->shade_model() != next->shade_model()) {
+        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+            GLCheck(glShadeModel, GL_SMOOTH);
+        } else {
+            GLCheck(glShadeModel, GL_FLAT);
+        }
+    }
+#endif
 
     if(!prev || prev->cull_mode() != next->cull_mode()) {
         if(next->cull_mode() != CULL_MODE_NONE) {
@@ -511,14 +532,6 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     if(!prev || prev->blend_func() != next->blend_func()) {
         renderer_->set_blending_mode(next->blend_func());
-    }
-
-    if(!prev || prev->shade_model() != next->shade_model()) {
-        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
-            GLCheck(glShadeModel, GL_SMOOTH);
-        } else {
-            GLCheck(glShadeModel, GL_FLAT);
-        }
     }
 
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
