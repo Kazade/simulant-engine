@@ -48,10 +48,10 @@ bool StatsPanel::on_init() {
     }
 
     auto hw = 32;
-    auto label_width = ui::Px(window_->width() * 0.5f);
+    auto label_width = ui::Px(scene->window->width() * 0.5f);
 
     const float diff = 32;
-    float vheight = window_->height() - diff;
+    float vheight = scene->window->height() - diff;
 
     auto heading1 = scene->create_node<ui::Label>("Performance", label_width);
     heading1->transform->set_position_2d(Vec2(hw, vheight));
@@ -99,11 +99,6 @@ bool StatsPanel::on_init() {
 void StatsPanel::on_clean_up() {
     frame_started_.disconnect();
 
-    if(pipeline_) {
-        pipeline_->destroy();
-        pipeline_ = nullptr;
-    }
-
     Panel::on_clean_up();
 
     fps_ = nullptr;
@@ -138,8 +133,8 @@ void StatsPanel::rebuild_ram_graph() {
     smlt::Color color = smlt::Color::BLUE;
     color.a = 0.35;
 
-    float width = window_->width();
-    float height = window_->height() * 0.4f;
+    float width = scene->window->width();
+    float height = scene->window->height() * 0.4f;
 
     ram_graph_mesh_->reset(
         ram_graph_mesh_->vertex_data->vertex_specification()
@@ -293,16 +288,6 @@ void StatsPanel::update_stats() {
             );
         }); */
     }
-}
-
-void StatsPanel::do_activate() {
-    pipeline_->activate();
-    S_DEBUG("Activating stats panel");
-}
-
-void StatsPanel::do_deactivate() {
-    pipeline_->deactivate();
-    S_DEBUG("Deactivating stats panel");
 }
 
 }

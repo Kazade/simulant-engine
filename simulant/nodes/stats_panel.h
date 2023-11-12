@@ -41,15 +41,8 @@ public:
 
     bool on_init() override;
     void on_clean_up() override;
+
 private:
-    Window* window_ = nullptr;
-
-    void do_activate() override;
-    void do_deactivate() override;
-
-    CameraPtr ui_camera_;
-    LayerPtr pipeline_;
-
     void update_stats();
 
     int32_t get_memory_usage_in_megabytes();

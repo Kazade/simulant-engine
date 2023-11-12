@@ -66,8 +66,8 @@ private:
     KeyboardCode activation_key_ = KEYBOARD_CODE_NONE;
     bool is_active_ = false;
 
-    virtual void do_activate() = 0;
-    virtual void do_deactivate() = 0;
+    virtual void do_activate() {}
+    virtual void do_deactivate() {}
 };
 
 
