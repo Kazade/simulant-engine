@@ -20,7 +20,7 @@
 
 #include <list>
 
-#include "panel.h"
+#include "../panels/panel.h"
 #include "../types.h"
 #include "../generic/managed.h"
 
@@ -28,11 +28,15 @@ namespace smlt {
 
 class Window;
 
+struct StatsPanelParams {};
+
 class StatsPanel:
     public Panel,
     public RefCounted<StatsPanel> {
 
 public:
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STATS_PANEL, StatsPanelParams);
+
     StatsPanel(Scene* owner);
 
     bool on_init() override;
@@ -70,6 +74,11 @@ private:
     sig::connection frame_started_;
     bool first_update_ = true;
     float last_update_ = 0.0f;
+
+    bool on_create(void *params) override {
+        _S_UNUSED(params);
+        return true;
+    }
 };
 
 }

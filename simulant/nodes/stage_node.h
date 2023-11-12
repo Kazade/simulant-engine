@@ -269,9 +269,13 @@ public:
      *  dynamic_cast on the entire subtree. Use for testing
      *  *only*. */
     template<typename T>
-    size_t count_nodes_by_type() const {
+    size_t count_nodes_by_type(bool include_destroyed=false) const {
         size_t ret = 0;
         for(auto& node: each_descendent()) {
+            if(node.is_destroyed() && !include_destroyed) {
+                continue;
+            }
+
             if(dynamic_cast<const T*>(&node)) {
                 ++ret;
             }
@@ -490,6 +494,11 @@ public:
 
     const AABB transformed_aabb() const override;
 
+    /* Default implementation, assume nodes have no volume unless they do */
+    const AABB& aabb() const override {
+        return AABB::ZERO;
+    }
+
     /* Control shading on the stage node (behaviour depends on the type of node) */
     ShadowCast shadow_cast() const { return shadow_cast_; }
     void set_shadow_cast(ShadowCast cast) {
@@ -623,4 +632,8 @@ typedef default_init_ptr<StageNode> StageNodePtr;
 #include "iterators/descendent_iterator.inc"
 #include "iterators/ancestor_iterator.inc"
 
-
+#define S_DEFINE_STAGE_NODE_META(node_type_id, params_type_klass) \
+struct Meta { \
+    const static StageNodeType node_type = node_type_id; \
+    typedef params_type_klass params_type; \
+}

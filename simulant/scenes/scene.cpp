@@ -40,6 +40,8 @@
 #include "../nodes/smooth_follow.h"
 #include "../nodes/fly_controller.h"
 #include "../nodes/skies/skybox.h"
+#include "../nodes/debug.h"
+#include "../nodes/stats_panel.h"
 #include "../nodes/ui/image.h"
 #include "../nodes/ui/label.h"
 #include "../nodes/ui/button.h"
@@ -99,6 +101,8 @@ void Scene::register_builtin_nodes() {
     register_stage_node<StaticBody>();
     register_stage_node<DynamicBody>();
     register_stage_node<KinematicBody>();
+    register_stage_node<Debug>();
+    register_stage_node<StatsPanel>();
 
     register_stage_node<ui::Label>();
     register_stage_node<ui::Image>();

@@ -199,12 +199,12 @@ public:
 
         actor->destroy();
         // Should be the same, the original actor is still lingering
-        assert_equal(scene->count_nodes_by_type<smlt::Stage>(), count + 1);
+        assert_equal(scene->count_nodes_by_type<smlt::Stage>(true), count + 1);
 
         application->run_frame();
 
         // Back to where we were
-        assert_equal(scene->count_nodes_by_type<smlt::Stage>(), count);
+        assert_equal(scene->count_nodes_by_type<smlt::Stage>(true), count);
     }
 
     void test_lights_are_freed() {
@@ -216,11 +216,11 @@ public:
 
         light->destroy();
 
-        assert_equal(scene->count_nodes_by_type<DirectionalLight>(), count + 1);
+        assert_equal(scene->count_nodes_by_type<DirectionalLight>(true), count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<DirectionalLight>(), count);
+        assert_equal(scene->count_nodes_by_type<DirectionalLight>(true), count);
     }
 
     void test_particle_systems_are_freed() {
@@ -237,11 +237,11 @@ public:
 
         particle_system->destroy();
 
-        assert_equal(scene->count_nodes_by_type<ParticleSystem>(), count + 1);
+        assert_equal(scene->count_nodes_by_type<ParticleSystem>(true), count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<ParticleSystem>(), count);
+        assert_equal(scene->count_nodes_by_type<ParticleSystem>(true), count);
     }
 
     void test_geoms_are_freed() {
@@ -256,11 +256,11 @@ public:
 
         geom->destroy();
 
-        assert_equal(scene->count_nodes_by_type<Geom>(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Geom>(true), count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Geom>(), count);
+        assert_equal(scene->count_nodes_by_type<Geom>(true), count);
     }
 
     void test_cameras_are_freed() {
@@ -272,11 +272,11 @@ public:
         assert_equal(scene->count_nodes_by_type<Camera>(), count + 1);
         camera->destroy();
 
-        assert_equal(scene->count_nodes_by_type<Camera>(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Camera>(true), count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Camera>(), count);
+        assert_equal(scene->count_nodes_by_type<Camera>(true), count);
     }
 
     void test_pipelines_are_freed() {
@@ -302,10 +302,10 @@ public:
         stage->destroy();
 
         assert_true(stage->is_destroyed());
-        assert_equal(scene->count_nodes_by_type<Stage>(), count + 1);
+        assert_equal(scene->count_nodes_by_type<Stage>(true), count + 1);
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Stage>(), count);
+        assert_equal(scene->count_nodes_by_type<Stage>(true), count);
     }
 
     void test_backgrounds_are_freed() {
@@ -330,11 +330,11 @@ public:
 
         sprite->destroy();
 
-        assert_true(scene->count_nodes_by_type<Sprite>() >= count + 1);
+        assert_true(scene->count_nodes_by_type<Sprite>(true) >= count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Sprite>(), count);
+        assert_equal(scene->count_nodes_by_type<Sprite>(true), count);
     }
 };
 

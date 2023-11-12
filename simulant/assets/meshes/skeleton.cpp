@@ -3,7 +3,7 @@
 #include "skeleton.h"
 #include "rig.h"
 
-#include "../../debug.h"
+#include "../../nodes/debug.h"
 
 namespace smlt {
 

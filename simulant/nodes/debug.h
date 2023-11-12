@@ -18,10 +18,11 @@
 
 #pragma once
 
-#include "types.h"
-#include "generic/managed.h"
-#include "meshes/mesh.h"
-#include "nodes/stage_node.h"
+#include "stage_node.h"
+#include "../types.h"
+#include "../generic/managed.h"
+#include "../meshes/mesh.h"
+
 
 namespace smlt {
 
@@ -29,10 +30,7 @@ struct DebugParams {};
 
 class Debug : public StageNode {
 public:
-    struct Meta {
-        typedef DebugParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_DEBUG;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DEBUG, DebugParams);
 
     Debug(Scene* owner);
     virtual ~Debug();
@@ -111,6 +109,11 @@ private:
     float current_point_size_ = 0.001f;
 
     sig::Connection frame_finished_connection_;
+
+    bool on_create(void *params) override {
+        _S_UNUSED(params);
+        return true;
+    }
 };
 
 }

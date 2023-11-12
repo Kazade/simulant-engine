@@ -19,7 +19,7 @@
 
 #include "actor.h"
 
-#include "../debug.h"
+#include "../nodes/debug.h"
 #include "../stage.h"
 #include "../animation.h"
 #include "../renderers/renderer.h"

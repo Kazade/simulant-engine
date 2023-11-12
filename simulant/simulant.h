@@ -65,7 +65,7 @@
 #include "nodes/particle_system.h"
 #include "nodes/camera.h"
 #include "nodes/audio_source.h"
-
+#include "nodes/debug.h"
 #include "nodes/locators/node_locator.h"
 
 #include "sound.h"
@@ -79,7 +79,7 @@
 #include "texture.h"
 #include "application.h"
 #include "assets/binary_data.h"
-#include "debug.h"
+
 
 #include "platform.h"
 #include "vfs.h"
