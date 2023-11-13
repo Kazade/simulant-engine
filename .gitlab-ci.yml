@@ -209,38 +209,6 @@ build:android-all-clang:debug:
     BUILD_TYPE: debug
     BUILD_JOB: assembleDebug
 
-build:android-armeabiv7a-clang:release:
-  extends: .build:android
-  variables:
-    ABI: armeabi-v7a
-    TARGET: android-armeabiv7a-clang
-    BUILD_TYPE: release
-    BUILD_JOB: assembleRelease
-
-build:android-armeabiv7a-clang:debug:
-  extends: .build:android
-  variables:
-    ABI: armeabi-v7a
-    TARGET: android-armeabiv7a-clang
-    BUILD_TYPE: debug
-    BUILD_JOB: assembleDebug
-
-build:android-x86_64-clang:release:
-  extends: .build:android
-  variables:
-    ABI: x86_64
-    TARGET: android-x86_64-clang
-    BUILD_TYPE: release
-    BUILD_JOB: assembleRelease
-
-build:android-x86_64-clang:debug:
-  extends: .build:android
-  variables:
-    ABI: x86_64
-    TARGET: android-x86_64-clang
-    BUILD_TYPE: debug
-    BUILD_JOB: assembleDebug
-
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
@@ -644,30 +612,6 @@ deploy:android-all-clang:
    - build:android-all-clang:debug
   variables:
     TARGET: android-all-clang
-    LIB_EXT: aar
-
-deploy:android-armeabiv7a-clang:
-  extends: .deploy:deploy
-  needs:
-   - build:android-armeabiv7a-clang:release
-   - build:android-armeabiv7a-clang:debug
-  dependencies:
-   - build:android-armeabiv7a-clang:release
-   - build:android-armeabiv7a-clang:debug
-  variables:
-    TARGET: android-armeabiv7a-clang
-    LIB_EXT: aar
-
-deploy:android-x86_64-clang:
-  extends: .deploy:deploy
-  needs:
-   - build:android-x86_64-clang:release
-   - build:android-x86_64-clang:debug
-  dependencies:
-   - build:android-x86_64-clang:release
-   - build:android-x86_64-clang:debug
-  variables:
-    TARGET: android-x86_64-clang
     LIB_EXT: aar
 
 deploy:assets:
