@@ -193,6 +193,22 @@ check:stream-usage:
       - .gradle/wrapper
       - .gradle/caches
 
+build:android-all-clang:release:
+  extends: .build:android
+  variables:
+    ABI: x86_64;armeabi-v7a;arm64-v8a
+    TARGET: android-all-clang
+    BUILD_TYPE: release
+    BUILD_JOB: assembleRelease
+
+build:android-all-clang:debug:
+  extends: .build:android
+  variables:
+    ABI: x86_64;armeabi-v7a;arm64-v8a
+    TARGET: android-all-clang
+    BUILD_TYPE: debug
+    BUILD_JOB: assembleDebug
+
 build:android-armeabiv7a-clang:release:
   extends: .build:android
   variables:
@@ -617,6 +633,18 @@ deploy:dreamcast-sh4-gcc:
    - test:dreamcast-sh4-gcc
   variables:
    TARGET: dreamcast-sh4-gcc
+
+deploy:android-all-clang:
+  extends: .deploy:deploy
+  needs:
+   - build:android-all-clang:release
+   - build:android-all-clang:debug
+  dependencies:
+   - build:android-all-clang:release
+   - build:android-all-clang:debug
+  variables:
+    TARGET: android-all-clang
+    LIB_EXT: aar
 
 deploy:android-armeabiv7a-clang:
   extends: .deploy:deploy
