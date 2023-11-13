@@ -634,6 +634,6 @@ typedef default_init_ptr<StageNode> StageNodePtr;
 
 #define S_DEFINE_STAGE_NODE_META(node_type_id, params_type_klass) \
 struct Meta { \
-    const static StageNodeType node_type = node_type_id; \
+    const static smlt::StageNodeType node_type = node_type_id; \
     typedef params_type_klass params_type; \
 }
