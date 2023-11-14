@@ -226,13 +226,14 @@ protected:
     }
 
     virtual void destroy_window() = 0;
+    virtual void on_application_set(Application* app);
 
     Window();
 
     void set_has_context(bool value=true);
     thread::Mutex& context_lock() { return context_lock_; }
 
-    void set_application(Application* app) { application_ = app; }
+    void set_application(Application* app);
 
     void update_screens(float dt);
     sig::Connection update_conn_;

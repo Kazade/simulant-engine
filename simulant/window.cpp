@@ -136,6 +136,10 @@ bool Window::has_explicit_audio_listener() const {
     return audio_listener_ != nullptr;
 }
 
+void Window::on_application_set(Application* app) {
+    _S_UNUSED(app);
+}
+
 bool Window::initialize_assets_and_devices() {
     S_DEBUG("Starting initialization");
 
@@ -265,6 +269,12 @@ void Window::destroy_panels() {
     }
     panels.clear();
 }
+
+void Window::set_application(Application* app) {
+    application_ = app;
+    on_application_set(app);
+}
+
 
 /**
  * @brief Window::reset
