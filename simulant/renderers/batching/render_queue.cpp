@@ -45,8 +45,8 @@ RenderQueue::RenderQueue() {
 
 }
 
-void RenderQueue::reset(StageNode* stage, RenderGroupFactory* factory, CameraPtr camera) {
-    stage_node_ = stage;
+void RenderQueue::reset(Stage* stage, RenderGroupFactory* factory, CameraPtr camera) {
+    stage_ = stage;
     render_group_factory_ = factory;
     camera_ = camera;
 
@@ -60,7 +60,7 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
      * and then adds the renderable to that pass's render queue
      */
 
-    assert(stage_node_);
+    assert(stage_);
     assert(camera_);
     assert(render_group_factory_);
 
@@ -125,7 +125,7 @@ void RenderQueue::clear() {
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     thread::Lock<thread::Mutex> lock(queue_lock_);
 
-    visitor->start_traversal(*this, frame_id, stage_node_);
+    visitor->start_traversal(*this, frame_id, stage_);
 
     for(auto& queue: priority_queues_) {
         IterationType pass_iteration_type = ITERATION_TYPE_ONCE;
@@ -184,7 +184,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         }
     }
 
-    visitor->end_traversal(*this, stage_node_);
+    visitor->end_traversal(*this, stage_);
 }
 
 std::size_t RenderQueue::group_count(Pass pass_number) const {

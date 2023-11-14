@@ -49,10 +49,10 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
 
     /* Make sure we always rebind the currently bound gpu program when
      * we leave this function */
-    auto current = renderer_->current_gpu_program();
+    auto current = renderer_->current_gpu_program_id();
     raii::Finally then([&]() {
-        if(current && current->id() != id()) {
-            auto program = current;
+        if(current && current != id()) {
+            auto program = renderer_->gpu_program(current);
             if(program) {
                 program->activate();
             } else {
@@ -64,7 +64,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
         }
     });
 
-    if(!current || current->id() != id()) {
+    if(current != id()) {
         activate();
     }
 
@@ -150,11 +150,11 @@ void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& v
     }
 }
 
-void GPUProgram::set_uniform_color(const int32_t loc, const Color& values) {
+void GPUProgram::set_uniform_colour(const int32_t loc, const Colour& values) {
     set_uniform_vec4(loc, Vec4(values.r, values.g, values.b, values.a));
 }
 
-void GPUProgram::set_uniform_color(const std::string& uniform_name, const Color& values) {
+void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {
     Vec4 tmp(values.r, values.g, values.b, values.a);
     set_uniform_vec4(uniform_name, tmp);
 }
@@ -262,11 +262,11 @@ void GPUProgram::prepare_program() {
     S_DEBUG("Created program {0}", program_object_);
 }
 
-bool GPUProgram::on_init() {
+bool GPUProgram::init() {
     return true;
 }
 
-void GPUProgram::on_clean_up()  {
+void GPUProgram::clean_up()  {
     if(GLThreadCheck::is_current() && program_object_) {
         S_DEBUG("Destroying GPU program: {0}", program_object_);
 
