@@ -2,9 +2,24 @@ apply plugin: 'com.android.library'
 
 android {
 	namespace "dev.simulant.simulant"
-    ndkVersion '23.1.7779620'
+    ndkVersion '25.2.9519653'
     compileSdkVersion 32
-    
+
+    buildFeatures {
+        prefabPublishing true
+    }
+
+    prefab {
+        simulant {
+            headers "$buildDir/headers"
+        }
+    }
+
+    packagingOptions {
+        exclude("**/libsimulant.so")
+        exclude("**/libc++_shared.so")
+    }
+
     defaultConfig {
         minSdkVersion 28
         targetSdkVersion 28
@@ -14,8 +29,8 @@ android {
 		    abiFilters = []
 		    abiFilters.addAll("${ABI_FILTERS}".split(';').collect{it as String})
         }
-    }    
-    
+    }
+
 	externalNativeBuild {
 		cmake {
 			path "../../CMakeLists.txt"
@@ -37,11 +52,11 @@ android {
 
             externalNativeBuild{
                 cmake{
-                    arguments "-DCMAKE_BUILD_TYPE=Release"
+                    arguments "-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared"
                 }
             }
         }
-        
+
         debug {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'),
@@ -49,13 +64,33 @@ android {
 
             externalNativeBuild{
                 cmake{
-                    arguments "-DCMAKE_BUILD_TYPE=Debug"
+                    arguments "-DCMAKE_BUILD_TYPE=Debug", "-DANDROID_STL=c++_shared"
                 }
             }
         }
     }
 }
 
+task mkHeadersDirs {
+    mkdir "$buildDir/headers"
+    mkdir "$buildDir/headers/simulant"
+}
+
+task extractHeaders(type: Copy) {
+    from('../../simulant')
+    into("$buildDir/headers/simulant")
+    include('**/*.h')
+}
+
+task extractIncludes(type: Copy) {
+    from('../../simulant')
+    into("$buildDir/headers/simulant")
+    include('**/*.inc')
+}
+
+extractHeaders.dependsOn mkHeadersDirs
+extractIncludes.dependsOn extractHeaders
+preBuild.dependsOn extractIncludes
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

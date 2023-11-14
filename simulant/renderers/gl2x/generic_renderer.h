@@ -32,7 +32,7 @@ namespace smlt {
 struct GL2RenderGroupImpl;
 class GenericRenderer;
 class VBOManager;
-class GPUBuffer;
+struct GPUBuffer;
 
 struct RenderState {
     Renderable* renderable;
@@ -46,9 +46,9 @@ class GL2RenderQueueVisitor : public batcher::RenderQueueVisitor {
 public:
     GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera);
 
-    void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage);
+    void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, StageNode *stage);
     void visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration);
-    void end_traversal(const batcher::RenderQueue &queue, Stage* stage);
+    void end_traversal(const batcher::RenderQueue &queue, StageNode* stage);
 
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next);
     void change_material_pass(const MaterialPass* prev, const MaterialPass* next);
@@ -57,7 +57,7 @@ public:
 private:
     GenericRenderer* renderer_;
     CameraPtr camera_;
-    Colour global_ambient_;
+    Color global_ambient_;
 
     GPUProgram* program_ = nullptr;
     const MaterialPass* pass_ = nullptr;
@@ -91,12 +91,12 @@ public:
 
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) override;
 
-    GPUProgramID new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source) override;
+    GPUProgramPtr new_or_existing_gpu_program(const std::string& vertex_shader_source, const std::string& fragment_shader_source) override;
 
     GPUProgramPtr gpu_program(const GPUProgramID& program_id) const override;
-    GPUProgramID current_gpu_program_id() const override;
+    GPUProgramPtr current_gpu_program() const override;
     bool supports_gpu_programs() const override { return true; }
-    GPUProgramID default_gpu_program_id() const override;
+    GPUProgramPtr default_gpu_program() const override;
 
     std::string name() const override {
         return "gl2x";
@@ -105,14 +105,14 @@ public:
     void prepare_to_render(const Renderable* renderable) override;
 private:
     GPUProgramManager program_manager_;
-    GPUProgramID default_gpu_program_id_ = 0;
+    GPUProgramPtr default_gpu_program_ = 0;
 
     std::shared_ptr<VBOManager> buffer_manager_;
 
     void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera);
-    void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Colour& global_ambient);
+    void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Color& global_ambient);
 
     void set_auto_attributes_on_shader(GPUProgram *program, const Renderable* buffer, GPUBuffer* buffers);
     void set_blending_mode(BlendType type);

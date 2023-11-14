@@ -75,8 +75,8 @@ public:
     GPUProgram(const GPUProgram&) = delete;
     GPUProgram& operator=(const GPUProgram&) = delete;
 
-    bool init() override;
-    void clean_up() override;
+    bool on_init() override;
+    void on_clean_up() override;
 
     bool is_current() const;
     void activate();
@@ -113,7 +113,7 @@ public:
 
     void set_uniform_int(const int32_t loc, const int32_t value);
     void set_uniform_mat4x4(const int32_t loc, const Mat4& values);
-    void set_uniform_colour(const int32_t loc, const Colour& values);
+    void set_uniform_color(const int32_t loc, const Color& values);
     void set_uniform_vec4(const int32_t loc, const Vec4& values);
     void set_uniform_float(const int32_t loc, const float value);
 
@@ -123,7 +123,7 @@ public:
     void set_uniform_mat3x3(const std::string& uniform_name, const Mat3& values);
     void set_uniform_vec3(const std::string& uniform_name, const Vec3& values);
     void set_uniform_vec4(const std::string& uniform_name, const Vec4& values);
-    void set_uniform_colour(const std::string& uniform_name, const Colour& values);
+    void set_uniform_color(const std::string& uniform_name, const Color& values);
     void set_uniform_mat4x4_array(const std::string& uniform_name, const std::vector<Mat4>& matrices);
 
     void relink() {

@@ -33,6 +33,7 @@ class MaterialPass;
 class Renderer;
 struct Renderable;
 class Light;
+class StageNode;
 
 namespace batcher {
 
@@ -115,7 +116,7 @@ class RenderQueueVisitor {
 public:
     virtual ~RenderQueueVisitor() {}
 
-    virtual void start_traversal(const RenderQueue& queue, uint64_t frame_id, Stage* stage) = 0;
+    virtual void start_traversal(const RenderQueue& queue, uint64_t frame_id, StageNode* stage) = 0;
 
     virtual void change_render_group(const RenderGroup* prev, const RenderGroup* next) = 0;
 
@@ -123,7 +124,7 @@ public:
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
 
     virtual void visit(const Renderable*, const MaterialPass*, Iteration) = 0;
-    virtual void end_traversal(const RenderQueue& queue, Stage* stage) = 0;
+    virtual void end_traversal(const RenderQueue& queue, StageNode* stage) = 0;
 };
 
 
@@ -132,7 +133,7 @@ public:
     MaterialChangeWatcher(RenderQueue* queue):
         queue_(queue) {}
 
-    void watch(MaterialID material_id, Renderable* renderable);
+    void watch(AssetID material_id, Renderable* renderable);
     void unwatch(Renderable* renderable);
 
 private:
@@ -141,15 +142,15 @@ private:
     /*
      * We store a list of all the renderables that need to be reinserted if a material changes
      */
-    std::unordered_map<MaterialID, std::set<Renderable*>> renderables_by_material_;
+    std::unordered_map<AssetID, std::set<Renderable*>> renderables_by_material_;
 
     /*
      * We store connections to material update signals, when all renderables are removed
      * for a particular material, we disconnect the signal
      */
-    std::unordered_map<MaterialID, sig::connection> material_update_conections_;
+    std::unordered_map<AssetID, sig::connection> material_update_conections_;
 
-    void on_material_changed(MaterialID material);
+    void on_material_changed(AssetID material);
 };
 
 
@@ -159,7 +160,7 @@ public:
 
     RenderQueue();
 
-    void reset(Stage* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
+    void reset(StageNode* stage, RenderGroupFactory* render_group_factory, CameraPtr camera);
 
     void insert_renderable(Renderable&& renderable); // IMPORTANT, must update RenderGroups if they exist already
     void clear();
@@ -175,12 +176,12 @@ public:
     }
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
-    // minimize GL state changes (e.g. if a RenderGroupImpl orders by TextureID, then ShaderID
+    // minimize GL state changes (e.g. if a RenderGroupImpl orders by AssetID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
     typedef ContiguousMultiMap<RenderGroup, std::size_t> SortedRenderables;
 
-    Stage* stage_ = nullptr;
+    StageNode* stage_node_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 

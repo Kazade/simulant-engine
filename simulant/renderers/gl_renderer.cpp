@@ -36,7 +36,7 @@
 
 namespace smlt {
 
-void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
+void GLRenderer::on_texture_register(AssetID tex_id, Texture* texture) {
     _S_UNUSED(tex_id);
 
     GLuint gl_tex;
@@ -53,7 +53,7 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
     texture->_set_renderer_specific_id(gl_tex);
 }
 
-void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
+void GLRenderer::on_texture_unregister(AssetID tex_id, Texture* texture) {
     _S_UNUSED(tex_id);
 
     GLuint gl_tex = texture->_renderer_specific_id();

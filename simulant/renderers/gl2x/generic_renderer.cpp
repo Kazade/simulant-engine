@@ -28,6 +28,11 @@
 #include "gpu_program.h"
 #include "vbo_manager.h"
 
+#ifdef __ANDROID__
+#include <dlfcn.h>
+#include <EGL/egl.h>
+#endif
+
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 #include "../../window.h"
@@ -40,14 +45,17 @@ namespace smlt {
  * Material is incomplete (no shaders provided) */
 
 const std::string default_vertex_shader = R"(
-#version 120
+#version {0}
+
+attribute vec4 s_position;
 void main(void) {
-    gl_Position = ftransform();
+    gl_Position = s_position;
 }
+
 )";
 
 const std::string default_fragment_shader = R"(
-#version 120
+#version {0}
 
 void main(void) {
     gl_FragColor = vec4(0.4,0.4,0.8,1.0);
@@ -61,8 +69,8 @@ struct GL2RenderGroupImpl {
     GPUProgramID shader_id;
 };
 
-GPUProgramID GenericRenderer::default_gpu_program_id() const {
-    return default_gpu_program_id_;
+GPUProgramPtr GenericRenderer::default_gpu_program() const {
+    return default_gpu_program_;
 }
 
 GenericRenderer::GenericRenderer(Window *window):
@@ -98,29 +106,29 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass, GPUProgram* p
 
     auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
     if(pos_loc > -1) {
-        auto pos = (light) ? light->absolute_position() : Vec3();
-        auto vec = (light) ? Vec4(pos, (light->type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
+        auto pos = (light) ? light->transform->position() : Vec3();
+        auto vec = (light) ? Vec4(pos, (light->node_type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0 : 1.0) : Vec4();
         program->set_uniform_vec4(pos_loc, vec);
     }
 
     auto amb_loc = program->locate_uniform(LIGHT_AMBIENT_PROPERTY, true);
     if(amb_loc > -1) {
-        program->set_uniform_colour(
+        program->set_uniform_color(
             amb_loc,
-            (light) ? light->ambient() : Colour::NONE
+            (light) ? light->ambient() : Color::NONE
         );
     }
 
     auto diff_loc = program->locate_uniform(LIGHT_DIFFUSE_PROPERTY, true);
     if(diff_loc > -1) {
-        auto diffuse = (light) ? light->diffuse() : smlt::Colour::NONE;
-        program->set_uniform_colour(diff_loc, diffuse);
+        auto diffuse = (light) ? light->diffuse() : smlt::Color::NONE;
+        program->set_uniform_color(diff_loc, diffuse);
     }
 
     auto spec_loc = program->locate_uniform(LIGHT_SPECULAR_PROPERTY, true);
     if(spec_loc > -1) {
-        auto specular = (light) ? light->specular() : smlt::Colour::NONE;
-        program->set_uniform_colour(spec_loc, specular);
+        auto specular = (light) ? light->specular() : smlt::Color::NONE;
+        program->set_uniform_color(spec_loc, specular);
     }
 
     auto ca_loc = program->locate_uniform(LIGHT_CONSTANT_ATTENUATION_PROPERTY, true);
@@ -147,17 +155,17 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
 
     auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY_NAME, true);
     if(amb_loc > -1) {
-        program->set_uniform_colour(AMBIENT_PROPERTY_NAME, pass->ambient());
+        program->set_uniform_color(AMBIENT_PROPERTY_NAME, pass->ambient());
     }
 
     auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY_NAME, true);
     if(diff_loc > -1) {
-        program->set_uniform_colour(DIFFUSE_PROPERTY_NAME, pass->diffuse());
+        program->set_uniform_color(DIFFUSE_PROPERTY_NAME, pass->diffuse());
     }
 
     auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
     if(spec_loc > -1) {
-        program->set_uniform_colour(SPECULAR_PROPERTY_NAME, pass->specular());
+        program->set_uniform_color(SPECULAR_PROPERTY_NAME, pass->specular());
     }
 
     auto shin_loc = program->locate_uniform(SHININESS_PROPERTY_NAME, true);
@@ -196,14 +204,14 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
     }
 }
 
-void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Colour &global_ambient) {
+void GenericRenderer::set_stage_uniforms(const MaterialPass *pass, GPUProgram *program, const Color &global_ambient) {
     _S_UNUSED(pass);
 
     auto varname = "s_global_ambient";
     auto loc = program->locate_uniform(varname, true);
 
     if(loc > -1) {
-        program->set_uniform_colour(loc, global_ambient);
+        program->set_uniform_color(loc, global_ambient);
     }
 }
 
@@ -333,7 +341,7 @@ void GenericRenderer::set_blending_mode(BlendType type) {
         break;
         case BLEND_ALPHA: GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         break;
-        case BLEND_COLOUR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        case BLEND_COLOR: GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
         break;
         case BLEND_MODULATE: GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
         break;
@@ -349,7 +357,7 @@ std::shared_ptr<batcher::RenderQueueVisitor> GenericRenderer::get_render_queue_v
     return std::make_shared<GL2RenderQueueVisitor>(this, camera);
 }
 
-smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
+smlt::GPUProgramPtr smlt::GenericRenderer::new_or_existing_gpu_program(const std::string &vertex_shader_source, const std::string &fragment_shader_source) {
     /* FIXME: This doesn't do what the function implies... it should either be called new_gpu_program, or it should try to return an existing progra
      * if the source matches */
 
@@ -362,7 +370,7 @@ smlt::GPUProgramID smlt::GenericRenderer::new_or_existing_gpu_program(const std:
         program->build();
     });
 
-    return program->id();
+    return program;
 }
 
 smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(const smlt::GPUProgramID &program_id) const {
@@ -379,15 +387,15 @@ void GL2RenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
     do_visit(renderable, material_pass, iteration);
 }
 
-void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) {
+void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, StageNode* stage) {
     _S_UNUSED(queue);
     _S_UNUSED(frame_id);
     _S_UNUSED(stage);
 
-    global_ambient_ = stage->ambient_light();
+    global_ambient_ = stage->scene->lighting->ambient_light();
 }
 
-void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, Stage* stage) {
+void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, StageNode *stage) {
     _S_UNUSED(queue);
     _S_UNUSED(stage);
 }
@@ -407,8 +415,15 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     // Active the new program, if this render group uses a different one
     if(!prev || prev->gpu_program_id() != next->gpu_program_id()) {
         program_ = this->renderer_->gpu_program(pass_->gpu_program_id()).get();
+        assert(program_);
+
         program_->build();
         program_->activate();
+    }
+
+    if(!program_) {
+        S_ERROR("Failed to find GPU program");
+        return;
     }
 
     /* First we bind any used texture properties to their associated variables */
@@ -421,8 +436,12 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             continue;
         }
 
-        const TexturePtr* tex_prop;
-        pass_->property_value(name, tex_prop);
+        const TexturePtr* tex_prop = nullptr;
+        if(!pass_->property_value(name, tex_prop)) {
+            continue;
+        }
+        assert(tex_prop);
+
         const TexturePtr tex = *tex_prop;
 
         // Do we use this texture property? Then bind the texture appropriately
@@ -461,6 +480,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
+#ifndef __ANDROID__
     if(!prev || prev->point_size() != next->point_size()) {
         glPointSize(next->point_size());
     }
@@ -477,6 +497,15 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
     }
+
+    if(!prev || prev->shade_model() != next->shade_model()) {
+        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+            GLCheck(glShadeModel, GL_SMOOTH);
+        } else {
+            GLCheck(glShadeModel, GL_FLAT);
+        }
+    }
+#endif
 
     if(!prev || prev->cull_mode() != next->cull_mode()) {
         if(next->cull_mode() != CULL_MODE_NONE) {
@@ -503,14 +532,6 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     if(!prev || prev->blend_func() != next->blend_func()) {
         renderer_->set_blending_mode(next->blend_func());
-    }
-
-    if(!prev || prev->shade_model() != next->shade_model()) {
-        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
-            GLCheck(glShadeModel, GL_SMOOTH);
-        } else {
-            GLCheck(glShadeModel, GL_FLAT);
-        }
     }
 
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
@@ -666,15 +687,15 @@ static GLenum convert_arrangement(MeshArrangement arrangement) {
     }
 }
 
-GPUProgramID GenericRenderer::current_gpu_program_id() const {
+GPUProgramPtr GenericRenderer::current_gpu_program() const {
     GLint id;
     GLCheck(glGetIntegerv, GL_CURRENT_PROGRAM, &id);
 
-    GPUProgramID ret;
+    GPUProgramPtr ret;
 
     program_manager_.each([&](uint32_t, GPUProgramPtr program) {
         if(program->program_object() == (GLuint) id) {
-            ret = program->id();
+            ret = program;
         }
     });
 
@@ -708,8 +729,33 @@ void GenericRenderer::send_geometry(const Renderable *renderable, GPUBuffer *buf
     }
 }
 
+#ifdef __ANDROID__
+static GLADloadproc gles_get_proc_address(const char* name) {
+    static void* libhandle = nullptr;
+    if(!libhandle) {
+        libhandle = dlopen("libGLESv2.so", RTLD_NOW);
+        assert(libhandle);
+        if(!libhandle) {
+            return nullptr;
+        }
+    }
+
+    GLADloadproc ret = (GLADloadproc) dlsym(libhandle, name);
+    if(!ret) {
+        ret = (GLADloadproc) eglGetProcAddress(name);
+    }
+
+    return ret;
+}
+#endif
+
 void GenericRenderer::init_context() {
+#ifdef __ANDROID__
+    if(!gladLoadGLES2Loader((GLADloadproc) gles_get_proc_address)) {
+#else
     if(!gladLoadGL()) {
+#endif
+        S_ERROR("Unable to initialize OpenGL");
         throw std::runtime_error("Unable to intialize OpenGL 2.1");
     }
 
@@ -727,12 +773,16 @@ void GenericRenderer::init_context() {
         GL_vendor, GL_renderer, GL_version, GL_extensions
     );
 
+    S_DEBUG("Setting up GL");
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
 
-    if(!default_gpu_program_id_) {
-        default_gpu_program_id_ = new_or_existing_gpu_program(default_vertex_shader, default_fragment_shader);
+    if(!default_gpu_program_) {
+        S_DEBUG("Creating GPU program");
+        default_gpu_program_ = new_or_existing_gpu_program(
+            default_vertex_shader, default_fragment_shader
+        );
     }
 }
 

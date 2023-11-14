@@ -49,10 +49,10 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
 
     /* Make sure we always rebind the currently bound gpu program when
      * we leave this function */
-    auto current = renderer_->current_gpu_program_id();
+    auto current = renderer_->current_gpu_program();
     raii::Finally then([&]() {
-        if(current && current != id()) {
-            auto program = renderer_->gpu_program(current);
+        if(current && current->id() != id()) {
+            auto program = current;
             if(program) {
                 program->activate();
             } else {
@@ -64,7 +64,7 @@ GLint GPUProgram::locate_uniform(const std::string& uniform_name, bool fail_sile
         }
     });
 
-    if(current != id()) {
+    if(!current || current->id() != id()) {
         activate();
     }
 
@@ -150,11 +150,11 @@ void GPUProgram::set_uniform_vec4(const std::string& uniform_name, const Vec4& v
     }
 }
 
-void GPUProgram::set_uniform_colour(const int32_t loc, const Colour& values) {
+void GPUProgram::set_uniform_color(const int32_t loc, const Color& values) {
     set_uniform_vec4(loc, Vec4(values.r, values.g, values.b, values.a));
 }
 
-void GPUProgram::set_uniform_colour(const std::string& uniform_name, const Colour& values) {
+void GPUProgram::set_uniform_color(const std::string& uniform_name, const Color& values) {
     Vec4 tmp(values.r, values.g, values.b, values.a);
     set_uniform_vec4(uniform_name, tmp);
 }
@@ -262,11 +262,11 @@ void GPUProgram::prepare_program() {
     S_DEBUG("Created program {0}", program_object_);
 }
 
-bool GPUProgram::init() {
+bool GPUProgram::on_init() {
     return true;
 }
 
-void GPUProgram::clean_up()  {
+void GPUProgram::on_clean_up()  {
     if(GLThreadCheck::is_current() && program_object_) {
         S_DEBUG("Destroying GPU program: {0}", program_object_);
 
@@ -302,8 +302,17 @@ void GPUProgram::set_shader_source(ShaderType type, const std::string& source) {
         throw std::logic_error("Tried to set shader source to an empty string");
     }
 
+    /* FIXME: This is a bit hacky! */
+#ifdef __ANDROID__
+    const char* shader_version = "100";
+#else
+    const char* shader_version = "120";
+#endif
+
     ShaderInfo new_shader;
-    new_shader.source = source;
+
+    // FIXME: Named formatting would be much nicer...somehow
+    new_shader.source = _F(source).format(shader_version);
 
     is_linked_ = false; //We're no longer linked
     shaders_[type] = new_shader;
