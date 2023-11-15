@@ -252,6 +252,16 @@ void Window::set_has_context(bool value) {
     if(value == has_context_) return;
 
     has_context_ = value;
+
+    /* Tell the application we now have, or lost, the context */
+    if(application_) {
+        if(has_context_) {
+            renderer_->init_context();
+            application_->on_render_context_created();
+        } else {
+            application_->on_render_context_destroyed();
+        }
+    }
 }
 
 void Window::create_panels() {
