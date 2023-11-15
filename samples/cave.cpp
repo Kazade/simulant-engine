@@ -75,6 +75,13 @@ public:
 
         // Fairy
         fairy_actor_->transform->set_position(fairyPath_->calc_bezier_point(0));
+
+        panel_cam_ = create_child<Camera>();
+        panel_cam_->set_orthographic_projection(0, window->width(), 0, window->height());
+        stats_ = create_child<StatsPanel>();
+        stats_->activate();
+
+        compositor->create_layer(stats_, panel_cam_, smlt::RENDER_PRIORITY_FOREGROUND);
     }
 
     void on_update(float dt) override {
@@ -145,6 +152,9 @@ private:
     float fairyPathSpeedFactor_ = fairyPathSpeed_ / 10;
     const float fairyPathStepSize_ = (fairyPathSpeed_ / 60) * (fairyPathSpeed_ / 60);
     float lastFairyPathStepSize;
+
+    StatsPanel* stats_ = nullptr;
+    CameraPtr panel_cam_;
 };
 
 

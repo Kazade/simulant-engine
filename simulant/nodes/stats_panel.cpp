@@ -53,43 +53,43 @@ bool StatsPanel::on_init() {
     const float diff = 32;
     float vheight = scene->window->height() - diff;
 
-    auto heading1 = scene->create_node<ui::Label>("Performance", label_width);
+    auto heading1 = create_child<ui::Label>("Performance", label_width);
     heading1->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    fps_ = scene->create_node<ui::Label>("FPS: 0", label_width);
+    fps_ = create_child<ui::Label>("FPS: 0", label_width);
     fps_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    frame_time_ = scene->create_node<ui::Label>("Frame Time: 0ms", label_width);
+    frame_time_ = create_child<ui::Label>("Frame Time: 0ms", label_width);
     frame_time_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    ram_usage_ = scene->create_node<ui::Label>("RAM Used: 0", label_width);
+    ram_usage_ = create_child<ui::Label>("RAM Used: 0", label_width);
     ram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    vram_usage_ = scene->create_node<ui::Label>("VRAM Used: 0", label_width);
+    vram_usage_ = create_child<ui::Label>("VRAM Used: 0", label_width);
     vram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    actors_rendered_ = scene->create_node<ui::Label>("Renderables visible: 0", label_width);
+    actors_rendered_ = create_child<ui::Label>("Renderables visible: 0", label_width);
     actors_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    polygons_rendered_ = scene->create_node<ui::Label>("Polygons Rendered: 0", label_width);
+    polygons_rendered_ = create_child<ui::Label>("Polygons Rendered: 0", label_width);
     polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
-    vheight -= diff;
 
     graph_material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
+    graph_material_->set_cull_mode(CULL_MODE_NONE);
     ram_graph_mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
-    ram_graph_ = scene->create_node<Actor>(ram_graph_mesh_);
+    ram_graph_ = create_child<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
 
-    low_mem_ = scene->create_node<ui::Label>("0M");
-    high_mem_ = scene->create_node<ui::Label>("0M");
+    low_mem_ = create_child<ui::Label>("0M");
+    high_mem_ = create_child<ui::Label>("0M");
 
     frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update_stats, this));
 
@@ -134,7 +134,7 @@ void StatsPanel::rebuild_ram_graph() {
     color.a = 0.35;
 
     float width = scene->window->width();
-    float height = scene->window->height() * 0.4f;
+    float height = 64;
 
     ram_graph_mesh_->reset(
         ram_graph_mesh_->vertex_data->vertex_specification()
@@ -183,12 +183,12 @@ void StatsPanel::rebuild_ram_graph() {
         auto sample = *this_sample_it;
 
         float y = (height / graph_max) * last_sample;
-        vdata->position(x, y, -1);
+        vdata->position(x, y, 0);
         vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
-        vdata->position(x, 0, -1);
+        vdata->position(x, 0, 0);
         vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
@@ -208,12 +208,12 @@ void StatsPanel::rebuild_ram_graph() {
         x += xstep;
 
         y = (height / graph_max) * sample;
-        vdata->position(x, 0, -1);
+        vdata->position(x, 0, 0);
         vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);
 
-        vdata->position(x, y, -1);
+        vdata->position(x, y, 0);
         vdata->diffuse(color);
         vdata->move_next();
         idata->index(idx++);

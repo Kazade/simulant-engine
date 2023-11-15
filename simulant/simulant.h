@@ -67,6 +67,7 @@
 #include "nodes/audio_source.h"
 #include "nodes/debug.h"
 #include "nodes/locators/node_locator.h"
+#include "nodes/stats_panel.h"
 
 #include "sound.h"
 #include "utils/random.h"
