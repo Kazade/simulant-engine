@@ -34,6 +34,7 @@ namespace smlt { typedef KOSWindow SysWindow; }
 #include "platforms/psp/psp_window.h"
 namespace smlt { typedef PSPWindow SysWindow; }
 #elif defined(__ANDROID__)
+#include <android_native_app_glue.h>
 #include "platforms/android/android_window.h"
 namespace smlt { typedef AndroidWindow SysWindow; }
 #else
