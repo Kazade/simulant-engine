@@ -113,7 +113,7 @@ void AndroidWindow::swap_buffers() {
 }
 
 bool AndroidWindow::_init_window() {
-    android_app* aapp = (android_app*) app->platform_state();
+    android_app* aapp = (android_app*) application->platform_state();
 
     if(!aapp) {
         S_ERROR("No platform state?");
