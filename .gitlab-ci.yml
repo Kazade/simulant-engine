@@ -15,7 +15,7 @@ workflow:
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_REF_NAME == "next"'
     - if: '$CI_COMMIT_TAG'
-    
+
 stages:
  - prepare
  - check
@@ -66,7 +66,7 @@ prepare:linux-x64-gcc:
       - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
         changes:
           - .gitlab-ci.yml
-          
+
 prepare:linux-x64-gcc11:
   stage: prepare
   image: docker:latest
@@ -173,12 +173,18 @@ check:stream-usage:
 .build:android:
   stage: build
   image: kazade/android-sdk
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
+  cache:
+    key:
+      files:
+        - gradle/gradle/wrapper/gradle-wrapper.properties
+    paths:
+      - gradle/.gradle/caches/
+      - gradle/.gradle/notifications/
+      - gradle/.gradle/wrapper/
   script:
    - cd gradle
    - export ABI_FILTERS=${ABI}
-   - gradle ${BUILD_JOB} --parallel --build-cache
+   - ./gradlew --parallel --build-cache --gradle-user-home .gradle/ ${BUILD_JOB}
    - cd ..
    - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
    - cp gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
@@ -188,43 +194,23 @@ check:stream-usage:
     paths:
       - ${TARGET}/${BUILD_TYPE}/simulant/
       - ${TARGET}/${BUILD_TYPE}/tests/
-  cache:
-    paths:
-      - .gradle/wrapper
-      - .gradle/caches
-      
-build:android-armeabiv7a-clang:release:
+
+build:android-all-clang:release:
   extends: .build:android
   variables:
-    ABI: armeabi-v7a
-    TARGET: android-armeabiv7a-clang
-    BUILD_TYPE: release
-    BUILD_JOB: assembleRelease
-    
-build:android-armeabiv7a-clang:debug:
-  extends: .build:android
-  variables:
-    ABI: armeabi-v7a
-    TARGET: android-armeabiv7a-clang
-    BUILD_TYPE: debug
-    BUILD_JOB: assembleDebug
-    
-build:android-x86_64-clang:release:
-  extends: .build:android
-  variables:
-    ABI: x86_64
-    TARGET: android-x86_64-clang
+    ABI: x86_64;armeabi-v7a;arm64-v8a
+    TARGET: android-all-clang
     BUILD_TYPE: release
     BUILD_JOB: assembleRelease
 
-build:android-x86_64-clang:debug:
+build:android-all-clang:debug:
   extends: .build:android
   variables:
-    ABI: x86_64
-    TARGET: android-x86_64-clang
+    ABI: x86_64;armeabi-v7a;arm64-v8a
+    TARGET: android-all-clang
     BUILD_TYPE: debug
     BUILD_JOB: assembleDebug
-      
+
 build:psp-mips-gcc:debug:
   stage: build
   image: sharkwouter/pspdev
@@ -298,7 +284,7 @@ build:windows-x64-mingw:release:
     TARGET: windows-x64-mingw
   script:
    - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release   
+   - cd ${TARGET}/release
    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
@@ -578,7 +564,7 @@ deploy:windows-x64-mingw:
   extends: .deploy:deploy
   needs: ["test:windows-x64-mingw"]
   dependencies:
-   - test:windows-x64-mingw  
+   - test:windows-x64-mingw
   variables:
    TARGET: windows-x64-mingw
    LIB_EXT: dll
@@ -588,13 +574,13 @@ deploy:linux-x64-gcc:
   needs:
   - build:linux-x64-gcc
   - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release  
+  - test:linux-x64-gcc-release
   dependencies:
   - test:linux-x64-gcc-debug
   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc
-   LIB_EXT: so
+   LIB_EXT: so*
 
 deploy:linux-x64-gcc11:
   extends: .deploy:deploy
@@ -608,7 +594,7 @@ deploy:linux-x64-gcc11:
   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc11
-   LIB_EXT: so
+   LIB_EXT: so*
 
 deploy:dreamcast-sh4-gcc:
   extends: .deploy:deploy
@@ -618,28 +604,16 @@ deploy:dreamcast-sh4-gcc:
   variables:
    TARGET: dreamcast-sh4-gcc
 
-deploy:android-armeabiv7a-clang:
+deploy:android-all-clang:
   extends: .deploy:deploy
   needs:
-   - build:android-armeabiv7a-clang:release
-   - build:android-armeabiv7a-clang:debug
+   - build:android-all-clang:release
+   - build:android-all-clang:debug
   dependencies:
-   - build:android-armeabiv7a-clang:release
-   - build:android-armeabiv7a-clang:debug
+   - build:android-all-clang:release
+   - build:android-all-clang:debug
   variables:
-    TARGET: android-armeabiv7a-clang
-    LIB_EXT: aar
-    
-deploy:android-x86_64-clang:
-  extends: .deploy:deploy
-  needs:
-   - build:android-x86_64-clang:release
-   - build:android-x86_64-clang:debug    
-  dependencies:
-   - build:android-x86_64-clang:release
-   - build:android-x86_64-clang:debug
-  variables:
-    TARGET: android-x86_64-clang
+    TARGET: android-all-clang
     LIB_EXT: aar
 
 deploy:assets:
@@ -675,6 +649,7 @@ deploy:tools:
    - mkdir -p upload/simulant/cmake_modules
    - cp tools/test_generator.py upload/simulant
    - cp cmake_modules/FindSDL2.cmake upload/simulant/cmake_modules
+   - cp cmake_modules/FindSimulant.cmake upload/simulant/cmake_modules
    - cd upload
    - zip -r tools.zip simulant/
    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a

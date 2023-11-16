@@ -33,6 +33,8 @@ private:
 
     bool _init_window() override;
     bool _init_renderer(Renderer *renderer) override;
+
+    void on_application_set(Application* app) override;
 };
 
 }

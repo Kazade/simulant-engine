@@ -173,7 +173,7 @@ class Application {
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
 public:
-    Application(const AppConfig& config);
+    Application(const AppConfig& config, void* platform_state=nullptr);
     virtual ~Application();
 
     //Create the window, start do_initialization in a thread, show the loading scene
@@ -271,10 +271,16 @@ public:
         }
     }
 
+    void* platform_state() {
+        return platform_state_;
+    }
+
 protected:
     bool _call_init();
 
 private:
+    void* platform_state_ = nullptr;
+
     friend void cr_run_main(std::function<void ()> func);
     std::function<void ()> cr_synced_function_;
 
@@ -345,7 +351,7 @@ private:
     AppConfig config_;
     StageNodePool* node_pool_ = nullptr;
 
-    void construct_window(const AppConfig& config);
+    bool construct_window(const AppConfig& config);
 
     ArgParser args_;
 
@@ -379,6 +385,14 @@ private:
     std::vector<std::string> generate_potential_codes(const std::string& language_code);
     bool load_arb(std::shared_ptr<std::istream> stream, std::string* language_code = nullptr);
     bool load_arb_from_file(const smlt::Path& filename);
+
+    /* A number of steps in the application initialization depend on a
+     * viable GL context. Some platforms (cough, Android) won't have a
+     * native window at boot time, and will get one later on. This function
+     * is called by the Window when set_has_context(true) happens */
+    void on_render_context_created();
+
+    void on_render_context_destroyed();
 };
 
 Application* get_app();

@@ -136,6 +136,10 @@ bool Window::has_explicit_audio_listener() const {
     return audio_listener_ != nullptr;
 }
 
+void Window::on_application_set(Application* app) {
+    _S_UNUSED(app);
+}
+
 bool Window::initialize_assets_and_devices() {
     S_DEBUG("Starting initialization");
 
@@ -248,6 +252,16 @@ void Window::set_has_context(bool value) {
     if(value == has_context_) return;
 
     has_context_ = value;
+
+    /* Tell the application we now have, or lost, the context */
+    if(application_) {
+        if(has_context_) {
+            renderer_->init_context();
+            application_->on_render_context_created();
+        } else {
+            application_->on_render_context_destroyed();
+        }
+    }
 }
 
 void Window::create_panels() {
@@ -265,6 +279,12 @@ void Window::destroy_panels() {
     }
     panels.clear();
 }
+
+void Window::set_application(Application* app) {
+    application_ = app;
+    on_application_set(app);
+}
+
 
 /**
  * @brief Window::reset

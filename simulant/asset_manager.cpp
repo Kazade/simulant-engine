@@ -55,6 +55,9 @@ AssetManager::~AssetManager() {
     } else {
         if(!children_.empty()) {
             S_WARN("Destroyed base manager while children remain");
+            for(auto& child: children_) {
+                child->parent_ = nullptr;
+            }
         }
 
         S_DEBUG("Destroyed base manager: {0}", this);

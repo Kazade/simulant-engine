@@ -34,6 +34,7 @@ namespace smlt { typedef KOSWindow SysWindow; }
 #include "platforms/psp/psp_window.h"
 namespace smlt { typedef PSPWindow SysWindow; }
 #elif defined(__ANDROID__)
+#include <android_native_app_glue.h>
 #include "platforms/android/android_window.h"
 namespace smlt { typedef AndroidWindow SysWindow; }
 #else
@@ -110,13 +111,28 @@ namespace smlt {
 
 static bool PROFILING = false;
 
-Application::Application(const AppConfig &config):
+Application::Application(const AppConfig &config, void* platform_state):
+    platform_state_(platform_state),
     main_thread_id_(thread::this_thread_id()),
     time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
-    vfs_(VirtualFileSystem::create()),
     config_(config),
     node_pool_(new StageNodePool(config_.general.stage_node_pool_size)) {
+
+    /* Start off with debug logging, this might change when the window is constructed */
+    smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
+    smlt::get_logger("/")->set_level(smlt::LOG_LEVEL_DEBUG);
+
+    /* Initialize the VFS after we've got some logging available */
+    vfs_ = VirtualFileSystem::create();
+
+#ifdef __ANDROID__
+        /* Android is horrible, this is so we can actually read paths */
+    android_app* app = (android_app*) platform_state;
+    if(app) {
+        kfs::set_platform_data(app->activity->assetManager);
+    }
+#endif
 
     args->define_arg("--help", ARG_TYPE_BOOLEAN, "display this help and exit");
 
@@ -175,10 +191,22 @@ Application::~Application() {
      * pool. */
     run_coroutines_and_late_update();
 
+    scene_manager_->clean_up();
     scene_manager_.reset();
+
     asset_manager_.reset();
 
     delete node_pool_;
+
+    if(window_) {
+        window_->_clean_up();
+        window_.reset();
+    }
+
+    if(global_app == this) {
+        global_app = nullptr;
+    }
+
 }
 
 void Application::preload_default_font() {
@@ -207,7 +235,7 @@ std::vector<std::string> Application::generate_potential_codes(const std::string
     return codes;
 }
 
-void Application::construct_window(const AppConfig& config) {
+bool Application::construct_window(const AppConfig& config) {
     /* Copy to remove const */
     AppConfig config_copy = config;
 
@@ -227,7 +255,6 @@ void Application::construct_window(const AppConfig& config) {
         config_copy.log_level = LOG_LEVEL_DEBUG;
     }
 
-    smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
     smlt::get_logger("/")->set_level(config_copy.log_level);
 
     if(!config_copy.development.log_file.empty()) {
@@ -256,7 +283,7 @@ void Application::construct_window(const AppConfig& config) {
        config_copy.enable_vsync)
     ) {
         S_ERROR("[FATAL] There was an error creating the window");
-        return;
+        return false;
     }
 
     if(!config_copy.show_cursor) {
@@ -292,7 +319,8 @@ void Application::construct_window(const AppConfig& config) {
     S_DEBUG("Search paths added successfully");
 
     if(!window_->initialize_assets_and_devices()) {
-        throw InstanceInitializationError("Unable to create window");
+        S_ERROR("Unable to create window");
+        return false;
     }
 
     window_->set_title(config.title.encode());
@@ -313,7 +341,7 @@ void Application::construct_window(const AppConfig& config) {
         }
     }
 #endif
-
+    return true;
 }
 
 bool Application::_call_init() {
@@ -324,18 +352,10 @@ bool Application::_call_init() {
         return false;
     }
 
-    try {
-        construct_window(config);
-    } catch(std::runtime_error&) {
+    if(!construct_window(config)) {
         S_ERROR("[FATAL] Unable to create the window. Check logs. Exiting!!!");
         exit(1);
     }
-
-    /* We can't do this in the initialiser as we need a valid
-     * window before doing things like creating textures */
-    asset_manager_ = SharedAssetManager::create();
-
-    preload_default_font();
 
     sound_driver_ = window->create_sound_driver(config_.development.force_sound_driver);
     sound_driver_->startup();
@@ -343,6 +363,7 @@ bool Application::_call_init() {
     S_DEBUG("Sound driver started");
 
     scene_manager_.reset(new SceneManager(window_.get()));
+    scene_manager_->init();
 
     // Add some useful scenes by default, these can be overridden in init if the
     // user so wishes
@@ -639,6 +660,17 @@ void Application::_call_clean_up() {
     clean_up();
 
     scene_manager_->reset();
+}
+
+void Application::on_render_context_created() {
+    /* We can't do this in the initialiser as we need a valid
+     * window before doing things like creating textures */
+    asset_manager_ = SharedAssetManager::create();
+    preload_default_font();
+}
+
+void Application::on_render_context_destroyed() {
+    asset_manager_.reset();
 }
 
 void Application::stop_running() {
