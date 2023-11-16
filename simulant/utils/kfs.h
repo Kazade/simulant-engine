@@ -109,4 +109,8 @@ namespace path {
     std::pair<Path, Path> split_ext(const Path& path);
 }
 
+/* Some platforms require an instance to access files, in the
+ * case of Android we need this to be AAssetManager* */
+void set_platform_data(void* data);
+
 }
