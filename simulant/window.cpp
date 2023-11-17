@@ -71,9 +71,10 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
         application_->config_.development.force_renderer
     );
 
-    _init_renderer(renderer_.get());
-
-    renderer_->init_context();
+    if(!_init_renderer(renderer_.get())) {
+        S_ERROR("Couldn't initialize the renderer");
+        return false;
+    }
 
     has_focus_ = true;
 
@@ -255,9 +256,9 @@ void Window::set_has_context(bool value) {
 
     /* Tell the application we now have, or lost, the context */
     if(application_) {
-        if(has_context_) {
+        if(has_context_) {            
             renderer_->init_context();
-            application_->on_render_context_created();
+            application_->on_render_context_created();            
         } else {
             application_->on_render_context_destroyed();
         }

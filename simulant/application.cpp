@@ -491,11 +491,15 @@ bool Application::run_frame() {
     run_fixed_updates();
     run_update(dt);
 
-    asset_manager_->update(time_keeper->delta_time());
+    if(asset_manager_) {
+        asset_manager_->update(time_keeper->delta_time());
+    }
 
     run_coroutines_and_late_update();
 
-    asset_manager_->run_garbage_collection();
+    if(asset_manager_) {
+        asset_manager_->run_garbage_collection();
+    }
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */

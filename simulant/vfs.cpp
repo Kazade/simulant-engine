@@ -32,14 +32,25 @@
 #include "streams/file_ifstream.h"
 #include "application.h"
 
+#ifdef __ANDROID__
+#define ANDROID_ASSET_DIR_PREFIX "/android_asset"
+#define ANDROID_ASSET_DIR_PREFIX_SLASH "/android_asset/"
+#endif
+
+
 namespace smlt {
 
 VirtualFileSystem::VirtualFileSystem() {
 
     auto cwd = find_working_directory();
-    add_search_path(cwd); //Add the working directory (might be different)
+    S_INFO("CWD: {0}", cwd.str());
+    if(!cwd.str().empty()) {
+        add_search_path(cwd); //Add the working directory (might be different)
+    }
 
-#ifndef __ANDROID__
+#ifdef __ANDROID__
+    add_search_path(".");
+#else
     //Android can't find the executable directory in release mode, but can in debug!
     auto ed = find_executable_directory();
     add_search_path(ed); //Make sure the directory the executable lives is on the resource path
@@ -68,6 +79,11 @@ VirtualFileSystem::VirtualFileSystem() {
      * root paths */
     auto copy = resource_path_;
     for(auto& path: copy) {
+#ifdef __ANDROID__
+        if(path.str().find(ANDROID_ASSET_DIR_PREFIX) == 0) {
+            path = path.str().substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
+        }
+#endif
         add_search_path(kfs::path::join(path.str(), "assets"));
     }
 
@@ -75,6 +91,12 @@ VirtualFileSystem::VirtualFileSystem() {
      * have assets/simulant */
     copy = resource_path_;
     for(auto& path: copy) {
+#ifdef __ANDROID__
+        if(path.str().find(ANDROID_ASSET_DIR_PREFIX) == 0) {
+            path = path.str().substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
+        }
+#endif
+
         add_search_path(kfs::path::join(path.str(), "simulant"));
     }
 }
@@ -100,6 +122,16 @@ bool VirtualFileSystem::insert_search_path(uint32_t index, const Path& path) {
 
 bool VirtualFileSystem::add_search_path(const Path& path) {
     Path new_path(kfs::path::abs_path(path.str()));
+
+#ifdef __ANDROID__
+    /* Android is special. Assets can only be loaded using relative paths, so
+     * we use this as a placeholder resource path, and we special case it when
+     * we do existence checks etc. It's depressing how bad Android is at this
+     * stuff */
+    new_path = kfs::path::norm_path(ANDROID_ASSET_DIR_PREFIX_SLASH + new_path.str());
+#endif
+
+    S_INFO("Adding path: {0}", new_path);
 
     if(path.str().empty() || path.str() == "/") {
         return false;
@@ -191,6 +223,21 @@ optional<Path> VirtualFileSystem::locate_file(
         auto full_path = kfs::path::norm_path(
             kfs::path::join(path.str(), final_name.str())
         );
+
+#ifdef __ANDROID__
+        /* Hackity hack. Wipe out the /android_asset placeholder folder
+         * to make the path relative */
+        S_DEBUG("Before manipulation {0}", full_path);
+
+        if(full_path.find(ANDROID_ASSET_DIR_PREFIX) == 0) {
+            full_path = full_path.substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
+
+            /* Remove any leading slashes, all paths must be relative */
+            if(!full_path.empty() && full_path[0] == '/') {
+                full_path = full_path.substr(1);
+            }
+        }
+#endif
 
         S_DEBUG("Trying path: {0}", full_path);
         if(kfs::path::exists(full_path)) {

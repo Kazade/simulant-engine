@@ -73,7 +73,7 @@ const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
-#ifdef __PSP__
+#if defined(__PSP__) || defined(__ANDROID__)
     VERTEX_ATTRIBUTE_4F,
 #else
     VERTEX_ATTRIBUTE_4UB, // Diffuse

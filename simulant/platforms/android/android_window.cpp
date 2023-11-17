@@ -120,9 +120,10 @@ bool AndroidWindow::_init_window() {
         return false;
     }
 
-    if(!aapp->window) {
-        S_DEBUG("No native window yet, so nothing to do!");
-        return true;
+    while(!aapp->window) {
+        thread::sleep(10);
+        check_events();
+        S_DEBUG("No native window yet...");
     }
 
     if(dpy_ != EGL_NO_DISPLAY) {
@@ -206,17 +207,12 @@ bool AndroidWindow::_init_window() {
 
     S_DEBUG("GL initialized, initializing the context");
 
-    /* We manually init the context here, rather than letting the Window
-     * do it as with other platforms */
-    if(renderer_) {
-        renderer_->init_context();
-    }
-
     return true;
 }
 
 bool AndroidWindow::_init_renderer(Renderer *renderer) {
     _S_UNUSED(renderer);
+    set_has_context(true);
     return true;
 }
 
@@ -479,9 +475,6 @@ void AndroidWindow::check_events() {
                 break;
             case APP_CMD_INIT_WINDOW:
                 S_DEBUG("CMD: Init window");
-                // The window is being shown, get it ready.
-                _init_window();
-                set_has_context(true);
                 break;
             case APP_CMD_TERM_WINDOW:
                 S_DEBUG("CMD: Term window");
