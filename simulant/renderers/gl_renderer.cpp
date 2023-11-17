@@ -147,7 +147,7 @@ uint32_t GLRenderer::convert_type(TextureFormat format) {
 static constexpr GLenum texture_format_to_internal_format(TextureFormat format) {
     return (format == TEXTURE_FORMAT_R_1UB_8) ? GL_RED :
            (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
-            (format == TEXTURE_FORMAT_RGB_1US_565) ? GL_RGB :
+           (format == TEXTURE_FORMAT_RGB_1US_565) ? GL_RGB :
             GL_RGBA;
 }
 
