@@ -173,25 +173,27 @@ check:stream-usage:
 .build:android:
   stage: build
   image: kazade/android-sdk
-  before_script:
-    - export GRADLE_USER_HOME=`pwd`/.gradle
+  cache:
+    key:
+      files:
+        - gradle/gradle/wrapper/gradle-wrapper.properties
+    paths:
+      - gradle/.gradle/caches/
+      - gradle/.gradle/notifications/
+      - gradle/.gradle/wrapper/
   script:
    - cd gradle
    - export ABI_FILTERS=${ABI}
-   - gradle ${BUILD_JOB} --parallel --build-cache
+   - ./gradlew --parallel --build-cache --gradle-user-home .gradle/ ${BUILD_JOB}
    - cd ..
    - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
-   - cp gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
+   - mv gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
    - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
-   - cp gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
+   - mv gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
   artifacts:
     paths:
       - ${TARGET}/${BUILD_TYPE}/simulant/
       - ${TARGET}/${BUILD_TYPE}/tests/
-  cache:
-    paths:
-      - .gradle/wrapper
-      - .gradle/caches
 
 build:android-all-clang:release:
   extends: .build:android

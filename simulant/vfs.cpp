@@ -37,6 +37,7 @@
 #define ANDROID_ASSET_DIR_PREFIX_SLASH "/android_asset/"
 #endif
 
+
 namespace smlt {
 
 VirtualFileSystem::VirtualFileSystem() {
@@ -95,6 +96,7 @@ VirtualFileSystem::VirtualFileSystem() {
             path = path.str().substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
         }
 #endif
+
         add_search_path(kfs::path::join(path.str(), "simulant"));
     }
 }
@@ -218,8 +220,6 @@ optional<Path> VirtualFileSystem::locate_file(
 
     S_DEBUG("Searching resource paths...");
     for(const Path& path: resource_path_) {
-        S_DEBUG("Path: {0}", path.str());
-
         auto full_path = kfs::path::norm_path(
             kfs::path::join(path.str(), final_name.str())
         );

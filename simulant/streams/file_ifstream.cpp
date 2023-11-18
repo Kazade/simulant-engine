@@ -12,7 +12,6 @@ namespace smlt {
 
 uint32_t FileStreamBuf::open_file_counter = 0;
 
-
 #ifdef __ANDROID__
 
 static int android_read(void* cookie, char* buf, int size) {
@@ -51,6 +50,7 @@ FILE* android_fopen(const char* fname, const char* mode) {
 
 #endif
 
+
 FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
     ++open_file_counter;
 
@@ -60,7 +60,7 @@ FileStreamBuf::FileStreamBuf(const std::string &name, const std::string &mode) {
     filein_ = fopen(name.c_str(), mode.c_str());
 #endif
 
-    if(!filein_) {
+    if(filein_) {
         if(open_file_counter == FILE_OPEN_WARN_COUNT) {
             S_WARN(
                 "{0} files are concurrently open, this may cause issues on some platforms",
