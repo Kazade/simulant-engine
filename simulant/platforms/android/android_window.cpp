@@ -16,15 +16,31 @@
  * and from there we call the user-defined simulant_main()
  */
 
-struct AndroidInputEvent {
-    int32_t type;
-    int32_t source;
-    int32_t key;
-    int32_t action;
+
+struct KeyboardEvent {
+    int action;
+    int key;
+};
+
+struct TouchEvent {
+    int pointer_id;
+    int action;
+    float x;
+    float y;
+    float pressure;
+};
+
+struct AndroidEvent {
+    int type;
+    union {
+        KeyboardEvent key;
+        TouchEvent touch;
+    };
 };
 
 static std::queue<int32_t> COMMANDS;
-static std::queue<AndroidInputEvent> EVENTS;
+static std::queue<AndroidEvent> EVENTS;
+
 
 namespace smlt {
 
@@ -45,19 +61,57 @@ static void android_handle_command(struct android_app* app, int32_t cmd) {
     COMMANDS.push(cmd);
 }
 
+
 static int android_handle_input(struct android_app* app, AInputEvent* evt) {
     AndroidWindow* window = (AndroidWindow*) app->userData;
     assert(window);
 
-    AndroidInputEvent aevt;
-    aevt.type = AInputEvent_getType(evt);
-    aevt.source = AInputEvent_getSource(evt);
-    if(aevt.type == AINPUT_EVENT_TYPE_KEY) {
-        aevt.key = AKeyEvent_getKeyCode(evt);
-        aevt.action = AKeyEvent_getAction(evt);
+    auto getX = [window, evt](int index) -> float {
+        float x = AMotionEvent_getX(evt, index);
+
+        if(window->width() <= 1) {
+            x = 0.5f;
+        } else {
+            x /= float(window->width() - 1);
+        }
+
+        return x;
+    };
+
+    auto getY = [window, evt](int index) -> float {
+        float y = AMotionEvent_getY(evt, index);
+
+        if(window->height() <= 1) {
+            y = 0.5f;
+        } else {
+            y /= float(window->height() - 1);
+        }
+
+        return y;
+    };
+
+
+    AndroidEvent out;
+    out.type = AInputEvent_getType(evt);
+    if(out.type == AINPUT_EVENT_TYPE_KEY) {
+        out.key.action = AKeyEvent_getAction(evt);
+        out.key.key = AKeyEvent_getKeyCode(evt);
+        EVENTS.push(out);
+    } else if(out.type == AINPUT_EVENT_TYPE_MOTION) {
+        for(std::size_t i = 0; i < AMotionEvent_getPointerCount(evt); ++i) {
+            out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
+            out.touch.action = AMotionEvent_getAction(evt);
+            out.touch.x = getX(i);
+            out.touch.y = getY(i);
+            out.touch.pressure = std::min(
+                AMotionEvent_getPressure(evt, i), 1.0f
+            );
+            EVENTS.push(out);
+        }
     }
 
-    EVENTS.push(aevt);
+
+
     return 1;
 }
 
@@ -448,6 +502,18 @@ static const KeyboardCode KEYCODE_MAPPING[256] = {
     KEYBOARD_CODE_NONE,
 };
 
+static struct {
+    float x;
+    float y;
+    float pressure;
+} FINGER_STATES[5] = {
+    {0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f},
+};
+
 void AndroidWindow::check_events() {
     android_app* aapp = (android_app*) get_app()->platform_state();
 
@@ -507,25 +573,57 @@ void AndroidWindow::check_events() {
     }
 
     while(!EVENTS.empty()) {
-        AndroidInputEvent evt = EVENTS.front();
+        AndroidEvent evt = EVENTS.front();
         EVENTS.pop();
 
         switch(evt.type) {
             case AINPUT_EVENT_TYPE_KEY: {
-                auto key = KEYCODE_MAPPING[evt.key];
-                S_INFO("Key: {0} -> {1}", evt.key, key);
-                S_INFO("Left: {0}", AKEYCODE_DPAD_LEFT);
-                if(evt.action == AKEY_EVENT_ACTION_UP) {
+                auto key = KEYCODE_MAPPING[evt.key.key];
+                if(evt.key.action == AKEY_EVENT_ACTION_UP) {
                     input_state->_handle_key_up(0, key);
                     on_key_up(key, ModifierKeyState());
-                } else if(evt.action == AKEY_EVENT_ACTION_DOWN) {
+                } else if(evt.key.action == AKEY_EVENT_ACTION_DOWN) {
                     input_state->_handle_key_down(0, key);
                     on_key_down(key, ModifierKeyState());
                 } else {}
             } break;
+            case AINPUT_EVENT_TYPE_MOTION: {
+                auto pointer = evt.touch.pointer_id;
+                if(pointer < 5) {
+                    float x = evt.touch.x;
+                    float y = evt.touch.y;
+
+                    if(evt.touch.action == AKEY_EVENT_ACTION_DOWN) {
+                        on_finger_down(
+                            pointer,
+                            x,
+                            y,
+                            evt.touch.pressure
+                        );
+
+                        FINGER_STATES[pointer].x = x;
+                        FINGER_STATES[pointer].y = y;
+                        FINGER_STATES[pointer].pressure = evt.touch.pressure;
+                    } else if(evt.touch.action == AKEY_EVENT_ACTION_UP) {
+                        on_finger_up(pointer, x, y);
+                        FINGER_STATES[pointer].x = x;
+                        FINGER_STATES[pointer].y = y;
+                        FINGER_STATES[pointer].pressure = 0.0f;
+                    } else {
+                        float dx = x - FINGER_STATES[pointer].x;
+                        float dy = y - FINGER_STATES[pointer].y;
+
+                        on_finger_motion(pointer, x, y, dx, dy);
+
+                        FINGER_STATES[pointer].x = x;
+                        FINGER_STATES[pointer].y = y;
+                        FINGER_STATES[pointer].pressure = evt.touch.pressure;
+                    }
+                }
+            }
 
             default:
-                S_INFO("Event type: {0} / {1}", evt.type, evt.source);
+                S_INFO("Event type: {0}", evt.type);
             break;
         }
     }
