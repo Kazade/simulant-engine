@@ -36,6 +36,11 @@
 
 namespace smlt {
 
+GLRenderer::GLRenderer(Window* window):
+    Renderer(window) {
+
+}
+
 void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
     _S_UNUSED(tex_id);
 
@@ -144,9 +149,14 @@ uint32_t GLRenderer::convert_type(TextureFormat format) {
     }
 }
 
+void GLRenderer::init_context() {
+    std::string version = (const char*) glGetString(GL_VERSION);
+    is_es_ = version.find("OpenGL ES") == 0;
+}
+
 static constexpr GLenum texture_format_to_internal_format(TextureFormat format) {
     return (format == TEXTURE_FORMAT_R_1UB_8) ? GL_RED :
-           (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
+               (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
            (format == TEXTURE_FORMAT_RGB_1US_565) ? GL_RGB :
             GL_RGBA;
 }
@@ -234,17 +244,30 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 format = internal_format = (texel_size == 4) ? GL_RGBA : GL_RGB;
                 type = (texel_size == 2) ? GL_UNSIGNED_SHORT_5_6_5 : GL_UNSIGNED_BYTE;
             }
-        } else {
-#ifdef __ANDROID__
-            // FIXME: is_es()
-            if(type == GL_UNSIGNED_SHORT_4_4_4_4_REV) {
+        }
+
+        if(is_es()) {
+            /* OpenGL ES doesn't support REV formats */
+            if(type == GL_UNSIGNED_SHORT_4_4_4_4_REV && format == GL_BGRA) {
+                /* We need to do a conversion */
+                new_data.resize(texture->data_size());
+                const uint16_t* src = (uint16_t*) texture->data();
+                uint16_t* dst = (uint16_t*) &new_data[0];
+
+                for(int i = 0; i < texture->data_size(); i+=2) {
+                    uint16_t value = *src++;
+
+                    /* Reversed BGRA, is ARGB. We want to convert to RGBA so
+                     * we shift the whole thing 4 bits left, then append the
+                     * alpha to the end */
+                    *dst = (value << 4) | (value >> 12);
+                    dst++;
+                }
+
+                data = &new_data[0];
+                format = GL_RGBA;
                 type = GL_UNSIGNED_SHORT_4_4_4_4;
             }
-
-            if(format == GL_BGRA) {
-                format = GL_RGBA;
-            }
-#endif
         }
 
         S_ERROR("{0} vs {1} vs {2}", internal_format, format, type);
