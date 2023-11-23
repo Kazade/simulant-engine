@@ -254,7 +254,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 const uint16_t* src = (uint16_t*) texture->data();
                 uint16_t* dst = (uint16_t*) &new_data[0];
 
-                for(int i = 0; i < texture->data_size(); i+=2) {
+                for(std::size_t i = 0; i < texture->data_size(); i+=2) {
                     uint16_t value = *src++;
 
                     /* Reversed BGRA, is ARGB. We want to convert to RGBA so
