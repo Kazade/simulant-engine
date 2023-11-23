@@ -189,19 +189,20 @@ void UIManager::destroy_object_immediately(Widget* object) {
     manager_->destroy_immediately(object->id());
 }
 
-void UIManager::on_touch_begin(const TouchEvent &evt) {
+void UIManager::on_mouse_down(const MouseEvent &evt) {
     queue_event(evt);
 }
 
-void UIManager::on_touch_end(const TouchEvent &evt) {
-    queue_event(evt);
-}
-
-void UIManager::on_touch_move(const TouchEvent &evt) {
+void UIManager::on_mouse_up(const MouseEvent &evt) {
     queue_event(evt);
 }
 
 void UIManager::queue_event(const TouchEvent& e) {
+    UIEvent evt(e);
+    queued_events_.push_back(evt);
+}
+
+void UIManager::queue_event(const MouseEvent& e) {
     UIEvent evt(e);
     queued_events_.push_back(evt);
 }
@@ -215,6 +216,26 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
 
     for(auto& evt: queued_events) {
         switch(evt.type) {
+            case UI_EVENT_TYPE_MOUSE: {
+                auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.mouse.x, evt.mouse.y));
+                if(widget) {
+                    if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_DOWN) {
+                        widget->fingerdown(evt.mouse.id);
+                    } else if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
+                        widget->fingerup(evt.mouse.id);
+                    }
+                }
+
+                if(/* evt.mouse.type == TOUCH_EVENT_TYPE_FINGER_MOVE || */ evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
+                    // Go through all the widgets, if one is being pressed and it's different
+                    // than the one above, then trigger a fingerleave event
+                    for(auto iter: *manager_) {
+                        if(iter->is_pressed_by_finger(evt.mouse.id) && iter != widget) {
+                            iter->fingerleave(evt.mouse.id);
+                        }
+                    }
+                }
+            } break;
             case UI_EVENT_TYPE_TOUCH: {
                 auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y));
                 if(widget) {

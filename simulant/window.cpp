@@ -307,15 +307,15 @@ void Window::reset() {
     create_panels();
 }
 
-void Window::on_mouse_down(MouseID id, uint8_t mouse_button, int32_t x, int32_t y) {
+void Window::on_mouse_down(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
     each_event_listener([=](EventListener* listener) {
-        listener->handle_mouse_down(this, id, mouse_button, x, y);
+        listener->handle_mouse_down(this, id, mouse_button, x, y, touch_device);
     });
 }
 
-void Window::on_mouse_up(MouseID id, uint8_t mouse_button, int32_t x, int32_t y) {
+void Window::on_mouse_up(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
     each_event_listener([=](EventListener* listener) {
-        listener->handle_mouse_up(this, id, mouse_button, x, y);
+        listener->handle_mouse_up(this, id, mouse_button, x, y, touch_device);
     });
 }
 

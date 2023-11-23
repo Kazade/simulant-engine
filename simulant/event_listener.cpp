@@ -76,7 +76,7 @@ void EventListener::handle_key_up(Window* window, KeyboardCode code, ModifierKey
     on_key_up(evt);
 }
 
-void EventListener::handle_mouse_down(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y) {
+void EventListener::handle_mouse_down(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
     _S_UNUSED(window);
 
     MouseEvent evt;
@@ -85,11 +85,12 @@ void EventListener::handle_mouse_down(Window* window, MouseID id, uint8_t mouse_
     evt.button = mouse_button;
     evt.x = x;
     evt.y = y;
+    evt.is_touch_device = touch_device;
 
     on_mouse_down(evt);
 }
 
-void EventListener::handle_mouse_up(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y) {
+void EventListener::handle_mouse_up(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
     _S_UNUSED(window);
 
     MouseEvent evt;
@@ -98,6 +99,7 @@ void EventListener::handle_mouse_up(Window* window, MouseID id, uint8_t mouse_bu
     evt.button = mouse_button;
     evt.x = x;
     evt.y = y;
+    evt.is_touch_device = touch_device;
 
     on_mouse_up(evt);
 }
