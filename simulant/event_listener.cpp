@@ -76,6 +76,32 @@ void EventListener::handle_key_up(Window* window, KeyboardCode code, ModifierKey
     on_key_up(evt);
 }
 
+void EventListener::handle_mouse_down(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y) {
+    _S_UNUSED(window);
+
+    MouseEvent evt;
+    evt.id = id;
+    evt.type = MOUSE_EVENT_TYPE_BUTTON_DOWN;
+    evt.button = mouse_button;
+    evt.x = x;
+    evt.y = y;
+
+    on_mouse_down(evt);
+}
+
+void EventListener::handle_mouse_up(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y) {
+    _S_UNUSED(window);
+
+    MouseEvent evt;
+    evt.id = id;
+    evt.type = MOUSE_EVENT_TYPE_BUTTON_UP;
+    evt.button = mouse_button;
+    evt.x = x;
+    evt.y = y;
+
+    on_mouse_up(evt);
+}
+
 void EventListenerManager::register_event_listener(EventListener* listener) {
     listeners_.push_back(listener);
 }

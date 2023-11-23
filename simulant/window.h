@@ -136,6 +136,9 @@ public:
     void on_game_controller_button_down(GameControllerIndex index, JoystickButton button);
     void on_game_controller_button_up(GameControllerIndex index, JoystickButton button);
 
+    void on_mouse_down(MouseID id, uint8_t mouse_button, int32_t x, int32_t y);
+    void on_mouse_up(MouseID id, uint8_t mouse_button, int32_t x, int32_t y);
+
     /* Return the number of screens connected */
     std::size_t screen_count() const;
 
