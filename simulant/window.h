@@ -138,6 +138,7 @@ public:
 
     void on_mouse_down(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
     void on_mouse_up(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
+    void on_mouse_move(MouseID id, int32_t x, int32_t y, bool touch_device);
 
     /* Return the number of screens connected */
     std::size_t screen_count() const;

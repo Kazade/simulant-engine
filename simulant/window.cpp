@@ -319,6 +319,12 @@ void Window::on_mouse_up(MouseID id, uint8_t mouse_button, int32_t x, int32_t y,
     });
 }
 
+void Window::on_mouse_move(MouseID id, int32_t x, int32_t y, bool touch_device) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_mouse_move(this, id, x, y, touch_device);
+    });
+}
+
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
         application->stop_running();

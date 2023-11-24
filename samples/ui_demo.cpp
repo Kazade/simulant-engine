@@ -38,6 +38,9 @@ public:
 
         auto button = stage_->ui->new_widget_as_button("Button");
         button->resize(column, -1);
+        button->signal_clicked().connect([=]() {
+            button->set_background_colour(smlt::Colour::RED);
+        });
         frame->pack_child(button);
 
         pg1_ = stage_->ui->new_widget_as_progress_bar();

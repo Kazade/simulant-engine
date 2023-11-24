@@ -104,6 +104,20 @@ void EventListener::handle_mouse_up(Window* window, MouseID id, uint8_t mouse_bu
     on_mouse_up(evt);
 }
 
+void EventListener::handle_mouse_move(Window* window, MouseID id, int32_t x, int32_t y, bool touch_device) {
+    _S_UNUSED(window);
+
+    MouseEvent evt;
+    evt.id = id;
+    evt.type = MOUSE_EVENT_TYPE_MOTION;
+    evt.button = -1;
+    evt.x = x;
+    evt.y = y;
+    evt.is_touch_device = touch_device;
+
+    on_mouse_move(evt);
+}
+
 void EventListenerManager::register_event_listener(EventListener* listener) {
     listeners_.push_back(listener);
 }

@@ -65,6 +65,7 @@ struct KeyEvent {
 enum MouseEventType : uint8_t {
     MOUSE_EVENT_TYPE_BUTTON_DOWN,
     MOUSE_EVENT_TYPE_BUTTON_UP,
+    MOUSE_EVENT_TYPE_MOTION
 };
 
 struct MouseEvent {
@@ -101,6 +102,7 @@ public:
 
     void handle_mouse_down(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
     void handle_mouse_up(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
+    void handle_mouse_move(Window* window, MouseID id, int32_t x, int32_t y, bool touch_device);
 
     void handle_controller_button_down(GameControllerIndex controller, JoystickButton button);
     void handle_controller_button_up(GameControllerIndex controller, JoystickButton button);
@@ -119,6 +121,10 @@ private:
     }
 
     virtual void on_mouse_up(const MouseEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_mouse_move(const MouseEvent& evt) {
         _S_UNUSED(evt);
     }
 
