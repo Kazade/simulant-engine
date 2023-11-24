@@ -292,7 +292,8 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
         AABB ss_aabb(&ss_points[0], ss_points.size());
 
         // FIXME: Return the nearest if overlapping!
-        if(Ray(Vec3(window_coord, 0.0), Vec3::FORWARD).intersects_aabb(ss_aabb)) {
+        if(ss_aabb.min().x <= window_coord.x && ss_aabb.max().x >= window_coord.x &&
+            ss_aabb.min().y <= window_coord.y && ss_aabb.max().y >= window_coord.y) {
             result = widget;
         }
     };
