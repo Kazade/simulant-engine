@@ -514,6 +514,8 @@ static struct {
     {0.0f, 0.0f, 0.0f},
 };
 
+const static int32_t TOUCH_MOUSE_ID = 0;
+
 void AndroidWindow::check_events() {
     android_app* aapp = (android_app*) get_app()->platform_state();
 
@@ -593,7 +595,7 @@ void AndroidWindow::check_events() {
                     float x = evt.touch.x;
                     float y = evt.touch.y;
 
-                    if(evt.touch.action == AKEY_EVENT_ACTION_DOWN) {
+                    if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN) {
                         S_INFO("DOWN: {0}", pointer);
                         on_finger_down(
                             pointer,
@@ -602,12 +604,25 @@ void AndroidWindow::check_events() {
                             evt.touch.pressure
                         );
 
+                        on_mouse_down(
+                            TOUCH_MOUSE_ID,
+                            pointer,
+                            x, y, true
+                        );
+
                         FINGER_STATES[pointer].x = x;
                         FINGER_STATES[pointer].y = y;
                         FINGER_STATES[pointer].pressure = evt.touch.pressure;
-                    } else if(evt.touch.action == AKEY_EVENT_ACTION_UP) {
+                    } else if(evt.touch.action == AMOTION_EVENT_ACTION_UP) {
                         S_INFO("UP: {0}", pointer);
                         on_finger_up(pointer, x, y);
+
+                        on_mouse_up(
+                            TOUCH_MOUSE_ID,
+                            pointer,
+                            x, y, true
+                        );
+
                         FINGER_STATES[pointer].x = x;
                         FINGER_STATES[pointer].y = y;
                         FINGER_STATES[pointer].pressure = 0.0f;
@@ -617,6 +632,10 @@ void AndroidWindow::check_events() {
                         float dy = y - FINGER_STATES[pointer].y;
 
                         on_finger_motion(pointer, x, y, dx, dy);
+                        on_mouse_move(
+                            TOUCH_MOUSE_ID,
+                            x, y, true
+                        );
 
                         FINGER_STATES[pointer].x = x;
                         FINGER_STATES[pointer].y = y;
