@@ -596,49 +596,55 @@ void AndroidWindow::check_events() {
                     float y = evt.touch.y;
 
                     if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN) {
-                        S_INFO("DOWN: {0}", pointer);
+                        S_INFO("DOWN: {0} ({1}, {2})", pointer, x, y);
                         on_finger_down(
                             pointer,
                             x,
-                            y,
+                            1.0f - y,
                             evt.touch.pressure
                         );
 
                         on_mouse_down(
                             TOUCH_MOUSE_ID,
                             pointer,
-                            x, y, true
+                            x * float(width()),
+                            (1.0f - y) * float(height()),
+                            true
                         );
 
                         FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = y;
+                        FINGER_STATES[pointer].y = 1.0f - y;
                         FINGER_STATES[pointer].pressure = evt.touch.pressure;
                     } else if(evt.touch.action == AMOTION_EVENT_ACTION_UP) {
-                        S_INFO("UP: {0}", pointer);
-                        on_finger_up(pointer, x, y);
+                        S_INFO("UP: {0} ({1}, {2})", pointer, x, y);
+                        on_finger_up(pointer, x, 1.0f - y);
 
                         on_mouse_up(
                             TOUCH_MOUSE_ID,
                             pointer,
-                            x, y, true
+                            x * float(width()),
+                            (1.0f - y) * float(height()),
+                            true
                         );
 
                         FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = y;
+                        FINGER_STATES[pointer].y = 1.0f - y;
                         FINGER_STATES[pointer].pressure = 0.0f;
                     } else {
                         S_INFO("MOVE: {0}", pointer);
                         float dx = x - FINGER_STATES[pointer].x;
                         float dy = y - FINGER_STATES[pointer].y;
 
-                        on_finger_motion(pointer, x, y, dx, dy);
+                        on_finger_motion(pointer, x, 1.0f - y, dx, dy);
                         on_mouse_move(
                             TOUCH_MOUSE_ID,
-                            x, y, true
+                            x * float(width()),
+                            (1.0f - y) * float(height()),
+                            true
                         );
 
                         FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = y;
+                        FINGER_STATES[pointer].y = 1.0f - y;
                         FINGER_STATES[pointer].pressure = evt.touch.pressure;
                     }
                 }
@@ -654,6 +660,7 @@ void AndroidWindow::check_events() {
 void AndroidWindow::initialize_input_controller(InputState &controller) {
     KeyboardDeviceInfo keyboard;
     keyboard.id = 0;
+    keyboard.type = KEYBOARD_TYPE_SOFTWARE;
     controller._update_keyboard_devices({keyboard});
 }
 
