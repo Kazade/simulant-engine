@@ -159,10 +159,10 @@ public:
         Viewport viewport;
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
         instancer->create_mesh_instance(Vec3());
-        assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(0, 0, 0));
+        assert_equal(instancer->transformed_aabb().center(), smlt::Vec3(0, 0, 0));
 
         instancer->transform->set_translation(Vec3(10, 0, 0));
-        assert_equal(instancer->transformed_aabb().centre(), smlt::Vec3(10, 0, 0));
+        assert_equal(instancer->transformed_aabb().center(), smlt::Vec3(10, 0, 0));
 
         auto camera = scene->create_child<smlt::Camera>();
         batcher::RenderQueue queue;

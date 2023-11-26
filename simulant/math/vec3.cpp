@@ -137,11 +137,11 @@ smlt::Vec3 operator-(const smlt::Vec3& vec) {
 }
 
 float Vec3::distance_to(const AABB& aabb) const {
-    Vec3 centre = aabb.centre();
+    Vec3 center = aabb.center();
 
-    float dx = fast_max(fast_abs(x - centre.x) - (aabb.width() * 0.5f), 0.0f);
-    float dy = fast_max(fast_abs(y - centre.y) - (aabb.height() * 0.5f), 0.0f);
-    float dz = fast_max(fast_abs(z - centre.z) - (aabb.depth() * 0.5f), 0.0f);
+    float dx = fast_max(fast_abs(x - center.x) - (aabb.width() * 0.5f), 0.0f);
+    float dy = fast_max(fast_abs(y - center.y) - (aabb.height() * 0.5f), 0.0f);
+    float dz = fast_max(fast_abs(z - center.z) - (aabb.depth() * 0.5f), 0.0f);
 
 #ifdef __DREAMCAST__
     return fast_sqrt(MATH_Sum_of_Squares(dx, dy, dz, 0));

@@ -44,8 +44,8 @@ public:
     AABB(const Vec3& center, const Vec3& extents):
         center_(center), extents_(extents) {}
 
-    AABB(const Vec3& centre, float width);
-    AABB(const Vec3& centre, float xsize, float ysize, float zsize);
+    AABB(const Vec3& center, float width);
+    AABB(const Vec3& center, float xsize, float ysize, float zsize);
     AABB(const Vec3* vertices, const std::size_t count);    
     AABB(const VertexData& vertex_data);
 
@@ -80,7 +80,7 @@ public:
     bool intersects_aabb(const AABB& other) const;
     bool intersects_sphere(const smlt::Vec3& center, float radius) const;
 
-    Vec3 centre() const {
+    Vec3 center() const {
         return center_;
     }
 

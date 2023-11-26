@@ -29,10 +29,10 @@ Frustum::Frustum():
 
 }
 
-bool Frustum::intersects_cube(const Vec3& centre, float size) const {
-    const float& x = centre.x;
-    const float& y = centre.y;
-    const float& z = centre.z;
+bool Frustum::intersects_cube(const Vec3& center, float size) const {
+    const float& x = center.x;
+    const float& y = center.y;
+    const float& z = center.z;
 
     size *= 0.5f;
 

@@ -359,7 +359,7 @@ public:
 
         auto& aabb = mesh->aabb();
 
-        assert_close(aabb.centre().x, -100.0f, EPSILON);
+        assert_close(aabb.center().x, -100.0f, EPSILON);
         assert_close(aabb.max().x, -99.5f, EPSILON);
         assert_close(aabb.width(), 1.0f, EPSILON);
         assert_close(aabb.height(), 1.0f, EPSILON);
@@ -375,7 +375,7 @@ public:
 
         auto& aabb = submesh->aabb();
 
-        assert_close(aabb.centre().x, -100.0f, EPSILON);
+        assert_close(aabb.center().x, -100.0f, EPSILON);
         assert_close(aabb.max().x, -99.5f, EPSILON);
         assert_close(aabb.width(), 1.0f, EPSILON);
         assert_close(aabb.height(), 1.0f, EPSILON);
