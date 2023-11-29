@@ -224,9 +224,18 @@ void UIManager::process_event_queue(const Camera* camera, const Viewport &viewpo
                     } else if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
                         widget->fingerup(evt.mouse.id);
                     }
+                } else if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION) {
+                    // If we just moved over the widget, and we weren't already on it
+                    // then trigger a fingerenter
+                    if(!widget->is_pressed_by_finger(evt.mouse.id)) {
+                        widget->fingerenter(evt.mouse.id);
+                    }
+
+                    // notify that there was a movement on the widget
+                    widget->fingermove(evt.mouse.id);
                 }
 
-                if(/* evt.mouse.type == TOUCH_EVENT_TYPE_FINGER_MOVE || */ evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
+                if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION || evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
                     // Go through all the widgets, if one is being pressed and it's different
                     // than the one above, then trigger a fingerleave event
                     for(auto iter: *manager_) {

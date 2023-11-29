@@ -169,6 +169,16 @@ void SDL2Window::check_events() {
         return state;
     };
 
+    auto to_mouse_button_id = [](uint8_t SDL_button) -> MouseButtonID {
+        switch(SDL_button) {
+        case SDL_BUTTON_LEFT: return 0;
+        case SDL_BUTTON_RIGHT: return 1;
+        case SDL_BUTTON_MIDDLE: return 2;
+        default:
+            return -1;
+        }
+    };
+
 
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
@@ -251,10 +261,10 @@ void SDL2Window::check_events() {
             } break;
             case SDL_MOUSEBUTTONDOWN: {
                 bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
-                input_state->_handle_mouse_down(event.button.which, event.button.button);
+                input_state->_handle_mouse_down(event.button.which, to_mouse_button_id(event.button.button));
                 on_mouse_down(
                     event.button.which,
-                    event.button.button,
+                    to_mouse_button_id(event.button.button),
                     event.button.x,
                     height() - event.button.y,
                     is_touch_device
@@ -262,10 +272,10 @@ void SDL2Window::check_events() {
             } break;
             case SDL_MOUSEBUTTONUP: {
                 bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
-                input_state->_handle_mouse_up(event.button.which, event.button.button);
+                input_state->_handle_mouse_up(event.button.which, to_mouse_button_id(event.button.button));
                 on_mouse_up(
                     event.button.which,
-                    event.button.button,
+                    to_mouse_button_id(event.button.button),
                     event.button.x,
                     height() - event.button.y,
                     is_touch_device
