@@ -142,24 +142,24 @@ void AndroidWindow::on_application_set(Application* app) {
     auto view_class = jni->FindClass("android/view/View");
     auto get_decor_view = jni->GetMethodID(window_class, "getDecorView", "()Landroid/view/View;");
 
-    auto setSystemUiVisibility = jni->GetMethodID(viewClass, "setSystemUiVisibility", "(I)V");
+    auto setSystemUiVisibility = jni->GetMethodID(view_class, "setSystemUiVisibility", "(I)V");
 
-    auto window = jni->CallObjectMethod(aap->activity->clazz, get_window);
+    auto window = jni->CallObjectMethod(aapp->activity->clazz, get_window);
     auto decor_view = jni->CallObjectMethod(window, get_decor_view);
 
-    auto id_SYSTEM_UI_FLAG_LAYOUT_STABLE = env->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_STABLE", "I");
-    auto id_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = env->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION", "I");
-    auto id_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = env->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN", "I");
-    auto id_SYSTEM_UI_FLAG_HIDE_NAVIGATION = env->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_HIDE_NAVIGATION", "I");
-    auto id_SYSTEM_UI_FLAG_FULLSCREEN = env->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_FULLSCREEN", "I");
-    auto id_SYSTEM_UI_FLAG_IMMERSIVE_STICKY = env->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_IMMERSIVE_STICKY", "I");
+    auto id_SYSTEM_UI_FLAG_LAYOUT_STABLE = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_STABLE", "I");
+    auto id_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION", "I");
+    auto id_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN", "I");
+    auto id_SYSTEM_UI_FLAG_HIDE_NAVIGATION = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_HIDE_NAVIGATION", "I");
+    auto id_SYSTEM_UI_FLAG_FULLSCREEN = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_FULLSCREEN", "I");
+    auto id_SYSTEM_UI_FLAG_IMMERSIVE_STICKY = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_IMMERSIVE_STICKY", "I");
 
-    const int flag_SYSTEM_UI_FLAG_LAYOUT_STABLE = env->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_STABLE);
-    const int flag_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = env->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-    const int flag_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = env->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-    const int flag_SYSTEM_UI_FLAG_HIDE_NAVIGATION = env->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-    const int flag_SYSTEM_UI_FLAG_FULLSCREEN = env->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_FULLSCREEN);
-    const int flag_SYSTEM_UI_FLAG_IMMERSIVE_STICKY = env->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    const int flag_SYSTEM_UI_FLAG_LAYOUT_STABLE = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    const int flag_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+    const int flag_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    const int flag_SYSTEM_UI_FLAG_HIDE_NAVIGATION = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+    const int flag_SYSTEM_UI_FLAG_FULLSCREEN = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_FULLSCREEN);
+    const int flag_SYSTEM_UI_FLAG_IMMERSIVE_STICKY = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
     const int flag =
         flag_SYSTEM_UI_FLAG_LAYOUT_STABLE |
