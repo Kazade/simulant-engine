@@ -270,8 +270,6 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
             }
         }
 
-        S_ERROR("{0} vs {1} vs {2}", internal_format, format, type);
-
         if(format > 0 && type > 0) {
             /* Paletted textures are uploaded using glCompressedTexImage2D if the
              * OES_compressed_paletted_texture extension is available */

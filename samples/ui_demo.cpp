@@ -38,6 +38,9 @@ public:
 
         auto button = stage_->ui->new_widget_as_button("Button");
         button->resize(column, -1);
+        button->signal_clicked().connect([=]() {
+            button->set_background_colour(smlt::Colour::RED);
+        });
         frame->pack_child(button);
 
         pg1_ = stage_->ui->new_widget_as_progress_bar();
@@ -111,7 +114,7 @@ public:
         align_frame->pack_child(middle_label);
         align_frame->pack_child(right_label);
         align_frame->set_anchor_point(1.0f, 1.0f);
-        align_frame->move_to(window->width() - 16, window->height() - 16);
+        align_frame->move_to(window->width() - 16, window->height() - 16);        
     }
 
     void activate() override {
@@ -190,6 +193,7 @@ int main(int argc, char* argv[]) {
     config.height = 960;
 #endif
 
+    config.show_cursor = true;
     App app(config);
     return app.run();
 }

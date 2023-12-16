@@ -178,6 +178,18 @@ GameControllerIndex InputState::game_controller_index_from_id(GameControllerID i
     return GameControllerIndex(-1);
 }
 
+Keyboard* InputState::keyboard_by_id(KeyboardID keyboard_id) {
+    assert(keyboard_id < (KeyboardID) keyboard_count());
+    assert(keyboard_id < 4);
+    return &keyboards_[keyboard_id];
+}
+
+const Keyboard* InputState::keyboard_by_id(KeyboardID keyboard_id) const {
+    assert(keyboard_id < (KeyboardID) keyboard_count());
+    assert(keyboard_id < 4);
+    return &keyboards_[keyboard_id];
+}
+
 float InputState::joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const {
     const GameController* controller = game_controller_by_id(joystick_id);
     if(controller) {

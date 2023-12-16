@@ -37,10 +37,15 @@ typedef ::smlt::StageNodeManager<
 > WidgetManager;
 
 enum UIEventType {
-    UI_EVENT_TYPE_TOUCH
+    UI_EVENT_TYPE_TOUCH,
+    UI_EVENT_TYPE_MOUSE,
 };
 
 struct UIEvent {
+    UIEvent(const MouseEvent& evt):
+        type(UI_EVENT_TYPE_MOUSE),
+        mouse(evt) {}
+
     UIEvent(const TouchEvent& evt):
         type(UI_EVENT_TYPE_TOUCH),
         touch(evt) {}
@@ -48,6 +53,7 @@ struct UIEvent {
     UIEventType type;
     union {
         TouchEvent touch;
+        MouseEvent mouse;
     };
 };
 
@@ -99,11 +105,11 @@ private:
     std::shared_ptr<WidgetManager> manager_;
     UIConfig config_;
 
-    void on_touch_begin(const TouchEvent &evt) override;
-    void on_touch_end(const TouchEvent &evt) override;
-    void on_touch_move(const TouchEvent &evt) override;
+    void on_mouse_down(const MouseEvent &evt) override;
+    void on_mouse_up(const MouseEvent &evt) override;
 
     void queue_event(const TouchEvent& evt);
+    void queue_event(const MouseEvent& evt);
     void process_event_queue(const Camera *camera, const Viewport& viewport) const;
     void clear_event_queue();
 

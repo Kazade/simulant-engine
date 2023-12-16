@@ -169,6 +169,16 @@ void SDL2Window::check_events() {
         return state;
     };
 
+    auto to_mouse_button_id = [](uint8_t SDL_button) -> MouseButtonID {
+        switch(SDL_button) {
+        case SDL_BUTTON_LEFT: return 0;
+        case SDL_BUTTON_RIGHT: return 1;
+        case SDL_BUTTON_MIDDLE: return 2;
+        default:
+            return -1;
+        }
+    };
+
 
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
@@ -239,24 +249,37 @@ void SDL2Window::check_events() {
                 on_key_up((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_MOUSEMOTION: {
-                if(event.motion.which != SDL_TOUCH_MOUSEID) {
-                    input_state->_handle_mouse_motion(
-                        event.motion.which,
-                        event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel
-                    );
-                }
+                bool is_touch_device = (event.motion.which == SDL_TOUCH_MOUSEID);
+                input_state->_handle_mouse_motion(
+                    event.motion.which,
+                    event.motion.x,
+                    height() - event.motion.y,
+                    event.motion.xrel,
+                    -event.motion.yrel
+                );
+                on_mouse_move(event.motion.which, event.motion.x, event.motion.y, is_touch_device);
             } break;
             case SDL_MOUSEBUTTONDOWN: {
-                if(event.button.which != SDL_TOUCH_MOUSEID) {
-                    input_state->_handle_mouse_down(event.button.which, event.button.button);
-                    on_mouse_down(event.button.which, event.button.button, event.button.x, event.button.y);
-                }
+                bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
+                input_state->_handle_mouse_down(event.button.which, to_mouse_button_id(event.button.button));
+                on_mouse_down(
+                    event.button.which,
+                    to_mouse_button_id(event.button.button),
+                    event.button.x,
+                    height() - event.button.y,
+                    is_touch_device
+                );
             } break;
             case SDL_MOUSEBUTTONUP: {
-                if(event.button.which != SDL_TOUCH_MOUSEID) {
-                    input_state->_handle_mouse_up(event.button.which, event.button.button);
-                    on_mouse_up(event.button.which, event.button.button, event.button.x, event.button.y);
-                }
+                bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
+                input_state->_handle_mouse_up(event.button.which, to_mouse_button_id(event.button.button));
+                on_mouse_up(
+                    event.button.which,
+                    to_mouse_button_id(event.button.button),
+                    event.button.x,
+                    height() - event.button.y,
+                    is_touch_device
+                );
             } break;
             case SDL_FINGERMOTION: {
                 float x = event.tfinger.x;
