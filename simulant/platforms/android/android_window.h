@@ -3,6 +3,8 @@
 #include <EGL/egl.h>
 #include "../../window.h"
 
+struct android_app;
+
 namespace smlt {
 
 class AndroidWindow : public Window {
@@ -27,14 +29,17 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
-    EGLDisplay dpy_;
-    EGLSurface surface_;
-    EGLContext ctx_;
+    EGLDisplay dpy_ = EGL_NO_DISPLAY;
+    EGLSurface surface_ = EGL_NO_SURFACE;
+    EGLContext ctx_ = EGL_NO_CONTEXT;
+    EGLConfig config_ = nullptr;
 
     bool _init_window() override;
     bool _init_renderer(Renderer *renderer) override;
 
     void on_application_set(Application* app) override;
+
+    void create_egl_surface(android_app* aapp);
 };
 
 }

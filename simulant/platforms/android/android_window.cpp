@@ -177,9 +177,20 @@ void AndroidWindow::on_application_set(Application* app) {
 }
 
 void AndroidWindow::swap_buffers() {
-    if(dpy_ != EGL_NO_DISPLAY) {
+    if(dpy_ != EGL_NO_DISPLAY && has_focus()) {
         eglSwapBuffers(dpy_, surface_);
     }
+}
+
+void AndroidWindow::create_egl_surface(android_app* aapp) {
+    EGLint width, height;
+
+    surface_ = eglCreateWindowSurface(dpy_, config_, aapp->window, NULL);
+    eglQuerySurface(dpy_, surface_, EGL_WIDTH, &width);
+    eglQuerySurface(dpy_, surface_, EGL_HEIGHT, &height);
+
+    set_width(width);
+    set_height(height);
 }
 
 bool AndroidWindow::_init_window() {
@@ -212,7 +223,6 @@ bool AndroidWindow::_init_window() {
         return false;
     }
 
-    EGLConfig config = nullptr;
     EGLint num_configs;
 
     eglChooseConfig(dpy_, attrib_list, nullptr, 0, &num_configs);
@@ -238,38 +248,33 @@ bool AndroidWindow::_init_window() {
         if(r == 8 && g == 8 && b == 8 && d >= max_depth) {
             S_DEBUG("Found config: {0}:{1}:{2}:{3} {4}", r, g, b, a, d);
             max_depth = d;
-            config = cfg;
+            config_ = cfg;
             break;
         }
     }
 
-    if(!config) {
-        config = supported_configs[0];
+    if(!config_) {
+        config_ = supported_configs[0];
     }
 
-    if(!config) {
+    if(!config_) {
         S_ERROR("Unable to find supported EGL config");
         return false;
     }
 
-    EGLint width, height, format;
+    EGLint format;
 
-    eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
+    eglGetConfigAttrib(dpy_, config_, EGL_NATIVE_VISUAL_ID, &format);
     ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
 
-    surface_ = eglCreateWindowSurface(dpy_, config, aapp->window, NULL);
-    eglQuerySurface(dpy_, surface_, EGL_WIDTH, &width);
-    eglQuerySurface(dpy_, surface_, EGL_HEIGHT, &height);
-
-    set_width(width);
-    set_height(height);
+    create_egl_surface(aapp);
 
     const EGLint context_attribs [] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
 
-    ctx_ = eglCreateContext(dpy_, config, NULL, context_attribs);
+    ctx_ = eglCreateContext(dpy_, config_, NULL, context_attribs);
     if(eglMakeCurrent(dpy_, surface_, surface_, ctx_) == EGL_FALSE) {
         S_ERROR("Error making the context current");
         return false;
@@ -555,35 +560,50 @@ void AndroidWindow::check_events() {
 
         switch(cmd) {
             case APP_CMD_SAVE_STATE:
-                S_DEBUG("CMD: Save state");
+                S_INFO("CMD: Save state");
                 break;
+
             case APP_CMD_INIT_WINDOW:
-                S_DEBUG("CMD: Init window");
+                S_INFO("CMD: Init window");
+                if(dpy_ != EGL_NO_DISPLAY && surface_ == EGL_NO_SURFACE && ctx_ != EGL_NO_CONTEXT) {
+                    // Rebind the context to the display/surface
+                    create_egl_surface(aapp);
+                    eglMakeCurrent(dpy_, surface_, surface_, ctx_);
+                }
+
                 break;
             case APP_CMD_TERM_WINDOW:
-                S_DEBUG("CMD: Term window");
-                // The window is being hidden or closed, clean it up.
+                S_INFO("CMD: Term window");
+
+                if(dpy_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE && ctx_ != EGL_NO_CONTEXT) {
+                    eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+                    eglDestroySurface(dpy_, surface_);
+                    surface_ = EGL_NO_SURFACE;
+                }
+
+                break;
+            case APP_CMD_DESTROY:
                 set_has_context(false);
                 destroy_window();
                 break;
             case APP_CMD_GAINED_FOCUS:
-                S_DEBUG("CMD: Focus gained");
-//                {
-//                    //See Window::context_lock_ for details
-//                    thread::Lock<thread::Mutex> context_lock(this->context_lock());
-//                    set_has_context(true);
-//                }
+                S_INFO("CMD: Focus gained");
+               // {
+               //     //See Window::context_lock_ for details
+               //     thread::Lock<thread::Mutex> context_lock(this->context_lock());
+               //     set_has_context(true);
+               // }
                 //FIXME: Reload textures and shaders
                 set_has_focus(true);
                 break;
             case APP_CMD_LOST_FOCUS:
-                S_DEBUG("CMD: Focus lost");
+                S_INFO("CMD: Focus lost");
                 set_has_focus(false);
-//                {
-//                    //See Window::context_lock_ for details
-//                    thread::Lock<thread::Mutex> context_lock(this->context_lock());
-//                    set_has_context(false);
-//                }
+               // {
+               //     //See Window::context_lock_ for details
+               //     thread::Lock<thread::Mutex> context_lock(this->context_lock());
+               //     set_has_context(false);
+               // }
                 break;
             default:
                 break;
