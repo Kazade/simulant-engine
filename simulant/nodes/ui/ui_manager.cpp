@@ -290,8 +290,6 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 
     auto window = get_app()->window.get();
 
-    float highest_z = std::numeric_limits<float>::lowest();
-
     for(auto widget: *manager_) {
         auto aabb = widget->transformed_aabb();
 
@@ -312,12 +310,8 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
         // FIXME: Return the nearest if overlapping!
         if(ss_aabb.min().x <= window_coord.x && ss_aabb.max().x >= window_coord.x &&
             ss_aabb.min().y <= window_coord.y && ss_aabb.max().y >= window_coord.y) {
-
-            /* This is a nasty hack, widgets may not be displayed this way. Should be raycast. */
-            if(highest_z <= ss_aabb.centre().z) {
-                result = widget;
-                highest_z = ss_aabb.centre().z;
-            }
+            result = widget;
+            break;
         }
     };
 
