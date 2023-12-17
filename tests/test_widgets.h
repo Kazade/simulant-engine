@@ -43,20 +43,31 @@ public:
     }
 
     void test_click_event() {
+        auto camera = stage_->new_camera_for_ui();
+        auto viewport = Viewport();
         auto button = stage_->ui->new_widget_as_button("Button");
         button->set_anchor_point(0.5f, 0.5f);
         button->move_to(window->width() / 2, window->height() / 2);
 
-        bool clicked = false;
+        int clicked = 0;
 
         button->signal_clicked().connect([&]() {
-            clicked = true;
+            clicked++;
         });
 
-        window->on_mouse_down(0, 0, window->width() / 2, window->height() / 2);
-        application->run_frame();
+        window->on_mouse_down(0, 0, window->width() / 2, window->height() / 2, false);
+        window->on_mouse_up(0, 0, window->width() / 2, window->height() / 2, false);
+        stage_->ui->process_event_queue(camera, viewport);
 
-        assert_true(clicked);
+        assert_equal(clicked, 1);
+
+        clicked = 0;
+
+        window->on_finger_down(0, 0.5f, 0.5f, 1.0f);
+        window->on_finger_up(0, 0.5f, 0.5f);
+        stage_->ui->process_event_queue(camera, viewport);
+
+        assert_equal(clicked, 1);
     }
 
     void test_foreground_and_background_images_differ() {
