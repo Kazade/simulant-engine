@@ -42,6 +42,23 @@ public:
         assert_equal(stage_->assets->material_count(), mc); /* Destroyed */
     }
 
+    void test_click_event() {
+        auto button = stage_->ui->new_widget_as_button("Button");
+        button->set_anchor_point(0.5f, 0.5f);
+        button->move_to(window->width() / 2, window->height() / 2);
+
+        bool clicked = false;
+
+        button->signal_clicked().connect([&]() {
+            clicked = true;
+        });
+
+        window->on_mouse_down(0, 0, window->width() / 2, window->height() / 2);
+        application->run_frame();
+
+        assert_true(clicked);
+    }
+
     void test_foreground_and_background_images_differ() {
         auto button = stage_->ui->new_widget_as_button("Button", ui::Px(100), ui::Px(20));
 
