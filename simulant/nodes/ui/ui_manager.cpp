@@ -290,7 +290,18 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 
     auto window = get_app()->window.get();
 
+    std::list<Widget*> sorted_widgets;
+
     for(auto widget: *manager_) {
+        sorted_widgets.push_back(widget);
+    }
+
+    // Order largest Z order (last rendered) to lowest z order
+    sorted_widgets.sort([](Widget* lhs, Widget* rhs) -> bool {
+        return lhs->z_order() > rhs->z_order();
+    });
+
+    for(auto widget: sorted_widgets) {
         auto aabb = widget->transformed_aabb();
 
         // Ignore things facing away
