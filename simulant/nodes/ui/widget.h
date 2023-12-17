@@ -217,6 +217,10 @@ public:
     void set_opacity(RangeValue<0, 1> alpha);
 
     Px line_height() const;
+
+    void set_z_order(int16_t z_order);
+
+    int16_t z_order() const;
 public:
     MaterialPtr border_material() const { return style_->materials_[0]; }
     MaterialPtr background_material() const { return style_->materials_[1]; }
