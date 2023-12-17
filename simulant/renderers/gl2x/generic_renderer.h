@@ -78,8 +78,7 @@ class GenericRenderer:
 public:
     GenericRenderer(Window* window);
 
-    batcher::RenderGroupKey prepare_render_group(
-        batcher::RenderGroup* group,
+    batcher::RenderGroupKey prepare_render_group(batcher::RenderGroup* group,
         const Renderable *renderable,
         const MaterialPass *material_pass,
         const uint8_t pass_number,

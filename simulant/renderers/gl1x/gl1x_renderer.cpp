@@ -50,7 +50,8 @@ batcher::RenderGroupKey GL1XRenderer::prepare_render_group(
     return batcher::generate_render_group_key(
         pass_number,
         is_blended,
-        distance_to_camera
+        distance_to_camera,
+        renderable->z_order
     );
 }
 
