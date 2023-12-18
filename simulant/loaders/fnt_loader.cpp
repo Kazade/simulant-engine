@@ -277,37 +277,38 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     flags.auto_upload = false;
     flags.filter = TEXTURE_FILTER_BILINEAR;
 
-    font->texture_ = font->asset_manager().new_texture_from_file(texture_path, flags);
-    assert(font->texture_);
+    FontPage page;
 
-    font->material_ = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-    font->material_->set_diffuse_map(font->texture_);
-    font->material_->set_cull_mode(CULL_MODE_NONE);
-    font->material_->set_depth_test_enabled(false);
+    page.texture = font->asset_manager().new_texture_from_file(texture_path, flags);
+    assert(page.texture);
+
+    page.material = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
+    page.material->set_diffuse_map(page.texture);
+    page.material->set_cull_mode(CULL_MODE_NONE);
+    page.material->set_depth_test_enabled(false);
+    page.material->set_blend_func(BLEND_ALPHA);
 
     // Set the page dimensions
     // FIXME: Multiple pages
-    font->page_height_ = font->texture_->height();
-    font->page_width_ = font->texture_->width();
+    page.height = page.texture->height();
+    page.width = page.texture->width();
 
-    font->material_->set_blend_func(BLEND_ALPHA);
-    font->material_->set_depth_test_enabled(false);
-    font->material_->set_cull_mode(CULL_MODE_NONE);
-
-    if(font->texture_->channels() == 1) {
+    if(page.texture->channels() == 1) {
         /*
          * Convert 1 channel textures to 4 channel, 16 bits-per-pixel textures
          * which are the most compressed format we can send the Dreamcast without
          * getting bogged down with VQ compression or paletted textures
          */
-        font->texture_->convert(
+        page.texture->convert(
             TEXTURE_FORMAT_RGBA_1US_4444,
             {{TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_ONE, TEXTURE_CHANNEL_RED}}
         );
     }
 
     // OK, it's fine to upload now
-    font->texture_->set_auto_upload(true);
+    page.texture->set_auto_upload(true);
+    font->pages_.push_back(page);
+
     S_DEBUG("Font texture loaded");
 }
 

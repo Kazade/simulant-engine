@@ -900,12 +900,6 @@ private:
         auto c = style_->text_colour_;
         c.set_alpha(style_->opacity_);
 
-        auto sm = mesh_->find_submesh("text");
-        assert(sm);
-
-        /* Make sure the font material is up to date! */
-        sm->set_material(font_->material());
-
         const char16_t row0 [] = {
             '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-'
         };
@@ -994,6 +988,9 @@ private:
                 Px ch_width = font_->character_width(ch);
                 Px ch_height = font_->character_height(ch);
                 auto min_max = font_->char_texcoords(ch);
+                auto page = font_->character_page(ch);
+
+                std::string sm_name = _F("text-{0}").format(page);
 
                 auto info = find_key(x, y);
                 if(info) {
@@ -1011,7 +1008,7 @@ private:
                         smlt::Vec2(min_max.second.x, min_max.second.y)
                     };
 
-                    sm = new_rectangle("text", bounds, c, 0, uvs);
+                    new_rectangle(sm_name, bounds, c, 0, uvs);
 
                     info->displayed_character = ch;
                 }
