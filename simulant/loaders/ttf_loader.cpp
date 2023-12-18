@@ -183,6 +183,8 @@ namespace loaders {
 
         while(packed < blocks.size()) {
             // Phase 1. Increment texture size
+            font->pages_.push_back(FontPage());
+
             int width = 256;
             int blocks_to_pack = blocks.size() - packed;
 

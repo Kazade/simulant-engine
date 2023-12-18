@@ -25,11 +25,19 @@ Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_p
         set_text_colour(defaults->text_colour_);
     }
 
-    std::string family = (defaults->font_family_.empty()) ?
-        get_app()->config->ui.font_family : defaults->font_family_;
+    VertexSpecification spec = VertexSpecification::DEFAULT;
 
-    Px size = (defaults->font_size_ == Px(0)) ?
-        Px(get_app()->config->ui.font_size) : Px(defaults->font_size_);
+    /* We don't need normals or multiple texcoords */
+    spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
+    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
+
+    mesh_ = stage->assets->new_mesh(spec);
+
+    std::string family = (theme_->font_family_.empty()) ?
+                             get_app()->config->ui.font_family : theme_->font_family_;
+
+    Px size = (theme_->font_size_ == Px(0)) ?
+                  Px(get_app()->config->ui.font_size) : Px(theme_->font_size_);
 
     auto font = stage->ui->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
     assert(font);
@@ -50,6 +58,10 @@ Widget::~Widget() {
 }
 
 void Widget::build_text_submeshes() {
+    if(!mesh_) {
+        return;
+    }
+
     for(std::size_t i = 0; i < font_->page_count(); ++i) {
         std::string id = _F("text-{0}").format(i);
         auto sm = mesh_->find_submesh(id);
@@ -66,13 +78,6 @@ void Widget::build_text_submeshes() {
 }
 
 bool Widget::init() {
-    VertexSpecification spec = VertexSpecification::DEFAULT;
-
-    /* We don't need normals or multiple texcoords */
-    spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
-    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
-
-    mesh_ = stage->assets->new_mesh(spec);
     actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
 
@@ -85,8 +90,6 @@ bool Widget::init() {
     mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
     mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
     mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-
-    build_text_submeshes();
 
     rebuild();
 
@@ -364,7 +367,7 @@ void Widget::render_text() {
         Char* ch = &characters.at(range.first >> 2);
 
         uint16_t hw = line_lengths[j++].value / 2;
-        for(auto i = 0u; i < range.second; ++i, ++ch) {
+        for(auto i = 0u; i < range.second >> 2; ++i, ++ch) {
             Vertex* bl = ch->vertices;
             Vertex* br = ch->vertices + 1;
             Vertex* tr = ch->vertices + 2;
@@ -434,7 +437,7 @@ void Widget::render_text() {
             auto ashift = std::ceil(-line_lengths[j++].value * 0.5f);
             ashift += std::ceil(cwidth.value * 0.5f);
 
-            for(auto i = 0u; i < range.second; i++, ch++) {
+            for(auto i = 0u; i < range.second >> 2; i++, ch++) {
                 for(auto j = 0u; j < 4; ++j) {
                     if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
                         ch->vertices[j].xyz.x -= ashift;

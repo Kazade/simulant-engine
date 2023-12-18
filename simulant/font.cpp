@@ -13,7 +13,7 @@
 
 namespace smlt {
 
-const static char FALLBACK_CHAR = FALLBACK_CHAR;
+const static char FALLBACK_CHAR = '?';
 
 Font::Font(FontID id, AssetManager *asset_manager):
     Asset(asset_manager),
