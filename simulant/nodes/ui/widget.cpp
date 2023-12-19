@@ -410,7 +410,7 @@ void Widget::render_text() {
         mesh_->find_submesh("text-0"),
         mesh_->find_submesh("text-1"),
         mesh_->find_submesh("text-2"),
-        mesh_->find_submesh("text-3"),
+        mesh_->find_submesh("text-3")
     };
 
     auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());

@@ -52,11 +52,12 @@ void Frame::finalize_build() {
 
     /* Reposition the text to be in the title bar */
     if(!text_.empty()) {
+        static_assert(Font::max_pages == 4, "This code needs changing");
         SubMeshPtr submeshes [] = {
             mesh()->find_submesh("text-0"),
             mesh()->find_submesh("text-1"),
             mesh()->find_submesh("text-2"),
-            mesh()->find_submesh("text-3")
+            mesh()->find_submesh("text-3"),
         };
 
         auto vdata = mesh()->vertex_data.get();
