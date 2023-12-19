@@ -33,6 +33,16 @@ Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_p
 
     mesh_ = stage->assets->new_mesh(spec);
 
+    /* Use the global materials until we can't anymore! */
+    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
+
+    /* Now we must create the submeshes in the order we want them rendered */
+    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+
     std::string family = (theme_->font_family_.empty()) ?
                              get_app()->config->ui.font_family : theme_->font_family_;
 
@@ -62,17 +72,26 @@ void Widget::build_text_submeshes() {
         return;
     }
 
-    for(std::size_t i = 0; i < font_->page_count(); ++i) {
+    for(std::size_t i = 0; i < Font::max_pages; ++i) {
         std::string id = _F("text-{0}").format(i);
         auto sm = mesh_->find_submesh(id);
+
+        smlt::MaterialPtr m =
+            (i < font_->page_count()) ?
+            font_->page(i)->material : MaterialPtr();
+
+        if(!m) {
+            m = stage->assets->clone_default_material();
+        }
+
         if(!sm) {
             mesh_->new_submesh(
                 id,
-                font_->page(i)->material,
+                m,
                 MESH_ARRANGEMENT_TRIANGLE_STRIP
             );
         } else {
-            sm->set_material(font_->page(i)->material);
+            sm->set_material(m);
         }
     }
 }
@@ -80,16 +99,6 @@ void Widget::build_text_submeshes() {
 bool Widget::init() {
     actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
-
-    /* Use the global materials until we can't anymore! */
-    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
-
-    /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     rebuild();
 
