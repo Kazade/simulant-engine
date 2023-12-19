@@ -214,8 +214,11 @@ namespace loaders {
                 while(blocks_to_pack > 1) {
                     // We failed to pack into 1024, so now we need to break the
                     // blocks down until things fit
-                    split_block();
-                    blocks_to_pack--;
+                    if(!split_block()) {
+                        // If we can't break down the blocks any further, we
+                        // reduce the number of blocks we're trying to pack
+                        blocks_to_pack--;
+                    }
 
                     stbtt_PackBegin(&ctx, &pixels[0], width, width, 0, 1, NULL);
 
@@ -224,6 +227,7 @@ namespace loaders {
                     stbtt_PackEnd(&ctx);
 
                     if(ret == 1) {
+                        S_INFO("Packed {0} blocks into texture {1}", blocks_to_pack, current_page);
                         upload_texture(width, std::move(pixels));
 
                         for(int i = 0; i < blocks_to_pack; ++i) {
@@ -236,11 +240,6 @@ namespace loaders {
                         font->pages_[current_page].height = width;
                         break;
                     }
-                }
-
-                if(blocks_to_pack == 1) {
-                    S_ERROR("Failed to pack font");
-                    return;
                 }
 
                 current_page++;  // Move to the next page for the remaining blocks

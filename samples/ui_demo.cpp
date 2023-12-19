@@ -56,7 +56,7 @@ public:
 
         smlt::FontFlags flags;
         flags.blur_radius = 1;
-        flags.size = 32;
+        flags.size = 128;
         auto blurred_font = stage_->assets->new_font_from_file("fonts/Orbitron/Orbitron-Regular.ttf", flags);
 
         auto big_label = stage_->ui->new_widget_as_label("Using a TrueType font!");
