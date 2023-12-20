@@ -125,7 +125,6 @@ ENDIF()
 IF(ANDROID)
     include_directories(
         ${ANDROID_NDK}/sources/android/native_app_glue
-        ${CMAKE_SOURCE_DIR}/platforms/android/openal/include
     )
 
     LINK_DIRECTORIES(
@@ -144,7 +143,7 @@ IF(ANDROID)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
     SET(OPENGL_LIBRARIES GLESv2 EGL)
     FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
-    FIND_PATH(OPENAL_INCLUDE_DIRS NAMES al.h PATH_SUFFIXES AL)
+    SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/platforms/android/openal/include)
 
 ELSEIF(PLATFORM_PSP)
     SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
