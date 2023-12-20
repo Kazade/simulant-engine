@@ -7,6 +7,7 @@
 #include <android/native_window.h>
 #include "android_window.h"
 
+#include "../../sound/drivers/openal_sound_driver.h"
 #include "../../sound/drivers/null_sound_driver.h"
 #include "../../renderers/renderer_config.h"
 #include "../../application.h"
