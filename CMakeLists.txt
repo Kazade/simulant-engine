@@ -127,11 +127,16 @@ IF(ANDROID)
         ${ANDROID_NDK}/sources/android/native_app_glue
     )
 
-    LINK_DIRECTORIES(
-        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/arm64-v8a
-        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/x86_64
-        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/x86
-        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/armeabi-v7a
+    add_library(
+        openal
+        SHARED
+        IMPORTED
+    )
+
+    set_target_properties(
+        openal
+        PROPERTIES IMPORTED_LOCATION
+        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/${ANDROID_ABI}/libopenal.so
     )
 
     add_library(
