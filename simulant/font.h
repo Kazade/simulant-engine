@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 
 #include "deps/stb_truetype/stb_truetype.h"
