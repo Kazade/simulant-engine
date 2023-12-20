@@ -73,6 +73,15 @@ IF(PLATFORM_DREAMCAST OR SIMULANT_USE_ALDC)
 
     MESSAGE("-- Including ALdc in build")
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBAL})
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
+    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/platforms/android/openal/include)
+    LINK_DIRECTORIES(
+        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/arm64-v8a
+        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/x86_64
+        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/x86
+        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/armeabi-v7a
+    )
+    LINK_LIBRARIES(openal)
 ENDIF()
 
 IF(PLATFORM_DREAMCAST)
