@@ -11,6 +11,10 @@
 #include "asset.h"
 #include "utils/limited_vector.h"
 
+#ifdef __DREAMCAST__
+#undef page_count
+#endif
+
 struct stbtt_fontinfo;
 
 namespace smlt {
