@@ -1046,6 +1046,10 @@ bool Widget::is_pressed_by_finger(uint8_t finger_id) {
     return fingers_down_ & (1 << finger_id);
 }
 
+bool Widget::is_pressed() const {
+    return fingers_down_;
+}
+
 void Widget::force_release() {
     for(int i = 0; i < 16; ++i) {
         if(fingers_down_ & (1 << i)) {

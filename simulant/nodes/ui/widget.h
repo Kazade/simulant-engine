@@ -207,6 +207,7 @@ public:
     void fingermove(uint8_t finger_id);
     void fingerleave(uint8_t finger_id);
     bool is_pressed_by_finger(uint8_t finger_id);
+    bool is_pressed() const;
 
     /* Releases all presses forcibly, firing signals */
     void force_release();

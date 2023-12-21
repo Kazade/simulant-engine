@@ -306,7 +306,7 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 
         // Ignore things facing away
         auto f = widget->absolute_rotation().forward();
-        if(f.dot(camera->absolute_rotation().forward()) < 0) {
+        if(f.dot(camera->absolute_rotation().forward()) > 0) {
             continue;
         }
 
