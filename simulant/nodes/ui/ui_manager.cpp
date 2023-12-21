@@ -293,13 +293,17 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     std::list<Widget*> sorted_widgets;
 
     for(auto widget: *manager_) {
+        if(!widget->is_visible()) {
+            continue;
+        }
+
         sorted_widgets.push_back(widget);
     }
 
     auto is_descendent = [](Widget* item, Widget* potential_parent) {
-        StageNode* it = item;
+        StageNode* it = (StageNode*) item->parent();
         while(it && it != item->stage.get()) {
-            if(it == potential_parent) {
+            if(it == (StageNode*) potential_parent) {
                 return true;
             }
             it = (StageNode*) it->parent();
@@ -308,20 +312,19 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
         return false;
     };
 
+    smlt::Plane cam_plane(camera->absolute_rotation().forward(), camera->absolute_position());
+
     // Order widgets by distance to camera desc. This is hacky, if the two widgets
     // have approx the same distance, we check to see if one is a descendent of the
     // other, if so we sort descendents after ancestors
-    sorted_widgets.sort([camera, &is_descendent](Widget* lhs, Widget* rhs) -> bool {
-        float lhd = Vec3::sqr_distance(lhs->absolute_position(), camera->absolute_position());
-        float rhd = Vec3::sqr_distance(rhs->absolute_position(), camera->absolute_position());
+    sorted_widgets.sort([cam_plane, &is_descendent](Widget* lhs, Widget* rhs) -> bool {
+        float lhd = cam_plane.distance_to(lhs->absolute_position());
+        float rhd = cam_plane.distance_to(lhs->absolute_position());
 
         if(almost_equal(lhd, rhd)) {
             if(is_descendent(lhs, rhs)) {
-                // If rhs is a parent of lhs, then lhs is not *less*, parents
-                // are less than children
-                return false;
-            } else if(is_descendent(rhs, lhs)) {
-                // If lhs is a parent of rhs, then lhs *is* less than rhs
+                // If lhs is a descendent of rhs, make sure it comes first in the
+                // list
                 return true;
             } else {
                 // Not related, return false
@@ -331,8 +334,6 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 
         return lhd < rhd;
     });
-
-    sorted_widgets.reverse();
 
     for(auto widget: sorted_widgets) {
         auto aabb = widget->transformed_aabb();
