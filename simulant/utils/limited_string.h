@@ -4,6 +4,8 @@
 #include <string>
 #include <cstring>
 
+namespace smlt {
+
 template<std::size_t N, typename T = char>
 class LimitedString {
 public:
@@ -84,3 +86,5 @@ private:
     T string_[N + 1] = {'\0'};
     std::size_t len_ = 0;
 };
+
+}

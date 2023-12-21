@@ -296,19 +296,46 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
         sorted_widgets.push_back(widget);
     }
 
-    // Order largest Z order (last rendered) to lowest z order
-    sorted_widgets.sort([](Widget* lhs, Widget* rhs) -> bool {
-        return lhs->z_order() > rhs->z_order();
+    auto is_descendent = [](Widget* item, Widget* potential_parent) {
+        StageNode* it = item;
+        while(it && it != item->stage.get()) {
+            if(it == potential_parent) {
+                return true;
+            }
+            it = (StageNode*) it->parent();
+        }
+
+        return false;
+    };
+
+    // Order widgets by distance to camera desc. This is hacky, if the two widgets
+    // have approx the same distance, we check to see if one is a descendent of the
+    // other, if so we sort descendents after ancestors
+    sorted_widgets.sort([camera, &is_descendent](Widget* lhs, Widget* rhs) -> bool {
+        float lhd = Vec3::sqr_distance(lhs->absolute_position(), camera->absolute_position());
+        float rhd = Vec3::sqr_distance(rhs->absolute_position(), camera->absolute_position());
+
+        if(almost_equal(lhd, rhd)) {
+            if(is_descendent(lhs, rhs)) {
+                // If rhs is a parent of lhs, then lhs is not *less*, parents
+                // are less than children
+                return false;
+            } else if(is_descendent(rhs, lhs)) {
+                // If lhs is a parent of rhs, then lhs *is* less than rhs
+                return true;
+            } else {
+                // Not related, return false
+                return false;
+            }
+        }
+
+        return lhd < rhd;
     });
+
+    sorted_widgets.reverse();
 
     for(auto widget: sorted_widgets) {
         auto aabb = widget->transformed_aabb();
-
-        // Ignore things facing away
-        auto f = widget->absolute_rotation().forward();
-        if(f.dot(camera->absolute_rotation().forward()) < 0) {
-            continue;
-        }
 
         std::vector<Vec3> ss_points;
 
