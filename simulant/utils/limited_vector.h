@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstring>
 
+namespace smlt {
+
 /**
  * A size-limited vector that is statically allocated
  * (basically an array with a variable length)
@@ -106,3 +108,5 @@ private:
     T data_[N];
     std::size_t size_ = 0;
 };
+
+}
