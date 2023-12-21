@@ -23,8 +23,8 @@ float smootherstep(const float e0, const float e1, float x);
 template<typename T>
 bool almost_equal(const T& lhs, const T& rhs) {
     const T EPSILON = std::numeric_limits<T>::epsilon();
-    return lhs + EPSILON > rhs &&
-           lhs - EPSILON < rhs;
+    return lhs + EPSILON >= rhs &&
+           lhs - EPSILON <= rhs;
 }
 
 template<typename T>
