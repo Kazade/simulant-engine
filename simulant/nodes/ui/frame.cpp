@@ -52,8 +52,14 @@ void Frame::finalize_build() {
 
     /* Reposition the text to be in the title bar */
     if(!text_.empty()) {
+        static_assert(Font::max_pages == 4, "This code needs changing");
+        SubMeshPtr submeshes [] = {
+            mesh()->find_submesh("text-0"),
+            mesh()->find_submesh("text-1"),
+            mesh()->find_submesh("text-2"),
+            mesh()->find_submesh("text-3"),
+        };
 
-        auto sm = mesh()->find_submesh("text");
         auto vdata = mesh()->vertex_data.get();
 
         Px line_height_shift = (text_height_ - font_->size()) / 2;
@@ -61,14 +67,20 @@ void Frame::finalize_build() {
 
         Px shift = Px((oh.value * 0.5f) - line_height().value + (line_height_shift.value));
 
-        for(std::size_t i = 0; i < sm->vertex_range_count(); ++i) {
-            auto& range = sm->vertex_ranges()[i];
-            for(auto idx = range.start; idx < range.start + range.count; ++idx) {
-                auto vpos = *vdata->position_at<smlt::Vec3>(idx);
-                vpos.y += shift.value;
+        for(auto& sm: submeshes) {
+            if(!sm) {
+                continue;
+            }
 
-                vdata->move_to(idx);
-                vdata->position(vpos);
+            for(std::size_t i = 0; i < sm->vertex_range_count(); ++i) {
+                auto& range = sm->vertex_ranges()[i];
+                for(auto idx = range.start; idx < range.start + range.count; ++idx) {
+                    auto vpos = *vdata->position_at<smlt::Vec3>(idx);
+                    vpos.y += shift.value;
+
+                    vdata->move_to(idx);
+                    vdata->position(vpos);
+                }
             }
         }
     }

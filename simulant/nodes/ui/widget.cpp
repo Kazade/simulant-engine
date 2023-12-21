@@ -25,11 +25,29 @@ Widget::Widget(UIManager *owner, UIConfig *defaults, Stage* stage, std::shared_p
         set_text_colour(defaults->text_colour_);
     }
 
-    std::string family = (defaults->font_family_.empty()) ?
-        get_app()->config->ui.font_family : defaults->font_family_;
+    VertexSpecification spec = VertexSpecification::DEFAULT;
 
-    Px size = (defaults->font_size_ == Px(0)) ?
-        Px(get_app()->config->ui.font_size) : Px(defaults->font_size_);
+    /* We don't need normals or multiple texcoords */
+    spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
+    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
+
+    mesh_ = stage->assets->new_mesh(spec);
+
+    /* Use the global materials until we can't anymore! */
+    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
+
+    /* Now we must create the submeshes in the order we want them rendered */
+    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
+
+    std::string family = (theme_->font_family_.empty()) ?
+                             get_app()->config->ui.font_family : theme_->font_family_;
+
+    Px size = (theme_->font_size_ == Px(0)) ?
+                  Px(get_app()->config->ui.font_size) : Px(theme_->font_size_);
 
     auto font = stage->ui->load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);
     assert(font);
@@ -49,27 +67,38 @@ Widget::~Widget() {
     style_.reset();
 }
 
+void Widget::build_text_submeshes() {
+    if(!mesh_) {
+        return;
+    }
+
+    for(std::size_t i = 0; i < Font::max_pages; ++i) {
+        std::string id = _F("text-{0}").format(i);
+        auto sm = mesh_->find_submesh(id);
+
+        smlt::MaterialPtr m =
+            (i < font_->page_count()) ?
+            font_->page(i)->material : MaterialPtr();
+
+        if(!m) {
+            m = stage->assets->clone_default_material();
+        }
+
+        if(!sm) {
+            mesh_->new_submesh(
+                id,
+                m,
+                MESH_ARRANGEMENT_TRIANGLE_STRIP
+            );
+        } else {
+            sm->set_material(m);
+        }
+    }
+}
+
 bool Widget::init() {
-    VertexSpecification spec = VertexSpecification::DEFAULT;
-
-    /* We don't need normals or multiple texcoords */
-    spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
-    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
-
-    mesh_ = stage->assets->new_mesh(spec);
     actor_ = stage->new_actor_with_mesh(mesh_);
     actor_->set_parent(this);
-
-    /* Use the global materials until we can't anymore! */
-    style_->materials_[WIDGET_LAYER_INDEX_BORDER] = stage->ui->global_border_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND] = stage->ui->global_background_material_;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND] = stage->ui->global_foreground_material_;
-
-    /* Now we must create the submeshes in the order we want them rendered */
-    mesh_->new_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->new_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     rebuild();
 
@@ -109,6 +138,9 @@ void Widget::set_font(FontPtr font) {
 
     font_ = font;
 
+    // It's important we keep this up-to-date as different fonts
+    // will have different numbers of pages
+    build_text_submeshes();
     on_size_changed();
 }
 
@@ -163,6 +195,11 @@ void Widget::render_text() {
         smlt::Vec2 uv;
     };
 
+    struct Char {
+        uint8_t page;
+        Vertex vertices[4];
+    };
+
     if(!font_ || text().empty()) {
         text_width_ = text_height_ = Px();
         return;
@@ -171,15 +208,15 @@ void Widget::render_text() {
     /* static to avoid reallocating each frame */
     static std::vector<std::pair<uint32_t, uint32_t>> line_ranges;
     static std::vector<Px> line_lengths;
-    static std::vector<Vertex> vertices;
+    static std::vector<Char> characters;
 
     /* Clear, but not shrink_to_fit */
     line_ranges.clear();
     line_lengths.clear();
-    vertices.clear();
+    characters.clear();
 
     /* We know how many vertices we'll need (roughly) */
-    vertices.reserve(text().length() * 4);
+    characters.reserve(text().length());
 
     Px left_bound = 0;
 
@@ -223,7 +260,7 @@ void Widget::render_text() {
             /* Ranges are (start_vertex_index, length_in_chars) */
             line_ranges.push_back(std::make_pair(line_start, line_vertex_count));
             line_lengths.push_back(line_length);
-            line_start = vertices.size();
+            line_start = characters.size() * 4;
             left = left_bound;
             line_length = Px(0);
             line_vertex_count = 0;
@@ -276,7 +313,9 @@ void Widget::render_text() {
 
         /* If the character is visible, then create some vertices for it */
         if(is_visible_character(ch)) {
-            Vertex corners[4];
+            Char new_char;
+            new_char.page = font_->character_page(ch);
+
 
             // Characters are created with their top-line at 0, we then
             // properly manipulate the position when we process the lines later
@@ -289,6 +328,8 @@ void Widget::render_text() {
             bottom -= font_->ascent();
 
             auto c = font_->char_corners(ch);
+            Vertex* corners = new_char.vertices;
+
             corners[0].xyz = smlt::Vec3((left.value + c.first.x), c.first.y, 0);
             corners[1].xyz = smlt::Vec3((left.value + c.second.x), c.first.y, 0);
             corners[2].xyz = smlt::Vec3((left.value + c.second.x), c.second.y, 0);
@@ -300,10 +341,7 @@ void Widget::render_text() {
             corners[2].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
             corners[3].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
 
-            vertices.push_back(corners[0]);
-            vertices.push_back(corners[1]);
-            vertices.push_back(corners[2]);
-            vertices.push_back(corners[3]);
+            characters.push_back(new_char);
 
             line_vertex_count += 4;
         }
@@ -335,13 +373,14 @@ void Widget::render_text() {
 
         uint16_t shift = (j * line_height().value);
 
-        Vertex* ch = &vertices.at(range.first);
+        Char* ch = &characters.at(range.first >> 2);
+
         uint16_t hw = line_lengths[j++].value / 2;
-        for(auto i = 0u; i < range.second; i += 4) {
-            Vertex* bl = ch;
-            Vertex* br = ch + 1;
-            Vertex* tr = ch + 2;
-            Vertex* tl = ch + 3;
+        for(auto i = 0u; i < range.second >> 2; ++i, ++ch) {
+            Vertex* bl = ch->vertices;
+            Vertex* br = ch->vertices + 1;
+            Vertex* tr = ch->vertices + 2;
+            Vertex* tl = ch->vertices + 3;
 
             // Shift the vertex downwards
             bl->xyz.y -= shift;
@@ -359,7 +398,6 @@ void Widget::render_text() {
             min_x = std::min(tl->xyz.x, min_x);
             max_x = std::max(br->xyz.x, max_x);
             max_x = std::max(tr->xyz.x, max_x);
-            ch += 4;
         }
     }
 
@@ -367,11 +405,13 @@ void Widget::render_text() {
         min_x = max_x = 0.0f;
     }
 
-    auto sm = mesh_->find_submesh("text");
-    assert(sm);
-
-    /* Make sure the font material is up to date! */
-    sm->set_material(font_->material());
+    static_assert(Font::max_pages == 4, "This code needs to change if this changes");
+    SubMeshPtr submeshes [] = {
+        mesh_->find_submesh("text-0"),
+        mesh_->find_submesh("text-1"),
+        mesh_->find_submesh("text-2"),
+        mesh_->find_submesh("text-3")
+    };
 
     auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
@@ -388,7 +428,7 @@ void Widget::render_text() {
 
     vdata->move_to_start();
     /* Allocate memory first */
-    vdata->reserve(vertices.size());
+    vdata->reserve(characters.size() * 4);
 
     if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
         auto cwidth = std::max(requested_width(), content_width()) - padding().left - padding().right;
@@ -401,18 +441,20 @@ void Widget::render_text() {
                 continue;
             }
 
-            Vertex* ch = &vertices.at(range.first);
+            Char* ch = &characters.at(range.first >> 2);
 
             auto ashift = std::ceil(-line_lengths[j++].value * 0.5f);
             ashift += std::ceil(cwidth.value * 0.5f);
 
-            for(auto i = 0u; i < range.second; i++, ch++) {
-                if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
-                    ch->xyz.x -= ashift;
-                    ch->xyz.x += padding().left.value;
-                } else {
-                    ch->xyz.x += ashift;
-                    ch->xyz.x -= padding().right.value;
+            for(auto i = 0u; i < range.second >> 2; i++, ch++) {
+                for(auto j = 0u; j < 4; ++j) {
+                    if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
+                        ch->vertices[j].xyz.x -= ashift;
+                        ch->vertices[j].xyz.x += padding().left.value;
+                    } else {
+                        ch->vertices[j].xyz.x += ashift;
+                        ch->vertices[j].xyz.x -= padding().right.value;
+                    }
                 }
             }
         }
@@ -422,28 +464,30 @@ void Widget::render_text() {
     c.set_alpha(style_->opacity_);
 
     auto idx = vdata->count();
-    auto count = 0;
-    for(std::size_t i = 0; i < vertices.size(); ++i) {
-        Vertex* v = &vertices[i];
+    for(std::size_t i = 0; i < characters.size(); ++i) {
+        Char* ch = &characters[i];
 
-        /* Turn into a tri-strip, rather than a quad */
-        if(i % 4 == 2) {
-            v++;
-        } else if(i % 4 == 3) {
-            v--;
+        auto sm = submeshes[ch->page];
+
+        for(std::size_t j = 0; j < 4; ++j) {
+            Vertex* v = &ch->vertices[j];
+
+            /* Turn into a tri-strip, rather than a quad */
+            if(j % 4 == 2) {
+                v++;
+            } else if(j % 4 == 3) {
+                v--;
+            }
+
+            auto p = v->xyz + Vec3(global_x_shift, global_y_shift, 0);
+            vdata->position(p);
+            vdata->tex_coord0(v->uv);
+            vdata->diffuse(c);
+            vdata->move_next();
         }
 
-        auto p = v->xyz + Vec3(global_x_shift, global_y_shift, 0);
-        vdata->position(p);
-        vdata->tex_coord0(v->uv);
-        vdata->diffuse(c);
-        vdata->move_next();
-
-        /* Add this strip */
-        if(count++ % 4 == 0) {
-            sm->add_vertex_range(idx, 4);
-            idx += 4;
-        }
+        sm->add_vertex_range(idx, 4);
+        idx = vdata->count();
     }
 
     vdata->done();

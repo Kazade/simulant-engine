@@ -20,3 +20,6 @@ dc-build.sh
 gradle/*/build/*
 .buildconfig
 .flatpak-builder
+platform/android/openal/openal-soft*
+platform/android/openal/oboe*
+

@@ -343,6 +343,8 @@ protected:
     virtual void finalize_render() {}
     virtual void finalize_build() {}
     virtual bool pre_set_text(const unicode&) { return true; }
+
+    void build_text_submeshes();
 };
 
 }

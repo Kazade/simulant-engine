@@ -188,8 +188,8 @@ check:stream-usage:
    - cd ..
    - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
    - mv gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
-   - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
-   - mv gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
+   # - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
+   # - mv gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
   artifacts:
     paths:
       - ${TARGET}/${BUILD_TYPE}/simulant/
