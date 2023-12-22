@@ -633,7 +633,6 @@ void AndroidWindow::check_events() {
                     float y = evt.touch.y;
 
                     if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN) {
-                        S_INFO("DOWN: {0} ({1}, {2})", pointer, x, y);
                         on_finger_down(
                             pointer,
                             x,
@@ -653,7 +652,6 @@ void AndroidWindow::check_events() {
                         FINGER_STATES[pointer].y = 1.0f - y;
                         FINGER_STATES[pointer].pressure = evt.touch.pressure;
                     } else if(evt.touch.action == AMOTION_EVENT_ACTION_UP) {
-                        S_INFO("UP: {0} ({1}, {2})", pointer, x, y);
                         on_finger_up(pointer, x, 1.0f - y);
 
                         on_mouse_up(
@@ -668,7 +666,6 @@ void AndroidWindow::check_events() {
                         FINGER_STATES[pointer].y = 1.0f - y;
                         FINGER_STATES[pointer].pressure = 0.0f;
                     } else {
-                        S_INFO("MOVE: {0}", pointer);
                         float dx = x - FINGER_STATES[pointer].x;
                         float dy = y - FINGER_STATES[pointer].y;
 

@@ -257,7 +257,7 @@ void SDL2Window::check_events() {
                     event.motion.xrel,
                     -event.motion.yrel
                 );
-                on_mouse_move(event.motion.which, event.motion.x, event.motion.y, is_touch_device);
+                on_mouse_move(event.motion.which, event.motion.x, height() - event.motion.y, is_touch_device);
             } break;
             case SDL_MOUSEBUTTONDOWN: {
                 bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
