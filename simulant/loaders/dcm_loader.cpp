@@ -28,6 +28,13 @@ VertexSpecification determine_spec(const FileHeader& header) {
         VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;
     vspec.normal_attribute = (header.normal_format == NORMAL_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_NONE;
 
+    /* FIXME: Do something better! */
+#ifdef __ANDROID__
+    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
+        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    }
+#endif
+
     return vspec;
 }
 
