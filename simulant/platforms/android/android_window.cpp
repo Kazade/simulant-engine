@@ -96,6 +96,19 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
     if(out.type == AINPUT_EVENT_TYPE_KEY) {
         out.key.action = AKeyEvent_getAction(evt);
         out.key.key = AKeyEvent_getKeyCode(evt);
+
+        /* Ignore certain key events */
+        switch(out.key.key) {
+            case AKEYCODE_VOLUME_UP:
+            case AKEYCODE_VOLUME_DOWN:
+            case AKEYCODE_CAMERA:
+            case AKEYCODE_ZOOM_IN:
+            case AKEYCODE_ZOOM_OUT:
+                return 0;
+            default:
+                break;
+        }
+
         EVENTS.push(out);
     } else if(out.type == AINPUT_EVENT_TYPE_MOTION) {
         for(std::size_t i = 0; i < AMotionEvent_getPointerCount(evt); ++i) {
@@ -109,8 +122,6 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
             EVENTS.push(out);
         }
     }
-
-
 
     return 1;
 }
