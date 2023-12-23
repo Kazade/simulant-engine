@@ -55,8 +55,7 @@ static const EGLint attrib_list [] = {
 };
 
 static void android_handle_command(struct android_app* app, int32_t cmd) {
-    AndroidWindow* window = (AndroidWindow*) app->userData;
-    assert(window);
+    _S_UNUSED(app);
 
     S_INFO("Received command: {0}", cmd);
     COMMANDS.push(cmd);
@@ -137,6 +136,11 @@ void AndroidWindow::on_application_set(Application* app) {
     const int landscape = 0;
     // const int portrait = 1;
     jni->CallVoidMethod(aapp->activity->clazz, methodID, landscape);
+
+    /* Set the volume control to STREAM_MUSIC */
+    auto setVolumeControlStream = jni->GetMethodID(clazz, "setVolumeControlStream", "(I)V");
+    auto STREAM_MUSIC = 0x00000003; // Let's hope this doesn't change
+    jni->CallVoidMethod(aapp->activity->clazz, setVolumeControlStream, STREAM_MUSIC);
 
     auto get_window = jni->GetMethodID(clazz, "getWindow", "()Landroid/view/Window;");
     auto window_class = jni->FindClass("android/view/Window");
