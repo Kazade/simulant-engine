@@ -29,7 +29,7 @@ VertexSpecification determine_spec(const FileHeader& header) {
     vspec.normal_attribute = (header.normal_format == NORMAL_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_NONE;
 
     /* FIXME: Do something better! */
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__LINUX__)
     if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
         vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
     }
@@ -193,15 +193,15 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             vdata->tex_coord0(v);
         }
 
-        if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
+        if(fheader.color_format == COLOR_FORMAT_4UB) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
             vdata->diffuse(smlt::Colour::from_bytes(color[2], color[1], color[0], color[3]));
-        } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F) {
+        } else if(fheader.color_format == COLOR_FORMAT_4F) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
             vdata->diffuse(smlt::Colour(color[0], color[1], color[2], color[3]));
-        } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) {
+        } else if(fheader.color_format == COLOR_FORMAT_3F) {
             float color[3];
             data_->read((char*) &color, sizeof(color));
             vdata->diffuse(smlt::Colour(color[0], color[1], color[2], 1.0f));
