@@ -319,7 +319,7 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
     // other, if so we sort descendents after ancestors
     sorted_widgets.sort([cam_plane, &is_descendent](Widget* lhs, Widget* rhs) -> bool {
         float lhd = cam_plane.distance_to(lhs->absolute_position());
-        float rhd = cam_plane.distance_to(lhs->absolute_position());
+        float rhd = cam_plane.distance_to(rhs->absolute_position());
 
         if(almost_equal(lhd, rhd)) {
             if(is_descendent(lhs, rhs)) {
