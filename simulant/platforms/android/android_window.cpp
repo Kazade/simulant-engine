@@ -265,13 +265,10 @@ bool AndroidWindow::_init_window() {
             S_DEBUG("Found config: {0}:{1}:{2}:{3} {4}", r, g, b, a, d);
             max_depth = d;
             config_ = cfg;
-            break;
         }
     }
 
-    if(!config_) {
-        config_ = supported_configs[0];
-    }
+    config_ = (config_) ? config_ : supported_configs[0];
 
     if(!config_) {
         S_ERROR("Unable to find supported EGL config");
