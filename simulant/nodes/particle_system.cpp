@@ -134,7 +134,7 @@ void ParticleSystem::_get_renderables(batcher::RenderQueue* render_queue, const 
     rebuild_vertex_data(camera->up(), camera->right());
 
     Renderable new_renderable;
-    new_renderable.arrangement = MESH_ARRANGEMENT_QUADS;
+    new_renderable.arrangement = MESH_ARRANGEMENT_TRIANGLE_STRIP;
     new_renderable.render_priority = render_priority();
     new_renderable.final_transformation = Mat4();
     new_renderable.index_data = nullptr;
@@ -221,6 +221,27 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
 
         *(pos) =
             p.position
+            + right * p.dimensions.x * -0.5f
+            + up * p.dimensions.y * +0.5f;
+
+        dif[0] = b;
+        dif[1] = g;
+        dif[2] = r;
+        dif[3] = a;
+
+        uv[0] = 0.0f;
+        uv[1] = 1.0f;
+
+        pos_ptr += stride;
+        dif_ptr += stride;
+        uv_ptr += stride;
+
+        pos = (Vec3*) pos_ptr;
+        dif = dif_ptr;
+        uv = (float*) uv_ptr;
+
+        *(pos) =
+            p.position
             + right * p.dimensions.x * +0.5f
             + up * p.dimensions.y * +0.5f;
 
@@ -236,33 +257,12 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         dif_ptr += stride;
         uv_ptr += stride;
 
-        pos = (Vec3*) pos_ptr;
-        dif = dif_ptr;
-        uv = (float*) uv_ptr;
-
-        *(pos) =
-            p.position
-            + right * p.dimensions.x * -0.5f
-            + up * p.dimensions.y * +0.5f;
-
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
-
-        uv[0] = 0.0f;
-        uv[1] = 1.0f;
-
-        pos_ptr += stride;
-        dif_ptr += stride;
-        uv_ptr += stride;
+        /* Add a vertex range for this tri-strip */
+        VertexRange new_range;
+        new_range.start = j * 4;
+        new_range.count = 4;
+        vertex_ranges_.push_back(new_range);
     }
-
-    /* Use one giant vertex range of quads (glDrawArrays) */
-    VertexRange new_range;
-    new_range.start = 0;
-    new_range.count = vertex_data_->count();
-    vertex_ranges_.push_back(new_range);
 
     vertex_data_->done();
 }
