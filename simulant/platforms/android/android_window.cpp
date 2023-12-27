@@ -51,6 +51,7 @@ static const EGLint attrib_list [] = {
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
+    EGL_DEPTH_SIZE, 16,
     EGL_NONE
 };
 
@@ -261,7 +262,7 @@ bool AndroidWindow::_init_window() {
         eglGetConfigAttrib(dpy_, cfg, EGL_ALPHA_SIZE, &a);
         eglGetConfigAttrib(dpy_, cfg, EGL_DEPTH_SIZE, &d);
 
-        if(r == 8 && g == 8 && b == 8 && d >= max_depth) {
+        if(d >= max_depth) {
             S_DEBUG("Found config: {0}:{1}:{2}:{3} {4}", r, g, b, a, d);
             max_depth = d;
             config_ = cfg;

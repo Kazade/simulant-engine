@@ -432,14 +432,12 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
     if(renderer->name() == "gl1x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    } else {
-#ifdef __ANDROID__
-        /* FIXME: Add a GLES2 renderer */
-        SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-#else
+    } else if(renderer->name() == "gl2x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#endif
+    } else if(renderer->name() == "gles2x") {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     }
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -448,7 +446,7 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     context_ = SDL_GL_CreateContext(screen_);
 

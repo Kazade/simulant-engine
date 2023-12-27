@@ -80,7 +80,7 @@ struct RenderGroup {
                 // back-to-front
                 return true;
             } else if(almost_equal(rhs.sort_key.distance_to_camera, sort_key.distance_to_camera)) {
-                return rhs.sort_key.z_order < sort_key.z_order;
+                return sort_key.z_order < rhs.sort_key.z_order;
             }
         }
 

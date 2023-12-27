@@ -73,8 +73,9 @@ GPUProgramID GenericRenderer::default_gpu_program_id() const {
     return default_gpu_program_id_;
 }
 
-GenericRenderer::GenericRenderer(Window *window):
+GenericRenderer::GenericRenderer(Window *window, bool use_es):
     GLRenderer(window),
+    use_es_(use_es),
     buffer_manager_(VBOManager::create()) {
 
 }
@@ -481,32 +482,32 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         }
     }
 
-#ifndef __ANDROID__
-    if(!prev || prev->point_size() != next->point_size()) {
-        glPointSize(next->point_size());
-    }
+    if(!renderer_->is_gles()) {
+        if(!prev || prev->point_size() != next->point_size()) {
+            glPointSize(next->point_size());
+        }
 
-    if(!prev || prev->polygon_mode() != next->polygon_mode()) {
-        switch(next->polygon_mode()) {
-            case POLYGON_MODE_POINT:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-            break;
-            case POLYGON_MODE_LINE:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            break;
-            default:
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        if(!prev || prev->polygon_mode() != next->polygon_mode()) {
+            switch(next->polygon_mode()) {
+                case POLYGON_MODE_POINT:
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+                break;
+                case POLYGON_MODE_LINE:
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                break;
+                default:
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+        }
+
+        if(!prev || prev->shade_model() != next->shade_model()) {
+            if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+                GLCheck(glShadeModel, GL_SMOOTH);
+            } else {
+                GLCheck(glShadeModel, GL_FLAT);
+            }
         }
     }
-
-    if(!prev || prev->shade_model() != next->shade_model()) {
-        if(next->shade_model() == SHADE_MODEL_SMOOTH) {
-            GLCheck(glShadeModel, GL_SMOOTH);
-        } else {
-            GLCheck(glShadeModel, GL_FLAT);
-        }
-    }
-#endif
 
     if(!prev || prev->cull_mode() != next->cull_mode()) {
         if(next->cull_mode() != CULL_MODE_NONE) {
