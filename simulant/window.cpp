@@ -137,6 +137,20 @@ bool Window::has_explicit_audio_listener() const {
     return audio_listener_ != nullptr;
 }
 
+void Window::set_has_focus(bool v) {
+    if(v == has_focus_) {
+        return;
+    }
+
+    has_focus_ = v;
+
+    if(has_focus_) {
+        signal_focus_gained_();
+    } else {
+        signal_focus_lost_();
+    }
+}
+
 void Window::on_application_set(Application* app) {
     _S_UNUSED(app);
 }

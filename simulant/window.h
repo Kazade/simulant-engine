@@ -59,6 +59,9 @@ class StageNode;
 typedef sig::signal<void (std::string, Screen*)> ScreenAddedSignal;
 typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
 
+typedef sig::signal<void ()> FocusLostSignal;
+typedef sig::signal<void ()> FocusGainedSignal;
+
 class Window :
     public Loadable,
     public RenderTarget,
@@ -66,6 +69,9 @@ class Window :
 
     DEFINE_SIGNAL(ScreenAddedSignal, signal_screen_added);
     DEFINE_SIGNAL(ScreenRemovedSignal, signal_screen_removed);
+
+    DEFINE_SIGNAL(FocusLostSignal, signal_focus_lost);
+    DEFINE_SIGNAL(FocusGainedSignal, signal_focus_gained);
 
     friend class Screen;  /* Screen needs to call render_screen */
     friend class Application; /* ContextLock stuff */
@@ -197,9 +203,7 @@ public:
 
     /** Sets whether or not the window has focus, this should
      *  not be called by user code directly. */
-    void set_has_focus(bool v=true) {
-        has_focus_ = v;
-    }
+    void set_has_focus(bool v=true);
 
     /** Recreates the debugging panels (e.g stats) */
     void create_panels();
