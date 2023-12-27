@@ -33,8 +33,10 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         /* NULL? Then return the default for the platform */
 #if defined(__DREAMCAST__) || defined(__PSP__)
         return std::make_shared<GL1XRenderer>(window);
+#elif defined(__ANDROID__)
+        return std::make_shared<GenericRenderer>(window, /*use_es=*/ true);
 #else
-        return std::make_shared<GenericRenderer>(window);
+        return std::make_shared<GenericRenderer>(window, false);
 #endif
     }
 
