@@ -51,7 +51,7 @@ static const EGLint attrib_list [] = {
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
-    EGL_DEPTH_SIZE, 24,
+    EGL_DEPTH_SIZE, 16,
     EGL_NONE
 };
 
