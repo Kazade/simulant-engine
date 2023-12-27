@@ -76,7 +76,7 @@ class GenericRenderer:
     public GLRenderer {
 
 public:
-    GenericRenderer(Window* window);
+    GenericRenderer(Window* window, bool use_es=false);
 
     batcher::RenderGroupKey prepare_render_group(batcher::RenderGroup* group,
         const Renderable *renderable,
@@ -98,14 +98,16 @@ public:
     GPUProgramID default_gpu_program_id() const override;
 
     std::string name() const override {
-        return "gl2x";
+        return (use_es_) ? "gles2x" : "gl2x";
     }
 
     void prepare_to_render(const Renderable* renderable) override;
+
+    bool is_gles() const { return use_es_; }
 private:
     GPUProgramManager program_manager_;
     GPUProgramID default_gpu_program_id_ = 0;
-
+    bool use_es_ = false;
     std::shared_ptr<VBOManager> buffer_manager_;
 
     void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
