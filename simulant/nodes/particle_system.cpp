@@ -18,7 +18,11 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
+#ifdef __DREAMCAST__
     smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
+#else
+    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+#endif
 );
 
 ParticleSystem::ParticleSystem(Stage* stage, SoundDriver* sound_driver, ParticleScriptPtr script):
@@ -169,23 +173,41 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         auto& p = particles_[j];
 
         Vec3* pos = (Vec3*) pos_ptr;
-        uint8_t* dif = dif_ptr;
         float* uv = (float*) uv_ptr;
 
+#ifdef __DREAMCAST__
+        uint8_t* dif = dif_ptr;
         uint8_t a = smlt::clamp(p.colour.a * 255.0f, 0, 255);
         uint8_t r = smlt::clamp(p.colour.r * 255.0f, 0, 255);
         uint8_t g = smlt::clamp(p.colour.g * 255.0f, 0, 255);
         uint8_t b = smlt::clamp(p.colour.b * 255.0f, 0, 255);
+
+#define RIDX 2
+#define GIDX 1
+#define BIDX 0
+#define AIDX 3
+#else
+        float* dif = (float*) dif_ptr;
+        float a = p.colour.a;
+        float r = p.colour.r;
+        float g = p.colour.g;
+        float b = p.colour.b;
+
+#define RIDX 0
+#define GIDX 1
+#define BIDX 2
+#define AIDX 3
+#endif
 
         *(pos) =
             p.position
             + right * p.dimensions.x * -0.5f
             + up * p.dimensions.y * -0.5f;
 
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
 
         uv[0] = 0.0f;
         uv[1] = 0.0f;
@@ -195,7 +217,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uv_ptr += stride;
 
         pos = (Vec3*) pos_ptr;
-        dif = dif_ptr;
+        dif = (decltype(dif)) dif_ptr;
         uv = (float*) uv_ptr;
 
         *(pos) =
@@ -203,10 +225,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
             + right * p.dimensions.x * +0.5f
             + up * p.dimensions.y * -0.5f;
 
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
 
         uv[0] = 1.0f;
         uv[1] = 0.0f;
@@ -216,7 +238,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uv_ptr += stride;
 
         pos = (Vec3*) pos_ptr;
-        dif = dif_ptr;
+        dif = (decltype(dif)) dif_ptr;
         uv = (float*) uv_ptr;
 
         *(pos) =
@@ -224,10 +246,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
             + right * p.dimensions.x * -0.5f
             + up * p.dimensions.y * +0.5f;
 
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
 
         uv[0] = 0.0f;
         uv[1] = 1.0f;
@@ -237,7 +259,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uv_ptr += stride;
 
         pos = (Vec3*) pos_ptr;
-        dif = dif_ptr;
+        dif = (decltype(dif)) dif_ptr;
         uv = (float*) uv_ptr;
 
         *(pos) =
@@ -245,10 +267,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
             + right * p.dimensions.x * +0.5f
             + up * p.dimensions.y * +0.5f;
 
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
 
         uv[0] = 1.0f;
         uv[1] = 1.0f;
