@@ -628,6 +628,7 @@ void AndroidWindow::check_events() {
                 } else {}
             } break;
             case AINPUT_EVENT_TYPE_MOTION: {
+                auto pointer = evt.touch.pointer_id;
                 float x = evt.touch.x;
                 float y = evt.touch.y;
 
