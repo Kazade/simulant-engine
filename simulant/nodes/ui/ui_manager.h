@@ -108,6 +108,9 @@ private:
     void on_mouse_down(const MouseEvent &evt) override;
     void on_mouse_up(const MouseEvent &evt) override;
 
+    void on_touch_begin(const TouchEvent& evt) override;
+    void on_touch_end(const TouchEvent& evt) override;
+
     void queue_event(const TouchEvent& evt);
     void queue_event(const MouseEvent& evt);
     void process_event_queue(const Camera *camera, const Viewport& viewport) const;

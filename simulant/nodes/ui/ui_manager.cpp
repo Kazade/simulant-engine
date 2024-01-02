@@ -189,12 +189,24 @@ void UIManager::destroy_object_immediately(Widget* object) {
     manager_->destroy_immediately(object->id());
 }
 
-void UIManager::on_mouse_down(const MouseEvent &evt) {
+void UIManager::on_touch_begin(const TouchEvent& evt) {
     queue_event(evt);
 }
 
-void UIManager::on_mouse_up(const MouseEvent &evt) {
+void UIManager::on_touch_end(const TouchEvent& evt) {
     queue_event(evt);
+}
+
+void UIManager::on_mouse_down(const MouseEvent &evt) {
+    if(!evt.is_touch_device) {
+        queue_event(evt);
+    }
+}
+
+void UIManager::on_mouse_up(const MouseEvent &evt) {
+    if(!evt.is_touch_device) {
+        queue_event(evt);
+    }
 }
 
 void UIManager::queue_event(const TouchEvent& e) {

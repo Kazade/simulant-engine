@@ -58,6 +58,7 @@ public:
         window->on_mouse_down(0, 0, window->width() / 2, window->height() / 2, false);
         window->on_mouse_up(0, 0, window->width() / 2, window->height() / 2, false);
         stage_->ui->process_event_queue(camera, viewport);
+        stage_->ui->clear_event_queue();
 
         assert_equal(clicked, 1);
 
@@ -66,6 +67,7 @@ public:
         window->on_finger_down(0, 0.5f, 0.5f, 1.0f);
         window->on_finger_up(0, 0.5f, 0.5f);
         stage_->ui->process_event_queue(camera, viewport);
+        stage_->ui->clear_event_queue();
 
         assert_equal(clicked, 1);
     }

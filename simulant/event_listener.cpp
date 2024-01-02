@@ -24,7 +24,7 @@ void EventListener::handle_touch_end(Window* window, TouchPointID touch_id, floa
     evt.normalized_coord = Vec2(normalized_x, normalized_y);
     evt.coord = window->coordinate_from_normalized(normalized_x, normalized_y);
 
-    on_touch_begin(evt);
+    on_touch_end(evt);
 }
 
 void EventListener::handle_touch_move(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy) {
