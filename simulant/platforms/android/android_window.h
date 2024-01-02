@@ -40,6 +40,14 @@ private:
     void on_application_set(Application* app) override;
 
     void create_egl_surface(android_app* aapp);
+
+    struct FingerState {
+        float x = 0.0f;
+        float y = 0.0f;
+        float pressure = 0.0f;
+    };
+
+    std::map<int, FingerState> finger_states_;
 };
 
 }

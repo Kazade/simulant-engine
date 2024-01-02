@@ -537,18 +537,6 @@ static const KeyboardCode KEYCODE_MAPPING[256] = {
     KEYBOARD_CODE_NONE,
 };
 
-static struct {
-    float x;
-    float y;
-    float pressure;
-} FINGER_STATES[5] = {
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-};
-
 const static int32_t TOUCH_MOUSE_ID = 0;
 
 void AndroidWindow::check_events() {
@@ -640,60 +628,61 @@ void AndroidWindow::check_events() {
                 } else {}
             } break;
             case AINPUT_EVENT_TYPE_MOTION: {
-                auto pointer = evt.touch.pointer_id;
-                if(pointer < 5) {
-                    float x = evt.touch.x;
-                    float y = evt.touch.y;
+                float x = evt.touch.x;
+                float y = evt.touch.y;
 
-                    if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN) {
-                        on_finger_down(
-                            pointer,
-                            x,
-                            1.0f - y,
-                            evt.touch.pressure
-                        );
+                if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN) {
+                    on_finger_down(
+                        pointer,
+                        x,
+                        1.0f - y,
+                        evt.touch.pressure
+                    );
 
-                        on_mouse_down(
-                            TOUCH_MOUSE_ID,
-                            pointer,
-                            x * float(width()),
-                            (1.0f - y) * float(height()),
-                            true
-                        );
+                    on_mouse_down(
+                        TOUCH_MOUSE_ID,
+                        pointer,
+                        x * float(width()),
+                        (1.0f - y) * float(height()),
+                        true
+                    );
 
-                        FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = 1.0f - y;
-                        FINGER_STATES[pointer].pressure = evt.touch.pressure;
-                    } else if(evt.touch.action == AMOTION_EVENT_ACTION_UP) {
-                        on_finger_up(pointer, x, 1.0f - y);
+                    auto& state = finger_states_[pointer];
+                    state.x = x;
+                    state.y = 1.0f - y;
+                    state.pressure = evt.touch.pressure;
+                } else if(evt.touch.action == AMOTION_EVENT_ACTION_UP) {
+                    on_finger_up(pointer, x, 1.0f - y);
 
-                        on_mouse_up(
-                            TOUCH_MOUSE_ID,
-                            pointer,
-                            x * float(width()),
-                            (1.0f - y) * float(height()),
-                            true
-                        );
+                    on_mouse_up(
+                        TOUCH_MOUSE_ID,
+                        pointer,
+                        x * float(width()),
+                        (1.0f - y) * float(height()),
+                        true
+                    );
 
-                        FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = 1.0f - y;
-                        FINGER_STATES[pointer].pressure = 0.0f;
-                    } else {
-                        float dx = x - FINGER_STATES[pointer].x;
-                        float dy = y - FINGER_STATES[pointer].y;
+                    auto& state = finger_states_[pointer];
+                    state.x = x;
+                    state.y = 1.0f - y;
+                    state.pressure = 0.0f;
+                } else {
+                    auto& state = finger_states_[pointer];
 
-                        on_finger_motion(pointer, x, 1.0f - y, dx, dy);
-                        on_mouse_move(
-                            TOUCH_MOUSE_ID,
-                            x * float(width()),
-                            (1.0f - y) * float(height()),
-                            true
-                        );
+                    float dx = x - state.x;
+                    float dy = y - state.y;
 
-                        FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = 1.0f - y;
-                        FINGER_STATES[pointer].pressure = evt.touch.pressure;
-                    }
+                    on_finger_motion(pointer, x, 1.0f - y, dx, dy);
+                    on_mouse_move(
+                        TOUCH_MOUSE_ID,
+                        x * float(width()),
+                        (1.0f - y) * float(height()),
+                        true
+                    );
+
+                    state.x = x;
+                    state.y = 1.0f - y;
+                    state.pressure = evt.touch.pressure;
                 }
             }
 
