@@ -390,10 +390,10 @@ void Window::each_screen(std::function<void (std::string, Screen *)> callback) {
 void Window::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_begin(
-                    this,
-                    touch_id,
-                    normalized_x,
-                    normalized_y,
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y,
             pressure
         );
     });

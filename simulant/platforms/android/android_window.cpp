@@ -115,6 +115,7 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
         for(std::size_t i = 0; i < AMotionEvent_getPointerCount(evt); ++i) {
             out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
             out.touch.action = AMotionEvent_getAction(evt);
+            out.touch.action &= AMOTION_EVENT_ACTION_MASK;
             out.touch.x = getX(i);
             out.touch.y = getY(i);
             out.touch.pressure = std::min(
@@ -652,6 +653,17 @@ void AndroidWindow::check_events() {
                     state.x = x;
                     state.y = 1.0f - y;
                     state.pressure = evt.touch.pressure;
+                } else if(evt.touch.action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
+                    on_finger_down(
+                        pointer,
+                        x,
+                        1.0f - y,
+                        evt.touch.pressure
+                    );
+                    auto& state = finger_states_[pointer];
+                    state.x = x;
+                    state.y = 1.0f - y;
+                    state.pressure = evt.touch.pressure;
                 } else if(evt.touch.action == AMOTION_EVENT_ACTION_UP) {
                     on_finger_up(pointer, x, 1.0f - y);
 
@@ -663,6 +675,12 @@ void AndroidWindow::check_events() {
                         true
                     );
 
+                    auto& state = finger_states_[pointer];
+                    state.x = x;
+                    state.y = 1.0f - y;
+                    state.pressure = 0.0f;
+                } else if(evt.touch.action == AMOTION_EVENT_ACTION_POINTER_UP) {
+                    on_finger_up(pointer, x, 1.0f - y);
                     auto& state = finger_states_[pointer];
                     state.x = x;
                     state.y = 1.0f - y;
