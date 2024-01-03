@@ -42,6 +42,47 @@ public:
         assert_equal(stage_->assets->material_count(), mc); /* Destroyed */
     }
 
+    void test_multi_touch_event() {
+        auto camera = stage_->new_camera_for_ui();
+        auto viewport = Viewport();
+
+        // Create two buttons, make sure we can press both with different fingers
+        auto button1 = stage_->ui->new_widget_as_button("Button1");
+        button1->set_anchor_point(0.5f, 0.5f);
+        button1->move_to(window->width() / 2, (window->height() / 2) + 100);
+
+        auto button2 = stage_->ui->new_widget_as_button("Button2");
+        button2->set_anchor_point(0.5f, 0.5f);
+        button2->move_to(window->width() / 2, (window->height() / 2) - 100);
+
+        float button1_normalized = button1->absolute_position().y / float(window->height());
+        assert_true(button1_normalized <= 1.0f);
+        assert_true(button1_normalized >= 0.0f);
+
+        window->on_finger_down(0, 0.5f, button1_normalized, 1.0f);
+        stage_->ui->process_event_queue(camera, viewport);
+        stage_->ui->clear_event_queue();
+
+        assert_true(button1->is_pressed());
+        assert_true(button1->is_pressed_by_finger(0));
+
+        float button2_normalized = button2->absolute_position().y / float(window->height());
+        assert_true(button2_normalized <= 1.0f);
+        assert_true(button2_normalized >= 0.0f);
+
+        window->on_finger_down(1, 0.5f, button2_normalized, 1.0f);
+        stage_->ui->process_event_queue(camera, viewport);
+        stage_->ui->clear_event_queue();
+
+        assert_true(button1->is_pressed());
+        assert_true(button1->is_pressed_by_finger(0));
+        assert_false(button1->is_pressed_by_finger(1));
+
+        assert_true(button2->is_pressed());
+        assert_true(button2->is_pressed_by_finger(1));
+        assert_false(button2->is_pressed_by_finger(0));
+    }
+
     void test_click_event() {
         auto camera = stage_->new_camera_for_ui();
         auto viewport = Viewport();
