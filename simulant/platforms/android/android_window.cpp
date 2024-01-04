@@ -112,17 +112,17 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
 
         EVENTS.push(out);
     } else if(out.type == AINPUT_EVENT_TYPE_MOTION) {
-        for(std::size_t i = 0; i < AMotionEvent_getPointerCount(evt); ++i) {
-            out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
-            out.touch.action = AMotionEvent_getAction(evt);
-            out.touch.action &= AMOTION_EVENT_ACTION_MASK;
-            out.touch.x = getX(i);
-            out.touch.y = getY(i);
-            out.touch.pressure = std::min(
-                AMotionEvent_getPressure(evt, i), 1.0f
-            );
-            EVENTS.push(out);
-        }
+        out.touch.action = AMotionEvent_getAction(evt);
+        auto i = (out.touch.action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        out.touch.action &= AMOTION_EVENT_ACTION_MASK;
+
+        out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
+        out.touch.x = getX(i);
+        out.touch.y = getY(i);
+        out.touch.pressure = std::min(
+            AMotionEvent_getPressure(evt, i), 1.0f
+        );
+        EVENTS.push(out);
     }
 
     return 1;
@@ -633,7 +633,8 @@ void AndroidWindow::check_events() {
                 float x = evt.touch.x;
                 float y = evt.touch.y;
 
-                if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN) {
+                if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN ||
+                   evt.touch.action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
                     on_finger_down(
                         pointer,
                         x,
@@ -641,67 +642,67 @@ void AndroidWindow::check_events() {
                         evt.touch.pressure
                     );
 
-                    on_mouse_down(
-                        TOUCH_MOUSE_ID,
-                        pointer,
-                        x * float(width()),
-                        (1.0f - y) * float(height()),
-                        true
-                    );
+                    if(pointer == 0) {
+                        on_mouse_down(
+                            TOUCH_MOUSE_ID,
+                            pointer,
+                            x * float(width()),
+                            (1.0f - y) * float(height()),
+                            true
+                        );
+                    }
 
                     auto& state = finger_states_[pointer];
                     state.x = x;
                     state.y = 1.0f - y;
                     state.pressure = evt.touch.pressure;
-                } else if(evt.touch.action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
-                    on_finger_down(
-                        pointer,
-                        x,
-                        1.0f - y,
-                        evt.touch.pressure
-                    );
-                    auto& state = finger_states_[pointer];
-                    state.x = x;
-                    state.y = 1.0f - y;
-                    state.pressure = evt.touch.pressure;
-                } else if(evt.touch.action == AMOTION_EVENT_ACTION_UP) {
-                    on_finger_up(pointer, x, 1.0f - y);
-
-                    on_mouse_up(
-                        TOUCH_MOUSE_ID,
-                        pointer,
-                        x * float(width()),
-                        (1.0f - y) * float(height()),
-                        true
-                    );
+                } else if(
+                    evt.touch.action == AMOTION_EVENT_ACTION_POINTER_UP ||
+                    evt.touch.action == AMOTION_EVENT_ACTION_UP ||
+                    evt.touch.action == AMOTION_EVENT_ACTION_CANCEL) {
 
                     auto& state = finger_states_[pointer];
-                    state.x = x;
-                    state.y = 1.0f - y;
-                    state.pressure = 0.0f;
-                } else if(evt.touch.action == AMOTION_EVENT_ACTION_POINTER_UP) {
-                    on_finger_up(pointer, x, 1.0f - y);
-                    auto& state = finger_states_[pointer];
-                    state.x = x;
-                    state.y = 1.0f - y;
-                    state.pressure = 0.0f;
-                } else {
+
+                    // This avoids a double-release if we get ACTION_UP and then CANCEL
+                    if(state.pressure > 0.0f) {
+                        on_finger_up(pointer, x, 1.0f - y);
+
+                        if(pointer == 0) {
+                            on_mouse_up(
+                                TOUCH_MOUSE_ID,
+                                pointer,
+                                x * float(width()),
+                                (1.0f - y) * float(height()),
+                                true
+                            );
+                        }
+
+                        state.x = x;
+                        state.y = 1.0f - y;
+                        state.pressure = 0.0f;
+                    }
+                } else if(evt.touch.action == AMOTION_EVENT_ACTION_MOVE) {
                     auto& state = finger_states_[pointer];
 
                     float dx = x - state.x;
                     float dy = y - state.y;
 
                     on_finger_motion(pointer, x, 1.0f - y, dx, dy);
-                    on_mouse_move(
-                        TOUCH_MOUSE_ID,
-                        x * float(width()),
-                        (1.0f - y) * float(height()),
-                        true
-                    );
+
+                    if(pointer == 0) {
+                        on_mouse_move(
+                            TOUCH_MOUSE_ID,
+                            x * float(width()),
+                            (1.0f - y) * float(height()),
+                            true
+                        );
+                    }
 
                     state.x = x;
                     state.y = 1.0f - y;
                     state.pressure = evt.touch.pressure;
+                } else {
+                    S_ERROR("ACTION_UNKNOWN ({0}) {1}", evt.touch.action, pointer);
                 }
             }
 
