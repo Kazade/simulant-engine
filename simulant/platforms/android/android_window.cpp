@@ -308,8 +308,13 @@ bool AndroidWindow::_init_renderer(Renderer *renderer) {
 
 void AndroidWindow::destroy_window() {
     S_DEBUG("Destroying the EGL display");
-    eglTerminate(dpy_);
+    if(dpy_ != EGL_NO_DISPLAY) {
+        eglTerminate(dpy_);
+    }
     dpy_ = EGL_NO_DISPLAY;
+
+    android_app* aapp = (android_app*) smlt::get_app()->platform_state();
+    ANativeActivity_finish(aapp->activity);
 }
 
 static const KeyboardCode KEYCODE_MAPPING[256] = {
