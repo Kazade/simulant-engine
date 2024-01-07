@@ -196,7 +196,7 @@ void Widget::render_text() {
     };
 
     struct Char {
-        uint8_t page;
+        uint8_t page = 0;
         Vertex vertices[4];
     };
 
@@ -371,11 +371,11 @@ void Widget::render_text() {
             continue;
         }
 
-        uint16_t shift = (j * line_height().value);
+        auto shift = (j * line_height().value);
 
         Char* ch = &characters.at(range.first >> 2);
 
-        uint16_t hw = line_lengths[j++].value / 2;
+        auto hw = line_lengths[j++].value / 2;
         for(auto i = 0u; i < range.second >> 2; ++i, ++ch) {
             Vertex* bl = ch->vertices;
             Vertex* br = ch->vertices + 1;
@@ -468,6 +468,12 @@ void Widget::render_text() {
         Char* ch = &characters[i];
 
         auto sm = submeshes[ch->page];
+        assert(sm);
+
+        if(!sm) {
+            S_ERROR("Failed to find required submesh for page: {0}", ch->page);
+            break;
+        }
 
         for(std::size_t j = 0; j < 4; ++j) {
             Vertex* v = &ch->vertices[j];
