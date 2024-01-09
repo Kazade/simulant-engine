@@ -183,23 +183,18 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass, GPUProgram
     /* Each texture property has a counterpart matrix, this passes those down if they exist */
     const auto& texture_props = mat->texture_properties();
     uint8_t texture_unit = 0;
-    std::string name;
     for(auto& tex_prop: texture_props) {
-        mat->property_name(tex_prop, name);
-
-        auto tloc = program->locate_uniform(name, true);
+        auto& info = tex_prop.second;
+        auto tloc = program->locate_uniform(info.texture_property_name, true);
         if(tloc > -1) {
             // This texture is being used
             program->set_uniform_int(tloc, texture_unit++);
         }
 
-        auto shader_name = name;
-        shader_name += "_matrix";
-
-        auto loc = program->locate_uniform(shader_name, true);
+        auto loc = program->locate_uniform(info.matrix_property_name, true);
         if(loc > -1) {
             const Mat4* mat;
-            if(pass->property_value(shader_name, mat)) {
+            if(pass->property_value(info.matrix_property_name_hash, mat)) {
                 program->set_uniform_mat4x4(loc, *mat);
             }
         }
@@ -430,16 +425,11 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     /* First we bind any used texture properties to their associated variables */
     uint8_t texture_unit = 0;
-    std::string name;
 
     const Material* mat = pass_->material();
     for(auto& defined_property: mat->texture_properties()) {
-        if(!mat->property_name(defined_property, name)) {
-            continue;
-        }
-
         const TexturePtr* tex_prop = nullptr;
-        if(!pass_->property_value(name, tex_prop)) {
+        if(!pass_->property_value(defined_property.second.texture_property_name_hash, tex_prop)) {
             continue;
         }
         assert(tex_prop);
@@ -452,7 +442,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         // and also whether there's a texture ID. The question is, should the material have some other
         // type of existence check for texture properties? Is checking the texture_id right for all situations?
         // If someone uses s_diffuse_map, but doesn't set a value, surely that should get the default texture?
-        auto loc = program_->locate_uniform(name, true);
+        auto loc = program_->locate_uniform(defined_property.second.texture_property_name, true);
         if(loc > -1 && (texture_unit + 1u) < _S_GL_MAX_TEXTURE_UNITS) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
             GLCheck(glBindTexture, GL_TEXTURE_2D, (tex) ? tex->_renderer_specific_id() : 0);
@@ -540,26 +530,24 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     renderer_->set_material_uniforms(next, program_);
 
     for(auto prop: mat->custom_properties()) {
-        if(!mat->property_name(prop.first, name)) {
-            continue;
-        }
-
-        switch(prop.second) {
+        switch(prop.second.type) {
         case MATERIAL_PROPERTY_TYPE_INT:
             const int* i;
-            pass_->property_value(name.c_str(), i);
-            program_->set_uniform_int(name, *i, /* fail_silently= */true);
+            if(pass_->property_value(prop.first, i)) {
+                program_->set_uniform_int(prop.second.property_name, *i, /* fail_silently= */true);
+            }
         break;
         case MATERIAL_PROPERTY_TYPE_FLOAT:
             const float* f;
-            pass_->property_value(name.c_str(), f);
-            program_->set_uniform_float(name, *f, /* fail_silently= */true);
+            if(pass_->property_value(prop.first, f)) {
+                program_->set_uniform_float(prop.second.property_name, *f, /* fail_silently= */true);
+            }
         break;
         case MATERIAL_PROPERTY_TYPE_TEXTURE:
             // Ignore, we handle textures separately
         break;
         default:
-            S_ERROR("UNIMPLEMENTED property type: {0}", prop.second);
+            S_ERROR("UNIMPLEMENTED property type: {0}", prop.second.type);
         }
     }
 

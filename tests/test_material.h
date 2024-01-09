@@ -207,43 +207,6 @@ public:
         mat->set_polygon_mode(smlt::POLYGON_MODE_LINE);
         assert_equal(mat->polygon_mode(), smlt::POLYGON_MODE_LINE);
     }
-
-    /* To save memory, we keep a global hash -> name mapping for all
-     * properties across all materials. This test ensures we release
-     * the elements from the map when it's no longer needed */
-    void test_property_name_refcounting() {
-        auto c0 = 0u;
-        auto mat = application->shared_assets->new_material();
-        mat->set_property_value("test", (int32_t) 1);
-
-        auto c1 = Material::_name_refcount("test");
-
-        assert_equal(c1, c0 + 1);
-
-        auto mat2 = application->shared_assets->clone_material(mat);
-
-        auto c2 = Material::_name_refcount("test");
-
-        assert_equal(c2, c0 + 2);
-
-        auto mat_count = application->shared_assets->material_count();
-        mat.reset();
-        application->shared_assets->run_garbage_collection();
-
-        assert_equal(application->shared_assets->material_count(), mat_count - 1);
-
-        auto c3 = Material::_name_refcount("test");
-
-        assert_equal(c3, c0 + 1);
-
-        mat2.reset();
-        application->shared_assets->run_garbage_collection();
-
-        assert_equal(application->shared_assets->material_count(), mat_count - 2);
-
-        auto c4 = Material::_name_refcount("test");
-        assert_equal(c4, c0);
-    }
 };
 
 

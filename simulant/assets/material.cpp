@@ -44,23 +44,41 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
 };
 
-std::unordered_map<MaterialPropertyNameHash, Material::PropertyName> Material::hashes_to_names_;
-
 Material::Material(MaterialID id, AssetManager* asset_manager):
     Asset(asset_manager),
     generic::Identifiable<MaterialID>(id),
     renderer_(get_app()->window->renderer) {
 
     /* The core material has 4 texture properties by default */
-    texture_properties_.insert(LIGHT_MAP_PROPERTY_HASH);
-    texture_properties_.insert(DIFFUSE_MAP_PROPERTY_HASH);
-    texture_properties_.insert(SPECULAR_MAP_PROPERTY_HASH);
-    texture_properties_.insert(NORMAL_MAP_PROPERTY_HASH);
 
-    push_name(LIGHT_MAP_PROPERTY_NAME, LIGHT_MAP_PROPERTY_HASH);
-    push_name(DIFFUSE_MAP_PROPERTY_NAME, DIFFUSE_MAP_PROPERTY_HASH);
-    push_name(SPECULAR_MAP_PROPERTY_NAME, SPECULAR_MAP_PROPERTY_HASH);
-    push_name(NORMAL_MAP_PROPERTY_NAME, NORMAL_MAP_PROPERTY_HASH);
+    TexturePropertyInfo diffuse_map;
+    diffuse_map.texture_property_name = DIFFUSE_MAP_PROPERTY_NAME;
+    diffuse_map.texture_property_name_hash = DIFFUSE_MAP_PROPERTY_HASH;
+    diffuse_map.matrix_property_name = DIFFUSE_MAP_MATRIX_PROPERTY_NAME;
+    diffuse_map.matrix_property_name_hash = DIFFUSE_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(std::make_pair(DIFFUSE_MAP_PROPERTY_HASH, diffuse_map));
+
+    TexturePropertyInfo light_map;
+    light_map.texture_property_name = LIGHT_MAP_PROPERTY_NAME;
+    light_map.texture_property_name_hash = LIGHT_MAP_PROPERTY_HASH;
+    light_map.matrix_property_name = LIGHT_MAP_MATRIX_PROPERTY_NAME;
+    light_map.matrix_property_name_hash = LIGHT_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(std::make_pair(LIGHT_MAP_PROPERTY_HASH, light_map));
+
+    TexturePropertyInfo specular_map;
+    specular_map.texture_property_name = SPECULAR_MAP_PROPERTY_NAME;
+    specular_map.texture_property_name_hash = SPECULAR_MAP_PROPERTY_HASH;
+    specular_map.matrix_property_name = SPECULAR_MAP_MATRIX_PROPERTY_NAME;
+    specular_map.matrix_property_name_hash = SPECULAR_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(std::make_pair(SPECULAR_MAP_PROPERTY_HASH, specular_map));
+
+
+    TexturePropertyInfo normal_map;
+    normal_map.texture_property_name = NORMAL_MAP_PROPERTY_NAME;
+    normal_map.texture_property_name_hash = NORMAL_MAP_PROPERTY_HASH;
+    normal_map.matrix_property_name = NORMAL_MAP_MATRIX_PROPERTY_NAME;
+    normal_map.matrix_property_name_hash = NORMAL_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(std::make_pair(NORMAL_MAP_PROPERTY_HASH, normal_map));
 
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
 
@@ -69,16 +87,7 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     renderer_->prepare_material(this);
 }
 
-Material::~Material() {
-    pop_name(LIGHT_MAP_PROPERTY_HASH);
-    pop_name(DIFFUSE_MAP_PROPERTY_HASH);
-    pop_name(SPECULAR_MAP_PROPERTY_HASH);
-    pop_name(NORMAL_MAP_PROPERTY_HASH);
-
-    for(auto& prop: custom_properties()) {
-        pop_name(prop.first);
-    }
-}
+Material::~Material() {}
 
 bool Material::set_pass_count(uint8_t pass_count) {
     if(pass_count >= MAX_MATERIAL_PASSES) {
@@ -105,20 +114,7 @@ void Material::update(float dt) {
 }
 
 Material &Material::operator=(const Material &rhs) {
-    /* Reduce refcounts for unused properties */
-    for(auto& prop: custom_properties()) {
-        pop_name(prop.first);
-    }
-
     MaterialObject::operator=(rhs);
-
-    /* Update refcounts for those names being transferred
-     * from the rhs */
-    std::string name;
-    for(auto& prop: rhs.custom_properties()) {
-        property_name(prop.first, name);
-        push_name(name.c_str(), prop.first);
-    }
 
     renderer_ = rhs.renderer_;
     texture_properties_ = rhs.texture_properties_;

@@ -126,7 +126,7 @@ static TexturePtr create_texture_with_colour(AssetManager* manager, const Colour
 
 
 bool SharedAssetManager::init() {
-    S_DEBUG("Initalizing default materials, textures, and fonts (AssetManager: {0})", this);
+    S_DEBUG("Initializing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
 
     white_tex_ = create_texture_with_colour(this, smlt::Colour::WHITE);
