@@ -613,6 +613,14 @@ void AndroidWindow::check_events() {
                //     set_has_context(false);
                // }
                 break;
+            case APP_CMD_PAUSE:
+                S_WARN("CMD: PAUSE");
+                set_has_focus(false);
+                break;
+            case APP_CMD_RESUME:
+                S_WARN("CMD: RESUME");
+                set_has_focus(true);
+                break;
             default:
                 break;
         }
