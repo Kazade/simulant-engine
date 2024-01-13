@@ -82,8 +82,14 @@ struct GameControllerInfo {
     } platform_data;
 };
 
+enum KeyboardType {
+    KEYBOARD_TYPE_PHYSICAL,
+    KEYBOARD_TYPE_SOFTWARE,
+};
+
 struct KeyboardDeviceInfo {
     uint32_t id;
+    KeyboardType type = KEYBOARD_TYPE_PHYSICAL;
 };
 
 struct MouseDeviceInfo {
@@ -226,6 +232,11 @@ private:
 };
 
 
+struct Keyboard {
+    bool keys[MAX_KEYBOARD_CODES] = {0};
+    KeyboardType type;
+};
+
 class InputState:
     public RefCounted<InputState> {
 
@@ -250,6 +261,9 @@ public:
 
     void _update_keyboard_devices(const std::vector<KeyboardDeviceInfo>& device_info) {
         keyboard_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
+        for(std::size_t i = 0; i < device_info.size(); ++i) {
+            keyboards_[i].type = device_info[i].type;
+        }
     }
 
     void _update_game_controllers(const std::vector<GameControllerInfo>& device_info);
@@ -283,6 +297,10 @@ public:
 
     std::size_t game_controller_count() const { return joystick_count_; }
     std::size_t keyboard_count() const { return keyboard_count_; }
+
+    Keyboard* keyboard_by_id(KeyboardID keyboard_id);
+    const Keyboard* keyboard_by_id(KeyboardID keyboard_id) const;
+
     std::size_t mouse_count() const { return mouse_count_; }
 
     JoystickAxis linked_axis(GameControllerID id, JoystickAxis axis);
@@ -296,13 +314,8 @@ private:
     float joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const;
     HatPosition joystick_hat_state(GameControllerID joystick_id, JoystickHatID hat) const;
 
-
-    struct KeyboardState {
-        bool keys[MAX_KEYBOARD_CODES] = {0};
-    };
-
     uint8_t keyboard_count_ = 0;
-    KeyboardState keyboards_[4];
+    Keyboard keyboards_[4];
 
     struct MouseState {
         uint8_t button_count = 0;

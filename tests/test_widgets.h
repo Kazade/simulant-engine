@@ -44,6 +44,86 @@ public:
         assert_equal(scene->assets->material_count(), mc); /* Destroyed */
     }
 
+    void test_multi_touch_event() {
+        auto camera = scene->create_child<Camera>();
+        camera->set_orthographic_projection(0, window->width(), 0, window->height());
+
+        auto viewport = Viewport();
+
+        auto ui = scene->create_child<ui::UIManager>();
+
+        // Create two buttons, make sure we can press both with different fingers
+        auto button1 = ui->create_child<ui::Button>("Button1");
+        button1->set_anchor_point(0.5f, 0.5f);
+        button1->transform->set_position(smlt::Vec3(window->width() / 2, (window->height() / 2) + 100, 0));
+
+        auto button2 = ui->create_child<ui::Button>("Button2");
+        button2->set_anchor_point(0.5f, 0.5f);
+        button2->transform->set_position(smlt::Vec3(window->width() / 2, (window->height() / 2) - 100, 0));
+
+        float button1_normalized = button1->transform->position().y / float(window->height());
+        assert_true(button1_normalized <= 1.0f);
+        assert_true(button1_normalized >= 0.0f);
+
+        window->on_finger_down(0, 0.5f, button1_normalized, 1.0f);
+        ui->process_event_queue(camera, &viewport);
+        ui->clear_event_queue();
+
+        assert_true(button1->is_pressed());
+        assert_true(button1->is_pressed_by_finger(0));
+
+        float button2_normalized = button2->transform->position().y / float(window->height());
+        assert_true(button2_normalized <= 1.0f);
+        assert_true(button2_normalized >= 0.0f);
+
+        window->on_finger_down(1, 0.5f, button2_normalized, 1.0f);
+        ui->process_event_queue(camera, &viewport);
+        ui->clear_event_queue();
+
+        assert_true(button1->is_pressed());
+        assert_true(button1->is_pressed_by_finger(0));
+        assert_false(button1->is_pressed_by_finger(1));
+
+        assert_true(button2->is_pressed());
+        assert_true(button2->is_pressed_by_finger(1));
+        assert_false(button2->is_pressed_by_finger(0));
+    }
+
+    void test_click_event() {
+        auto camera = scene->create_child<Camera>();
+        camera->set_orthographic_projection(0, window->width(), 0, window->height());
+
+        auto viewport = Viewport();
+
+        auto ui = scene->create_child<ui::UIManager>();
+
+        auto button = ui->create_child<ui::Button>("Button");
+        button->set_anchor_point(0.5f, 0.5f);
+        button->transform->set_position(smlt::Vec3(window->width() / 2, window->height() / 2, 0));
+
+        int clicked = 0;
+
+        button->signal_clicked().connect([&]() {
+            clicked++;
+        });
+
+        window->on_mouse_down(0, 0, window->width() / 2, window->height() / 2, false);
+        window->on_mouse_up(0, 0, window->width() / 2, window->height() / 2, false);
+        ui->process_event_queue(camera, &viewport);
+        ui->clear_event_queue();
+
+        assert_equal(clicked, 1);
+
+        clicked = 0;
+
+        window->on_finger_down(0, 0.5f, 0.5f, 1.0f);
+        window->on_finger_up(0, 0.5f, 0.5f);
+        ui->process_event_queue(camera, &viewport);
+        ui->clear_event_queue();
+
+        assert_equal(clicked, 1);
+    }
+
     void test_foreground_and_background_images_differ() {
         auto button = scene->create_child<ui::Button>("Button", ui::Px(100), ui::Px(20));
 

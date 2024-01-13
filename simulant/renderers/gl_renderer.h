@@ -49,8 +49,7 @@ constexpr const char* const INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY = "s_inv
 
 class GLRenderer : public Renderer {
 protected:
-    GLRenderer(Window* window):
-        Renderer(window) {}
+    GLRenderer(Window* window);
 
     void on_texture_register(AssetID tex_id, Texture *texture) override;
     void on_texture_unregister(AssetID tex_id, Texture* texture) override;
@@ -62,6 +61,14 @@ protected:
 
     thread::Mutex texture_object_mutex_;
     std::unordered_map<AssetID, uint32_t> texture_objects_;
+
+    bool is_es() const {
+        return is_es_;
+    }
+
+    void init_context() override;
+private:
+    bool is_es_ = false;
 
 };
 

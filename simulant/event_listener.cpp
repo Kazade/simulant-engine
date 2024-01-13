@@ -24,7 +24,7 @@ void EventListener::handle_touch_end(Window* window, TouchPointID touch_id, floa
     evt.normalized_coord = Vec2(normalized_x, normalized_y);
     evt.coord = window->coordinate_from_normalized(normalized_x, normalized_y);
 
-    on_touch_begin(evt);
+    on_touch_end(evt);
 }
 
 void EventListener::handle_touch_move(Window* window, TouchPointID touch_id, float normalized_x, float normalized_y, float dx, float dy) {
@@ -74,6 +74,48 @@ void EventListener::handle_key_up(Window* window, KeyboardCode code, ModifierKey
     evt.modifiers = modifiers;
 
     on_key_up(evt);
+}
+
+void EventListener::handle_mouse_down(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
+    _S_UNUSED(window);
+
+    MouseEvent evt;
+    evt.id = id;
+    evt.type = MOUSE_EVENT_TYPE_BUTTON_DOWN;
+    evt.button = mouse_button;
+    evt.x = x;
+    evt.y = y;
+    evt.is_touch_device = touch_device;
+
+    on_mouse_down(evt);
+}
+
+void EventListener::handle_mouse_up(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
+    _S_UNUSED(window);
+
+    MouseEvent evt;
+    evt.id = id;
+    evt.type = MOUSE_EVENT_TYPE_BUTTON_UP;
+    evt.button = mouse_button;
+    evt.x = x;
+    evt.y = y;
+    evt.is_touch_device = touch_device;
+
+    on_mouse_up(evt);
+}
+
+void EventListener::handle_mouse_move(Window* window, MouseID id, int32_t x, int32_t y, bool touch_device) {
+    _S_UNUSED(window);
+
+    MouseEvent evt;
+    evt.id = id;
+    evt.type = MOUSE_EVENT_TYPE_MOTION;
+    evt.button = -1;
+    evt.x = x;
+    evt.y = y;
+    evt.is_touch_device = touch_device;
+
+    on_mouse_move(evt);
 }
 
 void EventListenerManager::register_event_listener(EventListener* listener) {

@@ -62,6 +62,12 @@ UIManager::~UIManager() {
     }
 }
 
+bool UIManager::on_create(void *params) {
+    UIManagerParams* args = (UIManagerParams*) params;
+    config_ = args->config;
+    return true;
+}
+
 //Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const unicode &initial_text) {
 //    auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, mode, initial_text);
 //    stage_->append_child(keyboard);
@@ -160,6 +166,18 @@ UIManager::~UIManager() {
 //    manager_->destroy_immediately(object->id());
 //}
 
+void UIManager::on_mouse_down(const MouseEvent &evt) {
+    if(!evt.is_touch_device) {
+        queue_event(evt);
+    }
+}
+
+void UIManager::on_mouse_up(const MouseEvent &evt) {
+    if(!evt.is_touch_device) {
+        queue_event(evt);
+    }
+}
+
 void UIManager::on_touch_begin(const TouchEvent &evt) {
     queue_event(evt);
 }
@@ -170,6 +188,11 @@ void UIManager::on_touch_end(const TouchEvent &evt) {
 
 void UIManager::on_touch_move(const TouchEvent &evt) {
     queue_event(evt);
+}
+
+void UIManager::queue_event(const MouseEvent& e) {
+    UIEvent evt(e);
+    queued_events_.push_back(evt);
 }
 
 void UIManager::queue_event(const TouchEvent& e) {
@@ -189,11 +212,37 @@ void UIManager::process_event_queue(
 
     for(auto& evt: queued_events) {
         switch(evt.type) {
-            case UI_EVENT_TYPE_TOUCH: {
-                auto widget = find_widget_at_window_coordinate(
-                    camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y)
-                );
+            case UI_EVENT_TYPE_MOUSE: {
+                auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.mouse.x, evt.mouse.y));
+                if(widget) {
+                    if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_DOWN) {
+                        widget->fingerdown(evt.mouse.id);
+                    } else if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
+                        widget->fingerup(evt.mouse.id);
+                    }
+                } else if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION) {
+                    // If we just moved over the widget, and we weren't already on it
+                    // then trigger a fingerenter
+                    if(!widget->is_pressed_by_finger(evt.mouse.id)) {
+                        widget->fingerenter(evt.mouse.id);
+                    }
 
+                    // notify that there was a movement on the widget
+                    widget->fingermove(evt.mouse.id);
+                }
+
+                if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION || evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
+                    // Go through all the widgets, if one is being pressed and it's different
+                    // than the one above, then trigger a fingerleave event
+                    for(auto iter: find_child_widgets()) {
+                        if(iter->is_pressed_by_finger(evt.mouse.id) && iter != widget) {
+                            iter->fingerleave(evt.mouse.id);
+                        }
+                    }
+                }
+            } break;
+            case UI_EVENT_TYPE_TOUCH: {
+                auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.touch.coord.x, evt.touch.coord.y));
                 if(widget) {
                     if(evt.touch.type == TOUCH_EVENT_TYPE_FINGER_DOWN) {
                         widget->fingerdown(evt.touch.touch_id);
@@ -258,8 +307,54 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
 
     auto window = get_app()->window.get();
 
+    std::list<Widget*> sorted_widgets;
+
     for(auto widget: find_child_widgets()) {
+        if(!widget->is_visible()) {
+            continue;
+        }
+
+        sorted_widgets.push_back(widget);
+    }
+
+    auto is_descendent = [](Widget* item, Widget* potential_parent) {
+        StageNode* it = (StageNode*) item->parent();
+        while(it && it != item->scene.get()) {
+            if(it == (StageNode*) potential_parent) {
+                return true;
+            }
+            it = (StageNode*) it->parent();
+        }
+
+        return false;
+    };
+
+    smlt::Plane cam_plane(camera->transform->forward(), camera->transform->position());
+
+    // Order widgets by distance to camera desc. This is hacky, if the two widgets
+    // have approx the same distance, we check to see if one is a descendent of the
+    // other, if so we sort descendents after ancestors
+    sorted_widgets.sort([cam_plane, &is_descendent](Widget* lhs, Widget* rhs) -> bool {
+        float lhd = cam_plane.distance_to(lhs->transform->position());
+        float rhd = cam_plane.distance_to(rhs->transform->position());
+
+        if(almost_equal(lhd, rhd)) {
+            if(is_descendent(lhs, rhs)) {
+                // If lhs is a descendent of rhs, make sure it comes first in the
+                // list
+                return true;
+            } else {
+                // Not related, return false
+                return false;
+            }
+        }
+
+        return lhd < rhd;
+    });
+
+    for(auto widget: sorted_widgets) {
         auto aabb = widget->transformed_aabb();
+
         std::vector<Vec3> ss_points;
 
         for(auto& corner: aabb.corners()) {
@@ -269,8 +364,10 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(const Camera *camera, cons
         AABB ss_aabb(&ss_points[0], ss_points.size());
 
         // FIXME: Return the nearest if overlapping!
-        if(ss_aabb.contains_point(Vec3(window_coord, 0.5))) {
+        if(ss_aabb.min().x <= window_coord.x && ss_aabb.max().x >= window_coord.x &&
+            ss_aabb.min().y <= window_coord.y && ss_aabb.max().y >= window_coord.y) {
             result = widget;
+            break;
         }
     };
 

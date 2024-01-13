@@ -163,6 +163,16 @@ void SDL2Window::check_events() {
         return state;
     };
 
+    auto to_mouse_button_id = [](uint8_t SDL_button) -> MouseButtonID {
+        switch(SDL_button) {
+        case SDL_BUTTON_LEFT: return 0;
+        case SDL_BUTTON_RIGHT: return 1;
+        case SDL_BUTTON_MIDDLE: return 2;
+        default:
+            return -1;
+        }
+    };
+
 
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
@@ -233,18 +243,38 @@ void SDL2Window::check_events() {
                 on_key_up((KeyboardCode) event.key.keysym.scancode, get_modifiers());
             } break;
             case SDL_MOUSEMOTION: {
+                bool is_touch_device = (event.motion.which == SDL_TOUCH_MOUSEID);
                 input_state->_handle_mouse_motion(
                     event.motion.which,
-                    event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel
+                    event.motion.x,
+                    height() - event.motion.y,
+                    event.motion.xrel,
+                    -event.motion.yrel
                 );
+                on_mouse_move(event.motion.which, event.motion.x, height() - event.motion.y, is_touch_device);
             } break;
             case SDL_MOUSEBUTTONDOWN: {
-
+                bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
+                input_state->_handle_mouse_down(event.button.which, to_mouse_button_id(event.button.button));
+                on_mouse_down(
+                    event.button.which,
+                    to_mouse_button_id(event.button.button),
+                    event.button.x,
+                    height() - event.button.y,
+                    is_touch_device
+                );
             } break;
             case SDL_MOUSEBUTTONUP: {
-
+                bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
+                input_state->_handle_mouse_up(event.button.which, to_mouse_button_id(event.button.button));
+                on_mouse_up(
+                    event.button.which,
+                    to_mouse_button_id(event.button.button),
+                    event.button.x,
+                    height() - event.button.y,
+                    is_touch_device
+                );
             } break;
-
             case SDL_FINGERMOTION: {
                 float x = event.tfinger.x;
                 float y = event.tfinger.y;
@@ -396,14 +426,12 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
     if(renderer->name() == "gl1x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    } else {
-#ifdef __ANDROID__
-        /* FIXME: Add a GLES2 renderer */
-        SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-#else
+    } else if(renderer->name() == "gl2x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#endif
+    } else if(renderer->name() == "gles2x") {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     }
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -412,7 +440,7 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     context_ = SDL_GL_CreateContext(screen_);
 

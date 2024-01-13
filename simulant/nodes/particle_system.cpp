@@ -19,7 +19,11 @@ const static VertexSpecification PS_VERTEX_SPEC(
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
     smlt::VERTEX_ATTRIBUTE_NONE,
+#ifdef __DREAMCAST__
     smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
+#else
+    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+#endif
 );
 
 ParticleSystem::ParticleSystem(Scene* owner):
@@ -126,7 +130,7 @@ void ParticleSystem::do_generate_renderables(
     rebuild_vertex_data(camera->transform->up(), camera->transform->right());
 
     Renderable new_renderable;
-    new_renderable.arrangement = MESH_ARRANGEMENT_QUADS;
+    new_renderable.arrangement = MESH_ARRANGEMENT_TRIANGLE_STRIP;
     new_renderable.render_priority = render_priority();
     new_renderable.final_transformation = Mat4();
     new_renderable.index_data = nullptr;
@@ -161,23 +165,41 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         auto& p = particles_[j];
 
         Vec3* pos = (Vec3*) pos_ptr;
-        uint8_t* dif = dif_ptr;
         float* uv = (float*) uv_ptr;
 
+#ifdef __DREAMCAST__
+        uint8_t* dif = dif_ptr;
         uint8_t a = smlt::clamp(p.color.a * 255.0f, 0, 255);
         uint8_t r = smlt::clamp(p.color.r * 255.0f, 0, 255);
         uint8_t g = smlt::clamp(p.color.g * 255.0f, 0, 255);
         uint8_t b = smlt::clamp(p.color.b * 255.0f, 0, 255);
 
+#define RIDX 2
+#define GIDX 1
+#define BIDX 0
+#define AIDX 3
+#else
+        float* dif = (float*) dif_ptr;
+        float a = p.color.a;
+        float r = p.color.r;
+        float g = p.color.g;
+        float b = p.color.b;
+
+#define RIDX 0
+#define GIDX 1
+#define BIDX 2
+#define AIDX 3
+#endif
+
         *(pos) =
             p.position
             + right * p.dimensions.x * -0.5f
             + up * p.dimensions.y * -0.5f;
 
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
 
         uv[0] = 0.0f;
         uv[1] = 0.0f;
@@ -187,7 +209,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uv_ptr += stride;
 
         pos = (Vec3*) pos_ptr;
-        dif = dif_ptr;
+        dif = (decltype(dif)) dif_ptr;
         uv = (float*) uv_ptr;
 
         *(pos) =
@@ -195,10 +217,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
             + right * p.dimensions.x * +0.5f
             + up * p.dimensions.y * -0.5f;
 
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
 
         uv[0] = 1.0f;
         uv[1] = 0.0f;
@@ -208,7 +230,28 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         uv_ptr += stride;
 
         pos = (Vec3*) pos_ptr;
-        dif = dif_ptr;
+        dif = (decltype(dif)) dif_ptr;
+        uv = (float*) uv_ptr;
+
+        *(pos) =
+            p.position
+            + right * p.dimensions.x * -0.5f
+            + up * p.dimensions.y * +0.5f;
+
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
+
+        uv[0] = 0.0f;
+        uv[1] = 1.0f;
+
+        pos_ptr += stride;
+        dif_ptr += stride;
+        uv_ptr += stride;
+
+        pos = (Vec3*) pos_ptr;
+        dif = (decltype(dif)) dif_ptr;
         uv = (float*) uv_ptr;
 
         *(pos) =
@@ -216,10 +259,10 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
             + right * p.dimensions.x * +0.5f
             + up * p.dimensions.y * +0.5f;
 
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
+        dif[BIDX] = b;
+        dif[GIDX] = g;
+        dif[RIDX] = r;
+        dif[AIDX] = a;
 
         uv[0] = 1.0f;
         uv[1] = 1.0f;
@@ -228,33 +271,12 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         dif_ptr += stride;
         uv_ptr += stride;
 
-        pos = (Vec3*) pos_ptr;
-        dif = dif_ptr;
-        uv = (float*) uv_ptr;
-
-        *(pos) =
-            p.position
-            + right * p.dimensions.x * -0.5f
-            + up * p.dimensions.y * +0.5f;
-
-        dif[0] = b;
-        dif[1] = g;
-        dif[2] = r;
-        dif[3] = a;
-
-        uv[0] = 0.0f;
-        uv[1] = 1.0f;
-
-        pos_ptr += stride;
-        dif_ptr += stride;
-        uv_ptr += stride;
+        /* Add a vertex range for this tri-strip */
+        VertexRange new_range;
+        new_range.start = j * 4;
+        new_range.count = 4;
+        vertex_ranges_.push_back(new_range);
     }
-
-    /* Use one giant vertex range of quads (glDrawArrays) */
-    VertexRange new_range;
-    new_range.start = 0;
-    new_range.count = vertex_data_->count();
-    vertex_ranges_.push_back(new_range);
 
     vertex_data_->done();
 }

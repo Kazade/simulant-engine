@@ -33,8 +33,10 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         /* NULL? Then return the default for the platform */
 #if defined(__DREAMCAST__) || defined(__PSP__)
         return std::make_shared<GL1XRenderer>(window);
+#elif defined(__ANDROID__)
+        return std::make_shared<GenericRenderer>(window, /*use_es=*/ true);
 #else
-        return std::make_shared<GenericRenderer>(window);
+        return std::make_shared<GenericRenderer>(window, false);
 #endif
     }
 
@@ -46,11 +48,18 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         return std::make_shared<GL1XRenderer>(window);
 #endif
     } else if(chosen == "gl2x") {
-#if defined(__DREAMCAST__) || defined(PSP)
+#if defined(__DREAMCAST__) || defined(PSP) || defined(__ANDROID__)
         S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else
-        return std::make_shared<GenericRenderer>(window);
+        return std::make_shared<GenericRenderer>(window, false);
+#endif
+    } else if(chosen == "gles2x") {
+#if defined(__DREAMCAST__) || defined(PSP) || defined(__WIN32__)
+        S_ERROR("{0} is not a supported renderer", name);
+        return NOT_SUPPORTED;
+#else
+        return std::make_shared<GenericRenderer>(window, true);
 #endif
     }
 

@@ -28,6 +28,35 @@ Widget::~Widget() {
     style_.reset();
 }
 
+void Widget::build_text_submeshes() {
+    if(!mesh_) {
+        return;
+    }
+
+    for(std::size_t i = 0; i < Font::max_pages; ++i) {
+        std::string id = _F("text-{0}").format(i);
+        auto sm = mesh_->find_submesh(id);
+
+        smlt::MaterialPtr m =
+            (i < font_->page_count()) ?
+            font_->page(i)->material : MaterialPtr();
+
+        if(!m) {
+            m = scene->assets->clone_default_material();
+        }
+
+        if(!sm) {
+            mesh_->create_submesh(
+                id,
+                m,
+                MESH_ARRANGEMENT_TRIANGLE_STRIP
+            );
+        } else {
+            sm->set_material(m);
+        }
+    }
+}
+
 MaterialPtr Widget::find_or_create_material(const char* name) {
     auto material = scene->assets->find_material(name);
     if(!material) {
@@ -83,20 +112,6 @@ bool Widget::on_create(void* params) {
         style_ = args->shared_style;
     }
 
-    std::string family = (args->theme.font_family_.empty()) ?
-                             get_app()->config->ui.font_family : args->theme.font_family_;
-
-    Px size = (args->theme.font_size_ == Px(0)) ?
-                  Px(get_app()->config->ui.font_size) :
-                  Px(args->theme.font_size_);
-
-    auto font = load_or_get_font(
-        family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
-    );
-    assert(font);
-
-    set_font(font);
-
     VertexSpecification spec = VertexSpecification::DEFAULT;
 
     /* We don't need normals or multiple texcoords */
@@ -116,9 +131,20 @@ bool Widget::on_create(void* params) {
     mesh_->create_submesh("border", style_->materials_[WIDGET_LAYER_INDEX_BORDER], MESH_ARRANGEMENT_TRIANGLE_STRIP);
     mesh_->create_submesh("background", style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
     mesh_->create_submesh("foreground", style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND], MESH_ARRANGEMENT_TRIANGLE_STRIP);
-    mesh_->create_submesh("text", font_->material(), MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
-    rebuild();
+    std::string family = (args->theme.font_family_.empty()) ?
+                             get_app()->config->ui.font_family : args->theme.font_family_;
+
+    Px size = (args->theme.font_size_ == Px(0)) ?
+                  Px(get_app()->config->ui.font_size) :
+                  Px(args->theme.font_size_);
+
+    auto font = load_or_get_font(
+        family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL
+    );
+    assert(font);
+
+    set_font(font);
 
     initialized_ = true;
 
@@ -146,6 +172,9 @@ void Widget::set_font(FontPtr font) {
 
     font_ = font;
 
+    // It's important we keep this up-to-date as different fonts
+    // will have different numbers of pages
+    build_text_submeshes();
     on_size_changed();
 }
 
@@ -200,6 +229,11 @@ void Widget::render_text() {
         smlt::Vec2 uv;
     };
 
+    struct Char {
+        uint8_t page = 0;
+        Vertex vertices[4];
+    };
+
     if(!font_ || text().empty()) {
         text_width_ = text_height_ = Px();
         return;
@@ -208,15 +242,15 @@ void Widget::render_text() {
     /* static to avoid reallocating each frame */
     static std::vector<std::pair<uint32_t, uint32_t>> line_ranges;
     static std::vector<Px> line_lengths;
-    static std::vector<Vertex> vertices;
+    static std::vector<Char> characters;
 
     /* Clear, but not shrink_to_fit */
     line_ranges.clear();
     line_lengths.clear();
-    vertices.clear();
+    characters.clear();
 
     /* We know how many vertices we'll need (roughly) */
-    vertices.reserve(text().length() * 4);
+    characters.reserve(text().length());
 
     Px left_bound = 0;
 
@@ -260,7 +294,7 @@ void Widget::render_text() {
             /* Ranges are (start_vertex_index, length_in_chars) */
             line_ranges.push_back(std::make_pair(line_start, line_vertex_count));
             line_lengths.push_back(line_length);
-            line_start = vertices.size();
+            line_start = characters.size() * 4;
             left = left_bound;
             line_length = Px(0);
             line_vertex_count = 0;
@@ -313,7 +347,9 @@ void Widget::render_text() {
 
         /* If the character is visible, then create some vertices for it */
         if(is_visible_character(ch)) {
-            Vertex corners[4];
+            Char new_char;
+            new_char.page = font_->character_page(ch);
+
 
             // Characters are created with their top-line at 0, we then
             // properly manipulate the position when we process the lines later
@@ -326,6 +362,8 @@ void Widget::render_text() {
             bottom -= font_->ascent();
 
             auto c = font_->char_corners(ch);
+            Vertex* corners = new_char.vertices;
+
             corners[0].xyz = smlt::Vec3((left.value + c.first.x), c.first.y, 0);
             corners[1].xyz = smlt::Vec3((left.value + c.second.x), c.first.y, 0);
             corners[2].xyz = smlt::Vec3((left.value + c.second.x), c.second.y, 0);
@@ -337,10 +375,7 @@ void Widget::render_text() {
             corners[2].uv = smlt::Vec2(min_max.second.x, min_max.second.y);
             corners[3].uv = smlt::Vec2(min_max.first.x, min_max.second.y);
 
-            vertices.push_back(corners[0]);
-            vertices.push_back(corners[1]);
-            vertices.push_back(corners[2]);
-            vertices.push_back(corners[3]);
+            characters.push_back(new_char);
 
             line_vertex_count += 4;
         }
@@ -370,15 +405,16 @@ void Widget::render_text() {
             continue;
         }
 
-        uint16_t shift = (j * line_height().value);
+        auto shift = (j * line_height().value);
 
-        Vertex* ch = &vertices.at(range.first);
-        uint16_t hw = line_lengths[j++].value / 2;
-        for(auto i = 0u; i < range.second; i += 4) {
-            Vertex* bl = ch;
-            Vertex* br = ch + 1;
-            Vertex* tr = ch + 2;
-            Vertex* tl = ch + 3;
+        Char* ch = &characters.at(range.first >> 2);
+
+        auto hw = line_lengths[j++].value / 2;
+        for(auto i = 0u; i < range.second >> 2; ++i, ++ch) {
+            Vertex* bl = ch->vertices;
+            Vertex* br = ch->vertices + 1;
+            Vertex* tr = ch->vertices + 2;
+            Vertex* tl = ch->vertices + 3;
 
             // Shift the vertex downwards
             bl->xyz.y -= shift;
@@ -396,7 +432,6 @@ void Widget::render_text() {
             min_x = std::min(tl->xyz.x, min_x);
             max_x = std::max(br->xyz.x, max_x);
             max_x = std::max(tr->xyz.x, max_x);
-            ch += 4;
         }
     }
 
@@ -404,11 +439,13 @@ void Widget::render_text() {
         min_x = max_x = 0.0f;
     }
 
-    auto sm = mesh_->find_submesh("text");
-    assert(sm);
-
-    /* Make sure the font material is up to date! */
-    sm->set_material(font_->material());
+    static_assert(Font::max_pages == 4, "This code needs to change if this changes");
+    SubMeshPtr submeshes [] = {
+        mesh_->find_submesh("text-0"),
+        mesh_->find_submesh("text-1"),
+        mesh_->find_submesh("text-2"),
+        mesh_->find_submesh("text-3")
+    };
 
     auto max_length = *std::max_element(line_lengths.begin(), line_lengths.end());
 
@@ -425,7 +462,7 @@ void Widget::render_text() {
 
     vdata->move_to_start();
     /* Allocate memory first */
-    vdata->reserve(vertices.size());
+    vdata->reserve(characters.size() * 4);
 
     if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
         auto cwidth = std::max(requested_width(), content_width()) - padding().left - padding().right;
@@ -438,18 +475,20 @@ void Widget::render_text() {
                 continue;
             }
 
-            Vertex* ch = &vertices.at(range.first);
+            Char* ch = &characters.at(range.first >> 2);
 
             auto ashift = std::ceil(-line_lengths[j++].value * 0.5f);
             ashift += std::ceil(cwidth.value * 0.5f);
 
-            for(auto i = 0u; i < range.second; i++, ch++) {
-                if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
-                    ch->xyz.x -= ashift;
-                    ch->xyz.x += padding().left.value;
-                } else {
-                    ch->xyz.x += ashift;
-                    ch->xyz.x -= padding().right.value;
+            for(auto i = 0u; i < range.second >> 2; i++, ch++) {
+                for(auto j = 0u; j < 4; ++j) {
+                    if(text_alignment() == TEXT_ALIGNMENT_LEFT) {
+                        ch->vertices[j].xyz.x -= ashift;
+                        ch->vertices[j].xyz.x += padding().left.value;
+                    } else {
+                        ch->vertices[j].xyz.x += ashift;
+                        ch->vertices[j].xyz.x -= padding().right.value;
+                    }
                 }
             }
         }
@@ -459,28 +498,36 @@ void Widget::render_text() {
     c.set_alpha(style_->opacity_);
 
     auto idx = vdata->count();
-    auto count = 0;
-    for(std::size_t i = 0; i < vertices.size(); ++i) {
-        Vertex* v = &vertices[i];
+    for(std::size_t i = 0; i < characters.size(); ++i) {
+        Char* ch = &characters[i];
 
-        /* Turn into a tri-strip, rather than a quad */
-        if(i % 4 == 2) {
-            v++;
-        } else if(i % 4 == 3) {
-            v--;
+        auto sm = submeshes[ch->page];
+        assert(sm);
+
+        if(!sm) {
+            S_ERROR("Failed to find required submesh for page: {0}", ch->page);
+            break;
         }
 
-        auto p = v->xyz + Vec3(global_x_shift, global_y_shift, 0);
-        vdata->position(p);
-        vdata->tex_coord0(v->uv);
-        vdata->diffuse(c);
-        vdata->move_next();
+        for(std::size_t j = 0; j < 4; ++j) {
+            Vertex* v = &ch->vertices[j];
 
-        /* Add this strip */
-        if(count++ % 4 == 0) {
-            sm->add_vertex_range(idx, 4);
-            idx += 4;
+            /* Turn into a tri-strip, rather than a quad */
+            if(j % 4 == 2) {
+                v++;
+            } else if(j % 4 == 3) {
+                v--;
+            }
+
+            auto p = v->xyz + Vec3(global_x_shift, global_y_shift, 0);
+            vdata->position(p);
+            vdata->tex_coord0(v->uv);
+            vdata->diffuse(c);
+            vdata->move_next();
         }
+
+        sm->add_vertex_range(idx, 4);
+        idx = vdata->count();
     }
 
     vdata->done();
@@ -1091,6 +1138,10 @@ bool Widget::is_pressed_by_finger(uint8_t finger_id) {
     return fingers_down_ & (1 << finger_id);
 }
 
+bool Widget::is_pressed() const {
+    return fingers_down_;
+}
+
 void Widget::force_release() {
     for(int i = 0; i < 16; ++i) {
         if(fingers_down_ & (1 << i)) {
@@ -1112,6 +1163,14 @@ void Widget::set_opacity(RangeValue<0, 1> alpha) {
 
 Px Widget::line_height() const {
     return Px(font_->ascent() - font_->descent() + font_->line_gap());
+}
+
+void Widget::set_z_order(int16_t z_order) {
+    actor_->set_z_order(z_order);
+}
+
+int16_t Widget::z_order() const {
+    return actor_->z_order();
 }
 
 void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPriority new_priority) {

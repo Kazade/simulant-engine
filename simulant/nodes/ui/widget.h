@@ -222,6 +222,7 @@ public:
     void fingermove(uint8_t finger_id);
     void fingerleave(uint8_t finger_id);
     bool is_pressed_by_finger(uint8_t finger_id);
+    bool is_pressed() const;
 
     /* Releases all presses forcibly, firing signals */
     void force_release();
@@ -232,6 +233,10 @@ public:
     void set_opacity(RangeValue<0, 1> alpha);
 
     Px line_height() const;
+
+    void set_z_order(int16_t z_order);
+
+    int16_t z_order() const;
 public:
     MaterialPtr border_material() const { return style_->materials_[0]; }
     MaterialPtr background_material() const { return style_->materials_[1]; }
@@ -349,6 +354,8 @@ protected:
     virtual void finalize_render() {}
     virtual void finalize_build() {}
     virtual bool pre_set_text(const unicode&) { return true; }
+
+    void build_text_submeshes();
 
     FontPtr load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style);
 

@@ -330,6 +330,14 @@ bool StageNode::is_cullable() const {
     return cullable_;
 }
 
+void StageNode::set_z_order(int16_t z_order) {
+    z_order_ = z_order;
+}
+
+int16_t StageNode::z_order() const {
+    return z_order_;
+}
+
 void StageNode::recalc_bounds_if_necessary() const {
     if(!transformed_aabb_dirty_) {
         return;

@@ -83,6 +83,7 @@ struct alignas(8) Renderable final {
     uint8_t light_count = 0;
 
     smlt::Vec3 center;
+    int16_t z_order = 0;
 };
 
 typedef std::shared_ptr<Renderable> RenderablePtr;

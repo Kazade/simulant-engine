@@ -37,11 +37,19 @@ class StageNode;
 
 namespace batcher {
 
+
+/* How render ordering works:
+ *
+ * 1. Pass number takes precendence
+ * 2. Within a pass, blended objects are rendered first
+ * 3. If an object is not blended, objects order by distance to camera least, to most. If blended, most to least
+ * 4. If distance to camera is equal, z order is taken into account
+*/
 struct RenderGroupKey {
     uint8_t pass; // 1 byte
     bool is_blended; // 1 byte
-    float distance_to_camera; // 4 bytes
-    uint16_t padding; // 2-bytes to get 8-byte alignment
+    float distance_to_camera; // 4 bytes   
+    int16_t z_order; // 2-bytes to get 8-byte alignment
 };
 
 
@@ -64,12 +72,16 @@ struct RenderGroup {
                 // If the object is opaque, we want to render
                 // front-to-back, so less distance is less
                 return true;
+            } else if(almost_equal(rhs.sort_key.distance_to_camera, sort_key.distance_to_camera)) {
+                return sort_key.z_order < rhs.sort_key.z_order;
             }
         } else {
             if(rhs.sort_key.distance_to_camera < sort_key.distance_to_camera) {
                 // If the object is translucent, we want to render
                 // back-to-front
                 return true;
+            } else if(almost_equal(rhs.sort_key.distance_to_camera, sort_key.distance_to_camera)) {
+                return sort_key.z_order < rhs.sort_key.z_order;
             }
         }
 
@@ -80,7 +92,8 @@ struct RenderGroup {
         return (
             sort_key.pass == rhs.sort_key.pass &&
             sort_key.is_blended == rhs.sort_key.is_blended &&
-            sort_key.distance_to_camera == rhs.sort_key.distance_to_camera
+            almost_equal(sort_key.distance_to_camera, rhs.sort_key.distance_to_camera) &&
+            sort_key.z_order == rhs.sort_key.z_order
         );
     }
 
@@ -89,7 +102,7 @@ struct RenderGroup {
     }
 };
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera);
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t z_order);
 
 class RenderGroupFactory {
 public:

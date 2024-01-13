@@ -21,7 +21,7 @@
 
 
 #include <unordered_map>
-#include <set>
+#include <unordered_set>
 
 #include "../asset.h"
 #include "../generic/identifiable.h"
@@ -80,6 +80,19 @@ private:
 
 typedef uint8_t PropertyIndex;
 
+struct TexturePropertyInfo {
+    std::string texture_property_name;
+    std::string matrix_property_name;
+    MaterialPropertyNameHash texture_property_name_hash;
+    MaterialPropertyNameHash matrix_property_name_hash;
+};
+
+struct CustomPropertyInfo {
+    std::string property_name;
+    MaterialPropertyNameHash property_name_hash;
+    MaterialPropertyType type;
+};
+
 class Material:
     public Asset,
     public Loadable,
@@ -117,85 +130,23 @@ public:
         }
     }
 
-    const std::unordered_map<MaterialPropertyNameHash, MaterialPropertyType>& custom_properties() const {
+    const std::unordered_map<MaterialPropertyNameHash, CustomPropertyInfo>& custom_properties() const {
         return custom_properties_;
     }
 
-    const std::set<MaterialPropertyNameHash>& texture_properties() const {
+    const std::unordered_map<MaterialPropertyNameHash, TexturePropertyInfo>& texture_properties() const {
         return texture_properties_;
-    }
-
-    /* Return the string name of a property, given its name hash */
-    bool property_name(MaterialPropertyNameHash hsh, std::string& name) const {
-        auto it = hashes_to_names_.find(hsh);
-        if(it != hashes_to_names_.end()) {
-            name = it->second.name;
-            return true;
-        } else {
-            return false;
-        }
     }
 
 private:
     Renderer* renderer_ = nullptr;
     std::vector<MaterialPass> passes_;
 
-    struct PropertyName {
-        std::string name;
-        uint8_t ref_count = 0;
-    };
-
-    static std::unordered_map<
-        MaterialPropertyNameHash,
-        PropertyName
-    > hashes_to_names_;
-
-    static uint32_t _name_refcount(const char* name) {
-        auto hsh = material_property_hash(name);
-
-        auto it = hashes_to_names_.find(hsh);
-        if(it != hashes_to_names_.end()) {
-            return it->second.ref_count;
-        } else {
-            return 0;
-        }
-    }
-
-    /* Push a name onto the hash lookup */
-    static PropertyName* push_name(const char* name, MaterialPropertyNameHash hsh) {
-        auto it = hashes_to_names_.find(hsh);
-        if(it != hashes_to_names_.end()) {
-            it->second.ref_count++;
-            return &it->second;
-        } else {
-            PropertyName pn;
-            pn.name = name;
-            pn.ref_count = 1;
-            hashes_to_names_[hsh] = pn;
-            return &hashes_to_names_[hsh];
-        }
-    }
-
-    /* Reduce the refcount of hsh. Returns true if this was the
-     * last hsh entry */
-    static bool pop_name(MaterialPropertyNameHash hsh) {
-        auto it = hashes_to_names_.find(hsh);
-        if(it != hashes_to_names_.end()) {
-            it->second.ref_count--;
-            if(!it->second.ref_count) {
-                hashes_to_names_.erase(it);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    std::set<MaterialPropertyNameHash> texture_properties_;
+    std::unordered_map<MaterialPropertyNameHash, TexturePropertyInfo> texture_properties_;
 
     std::unordered_map<
         MaterialPropertyNameHash,
-        MaterialPropertyType
+        CustomPropertyInfo
     > custom_properties_;
 
     virtual void on_override(
@@ -203,19 +154,27 @@ private:
         const char *name,
         MaterialPropertyType type) override {
 
-        push_name(name, hsh);
-
         if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
-            texture_properties_.insert(hsh);
+            TexturePropertyInfo info;
+            info.texture_property_name = name;
+            info.texture_property_name_hash = hsh;
+            info.matrix_property_name = info.texture_property_name + "_matrix";
+            info.matrix_property_name_hash = material_property_hash(info.matrix_property_name.c_str());
+            texture_properties_[info.texture_property_name_hash] = info;
         }
 
         if(!is_core_property(hsh)) {
-            custom_properties_[hsh] = type;
+            CustomPropertyInfo info;
+            info.property_name = name;
+            info.property_name_hash = hsh;
+            info.type = type;
+            custom_properties_[hsh] = info;
         }
     }
 
-    virtual void on_clear_override(MaterialPropertyNameHash hsh) override {
-        pop_name(hsh);
+    void on_clear_override(MaterialPropertyNameHash hsh) override {
+        texture_properties_.erase(hsh);
+        custom_properties_.erase(hsh);
     }
 
 protected:

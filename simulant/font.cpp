@@ -13,27 +13,26 @@
 
 namespace smlt {
 
+const static char FALLBACK_CHAR = '?';
+
 Font::Font(AssetID id, AssetManager *asset_manager):
     Asset(asset_manager),
     generic::Identifiable<AssetID>(id) {
 
 }
 
-TexturePtr Font::texture() const {
-    return texture_;
-}
-
-MaterialPtr Font::material() const {
-    return material_;
-}
-
 bool Font::on_init() {
     return true;
 }
 
+const FontPage* Font::page(std::size_t i) const {
+    assert(i < pages_.size());
+    return &pages_[i];
+}
+
 std::pair<Vec2, Vec2> Font::char_texcoords(char32_t ch) const {
     if(!char_data_.count(ch)) {
-        ch = '?';
+        ch = FALLBACK_CHAR;
     }
 
     if(info_) {
@@ -56,7 +55,7 @@ std::pair<Vec2, Vec2> Font::char_texcoords(char32_t ch) const {
 
 std::pair<Vec2, Vec2> Font::char_corners(char32_t ch) const {
     if(!char_data_.count(ch)) {
-        ch = '?';
+        ch = FALLBACK_CHAR;
     }
 
     CharInfo q = char_data_.at(ch);
@@ -65,7 +64,7 @@ std::pair<Vec2, Vec2> Font::char_corners(char32_t ch) const {
 
 uint16_t Font::character_width(char32_t ch) {
     if(!char_data_.count(ch)) {
-        ch = '?';
+        ch = FALLBACK_CHAR;
     }
 
     auto *b = &char_data_.at(ch);
@@ -74,7 +73,7 @@ uint16_t Font::character_width(char32_t ch) {
 
 uint16_t Font::character_height(char32_t ch) {
     if(!char_data_.count(ch)) {
-        ch = '?';
+        ch = FALLBACK_CHAR;
     }
 
     auto *b = &char_data_.at(ch);
@@ -85,7 +84,7 @@ float Font::character_advance(char32_t ch, char32_t next) {
     _S_UNUSED(next); // FIXME: Kerning!
 
     if(!char_data_.count(ch)) {
-        ch = '?';
+        ch = FALLBACK_CHAR;
     }
 
     auto *b = &char_data_.at(ch);
@@ -94,11 +93,19 @@ float Font::character_advance(char32_t ch, char32_t next) {
 
 Vec2 Font::character_offset(char32_t ch) {
     if(!char_data_.count(ch)) {
-        ch = '?';
+        ch = FALLBACK_CHAR;
     }
 
     auto *b = &char_data_.at(ch);    
     return b->off;
+}
+
+uint16_t Font::character_page(char32_t ch) {
+    if(!char_data_.count(ch)) {
+        ch = FALLBACK_CHAR;
+    }
+
+    return char_data_[ch].page;
 }
 
 int16_t Font::ascent() const {
@@ -113,17 +120,24 @@ int16_t Font::line_gap() const {
     return line_gap_;
 }
 
-uint16_t Font::page_width(char ch) const {
-    _S_UNUSED(ch);
+uint16_t Font::page_width(char16_t ch) const {
+    auto it = char_data_.find(ch);
+    if(it == char_data_.end()) {
+        it = char_data_.find(FALLBACK_CHAR);
+        assert(it != char_data_.end());
+    }
 
-    // FIXME: This will need to change when we support multiple pages
-    return page_width_;
+    return pages_[it->second.page].width;
 }
 
-uint16_t Font::page_height(char ch) const {
-    _S_UNUSED(ch);
+uint16_t Font::page_height(char16_t ch) const {
+    auto it = char_data_.find(ch);
+    if(it == char_data_.end()) {
+        it = char_data_.find(FALLBACK_CHAR);
+        assert(it != char_data_.end());
+    }
 
-    return page_height_;
+    return pages_[it->second.page].height;
 }
 
 

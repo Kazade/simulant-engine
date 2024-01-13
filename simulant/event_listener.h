@@ -62,6 +62,21 @@ struct KeyEvent {
     ModifierKeyState modifiers;
 };
 
+enum MouseEventType : uint8_t {
+    MOUSE_EVENT_TYPE_BUTTON_DOWN,
+    MOUSE_EVENT_TYPE_BUTTON_UP,
+    MOUSE_EVENT_TYPE_MOTION
+};
+
+struct MouseEvent {
+    MouseID id;
+    MouseEventType type;
+    uint8_t button;
+    int32_t x;
+    int32_t y;
+    bool is_touch_device;
+};
+
 enum GameControllerEventType {
     GAME_CONTROLLER_EVENT_TYPE_BUTTON_DOWN,
     GAME_CONTROLLER_EVENT_TYPE_BUTTON_UP
@@ -85,6 +100,10 @@ public:
     void handle_key_down(Window* window, KeyboardCode code, ModifierKeyState modifiers);
     void handle_key_up(Window* window, KeyboardCode code, ModifierKeyState modifiers);
 
+    void handle_mouse_down(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
+    void handle_mouse_up(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
+    void handle_mouse_move(Window* window, MouseID id, int32_t x, int32_t y, bool touch_device);
+
     void handle_controller_button_down(GameControllerIndex controller, JoystickButton button);
     void handle_controller_button_up(GameControllerIndex controller, JoystickButton button);
 
@@ -94,6 +113,18 @@ private:
     }
 
     virtual void on_key_up(const KeyEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_mouse_down(const MouseEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_mouse_up(const MouseEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    virtual void on_mouse_move(const MouseEvent& evt) {
         _S_UNUSED(evt);
     }
 

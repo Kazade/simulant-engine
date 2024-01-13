@@ -303,11 +303,7 @@ void GPUProgram::set_shader_source(ShaderType type, const std::string& source) {
     }
 
     /* FIXME: This is a bit hacky! */
-#ifdef __ANDROID__
-    const char* shader_version = "100";
-#else
-    const char* shader_version = "120";
-#endif
+    const char* shader_version = (renderer_->name() == "gles2x") ? "100" : "120";
 
     ShaderInfo new_shader;
 

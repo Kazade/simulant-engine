@@ -30,10 +30,15 @@ class TextEntry;
 
 
 enum UIEventType {
-    UI_EVENT_TYPE_TOUCH
+    UI_EVENT_TYPE_TOUCH,
+    UI_EVENT_TYPE_MOUSE,
 };
 
 struct UIEvent {
+    UIEvent(const MouseEvent& evt):
+        type(UI_EVENT_TYPE_MOUSE),
+        mouse(evt) {}
+
     UIEvent(const TouchEvent& evt):
         type(UI_EVENT_TYPE_TOUCH),
         touch(evt) {}
@@ -41,6 +46,7 @@ struct UIEvent {
     UIEventType type;
     union {
         TouchEvent touch;
+        MouseEvent mouse;
     };
 };
 
@@ -49,8 +55,6 @@ struct UIManagerParams {
     UIConfig config;
 };
 
-
-
 class UIManager:
     public EventListener,
     public StageNode {
@@ -58,6 +62,8 @@ class UIManager:
     friend class Widget;
 
 public:
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_UI_MANAGER, UIManagerParams);
+
     UIManager(Scene* owner, UIConfig config=UIConfig());
     virtual ~UIManager();
 
@@ -68,11 +74,17 @@ public:
 private:
     UIConfig config_;
 
-    void on_touch_begin(const TouchEvent &evt) override;
-    void on_touch_end(const TouchEvent &evt) override;
+    bool on_create(void *params) override;
+
+    void on_mouse_down(const MouseEvent &evt) override;
+    void on_mouse_up(const MouseEvent &evt) override;
+
+    void on_touch_begin(const TouchEvent& evt) override;
+    void on_touch_end(const TouchEvent& evt) override;
     void on_touch_move(const TouchEvent &evt) override;
 
     void queue_event(const TouchEvent& evt);
+    void queue_event(const MouseEvent& evt);
     void process_event_queue(
         const Camera* camera,
         const Viewport* viewport
@@ -98,11 +110,4 @@ private:
 };
 
 }
-
-template<>
-struct stage_node_traits<ui::UIManager> {
-    typedef ui::UIManagerParams params_type;
-    const static StageNodeType node_type = STAGE_NODE_TYPE_UI_MANAGER;
-};
-
 }

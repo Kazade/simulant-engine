@@ -143,6 +143,20 @@ bool Window::has_explicit_audio_listener() const {
     return audio_listener_ != nullptr;
 }
 
+void Window::set_has_focus(bool v) {
+    if(v == has_focus_) {
+        return;
+    }
+
+    has_focus_ = v;
+
+    if(has_focus_) {
+        signal_focus_gained_();
+    } else {
+        signal_focus_lost_();
+    }
+}
+
 void Window::on_application_set(Application* app) {
     _S_UNUSED(app);
 }
@@ -256,6 +270,24 @@ void Window::reset() {
     create_defaults();
 }
 
+void Window::on_mouse_down(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_mouse_down(this, id, mouse_button, x, y, touch_device);
+    });
+}
+
+void Window::on_mouse_up(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_mouse_up(this, id, mouse_button, x, y, touch_device);
+    });
+}
+
+void Window::on_mouse_move(MouseID id, int32_t x, int32_t y, bool touch_device) {
+    each_event_listener([=](EventListener* listener) {
+        listener->handle_mouse_move(this, id, x, y, touch_device);
+    });
+}
+
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
         app->stop_running();
@@ -307,10 +339,10 @@ void Window::each_screen(std::function<void (std::string, Screen *)> callback) {
 void Window::on_finger_down(TouchPointID touch_id, float normalized_x, float normalized_y, float pressure) {
     each_event_listener([&](EventListener* listener) {
         listener->handle_touch_begin(
-                    this,
-                    touch_id,
-                    normalized_x,
-                    normalized_y,
+            this,
+            touch_id,
+            normalized_x,
+            normalized_y,
             pressure
         );
     });

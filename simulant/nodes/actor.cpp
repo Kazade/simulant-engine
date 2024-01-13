@@ -273,6 +273,7 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Ca
         new_renderable.vertex_range_count = submesh->vertex_range_count();
         new_renderable.material = submesh->material_at_slot(material_slot_, true).get();
         new_renderable.center = transformed_aabb().center();
+        new_renderable.z_order = z_order();
 
         render_queue->insert_renderable(std::move(new_renderable));
     }

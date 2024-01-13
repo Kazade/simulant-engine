@@ -46,7 +46,7 @@ void end_of_frame_check() {
 #define GL_INVALID_FRAMEBUFFER_OPERATION GL_INVALID_FRAMEBUFFER_OPERATION_EXT
 #endif
 
-void check_and_log_error(const char *function_name) {
+void check_and_log_error(const char *calling_func, const char* func_type_name) {
     GLuint error = glGetError();
     if(error != GL_NO_ERROR) {
         std::string error_string;
@@ -76,9 +76,7 @@ void check_and_log_error(const char *function_name) {
 #endif
         }
 
-        S_ERROR("An OpenGL error occurred: {0} - {1}", function_name, error_string);
-
-        throw std::runtime_error(_F("GL ERROR: {0}").format(error_string));
+        S_ERROR("An OpenGL error occurred: {0} -> {1} = {2}", calling_func, func_type_name, error_string);
     }
 }
 }

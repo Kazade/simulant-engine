@@ -7,6 +7,7 @@
 #include <android/native_window.h>
 #include "android_window.h"
 
+#include "../../sound/drivers/openal_sound_driver.h"
 #include "../../sound/drivers/null_sound_driver.h"
 #include "../../renderers/renderer_config.h"
 #include "../../application.h"
@@ -50,12 +51,12 @@ static const EGLint attrib_list [] = {
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
+    EGL_DEPTH_SIZE, 16,
     EGL_NONE
 };
 
 static void android_handle_command(struct android_app* app, int32_t cmd) {
-    AndroidWindow* window = (AndroidWindow*) app->userData;
-    assert(window);
+    _S_UNUSED(app);
 
     S_INFO("Received command: {0}", cmd);
     COMMANDS.push(cmd);
@@ -94,18 +95,32 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
     if(out.type == AINPUT_EVENT_TYPE_KEY) {
         out.key.action = AKeyEvent_getAction(evt);
         out.key.key = AKeyEvent_getKeyCode(evt);
+
+        /* Ignore certain key events */
+        switch(out.key.key) {
+            case AKEYCODE_VOLUME_UP:
+            case AKEYCODE_VOLUME_DOWN:
+            case AKEYCODE_CAMERA:
+            case AKEYCODE_ZOOM_IN:
+            case AKEYCODE_ZOOM_OUT:
+                return 0;
+            default:
+                break;
+        }
+
         EVENTS.push(out);
     } else if(out.type == AINPUT_EVENT_TYPE_MOTION) {
-        for(std::size_t i = 0; i < AMotionEvent_getPointerCount(evt); ++i) {
-            out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
-            out.touch.action = AMotionEvent_getAction(evt);
-            out.touch.x = getX(i);
-            out.touch.y = getY(i);
-            out.touch.pressure = std::min(
-                AMotionEvent_getPressure(evt, i), 1.0f
-            );
-            EVENTS.push(out);
-        }
+        out.touch.action = AMotionEvent_getAction(evt);
+        auto i = (out.touch.action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        out.touch.action &= AMOTION_EVENT_ACTION_MASK;
+
+        out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
+        out.touch.x = getX(i);
+        out.touch.y = getY(i);
+        out.touch.pressure = std::min(
+            AMotionEvent_getPressure(evt, i), 1.0f
+        );
+        EVENTS.push(out);
     }
 
     return 1;
@@ -133,33 +148,65 @@ void AndroidWindow::on_application_set(Application* app) {
     // const int portrait = 1;
     jni->CallVoidMethod(aapp->activity->clazz, methodID, landscape);
 
-//    const int flag_SYSTEM_UI_FLAG_LAYOUT_STABLE = 256;
-//    const int flag_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = 512;
-//    const int flag_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = 1024;
-//    const int flag_SYSTEM_UI_FLAG_HIDE_NAVIGATION = 2;
-//    const int flag_SYSTEM_UI_FLAG_FULLSCREEN = 4;
-//    const int flag_SYSTEM_UI_FLAG_IMMERSIVE_STICKY = 4096;
-//    const int flag_SYSTEM_UI_FLAG_IMMERSIVE = 2048;
+    /* Set the volume control to STREAM_MUSIC */
+    auto setVolumeControlStream = jni->GetMethodID(clazz, "setVolumeControlStream", "(I)V");
+    auto STREAM_MUSIC = 0x00000003; // Let's hope this doesn't change
+    jni->CallVoidMethod(aapp->activity->clazz, setVolumeControlStream, STREAM_MUSIC);
 
-//    const int flag =
-//        flag_SYSTEM_UI_FLAG_LAYOUT_STABLE |
-//        flag_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-//        flag_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-//        flag_SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-//        flag_SYSTEM_UI_FLAG_FULLSCREEN |
-//        flag_SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
-//        flag_SYSTEM_UI_FLAG_IMMERSIVE;
+    auto get_window = jni->GetMethodID(clazz, "getWindow", "()Landroid/view/Window;");
+    auto window_class = jni->FindClass("android/view/Window");
+    auto view_class = jni->FindClass("android/view/View");
+    auto get_decor_view = jni->GetMethodID(window_class, "getDecorView", "()Landroid/view/View;");
 
-//    auto setSystemUiVisibility = jni->GetMethodID(clazz, "setSystemUiVisibility", "(I)V");
-//    jni->CallVoidMethod(aapp->activity->clazz, setSystemUiVisibility, flag);
+    auto setSystemUiVisibility = jni->GetMethodID(view_class, "setSystemUiVisibility", "(I)V");
 
+    auto window = jni->CallObjectMethod(aapp->activity->clazz, get_window);
+    auto decor_view = jni->CallObjectMethod(window, get_decor_view);
+
+    auto id_SYSTEM_UI_FLAG_LAYOUT_STABLE = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_STABLE", "I");
+    auto id_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION", "I");
+    auto id_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN", "I");
+    auto id_SYSTEM_UI_FLAG_HIDE_NAVIGATION = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_HIDE_NAVIGATION", "I");
+    auto id_SYSTEM_UI_FLAG_FULLSCREEN = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_FULLSCREEN", "I");
+    auto id_SYSTEM_UI_FLAG_IMMERSIVE_STICKY = jni->GetStaticFieldID(view_class, "SYSTEM_UI_FLAG_IMMERSIVE_STICKY", "I");
+
+    const int flag_SYSTEM_UI_FLAG_LAYOUT_STABLE = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    const int flag_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+    const int flag_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+    const int flag_SYSTEM_UI_FLAG_HIDE_NAVIGATION = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+    const int flag_SYSTEM_UI_FLAG_FULLSCREEN = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_FULLSCREEN);
+    const int flag_SYSTEM_UI_FLAG_IMMERSIVE_STICKY = jni->GetStaticIntField(view_class, id_SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
+    const int flag =
+        flag_SYSTEM_UI_FLAG_LAYOUT_STABLE |
+        flag_SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+        flag_SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+        flag_SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+        flag_SYSTEM_UI_FLAG_FULLSCREEN |
+        flag_SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+
+    jni->CallVoidMethod(decor_view, setSystemUiVisibility, flag);
+
+    jni->DeleteLocalRef(window);
+    jni->DeleteLocalRef(decor_view);
     aapp->activity->vm->DetachCurrentThread();
 }
 
 void AndroidWindow::swap_buffers() {
-    if(dpy_ != EGL_NO_DISPLAY) {
+    if(dpy_ != EGL_NO_DISPLAY && has_focus()) {
         eglSwapBuffers(dpy_, surface_);
     }
+}
+
+void AndroidWindow::create_egl_surface(android_app* aapp) {
+    EGLint width, height;
+
+    surface_ = eglCreateWindowSurface(dpy_, config_, aapp->window, NULL);
+    eglQuerySurface(dpy_, surface_, EGL_WIDTH, &width);
+    eglQuerySurface(dpy_, surface_, EGL_HEIGHT, &height);
+
+    set_width(width);
+    set_height(height);
 }
 
 bool AndroidWindow::_init_window() {
@@ -192,7 +239,6 @@ bool AndroidWindow::_init_window() {
         return false;
     }
 
-    EGLConfig config = nullptr;
     EGLint num_configs;
 
     eglChooseConfig(dpy_, attrib_list, nullptr, 0, &num_configs);
@@ -215,41 +261,33 @@ bool AndroidWindow::_init_window() {
         eglGetConfigAttrib(dpy_, cfg, EGL_ALPHA_SIZE, &a);
         eglGetConfigAttrib(dpy_, cfg, EGL_DEPTH_SIZE, &d);
 
-        if(r == 8 && g == 8 && b == 8 && d >= max_depth) {
+        if(d >= max_depth) {
             S_DEBUG("Found config: {0}:{1}:{2}:{3} {4}", r, g, b, a, d);
             max_depth = d;
-            config = cfg;
-            break;
+            config_ = cfg;
         }
     }
 
-    if(!config) {
-        config = supported_configs[0];
-    }
+    config_ = (config_) ? config_ : supported_configs[0];
 
-    if(!config) {
+    if(!config_) {
         S_ERROR("Unable to find supported EGL config");
         return false;
     }
 
-    EGLint width, height, format;
+    EGLint format;
 
-    eglGetConfigAttrib(dpy_, config, EGL_NATIVE_VISUAL_ID, &format);
+    eglGetConfigAttrib(dpy_, config_, EGL_NATIVE_VISUAL_ID, &format);
     ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
 
-    surface_ = eglCreateWindowSurface(dpy_, config, aapp->window, NULL);
-    eglQuerySurface(dpy_, surface_, EGL_WIDTH, &width);
-    eglQuerySurface(dpy_, surface_, EGL_HEIGHT, &height);
-
-    set_width(width);
-    set_height(height);
+    create_egl_surface(aapp);
 
     const EGLint context_attribs [] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
 
-    ctx_ = eglCreateContext(dpy_, config, NULL, context_attribs);
+    ctx_ = eglCreateContext(dpy_, config_, NULL, context_attribs);
     if(eglMakeCurrent(dpy_, surface_, surface_, ctx_) == EGL_FALSE) {
         S_ERROR("Error making the context current");
         return false;
@@ -269,8 +307,13 @@ bool AndroidWindow::_init_renderer(Renderer *renderer) {
 
 void AndroidWindow::destroy_window() {
     S_DEBUG("Destroying the EGL display");
-    eglTerminate(dpy_);
+    if(dpy_ != EGL_NO_DISPLAY) {
+        eglTerminate(dpy_);
+    }
     dpy_ = EGL_NO_DISPLAY;
+
+    android_app* aapp = (android_app*) smlt::get_app()->platform_state();
+    ANativeActivity_finish(aapp->activity);
 }
 
 static const KeyboardCode KEYCODE_MAPPING[256] = {
@@ -499,17 +542,7 @@ static const KeyboardCode KEYCODE_MAPPING[256] = {
     KEYBOARD_CODE_NONE,
 };
 
-static struct {
-    float x;
-    float y;
-    float pressure;
-} FINGER_STATES[5] = {
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-};
+const static int32_t TOUCH_MOUSE_ID = 0;
 
 void AndroidWindow::check_events() {
     android_app* aapp = (android_app*) get_app()->platform_state();
@@ -534,35 +567,58 @@ void AndroidWindow::check_events() {
 
         switch(cmd) {
             case APP_CMD_SAVE_STATE:
-                S_DEBUG("CMD: Save state");
+                S_INFO("CMD: Save state");
                 break;
+
             case APP_CMD_INIT_WINDOW:
-                S_DEBUG("CMD: Init window");
+                S_INFO("CMD: Init window");
+                if(dpy_ != EGL_NO_DISPLAY && surface_ == EGL_NO_SURFACE && ctx_ != EGL_NO_CONTEXT) {
+                    // Rebind the context to the display/surface
+                    create_egl_surface(aapp);
+                    eglMakeCurrent(dpy_, surface_, surface_, ctx_);
+                }
+
                 break;
             case APP_CMD_TERM_WINDOW:
-                S_DEBUG("CMD: Term window");
-                // The window is being hidden or closed, clean it up.
+                S_INFO("CMD: Term window");
+
+                if(dpy_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE && ctx_ != EGL_NO_CONTEXT) {
+                    eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+                    eglDestroySurface(dpy_, surface_);
+                    surface_ = EGL_NO_SURFACE;
+                }
+
+                break;
+            case APP_CMD_DESTROY:
                 set_has_context(false);
                 destroy_window();
                 break;
             case APP_CMD_GAINED_FOCUS:
-                S_DEBUG("CMD: Focus gained");
-//                {
-//                    //See Window::context_lock_ for details
-//                    thread::Lock<thread::Mutex> context_lock(this->context_lock());
-//                    set_has_context(true);
-//                }
+                S_INFO("CMD: Focus gained");
+               // {
+               //     //See Window::context_lock_ for details
+               //     thread::Lock<thread::Mutex> context_lock(this->context_lock());
+               //     set_has_context(true);
+               // }
                 //FIXME: Reload textures and shaders
                 set_has_focus(true);
                 break;
             case APP_CMD_LOST_FOCUS:
-                S_DEBUG("CMD: Focus lost");
+                S_INFO("CMD: Focus lost");
                 set_has_focus(false);
-//                {
-//                    //See Window::context_lock_ for details
-//                    thread::Lock<thread::Mutex> context_lock(this->context_lock());
-//                    set_has_context(false);
-//                }
+               // {
+               //     //See Window::context_lock_ for details
+               //     thread::Lock<thread::Mutex> context_lock(this->context_lock());
+               //     set_has_context(false);
+               // }
+                break;
+            case APP_CMD_PAUSE:
+                S_WARN("CMD: PAUSE");
+                set_has_focus(false);
+                break;
+            case APP_CMD_RESUME:
+                S_WARN("CMD: RESUME");
+                set_has_focus(true);
                 break;
             default:
                 break;
@@ -586,36 +642,79 @@ void AndroidWindow::check_events() {
             } break;
             case AINPUT_EVENT_TYPE_MOTION: {
                 auto pointer = evt.touch.pointer_id;
-                if(pointer < 5) {
-                    float x = evt.touch.x;
-                    float y = evt.touch.y;
+                float x = evt.touch.x;
+                float y = evt.touch.y;
 
-                    if(evt.touch.action == AKEY_EVENT_ACTION_DOWN) {
-                        on_finger_down(
+                if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN ||
+                   evt.touch.action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
+                    on_finger_down(
+                        pointer,
+                        x,
+                        1.0f - y,
+                        evt.touch.pressure
+                    );
+
+                    if(pointer == 0) {
+                        on_mouse_down(
+                            TOUCH_MOUSE_ID,
                             pointer,
-                            x,
-                            y,
-                            evt.touch.pressure
+                            x * float(width()),
+                            (1.0f - y) * float(height()),
+                            true
                         );
-
-                        FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = y;
-                        FINGER_STATES[pointer].pressure = evt.touch.pressure;
-                    } else if(evt.touch.action == AKEY_EVENT_ACTION_UP) {
-                        on_finger_up(pointer, x, y);
-                        FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = y;
-                        FINGER_STATES[pointer].pressure = 0.0f;
-                    } else {
-                        float dx = x - FINGER_STATES[pointer].x;
-                        float dy = y - FINGER_STATES[pointer].y;
-
-                        on_finger_motion(pointer, x, y, dx, dy);
-
-                        FINGER_STATES[pointer].x = x;
-                        FINGER_STATES[pointer].y = y;
-                        FINGER_STATES[pointer].pressure = evt.touch.pressure;
                     }
+
+                    auto& state = finger_states_[pointer];
+                    state.x = x;
+                    state.y = 1.0f - y;
+                    state.pressure = evt.touch.pressure;
+                } else if(
+                    evt.touch.action == AMOTION_EVENT_ACTION_POINTER_UP ||
+                    evt.touch.action == AMOTION_EVENT_ACTION_UP ||
+                    evt.touch.action == AMOTION_EVENT_ACTION_CANCEL) {
+
+                    auto& state = finger_states_[pointer];
+
+                    // This avoids a double-release if we get ACTION_UP and then CANCEL
+                    if(state.pressure > 0.0f) {
+                        on_finger_up(pointer, x, 1.0f - y);
+
+                        if(pointer == 0) {
+                            on_mouse_up(
+                                TOUCH_MOUSE_ID,
+                                pointer,
+                                x * float(width()),
+                                (1.0f - y) * float(height()),
+                                true
+                            );
+                        }
+
+                        state.x = x;
+                        state.y = 1.0f - y;
+                        state.pressure = 0.0f;
+                    }
+                } else if(evt.touch.action == AMOTION_EVENT_ACTION_MOVE) {
+                    auto& state = finger_states_[pointer];
+
+                    float dx = x - state.x;
+                    float dy = y - state.y;
+
+                    on_finger_motion(pointer, x, 1.0f - y, dx, dy);
+
+                    if(pointer == 0) {
+                        on_mouse_move(
+                            TOUCH_MOUSE_ID,
+                            x * float(width()),
+                            (1.0f - y) * float(height()),
+                            true
+                        );
+                    }
+
+                    state.x = x;
+                    state.y = 1.0f - y;
+                    state.pressure = evt.touch.pressure;
+                } else {
+                    S_ERROR("ACTION_UNKNOWN ({0}) {1}", evt.touch.action, pointer);
                 }
             }
 
@@ -629,14 +728,26 @@ void AndroidWindow::check_events() {
 void AndroidWindow::initialize_input_controller(InputState &controller) {
     KeyboardDeviceInfo keyboard;
     keyboard.id = 0;
+    keyboard.type = KEYBOARD_TYPE_SOFTWARE;
     controller._update_keyboard_devices({keyboard});
 }
 
 std::shared_ptr<SoundDriver> AndroidWindow::create_sound_driver(const std::string& from_config) {
-    _S_UNUSED(from_config);
+    const char* from_env = std::getenv("SIMULANT_SOUND_DRIVER");
 
-    S_DEBUG("Null sound driver activated");
-    return std::make_shared<NullSoundDriver>(this);
+    std::string selected = (from_env) ? from_env :
+                               (from_config.empty()) ? "openal" : from_config;
+
+    if(selected == "null") {
+        S_DEBUG("Null sound driver activated");
+        return std::make_shared<NullSoundDriver>(this);
+    } else {
+        if(selected != "openal") {
+            S_WARN("Unknown sound driver ({0}) falling back to OpenAL", selected);
+        }
+        S_DEBUG("OpenAL sound driver activated");
+        return std::make_shared<OpenALSoundDriver>(this);
+    }
 }
 
 }

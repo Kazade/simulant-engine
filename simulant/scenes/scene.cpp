@@ -49,7 +49,7 @@
 #include "../nodes/ui/keyboard.h"
 #include "../nodes/ui/text_entry.h"
 #include "../nodes/ui/progress_bar.h"
-
+#include "../nodes/ui/ui_manager.h"
 #include "../nodes/cylindrical_billboard.h"
 #include "../nodes/spherical_billboard.h"
 #include "../nodes/frustum_culler.h"
@@ -104,6 +104,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Debug>();
     register_stage_node<StatsPanel>();
 
+    register_stage_node<ui::UIManager>();
     register_stage_node<ui::Label>();
     register_stage_node<ui::Image>();
     register_stage_node<ui::ProgressBar>();

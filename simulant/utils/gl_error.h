@@ -25,7 +25,7 @@
 
 namespace smlt {
 
-void check_and_log_error(const char* function_name);
+void check_and_log_error(const char* calling_func, const char* func_type_name);
 
 namespace GLChecker {
 
@@ -44,7 +44,7 @@ struct Checker {
     static Res run(const char* function_name, Func&& func, Args&&... args) {
         Res result = func(std::forward<Args>(args)...);
         if(USE_GL_GET_ERROR) {
-            check_and_log_error(function_name);
+            check_and_log_error(function_name, typeid(func).name());
         }
         return result;
     }
@@ -55,7 +55,7 @@ struct Checker<void, Func, Args...> {
     static void run(const char* function_name, Func&& func, Args&&... args) {
         func(std::forward<Args>(args)...);
         if(USE_GL_GET_ERROR) {
-            check_and_log_error(function_name);
+            check_and_log_error(function_name, typeid(func).name());
         }
     }
 };
@@ -65,7 +65,7 @@ struct Checker<void, Func> {
     static void run(const char* function_name, Func&& func) {
         func();
         if(USE_GL_GET_ERROR) {
-            check_and_log_error(function_name);
+            check_and_log_error(function_name, typeid(func).name());
         }
     }
 };

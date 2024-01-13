@@ -52,7 +52,7 @@ android {
 
             externalNativeBuild{
                 cmake{
-                    arguments "-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared"
+                    arguments "-DCMAKE_BUILD_TYPE=Release", "-DANDROID_STL=c++_shared", "-DSIMULANT_BUILD_SAMPLES=OFF", "-DSIMULANT_BUILD_TESTS=OFF"
                 }
             }
         }
@@ -64,7 +64,7 @@ android {
 
             externalNativeBuild{
                 cmake{
-                    arguments "-DCMAKE_BUILD_TYPE=Debug", "-DANDROID_STL=c++_shared"
+                    arguments "-DCMAKE_BUILD_TYPE=Debug", "-DANDROID_STL=c++_shared", "-DSIMULANT_BUILD_SAMPLES=OFF", "-DSIMULANT_BUILD_TESTS=OFF"
                 }
             }
         }
