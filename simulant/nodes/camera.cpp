@@ -31,7 +31,7 @@ void Camera::update_frustum() {
     view_matrix_ = Mat4::as_look_at(
         transform->position(),
         transform->position() + transform->orientation().forward(),
-        smlt::Vec3::POSITIVE_Y
+        transform->orientation().up()
     );
 
     Mat4 mvp = projection_matrix_ * view_matrix_;
