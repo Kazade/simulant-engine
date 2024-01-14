@@ -5,7 +5,9 @@
 
 namespace {
 
-class DebugTests : public smlt::test::SimulantTestCase {
+using namespace smlt;
+
+class DebugTests : public test::SimulantTestCase {
 public:
     void test_debug_can_be_created() {
         auto debug = scene->create_child<Debug>();
