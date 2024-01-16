@@ -211,7 +211,12 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 uint8_t* palette = texture->_stash_paletted_data();
                 uint8_t* indexed = palette + texture->palette_size();
 
-                auto half_byte = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGBA8_PALETTED4);
+                auto half_byte = (
+                    f == TEXTURE_FORMAT_RGB565_PALETTED4 ||
+                    f == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+                    f == TEXTURE_FORMAT_RGBA8_PALETTED4
+                );
+
                 auto texel_size = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB565_PALETTED8) ? 2 :
                                   (f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4) ? 3 : 4;
 
@@ -287,7 +292,8 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                     texture->_set_has_mipmaps(true);
                 }
             } else {
-                GLCheck(glTexImage2D,
+                GLCheck(
+                    glTexImage2D,
                     GL_TEXTURE_2D,
                     0, internal_format,
                     texture->width(), texture->height(), 0,
