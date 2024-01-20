@@ -755,4 +755,8 @@ void Mesh::generate_adjacency_info() {
     adjacency_->rebuild();
 }
 
+SphereApproximation Mesh::generate_sphere_approximation(std::size_t frame) const {
+    return SphereApproximation({});
+}
+
 }

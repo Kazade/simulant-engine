@@ -25,7 +25,7 @@
 #include <set>
 #include <memory>
 #include <list>
-
+#include "approximations.h"
 #include "submesh.h"
 
 #include "../interfaces/boundable.h"
@@ -285,6 +285,7 @@ public:
     void generate_adjacency_info();
     bool has_adjacency_info() const { return bool(adjacency_); }
 
+    SphereApproximation generate_sphere_approximation(std::size_t frame=0) const;
 public:
     // Signals
 
