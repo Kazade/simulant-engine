@@ -89,7 +89,7 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
 
     auto pos = renderable->center;
     auto plane = camera_->frustum().plane(FRUSTUM_PLANE_NEAR);
-    auto renderable_dist_to_camera = plane.distance_to(pos);
+    auto renderable_dist_to_camera = std::abs(plane.distance_to(pos));
     auto priority = renderable->render_priority;
 
     auto pass_count = material->pass_count();

@@ -61,10 +61,14 @@ struct RenderGroup {
     bool operator<(const RenderGroup& rhs) const {
         if(sort_key.pass < rhs.sort_key.pass) {
             return true;
+        } else if(sort_key.pass > rhs.sort_key.pass) {
+            return false;
         }
 
         if(sort_key.is_blended < rhs.sort_key.is_blended) {
             return true;
+        } else if(sort_key.is_blended > rhs.sort_key.is_blended) {
+            return false;
         }
 
         if(!sort_key.is_blended) {
@@ -72,20 +76,22 @@ struct RenderGroup {
                 // If the object is opaque, we want to render
                 // front-to-back, so less distance is less
                 return true;
-            } else if(almost_equal(rhs.sort_key.distance_to_camera, sort_key.distance_to_camera)) {
-                return sort_key.z_order < rhs.sort_key.z_order;
+            } else if(sort_key.distance_to_camera > rhs.sort_key.distance_to_camera) {
+                return false;
             }
+
+            return sort_key.z_order < rhs.sort_key.z_order;
         } else {
             if(rhs.sort_key.distance_to_camera < sort_key.distance_to_camera) {
                 // If the object is translucent, we want to render
                 // back-to-front
                 return true;
-            } else if(almost_equal(rhs.sort_key.distance_to_camera, sort_key.distance_to_camera)) {
-                return sort_key.z_order < rhs.sort_key.z_order;
+            } else if(rhs.sort_key.distance_to_camera > sort_key.distance_to_camera) {
+                return false;
             }
-        }
 
-        return false;
+            return sort_key.z_order < rhs.sort_key.z_order;
+        }
     }
 
     bool operator==(const RenderGroup& rhs) const  {
