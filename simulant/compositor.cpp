@@ -30,6 +30,7 @@
 #include "loader.h"
 #include "application.h"
 #include "scenes/scene.h"
+#include "renderers/batching/render_queue.h"
 
 namespace smlt {
 
@@ -72,6 +73,59 @@ void Compositor::clean_destroyed_layers() {
         });
     }
     queued_for_destruction_.clear();
+}
+
+
+class TraceWriter : public batcher::RenderQueueVisitor {
+public:
+    TraceWriter(std::fstream* out):
+        out_(out) {}
+
+    void start_traversal(const batcher::RenderQueue&, uint64_t, StageNode*) {}
+
+    void change_render_group(const batcher::RenderGroup*, const batcher::RenderGroup* next) {
+        group_ = next;
+    }
+
+    void change_material_pass(const MaterialPass*, const MaterialPass*) {}
+    void apply_lights(const LightPtr*, const uint8_t) {}
+    void visit(const Renderable* r, const MaterialPass*, batcher::Iteration) {
+        auto line = _F("{0}, {1}, {2}, {3}, {4}\n").format(
+            r,
+            (group_) ? group_->sort_key.is_blended : false,
+            (group_) ? group_->sort_key.distance_to_camera : -1.0f,
+            r->render_priority,
+            (group_) ? group_->sort_key.z_order : -1
+        );
+
+        out_->write(line.c_str(), line.size());
+    }
+
+    virtual void end_traversal(const batcher::RenderQueue&, StageNode*) {}
+
+private:
+    std::fstream* out_ = nullptr;
+    const batcher::RenderGroup* group_ = nullptr;
+};
+
+void Compositor::dump_render_trace(std::fstream *out) {
+    auto visitor = std::make_shared<TraceWriter>(out);
+
+    std::string headings = "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER\n";
+    out->write(headings.c_str(), headings.size());
+
+    sig::Connection conn = signal_layer_render_finished().connect([=](Layer&) {
+        std::string row = ", , , ,\n";
+        out->write(row.c_str(), row.size());
+
+        render_queue_.traverse(visitor.get(), 0);
+    });
+
+    smlt::get_app()->signal_frame_finished().connect_once([=]() {
+        auto conn2 = conn;
+        out->flush();
+        conn2.disconnect();
+    });
 }
 
 void Compositor::destroy_all_layers() {

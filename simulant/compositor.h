@@ -94,6 +94,10 @@ public:
         destroy_object(pipeline);
     }
 
+    /* Writes to file the render queue for the current frame in CSV
+     * format. The `out` parameter must stay valid for the lifetime
+     * of the frame */
+    void dump_render_trace(std::fstream* out);
 private:
     void sort_layers();
     void run_layer(LayerPtr stage, int& actors_rendered);
