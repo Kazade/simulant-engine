@@ -78,7 +78,7 @@ void Compositor::clean_destroyed_layers() {
 
 class TraceWriter : public batcher::RenderQueueVisitor {
 public:
-    TraceWriter(std::fstream* out):
+    TraceWriter(std::ostream* out):
         out_(out) {}
 
     void start_traversal(const batcher::RenderQueue&, uint64_t, StageNode*) {}
@@ -104,11 +104,11 @@ public:
     virtual void end_traversal(const batcher::RenderQueue&, StageNode*) {}
 
 private:
-    std::fstream* out_ = nullptr;
+    std::ostream* out_ = nullptr;
     const batcher::RenderGroup* group_ = nullptr;
 };
 
-void Compositor::dump_render_trace(std::fstream *out) {
+void Compositor::dump_render_trace(std::ostream *out) {
     auto visitor = std::make_shared<TraceWriter>(out);
 
     std::string headings = "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER\n";
