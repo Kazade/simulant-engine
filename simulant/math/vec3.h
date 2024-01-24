@@ -224,6 +224,13 @@ public:
     }
 
     float distance_to(const AABB& aabb) const;
+    float distance_to(const Vec3& other) const {
+        return (other - *this).length();
+    }
+
+    float squared_distance_to(const Vec3& other) const {
+        return (other - *this).length_squared();
+    }
 
     template<typename Container>
     static Vec3 find_average(const Container& vectors) {
@@ -234,14 +241,6 @@ public:
 
         ret /= float(vectors.size());
         return ret;
-    }
-
-    static float distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
-        return (rhs - lhs).length();
-    }
-
-    static float sqr_distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
-        return (rhs - lhs).length_squared();
     }
 
     inline Vec3 parallel_component(const Vec3& unit_basis) const {

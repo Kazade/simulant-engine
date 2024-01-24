@@ -121,7 +121,7 @@ public:
         fairy_actor_->transform->set_position(fairyPos);
 
         // Make sure the fairy moves at a constant speed
-        lastFairyPathStepSize = Vec3::sqr_distance(fairyPos, prevFairyPos);
+        lastFairyPathStepSize = fairyPos.squared_distance_to(prevFairyPos);
 
         if(lastFairyPathStepSize < fairyPathStepSize_) {
             fairyPathSpeedFactor_ *= 1.1f;
