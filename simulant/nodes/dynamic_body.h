@@ -6,8 +6,8 @@
 namespace smlt {
 
 class Scene;
-struct RigidBodyParams : public PhysicsBodyParams {
-    RigidBodyParams(const Vec3& position=Vec3(), const Quaternion& rotation=Quaternion()):
+struct DynamicBodyParams : public PhysicsBodyParams {
+    DynamicBodyParams(const Vec3& position=Vec3(), const Quaternion& rotation=Quaternion()):
         PhysicsBodyParams(position, rotation) {}
 };
 
@@ -17,7 +17,7 @@ class DynamicBody:
 public:
     struct Meta {
         const static StageNodeType node_type = STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY;
-        typedef RigidBodyParams params_type;
+        typedef DynamicBodyParams params_type;
     };
 
     DynamicBody(Scene* owner):
