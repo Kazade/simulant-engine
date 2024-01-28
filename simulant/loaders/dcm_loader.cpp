@@ -1,16 +1,17 @@
-#include <cstdint>
-#include <iostream>
 #include "dcm_loader.h"
-#include "../meshes/mesh.h"
-#include "../vertex_data.h"
-#include "../asset_manager.h"
 #include "../application.h"
+#include "../asset_manager.h"
+#include "../meshes/mesh.h"
+#include "../utils/limited_string.h"
+#include "../vertex_data.h"
 #include "../vfs.h"
-
 #include "dcm.h"
+#include <cstdint>
 
 namespace smlt {
 namespace loaders {
+
+using namespace dcm;
 
 VertexSpecification determine_spec(const FileHeader& header) {
     /* FIXME:
@@ -58,7 +59,9 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         return;
     }
 
-    if(((const char*) fheader.id) != std::string("DCM")) {
+    LimitedString<3> hid((const char*)fheader.id);
+
+    if(hid != std::string("DCM")) {
         S_ERROR("Not a valid .dcm file: {0}", fheader.id);
         return;
     }
@@ -72,11 +75,13 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto added = smlt::get_app()->vfs->insert_search_path(0, filename_.parent());
 
     for(int i = 0; i < fheader.material_count; ++i) {
-        ::Material mat;
-        data_->read((char*) &mat, sizeof(::Material));
+        dcm::Material mat;
+        data_->read((char*)&mat, sizeof(dcm::Material));
 
-        ::smlt::MaterialPtr new_mat = mesh->asset_manager().clone_default_material();
+        smlt::MaterialPtr new_mat =
+            mesh->asset_manager().clone_default_material();
         new_mat->set_pass_count(1);
+        new_mat->set_lighting_enabled(true);
         new_mat->set_cull_mode(mesh_opts.cull_mode);
         new_mat->set_blend_func(mesh_opts.blending_enabled ? BLEND_ALPHA : BLEND_NONE);
         new_mat->set_diffuse(smlt::Colour(mat.diffuse, 4));
@@ -84,7 +89,9 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         new_mat->set_specular(smlt::Colour(mat.specular, 4));
         new_mat->set_emission(smlt::Colour(mat.emission, 4));
         new_mat->set_shininess(mat.shininess * 128.0f);
-        new_mat->set_name(std::string(mat.name, 32).c_str());
+        new_mat->set_name(
+            std::string(mat.data_header.path, sizeof(mat.data_header.path))
+                .c_str());
 
         int enabled_textures = 0;
 
@@ -165,8 +172,6 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         smlt::get_app()->vfs->remove_search_path(filename_.parent());
     }
 
-    data_->seekg(fheader.mesh_offset);
-
     MeshHeader mheader;
     data_->read((char*) &mheader, sizeof(MeshHeader));
 
@@ -218,8 +223,6 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     vdata->done();
 
-    data_->seekg(mheader.first_submesh_offset);
-
     for(int i = 0; i < mheader.submesh_count; ++i) {
         SubMeshHeader sheader;
         data_->read((char*) &sheader, sizeof(SubMeshHeader));
@@ -235,12 +238,6 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 data_->read((char*) &range.count, sizeof(uint32_t));
 
                 sm->add_vertex_range(range.start, range.count);
-            }
-
-            if(sheader.next_submesh_offset) {
-                data_->seekg(sheader.next_submesh_offset);
-            } else {
-                break;
             }
         } else {
             auto type = (fheader.index_size == 1) ?
