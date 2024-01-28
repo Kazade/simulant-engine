@@ -27,7 +27,7 @@ public:
 #endif
 
         // Meshes
-        cave_mesh_ = app->shared_assets->load_mesh("sample_data/cave/cave.obj", VertexSpecification::DEFAULT, opts);
+        cave_mesh_ = app->shared_assets->load_mesh("sample_data/cave/cave.dcm", VertexSpecification::DEFAULT, opts);
         godray_mesh_ = app->shared_assets->load_mesh("sample_data/cave/godray.obj", VertexSpecification::DEFAULT, opts);
         fairy_mesh_ = app->shared_assets->load_mesh("sample_data/cave/fairy.obj", VertexSpecification::DEFAULT, opts);
 
