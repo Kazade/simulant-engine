@@ -74,9 +74,26 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     /* Add the parent directory to the search path so we can load textures */
     auto added = smlt::get_app()->vfs->insert_search_path(0, filename_.parent());
 
+    auto read_data_header = [=](DataHeader* out) {
+        data_->read((char*) &out->flags, sizeof(out->flags));
+        data_->read((char*) &out->local_id, sizeof(out->local_id));
+        data_->read((char*) &out->path, sizeof(out->path));
+    };
+
     for(int i = 0; i < fheader.material_count; ++i) {
         dcm::Material mat;
-        data_->read((char*)&mat, sizeof(dcm::Material));
+        read_data_header(&mat.data_header);
+
+        data_->read((char*) mat.ambient, sizeof(mat.ambient));
+        data_->read((char*) mat.diffuse, sizeof(mat.diffuse));
+        data_->read((char*) mat.specular, sizeof(mat.specular));
+        data_->read((char*) mat.emission, sizeof(mat.emission));
+        data_->read((char*) &mat.shininess, sizeof(mat.shininess));
+
+        data_->read((char*) mat.diffuse_map, sizeof(mat.diffuse_map));
+        data_->read((char*) mat.light_map, sizeof(mat.light_map));
+        data_->read((char*) mat.normal_map, sizeof(mat.normal_map));
+        data_->read((char*) mat.specular_map, sizeof(mat.specular_map));
 
         smlt::MaterialPtr new_mat =
             mesh->asset_manager().clone_default_material();
@@ -173,7 +190,9 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     }
 
     MeshHeader mheader;
-    data_->read((char*) &mheader, sizeof(MeshHeader));
+    read_data_header(&mheader.data_header);
+    data_->read((char*) &mheader.submesh_count, sizeof(mheader.submesh_count));
+    data_->read((char*) &mheader.vertex_count, sizeof(mheader.vertex_count));
 
     auto vdata = mesh->vertex_data.get();
     vdata->move_to_start();
@@ -225,7 +244,12 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     for(int i = 0; i < mheader.submesh_count; ++i) {
         SubMeshHeader sheader;
-        data_->read((char*) &sheader, sizeof(SubMeshHeader));
+        read_data_header(&sheader.data_header);
+
+        data_->read((char*) &sheader.material_id, sizeof(sheader.material_id));
+        data_->read((char*) &sheader.arrangement, sizeof(sheader.arrangement));
+        data_->read((char*) &sheader.type, sizeof(sheader.type));
+        data_->read((char*) &sheader.num_ranges_or_indices, sizeof(sheader.num_ranges_or_indices));
 
         auto arrangement = (sheader.arrangement == SUB_MESH_ARRANGEMENT_TRIANGLES) ?
             MESH_ARRANGEMENT_TRIANGLES : MESH_ARRANGEMENT_TRIANGLE_STRIP;
