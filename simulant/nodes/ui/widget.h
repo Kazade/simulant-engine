@@ -219,9 +219,9 @@ public:
 
     Px line_height() const;
 
-    void set_z_order(int16_t z_order);
+    void set_precedence(int16_t precedence);
 
-    int16_t z_order() const;
+    int16_t precedence() const;
 public:
     MaterialPtr border_material() const { return style_->materials_[0]; }
     MaterialPtr background_material() const { return style_->materials_[1]; }

@@ -262,6 +262,7 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         interpolated_vertex_data_.get() :
         mesh->vertex_data.get();
 
+    int i = mesh->submesh_count();
     for(auto submesh: mesh->each_submesh()) {
         Renderable new_renderable;
         new_renderable.final_transformation = absolute_transformation();
@@ -275,7 +276,13 @@ void Actor::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr
         new_renderable.vertex_range_count = submesh->vertex_range_count();
         new_renderable.material = submesh->material_at_slot(material_slot_, true).get();
         new_renderable.centre = transformed_aabb().centre();
-        new_renderable.z_order = z_order();
+
+        /* We include the submesh order in the precedence so that overlapping
+         * submeshes can be tie-broken when their distance is the same.
+         *
+         * Used primarily by Widgets.
+         */
+        new_renderable.precedence = float(precedence()) + ((--i) * 0.0001f);
 
         render_queue->insert_renderable(std::move(new_renderable));
     }

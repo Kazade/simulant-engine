@@ -245,9 +245,9 @@ public:
         return make_key();
     }
 
-    void set_z_order(int16_t z_order);
+    void set_precedence(int16_t precedence);
 
-    int16_t z_order() const;
+    int16_t precedence() const;
 
 protected:
     virtual UniqueIDKey make_key() const = 0;
@@ -303,7 +303,7 @@ private:
     /* Passed to coroutines and used to detect when the object has been destroyed */
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
 
-    int16_t z_order_ = 0;
+    int16_t precedence_ = 0;
 };
 
 

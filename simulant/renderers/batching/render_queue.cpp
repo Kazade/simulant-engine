@@ -33,12 +33,12 @@ namespace smlt {
 namespace batcher {
 
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t z_order) {
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t precedence) {
     RenderGroupKey key;
     key.pass = pass;
     key.is_blended = is_blended;
     key.distance_to_camera = distance_to_camera;
-    key.z_order = z_order;
+    key.precedence = precedence;
     return key;
 }
 

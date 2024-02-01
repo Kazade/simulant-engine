@@ -84,7 +84,7 @@ struct alignas(8) Renderable final {
 
     smlt::Vec3 centre;
 
-    int16_t z_order = 0;
+    float precedence = 0.0f;
 };
 
 typedef std::shared_ptr<Renderable> RenderablePtr;

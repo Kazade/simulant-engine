@@ -253,19 +253,45 @@ public:
         const Vec3& offset=Vec3()
     );
 
+    /**
+     * The order that submeshes are created has a minor impact on the render
+     * order of the generated renderables - submeshes created first have a
+     * higher precedence than ones created later. Precedence takes effect
+     * when all other metrics for render-queue sorting are equal.
+     *
+     * This method allows changing the submesh order after creation.
+     *
+     * @param submesh - The submesh to relocate
+     * @param i - The new position of the submesh.
+     *            Must be gte 0, and < submesh_count
+     *
+     * @return Returns true on success, returns false if the submesh is invalid
+     *         or i is outside the expected range
+     */
+    bool reinsert_submesh(const SubMeshPtr& submesh, std::size_t new_idx);
+
+    /**
+     * @brief submesh_index
+     * @param submesh
+     * @return the index of the submesh in the submeshes list if any
+     */
+    optional<std::size_t> submesh_index(const SubMeshPtr& submesh) const;
+
     uint32_t submesh_count() const { return submeshes_.size(); }
     bool has_submesh(const std::string& name) const;
     SubMeshPtr find_submesh(const std::string& name) const;
     SubMeshPtr find_submesh_with_material(const MaterialPtr& mat) const;
     std::vector<SubMeshPtr> find_all_submeshes(const std::string& name) const;
-    std::vector<SubMeshPtr> find_all_submeshes_with_material(const MaterialPtr& mat) const;
+    std::vector<SubMeshPtr>
+    find_all_submeshes_with_material(const MaterialPtr& mat) const;
 
     SubMeshPtr first_submesh() const;
 
     void destroy_submesh(const std::string& name);
 
-    void set_material(MaterialPtr material); ///< Apply material to all submeshes
-    void set_diffuse(const smlt::Colour& colour); ///< Override vertex colour on all vertices
+    void set_material(MaterialPtr material); ///< Apply material to all
+    void set_diffuse(
+        const smlt::Colour& colour); ///< Override vertex colour on all vertices
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
 
@@ -275,12 +301,16 @@ public:
 
     SubMeshIteratorPair each_submesh();
 
-    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data);
-    bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
+    void enable_animation(MeshAnimationType animation_type,
+                          uint32_t animation_frames, FrameUnpackerPtr data);
+    bool is_animated() const {
+        return animation_type_ != MESH_ANIMATION_TYPE_NONE;
+    }
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
 
-    /* Generates adjacency information for this mesh. This is necessary for stencil shadowing
+    /* Generates adjacency information for this mesh. This is necessary for
+    stencil shadowing
      * to work */
     void generate_adjacency_info();
     bool has_adjacency_info() const { return bool(adjacency_); }
