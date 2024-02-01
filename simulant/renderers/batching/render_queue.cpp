@@ -87,8 +87,11 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     auto material = renderable->material;
     assert(material);
 
+    auto plane =
+        Plane(camera_->absolute_rotation().forward(), camera_->position());
+
     auto pos = renderable->centre;
-    auto renderable_dist_to_camera = smlt::Vec3::sqr_distance(camera_->absolute_position(), pos);
+    auto renderable_dist_to_camera = plane.distance_to(pos);
     auto priority = renderable->render_priority;
 
     auto pass_count = material->pass_count();

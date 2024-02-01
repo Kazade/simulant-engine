@@ -85,11 +85,10 @@ void Widget::build_text_submeshes() {
         }
 
         if(!sm) {
-            mesh_->new_submesh(
-                id,
-                m,
-                MESH_ARRANGEMENT_TRIANGLE_STRIP
-            );
+            sm = mesh_->new_submesh(id, m, MESH_ARRANGEMENT_TRIANGLE_STRIP);
+
+            // Make sure text is rendered last
+            mesh_->reinsert_submesh(sm, mesh_->submesh_count() - 1);
         } else {
             sm->set_material(m);
         }
