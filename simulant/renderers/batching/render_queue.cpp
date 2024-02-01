@@ -33,12 +33,12 @@ namespace smlt {
 namespace batcher {
 
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t z_order) {
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t precedence) {
     RenderGroupKey key;
     key.pass = pass;
     key.is_blended = is_blended;
     key.distance_to_camera = distance_to_camera;
-    key.z_order = z_order;
+    key.precedence = precedence;
     return key;
 }
 
@@ -87,8 +87,11 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     auto material = renderable->material;
     assert(material);
 
+    auto plane =
+        Plane(camera_->absolute_rotation().forward(), camera_->position());
+
     auto pos = renderable->centre;
-    auto renderable_dist_to_camera = smlt::Vec3::sqr_distance(camera_->absolute_position(), pos);
+    auto renderable_dist_to_camera = plane.distance_to(pos);
     auto priority = renderable->render_priority;
 
     auto pass_count = material->pass_count();

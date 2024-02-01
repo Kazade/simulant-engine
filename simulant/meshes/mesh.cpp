@@ -115,6 +115,60 @@ Mesh::~Mesh() {
     delete skeleton_;
 }
 
+bool Mesh::reinsert_submesh(const SubMeshPtr& submesh, std::size_t new_idx) {
+    if(new_idx >= submeshes_.size()) {
+        return false;
+    }
+
+    auto idx = submesh_index(submesh);
+    if(!idx) {
+        return false;
+    }
+
+    auto orig_index = idx.value();
+    if(orig_index == new_idx) {
+        return true;
+    }
+
+    assert(orig_index < submeshes_.size());
+    auto sm = submeshes_[orig_index];
+
+    if(orig_index < new_idx) {
+        // Moving forward
+        for(std::size_t j = orig_index + 1; j <= new_idx; ++j) {
+            assert(j > 0);
+            assert(j < submeshes_.size());
+            submeshes_[j - 1] = submeshes_[j];
+        }
+    } else {
+        // Moving backward
+        for(std::size_t i = new_idx + 1; i <= orig_index; ++i) {
+            assert(i < submeshes_.size());
+            assert(i > 0);
+            submeshes_[i] = submeshes_[i - 1];
+        }
+
+        submeshes_[new_idx] = sm;
+    }
+
+    assert(new_idx < submeshes_.size());
+    submeshes_[new_idx] = sm;
+    return true;
+}
+
+optional<std::size_t> Mesh::submesh_index(const SubMeshPtr& submesh) const {
+    std::size_t i = 0;
+    for(const auto& sm: submeshes_) {
+        if(sm.get() == submesh) {
+            return i;
+        }
+
+        ++i;
+    }
+
+    return optional<std::size_t>();
+}
+
 void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data) {
     if(animation_type_ != MESH_ANIMATION_TYPE_NONE) {
         throw std::logic_error("Tried to re-enable animations on an animated mesh");
