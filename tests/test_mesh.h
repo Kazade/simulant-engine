@@ -82,6 +82,21 @@ public:
         return mesh;
     }
 
+    void test_submesh_index() {
+        auto mesh = generate_test_mesh(stage_);
+        assert_equal(mesh->submesh_index(mesh->first_submesh()).value(), 0u);
+        assert_equal(mesh->submesh_index(mesh->find_submesh("test2")).value(),
+                     1u);
+
+        assert_false(mesh->reinsert_submesh(mesh->first_submesh(), 100));
+        assert_true(mesh->reinsert_submesh(mesh->first_submesh(), 1));
+
+        assert_equal(mesh->first_submesh(), mesh->find_submesh("test2"));
+
+        assert_true(mesh->reinsert_submesh(mesh->find_submesh("test"), 0));
+        assert_equal(mesh->first_submesh(), mesh->find_submesh("test"));
+    }
+
     void test_create_mesh_from_submesh() {
         auto mesh = generate_test_mesh(stage_);
         auto submesh = mesh->first_submesh();

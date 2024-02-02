@@ -514,9 +514,9 @@ public:
     void set_cullable(bool v);
     bool is_cullable() const;
 
-    void set_z_order(int16_t z_order);
-    int16_t z_order() const;
+    void set_precedence(int16_t precedence);
 
+    int16_t precedence() const;
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as important
     Scene* get_scene() const { return owner_; }
@@ -554,7 +554,7 @@ private:
     /* Passed to coroutines and used to detect when the object has been destroyed */
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
 
-    int16_t z_order_ = 0;
+    int16_t precedence_ = 0;
 public:
     Transform* get_transform() const {
         return &base_->transform_;

@@ -49,7 +49,7 @@ struct RenderGroupKey {
     uint8_t pass; // 1 byte
     bool is_blended; // 1 byte
     float distance_to_camera; // 4 bytes   
-    int16_t z_order; // 2-bytes to get 8-byte alignment
+    int16_t precedence; // 2-bytes to get 8-byte alignment
 };
 
 
@@ -80,7 +80,7 @@ struct RenderGroup {
                 return false;
             }
 
-            return sort_key.z_order < rhs.sort_key.z_order;
+            return sort_key.precedence > rhs.sort_key.precedence;
         } else {
             if(rhs.sort_key.distance_to_camera < sort_key.distance_to_camera) {
                 // If the object is translucent, we want to render
@@ -90,8 +90,10 @@ struct RenderGroup {
                 return false;
             }
 
-            return sort_key.z_order < rhs.sort_key.z_order;
+            return sort_key.precedence > rhs.sort_key.precedence;
         }
+
+        return false;
     }
 
     bool operator==(const RenderGroup& rhs) const  {
@@ -99,7 +101,7 @@ struct RenderGroup {
             sort_key.pass == rhs.sort_key.pass &&
             sort_key.is_blended == rhs.sort_key.is_blended &&
             almost_equal(sort_key.distance_to_camera, rhs.sort_key.distance_to_camera) &&
-            sort_key.z_order == rhs.sort_key.z_order
+            sort_key.precedence == rhs.sort_key.precedence
         );
     }
 
@@ -108,7 +110,7 @@ struct RenderGroup {
     }
 };
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t z_order);
+RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t precedence);
 
 class RenderGroupFactory {
 public:

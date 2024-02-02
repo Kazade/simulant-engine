@@ -95,7 +95,7 @@ public:
             (group_) ? group_->sort_key.is_blended : false,
             (group_) ? group_->sort_key.distance_to_camera : -1.0f,
             r->render_priority,
-            (group_) ? group_->sort_key.z_order : -1
+            (group_) ? group_->sort_key.precedence : -1
         );
 
         out_->write(line.c_str(), line.size());

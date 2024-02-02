@@ -46,11 +46,13 @@ void Widget::build_text_submeshes() {
         }
 
         if(!sm) {
-            mesh_->create_submesh(
+            sm = mesh_->create_submesh(
                 id,
                 m,
                 MESH_ARRANGEMENT_TRIANGLE_STRIP
             );
+            // Make sure text is rendered last
+            mesh_->reinsert_submesh(sm, mesh_->submesh_count() - 1);
         } else {
             sm->set_material(m);
         }
@@ -1165,12 +1167,12 @@ Px Widget::line_height() const {
     return Px(font_->ascent() - font_->descent() + font_->line_gap());
 }
 
-void Widget::set_z_order(int16_t z_order) {
-    actor_->set_z_order(z_order);
+void Widget::set_precedence(int16_t precedence) {
+    actor_->set_precedence(precedence);
 }
 
-int16_t Widget::z_order() const {
-    return actor_->z_order();
+int16_t Widget::precedence() const {
+    return actor_->precedence();
 }
 
 void Widget::on_render_priority_changed(RenderPriority old_priority, RenderPriority new_priority) {

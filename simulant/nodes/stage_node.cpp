@@ -330,12 +330,12 @@ bool StageNode::is_cullable() const {
     return cullable_;
 }
 
-void StageNode::set_z_order(int16_t z_order) {
-    z_order_ = z_order;
+void StageNode::set_precedence(int16_t precedence) {
+    precedence_ = precedence;
 }
 
-int16_t StageNode::z_order() const {
-    return z_order_;
+int16_t StageNode::precedence() const {
+    return precedence_;
 }
 
 void StageNode::recalc_bounds_if_necessary() const {
