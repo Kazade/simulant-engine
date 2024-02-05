@@ -292,6 +292,52 @@ public:
 
         assert_equal(json["sessions"]->size(), 0u);
     }
+
+    void test_complex_example() {
+        const std::string data = R"(
+{
+    "geoms": [
+        {
+            "cargo": "none",
+            "cargo_position": -1,
+            "formation": "line-abreast",
+            "mesh": "command-centre",
+            "name": "Command",
+            "objective": "all-destroyed",
+            "order": "defend",
+            "position": "800.000000 -800.000000",
+            "rotation": 0,
+            "side": "bad",
+            "units": 1
+        },
+        {
+            "cargo": "missiles",
+            "cargo_position": 1,
+            "formation": "line-abreast",
+            "mesh": "artillery",
+            "name": "Homestead 1",
+            "objective": "all-survive",
+            "order": "defend",
+            "position": "500.000000 20.000000",
+            "rotation": 0,
+            "side": "neutral",
+            "units": 8
+        }
+    ],
+    "meta": {
+        "player_rotation": 0,
+        "player_start": "0.000000 1000.000000",
+        "theme": "Desert",
+        "tree_density": 0.10000000149011612,
+        "water_level": 0
+    }
+}
+
+)";
+
+        auto json = json_parse(data);
+        assert_equal(json["passes"]->size(), 3);
+    }
 };
 
 }
