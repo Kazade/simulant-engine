@@ -46,10 +46,10 @@ namespace batcher {
  * 4. If distance to camera is equal, z order is taken into account
 */
 struct RenderGroupKey {
-    uint8_t pass; // 1 byte
-    bool is_blended; // 1 byte
-    float distance_to_camera; // 4 bytes   
-    int16_t precedence; // 2-bytes to get 8-byte alignment
+    uint8_t pass = 0; // 1 byte
+    bool is_blended = false; // 1 byte
+    float distance_to_camera = 0.0f; // 4 bytes
+    int16_t precedence = 0; // 2-bytes to get 8-byte alignment
 };
 
 
