@@ -2,6 +2,7 @@
 
 #include <simulant/test.h>
 #include <simulant/utils/json.h>
+#include <simulant/simulant.h>
 
 namespace {
 
@@ -291,6 +292,17 @@ public:
         auto json = json_parse(data);
 
         assert_equal(json["sessions"]->size(), 0u);
+    }
+
+    void test_complex_example() {
+        const char* path = "sample_data/level1.json";
+        std::ifstream t(path);
+        assert_true(t.good());
+        std::string str((std::istreambuf_iterator<char>(t)),
+                        std::istreambuf_iterator<char>());
+
+        auto json = json_parse(str);
+        assert_equal(json["geoms"]->size(), 2u);
     }
 };
 

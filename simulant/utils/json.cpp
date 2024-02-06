@@ -384,7 +384,6 @@ static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
         }
 
         char c = stream->get();
-
         if(c == '"') {
             std::string key = read_string(stream);
             ++count;
@@ -408,8 +407,6 @@ static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
 
                 if(c == '}') {
                     return optional<std::size_t>(count);
-                } else {
-                    stream->ignore();
                 }
             }
         } else if(c == '}') {
