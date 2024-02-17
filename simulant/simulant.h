@@ -41,6 +41,7 @@
 #include "nodes/mesh_instancer.h"
 #include "nodes/dynamic_body.h"
 #include "nodes/kinematic_body.h"
+#include "nodes/joints.h"
 #include "services/physics.h"
 
 #include "nodes/static_body.h"

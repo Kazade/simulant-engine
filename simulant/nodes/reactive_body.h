@@ -2,13 +2,24 @@
 
 #include "physics_body.h"
 
-
 namespace smlt {
+
+class SphereJoint;
 
 class ReactiveBody : public PhysicsBody {
 public:
     ReactiveBody(Scene* owner, StageNodeType node_type, PhysicsBodyType type):
         PhysicsBody(owner, node_type, type) {}
+
+    SphereJoint* create_sphere_joint(
+        ReactiveBody* other,
+        const smlt::Vec3& this_relative_anchor,
+        const smlt::Vec3& other_relative_anchor
+    );
+
+    std::size_t sphere_joint_count() const {
+        return sphere_joints_.size();
+    }
 
     float mass() const;
     void set_mass(float m);
@@ -52,6 +63,11 @@ public:
     Vec3 up();
     bool is_awake() const;
     void lock_rotation(bool x, bool y, bool z);
+
+    bool on_destroy() override;
+
+private:
+    std::vector<std::shared_ptr<SphereJoint>> sphere_joints_;
 };
 
 }
