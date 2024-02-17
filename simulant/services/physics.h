@@ -13,6 +13,8 @@ typedef struct _PhysicsData PhysicsData;
 class PhysicsBody;
 class PhysicsService;
 struct PhysicsMaterial;
+class SphereJoint;
+class ReactiveBody;
 
 struct RayCastResult {
     PhysicsBody* other_body = nullptr;
@@ -80,6 +82,7 @@ private:
     friend class ContactListener;
     friend class ReactiveBody;
     friend class Fixture;
+    friend class SphereJoint;
 
     std::shared_ptr<PhysicsData> pimpl_;
 
@@ -91,6 +94,16 @@ private:
 
     void register_body(PhysicsBody* body, const Vec3& pos, const Quaternion& rot);
     void unregister_body(PhysicsBody* body);
+
+    void init_sphere_joint(
+        SphereJoint* joint,
+        const ReactiveBody* a,
+        const ReactiveBody* b,
+        const Vec3& a_off,
+        const Vec3& b_off
+    );
+
+    void release_sphere_joint(SphereJoint* joint);
 
     void add_box_collider(
         PhysicsBody* self,

@@ -111,6 +111,23 @@ public:
         assert_close(hit->distance, 1.0f, 0.0001f);
     }
 
+    void test_sphere_joint_creation() {
+        auto bodya = scene->create_child<DynamicBody>();
+        auto bodyb = scene->create_child<DynamicBody>();
+
+        auto joint = bodya->create_sphere_joint(bodyb, Vec3(), Vec3());
+
+        assert_equal(joint->first_body(), bodya);
+        assert_equal(joint->second_body(), bodyb);
+
+        assert_equal(bodya->sphere_joint_count(), 1u);
+        assert_equal(bodyb->sphere_joint_count(), 1u);
+
+        bodya->destroy();
+
+        assert_equal(bodyb->sphere_joint_count(), 0u);
+    }
+
     void test_contact_filtering() {
         bool enter_called = false;
         bool leave_called = false;

@@ -6,6 +6,7 @@
 #include "../nodes/physics_body.h"
 #include "../utils/mesh/triangulate.h"
 #include "../meshes/mesh.h"
+#include "../nodes/joints.h"
 
 /* Need for bounce */
 void b3BeginProfileScope(const char* name) {
@@ -351,8 +352,40 @@ void PhysicsService::unregister_body(PhysicsBody* body) {
     pimpl_->bodies_.erase(body);
 }
 
+void PhysicsService::init_sphere_joint(SphereJoint *joint, const ReactiveBody *a, const ReactiveBody *b, const Vec3 &a_off, const Vec3 &b_off) {
+    auto b3a_it = pimpl_->bodies_.find((PhysicsBody*) a);
+    auto b3b_it = pimpl_->bodies_.find((PhysicsBody*) b);
+
+    auto b3a = (b3a_it != pimpl_->bodies_.end()) ? b3a_it->second.body : nullptr;
+    auto b3b = (b3b_it != pimpl_->bodies_.end()) ? b3b_it->second.body : nullptr;
+
+    if(!b3a || !b3b) {
+        S_WARN("Couldn't create sphere joint as body was missing");
+        return;
+    }
+
+    b3SphereJointDef def;
+    def.bodyA = b3a;
+    def.bodyB = b3b;
+    def.collideConnected = false; // FIXME??
+    def.localAnchorA.x = a_off.x;
+    def.localAnchorA.y = a_off.y;
+    def.localAnchorA.z = a_off.z;
+
+    def.localAnchorB.x = b_off.x;
+    def.localAnchorB.y = b_off.y;
+    def.localAnchorB.z = b_off.z;
+
+    joint->set_b3_joint(pimpl_->scene_->CreateJoint(def));
+}
+
+void PhysicsService::release_sphere_joint(SphereJoint *joint) {
+    pimpl_->scene_->DestroyJoint((b3Joint*) joint->get_b3_joint());
+    joint->set_b3_joint(nullptr);
+}
+
 void PhysicsService::add_box_collider(PhysicsBody* self, const Vec3& size,
-    const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation
+                                      const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation
 ) {
 
     assert(pimpl_);

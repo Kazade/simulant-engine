@@ -1,8 +1,24 @@
 #include "reactive_body.h"
 #include "../services/physics.h"
 #include "bounce/bounce.h"
+#include "joints.h"
 
 namespace smlt {
+
+SphereJoint *ReactiveBody::create_sphere_joint(
+    ReactiveBody *other, const Vec3 &this_relative_anchor, const Vec3 &other_relative_anchor) {
+
+    sphere_joints_.push_back(
+        std::make_shared<SphereJoint>(
+            this, other, this_relative_anchor, other_relative_anchor
+        )
+    );
+
+    // Add the joint to the lists on both objects
+    other->sphere_joints_.push_back(sphere_joints_.back());
+
+    return sphere_joints_.back().get();
+}
 
 float ReactiveBody::mass() const {
     auto sim = get_simulation();
@@ -291,6 +307,21 @@ void ReactiveBody::lock_rotation(bool x, bool y, bool z) {
 
     auto b = (b3Body*) sim->private_body(this);
     b->SetFixedRotation(x, y, z);
+}
+
+bool ReactiveBody::on_destroy() {
+
+    // Remove the sphere joints from the counterpart body
+    for(auto joint: sphere_joints_) {
+        auto& other = joint->second_body()->sphere_joints_;
+        other.erase(std::remove(other.begin(), other.end(), joint), other.end());
+    }
+
+    // Clear the sphere joints from this node, this will destroy
+    // the joints and remove them from the simulation
+    sphere_joints_.clear();
+
+    return PhysicsBody::on_destroy();
 }
 
 
