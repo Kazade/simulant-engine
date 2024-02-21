@@ -133,6 +133,32 @@ Quaternion PhysicsBody::simulated_rotation() const {
     return {};
 }
 
+void PhysicsBody::set_simulated_position(const Vec3 &position) {
+    auto sim = get_simulation();
+    if(sim) {
+        b3Body* b = (b3Body*) sim->private_body(this);
+        if(b) {
+            b3Vec3 p(position.x, position.y, position.z);
+            b->SetTransform(p, b->GetTransform().rotation);
+        }
+    }
+}
+
+void PhysicsBody::set_simulated_rotation(const Quaternion &rotation) {
+    auto sim = get_simulation();
+    if(sim) {
+        b3Body* b = (b3Body*) sim->private_body(this);
+        if(b) {
+            b3Quat q;
+            q.v.x = rotation.x;
+            q.v.y = rotation.y;
+            q.v.z = rotation.z;
+            q.s = rotation.w;
+            b->SetTransform(b->GetPosition(), q.GetRotationMatrix());
+        }
+    }
+}
+
 void PhysicsBody::clear_simulation_cache() {
     simulation_ = nullptr;
 }
