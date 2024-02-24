@@ -48,6 +48,9 @@ constexpr const MaterialPropertyNameHash FOG_START_PROPERTY_HASH = material_prop
 constexpr const MaterialPropertyNameHash FOG_END_PROPERTY_HASH = material_property_hash(FOG_END_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash FOG_COLOR_PROPERTY_HASH = material_property_hash(FOG_COLOR_PROPERTY_NAME);
 
+constexpr const MaterialPropertyNameHash ALPHA_FUNC_PROPERTY_HASH = material_property_hash(ALPHA_FUNC_PROPERTY_NAME);
+constexpr const MaterialPropertyNameHash ALPHA_THRESHOLD_PROPERTY_HASH = material_property_hash(ALPHA_THRESHOLD_PROPERTY_NAME);
+
 inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
     switch(hsh) {
         case DIFFUSE_PROPERTY_HASH:
@@ -78,6 +81,8 @@ inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
         case FOG_START_PROPERTY_HASH:
         case FOG_END_PROPERTY_HASH:
         case FOG_MODE_PROPERTY_HASH:
+        case ALPHA_FUNC_PROPERTY_HASH:
+        case ALPHA_THRESHOLD_PROPERTY_HASH:
             return true;
         default:
             return false;
@@ -115,6 +120,8 @@ struct CoreMaterial {
     const EnumType color_material = (EnumType) COLOR_MATERIAL_NONE;
     const EnumType cull_mode = (EnumType) CULL_MODE_NONE;
     const EnumType depth_func = (EnumType) DEPTH_FUNC_LEQUAL;
+    const EnumType alpha_func = (EnumType) ALPHA_FUNC_NONE;
+    const float alpha_threshold = 1.0f;
 
     const EnumType fog_mode = (EnumType) FOG_MODE_NONE;
     const float fog_density = 1.0f;

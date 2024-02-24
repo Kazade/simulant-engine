@@ -83,4 +83,19 @@ DepthFunc depth_func_from_name(const char* name) {
     }
 }
 
+AlphaFunc alpha_func_from_name(const char* name) {
+    auto hsh = material_property_hash(name);
+    switch(hsh) {
+    case material_property_hash("less"): return ALPHA_FUNC_LESS;
+    case material_property_hash("lequal"): return ALPHA_FUNC_LEQUAL;
+    case material_property_hash("equal"): return ALPHA_FUNC_EQUAL;
+    case material_property_hash("gequal"): return ALPHA_FUNC_GEQUAL;
+    case material_property_hash("greater"): return ALPHA_FUNC_GREATER;
+    case material_property_hash("none"): return ALPHA_FUNC_NONE;
+    default:
+        S_WARN("Invalid alpha func name: {0}", name);
+        return ALPHA_FUNC_NONE;
+    }
+}
+
 }

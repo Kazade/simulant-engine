@@ -53,6 +53,9 @@ bool core_material_property_value(const char* name, const bool*& out) {
 
 bool core_material_property_value(const MaterialPropertyNameHash hsh, const float*& out) {
     switch(hsh) {
+        case ALPHA_FUNC_PROPERTY_HASH:
+            out = &core_material().alpha_threshold;
+        break;
         case SHININESS_PROPERTY_HASH:
             out = &core_material().shininess;
         break;
@@ -78,6 +81,9 @@ bool core_material_property_value(const MaterialPropertyNameHash hsh, const int3
         break;
         case DEPTH_FUNC_PROPERTY_HASH:
             out = &core_material().depth_func;
+        break;
+        case ALPHA_FUNC_PROPERTY_HASH:
+            out = &core_material().alpha_func;
         break;
         case POLYGON_MODE_PROPERTY_HASH:
             out = &core_material().polygon_mode;
@@ -250,6 +256,7 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         break;
         case material_property_hash(SHININESS_PROPERTY_NAME):
         case material_property_hash(POINT_SIZE_PROPERTY_NAME):
+        case ALPHA_THRESHOLD_PROPERTY_HASH:
         case FOG_DENSITY_PROPERTY_HASH:
         case FOG_START_PROPERTY_HASH:
         case FOG_END_PROPERTY_HASH:
@@ -278,6 +285,7 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(COLOR_MATERIAL_PROPERTY_NAME):
         case material_property_hash(CULL_MODE_PROPERTY_NAME):
         case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
+        case material_property_hash(ALPHA_FUNC_PROPERTY_NAME):
         case FOG_MODE_PROPERTY_HASH:
             *type = MATERIAL_PROPERTY_TYPE_INT;
         break;
@@ -336,6 +344,8 @@ const PropertyList& core_properties() {
         {COLOR_MATERIAL_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {CULL_MODE_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {DEPTH_FUNC_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
+        {ALPHA_FUNC_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
+        {ALPHA_THRESHOLD_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},
 
         {FOG_MODE_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_INT},
         {FOG_START_PROPERTY_NAME, MATERIAL_PROPERTY_TYPE_FLOAT},

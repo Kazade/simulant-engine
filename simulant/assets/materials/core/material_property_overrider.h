@@ -159,6 +159,9 @@ protected:
     PropertyValue<float> fog_end_property_;
     PropertyValue<int32_t> fog_mode_property_;
 
+    PropertyValue<int32_t> alpha_func_property_;
+    PropertyValue<float> alpha_threshold_property_;
+
     BasePropertyValue* find_core_property_value(const MaterialPropertyNameHash& hsh) {
         return const_cast<BasePropertyValue*>(static_cast<const MaterialPropertyOverrider*>(this)->find_core_property_value(hsh));
     }
@@ -223,6 +226,10 @@ protected:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_end_property_;
             case FOG_MODE_PROPERTY_HASH:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_mode_property_;
+            case ALPHA_FUNC_PROPERTY_HASH:
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::alpha_func_property_;
+            case ALPHA_THRESHOLD_PROPERTY_HASH:
+                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::alpha_threshold_property_;
             default:
                 return nullptr;
         }

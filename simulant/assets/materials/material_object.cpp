@@ -258,6 +258,34 @@ BlendType MaterialObject::blend_func() const {
     return *(reinterpret_cast<const BlendType*>(ptr));
 }
 
+void MaterialObject::set_alpha_func(AlphaFunc a) {
+    set_property_value(ALPHA_FUNC_PROPERTY_NAME, (EnumType) a);
+}
+
+AlphaFunc MaterialObject::alpha_func() const {
+    const EnumType* ptr = nullptr;
+    bool ok = property_value(ALPHA_FUNC_PROPERTY_HASH, (const EnumType*&) ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *(reinterpret_cast<const AlphaFunc*>(ptr));
+}
+
+void MaterialObject::set_alpha_threshold(float v) {
+    set_property_value(ALPHA_THRESHOLD_PROPERTY_NAME, v);
+}
+
+float MaterialObject::alpha_threshold() const {
+    const float* ptr = nullptr;
+    bool ok = property_value(ALPHA_FUNC_PROPERTY_HASH, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+bool MaterialObject::is_alpha_testing_enabled() const {
+    return alpha_func() != ALPHA_FUNC_NONE;
+}
+
 void MaterialObject::set_depth_func(DepthFunc b) {
     set_property_value(DEPTH_FUNC_PROPERTY_NAME, (EnumType) b);
 }

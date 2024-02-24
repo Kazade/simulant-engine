@@ -180,6 +180,25 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         break;
     }
 
+    GLCheck(glEnable, GL_ALPHA_TEST);
+    auto alpha_ref = next->alpha_threshold();
+    switch(next->alpha_func()) {
+    case ALPHA_FUNC_NONE: GLCheck(glDisable, GL_ALPHA_TEST);
+        break;
+    case ALPHA_FUNC_EQUAL: GLCheck(glAlphaFunc, GL_EQUAL, alpha_ref);
+        break;
+    case ALPHA_FUNC_GEQUAL: GLCheck(glAlphaFunc, GL_GEQUAL, alpha_ref);
+        break;
+    case ALPHA_FUNC_GREATER: GLCheck(glAlphaFunc, GL_GREATER, alpha_ref);
+        break;
+    case ALPHA_FUNC_LEQUAL: GLCheck(glAlphaFunc, GL_LEQUAL, alpha_ref);
+        break;
+    case ALPHA_FUNC_LESS: GLCheck(glAlphaFunc, GL_LESS, alpha_ref);
+        break;
+    default:
+        break;
+    }
+
     GLCheck(glEnable, GL_BLEND);
     switch(next->blend_func()) {
         case BLEND_NONE: GLCheck(glDisable, GL_BLEND);

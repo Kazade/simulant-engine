@@ -71,6 +71,12 @@ public:
     void set_depth_write_enabled(bool v);
     bool is_depth_write_enabled() const;
 
+    void set_alpha_func(AlphaFunc a);
+    AlphaFunc alpha_func() const;
+    void set_alpha_threshold(float v);
+    float alpha_threshold() const;
+    bool is_alpha_testing_enabled() const;
+
     void set_cull_mode(CullMode mode);
     CullMode cull_mode() const;
     void set_depth_test_enabled(bool v);

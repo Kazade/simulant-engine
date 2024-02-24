@@ -33,6 +33,15 @@ enum CullMode : EnumType {
     CULL_MODE_FRONT_AND_BACK_FACE
 };
 
+enum AlphaFunc : EnumType {
+    ALPHA_FUNC_NONE,
+    ALPHA_FUNC_LESS,
+    ALPHA_FUNC_LEQUAL,
+    ALPHA_FUNC_EQUAL,
+    ALPHA_FUNC_GEQUAL,
+    ALPHA_FUNC_GREATER
+};
+
 enum BlendType : EnumType {
     BLEND_NONE,
     BLEND_ADD,
@@ -74,6 +83,7 @@ ColorMaterial color_material_from_name(const char* name);
 CullMode cull_mode_from_name(const char* name);
 BlendType blend_type_from_name(const char* name);
 DepthFunc depth_func_from_name(const char* name);
+AlphaFunc alpha_func_from_name(const char* name);
 
 #define DIFFUSE_PROPERTY_NAME "s_material_diffuse"
 #define AMBIENT_PROPERTY_NAME "s_material_ambient"
@@ -88,6 +98,8 @@ DepthFunc depth_func_from_name(const char* name);
 #define DEPTH_TEST_ENABLED_PROPERTY_NAME "s_depth_test_enabled"
 #define DEPTH_FUNC_PROPERTY_NAME "s_depth_func"
 #define BLEND_FUNC_PROPERTY_NAME "s_blend_func"
+#define ALPHA_FUNC_PROPERTY_NAME "s_alpha_func"
+#define ALPHA_THRESHOLD_PROPERTY_NAME "s_alpha_threshold"
 #define CULL_MODE_PROPERTY_NAME "s_cull_mode"
 #define SHADE_MODEL_PROPERTY_NAME "s_shade_model"
 #define LIGHTING_ENABLED_PROPERTY_NAME "s_lighting_enabled"
