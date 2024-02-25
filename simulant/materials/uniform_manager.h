@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <stdexcept>
+#include <cstdint>
 
 namespace smlt {
 
