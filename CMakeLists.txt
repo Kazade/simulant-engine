@@ -21,6 +21,12 @@ OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 # This is only for testing! You will not get any sound!
 OPTION(SIMULANT_USE_ALDC "Use ALdc on all platforms" OFF)
 
+# FIXME: Need a better check for this
+IF(CMAKE_SYSTEM_PROCESSOR MATCHES "mips")
+    SET(PLATFORM_PS2 TRUE)
+    ADD_DEFINITIONS(-D__PS2__)
+ENDIF()
+
 IF(PLATFORM_DREAMCAST)
 OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
 ELSE()
@@ -150,6 +156,9 @@ IF(ANDROID)
     FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
     SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/platforms/android/openal/include)
 
+ELSEIF(PLATFORM_PS2)
+    SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PS2
+    SET(SDL2_LIBRARIES "")
 ELSEIF(PLATFORM_PSP)
     SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
     SET(SDL2_LIBRARIES "")
@@ -197,7 +206,7 @@ ELSE()
     FIND_PACKAGE(OpenGL REQUIRED)
 ENDIF()
 
-IF(NOT PLATFORM_PSP AND NOT PLATFORM_DREAMCAST)
+IF(NOT PLATFORM_PSP AND NOT PLATFORM_DREAMCAST AND NOT PLATFORM_PS2)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
     link_libraries(Threads::Threads)

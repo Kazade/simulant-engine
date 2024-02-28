@@ -7,6 +7,11 @@
 #include "platforms/dreamcast/platform.h"
 typedef smlt::DreamcastPlatform ThisPlatform;
 
+#elif defined(__PS2__)
+
+#include "platforms/ps2/platform.h"
+typedef smlt::PS2Platform ThisPlatform;
+
 #elif defined(__PSP__)
 
 #include "platforms/psp/platform.h"

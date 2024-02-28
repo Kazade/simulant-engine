@@ -17,6 +17,7 @@ LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 # Include GL2x stuff on non-DC builds
 IF(NOT PLATFORM_DREAMCAST)
     IF(NOT PLATFORM_PSP)
+    IF(NOT PLATFORM_PS2)
         MESSAGE("-- Including GLAD in build")
         # DC build doesn't need glad, GL1 is available directly
         FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
@@ -25,6 +26,7 @@ IF(NOT PLATFORM_DREAMCAST)
         MESSAGE("-- Including GL2X in build")
         FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
         SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
+    ENDIF()
     ENDIF()
 ENDIF()
 
@@ -113,6 +115,22 @@ IF(PLATFORM_DREAMCAST)
     )
 ELSEIF(PLATFORM_PSP)
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/psp/*.cpp)
+
+    IF(PLATFORM)
+        MESSAGE("-- Including platform specific files: ${PLATFORM}")
+    ENDIF()
+
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        ${PLATFORM}
+        # FIXME: Use OpenAL on PSP
+        # sound_drivers/openal_sound_driver.cpp
+        # sound_drivers/al_error.cpp
+        sound/drivers/null_sound_driver.cpp
+    )
+ELSEIF(PLATFORM_PS2)
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ps2/*.cpp)
 
     IF(PLATFORM)
         MESSAGE("-- Including platform specific files: ${PLATFORM}")

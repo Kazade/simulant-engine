@@ -4,6 +4,8 @@
     #include "kos_keycodes.h"
 #elif defined(__PSP__)
     #include "platforms/psp/psp_keycodes.h"
+#elif defined(__PS2__)
+    #include "platforms/ps2/ps2_keycodes.h"
 #elif defined(__ANDROID__)
     #include "platforms/android/android_keycodes.h"
 #else
