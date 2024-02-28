@@ -96,14 +96,9 @@ public:
     }
 
     bool contains_point(const Vec3& p) const {
-        // FIXME: Use extents_ directly
-        if(p.x >= min().x && p.x <= max().x &&
-           p.y >= min().y && p.y <= max().y &&
-           p.z >= min().z && p.z <= max().z) {
-            return true;
-        }
-
-        return false;
+        return (p.x >= (center_.x - extents_.x) && p.x <= (center_.x + extents_.x) &&
+                p.y >= (center_.y - extents_.y) && p.y <= (center_.y + extents_.y) &&
+                p.z >= (center_.z - extents_.z) && p.z <= (center_.z + extents_.z));
     }
 
     bool contains_points(const Vec3* vertices, std::size_t count) const {
