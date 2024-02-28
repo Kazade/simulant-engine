@@ -64,6 +64,23 @@ public:
         return ret;
     }
 
+    Vec2 lerp(const Vec2& end, float t) const {
+        t = fast_min(t, 1.0f);
+        t = fast_max(t, 0.0f);
+
+        return Vec2(
+            fast_fmaf((end.x - x), t, x),
+            fast_fmaf((end.y - y), t, y)
+        );
+    }
+
+    Vec2 lerp_smooth(const Vec2& end, const float dt, const float p, const float t) const {
+        return Vec2(
+            fast_fmaf((end.x - x), 1.0f - ::powf(p, fast_divide(dt, t)), x),
+            fast_fmaf((end.y - y), 1.0f - ::powf(p, fast_divide(dt, t)), y)
+        );
+    }
+
     void limit(float l) {
         if(length() > l) {
             normalize();
