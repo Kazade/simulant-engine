@@ -487,19 +487,15 @@ void PhysicsService::add_triangle_collider(
     data.fixtures.push_back(fdata);
 }
 
-void PhysicsService::add_capsule_collider(
-    PhysicsBody* self,
-    float height, const float diameter, const PhysicsMaterial& properties, uint16_t kind
-) {
+void PhysicsService::add_capsule_collider(PhysicsBody* self, const Vec3& v0,
+                                          const Vec3& v1, const float diameter,
+                                          const PhysicsMaterial& properties,
+                                          uint16_t kind) {
     BodyData& data = pimpl_->bodies_.at(self);
 
-    float off = (height - (diameter * 0.5f)) * 0.5f;
-    b3Vec3 v1(0.0f, off, 0.0f);
-    b3Vec3 v2(0.0f, -off, 0.0f);
-
     b3CapsuleShape capsule;
-    capsule.m_vertex1 = v1;
-    capsule.m_vertex2 = v2;
+    capsule.m_vertex1 = b3Vec3(v0.x, v0.y, v0.z);
+    capsule.m_vertex2 = b3Vec3(v1.x, v1.y, v1.z);
     capsule.m_radius = diameter * 0.5f;
 
     b3FixtureDef sdef;
@@ -515,6 +511,17 @@ void PhysicsService::add_capsule_collider(
     fdata.kind = kind;
 
     data.fixtures.push_back(fdata);
+}
+
+void PhysicsService::add_capsule_collider(PhysicsBody* self, float height,
+                                          const float diameter,
+                                          const PhysicsMaterial& properties,
+                                          uint16_t kind) {
+
+    auto v0 = smlt::Vec3::POSITIVE_Y * (height / 2);
+    auto v1 = smlt::Vec3::NEGATIVE_Y * (height / 2);
+
+    add_capsule_collider(self, v0, v1, diameter, properties, kind);
 }
 
 void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset, const Quaternion& rotation) {
