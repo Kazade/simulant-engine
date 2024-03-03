@@ -10,42 +10,13 @@ namespace smlt {
 #define SCREEN_DEPTH 32
 
 void PS2Window::swap_buffers() {
-    eglSwapBuffers(dpy_, surface_);
+    
 }
 
-static const EGLint attrib_list [] = {
-    EGL_RED_SIZE, 5,
-    EGL_GREEN_SIZE, 6,
-    EGL_BLUE_SIZE, 5,
-    EGL_ALPHA_SIZE, 0,
-    EGL_DEPTH_SIZE, 0,
-    EGL_NONE
-};
-
 bool PS2Window::_init_window() {
-    dpy_ = eglGetDisplay(0);
-    eglInitialize(dpy_, NULL, NULL);
+    // set_width(width);
+    // set_height(height);
 
-    EGLConfig config;
-    EGLint num_configs;
-
-    eglChooseConfig(dpy_, attrib_list, &config, 1, &num_configs);
-
-    if(!num_configs) {
-        return false;
-    }
-
-    EGLint width, height;
-
-    eglGetConfigAttrib(dpy_, config, EGL_WIDTH, &width);
-    eglGetConfigAttrib(dpy_, config, EGL_HEIGHT, &height);
-
-    set_width(width);
-    set_height(height);
-
-    ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
-    surface_ = eglCreateWindowSurface(dpy_, config, 0, NULL);
-    eglMakeCurrent(dpy_, surface_, surface_, ctx_);
     return true;
 }
 
@@ -57,7 +28,7 @@ bool PS2Window::_init_renderer(Renderer *renderer) {
 }
 
 void PS2Window::destroy_window() {
-    eglTerminate(dpy_);
+    
 }
 
 void PS2Window::check_events() {

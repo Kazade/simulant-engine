@@ -5,6 +5,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "platforms/*"  # Remove platform specific additions
     "renderers/glad/*"
     "renderers/gl2x/*"
+    "renderers/gskit/*"
     "sdl2_window.*"
     "kos_window.*"
     "sound/drivers/*"
@@ -136,13 +137,14 @@ ELSEIF(PLATFORM_PS2)
         MESSAGE("-- Including platform specific files: ${PLATFORM}")
     ENDIF()
 
+    # Add the GSKit renderer
+    FILE(GLOB_RECURSE GSKIT_FILES renderers/gskit/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GSKIT_FILES})
+
     SET(
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
-        # FIXME: Use OpenAL on PSP
-        # sound_drivers/openal_sound_driver.cpp
-        # sound_drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp
     )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")

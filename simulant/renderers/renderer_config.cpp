@@ -6,6 +6,8 @@
     #include "gl1x/gl1x_renderer.h"
 #elif defined(__ANDROID__)
     #include "gl2x/generic_renderer.h"
+#elif defined(__PS2__)
+    #include "gskit/gskit_renderer.h"
 #else
     #include "gl1x/gl1x_renderer.h"
     #include "gl2x/generic_renderer.h"
@@ -33,6 +35,8 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         /* NULL? Then return the default for the platform */
 #if defined(__DREAMCAST__) || defined(__PSP__)
         return std::make_shared<GL1XRenderer>(window);
+#elif defined(__PS2__)
+        return std::make_shared<GSKitRenderer>(window);
 #elif defined(__ANDROID__)
         return std::make_shared<GenericRenderer>(window, /*use_es=*/ true);
 #else
@@ -53,6 +57,13 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         return NOT_SUPPORTED;
 #else
         return std::make_shared<GenericRenderer>(window, false);
+#endif
+    } else if(chosen == "gskit") {
+#if !defined(__PS2__)
+        S_ERROR("{0} is not a supported renderer", name);
+        return NOT_SUPPORTED;
+#else
+        return std::make_shared<GSKitRenderer>(window, false);
 #endif
     } else if(chosen == "gles2x") {
 #if defined(__DREAMCAST__) || defined(PSP) || defined(__WIN32__)

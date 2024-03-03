@@ -8,7 +8,7 @@
 #include <kos/thread.h>
 #include <kos/mutex.h>
 #else
-#include "pthread.h"
+#include <pthread.h>
 #endif
 
 namespace smlt {
