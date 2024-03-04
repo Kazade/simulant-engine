@@ -513,17 +513,6 @@ void PhysicsService::add_capsule_collider(PhysicsBody* self, const Vec3& v0,
     data.fixtures.push_back(fdata);
 }
 
-void PhysicsService::add_capsule_collider(PhysicsBody* self, float height,
-                                          const float diameter,
-                                          const PhysicsMaterial& properties,
-                                          uint16_t kind) {
-
-    auto v0 = smlt::Vec3::POSITIVE_Y * (height / 2);
-    auto v1 = smlt::Vec3::NEGATIVE_Y * (height / 2);
-
-    add_capsule_collider(self, v0, v1, diameter, properties, kind);
-}
-
 void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset, const Quaternion& rotation) {
     BodyData& data = pimpl_->bodies_.at(self);
 

@@ -91,7 +91,8 @@ public:
     void test_capsule_collider_addition() {
         auto body = scene->create_child<DynamicBody>();
         body->add_capsule_collider(
-            2.0f,
+            Vec3(0),
+            Vec3(2),
             2.0f,
             PhysicsMaterial::WOOD
         );

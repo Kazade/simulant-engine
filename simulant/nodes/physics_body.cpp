@@ -80,13 +80,13 @@ void PhysicsBody::add_triangle_collider(
     simulation->add_triangle_collider(this, v1, v2, v3, properties, kind);
 }
 
-void PhysicsBody::add_capsule_collider(float height, const float diameter, const PhysicsMaterial& properties, uint16_t kind) {
+void PhysicsBody::add_capsule_collider(const Vec3& v0, const Vec3& v1, const float diameter, const PhysicsMaterial& properties, uint16_t kind) {
     auto simulation = get_simulation();
     if(!simulation) {
         return;
     }
 
-    return simulation->add_capsule_collider(this, height, diameter, properties, kind);
+    return simulation->add_capsule_collider(this, v0, v1, diameter, properties, kind);
 }
 
 void PhysicsBody::register_collision_listener(CollisionListener *listener) {

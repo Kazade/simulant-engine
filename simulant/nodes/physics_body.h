@@ -105,7 +105,7 @@ public:
     );
 
     void add_capsule_collider(
-        float height,
+        const Vec3& v0, const Vec3& v1,
         const float diameter,
         const PhysicsMaterial& properties,
         uint16_t kind=0

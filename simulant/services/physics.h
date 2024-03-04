@@ -121,10 +121,6 @@ private:
         const PhysicsMaterial& properties, uint16_t kind
     );
 
-    void add_capsule_collider(PhysicsBody* self, float height,
-                              const float diameter,
-                              const PhysicsMaterial& properties, uint16_t kind);
-
     void add_capsule_collider(PhysicsBody* self, const Vec3& v0, const Vec3& v1,
                               const float diameter,
                               const PhysicsMaterial& properties, uint16_t kind);
