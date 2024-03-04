@@ -4,6 +4,8 @@
 #include <pspthreadman.h>
 #elif defined(__DREAMAST__)
 #include <kos/thread.h>
+#elif defined(__PS2__)
+#include <kernel.h>
 #else
 #include <pthread.h>
 #endif
@@ -30,7 +32,7 @@ namespace thread {
 template< class T >
 using decay_t = typename std::decay<T>::type;
 
-#if defined(__PSP__) || defined(__DREAMCAST__)
+#if defined(__PSP__) || defined(__DREAMCAST__) || defined(__PS2__)
 typedef uint32_t ThreadID;
 #else
 typedef uint64_t ThreadID;
@@ -56,7 +58,7 @@ public:
 };
 
 class Thread {
-#ifdef __PSP__
+#if defined(__PSP__) || defined(__PS2__)
     /* PSP doesn't natively support detached threads
      * so we pass some additional state to keep track
      * of whether a thread is joinable or not. If it's
@@ -101,6 +103,29 @@ public:
         assert(thread_);
 
         sceKernelStartThread(thread_, sizeof(psp_thread_state_), &psp_thread_state_);
+#elif defined(__PS2__)
+        int priority = 0x60; // FIXME: No idea... //GetThreadCurrentPriority();
+
+        ee_thread_t eethread;
+        eethread.attr = 0;
+        eethread.option = 0;
+        eethread.func = &Thread::thread_runner;
+        eethread.stack = malloc(0x10000);
+        eethread.stack_size = 0x10000;
+        eethread.gp_reg = &_gp;
+        eethread.initial_priority = priority;
+
+        /* We use the current thread's priority for the new thread */
+
+        thread_ = CreateThread(&eethread);
+        psp_thread_state_ = std::make_shared<PSPThreadState>();
+        psp_thread_state_->func = func;
+        psp_thread_state_->detached = false;
+        psp_thread_state_->id = thread_;
+
+        assert(thread_);
+
+        StartThread(thread_, &psp_thread_state_);
 #elif defined(__DREAMCAST__)
 
         /* The default stack size is 32k, which is a bit low for us */
@@ -135,7 +160,7 @@ public:
          * to an unsigned int without losing information. On the Dreamcast
          * this is a kthread_t* but pointers are 32 bit, so that's "ok".
          */
-#if !defined(__DREAMCAST__) && !defined(__APPLE__) && !defined(__PSP__)
+#if !defined(__DREAMCAST__) && !defined(__APPLE__) && !defined(__PSP__) && !defined(__PS2__)
         static_assert(std::is_convertible<pthread_t, ThreadID>::value, "pthread_t is not convertible");
 #endif
         return (ThreadID) thread_;
@@ -146,6 +171,9 @@ private:
 
 #ifdef __PSP__
     static int thread_runner(unsigned int, void* data);
+    int thread_ = 0;
+#elif defined(__PS2__)
+    static int thread_runner(void* data);
     int thread_ = 0;
 #elif defined(__DREAMCAST__)
     static void* thread_runner(void* data);

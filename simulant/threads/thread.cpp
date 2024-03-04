@@ -92,11 +92,10 @@ void Thread::exit() {
     S_DEBUG("Thread exited");
 }
 
-#ifdef __PSP__
+#if defined(__PSP__) || defined(__PS2__)
 int Thread::thread_runner(unsigned int, void* data) {
     std::shared_ptr<PSPThreadState> state = *((std::shared_ptr<PSPThreadState>*)(data));
     CallableWrapperBase* func = state->func;
-
 #else
 void* Thread::thread_runner(void* data) {
     CallableWrapperBase* func = reinterpret_cast<CallableWrapperBase*>(data);
@@ -115,6 +114,13 @@ void* Thread::thread_runner(void* data) {
         sceKernelExitThread(0);
     }
     return 0;
+#elif defined(__PS2__)
+    if(state->detached) {
+        ExitDeleteThread();
+    } else {
+        ExitThread();
+    }
+    return 0;
 #else
     return nullptr;
 #endif
@@ -131,6 +137,8 @@ void sleep(size_t ms) {
 #ifdef __PSP__
     _S_UNUSED(tim2);
     sceKernelDelayThreadCB(1000000 * tim.tv_sec + (tim.tv_nsec / 1000));
+#elif defined(__PS2__)
+    DelayThread(1000000 * tim.tv_sec + (tim.tv_nsec / 1000));
 #else
     nanosleep(&tim , &tim2);
 #endif
@@ -145,7 +153,7 @@ void yield() {
      * sleep(0) or no-op. My money's on sleep(0).
      */
     sleep(0);
-#elif defined(__PSP__)
+#elif defined(__PSP__) || defined(__PS2__)
     /* FIXME: For some reason the CMake check thinks pthread_yield exists? */
     sleep(0);
 #else
@@ -156,6 +164,8 @@ void yield() {
 ThreadID this_thread_id() {
 #ifdef __PSP__
     return (ThreadID) sceKernelGetThreadId();
+#elif defined(__PS2__)
+    return (ThreadID) GetThreadId();
 #elif defined(__DREAMCAST__)
     auto thd = thd_get_current();
     return (ThreadID) (thd ? thd->tid : 0);

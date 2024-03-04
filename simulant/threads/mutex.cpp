@@ -35,6 +35,8 @@ Mutex::Mutex() {
     if(mutex_init(&mutex_, MUTEX_TYPE_NORMAL) != 0) {
         FATAL_ERROR(ERROR_CODE_MUTEX_INIT_FAILED, "Failed to create mutex");
     }
+#elif defined(__PS2__)
+    mutex_ = CreateMutex(IOP_MUTEX_UNLOCKED);
 #else
     if(pthread_mutex_init(&mutex_, NULL) != 0) {
         FATAL_ERROR(ERROR_CODE_MUTEX_INIT_FAILED, "Failed to create mutex");
@@ -51,6 +53,9 @@ Mutex::~Mutex() {
     int err = mutex_destroy(&mutex_);
     _S_UNUSED(err);
     assert(!err);
+#elif defined(__PS2__)
+    DeleteSema(mutex_);
+    mutex_ = 0;
 #else
 #ifndef NDEBUG
     /* This checks to make sure that the mutex
@@ -77,6 +82,12 @@ bool Mutex::try_lock() {
         return false;
     }
     return true;
+#elif defined(__PS2__)
+    auto res = PollSema(mutex_);
+    if(res < 0) {
+        return false;
+    }
+    return true;
 #elif defined(__DREAMCAST__)
     return mutex_trylock(&mutex_) == 0;
 #else
@@ -88,6 +99,12 @@ void Mutex::lock() {
 #ifdef __PSP__
     auto tid = this_thread_id();
     auto ret = sceKernelWaitSema(semaphore_, 1, NULL);
+    assert(ret >= 0);
+    _S_UNUSED(ret);
+    owner_ = tid;
+#elif defined(__PS2__)
+    auto tid = this_thread_id();
+    auto ret = WaitSema(mutex_, 1, NULL);
     assert(ret >= 0);
     _S_UNUSED(ret);
     owner_ = tid;
@@ -108,6 +125,15 @@ void Mutex::unlock() {
     auto ret = sceKernelSignalSema(semaphore_, 1);
     assert(ret >= 0);
     _S_UNUSED(ret);
+#elif defined(__PS2__)
+    if(this_thread_id() != owner_) {
+        return;
+    }
+
+    owner_ = 0;
+    auto ret = SignalSema(mutex_, 1);
+    assert(ret >= 0);
+    _S_UNUSED(ret);
 #elif defined(__DREAMCAST__)
     mutex_unlock(&mutex_);
 #else
@@ -126,7 +152,11 @@ RecursiveMutex::RecursiveMutex() {
     );
     owner_ = 0; /* No owner */
     recursive_ = 0;
-
+#elif defined(__PS2__)
+    /* Create a semaphore with an initial and max value of 1 */
+    semaphore_ = CreateMutex(IOP_MUTEX_UNLOCKED);
+    owner_ = 0; /* No owner */
+    recursive_ = 0;
 #elif defined(__DREAMCAST__)
     err = mutex_init(&mutex_, MUTEX_TYPE_RECURSIVE);
 #else
@@ -150,6 +180,8 @@ RecursiveMutex::~RecursiveMutex() {
     int err = 0;
 #ifdef __PSP__
     sceKernelDeleteSema(semaphore_);
+#elif defined(__PS2__)
+    DeleteSema(semaphore_);
 #elif defined(__DREAMCAST__)
     err = mutex_destroy(&mutex_);
 #else
@@ -166,6 +198,17 @@ void RecursiveMutex::lock() {
         ++recursive_;
     } else {
         auto ret = sceKernelWaitSema(semaphore_, 1, NULL);
+        assert(ret >= 0);
+        _S_UNUSED(ret);
+        owner_ = tid;
+        recursive_ = 0;
+    }
+#elif __PS2__
+    auto tid = this_thread_id();
+    if(owner_ == tid) {
+        ++recursive_;
+    } else {
+        auto ret = WaitSema(semaphore_, 1, NULL);
         assert(ret >= 0);
         _S_UNUSED(ret);
         owner_ = tid;
@@ -189,6 +232,19 @@ void RecursiveMutex::unlock() {
     } else {
         owner_ = 0;
         auto ret = sceKernelSignalSema(semaphore_, 1);
+        assert(ret >= 0);
+        _S_UNUSED(ret);
+    }
+#elif defined(__PS2__)
+    if(this_thread_id() != owner_) {
+        return;
+    }
+
+    if(recursive_) {
+        recursive_--;
+    } else {
+        owner_ = 0;
+        auto ret = SignalSema(semaphore_);
         assert(ret >= 0);
         _S_UNUSED(ret);
     }
