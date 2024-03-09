@@ -220,7 +220,8 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         if(fheader.color_format == COLOR_FORMAT_4UB) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Colour::from_bytes(color[2], color[1], color[0], color[3]));
+            vdata->diffuse(smlt::Colour::from_bytes(color[0], color[1],
+                                                    color[2], color[3]));
         } else if(fheader.color_format == COLOR_FORMAT_4F) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
