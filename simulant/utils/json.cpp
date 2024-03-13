@@ -632,6 +632,7 @@ JSONIterator JSONIterator::operator[](const std::string& key) const {
 
     current_node_->read_keys(cb);
 
+
     assert(found);
 
     if(found) {

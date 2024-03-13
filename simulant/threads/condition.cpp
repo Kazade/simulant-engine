@@ -17,6 +17,16 @@ Condition::Condition() {
         smlt::to_string((int) rand()).c_str(),
         0, 0, 1, 0
     );
+#elif defined(__PS2__)
+    ee_sema_t state;
+    state.attr = 0;
+    state.initial = 0;
+    state.max = 1;
+    state.option = 0;
+
+    wait_sem_ = CreateSema(&state);
+    wait_done_= CreateSema(&state);
+
 #elif defined(__DREAMCAST__)
     cond_init(&cond_);
 #else
@@ -30,6 +40,9 @@ Condition::~Condition() {
 #ifdef __PSP__
     sceKernelDeleteSema(wait_sem_);
     sceKernelDeleteSema(wait_done_);
+#elif defined(__PS2__)
+    DeleteSema(wait_sem_);
+    DeleteSema(wait_done_);
 #elif defined(__DREAMCAST__)
     cond_destroy(&cond_);
 #else
@@ -52,6 +65,27 @@ void Condition::wait(Mutex& mutex) {
         Lock<Mutex> lock(lock_);
         if(signals_ > 0) {
             sceKernelSignalSema(wait_done_, 1);
+            --signals_;
+        }
+
+        --waiting_;
+    }
+
+    mutex.lock();
+#elif defined(__PS2__)
+    {
+        Lock<Mutex> lock(lock_);
+        ++waiting_;
+    }
+
+    mutex.unlock();
+
+    WaitSema(wait_sem_);
+
+    {
+        Lock<Mutex> lock(lock_);
+        if(signals_ > 0) {
+            SignalSema(wait_done_);
             --signals_;
         }
 
@@ -82,6 +116,16 @@ void Condition::notify_one() {
     } else {
         lock_.unlock();
     }
+#elif defined(__PS2__)
+    lock_.lock();
+    if(waiting_ > signals_) {
+        ++signals_;
+        SignalSema(wait_sem_);
+        lock_.unlock();
+        SignalSema(wait_done_);
+    } else {
+        lock_.unlock();
+    }
 #elif defined(__DREAMCAST__)
     int err = cond_signal(&cond_);
     _S_UNUSED(err);
@@ -106,6 +150,22 @@ void Condition::notify_all() {
         lock_.unlock();
         for(int i = 0; i < num_waiting; ++i) {
             sceKernelWaitSema(wait_done_, 1, NULL);
+        }
+    } else {
+        lock_.unlock();
+    }
+#elif defined(__PS2__)
+    lock_.lock();
+    if(waiting_ > signals_) {
+        int num_waiting = (waiting_ - signals_);
+        signals_ = waiting_;
+        for(int i = 0; i < num_waiting; ++i) {
+            SignalSema(wait_sem_);
+        }
+
+        lock_.unlock();
+        for(int i = 0; i < num_waiting; ++i) {
+            WaitSema(wait_done_);
         }
     } else {
         lock_.unlock();

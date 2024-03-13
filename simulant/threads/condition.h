@@ -23,6 +23,12 @@ private:
     SceUID wait_done_;
     int waiting_ = 0;
     int signals_ = 0;
+#elif defined(__PS2__)
+    Mutex lock_;
+    int wait_sem_;
+    int wait_done_;
+    int waiting_ = 0;
+    int signals_ = 0;
 #elif defined(__DREAMCAST__)
     condvar_t cond_;
 #else

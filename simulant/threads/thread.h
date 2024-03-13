@@ -109,7 +109,7 @@ public:
         ee_thread_t eethread;
         eethread.attr = 0;
         eethread.option = 0;
-        eethread.func = &Thread::thread_runner;
+        eethread.func = (void*) &Thread::thread_runner;
         eethread.stack = malloc(0x10000);
         eethread.stack_size = 0x10000;
         eethread.gp_reg = &_gp;
