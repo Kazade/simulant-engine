@@ -4,20 +4,36 @@ namespace smlt {
 
 struct Degrees;
 
-struct Radians {
+class Radians {
+private:
+    float value_ = 0.0f;
+
+public:
     Radians():
-        value(0) {}
+        value_(0) {}
 
     explicit Radians(float value):
-        value(value) {}
+        value_(value) {}
 
     Radians(const Degrees& rhs);
 
-    float value;
+    float to_float() const {
+        return value_;
+    }
+
+    Degrees to_degrees() const;
+
+    Radians operator*(float scalar) {
+        return Radians(to_float() * scalar);
+    }
+
+    Radians& operator*=(float scalar) {
+        value_ *= scalar;
+        return *this;
+    }
 };
 
-
-Radians to_radians(const Degrees& degrees);
 Radians lerp_angle(Radians a, Radians b, float t);
 
+typedef Radians Rad;
 }

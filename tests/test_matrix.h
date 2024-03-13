@@ -24,13 +24,13 @@ public:
     void test_from_rotation_z() {
         smlt::Mat4 m = smlt::Mat4::as_rotation_z(smlt::Degrees(90));
 
-        assert_close(m[0], std::acos(smlt::Radians(smlt::Degrees(90)).value), 0.0000001f);
-        assert_close(m[1], std::asin(smlt::Radians(smlt::Degrees(90)).value), 0.0000001f);
+        assert_close(m[0], std::acos(smlt::Radians(smlt::Degrees(90)).to_float()), 0.0000001f);
+        assert_close(m[1], std::asin(smlt::Radians(smlt::Degrees(90)).to_float()), 0.0000001f);
         assert_close(m[2], 0.0f, 0.0000001f);
         assert_close(m[3], 0.0f, 0.0000001f);
 
-        assert_close(m[4], -std::asin(smlt::Radians(smlt::Degrees(90)).value), 0.0000001f);
-        assert_close(m[5], std::acos(smlt::Radians(smlt::Degrees(90)).value), 0.0000001f);
+        assert_close(m[4], -std::asin(smlt::Radians(smlt::Degrees(90)).to_float()), 0.0000001f);
+        assert_close(m[5], std::acos(smlt::Radians(smlt::Degrees(90)).to_float()), 0.0000001f);
         assert_close(m[6], 0.0f, 0.0000001f);
         assert_close(m[7], 0.0f, 0.0000001f);
 

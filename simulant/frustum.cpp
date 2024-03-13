@@ -116,7 +116,7 @@ float Frustum::width_at_distance(float distance) const {
 
 float Frustum::height_at_distance(float distance) const {
     const float Deg2Rad = (PI * 2) / 360;
-    return 2.0f * distance * tanf(field_of_view().value * 0.5f * Deg2Rad);
+    return 2.0f * distance * tanf(field_of_view().to_float() * 0.5f * Deg2Rad);
 }
 
 Degrees Frustum::field_of_view() const {

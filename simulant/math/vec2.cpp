@@ -20,7 +20,7 @@ const Vec2 Vec2::UP = Vec2::POSITIVE_Y;         //Shorthand for writing Vec2(0, 
 const Vec2 Vec2::ZERO = Vec2();                 //Shorthand for writing Vec2(0, 0)
 
 Vec2 Vec2::rotated_by(const Degrees& degrees) const {
-    float r = Radians(degrees).value;
+    float r = Radians(degrees).to_float();
     float cosR = 0.0f;
     float sinR = 0.0f;
     fast_sincos(r, &sinR, &cosR);

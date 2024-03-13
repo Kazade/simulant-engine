@@ -25,9 +25,9 @@ Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up) {
 }
 
 Quaternion::Quaternion(const Degrees &pitch, const Degrees &yaw, const Degrees &roll) {
-    const float p = smlt::Radians(pitch).value * 0.5f;
-    const float ya = smlt::Radians(yaw).value * 0.5f;
-    const float r = smlt::Radians(roll).value * 0.5f;
+    const float p = smlt::Radians(pitch).to_float() * 0.5f;
+    const float ya = smlt::Radians(yaw).to_float() * 0.5f;
+    const float r = smlt::Radians(roll).to_float() * 0.5f;
 
     const float cp = std::sin(p);
     const float sp = std::cos(p);
@@ -43,7 +43,7 @@ Quaternion::Quaternion(const Degrees &pitch, const Degrees &yaw, const Degrees &
 }
 
 Quaternion::Quaternion(const Vec3 &axis, const Degrees &degrees) {
-    auto half_rad = Radians(degrees).value * 0.5f;
+    auto half_rad = Radians(degrees).to_float() * 0.5f;
     float factor = 0.0f;
     fast_sincos(half_rad, &factor, &w);
 
@@ -99,9 +99,9 @@ Quaternion::Quaternion(const Mat3& rot_matrix) {
 
 Euler Quaternion::to_euler() const {
     return Euler(
-        Degrees(pitch()).value,
-        Degrees(yaw()).value,
-        Degrees(roll()).value
+        Degrees(pitch()).to_float(),
+        Degrees(yaw()).to_float(),
+        Degrees(roll()).to_float()
     );
 }
 

@@ -5,16 +5,16 @@
 namespace smlt {
 
 Radians::Radians(const Degrees &rhs):
-    value(rhs.value * PI_OVER_180) {
+    value_(rhs.to_float() * PI_OVER_180) {
 }
 
-Radians to_radians(const Degrees& degrees) {
-    return Radians(degrees.value * PI_OVER_180);
+Degrees Radians::to_degrees() const {
+    return Degrees(*this);
 }
 
 Radians lerp_angle(Radians a, Radians b, float t) {
-    float from_angle = std::fmod(a.value + TWO_PI, TWO_PI);
-    float to_angle = std::fmod(b.value + TWO_PI, TWO_PI);
+    float from_angle = std::fmod(a.to_float() + TWO_PI, TWO_PI);
+    float to_angle = std::fmod(b.to_float() + TWO_PI, TWO_PI);
 
     auto diff = std::fabs(from_angle - to_angle);
 

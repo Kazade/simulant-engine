@@ -15,10 +15,10 @@ public:
         smlt::Degrees b(270);
 
         auto ret = smlt::lerp_angle(a, b, 0.5f);
-        assert_close(ret.value, -40, 0.0001f);
+        assert_close(ret.to_float(), -40, 0.0001f);
 
         ret = smlt::lerp_angle(a, b, 0.0f);
-        assert_close(ret.value, a.value, 0.0001f);
+        assert_close(ret.to_float(), a.to_float(), 0.0001f);
 
         ret = smlt::lerp_angle(a, b, 1.0f);
         assert_true(ret.is_effectively_equal_to(b, 0.0001f));
