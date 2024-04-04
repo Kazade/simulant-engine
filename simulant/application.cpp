@@ -378,9 +378,11 @@ bool Application::_call_init() {
     // If we successfully initialized, but the user didn't specify
     // a particular scene, we just hit the root route
     if(initialized_ && !scenes->active_scene() && !scenes->scene_queued_for_activation()) {
+        S_DEBUG("Activating main");
         scenes->activate("main");
     }
 
+    S_DEBUG("Initialized: {0}", initialized_);
     return initialized_;
 }
 
@@ -471,11 +473,17 @@ bool Application::run_frame() {
         dt = time_keeper_->delta_time();
     }
 
+    S_DEBUG("Starting frame");
     signal_frame_started_();
 
+    S_DEBUG("Signal finished");
+
     window_->input_state->pre_update(dt);
+
+    S_DEBUG("Checking events");
     window_->check_events(); // Check for any window events
 
+    S_DEBUG("Checking audio stuff");
     auto listener = window_->audio_listener();
     if(listener) {
         sound_driver_->set_listener_properties(
@@ -485,6 +493,7 @@ bool Application::run_frame() {
         );
     }
 
+    S_DEBUG("Checking input");
     window_->input_state->update(dt); // Update input devices
     window_->input->update(dt); // Now update any manager stuff based on the new input state
 
@@ -492,18 +501,22 @@ bool Application::run_frame() {
     run_update(dt);
 
     if(asset_manager_) {
+        S_DEBUG("Updating assets");
         asset_manager_->update(time_keeper->delta_time());
     }
 
     run_coroutines_and_late_update();
 
     if(asset_manager_) {
+        S_DEBUG("Running GC");
         asset_manager_->run_garbage_collection();
     }
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
     {
+        S_DEBUG("Locking for rendering");
+
         thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
         if(window_->has_context()) {
 
@@ -529,6 +542,7 @@ bool Application::run_frame() {
 
     bool is_running = !is_shutting_down();
     if(!is_running) {
+        S_INFO("Stopped running, shutting down");
         shutdown();
     }
 
