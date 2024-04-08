@@ -82,6 +82,8 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "utils/string.h"
 #include "scenes/scene_manager.h"
 
+#include "assets/sweet16.h"
+
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
 #define SIMULANT_DEBUG_KEY "SIMULANT_DEBUG"
@@ -213,8 +215,9 @@ void Application::preload_default_font() {
 
     FontFlags flags;
     flags.size = ui.font_size;
-    auto fnt = shared_assets->create_font_from_family(ui.font_family, flags);
 
+    auto fnt = shared_assets->create_font_from_memory(sweet16_ttf,
+                                                      sweet16_ttf_len, flags);
     if(!fnt) {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }

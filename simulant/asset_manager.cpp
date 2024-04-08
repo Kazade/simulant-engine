@@ -17,17 +17,16 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <iterator>
 #include "asset_manager.h"
-#include "loader.h"
-#include "procedural/mesh.h"
-#include "utils/gl_thread_check.h"
-#include "loaders/heightmap_loader.h"
-#include "application.h"
 #include "application.h"
 #include "generic/lru_cache.h"
+#include "loader.h"
+#include "loaders/heightmap_loader.h"
+#include "procedural/mesh.h"
+#include "utils/gl_thread_check.h"
+#include "utils/simple_memstream.h"
 #include "vfs.h"
-
+#include <iterator>
 /** FIXME
  *
  * - Write tests to show that all load_X methods mark resources as uncollected before returning
@@ -569,6 +568,42 @@ AssetManager* AssetManager::base_manager() const {
 }
 
 // ========== FONTS ======================
+
+FontPtr AssetManager::create_font_from_memory(
+    const uint8_t* data, const std::size_t size, const FontFlags& flags,
+    GarbageCollectMethod garbage_collect) {
+
+    auto font = font_manager_.make(this);
+    auto font_id = font->id();
+    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
+
+    try {
+        LoaderOptions options;
+        options["size"] =
+            flags.size ? flags.size : get_app()->config->ui.font_size;
+        options["weight"] = flags.weight;
+        options["style"] = flags.style;
+        options["charset"] = flags.charset;
+        options["blur_radius"] = flags.blur_radius;
+
+        // FIXME: We should see if it's a ttf_font or something else not just
+        // assume a TTF.
+        auto loadert = get_app()->loader_type("ttf_font");
+        assert(loadert);
+
+        auto stream = stream_from_memory(data, size);
+        stream->seekg(0);
+
+        loadert->loader_for("", stream)->into(font.get(), options);
+        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
+    } catch(...) {
+        // Make sure we don't leave the font hanging around
+        destroy_font(font_id);
+        throw;
+    }
+
+    return font;
+}
 
 FontPtr AssetManager::create_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     uint16_t size = flags.size || get_app()->config->ui.font_size;

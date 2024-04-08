@@ -186,6 +186,10 @@ public:
      * $path/fonts/$filename
      * $path/fonts/family/$filename
      */
+
+    FontPtr create_font_from_memory(
+        const uint8_t* data, const std::size_t size, const FontFlags& flags,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     FontPtr create_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     FontPtr load_font(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
     void destroy_font(AssetID id);
