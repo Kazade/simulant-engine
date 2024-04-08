@@ -234,6 +234,10 @@ std::vector<std::string> Application::generate_potential_codes(const std::string
     return codes;
 }
 
+std::shared_ptr<Window> Application::instantiate_window() {
+    return SysWindow::create(this);
+}
+
 bool Application::construct_window(const AppConfig& config) {
     /* Copy to remove const */
     AppConfig config_copy = config;
@@ -265,7 +269,7 @@ bool Application::construct_window(const AppConfig& config) {
     S_DEBUG("Constructing the window");
     S_DEBUG("Platform state: {0}", platform_state_);
 
-    window_ = SysWindow::create(this);
+    window_ = instantiate_window();
 
     /* Fallback. If fullscreen is disabled and there is no width
      * or height, then default to 640x480 */

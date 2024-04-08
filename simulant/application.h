@@ -270,6 +270,8 @@ public:
 protected:
     bool _call_init();
 
+    virtual std::shared_ptr<Window> instantiate_window();
+
 private:
     void* platform_state_ = nullptr;
     friend void cr_run_main(std::function<void ()> func);
