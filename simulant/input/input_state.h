@@ -41,15 +41,24 @@ class InputState;
 typedef int8_t KeyboardID;
 typedef int8_t MouseID;
 
-#define STRONG_TYPEDEF(name, type) \
-    typedef struct tag_ ## name { \
-        type v; \
-        type to_ ## type () const { return v; } \
-        tag_ ## name () {} \
-        explicit tag_ ## name (type i): v(i) {} \
-        bool operator==(const tag_ ## name & rhs) const { return v == rhs.v; } \
-    } (name)
-
+#define STRONG_TYPEDEF(name, type)                                             \
+    typedef struct tag_##name {                                                \
+        type to_##type() const {                                               \
+            return v;                                                          \
+        }                                                                      \
+        tag_##name() {}                                                        \
+        explicit tag_##name(type i) :                                          \
+            v(i) {}                                                            \
+        bool operator==(const tag_##name& rhs) const {                         \
+            return v == rhs.v;                                                 \
+        }                                                                      \
+        bool operator<(const tag_##name& rhs) const {                          \
+            return v < rhs.v;                                                  \
+        }                                                                      \
+                                                                               \
+    private:                                                                   \
+        type v;                                                                \
+    }(name)
 
 /** GameControllerID represents the unique id of a *detected* controller
  *  it is *not* a zero-based index into the detected controller list */
