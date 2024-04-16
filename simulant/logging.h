@@ -128,6 +128,10 @@ public:
         level_ = level;
     }
 
+    LogLevel level() const {
+        return level_;
+    }
+
 private:
     void write_message(const std::string& level, const std::string& text,
                        const std::string& file, int32_t line) {

@@ -109,7 +109,10 @@ public:
     bool vsync_enabled() const { return vsync_enabled_; }
 
     float aspect_ratio() const;
+
+    // FIXME: these should be on Application, not Window!
     void set_logging_level(LogLevel level);
+    LogLevel logging_level() const;
 
     void reset();
 

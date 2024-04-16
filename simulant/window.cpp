@@ -221,6 +221,10 @@ void Window::set_logging_level(LogLevel level) {
     smlt::get_logger("/")->set_level(level);
 }
 
+LogLevel Window::logging_level() const {
+    return get_logger("/")->level();
+}
+
 Screen* Window::_create_screen(const std::string &name, uint16_t width, uint16_t height, ScreenFormat format, uint16_t refresh_rate) {
     if(screens_.count(name)) {
         S_WARN("Tried to add duplicate Screen");
