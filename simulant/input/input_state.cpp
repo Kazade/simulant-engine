@@ -18,7 +18,6 @@
 //
 
 #include "../logging.h"
-#include "../utils/unicode.h"
 #include "../macros.h"
 
 #include "input_state.h"
@@ -28,19 +27,19 @@
 namespace smlt {
 
 void InputState::_handle_key_down(KeyboardID keyboard_id, KeyboardCode code) {
-    if(keyboard_id < keyboard_count_) {
+    if(keyboard_id < keyboards_.size()) {
         keyboards_[keyboard_id].keys[code] = true;
     }
 }
 
 void InputState::_handle_key_up(KeyboardID keyboard_id, KeyboardCode code) {
-    if(keyboard_id < keyboard_count_) {
+    if(keyboard_id < keyboards_.size()) {
         keyboards_[keyboard_id].keys[code] = false;
     }
 }
 
 void InputState::_handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, int32_t xrel, int32_t yrel) {
-    if(mouse_id < mouse_count_) {
+    if(mouse_id < mice_.size()) {
         auto& mouse = mice_[mouse_id];
 
         mouse.axises[MOUSE_AXIS_X] = xrel;
@@ -52,13 +51,13 @@ void InputState::_handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, 
 }
 
 void InputState::_handle_mouse_down(MouseID mouse_id, MouseButtonID button_id) {
-    if(mouse_id < mouse_count_) {
+    if(mouse_id < mice_.size()) {
         mice_[mouse_id].buttons[button_id] = true;
     }
 }
 
 void InputState::_handle_mouse_up(MouseID mouse_id, MouseButtonID button_id) {
-    if(mouse_id < mouse_count_) {
+    if(mouse_id < mice_.size()) {
         mice_[mouse_id].buttons[button_id] = false;
     }
 }
@@ -100,7 +99,7 @@ void InputState::_handle_joystick_hat_motion(GameControllerID joypad_id, Joystic
 }
 
 bool InputState::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
-    if(keyboard_id < keyboard_count_) {
+    if(keyboard_id < keyboards_.size()) {
         return keyboards_[keyboard_id].keys[code];
     }
 
@@ -108,7 +107,7 @@ bool InputState::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) c
 }
 
 bool InputState::mouse_button_state(MouseID mouse_id, MouseButtonID button) const {
-    if(mouse_id < mouse_count_) {
+    if(mouse_id < mice_.size()) {
         return mice_[mouse_id].buttons[button];
     }
 
@@ -124,7 +123,7 @@ bool InputState::joystick_button_state(GameControllerID joystick_id, JoystickBut
 }
 
 float InputState::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
-    if(mouse_id < mouse_count_) {
+    if(mouse_id < mice_.size()) {
         return mice_[mouse_id].axises[axis];
     }
 
@@ -132,19 +131,20 @@ float InputState::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
 }
 
 GameController *InputState::game_controller_by_id(GameControllerID id) {
-    for(int i = 0; i < joystick_count_; ++i) {
-        if(joysticks_[i].id_ == id) {
-            return &joysticks_[i];
+    for(std::size_t i = 0; i < game_controllers_.size(); ++i) {
+        auto& cont = game_controllers_[i];
+        if(cont.id_ == id) {
+            return &cont;
         }
     }
-
     return nullptr;
 }
 
 const GameController *InputState::game_controller_by_id(GameControllerID id) const {
-    for(int i = 0; i < joystick_count_; ++i) {
-        if(joysticks_[i].id_ == id) {
-            return &joysticks_[i];
+    for(std::size_t i = 0; i < game_controllers_.size(); ++i) {
+        const auto& cont = game_controllers_[i];
+        if(cont.id_ == id) {
+            return &cont;
         }
     }
 
@@ -162,12 +162,13 @@ GameController *InputState::game_controller(GameControllerIndex index) {
         return nullptr;
     }
 
-    return &joysticks_[idx];
+    return &game_controllers_[idx];
 }
 
 GameControllerIndex InputState::game_controller_index_from_id(GameControllerID id) const {
     auto idx = 0;
-    for(auto& cont: joysticks_) {
+    for(std::size_t i = 0; i < game_controllers_.size(); ++i) {
+        const auto& cont = game_controllers_[i];
         if(cont.id() == id) {
             return GameControllerIndex(idx);
         }
@@ -212,7 +213,7 @@ void InputState::pre_update(float dt) {
 
     /* Reset the mouse motion each frame, as motion events only come in
      * when the mouse moves, not every frame */
-    for(uint8_t i = 0; i < mouse_count_; ++i) {
+    for(uint8_t i = 0; i < mice_.size(); ++i) {
         for(uint8_t j = 0; j < mice_[i].axis_count; ++j) {
             mice_[i].axises[j] = 0.0f;
         }
@@ -226,20 +227,23 @@ void InputState::update(float dt) {
 void InputState::_update_game_controllers(const std::vector<GameControllerInfo>& device_info) {
     S_DEBUG("Updating controllers with new list of size: {0}", device_info.size());
 
-    if(device_info.size() > joystick_count_) {
-        S_INFO("{0} controllers connected", device_info.size() - joystick_count_);
-    } else if(device_info.size() < joystick_count_) {
-        S_INFO("{0} controllers removed", joystick_count_ - device_info.size());
+    if(device_info.size() > game_controllers_.size()) {
+        S_INFO("{0} controllers connected",
+               device_info.size() - game_controllers_.size());
+    } else if(device_info.size() < game_controllers_.size()) {
+        S_INFO("{0} controllers removed",
+               game_controllers_.size() - device_info.size());
     }
 
-    joystick_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
-    for(decltype(joystick_count_) i = 0; i < joystick_count_; ++i) {
-        joysticks_[i] = GameController(this, GameControllerID(device_info[i].id));
-        joysticks_[i].button_count = device_info[i].button_count;
-        joysticks_[i].axis_count = device_info[i].axis_count;
-        joysticks_[i].hat_count = device_info[i].hat_count;
-        joysticks_[i].has_rumble_ = device_info[i].has_rumble;
-        joysticks_[i].platform_data_.i = device_info[i].platform_data.i;
+    game_controllers_.clear();
+
+    for(auto& info: device_info) {
+        GameController controller(this, GameControllerID(info.id));
+        controller.button_count = info.button_count;
+        controller.axis_count = info.axis_count;
+        controller.hat_count = info.hat_count;
+        controller.has_rumble_ = info.has_rumble;
+        controller.platform_data_.i = info.platform_data.i;
     }
 }
 

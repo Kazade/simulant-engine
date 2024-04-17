@@ -29,10 +29,11 @@
 #include "../keycodes.h"
 #include "../types.h"
 
-#include "../signals/signal.h"
-#include "../generic/managed.h"
 #include "../generic/identifiable.h"
+#include "../generic/managed.h"
 #include "../generic/unique_id.h"
+#include "../signals/signal.h"
+#include "simulant/utils/limited_vector.h"
 
 namespace smlt {
 
@@ -192,12 +193,12 @@ class InputState;
 class GameController {
     friend class InputState;
 
-    GameController() = default;
-    GameController(InputState* parent, GameControllerID id):
-        parent_(parent),
-        id_(id) {}
+    GameController(InputState* parent, GameControllerID id) :
+        parent_(parent), id_(id) {}
 
 public:
+    GameController() = default;
+
     GameControllerID id() const {
         return id_;
     }
@@ -261,17 +262,21 @@ public:
      */
 
     void _update_mouse_devices(const std::vector<MouseDeviceInfo>& device_info) {
-        mouse_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
-        for(decltype(mouse_count_) i = 0; i < mouse_count_; ++i) {
-            mice_[i].button_count = device_info[i].button_count;
-            mice_[i].axis_count = device_info[i].axis_count;
+        mice_.clear();
+        for(std::size_t i = 0; i < device_info.size(); ++i) {
+            auto mouse = MouseState();
+            mouse.button_count = device_info[i].button_count;
+            mouse.axis_count = device_info[i].axis_count;
+            mice_.push_back(mouse);
         }
     }
 
     void _update_keyboard_devices(const std::vector<KeyboardDeviceInfo>& device_info) {
-        keyboard_count_ = std::min(device_info.size(), MAX_DEVICE_TYPE_COUNT);
+        keyboards_.clear();
         for(std::size_t i = 0; i < device_info.size(); ++i) {
-            keyboards_[i].type = device_info[i].type;
+            auto keyboard = Keyboard();
+            keyboard.type = device_info[i].type;
+            keyboards_.push_back(keyboard);
         }
     }
 
@@ -304,13 +309,19 @@ public:
     GameController* game_controller(GameControllerIndex id);
     GameControllerIndex game_controller_index_from_id(GameControllerID id) const;
 
-    std::size_t game_controller_count() const { return joystick_count_; }
-    std::size_t keyboard_count() const { return keyboard_count_; }
+    std::size_t game_controller_count() const {
+        return game_controllers_.size();
+    }
+    std::size_t keyboard_count() const {
+        return keyboards_.size();
+    }
 
     Keyboard* keyboard_by_id(KeyboardID keyboard_id);
     const Keyboard* keyboard_by_id(KeyboardID keyboard_id) const;
 
-    std::size_t mouse_count() const { return mouse_count_; }
+    std::size_t mouse_count() const {
+        return mice_.size();
+    }
 
     JoystickAxis linked_axis(GameControllerID id, JoystickAxis axis);
 
@@ -323,9 +334,6 @@ private:
     float joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const;
     HatPosition joystick_hat_state(GameControllerID joystick_id, JoystickHatID hat) const;
 
-    uint8_t keyboard_count_ = 0;
-    Keyboard keyboards_[4];
-
     struct MouseState {
         uint8_t button_count = 0;
         uint8_t axis_count = 0;
@@ -337,11 +345,9 @@ private:
         uint32_t y = 0;
     };
 
-    uint8_t mouse_count_ = 0;
-    MouseState mice_[4];
-
-    uint8_t joystick_count_ = 0;
-    GameController joysticks_[4];
+    LimitedVector<Keyboard, 4> keyboards_;
+    LimitedVector<MouseState, 4> mice_;
+    LimitedVector<GameController, 4> game_controllers_;
 };
 
 }
