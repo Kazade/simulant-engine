@@ -27,20 +27,20 @@
 namespace smlt {
 
 void InputState::_handle_key_down(KeyboardID keyboard_id, KeyboardCode code) {
-    if(keyboard_id < keyboards_.size()) {
-        keyboards_[keyboard_id].keys[code] = true;
+    if(keyboard_id.to_int8_t() < (int8_t)keyboards_.size()) {
+        keyboards_[keyboard_id.to_int8_t()].keys[code] = true;
     }
 }
 
 void InputState::_handle_key_up(KeyboardID keyboard_id, KeyboardCode code) {
-    if(keyboard_id < keyboards_.size()) {
-        keyboards_[keyboard_id].keys[code] = false;
+    if(keyboard_id.to_int8_t() < (int8_t)keyboards_.size()) {
+        keyboards_[keyboard_id.to_int8_t()].keys[code] = false;
     }
 }
 
 void InputState::_handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, int32_t xrel, int32_t yrel) {
-    if(mouse_id < mice_.size()) {
-        auto& mouse = mice_[mouse_id];
+    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
+        auto& mouse = mice_[mouse_id.to_int8_t()];
 
         mouse.axises[MOUSE_AXIS_X] = xrel;
         mouse.axises[MOUSE_AXIS_Y] = yrel;
@@ -51,14 +51,14 @@ void InputState::_handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, 
 }
 
 void InputState::_handle_mouse_down(MouseID mouse_id, MouseButtonID button_id) {
-    if(mouse_id < mice_.size()) {
-        mice_[mouse_id].buttons[button_id] = true;
+    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
+        mice_[mouse_id.to_int8_t()].buttons[button_id] = true;
     }
 }
 
 void InputState::_handle_mouse_up(MouseID mouse_id, MouseButtonID button_id) {
-    if(mouse_id < mice_.size()) {
-        mice_[mouse_id].buttons[button_id] = false;
+    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
+        mice_[mouse_id.to_int8_t()].buttons[button_id] = false;
     }
 }
 
@@ -99,16 +99,16 @@ void InputState::_handle_joystick_hat_motion(GameControllerID joypad_id, Joystic
 }
 
 bool InputState::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
-    if(keyboard_id < keyboards_.size()) {
-        return keyboards_[keyboard_id].keys[code];
+    if(keyboard_id.to_int8_t() < (int8_t)keyboards_.size()) {
+        return keyboards_[keyboard_id.to_int8_t()].keys[code];
     }
 
     return false;
 }
 
 bool InputState::mouse_button_state(MouseID mouse_id, MouseButtonID button) const {
-    if(mouse_id < mice_.size()) {
-        return mice_[mouse_id].buttons[button];
+    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
+        return mice_[mouse_id.to_int8_t()].buttons[button];
     }
 
     return false;
@@ -123,8 +123,8 @@ bool InputState::joystick_button_state(GameControllerID joystick_id, JoystickBut
 }
 
 float InputState::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
-    if(mouse_id < mice_.size()) {
-        return mice_[mouse_id].axises[axis];
+    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
+        return mice_[mouse_id.to_int8_t()].axises[axis];
     }
 
     return 0.0f;
@@ -181,14 +181,14 @@ GameControllerIndex InputState::game_controller_index_from_id(GameControllerID i
 
 Keyboard* InputState::keyboard_by_id(KeyboardID keyboard_id) {
     assert(keyboard_id < (KeyboardID) keyboard_count());
-    assert(keyboard_id < 4);
-    return &keyboards_[keyboard_id];
+    assert(keyboard_id.to_int8_t() < 4);
+    return &keyboards_[keyboard_id.to_int8_t()];
 }
 
 const Keyboard* InputState::keyboard_by_id(KeyboardID keyboard_id) const {
     assert(keyboard_id < (KeyboardID) keyboard_count());
-    assert(keyboard_id < 4);
-    return &keyboards_[keyboard_id];
+    assert(keyboard_id.to_int8_t() < 4);
+    return &keyboards_[keyboard_id.to_int8_t()];
 }
 
 float InputState::joystick_axis_state(GameControllerID joystick_id, JoystickAxis axis) const {
@@ -225,7 +225,8 @@ void InputState::update(float dt) {
 }
 
 void InputState::_update_game_controllers(const std::vector<GameControllerInfo>& device_info) {
-    S_DEBUG("Updating controllers with new list of size: {0}", device_info.size());
+    S_VERBOSE("Updating controllers with new list of size: {0}",
+              device_info.size());
 
     if(device_info.size() > game_controllers_.size()) {
         S_INFO("{0} controllers connected",

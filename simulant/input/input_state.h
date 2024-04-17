@@ -39,9 +39,6 @@ namespace smlt {
 
 class InputState;
 
-typedef int8_t KeyboardID;
-typedef int8_t MouseID;
-
 #define STRONG_TYPEDEF(name, type)                                             \
     typedef struct tag_##name {                                                \
         type to_##type() const {                                               \
@@ -61,6 +58,9 @@ typedef int8_t MouseID;
         type v;                                                                \
     }(name)
 
+STRONG_TYPEDEF(MouseID, int8_t);
+STRONG_TYPEDEF(KeyboardID, int8_t);
+
 /** GameControllerID represents the unique id of a *detected* controller
  *  it is *not* a zero-based index into the detected controller list */
 STRONG_TYPEDEF(GameControllerID, int8_t);
@@ -72,10 +72,9 @@ STRONG_TYPEDEF(GameControllerIndex, int8_t);
 typedef int8_t MouseButtonID;
 typedef int8_t JoystickHatID;
 
-static const KeyboardID ALL_KEYBOARDS = -1;
-static const MouseID ALL_MICE = -1;
+static const KeyboardID ALL_KEYBOARDS = KeyboardID(-1);
+static const MouseID ALL_MICE = MouseID(-1);
 static const GameControllerIndex ALL_GAME_CONTROLLERS = GameControllerIndex(-1);
-
 
 struct GameControllerInfo {
     GameControllerID id;
@@ -88,7 +87,7 @@ struct GameControllerInfo {
     /* Space for each platform to store some limited data */
     union {
         uint32_t i;
-        uint8_t  b[4];
+        uint8_t b[4];
     } platform_data;
 };
 

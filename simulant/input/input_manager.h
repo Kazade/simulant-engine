@@ -116,9 +116,11 @@ private:
     bool _update_joystick_axis_axis(InputAxis* axis, float dt);
     bool _update_joystick_hat_axis(InputAxis* axis, float dt);
 
-    void _process_mouse(int8_t id, int8_t pbtn, int8_t nbtn, bool* positive_pressed, bool* negative_pressed);
+    void _process_mouse(MouseID id, int8_t pbtn, int8_t nbtn,
+                        bool* positive_pressed, bool* negative_pressed);
     void _process_game_controller(GameController* controller, JoystickButton pbtn, JoystickButton nbtn, bool *positive_pressed, bool *negative_pressed);
-    void _process_keyboard(int8_t id, KeyboardCode pbtn, KeyboardCode nbtn, bool *positive_pressed, bool *negative_pressed);
+    void _process_keyboard(KeyboardID id, KeyboardCode pbtn, KeyboardCode nbtn,
+                           bool* positive_pressed, bool* negative_pressed);
 
     bool text_input_enabled_ = false;
 
