@@ -54,6 +54,14 @@ IF(PLATFORM_PSP)
     )
 
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${PROC_FILE})
+
+    link_libraries(
+        pspdebug
+        pspdisplay
+        pspge
+        pspgu
+        pspvfpu
+    )
 ENDIF()
 
 IF(PLATFORM_DREAMCAST OR SIMULANT_USE_ALDC)

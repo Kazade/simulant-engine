@@ -30,7 +30,7 @@ VertexSpecification determine_spec(const FileHeader& header) {
     vspec.normal_attribute = (header.normal_format == NORMAL_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_NONE;
 
     /* FIXME: Do something better! */
-#if defined(__ANDROID__) || defined(__LINUX__)
+#if defined(__ANDROID__) || defined(__LINUX__) || defined(__PSP__)
     if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
         vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
     }

@@ -18,9 +18,10 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "simulant/tools/profiler.h"
 #include <chrono>
-#include <future>
 #include <cstdlib>
+#include <future>
 
 #define DEFINE_STAGENODEPOOL
 #include "nodes/stage_node_pool.h"
@@ -110,6 +111,10 @@ __attribute__((weak,noreturn)) void __stack_chk_fail(void) {
 namespace smlt {
 
 static bool PROFILING = false;
+
+bool Application::profiling_enabled() const {
+    return PROFILING;
+}
 
 Application::Application(const AppConfig &config, void* platform_state):
     platform_state_(platform_state),
@@ -392,6 +397,10 @@ static void on_terminate() {
         profiler_stop();
         profiler_clean_up();
     }
+#else
+    if(PROFILING) {
+        S_PROFILE_DUMP_TO_STDOUT();
+    }
 #endif
 
 #ifdef __PSP__
@@ -456,6 +465,8 @@ void Application::run_fixed_updates() {
 }
 
 bool Application::run_frame() {
+    _S_PROFILE_SUBSECTION("frame");
+
     static bool first_frame = true;
 
     await_frame_time(); /* Frame limiter */
@@ -463,6 +474,7 @@ bool Application::run_frame() {
     float dt = 0.0f;
 
     if(first_frame) {
+        _S_PROFILE_SECTION("init");
         if(!_call_init()) {
             S_ERROR("Error while initializing, terminating application");
             return false;
@@ -559,7 +571,6 @@ int32_t Application::run() {
     }
 #endif
 
-
     /* Try to write samples even if bad things happen */
     std::set_terminate(on_terminate);
 
@@ -579,6 +590,8 @@ int32_t Application::run() {
         profiler_stop();
         profiler_clean_up();
     }
+#else
+    S_PROFILE_DUMP_TO_STDOUT();
 #endif
 
     if(global_app == this) {

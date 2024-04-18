@@ -420,6 +420,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     Mat4 modelview = view * model;
 
+    S_VERBOSE("Applying GL matrices");
+
     GLCheck(glMatrixMode, GL_MODELVIEW);
     GLCheck(glLoadMatrixf, modelview.data());
 
@@ -429,6 +431,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     const auto& spec = renderable->vertex_data->vertex_specification();
     const auto stride = spec.stride();
 
+    S_VERBOSE("Preparing renderer");
+
     renderer_->prepare_to_render(renderable);
 
     const auto vertex_data = renderable->vertex_data->data();
@@ -436,6 +440,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     const auto has_positions = spec.has_positions();
     if(has_positions) {
+        S_VERBOSE("Enabling positions");
         enable_vertex_arrays();
         GLCheck(
             glVertexPointer,
@@ -450,6 +455,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     const auto has_diffuse = spec.has_diffuse();
     if(has_diffuse) {
+        S_VERBOSE("Enabling colors");
         enable_colour_arrays();
         GLCheck(
             glColorPointer,
@@ -466,6 +472,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     const auto has_normals = spec.has_normals();
     if(has_normals) {
+        S_VERBOSE("Enabling normals");
         enable_normal_arrays();
 
         auto type = (spec.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I) ?
@@ -494,6 +501,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         bool enabled = spec.has_texcoordX(i);
 
         if(enabled) {
+            S_VERBOSE("Enable texcoords: {0}", i);
             enable_texcoord_array(i);
             auto offset = spec.texcoordX_offset(i, false);
 
