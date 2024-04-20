@@ -213,13 +213,13 @@ build:android-all-clang:debug:
 
 build:psp-mips-gcc:debug:
   stage: build
-  image: sharkwouter/pspdev
+  image: kazade/psp-sdk
   variables:
     TARGET: psp-mips-gcc
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - psp-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
@@ -229,13 +229,13 @@ build:psp-mips-gcc:debug:
 
 build:psp-mips-gcc:release:
   stage: build
-  image: sharkwouter/pspdev
+  image: kazade/psp-sdk
   variables:
     TARGET: psp-mips-gcc
   script:
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
-   - cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/PSP.cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - psp-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
