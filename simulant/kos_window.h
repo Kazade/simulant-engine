@@ -56,7 +56,7 @@ private:
         Seconds current_rumble_remaining_;
     };
 
-    ControllerState previous_controller_state_[4] = {0};
+    ControllerState previous_controller_state_[4] = {{}, {}, {}, {}};
     uint32_t previous_controller_button_state_[4] = {0};
     uint8_t previous_key_state_[MAX_KEYBOARD_CODES] = {0}; // value-initialize to zero
 
