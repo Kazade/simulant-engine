@@ -2,7 +2,9 @@
 #include "psp_window.h"
 #include <pspctrl.h>
 
+#include "../../sound/drivers/openal_sound_driver.h"
 #include "../../sound/drivers/null_sound_driver.h"
+
 #include "../../renderers/renderer_config.h"
 
 namespace smlt {
@@ -126,10 +128,21 @@ void PSPWindow::initialize_input_controller(InputState &controller) {
 }
 
 std::shared_ptr<SoundDriver> PSPWindow::create_sound_driver(const std::string& from_config) {
-    _S_UNUSED(from_config);
+    const char* from_env = std::getenv("SIMULANT_SOUND_DRIVER");
 
-    S_DEBUG("Null sound driver activated");
-    return std::make_shared<NullSoundDriver>(this);
+    std::string selected = (from_env) ? from_env :
+        (from_config.empty()) ? "openal" : from_config;
+
+    if(selected == "null") {
+        S_DEBUG("Null sound driver activated");
+        return std::make_shared<NullSoundDriver>(this);
+    } else {
+        if(selected != "openal") {
+            S_WARN("Unknown sound driver ({0}) falling back to OpenAL", selected);
+        }
+        S_DEBUG("OpenAL sound driver activated");
+        return std::make_shared<OpenALSoundDriver>(this);
+    }
 }
 
 }
