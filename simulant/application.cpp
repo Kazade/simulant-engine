@@ -18,6 +18,19 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "simulant/nodes/actor.h"
+#include "simulant/nodes/camera.h"
+#include "simulant/nodes/geom.h"
+#include "simulant/nodes/light.h"
+#include "simulant/nodes/mesh_instancer.h"
+#include "simulant/nodes/particle_system.h"
+#include "simulant/nodes/skies/skybox.h"
+#include "simulant/nodes/sprite.h"
+#include "simulant/nodes/ui/button.h"
+#include "simulant/nodes/ui/frame.h"
+#include "simulant/nodes/ui/image.h"
+#include "simulant/nodes/ui/label.h"
+#include "simulant/nodes/ui/text_entry.h"
 #include "simulant/tools/profiler.h"
 #include <chrono>
 #include <cstdlib>
@@ -465,6 +478,8 @@ void Application::run_fixed_updates() {
 }
 
 bool Application::run_frame() {
+    S_PROFILE_START_FRAME();
+
     _S_PROFILE_SUBSECTION("frame");
 
     static bool first_frame = true;
@@ -490,9 +505,11 @@ bool Application::run_frame() {
 
     S_DEBUG("Signal finished");
 
+    S_PROFILE_SECTION("input-pre-update");
     window_->input_state->pre_update(dt);
 
     S_DEBUG("Checking events");
+    S_PROFILE_SECTION("check-events");
     window_->check_events(); // Check for any window events
 
     S_DEBUG("Checking audio stuff");
@@ -505,7 +522,8 @@ bool Application::run_frame() {
         );
     }
 
-    S_DEBUG("Checking input");
+    S_VERBOSE("Checking input");
+    S_PROFILE_SECTION("update");
     window_->input_state->update(dt); // Update input devices
     window_->input->update(dt); // Now update any manager stuff based on the new input state
 
@@ -517,8 +535,10 @@ bool Application::run_frame() {
         asset_manager_->update(time_keeper->delta_time());
     }
 
+    S_PROFILE_SECTION("coroutines");
     run_coroutines_and_late_update();
 
+    S_PROFILE_SECTION("garbage-collection");
     if(asset_manager_) {
         S_DEBUG("Running GC");
         asset_manager_->run_garbage_collection();
@@ -529,14 +549,16 @@ bool Application::run_frame() {
     {
         S_DEBUG("Locking for rendering");
 
+        S_PROFILE_SUBSECTION("rendering");
         thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
         if(window_->has_context()) {
-
+            S_PROFILE_SECTION("compositor");
             stats->reset_polygons_rendered();
             window_->compositor->run();
 
             signal_pre_swap_();
 
+            S_PROFILE_SECTION("swap");
             window_->swap_buffers();
             GLChecker::end_of_frame_check();
         }

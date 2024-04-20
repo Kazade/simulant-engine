@@ -53,6 +53,7 @@ private:
 class StdIOHandler : public Handler {
 public:
     StdIOHandler();
+    ~StdIOHandler();
 
 private:
 

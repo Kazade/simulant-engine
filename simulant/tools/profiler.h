@@ -44,12 +44,23 @@ public:
 
     void dump();
 
+    void reset_counter() {
+        counter_ = 0;
+    }
+
 private:
     friend class ProfileSection;
 
     void log(uint64_t ms, ProfileSection* which);
 
-    std::map<std::string, std::pair<std::size_t, uint64_t>> times_;
+    struct Stats {
+        std::size_t counter = 0;
+        std::size_t count = 0;
+        uint64_t nanoseconds = 0;
+    };
+
+    std::size_t counter_ = 0;
+    std::map<std::string, Stats> times_;
 };
 
 class ProfileSection {
@@ -61,12 +72,12 @@ public:
         _S_UNUSED(func_name);
         _S_UNUSED(line);
 
+        parent_ = current_parent;
+
         if(current) {
             if(nest) {
-                parent_ = current;
+                current_parent = this;
             } else {
-                parent_ = current->parent_;
-
                 // Finish any existing current section, if we're
                 // not nesting (if we are nesting then we wait for the
                 // destructor of the parent to finish */
@@ -81,6 +92,18 @@ public:
 
     ~ProfileSection() {
         finish();
+
+        /* Sections are destroyed in reverse order, so if we're destroying
+         * the "current" one then we must've finished the whole nested
+         * section. Then any further ones within this subsection will be
+         * destroyed (but this logic won't happen) */
+        if(current == this) {
+            current = current->parent_;
+        }
+
+        if(current_parent == this) {
+            current_parent = parent_;
+        }
     }
 
     const char* name() const {
@@ -105,21 +128,25 @@ private:
     uint64_t start_ = 0;
     ProfileSection* parent_ = nullptr;
     static ProfileSection* current;
+    static ProfileSection* current_parent;
     bool is_finished_ = false;
 };
 
+#define _S_CONCAT(a, b) _S_CONCAT_INNER(a, b)
+#define _S_CONCAT_INNER(a, b) a##b
+#define _S_UNIQUE_NAME(prefix) _S_CONCAT(prefix, __COUNTER__)
+
 #define S_PROFILE_SECTION(name)                                                \
-    auto _section##__COUNTER__ =                                               \
+    auto _S_UNIQUE_NAME(_section) =                                            \
         ProfileSection((name), false, __FUNCTION__, __LINE__);
 
 #define S_PROFILE_SUBSECTION(name)                                             \
-    auto _section##__COUNTER__ =                                               \
+    auto _S_UNIQUE_NAME(_section) =                                            \
         ProfileSection((name), true, __FUNCTION__, __LINE__);
 
 /* Same as above, but switched based on profiling_enabled() (E.g. internal) */
-#ifndef NDEBUG
+#ifdef SIMULANT_PROFILE
 #define _S_PROFILE_SECTION(name)                                               \
-    if(smlt::get_app()->profiling_enabled())                                   \
     S_PROFILE_SECTION(name)
 #else
 #define _S_PROFILE_SECTION(name)                                               \
@@ -127,9 +154,8 @@ private:
     } while(0)
 #endif
 
-#ifndef NDEBUG
+#ifdef SIMULANT_PROFILE
 #define _S_PROFILE_SUBSECTION(name)                                            \
-    if(smlt::get_app()->profiling_enabled())                                   \
     S_PROFILE_SUBSECTION(name)
 #else
 #define _S_PROFILE_SUBSECTION(name)                                            \
@@ -137,4 +163,5 @@ private:
     } while(0)
 #endif
 
-#define S_PROFILE_DUMP_TO_STDOUT() ProfileRecord::get()->dump();
+#define S_PROFILE_START_FRAME() ProfileRecord::get()->reset_counter()
+#define S_PROFILE_DUMP_TO_STDOUT() ProfileRecord::get()->dump()

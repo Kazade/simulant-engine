@@ -61,6 +61,7 @@ IF(PLATFORM_PSP)
         pspge
         pspgu
         pspvfpu
+        pspctrl
     )
 ENDIF()
 
