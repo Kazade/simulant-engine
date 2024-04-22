@@ -1,6 +1,10 @@
 
 #include "psp_window.h"
 #include <pspctrl.h>
+#include <pspdisplay.h>
+#include <pspgu.h>
+#include <pspkernel.h>
+
 
 #include "../../sound/drivers/openal_sound_driver.h"
 #include "../../sound/drivers/null_sound_driver.h"
@@ -14,42 +18,14 @@ namespace smlt {
 #define SCREEN_DEPTH 32
 
 void PSPWindow::swap_buffers() {
-    eglSwapBuffers(dpy_, surface_);
+    sceGuSync(0, 0);
+    sceDisplayWaitVblankStart();
+    sceGuSwapBuffers();
 }
 
-static const EGLint attrib_list [] = {
-    EGL_RED_SIZE, 5,
-    EGL_GREEN_SIZE, 6,
-    EGL_BLUE_SIZE, 5,
-    EGL_ALPHA_SIZE, 0,
-    EGL_DEPTH_SIZE, 0,
-    EGL_NONE
-};
-
 bool PSPWindow::_init_window() {
-    dpy_ = eglGetDisplay(0);
-    eglInitialize(dpy_, NULL, NULL);
-
-    EGLConfig config;
-    EGLint num_configs;
-
-    eglChooseConfig(dpy_, attrib_list, &config, 1, &num_configs);
-
-    if(!num_configs) {
-        return false;
-    }
-
-    EGLint width, height;
-
-    eglGetConfigAttrib(dpy_, config, EGL_WIDTH, &width);
-    eglGetConfigAttrib(dpy_, config, EGL_HEIGHT, &height);
-
-    set_width(width);
-    set_height(height);
-
-    ctx_ = eglCreateContext(dpy_, config, NULL, NULL);
-    surface_ = eglCreateWindowSurface(dpy_, config, 0, NULL);
-    eglMakeCurrent(dpy_, surface_, surface_, ctx_);
+    set_width(SCREEN_WIDTH);
+    set_height(SCREEN_HEIGHT);
 
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
@@ -65,7 +41,7 @@ bool PSPWindow::_init_renderer(Renderer *renderer) {
 }
 
 void PSPWindow::destroy_window() {
-    eglTerminate(dpy_);
+
 }
 
 void PSPWindow::check_events() {
