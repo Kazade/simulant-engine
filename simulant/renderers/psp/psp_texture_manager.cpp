@@ -74,7 +74,7 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         // This will promote to vram if possible
         bind_texture(obj.id);
 
-        S_INFO("Created texture: {0}", obj.id);
+        S_DEBUG("Created texture: {0}", obj.id);
 
         textures_.push_back(obj);
 
@@ -117,7 +117,7 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
 
             bind_texture(obj->id);
 
-            S_INFO("Updated texture: {0}", obj->id);
+            S_DEBUG("Updated texture: {0}", obj->id);
             return obj->id;
         }
     }

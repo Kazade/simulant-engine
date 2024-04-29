@@ -183,9 +183,9 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
 
         for(std::size_t i = 0; i < texel_count; ++i) {
             auto off = (i * 3);
-            uint16_t texel = ((data[off + 0] >> 3) << 11) |
+            uint16_t texel = ((data[off + 2] >> 3) << 11) |
                              ((data[off + 1] >> 2) << 5) |
-                             ((data[off + 2] >> 3) << 0);
+                             ((data[off + 0] >> 3) << 0);
 
             new_data.push_back(texel);
         }
