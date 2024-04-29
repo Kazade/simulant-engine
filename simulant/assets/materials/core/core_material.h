@@ -58,6 +58,7 @@ inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
         case POINT_SIZE_PROPERTY_HASH:
         case DEPTH_WRITE_ENABLED_PROPERTY_HASH:
         case DEPTH_TEST_ENABLED_PROPERTY_HASH:
+        case DEPTH_FUNC_PROPERTY_HASH:
         case LIGHTING_ENABLED_PROPERTY_HASH:
         case TEXTURES_ENABLED_PROPERTY_HASH:
         case DIFFUSE_MAP_PROPERTY_HASH:

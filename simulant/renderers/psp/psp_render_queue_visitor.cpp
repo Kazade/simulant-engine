@@ -54,6 +54,10 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     S_VERBOSE("change_material_pass");
     pass_ = next;
 
+    if(!next) {
+        return;
+    }
+
     const auto& diffuse = next->diffuse();
     sceGuMaterial(GU_DIFFUSE,
                   GU_COLOR(diffuse.r, diffuse.g, diffuse.b, diffuse.a));
