@@ -5,6 +5,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "platforms/*"  # Remove platform specific additions
     "renderers/glad/*"
     "renderers/gl2x/*"
+    "renderers/psp/*"
     "sdl2_window.*"
     "kos_window.*"
     "sound/drivers/*"
@@ -55,6 +56,10 @@ IF(PLATFORM_PSP)
 
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${PROC_FILE})
 
+    MESSAGE("-- Including PSP renderer in build")
+    FILE(GLOB_RECURSE PSP_FILES renderers/psp/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PSP_FILES})
+
     link_libraries(
         pspdebug
         pspdisplay
@@ -63,6 +68,7 @@ IF(PLATFORM_PSP)
         pspvfpu
         pspctrl
         pspaudio
+        pspgum
     )
 ENDIF()
 

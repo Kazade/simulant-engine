@@ -19,6 +19,8 @@
 #pragma once
 
 #include "../renderer.h"
+#include "../utils/vram_alloc.h"
+#include "psp_texture_manager.h"
 
 namespace smlt {
 
@@ -41,11 +43,11 @@ public:
     void init_context() override;
 
     std::string name() const override {
-        return "PSP";
+        return "psp";
     }
 
-    void prepare_to_render(const Renderable *renderable) override {
-        _S_UNUSED(renderable);
+    void prepare_to_render(const Renderable*) override {
+        texture_manager_.update_priorities();
     }
 
     const uint8_t* display_list() const {
@@ -53,8 +55,20 @@ public:
     }
 
     bool texture_format_is_native(TextureFormat fmt) override;
-private:
-    uint8_t list_[0x20000] __attribute__((aligned(64)));
+
+    void clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags);
+    void apply_viewport(const RenderTarget& target, const Viewport& viewport);
+
+private:    
+    uint8_t list_[512 * 1024] __attribute__((aligned(64)));
+
+    PSPTextureManager texture_manager_;
+
+    void on_pre_render() override;
+    void on_post_render() override;
+    void do_swap_buffers() override;
+
+    void on_texture_prepare(Texture* texture);
 };
 }
 

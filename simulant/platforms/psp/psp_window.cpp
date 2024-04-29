@@ -17,16 +17,10 @@ namespace smlt {
 #define SCREEN_HEIGHT 272
 #define SCREEN_DEPTH 32
 
-void PSPWindow::swap_buffers() {
-    sceGuSync(0, 0);
-    sceDisplayWaitVblankStart();
-    sceGuSwapBuffers();
-}
 
 bool PSPWindow::_init_window() {
     set_width(SCREEN_WIDTH);
     set_height(SCREEN_HEIGHT);
-
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 

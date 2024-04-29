@@ -478,6 +478,8 @@ void Application::run_fixed_updates() {
 }
 
 bool Application::run_frame() {
+    S_VERBOSE("Frame start");
+
     S_PROFILE_START_FRAME();
 
     _S_PROFILE_SUBSECTION("frame");
@@ -560,7 +562,6 @@ bool Application::run_frame() {
 
             S_PROFILE_SECTION("swap");
             window_->swap_buffers();
-            GLChecker::end_of_frame_check();
         }
     }
 

@@ -23,6 +23,7 @@
 #include <string>
 
 #include "generic/range_value.h"
+#include "simulant/math/utils.h"
 
 namespace smlt {
 
@@ -117,6 +118,60 @@ struct Colour {
 
     std::string to_hex_string() const;
     static Colour from_hex_string(const std::string& hex_string);
+
+    uint32_t to_rgba_8888() const {
+        uint8_t r = (this->r * 255.0f);
+        uint8_t g = (this->g * 255.0f);
+        uint8_t b = (this->b * 255.0f);
+        uint8_t a = (this->a * 255.0f);
+
+        return (r << 24) | (g << 16) | (b << 8) | a;
+    }
+
+    uint32_t to_argb_8888() const {
+        uint8_t r = (this->r * 255.0f);
+        uint8_t g = (this->g * 255.0f);
+        uint8_t b = (this->b * 255.0f);
+        uint8_t a = (this->a * 255.0f);
+
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    uint32_t to_abgr_8888() const {
+        uint8_t r = (this->r * 255.0f);
+        uint8_t g = (this->g * 255.0f);
+        uint8_t b = (this->b * 255.0f);
+        uint8_t a = (this->a * 255.0f);
+
+        return (a << 24) | (b << 16) | (g << 8) | r;
+    }
+
+    uint16_t to_rgba_4444() const {
+        uint8_t r = (this->r * 255.0f);
+        uint8_t g = (this->g * 255.0f);
+        uint8_t b = (this->b * 255.0f);
+        uint8_t a = (this->a * 255.0f);
+
+        return ((r >> 4) << 12) | ((g >> 4) << 8) | ((b >> 4) << 4) | (a >> 4);
+    }
+
+    uint16_t to_abgr_4444() const {
+        uint32_t r = clamp(this->r * 255.0f, 0, 255);
+        uint32_t g = clamp(this->g * 255.0f, 0, 255);
+        uint32_t b = clamp(this->b * 255.0f, 0, 255);
+        uint32_t a = clamp(this->a * 255.0f, 0, 255);
+
+        return ((a >> 4) << 12) | ((b >> 4) << 8) | ((g >> 4) << 4) | (r >> 4);
+    }
+
+    uint16_t to_argb_4444() const {
+        uint8_t r = (this->r * 255.0f);
+        uint8_t g = (this->g * 255.0f);
+        uint8_t b = (this->b * 255.0f);
+        uint8_t a = (this->a * 255.0f);
+
+        return ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+    }
 
     static const Colour BLACK;
     static const Colour GREY;

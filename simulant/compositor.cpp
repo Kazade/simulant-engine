@@ -172,6 +172,8 @@ void Compositor::set_renderer(Renderer* renderer) {
 }
 
 void Compositor::run() {
+    S_VERBOSE("Running compositor");
+
     _S_PROFILE_SECTION("clean");
     clean_destroyed_pipelines();  /* Clean up any destroyed pipelines before rendering */
     targets_rendered_this_frame_.clear();
@@ -184,12 +186,17 @@ void Compositor::run() {
     {
         _S_PROFILE_SUBSECTION("pipelines");
         for(auto& pipeline: ordered_pipelines_) {
+            S_VERBOSE("Running pipline");
             run_pipeline(pipeline, actors_rendered);
         }
     }
 
+    renderer_->post_render();
+
     _S_PROFILE_SECTION("stats-update");
     get_app()->stats->set_subactors_rendered(actors_rendered);
+
+    S_VERBOSE("Compositor complete");
 }
 
 
@@ -235,7 +242,9 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     if(targets_rendered_this_frame_.find(&target) == targets_rendered_this_frame_.end()) {
         if(target.clear_every_frame_flags()) {
             Viewport view(smlt::VIEWPORT_TYPE_FULL, target.clear_every_frame_colour());
-            view.clear(target, target.clear_every_frame_flags());
+            renderer_->apply_viewport(target, view);
+            renderer_->clear(target, target.clear_every_frame_colour(),
+                             target.clear_every_frame_flags());
         }
 
         targets_rendered_this_frame_.insert(&target);
@@ -244,10 +253,11 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     auto& viewport = pipeline_stage->viewport;
 
     uint32_t clear = pipeline_stage->clear_flags();
+
+    renderer_->apply_viewport(target, viewport);
+
     if(clear) {
-        viewport->clear(target, clear); //Implicitly calls apply
-    } else {
-        viewport->apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
+        renderer_->clear(target, viewport->colour(), clear);
     }
 
     signal_pipeline_started_(*pipeline_stage);

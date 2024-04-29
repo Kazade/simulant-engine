@@ -111,6 +111,30 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         GLCheck(glDepthMask, GL_FALSE);
     }
 
+    switch(next->depth_func()) {
+        case DEPTH_FUNC_NEVER:
+            GLCheck(glDepthFunc, GL_NEVER);
+            break;
+        case DEPTH_FUNC_LEQUAL:
+            GLCheck(glDepthFunc, GL_LEQUAL);
+            break;
+        case DEPTH_FUNC_ALWAYS:
+            GLCheck(glDepthFunc, GL_ALWAYS);
+            break;
+        case DEPTH_FUNC_EQUAL:
+            GLCheck(glDepthFunc, GL_EQUAL);
+            break;
+        case DEPTH_FUNC_GEQUAL:
+            GLCheck(glDepthFunc, GL_GEQUAL);
+            break;
+        case DEPTH_FUNC_GREATER:
+            GLCheck(glDepthFunc, GL_GREATER);
+            break;
+        case DEPTH_FUNC_LESS:
+            GLCheck(glDepthFunc, GL_LESS);
+            break;
+    }
+
     /* Enable lighting on the pass appropriately */
     if(next->is_lighting_enabled()) {
         GLCheck(glEnable, GL_LIGHTING);
@@ -208,19 +232,19 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     switch(next->colour_material()) {
     case COLOUR_MATERIAL_NONE:
         GLCheck(glDisable, GL_COLOR_MATERIAL);
-    break;
+        break;
     case COLOUR_MATERIAL_AMBIENT:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
-    break;
+        break;
     case COLOUR_MATERIAL_DIFFUSE:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
-    break;
+        break;
     case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-    break;
+        break;
     default:
         break;
     }
