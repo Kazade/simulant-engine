@@ -30,32 +30,6 @@ IF(NOT PLATFORM_DREAMCAST)
 ENDIF()
 
 IF(PLATFORM_PSP)
-    MESSAGE("-- Including pspgl in build as this is the PSP")
-    FILE(GLOB LIBGL ${CMAKE_SOURCE_DIR}/deps/pspgl/*.c)
-
-    # These are dead files?
-    LIST(
-        REMOVE_ITEM
-        LIBGL
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/glGenLists.c
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/glIsList.c
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/glDeleteLists.c
-    )
-
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/pspgl)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBGL})
-
-    SET(PROC_FILE ${CMAKE_SOURCE_DIR}/deps/pspgl/pspgl_proctable.h)
-    add_custom_command(
-        OUTPUT ${PROC_FILE}
-        COMMAND ${CMAKE_SOURCE_DIR}/conf/extract_gl_extensions.py
-        ${PROC_FILE}
-        ${LIBGL}
-        COMMENT "Generating pspgl extension list"
-    )
-
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PROC_FILE})
-
     MESSAGE("-- Including PSP renderer in build")
     FILE(GLOB_RECURSE PSP_FILES renderers/psp/*.c*)
     SET(SIMULANT_FILES ${SIMULANT_FILES} ${PSP_FILES})

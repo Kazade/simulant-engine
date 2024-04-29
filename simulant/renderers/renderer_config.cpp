@@ -7,7 +7,6 @@
 #elif defined(__ANDROID__)
     #include "gl2x/generic_renderer.h"
 #elif defined(__PSP__)
-    #include "gl1x/gl1x_renderer.h"
     #include "psp/psp_renderer.h"
 #else
     #include "gl1x/gl1x_renderer.h"
@@ -48,7 +47,7 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
     }
 
     if(chosen == "gl1x") {
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__PSP__)
         S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else

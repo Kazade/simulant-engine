@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
     AppConfig config;
     config.title = "Cave Demo";
     config.fullscreen = false;
-    config.log_level = smlt::LOG_LEVEL_WARN;
+    config.log_level = smlt::LOG_LEVEL_INFO;
 
 #ifdef __DREAMCAST__
     config.width = 640;
