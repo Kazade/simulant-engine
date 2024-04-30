@@ -92,6 +92,8 @@ std::size_t Sound::buffer_size() const {
      * will truncate if it's larger so this prevents us triggering
      * an OpenAL error */
     ret = std::min(ret, (std::size_t) 65534);
+#elif __PSP__
+    ret = std::min(ret, (std::size_t)32 * 1024);
 #endif
 
     return ret;

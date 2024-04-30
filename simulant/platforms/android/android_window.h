@@ -20,7 +20,6 @@ public:
     void show_cursor(bool) override {} // No-op
     void lock_cursor(bool) override {} // No-op
 
-    void swap_buffers() override;
     void destroy_window() override;
     void check_events() override;
 
@@ -29,6 +28,8 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
+    void do_swap_buffers() override;
+
     EGLDisplay dpy_ = EGL_NO_DISPLAY;
     EGLSurface surface_ = EGL_NO_SURFACE;
     EGLContext ctx_ = EGL_NO_CONTEXT;

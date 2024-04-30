@@ -18,9 +18,23 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "simulant/nodes/actor.h"
+#include "simulant/nodes/camera.h"
+#include "simulant/nodes/geom.h"
+#include "simulant/nodes/light.h"
+#include "simulant/nodes/mesh_instancer.h"
+#include "simulant/nodes/particle_system.h"
+#include "simulant/nodes/skies/skybox.h"
+#include "simulant/nodes/sprite.h"
+#include "simulant/nodes/ui/button.h"
+#include "simulant/nodes/ui/frame.h"
+#include "simulant/nodes/ui/image.h"
+#include "simulant/nodes/ui/label.h"
+#include "simulant/nodes/ui/text_entry.h"
+#include "simulant/tools/profiler.h"
 #include <chrono>
-#include <future>
 #include <cstdlib>
+#include <future>
 
 #define DEFINE_STAGENODEPOOL
 #include "nodes/stage_node_pool.h"
@@ -110,6 +124,10 @@ __attribute__((weak,noreturn)) void __stack_chk_fail(void) {
 namespace smlt {
 
 static bool PROFILING = false;
+
+bool Application::profiling_enabled() const {
+    return PROFILING;
+}
 
 Application::Application(const AppConfig &config, void* platform_state):
     platform_state_(platform_state),
@@ -392,6 +410,10 @@ static void on_terminate() {
         profiler_stop();
         profiler_clean_up();
     }
+#else
+    if(PROFILING) {
+        S_PROFILE_DUMP_TO_STDOUT();
+    }
 #endif
 
 #ifdef __PSP__
@@ -456,6 +478,12 @@ void Application::run_fixed_updates() {
 }
 
 bool Application::run_frame() {
+    S_VERBOSE("Frame start");
+
+    S_PROFILE_START_FRAME();
+
+    _S_PROFILE_SUBSECTION("frame");
+
     static bool first_frame = true;
 
     await_frame_time(); /* Frame limiter */
@@ -463,6 +491,7 @@ bool Application::run_frame() {
     float dt = 0.0f;
 
     if(first_frame) {
+        _S_PROFILE_SECTION("init");
         if(!_call_init()) {
             S_ERROR("Error while initializing, terminating application");
             return false;
@@ -478,9 +507,11 @@ bool Application::run_frame() {
 
     S_DEBUG("Signal finished");
 
+    S_PROFILE_SECTION("input-pre-update");
     window_->input_state->pre_update(dt);
 
     S_DEBUG("Checking events");
+    S_PROFILE_SECTION("check-events");
     window_->check_events(); // Check for any window events
 
     S_DEBUG("Checking audio stuff");
@@ -493,7 +524,8 @@ bool Application::run_frame() {
         );
     }
 
-    S_DEBUG("Checking input");
+    S_VERBOSE("Checking input");
+    S_PROFILE_SECTION("update");
     window_->input_state->update(dt); // Update input devices
     window_->input->update(dt); // Now update any manager stuff based on the new input state
 
@@ -505,8 +537,10 @@ bool Application::run_frame() {
         asset_manager_->update(time_keeper->delta_time());
     }
 
+    S_PROFILE_SECTION("coroutines");
     run_coroutines_and_late_update();
 
+    S_PROFILE_SECTION("garbage-collection");
     if(asset_manager_) {
         S_DEBUG("Running GC");
         asset_manager_->run_garbage_collection();
@@ -517,16 +551,17 @@ bool Application::run_frame() {
     {
         S_DEBUG("Locking for rendering");
 
+        S_PROFILE_SUBSECTION("rendering");
         thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
         if(window_->has_context()) {
-
+            S_PROFILE_SECTION("compositor");
             stats->reset_polygons_rendered();
             window_->compositor->run();
 
             signal_pre_swap_();
 
+            S_PROFILE_SECTION("swap");
             window_->swap_buffers();
-            GLChecker::end_of_frame_check();
         }
     }
 
@@ -559,7 +594,6 @@ int32_t Application::run() {
     }
 #endif
 
-
     /* Try to write samples even if bad things happen */
     std::set_terminate(on_terminate);
 
@@ -579,6 +613,8 @@ int32_t Application::run() {
         profiler_stop();
         profiler_clean_up();
     }
+#else
+    S_PROFILE_DUMP_TO_STDOUT();
 #endif
 
     if(global_app == this) {

@@ -84,9 +84,15 @@ bool Renderer::is_texture_registered(TextureID texture_id) const {
 }
 
 void Renderer::pre_render() {
-    for(auto& wptr: texture_registry_){
+    on_pre_render();
+
+    for(auto& wptr: texture_registry_) {
         prepare_texture(wptr.second);
     }
+}
+
+void Renderer::post_render() {
+    on_post_render();
 }
 
 static bool format_in_list(TextureFormat fmt, const TextureFormat* values) {

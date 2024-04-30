@@ -87,6 +87,7 @@ enum VertexAttribute {
     VERTEX_ATTRIBUTE_3F,
     VERTEX_ATTRIBUTE_4F,
     VERTEX_ATTRIBUTE_4UB,
+    VERTEX_ATTRIBUTE_4UB_REV,
     VERTEX_ATTRIBUTE_PACKED_VEC4_1I // Packed 10, 10, 10, 2 vector
 };
 
@@ -533,13 +534,14 @@ constexpr uint16_t round_to_bytes(uint16_t stride, uint16_t bytes) {
 
 constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
     return round_to_bytes(
-       (attr == VERTEX_ATTRIBUTE_2F) ? sizeof(float) * 2 :
-       (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3 :
-       (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4 :
-       (attr == VERTEX_ATTRIBUTE_4UB) ? sizeof(uint8_t) * 4 :
-       (attr == VERTEX_ATTRIBUTE_PACKED_VEC4_1I) ? sizeof(uint32_t) : 0,
-        BUFFER_ATTRIBUTE_ALIGNMENT
-    );
+        (attr == VERTEX_ATTRIBUTE_2F)   ? sizeof(float) * 2
+        : (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3
+        : (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4
+        : (attr == VERTEX_ATTRIBUTE_4UB || attr == VERTEX_ATTRIBUTE_4UB_REV)
+            ? sizeof(uint8_t) * 4
+        : (attr == VERTEX_ATTRIBUTE_PACKED_VEC4_1I) ? sizeof(uint32_t)
+                                                    : 0,
+        BUFFER_ATTRIBUTE_ALIGNMENT);
 }
 
 }

@@ -51,9 +51,9 @@ public:
         fairy_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
-        cave_geom_ = stage_->new_geom_with_mesh(cave_mesh_);
+        cave_geom_ = stage_->new_actor_with_mesh(cave_mesh_);
         fairy_actor_ = stage_->new_actor_with_mesh(fairy_mesh_);
-        godray_geom_ = stage_->new_geom_with_mesh(godray_mesh_);
+        godray_geom_ = stage_->new_actor_with_mesh(godray_mesh_);
         fairy_actor_->set_render_priority(10);
 
         // Lights
@@ -78,6 +78,11 @@ public:
 
         // Fairy
         fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(0));
+
+        sound_ =
+            stage_->assets->new_sound_from_file("sample_data/cave/ambient.wav");
+
+        player_ = camera_->play_sound(sound_, smlt::AUDIO_REPEAT_FOREVER);
     }
 
     void update(float dt) override {
@@ -131,12 +136,15 @@ private:
     StagePtr stage_;
     CameraPtr camera_;
 
+    SoundPtr sound_;
+    PlayingSoundPtr player_;
+
     MeshPtr cave_mesh_;
     MeshPtr godray_mesh_;
     MeshPtr fairy_mesh_;
 
-    GeomPtr cave_geom_;
-    GeomPtr godray_geom_;
+    ActorPtr cave_geom_;
+    ActorPtr godray_geom_;
     ActorPtr fairy_actor_;
 
     float cameraSpeed_ = 0.35f;
@@ -170,6 +178,7 @@ int main(int argc, char* argv[]) {
     AppConfig config;
     config.title = "Cave Demo";
     config.fullscreen = false;
+    config.log_level = smlt::LOG_LEVEL_INFO;
 
 #ifdef __DREAMCAST__
     config.width = 640;

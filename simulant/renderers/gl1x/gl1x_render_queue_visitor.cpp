@@ -111,6 +111,30 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         GLCheck(glDepthMask, GL_FALSE);
     }
 
+    switch(next->depth_func()) {
+        case DEPTH_FUNC_NEVER:
+            GLCheck(glDepthFunc, GL_NEVER);
+            break;
+        case DEPTH_FUNC_LEQUAL:
+            GLCheck(glDepthFunc, GL_LEQUAL);
+            break;
+        case DEPTH_FUNC_ALWAYS:
+            GLCheck(glDepthFunc, GL_ALWAYS);
+            break;
+        case DEPTH_FUNC_EQUAL:
+            GLCheck(glDepthFunc, GL_EQUAL);
+            break;
+        case DEPTH_FUNC_GEQUAL:
+            GLCheck(glDepthFunc, GL_GEQUAL);
+            break;
+        case DEPTH_FUNC_GREATER:
+            GLCheck(glDepthFunc, GL_GREATER);
+            break;
+        case DEPTH_FUNC_LESS:
+            GLCheck(glDepthFunc, GL_LESS);
+            break;
+    }
+
     /* Enable lighting on the pass appropriately */
     if(next->is_lighting_enabled()) {
         GLCheck(glEnable, GL_LIGHTING);
@@ -208,19 +232,19 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     switch(next->colour_material()) {
     case COLOUR_MATERIAL_NONE:
         GLCheck(glDisable, GL_COLOR_MATERIAL);
-    break;
+        break;
     case COLOUR_MATERIAL_AMBIENT:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
-    break;
+        break;
     case COLOUR_MATERIAL_DIFFUSE:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
-    break;
+        break;
     case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
         GLCheck(glEnable, GL_COLOR_MATERIAL);
         GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-    break;
+        break;
     default:
         break;
     }
@@ -420,6 +444,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     Mat4 modelview = view * model;
 
+    S_VERBOSE("Applying GL matrices");
+
     GLCheck(glMatrixMode, GL_MODELVIEW);
     GLCheck(glLoadMatrixf, modelview.data());
 
@@ -429,6 +455,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     const auto& spec = renderable->vertex_data->vertex_specification();
     const auto stride = spec.stride();
 
+    S_VERBOSE("Preparing renderer");
+
     renderer_->prepare_to_render(renderable);
 
     const auto vertex_data = renderable->vertex_data->data();
@@ -436,6 +464,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     const auto has_positions = spec.has_positions();
     if(has_positions) {
+        S_VERBOSE("Enabling positions");
         enable_vertex_arrays();
         GLCheck(
             glVertexPointer,
@@ -450,22 +479,26 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     const auto has_diffuse = spec.has_diffuse();
     if(has_diffuse) {
+        S_VERBOSE("Enabling colors");
         enable_colour_arrays();
         GLCheck(
             glColorPointer,
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F) ? 2 :
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3 :
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F) ? 4 : GL_BGRA, // This weirdness is an extension apparently
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) ? GL_UNSIGNED_BYTE : GL_FLOAT,
-            stride,
-            ((const uint8_t*) vertex_data) + spec.diffuse_offset(false)
-        );
+            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
+            : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+            : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F ||
+               spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB)
+                ? 4
+                : GL_BGRA, // This weirdness is an extension apparently
+            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) ? GL_UNSIGNED_BYTE
+                                                             : GL_FLOAT,
+            stride, ((const uint8_t*)vertex_data) + spec.diffuse_offset(false));
     } else {
         disable_colour_arrays();
     }
 
     const auto has_normals = spec.has_normals();
     if(has_normals) {
+        S_VERBOSE("Enabling normals");
         enable_normal_arrays();
 
         auto type = (spec.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I) ?
@@ -494,6 +527,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         bool enabled = spec.has_texcoordX(i);
 
         if(enabled) {
+            S_VERBOSE("Enable texcoords: {0}", i);
             enable_texcoord_array(i);
             auto offset = spec.texcoordX_offset(i, false);
 

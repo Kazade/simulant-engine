@@ -27,7 +27,6 @@ public:
     void show_cursor(bool) override {} // No-op
     void lock_cursor(bool) override {} // No-op
 
-    void swap_buffers() override;
     void destroy_window() override;
     void check_events() override;
 
@@ -36,6 +35,7 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
+    void do_swap_buffers() override;
     bool _init_window() override;
     bool _init_renderer(Renderer* renderer) override;
 
@@ -56,7 +56,7 @@ private:
         Seconds current_rumble_remaining_;
     };
 
-    ControllerState previous_controller_state_[4] = {0};
+    ControllerState previous_controller_state_[4] = {{}, {}, {}, {}};
     uint32_t previous_controller_button_state_[4] = {0};
     uint8_t previous_key_state_[MAX_KEYBOARD_CODES] = {0}; // value-initialize to zero
 

@@ -83,6 +83,13 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
     return true;
 }
 
+void Window::swap_buffers() {
+    do_swap_buffers();
+    if(renderer_) {
+        renderer_->do_swap_buffers();
+    }
+}
+
 void Window::create_defaults() {
     //This needs to happen after SDL or whatever is initialized
     input_state_ = InputState::create(this);

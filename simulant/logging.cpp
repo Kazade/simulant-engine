@@ -53,6 +53,10 @@ StdIOHandler::StdIOHandler() {
 
 }
 
+StdIOHandler::~StdIOHandler() {
+    std::cout.flush();
+}
+
 void StdIOHandler::do_write_message(Logger*,
                                     const DateTime& time,
                        const std::string& level,
@@ -70,6 +74,7 @@ void StdIOHandler::do_write_message(Logger*,
     } else {
 #ifndef __ANDROID__
         std::cout << to_string(time) << " " << level << " " << message << std::endl;
+        std::cout.flush();
 #else
         __android_log_write(ANDROID_LOG_INFO, "SIMULANT", message.c_str());
 #endif

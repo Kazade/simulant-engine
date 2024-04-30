@@ -101,7 +101,8 @@ public:
     virtual void lock_cursor(bool cursor_locked=true) = 0;
 
     virtual void check_events() = 0;
-    virtual void swap_buffers() = 0;
+
+    void swap_buffers();
 
     uint16_t width() const override { return width_; }
     uint16_t height() const override { return height_; }
@@ -327,6 +328,8 @@ private:
     virtual void shutdown_screen(Screen* screen) {
         _S_UNUSED(screen);
     }
+
+    virtual void do_swap_buffers() {}
 
     StageNode* audio_listener_ = nullptr;
 protected:

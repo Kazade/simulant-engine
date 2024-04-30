@@ -1,10 +1,10 @@
 #include "gl_renderer.h"
 
-#include "../window.h"
 #include "../application.h"
 #include "../utils/gl_error.h"
 #include "../utils/gl_thread_check.h"
-
+#include "../viewport.h"
+#include "../window.h"
 
 /* This file should only contain things shared between GL1 + GL2 so include
  * the gl1 headers here */
@@ -159,6 +159,51 @@ static constexpr GLenum texture_format_to_internal_format(TextureFormat format) 
                (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
            (format == TEXTURE_FORMAT_RGB_1US_565) ? GL_RGB :
             GL_RGBA;
+}
+
+void GLRenderer::apply_viewport(const RenderTarget& target,
+                                const Viewport& viewport) {
+
+    auto x = viewport.x() * target.width();
+    auto y = viewport.y() * target.height();
+    auto width = viewport.width() * target.width();
+    auto height = viewport.height() * target.height();
+
+    GLCheck(glEnable, GL_SCISSOR_TEST);
+    GLCheck(glScissor, x, y, width, height);
+    GLCheck(glViewport, x, y, width, height);
+}
+
+void GLRenderer::clear(const RenderTarget& target, const Colour& colour,
+                       uint32_t clear_flags) {
+
+    _S_UNUSED(target);
+
+    GLCheck(glClearColor, colour.r, colour.g, colour.b, colour.a);
+
+    uint32_t gl_clear_flags = 0;
+    if((clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) ==
+       BUFFER_CLEAR_COLOUR_BUFFER) {
+        gl_clear_flags |= GL_COLOR_BUFFER_BIT;
+    }
+
+    if((clear_flags & BUFFER_CLEAR_DEPTH_BUFFER) == BUFFER_CLEAR_DEPTH_BUFFER) {
+        gl_clear_flags |= GL_DEPTH_BUFFER_BIT;
+
+        // Without this clearing the depth will do nothing.
+        GLCheck(glDepthMask, GL_TRUE);
+    }
+
+    if((clear_flags & BUFFER_CLEAR_STENCIL_BUFFER) ==
+       BUFFER_CLEAR_STENCIL_BUFFER) {
+        gl_clear_flags |= GL_STENCIL_BUFFER_BIT;
+    }
+
+    GLCheck(glClear, gl_clear_flags);
+}
+
+void GLRenderer::do_swap_buffers() {
+    GLChecker::end_of_frame_check();
 }
 
 void GLRenderer::on_texture_prepare(Texture *texture) {

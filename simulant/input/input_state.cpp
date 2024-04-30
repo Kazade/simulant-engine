@@ -245,6 +245,7 @@ void InputState::_update_game_controllers(const std::vector<GameControllerInfo>&
         controller.hat_count = info.hat_count;
         controller.has_rumble_ = info.has_rumble;
         controller.platform_data_.i = info.platform_data.i;
+        game_controllers_.push_back(controller);
     }
 }
 

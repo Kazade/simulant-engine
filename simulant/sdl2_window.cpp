@@ -522,7 +522,7 @@ void SDL2Window::destroy_window() {
     screen_ = nullptr;
 }
 
-void SDL2Window::swap_buffers() {
+void SDL2Window::do_swap_buffers() {
     SDL_GL_SwapWindow(screen_);
 }
 

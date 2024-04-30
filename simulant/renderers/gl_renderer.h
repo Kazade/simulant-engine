@@ -67,6 +67,14 @@ protected:
     }
 
     void init_context() override;
+
+    void apply_viewport(const RenderTarget& target,
+                        const Viewport& viewport) override;
+    void clear(const RenderTarget& target, const Colour& colour,
+               uint32_t clear_flags) override;
+
+    void do_swap_buffers() override;
+
 private:
     bool is_es_ = false;
 
