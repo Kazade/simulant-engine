@@ -24,6 +24,19 @@ void update_data_pointer(void* src, void* dst, void* data) {
     }
 }
 
+static std::size_t calc_row_stride(int format, std::size_t width) {
+    switch(format) {
+        case GU_PSM_8888:
+            return width * 4;
+        case GU_PSM_T4:
+            return width / 2;
+        case GU_PSM_T8:
+            return width;
+        default:
+            return width * 2;
+    }
+}
+
 PSPTextureManager::PSPTextureManager(PSPRenderer* renderer) :
     renderer_(renderer) {}
 
@@ -34,16 +47,230 @@ PSPTextureManager::~PSPTextureManager() {
     }
 }
 
+static void swizzle(uint8_t* out, const uint8_t* in, std::size_t width,
+                    std::size_t height) {
+
+    std::size_t width_blocks = (width / 16);
+    std::size_t height_blocks = (height / 8);
+
+    std::size_t src_pitch = (width - 16) / 4;
+    std::size_t src_row = width * 8;
+
+    const uint8_t* ysrc = in;
+    uint32_t* dst = (uint32_t*)out;
+
+    for(std::size_t blocky = 0; blocky < height_blocks; ++blocky) {
+        const uint8_t* xsrc = ysrc;
+        for(std::size_t blockx = 0; blockx < width_blocks; ++blockx) {
+            const uint32_t* src = (uint32_t*)xsrc;
+            for(std::size_t j = 0; j < 8; ++j) {
+                *(dst++) = *(src++);
+                *(dst++) = *(src++);
+                *(dst++) = *(src++);
+                *(dst++) = *(src++);
+                src += src_pitch;
+            }
+            xsrc += 16;
+        }
+        ysrc += src_row;
+    }
+}
+
+static std::size_t calc_mipmap_data_required(int format, std::size_t w,
+                                             std::size_t h) {
+    std::size_t final_data_size = 0;
+    while(w > 1 || h > 1) {
+        final_data_size += calc_row_stride(format, w) * h;
+        if(w > 1) {
+            w /= 2;
+        }
+        if(h > 1) {
+            h /= 2;
+        }
+    }
+
+    return final_data_size;
+}
+
+static std::size_t generate_mipmaps(std::vector<uint8_t>& out, int format,
+                                    std::size_t w, std::size_t h,
+                                    const uint8_t*& data) {
+
+    auto row_stride = calc_row_stride(format, w);
+    std::size_t data_size = row_stride * h;
+    auto final_data_size = calc_mipmap_data_required(format, w, h);
+
+    S_DEBUG("[MIP] Final data size: {0} for {1}x{2}", final_data_size, w, h);
+
+    out.resize(final_data_size);
+
+    uint8_t* new_data = &out[0];
+
+    if(format == GU_PSM_T4 || format == GU_PSM_T8) {
+        // FIXME: Support paletted texture mipmaps
+        swizzle(new_data, data, row_stride, h);
+        return data_size;
+    } else {
+        S_DEBUG("[MIP] Copied {0} bytes to level 0", data_size);
+        std::memcpy(new_data, data, data_size);
+    }
+
+    uint8_t* src = new_data;
+    uint8_t* dest = new_data + data_size;
+
+    int texel_stride = (format == GU_PSM_8888) ? 4 : 2;
+
+    struct Mipmap {
+        uint8_t* ptr;
+        std::size_t row_stride;
+        std::size_t h;
+    };
+
+    std::vector<Mipmap> mipmaps;
+
+    Mipmap base;
+    base.ptr = src;
+    base.row_stride = row_stride;
+    base.h = h;
+
+    mipmaps.push_back(base);
+
+    while(w > 1 || h > 1) {
+        auto lw = w;
+        auto lh = h;
+        auto source_row_stride = calc_row_stride(format, w);
+        auto dest_row_stride = calc_row_stride(format, w / 2);
+
+        S_DEBUG("[MIP] SRS: {0}, DRS: {1}", source_row_stride, dest_row_stride);
+
+        if(w > 1) {
+            w /= 2;
+        }
+
+        if(h > 1) {
+            h /= 2;
+        }
+
+        Mipmap map;
+        map.ptr = dest;
+        map.row_stride = dest_row_stride;
+        map.h = h;
+
+        mipmaps.push_back(map);
+
+        for(std::size_t y = 0; y < lh; y += 2) {
+            for(std::size_t x = 0; x < lw; x += 2) {
+
+                int source_idx = ((y * source_row_stride) + x);
+                int dest_idx = (((y / 2) * dest_row_stride) + (x / 2));
+
+                if(format == GU_PSM_8888) {
+
+                } else {
+                    uint16_t* src_t = (uint16_t*)(src + source_idx);
+                    uint16_t* dest_t = (uint16_t*)(dest + dest_idx);
+
+                    uint16_t t0 = *src_t;
+                    uint16_t t1 = *(src_t + 1);
+                    uint16_t t2 = *(src_t + source_row_stride);
+                    uint16_t t3 = *(src_t + source_row_stride + 1);
+
+                    uint16_t final = 0;
+                    if(format == GU_PSM_5650) {
+                        int r = 0, g = 0, b = 0;
+                        for(const uint16_t& t: {t0, t1, t2, t3}) {
+                            r += (t >> 11) & 0x1F;
+                            g += ((t >> 5) & 0x3F);
+                            b += (t & 0x1F);
+                        }
+
+                        r /= 4;
+                        g /= 4;
+                        b /= 4;
+
+                        final = (r << 11) | (g << 5) | (b);
+                    } else if(format == GU_PSM_4444) {
+                        int r = 0, g = 0, b = 0, a = 0;
+
+                        for(const uint16_t& t: {t0, t1, t2, t3}) {
+                            r += (t >> 12);
+                            g += ((t >> 8) & 0xF);
+                            b += ((t >> 4) & 0xF);
+                            a += (t & 0xF);
+                        }
+
+                        r /= 4;
+                        g /= 4;
+                        b /= 4;
+                        a /= 4;
+
+                        final = (r << 12) | (g << 8) | (b << 4) | (a);
+                    } else if(format == GU_PSM_5551) {
+                        int r = 0, g = 0, b = 0, a = 0;
+
+                        for(const uint16_t& t: {t0, t1, t2, t3}) {
+                            r += ((t >> 11) & 0x1F);
+                            g += ((t >> 6) & 0x1F);
+                            b += ((t >> 1) & 0x1F);
+                            a += (t & 0x1);
+                        }
+
+                        r /= 4;
+                        g /= 4;
+                        b /= 4;
+                        a /= 4;
+
+                        final = (r << 11) | (g << 6) | (b << 1) | (a & 0x1);
+                    }
+
+                    *dest_t = final;
+                }
+            }
+        }
+
+        src = dest;
+        dest += calc_row_stride(format, w) * h;
+    }
+
+    /* Now we have to swizzle each mipmap level */
+    for(auto& map: mipmaps) {
+        std::vector<uint8_t> temp(map.row_stride * map.h);
+        swizzle(&temp[0], map.ptr, map.row_stride, map.h);
+        std::memcpy(map.ptr, &temp[0], temp.size());
+    }
+
+    data = new_data;
+
+    return final_data_size;
+}
+
 int PSPTextureManager::upload_texture(int id, int format, int width, int height,
                                       std::size_t data_size,
                                       const uint8_t* data,
                                       const uint8_t* palette,
                                       std::size_t palette_size,
-                                      int palette_format) {
+                                      int palette_format, bool do_mipmaps) {
+
+    std::vector<uint8_t> buffer;
+
+    /* We don't currently allowed swizzled versions of texture formats, which
+     * means users can't just provide their pre-swizzled textures, so we
+     * always swizzle here - in future we can change that and avoid the
+     * perf cost. We don't currently swizzled paletted textures. */
+
+    if(do_mipmaps) {
+        data_size = generate_mipmaps(buffer, format, width, height, data);
+        data = &buffer[0];
+    } else {
+        int row_stride = calc_row_stride(format, width);
+        buffer.resize(data_size);
+        swizzle(&buffer[0], data, row_stride, height);
+        data = &buffer[0];
+    }
 
     static int id_counter = 0;
 
-    if(id == 0) {        
+    if(id == 0) {
         PSPTextureObject obj;
         obj.id = ++id_counter;
         obj.format = format;
@@ -157,17 +384,40 @@ void PSPTextureManager::bind_texture(int id) {
             auto entries = tex->palette_size /
                            ((tex->palette_format == GU_PSM_8888) ? 4 : 2);
 
-            sceGuClutMode(tex->palette_format, 0, 0, 0);
+            sceGuClutMode(tex->palette_format, 0, 0xFF, 0);
             sceGuClutLoad(entries / 8, tex->palette);
         }
 
         // FIXME: mipmap
-        // FIXME: Swizzle
-        sceGuTexMode(tex->format, 0, 0, GU_FALSE);
+        sceGuTexMode(tex->format, 8, 0, GU_TRUE);
 
         // FIXME: mipmap
-        sceGuTexImage(0, tex->width, tex->height, tex->width,
-                      tex->texture_vram ? tex->texture_vram : tex->texture_ram);
+        auto data = tex->texture_vram ? tex->texture_vram : tex->texture_ram;
+        sceGuTexImage(0, tex->width, tex->height, tex->width, data);
+
+        if(tex->has_mipmaps) {
+            // Specify the other mip levels
+            int w = tex->width;
+            int h = tex->height;
+            uint8_t* mip = data + calc_row_stride(tex->format, w) * h;
+
+            int i = 1;
+            w /= 2;
+            h /= 2;
+            while(w > 1 || h > 1) {
+                sceGuTexImage(i++, w, h, w, mip);
+
+                mip += calc_row_stride(tex->format, w) * h;
+
+                if(w > 1) {
+                    w /= 2;
+                }
+
+                if(h > 1) {
+                    h /= 2;
+                }
+            }
+        }
 
         if(tex->has_mipmaps) {
             switch(tex->filter) {

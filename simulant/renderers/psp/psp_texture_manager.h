@@ -41,8 +41,8 @@ public:
 
     int upload_texture(int id, int format, int width, int height,
                        std::size_t data_size, const uint8_t* data,
-                       const uint8_t* palette = nullptr,
-                       std::size_t palette_size = 0, int palette_format = 0);
+                       const uint8_t* palette, std::size_t palette_size,
+                       int palette_format, bool do_mipmaps);
 
     void bind_texture(int id);
     void release_texture(int id);

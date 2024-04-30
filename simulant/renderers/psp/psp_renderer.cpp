@@ -161,6 +161,22 @@ void PSPRenderer::do_swap_buffers() {
     sceGuSwapBuffers();
 }
 
+static void swap_channels_8888(uint8_t* data, const std::size_t data_size) {
+    for(std::size_t i = 0; i < data_size; i += 4) {
+        std::swap(data[i + 0], data[i + 3]);
+        std::swap(data[i + 1], data[i + 2]);
+    }
+}
+
+static void swap_channels_565(uint8_t* data, const std::size_t data_size) {
+    uint16_t* it = (uint16_t*)data;
+
+    for(std::size_t i = 0; i < data_size; i += 2) {
+        *it = (*it & 0x1F) << 11 | (*it & 0x7E0) | (*it >> 11);
+        ++it;
+    }
+}
+
 void PSPRenderer::on_texture_prepare(Texture* texture) {
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
@@ -168,6 +184,7 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
     }
 
     auto data = texture->data();
+    auto data_size = texture->data_size();
     const uint8_t* palette = nullptr;
     int palette_format = 0;
 
@@ -191,52 +208,55 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
         }
 
         data = (const uint8_t*)&new_data[0];
+        data_size = texel_count * 2;
         tex_fmt = TEXTURE_FORMAT_RGB_1US_565;
     } else if(tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED4 ||
               tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED8 ||
               tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
               tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
 
-        const uint8_t* palette = data;
+        palette = data;
+
+        if(tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
+           tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
+            // FIXME: nasty casting away const
+            swap_channels_8888((uint8_t*)palette, texture->palette_size());
+        } else {
+            swap_channels_565((uint8_t*)palette, texture->palette_size());
+        }
+
         data = palette + texture->palette_size();
+        data_size -= texture->palette_size();
     }
 
     S_VERBOSE("Texture format: {0}. W: {1}. H: {2}", tex_fmt, texture->width(),
               texture->height());
 
-    int size = 0;
     int format = 0;
     switch(tex_fmt) {
         case TEXTURE_FORMAT_RGB_1US_565:
             format = GU_PSM_5650;
-            size = texel_count * 2;
             break;
         case TEXTURE_FORMAT_RGBA_1US_5551:
             format = GU_PSM_5551;
-            size = texel_count * 2;
             break;
         case TEXTURE_FORMAT_RGBA_4UB_8888:
             format = GU_PSM_8888;
-            size = texel_count * 4;
             break;
         case TEXTURE_FORMAT_RGB565_PALETTED4:
             format = GU_PSM_T4;
-            size = texel_count / 2;
             palette_format = GU_PSM_5650;
             break;
         case TEXTURE_FORMAT_RGBA8_PALETTED4:
             format = GU_PSM_T4;
-            size = texel_count / 2;
             palette_format = GU_PSM_8888;
             break;
         case TEXTURE_FORMAT_RGB565_PALETTED8:
             format = GU_PSM_T8;
-            size = texel_count;
             palette_format = GU_PSM_5650;
             break;
         case TEXTURE_FORMAT_RGBA8_PALETTED8:
             format = GU_PSM_T8;
-            size = texel_count;
             palette_format = GU_PSM_8888;
             break;
         default:
@@ -247,8 +267,9 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
 
     auto id = texture_manager_.upload_texture(
         texture->_renderer_specific_id(), // If 0, the texture will be created
-        format, texture->width(), texture->height(), size, data, palette,
-        palette_format);
+        format, texture->width(), texture->height(), data_size, data, palette,
+        texture->palette_size(), palette_format,
+        texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE);
 
     texture->_set_renderer_specific_id(id);
     texture->_set_data_clean();
