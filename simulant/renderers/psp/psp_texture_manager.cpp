@@ -165,6 +165,31 @@ static std::size_t generate_mipmaps(std::vector<uint8_t>& out, int format,
                 int dest_idx = (((y / 2) * dest_row_stride) + (x / 2));
 
                 if(format == GU_PSM_8888) {
+                    uint8_t* src_t = src + source_idx;
+                    uint8_t* dest_t = dest + dest_idx;
+
+                    uint8_t* t0 = src_t;
+                    uint8_t* t1 = src_t + 1;
+                    uint8_t* t2 = src_t + source_row_stride;
+                    uint8_t* t3 = src_t + source_row_stride + 1;
+
+                    int r = 0, g = 0, b = 0, a = 0;
+                    for(auto& t: {t0, t1, t2, t3}) {
+                        r += t[0];
+                        g += t[1];
+                        b += t[2];
+                        a += t[3];
+                    }
+
+                    r /= 4;
+                    g /= 4;
+                    b /= 4;
+                    a /= 4;
+
+                    dest_t[0] = r;
+                    dest_t[1] = g;
+                    dest_t[2] = b;
+                    dest_t[3] = a;
 
                 } else {
                     uint16_t* src_t = (uint16_t*)(src + source_idx);
