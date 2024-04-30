@@ -194,7 +194,7 @@ void AndroidWindow::on_application_set(Application* app) {
     aapp->activity->vm->DetachCurrentThread();
 }
 
-void AndroidWindow::swap_buffers() {
+void AndroidWindow::do_swap_buffers() {
     if(dpy_ != EGL_NO_DISPLAY && has_focus()) {
         eglSwapBuffers(dpy_, surface_);
     }

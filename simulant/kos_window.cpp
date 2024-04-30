@@ -102,7 +102,7 @@ KOSWindow::~KOSWindow() {
     }
 }
 
-void KOSWindow::swap_buffers() {
+void KOSWindow::do_swap_buffers() {
     glKosSwapBuffers();
 }
 

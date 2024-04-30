@@ -27,7 +27,6 @@ public:
     void show_cursor(bool) override {} // No-op
     void lock_cursor(bool) override {} // No-op
 
-    void swap_buffers() override;
     void destroy_window() override;
     void check_events() override;
 
@@ -36,6 +35,7 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
 private:
+    void do_swap_buffers() override;
     bool _init_window() override;
     bool _init_renderer(Renderer* renderer) override;
 

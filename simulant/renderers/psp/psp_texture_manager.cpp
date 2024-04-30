@@ -413,10 +413,8 @@ void PSPTextureManager::bind_texture(int id) {
             sceGuClutLoad(entries / 8, tex->palette);
         }
 
-        // FIXME: mipmap
         sceGuTexMode(tex->format, 8, 0, GU_TRUE);
 
-        // FIXME: mipmap
         auto data = tex->texture_vram ? tex->texture_vram : tex->texture_ram;
         sceGuTexImage(0, tex->width, tex->height, tex->width, data);
 
