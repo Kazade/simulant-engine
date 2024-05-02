@@ -301,6 +301,7 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         obj.height = height;
         obj.data_size = data_size;
         obj.priority = max_priority;
+        obj.has_mipmaps = do_mipmaps;
 
         if(palette && (format == GU_PSM_T4 || format == GU_PSM_T8)) {
             S_DEBUG("Uploading palette data of size {0} format: {1}, "
@@ -332,8 +333,9 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
     } else {
         auto obj = find_texture(id);
         if(obj) {
-            // Move out of vram if it's there
-            evict_texture(obj);
+            vram_alloc_free(nullptr, obj->texture_vram);
+            obj->texture_vram = 0;
+            obj->priority = 0;
 
             // Free the data that's there
             free(obj->texture_ram);
@@ -346,6 +348,7 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
             obj->height = height;
             obj->data_size = data_size;
             obj->format = format;
+            obj->has_mipmaps = do_mipmaps;
             obj->texture_ram = (uint8_t*)aligned_alloc(16, data_size);
             std::memcpy(obj->texture_ram, data, data_size);
 
