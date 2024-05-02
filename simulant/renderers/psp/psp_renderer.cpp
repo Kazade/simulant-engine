@@ -88,7 +88,6 @@ void PSPRenderer::init_context() {
     sceGuShadeModel(GU_SMOOTH);
     sceGuFrontFace(GU_CCW);
 
-    sceGuClearColor(0xdddddd);
     sceGuFinish();
     sceGuSync(0, 0);
     sceDisplayWaitVblankStart();
@@ -99,7 +98,8 @@ void PSPRenderer::init_context() {
 
 void PSPRenderer::clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags) {
     S_VERBOSE("clear");
-    uint32_t c = int(255.0f * colour.r) << 24 | int(255.0f * colour.g) << 16 | int(255.0f * colour.b) << 8 | int(255.0f * colour.a);
+    uint32_t c = int(255.0f * colour.r) | int(255.0f * colour.g) << 8 |
+                 int(255.0f * colour.b) << 16 | int(255.0f * colour.a) << 24;
     uint32_t flags = 0;
 
     if(clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) {
@@ -128,6 +128,7 @@ bool PSPRenderer::texture_format_is_native(TextureFormat fmt) {
         case TEXTURE_FORMAT_RGB_3UB_888: // Converted to 565 in prepare
         case TEXTURE_FORMAT_RGBA_4UB_8888:
         case TEXTURE_FORMAT_RGBA_1US_5551:
+        case TEXTURE_FORMAT_RGBA_1US_4444:
         case TEXTURE_FORMAT_RGB565_PALETTED4:
         case TEXTURE_FORMAT_RGB565_PALETTED8:
         case TEXTURE_FORMAT_RGBA8_PALETTED4:
@@ -239,6 +240,9 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
             break;
         case TEXTURE_FORMAT_RGBA_1US_5551:
             format = GU_PSM_5551;
+            break;
+        case TEXTURE_FORMAT_RGBA_1US_4444:
+            format = GU_PSM_4444;
             break;
         case TEXTURE_FORMAT_RGBA_4UB_8888:
             format = GU_PSM_8888;

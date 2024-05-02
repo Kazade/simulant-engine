@@ -231,7 +231,7 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 struct PSPVertex {
     float u, v;
     uint16_t color;
-    float nx, ny, nz;
+    int16_t nx, ny, nz;
     float x, y, z;
 };
 
@@ -289,13 +289,13 @@ void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
     }
 }
 
-void convert_normal(float* vout, const uint8_t* vin, VertexAttribute type) {
+void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
     float* v = (float*)vin;
     switch(type) {
         case VERTEX_ATTRIBUTE_3F:
-            vout[0] = v[0];
-            vout[1] = v[1];
-            vout[2] = v[2];
+            vout[0] = ((float*)v)[0] * 32767.0f;
+            vout[1] = ((float*)v)[1] * 32767.0f;
+            vout[2] = ((float*)v)[2] * 32767.0f;
             break;
         default:
             S_ERROR("{0}", type);
@@ -355,7 +355,7 @@ static void zclip_tristrips_and_submit_range(const VertexRange* range,
     memcpy(output, buffer.data(), buffer.size() * sizeof(PSPVertex));
 
     sceGumDrawArray(GU_TRIANGLE_STRIP,
-                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_32BITF |
+                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_16BIT |
                         GU_TRANSFORM_3D | GU_COLOR_4444,
                     buffer.size(), 0, output);
 }
@@ -379,7 +379,7 @@ static void zclip_triangles_and_submit_range(const VertexRange* range,
     memcpy(output, buffer.data(), buffer.size() * sizeof(PSPVertex));
 
     sceGumDrawArray(GU_TRIANGLES,
-                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_32BITF |
+                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_16BIT |
                         GU_TRANSFORM_3D | GU_COLOR_4444,
                     buffer.size(), 0, output);
 }

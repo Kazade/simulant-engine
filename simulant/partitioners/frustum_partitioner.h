@@ -29,11 +29,9 @@ public:
     FrustumPartitioner(Stage* ss):
         Partitioner(ss) {}
 
-    void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID> &lights_out,
-        std::vector<StageNode*> &geom_out
-    );
+    void lights_and_geometry_visible_from(CameraID camera_id,
+                                          std::vector<Light*>& lights_out,
+                                          std::vector<StageNode*>& geom_out);
 
 private:
     void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write);
