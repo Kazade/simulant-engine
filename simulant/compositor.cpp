@@ -269,24 +269,24 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
     // Apply any outstanding writes to the partitioner
     stage->partitioner->_apply_writes();
 
-    static std::vector<LightID> light_ids;
+    static std::vector<Light*> lights;
     static std::vector<StageNode*> nodes_visible;
 
     /* Empty out, but leave capacity to prevent constant allocations */
-    light_ids.resize(0);
+    lights.resize(0);
     nodes_visible.resize(0);
 
-    _S_PROFILE_SECTION("gather");
-    // Gather the lights and geometry visible to the camera
-    stage->partitioner->lights_and_geometry_visible_from(camera->id(), light_ids, nodes_visible);
+    {
+        _S_PROFILE_SUBSECTION("gather");
+        _S_PROFILE_SECTION("partitioner");
+        // Gather the lights and geometry visible to the camera
+        stage->partitioner->lights_and_geometry_visible_from(
+            camera->id(), lights, nodes_visible);
 
-    // Get the actual lights from the IDs
-    auto lights_visible = map<decltype(light_ids), std::vector<LightPtr>>(
-        light_ids, [&](const LightID& light_id) -> LightPtr { return stage->light(light_id); }
-    );
-
-    // Reset it, ready for this pipeline
-    render_queue_.reset(stage, window->renderer.get(), camera);
+        _S_PROFILE_SECTION("reset");
+        // Reset it, ready for this pipeline
+        render_queue_.reset(stage, window->renderer.get(), camera);
+    }
 
     {
         _S_PROFILE_SUBSECTION("process-nodes");
@@ -299,7 +299,7 @@ void Compositor::run_pipeline(PipelinePtr pipeline_stage, int &actors_rendered) 
             }
 
             auto renderable_lights =
-                filter(lights_visible, [&node](const LightPtr& light) -> bool {
+                filter(lights, [&node](const LightPtr& light) -> bool {
                 // Filter by whether or not the renderable bounds intersects the
                 // light bounds
                 if(light->type() == LIGHT_TYPE_DIRECTIONAL) {

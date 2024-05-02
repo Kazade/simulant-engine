@@ -87,11 +87,10 @@ public:
 
     void _apply_writes();
 
-    virtual void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID>& lights_out,
-        std::vector<StageNode*>& geom_out
-    ) = 0;
+    virtual void
+        lights_and_geometry_visible_from(CameraID camera_id,
+                                         std::vector<Light*>& lights_out,
+                                         std::vector<StageNode*>& geom_out) = 0;
 
     virtual MeshID debug_mesh_id() { return MeshID(); }
 protected:

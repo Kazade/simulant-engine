@@ -29,8 +29,8 @@
 namespace smlt {
 
 void FrustumPartitioner::lights_and_geometry_visible_from(
-        CameraID camera_id, std::vector<LightID> &lights_out,
-        std::vector<StageNode*> &geom_out) {
+    CameraID camera_id, std::vector<Light*>& lights_out,
+    std::vector<StageNode*>& geom_out) {
 
     _apply_writes();
 
@@ -50,7 +50,7 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
                 if(!light->is_cullable() ||
                     frustum.intersects_sphere(centre, aabb.max_dimension())
                 ) {
-                    lights_out.push_back(light->id());
+                    lights_out.push_back(light);
                 }
             } else if(!node.is_cullable()) {
                 /* If the culling mode is NEVER then we always return */

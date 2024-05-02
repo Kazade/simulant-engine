@@ -29,8 +29,8 @@
 namespace smlt {
 
 void NullPartitioner::lights_and_geometry_visible_from(
-        CameraID camera_id, std::vector<LightID> &lights_out,
-        std::vector<StageNode*> &geom_out) {
+    CameraID camera_id, std::vector<Light*>& lights_out,
+    std::vector<StageNode*>& geom_out) {
 
     _S_UNUSED(camera_id);
 
@@ -39,7 +39,7 @@ void NullPartitioner::lights_and_geometry_visible_from(
     lights_out.reserve(lights_.size());
     geom_out.reserve(geometry_.size());
     for(auto& node: lights_) {
-        lights_out.push_back(node.second->id());
+        lights_out.push_back(node.second);
     }
 
     for(auto& node: geometry_) {
