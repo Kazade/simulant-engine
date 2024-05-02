@@ -128,6 +128,7 @@ bool PSPRenderer::texture_format_is_native(TextureFormat fmt) {
         case TEXTURE_FORMAT_RGB_3UB_888: // Converted to 565 in prepare
         case TEXTURE_FORMAT_RGBA_4UB_8888:
         case TEXTURE_FORMAT_RGBA_1US_5551:
+        case TEXTURE_FORMAT_RGBA_1US_4444:
         case TEXTURE_FORMAT_RGB565_PALETTED4:
         case TEXTURE_FORMAT_RGB565_PALETTED8:
         case TEXTURE_FORMAT_RGBA8_PALETTED4:
@@ -239,6 +240,9 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
             break;
         case TEXTURE_FORMAT_RGBA_1US_5551:
             format = GU_PSM_5551;
+            break;
+        case TEXTURE_FORMAT_RGBA_1US_4444:
+            format = GU_PSM_4444;
             break;
         case TEXTURE_FORMAT_RGBA_4UB_8888:
             format = GU_PSM_8888;

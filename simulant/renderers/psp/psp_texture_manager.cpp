@@ -118,8 +118,6 @@ static std::size_t generate_mipmaps(std::vector<uint8_t>& out, int format,
     uint8_t* src = new_data;
     uint8_t* dest = new_data + data_size;
 
-    int texel_stride = (format == GU_PSM_8888) ? 4 : 2;
-
     struct Mipmap {
         uint8_t* ptr;
         std::size_t row_stride;
