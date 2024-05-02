@@ -88,7 +88,6 @@ void PSPRenderer::init_context() {
     sceGuShadeModel(GU_SMOOTH);
     sceGuFrontFace(GU_CCW);
 
-    sceGuClearColor(0xdddddd);
     sceGuFinish();
     sceGuSync(0, 0);
     sceDisplayWaitVblankStart();
@@ -99,7 +98,8 @@ void PSPRenderer::init_context() {
 
 void PSPRenderer::clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags) {
     S_VERBOSE("clear");
-    uint32_t c = int(255.0f * colour.r) << 24 | int(255.0f * colour.g) << 16 | int(255.0f * colour.b) << 8 | int(255.0f * colour.a);
+    uint32_t c = int(255.0f * colour.r) | int(255.0f * colour.g) << 8 |
+                 int(255.0f * colour.b) << 16 | int(255.0f * colour.a) << 24;
     uint32_t flags = 0;
 
     if(clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) {
