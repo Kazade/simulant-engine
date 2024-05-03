@@ -481,17 +481,19 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     if(has_diffuse) {
         S_VERBOSE("Enabling colors");
         enable_colour_arrays();
-        GLCheck(
-            glColorPointer,
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
-            : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3
-            : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F ||
-               spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB)
-                ? 4
-                : GL_BGRA, // This weirdness is an extension apparently
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) ? GL_UNSIGNED_BYTE
-                                                             : GL_FLOAT,
-            stride, ((const uint8_t*)vertex_data) + spec.diffuse_offset(false));
+        GLCheck(glColorPointer,
+                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
+                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F ||
+                   spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
+                    ? 4
+                    : GL_BGRA, // This weirdness is an extension apparently
+                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+                 spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
+                    ? GL_UNSIGNED_BYTE
+                    : GL_FLOAT,
+                stride,
+                ((const uint8_t*)vertex_data) + spec.diffuse_offset(false));
     } else {
         disable_colour_arrays();
     }

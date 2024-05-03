@@ -76,9 +76,9 @@ const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
 #if defined(__PSP__) || defined(__ANDROID__)
     VERTEX_ATTRIBUTE_4F,
 #elif defined(__DREAMCAST__)
-        VERTEX_ATTRIBUTE_4UB_REV, // Diffuse
+    VERTEX_ATTRIBUTE_4UB_BGRA, // Diffuse
 #else
-    VERTEX_ATTRIBUTE_4UB, // Diffuse
+    VERTEX_ATTRIBUTE_4UB_RGBA, // Diffuse
 #endif
     VERTEX_ATTRIBUTE_NONE
 };
@@ -95,9 +95,9 @@ const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = VertexSpec
 #if defined(__PSP__) || defined(__ANDROID__)
         VERTEX_ATTRIBUTE_4F,
 #elif defined(__DREAMCAST__)
-        VERTEX_ATTRIBUTE_4UB_REV, // Diffuse
+        VERTEX_ATTRIBUTE_4UB_BGRA, // Diffuse
 #else
-        VERTEX_ATTRIBUTE_4UB, // Diffuse
+        VERTEX_ATTRIBUTE_4UB_RGBA, // Diffuse
 #endif
 };
 
@@ -398,7 +398,9 @@ const Colour* VertexData::diffuse_at(const uint32_t idx) const {
 
 template<>
 const uint8_t* VertexData::diffuse_at(const uint32_t idx) const {
-    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB);
+    assert(
+        vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+        vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA);
     return ((uint8_t*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
 }
 
@@ -439,7 +441,9 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 }
 
 void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB);
+    assert(
+        vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA ||
+        vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_RGBA);
     auto offset = vertex_specification_.diffuse_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
@@ -449,12 +453,17 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 
     uint8_t* out = (uint8_t*) &data_[cursor_offset() + offset];
 
-    /* We store unsigned bytes in bgra format internally as this is faster
-     * on some platforms (e.g. Dreamcast) */
-    out[0] = b;
-    out[1] = g;
-    out[2] = r;
-    out[3] = a;
+    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA) {
+        out[0] = b;
+        out[1] = g;
+        out[2] = r;
+        out[3] = a;
+    } else {
+        out[0] = r;
+        out[1] = g;
+        out[2] = b;
+        out[3] = a;
+    }
 }
 
 void VertexData::diffuse(float r, float g, float b, float a) {

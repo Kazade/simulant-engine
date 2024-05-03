@@ -24,15 +24,20 @@ VertexSpecification determine_spec(const FileHeader& header) {
         VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;
     vspec.texcoord0_attribute = (header.tex0_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
     vspec.texcoord1_attribute = (header.tex1_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
-    vspec.diffuse_attribute = (header.color_format == COLOR_FORMAT_4UB) ?
-        VERTEX_ATTRIBUTE_4UB : (header.color_format == COLOR_FORMAT_3F) ?
-        VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;
+    vspec.diffuse_attribute =
+        (header.color_format == COLOR_FORMAT_4UB)  ? VERTEX_ATTRIBUTE_4UB_RGBA
+        : (header.color_format == COLOR_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F
+                                                   : VERTEX_ATTRIBUTE_4F;
     vspec.normal_attribute = (header.normal_format == NORMAL_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_NONE;
 
     /* FIXME: Do something better! */
 #if defined(__ANDROID__) || defined(__LINUX__)
-    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
+    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
         vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    }
+#elif defined(__DREAMCAST__)
+    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
+        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
     }
 #endif
 
