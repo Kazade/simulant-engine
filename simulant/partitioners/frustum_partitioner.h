@@ -34,7 +34,7 @@ public:
                                           std::vector<StageNode*>& geom_out);
 
 private:
-    void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write);
+    void apply_staged_write(const StagedWrite& write);
 };
 
 }

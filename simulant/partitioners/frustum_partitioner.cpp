@@ -62,13 +62,8 @@ void FrustumPartitioner::lights_and_geometry_visible_from(
     }
 }
 
-void FrustumPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
-    _S_UNUSED(key);
+void FrustumPartitioner::apply_staged_write(const StagedWrite& write) {
     _S_UNUSED(write);
     // Do nothing, we don't need to!
-
 }
-
-
-
 }

@@ -19,10 +19,7 @@ public:
         Partitioner(stage),
         cb_(cb) {}
 
-    void apply_staged_write(const UniqueIDKey& k,
-                            const StagedWrite& write) override {
-        _S_UNUSED(k);
-
+    void apply_staged_write(const StagedWrite& write) override {
         cb_(write);
     }
 
