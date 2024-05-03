@@ -192,7 +192,7 @@ void AndroidWindow::on_application_set(Application* app) {
     aapp->activity->vm->DetachCurrentThread();
 }
 
-void AndroidWindow::swap_buffers() {
+void AndroidWindow::do_swap_buffers() {
     if(dpy_ != EGL_NO_DISPLAY && has_focus()) {
         eglSwapBuffers(dpy_, surface_);
     }
@@ -542,7 +542,7 @@ static const KeyboardCode KEYCODE_MAPPING[256] = {
     KEYBOARD_CODE_NONE,
 };
 
-const static int32_t TOUCH_MOUSE_ID = 0;
+const static MouseID TOUCH_MOUSE_ID(0);
 
 void AndroidWindow::check_events() {
     android_app* aapp = (android_app*) get_app()->platform_state();
@@ -633,10 +633,10 @@ void AndroidWindow::check_events() {
             case AINPUT_EVENT_TYPE_KEY: {
                 auto key = KEYCODE_MAPPING[evt.key.key];
                 if(evt.key.action == AKEY_EVENT_ACTION_UP) {
-                    input_state->_handle_key_up(0, key);
+                    input_state->_handle_key_up(KeyboardID(0), key);
                     on_key_up(key, ModifierKeyState());
                 } else if(evt.key.action == AKEY_EVENT_ACTION_DOWN) {
-                    input_state->_handle_key_down(0, key);
+                    input_state->_handle_key_down(KeyboardID(0), key);
                     on_key_down(key, ModifierKeyState());
                 } else {}
             } break;

@@ -1,0 +1,294 @@
+//
+//   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+//
+//     This file is part of Simulant.
+//
+//     Simulant is free software: you can redistribute it and/or modify
+//     it under the terms of the GNU Lesser General Public License as published by
+//     the Free Software Foundation, either version 3 of the License, or
+//     (at your option) any later version.
+//
+//     Simulant is distributed in the hope that it will be useful,
+//     but WITHOUT ANY WARRANTY; without even the implied warranty of
+//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//     GNU Lesser General Public License for more details.
+//
+//     You should have received a copy of the GNU Lesser General Public License
+//     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
+//
+
+#include <pspdisplay.h>
+#include <pspgu.h>
+#include <pspgum.h>
+#include <pspkernel.h>
+
+#include "psp_renderer.h"
+
+#include "../../assets/material.h"
+#include "../../material_constants.h"
+#include "../../texture.h"
+#include "../../viewport.h"
+#include "../../window.h"
+#include "../utils/tex_conversions.h"
+#include "psp_render_group_impl.h"
+#include "psp_render_queue_visitor.h"
+
+namespace smlt {
+
+batcher::RenderGroupKey PSPRenderer::prepare_render_group(
+    batcher::RenderGroup* group,
+    const Renderable *renderable,
+    const MaterialPass *material_pass,
+    const uint8_t pass_number,
+    const bool is_blended,
+    const float distance_to_camera) {
+
+    _S_UNUSED(renderable);
+    _S_UNUSED(material_pass);
+    _S_UNUSED(group);
+
+    return batcher::generate_render_group_key(
+        pass_number,
+        is_blended,
+        distance_to_camera,
+        renderable->precedence
+    );
+}
+
+void PSPRenderer::init_context() {
+    S_VERBOSE("init_context");
+    const int buffer_width = 512;
+    const int buffer_px_bytes = 4;
+    const int frame_size = buffer_width * window->height() * buffer_px_bytes;
+
+    S_VERBOSE("W: {0} H: {1}", window->width(), window->height());
+
+    uint8_t* start = 0;
+    uint8_t* disp_buffer = start;
+    uint8_t* draw_buffer = disp_buffer + frame_size;
+    uint8_t* depth_buffer = draw_buffer + frame_size;
+
+    void* texture_ram = depth_buffer + buffer_width;
+
+    // Allocate 1.5M of VRAM for textures FIXME: Can we do more?
+    vram_alloc_init(texture_ram, 1024 * 1536);
+
+    // Set up buffers
+    sceGuStart(GU_DIRECT, list_);
+    sceGuDispBuffer(window->width(), window->height(), (void*) disp_buffer, buffer_width);
+    sceGuDrawBuffer(GU_PSM_8888, (void*) draw_buffer, buffer_width);
+    sceGuDepthBuffer(depth_buffer, buffer_width);
+
+    sceGuOffset(2048 - (window->width() / 2), 2048 - (window->height() / 2));
+    sceGuViewport(2048, 2048, window->width(), window->height());
+
+    sceGuDepthRange(32, 65535);
+    sceGuDepthFunc(GU_LEQUAL);
+    sceGuEnable(GU_DEPTH_TEST);
+    sceGuEnable(GU_CLIP_PLANES);
+    sceGuShadeModel(GU_SMOOTH);
+    sceGuFrontFace(GU_CCW);
+
+    sceGuFinish();
+    sceGuSync(0, 0);
+    sceDisplayWaitVblankStart();
+    sceGuDisplay(GU_TRUE);
+
+    S_VERBOSE("Context initialized");
+}
+
+void PSPRenderer::clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags) {
+    S_VERBOSE("clear");
+    uint32_t c = int(255.0f * colour.r) | int(255.0f * colour.g) << 8 |
+                 int(255.0f * colour.b) << 16 | int(255.0f * colour.a) << 24;
+    uint32_t flags = 0;
+
+    if(clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) {
+        flags |= GU_COLOR_BUFFER_BIT;
+    }
+
+    if(clear_flags & BUFFER_CLEAR_DEPTH_BUFFER) {
+        flags |= GU_DEPTH_BUFFER_BIT;
+    }
+
+    sceGuClearColor(c);
+    sceGuClear(flags);
+}
+
+void PSPRenderer::apply_viewport(const RenderTarget& target, const Viewport& viewport) {
+    S_VERBOSE("apply_viewport");
+    sceGuEnable(GU_SCISSOR_TEST);
+    // sceGuScissor(viewport.x(), viewport.y(), viewport.width(),
+    //              viewport.height());
+    sceGuScissor(0, 0, 480, 272);
+}
+
+bool PSPRenderer::texture_format_is_native(TextureFormat fmt) {
+    switch(fmt) {
+        case TEXTURE_FORMAT_RGB_1US_565:
+        case TEXTURE_FORMAT_RGB_3UB_888: // Converted to 565 in prepare
+        case TEXTURE_FORMAT_RGBA_4UB_8888:
+        case TEXTURE_FORMAT_RGBA_1US_5551:
+        case TEXTURE_FORMAT_RGBA_1US_4444:
+        case TEXTURE_FORMAT_ARGB_1US_4444:
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
+            return true;
+        default:
+            return false;
+    }
+}
+
+std::shared_ptr<batcher::RenderQueueVisitor> PSPRenderer::get_render_queue_visitor(CameraPtr camera) {
+    return std::make_shared<PSPRenderQueueVisitor>(this, camera);
+}
+
+void PSPRenderer::on_pre_render() {
+    S_VERBOSE("pre_render");
+    sceGuStart(GU_DIRECT, list_);
+}
+
+void PSPRenderer::on_post_render() {
+    S_VERBOSE("post_render");
+    sceGuFinish();
+}
+
+void PSPRenderer::do_swap_buffers() {
+    S_VERBOSE("do_swap_buffers");
+
+    sceGuSync(0, 0);
+    sceDisplayWaitVblankStart();
+    sceGuSwapBuffers();
+}
+
+static void swap_channels_8888(uint8_t* data, const std::size_t data_size) {
+    for(std::size_t i = 0; i < data_size; i += 4) {
+        std::swap(data[i + 0], data[i + 3]);
+        std::swap(data[i + 1], data[i + 2]);
+    }
+}
+
+static void swap_channels_565(uint8_t* data, const std::size_t data_size) {
+    uint16_t* it = (uint16_t*)data;
+
+    for(std::size_t i = 0; i < data_size; i += 2) {
+        *it = (*it & 0x1F) << 11 | (*it & 0x7E0) | (*it >> 11);
+        ++it;
+    }
+}
+
+void PSPRenderer::on_texture_prepare(Texture* texture) {
+    // Do nothing if everything is up to date
+    if(!texture->_data_dirty() && !texture->_params_dirty()) {
+        return;
+    }
+
+    auto data = texture->data();
+    auto data_size = texture->data_size();
+    const uint8_t* palette = nullptr;
+    int palette_format = 0;
+
+    std::vector<uint8_t> new_data;
+
+    auto tex_fmt = texture->format();
+    std::size_t texel_count = texture->width() * texture->height();
+
+    int format = -1;
+
+    if(tex_fmt == TEXTURE_FORMAT_RGB_3UB_888) {
+        tex_convert_rgb888_to_bgr565(new_data, data, texture->width(),
+                                     texture->height());
+
+        data = &new_data[0];
+        data_size = new_data.size();
+        format = GU_PSM_5650;
+    } else if(tex_fmt == TEXTURE_FORMAT_ARGB_1US_4444) {
+        tex_convert_argb4444_to_abgr4444(new_data, data, texture->width(),
+                                         texture->height());
+
+        data = &new_data[0];
+        format = GU_PSM_4444;
+    } else if(tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED4 ||
+              tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED8 ||
+              tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
+              tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
+
+        palette = data;
+
+        if(tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
+           tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
+            // FIXME: nasty casting away const
+            swap_channels_8888((uint8_t*)palette, texture->palette_size());
+        } else {
+            swap_channels_565((uint8_t*)palette, texture->palette_size());
+        }
+
+        data = palette + texture->palette_size();
+        data_size -= texture->palette_size();
+    }
+
+    S_VERBOSE("Texture format: {0}. W: {1}. H: {2}", tex_fmt, texture->width(),
+              texture->height());
+
+    if(format < 0) {
+        switch(tex_fmt) {
+            case TEXTURE_FORMAT_RGB_1US_565:
+                format = GU_PSM_5650;
+                break;
+            case TEXTURE_FORMAT_RGBA_1US_5551:
+                format = GU_PSM_5551;
+                break;
+            case TEXTURE_FORMAT_RGBA_1US_4444:
+                format = GU_PSM_4444;
+                break;
+            case TEXTURE_FORMAT_RGBA_4UB_8888:
+                format = GU_PSM_8888;
+                break;
+            case TEXTURE_FORMAT_RGB565_PALETTED4:
+                format = GU_PSM_T4;
+                palette_format = GU_PSM_5650;
+                break;
+            case TEXTURE_FORMAT_RGBA8_PALETTED4:
+                format = GU_PSM_T4;
+                palette_format = GU_PSM_8888;
+                break;
+            case TEXTURE_FORMAT_RGB565_PALETTED8:
+                format = GU_PSM_T8;
+                palette_format = GU_PSM_5650;
+                break;
+            case TEXTURE_FORMAT_RGBA8_PALETTED8:
+                format = GU_PSM_T8;
+                palette_format = GU_PSM_8888;
+                break;
+            default:
+                S_ERROR("Unsupported texture format for PSP: {0}",
+                        texture->format());
+                return;
+        }
+    }
+
+    auto id = texture_manager_.upload_texture(
+        texture->_renderer_specific_id(), // If 0, the texture will be created
+        format, texture->width(), texture->height(), data_size, data, palette,
+        texture->palette_size(), palette_format,
+        texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE);
+
+    texture->_set_renderer_specific_id(id);
+    texture->_set_data_clean();
+    texture->_set_params_clean();
+}
+
+PSPRenderer::PSPRenderer(smlt::Window* window) :
+    Renderer(window), texture_manager_(this) {
+
+    S_VERBOSE("Constructing renderer");
+
+    sceGuInit();
+
+    S_VERBOSE("Renderer constructed");
+}
+}
+
+

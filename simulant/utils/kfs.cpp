@@ -186,9 +186,9 @@ std::pair<Stat, bool> lstat(const Path& path) {
         return std::make_pair(ret, false);
     }
 
-    ret.atime = psp_time_to_epoch(s.st_atime);
-    ret.ctime = psp_time_to_epoch(s.st_ctime);
-    ret.mtime = psp_time_to_epoch(s.st_mtime);
+    ret.atime = psp_time_to_epoch(s.sce_st_atime);
+    ret.ctime = psp_time_to_epoch(s.sce_st_ctime);
+    ret.mtime = psp_time_to_epoch(s.sce_st_mtime);
     ret.size = s.st_size;
 
     // FIXME: Other things!
@@ -777,7 +777,7 @@ bool is_link(const Path& path) {
 }
 
 Path real_path(const Path& path) {
-#ifdef _arch_dreamcast
+#if defined(_arch_dreamcast) | defined(__PSP__)
     throw std::logic_error("Not implemented");
 #else
     char *real_path = realpath(path.c_str(), NULL);

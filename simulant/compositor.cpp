@@ -31,6 +31,7 @@
 #include "application.h"
 #include "scenes/scene.h"
 #include "renderers/batching/render_queue.h"
+#include "tools/profiler.h"
 
 namespace smlt {
 
@@ -179,6 +180,9 @@ void Compositor::set_renderer(Renderer* renderer) {
 }
 
 void Compositor::run() {
+    S_VERBOSE("Running compositor");
+
+    _S_PROFILE_SECTION("clean");
     clean_destroyed_layers();  /* Clean up any destroyed pipelines before rendering */
 
     targets_rendered_this_frame_.clear();
@@ -187,10 +191,14 @@ void Compositor::run() {
     renderer_->pre_render();
 
     int actors_rendered = 0;
-    for(auto& pipeline: ordered_pipelines_) {
-        run_layer(pipeline, actors_rendered);
+    {        
+        _S_PROFILE_SUBSECTION("pipelines");
+        for(auto& pipeline: ordered_pipelines_) {
+            run_layer(pipeline, actors_rendered);
+        }
     }
 
+    _S_PROFILE_SECTION("stats-update");
     get_app()->stats->set_subactors_rendered(actors_rendered);
 }
 
@@ -273,12 +281,16 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     /*
      * This is where rendering actually happens.
      *
-     * FIXME: This needs some serious thought regarding thread-safety. There is no locking here
-     * and another thread could be adding/removing objects, updating the partitioner, or changing materials
-     * and/or textures on renderables. We need to make sure that we render a consistent snapshot of the world
-     * which means figuring out some kind of locking around the render queue building and traversal, or
-     * some deep-copying (of materials/textures/renderables) to make sure that nothing changes during traversal
+     * FIXME: This needs some serious thought regarding thread-safety. There is
+     * no locking here and another thread could be adding/removing objects,
+     * updating the partitioner, or changing materials and/or textures on
+     * renderables. We need to make sure that we render a consistent snapshot of
+     * the world which means figuring out some kind of locking around the render
+     * queue building and traversal, or some deep-copying (of
+     * materials/textures/renderables) to make sure that nothing changes during
+     * traversal
      */
+    _S_PROFILE_SECTION("check");
     uint64_t frame_id = generate_frame_id();
 
     if(!pipeline_stage->is_active()) {
@@ -294,17 +306,23 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     auto stage_node = pipeline_stage->stage_node();
     auto camera = pipeline_stage->camera();
 
-    RenderTarget& target = *window_; //FIXME: Should be window or texture
+    RenderTarget& target = *window_; // FIXME: Should be window or texture
 
     /*
-     *  Render targets can specify whether their buffer should be cleared at the start of each frame. We do this the first
-     *  time we hit a render target when processing the pipelines. We keep track of the targets that have been rendered each frame
-     *  and this list is cleared at the start of run().
+     *  Render targets can specify whether their buffer should be cleared at the
+     * start of each frame. We do this the first time we hit a render target
+     * when processing the pipelines. We keep track of the targets that have
+     * been rendered each frame and this list is cleared at the start of run().
      */
-    if(targets_rendered_this_frame_.find(&target) == targets_rendered_this_frame_.end()) {
+    _S_PROFILE_SECTION("clear");
+    if(targets_rendered_this_frame_.find(&target) ==
+       targets_rendered_this_frame_.end()) {
         if(target.clear_every_frame_flags()) {
-            Viewport view(smlt::VIEWPORT_TYPE_FULL, target.clear_every_frame_color());
-            view.clear(target, target.clear_every_frame_flags());
+            Viewport view(smlt::VIEWPORT_TYPE_FULL,
+                          target.clear_every_frame_color());
+            renderer_->apply_viewport(target, view);
+            renderer_->clear(target, view.color(),
+                             target.clear_every_frame_flags());
         }
 
         targets_rendered_this_frame_.insert(&target);
@@ -313,30 +331,34 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     auto& viewport = pipeline_stage->viewport;
 
     uint32_t clear = pipeline_stage->clear_flags();
+    renderer_->apply_viewport(target, viewport);
+
     if(clear) {
-        viewport->clear(target, clear); //Implicitly calls apply
-    } else {
-        viewport->apply(target); //FIXME apply shouldn't exist, it ties Viewport to OpenGL...
+        renderer_->clear(target, viewport->color(), clear);
     }
 
     signal_layer_render_started_(*pipeline_stage);
 
     // Trigger a signal to indicate the stage is about to be rendered
-    stage_node->scene->signal_layer_render_started()(camera, viewport, stage_node);
+    stage_node->scene->signal_layer_render_started()(camera, viewport,
+                                                     stage_node);
 
     static std::vector<Light*> lights_visible;
 
     /* Empty out, but leave capacity to prevent constant allocations */
     lights_visible.resize(0);
 
+    _S_PROFILE_SECTION("gather-lights");
     /* Gather lights */
     StageNodeVisitorBFS light_finder(stage_node, [&](StageNode* node) {
-        if(node->node_type() == STAGE_NODE_TYPE_DIRECTIONAL_LIGHT || node->node_type() == STAGE_NODE_TYPE_POINT_LIGHT) {
-            Light* light = (Light*) node;
+        if(node->node_type() == STAGE_NODE_TYPE_DIRECTIONAL_LIGHT ||
+           node->node_type() == STAGE_NODE_TYPE_POINT_LIGHT) {
+            Light* light = (Light*)node;
             if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
                 lights_visible.push_back(light);
             } else {
-                if(camera->frustum().intersects_sphere(light->transform->position(), light->diameter())) {
+                if(camera->frustum().intersects_sphere(
+                       light->transform->position(), light->diameter())) {
                     lights_visible.push_back(light);
                 }
             }
@@ -346,14 +368,14 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     // Traverse the tree in BFS order
     while(light_finder.call_next()) {}
 
-
+    _S_PROFILE_SECTION("reset");
     // Reset it, ready for this pipeline
     render_queue_.reset(stage_node, window->renderer.get(), camera);
 
+    _S_PROFILE_SUBSECTION("build-renderables");
     StageNodeVisitorBFS node_finder(
-        stage_node,
-        std::bind(build_renderables, lights_visible, &render_queue_, camera, pipeline_stage, std::placeholders::_1)
-    );
+        stage_node, std::bind(build_renderables, lights_visible, &render_queue_,
+                              camera, pipeline_stage, std::placeholders::_1));
 
     while(node_finder.call_next()) {}
 
@@ -361,13 +383,16 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
 
     using namespace std::placeholders;
 
+    _S_PROFILE_SECTION("traverse");
     auto visitor = renderer_->get_render_queue_visitor(camera);
 
     // Render the visible objects
     render_queue_.traverse(visitor.get(), frame_id);
 
+    _S_PROFILE_SECTION("post-render");
     // Trigger a signal to indicate the stage has been rendered
-    stage_node->scene->signal_layer_render_finished()(camera, viewport, stage_node);
+    stage_node->scene->signal_layer_render_finished()(camera, viewport,
+                                                      stage_node);
 
     signal_layer_render_finished_(*pipeline_stage);
     render_queue_.clear();

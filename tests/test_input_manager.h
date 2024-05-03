@@ -38,7 +38,7 @@ public:
     void test_axis_force() {
         InputAxis* axis = manager_->new_axis("Test");
         axis->set_positive_keyboard_key(KEYBOARD_CODE_A);
-        state_->_handle_key_down(0, KEYBOARD_CODE_A);
+        state_->_handle_key_down(KeyboardID(0), KEYBOARD_CODE_A);
         manager_->update(0.1f);
 
         // Default is 3.0
@@ -54,14 +54,15 @@ public:
         axis->set_return_speed(0.1f);
         axis->set_positive_keyboard_key(KEYBOARD_CODE_A);
 
-        state_->_handle_key_down(0, KEYBOARD_CODE_A);
+        state_->_handle_key_down(KeyboardID(0), KEYBOARD_CODE_A);
         manager_->update(1.0);
 
         assert_equal(axis->value(), 1.0f);
 
-        state_->_handle_key_up(0, KEYBOARD_CODE_A);
+        state_->_handle_key_up(KeyboardID(0), KEYBOARD_CODE_A);
 
-        assert_false(state_->keyboard_key_state(0, KEYBOARD_CODE_A));
+        assert_false(
+            state_->keyboard_key_state(KeyboardID(0), KEYBOARD_CODE_A));
 
         manager_->update(1.0);
         assert_close(axis->value(), 0.9f, 0.0001f);
@@ -130,17 +131,17 @@ public:
         assert_false(manager_->axis_was_pressed("Test"));
         assert_false(manager_->axis_was_pressed("TestX")); // Unknown axis
 
-        state_->_handle_key_down(0, KEYBOARD_CODE_0);
+        state_->_handle_key_down(KeyboardID(0), KEYBOARD_CODE_0);
         manager_->update(1.0f);
 
         assert_false(manager_->axis_was_pressed("Test")); // Still false
 
-        state_->_handle_key_down(0, KEYBOARD_CODE_A);
+        state_->_handle_key_down(KeyboardID(0), KEYBOARD_CODE_A);
         manager_->update(1.0f);
 
         assert_true(manager_->axis_was_pressed("Test"));
 
-        state_->_handle_key_up(0, KEYBOARD_CODE_A);
+        state_->_handle_key_up(KeyboardID(0), KEYBOARD_CODE_A);
         manager_->update(1.0f);
 
         assert_false(manager_->axis_was_pressed("Test"));
@@ -156,29 +157,30 @@ public:
 
         assert_false(manager_->axis_was_pressed("Test"));
 
-        state_->_handle_key_down(0, KEYBOARD_CODE_A);
+        state_->_handle_key_down(KeyboardID(0), KEYBOARD_CODE_A);
         manager_->update(1.0f);
 
         assert_true(manager_->axis_was_pressed("Test"));
 
-        state_->_handle_key_up(0, KEYBOARD_CODE_A);
+        state_->_handle_key_up(KeyboardID(0), KEYBOARD_CODE_A);
         manager_->update(1.0f);
 
         assert_false(manager_->axis_was_pressed("Test"));
 
-        state_->_handle_key_down(0, KEYBOARD_CODE_B);
+        state_->_handle_key_down(KeyboardID(0), KEYBOARD_CODE_B);
         manager_->update(1.0f);
 
         assert_true(manager_->axis_was_pressed("Test"));
 
-        state_->_handle_key_down(0, KEYBOARD_CODE_A); // Now press A as well
+        state_->_handle_key_down(KeyboardID(0),
+                                 KEYBOARD_CODE_A); // Now press A as well
         manager_->update(1.0f);
 
         /* State was already set */
         assert_false(manager_->axis_was_pressed("Test"));
 
-        state_->_handle_key_up(0, KEYBOARD_CODE_A);
-        state_->_handle_key_up(0, KEYBOARD_CODE_B);
+        state_->_handle_key_up(KeyboardID(0), KEYBOARD_CODE_A);
+        state_->_handle_key_up(KeyboardID(0), KEYBOARD_CODE_B);
         manager_->update(1.0f);
 
         assert_true(manager_->axis_was_released("Test"));

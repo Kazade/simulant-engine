@@ -48,9 +48,9 @@ public:
         fairy_mat->diffuse_map()->set_texture_filter(TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
-        cave_geom_ = create_child<smlt::Geom>(cave_mesh_);
+        cave_geom_ = create_child<smlt::Actor>(cave_mesh_);
         fairy_actor_ = create_child<smlt::Actor>(fairy_mesh_);
-        godray_geom_ = create_child<smlt::Geom>(godray_mesh_);
+        godray_geom_ = create_child<smlt::Actor>(godray_mesh_);
         fairy_actor_->set_render_priority(10);
 
         // Lights
@@ -140,8 +140,8 @@ private:
     MeshPtr godray_mesh_;
     MeshPtr fairy_mesh_;
 
-    GeomPtr cave_geom_;
-    GeomPtr godray_geom_;
+    ActorPtr cave_geom_;
+    ActorPtr godray_geom_;
     ActorPtr fairy_actor_;
 
     float cameraSpeed_ = 0.35f;

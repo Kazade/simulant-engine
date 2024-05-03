@@ -90,7 +90,7 @@ public:
     void _apply_writes();
 
 protected:
-    virtual void apply_staged_write(const StageNodeID& key, const StagedWrite& write) = 0;
+    virtual void apply_staged_write(const StagedWrite& write) = 0;
 
     void stage_write(StageNode* node, const StagedWrite& op);
 
@@ -103,8 +103,8 @@ protected:
 private:
     thread::Mutex staging_lock_;
 
-    std::vector<StageNode*> staged_writes_;
-    std::unordered_map<StageNode*, StageNodeID> removed_nodes_;
+    ContiguousMap<StageNode*, std::vector<StagedWrite>> staged_writes_;
+    std::size_t write_count_ = 0;
 };
 
 }

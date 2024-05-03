@@ -52,8 +52,7 @@ private:
         const DetailLevel detail_level
     ) override;
 
-
-    void apply_staged_write(const StageNodeID& key, const StagedWrite& write);
+    void apply_staged_write(const StagedWrite& write) override;
 };
 
 }

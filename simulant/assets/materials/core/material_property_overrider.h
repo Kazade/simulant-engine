@@ -138,6 +138,7 @@ protected:
     PropertyValue<float> point_size_property_;
     PropertyValue<bool> depth_write_enabled_property_;
     PropertyValue<bool> depth_test_enabled_property_;
+    PropertyValue<int32_t> depth_func_property_;
     PropertyValue<bool> lighting_enabled_property_;
     PropertyValue<int32_t> textures_enabled_property_;
     PropertyValue<TexturePtr> diffuse_map_property_;
@@ -186,6 +187,9 @@ protected:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_write_enabled_property_;
             case DEPTH_TEST_ENABLED_PROPERTY_HASH:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_test_enabled_property_;
+            case DEPTH_FUNC_PROPERTY_HASH:
+                return (PropertyValueMemberPtr)&MaterialPropertyOverrider::
+                    depth_func_property_;
             case LIGHTING_ENABLED_PROPERTY_HASH:
                 return (PropertyValueMemberPtr) &MaterialPropertyOverrider::lighting_enabled_property_;
             case TEXTURES_ENABLED_PROPERTY_HASH:

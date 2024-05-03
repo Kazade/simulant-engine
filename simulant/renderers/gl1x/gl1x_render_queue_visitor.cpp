@@ -111,6 +111,30 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         GLCheck(glDepthMask, GL_FALSE);
     }
 
+    switch(next->depth_func()) {
+        case DEPTH_FUNC_NEVER:
+            GLCheck(glDepthFunc, GL_NEVER);
+            break;
+        case DEPTH_FUNC_LEQUAL:
+            GLCheck(glDepthFunc, GL_LEQUAL);
+            break;
+        case DEPTH_FUNC_ALWAYS:
+            GLCheck(glDepthFunc, GL_ALWAYS);
+            break;
+        case DEPTH_FUNC_EQUAL:
+            GLCheck(glDepthFunc, GL_EQUAL);
+            break;
+        case DEPTH_FUNC_GEQUAL:
+            GLCheck(glDepthFunc, GL_GEQUAL);
+            break;
+        case DEPTH_FUNC_GREATER:
+            GLCheck(glDepthFunc, GL_GREATER);
+            break;
+        case DEPTH_FUNC_LESS:
+            GLCheck(glDepthFunc, GL_LESS);
+            break;
+    }
+
     /* Enable lighting on the pass appropriately */
     if(next->is_lighting_enabled()) {
         GLCheck(glEnable, GL_LIGHTING);
@@ -469,16 +493,21 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     const auto has_diffuse = spec.has_diffuse();
     if(has_diffuse) {
+        S_VERBOSE("Enabling colors");
         enable_color_arrays();
-        GLCheck(
-            glColorPointer,
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F) ? 2 :
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3 :
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F) ? 4 : GL_BGRA, // This weirdness is an extension apparently
-            (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) ? GL_UNSIGNED_BYTE : GL_FLOAT,
-            stride,
-            ((const uint8_t*) vertex_data) + spec.diffuse_offset(false)
-        );
+        GLCheck(glColorPointer,
+                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
+                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F ||
+                   spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
+                    ? 4
+                    : GL_BGRA, // This weirdness is an extension apparently
+                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+                 spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
+                    ? GL_UNSIGNED_BYTE
+                    : GL_FLOAT,
+                stride,
+                ((const uint8_t*)vertex_data) + spec.diffuse_offset(false));
     } else {
         disable_color_arrays();
     }

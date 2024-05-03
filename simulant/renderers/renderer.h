@@ -85,6 +85,21 @@ public:
         return texture_format_is_usable(fmt);
     }
 
+    virtual void apply_viewport(const RenderTarget& target,
+                                const Viewport& viewport) {
+        _S_UNUSED(target);
+        _S_UNUSED(viewport);
+    }
+
+    virtual void clear(const RenderTarget& target, const Color& color,
+                       uint32_t clear_flags) {
+        _S_UNUSED(target);
+        _S_UNUSED(color);
+        _S_UNUSED(clear_flags);
+    }
+
+    virtual void do_swap_buffers() {}
+
 public:
     /** To be overridden by subclasses. Default supported textures
      *  are those that are supported by glTexImage2D without any
@@ -103,6 +118,8 @@ public:
      */
     bool is_texture_registered(AssetID texture_id) const;
     void pre_render();
+    void post_render();
+
     void prepare_texture(Texture *texture);
     void prepare_material(Material* material);
 
@@ -162,6 +179,10 @@ private:
     virtual void on_material_prepare(Material* material) {
         _S_UNUSED(material);
     }
+
+    /* Called at the start of pre_render() */
+    virtual void on_pre_render() {}
+    virtual void on_post_render() {}
 
     mutable thread::Mutex texture_registry_mutex_;
     std::unordered_map<AssetID, Texture*> texture_registry_;

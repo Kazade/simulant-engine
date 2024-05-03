@@ -55,15 +55,15 @@ public:
     Ratio width() const { return width_; }
     Ratio height() const { return height_; }
 
-    void clear(const RenderTarget& target, uint32_t clear_flags);
-    void apply(const RenderTarget& target);
-
     uint32_t width_in_pixels(const RenderTarget& target) const;
     uint32_t height_in_pixels(const RenderTarget& target) const;
 
     ViewportType type() const { return type_; }
 
     void set_color(const smlt::Color& color);
+    const Color& color() const {
+        return color_;
+    }
 private:
     Ratio x_;
     Ratio y_;

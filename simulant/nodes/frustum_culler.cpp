@@ -51,13 +51,8 @@ void FrustumCuller::do_generate_renderables(
     }
 }
 
-void FrustumCuller::apply_staged_write(const StageNodeID& key, const StagedWrite &write) {
-    _S_UNUSED(key);
+void FrustumCuller::apply_staged_write(const StagedWrite& write) {
     _S_UNUSED(write);
     // Do nothing, we don't need to!
-
 }
-
-
-
 }

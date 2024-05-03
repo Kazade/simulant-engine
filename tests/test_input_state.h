@@ -118,15 +118,19 @@ public:
 
         controller_->_update_mouse_devices(mice);
 
-        controller_->_handle_mouse_motion(0, 0, 0, -5, 10);
+        controller_->_handle_mouse_motion(MouseID(0), 0, 0, -5, 10);
 
-        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_X), -5.0f);
-        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_Y), 10.0f);
+        assert_equal(controller_->mouse_axis_state(MouseID(0), MOUSE_AXIS_X),
+                     -5.0f);
+        assert_equal(controller_->mouse_axis_state(MouseID(0), MOUSE_AXIS_Y),
+                     10.0f);
 
-        controller_->_handle_mouse_motion(0, 0, 0, 5, -10);
+        controller_->_handle_mouse_motion(MouseID(0), 0, 0, 5, -10);
 
-        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_X), 5.0f);
-        assert_equal(controller_->mouse_axis_state(0, MOUSE_AXIS_Y), -10.0f);
+        assert_equal(controller_->mouse_axis_state(MouseID(0), MOUSE_AXIS_X),
+                     5.0f);
+        assert_equal(controller_->mouse_axis_state(MouseID(0), MOUSE_AXIS_Y),
+                     -10.0f);
     }
 
     void test_mouse_button_input() {
@@ -136,13 +140,13 @@ public:
 
         controller_->_update_mouse_devices(mice);
 
-        controller_->_handle_mouse_down(0, 0);
+        controller_->_handle_mouse_down(MouseID(0), 0);
 
-        assert_true(controller_->mouse_button_state(0, 0));
+        assert_true(controller_->mouse_button_state(MouseID(0), 0));
 
-        controller_->_handle_mouse_up(0, 0);
+        controller_->_handle_mouse_up(MouseID(0), 0);
 
-        assert_false(controller_->mouse_button_state(0, 0));
+        assert_false(controller_->mouse_button_state(MouseID(0), 0));
     }
 
     void test_too_many_keyboards() {

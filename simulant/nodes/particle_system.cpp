@@ -8,23 +8,20 @@
 
 namespace smlt {
 
-const static VertexSpecification PS_VERTEX_SPEC(
-    smlt::VERTEX_ATTRIBUTE_3F, // Position
-    smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_2F, // Texcoord 0
-    smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_NONE,
-    smlt::VERTEX_ATTRIBUTE_NONE,
+const static VertexSpecification
+    PS_VERTEX_SPEC(smlt::VERTEX_ATTRIBUTE_3F, // Position
+                   smlt::VERTEX_ATTRIBUTE_NONE,
+                   smlt::VERTEX_ATTRIBUTE_2F, // Texcoord 0
+                   smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
+                   smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
+                   smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
+                   smlt::VERTEX_ATTRIBUTE_NONE,
 #ifdef __DREAMCAST__
-    smlt::VERTEX_ATTRIBUTE_4UB // Diffuse
+                   smlt::VERTEX_ATTRIBUTE_4UB_BGRA // Diffuse
 #else
     smlt::VERTEX_ATTRIBUTE_4F // Diffuse
 #endif
-);
+    );
 
 ParticleSystem::ParticleSystem(Scene* owner):
     StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),

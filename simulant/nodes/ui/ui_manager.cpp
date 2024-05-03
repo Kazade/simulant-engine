@@ -216,27 +216,30 @@ void UIManager::process_event_queue(
                 auto widget = find_widget_at_window_coordinate(camera, viewport, Vec2(evt.mouse.x, evt.mouse.y));
                 if(widget) {
                     if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_DOWN) {
-                        widget->fingerdown(evt.mouse.id);
+                        widget->fingerdown(evt.mouse.id.to_int8_t());
                     } else if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
-                        widget->fingerup(evt.mouse.id);
+                        widget->fingerup(evt.mouse.id.to_int8_t());
                     }
                 } else if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION) {
                     // If we just moved over the widget, and we weren't already on it
                     // then trigger a fingerenter
-                    if(!widget->is_pressed_by_finger(evt.mouse.id)) {
-                        widget->fingerenter(evt.mouse.id);
+                    if(!widget->is_pressed_by_finger(
+                           evt.mouse.id.to_int8_t())) {
+                        widget->fingerenter(evt.mouse.id.to_int8_t());
                     }
 
                     // notify that there was a movement on the widget
-                    widget->fingermove(evt.mouse.id);
+                    widget->fingermove(evt.mouse.id.to_int8_t());
                 }
 
                 if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION || evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
                     // Go through all the widgets, if one is being pressed and it's different
                     // than the one above, then trigger a fingerleave event
                     for(auto iter: find_child_widgets()) {
-                        if(iter->is_pressed_by_finger(evt.mouse.id) && iter != widget) {
-                            iter->fingerleave(evt.mouse.id);
+                        if(iter->is_pressed_by_finger(
+                               evt.mouse.id.to_int8_t()) &&
+                           iter != widget) {
+                            iter->fingerleave(evt.mouse.id.to_int8_t());
                         }
                     }
                 }

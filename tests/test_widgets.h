@@ -107,8 +107,10 @@ public:
             clicked++;
         });
 
-        window->on_mouse_down(0, 0, window->width() / 2, window->height() / 2, false);
-        window->on_mouse_up(0, 0, window->width() / 2, window->height() / 2, false);
+        window->on_mouse_down(MouseID(0), 0, window->width() / 2,
+                              window->height() / 2, false);
+        window->on_mouse_up(MouseID(0), 0, window->width() / 2,
+                            window->height() / 2, false);
         ui->process_event_queue(camera, &viewport);
         ui->clear_event_queue();
 
