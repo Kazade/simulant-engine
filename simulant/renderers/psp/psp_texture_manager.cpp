@@ -293,6 +293,9 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
 
     static int id_counter = 0;
 
+    S_DEBUG("Uploading texture data of size: {0} format: {1} pformat: {2}",
+            data_size, format, palette_format);
+
     if(id == 0) {
         PSPTextureObject obj;
         obj.id = ++id_counter;
@@ -304,9 +307,6 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         obj.has_mipmaps = do_mipmaps;
 
         if(palette && (format == GU_PSM_T4 || format == GU_PSM_T8)) {
-            S_DEBUG("Uploading palette data of size {0} format: {1}, "
-                    "palette_format: {2}",
-                    palette_size, format, palette_format);
 
             obj.palette = (uint8_t*)aligned_alloc(16, palette_size);
             assert(obj.palette);
@@ -353,9 +353,6 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
             std::memcpy(obj->texture_ram, data, data_size);
 
             if(palette && (format == GU_PSM_T4 || format == GU_PSM_T8)) {
-                S_DEBUG("Uploading palette data of size {0} format: {1}, "
-                        "palette_format: {2}",
-                        palette_size, format, palette_format);
                 obj->palette = (uint8_t*)aligned_alloc(16, palette_size);
                 assert(obj->palette);
 
@@ -394,8 +391,15 @@ void PSPTextureManager::promote_texture(PSPTextureObject* obj) {
 }
 
 void PSPTextureManager::bind_texture(int id) {
+    if(currently_bound_texture_ == id) {
+        // Don't bind unnecessarily
+        return;
+    }
+
     auto tex = find_texture(id);
     if(tex) {
+        currently_bound_texture_ = tex->id;
+
         tex->priority = max_priority; // Reset the texture priority
 
         if(!tex->texture_vram && lowest_texture_priority_ < tex->priority) {
