@@ -64,6 +64,8 @@ private:
     /* Returns true if there are enough textures in vram with a lower
      * priority to make room for this one */
     bool space_in_vram(PSPTextureObject* obj);
+
+    int currently_bound_texture_ = 0;
 };
 
 } // namespace smlt

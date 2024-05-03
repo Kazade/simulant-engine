@@ -27,8 +27,9 @@
 #include "../../assets/material.h"
 #include "../../material_constants.h"
 #include "../../texture.h"
-#include "../../window.h"
 #include "../../viewport.h"
+#include "../../window.h"
+#include "../utils/tex_conversions.h"
 #include "psp_render_group_impl.h"
 #include "psp_render_queue_visitor.h"
 
@@ -129,13 +130,13 @@ bool PSPRenderer::texture_format_is_native(TextureFormat fmt) {
         case TEXTURE_FORMAT_RGBA_4UB_8888:
         case TEXTURE_FORMAT_RGBA_1US_5551:
         case TEXTURE_FORMAT_RGBA_1US_4444:
+        case TEXTURE_FORMAT_ARGB_1US_4444:
         case TEXTURE_FORMAT_RGB565_PALETTED4:
         case TEXTURE_FORMAT_RGB565_PALETTED8:
         case TEXTURE_FORMAT_RGBA8_PALETTED4:
         case TEXTURE_FORMAT_RGBA8_PALETTED8:
             return true;
         default:
-            S_ERROR("Couldn't handle format: {0}", fmt);
             return false;
     }
 }
@@ -189,28 +190,26 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
     const uint8_t* palette = nullptr;
     int palette_format = 0;
 
-    std::vector<uint16_t> new_data;
+    std::vector<uint8_t> new_data;
 
     auto tex_fmt = texture->format();
     std::size_t texel_count = texture->width() * texture->height();
 
+    int format = -1;
+
     if(tex_fmt == TEXTURE_FORMAT_RGB_3UB_888) {
-        /* PSP doesn't natively support this so we convert to 565 when we
-         * prepare */
-        new_data.reserve(texel_count);
+        tex_convert_rgb888_to_bgr565(new_data, data, texture->width(),
+                                     texture->height());
 
-        for(std::size_t i = 0; i < texel_count; ++i) {
-            auto off = (i * 3);
-            uint16_t texel = ((data[off + 2] >> 3) << 11) |
-                             ((data[off + 1] >> 2) << 5) |
-                             ((data[off + 0] >> 3) << 0);
+        data = &new_data[0];
+        data_size = new_data.size();
+        format = GU_PSM_5650;
+    } else if(tex_fmt == TEXTURE_FORMAT_ARGB_1US_4444) {
+        tex_convert_argb4444_to_abgr4444(new_data, data, texture->width(),
+                                         texture->height());
 
-            new_data.push_back(texel);
-        }
-
-        data = (const uint8_t*)&new_data[0];
-        data_size = texel_count * 2;
-        tex_fmt = TEXTURE_FORMAT_RGB_1US_565;
+        data = &new_data[0];
+        format = GU_PSM_4444;
     } else if(tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED4 ||
               tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED8 ||
               tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
@@ -233,40 +232,41 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
     S_VERBOSE("Texture format: {0}. W: {1}. H: {2}", tex_fmt, texture->width(),
               texture->height());
 
-    int format = 0;
-    switch(tex_fmt) {
-        case TEXTURE_FORMAT_RGB_1US_565:
-            format = GU_PSM_5650;
-            break;
-        case TEXTURE_FORMAT_RGBA_1US_5551:
-            format = GU_PSM_5551;
-            break;
-        case TEXTURE_FORMAT_RGBA_1US_4444:
-            format = GU_PSM_4444;
-            break;
-        case TEXTURE_FORMAT_RGBA_4UB_8888:
-            format = GU_PSM_8888;
-            break;
-        case TEXTURE_FORMAT_RGB565_PALETTED4:
-            format = GU_PSM_T4;
-            palette_format = GU_PSM_5650;
-            break;
-        case TEXTURE_FORMAT_RGBA8_PALETTED4:
-            format = GU_PSM_T4;
-            palette_format = GU_PSM_8888;
-            break;
-        case TEXTURE_FORMAT_RGB565_PALETTED8:
-            format = GU_PSM_T8;
-            palette_format = GU_PSM_5650;
-            break;
-        case TEXTURE_FORMAT_RGBA8_PALETTED8:
-            format = GU_PSM_T8;
-            palette_format = GU_PSM_8888;
-            break;
-        default:
-            S_ERROR("Unsupported texture format for PSP: {0}",
-                    texture->format());
-            return;
+    if(format < 0) {
+        switch(tex_fmt) {
+            case TEXTURE_FORMAT_RGB_1US_565:
+                format = GU_PSM_5650;
+                break;
+            case TEXTURE_FORMAT_RGBA_1US_5551:
+                format = GU_PSM_5551;
+                break;
+            case TEXTURE_FORMAT_RGBA_1US_4444:
+                format = GU_PSM_4444;
+                break;
+            case TEXTURE_FORMAT_RGBA_4UB_8888:
+                format = GU_PSM_8888;
+                break;
+            case TEXTURE_FORMAT_RGB565_PALETTED4:
+                format = GU_PSM_T4;
+                palette_format = GU_PSM_5650;
+                break;
+            case TEXTURE_FORMAT_RGBA8_PALETTED4:
+                format = GU_PSM_T4;
+                palette_format = GU_PSM_8888;
+                break;
+            case TEXTURE_FORMAT_RGB565_PALETTED8:
+                format = GU_PSM_T8;
+                palette_format = GU_PSM_5650;
+                break;
+            case TEXTURE_FORMAT_RGBA8_PALETTED8:
+                format = GU_PSM_T8;
+                palette_format = GU_PSM_8888;
+                break;
+            default:
+                S_ERROR("Unsupported texture format for PSP: {0}",
+                        texture->format());
+                return;
+        }
     }
 
     auto id = texture_manager_.upload_texture(

@@ -275,11 +275,11 @@ void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
         case VERTEX_ATTRIBUTE_3F:
             *vout = smlt::Colour(v[0], v[1], v[2], 1.0f).to_abgr_4444();
             break;
-        case VERTEX_ATTRIBUTE_4UB:
+        case VERTEX_ATTRIBUTE_4UB_RGBA:
             *vout = smlt::Colour::from_bytes(vin[0], vin[1], vin[2], vin[3])
                         .to_abgr_4444();
             break;
-        case VERTEX_ATTRIBUTE_4UB_REV:
+        case VERTEX_ATTRIBUTE_4UB_BGRA:
             *vout = smlt::Colour::from_bytes(vin[2], vin[1], vin[0], vin[3])
                         .to_abgr_4444();
             break;
