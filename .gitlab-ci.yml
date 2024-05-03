@@ -1,6 +1,6 @@
 include:
   - template: Jobs/Dependency-Scanning.latest.gitlab-ci.yml
-  - template: Jobs/SAST.latest.gitlab-ci.yml  
+  - template: Jobs/SAST.latest.gitlab-ci.yml
   - template: Jobs/Code-Quality.gitlab-ci.yml
   - template: Jobs/Secret-Detection.latest.gitlab-ci.yml
 
@@ -275,6 +275,31 @@ test:psp-mips-gcc:
     - ${TARGET}/debug/simulant/libsimulant.a
     - ${TARGET}/release/simulant/libsimulant.a
 
+
+build:windows-x64-vcxx:release:
+  stage: build
+  allow_failure: true
+  tags:
+    - shared-windows
+    - windows
+    - windows-1809
+  variables:
+    TARGET: windows-x64-vcxx
+    MSBUILD: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe'
+  before_script:
+    - choco install -y cmake
+    - $env:Path += ';C:\Program Files\CMake\bin'
+  script:
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - dir
+   - '& "$MSBUILD" my.vcxproj'
+  artifacts:
+    paths:
+      - ${TARGET}/release/simulant/*.dll
+
+
 build:windows-x64-mingw:release:
   stage: build
   image: $CI_REGISTRY_IMAGE:windows-x64-mingw
@@ -467,7 +492,6 @@ test:linux-x64-gcc-release:
    - cd ${TARGET}/release
    - export SIMULANT_SOUND_DRIVER=null
    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
-  artifacts:
   artifacts:
    when: always
    paths:
