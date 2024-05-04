@@ -163,22 +163,6 @@ void PSPRenderer::do_swap_buffers() {
     sceGuSwapBuffers();
 }
 
-static void swap_channels_8888(uint8_t* data, const std::size_t data_size) {
-    for(std::size_t i = 0; i < data_size; i += 4) {
-        std::swap(data[i + 0], data[i + 3]);
-        std::swap(data[i + 1], data[i + 2]);
-    }
-}
-
-static void swap_channels_565(uint8_t* data, const std::size_t data_size) {
-    uint16_t* it = (uint16_t*)data;
-
-    for(std::size_t i = 0; i < data_size; i += 2) {
-        *it = (*it & 0x1F) << 11 | (*it & 0x7E0) | (*it >> 11);
-        ++it;
-    }
-}
-
 void PSPRenderer::on_texture_prepare(Texture* texture) {
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
@@ -191,6 +175,7 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
     int palette_format = 0;
 
     std::vector<uint8_t> new_data;
+    std::vector<uint8_t> new_palette;
 
     auto tex_fmt = texture->format();
     std::size_t texel_count = texture->width() * texture->height();
@@ -210,22 +195,48 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
 
         data = &new_data[0];
         format = GU_PSM_4444;
+    } else if(tex_fmt == TEXTURE_FORMAT_RGB_1US_565) {
+        tex_convert_rgb565_to_bgr565(new_data, data, texture->width(),
+                                     texture->height());
+
+        data = &new_data[0];
+        format = GU_PSM_5650;
     } else if(tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED4 ||
               tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED8 ||
+              tex_fmt == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+              tex_fmt == TEXTURE_FORMAT_RGB8_PALETTED8 ||
               tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
               tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
 
-        palette = data;
-
-        if(tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
-           tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
-            // FIXME: nasty casting away const
-            swap_channels_8888((uint8_t*)palette, texture->palette_size());
-        } else {
-            swap_channels_565((uint8_t*)palette, texture->palette_size());
+        switch(tex_fmt) {
+            case TEXTURE_FORMAT_RGBA8_PALETTED4:
+            case TEXTURE_FORMAT_RGBA8_PALETTED8: {
+                auto w = texture->palette_size() / 4;
+                tex_convert_rgba8888_to_abgr8888(new_palette, data, w, 1);
+            } break;
+            case TEXTURE_FORMAT_RGB8_PALETTED4: {
+                auto w = texture->palette_size() / 3;
+                tex_convert_rgb888_to_bgr565(new_palette, data, w, 1);
+                format = GU_PSM_T4;
+                palette_format = GU_PSM_5650;
+            } break;
+            case TEXTURE_FORMAT_RGB8_PALETTED8: {
+                auto w = texture->palette_size() / 3;
+                tex_convert_rgb888_to_bgr565(new_palette, data, w, 1);
+                format = GU_PSM_T8;
+                palette_format = GU_PSM_5650;
+            } break;
+            case TEXTURE_FORMAT_RGB565_PALETTED8:
+            case TEXTURE_FORMAT_RGB565_PALETTED4: {
+                auto w = texture->palette_size() / 2;
+                tex_convert_rgb565_to_bgr565(new_palette, data, w, 1);
+            } break;
+            default:
+                break;
         }
 
-        data = palette + texture->palette_size();
+        palette = &new_palette[0];
+        data = data + texture->palette_size();
         data_size -= texture->palette_size();
     }
 
