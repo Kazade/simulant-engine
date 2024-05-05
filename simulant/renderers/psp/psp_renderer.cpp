@@ -82,12 +82,14 @@ void PSPRenderer::init_context() {
     sceGuOffset(2048 - (window->width() / 2), 2048 - (window->height() / 2));
     sceGuViewport(2048, 2048, window->width(), window->height());
 
-    sceGuDepthRange(32, 65535);
+    sceGuDepthRange(0, 65535);
     sceGuDepthFunc(GU_LEQUAL);
     sceGuEnable(GU_DEPTH_TEST);
     sceGuEnable(GU_CLIP_PLANES);
     sceGuShadeModel(GU_SMOOTH);
     sceGuFrontFace(GU_CCW);
+
+    sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 
     sceGuFinish();
     sceGuSync(0, 0);
@@ -212,7 +214,8 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
             case TEXTURE_FORMAT_RGBA8_PALETTED4:
             case TEXTURE_FORMAT_RGBA8_PALETTED8: {
                 auto w = texture->palette_size() / 4;
-                tex_convert_rgba8888_to_abgr8888(new_palette, data, w, 1);
+                new_palette.resize(data_size);
+                std::memcpy(&new_palette[0], data, texture->palette_size());
             } break;
             case TEXTURE_FORMAT_RGB8_PALETTED4: {
                 auto w = texture->palette_size() / 3;

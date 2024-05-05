@@ -281,6 +281,11 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
      * always swizzle here - in future we can change that and avoid the
      * perf cost. We don't currently swizzled paletted textures. */
 
+    // FIXME: generate mipmaps for paletted formats
+    if(format == GU_PSM_T4 || format == GU_PSM_T8) {
+        do_mipmaps = false;
+    }
+
     if(do_mipmaps) {
         data_size = generate_mipmaps(buffer, format, width, height, data);
         data = &buffer[0];
@@ -307,11 +312,10 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         obj.has_mipmaps = do_mipmaps;
 
         if(palette && (format == GU_PSM_T4 || format == GU_PSM_T8)) {
-
             obj.palette = (uint8_t*)aligned_alloc(16, palette_size);
             assert(obj.palette);
 
-            std::memcpy(obj.palette, palette, obj.palette_size);
+            std::memcpy(obj.palette, palette, palette_size);
             obj.palette_format = palette_format;
             obj.palette_size = palette_size;
         } else {
@@ -322,12 +326,12 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         obj.texture_ram = (uint8_t*)aligned_alloc(16, data_size);
         std::memcpy(obj.texture_ram, data, data_size);
 
+        textures_.push_back(obj);
+
         // This will promote to vram if possible
         bind_texture(obj.id);
 
         S_DEBUG("Created texture: {0}", obj.id);
-
-        textures_.push_back(obj);
 
         return obj.id;
     } else {
@@ -356,7 +360,7 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
                 obj->palette = (uint8_t*)aligned_alloc(16, palette_size);
                 assert(obj->palette);
 
-                std::memcpy(obj->palette, palette, obj->palette_size);
+                std::memcpy(obj->palette, palette, palette_size);
                 obj->palette_format = palette_format;
                 obj->palette_size = palette_size;
             } else {
@@ -410,11 +414,11 @@ void PSPTextureManager::bind_texture(int id) {
             }
         }
 
-        if(tex->palette) {
+        if(tex->palette) {            
             auto entries = tex->palette_size /
                            ((tex->palette_format == GU_PSM_8888) ? 4 : 2);
 
-            sceGuClutMode(tex->palette_format, 0, 0xFF, 0);
+            sceGuClutMode(tex->palette_format, 0, entries - 1, 0);
             sceGuClutLoad(entries / 8, tex->palette);
         }
 
