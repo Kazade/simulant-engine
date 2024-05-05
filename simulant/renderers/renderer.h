@@ -100,6 +100,10 @@ public:
 
     virtual void do_swap_buffers() {}
 
+    virtual std::size_t max_texture_size() const {
+        return 1024;
+    }
+
 public:
     /** To be overridden by subclasses. Default supported textures
      *  are those that are supported by glTexImage2D without any

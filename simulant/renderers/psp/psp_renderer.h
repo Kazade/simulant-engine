@@ -56,8 +56,14 @@ public:
 
     bool texture_format_is_native(TextureFormat fmt) override;
 
-    void clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags);
-    void apply_viewport(const RenderTarget& target, const Viewport& viewport);
+    void clear(const RenderTarget& target, const Colour& colour,
+               uint32_t clear_flags) override;
+    void apply_viewport(const RenderTarget& target,
+                        const Viewport& viewport) override;
+
+    std::size_t max_texture_size() const override {
+        return 512;
+    }
 
 private:    
     uint8_t list_[512 * 1024] __attribute__((aligned(64)));

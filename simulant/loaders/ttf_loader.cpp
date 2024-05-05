@@ -1,9 +1,12 @@
+#include "ttf_loader.h"
+#include "../application.h"
+#include "../asset_manager.h"
+#include "../font.h"
+#include "../platform.h"
+#include "../renderers/renderer.h"
+#include "../window.h"
 #include "deps/stb_rect_pack/stb_rect_pack.h"
 #include "deps/stb_truetype/stb_truetype.h"
-#include "ttf_loader.h"
-#include "../font.h"
-#include "../asset_manager.h"
-#include "../platform.h"
 
 namespace smlt {
 namespace loaders {
@@ -181,15 +184,20 @@ namespace loaders {
             offset += block.num_chars;
         }
 
+        auto max_texture_size =
+            smlt::get_app()->window->renderer->max_texture_size();
+
+        S_INFO("Packing using max texture size of {0}", max_texture_size);
+
         while(packed < blocks.size()) {
             // Phase 1. Increment texture size
             font->pages_.push_back(FontPage());
 
-            int width = 256;
+            std::size_t width = 256;
             int blocks_to_pack = blocks.size() - packed;
 
             std::vector<uint8_t> pixels;
-            while(width < 2048) {
+            while(width < (max_texture_size * 2)) {
                 pixels.resize(width * width);
 
                 stbtt_PackBegin(&ctx, &pixels[0], width, width, 0, 1, NULL);
@@ -207,8 +215,8 @@ namespace loaders {
             }
 
             // Phase 2. Reduce block sizes
-            if(width == 2048) {
-                width = 1024;
+            if(width == (max_texture_size * 2)) {
+                width = max_texture_size;
                 pixels.resize(width * width);
 
                 while(blocks_to_pack > 1) {
@@ -235,7 +243,6 @@ namespace loaders {
                         }
 
                         packed += blocks_to_pack;
-                        blocks_to_pack = 0;
                         font->pages_[current_page].width = width;
                         font->pages_[current_page].height = width;
                         break;
