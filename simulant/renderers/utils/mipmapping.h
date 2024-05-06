@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 std::size_t generate_mipmap_level_rgb565(int lw, int lh, const uint8_t* src,
