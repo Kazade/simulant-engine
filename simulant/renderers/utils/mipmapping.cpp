@@ -1,4 +1,5 @@
 #include "mipmapping.h"
+#include "../../logging.h"
 #include <initializer_list>
 
 std::size_t generate_mipmap_level_rgb565(int lw, int lh, const uint8_t* src,
@@ -137,6 +138,9 @@ std::size_t generate_mipmap_level_rgba8888(int lw, int lh, const uint8_t* src,
                                            uint8_t* dest) {
     int w = lw >> 1;
     int h = lh >> 1;
+
+    w = std::max(w, 1);
+    h = std::max(h, 1);
 
     const int stride = 4;
     const int src_row_stride = lw * stride;

@@ -112,6 +112,8 @@ static std::size_t generate_mipmaps(std::vector<uint8_t>& out,
 
     uint8_t* new_data = &out[0];
 
+    mipmaps.clear();
+
     PSPMipmap base;
     base.offset = 0;
     base.w = w;
@@ -134,7 +136,7 @@ static std::size_t generate_mipmaps(std::vector<uint8_t>& out,
         const uint8_t* src = &new_data[0];
         uint8_t* dest = &new_data[0] + offset;
 
-        while(w > 1 || h > 1) {
+        while(true) {
             PSPMipmap mipmap;
             mipmap.offset = (dest - &new_data[0]);
             mipmap.w = w;
@@ -168,8 +170,16 @@ static std::size_t generate_mipmaps(std::vector<uint8_t>& out,
                 dest += new_level_size;
             }
 
+            if(w == 1 && h == 1) {
+                // We're done!
+                break;
+            }
+
             w >>= 1;
             h >>= 1;
+
+            w = std::max((int)w, 1);
+            h = std::max((int)h, 1);
         }
 
         /* Now we have to swizzle each mipmap level */
@@ -370,13 +380,18 @@ void PSPTextureManager::bind_texture(int id) {
         }
 
         assert(tex->mipmaps.size() > 0);
-        sceGuTexMode(tex->format, tex->mipmaps.size() - 1, 0,
+        sceGuTexMode(tex->format, std::min(tex->mipmaps.size(), 8u), 0,
                      (tex->is_swizzled) ? GU_TRUE : GU_FALSE);
 
         auto data = tex->texture_vram ? tex->texture_vram : tex->texture_ram;
         int i = 0;
 
         for(auto& level: tex->mipmaps) {
+            if(i > 7) {
+                // PSP only supports up to 8 levels
+                break;
+            }
+
             sceGuTexImage(i++, level.w, level.h, level.w, data + level.offset);
         }
 
