@@ -1,11 +1,12 @@
+#include "psp_texture_manager.h"
 #include "../../core/memory.h"
+#include "../utils/mipmapping.h"
+#include "psp_renderer.h"
+#include <map>
 #include <pspdisplay.h>
 #include <pspgu.h>
 #include <pspgum.h>
 #include <pspkernel.h>
-
-#include "psp_texture_manager.h"
-#include "psp_renderer.h"
 
 namespace smlt {
 
@@ -89,10 +90,15 @@ static std::size_t calc_mipmap_data_required(int format, std::size_t w,
         }
     }
 
-    return final_data_size;
+    return final_data_size + (calc_row_stride(format, w) * h);
 }
 
-static std::size_t generate_mipmaps(std::vector<uint8_t>& out, int format,
+static inline bool is_paletted_format(int format) {
+    return format == GU_PSM_T4 || format == GU_PSM_T8;
+}
+
+static std::size_t generate_mipmaps(std::vector<uint8_t>& out,
+                                    PSPMipmapVector& mipmaps, int format,
                                     std::size_t w, std::size_t h,
                                     const uint8_t*& data) {
 
@@ -106,165 +112,78 @@ static std::size_t generate_mipmaps(std::vector<uint8_t>& out, int format,
 
     uint8_t* new_data = &out[0];
 
-    if(format == GU_PSM_T4 || format == GU_PSM_T8) {
+    PSPMipmap base;
+    base.offset = 0;
+    base.w = w;
+    base.h = h;
+
+    mipmaps.push_back(base);
+
+    if(is_paletted_format(format)) {
         // FIXME: Support paletted texture mipmaps
         swizzle(new_data, data, row_stride, h);
         return data_size;
     } else {
         S_DEBUG("[MIP] Copied {0} bytes to level 0", data_size);
         std::memcpy(new_data, data, data_size);
-    }
 
-    uint8_t* src = new_data;
-    uint8_t* dest = new_data + data_size;
+        int offset = calc_row_stride(format, w) * h;
+        w >>= 1;
+        h >>= 1;
 
-    struct Mipmap {
-        uint8_t* ptr;
-        std::size_t row_stride;
-        std::size_t h;
-    };
+        const uint8_t* src = &new_data[0];
+        uint8_t* dest = &new_data[0] + offset;
 
-    std::vector<Mipmap> mipmaps;
+        while(w > 1 || h > 1) {
+            PSPMipmap mipmap;
+            mipmap.offset = (dest - &new_data[0]);
+            mipmap.w = w;
+            mipmap.h = h;
+            mipmaps.push_back(mipmap);
 
-    Mipmap base;
-    base.ptr = src;
-    base.row_stride = row_stride;
-    base.h = h;
+            if(format == GU_PSM_5650) {
+                auto new_level_size =
+                    generate_mipmap_level_rgb565(w * 2, h * 2, src, dest);
 
-    mipmaps.push_back(base);
+                src = dest;
+                dest += new_level_size;
+            } else if(format == GU_PSM_4444) {
+                auto new_level_size =
+                    generate_mipmap_level_rgba4444(w * 2, h * 2, src, dest);
 
-    while(w > 1 || h > 1) {
-        auto lw = w;
-        auto lh = h;
-        auto source_row_stride = calc_row_stride(format, w);
-        auto dest_row_stride = calc_row_stride(format, w / 2);
+                src = dest;
+                dest += new_level_size;
+            } else if(format == GU_PSM_5551) {
+                auto new_level_size =
+                    generate_mipmap_level_rgba5551(w * 2, h * 2, src, dest);
 
-        S_DEBUG("[MIP] SRS: {0}, DRS: {1}", source_row_stride, dest_row_stride);
+                src = dest;
+                dest += new_level_size;
+            } else {
+                assert(format == GU_PSM_8888);
+                auto new_level_size =
+                    generate_mipmap_level_rgba8888(w * 2, h * 2, src, dest);
 
-        if(w > 1) {
-            w /= 2;
-        }
-
-        if(h > 1) {
-            h /= 2;
-        }
-
-        Mipmap map;
-        map.ptr = dest;
-        map.row_stride = dest_row_stride;
-        map.h = h;
-
-        mipmaps.push_back(map);
-
-        for(std::size_t y = 0; y < lh; y += 2) {
-            for(std::size_t x = 0; x < lw; x += 2) {
-
-                int source_idx = ((y * source_row_stride) + x);
-                int dest_idx = (((y / 2) * dest_row_stride) + (x / 2));
-
-                if(format == GU_PSM_8888) {
-                    uint8_t* src_t = src + source_idx;
-                    uint8_t* dest_t = dest + dest_idx;
-
-                    uint8_t* t0 = src_t;
-                    uint8_t* t1 = src_t + 1;
-                    uint8_t* t2 = src_t + source_row_stride;
-                    uint8_t* t3 = src_t + source_row_stride + 1;
-
-                    int r = 0, g = 0, b = 0, a = 0;
-                    for(auto& t: {t0, t1, t2, t3}) {
-                        r += t[0];
-                        g += t[1];
-                        b += t[2];
-                        a += t[3];
-                    }
-
-                    r /= 4;
-                    g /= 4;
-                    b /= 4;
-                    a /= 4;
-
-                    dest_t[0] = r;
-                    dest_t[1] = g;
-                    dest_t[2] = b;
-                    dest_t[3] = a;
-
-                } else {
-                    uint16_t* src_t = (uint16_t*)(src + source_idx);
-                    uint16_t* dest_t = (uint16_t*)(dest + dest_idx);
-
-                    uint16_t t0 = *src_t;
-                    uint16_t t1 = *(src_t + 1);
-                    uint16_t t2 = *(src_t + source_row_stride);
-                    uint16_t t3 = *(src_t + source_row_stride + 1);
-
-                    uint16_t final = 0;
-                    if(format == GU_PSM_5650) {
-                        int r = 0, g = 0, b = 0;
-                        for(const uint16_t& t: {t0, t1, t2, t3}) {
-                            r += (t >> 11) & 0x1F;
-                            g += ((t >> 5) & 0x3F);
-                            b += (t & 0x1F);
-                        }
-
-                        r /= 4;
-                        g /= 4;
-                        b /= 4;
-
-                        final = (r << 11) | (g << 5) | (b);
-                    } else if(format == GU_PSM_4444) {
-                        int r = 0, g = 0, b = 0, a = 0;
-
-                        for(const uint16_t& t: {t0, t1, t2, t3}) {
-                            r += (t >> 12);
-                            g += ((t >> 8) & 0xF);
-                            b += ((t >> 4) & 0xF);
-                            a += (t & 0xF);
-                        }
-
-                        r /= 4;
-                        g /= 4;
-                        b /= 4;
-                        a /= 4;
-
-                        final = (r << 12) | (g << 8) | (b << 4) | (a);
-                    } else if(format == GU_PSM_5551) {
-                        int r = 0, g = 0, b = 0, a = 0;
-
-                        for(const uint16_t& t: {t0, t1, t2, t3}) {
-                            r += ((t >> 11) & 0x1F);
-                            g += ((t >> 6) & 0x1F);
-                            b += ((t >> 1) & 0x1F);
-                            a += (t & 0x1);
-                        }
-
-                        r /= 4;
-                        g /= 4;
-                        b /= 4;
-                        a /= 4;
-
-                        final = (r << 11) | (g << 6) | (b << 1) | (a & 0x1);
-                    }
-
-                    *dest_t = final;
-                }
+                src = dest;
+                dest += new_level_size;
             }
+
+            w >>= 1;
+            h >>= 1;
         }
 
-        src = dest;
-        dest += calc_row_stride(format, w) * h;
+        /* Now we have to swizzle each mipmap level */
+        for(auto& map: mipmaps) {
+            auto row_stride = calc_row_stride(format, map.w);
+            std::vector<uint8_t> temp(row_stride * map.h);
+            swizzle(&temp[0], &new_data[0] + map.offset, row_stride, map.h);
+            std::memcpy(&new_data[0] + map.offset, &temp[0], temp.size());
+        }
+
+        data = new_data;
+
+        return final_data_size;
     }
-
-    /* Now we have to swizzle each mipmap level */
-    for(auto& map: mipmaps) {
-        std::vector<uint8_t> temp(map.row_stride * map.h);
-        swizzle(&temp[0], map.ptr, map.row_stride, map.h);
-        std::memcpy(map.ptr, &temp[0], temp.size());
-    }
-
-    data = new_data;
-
-    return final_data_size;
 }
 
 int PSPTextureManager::upload_texture(int id, int format, int width, int height,
@@ -274,29 +193,42 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
                                       std::size_t palette_size,
                                       int palette_format, bool do_mipmaps) {
 
-    std::vector<uint8_t> buffer;
+    static int id_counter = 0;
+    static std::vector<uint8_t> buffer;
+    buffer.clear();
+
+    PSPMipmapVector mipmaps;
+
+    bool is_swizzled = false;
+
+    // FIXME: generate mipmaps for paletted formats
+    if(is_paletted_format(format)) {
+        do_mipmaps = false;
+    }
 
     /* We don't currently allowed swizzled versions of texture formats, which
      * means users can't just provide their pre-swizzled textures, so we
      * always swizzle here - in future we can change that and avoid the
-     * perf cost. We don't currently swizzled paletted textures. */
-
-    // FIXME: generate mipmaps for paletted formats
-    if(format == GU_PSM_T4 || format == GU_PSM_T8) {
-        do_mipmaps = false;
-    }
-
+     * perf cost. */
     if(do_mipmaps) {
-        data_size = generate_mipmaps(buffer, format, width, height, data);
+        data_size =
+            generate_mipmaps(buffer, mipmaps, format, width, height, data);
         data = &buffer[0];
+        is_swizzled = true;
     } else {
         int row_stride = calc_row_stride(format, width);
         buffer.resize(data_size);
         swizzle(&buffer[0], data, row_stride, height);
         data = &buffer[0];
-    }
+        is_swizzled = true;
 
-    static int id_counter = 0;
+        // Specify the base level image
+        PSPMipmap base;
+        base.offset = 0;
+        base.w = width;
+        base.h = height;
+        mipmaps.push_back(base);
+    }
 
     S_DEBUG("Uploading texture data of size: {0} format: {1} pformat: {2}",
             data_size, format, palette_format);
@@ -309,9 +241,10 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         obj.height = height;
         obj.data_size = data_size;
         obj.priority = max_priority;
-        obj.has_mipmaps = do_mipmaps;
+        obj.mipmaps = mipmaps;
+        obj.is_swizzled = is_swizzled;
 
-        if(palette && (format == GU_PSM_T4 || format == GU_PSM_T8)) {
+        if(is_paletted_format(obj.format)) {
             obj.palette = (uint8_t*)aligned_alloc(16, palette_size);
             assert(obj.palette);
 
@@ -325,6 +258,8 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         // FIXME: If this malloc fails, what should we do?
         obj.texture_ram = (uint8_t*)aligned_alloc(16, data_size);
         std::memcpy(obj.texture_ram, data, data_size);
+
+        obj.texture_vram = nullptr;
 
         textures_.push_back(obj);
 
@@ -352,11 +287,14 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
             obj->height = height;
             obj->data_size = data_size;
             obj->format = format;
-            obj->has_mipmaps = do_mipmaps;
+            obj->mipmaps = mipmaps;
+            obj->is_swizzled = is_swizzled;
             obj->texture_ram = (uint8_t*)aligned_alloc(16, data_size);
+            obj->texture_vram = nullptr;
+
             std::memcpy(obj->texture_ram, data, data_size);
 
-            if(palette && (format == GU_PSM_T4 || format == GU_PSM_T8)) {
+            if(is_paletted_format(obj->format)) {
                 obj->palette = (uint8_t*)aligned_alloc(16, palette_size);
                 assert(obj->palette);
 
@@ -406,12 +344,21 @@ void PSPTextureManager::bind_texture(int id) {
 
         tex->priority = max_priority; // Reset the texture priority
 
-        if(!tex->texture_vram && lowest_texture_priority_ < tex->priority) {
+        auto available = vram_alloc_count_continuous((void*)0);
+
+        if(!tex->texture_vram && (available < tex->data_size ||
+                                  lowest_texture_priority_ < tex->priority)) {
             /* We've bound a texture not in vram, and there's a texture with a
              * lower priority. Let's find out what it is! */
             if(space_in_vram(tex)) {
                 promote_texture(tex);
+            } else {
+                S_ERROR("No space in vram. {0} vs {1}", tex->data_size,
+                        available);
             }
+        } else {
+            S_ERROR("Not promoting: {0} vs {1} - {2} vs {3}", available,
+                    tex->data_size, lowest_texture_priority_, tex->priority);
         }
 
         if(tex->palette) {            
@@ -422,36 +369,18 @@ void PSPTextureManager::bind_texture(int id) {
             sceGuClutLoad(entries / 8, tex->palette);
         }
 
-        sceGuTexMode(tex->format, 8, 0, GU_TRUE);
+        assert(tex->mipmaps.size() > 0);
+        sceGuTexMode(tex->format, tex->mipmaps.size() - 1, 0,
+                     (tex->is_swizzled) ? GU_TRUE : GU_FALSE);
 
         auto data = tex->texture_vram ? tex->texture_vram : tex->texture_ram;
-        sceGuTexImage(0, tex->width, tex->height, tex->width, data);
+        int i = 0;
 
-        if(tex->has_mipmaps) {
-            // Specify the other mip levels
-            int w = tex->width;
-            int h = tex->height;
-            uint8_t* mip = data + calc_row_stride(tex->format, w) * h;
-
-            int i = 1;
-            w /= 2;
-            h /= 2;
-            while(w > 1 || h > 1) {
-                sceGuTexImage(i++, w, h, w, mip);
-
-                mip += calc_row_stride(tex->format, w) * h;
-
-                if(w > 1) {
-                    w /= 2;
-                }
-
-                if(h > 1) {
-                    h /= 2;
-                }
-            }
+        for(auto& level: tex->mipmaps) {
+            sceGuTexImage(i++, level.w, level.h, level.w, data + level.offset);
         }
 
-        if(tex->has_mipmaps) {
+        if(tex->mipmaps.size() > 1) {
             switch(tex->filter) {
                 case TEXTURE_FILTER_BILINEAR:
                     sceGuTexFilter(GU_LINEAR, GU_LINEAR_MIPMAP_NEAREST);
@@ -554,9 +483,11 @@ PSPTextureObject* PSPTextureManager::find_texture(int id) {
 }
 
 bool PSPTextureManager::space_in_vram(PSPTextureObject* obj) {
-
-    if(obj->data_size >= vram_alloc_pool_size((void*)0)) {
+    auto pool_size = vram_alloc_pool_size((void*)0);
+    if(obj->data_size >= pool_size) {
         // No amount of evicting will help us
+        S_DEBUG("Not enough room in pool to store texture in vram: {0} vs {1}",
+                obj->data_size, pool_size);
         return false;
     }
 

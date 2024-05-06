@@ -55,6 +55,8 @@ batcher::RenderGroupKey PSPRenderer::prepare_render_group(
     );
 }
 
+#define ALIGN32(x) ((x + (31)) & ~31)
+
 void PSPRenderer::init_context() {
     S_VERBOSE("init_context");
     const int buffer_width = 512;
@@ -68,7 +70,7 @@ void PSPRenderer::init_context() {
     uint8_t* draw_buffer = disp_buffer + frame_size;
     uint8_t* depth_buffer = draw_buffer + frame_size;
 
-    void* texture_ram = depth_buffer + buffer_width;
+    void* texture_ram = (void*)ALIGN32((intptr_t)(depth_buffer + buffer_width));
 
     // Allocate 1.5M of VRAM for textures FIXME: Can we do more?
     vram_alloc_init(texture_ram, 1024 * 1536);
@@ -213,7 +215,6 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
         switch(tex_fmt) {
             case TEXTURE_FORMAT_RGBA8_PALETTED4:
             case TEXTURE_FORMAT_RGBA8_PALETTED8: {
-                auto w = texture->palette_size() / 4;
                 new_palette.resize(data_size);
                 std::memcpy(&new_palette[0], data, texture->palette_size());
             } break;
@@ -241,6 +242,18 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
         palette = &new_palette[0];
         data = data + texture->palette_size();
         data_size -= texture->palette_size();
+
+        /* Very strangely, PSP 4bpp format has each nibble reversed compared
+         * to DC and PC(?) */
+        if(tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
+           tex_fmt == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+           tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED4) {
+            for(std::size_t i = 0; i < data_size; ++i) {
+                new_data.push_back((data[i] >> 4) | (data[i] & 0xF) << 4);
+            }
+
+            data = &new_data[0];
+        }
     }
 
     S_VERBOSE("Texture format: {0}. W: {1}. H: {2}", tex_fmt, texture->width(),

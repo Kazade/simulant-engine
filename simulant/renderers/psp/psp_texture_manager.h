@@ -1,13 +1,21 @@
 #pragma once
 
-#include "simulant/texture.h"
+#include "../../texture.h"
+#include "../../utils/limited_vector.h"
 #include <cstdint>
-#include <map>
 #include <vector>
 
 namespace smlt {
 
 class PSPRenderer;
+
+struct PSPMipmap {
+    uint32_t offset = 0;
+    int w = 0;
+    int h = 0;
+};
+
+typedef LimitedVector<PSPMipmap, 10> PSPMipmapVector;
 
 struct PSPTextureObject {
     int id = 0;
@@ -31,7 +39,9 @@ struct PSPTextureObject {
     uint8_t priority = 255;
 
     TextureFilter filter = TEXTURE_FILTER_POINT;
-    bool has_mipmaps = false;
+    PSPMipmapVector mipmaps;
+
+    bool is_swizzled = false;
 };
 
 class PSPTextureManager {
