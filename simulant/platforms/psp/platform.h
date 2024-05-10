@@ -18,9 +18,7 @@ public:
         return native;
     }
 
-    uint64_t available_ram_in_bytes() const override {
-        return MEMORY_VALUE_UNAVAILABLE;
-    }
+    uint64_t available_ram_in_bytes() const override;
 
     uint64_t total_ram_in_bytes() const override {
         return MEMORY_VALUE_UNAVAILABLE;

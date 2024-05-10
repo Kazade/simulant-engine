@@ -75,6 +75,7 @@ private:
     void do_swap_buffers() override;
 
     void on_texture_prepare(Texture* texture);
+    void on_texture_unregister(TextureID tex_id, Texture* texture) override;
 };
 }
 

@@ -37,6 +37,7 @@ struct PSPTextureObject {
      * is moved into vram its priority goes back to zero.
      */
     uint8_t priority = 255;
+    bool can_fit_in_vram = false;
 
     TextureFilter filter = TEXTURE_FILTER_POINT;
     PSPMipmapVector mipmaps;
@@ -65,7 +66,7 @@ private:
     friend void update_data_pointer(void* src, void* dst, void* data);
 
     PSPRenderer* renderer_ = nullptr;
-    void evict_texture(PSPTextureObject* obj);
+    bool evict_texture(PSPTextureObject* obj);
     void promote_texture(PSPTextureObject* texture);    
 
     std::vector<PSPTextureObject> textures_;

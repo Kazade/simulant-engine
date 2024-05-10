@@ -55,30 +55,35 @@ batcher::RenderGroupKey PSPRenderer::prepare_render_group(
     );
 }
 
-#define ALIGN32(x) ((x + (31)) & ~31)
+#define ALIGN2048(x) ((x + (2047)) & ~2047)
 
 void PSPRenderer::init_context() {
     S_VERBOSE("init_context");
     const int buffer_width = 512;
     const int buffer_px_bytes = 4;
     const int frame_size = buffer_width * window->height() * buffer_px_bytes;
+    const int depth_size = 512 * 272 * 2;
 
-    S_VERBOSE("W: {0} H: {1}", window->width(), window->height());
-
-    uint8_t* start = 0;
+    uint8_t* start = (uint8_t*)sceGeEdramGetAddr();
     uint8_t* disp_buffer = start;
     uint8_t* draw_buffer = disp_buffer + frame_size;
     uint8_t* depth_buffer = draw_buffer + frame_size;
+    uint8_t* texture_ram = depth_buffer + depth_size;
+    texture_ram = (uint8_t*)ALIGN2048((intptr_t)(texture_ram));
 
-    void* texture_ram = (void*)ALIGN32((intptr_t)(depth_buffer + buffer_width));
+    S_VERBOSE("Ram size: {0}", sceGeEdramGetSize());
 
-    // Allocate 1.5M of VRAM for textures FIXME: Can we do more?
-    vram_alloc_init(texture_ram, 1024 * 1536);
+    auto max_size = sceGeEdramGetSize() - intptr_t(texture_ram - start);
+
+    S_VERBOSE("Using {0} bytes of VRAM for texture pool", max_size);
+
+    vram_alloc_init(texture_ram, max_size);
 
     // Set up buffers
     sceGuStart(GU_DIRECT, list_);
-    sceGuDispBuffer(window->width(), window->height(), (void*) disp_buffer, buffer_width);
-    sceGuDrawBuffer(GU_PSM_8888, (void*) draw_buffer, buffer_width);
+    sceGuDispBuffer(window->width(), window->height(),
+                    (void*)(disp_buffer - start), buffer_width);
+    sceGuDrawBuffer(GU_PSM_8888, (void*)(draw_buffer - start), buffer_width);
     sceGuDepthBuffer(depth_buffer, buffer_width);
 
     sceGuOffset(2048 - (window->width() / 2), 2048 - (window->height() / 2));
@@ -99,6 +104,10 @@ void PSPRenderer::init_context() {
     sceGuDisplay(GU_TRUE);
 
     S_VERBOSE("Context initialized");
+}
+
+void PSPRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
+    texture_manager_.release_texture(texture->_renderer_specific_id());
 }
 
 void PSPRenderer::clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags) {
@@ -302,7 +311,12 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
         texture->palette_size(), palette_format,
         texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE);
 
-    texture->_set_renderer_specific_id(id);
+    if(id > 0) {
+        texture->_set_renderer_specific_id(id);
+    }
+
+    // We always set this clean, even on failure otherwise we'll keep
+    // retrying
     texture->_set_data_clean();
     texture->_set_params_clean();
 }

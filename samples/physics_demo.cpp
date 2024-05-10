@@ -28,7 +28,8 @@ public:
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
-            stage_->skies->new_skybox_from_folder("sample_data/skyboxes/TropicalSunnyDay");
+            stage_->skies->new_skybox_from_folder(
+                "sample_data/skyboxes/${RENDERER}/TropicalSunnyDay");
         }
 
         smlt::TextureID crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");

@@ -502,19 +502,19 @@ bool Application::run_frame() {
         dt = time_keeper_->delta_time();
     }
 
-    S_DEBUG("Starting frame");
+    S_VERBOSE("Starting frame");
     signal_frame_started_();
 
-    S_DEBUG("Signal finished");
+    S_VERBOSE("Signal finished");
 
     S_PROFILE_SECTION("input-pre-update");
     window_->input_state->pre_update(dt);
 
-    S_DEBUG("Checking events");
+    S_VERBOSE("Checking events");
     S_PROFILE_SECTION("check-events");
     window_->check_events(); // Check for any window events
 
-    S_DEBUG("Checking audio stuff");
+    S_VERBOSE("Checking audio stuff");
     auto listener = window_->audio_listener();
     if(listener) {
         sound_driver_->set_listener_properties(
@@ -533,7 +533,7 @@ bool Application::run_frame() {
     run_update(dt);
 
     if(asset_manager_) {
-        S_DEBUG("Updating assets");
+        S_VERBOSE("Updating assets");
         asset_manager_->update(time_keeper->delta_time());
     }
 
@@ -542,14 +542,14 @@ bool Application::run_frame() {
 
     S_PROFILE_SECTION("garbage-collection");
     if(asset_manager_) {
-        S_DEBUG("Running GC");
+        S_VERBOSE("Running GC");
         asset_manager_->run_garbage_collection();
     }
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
     {
-        S_DEBUG("Locking for rendering");
+        S_VERBOSE("Locking for rendering");
 
         S_PROFILE_SUBSECTION("rendering");
         thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
