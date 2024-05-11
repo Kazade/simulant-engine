@@ -1,0 +1,19 @@
+{
+    "passes": [
+        {
+            "vertex_shader": "default0.vert",
+            "fragment_shader": "default0.frag",
+            "property_values": {
+                "s_blend_func": "alpha"
+            }
+        },
+        {
+            "iteration": "once_per_light",
+            "vertex_shader": "default1.vert",
+            "fragment_shader": "default1.frag",
+            "property_values": {
+                "s_blend_func": "add"
+            }
+        }
+    ]
+}

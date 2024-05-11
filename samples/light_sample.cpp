@@ -26,7 +26,7 @@ public:
 
         stage_->set_ambient_light(smlt::Colour(0.25f, 0.25f, 0.25f, 1.0f));
 
-        texture_ = stage_->assets->new_texture_from_file("sample_data/crate.png");
+        texture_ = stage_->assets->new_texture_from_file("assets/samples/crate.png");
         texture_->set_texture_filter(TEXTURE_FILTER_BILINEAR);
 
         material_ = stage_->assets->new_material_from_texture(texture_);
@@ -57,7 +57,7 @@ public:
         auto axis = input->new_axis("F");
         axis->set_positive_keyboard_key(smlt::KEYBOARD_CODE_F);
 
-        auto tex = stage_->assets->new_texture_from_file("simulant/textures/icons/simulant-icon-vmu.png");
+        auto tex = stage_->assets->new_texture_from_file("assets/textures/icons/simulant-icon-vmu.png");
         tex->convert(smlt::TEXTURE_FORMAT_RGBA_4UB_8888, {smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED});
         auto data_maybe = smlt::utils::vmu_lcd_image_from_texture(tex, utils::VMU_IMAGE_GENERATION_MODE_ALPHA);
         auto data = data_maybe.value();

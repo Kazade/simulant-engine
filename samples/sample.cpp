@@ -33,7 +33,7 @@ public:
 #endif
 
         auto mesh = stage_->assets->new_mesh_from_file(
-            "sample_data/autumn_house/autumn_house.dcm",
+            "assets/samples/autumn_house/autumn_house.dcm",
             VertexSpecification::DEFAULT,
             opts
         );

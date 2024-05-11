@@ -1,0 +1,26 @@
+{
+    "name": "fire",
+    "particle_width": 2.0,
+    "particle_height": 2.0,
+    "cull_each": false,
+    "quota": 50,
+
+    "material": "TEXTURE_ONLY",
+    "material.s_diffuse_map": "flare.tga",
+    "material.s_depth_write_enabled": false,
+    "material.s_blend_func": "add",
+
+    "emitters": [{
+        "angle": 15,
+        "emission_rate": 25,
+        "ttl_min": 1.0,
+        "ttl_max": 1.0,
+        "direction": "0.0 1.0 0.0",
+        "colour": "0.3 0.05 0.0 0.0"
+    }],
+
+    "manipulators": [{
+        "type": "size",
+        "rate": -0.9
+    }]
+}
