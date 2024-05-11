@@ -1,9 +1,6 @@
 [submodule "deps/bounce"]
 	path = deps/bounce
 	url = https://gitlab.com/simulant/bounce.git
-[submodule "assets"]
-	path = assets
-	url = https://gitlab.com/simulant/simulant-assets.git
 [submodule "bin"]
 	path = bin
 	url = https://gitlab.com/simulant/simulant-tools.git
