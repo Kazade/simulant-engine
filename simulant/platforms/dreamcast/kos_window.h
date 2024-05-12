@@ -4,10 +4,10 @@
 
 #include <kos.h>
 
-#include "window.h"
-#include "platform.h"
+#include "../../window.h"
+#include "../../platform.h"
 
-#include "threads/mutex.h"
+#include "../../threads/mutex.h"
 
 namespace smlt {
 
