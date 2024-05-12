@@ -80,7 +80,6 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "loaders/obj_loader.h"
 #include "loaders/particle_script.h"
 #include "loaders/heightmap_loader.h"
-#include "loaders/q2bsp_loader.h"
 #include "loaders/wal_loader.h"
 #include "loaders/md2_loader.h"
 #include "loaders/pcx_loader.h"
@@ -184,7 +183,6 @@ Application::Application(const AppConfig &config, void* platform_state):
     register_loader(std::make_shared<smlt::loaders::OGGLoaderType>());
     register_loader(std::make_shared<smlt::loaders::OBJLoaderType>());
     register_loader(std::make_shared<smlt::loaders::HeightmapLoaderType>());
-    register_loader(std::make_shared<smlt::loaders::Q2BSPLoaderType>());
     register_loader(std::make_shared<smlt::loaders::WALLoaderType>());
     register_loader(std::make_shared<smlt::loaders::MD2LoaderType>());
     register_loader(std::make_shared<smlt::loaders::PCXLoaderType>());

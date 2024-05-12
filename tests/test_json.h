@@ -212,7 +212,7 @@ public:
     ],
 
     "property_values": {
-        "texture_map": "simulant-icon.png",
+        "texture_map": "assets/textures/simulant-icon.png",
         "s_material_diffuse": "1 0 1 0",
         "s_material_ambient": "1 1 1 1"
     },

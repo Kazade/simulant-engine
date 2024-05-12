@@ -84,7 +84,6 @@
 
 #include "renderers/renderer_config.h"
 
-#include "loaders/q2bsp_loader.h"
 #include "coroutines/helpers.h"
 
 #include "streams/file_ifstream.h"

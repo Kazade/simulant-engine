@@ -11,7 +11,6 @@ SET(SAMPLES
     selection_sample
     light_sample
     rtt_sample
-    q2bsp_sample
     fleets_demo
     terrain_sample
     physics_demo

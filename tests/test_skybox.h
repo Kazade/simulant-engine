@@ -12,7 +12,7 @@ public:
     void test_skybox_from_folder() {
         auto stage = scene->new_stage();
 
-        auto sky = stage->skies->new_skybox_from_folder("skyboxes/TropicalSunnyDay");
+        auto sky = stage->skies->new_skybox_from_folder("assets/samples/skyboxes/${RENDERER}/TropicalSunnyDay");
 
         assert_equal(sky->child_count(), 1u); // Should have 1 child (the actor)
     }
