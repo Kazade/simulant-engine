@@ -24,8 +24,13 @@ public:
     }
 
     void test_is_absolute() {
+#ifdef _WIN32
+        Path p1("C:\etc\my_path");
+        Path p2("another_path");
+#else
         Path p1("/etc/my_path");
         Path p2("another_path");
+#endif
 
         assert_true(p1.is_absolute());
         assert_false(p2.is_absolute());
