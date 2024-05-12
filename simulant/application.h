@@ -98,7 +98,7 @@ struct AppConfig {
         std::vector<Path> font_directories = {};
 
         /** The font-family that is used by default for widgets */
-        std::string font_family = "Cantarell";
+        std::string font_family = "Orbitron";
 
         /** The root font size, all Rem measurements are based on this
           * unless overridden in a UIConfig */

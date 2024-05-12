@@ -26,7 +26,7 @@ public:
         S_DEBUG("Scene loaded");
 
 
-        auto tex = stage_->assets->new_texture_from_file("simulant/textures/icons/simulant-icon-vmu.png");
+        auto tex = stage_->assets->new_texture_from_file("assets/textures/icons/simulant-icon-vmu.png");
         tex->convert(smlt::TEXTURE_FORMAT_RGBA_4UB_8888, {smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED, smlt::TEXTURE_CHANNEL_INVERSE_RED});
         auto data_maybe = smlt::utils::vmu_lcd_image_from_texture(tex, smlt::utils::VMU_IMAGE_GENERATION_MODE_ALPHA);
         data = data_maybe.value();

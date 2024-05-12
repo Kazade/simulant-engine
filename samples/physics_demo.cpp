@@ -28,18 +28,17 @@ public:
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
-            stage_->skies->new_skybox_from_folder(
-                "sample_data/skyboxes/${RENDERER}/TropicalSunnyDay");
+            stage_->skies->new_skybox_from_folder("sample_data/skyboxes/${RENDERER}/TropicalSunnyDay");
         }
 
-        smlt::TextureID crate = app->shared_assets->new_texture_from_file("sample_data/crate.png");
+        smlt::TextureID crate = app->shared_assets->new_texture_from_file("assets/samples/crate.png");
         smlt::MaterialID mat = app->shared_assets->new_material_from_texture(crate);
 
         auto box_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->new_submesh_as_cube("cube", mat, 5);
         box_mesh_id_ = box_mesh;
 
-        smlt::TextureID grass = app->shared_assets->new_texture_from_file("sample_data/beach_sand.png");
+        smlt::TextureID grass = app->shared_assets->new_texture_from_file("assets/samples/beach_sand.png");
         auto ground_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         ground_mesh->new_submesh_as_box(
             "ground", app->shared_assets->new_material_from_texture(grass), 1000, 2.5, 1000

@@ -79,7 +79,7 @@ public:
         cam->new_behaviour<smlt::behaviours::Fly>(window);
 
         auto terrain_material = stage_->assets->new_material_from_file(
-            "sample_data/terrain_splat.smat", GARBAGE_COLLECT_NEVER
+            "assets/samples/terrain_splat.smat", GARBAGE_COLLECT_NEVER
         );
 
         terrain_material_id_ = terrain_material;
@@ -87,7 +87,7 @@ public:
         smlt::HeightmapSpecification spec;
         spec.smooth_iterations = 0;
 
-        terrain_mesh_id_ = stage_->assets->new_mesh_from_heightmap("sample_data/terrain.png", spec);
+        terrain_mesh_id_ = stage_->assets->new_mesh_from_heightmap("assets/samples/terrain.png", spec);
         auto terrain_mesh = stage_->assets->mesh(terrain_mesh_id_);
 
         auto terrain_data = terrain_mesh->data->get<smlt::TerrainData>("terrain_data");

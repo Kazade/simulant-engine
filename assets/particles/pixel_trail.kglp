@@ -1,0 +1,30 @@
+{
+    "name": "Pixel Trail",
+    "quota": 150,
+    "particle_width": 1,
+    "particle_height": 1,
+    "cull_each": false,
+    "material": "DIFFUSE_ONLY",
+
+    "emitters": [
+        {
+            "type": "point",
+            "direction": "0 0 1",
+            "velocity": 5,
+            "ttl_min": 0.1,
+            "ttl_max": 0.3,
+            "angle": 90,
+            "colour": "1 0 0 1",
+            "emission_rate": 30
+        }
+    ],
+
+    "affectors": [
+        {
+            "type": "colour_fader",
+            "red": -0.25,
+            "green": -0.25,
+            "blue": -0.25
+        }
+    ]
+}
