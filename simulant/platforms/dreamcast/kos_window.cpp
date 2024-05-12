@@ -2,18 +2,18 @@
 #include <malloc.h>
 #include <memory>
 #include <vector>
-#include "../deps/libgl/include/GL/gl.h"
-#include "../deps/libgl/include/GL/glkos.h"
+#include "../../../deps/libgl/include/GL/gl.h"
+#include "../../../deps/libgl/include/GL/glkos.h"
 
-#include "input/input_state.h"
+#include "../../input/input_state.h"
 #include "kos_window.h"
-#include "time_keeper.h"
-#include "application.h"
+#include "../../time_keeper.h"
+#include "../../application.h"
 
-#include "sound/drivers/openal_sound_driver.h"
-#include "sound/drivers/null_sound_driver.h"
+#include "../../sound/drivers/openal_sound_driver.h"
+#include "../../sound/drivers/null_sound_driver.h"
 
-#include "renderers/renderer_config.h"
+#include "../../renderers/renderer_config.h"
 
 namespace smlt {
 

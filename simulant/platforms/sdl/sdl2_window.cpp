@@ -26,18 +26,18 @@
 #include <processthreadsapi.h>
 #endif
 
-#include "logging.h"
-#include "utils/unicode.h"
-#include "input/input_state.h"
+#include "../../logging.h"
+#include "../../utils/unicode.h"
+#include "../../input/input_state.h"
 #include "sdl2_window.h"
-#include "application.h"
-#include "sound/drivers/openal_sound_driver.h"
-#include "sound/drivers/null_sound_driver.h"
+#include "../../application.h"
+#include "../../sound/drivers/openal_sound_driver.h"
+#include "../../sound/drivers/null_sound_driver.h"
 
-#include "renderers/renderer_config.h"
+#include "../../renderers/renderer_config.h"
 
 static const std::string SDL_CONTROLLER_DB =
-#include "input/sdl/gamecontrollerdb.txt"
+#include "../../input/sdl/gamecontrollerdb.txt"
 ;
 
 namespace smlt {

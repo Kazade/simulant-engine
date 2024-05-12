@@ -22,13 +22,13 @@
 #include "types.h"
 
 #ifdef __DREAMCAST__
-#include "kos_window.h"
+#include "platforms/dreamcast/kos_window.h"
 #elif defined(__PSP__)
 #include "platforms/psp/psp_window.h"
 #elif defined(__ANDROID__)
 #include "platforms/android/android_window.h"
 #else
-#include "sdl2_window.h"
+#include "platforms/sdl/sdl2_window.h"
 #endif
 
 #include "stage.h"

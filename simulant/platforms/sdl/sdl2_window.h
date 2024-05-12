@@ -26,8 +26,8 @@
     #undef main
 #endif
 #include "sdl2_keycodes.h"
-#include "generic/managed.h"
-#include "window.h"
+#include "../../generic/managed.h"
+#include "../../window.h"
 
 namespace smlt {
 

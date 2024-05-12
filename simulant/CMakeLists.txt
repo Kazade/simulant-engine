@@ -6,8 +6,6 @@ FILE(GLOB_RECURSE TO_REMOVE
     "renderers/glad/*"
     "renderers/gl2x/*"
     "renderers/psp/*"
-    "sdl2_window.*"
-    "kos_window.*"
     "sound/drivers/*"
 )
 
@@ -96,7 +94,7 @@ IF(PLATFORM_DREAMCAST)
     SET(
         SIMULANT_FILES
         ${SIMULANT_FILES}
-        kos_window.cpp
+        platforms/dreamcast/kos_window.cpp
         sound/drivers/openal_sound_driver.cpp
         sound/drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp
@@ -149,7 +147,7 @@ ELSE()
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
-        sdl2_window.cpp
+        platforms/sdl/sdl2_window.cpp
         sound/drivers/openal_sound_driver.cpp
         sound/drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp

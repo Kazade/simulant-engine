@@ -41,7 +41,7 @@
 
 #ifdef __DREAMCAST__
 #include "platforms/dreamcast/profiler.h"
-#include "kos_window.h"
+#include "platforms/dreamcast/kos_window.h"
 namespace smlt { typedef KOSWindow SysWindow; }
 #elif defined(__PSP__)
 #include <pspkernel.h>
@@ -52,7 +52,7 @@ namespace smlt { typedef PSPWindow SysWindow; }
 #include "platforms/android/android_window.h"
 namespace smlt { typedef AndroidWindow SysWindow; }
 #else
-#include "sdl2_window.h"
+#include "platforms/sdl/sdl2_window.h"
 namespace smlt { typedef SDL2Window SysWindow; }
 #endif
 
