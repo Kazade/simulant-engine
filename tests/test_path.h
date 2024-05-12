@@ -20,7 +20,7 @@ public:
 
     void test_append() {
         Path p1("/etc/my_path");
-        assert_equal(p1.append("another_path").normalize().str(), "/etc/my_path/another_path");
+        assert_equal(p1.append("another_path").normalize().str(), Path("/etc/my_path/another_path").normalize().str());
     }
 
     void test_is_absolute() {
