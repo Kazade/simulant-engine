@@ -1,5 +1,4 @@
-#ifndef TEST_SOUND_H
-#define TEST_SOUND_H
+#pragma once
 
 #include <cstdlib>
 #include "simulant/simulant.h"
@@ -50,7 +49,7 @@ public:
     }
 
     void test_global_output() {
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
         auto playing = application->sound_driver->play_sound(sound);
         assert_true(playing->is_playing());
         while(playing->is_playing()) {
@@ -59,7 +58,7 @@ public:
     }
 
     void test_2d_sound_output() {
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
 
         auto actor = stage_->new_actor();
 
@@ -77,7 +76,7 @@ public:
     void test_played_signal() {
         bool played = false;
 
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
 
         auto actor = stage_->new_actor();
 
@@ -103,7 +102,7 @@ public:
     }
 
     void test_3d_sound_output() {
-        smlt::SoundPtr sound = stage_->assets->new_sound_from_file("test_sound.ogg");
+        smlt::SoundPtr sound = stage_->assets->new_sound_from_file("assets/sounds/simulant.ogg");
 
         auto actor = stage_->new_actor();
         actor->move_to(10, 0, 0);
@@ -121,7 +120,7 @@ public:
     }
 
     void test_sound_destruction_stops_play() {
-        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
 
         auto sid = sound->id();
 
@@ -145,7 +144,7 @@ public:
     }
 
     void test_sound_stopping() {
-        auto sound = application->shared_assets->new_sound_from_file("test_sound.ogg");
+        auto sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
         auto a = stage_->new_actor();
         smlt::PlayingSoundPtr s = a->play_sound(sound);
 
@@ -161,4 +160,3 @@ private:
     smlt::StagePtr stage_;
 
 };
-#endif // TEST_SOUND_H

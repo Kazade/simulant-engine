@@ -18,7 +18,7 @@ public:
         pipeline->viewport->set_colour(smlt::Colour::BLACK);
 
         camera_->set_perspective_projection(Degrees(45.0), float(window->width()) / float(window->height()), 10.0, 10000.0);
-        ship_mesh_id_ = app->shared_assets->new_mesh_from_file("sample_data/fighter_good/space_frigate_6.obj");
+        ship_mesh_id_ = app->shared_assets->new_mesh_from_file("assets/samples/fighter_good/space_frigate_6.obj");
         generate_ships();
 
         stage_->set_ambient_light(smlt::Colour(0.2, 0.2, 0.2, 1.0));
@@ -53,7 +53,7 @@ private:
         auto rgen = smlt::RandomGenerator();
 
         auto pscript = stage_->assets->new_particle_script_from_file(
-            "simulant/particles/pixel_trail.kglp"
+            "assets/particles/pixel_trail.kglp"
         );
 
         for(uint32_t i = 0; i < 100; ++i) {

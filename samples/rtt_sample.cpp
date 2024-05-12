@@ -14,7 +14,7 @@ public:
         rect_stage_ = new_stage();
         auto rect_cam = rect_stage_->new_camera();
 
-        auto tid = app->shared_assets->new_texture_from_file("sample_data/sample.tga");
+        auto tid = app->shared_assets->new_texture_from_file("assets/samples/sample.tga");
         auto cube_mesh = app->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
         cube_mesh->new_submesh_as_cube("cube", app->shared_assets->new_material(), 1.0);
 

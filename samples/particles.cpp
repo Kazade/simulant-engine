@@ -18,7 +18,7 @@ public:
         auto path = app->args->arg_value<std::string>("filename");
 
         script_ = stage_->assets->new_particle_script_from_file(
-            !path.has_value() ? "simulant/particles/fire.kglp" : path.value()
+            !path.has_value() ? "assets/particles/fire.kglp" : path.value()
         );
 
         camera_->set_perspective_projection(
