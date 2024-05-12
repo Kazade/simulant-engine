@@ -223,7 +223,7 @@ build:psp-mips-gcc:debug:
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
-      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/EBOOT.PBP
 
 build:psp-mips-gcc:release:
@@ -239,7 +239,7 @@ build:psp-mips-gcc:release:
   artifacts:
     paths:
       - ${TARGET}/release/simulant/
-      - ${TARGET}/release/sample_data/
+      - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/EBOOT.PBP
 
 test:psp-mips-gcc:
@@ -263,7 +263,7 @@ test:psp-mips-gcc:
    - cd ${TARGET}/debug
    - export SIMULANT_SOUND_DRIVER=null
    - ln -s ../simulant simulant
-   - ln -s ../sample_data sample_data
+   - ln -s ../assets assets
    - cp tests/EBOOT.PBP .
    # FIXME: PSP tests currently hang on future tests, we need to fix that!
    - timeout 120s PPSSPPSDL -d --escape-exit EBOOT.PBP || true
@@ -319,7 +319,7 @@ build:windows-x64-mingw:debug:
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
-      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests.exe
       - ${TARGET}/debug/tests/*.dll
 
@@ -342,7 +342,7 @@ test:windows-x64-mingw:
   script:
    - cd ${TARGET}/debug/tests
    - ln -s ../simulant
-   - ln -s ../sample_data
+   - ln -s ../assets
    - wine64 simulant_tests.exe --junit-xml=report.xml
   artifacts:
    reports:
@@ -375,7 +375,7 @@ build:linux-x64-clang:
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
-      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
 
@@ -397,10 +397,10 @@ build:linux-x64-gcc:
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
-      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
-      - ${TARGET}/release/sample_data/
+      - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
 
 build:linux-x64-gcc11:
@@ -421,10 +421,10 @@ build:linux-x64-gcc11:
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
-      - ${TARGET}/debug/sample_data/
+      - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
-      - ${TARGET}/release/sample_data/
+      - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
 
 
@@ -496,7 +496,7 @@ build:dreamcast-sh4-gcc:
   artifacts:
     paths:
      - ${TARGET}/debug/simulant/
-     - ${TARGET}/debug/sample_data/
+     - ${TARGET}/debug/assets/
      - ${TARGET}/debug/tests/simulant_tests.elf
      - ${TARGET}/release/simulant/
 
