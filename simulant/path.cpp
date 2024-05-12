@@ -29,22 +29,7 @@ std::string Path::ext() const {
 }
 
 bool Path::is_absolute() const {
-    if(path_.empty()) {
-        return false;
-    }
-
-#ifdef _WIN32
-    if(path_.size() > 3) {
-        // FIXME: This will return true for like... $:/ as we
-        // don't check the first character is a drive letter
-        if(path_[1] == ':' && normalize().str()[2] == '/') {
-            return true;
-        }
-    }
-    return false;
-#else
-    return path_[0] == '/';
-#endif
+    return kfs::path::is_absolute(path_);
 }
 
 Path Path::replace_ext(const std::string &new_ext) const {
