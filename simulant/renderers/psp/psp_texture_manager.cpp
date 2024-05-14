@@ -9,19 +9,16 @@
 #include <pspgu.h>
 #include <pspgum.h>
 #include <pspkernel.h>
+#include <pspsdk.h>
 
 namespace smlt {
 
-const static int max_priority =
-    std::numeric_limits<decltype(PSPTextureObject::priority)>::max();
-
 void update_data_pointer(void* src, void* dst, void* data) {
-
     PSPTextureManager* self = (PSPTextureManager*)data;
 
     for(auto& texture: self->textures_) {
-        if(texture.texture_vram == src) {
-            texture.texture_vram = (uint8_t*)dst;
+        if(texture->texture_vram == src) {
+            texture->texture_vram = (uint8_t*)dst;
             return;
         }
     }
@@ -46,7 +43,7 @@ PSPTextureManager::PSPTextureManager(PSPRenderer* renderer) :
 PSPTextureManager::~PSPTextureManager() {
     auto textures = textures_;
     for(auto& tex: textures) {
-        release_texture(tex.id);
+        release_texture(tex->id);
     }
 }
 
@@ -208,6 +205,8 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
                                       std::size_t palette_size,
                                       int palette_format, bool do_mipmaps) {
 
+    S_DEBUG("upload_texture");
+
     static int id_counter = 0;
     static std::vector<uint8_t> buffer;
     buffer.clear();
@@ -219,7 +218,7 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
 
     if(width > 512 || height > 512) {
         S_ERROR("Tried to upload a texture beyond the max texture size");
-        return -1;
+        return 0;
     }
 
     PSPMipmapVector mipmaps;
@@ -258,133 +257,105 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
     S_DEBUG("Uploading texture data of size: {0} format: {1} pformat: {2}",
             data_size, format, palette_format);
 
-    if(id == 0) {
-        PSPTextureObject obj;
-        obj.id = ++id_counter;
-        obj.format = format;
-        obj.width = width;
-        obj.height = height;
-        obj.data_size = data_size;
-        obj.priority = max_priority;
-        obj.mipmaps = mipmaps;
-        obj.is_swizzled = is_swizzled;
-        obj.can_fit_in_vram = data_size < vram_alloc_pool_size(nullptr);
-
-        if(is_paletted_format(obj.format)) {
-            obj.palette = (uint8_t*)aligned_alloc(16, palette_size);
-            assert(obj.palette);
-
-            std::memcpy(obj.palette, palette, palette_size);
-            obj.palette_format = palette_format;
-            obj.palette_size = palette_size;
-        } else {
-            obj.palette = nullptr;
-        }
-
-        obj.texture_vram = nullptr;
-        obj.texture_ram = (uint8_t*)aligned_alloc(16, data_size);
-
-        if(!obj.texture_ram) {
-            S_ERROR("Failed to allocate memory ({0} bytes) for texture",
-                    data_size);
-            release_texture(obj.id);
+    bool created = id == 0;
+    std::shared_ptr<PSPTextureObject> obj;
+    if(id != 0) {
+        obj = find_texture(id);
+        if(!obj) {
+            S_ERROR("Tried to update invalid texture");
             return 0;
         }
 
-        std::memcpy(obj.texture_ram, data, data_size);
-
-        textures_.push_back(obj);
-
-        S_DEBUG("Created texture: {0}", obj.id);
-
-        return obj.id;
     } else {
-        auto obj = find_texture(id);
-        if(obj) {
-            vram_alloc_free(nullptr, obj->texture_vram);
-            obj->texture_vram = 0;
-            obj->priority = 0;
-
-            // Free the data that's there
-            free(obj->texture_ram);
-            obj->texture_ram = nullptr;
-
-            free(obj->palette);
-            obj->palette = nullptr;
-
-            obj->width = width;
-            obj->height = height;
-            obj->data_size = data_size;
-            obj->format = format;
-            obj->mipmaps = mipmaps;
-            obj->is_swizzled = is_swizzled;
-            obj->texture_ram = (uint8_t*)aligned_alloc(16, data_size);
-            obj->texture_vram = nullptr;
-
-            if(!obj->texture_ram) {
-                S_ERROR("Failed to allocate memory ({0} bytes) for texture",
-                        data_size);
-                release_texture(obj->id);
-                return 0;
-            }
-
-            obj->can_fit_in_vram = data_size < vram_alloc_pool_size(nullptr);
-
-            std::memcpy(obj->texture_ram, data, data_size);
-
-            if(is_paletted_format(obj->format)) {
-                obj->palette = (uint8_t*)aligned_alloc(16, palette_size);
-                assert(obj->palette);
-
-                std::memcpy(obj->palette, palette, palette_size);
-                obj->palette_format = palette_format;
-                obj->palette_size = palette_size;
-            } else {
-                obj->palette = nullptr;
-                obj->palette_format = 0;
-                obj->palette_size = 0;
-            }
-
-            S_DEBUG("Updated texture: {0}", obj->id);
-            return obj->id;
-        }
+        obj = std::make_shared<PSPTextureObject>();
+        obj->id = ++id_counter;
     }
 
-    return 0;
+    vram_alloc_free(nullptr, obj->texture_vram);
+    obj->texture_vram = 0;
+
+    // Free the data that's there
+    free(obj->texture_ram);
+    obj->texture_ram = nullptr;
+
+    free(obj->palette);
+    obj->palette = nullptr;
+
+    obj->width = width;
+    obj->height = height;
+    obj->data_size = data_size;
+    obj->format = format;
+    obj->mipmaps = mipmaps;
+    obj->is_swizzled = is_swizzled;
+    obj->texture_ram = (uint8_t*)aligned_alloc(16, data_size);
+    obj->texture_vram = nullptr;
+
+    if(!obj->texture_ram) {
+        S_ERROR("Failed to allocate memory ({0} bytes) for texture", data_size);
+        release_texture(obj->id);
+        return 0;
+    }
+
+    obj->can_fit_in_vram = data_size < vram_alloc_pool_size(nullptr) &&
+                           (obj->width < 512 && obj->height < 512);
+
+    std::memcpy(obj->texture_ram, data, data_size);
+
+    if(is_paletted_format(obj->format)) {
+        obj->palette = (uint8_t*)aligned_alloc(16, palette_size);
+        assert(obj->palette);
+
+        std::memcpy(obj->palette, palette, palette_size);
+        obj->palette_format = palette_format;
+        obj->palette_size = palette_size;
+    } else {
+        obj->palette = nullptr;
+        obj->palette_format = 0;
+        obj->palette_size = 0;
+    }
+
+    textures_.push_back(obj);
+    texture_priority_.push_front(obj.get());
+
+    if(created) {
+        S_DEBUG("Created texture: {0}", obj->id);
+    } else {
+        S_VERBOSE("Updated texture: {0}", obj->id);
+    }
+
+    return obj->id;
 }
 
-#define UNCACHED(x) (x + 0x40000000)
-
-void PSPTextureManager::promote_texture(PSPTextureObject* obj) {
+bool PSPTextureManager::promote_texture(PSPTextureObject* obj) {
     if(obj && !obj->texture_vram && obj->texture_ram) {
-        S_VERBOSE("Promoted {0} (priority: {1}, size: {2}) to VRAM", obj->id,
-                  +obj->priority, obj->data_size);
+        S_VERBOSE("Promoting {0} (size: {1}) to VRAM", obj->id, obj->data_size);
         auto size = obj->data_size;
         // Move into vram
         obj->texture_vram = (uint8_t*)vram_alloc_malloc((void*)0, size);
 
         if(!obj->texture_vram) {
-            S_WARN("Couldn't allocate vram. {0} vs {1}", size,
-                   vram_alloc_count_free(nullptr));
-            return;
+            S_VERBOSE("Couldn't allocate vram. {0} vs {1}", size,
+                      vram_alloc_count_continuous(nullptr));
+            return false;
         }
 
-        S_VERBOSE("Copying data from {0} to {1}", (intptr_t)obj->texture_ram,
-                  (intptr_t)obj->texture_vram);
+        S_DEBUG("Copying data from {0} to {1}", (intptr_t)obj->texture_ram,
+                (intptr_t)obj->texture_vram);
 
-        S_VERBOSE("Allocated {0} bytes ({1}). Remaining: {2}\n", size,
-                  (intptr_t)obj->texture_vram, vram_alloc_count_free(nullptr));
+        S_DEBUG("Allocated {0} bytes ({1}). Remaining: {2}\n", size,
+                (intptr_t)obj->texture_vram, vram_alloc_count_free(nullptr));
 
-        std::memcpy(UNCACHED(obj->texture_vram), obj->texture_ram,
-                    obj->data_size);
+        std::memcpy(obj->texture_vram, obj->texture_ram, obj->data_size);
 
         free(obj->texture_ram);
         obj->texture_ram = nullptr;
-        obj->priority = max_priority;
     }
+
+    return true;
 }
 
 void PSPTextureManager::bind_texture(int id) {
+
     if(currently_bound_texture_ == id) {
         // Don't bind unnecessarily
         return;
@@ -396,25 +367,16 @@ void PSPTextureManager::bind_texture(int id) {
 
         if(!tex->texture_ram && !tex->texture_vram) {
             // Can't do anything with a texture that has no data
-            S_DEBUG("Texture ({0}) had no data and couldn't be bound", id);
+            S_ERROR("Texture ({0}) had no data and couldn't be bound", id);
             return;
         }
 
-        tex->priority = max_priority; // Reset the texture priority
+        textures_this_frame_.insert(tex.get());
+        texture_priority_.erase(std::find(texture_priority_.begin(),
+                                          texture_priority_.end(), tex.get()));
+        texture_priority_.push_front(tex.get());
 
         auto available = vram_alloc_count_continuous((void*)0);
-
-        if(!tex->texture_vram && (available < tex->data_size ||
-                                  lowest_texture_priority_ < tex->priority)) {
-            /* We've bound a texture not in vram, and there's a texture with a
-             * lower priority. Let's find out what it is! */
-            if(tex->can_fit_in_vram && space_in_vram(tex)) {
-                promote_texture(tex);
-            }
-        } else if(!tex->texture_vram) {
-            S_VERBOSE("Not promoting: {0} vs {1} - {2} vs {3}", available,
-                      tex->data_size, lowest_texture_priority_, +tex->priority);
-        }
 
         if(tex->palette) {            
             auto entries = tex->palette_size /
@@ -476,6 +438,8 @@ void PSPTextureManager::bind_texture(int id) {
 void PSPTextureManager::release_texture(int id) {
     auto obj = find_texture(id);
 
+    S_INFO("Releasing texture: {0}", id);
+
     assert(obj);
 
     if(!obj) {
@@ -496,37 +460,66 @@ void PSPTextureManager::release_texture(int id) {
     free(obj->palette);
     obj->palette = nullptr;
     obj->id = 0;
-
-    textures_.erase(std::remove_if(textures_.begin(), textures_.end(),
-                                   [=](const PSPTextureObject& it) -> bool {
-        return it.id == obj->id;
-    }));
+    textures_this_frame_.erase(obj.get());
+    texture_priority_.erase(std::find(texture_priority_.begin(),
+                                      texture_priority_.end(), obj.get()));
+    textures_.erase(std::remove(textures_.begin(), textures_.end(), obj));
 }
 
 void PSPTextureManager::update_priorities() {
-    int lowest = 100000;
-    for(auto& tex: textures_) {
+    int space_required = 0;
 
-        // Avoid wrapping the texture count
-        if(tex.priority > 0) {
-            tex.priority -= 1;
+    static std::vector<PSPTextureObject*> to_promote;
+    to_promote.clear();
+
+    for(auto tex: textures_this_frame_) {
+        if(tex->texture_vram) {
+            continue;
         }
 
-        if(tex.priority < lowest) {
-            lowest = tex.priority;
-        }
+        space_required += tex->data_size;
+        to_promote.push_back(tex);
     }
 
-    lowest_texture_priority_ = lowest;
+    int available = (int)vram_alloc_count_free(nullptr);
+
+    /* Under-estimate the available memory, in case defragging doesn't
+     * give it all to us */
+    available *= 0.8;
+
+    space_required = std::max(space_required - available, 0);
+
+    if(space_required > 0) {
+        for(auto it = texture_priority_.rbegin();
+            it != texture_priority_.rend(); ++it) {
+
+            auto t = *it;
+            if(t->texture_vram && !textures_this_frame_.count(*it)) {
+                evict_texture(t);
+                space_required -= t->data_size;
+
+                if(space_required <= 0) {
+                    break;
+                }
+            }
+        }
+
+        // Run a defrag to make sure we maximise the free space
+        vram_alloc_run_defrag((void*)0, update_data_pointer, 5, this);
+    }
+
+    textures_this_frame_.clear();
+
+    for(auto& t: to_promote) {
+        if(!promote_texture(t)) {
+            S_VERBOSE("Couldn't promote texture {0}", t->id);
+        }
+    }
 }
 
 bool PSPTextureManager::evict_texture(PSPTextureObject* obj) {
-
     // If we found a texture, move its data out of vram
     if(obj && obj->texture_vram) {
-        S_DEBUG("Demoted {0} (priority: {1}, size: {2}) to VRAM", obj->id,
-                obj->priority, obj->data_size);
-
         auto size = obj->data_size;
         // Move out of vram
         obj->texture_ram = (uint8_t*)aligned_alloc(16, size);
@@ -539,88 +532,22 @@ bool PSPTextureManager::evict_texture(PSPTextureObject* obj) {
         std::memcpy(obj->texture_ram, obj->texture_vram, size);
 
         vram_alloc_free(nullptr, obj->texture_vram);
-        obj->texture_vram = nullptr;        
+        obj->texture_vram = nullptr;
 
-        // We set the priority to the lowest, if we get bound again
-        // we'll get moved back in if possible
-        obj->priority = 0;
+        S_VERBOSE("Demoted {0} (size: {1}) to RAM", obj->id, obj->data_size);
     }
 
     return true;
 }
 
-PSPTextureObject* PSPTextureManager::find_texture(int id) {
+std::shared_ptr<PSPTextureObject> PSPTextureManager::find_texture(int id) {
     for(auto& tex: textures_) {
-        if(tex.id == id) {
-            return &tex;
+        if(tex->id == id) {
+            return tex;
         }
     }
 
     return nullptr;
-}
-
-bool PSPTextureManager::space_in_vram(PSPTextureObject* obj) {
-    auto pool_size = vram_alloc_pool_size((void*)0);
-    if(obj->data_size >= pool_size) {
-        // No amount of evicting will help us
-        S_VERBOSE(
-            "Not enough room in pool to store texture in vram: {0} vs {1}",
-            obj->data_size, pool_size);
-        return false;
-    }
-
-    auto available = vram_alloc_count_continuous((void*)0);
-
-    if(available >= obj->data_size) {
-        return true;
-    } else {
-        // If there wasn't enough space, run a defrag an see if there is now
-        vram_alloc_run_defrag((void*)0, update_data_pointer, 5, this);
-        available = vram_alloc_count_continuous((void*)0);
-        if(available >= obj->data_size) {
-            return true;
-        }
-    }
-
-    std::map<int, PSPTextureObject*> sorted;
-
-    /* Build a list of textures with a lower priority, that are using vram.
-     * These are ordered from lowest priority to highest */
-    int possible_to_free = 0;
-    for(auto& tex: textures_) {
-        if(tex.id == obj->id || !tex.texture_vram ||
-           tex.priority >= obj->priority) {
-            continue;
-        }
-
-        possible_to_free += tex.data_size;
-        sorted.insert(std::make_pair(tex.priority, &tex));
-    }
-
-    // Assuming we freed everything with a lower priority and then
-    // defragged, are we likely to hit the amount we need?
-    auto potential = possible_to_free + available;
-    if(potential < obj->data_size) {
-        return false;
-    }
-
-    // Now loop through, free each texture and then defrag until we have
-    // enough space
-    for(auto& p: sorted) {
-        if(evict_texture(p.second)) {
-            vram_alloc_run_defrag((void*)0, update_data_pointer, 5, this);
-            available = vram_alloc_count_continuous((void*)0);
-            if(available >= obj->data_size) {
-                return true;
-            }
-        } else {
-            // If we couldn't evict a texture, we're very much in trouble
-            // (out of memory)
-            return false;
-        }
-    }
-
-    return false;
 }
 
 } // namespace smlt

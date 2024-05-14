@@ -467,7 +467,7 @@ void vram_alloc_run_defrag(void* pool, defrag_address_move callback,
 
         while(it) {
             void* potential_dest = vram_alloc_next_available(pool, it->size);
-            if(potential_dest < it->pointer) {
+            if(potential_dest && potential_dest < it->pointer) {
                 potential_dest = vram_alloc_malloc(pool, it->size);
                 memcpy(potential_dest, it->pointer, it->size);
 

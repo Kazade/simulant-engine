@@ -102,9 +102,9 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     }
 
     if(next->is_depth_write_enabled()) {
-        sceGuDepthMask(GU_TRUE);
-    } else {
         sceGuDepthMask(GU_FALSE);
+    } else {
+        sceGuDepthMask(GU_TRUE);
     }
 
     switch(next->depth_func()) {
@@ -200,7 +200,7 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         if(enabled) {
             auto pos = camera_->view_matrix() * light->absolute_position();
 
-            ScePspFVector3 light_pos = {pos.x, pos.y, pos.z};
+            ScePspFVector3 light_pos = {pos.x, pos.y, -pos.z};
             sceGuEnable(GU_LIGHT0 + i);
 
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
@@ -337,13 +337,12 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
 static std::vector<PSPVertex> buffer;
 
 static void zclip_tristrips_and_submit_range(const VertexRange* range,
-                                             const VertexData* data) {
+                                             const VertexSpecification& spec,
+                                             const uint8_t* data,
+                                             std::size_t stride) {
     buffer.clear();
 
-    const uint8_t* it = data->data() + (data->stride() * range->start);
-
-    auto spec = data->vertex_specification();
-    auto stride = data->stride();
+    const uint8_t* it = data + (stride * range->start);
 
     for(std::size_t i = 0; i < range->count; ++i) {
         convert_and_push(buffer, it, spec);
@@ -361,13 +360,12 @@ static void zclip_tristrips_and_submit_range(const VertexRange* range,
 }
 
 static void zclip_triangles_and_submit_range(const VertexRange* range,
-                                             const VertexData* data) {
+                                             const VertexSpecification& spec,
+                                             const uint8_t* data,
+                                             std::size_t stride) {
     buffer.clear();
 
-    const uint8_t* it = data->data() + (data->stride() * range->start);
-
-    auto spec = data->vertex_specification();
-    auto stride = data->stride();
+    const uint8_t* it = data + (stride * range->start);
 
     for(std::size_t i = 0; i < range->count; ++i) {
         convert_and_push(buffer, it, spec);
@@ -411,25 +409,69 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     std::memcpy(psp_view, view.data(), sizeof(ScePspFMatrix4));
     std::memcpy(psp_proj, projection.data(), sizeof(ScePspFMatrix4));
 
+    /* PSP uses an inverse coordinate system, so we need to flip
+     * some things to match GL */
+    psp_proj->z.z *= -1;
+    psp_proj->w.z *= -1;
+
     sceGuSetMatrix(GU_MODEL, psp_model);
     sceGuSetMatrix(GU_VIEW, psp_view);
     sceGuSetMatrix(GU_PROJECTION, psp_proj);
 
-    if(element_count) {
+    auto total = 0;
 
+    if(element_count) {
+        std::vector<uint8_t> buffer;
+        auto stride = renderable->vertex_data->stride();
+        buffer.resize(renderable->index_element_count * stride);
+
+        uint8_t* dst = &buffer[0];
+
+        for(std::size_t i = 0; i < renderable->index_element_count; ++i) {
+            auto idx = renderable->index_data->at(i);
+            auto offset = idx * stride;
+            std::memcpy(dst, renderable->vertex_data->data() + offset, stride);
+            dst += stride;
+        }
+
+        VertexRange range;
+        range.start = 0;
+        range.count = renderable->index_element_count;
+
+        switch(renderable->arrangement) {
+            case MESH_ARRANGEMENT_TRIANGLE_STRIP:
+                zclip_tristrips_and_submit_range(
+                    &range, renderable->vertex_data->vertex_specification(),
+                    &buffer[0], stride);
+                break;
+            case MESH_ARRANGEMENT_TRIANGLES:
+                zclip_triangles_and_submit_range(
+                    &range, renderable->vertex_data->vertex_specification(),
+                    &buffer[0], stride);
+                break;
+            default:
+                break;
+        }
+
+        total += range.count;
     } else {
         auto range = renderable->vertex_ranges;
-        auto total = 0;
 
         for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
             switch(renderable->arrangement) {
                 case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-                    zclip_tristrips_and_submit_range(range,
-                                                     renderable->vertex_data);
+                    zclip_tristrips_and_submit_range(
+                        range, renderable->vertex_data->vertex_specification(),
+                        renderable->vertex_data->data(),
+                        renderable->vertex_data->vertex_specification()
+                            .stride());
                     break;
                 case MESH_ARRANGEMENT_TRIANGLES:
-                    zclip_triangles_and_submit_range(range,
-                                                     renderable->vertex_data);
+                    zclip_triangles_and_submit_range(
+                        range, renderable->vertex_data->vertex_specification(),
+                        renderable->vertex_data->data(),
+                        renderable->vertex_data->vertex_specification()
+                            .stride());
                     break;
                 default:
                     break;
@@ -437,11 +479,11 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
             total += range->count;
         }
-
-        get_app()->stats->increment_polygons_rendered(renderable->arrangement, total);
     }
-}
 
+    get_app()->stats->increment_polygons_rendered(renderable->arrangement,
+                                                  total);
+}
 }
 
 

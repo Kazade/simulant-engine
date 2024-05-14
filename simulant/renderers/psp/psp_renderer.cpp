@@ -56,6 +56,7 @@ batcher::RenderGroupKey PSPRenderer::prepare_render_group(
 }
 
 #define ALIGN2048(x) ((x + (2047)) & ~2047)
+#define UNCACHED(x) (x + 0x40000000)
 
 void PSPRenderer::init_context() {
     S_VERBOSE("init_context");
@@ -77,7 +78,7 @@ void PSPRenderer::init_context() {
 
     S_VERBOSE("Using {0} bytes of VRAM for texture pool", max_size);
 
-    vram_alloc_init(texture_ram, max_size);
+    vram_alloc_init(UNCACHED(texture_ram), max_size);
 
     // Set up buffers
     sceGuStart(GU_DIRECT, list_);
@@ -89,8 +90,8 @@ void PSPRenderer::init_context() {
     sceGuOffset(2048 - (window->width() / 2), 2048 - (window->height() / 2));
     sceGuViewport(2048, 2048, window->width(), window->height());
 
-    sceGuDepthRange(0, 65535);
-    sceGuDepthFunc(GU_LEQUAL);
+    sceGuDepthRange(65535, 0);
+    sceGuDepthFunc(GU_GEQUAL);
     sceGuEnable(GU_DEPTH_TEST);
     sceGuEnable(GU_CLIP_PLANES);
     sceGuShadeModel(GU_SMOOTH);
@@ -160,6 +161,7 @@ std::shared_ptr<batcher::RenderQueueVisitor> PSPRenderer::get_render_queue_visit
 
 void PSPRenderer::on_pre_render() {
     S_VERBOSE("pre_render");
+    texture_manager_.update_priorities();
     sceGuStart(GU_DIRECT, list_);
 }
 
@@ -180,6 +182,10 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;
+    }
+
+    if(texture->width() >= 256 || texture->height() >= 256) {
+        S_ERROR("Large texture: {0}", texture->source().str());
     }
 
     auto data = texture->data();

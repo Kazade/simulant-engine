@@ -3,6 +3,7 @@
 #include "../../texture.h"
 #include "../../utils/limited_vector.h"
 #include <cstdint>
+#include <list>
 #include <vector>
 
 namespace smlt {
@@ -29,14 +30,6 @@ struct PSPTextureObject {
     uint8_t* palette = nullptr;
     std::size_t palette_size = 0;
     int palette_format = 0;
-
-    /* When this texture is bound, we increase the priority. Before
-     * each frame we decrease the priority by 1 until we hit min-priority.
-     * If we run out of VRAM we find any resident textures with the lowest
-     * priority and then move the largest ones out of vram. When a texture
-     * is moved into vram its priority goes back to zero.
-     */
-    uint8_t priority = 255;
     bool can_fit_in_vram = false;
 
     TextureFilter filter = TEXTURE_FILTER_POINT;
@@ -60,21 +53,24 @@ public:
 
     void update_priorities();
 
-    PSPTextureObject* find_texture(int texture);
+    std::shared_ptr<PSPTextureObject> find_texture(int texture);
 
 private:
     friend void update_data_pointer(void* src, void* dst, void* data);
 
     PSPRenderer* renderer_ = nullptr;
     bool evict_texture(PSPTextureObject* obj);
-    void promote_texture(PSPTextureObject* texture);    
+    bool promote_texture(PSPTextureObject* texture);
 
-    std::vector<PSPTextureObject> textures_;
-    int lowest_texture_priority_ = 0;
+    std::vector<std::shared_ptr<PSPTextureObject>> textures_;
 
-    /* Returns true if there are enough textures in vram with a lower
-     * priority to make room for this one */
-    bool space_in_vram(PSPTextureObject* obj);
+    /* As we bind textures, we move them to the front of the priority
+     * queue, and add them to the textures_this_frame set. Each frame
+     * we go through the textures_this_frame_, work out how much space
+     * we need to promote them all, and then reverse through the priority
+     * list freeing textures until we we have enough space */
+    std::list<PSPTextureObject*> texture_priority_;
+    std::unordered_set<PSPTextureObject*> textures_this_frame_;
 
     int currently_bound_texture_ = 0;
 };
