@@ -477,6 +477,34 @@ test:linux-x64-gcc-release:
    reports:
       junit: ${TARGET}/release/report.xml
 
+build:macos-m1-gcc:
+  stage: build
+  image: macos-14-xcode-15
+  tags:
+    - saas-macos-medium-m1
+  variables:
+   TARGET: macos-m1-gcc
+  before_script:
+   - brew install glfw sdl2 python 
+  script:
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+   - cd ../..
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/assets/
+      - ${TARGET}/debug/tests/simulant_tests
+      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/assets/
+      - ${TARGET}/release/tests/simulant_tests
+
 build:dreamcast-sh4-gcc:
   stage: build
   image: kazade/dreamcast-sdk
