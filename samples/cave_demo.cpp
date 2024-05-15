@@ -79,8 +79,8 @@ public:
         // Fairy
         fairy_actor_->move_to_absolute(fairyPath_->calc_bezier_point(0));
 
-        sound_ =
-            stage_->assets->new_sound_from_file("sample_data/cave/ambient.wav");
+        sound_ = stage_->assets->new_sound_from_file(
+            "assets/samples/cave/ambient.wav");
 
         player_ = camera_->play_sound(sound_, smlt::AUDIO_REPEAT_FOREVER);
     }
