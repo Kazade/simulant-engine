@@ -654,8 +654,10 @@ void Texture::set_texture_filter(TextureFilter filter) {
 }
 
 void Texture::set_free_data_mode(TextureFreeData mode) {
-    free_data_mode_ = mode;
-    params_dirty_ = true;
+    if(free_data_mode_ != mode) {
+        free_data_mode_ = mode;
+        params_dirty_ = true;
+    }
 }
 
 TextureFreeData Texture::free_data_mode() const {
@@ -706,13 +708,17 @@ void Texture::set_texture_wrap_w(TextureWrap wrap_w) {
 }
 
 void Texture::set_auto_upload(bool v) {
-    auto_upload_ = v;
-    params_dirty_ = true;
+    if(auto_upload_ != v) {
+        auto_upload_ = v;
+        params_dirty_ = true;
+    }
 }
 
 void Texture::set_mipmap_generation(MipmapGenerate type) {
-    mipmap_generation_ = type;
-    params_dirty_ = true;
+    if(mipmap_generation_ != type) {
+        mipmap_generation_ = type;
+        params_dirty_ = true;
+    }
 }
 
 std::vector<uint8_t> Texture::data_copy() const {

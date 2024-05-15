@@ -11,7 +11,6 @@ SET(SAMPLES
     selection_sample
     light_sample
     rtt_sample
-    q2bsp_sample
     fleets_demo
     terrain_sample
     physics_demo
@@ -51,7 +50,7 @@ foreach(sample ${SAMPLES})
         add_custom_command(
             TARGET ${sample} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_BINARY_DIR}/psp_artifact/EBOOT.PBP
+            ${CMAKE_CURRENT_BINARY_DIR}/EBOOT.PBP
             ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/EBOOT.PBP
         )
         add_custom_command(

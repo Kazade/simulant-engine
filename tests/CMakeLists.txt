@@ -51,13 +51,6 @@ IF(PLATFORM_PSP)
 
     add_custom_command(
         TARGET simulant_tests POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_BINARY_DIR}/psp_artifact/EBOOT.PBP
-        ${CMAKE_CURRENT_BINARY_DIR}/EBOOT.PBP
-    )
-
-    add_custom_command(
-        TARGET simulant_tests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
         ../../assets
         ${CMAKE_CURRENT_BINARY_DIR}/simulant

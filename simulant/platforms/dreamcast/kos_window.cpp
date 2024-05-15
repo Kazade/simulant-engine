@@ -2,18 +2,18 @@
 #include <malloc.h>
 #include <memory>
 #include <vector>
-#include "../deps/libgl/include/GL/gl.h"
-#include "../deps/libgl/include/GL/glkos.h"
+#include "../../../deps/libgl/include/GL/gl.h"
+#include "../../../deps/libgl/include/GL/glkos.h"
 
-#include "input/input_state.h"
+#include "../../input/input_state.h"
 #include "kos_window.h"
-#include "time_keeper.h"
-#include "application.h"
+#include "../../time_keeper.h"
+#include "../../application.h"
 
-#include "sound/drivers/openal_sound_driver.h"
-#include "sound/drivers/null_sound_driver.h"
+#include "../../sound/drivers/openal_sound_driver.h"
+#include "../../sound/drivers/null_sound_driver.h"
 
-#include "renderers/renderer_config.h"
+#include "../../renderers/renderer_config.h"
 
 namespace smlt {
 
@@ -102,7 +102,7 @@ KOSWindow::~KOSWindow() {
     }
 }
 
-void KOSWindow::swap_buffers() {
+void KOSWindow::do_swap_buffers() {
     glKosSwapBuffers();
 }
 
@@ -336,14 +336,14 @@ void KOSWindow::check_events() {
                     if(key_state[j] && !previous_key_state_[j]) {
                         // Key down
                         input_state->_handle_key_down(
-                            i, KeyboardCode(j)
+                            KeyboardID(i), KeyboardCode(j)
                         );
                         on_key_down((KeyboardCode) j, get_modifiers());
                     }
                     if(!key_state[j] && previous_key_state_[j]) {
                         // Key up
                         input_state->_handle_key_up(
-                            i, KeyboardCode(j)
+                            KeyboardID(i), KeyboardCode(j)
                         );
 
                         on_key_up((KeyboardCode) j, get_modifiers());
@@ -526,7 +526,7 @@ void KOSWindow::game_controller_stop_rumble(GameController *controller) {
             } else {
                 state.current_rumble_remaining_ = Seconds(0.0f);
                 S_DEBUG("Stopped PURUPURU");
-            }            
+            }
         }
     }
 }

@@ -29,8 +29,8 @@
 namespace smlt {
 
 void NullPartitioner::lights_and_geometry_visible_from(
-        CameraID camera_id, std::vector<LightID> &lights_out,
-        std::vector<StageNode*> &geom_out) {
+    CameraID camera_id, std::vector<Light*>& lights_out,
+    std::vector<StageNode*>& geom_out) {
 
     _S_UNUSED(camera_id);
 
@@ -39,33 +39,32 @@ void NullPartitioner::lights_and_geometry_visible_from(
     lights_out.reserve(lights_.size());
     geom_out.reserve(geometry_.size());
     for(auto& node: lights_) {
-        lights_out.push_back(node.second->id());
+        lights_out.push_back(node);
     }
 
     for(auto& node: geometry_) {
-        geom_out.push_back(node.second);
+        geom_out.push_back(node);
     }
 }
 
-void NullPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
+void NullPartitioner::apply_staged_write(const StagedWrite& write) {
     if(write.operation == WRITE_OPERATION_ADD) {
-        if(key.first == typeid(Light)) {
-            assert(write.node);
-            lights_.insert(std::make_pair(key, (Light*) write.node));
-        } else if(key.first == typeid(Camera)) {
-            // Skip cameras
-        } else {
-            assert(write.node);
-            geometry_.insert(std::make_pair(key, write.node));
+        if(write.node->node_type() == STAGE_NODE_TYPE_LIGHT) {
+            lights_.insert((Light*)write.node);
+        } else if(write.node->node_type() != STAGE_NODE_TYPE_CAMERA) {
+            geometry_.insert(write.node);
         }
     } else if(write.operation == WRITE_OPERATION_REMOVE) {
-        geometry_.erase(key);
-        lights_.erase(key);
+        geometry_.erase(std::find_if(geometry_.begin(), geometry_.end(),
+                                     [=](const StageNode* ent) -> bool {
+            return ent == write.node;
+        }));
+        lights_.erase(std::find_if(lights_.begin(), lights_.end(),
+                                   [=](const Light* ent) -> bool {
+            return ent == write.node;
+        }));
     } else if(write.operation == WRITE_OPERATION_UPDATE) {
         // Do nothing!
     }
 }
-
-
-
 }

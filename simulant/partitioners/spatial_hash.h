@@ -47,11 +47,9 @@ public:
     SpatialHashPartitioner(Stage* ss);
     virtual ~SpatialHashPartitioner();
 
-    void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID> &lights_out,
-        std::vector<StageNode*> &geom_out
-    );
+    void lights_and_geometry_visible_from(CameraID camera_id,
+                                          std::vector<Light*>& lights_out,
+                                          std::vector<StageNode*>& geom_out);
 
 private:
     void stage_add_actor(ActorID obj);
@@ -70,7 +68,7 @@ private:
     void _update_particle_system(const AABB& bounds, ParticleSystemID ps);
     void _update_light(const AABB& bounds, LightID light);
 
-    void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) override;
+    void apply_staged_write(const StagedWrite& write) override;
 
     SpatialHash* hash_ = nullptr;
 

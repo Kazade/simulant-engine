@@ -53,6 +53,7 @@ private:
 class StdIOHandler : public Handler {
 public:
     StdIOHandler();
+    ~StdIOHandler();
 
 private:
 
@@ -126,6 +127,10 @@ public:
 
     void set_level(LogLevel level) {
         level_ = level;
+    }
+
+    LogLevel level() const {
+        return level_;
     }
 
 private:

@@ -172,9 +172,12 @@ class Application {
 
     DEFINE_SIGNAL(FrameStartedSignal, signal_frame_started);
     DEFINE_SIGNAL(FrameFinishedSignal, signal_frame_finished);
+
 public:
     Application(const AppConfig& config, void* platform_state=nullptr);
     virtual ~Application();
+
+    bool profiling_enabled() const;
 
     //Create the window, start do_initialization in a thread, show the loading scene
     //when thread completes, hide the loading scene and run the main loop

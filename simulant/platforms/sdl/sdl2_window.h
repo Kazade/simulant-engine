@@ -26,8 +26,8 @@
     #undef main
 #endif
 #include "sdl2_keycodes.h"
-#include "generic/managed.h"
-#include "window.h"
+#include "../../generic/managed.h"
+#include "../../window.h"
 
 namespace smlt {
 
@@ -58,7 +58,7 @@ private:
     void destroy_window() override;
 
     void check_events() override;
-    void swap_buffers() override;
+    void do_swap_buffers() override;
 
     friend int event_filter(void* user_data, SDL_Event* event);
 

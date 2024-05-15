@@ -19,17 +19,12 @@
 #ifndef PARTITIONER_H
 #define PARTITIONER_H
 
-#include <memory>
-#include <set>
-#include <map>
 #include <vector>
 
 #include "generic/containers/contiguous_map.h"
-#include "generic/property.h"
 #include "generic/managed.h"
-#include "renderers/renderer.h"
+#include "generic/property.h"
 #include "types.h"
-#include "interfaces.h"
 
 namespace smlt {
 
@@ -87,17 +82,16 @@ public:
 
     void _apply_writes();
 
-    virtual void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID>& lights_out,
-        std::vector<StageNode*>& geom_out
-    ) = 0;
+    virtual void
+        lights_and_geometry_visible_from(CameraID camera_id,
+                                         std::vector<Light*>& lights_out,
+                                         std::vector<StageNode*>& geom_out) = 0;
 
     virtual MeshID debug_mesh_id() { return MeshID(); }
 protected:
     Stage* get_stage() const { return stage_; }
 
-    virtual void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) = 0;
+    virtual void apply_staged_write(const StagedWrite& write) = 0;
 
     void stage_write(StageNode* node, const StagedWrite& op);
 
@@ -106,8 +100,8 @@ private:
 
     thread::Mutex staging_lock_;
 
-    std::vector<StageNode*> staged_writes_;
-    std::unordered_map<StageNode*, UniqueIDKey> removed_nodes_;
+    ContiguousMap<StageNode*, std::vector<StagedWrite>> staged_writes_;
+    std::size_t write_count_ = 0;
 
 protected:
     Property<decltype(&Partitioner::stage_)> stage = { this, &Partitioner::stage_ };

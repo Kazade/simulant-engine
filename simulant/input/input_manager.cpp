@@ -140,7 +140,9 @@ inline static float sgn(float v) {
     return (v > 0) ? 1.0f : -1.0f;
 }
 
-void InputManager::_process_mouse(int8_t id, int8_t pbtn, int8_t nbtn, bool *positive_pressed, bool *negative_pressed) {
+void InputManager::_process_mouse(MouseID id, int8_t pbtn, int8_t nbtn,
+                                  bool* positive_pressed,
+                                  bool* negative_pressed) {
     if(pbtn != -1 && controller_->mouse_button_state(id, pbtn)) {
         *positive_pressed = true;
     }
@@ -251,7 +253,9 @@ bool InputManager::_update_joystick_button_axis(InputAxis* axis, float dt) {
     return negative_pressed || positive_pressed;
 }
 
-void InputManager::_process_keyboard(int8_t id, KeyboardCode pkey, KeyboardCode nkey, bool *positive_pressed, bool *negative_pressed) {
+void InputManager::_process_keyboard(KeyboardID id, KeyboardCode pkey,
+                                     KeyboardCode nkey, bool* positive_pressed,
+                                     bool* negative_pressed) {
     if(pkey != KEYBOARD_CODE_NONE && controller_->keyboard_key_state(id, pkey)) {
         *positive_pressed = true;
     }

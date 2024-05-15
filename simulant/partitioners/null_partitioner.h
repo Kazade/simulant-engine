@@ -19,7 +19,7 @@
 #ifndef NULL_PARTITIONER_H
 #define NULL_PARTITIONER_H
 
-#include <map>
+#include <unordered_set>
 
 #include "../partitioner.h"
 #include "../generic/unique_id.h"
@@ -34,16 +34,14 @@ public:
         Partitioner(ss) {}
 
     void lights_and_geometry_visible_from(
-        CameraID camera_id,
-        std::vector<LightID> &lights_out,
-        std::vector<StageNode*> &geom_out
-    ) override;
+        CameraID camera_id, std::vector<Light*>& lights_out,
+        std::vector<StageNode*>& geom_out) override;
 
 private:
-    void apply_staged_write(const UniqueIDKey& key, const StagedWrite& write) override;
+    void apply_staged_write(const StagedWrite& write) override;
 
-    std::map<UniqueIDKey, StageNode*> geometry_;
-    std::map<UniqueIDKey, Light*> lights_;
+    std::unordered_set<StageNode*> geometry_;
+    std::unordered_set<Light*> lights_;
 };
 
 }

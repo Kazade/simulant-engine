@@ -13,14 +13,14 @@ class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_loading_without_texture_coords() {
         //Shouldn't throw
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj");
+        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("assets/samples/cube.obj");
     }
 
     void test_culling_method_applied() {
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("cube.obj", VertexSpecification::DEFAULT, opts);
+        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("assets/samples/cube.obj", VertexSpecification::DEFAULT, opts);
         smlt::MeshPtr m = mid.fetch();
 
         assert_equal(m->submesh_count(), 1u);
@@ -40,28 +40,30 @@ public:
         )");
 
         loaders::OBJLoader loader(
-            "test.obj",
+            "assets/samples/test.obj",
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto spec = smlt::VertexSpecification::DEFAULT;
+        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+
+        auto mesh = application->shared_assets->new_mesh(spec);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-#ifndef __PSP__
         const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
-        assert_equal(bytes[0], 0);  // B
-        assert_equal(bytes[1], 0);  // G
-        assert_equal(bytes[2], 255);  // R
-        assert_equal(bytes[3], 255);  // A
+
+        assert_equal(bytes[0], 0);   // B
+        assert_equal(bytes[1], 0);   // G
+        assert_equal(bytes[2], 255); // R
+        assert_equal(bytes[3], 255); // A
 
         bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
-        assert_equal(bytes[0], 0);  // B
-        assert_equal(bytes[1], 255);  // G
-        assert_equal(bytes[2], 0);  // R
-        assert_equal(bytes[3], 255);  // A
-#endif
+        assert_equal(bytes[0], 0);   // B
+        assert_equal(bytes[1], 255); // G
+        assert_equal(bytes[2], 0);   // R
+        assert_equal(bytes[3], 255); // A
     }
 
     void test_vertex_colours_default_white() {
@@ -74,17 +76,17 @@ public:
         )");
 
         loaders::OBJLoader loader(
-            "test.obj",
+            "assets/samples/test.obj",
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto mesh = application->shared_assets->new_mesh(smlt::VertexSpecification::DEFAULT);
+        auto spec = smlt::VertexSpecification::DEFAULT;
+        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+        auto mesh = application->shared_assets->new_mesh(spec);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        /* PSP uses 4f not 4ub */
-#ifndef __PSP__
         const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
@@ -96,7 +98,6 @@ public:
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
         assert_equal(bytes[3], 255);  // A
-#endif
     }
 
     void test_specification_override() {
@@ -108,12 +109,12 @@ public:
         )");
 
         loaders::OBJLoader loader(
-            "test.obj",
+            "assets/samples/test.obj",
             std::make_shared<std::istringstream>(obj_file)
         );
 
         auto mesh = application->shared_assets->new_mesh_from_file(
-            "cube.obj",
+            "assets/samples/cube.obj",
             smlt::VertexSpecification::POSITION_ONLY
         );
         loader.into(*mesh);

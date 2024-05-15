@@ -35,7 +35,7 @@ public:
         a1->move_to(791, 58, -810);
         a2->move_to(791, 58, -810);
 
-        std::vector<LightID> lights;
+        std::vector<Light*> lights;
         std::vector<StageNode*> nodes;
         FrustumPartitioner partitioner(stage_);
 
@@ -62,7 +62,7 @@ public:
 
         assert_false(a1->transformed_aabb().has_zero_area());
 
-        std::vector<LightID> lights;
+        std::vector<Light*> lights;
         std::vector<StageNode*> nodes;
         FrustumPartitioner partitioner(stage_);
 
@@ -80,7 +80,7 @@ public:
 
         a1->move_to(0, 0, 100);
 
-        std::vector<LightID> lights;
+        std::vector<Light*> lights;
         std::vector<StageNode*> nodes;
         FrustumPartitioner partitioner(stage);
 
@@ -112,7 +112,7 @@ public:
         a2->move_to(0, 0, -5);
         a3->move_to(0, 0, -5);
 
-        std::vector<LightID> lights;
+        std::vector<Light*> lights;
         std::vector<StageNode*> nodes;
 
         FrustumPartitioner partitioner(stage_);

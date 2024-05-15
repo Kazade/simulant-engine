@@ -1,9 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
-#include <unordered_map>
-#include <string>
 #include <stdexcept>
+#include <string>
+#include <unordered_map>
 
 namespace smlt {
 

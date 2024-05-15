@@ -5,8 +5,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "platforms/*"  # Remove platform specific additions
     "renderers/glad/*"
     "renderers/gl2x/*"
-    "sdl2_window.*"
-    "kos_window.*"
+    "renderers/psp/*"
     "sound/drivers/*"
 )
 
@@ -29,34 +28,23 @@ IF(NOT PLATFORM_DREAMCAST)
 ENDIF()
 
 IF(PLATFORM_PSP)
-    MESSAGE("-- Including pspgl in build as this is the PSP")
-    FILE(GLOB LIBGL ${CMAKE_SOURCE_DIR}/deps/pspgl/src/*.c)
+    MESSAGE("-- Including PSP renderer in build")
+    FILE(GLOB_RECURSE PSP_FILES renderers/psp/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PSP_FILES})
 
-    # These are dead files?
-    LIST(
-        REMOVE_ITEM
-        LIBGL
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/src/glGenLists.c
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/src/glIsList.c
-        ${CMAKE_SOURCE_DIR}/deps/pspgl/src/glDeleteLists.c
+    link_libraries(
+        pspdebug
+        pspdisplay
+        pspge
+        pspgu
+        pspvfpu
+        pspctrl
+        pspaudio
+        pspgum
     )
-
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/pspgl/include)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBGL})
-
-    SET(PROC_FILE ${CMAKE_SOURCE_DIR}/deps/pspgl/include/pspgl_proctable.h)
-    add_custom_command(
-        OUTPUT ${PROC_FILE}
-        COMMAND ${CMAKE_SOURCE_DIR}/conf/extract_gl_extensions.py
-        ${PROC_FILE}
-        ${LIBGL}
-        COMMENT "Generating pspgl extension list"
-    )
-
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PROC_FILE})
 ENDIF()
 
-IF(PLATFORM_DREAMCAST OR SIMULANT_USE_ALDC)
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR SIMULANT_USE_ALDC)
     SET(
         LIBAL
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/buffer.c
@@ -106,7 +94,7 @@ IF(PLATFORM_DREAMCAST)
     SET(
         SIMULANT_FILES
         ${SIMULANT_FILES}
-        kos_window.cpp
+        platforms/dreamcast/kos_window.cpp
         sound/drivers/openal_sound_driver.cpp
         sound/drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp
@@ -122,9 +110,8 @@ ELSEIF(PLATFORM_PSP)
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
-        # FIXME: Use OpenAL on PSP
-        # sound_drivers/openal_sound_driver.cpp
-        # sound_drivers/al_error.cpp
+        sound/drivers/openal_sound_driver.cpp
+        sound/drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp
     )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
@@ -160,7 +147,7 @@ ELSE()
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
-        sdl2_window.cpp
+        platforms/sdl/sdl2_window.cpp
         sound/drivers/openal_sound_driver.cpp
         sound/drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp

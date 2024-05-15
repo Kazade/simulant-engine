@@ -20,7 +20,6 @@ public:
     void show_cursor(bool) override {} // No-op
     void lock_cursor(bool) override {} // No-op
 
-    void swap_buffers() override;
     void destroy_window() override;
     void check_events() override;
 

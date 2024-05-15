@@ -162,6 +162,9 @@ void VirtualFileSystem::set_location_cache_limit(std::size_t entries) {
     location_cache_.set_max_size(entries);
 }
 
+static const char* RENDERER_PLACEHOLDER = "${RENDERER}";
+static const char* PLATFORM_PLACEHOLDER = "${PLATFORM}";
+
 optional<Path> VirtualFileSystem::locate_file(
         const Path &filename,
         bool use_cache,
@@ -180,84 +183,115 @@ optional<Path> VirtualFileSystem::locate_file(
 
     auto window = get_app()->window.get();
 
-    unicode tmp_name = filename.str();
+    std::vector<Path> names_to_try;
 
-    if(window && window->renderer.get()) {
-        tmp_name = tmp_name.replace("${RENDERER}", window->renderer->name());
-    }
+    /* Here, we need to do the following. Given this example:
+     *
+     * /my/${RENDERER}/path/${PLATFORM}/
+     *
+     * We need the search to be:
+     *
+     * /my/psp/path/psp/
+     * /my/psp/path/
+     * /my/path/psp/
+     * /my/path/
+     */
 
     auto platform = get_platform();
-    if(platform) {
-        tmp_name = tmp_name.replace("${PLATFORM}", platform->name());
-    }
+    std::multimap<std::string, std::string> replacements = {
+        {RENDERER_PLACEHOLDER, window->renderer->name()},
+        {PLATFORM_PLACEHOLDER, platform->name()        },
+        {RENDERER_PLACEHOLDER, ""                      },
+        {PLATFORM_PLACEHOLDER, ""                      },
+    };
 
-    Path final_name = Path(kfs::path::norm_path(tmp_name.encode()));
+    for(auto& p: replacements) {
+        for(auto& q: replacements) {
+            if(p.first == q.first) {
+                continue;
+            }
 
-    if(use_cache) {
-        auto ret = location_cache_.get(final_name);
-        if(ret) {
-            /* An empty Path means that the file doesn't exist */
-            if(ret.value() == DOES_NOT_EXIST) {
-                return optional<Path>();
-            } else {
-                return ret.value();
+            auto repl = unicode(filename.str())
+                            .replace(p.first, p.second)
+                            .replace(q.first, q.second);
+
+            auto new_path = Path(kfs::path::norm_path(repl.encode()));
+            if(std::find(names_to_try.begin(), names_to_try.end(), new_path) ==
+               names_to_try.end()) {
+                names_to_try.push_back(new_path);
             }
         }
     }
 
-    Path abs_final_name(kfs::path::abs_path(final_name.str()));
-
-    S_DEBUG("Checking existence...");
-    if(kfs::path::exists(abs_final_name.str())) {
-        S_INFO("Located file: {0}", abs_final_name);
+    for(const auto& final_name: names_to_try) {
 
         if(use_cache) {
-            location_cache_.insert(final_name, abs_final_name);
-        }
-
-        return abs_final_name;
-    }
-
-    S_DEBUG("Searching resource paths...");
-    for(const Path& path: resource_path_) {
-        auto full_path = kfs::path::norm_path(
-            kfs::path::join(path.str(), final_name.str())
-        );
-
-#ifdef __ANDROID__
-        /* Hackity hack. Wipe out the /android_asset placeholder folder
-         * to make the path relative */
-        S_DEBUG("Before manipulation {0}", full_path);
-
-        if(full_path.find(ANDROID_ASSET_DIR_PREFIX) == 0) {
-            full_path = full_path.substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
-
-            /* Remove any leading slashes, all paths must be relative */
-            if(!full_path.empty() && full_path[0] == '/') {
-                full_path = full_path.substr(1);
+            auto ret = location_cache_.get(final_name);
+            if(ret) {
+                /* An empty Path means that the file doesn't exist */
+                if(ret.value() == DOES_NOT_EXIST) {
+                    return optional<Path>();
+                } else {
+                    return ret.value();
+                }
             }
         }
-#endif
 
-        S_DEBUG("Trying path: {0}", full_path);
-        if(kfs::path::exists(full_path)) {
-            S_INFO("Located file: {0}", full_path);
+        Path abs_final_name(kfs::path::abs_path(final_name.str()));
+
+        S_DEBUG("Checking existence...");
+        if(kfs::path::exists(abs_final_name.str())) {
+            S_INFO("Located file: {0}", abs_final_name);
 
             if(use_cache) {
-                location_cache_.insert(final_name, full_path);
+                location_cache_.insert(final_name, abs_final_name);
             }
 
-            return optional<Path>(full_path);
+            return abs_final_name;
+        }
+
+        S_DEBUG("Searching resource paths...");
+        for(const Path& path: resource_path_) {
+            auto full_path = kfs::path::norm_path(
+                kfs::path::join(path.str(), final_name.str()));
+
+#ifdef __ANDROID__
+            /* Hackity hack. Wipe out the /android_asset placeholder folder
+             * to make the path relative */
+            S_DEBUG("Before manipulation {0}", full_path);
+
+            if(full_path.find(ANDROID_ASSET_DIR_PREFIX) == 0) {
+                full_path = full_path.substr(
+                    std::string(ANDROID_ASSET_DIR_PREFIX).size());
+
+                /* Remove any leading slashes, all paths must be relative */
+                if(!full_path.empty() && full_path[0] == '/') {
+                    full_path = full_path.substr(1);
+                }
+            }
+#endif
+
+            S_DEBUG("Trying path: {0}", full_path);
+            if(kfs::path::exists(full_path)) {
+                S_INFO("Located file: {0}", full_path);
+
+                if(use_cache) {
+                    location_cache_.insert(final_name, full_path);
+                }
+
+                return optional<Path>(full_path);
+            }
+        }
+
+        if(use_cache) {
+            location_cache_.insert(final_name, DOES_NOT_EXIST);
         }
     }
 
     if(!fail_silently) {
-        S_WARN("Unable to find file: {0}", final_name);
+        S_WARN("Unable to find file: {0}", filename.str());
     }
 
-    if(use_cache) {
-        location_cache_.insert(final_name, DOES_NOT_EXIST);
-    }
     return optional<Path>();
 }
 

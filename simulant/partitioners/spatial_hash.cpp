@@ -135,9 +135,9 @@ void SpatialHashPartitioner::stage_remove_particle_system(ParticleSystemID ps) {
     }
 }
 
-void SpatialHashPartitioner::apply_staged_write(const UniqueIDKey& key, const StagedWrite &write) {
+void SpatialHashPartitioner::apply_staged_write(const StagedWrite& write) {
     _apply_writes();
-
+    auto key = write.node->key();
     bool is_actor = key.first == typeid(Actor);
     bool is_geom = key.first == typeid(Geom);
     bool is_light = key.first == typeid(Light);
@@ -183,8 +183,8 @@ void SpatialHashPartitioner::apply_staged_write(const UniqueIDKey& key, const St
 }
 
 void SpatialHashPartitioner::lights_and_geometry_visible_from(
-        CameraID camera_id, std::vector<LightID> &lights_out,
-        std::vector<StageNode*> &geom_out) {
+    CameraID camera_id, std::vector<Light*>& lights_out,
+    std::vector<StageNode*>& geom_out) {
 
     thread::ReadLock<thread::SharedMutex> lock(lock_);
 
@@ -208,8 +208,8 @@ void SpatialHashPartitioner::lights_and_geometry_visible_from(
                 geom_out.push_back(pentry->particle_system_id.fetch());
             break;
             case PARTITIONER_ENTRY_TYPE_LIGHT:
-                lights_out.push_back(pentry->light_id);
-            break;
+                lights_out.push_back(stage->light(pentry->light_id));
+                break;
         default:
             break;
 
@@ -217,7 +217,8 @@ void SpatialHashPartitioner::lights_and_geometry_visible_from(
     }
 
     // Add directional lights to the end
-    lights_out.insert(lights_out.end(), directional_lights_.begin(), directional_lights_.end());
+    for(auto& id: directional_lights_) {
+        lights_out.push_back(stage->light(id));
+    }
 }
-
 }

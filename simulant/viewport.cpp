@@ -48,6 +48,7 @@ Viewport::Viewport(ViewportType type, const Colour& colour):
     type_(type),
     colour_(colour) {
 
+    calculate_ratios_from_viewport(type_, x_, y_, width_, height_);
 }
 
 Viewport::Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour &colour):
@@ -62,47 +63,6 @@ Viewport::Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour &co
 
 void Viewport::set_colour(const smlt::Colour& colour) {
     colour_ = colour;
-}
-
-void Viewport::clear(const RenderTarget &target, uint32_t clear_flags) {
-    apply(target);
-
-    GLCheck(glClearColor, colour_.r, colour_.g, colour_.b, colour_.a);
-
-    uint32_t gl_clear_flags = 0;
-    if((clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) == BUFFER_CLEAR_COLOUR_BUFFER) {
-        gl_clear_flags |= GL_COLOR_BUFFER_BIT;
-    }
-
-    if((clear_flags & BUFFER_CLEAR_DEPTH_BUFFER) == BUFFER_CLEAR_DEPTH_BUFFER) {
-        gl_clear_flags |= GL_DEPTH_BUFFER_BIT;
-
-        // Without this clearing the depth will do nothing.
-        GLCheck(glDepthMask, GL_TRUE);
-    }
-
-    if((clear_flags & BUFFER_CLEAR_STENCIL_BUFFER) == BUFFER_CLEAR_STENCIL_BUFFER) {
-        gl_clear_flags |= GL_STENCIL_BUFFER_BIT;
-    }
-
-    GLCheck(glClear, gl_clear_flags);
-}
-
-void Viewport::apply(const RenderTarget& target) {
-    if(type_ != VIEWPORT_TYPE_CUSTOM) {
-        calculate_ratios_from_viewport(type_, x_, y_, width_, height_);
-    }
-
-    GLCheck(glDisable, GL_SCISSOR_TEST);
-
-    auto x = x_ * target.width();
-    auto y = y_ * target.height();
-    auto width = width_ * target.width();
-    auto height = height_ * target.height();
-
-    GLCheck(glEnable, GL_SCISSOR_TEST);
-    GLCheck(glScissor, x, y, width, height);
-    GLCheck(glViewport, x, y, width, height);
 }
 
 uint32_t Viewport::width_in_pixels(const smlt::RenderTarget& target) const {
