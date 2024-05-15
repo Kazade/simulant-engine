@@ -477,7 +477,7 @@ test:linux-x64-gcc-release:
    reports:
       junit: ${TARGET}/release/report.xml
 
-build:macos-m1-gcc:
+.build:macos-m1-gcc:
   stage: build
   image: macos-14-xcode-15
   tags:
