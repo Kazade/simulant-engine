@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../platform.h"
+#include <SDL.h>
 
 namespace smlt {
 

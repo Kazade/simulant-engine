@@ -42,7 +42,11 @@ foreach(sample ${SAMPLES})
 
     ADD_EXECUTABLE(${sample} ${SAMPLE_SOURCES})
 
-    target_link_options(${sample} PRIVATE "-Wl,-Map,${sample}.${CMAKE_BUILD_TYPE}.map")
+    IF(APPLE)
+        target_link_options(${sample} PRIVATE "-Wl,-map,${sample}.${CMAKE_BUILD_TYPE}.map")
+    ELSE()
+        target_link_options(${sample} PRIVATE "-Wl,-Map,${sample}.${CMAKE_BUILD_TYPE}.map")
+    ENDIF()
 
     IF(PLATFORM_PSP)
         create_pbp_file(TARGET ${sample})
