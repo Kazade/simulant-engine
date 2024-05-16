@@ -44,6 +44,10 @@ public:
         mixin1->signal_late_update().connect([&](float) { late_update_called++; });
         mixin1->signal_fixed_update().connect([&](float) { fixed_update_called++; });
 
+        // Give the timekeeper a chance to accumulate enough time
+        // to run at least one fixed update
+        smlt::thread::sleep(100);
+
         application->run_frame();
 
         assert_equal(update_called, 1);
