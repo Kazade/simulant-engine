@@ -249,13 +249,17 @@ int vram_alloc_init(void* pool, size_t size) {
 
     memset(pool_header.block_usage, 0, BLOCK_COUNT);
     pool_header.pool = (uint8_t*)pool;
-    pool_header.pool_size = size;
 
-    intptr_t base_address = (intptr_t) pool_header.pool;
+    intptr_t base_address = (intptr_t)pool_header.pool;
     base_address = round_up(base_address, 2048);
 
     pool_header.base_address = (uint8_t*) base_address;
     pool_header.block_count = ((p + size) - pool_header.base_address) / 2048;
+
+    /* The pool size might be less than the passed size if the memory
+     * wasn't aligned to 2048 */
+    pool_header.pool_size = pool_header.block_count * 2048;
+
     pool_header.allocations = NULL;
 
     assert(((uintptr_t) pool_header.base_address) % 2048 == 0);
@@ -463,7 +467,7 @@ void vram_alloc_run_defrag(void* pool, defrag_address_move callback,
 
         while(it) {
             void* potential_dest = vram_alloc_next_available(pool, it->size);
-            if(potential_dest < it->pointer) {
+            if(potential_dest && potential_dest < it->pointer) {
                 potential_dest = vram_alloc_malloc(pool, it->size);
                 memcpy(potential_dest, it->pointer, it->size);
 
@@ -497,30 +501,23 @@ static inline uint8_t count_ones(uint8_t byte) {
 size_t vram_alloc_count_free(void* pool) {
     (void) pool;
 
-    uint8_t* it = pool_header.block_usage;
-    uint8_t* end = it + pool_header.block_count;
+    size_t total_used = 0;
 
-    size_t total_free = 0;
-
-    while(it < end) {
-        total_free += count_ones(*it) * 256;
-        ++it;
+    for(std::size_t i = 0; i < pool_header.block_count; ++i) {
+        total_used += count_ones(pool_header.block_usage[i]) * 256;
     }
 
-    return total_free;
+    return vram_alloc_pool_size(pool) - total_used;
 }
 
 size_t vram_alloc_count_continuous(void* pool) {
     (void) pool;
 
     size_t largest_block = 0;
-
-    uint8_t* it = pool_header.block_usage;
-    uint8_t* end = it + pool_header.block_count;
-
     size_t current_block = 0;
-    while(it < end) {
-        uint8_t t = *it++;
+
+    for(std::size_t i = 0; i < pool_header.block_count; ++i) {
+        uint8_t t = pool_header.block_usage[i];
         if(!t) {
             current_block += 2048;
         } else {
@@ -535,6 +532,10 @@ size_t vram_alloc_count_continuous(void* pool) {
                 }
             }
         }
+    }
+
+    if(largest_block < current_block) {
+        largest_block = current_block;
     }
 
     return largest_block;

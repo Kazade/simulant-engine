@@ -1,5 +1,4 @@
-#ifndef TEST_SOUND_H
-#define TEST_SOUND_H
+#pragma once
 
 #include <cstdlib>
 #include "simulant/simulant.h"
@@ -51,7 +50,7 @@ public:
     }
 
     void test_2d_sound_output() {
-        smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
 
         auto actor = scene->create_child<smlt::AudioSource>();
 
@@ -69,7 +68,7 @@ public:
     void test_played_signal() {
         bool played = false;
 
-        smlt::SoundPtr sound = application->shared_assets->load_sound("test_sound.ogg");
+        smlt::SoundPtr sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
 
         auto actor = scene->create_child<smlt::AudioSource>();
 
@@ -95,7 +94,7 @@ public:
     }
 
     void test_3d_sound_output() {
-        smlt::SoundPtr sound = scene->assets->load_sound("test_sound.ogg");
+        smlt::SoundPtr sound = scene->assets->load_sound("assets/sounds/simulant.ogg");
 
         auto actor = scene->create_child<smlt::AudioSource>();
         actor->transform->set_translation(smlt::Vec3(10, 0, 0));
@@ -113,7 +112,7 @@ public:
     }
 
     void test_sound_destruction_stops_play() {
-        auto sound = application->shared_assets->load_sound("test_sound.ogg");
+        auto sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
 
         auto sid = sound->id();
 
@@ -137,7 +136,7 @@ public:
     }
 
     void test_sound_stopping() {
-        auto sound = application->shared_assets->load_sound("test_sound.ogg");
+        auto sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
         auto a = scene->create_child<smlt::AudioSource>();
         smlt::PlayingSoundPtr s = a->play_sound(sound);
 
@@ -153,4 +152,3 @@ private:
     smlt::StagePtr stage_;
 
 };
-#endif // TEST_SOUND_H

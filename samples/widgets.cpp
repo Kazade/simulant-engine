@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
     smlt::AppConfig config;
     config.title = "UI Demo";
     config.fullscreen = false;
-
+    config.log_level = smlt::LOG_LEVEL_VERBOSE;
 
 #ifdef __DREAMCAST__
     config.width = 640;

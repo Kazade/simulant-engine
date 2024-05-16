@@ -12,10 +12,10 @@ public:
         vfs->clear_location_cache();
         assert_equal(vfs->location_cache_size(), 0u);
 
-        auto f0 = vfs->locate_file("simulant/textures/simulant-icon.png");
+        auto f0 = vfs->locate_file("assets/textures/simulant-icon.png");
         assert_equal(vfs->location_cache_size(), 1u);
 
-        auto f1 = vfs->locate_file("simulant/textures/simulant-icon.png");
+        auto f1 = vfs->locate_file("assets/textures/simulant-icon.png");
         assert_equal(vfs->location_cache_size(), 1u);
 
         assert_true(f0);
@@ -26,7 +26,7 @@ public:
         vfs->add_search_path("/bananas/");
         assert_equal(vfs->location_cache_size(), 0u);
 
-        vfs->locate_file("simulant/textures/simulant-icon.png");
+        vfs->locate_file("assets/textures/simulant-icon.png");
         assert_equal(vfs->location_cache_size(), 1u);
     }
 
@@ -38,18 +38,18 @@ public:
 
     void test_read_blocking() {
         auto vfs = application->vfs.get();
-        auto path = vfs->locate_file("simulant/textures/simulant-icon.png");
+        auto path = vfs->locate_file("assets/textures/simulant-icon.png");
         assert_true(path);
 
         assert_false(vfs->read_blocking_enabled());
         vfs->enable_read_blocking();
         assert_true(vfs->read_blocking_enabled());
 
-        path = vfs->locate_file("simulant/textures/simulant-icon.png");
+        path = vfs->locate_file("assets/textures/simulant-icon.png");
         assert_false(path);
 
         vfs->disable_read_blocking();
-        path = vfs->locate_file("simulant/textures/simulant-icon.png");
+        path = vfs->locate_file("assets/textures/simulant-icon.png");
         assert_true(path);
     }
 };

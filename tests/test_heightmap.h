@@ -16,7 +16,7 @@ public:
         auto test1 = scene->assets->create_mesh_from_heightmap("junk_path", HeightmapSpecification());
         assert_false(test1);
 
-        auto path = "flare.tga";
+        auto path = "assets/particles/flare.tga";
         auto tex = scene->assets->load_texture(path);
         auto heightmap = scene->assets->create_mesh_from_heightmap(path, HeightmapSpecification());
 

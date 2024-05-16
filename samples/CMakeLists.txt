@@ -7,7 +7,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
 SET(SAMPLES
     viewports
-    q2bsp
     boxes
     widgets
     cave
@@ -34,7 +33,11 @@ foreach(sample ${SAMPLES})
 
     ADD_EXECUTABLE(${sample} ${SAMPLE_SOURCES})
 
-    target_link_options(${sample} PRIVATE "-Wl,-Map,${sample}.${CMAKE_BUILD_TYPE}.map")
+    IF(APPLE)
+        target_link_options(${sample} PRIVATE "-Wl,-map,${sample}.${CMAKE_BUILD_TYPE}.map")
+    ELSE()
+        target_link_options(${sample} PRIVATE "-Wl,-Map,${sample}.${CMAKE_BUILD_TYPE}.map")
+    ENDIF()
 
     IF(PLATFORM_PSP)
         create_pbp_file(TARGET ${sample})
@@ -55,8 +58,8 @@ foreach(sample ${SAMPLES})
         add_custom_command(
             TARGET ${sample} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ../../../samples/data
-            ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/sample_data
+            ../../../assets
+            ${CMAKE_CURRENT_BINARY_DIR}/${sample}_psp/assets
         )
     ENDIF()
 
@@ -85,12 +88,7 @@ foreach(sample ${SAMPLES})
             COMMAND $ENV{KOS_BASE}/utils/scramble/scramble ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.bin ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/1ST_READ.BIN
             COMMAND IP_TEMPLATE_FILE=${CMAKE_SOURCE_DIR}/platforms/dreamcast/IP.TMPL $ENV{KOS_BASE}/utils/makeip/makeip ${CMAKE_SOURCE_DIR}/platforms/dreamcast/ip.txt ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/IP.BIN
             COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/fonts ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/materials ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/particles ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/textures ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets/sounds ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/simulant
-            COMMAND cp -r ${CMAKE_SOURCE_DIR}/samples/data ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/sample_data
+            COMMAND cp -r ${CMAKE_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/assets
             COMMAND mkisofs -C 0,11702 -V ${EXE_FILENAME} -G ${CMAKE_CURRENT_BINARY_DIR}/${EXE}/IP.BIN -joliet -rock -l -o ${EXE}.iso ${CMAKE_CURRENT_BINARY_DIR}/${EXE}
             COMMAND $ENV{KOS_BASE}/utils/img4dc/build/cdi4dc/cdi4dc ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.iso ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.cdi
             DEPENDS ${EXE_FILENAME}.debug.target

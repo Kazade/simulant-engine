@@ -1,5 +1,7 @@
 #include <stdlib.h>
+#if !defined(__APPLE__)
 #include <malloc.h>
+#endif
 #include "memory.h"
 
 

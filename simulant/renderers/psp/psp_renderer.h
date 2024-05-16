@@ -46,18 +46,22 @@ public:
         return "psp";
     }
 
-    void prepare_to_render(const Renderable*) override {
-        texture_manager_.update_priorities();
-    }
-
     const uint8_t* display_list() const {
         return list_;
     }
 
     bool texture_format_is_native(TextureFormat fmt) override;
 
-    void clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags);
-    void apply_viewport(const RenderTarget& target, const Viewport& viewport);
+    void clear(const RenderTarget& target, const Colour& colour,
+               uint32_t clear_flags) override;
+    void apply_viewport(const RenderTarget& target,
+                        const Viewport& viewport) override;
+
+    std::size_t max_texture_size() const override {
+        return 512;
+    }
+
+    void prepare_to_render(const Renderable*) override {}
 
 private:    
     uint8_t list_[512 * 1024] __attribute__((aligned(64)));
@@ -68,7 +72,8 @@ private:
     void on_post_render() override;
     void do_swap_buffers() override;
 
-    void on_texture_prepare(Texture* texture);
+    void on_texture_prepare(Texture* texture) override;
+    void on_texture_unregister(TextureID tex_id, Texture* texture) override;
 };
 }
 

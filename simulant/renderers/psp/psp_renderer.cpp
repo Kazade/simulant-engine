@@ -55,39 +55,49 @@ batcher::RenderGroupKey PSPRenderer::prepare_render_group(
     );
 }
 
+#define ALIGN2048(x) ((x + (2047)) & ~2047)
+#define UNCACHED(x) (x + 0x40000000)
+
 void PSPRenderer::init_context() {
     S_VERBOSE("init_context");
     const int buffer_width = 512;
     const int buffer_px_bytes = 4;
     const int frame_size = buffer_width * window->height() * buffer_px_bytes;
+    const int depth_size = 512 * 272 * 2;
 
-    S_VERBOSE("W: {0} H: {1}", window->width(), window->height());
-
-    uint8_t* start = 0;
+    uint8_t* start = (uint8_t*)sceGeEdramGetAddr();
     uint8_t* disp_buffer = start;
     uint8_t* draw_buffer = disp_buffer + frame_size;
     uint8_t* depth_buffer = draw_buffer + frame_size;
+    uint8_t* texture_ram = depth_buffer + depth_size;
+    texture_ram = (uint8_t*)ALIGN2048((intptr_t)(texture_ram));
 
-    void* texture_ram = depth_buffer + buffer_width;
+    S_VERBOSE("Ram size: {0}", sceGeEdramGetSize());
 
-    // Allocate 1.5M of VRAM for textures FIXME: Can we do more?
-    vram_alloc_init(texture_ram, 1024 * 1536);
+    auto max_size = sceGeEdramGetSize() - intptr_t(texture_ram - start);
+
+    S_VERBOSE("Using {0} bytes of VRAM for texture pool", max_size);
+
+    vram_alloc_init(UNCACHED(texture_ram), max_size);
 
     // Set up buffers
     sceGuStart(GU_DIRECT, list_);
-    sceGuDispBuffer(window->width(), window->height(), (void*) disp_buffer, buffer_width);
-    sceGuDrawBuffer(GU_PSM_8888, (void*) draw_buffer, buffer_width);
+    sceGuDispBuffer(window->width(), window->height(),
+                    (void*)(disp_buffer - start), buffer_width);
+    sceGuDrawBuffer(GU_PSM_8888, (void*)(draw_buffer - start), buffer_width);
     sceGuDepthBuffer(depth_buffer, buffer_width);
 
     sceGuOffset(2048 - (window->width() / 2), 2048 - (window->height() / 2));
     sceGuViewport(2048, 2048, window->width(), window->height());
 
-    sceGuDepthRange(32, 65535);
-    sceGuDepthFunc(GU_LEQUAL);
+    sceGuDepthRange(65535, 0);
+    sceGuDepthFunc(GU_GEQUAL);
     sceGuEnable(GU_DEPTH_TEST);
     sceGuEnable(GU_CLIP_PLANES);
     sceGuShadeModel(GU_SMOOTH);
     sceGuFrontFace(GU_CCW);
+
+    sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
 
     sceGuFinish();
     sceGuSync(0, 0);
@@ -95,6 +105,10 @@ void PSPRenderer::init_context() {
     sceGuDisplay(GU_TRUE);
 
     S_VERBOSE("Context initialized");
+}
+
+void PSPRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
+    texture_manager_.release_texture(texture->_renderer_specific_id());
 }
 
 void PSPRenderer::clear(const RenderTarget& target, const Colour& colour, uint32_t clear_flags) {
@@ -147,6 +161,7 @@ std::shared_ptr<batcher::RenderQueueVisitor> PSPRenderer::get_render_queue_visit
 
 void PSPRenderer::on_pre_render() {
     S_VERBOSE("pre_render");
+    texture_manager_.update_priorities();
     sceGuStart(GU_DIRECT, list_);
 }
 
@@ -163,26 +178,14 @@ void PSPRenderer::do_swap_buffers() {
     sceGuSwapBuffers();
 }
 
-static void swap_channels_8888(uint8_t* data, const std::size_t data_size) {
-    for(std::size_t i = 0; i < data_size; i += 4) {
-        std::swap(data[i + 0], data[i + 3]);
-        std::swap(data[i + 1], data[i + 2]);
-    }
-}
-
-static void swap_channels_565(uint8_t* data, const std::size_t data_size) {
-    uint16_t* it = (uint16_t*)data;
-
-    for(std::size_t i = 0; i < data_size; i += 2) {
-        *it = (*it & 0x1F) << 11 | (*it & 0x7E0) | (*it >> 11);
-        ++it;
-    }
-}
-
 void PSPRenderer::on_texture_prepare(Texture* texture) {
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;
+    }
+
+    if(texture->width() >= 256 || texture->height() >= 256) {
+        S_ERROR("Large texture: {0}", texture->source().str());
     }
 
     auto data = texture->data();
@@ -191,6 +194,7 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
     int palette_format = 0;
 
     std::vector<uint8_t> new_data;
+    std::vector<uint8_t> new_palette;
 
     auto tex_fmt = texture->format();
     std::size_t texel_count = texture->width() * texture->height();
@@ -210,23 +214,61 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
 
         data = &new_data[0];
         format = GU_PSM_4444;
+    } else if(tex_fmt == TEXTURE_FORMAT_RGB_1US_565) {
+        tex_convert_rgb565_to_bgr565(new_data, data, texture->width(),
+                                     texture->height());
+
+        data = &new_data[0];
+        format = GU_PSM_5650;
     } else if(tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED4 ||
               tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED8 ||
+              tex_fmt == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+              tex_fmt == TEXTURE_FORMAT_RGB8_PALETTED8 ||
               tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
               tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
 
-        palette = data;
-
-        if(tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
-           tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED8) {
-            // FIXME: nasty casting away const
-            swap_channels_8888((uint8_t*)palette, texture->palette_size());
-        } else {
-            swap_channels_565((uint8_t*)palette, texture->palette_size());
+        switch(tex_fmt) {
+            case TEXTURE_FORMAT_RGBA8_PALETTED4:
+            case TEXTURE_FORMAT_RGBA8_PALETTED8: {
+                new_palette.resize(data_size);
+                std::memcpy(&new_palette[0], data, texture->palette_size());
+            } break;
+            case TEXTURE_FORMAT_RGB8_PALETTED4: {
+                auto w = texture->palette_size() / 3;
+                tex_convert_rgb888_to_bgr565(new_palette, data, w, 1);
+                format = GU_PSM_T4;
+                palette_format = GU_PSM_5650;
+            } break;
+            case TEXTURE_FORMAT_RGB8_PALETTED8: {
+                auto w = texture->palette_size() / 3;
+                tex_convert_rgb888_to_bgr565(new_palette, data, w, 1);
+                format = GU_PSM_T8;
+                palette_format = GU_PSM_5650;
+            } break;
+            case TEXTURE_FORMAT_RGB565_PALETTED8:
+            case TEXTURE_FORMAT_RGB565_PALETTED4: {
+                auto w = texture->palette_size() / 2;
+                tex_convert_rgb565_to_bgr565(new_palette, data, w, 1);
+            } break;
+            default:
+                break;
         }
 
-        data = palette + texture->palette_size();
+        palette = &new_palette[0];
+        data = data + texture->palette_size();
         data_size -= texture->palette_size();
+
+        /* Very strangely, PSP 4bpp format has each nibble reversed compared
+         * to DC and PC(?) */
+        if(tex_fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
+           tex_fmt == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+           tex_fmt == TEXTURE_FORMAT_RGB565_PALETTED4) {
+            for(std::size_t i = 0; i < data_size; ++i) {
+                new_data.push_back((data[i] >> 4) | (data[i] & 0xF) << 4);
+            }
+
+            data = &new_data[0];
+        }
     }
 
     S_VERBOSE("Texture format: {0}. W: {1}. H: {2}", tex_fmt, texture->width(),
@@ -275,7 +317,12 @@ void PSPRenderer::on_texture_prepare(Texture* texture) {
         texture->palette_size(), palette_format,
         texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE);
 
-    texture->_set_renderer_specific_id(id);
+    if(id > 0) {
+        texture->_set_renderer_specific_id(id);
+    }
+
+    // We always set this clean, even on failure otherwise we'll keep
+    // retrying
     texture->_set_data_clean();
     texture->_set_params_clean();
 }

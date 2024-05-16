@@ -27,9 +27,14 @@ public:
 #endif
 
         // Meshes
-        cave_mesh_ = app->shared_assets->load_mesh("sample_data/cave/cave.dcm", VertexSpecification::DEFAULT, opts);
-        godray_mesh_ = app->shared_assets->load_mesh("sample_data/cave/godray.obj", VertexSpecification::DEFAULT, opts);
-        fairy_mesh_ = app->shared_assets->load_mesh("sample_data/cave/fairy.obj", VertexSpecification::DEFAULT, opts);
+        cave_mesh_ = app->shared_assets->load_mesh(
+            "assets/samples/cave/cave.dcm", VertexSpecification::DEFAULT, opts);
+        godray_mesh_ =
+            app->shared_assets->load_mesh("assets/samples/cave/godray.obj",
+                                          VertexSpecification::DEFAULT, opts);
+        fairy_mesh_ =
+            app->shared_assets->load_mesh("assets/samples/cave/fairy.obj",
+                                          VertexSpecification::DEFAULT, opts);
 
         // Materials + Textures
         for(auto submesh : cave_mesh_->each_submesh())
@@ -81,6 +86,7 @@ public:
         stats_ = create_child<StatsPanel>();
         stats_->activate();
 
+        sound_ = assets->load_sound("assets/samples/cave/ambient.wav");
         compositor->create_layer(stats_, panel_cam_, smlt::RENDER_PRIORITY_FOREGROUND);
     }
 
@@ -136,6 +142,9 @@ private:
     StagePtr stage_;
     CameraPtr camera_;
 
+    SoundPtr sound_;
+    PlayingSoundPtr player_;
+
     MeshPtr cave_mesh_;
     MeshPtr godray_mesh_;
     MeshPtr fairy_mesh_;
@@ -178,7 +187,7 @@ int main(int argc, char* argv[]) {
     AppConfig config;
     config.title = "Cave Demo";
     config.fullscreen = false;
-    config.development.force_renderer = "gl1x";
+    config.log_level = smlt::LOG_LEVEL_INFO;
 
 #ifdef __DREAMCAST__
     config.width = 640;

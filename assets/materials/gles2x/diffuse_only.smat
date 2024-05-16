@@ -1,0 +1,8 @@
+{
+    "passes": [
+        {
+            "vertex_shader": "diffuse_only.vert",
+            "fragment_shader": "diffuse_only.frag"
+        }
+    ]
+}

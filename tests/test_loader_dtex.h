@@ -15,7 +15,7 @@ public:
 
     void test_1555_vq() {
         auto tex = application->shared_assets->load_texture(
-            "textures/1555_vq.dtex"
+            "assets/samples/1555_vq.dtex"
         );
 
         tex->set_free_data_mode(smlt::TEXTURE_FREE_DATA_NEVER);
@@ -38,7 +38,7 @@ public:
 
     void test_4444_vq() {
         auto tex = application->shared_assets->load_texture(
-            "textures/4444_vq.dtex"
+            "assets/samples/4444_vq.dtex"
         );
 
         tex->set_free_data_mode(smlt::TEXTURE_FREE_DATA_NEVER);
@@ -61,7 +61,7 @@ public:
 
     void test_565_vq() {
         auto tex = application->shared_assets->load_texture(
-            "textures/565_vq.dtex"
+            "assets/samples/565_vq.dtex"
         );
 
         tex->set_free_data_mode(smlt::TEXTURE_FREE_DATA_NEVER);
@@ -84,7 +84,7 @@ public:
 
     void test_1555() {
         auto tex = application->shared_assets->load_texture(
-            "textures/1555.dtex"
+            "assets/samples/1555.dtex"
         );
 
         tex->set_free_data_mode(smlt::TEXTURE_FREE_DATA_NEVER);
@@ -107,7 +107,7 @@ public:
 
     void test_4444() {
         auto tex = application->shared_assets->load_texture(
-            "textures/4444.dtex"
+            "assets/samples/4444.dtex"
         );
 
         tex->set_free_data_mode(smlt::TEXTURE_FREE_DATA_NEVER);
@@ -131,7 +131,7 @@ public:
 
     void test_565() {
         auto tex = application->shared_assets->load_texture(
-            "textures/565.dtex"
+            "assets/samples/565.dtex"
         );
 
         tex->set_free_data_mode(smlt::TEXTURE_FREE_DATA_NEVER);

@@ -1,0 +1,8 @@
+{
+    "passes": [
+        {
+            "vertex_shader": "texture_only.vert",
+            "fragment_shader": "texture_only.frag"
+        }
+    ]
+}
