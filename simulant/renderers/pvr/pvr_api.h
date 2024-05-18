@@ -120,19 +120,17 @@ typedef struct pvr_vec3 {
     float x, y, z;
 } pvr_vec3_t;
 
-typedef struct pvr_vertex {
-    uint32_t flags;
+typedef struct pvr_vec2 {
+    float x, y;
+} pvr_vec2_t;
+
+typedef struct pvr_vertex_in {
+    uint32_t _unused;
     float x, y, z;
     float u, v;
     argb_color_t color;
     argb_color_t offset_color;
-    // Extra stuff for processing
-    float s, t;       // secondary uv
-    float w;          // w coordinate
-    float nx, ny, nz; // Normal
-
-    uint8_t unused[8]; // Make the whole struct 64 bytes
-} pvr_vertex_t;
+} pvr_vertex_in_t;
 
 typedef uint32_t pvr_material_mode_mask_t;
 typedef uint32_t pvr_clear_flag_mask_t;
@@ -161,8 +159,12 @@ void pvr_light_color(PVRLight i, PVRLightComponent comp, argb_color_t color);
 void pvr_light_attenuation(PVRLight i, float constant, float linear,
                            float quadratic);
 
-void pvr_draw_array(PVRPrimitive prim, size_t start, size_t count,
-                    pvr_vertex_t* vertices);
+/** Set the source vertex data for drawing
+void pvr_vertex_pointer(pvr_vertex_in_t* vertices, pvr_vec3_t* normals,
+                        pvr_vec2_t* sts);
+void pvr_draw_arrays(PVRPrimitive prim, size_t start, size_t count);
+void pvr_multi_draw_arrays(PVRPrimitive prim, size_t* starts, size_t* counts,
+                           size_t draw_count);
 
 void pvr_tex_mode(PVRTexFormat format, int mipmaps, bool twiddled);
 void pvr_tex_image(int level, int w, int h, void* data);
