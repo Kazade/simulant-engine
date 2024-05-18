@@ -153,20 +153,19 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             pvr_disable(PVR_STATE_BLENDING);
             break;
         case BLEND_ADD:
-            sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0xFFFFFFFF, 0xFFFFFFFF);
+            pvr_blend_func(PVR_BLEND_FACTOR_ONE, PVR_BLEND_FACTOR_ONE);
             break;
         case BLEND_ALPHA:
-            sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+            pvr_blend_func(PVR_BLEND_FACTOR_SRC_ALPHA, PVR_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
             break;
         case BLEND_COLOUR:
-            sceGuBlendFunc(GU_ADD, GU_SRC_COLOR, GU_ONE_MINUS_SRC_COLOR, 0, 0);
+            pvr_blend_func(PVR_BLEND_FACTOR_ONE, PVR_BLEND_FACTOR_ONE_MINUS_OTHER_COLOR);
             break;
         case BLEND_MODULATE:
-            sceGuBlendFunc(GU_ADD, GU_DST_COLOR, GU_ZERO, 0, 0);
+            pvr_blend_func(PVR_BLEND_FACTOR_OTHER_COLOR, PVR_BLEND_FACTOR_ZERO);
             break;
         case BLEND_ONE_ONE_MINUS_ALPHA:
-            sceGuBlendFunc(GU_ADD, GU_FIX, GU_ONE_MINUS_SRC_ALPHA, 0xFFFFFFFF,
-                           0);
+            pvr_blend_func(PVR_BLEND_FACTOR_ONE, PVR_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
             break;
         default:
             break;
@@ -233,11 +232,13 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights,
     }
 }
 
-struct PSPVertex {
-    float u, v;
-    uint16_t color;
-    int16_t nx, ny, nz;
-    float x, y, z;
+struct PVRVertex {
+    pvr_vec3_t xyz;
+    pvr_vec2_t uv;
+    pvr_vec3_t normal;
+    argb_color_t color;
+    argb_color_t color_offset;
+    pvr_vec2_t st;
 };
 
 void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
@@ -338,7 +339,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     convert_position(&v->x, it + pos_off, spec.position_attribute);
 }
 
-static std::vector<PSPVertex> buffer;
+static std::vector<PVR> buffer;
 
 static void zclip_tristrips_and_submit_range(const VertexRange* range,
                                              const VertexSpecification& spec,
@@ -353,14 +354,20 @@ static void zclip_tristrips_and_submit_range(const VertexRange* range,
         it += stride;
     }
 
-    PSPVertex* output =
-        (PSPVertex*)sceGuGetMemory(buffer.size() * sizeof(PSPVertex));
-    memcpy(output, buffer.data(), buffer.size() * sizeof(PSPVertex));
+    pvr_vertex_pointer(
+        &buffer[0].xyz,
+        &buffer[0].uv,
+        &buffer[0].color,
+        &buffer[0].color_offset,
+        &buffer[0].normal,
+        &buffer[0].st,
+        sizeof(PVRVertex)
+    );
 
-    sceGumDrawArray(GU_TRIANGLE_STRIP,
-                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_16BIT |
-                        GU_TRANSFORM_3D | GU_COLOR_4444,
-                    buffer.size(), 0, output);
+    pvr_draw_arrays(
+        PVR_PRIM_TRIANGLE_STRIP,
+        0, buffer.size()
+    );
 }
 
 static void zclip_triangles_and_submit_range(const VertexRange* range,
@@ -376,14 +383,20 @@ static void zclip_triangles_and_submit_range(const VertexRange* range,
         it += stride;
     }
 
-    PSPVertex* output =
-        (PSPVertex*)sceGuGetMemory(buffer.size() * sizeof(PSPVertex));
-    memcpy(output, buffer.data(), buffer.size() * sizeof(PSPVertex));
+    pvr_vertex_pointer(
+        &buffer[0].xyz,
+        &buffer[0].uv,
+        &buffer[0].color,
+        &buffer[0].color_offset,
+        &buffer[0].normal,
+        &buffer[0].st,
+        sizeof(PVRVertex)
+    );
 
-    sceGumDrawArray(GU_TRIANGLES,
-                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_16BIT |
-                        GU_TRANSFORM_3D | GU_COLOR_4444,
-                    buffer.size(), 0, output);
+    pvr_draw_arrays(
+        PVR_PRIM_TRIANGLES,
+        0, buffer.size()
+    );
 }
 
 void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
@@ -420,9 +433,9 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     psp_proj->z.z *= -1;
     psp_proj->w.z *= -1;
 
-    sceGuSetMatrix(GU_MODEL, psp_model);
-    sceGuSetMatrix(GU_VIEW, psp_view);
-    sceGuSetMatrix(GU_PROJECTION, psp_proj);
+    pvr_set_matrix(GU_MODEL, psp_model);
+    pvr_set_matrix(GU_VIEW, psp_view);
+    pvr_set_matrix(GU_PROJECTION, psp_proj);
 
     auto total = 0;
 

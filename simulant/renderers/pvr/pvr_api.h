@@ -24,6 +24,7 @@ enum PVRState {
     PVR_STATE_BLENDING,
     PVR_STATE_TEXTURE_2D,
     PVR_STATE_SCISSOR_TEST,
+    PVR_STATE_ALPHA_TEST,
     PVR_STATE_LIGHT0,
     PVR_STATE_LIGHT1,
     PVR_STATE_LIGHT2,
@@ -116,6 +117,45 @@ enum PVRPaletteFormat {
     PVR_PALETTE_FORMAT_RGBA8888,
 };
 
+/**
+ * @brief The PVRCommandMode enum
+ *
+ * When making calls to draw primitives, apply scissor rectangles etc.
+ * the context buffer will be filled with PVR commands and vertices. In
+ * DIRECT mode, the buffer will be submitted after each draw call. In QUEUE
+ * mode the buffer will be appended until a call to pvr_flush or pvr_finish
+ * is made.
+ */
+enum PVRCommandMode {
+    PVR_COMMAND_MODE_DIRECT,
+    PVR_COMMAND_MODE_QUEUE,
+};
+
+enum PVRTargetList {
+    PVR_TARGET_LIST_AUTO,
+    PVR_TARGET_LIST_OPAQUE,
+    PVR_TARGET_LIST_OPAQUE_MODIFIER,
+    PVR_TARGET_LIST_PUNCH_THROUGH,
+    PVR_TARGET_LIST_TRANSPARENT,
+    PVR_TARGET_LIST_TRANSPARENT_MODIFIER,
+};
+
+enum PVRBlendFactor {
+    PVR_BLEND_FACTOR_ZERO,
+    PVR_BLEND_FACTOR_ONE,
+    PVR_BLEND_FACTOR_OTHER_COLOR,
+    PVR_BLEND_FACTOR_ONE_MINUS_OTHER_COLOR,
+    PVR_BLEND_FACTOR_SRC_ALPHA,
+    PVR_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    PVR_BLEND_FACTOR_DST_ALPHA,
+    PVR_BLEND_FACTOR_ONE_MINUS_DST_ALPHA,
+};
+
+enum PVRMatrixMode {
+    PVR_MATRIX_MODE_MODELVIEW,
+    PVR_MATRIX_MODE_PROJECTION,
+};
+
 typedef struct pvr_vec3 {
     float x, y, z;
 } pvr_vec3_t;
@@ -124,22 +164,63 @@ typedef struct pvr_vec2 {
     float x, y;
 } pvr_vec2_t;
 
-typedef struct pvr_vertex_in {
-    uint32_t _unused;
-    float x, y, z;
-    float u, v;
-    argb_color_t color;
-    argb_color_t offset_color;
-} pvr_vertex_in_t;
+typedef struct pvr_mat4 {
+    float m[16];
+} pvr_mat4_t;
 
 typedef uint32_t pvr_material_mode_mask_t;
 typedef uint32_t pvr_clear_flag_mask_t;
 
-void pvr_start(void* context);
+/**
+ * @brief pvr_start starts a new PVR command list
+ * @param mode
+ * Whether to flush the command list after each
+ * draw call, or to wait until an explicit flush.
+ *
+ * @param context
+ *
+ * A pointer to a 32 byte aligned RAM buffer to hold
+ * commands until they are ready for submission.
+ */
+void pvr_start(PVRCommandMode mode, void* buffer);
+
+/**
+ * @brief pvr_flush Flushes the current command buffer
+ * to the pvr
+ */
+void pvr_flush();
+
+/**
+ * @brief pvr_finish Flushes the command buffer and finishes
+ * the frame.
+ */
 void pvr_finish();
+
+
+/**
+ * @brief pvr_set_target_list
+ *
+ * Sets the target polygon list for subsequent drawing operations.
+ * Changing the target list will implicitly flush any outstanding commands
+ * in the queue.
+ *
+ * If the target list is PVR_TARGET_LIST_AUTO then the target list
+ * will be determined based on the following:
+ *
+ * 1. If blending is enabled, the target list will be PVR_TARGET_LIST_TRANSPARENT
+ * 2. If blending is not enabled, but alpha testing is, the target list will
+ *    be PVR_TARGET_LIST_PUNCH_THROUGH
+ * 3. If blending is not enabled, and alpha testing is disabled, the target
+ *    list will be PVR_TARGET_LIST_OPAQUE
+ *
+ * @param list  the target list to set
+ *
+ */
+void pvr_set_target_list(PVRTargetList list);
 
 void pvr_viewport(int x, int y, int width, int height);
 void pvr_shade_model(PVRShadeModel model);
+void pvr_blend_func(PVRBlendFactor src_factor, PVRBlendFactor dst_factor);
 void pvr_clear_color(argb_color_t color);
 void pvr_clear(pvr_clear_flag_mask_t mask);
 void pvr_ambient_color(argb_color_t color);
@@ -159,10 +240,39 @@ void pvr_light_color(PVRLight i, PVRLightComponent comp, argb_color_t color);
 void pvr_light_attenuation(PVRLight i, float constant, float linear,
                            float quadratic);
 
-/** Set the source vertex data for drawing
-void pvr_vertex_pointer(pvr_vertex_in_t* vertices, pvr_vec3_t* normals,
-                        pvr_vec2_t* sts);
+void pvr_set_matrix_identity(PVRMatrixMode mode);
+void pvr_set_matrix(PVRMatrixMode mode, pvr_mat4_t* matrix);
+
+/**
+ * @brief pvr_vertex_pointer
+ *
+ * Set up source data for pvr_draw_arrays etc.
+ *
+ * If `stride` is zero, then it is assumed all
+ * arrays are tightly packed. If stride is non-zero
+ * then it is assumed all arrays are interleved by
+ * `stride`
+ *
+ * @param positions
+ * @param uvs
+ * @param colors
+ * @param color_offsets
+ * @param normals
+ * @param sts
+ * @param stride
+ */
+void pvr_vertex_pointers(
+    pvr_vec3_t* positions,
+    pvr_vec2_t* uvs,
+    argb_color_t* colors,
+    argb_color_t* color_offsets,
+    pvr_vec3_t* normals,
+    pvr_vec2_t* sts,
+    size_t stride
+);
+
 void pvr_draw_arrays(PVRPrimitive prim, size_t start, size_t count);
+void pvr_draw_elements(PVRPrimitive prim, size_t count, const uint32_t* indices);
 void pvr_multi_draw_arrays(PVRPrimitive prim, size_t* starts, size_t* counts,
                            size_t draw_count);
 
