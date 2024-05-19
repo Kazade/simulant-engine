@@ -17,6 +17,10 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <kos.h>
+#include <dc/matrix.h>
+#include <dc/pvr.h>
+
 #include "pvr_renderer.h"
 
 #include "../../assets/material.h"
@@ -49,33 +53,21 @@ batcher::RenderGroupKey PVRRenderer::prepare_render_group(
 }
 
 #define ALIGN2048(x) ((x + (2047)) & ~2047)
-#define UNCACHED(x) (x + 0x40000000)
 
 void PVRRenderer::init_context() {
     S_VERBOSE("init_context");
-    const int buffer_width = 512;
-    const int buffer_px_bytes = 4;
-    const int frame_size = buffer_width * window->height() * buffer_px_bytes;
-    const int depth_size = 512 * 272 * 2;
 
-    uint8_t* start = (uint8_t*)sceGeEdramGetAddr();
-    uint8_t* disp_buffer = start;
-    uint8_t* draw_buffer = disp_buffer + frame_size;
-    uint8_t* depth_buffer = draw_buffer + frame_size;
-    uint8_t* texture_ram = depth_buffer + depth_size;
-    texture_ram = (uint8_t*)ALIGN2048((intptr_t)(texture_ram));
+    // Leave a bit of room
+    const int buffer = 32 * 1024;
+    int available = pvr_mem_available();
+    vram_base_ = pvr_mem_malloc(available - buffer);
+    uint8_t* texture_ram = (uint8_t*)ALIGN2048((intptr_t)(vram_base_));
 
-    S_VERBOSE("Ram size: {0}", sceGeEdramGetSize());
-
-    auto max_size = sceGeEdramGetSize() - intptr_t(texture_ram - start);
-
-    S_VERBOSE("Using {0} bytes of VRAM for texture pool", max_size);
-
-    vram_alloc_init(UNCACHED(texture_ram), max_size);
+    vram_alloc_init(texture_ram, max_size);
 
     // Set up buffers
-    pvr_start(list_);
-    pvr_viewport(2048, 2048, window->width(), window->height());
+    pvr_start(PVR_COMMAND_MODE_DIRECT, list_);
+    pvr_viewport(0, 0, window->width(), window->height());
     pvr_depth_func(PVR_DEPTH_FUNC_GEQUAL);
     pvr_enable(PVR_STATE_DEPTH_TEST);
     pvr_shade_model(PVR_SHADE_MODEL_SMOOTH);

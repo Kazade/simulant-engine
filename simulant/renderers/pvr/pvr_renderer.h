@@ -74,6 +74,8 @@ private:
 
     void on_texture_prepare(Texture* texture) override;
     void on_texture_unregister(TextureID tex_id, Texture* texture) override;
+
+    void* vram_base_ = nullptr;
 };
 }
 

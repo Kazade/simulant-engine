@@ -417,25 +417,16 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     const auto& model = renderable->final_transformation;
     const auto& view = camera_->view_matrix();
     const auto& projection = camera_->projection_matrix();
-    const auto vertex_data = renderable->vertex_data->data();
 
-    ScePspFMatrix4* psp_model =
-        (ScePspFMatrix4*)sceGuGetMemory(3 * sizeof(ScePspFMatrix4));
-    ScePspFMatrix4* psp_view = psp_model + 1;
-    ScePspFMatrix4* psp_proj = psp_model + 2;
+    const auto modelview = view * model;
 
-    std::memcpy(psp_model, model.data(), sizeof(ScePspFMatrix4));
-    std::memcpy(psp_view, view.data(), sizeof(ScePspFMatrix4));
-    std::memcpy(psp_proj, projection.data(), sizeof(ScePspFMatrix4));
+    pvr_set_matrix(PVR_MATRIX_MODE_MODELVIEW, (pvr_mat4_t*) modeview.data());
+    pvr_set_matrix(PVR_MATRIX_MODE_PROJECTION, (pvr_mat4_t*) projection.data());
 
-    /* PSP uses an inverse coordinate system, so we need to flip
+    /* PVR uses an inverse coordinate system, so we need to flip
      * some things to match GL */
     psp_proj->z.z *= -1;
     psp_proj->w.z *= -1;
-
-    pvr_set_matrix(GU_MODEL, psp_model);
-    pvr_set_matrix(GU_VIEW, psp_view);
-    pvr_set_matrix(GU_PROJECTION, psp_proj);
 
     auto total = 0;
 

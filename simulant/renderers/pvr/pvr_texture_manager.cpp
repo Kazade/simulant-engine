@@ -21,13 +21,11 @@ void update_data_pointer(void* src, void* dst, void* data) {
     }
 }
 
-static std::size_t calc_row_stride(int format, std::size_t width) {
+static std::size_t calc_row_stride(pvr_tex_format_t format, std::size_t width) {
     switch(format) {
-        case GU_PSM_8888:
-            return width * 4;
-        case GU_PSM_T4:
+        case PVR_TEX_FORMAT_PAL_4BPP:
             return width / 2;
-        case GU_PSM_T8:
+        case PVR_TEX_FORMAT_PAL_8BPP:
             return width;
         default:
             return width * 2;
@@ -75,7 +73,7 @@ static void swizzle(uint8_t* out, const uint8_t* in, std::size_t width,
 
 #define ALIGN16(x) ((x + (15)) & ~15)
 
-static std::size_t calc_mipmap_data_required(int format, std::size_t w,
+static std::size_t calc_mipmap_data_required(pvr_tex_format_t format, std::size_t w,
                                              std::size_t h) {
     std::size_t final_data_size = 0;
     while(w > 1 || h > 1) {
@@ -94,11 +92,11 @@ static std::size_t calc_mipmap_data_required(int format, std::size_t w,
 }
 
 static inline bool is_paletted_format(int format) {
-    return format == GU_PSM_T4 || format == GU_PSM_T8;
+    return format == PVR_TEX_FORMAT_PAL_4BPP || format == PVR_TEX_FORMAT_PAL_8BPP;
 }
 
 static std::size_t generate_mipmaps(std::vector<uint8_t>& out,
-                                    PVRMipmapVector& mipmaps, int format,
+                                    PVRMipmapVector& mipmaps, pvr_tex_format_t format,
                                     std::size_t w, std::size_t h,
                                     const uint8_t*& data) {
 
@@ -192,10 +190,9 @@ static std::size_t generate_mipmaps(std::vector<uint8_t>& out,
     }
 }
 
-int PVRTextureManager::upload_texture(
-    int id, PVRTexFormat format, int width, int height, std::size_t data_size,
-    const uint8_t* data, const uint8_t* palette, std::size_t palette_size,
-    PVRPaletteFormat palette_format, bool do_mipmaps) {
+int PVRTextureManager::upload_texture(int id, pvr_tex_format_t format, int width, int height, std::size_t data_size,
+                                      const uint8_t* data, const uint8_t* palette, std::size_t palette_size,
+                                      pvr_palette_format_t palette_format, bool do_mipmaps) {
 
     S_DEBUG("upload_texture");
 
@@ -215,7 +212,7 @@ int PVRTextureManager::upload_texture(
 
     PVRMipmapVector mipmaps;
 
-    bool is_swizzled = false;
+    bool is_twiddled = false;
 
     // FIXME: generate mipmaps for paletted formats
     if(is_paletted_format(format)) {
@@ -230,13 +227,13 @@ int PVRTextureManager::upload_texture(
         data_size =
             generate_mipmaps(buffer, mipmaps, format, width, height, data);
         data = &buffer[0];
-        is_swizzled = true;
+        is_twiddled = true;
     } else {
         int row_stride = calc_row_stride(format, width);
         buffer.resize(data_size);
         swizzle(&buffer[0], data, row_stride, height);
         data = &buffer[0];
-        is_swizzled = true;
+        is_twiddled = true;
 
         // Specify the base level image
         PVRMipmap base;
@@ -278,7 +275,7 @@ int PVRTextureManager::upload_texture(
     obj->data_size = data_size;
     obj->format = format;
     obj->mipmaps = mipmaps;
-    obj->is_swizzled = is_swizzled;
+    obj->is_twiddled = is_twiddled;
     obj->texture_ram = (uint8_t*)aligned_alloc(16, data_size);
     obj->texture_vram = nullptr;
 
@@ -368,8 +365,6 @@ void PVRTextureManager::bind_texture(int id) {
                                           texture_priority_.end(), tex.get()));
         texture_priority_.push_front(tex.get());
 
-        auto available = vram_alloc_count_continuous((void*)0);
-
         if(tex->palette) {
             auto entries =
                 tex->palette_size /
@@ -381,10 +376,10 @@ void PVRTextureManager::bind_texture(int id) {
 
         assert(tex->mipmaps.size() > 0);
 
-        auto levels = std::max(std::min(tex->mipmaps.size(), 8u), 1u);
+        auto levels = std::max(std::min(tex->mipmaps.size(), (std::size_t) 8u), (std::size_t) 1u);
 
-        pvr_tex_mode(tex->format, levels - 1, 0,
-                     (tex->is_swizzled) ? PVR_TRUE : PVR_FALSE);
+        pvr_tex_mode(tex->format, levels - 1,
+                     (tex->is_twiddled) ? PVR_TRUE : PVR_FALSE);
 
         auto data = tex->texture_vram ? tex->texture_vram : tex->texture_ram;
         if(!data) {

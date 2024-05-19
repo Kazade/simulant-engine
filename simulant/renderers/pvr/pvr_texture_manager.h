@@ -21,7 +21,7 @@ typedef LimitedVector<PVRMipmap, 10> PVRMipmapVector;
 
 struct PVRTextureObject {
     int id = 0;
-    int format = -1;                 // e.g. GU_PSM_5650
+    pvr_tex_format_t format = PVR_TEX_FORMAT_INVALID;
     uint8_t* texture_ram = nullptr;  // If not-null, this texture is in ram
     uint8_t* texture_vram = nullptr; // If not-null, this texture is in vram    
     int width = 0;
@@ -30,13 +30,13 @@ struct PVRTextureObject {
 
     uint8_t* palette = nullptr;
     std::size_t palette_size = 0;
-    PVRPaletteFormat palette_format = PVR_PALETTE_FORMAT_NONE;
+    pvr_palette_format_t palette_format = PVR_PALETTE_FORMAT_NONE;
     bool can_fit_in_vram = false;
 
     TextureFilter filter = TEXTURE_FILTER_POINT;
     PVRMipmapVector mipmaps;
 
-    bool is_swizzled = false;
+    bool is_twiddled = false;
 };
 
 class PVRTextureManager {
@@ -44,10 +44,10 @@ public:
     PVRTextureManager(PVRRenderer* renderer);
     ~PVRTextureManager();
 
-    int upload_texture(int id, PVRTexFormat format, int width, int height,
+    int upload_texture(int id, pvr_tex_format_t format, int width, int height,
                        std::size_t data_size, const uint8_t* data,
                        const uint8_t* palette, std::size_t palette_size,
-                       PVRPaletteFormat palette_format, bool do_mipmaps);
+                       pvr_palette_format_t palette_format, bool do_mipmaps);
 
     void bind_texture(int id);
     void release_texture(int id);

@@ -6,6 +6,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "renderers/glad/*"
     "renderers/gl2x/*"
     "renderers/psp/*"
+    "renderers/pvr/*"
     "sound/drivers/*"
 )
 
@@ -78,6 +79,10 @@ IF(PLATFORM_DREAMCAST)
     LIST(REMOVE_ITEM LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/GL/platforms/software.c)
 
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.c ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.cpp)
+
+    MESSAGE("-- Including PVR renderer in build")
+    FILE(GLOB_RECURSE PVR_FILES renderers/pvr/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PVR_FILES})
 
     IF(PLATFORM)
         MESSAGE("-- Including platform specific files: ${PLATFORM}")
