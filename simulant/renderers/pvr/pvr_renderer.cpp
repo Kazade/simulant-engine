@@ -59,8 +59,9 @@ void PVRRenderer::init_context() {
 
     // Leave a bit of room
     const int buffer = 32 * 1024;
-    int available = pvr_mem_available();
-    vram_base_ = pvr_mem_malloc(available - buffer);
+    auto available = pvr_mem_available();
+    auto max_size = available - buffer;
+    vram_base_ = pvr_mem_malloc(max_size);
     uint8_t* texture_ram = (uint8_t*)ALIGN2048((intptr_t)(vram_base_));
 
     vram_alloc_init(texture_ram, max_size);
@@ -135,7 +136,7 @@ std::shared_ptr<batcher::RenderQueueVisitor>
 void PVRRenderer::on_pre_render() {
     S_VERBOSE("pre_render");
     texture_manager_.update_priorities();
-    pvr_start(list_);
+    pvr_start(PVR_COMMAND_MODE_DIRECT, list_);
 }
 
 void PVRRenderer::on_post_render() {
@@ -164,14 +165,14 @@ void PVRRenderer::on_texture_prepare(Texture* texture) {
     auto data = texture->data();
     auto data_size = texture->data_size();
     const uint8_t* palette = nullptr;
-    PVRPaletteFormat palette_format = PVR_PALETTE_FORMAT_NONE;
+    pvr_palette_format_t palette_format = PVR_PALETTE_FORMAT_NONE;
 
     std::vector<uint8_t> new_data;
     std::vector<uint8_t> new_palette;
 
     auto tex_fmt = texture->format();
 
-    PVRTexFormat format = PVR_TEX_FORMAT_NONE;
+    pvr_tex_format_t format = PVR_TEX_FORMAT_INVALID;
 
     if(tex_fmt == TEXTURE_FORMAT_RGB_3UB_888) {
         tex_convert_rgb888_to_bgr565(new_data, data, texture->width(),
@@ -287,7 +288,39 @@ PVRRenderer::PVRRenderer(smlt::Window* window) :
 
     S_VERBOSE("Constructing renderer");
 
-    sceGuInit();
+    pvr_init_params_t params = {
+        {PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0,
+         PVR_BINSIZE_32},
+        2560 * 256, /* Vertex buffer size */
+        0, /* No DMA */
+        0, /* No FSAA */
+        0  /* No autosort (for now) */
+    };
+
+    /* Newer versions of KOS add an extra parameter to pvr_init_params_t
+     * called opb_overflow_count. To remain compatible we set that last
+     * parameter to something only if it exists */
+    const int opb_offset = offsetof(pvr_init_params_t, autosort_disabled) + 4;
+    if(sizeof(pvr_init_params_t) > opb_offset) {
+        int* opb_count = (int*)(((char*)&params) + opb_offset);
+        *opb_count = 2; // Two should be enough for anybody.. right?
+    }
+
+    pvr_init(&params);
+
+    /* If we're PAL and we're NOT VGA, then use 50hz by default. This is the
+    safest thing to do. If someone wants to force 60hz then they can call
+    vid_set_mode later and hopefully that'll work... */
+
+    int cable = vid_check_cable();
+
+    if(cable != CT_VGA) {
+        int region = flashrom_get_region();
+        if(region == FLASHROM_REGION_EUROPE) {
+            S_WARN("PAL region without VGA - enabling 50hz");
+            vid_set_mode(DM_640x480_PAL_IL, PM_RGB565);
+        }
+    }
 
     S_VERBOSE("Renderer constructed");
 }

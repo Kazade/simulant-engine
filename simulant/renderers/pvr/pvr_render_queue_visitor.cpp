@@ -198,13 +198,13 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights,
         auto light = lights[i];
         bool enabled = i < count;
 
-        PVRLight light_no = (PVRLight)(PVR_LIGHT0 + i);
+        pvr_light_t light_no = (pvr_light_t)(PVR_LIGHT0 + i);
 
         if(enabled) {
             auto pos = camera_->view_matrix() * light->absolute_position();
 
             pvr_vec3_t light_pos = {pos.x, pos.y, -pos.z};
-            pvr_enable((PVRState)(PVR_STATE_LIGHT0 + i));
+            pvr_enable((pvr_state_t)(PVR_STATE_LIGHT0 + i));
 
             if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
                 pvr_light(light_no, PVR_LIGHT_TYPE_DIRECTIONAL,
@@ -227,7 +227,7 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights,
                                   light->linear_attenuation(),
                                   light->quadratic_attenuation());
         } else {
-            pvr_disable((PVRState)(PVR_STATE_LIGHT0 + i));
+            pvr_disable((pvr_state_t)(PVR_STATE_LIGHT0 + i));
         }
     }
 }
@@ -241,53 +241,55 @@ struct PVRVertex {
     pvr_vec2_t st;
 };
 
-void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
+void convert_position(pvr_vec3_t* vout, const uint8_t* vin,
+                      VertexAttribute type) {
     switch(type) {
         case VERTEX_ATTRIBUTE_2F:
-            vout[0] = ((float*)vin)[0];
-            vout[1] = ((float*)vin)[1];
-            vout[2] = 0.0f;
+            vout->x = ((float*)vin)[0];
+            vout->y = ((float*)vin)[1];
+            vout->z = 0.0f;
             break;
         case VERTEX_ATTRIBUTE_3F:
         case VERTEX_ATTRIBUTE_4F:
-            vout[0] = ((float*)vin)[0];
-            vout[1] = ((float*)vin)[1];
-            vout[2] = ((float*)vin)[2];
+            vout->x = ((float*)vin)[0];
+            vout->y = ((float*)vin)[1];
+            vout->z = ((float*)vin)[2];
             break;
         default:
             break;
     }
 }
 
-void convert_uv(float* vout, const uint8_t* vin, VertexAttribute type) {
+void convert_uv(pvr_vec2_t* vout, const uint8_t* vin, VertexAttribute type) {
     switch(type) {
         case VERTEX_ATTRIBUTE_2F:
         case VERTEX_ATTRIBUTE_3F:
         case VERTEX_ATTRIBUTE_4F:
-            vout[0] = ((float*)vin)[0];
-            vout[1] = ((float*)vin)[1];
+            vout->x = ((float*)vin)[0];
+            vout->y = ((float*)vin)[1];
             break;
         default:
             break;
     }
 }
 
-void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
+void convert_color(argb_color_t* vout, const uint8_t* vin,
+                   VertexAttribute type) {
     const float* v = (const float*)vin;
     switch(type) {
         case VERTEX_ATTRIBUTE_4F:
-            *vout = smlt::Colour(v[0], v[1], v[2], v[3]).to_abgr_4444();
+            *vout = smlt::Colour(v[0], v[1], v[2], v[3]).to_argb_4444();
             break;
         case VERTEX_ATTRIBUTE_3F:
-            *vout = smlt::Colour(v[0], v[1], v[2], 1.0f).to_abgr_4444();
+            *vout = smlt::Colour(v[0], v[1], v[2], 1.0f).to_argb_4444();
             break;
         case VERTEX_ATTRIBUTE_4UB_RGBA:
             *vout = smlt::Colour::from_bytes(vin[0], vin[1], vin[2], vin[3])
-                        .to_abgr_4444();
+                        .to_argb_4444();
             break;
         case VERTEX_ATTRIBUTE_4UB_BGRA:
             *vout = smlt::Colour::from_bytes(vin[2], vin[1], vin[0], vin[3])
-                        .to_abgr_4444();
+                        .to_argb_4444();
             break;
         default:
             *vout = 0xFFFF;
@@ -295,20 +297,21 @@ void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
     }
 }
 
-void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
+void convert_normal(pvr_vec3_t* vout, const uint8_t* vin,
+                    VertexAttribute type) {
     float* v = (float*)vin;
     switch(type) {
         case VERTEX_ATTRIBUTE_3F:
-            vout[0] = ((float*)v)[0] * 32767.0f;
-            vout[1] = ((float*)v)[1] * 32767.0f;
-            vout[2] = ((float*)v)[2] * 32767.0f;
+            vout->x = ((float*)v)[0];
+            vout->y = ((float*)v)[1];
+            vout->z = ((float*)v)[2];
             break;
         default:
             S_ERROR("{0}", type);
     }
 }
 
-static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
+static void convert_and_push(std::vector<PVRVertex>& buffer, const uint8_t* it,
                              const VertexSpecification& spec) {
     auto pos_off = spec.position_offset(false);
     auto uv_off = (spec.has_texcoord0())
@@ -318,14 +321,14 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     auto normal_off = (spec.has_normals()) ? spec.normal_offset(false) : 0;
 
     int i = buffer.size();
-    buffer.push_back(PSPVertex());
+    buffer.push_back(PVRVertex());
 
-    PSPVertex* v = &buffer[i];
-    memset(v, 0, sizeof(PSPVertex));
+    PVRVertex* v = &buffer[i];
+    memset(v, 0, sizeof(PVRVertex));
     v->color = 0xFFFF;
 
     if(uv_off) {
-        convert_uv(&v->u, it + uv_off, spec.texcoord0_attribute);
+        convert_uv(&v->uv, it + uv_off, spec.texcoord0_attribute);
     }
 
     if(color_off) {
@@ -333,13 +336,13 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     }
 
     if(normal_off) {
-        convert_normal(&v->nx, it + normal_off, spec.normal_attribute);
+        convert_normal(&v->normal, it + normal_off, spec.normal_attribute);
     }
 
-    convert_position(&v->x, it + pos_off, spec.position_attribute);
+    convert_position(&v->xyz, it + pos_off, spec.position_attribute);
 }
 
-static std::vector<PVR> buffer;
+static std::vector<PVRVertex> buffer;
 
 static void zclip_tristrips_and_submit_range(const VertexRange* range,
                                              const VertexSpecification& spec,
@@ -354,15 +357,9 @@ static void zclip_tristrips_and_submit_range(const VertexRange* range,
         it += stride;
     }
 
-    pvr_vertex_pointer(
-        &buffer[0].xyz,
-        &buffer[0].uv,
-        &buffer[0].color,
-        &buffer[0].color_offset,
-        &buffer[0].normal,
-        &buffer[0].st,
-        sizeof(PVRVertex)
-    );
+    pvr_vertex_pointers(&buffer[0].xyz, &buffer[0].uv, &buffer[0].color,
+                        &buffer[0].color_offset, &buffer[0].normal,
+                        &buffer[0].st, sizeof(PVRVertex));
 
     pvr_draw_arrays(
         PVR_PRIM_TRIANGLE_STRIP,
@@ -383,15 +380,9 @@ static void zclip_triangles_and_submit_range(const VertexRange* range,
         it += stride;
     }
 
-    pvr_vertex_pointer(
-        &buffer[0].xyz,
-        &buffer[0].uv,
-        &buffer[0].color,
-        &buffer[0].color_offset,
-        &buffer[0].normal,
-        &buffer[0].st,
-        sizeof(PVRVertex)
-    );
+    pvr_vertex_pointers(&buffer[0].xyz, &buffer[0].uv, &buffer[0].color,
+                        &buffer[0].color_offset, &buffer[0].normal,
+                        &buffer[0].st, sizeof(PVRVertex));
 
     pvr_draw_arrays(
         PVR_PRIM_TRIANGLES,
@@ -416,17 +407,17 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
     const auto& model = renderable->final_transformation;
     const auto& view = camera_->view_matrix();
-    const auto& projection = camera_->projection_matrix();
+    auto projection = camera_->projection_matrix();
 
     const auto modelview = view * model;
 
-    pvr_set_matrix(PVR_MATRIX_MODE_MODELVIEW, (pvr_mat4_t*) modeview.data());
-    pvr_set_matrix(PVR_MATRIX_MODE_PROJECTION, (pvr_mat4_t*) projection.data());
-
     /* PVR uses an inverse coordinate system, so we need to flip
-     * some things to match GL */
-    psp_proj->z.z *= -1;
-    psp_proj->w.z *= -1;
+     * some things */
+    projection[10] *= -1;
+    projection[14] *= -1;
+
+    pvr_set_matrix(PVR_MATRIX_MODE_MODELVIEW, (pvr_mat4_t*)modelview.data());
+    pvr_set_matrix(PVR_MATRIX_MODE_PROJECTION, (pvr_mat4_t*) projection.data());
 
     auto total = 0;
 

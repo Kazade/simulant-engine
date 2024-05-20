@@ -27,7 +27,7 @@ namespace smlt {
 class PVRRenderer: public Renderer {
 
 public:
-    friend class PSPRenderQueueVisitor;
+    friend class PVRRenderQueueVisitor;
 
     PVRRenderer(Window* window);
 
@@ -63,8 +63,8 @@ public:
 
     void prepare_to_render(const Renderable*) override {}
 
-private:    
-    uint8_t list_[512 * 1024] __attribute__((aligned(64)));
+private:
+    uint8_t list_[512 * 1024] __attribute__((aligned(32)));
 
     PVRTextureManager texture_manager_;
 

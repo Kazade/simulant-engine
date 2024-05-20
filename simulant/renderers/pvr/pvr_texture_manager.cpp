@@ -276,7 +276,7 @@ int PVRTextureManager::upload_texture(int id, pvr_tex_format_t format, int width
     obj->format = format;
     obj->mipmaps = mipmaps;
     obj->is_twiddled = is_twiddled;
-    obj->texture_ram = (uint8_t*)aligned_alloc(16, data_size);
+    obj->texture_ram = (uint8_t*)aligned_alloc(32, data_size);
     obj->texture_vram = nullptr;
 
     if(!obj->texture_ram) {
