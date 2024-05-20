@@ -23,6 +23,15 @@
 #include <typeinfo>
 #include <memory>
 
+#if defined(_MSC_VER)
+#if __cplusplus >= 202002L
+ // C++20 (and later) code
+#include <version>
+#else
+#include <ciso646>
+#endif
+#endif
+
 #include "type_traits.h"
 #include "utility.h"
 
@@ -268,7 +277,7 @@ ValueType* any_cast (any* operand) noexcept {
 template <
   class ValueType,
   class=enable_if_t<
-    ::std::is_reference<ValueType>::value ||
+    ::std::is_reference<ValueType>::value or
     ::std::is_copy_constructible<ValueType>::value
   >
 > ValueType any_cast (any const& operand) {
@@ -281,7 +290,7 @@ template <
 template <
   class ValueType,
   class=enable_if_t<
-    ::std::is_reference<ValueType>::value ||
+    ::std::is_reference<ValueType>::value or
     ::std::is_copy_constructible<ValueType>::value
   >
 > ValueType any_cast (any&& operand) {
@@ -294,7 +303,7 @@ template <
 template <
   class ValueType,
   class=enable_if_t<
-    ::std::is_reference<ValueType>::value ||
+    ::std::is_reference<ValueType>::value or
     ::std::is_copy_constructible<ValueType>::value
   >
 > ValueType any_cast (any& operand) {

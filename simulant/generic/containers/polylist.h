@@ -377,10 +377,10 @@ private:
         std::size_t index = 0;  // 4
     };
 
-    typedef struct {
-        byte data[entry_size] __attribute__((aligned(8)));
+    typedef struct alignas(8) {
+        byte alignas(8) data[entry_size];
         EntryMeta meta;
-    } __attribute__((aligned(8))) EntryWithMeta;
+    } EntryWithMeta;
 
     struct Chunk {
         uint32_t used_count = 0;

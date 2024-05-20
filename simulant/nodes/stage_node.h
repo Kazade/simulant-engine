@@ -338,7 +338,7 @@ private:
 
 private:
     template<typename F, typename T, typename... Args>
-    friend T* impl::mixin_factory(F& factory, StageNode* base, Args&&... args);
+    friend T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 
     /* Mixin handling */
     StageNode* base_ = this;

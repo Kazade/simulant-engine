@@ -114,17 +114,13 @@ public:
             FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
         }
 #elif defined(_MSC_VER)
-        win_thread_start_t* data;
+        thread_ = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&Thread::thread_runner, (LPVOID)func, 0, NULL);
 
-        data = mcalloc(sizeof(*data));
-        data->start_routine = &Thread::thread_runner;
-        data->start_arg = func;
-
-        thread_ = CreateThread(NULL, 0, win_thread_start, data, 0, NULL);
         if (!thread_) {
             FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
         }
 #else
+        // ... (the rest of the code remains the same)
         auto ret = pthread_create(&thread_, NULL, &Thread::thread_runner, func);
         if(ret) {
             FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
