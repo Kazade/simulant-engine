@@ -1,5 +1,6 @@
-
+#if !defined(_MSC_VER)
 #include <pthread.h>
+#endif
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -54,6 +55,9 @@ void Thread::join() {
     psp_thread_state_.reset();
 #elif defined(__DREAMCAST__)
     thd_join(thread_, nullptr);
+#elif defined(_MSC_VER)
+    WaitForSingleObject(thread_, INFINITE);
+    CloseHandle(thread_);
 #else
     pthread_join(thread_, nullptr);
 #endif
@@ -70,6 +74,8 @@ void Thread::detach() {
     psp_thread_state_->detached = true;
 #elif defined(__DREAMCAST__)
     thd_detach(thread_);
+#elif defined(_MSC_VER)
+    CloseHandle(thread_);
 #else
     pthread_detach(thread_);
 #endif
@@ -84,6 +90,8 @@ void Thread::exit() {
 #elif defined(__DREAMCAST__)
     int status = 0;
     thd_exit(&status);
+#elif defined(_MSC_VER)
+    ExitThread(0);
 #else
     int status = 0;
     pthread_exit(&status);
@@ -159,6 +167,8 @@ ThreadID this_thread_id() {
 #elif defined(__DREAMCAST__)
     auto thd = thd_get_current();
     return (ThreadID) (thd ? thd->tid : 0);
+#elif defined(_MSC_VER)
+    return (ThreadID) GetCurrentThreadId();
 #else
     auto ret = pthread_self();
     return (ThreadID) ret;

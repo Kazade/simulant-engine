@@ -268,7 +268,7 @@ ValueType* any_cast (any* operand) noexcept {
 template <
   class ValueType,
   class=enable_if_t<
-    ::std::is_reference<ValueType>::value or
+    ::std::is_reference<ValueType>::value ||
     ::std::is_copy_constructible<ValueType>::value
   >
 > ValueType any_cast (any const& operand) {
@@ -281,7 +281,7 @@ template <
 template <
   class ValueType,
   class=enable_if_t<
-    ::std::is_reference<ValueType>::value or
+    ::std::is_reference<ValueType>::value ||
     ::std::is_copy_constructible<ValueType>::value
   >
 > ValueType any_cast (any&& operand) {
@@ -294,7 +294,7 @@ template <
 template <
   class ValueType,
   class=enable_if_t<
-    ::std::is_reference<ValueType>::value or
+    ::std::is_reference<ValueType>::value ||
     ::std::is_copy_constructible<ValueType>::value
   >
 > ValueType any_cast (any& operand) {

@@ -23,10 +23,9 @@
 namespace smlt {
 
 namespace _contiguous_map {
-
 template<typename K, typename V>
-struct NodeMeta {
-    NodeMeta(const K& key, const V& value):
+struct alignas(8) NodeMeta {
+    NodeMeta(const K& key, const V& value) :
         pair(std::make_pair(key, value)) {}
 
     std::pair<const K, V> pair;
@@ -41,9 +40,10 @@ struct NodeMeta {
     int32_t parent_index_ = -1;
     int32_t left_index_ = -1;
     int32_t right_index_ = -1;
-} __attribute__((aligned(8)));
+};
 
 }
+
 
 template<typename T>
 class ThreeWayCompare {

@@ -7,12 +7,34 @@
 #elif defined(__DREAMCAST__)
 #include <kos/thread.h>
 #include <kos/mutex.h>
+#elif defined(_MSC_VER)
+#include <stdbool.h>
+#include <windows.h>
 #else
 #include "pthread.h"
 #endif
 
 namespace smlt {
 namespace thread {
+
+#if defined(_MSC_VER)
+    typedef CRITICAL_SECTION pthread_mutex_t;
+    typedef void pthread_mutexattr_t;
+    typedef void pthread_condattr_t;
+    typedef void pthread_rwlockattr_t;
+    typedef HANDLE pthread_t;
+    typedef CONDITION_VARIABLE pthread_cond_t;
+
+    typedef struct {
+        SRWLOCK lock;
+        bool exclusive;
+    } pthread_rwlock_t;
+
+    struct timespec {
+        long tv_sec;
+        long tv_nsec;
+    };
+#endif
 
 class MutexInitialisationError:
     public std::runtime_error {
