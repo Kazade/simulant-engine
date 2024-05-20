@@ -108,30 +108,17 @@ struct type_at<0ul, T, Ts...> { using type = T; };
 template < ::std::size_t N, class... Ts>
 using type_at_t = typename type_at<N, Ts...>::type;
 
-// template < ::std::size_t N, class T, class... Ts>
-// constexpr auto value_at (T&& value, Ts&&...) -> enable_if_t<
-//   N == 0 and N < (sizeof...(Ts) + 1),
-//   decltype(::smlt::forward<T>(value))
-// > { return ::smlt::forward<T>(value); }
+ template < ::std::size_t N, class T, class... Ts>
+ constexpr auto value_at (T&& value, Ts&&...) -> enable_if_t<
+   N == 0 && N < (sizeof...(Ts) + 1),
+   decltype(::smlt::forward<T>(value))
+ > { return ::smlt::forward<T>(value); }
 
-// template < ::std::size_t N, class T, class... Ts>
-// constexpr auto value_at (T&&, Ts&&... values) -> enable_if_t<
-//   N != 0 and N < (sizeof...(Ts) + 1),
-//   type_at_t<N, T, Ts...>
-// > { return value_at<N - 1, Ts...>(::smlt::forward<Ts>(values)...); }
-
-template <std::size_t N, class T, class... Ts>
-constexpr auto value_at(T&& value, Ts&&...) -> 
-enable_if_t<N == 0 && N < (sizeof...(Ts) + 1), decltype(::smlt::forward<T>(value))>
-{
-    return ::smlt::forward<T>(value);
-}
-
-template <std::size_t N, class T, class... Ts>
-constexpr auto value_at(T&&, Ts&&... values) -> enable_if_t<
-  N != 0 && N < (sizeof...(Ts) + 1), 
-  type_at_t<N, T, Ts...>
-  > { return value_at<N - 1, Ts...>(::smlt::forward<Ts>(values)...); }
+ template < ::std::size_t N, class T, class... Ts>
+ constexpr auto value_at (T&&, Ts&&... values) -> enable_if_t<
+   N != 0 && N < (sizeof...(Ts) + 1),
+   type_at_t<N, T, Ts...>
+ > { return value_at<N - 1, Ts...>(::smlt::forward<Ts>(values)...); }
 
 template <class Callable>
 struct scope_guard final {
