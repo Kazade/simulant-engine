@@ -1,3 +1,4 @@
+#pragma execution_character_set("utf-8")
 #include <cstddef>
 
 #include "keyboard_mappings.h"
@@ -72,6 +73,7 @@ KeyboardMap UK [] = {
     {KEYBOARD_CODE_2, false, '2'},
     {KEYBOARD_CODE_2, true, '"'},
     {KEYBOARD_CODE_3, false, '3'},
+    //{KEYBOARD_CODE_3, true, '\u00E3'},
     {KEYBOARD_CODE_3, true, u'£'},
     {KEYBOARD_CODE_4, false, '4'},
     {KEYBOARD_CODE_4, true, '$'},

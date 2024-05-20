@@ -199,7 +199,7 @@ public:
 
     template<typename T, typename... Args>
     T* create_child(Args&&... args) {
-        return child_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
+        return impl::child_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
     }
 
     void adopt_children(StageNode* node) {

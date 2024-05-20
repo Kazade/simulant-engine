@@ -20,7 +20,11 @@ bool valid_name(const char* name) {
 }
 
 template<typename T, typename Map>
+#if !defined(_MSC_VER)
 static inline bool fetcher(const MaterialPropertyOverrider* const __restrict__ _this, const MaterialPropertyOverrider* const __restrict__ parent, const Map& map, MaterialPropertyNameHash hsh, const T*& out) {
+#else
+static inline bool fetcher(const MaterialPropertyOverrider* const __restrict _this, const MaterialPropertyOverrider* const __restrict parent, const Map & map, MaterialPropertyNameHash hsh, const T * &out) {
+#endif
     auto& lookup = _this->*map;
 
     auto s = lookup.size();

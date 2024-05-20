@@ -1,5 +1,7 @@
 #define WINVER 0x0600
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
+#endif
 
 #include <fstream>
 #include <sstream>

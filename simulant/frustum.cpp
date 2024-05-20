@@ -22,6 +22,11 @@
 #include "types.h"
 #include "math/plane.h"
 
+#if defined(_MSC_VER)
+#undef near
+#undef far
+#endif
+
 namespace smlt {
 
 Frustum::Frustum():
