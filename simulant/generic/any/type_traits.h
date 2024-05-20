@@ -22,6 +22,15 @@
 #include <type_traits>
 #include <utility>
 
+#if defined(_MSC_VER)
+#if __cplusplus >= 202002L
+// C++20 (and later) code
+#include <version>
+#else
+#include <ciso646>
+#endif
+#endif
+
 namespace smlt {
 inline namespace v1 {
 
@@ -123,7 +132,7 @@ template <class... Args> auto invoke_expr (undefined, Args&&...) -> undefined;
 
 template <class Functor, class Object, class... Args>
 auto invoke_expr (Functor&& fun, Object&& obj, Args&&... args) -> enable_if_t<
-  ::std::is_member_function_pointer<remove_reference_t<Functor>>::value &&
+  ::std::is_member_function_pointer<remove_reference_t<Functor>>::value and
   ::std::is_base_of<
     class_of_t<remove_reference_t<Functor>>,
     remove_reference_t<Object>
@@ -133,8 +142,8 @@ auto invoke_expr (Functor&& fun, Object&& obj, Args&&... args) -> enable_if_t<
 
 template <class Functor, class Object, class... Args>
 auto invoke_expr (Functor&& fun, Object&& obj, Args&&... args) -> enable_if_t<
-  ::std::is_member_function_pointer<remove_reference_t<Functor>>::value &&
-  !::std::is_base_of<
+  ::std::is_member_function_pointer<remove_reference_t<Functor>>::value and
+  not ::std::is_base_of<
     class_of_t<remove_reference_t<Functor>>,
     remove_reference_t<Object>
   >::value,
@@ -145,7 +154,7 @@ auto invoke_expr (Functor&& fun, Object&& obj, Args&&... args) -> enable_if_t<
 
 template <class Functor, class Object>
 auto invoke_expr (Functor&& functor, Object&& object) -> enable_if_t<
-  ::std::is_member_object_pointer<remove_reference_t<Functor>>::value &&
+  ::std::is_member_object_pointer<remove_reference_t<Functor>>::value and
   ::std::is_base_of<
     class_of_t<remove_reference_t<Functor>>,
     remove_reference_t<Object>
@@ -155,8 +164,8 @@ auto invoke_expr (Functor&& functor, Object&& object) -> enable_if_t<
 
 template <class Functor, class Object>
 auto invoke_expr (Functor&& functor, Object&& object) -> enable_if_t<
-  ::std::is_member_object_pointer<remove_reference_t<Functor>>::value &&
-  !::std::is_base_of<
+  ::std::is_member_object_pointer<remove_reference_t<Functor>>::value and
+  not ::std::is_base_of<
     class_of_t<remove_reference_t<Functor>>,
     remove_reference_t<Object>
   >::value,
@@ -188,20 +197,20 @@ class is_swappable {
   template <class X, class Y> static void check (...) noexcept(false);
 public:
   static constexpr bool value =
-    noexcept(check<T, U>(0)) && noexcept(check<U, T>(0));
+    noexcept(check<T, U>(0)) and noexcept(check<U, T>(0));
 };
 
 template <class T, class U>
 struct is_nothrow_swappable : ::std::integral_constant<
   bool,
-  is_swappable<T, U>::value && noexcept(swap(declval<T&>(), declval<U&>()))
+  is_swappable<T, U>::value and noexcept(swap(declval<T&>(), declval<U&>()))
 > { };
 
 } /* namespace impl */
 
 template <class... Args> struct invokable : ::std::integral_constant<
   bool,
-  !::std::is_same<
+  not ::std::is_same<
     decltype(impl::invoke_expr(::std::declval<Args>()...)),
     impl::undefined
   >::value
@@ -263,7 +272,7 @@ using is_nothrow_swappable = impl::is_nothrow_swappable<T, U>;
 template <class...> struct all_traits;
 template <class T, class... Args>
 struct all_traits<T, Args...> : ::std::integral_constant<bool,
-  T::value && all_traits<Args...>::value
+  T::value and all_traits<Args...>::value
 > { };
 template <> struct all_traits<> : ::std::true_type { };
 
@@ -271,13 +280,13 @@ template <> struct all_traits<> : ::std::true_type { };
 template <class...> struct any_traits;
 template <class T, class... Args>
 struct any_traits<T, Args...> : ::std::integral_constant<bool,
-  T::value || any_traits<Args...>::value
+  T::value or any_traits<Args...>::value
 > { };
 template <> struct any_traits<> : ::std::false_type { };
 
 /* no-traits */
 template <class... Args> struct no_traits : ::std::integral_constant<bool,
-  !all_traits<Args...>::value
+  not all_traits<Args...>::value
 > { };
 
 }} /* namespace core::v1 */
