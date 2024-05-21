@@ -32,8 +32,23 @@
     #include <pspiofilemgr.h>
 #elif defined(__WIN32__)
     #include <windows.h>
+    
+#if defined(_MSC_VER)
+    #include <direct.h>
+
+#if !defined S_ISDIR
+    #define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
+#endif
+
+#if !defined S_ISREG
+    #define S_ISREG(m) (((m) & _S_IFREG) == _S_IFREG)
+#endif
+
+#endif // _MSC_VER
+
     #include <sys/types.h>
     #include <sys/stat.h>
+
     #include <userenv.h>
     #include "realpath.h"
 #else

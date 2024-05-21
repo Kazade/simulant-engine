@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <numeric>
 #include "../types.h"
 
 #include "noise.h"

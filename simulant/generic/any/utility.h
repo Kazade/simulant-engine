@@ -35,7 +35,7 @@
 
 namespace smlt {
 inline namespace v1 {
-namespace impl {
+namespace implm {
 
 template <class T, T... I> struct integer_sequence {
   static_assert(
@@ -89,13 +89,13 @@ constexpr auto move (T&& t) noexcept -> decltype(
 
 
 template <class T, T... I>
-using integer_sequence = impl::integer_sequence<T, I...>;
+using integer_sequence = implm::integer_sequence<T, I...>;
 
 template < ::std::size_t... I>
 using index_sequence = integer_sequence< ::std::size_t, I...>;
 
 template <class T, T N>
-using make_integer_sequence = typename impl::sequence_generator<T, N, N>::type;
+using make_integer_sequence = typename implm::sequence_generator<T, N, N>::type;
 
 template < ::std::size_t N>
 using make_index_sequence = make_integer_sequence< ::std::size_t, N>;
@@ -103,7 +103,7 @@ using make_index_sequence = make_integer_sequence< ::std::size_t, N>;
 template <class T, class... Ts>
 using typelist_index = ::std::integral_constant<
   ::std::size_t,
-  impl::typelist_index<0ul, T, Ts...>::type::value
+  implm::typelist_index<0ul, T, Ts...>::type::value
 >;
 
 /* N3761 (with some additions) */

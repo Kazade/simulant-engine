@@ -26,6 +26,10 @@
 #include "../errors.h"
 #include "../macros.h"
 
+#if defined(_MSC_VER)
+#include "mutex.h"
+#endif
+
 namespace smlt {
 namespace thread {
 
@@ -159,6 +163,9 @@ private:
 #elif defined(__DREAMCAST__)
     static void* thread_runner(void* data);
     kthread_t* thread_ = nullptr;
+#elif defined(_MSC_VER)
+    static void* thread_runner(void* data);
+    pthread_t thread_ = 0;
 #else
     static void* thread_runner(void* data);
     pthread_t thread_ = 0;

@@ -6,6 +6,11 @@
 #include "../viewport.h"
 #include "../application.h"
 
+#if defined(_MSC_VER)
+#undef near
+#undef far
+#endif
+
 namespace smlt {
 
 

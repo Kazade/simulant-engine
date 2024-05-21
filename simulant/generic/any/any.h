@@ -37,7 +37,7 @@
 
 namespace smlt {
 inline namespace v1 {
-namespace impl {
+namespace implm {
 
 using data_type = add_pointer_t<void>;
 
@@ -138,12 +138,12 @@ class any final {
   friend ValueType const* any_cast (any const*) noexcept;
   template <class ValueType> friend ValueType* any_cast (any*) noexcept;
 
-  impl::any_dispatch const* table;
-  impl::data_type data;
+  implm::any_dispatch const* table;
+  implm::data_type data;
 
   template <class ValueType>
   any (ValueType&& value, ::std::true_type&&) :
-    table { impl::get_any_dispatch<decay_t<ValueType>>() },
+    table { implm::get_any_dispatch<decay_t<ValueType>>() },
     data { nullptr }
   {
     using value_type = decay_t<ValueType>;
@@ -157,7 +157,7 @@ class any final {
 
   template <class ValueType>
   any (ValueType&& value, ::std::false_type&&) :
-    table { impl::get_any_dispatch<decay_t<ValueType>>() },
+    table { implm::get_any_dispatch<decay_t<ValueType>>() },
     data { nullptr }
   {
     using value_type = decay_t<ValueType>;
@@ -200,12 +200,12 @@ public:
     table { that.table },
     data { that.data }
   {
-    that.table = impl::get_any_dispatch<void>();
+    that.table = implm::get_any_dispatch<void>();
     that.data = nullptr;
   }
 
   any () noexcept :
-    table { impl::get_any_dispatch<void>() },
+    table { implm::get_any_dispatch<void>() },
     data { nullptr }
   { }
 
@@ -213,7 +213,7 @@ public:
     class ValueType,
     class=enable_if_t<! ::std::is_same<any, decay_t<ValueType>>::value>
   > any (ValueType&& value) :
-    any { ::std::forward<ValueType>(value), impl::is_small<ValueType> { } }
+    any { ::std::forward<ValueType>(value), implm::is_small<ValueType> { } }
   { }
 
   ~any () noexcept { this->clear(); }
@@ -234,7 +234,7 @@ public:
   > any& operator = (ValueType&& value) {
     any {
       ::std::forward<ValueType>(value),
-      impl::is_small<ValueType> { }
+      implm::is_small<ValueType> { }
     }.swap(*this);
     return *this;
   }
@@ -247,7 +247,7 @@ public:
 
   void clear () noexcept {
     this->table->destroy(this->data);
-    this->table = impl::get_any_dispatch<void>();
+    this->table = implm::get_any_dispatch<void>();
   }
 
   ::std::type_info const& type () const noexcept {
@@ -255,7 +255,7 @@ public:
   }
 
   bool empty () const noexcept {
-    return this->table == impl::get_any_dispatch<void>();
+    return this->table == implm::get_any_dispatch<void>();
   }
 
 };
@@ -263,14 +263,14 @@ public:
 template <class ValueType>
 ValueType const* any_cast (any const* operand) noexcept {
   return operand && operand->type() == typeid(ValueType)
-    ? operand->cast<ValueType>(impl::is_small<ValueType> { })
+    ? operand->cast<ValueType>(implm::is_small<ValueType> { })
     : nullptr;
 }
 
 template <class ValueType>
 ValueType* any_cast (any* operand) noexcept {
   return operand && operand->type() == typeid(ValueType)
-    ? operand->cast<ValueType>(impl::is_small<ValueType> { })
+    ? operand->cast<ValueType>(implm::is_small<ValueType> { })
     : nullptr;
 }
 

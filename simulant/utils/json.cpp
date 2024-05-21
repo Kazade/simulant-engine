@@ -228,10 +228,16 @@ std::string JSONNode::read_value_from_stream() const {
     auto len = (end_ - start_) + 1;
     stream_->seekg(start_);
 
-    char buffer[len + 1];
+    char* buffer = new char[len + 1];
+
     stream_->read(buffer, len);
     buffer[len] = '\0';
-    return std::string(buffer);
+
+    std::string out_buffer = std::string(buffer);
+
+    delete[] buffer;
+
+    return out_buffer;
 }
 
 JSONNodeType JSONNode::type() const {

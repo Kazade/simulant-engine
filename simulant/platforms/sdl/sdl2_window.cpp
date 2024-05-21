@@ -36,9 +36,14 @@
 
 #include "../../renderers/renderer_config.h"
 
+#if !defined (_MSC_VER)
 static const std::string SDL_CONTROLLER_DB =
 #include "../../input/sdl/gamecontrollerdb.txt"
 ;
+#else
+#pragma message("SDL_CONTROLLER_DB implementation missing!")
+static const std::string SDL_CONTROLLER_DB = "gamecontrollerdb.txt";
+#endif
 
 namespace smlt {
 
