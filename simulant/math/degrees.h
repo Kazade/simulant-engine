@@ -1,12 +1,18 @@
 #pragma once
 
+#if defined(_MSC_VER)
+#include "radians.h"
+#endif
+
 namespace smlt {
 
+#if !defined(_MSC_VER)
 struct Radians;
+#endif
 
 class Degrees {
 private:
-    float value_;
+    float value_ = 0.0f;
 
 public:
     Degrees():
