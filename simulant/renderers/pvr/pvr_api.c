@@ -1,135 +1,16 @@
 #include <dc/pvr.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "pvr_api.h"
-
-/* Note: kos already has a pvr_list_t however
- * this has nicer type-safety and is only used
- * internally. This is similar but different to the
- * target list (which is a user-facing enum with an AUTO)
- * pvr_poly_list_t is an explicit list type. The order matches
- * the header value.
- */
-
-typedef enum {
-    PVR_POLY_LIST_OPAQUE = PVR_LIST_OP_POLY,
-    PVR_POLY_LIST_OPAQUE_MODIFIER = PVR_LIST_OP_MOD,
-    PVR_POLY_LIST_TRANSPARENT = PVR_LIST_TR_POLY,
-    PVR_POLY_LIST_TRANSPARENT_MODIFIER = PVR_LIST_TR_MOD,
-    PVR_POLY_LIST_PUNCH_THROUGH = PVR_LIST_PT_POLY,
-} pvr_poly_list_t;
-
-/* This is a nicer version of pvr_poly_hdr_t
- * that doesn't require compiling (which is slow)
- */
-typedef struct pvr_command_header {
-    unsigned int para_type : 3;
-    unsigned int end_of_strip : 1;
-    unsigned int unknown : 1;
-    unsigned int list_type : 3;
-
-    unsigned int group_enable : 1;
-    unsigned int unknown2 : 3;
-    unsigned int strip_length : 2;
-    unsigned int user_clip : 2;
-
-    unsigned int unknown3 : 8;
-
-    unsigned int shadow : 1;
-    unsigned int volume : 1;
-    unsigned int color_type : 2;
-    unsigned int texture : 1;
-    unsigned int offset : 1;
-    unsigned int gouraud : 1;
-    unsigned int uv_16bit : 1;
-} pvr_command_header_t;
-
-typedef struct pvr_poly_instruction {
-    unsigned int depth_func : 3;
-    unsigned int cull_mode : 2;
-    unsigned int write_disable : 1;
-    unsigned int texture : 1;
-    unsigned int offset : 1;
-    unsigned int gouraud : 1;
-    unsigned int uv_16bit : 1;
-    unsigned int cache_bypass : 1;
-    unsigned int mipmap_bias : 1;
-    unsigned int unknown : 20;
-} pvr_poly_instruction_t;
-
-typedef struct pvr_mod_instruction {
-    unsigned int volume_instruction : 3;
-    unsigned int culling_mode : 2;
-    unsigned int unknown : 27;
-} pvr_mod_instruction_t;
-
-typedef struct pvr_tsp_instruction {
-    unsigned int src_blend : 3;
-    unsigned int dst_blend : 3;
-    unsigned int src_select : 1;
-    unsigned int dst_select : 1;
-    unsigned int fog_control : 2;
-    unsigned int color_clamp : 1;
-    unsigned int use_alpha : 1;
-    unsigned int ignore_tex_alpha : 1;
-    unsigned int flip_uv : 2;
-    unsigned int clamp_uv : 2;
-    unsigned int filter_mode : 2;
-    unsigned int super_sample : 1;
-    unsigned int mipmap_bias : 4;
-    unsigned int texture_shading : 2;
-    unsigned int texture_width : 3;
-    unsigned int texture_height : 3;
-} pvr_tsp_instruction_t;
-
-typedef struct pvr_rgb_texture_control {
-    unsigned int mipmap_enabled : 1;
-    unsigned int compressed : 1;
-    unsigned int pixel_format : 3;
-    unsigned int scan_order : 1;
-    unsigned int stride_select : 1;
-    unsigned int unknown : 4;
-    unsigned int data_address : 21;
-} pvr_rgb_texture_control_t;
-
-typedef struct pvr_pal_texture_control {
-    unsigned int mipmap_enabled : 1;
-    unsigned int compressed : 1;
-    unsigned int pixel_format : 3;
-    unsigned int palette_selector : 6;
-    unsigned int data_address : 21;
-} pvr_pal_texture_control_t;
-
-/* Generic command */
-typedef struct {
-    pvr_command_header_t header;
-    uint32_t data[7];
-} pvr_command_t;
-
-/*
- * Our standard vertex command (aka pvr_vertex_t)
- */
-typedef struct {
-    pvr_command_header_t header;
-    float x, y, z;
-    float u, v;
-    argb_color_t color;
-    argb_color_t offset_color;
-} pvr_vertex3_t;
-
-typedef struct {
-    pvr_command_header_t header;
-    uint32_t isp_tsp_instruction;
-    pvr_tsp_instruction_t tsp_struction;
-    uint32_t texture_control;
-    uint32_t padding[4];
-} pvr_poly_header_t;
+#include "pvr_private.h"
 
 static struct {
     pvr_poly_header_t poly_conf;
     pvr_command_t* command_list;
     size_t command_counter;
-} state;
+    pvr_bool_t lists_submitting;
+} state = {{}, NULL, 0, PVR_FALSE};
 
 #define REG_SOFTRESET 0x005F8008
 #define REG_TA_LIST_INIT 0x005F8144
@@ -149,22 +30,61 @@ static void ta_list_continue() {
     PVR_GET(REG_TA_LIST_CONT);
 }
 
-static void ta_await_list_finish(pvr_poly_list_t list) {}
+void pvr_interrupt_handler(uint32_t code, void* data) {
+    switch(code) {
+        case ASIC_EVT_PVR_OPAQUEDONE:
+        case ASIC_EVT_PVR_TRANSDONE:
+        case ASIC_EVT_PVR_OPAQUEMODDONE:
+        case ASIC_EVT_PVR_TRANSMODDONE:
+        case ASIC_EVT_PVR_PTDONE:
+            state.lists_submitting = PVR_FALSE;
+            break;
+        case ASIC_EVT_PVR_RENDERDONE_TSP:
+        case ASIC_EVT_PVR_VBLANK_BEGIN:
+            break;
+        case ASIC_EVT_PVR_ISP_OUTOFMEM:
+        case ASIC_EVT_PVR_STRIP_HALT:
+        case ASIC_EVT_PVR_OPB_OUTOFMEM:
+        case ASIC_EVT_PVR_TA_INPUT_ERR:
+        case ASIC_EVT_PVR_TA_INPUT_OVERFLOW:
+        default:
+            fprintf(stderr, "PVR Error: %d\n", code);
+            break;
+    }
+}
 
+static void ta_await_list_finish(pvr_poly_list_t list) {
+    while(state.lists_submitting) {}
+}
+
+/* Called when we start targetting a new list. This will do one of several
+ * things:
+ *
+ * 1. If the passed list is the same as the current list, this is a no-op
+ * 2. If the new list is numerically after the current list, it will also do
+ * nothing
+ * 3. If the new list is numerically less than the current list, it will flush
+ * the command queue, await the list processing to finish, and then submit a
+ * list continuation
+ */
 static void set_active_pvr_list(pvr_poly_list_t list) {
     pvr_poly_list_t current_list = state.poly_conf.header.list_type;
 
     if(list == current_list) {
         return;
-    }
-
-    ta_await_list_finish(current_list);
+    }    
 
     if(list > current_list) {
         /* We can just move onto the list, we don't need to do
          * multi-pass */
 
     } else {
+        // Flush the outstanding command buffer before
+        // commencing the next list
+        pvr_flush();
+
+        ta_await_list_finish(current_list);
+
         /* Need to continue the list */
         ta_list_continue();
     }
@@ -181,9 +101,50 @@ static bool started = false;
  * If this ever gets upstreamed we'll need to figure out how the
  * existing API and this one interact, or maybe this one can replace it */
 
-void pvr_api_init() {
+static void enable_interrupt_handlers() {
+    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEDONE, pvr_interrupt_handler, NULL);
+    asic_evt_enable(ASIC_EVT_PVR_OPAQUEDONE, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_OPAQUEMODDONE, pvr_interrupt_handler,
+                         NULL);
+    asic_evt_enable(ASIC_EVT_PVR_OPAQUEMODDONE, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_TRANSDONE, pvr_interrupt_handler, NULL);
+    asic_evt_enable(ASIC_EVT_PVR_TRANSDONE, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_TRANSMODDONE, pvr_interrupt_handler,
+                         NULL);
+    asic_evt_enable(ASIC_EVT_PVR_TRANSMODDONE, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_PTDONE, pvr_interrupt_handler, NULL);
+    asic_evt_enable(ASIC_EVT_PVR_PTDONE, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_RENDERDONE_TSP, pvr_interrupt_handler,
+                         NULL);
+    asic_evt_enable(ASIC_EVT_PVR_RENDERDONE_TSP, ASIC_IRQ_DEFAULT);
 
+    asic_evt_set_handler(ASIC_EVT_PVR_ISP_OUTOFMEM, pvr_interrupt_handler,
+                         NULL);
+    asic_evt_enable(ASIC_EVT_PVR_ISP_OUTOFMEM, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_STRIP_HALT, pvr_interrupt_handler, NULL);
+    asic_evt_enable(ASIC_EVT_PVR_STRIP_HALT, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_OPB_OUTOFMEM, pvr_interrupt_handler,
+                         NULL);
+    asic_evt_enable(ASIC_EVT_PVR_OPB_OUTOFMEM, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_ERR, pvr_interrupt_handler,
+                         NULL);
+    asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_ERR, ASIC_IRQ_DEFAULT);
+    asic_evt_set_handler(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, pvr_interrupt_handler,
+                         NULL);
+    asic_evt_enable(ASIC_EVT_PVR_TA_INPUT_OVERFLOW, ASIC_IRQ_DEFAULT);
+}
+
+void pvr_api_init() {
+    enable_interrupt_handlers();
     started = true;
+}
+
+void pvr_flush() {
+    state.lists_submitting = true;
+
+    for(size_t i = 0; i < state.command_counter; ++i) {}
+
+    state.command_counter = 0;
 }
 
 void pvr_start(pvr_command_mode_t mode, void* context) {
@@ -193,6 +154,8 @@ void pvr_start(pvr_command_mode_t mode, void* context) {
     // Start the command list of with the header state
     memcpy(state.command_list[state.command_counter++], state.header,
            sizeof(state.header));
+
+    pvr_wait_ready();
 
     // Reset everything to the opaque list
     state.poly_conf.header.list_type = PVR_POLY_LIST_OPAQUE;

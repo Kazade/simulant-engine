@@ -163,6 +163,11 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
+target_sources(simulant
+  PRIVATE
+    renderers/pvr/pvr_private.h
+)
+
 IF(PLATFORM_DREAMCAST OR PLATFORM_PSP)
 ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
